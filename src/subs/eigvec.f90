@@ -1,0 +1,419 @@
+!
+!	eigvec.f90
+!	new_quick
+!
+!	Created by Yipu Miao on 2/23/11.
+!	Copyright 2011 University of Florida. All rights reserved.
+!
+
+!-----------------------------------------------------------
+! EIGVEC
+!------------------------------------------------------------
+SUBROUTINE EIGVEC(NDIM,NEVEC1,A,AWORK,TOLERA,ANORM,EVAL1,IDEGEN1, &
+     EVEC1)
+
+  ! INVERSE ITERATION ROUTINE FOR EIGENVECTOR DETERMINATION.
+  ! CALCULATES THE EIGENVECTORS OF AN NDIM BY NDIM SYMMETRIC,
+  ! TRIDIAGONAL MATRIX A.
+
+  ! INPUT:
+
+  ! NDIM   = SIZE OF MATRIX A.
+  ! NEVEC1  = NUMBER OF EIGENVECTORS REQUIRED.
+  ! A      = NDIM BY NDIM TRIDIAGONAL MATRIX.
+  ! TOLERA = SAME TOLERANCE USED TO DETERMINE EIGENVALUES.
+  ! ANORM  = ABSOLUTE COLUMN NORM OF TRIDIAGONAL MATRIX A.
+  ! EVAL1   = SORTED EIGENVALUES OF A.
+  ! IDEGEN1 = DEGENERACIES OF EIGENVALUES.
+
+
+  ! RETURNED:
+
+  ! EVEC1   = EIGENVECTORS OF TRIDIAGONAL MATRIX (IN COLUMNS).
+
+  ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
+
+
+  use allmod
+  IMPLICIT doUBLE PRECISION (A-H,O-Z)
+  ! DIMENSION A(NDIM,*),AWORK(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
+  DIMENSION A(nbasis,nbasis),AWORK(3,nbasis),EVAL1(nbasis), &
+       IDEGEN1(nbasis),EVEC1(nbasis,nbasis)
+  LOGICAL :: ORTH
+  IRAND = 13876532
+
+  ! COMPUTE THRESHOLD EPSLON WHICH WILL BE USED if THE INVERSE ITERATION
+  ! MATRIX IS SINGULAR.
+
+  EPSLON = ANORM*TOLERA
+
+  ! WHEN DEGENERACIES OCCUR, THERE ARE RARE INSTANCES WHEN THE
+  ! DEGENERATE BLOCK OF EIGENVECTORS ARE NOT LINEARLY INDEPENDENT.
+  ! IN THESE CASES, AN ADDITIONAL PASS THROUGH THE INVERSE ITERATION
+  ! (WITH A NEW SET OF RANdoM NUMBERS) IS CARRIED OUT, I.E., CONTROL
+  ! PASSES TO STATEMENT 40.  IVECT WILL KEEP TRACK OF THE CURRENT
+  ! STARTING EIGENVECTOR WHEN ADDITIONAL PASSES ARE NECESSARY.
+
+  IVECT = 1
+  NFAIL = 0
+  NPRTRB = 0
+
+  ! do ONE ITERATION FOR EACH EIGENVECTOR.
+
+40 ORTH = .TRUE.
+  NDEGEN = 0
+  MSTART = IVECT
+  do 380 M=MSTART,NEVEC1
+     if(IDEGEN1(M) > 1) NDEGEN = NDEGEN + 1
+     Z = EVAL1(M)
+
+     ! if THE INVERSE ITERATION HAS FAILED TWICE DUE TO NON-ORTHOGONALITY
+     ! OF DEGENERATE EIGENVECTORS, PERTURB THE EIGENVALUE BY A SMALL
+     ! AMOUNT.
+
+     if(NFAIL >= 2)then
+        NPRTRB = NPRTRB + 1
+        Z = Z + 0.001D0*dble(NPRTRB)*TOLERA
+     endif
+
+     ! STORE THE TRIDIAGONAL ENTRIES OF THE INVERSE ITERATION MATRIX IN
+     ! THE 3 BY NDIM WORKSPACE AWORK.
+
+     AWORK(1,1) = 0.0D0
+     AWORK(2,1) = A(1,1) - Z
+     AWORK(3,1) = A(2,1)
+     if(NDIM > 2)then
+        do 80 I=2,NDIM-1
+           AWORK(1,I) = A(I,I-1)
+           AWORK(2,I) = A(I,I) - Z
+           AWORK(3,I) = A(I+1,I)
+80      enddo
+     endif
+     AWORK(1,NDIM) = A(NDIM,NDIM-1)
+     AWORK(2,NDIM) = A(NDIM,NDIM) - Z
+     AWORK(3,NDIM) = 0.0D0
+
+     ! ASSIGN INVERSE ITERATION VECTOR FROM RANdoM NUMBERS.
+
+     do 120 I=1,NDIM
+        CALL RANdoM(IRAND,RNdoM)
+        RNdoM = 2.0D0*(RNdoM - 0.5D0)
+        EVEC1(I,M) = RNdoM*TOLERA
+120  enddo
+
+     ! CARRY OUT FORWARD GAUSSIAN ELIMINATION WITH ROW PIVOTING
+     ! ON THE INVERSE ITERATION MATRIX.
+
+     do 160 K=1,NDIM-1
+        ADIAG = ABS(AWORK(2,K))
+        ASUB = ABS(AWORK(1,K+1))
+        if(ADIAG >= ASUB)then
+
+           ! USE PIVOTAL ELEMENT FROM ROW K.
+
+           if(AWORK(2,K) == 0.0D0) AWORK(2,K) = EPSLON
+           T = AWORK(1,K+1)/AWORK(2,K)
+           AWORK(1,K+1) = 0.0D0
+           AWORK(2,K+1) = AWORK(2,K+1) - T*AWORK(3,K)
+
+           ! LEFT-JUSTifY EQUATION K SO THAT DIAGONAL ENTRY IS STORED
+           ! IN AWORK(1,K).
+
+           AWORK(1,K) = AWORK(2,K)
+           AWORK(2,K) = AWORK(3,K)
+           AWORK(3,K) = 0.0D0
+
+           ! OPERATE ON VECTOR AS WELL.
+
+           EVEC1(K+1,M) = EVEC1(K+1,M) - T*EVEC1(K,M)
+        else
+
+           ! USE PIVOTAL ELEMENT FROM ROW K+1 AND SWAP ROWS K AND K+1.
+
+           if(AWORK(1,K+1) == 0.0D0) AWORK(1,K+1) = EPSLON
+           T = AWORK(2,K)/AWORK(1,K+1)
+           ATEMP = AWORK(3,K) - T*AWORK(2,K+1)
+           AWORK(1,K) = AWORK(1,K+1)
+           AWORK(2,K) = AWORK(2,K+1)
+           AWORK(3,K) = AWORK(3,K+1)
+           AWORK(1,K+1) = 0.0D0
+           AWORK(2,K+1) = ATEMP
+           AWORK(3,K+1) = -T*AWORK(3,K+1)
+
+           ! OPERATE ON VECTOR AND SWAP ENTRIES.
+
+           ETEMP = EVEC1(K+1,M)
+           EVEC1(K+1,M) = EVEC1(K,M) - ETEMP*T
+           EVEC1(K,M) = ETEMP
+        endif
+160  enddo
+
+     ! FORWARD ELIMINATION COMPLETE.  BACK SUBSTITUTE TO GET SOLUTION.
+     ! OVERWRITE COLUMN M OF EVEC1 WITH SOLUTION.
+
+     if(AWORK(2,NDIM) == 0.0D0) AWORK(2,NDIM) = EPSLON
+     EVEC1(NDIM,M) = EVEC1(NDIM,M)/AWORK(2,NDIM)
+     ETEMP = EVEC1(NDIM-1,M) - AWORK(2,NDIM-1)*EVEC1(NDIM,M)
+     EVEC1(NDIM-1,M) = ETEMP/AWORK(1,NDIM-1)
+     ENORM = EVEC1(NDIM,M)**2 + EVEC1(NDIM-1,M)**2
+     if(NDIM > 2)then
+
+        ! CAUTION: PROBLEM LOOP FOR SOME IBM RS/6000 COMPILERS.  VALUE
+        ! OF K CAN GET LOST WHEN OPTIMIZE FLAG IS USED.
+
+        do 200 L=1,NDIM-2
+           K = NDIM-L-1
+           ETEMP = EVEC1(K,M) - AWORK(2,K)*EVEC1(K+1,M) &
+                - AWORK(3,K)*EVEC1(K+2,M)
+           EVEC1(K,M) = ETEMP/AWORK(1,K)
+           ENORM = ENORM + EVEC1(K,M)**2
+200     enddo
+     endif
+     EINV = 1.0D0/DSQRT(ENORM)
+
+     ! NORMALIZE EIGENVECTOR.
+
+     do 240 I=1,NDIM
+        EVEC1(I,M) = EVEC1(I,M)*EINV
+240  enddo
+
+     ! if WE HAVE COME TO THE END OF A DEGENERATE BLOCK OF EIGENVECTORS,
+     ! ORTHOGONALIZE THE BLOCK.
+
+     if(NDEGEN > 1)then
+        if(NDEGEN == IDEGEN1(M) .OR. M == NEVEC1)then
+           JSTART = M-NDEGEN+1
+           CALL ORTHOG(NDIM,NDEGEN,JSTART,EVEC1,ORTH)
+           if(ORTH)then
+              NFAIL = 0
+              NPRTRB = 0
+
+              ! THE DEGENERATE VECTORS WERE LINEARLY INDEPENDENT AND WERE
+              ! SUCCESSFULLY ORTHOGONALIZED.
+
+              IVECT = IVECT + NDEGEN
+              NDEGEN = 0
+           else
+
+              ! THE BLOCK IS APPARENTLY NOT LINEARLY INDEPENDENT.  GO BACK
+              ! AND REPEAT THE INVERSE ITERATION FOR THESE VECTORS.  AFTER
+              ! AN INDEPENDENT SET HAS BEEN FOUND, ANY ADDITIONAL EIGENVECTORS
+              ! WILL BE DETERMINED.
+
+              NFAIL = NFAIL + 1
+              GO TO 40
+           endif
+        endif
+     endif
+
+     ! THE CURRENT EIGENVECTOR SHOULD BE OKAY if IT IS NONDEGENERATE.
+
+     if(IDEGEN1(M) == 1) IVECT = IVECT + 1
+380 enddo
+  RETURN
+end SUBROUTINE EIGVEC
+
+!********************************************************
+! EIGVAL
+!------------------------------------------------------------
+
+    SUBROUTINE EIGVAL(NDIM,A,BETAH,TOLERA,ANORM,EVAL1,IERROR)
+
+! QR ROUTINE FOR THE DETERMINATION OF ALL THE EIGENVALUES
+! OF THE NDIM BY NDIM SYMMETRIC, TRIDIAGONAL MATRIX A.
+
+! INPUT:
+
+! NDIM   = SIZE OF MATRIX A.
+! A      = NDIM BY NDIM SYMMETRIC TRIDIAGONAL MATRIX.
+! BETAH   = 3 BY NDIM WORKSPACE.
+! TOLERA = SMALL NUMBER USED TO DETERMINE WHEN OFF-DIAGONAL
+! ELEMENTS ARE ESSENTIALLY ZERO.
+! ANORM  = ABSOLUTE COLUMN NORM OF TRIDIAGONAL MATRIX A.
+
+
+! RETURNED:
+
+! EVAL1   = EIGENVALUES OF A IN ASCENDING ORDER.
+! IERROR = 1 IF QR ITERATION DID NOT CONVERGE; 0 OTHERWISE.
+
+! PROGRAMMED BY S. L. DIXON.
+
+
+    use allmod
+    IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+! DIMENSION A(NDIM,*),BETAH(3,*),EVAL1(*)
+    DIMENSION A(nbasis,nbasis),BETAH(3,nbasis),EVAL1(nbasis)
+    IERROR = 0
+! ITMAX = 20
+    ITMAX = 200
+
+! TOLERANCE FOR OFF-DIAGONAL ELEMENTS:
+
+    EPSLON = TOLERA*ANORM
+
+! COPY DIAGONAL ELEMENTS OF A TO EVAL1, AND SUBDIAGONAL ELEMENTS
+! TO BETAH.
+
+    EVAL1(1) = A(1,1)
+    BETAH(1,1) = A(2,1)
+    IF(NDIM > 2)then
+        do 50 I=2,NDIM-1
+            EVAL1(I) = A(I,I)
+            BETAH(1,I) = A(I+1,I)
+        50 enddo
+    endif
+    EVAL1(NDIM) = A(NDIM,NDIM)
+
+! EACH QR ITERATION WILL OPERATE ON THE UNREDUCED TRIDIAGONAL
+! SUBMATRIX WITH UPPER LEFT ELEMENT (L,L) AND LOWER RIGHT ELEMENT
+! (N,N).
+
+    L = 1
+    N = NDIM
+    ITER = 0
+
+! FIND THE SMALLEST UNREDUCED SUBMATRIX WITH LOWER RIGHT CORNER AT
+! (N,N).  I.E., SEARCH UPWARD FOR A BETAH THAT IS ZERO.
+
+    80 KUPPER = N-L
+    do 100 K=1,KUPPER
+        I = N-K
+        IF(ABS(BETAH(1,I)) <= EPSLON)then
+            L = I+1
+            GO TO 150
+        endif
+    100 enddo
+
+! IF WE GET TO THE NEXT STATEMENT, then THERE ARE NO ZERO OFF-DIAGONALS
+! FOR THE SUBMATRIX WITH UPPER LEFT A(L,L) AND LOWER RIGHT A(N,N).
+! WE CAN STILL GET EIGENVALUES IF THE MATRIX IS 2 BY 2 OR 1 BY 1.
+! OTHERWISE, do ANOTHER QR ITERATION PROVIDED ITMAX CYCLES HAVE
+! NOT OCCURRED.
+
+    IF(L == N .OR. L == N-1)then
+        GO TO 150
+    else
+        IF(ITER == ITMAX)then
+            IERROR = 1
+            GO TO 1000
+        else
+            GO TO 200
+        endif
+    endif
+
+! IF WE GET TO 150 then A(L,L-1) IS ZERO AND THE UNREDUCED SUBMATRIX
+! HAS UPPER LEFT AT A(L,L) AND LOWER RIGHT AT A(N,N).  WE CAN
+! EXTRACT ONE EIGENVALUE IF THIS MATRIX IS 1 BY 1 AND 2 EIGENVALUES
+! IF IT IS 2 BY 2.
+
+    150 IF(L == N)then
+    
+    ! IT'S A 1 BY 1 AND EVAL1(N) IS AN EIGENVALUE.  IF L=2 OR 1 WE ARE
+    ! DONE.  OTHERWISE, UPDATE N, RESET L AND ITER, AND REPEAT THE
+    ! SEARCH.
+    
+        IF(L <= 2)then
+            GO TO 500
+        else
+            N = L-1
+            L = 1
+            ITER = 0
+            GO TO 80
+        endif
+    ELSEIF(L == N-1)then
+    
+    ! THE UNREDUCED SUBMATRIX IS A 2 BY 2.  OVERWRITE EVAL1(N-1)
+    ! AND EVAL1(N) WITH THE EIGENVALUES OF THE LOWER RIGHT 2 BY 2.
+    
+        BTERM = EVAL1(N-1) + EVAL1(N)
+        ROOT1 = BTERM*0.5D0
+        ROOT2 = ROOT1
+        DISCR = BTERM**2 - 4.0D0*(EVAL1(N-1)*EVAL1(N)-BETAH(1,N-1)**2)
+        IF(DISCR > 0.0D0)then
+            D = DSQRT(DISCR)*0.5D0
+            ROOT1 = ROOT1 - D
+            ROOT2 = ROOT2 + D
+        endif
+        EVAL1(N-1) = ROOT1
+        EVAL1(N) = ROOT2
+    
+    ! SEE IF WE ARE DONE.  IF NOT, RESET N, L, AND ITER AND LOOK
+    ! FOR NEXT UNREDUCED SUBMATRIX.
+    
+        IF(L <= 2)then
+            GO TO 500
+        else
+            N = L-1
+            L = 1
+            ITER = 0
+            GO TO 80
+        endif
+    else
+    
+    ! AN EIGENVALUE WAS FOUND AND THE NEW UNREDUCED MATRIX LIMITS
+    ! N AND L ARE SET.  do A QR ITERATION ON NEW MATRIX.
+    
+        ITER = 0
+        GO TO 200
+    endif
+
+! QR ITERATION BEGINS HERE.
+
+    200 ITER = ITER + 1
+
+! USE EIGENVALUES OF THE LOWER RIGHT 2 BY 2 TO COMPUTE SHIFT.  SHIFT
+! BY THE EIGENVALUE CLOSEST TO EVAL1(N).
+
+    D = (EVAL1(N-1) - EVAL1(N))*0.5D0
+    SIGND = 1.0D0
+    IF(D < 0.0D0) SIGND = -1.0D0
+    SHIFT = EVAL1(N) + D - SIGND*DSQRT(D*D + BETAH(1,N-1)**2)
+    P = EVAL1(L) - SHIFT
+    R = BETAH(1,L)
+    T = EVAL1(L)
+    W = BETAH(1,L)
+
+! OVERWRITE A WITH Q'*A*Q.
+
+    do 250 K=L,N-1
+        D = DSQRT(P*P + R*R)
+        C = P/D
+        S = R/D
+        IF(K /= L) BETAH(1,K-1) = D
+        CC = C*C
+        SS = 1.0D0 - CC
+        CS = C*S
+        CSW = 2.0D0*CS*W
+        AK1 = EVAL1(K+1)
+        EVAL1(K) = CC*T + CSW + SS*AK1
+        P = (CC - SS)*W + CS*(AK1 - T)
+        T = SS*T - CSW + CC*AK1
+        R = S*BETAH(1,K+1)
+        W = C*BETAH(1,K+1)
+    250 enddo
+    BETAH(1,N-1) = P
+    EVAL1(N) = T
+
+! GO BACK AND SEE IF L AND N NEED TO BE UPDATED.
+
+    GO TO 80
+
+! SORT EIGENVALUES IN ASCENDING ALGEBRAIC ORDER.
+
+    500 do 600 I=2,NDIM
+        JMAX = NDIM-I+1
+        ISORT = 0
+        do 550 J=1,JMAX
+            IF(EVAL1(J) > EVAL1(J+1))then
+                ETEMP = EVAL1(J)
+                EVAL1(J) = EVAL1(J+1)
+                EVAL1(J+1) = ETEMP
+                ISORT = 1
+            endif
+        550 enddo
+        IF(ISORT == 0) GO TO 1000
+    600 enddo
+    1000 RETURN
+    end SUBROUTINE EIGVAL
+

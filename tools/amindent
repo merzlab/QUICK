@@ -1,0 +1,204 @@
+#!/usr/bin/perl
+# A simple script to indent free-format Fortran code according to
+# AMBER standards of three spaces per indent.
+#
+# Usage:
+#
+# indent [-d DIR] FILE ...
+#
+# The DIR option causes output to go to a directory, which must already exist.
+# Otherwise, each file is converted in-place, and the original is renamed
+# "FILE.bak".
+#
+# If an indentation error occurs, the invalid result is written to "FILE.rej".
+# If this happens, and it is not one of the known limitations listed below,
+# tell Joe Krahn <krahn@niehs.nih.gov> or <Joseph.Krahn@gmail.com>.
+#
+# Parsing is fairly simple and may not always work. In particular, it
+# does not handle:
+#  * label-do loops (unless they also have END DO)
+#  * block statements merged on to a single line using semicolons.
+#  * CPP conditionals that split multi-line statements.
+#
+# TO DO:
+#
+# Handle the above situations (but not label-do; those should all be converted.)
+#
+# AMBER standards have not define the indentation level for continuation
+# lines. Should there be?
+#
+# It would be nice to allow continuation lines to match the parent line
+# indentation adjustment, so that "pretty" aligned continuations
+# remain that way.
+#
+use strict;
+
+my $indent_level;
+my $continuation;
+my $backup     = ".bak";
+my $out_prefix = "";
+if ( $ARGV[0] =~ m/^-(.*)/ ) {
+    my $opt = shift @ARGV;
+    if ( $opt eq "-d" ) {
+        $out_prefix = $ARGV[0] . "/";
+        shift @ARGV or die;
+    }
+}
+if ( $out_prefix eq "" ) { $backup = ".bak"; }
+
+foreach my $file (@ARGV) {
+
+    #next if ( $out_prefix ne "" and -f $out_prefix . $file );
+    my $neg_indent = 0;
+    my $label_do   = 0;
+    my @indent_stack;
+    $indent_level = 0;
+    my $continuation = "";
+
+    open IN, "<$file" or die;
+    my $out = "";
+    while (<IN>) {
+        my $dedent   = 0;
+        my $indent   = 0;
+        my $cpp_line = "";
+
+        $_ =~ s/^ *| *$//g;
+
+        if (/^#/) {
+            $cpp_line = $_;
+            $_        = $continuation;
+        }
+        else {
+            $_ = $continuation . $_;
+            if ( $_ =~ m/&(?: *!.*)?[\s\n\r]*$/ ) {
+                $continuation = $_;
+                next;
+            }
+        }
+        $continuation = "";
+
+        if ( $_ ne "" ) {
+            if (/^(?:\d+\s+)?(?:\w+:\s+)?do\s+\d/i) {
+                $label_do = 1;
+                last;
+            }
+
+            if (/^(?:contains|else)\b/i) {
+                $dedent = 1;
+                $indent = 1;
+            }
+            elsif (
+/^(?:\d+\s+)?end ?(?:do|if|program|subroutine|block\s*data|function|module|interface|type)\b/i
+              )
+            {
+                $dedent = 1;
+            }
+            elsif (/^(?:\d+\s+)?end *$/i) {
+                $dedent = 1;
+            }
+            elsif (/^(?:[A-Za-z0-9_(=) ]+\s+)?function\b/i) {
+                $indent = 1;
+            }
+            elsif (/^(?:(?:pure|elemental|recursive)\s+)?subroutine\b/i) {
+                $indent = 1;
+            }
+            elsif (/^module +procedure\b/i) {
+
+                # nothing
+            }
+            elsif (/^interface\b.*; end interface/i) {
+
+                # nothing
+            }
+            elsif (/^type *(?:, *(?:private|public) *)?(?::: *)?\w/i) {
+                $indent = 1;
+            }
+            elsif (/^(?:module|interface|program|block\s*data)\b/i) {
+                $indent = 1;
+            }
+            elsif (/^(?:\d+\s+)?(?:\w+:\s*)?(?:&\n\s*)?do\b/i) {
+                $indent = 1;
+            }
+            elsif (/^(?:\d+\s+)?(?:\w+:\s+)?if\b/i) {
+                if (/(?:&|then)\s*(?:!|$)/i) { $indent = 1; }
+            }
+            elsif (/^(?:\d+\s+)?select *case *\(/i) {
+                $indent = 1;
+            }
+            elsif (/^case *(?:\(|default)/i) {
+                $dedent = 1;
+                $indent = 1;
+            }
+            elsif (/^end +select\b/i) {
+                $dedent = 1;
+            }
+
+            $indent_level -= $dedent;
+            if ( $indent_level < 0 ) {
+                $out .= "******* INDENT ERROR ********\n";
+                $neg_indent = 1;
+                last;
+            }
+            my $s1 = &indent_token();
+            my $s2 = $s1 . "      ";
+            s/([\r\n]+)(.)/$1$s2$2/g;
+            $_ = $s1 . $_;
+            s/[\s\r\n]+$/\n/mg;
+            $out .= $_;
+            $indent_level += $indent;
+        }
+
+        if ( $cpp_line =~ m/^#\s*(\w+)/ ) {
+            my $cpp = $1;
+            if ( $cpp =~ m/^if/ ) {
+                push @indent_stack, $indent_level;
+            }
+            elsif ( $cpp eq 'else' ) {
+                $indent_level = pop @indent_stack;
+                push @indent_stack, -666;
+            }
+            elsif ( $cpp eq 'endif' ) {
+                if ( $indent_stack[$#indent_stack] == -666 ) {
+                    pop @indent_stack;
+                }
+                else {
+                    $indent_level = pop @indent_stack;
+                }
+            }
+            $out .= $cpp_line;
+        }
+        $cpp_line = "";
+    }
+    close IN;
+
+    my $outfile;
+    if ($label_do) {
+        warn "Indent error: $file contains LABEL-DO expressions.\n";
+        next;
+    }
+    elsif ($neg_indent) {
+        $outfile = $file . ".rej";
+        warn
+"Indent error: $file, negative indentation (see INDENT ERROR in .rej); output written to $outfile\n";
+    }
+    elsif ( $indent_level != 0 ) {
+        $outfile = $file . ".rej";
+        warn
+"Indent error: $file, final indent level = $indent_level; output written to $outfile\n";
+    }
+    else {
+        $outfile = $out_prefix . $file;
+        if ( $out_prefix eq "" and $backup ne "" ) {
+            rename( $file, $file . $backup ) or die;
+        }
+    }
+    open OUT, ">$outfile" or die;
+    print OUT $out;
+    close OUT;
+}
+
+sub indent_token {
+    my $token = ( "   " x $indent_level );
+    if ($continuation) { $token .= "      "; }
+    return $token;
+}

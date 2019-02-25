@@ -1,0 +1,39 @@
+!************************************************************************
+!                              QUICK                                   **
+!                                                                      **
+!                        Copyright (c) 2010                            **
+!                Regents of the University of Florida                  **
+!                       All Rights Reserved.                           **
+!                                                                      **
+!************************************************************************
+
+===============================================
+UPDATE LOG
+===============================================
+
+Yipu Miao   2011-6-9_0.06_beta16sp  : fix some bugs.
+Yipu Miao   2011-2-23_0.06_beta5	: opt makefile, add subs folder. 
+Yipu Miao	2011-2-18_0.06_beta3	: rewrite method module and try to make quick as an Open-Object project. reorganize file system. now all source will be stored in src folder 
+Yipu Miao   2011-1-5_0.05_beta7     : milestone version
+Yipu Miao   2010-12-13_0.05_beta5   : Fix MP2 problem
+Yipu Miao   2010-11-22_0.05_beta3   : Add freq and hessian matrix calculation. But is broken from last author. not support MPI 
+Yipu Miao	2010-11-22_0.05_beta1	: Add optimization option. And MPI is valid for gradient calculation.
+Yipu Miao	2010-11-10_0.04_milestone:Complete MPI for MP2, only valid for HF MP2, not valid for Divcon MP2. Optimize code
+Yipu Miao	2010-11-4_0.04_beta4	: Complete MPI for HF and Divcon, valid for 1e,2e and diag(div-con only) part
+Yipu Miao	2010-11-3_0.03_milestone: Add MPI option for HF calculation. Not available for UHF and DFT
+					  Optimze output format
+Yipu Miao	2010-10-25_0.03_beta1   : Add MPI option for div&con diag.
+Yipu Miao	2010-7-27_0.01_final_sp1: Add elimination step, improve accuracy. kill some bugs.
+Yipu Miao	2010-7-23_0.01_final	: First final version. Divcon works. Some tests are done. But still buggy,
+					  especially the convergence problem.
+Yipu Miao	2010-7-14_0.01		: Add HF SCF calculation. Divcon is partly work, but under test.
+Yipu Miao	2010-5-24_0.01		: Add keyword "atombasis“ and "residuebasis" to specify fragment method. 
+					  if it's residue based, pdb file is needed, while atom based, no pdb file is needed
+Yipu Miao	2010-5-21_0.01		: new quick can now read pdb file as input. But hasn't reach the calculation part.
+
+===============================================
+PLEASE FOLLOW THE ABOVE FORMAT TO UPDATE
+KEY CHANGE OF NEW VERSION AND KEEP BUCK-UPING
+PREVIOUS VERSION FREQENTLY, DAY-TO-DAY IS
+RECOMMENDED
+===============================================

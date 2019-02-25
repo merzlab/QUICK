@@ -1,0 +1,105 @@
+!************************************************************************
+!                              QUICK                                   **
+!                                                                      **
+!                        Copyright (c) 2014                            **
+!                Regents of the University of Florida                  **
+!                       All Rights Reserved.                           **
+!                                                                      **
+!  This software provided pursuant to a license agreement containing   **
+!  restrictions on its disclosure, duplication, and use. This software **
+!  contains confidential and proprietary information, and may not be   **
+!  extracted or distributed, in whole or in part, for any purpose      **
+!  whatsoever, without the express written permission of the authors.  **
+!  This notice, and the associated author list, must be attached to    **
+!  all copies, or extracts, of this software. Any additional           **
+!  restrictions set forth in the license agreement also apply to this  **
+!  software.                                                           **
+!************************************************************************
+!
+!  Cite this work as:
+!  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
+!  University of Florida, Gainesville, FL, 2014 and
+!  Michigan State University, East Lansing, MI, 2014
+!
+!
+!  If you want to use GPU version, please cite:
+!  Miao, Y., Merz, K. M. (2013) Acceleration of Electron Repulsion Integral Evaluation on Graphics Processing Units 
+!     via Use of Recurrence Relations Journal of Chemical Theory and Computation 9, 965–976.
+! 
+!  Tech support: miao@qtp.ufl.edu
+!************************************************************************
+
+
+1. INSTALLATION
+
+To install QUICK, first you may need to configure make.in file. Intel Fortran compiler is recommanded. 
+
+	 ! Copy corresponding make.in file from makein folder and rename it to make.in. 
+
+Then type
+
+     make quick
+
+1.1 CUDA VERSION INSTALLATION
+If you want to install GPU QUICK, NVIDIA CUDA COMPILER is required, which uses make.in.gnu.cuda. You may test 'nvcc --version'.
+Copy make.in.gnu.cuda to from makein folder to your directory and remane it to make.in
+
+	cp ./makein/make.in.gnu.cuda ./make.in
+
+Before compiler, you must set CUDA_HOME in make.in file if not set in bashfile, otherwise, CUBLAS and other libraries can not be
+compiled or linked. Notice, if you want to support f orbital, set CUDA_SPDF=y in make.in file you copied from make.in.gpu.cuda, 
+which will take a little bit long time and memory to compile, otherwise, set CUDA_SPDF=n for s, p and d orbital. (Default is not)
+	
+	! Modify CUDA_HOME=(your cuda home) in make.in file
+	
+	! Modify CUDA_SPDF=y or n in make.in file if you want or do not want to support gpu f function 
+
+Then type
+     
+     make quick.cuda
+
+in ./bin directory, you can find executable files. 
+
+
+2. USAGE
+We suggust you to put this direct into PATH. Edit ~/.bashrc, then add this line
+
+    export PATH=(YOUR QUICK DIR)/bin:$PATH
+
+and add basis set path
+	
+	export QUICK_BASIS=(YOUR QUICK DIR)/basis
+
+where (YOUR QUICK DIR) is your directory.
+
+the basic principal of QUICK is that the simpler, the better. so in the input file, the first line is calculation
+card. For example
+    HF ncyc=3 energy BASIS=6-31gs denserms=1.0e-7
+This means HF calculation is wanted, and after 3 cycle, We only calculate difference of Fock matrix, basis set is 
+6-31g**, and the convergence criteria is 1.0E-7. If you don't know anything about quantum chemistry, this card is 
+recommended.
+
+After first line, you input your molecule geometry
+
+C           4.5916       2.6127       4.3145
+H           6.8049       4.5138      -2.5775
+H           8.3134       7.7325      -1.0688
+H           4.3547       2.9911       3.3201
+H           4.5176       3.5187       3.7129
+
+which is the element and x,y,z coordinates respectively.  
+
+Next, type
+
+      quick mol.in
+
+or GPU version
+      
+      quick.cuda mol.in
+
+if you save the input file as mol.in. It will generate mol.out as output file.
+
+
+3. About GPU VERSION
+Currently, QUICK support CUDA version 2.0 and up GPU. We tested on GTX580, M2090 and K20. We can't gureentee our program
+is flawless, and it is experimental now. If you have any question feel free to email the author.

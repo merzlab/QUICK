@@ -1,0 +1,115 @@
+initialize.o: quick_modules
+	$(FPP) $(srcfolder)/initialize.f90 > $(objfolder)/_initialize.f90
+	$(FC) -o $(objfolder)/initialize.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c      $(objfolder)/_initialize.f90
+
+read_job_and_atom.o: quick_modules
+	$(FPP) $(srcfolder)/read_job_and_atom.f90 > $(objfolder)/_read_job_and_atom.f90
+	$(FC) -o $(objfolder)/read_job_and_atom.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_read_job_and_atom.f90
+
+shell.o: $(srcfolder)/shell.f90 quick_modules
+	$(FPP) $(srcfolder)/shell.f90 > $(objfolder)/_shell.f90
+	$(FC) -o $(objfolder)/shell.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_shell.f90
+
+getMolSad.o: $(srcfolder)/getMolSad.f90 quick_modules
+	$(FC) -o $(objfolder)/getMolSad.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c     $(srcfolder)/getMolSad.f90
+
+getMol.o: $(srcfolder)/getMol.f90 quick_modules
+	$(FPP) $(srcfolder)/getMol.f90 > $(objfolder)/_getMol.f90
+	$(FC) -o $(objfolder)/getMol.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_getMol.f90
+
+schwarz.o: $(srcfolder)/schwarz.f90 quick_modules
+	$(FPP) $(srcfolder)/schwarz.f90 > $(objfolder)/_schwarz.f90
+	$(FC) -o $(objfolder)/schwarz.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_schwarz.f90
+
+quick_one_electron_integral.o: $(srcfolder)/quick_one_electron_integral.f90 quick_modules
+	$(FPP) $(srcfolder)/quick_one_electron_integral.f90 > $(objfolder)/_quick_one_electron_integral.f90
+	$(FC) -o $(objfolder)/quick_one_electron_integral.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_quick_one_electron_integral.f90
+
+getEnergy.o: $(srcfolder)/getEnergy.f90 quick_modules
+	$(FPP) $(srcfolder)/getEnergy.f90 > $(objfolder)/_getEnergy.f90
+	$(FC) -o $(objfolder)/getEnergy.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_getEnergy.f90
+
+inidivcon.o: $(srcfolder)/inidivcon.f90 quick_modules
+	$(FPP) $(srcfolder)/inidivcon.f90 > $(objfolder)/_inidivcon.f90
+	$(FC) -o $(objfolder)/inidivcon.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_inidivcon.f90
+
+ecp.o: $(srcfolder)/ecp.f90 quick_modules
+	$(FC) -o $(objfolder)/ecp.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/ecp.f90
+
+uelectdii.o: $(srcfolder)/uelectdii.f90 quick_modules
+	$(FC) -o $(objfolder)/uelectdii.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/uelectdii.f90
+
+hfoperator.o: $(srcfolder)/hfoperator.f90 quick_modules
+	$(FPP) $(srcfolder)/hfoperator.f90 >$(objfolder)/_hfoperator.f90
+	$(FC) -o $(objfolder)/hfoperator.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_hfoperator.f90
+
+nuclear.o: $(srcfolder)/nuclear.f90 quick_modules
+	$(FC) -o $(objfolder)/nuclear.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/nuclear.f90
+
+fmm.o: $(srcfolder)/fmm.f90 quick_modules
+	$(FC) -o $(objfolder)/fmm.o  $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/fmm.f90
+
+dft.o: $(srcfolder)/dft.f90 quick_modules
+	$(FPP) $(srcfolder)/dft.f90 >$(objfolder)/_dft.f90
+	$(FC) -o $(objfolder)/dft.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c      $(objfolder)/_dft.f90
+
+sedftoperator.o: $(srcfolder)/sedftoperator.f90 quick_modules
+	$(FC) -o $(objfolder)/sedftoperator.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/sedftoperator.f90
+
+scf.o: $(srcfolder)/scf.f90 quick_modules
+	$(FPP) $(srcfolder)/scf.f90 > $(objfolder)/_scf.f90
+	$(FC) -o $(objfolder)/scf.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c		      $(objfolder)/_scf.f90
+
+uscf.o: $(srcfolder)/uscf.f90 quick_modules
+	$(FC) -o $(objfolder)/uscf.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/uscf.f90
+
+finalize.o: $(srcfolder)/finalize.f90 quick_modules
+	$(FPP) $(srcfolder)/finalize.f90 > $(objfolder)/_finalize.f90
+	$(FC) -o $(objfolder)/finalize.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_finalize.f90
+
+uhfoperator.o: $(srcfolder)/uhfoperator.f90 quick_modules
+	$(FC) -o $(objfolder)/uhfoperator.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/uhfoperator.f90
+
+udftoperator.o: $(srcfolder)/udftoperator.f90 quick_modules
+	$(FC) -o $(objfolder)/udftoperator.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/udftoperator.f90
+
+usedftoperator.o: $(srcfolder)/usedftoperator.f90 quick_modules
+	$(FC) -o $(objfolder)/usedftoperator.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/usedftoperator.f90
+
+quick_debug.o: $(srcfolder)/quick_debug.f90 quick_modules
+	$(FC) -o $(objfolder)/quick_debug.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/quick_debug.f90
+
+mpi_setup.o: $(srcfolder)/mpi_setup.f90 quick_modules
+	$(FPP) $(srcfolder)/mpi_setup.f90 > $(objfolder)/_mpi_setup.f90
+	$(FC) -o $(objfolder)/mpi_setup.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c      $(objfolder)/_mpi_setup.f90
+
+calMP2.o: $(srcfolder)/calMP2.f90 quick_modules
+	$(FPP) $(srcfolder)/calMP2.f90 > $(objfolder)/_calMP2.f90
+	$(FC) -o $(objfolder)/calMP2.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c         $(objfolder)/_calMP2.f90
+
+optimize.o: $(srcfolder)/optimize.f90 quick_modules
+	$(FPP) $(srcfolder)/optimize.f90 > $(objfolder)/_optimize.f90
+	$(FC) -o $(objfolder)/optimize.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_optimize.f90
+
+gradient.o: $(srcfolder)/gradient.f90 quick_modules
+	$(FPP) $(srcfolder)/gradient.f90 > $(objfolder)/_gradient.f90
+	$(FC) -o $(objfolder)/gradient.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(objfolder)/_gradient.f90
+
+hessian.o: $(srcfolder)/hessian.f90 quick_modules
+	$(FC) -o $(objfolder)/hessian.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/hessian.f90
+
+CPHF.o: $(srcfolder)/CPHF.f90 quick_modules
+	$(FC) -o $(objfolder)/CPHF.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/CPHF.f90
+
+frequency.o: $(srcfolder)/frequency.f90 quick_modules
+	$(FC) -o $(objfolder)/frequency.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/frequency.f90
+
+MFCC.o: $(srcfolder)/MFCC.f90 quick_modules
+	$(FC) -o $(objfolder)/MFCC.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/MFCC.f90
+
+dipole.o: $(srcfolder)/dipole.f90 quick_modules
+	$(FC) -o $(objfolder)/dipole.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c       $(srcfolder)/dipole.f90
+
+basis.o: $(srcfolder)/basis.f90 quick_modules
+	$(FPP) $(srcfolder)/basis.f90 > $(objfolder)/_basis.f90
+	$(FC) -o $(objfolder)/basis.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c          $(objfolder)/_basis.f90
