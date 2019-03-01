@@ -12,7 +12,7 @@
 #---------------------
 # a. MPI Version
 #---------------------
-FC = mpif90
+FC = mpiifort
 #FC = /usr/local/bin/mpif90
 #MPI_INCLUDES = /usr/local/include
 #MPI_LIBS = /usr/local/lib
