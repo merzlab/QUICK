@@ -32,8 +32,10 @@
 
 1. INSTALLATION 
 
+Go to quick main folder and create 3 folders named "bin", "lib" and "obj".
+
 1.1 SINGLE CPU INSTALLATION 
-You can use gnu or intel compilers for this purpose. Go to quick main folder and run one of the following commands. 
+You can use gnu or intel compilers for this purpose. Go to quick main folder and run following commands. 
 If you are using gnu compiler (version 4.6 or later)
 
 	cp ./makein/make.in.gnu ./make.in
@@ -49,7 +51,8 @@ Then run the following command.
 This will compile a single CPU version of quick. 
 
 1.2 MPI INSTALLATION
-If you have intel mpi (version 2011 or later), you can compile the MPI version by running following commands. 
+If you have intel mpi installed (version 2011 or later), you can compile the MPI version by running following commands 
+from quick main folder. 
 
 	cp ./makein/make.in.MPI ./make.in
 	
@@ -58,19 +61,26 @@ If you have intel mpi (version 2011 or later), you can compile the MPI version b
 1.3 CUDA VERSION INSTALLATION
 If you want to install the GPU version, NVIDIA CUDA COMPILER is required. You may check your CUDA compiler version using 
 'nvcc --version'. 
-Run the following command.
+a) Run the following command.
 
 	cp ./makein/make.in.gnu.cuda ./make.in
 
-Before the compilation, you must set CUDA_HOME in make.in file. Otherwise, CUBLAS and other libraries can not be
-compiled or linked. Furthermore, you will have to change Notice, if you want to support f orbital, set CUDA_SPDF=y in make.in file you copied from make.in.gpu.cuda, 
-which will take a little bit long time and memory to compile, otherwise, set CUDA_SPDF=n for s, p and d orbital. (Default is not)
-	
-	! Modify CUDA_HOME=(your cuda home) in make.in file
-	
-	! Modify CUDA_SPDF=y or n in make.in file if you want or do not want to support gpu f function 
+b) Open up the make.in file and set CUDA_HOME. This is essential to link or compile CUBLAS and other libraries.
 
-Then type
+	CUDA_HOME=(your cuda home) 
+
+c) You may have to change the "-gencode arch=compute_70,code=sm_70" options in nvcc compiler 
+flags depending on the type of your GPU. The default value (70) is for a Volta gpu. Use 30, 50, 60 and 75 for Kepler,
+Maxwell, Pascal and Turing GPUs respectively. 
+
+	-gencode arch=compute_(your gpu),code=sm_(your gpu)
+	
+d) If you want to support f orbital, set CUDA_SPDF=y in make.in file. 
+This will take a longer time and memory to compile. Otherwise, leave the default value CUDA_SPDF=n for s, p and d orbital. 	
+	
+	CUDA_SPDF=(y or n)  
+
+e) Then run
      
      make quick.cuda
 
@@ -78,9 +88,9 @@ in ./bin directory, you can find executable files.
 
 
 2. USAGE
-We suggust you to put this direct into PATH. Edit ~/.bashrc, then add this line
+We suggust you to put the following into your PATH. Edit ~/.bashrc, then add this line
 
-    export PATH=(YOUR QUICK DIR)/bin:$PATH
+        export PATH=(YOUR QUICK DIR)/bin:$PATH
 
 and add basis set path
 	
@@ -88,14 +98,14 @@ and add basis set path
 
 where (YOUR QUICK DIR) is your directory.
 
-the basic principal of QUICK is that the simpler, the better. so in the input file, the first line is calculation
+The basic principal of QUICK is that the simpler, the better. So in the input file, the first line is calculation
 card. For example
     HF ncyc=3 energy BASIS=6-31gs denserms=1.0e-7
-This means HF calculation is wanted, and after 3 cycle, We only calculate difference of Fock matrix, basis set is 
-6-31g**, and the convergence criteria is 1.0E-7. If you don't know anything about quantum chemistry, this card is 
+This means HF calculation is required and after 3 cycles, we calculate the difference of Fock matrix. The basis set is 
+6-31g** and the convergence criteria is 1.0E-7. If you don't know anything about quantum chemistry, this card is 
 recommended.
 
-After first line, you input your molecule geometry
+After the first line, you should mention your molecule geometry in the following format. 
 
 C           4.5916       2.6127       4.3145
 H           6.8049       4.5138      -2.5775
@@ -103,9 +113,9 @@ H           8.3134       7.7325      -1.0688
 H           4.3547       2.9911       3.3201
 H           4.5176       3.5187       3.7129
 
-which is the element and x,y,z coordinates respectively.  
+Each line specifies the element and x,y,z coordinates respectively.  
 
-Next, type
+If you save this example as mol.in and run
 
       quick mol.in
 
@@ -113,9 +123,9 @@ or GPU version
       
       quick.cuda mol.in
 
-if you save the input file as mol.in. It will generate mol.out as output file.
+you should get mol.out output file. You can find more examples in the benchmarks folder. 
 
-
-3. About GPU VERSION
-Currently, QUICK support CUDA version 2.0 and up GPU. We tested on GTX580, M2090 and K20. We can't gureentee our program
-is flawless, and it is experimental now. If you have any question feel free to email the author.
+2. SPECIAL NOTE ON THE GPU VERSION 
+Currently, QUICK supports CUDA version 4.6 and later. We have tested it on GTX580, M2090, K20, K40, K80, P100, 
+V100 and T4. We cannot gureentee that our program is flawless and it is still in the experimental stage.
+If you have any questions, please feel free to contact us.
