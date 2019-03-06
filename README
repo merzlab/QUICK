@@ -1,7 +1,7 @@
 !************************************************************************
 !                              QUICK                                   **
 !                                                                      **
-!                        Copyright (c) 2014                            **
+!                        Copyright (c) 2019                            **
 !                Regents of the University of Florida                  **
 !                       All Rights Reserved.                           **
 !                                                                      **
@@ -17,9 +17,9 @@
 !************************************************************************
 !
 !  Cite this work as:
-!  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
-!  University of Florida, Gainesville, FL, 2014 and
-!  Michigan State University, East Lansing, MI, 2014
+!  Manathunga, M.; Mu, D.; Miao,Y.; He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK
+!  University of Florida, Gainesville, FL, 2019 and
+!  Michigan State University, East Lansing, MI, 2019
 !
 !
 !  If you want to use GPU version, please cite:
@@ -30,24 +30,40 @@
 !************************************************************************
 
 
-1. INSTALLATION
+1. INSTALLATION 
 
-To install QUICK, first you may need to configure make.in file. Intel Fortran compiler is recommanded. 
+1.1 SINGLE CPU INSTALLATION 
+You can use gnu or intel compilers for this purpose. Go to quick main folder and run one of the following commands. 
+If you are using gnu compiler (version 4.6 or later)
 
-	 ! Copy corresponding make.in file from makein folder and rename it to make.in. 
+	cp ./makein/make.in.gnu ./make.in
+	
+If you are using intel compiler (version 2011 or later)
 
-Then type
+	cp ./makein/make.in.intel ./make.in
 
-     make quick
+Then run the following command. 
 
-1.1 CUDA VERSION INSTALLATION
-If you want to install GPU QUICK, NVIDIA CUDA COMPILER is required, which uses make.in.gnu.cuda. You may test 'nvcc --version'.
-Copy make.in.gnu.cuda to from makein folder to your directory and remane it to make.in
+        make quick
+     
+This will compile a single CPU version of quick. 
+
+1.2 MPI INSTALLATION
+If you have intel mpi (version 2011 or later), you can compile the MPI version by running following commands. 
+
+	cp ./makein/make.in.MPI ./make.in
+	
+	make quick.MPI
+
+1.3 CUDA VERSION INSTALLATION
+If you want to install the GPU version, NVIDIA CUDA COMPILER is required. You may check your CUDA compiler version using 
+'nvcc --version'. 
+Run the following command.
 
 	cp ./makein/make.in.gnu.cuda ./make.in
 
-Before compiler, you must set CUDA_HOME in make.in file if not set in bashfile, otherwise, CUBLAS and other libraries can not be
-compiled or linked. Notice, if you want to support f orbital, set CUDA_SPDF=y in make.in file you copied from make.in.gpu.cuda, 
+Before the compilation, you must set CUDA_HOME in make.in file. Otherwise, CUBLAS and other libraries can not be
+compiled or linked. Furthermore, you will have to change Notice, if you want to support f orbital, set CUDA_SPDF=y in make.in file you copied from make.in.gpu.cuda, 
 which will take a little bit long time and memory to compile, otherwise, set CUDA_SPDF=n for s, p and d orbital. (Default is not)
 	
 	! Modify CUDA_HOME=(your cuda home) in make.in file
