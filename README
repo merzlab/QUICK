@@ -18,11 +18,10 @@
 !
 !  Cite this work as:
 !  Manathunga, M.; Mu, D.; Miao,Y.; He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK
-!  University of Florida, Gainesville, FL, 2019 and
-!  Michigan State University, East Lansing, MI, 2019
+!  University of Florida, Gainesville, FL, 2019 and Michigan State University, East Lansing, MI, 2019
 !
 !
-!  If you want to use GPU version, please cite:
+!  If you want to use the GPU version, please cite:
 !  Miao, Y., Merz, K. M. (2013) Acceleration of Electron Repulsion Integral Evaluation on Graphics Processing Units 
 !     via Use of Recurrence Relations Journal of Chemical Theory and Computation 9, 965–976.
 ! 
@@ -35,7 +34,7 @@
 Go to quick main folder and create 3 folders named "bin", "lib" and "obj".
 
 1.1 SINGLE CPU INSTALLATION 
-You can use gnu or intel compilers for this purpose. Go to quick main folder and run following commands. 
+You can use gnu or intel compilers for this purpose. Go to QUICK main folder and run the following commands. 
 If you are using gnu compiler (version 4.6 or later)
 
 	cp ./makein/make.in.gnu ./make.in
@@ -44,14 +43,14 @@ If you are using intel compiler (version 2011 or later)
 
 	cp ./makein/make.in.intel ./make.in
 
-Then run the following command. 
+Then, run the following command. 
 
         make quick
      
 This will compile a single CPU version of quick. 
 
 1.2 MPI INSTALLATION
-If you have intel mpi installed (version 2011 or later), you can compile the MPI version by running following commands 
+If you have intel mpi (version 2011 or later) installed, you can compile the MPI version by running following commands 
 from quick main folder. 
 
 	cp ./makein/make.in.MPI ./make.in
@@ -69,8 +68,8 @@ b) Open up the make.in file and set CUDA_HOME. This is essential to link or comp
 
 	CUDA_HOME=(your cuda home) 
 
-c) You may have to change the "-gencode arch=compute_70,code=sm_70" options in nvcc compiler 
-flags depending on the type of your GPU. The default value (70) is for a Volta gpu. Use 30, 50, 60 and 75 for Kepler,
+c) You may have to change the "-gencode arch=compute_70,code=sm_70" options in CUDA_FLAGS 
+variable depending on the type of your GPU. The default value (70) is for a Volta gpu. Use 30, 50, 60 and 75 for Kepler,
 Maxwell, Pascal and Turing GPUs respectively. 
 
 	-gencode arch=compute_(your gpu),code=sm_(your gpu)
@@ -96,16 +95,16 @@ and add basis set path
 	
 	export QUICK_BASIS=(YOUR QUICK DIR)/basis
 
-where (YOUR QUICK DIR) is your directory.
+where (YOUR QUICK DIR) is your QUICK installation directory.
 
-The basic principal of QUICK is that the simpler, the better. So in the input file, the first line is calculation
+The basic principal of QUICK is that the simpler the better. So in the input file, the first line is calculation
 card. For example
     HF ncyc=3 energy BASIS=6-31gs denserms=1.0e-7
 This means HF calculation is required and after 3 cycles, we calculate the difference of Fock matrix. The basis set is 
 6-31g** and the convergence criteria is 1.0E-7. If you don't know anything about quantum chemistry, this card is 
 recommended.
 
-After the first line, you should mention your molecule geometry in the following format. 
+After the first line, you should specify the information related to molecular geometry in the following format. 
 
 C           4.5916       2.6127       4.3145
 H           6.8049       4.5138      -2.5775
@@ -125,7 +124,7 @@ or GPU version
 
 you should get mol.out output file. You can find more examples in the benchmarks folder. 
 
-2. SPECIAL NOTE ON THE GPU VERSION 
-Currently, QUICK supports CUDA version 4.6 and later. We have tested it on GTX580, M2090, K20, K40, K80, P100, 
-V100 and T4. We cannot gureentee that our program is flawless and it is still in the experimental stage.
+4. SPECIAL NOTE ON THE GPU VERSION 
+Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GTX580, M2090, K20, K40, K80, P100, 
+V100 and T4. Our program is still in the experimental stage and we cannot guarantee that it is flawless.
 If you have any questions, please feel free to contact us.
