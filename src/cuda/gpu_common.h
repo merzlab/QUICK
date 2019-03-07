@@ -173,11 +173,11 @@ unsigned long long int
  */
 // constant for general purpose
 static const int SM_13_THREADS_PER_BLOCK    =   256;
-static const int SM_2X_THREADS_PER_BLOCK    =   512;
+static const int SM_2X_THREADS_PER_BLOCK    =   256;
 
 // constant for 2e-integral
 static const int SM_13_2E_THREADS_PER_BLOCK =   256;
-static const int SM_2X_2E_THREADS_PER_BLOCK =   512;
+static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
 
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
@@ -187,7 +187,7 @@ static const int SM_2X_XC_THREADS_PER_BLOCK =   384;
 
 // constant for grad
 static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
-static const int SM_2X_GRAD_THREADS_PER_BLOCK =   512;
+static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;
