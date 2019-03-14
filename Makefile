@@ -146,6 +146,25 @@ main.o: quick_modules
 #	$(FPP) $(srcfolder)/optimize.f90 > $(objfolder)/_optimize.f90
 #	$(FC) -o $(objfolder)/optimize.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_optimize.f90
 
+#================= quick dft gradient subroutines ===============================
+dftgrad.o: quick_modules
+	$(FPP) $(srcfolder)/dftgrad.f90 > $(objfolder)/_dftgrad.f90
+	$(FC) -o $(objfolder)/dftgrad.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_dftgrad.f90
+
+#================= quick pt2der subroutines ===============================
+pt2der.o: quick_modules
+	$(FPP) $(srcfolder)/pt2der.f90 > $(objfolder)/_pt2der.f90
+	$(FC) -o $(objfolder)/pt2der.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_pt2der.f90
+
+#================= quick 2eshelloptdft.o subroutines ===============================
+2eshelloptdft.o: quick_modules
+	$(FPP) $(srcfolder)/2eshelloptdft.f90 > $(objfolder)/_2eshelloptdft.f90
+	$(FC) -o $(objfolder)/2eshelloptdft.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_2eshelloptdft.f90
+
+#================= quick sswder.o subroutines ===============================
+sswder.o: quick_modules
+	$(FPP) $(srcfolder)/sswder.f90 > $(objfolder)/_sswder.f90
+	$(FC) -o $(objfolder)/sswder.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_sswder.f90
 
 #=========== targets for BLAS =====================================
 blas:
@@ -174,7 +193,7 @@ OBJ =   main.o \
 		dft.o sedftoperator.o dipole.o \
 		scf.o uscf.o finalize.o uhfoperator.o udftoperator.o usedftoperator.o \
 		uelectdii.o mpi_setup.o quick_debug.o calMP2.o optimize.o \
-		gradient.o hessian.o CPHF.o frequency.o MFCC.o basis.o 
+		gradient.o hessian.o CPHF.o frequency.o MFCC.o basis.o dftgrad.o pt2der.o 2eshelloptdft.o sswder.o
 cpconfig:
 	cp $(configfolder)/config.h $(srcfolder)/config.h
 cpconfig.cuda:

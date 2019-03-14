@@ -172,7 +172,7 @@ subroutine optimize(failed)
          endif
 #endif
          endif
-         !                if (quick_method%DFT) call DFTgrad
+                          if (quick_method%DFT) call DFTgrad
          !                if (quick_method%SEDFT) call SEDFTgrad
          !            endif
       endif

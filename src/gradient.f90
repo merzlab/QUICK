@@ -87,6 +87,11 @@ subroutine hfgrad
         HOLDJI = 0.d0
         do K=1,quick_molspec%nelec/2
            HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
+!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
+                write (ioutfile,'(A4,I5,I5,I5,7x,F20.10,7x,F20.10,7x,F20.10)')"Vars",I,J,K, &
+                quick_qm_struct%E(K),quick_qm_struct%co(J,K),quick_qm_struct%co(I,K)
+!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
+
         enddo
         quick_scratch%hold(J,I) = 2.d0*HOLDJI
      enddo
@@ -320,7 +325,7 @@ endif
 #endif
 
   call cpu_time(timer_end%TGrad)
-  write(ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")'), timer_end%TGrad-timer_begin%TGrad
+  write(ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")') timer_end%TGrad-timer_begin%TGrad
   timer_cumer%TGrad=timer_end%TGrad-timer_begin%TGrad+timer_cumer%TGrad
 
   return
