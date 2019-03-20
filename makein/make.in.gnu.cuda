@@ -53,7 +53,7 @@ CUDA_FLAGS= -O3  -Xptxas=-v -m64 -use_fast_math -gencode arch=compute_70,code=sm
 
 # G++ Compiler
 CXX = g++
-CFLAGS = -lgfortran -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas
+CFLAGS = -lgfortran -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
 
 
 CUDA_SPDF=n
