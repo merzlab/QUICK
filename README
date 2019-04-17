@@ -126,5 +126,5 @@ you should get mol.out output file. You can find more examples in the benchmarks
 
 4. SPECIAL NOTE ON THE GPU VERSION 
 Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GTX580, M2090, K20, K40, K80, P100, 
-V100 and T4. Our program is still in the experimental stage and we cannot guarantee that it is flawless.
+V100 and Titan V. Our program is still in the experimental stage and we cannot guarantee that it is flawless.
 If you have any questions, please feel free to contact us.
