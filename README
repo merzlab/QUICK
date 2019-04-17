@@ -31,7 +31,6 @@
 
 1. INSTALLATION 
 
-Go to quick main folder and create 3 folders named "bin", "lib" and "obj".
 
 1.1 SINGLE CPU INSTALLATION 
 You can use gnu or intel compilers for this purpose. Go to QUICK main folder and run the following commands. 
@@ -73,20 +72,21 @@ variable depending on the type of your GPU. The default value (70) is for a Volt
 Maxwell, Pascal and Turing GPUs respectively. 
 
 	-gencode arch=compute_(your gpu),code=sm_(your gpu)
-	
-d) If you want to support f orbital, set CUDA_SPDF=y in make.in file. 
-This will take a longer time and memory to compile. Otherwise, leave the default value CUDA_SPDF=n for s, p and d orbital. 	
-	
-	CUDA_SPDF=(y or n)  
 
-e) Then run
+d) Then run
      
      make quick.cuda
 
 in ./bin directory, you can find executable files. 
 
+2. TEST
 
-2. USAGE
+Run testqk.sh script from the quick main folder. Depending on your installation, you might want to change the qexe variable
+value in line 12. The default is for gpu version: "quick.cuda". For single cpu and MPI installations, change it to 
+"quick" and "quick.MPI" respectively.   
+
+3. USAGE
+
 We suggust you to put the following into your PATH. Edit ~/.bashrc, then add this line
 
         export PATH=(YOUR QUICK DIR)/bin:$PATH
@@ -124,7 +124,14 @@ or GPU version
 
 you should get mol.out output file. You can find more examples in the benchmarks folder. 
 
-4. SPECIAL NOTE ON THE GPU VERSION 
+4. CLEAN UP
+
+To completely clean up a quick installation, run the following command from quick main directory.
+
+	make clean
+
+5. SPECIAL NOTE ON THE GPU VERSION 
+
 Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GTX580, M2090, K20, K40, K80, P100, 
 V100 and Titan V. Our program is still in the experimental stage and we cannot guarantee that it is flawless.
 If you have any questions, please feel free to contact us.
