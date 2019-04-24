@@ -5,6 +5,7 @@ MAKEIN = ./make.in
 include $(MAKEIN)
 
 # --- Makefile for Quick Program ---
+#  				- v 3.00 2019/03/30 Madu Manathunga
 #				- v 2.00 2010/10/25 Yipu Miao
 #				- v 1.18 2009/09/16 John Faver Exp $ 
 #				- Makefile created by mkmf.pl $Id:
@@ -12,10 +13,11 @@ include $(MAKEIN)
 #	 INDEX
 #	--------
 #	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#								! mpif90 is recommended for MPI Multi-CPU Version
-#	B. Make Object Files		! Source files --> Object files
-#	C. Make Executed files		! Object files --> Executed files
-#	D. Self-defined Option		! Make option
+#	B. Make folders
+#		! mpif90 is recommended for MPI Multi-CPU Version
+#	C. Make Object Files		! Source files --> Object files
+#	D. Make Executed files		! Object files --> Executed files
+#	E. Self-defined Option		! Make option
 
 #************************************************************************
 #                  A. Compiler Settings
@@ -72,109 +74,81 @@ blasfolder = ./src/BLAS
 # cuda files
 #----------------------
 
-
-
 cudafolder = ./src/cuda
-cudaobj    = gpu_write_info.o gpu.o gpu_type.o gpu_getxc.o gpu_get2e.o #vertical.o #$(CUDA_INT_OBJ)
-#cudafile   = gpu.cu gpu_type.cu gpu_get2e.cu gpu_getxc.cu
+cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_getxc.o \
+	       $(objfolder)/gpu_get2e.o 
 
+cublasfolder  =$(cudafolder)/CUBLAS
+cublasobj     =$(objfolder)/fortran_thunking.o
 #----------------------
 # quick modules and object files
 #----------------------
 modfolder = ./src/modules
 
-mpimod  = quick_mpi_module.f90
-mpimod_o= quick_mpi_module.o
+modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
+        $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
+        $(objfolder)/quick_amber_interface_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
+        $(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
+        $(objfolder)/quick_files_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_mfcc_module.o \
+        $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
+        $(objfolder)/quick_timer_module.o $(objfolder)/quick_all_module.o
 
-modfile0 = quick_constants_module.f90
-modobj0  = quick_constants_module.o
-modfile1 = quick_method_module.f90 quick_molspec_module.f90 quick_gaussian_class_module.f90 
-modobj1  = quick_method_module.o quick_molspec_module.o quick_gaussian_class_module.o
-modfile2 = quick_size_module.f90 quick_amber_interface_module.f90 quick_basis_module.f90 \
-		   quick_calculated_module.f90 quick_divcon_module.f90 \
-		   quick_ecp_module.f90 quick_electrondensity_module.f90 quick_files_module.f90 \
-		   quick_gridpoints_module.f90 \
-		   quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90 \
-		   quick_scratch_module.f90 quick_timer_module.f90 quick_all_module.f90
-modobj2  = quick_size_module.o quick_amber_interface_module.o quick_basis_module.o \
-		   quick_calculated_module.o quick_divcon_module.o \
-		   quick_ecp_module.o quick_electrondensity_module.o quick_files_module.o \
-		   quick_gridpoints_module.o \
-		   quick_mfcc_module.o quick_params_module.o quick_pb_module.o \
-		   quick_scratch_module.o quick_timer_module.o quick_all_module.o
-modobjall = $(mpimod_o) ${modobj0} ${modobj1} ${modobj2} 
-
-#.DEFAULT:
-#	-touch $@
+OBJ =   $(objfolder)/main.o \
+        $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
+        $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
+        $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
+        $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
+        $(objfolder)/dft.o $(objfolder)/sedftoperator.o $(objfolder)/dipole.o \
+        $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
+        $(objfolder)/udftoperator.o $(objfolder)/usedftoperator.o \
+        $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
+        $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
+        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
+	$(objfolder)/fake_amber_interface.o 
+#        $(objfolder)/dftgrad.o $(objfolder)/pt2der.o $(objfolder)/2eshelloptdft.o $(objfolder)/sswder.o 
 
 all: quick quick.cuda
+#************************************************************************
+# 
+#                  B. Make necessary directories
+#  
+#************************************************************************
+makefolders:
+	mkdir -p $(objfolder) $(exefolder) $(libfolder)
 
 #************************************************************************
 # 
-#                 B. Make Object Files
+#                 C. Make Object Files
 # 
 #************************************************************************
 
 #================= common subroutine library ============================
 quick_subs:
-	cp $(objfolder)/*.mod $(subfolder)
-	cd $(subfolder) && $(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c *.f90
-	ar -r $(libfolder)/quicklib.a $(subfolder)/*.o
-	rm $(subfolder)/*.mod
+	cd $(subfolder) && make all
 
 #================= quick module library =================================
 quick_modules:
-	cd $(modfolder) && make
-	cp $(modfolder)/*.mod $(srcfolder)
-	mv $(modfolder)/*.mod $(modfolder)/*.o $(objfolder)
-#=========== targets for cuda =========================================
+	cd $(modfolder) && make all
+#============= targets for cuda =========================================
 quick_cuda:
-#	cd $(cudafolder) && $(CUDAC) $(CUDA_FLAGS) -c gpu.cu
-#	cd $(cudafolder) && $(CUDAC) $(CUDA_FLAGS) -c gpu_get2e.cu 
-#	cd $(cudafolder) && $(CUDAC) $(CUDA_FLAGS) -c $(cudafile)
-#	cd $(cudafolder) && $(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c gpu_write_info.f90
 	cd $(cudafolder) && make all 
-	cp $(cudafolder)/*.o $(objfolder)
 	
-#================= quick core subroutines ===============================
-main.o: quick_modules
-	$(FPP) $(srcfolder)/main.f90 > $(objfolder)/_main.f90
-	$(FC) -o $(objfolder)/main.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_main.f90
-
-#================= quick core subroutines ===============================
-#optimize.o: quick_modules
-#	$(FPP) $(srcfolder)/optimize.f90 > $(objfolder)/_optimize.f90
-#	$(FC) -o $(objfolder)/optimize.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c   $(objfolder)/_optimize.f90
-
-
-#=========== targets for BLAS =====================================
+#================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
 	cp $(blasfolder)/*.a $(libfolder)
 
-#=========== targets for CUBLAS =====================================
-fortran_thunking.o:
-	cd $(cudafolder)/CUBLAS && $(CPP) $(CPP_FLAG) -c  fortran_thunking.c
-	cp $(cudafolder)/CUBLAS/fortran_thunking.o $(objfolder)
+#=============== targets for CUBLAS =====================================
+$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
+	$(CPP) $(CPP_FLAG) -c $< -o $@
 
-#=========== targets for amber-quick interface ========================
-# This is a fake amber-quick interface
-fake_amber_interface.o: 
-	$(FC) -o $(objfolder)/fake_amber_interface.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c  $(srcfolder)/fake_amber_interface.f90
+#===================== target for main src files ========================
 
-# This is for amber-quick interface
-amber_interface.o: amber_interface.f90 quick_modules qmmm_module.mod
-	$(FC) -o $(objfolder)/amber_interface.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c  $(srcfolder)/amber_interface.f90
+$(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
-									
-OBJ =   main.o \
-		initialize.o read_job_and_atom.o fmm.o \
-		getMolSad.o getMol.o shell.o schwarz.o quick_one_electron_integral.o \
-		getEnergy.o inidivcon.o ecp.o hfoperator.o nuclear.o \
-		dft.o sedftoperator.o dipole.o \
-		scf.o uscf.o finalize.o uhfoperator.o udftoperator.o usedftoperator.o \
-		uelectdii.o mpi_setup.o quick_debug.o calMP2.o optimize.o \
-		gradient.o hessian.o CPHF.o frequency.o MFCC.o basis.o 
+#==================== target configuration files ========================
+
 cpconfig:
 	cp $(configfolder)/config.h $(srcfolder)/config.h
 cpconfig.cuda:
@@ -184,40 +158,34 @@ cpconfig.cuda.SP:
 cpconfig.MPI:
 	cp $(configfolder)/config.MPI.h $(srcfolder)/config.h
 
-#************************************************************************
+#=========== targets for amber-quick interface ========================
+# This is for amber-quick interface
+# #amber_interface.o: amber_interface.f90 quick_modules qmmm_module.mod
+# #       $(FC) -o $(objfolder)/amber_interface.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c  $(srcfolder)/amber_interface.f90
+#
+#===================== preprocess files ===============================
+#quick_pprs:
+#	$(FPP) $(srcfolder)/main.f90 > $(srcfolder)/main_.f90
+#
+#================= quick core subroutines ===============================
+
+
+#**********************************************************************
 # 
-#                 C. Make Executed Files
+#                 C. Make Executables
 # 
-#************************************************************************
+#**********************************************************************
+quick: makefolders cpconfig quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
 
-quick: cpconfig quick_modules quick_subs $(OBJ) blas fake_amber_interface.o
-	mkdir -p $(libfolder) $(objfolder) $(exefolder) 
-	cp $(libfolder)/quicklib.a $(objfolder)
-	cp $(libfolder)/blas.a $(objfolder)
-	cd $(objfolder) && $(FC) -o quick  $(OBJ) $(modobjall) quicklib.a blas.a fake_amber_interface.o $(LDFLAGS)
-	mv $(objfolder)/quick $(exefile)	
-	rm -f $(srcfolder)/*.mod $(srcfolder)/*.o
+quick.cuda: makefolders cpconfig.cuda quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
+	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) $(LDFLAGS) 
 
-quick.cuda: cpconfig.cuda quick_cuda quick_modules quick_subs $(OBJ) fake_amber_interface.o fortran_thunking.o
-	mkdir -p $(libfolder) $(objfolder) $(exefolder) 
-	cp $(libfolder)/quicklib.a $(objfolder)
-	cd $(objfolder) && $(FC) -o quick.cuda $(OBJ) $(modobjall) $(cudaobj) quicklib.a fake_amber_interface.o fortran_thunking.o $(CFLAGS) $(LDFLAGS) 
-	mv $(objfolder)/quick.cuda $(exefile).cuda 
-	rm -f $(srcfolder)/*.mod $(srcfolder)/*.o
+quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
+	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
 
-quick.cuda.SP: cpconfig.cuda.SP quick_cuda quick_modules quick_subs $(OBJ) fake_amber_interface.o fortran_thunking.o
-	cp $(libfolder)/quicklib.a $(objfolder)
-	cd $(objfolder) && $(FC) -o quick.cuda.SP $(OBJ) $(modobjall) $(cudaobj) $(libfolder)/quicklib.a fake_amber_interface.o fortran_thunking.o $(CFLAGS) 
-	mv $(objfolder)/quick.cuda.SP $(exefile).cuda.SP
-	rm -f $(srcfolder)/*.mod $(srcfolder)/*.o
-
-quick.MPI: cpconfig.MPI quick_modules quick_subs $(OBJ) blas fake_amber_interface.o
-	cp $(libfolder)/quicklib.a $(objfolder)
-	cp $(libfolder)/blas.a $(objfolder)
-	cd $(objfolder) && $(FC) -o quick.MPI  $(OBJ) $(modobjall) quicklib.a blas.a fake_amber_interface.o $(LDFLAGS)
-	mv $(objfolder)/quick.MPI $(exefile).MPI    
-	rm -f $(srcfolder)/*.mod $(srcfolder)/*.o
-
+quick.MPI: makefolders cpconfig.MPI quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
 
 quick_lib:$(OBJ) ambermod amber_interface.o
 
@@ -238,7 +206,11 @@ ambermod:
 
 # - 1. Clean object files
 clean: neat
-	-rm -f _*.f90 .cppdefs *.mod *.o subs/*.o quick
+	-rm -f $(objfolder)/* $(exefolder)/quick* $(libfolder)/* 
+	cd $(cudafolder) && make clean
+	cd $(subfolder) && make clean
+	cd $(blasfolder) && make clean
+	cd $(modfolder) && make clean
 	
 neat:
 	-rm -f $(TMPFILES)
