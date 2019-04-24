@@ -11,12 +11,14 @@
 UPDATE LOG
 ===============================================
 
-Yipu Miao   2011-6-9_0.06_beta16sp  : fix some bugs.
-Yipu Miao   2011-2-23_0.06_beta5	: opt makefile, add subs folder. 
+Madu Manathunga 2019-4-24_0.07_beta2    : Updated Makefiles and make.in files
+Madu Manathunga 2019-3-12_0.07_beta1    : Added tests folder, test cases and testqk.sh  
+Yipu Miao       2011-6-9_0.06_beta16sp  : fix some bugs.
+Yipu Miao       2011-2-23_0.06_beta5	: opt makefile, add subs folder. 
 Yipu Miao	2011-2-18_0.06_beta3	: rewrite method module and try to make quick as an Open-Object project. reorganize file system. now all source will be stored in src folder 
-Yipu Miao   2011-1-5_0.05_beta7     : milestone version
-Yipu Miao   2010-12-13_0.05_beta5   : Fix MP2 problem
-Yipu Miao   2010-11-22_0.05_beta3   : Add freq and hessian matrix calculation. But is broken from last author. not support MPI 
+Yipu Miao       2011-1-5_0.05_beta7     : milestone version
+Yipu Miao       2010-12-13_0.05_beta5   : Fix MP2 problem
+Yipu Miao       2010-11-22_0.05_beta3   : Add freq and hessian matrix calculation. But is broken from last author. not support MPI 
 Yipu Miao	2010-11-22_0.05_beta1	: Add optimization option. And MPI is valid for gradient calculation.
 Yipu Miao	2010-11-10_0.04_milestone:Complete MPI for MP2, only valid for HF MP2, not valid for Divcon MP2. Optimize code
 Yipu Miao	2010-11-4_0.04_beta4	: Complete MPI for HF and Divcon, valid for 1e,2e and diag(div-con only) part
