@@ -7,3 +7,5 @@ src/*.bak
 src/Makefile
 example/*
 src/subs/*.o
+src/config.h
+**/*.a
