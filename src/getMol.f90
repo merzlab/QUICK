@@ -2,7 +2,8 @@
 !
 !	getMol.f90
 !	new_quick
-!
+!        
+!       Updated by Madu Manathunga on 04/20/2019
 !	Created by Yipu Miao on 3/4/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 !
@@ -87,9 +88,26 @@ subroutine getMol()
       ! Store the normalized primitives coefficients for ECP calculations
       if (quick_method%ecp) call store_basis_to_ecp()      ! Alessandro GENONI 03/21/2007
 
-      ! calculate the radius of the sphere of basis function signifigance.
-      if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
+   endif !Madu
 
+      ! calculate the radius of the sphere of basis function signifigance.
+!      if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
+
+!--------------Madu----------------
+!Orginally, this block was only ran by master node and sigrad2 variable values
+!were not available for slaves in dft MPI. 
+
+  ! calculate the radius of the sphere of basis function signifigance.
+    if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
+
+#ifdef MPI
+    if (bMPI .and. quick_method%DFT) then
+      call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+    endif
+#endif
+!--------------Madu----------------
+
+   if (master) then
       ! Read params for semi-emipeircal DFT
       if (quick_method%SEDFT) call read_sedft_parm
 
@@ -97,6 +115,7 @@ subroutine getMol()
       call initialGuess
 
       call PrtAct(iOutfile,"End Reading Mol Info ")
+
    endif
    !-----------END MPI/MASTER------------------------
 

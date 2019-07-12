@@ -1,9 +1,27 @@
+#include "config.h"
 ! Ed Brothers. May 23, 2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-    subroutine dftgrad
-    use allmod
-    implicit double precision(a-h,o-z)
+
+  subroutine dftgrad
+#ifndef CUDA
+   use allmod
+   use xc_f90_types_m
+   use xc_f90_lib_m
+
+   implicit double precision(a-h,o-z)
+
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+   !Variables required for libxc
+   double precision, dimension(1) :: libxc_rho
+   double precision, dimension(1) :: libxc_sigma
+   double precision, dimension(1) :: libxc_exc
+   double precision, dimension(1) :: libxc_vrhoa
+   double precision, dimension(1) :: libxc_vsigmaa
+   type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
+   type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
 
 ! The purpose of this subroutine is to calculate the gradient of
 ! the total energy with respect to nuclear displacement.  The results
@@ -13,6 +31,10 @@
 
 ! This is the restricted DFT code.  Notes on how this differs from the
 ! restricted HF gradient code will be found as the differences pop up.
+
+!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+    integer ::imadu=0;
+!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
 
     character(len=1) cartsym(3)
 
@@ -67,10 +89,10 @@
     enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-        write (ioutfile,'(/," Madu STEP1 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," Madu STEP1 :  ANALYTICAL GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (ioutfile,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
+                write (*,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
@@ -93,7 +115,7 @@
 ! calculations later).
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        write (ioutfile,'(/," Madu STEP 2-3: HOLD variables: ")')
+!        write (ioutfile,'(/," Madu STEP 2-3: HOLD variables: ")')
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     do I=1,nbasis
@@ -103,15 +125,15 @@
                 HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
 
 !!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
-                write (ioutfile,'(A4,I5,I5,I5,7x,F20.10,7x,F20.10,7x,F20.10)') "Vars",I,J,K, &
-                quick_qm_struct%Eel(K),quick_qm_struct%co(J,K),quick_qm_struct%co(I,K)
+!                write (ioutfile,'(A4,I5,I5,I5,7x,F20.10,7x,F20.10,7x,F20.10)') "Vars",I,J,K, &
+!                quick_qm_struct%E(K),quick_qm_struct%co(J,K),quick_qm_struct%co(I,K)
 !!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
 
             enddo
             quick_scratch%hold(J,I) = 2.d0*HOLDJI
 
 !!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
-            write (ioutfile,'(A1,I5,I5,7x,F20.10)') "H",I,J,quick_scratch%hold(J,I)
+!            write (ioutfile,'(A1,I5,I5,7x,F20.10)') "H",I,J,quick_scratch%hold(J,I)
 !!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
 
         enddo
@@ -262,13 +284,14 @@
     enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-        write (ioutfile,'(/," Madu STEP 2-3 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," Madu STEP 2-3 :  ANALYTICAL GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (ioutfile,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
+                write (*,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 ! 4)  The derivative of the 1 electron nuclear attraction term ij times
@@ -276,11 +299,49 @@
 
 ! Please note that these are the three center terms.
 
+!do i=1,nbasis
+! do j=1,nbasis
+! write(*,*) "dense",quick_qm_struct%dense(j,i)
+! enddo
+!enddo
+
+!stop
+
+
+!do i=1,3
+! do j=1,56
+!  do k=1,56
+!   do l=0,5
+!      write(*,*) "attrxiaoopt",attraxiaoopt(i,j,k,l)
+!   enddo
+!  enddo
+! enddo
+!enddo
+!stop
+
+
     do IIsh=1,jshell
       do JJsh=IIsh,jshell
         call attrashellopt(IIsh,JJsh)
       enddo
     enddo
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,*) "Madu STEP 4 :  ANALYTICAL GRADIENT:"
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+call cpu_time(timer_end%TGrad)
+        write (ioutfile,'(" TIME of evaluation gradients of DFT1e-integral=",F12.2)') &
+        timer_end%TGrad-timer_begin%TGrad
+        timer_cumer%TGrad=timer_end%TGrad-timer_begin%TGrad+timer_cumer%TGrad
+
+call cpu_time(timer_begin%TGrad)
 
 ! 5)  The derivative of the 4center 2e- terms with respect to X times
 ! the coefficient found in the energy. (i.e. the multiplicative
@@ -298,6 +359,10 @@
      call DNscreen(II,JJ,DNtemp)
      Cutmatrix(II,JJ)=DNtemp
      Cutmatrix(JJ,II)=DNtemp
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+!     write(ioutfile,'(/," Madu STEP 5: Values of the cutmatrix ")')
+!     write (ioutfile,'(A6,I5,I5,7x,F20.10)')"CTMTRX",II,JJ,Cutmatrix(II,JJ)
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
    enddo
  enddo
 
@@ -323,12 +388,13 @@
             If(cutoffTest.gt.quick_method%gradCutoff)then
 !              print*,II,JJ,KK,LL
 !              call shelloptdft
-              IIxiao=II
-              JJxiao=JJ
-              KKxiao=KK
-              LLxiao=LL
+              !IIxiao=II
+              !JJxiao=JJ
+             ! KKxiao=KK
+              !LLxiao=LL
               !Madu: Located in 2eshelloptdft.f90. 
-              call shelloptdft(IIxiao,JJxiao,KKxiao,LLxiao)
+              !call shelloptdft(IIxiao,JJxiao,KKxiao,LLxiao)
+                call shellopt
 !              ntempxiao2=ntempxiao2+1
             endif
           endif
@@ -348,15 +414,14 @@
         timer_cumer%TGrad=timer_end%TGrad-timer_begin%TGrad+timer_cumer%TGrad
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        write (ioutfile,'(/," Madu STEP5: ANALYTICAL GRADIENT: ")')
+        write (*,'(/," Madu STEP5: ANALYTICAL GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (ioutfile,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
+                write (*,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 ! 6) The derivative of the exchange/correlation functional energy
 ! with respect to nuclear displacement.
 
@@ -397,6 +462,18 @@
 !        DO Irad=iradial(ireg-1)+1,iradial(ireg)
         call cpu_time(timer_begin%TGrad)
 
+
+do ifunc=1, quick_method%nof_functionals
+     if(quick_method%xc_polarization > 0) then
+          call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
+          quick_method%functional_id(ifunc),XC_POLARIZED)
+     else
+          call xc_f90_func_init(xc_func(ifunc), &
+          xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
+     endif
+enddo
+
+
          do Iatm=1,natom
            if(quick_method%iSG.eq.1)then
              Iradtemp=50
@@ -432,7 +509,7 @@
                     sswt=SSW(gridx,gridy,gridz,Iatm)
                     weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
 
-                    if (weight < tol ) then
+                    if (weight < quick_method%DMCutoff ) then
                         continue
                     else
 
@@ -451,7 +528,7 @@
                         call denspt(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
                         gbx,gby,gbz)
 
-                        if (density < tol ) then
+                        if (density < quick_method%DMCutoff ) then
                             continue
                         else
 
@@ -459,26 +536,34 @@
                         ! with regard to the density (dfdr), with regard to the alpha-alpha
                         ! density invariant (df/dgaa), and the alpha-beta density invariant.
 
-                            call becke(density,gax,gay,gaz,gbx,gby,gbz, &
-                            dfdr,dfdgaa,dfdgab)
+                            densitysum=2.0d0*density
+                            sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
 
-                            call lyp(density,densityb,gax,gay,gaz,gbx,gby,gbz, &
-                            dfdr2,dfdgaa2,dfdgab2)
+                            libxc_rho(1)=densitysum
+                            libxc_sigma(1)=sigma
+       
+                            tsttmp_exc=0.0d0
+                            tsttmp_vrhoa=0.0d0
+                            tsttmp_vsigmaa=0.0d0
+       
+                            do ifunc=1, quick_method%nof_functionals
+                               call xc_f90_gga_exc_vxc(xc_func(ifunc), 1,libxc_rho(1),&
+                               libxc_sigma(1),libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+       
+                               tsttmp_exc=tsttmp_exc+libxc_exc(1)
+                               tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
+                               tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
+                            enddo
+       
+                            zkec=densitysum*tsttmp_exc
+                            dfdr=tsttmp_vrhoa
+                            xiaodot=tsttmp_vsigmaa*4
 
-!                            dfdr = param7*dfdr+param8*dfdr2
-!                            dfdgaa = param7*dfdgaa + param8*dfdgaa2
-!                            dfdgab = param7*dfdgab + param8*dfdgab2
 
-                            dfdr = dfdr+dfdr2
-                            dfdgaa = dfdgaa + dfdgaa2
-                            dfdgab = dfdgab + dfdgab2
-
-                        ! Calculate the first term in the dot product shown above,i.e.:
-                        ! (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b))
-
-                            xdot=2.d0*dfdgaa*gax+dfdgab*gbx
-                            ydot=2.d0*dfdgaa*gay+dfdgab*gby
-                            zdot=2.d0*dfdgaa*gaz+dfdgab*gbz
+                            !call b3lypf(densitysum,sigma,dfdr,xiaodot)
+                            xdot=xiaodot*gax
+                            ydot=xiaodot*gay
+                            zdot=xiaodot*gaz
 
                         ! Now loop over basis functions and compute the addition to the matrix
                         ! element.
@@ -495,7 +580,7 @@
 !                                +DABS(phi)
                                 quicktest = DABS(dphidx+dphidy+dphidz+ &
                                 phi)
-                                if (quicktest < tol ) then
+                                if (quicktest < quick_method%DMCutoff ) then
                                     continue
                                 else
                                     call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
@@ -539,7 +624,9 @@
 
                                 endif
                             enddo
-        
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+!     write(ioutfile,'(/," Madu STEP 6-7: Compare above DOTXYZ values ")')
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!! 
 
                         ! We are now completely done with the derivative of the
                         ! exchange correlation energy with nuclear displacement at this point.
@@ -551,13 +638,26 @@
                         ! sswder.  Note that if a new weighting scheme is ever added, this needs
                         ! to be modified with a second subprogram.
 
+!write(*,'(I3,2X,I3,2X,I3,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10)')Iatm, Irad, Iang &
+!,gridx,gridy,gridz,sswt
                             if (sswt == 1.d0) then
                                 continue
                             else
-                                call becke_e(density,densityb,gax,gay,gaz,gbx,gby,gbz,Ex)
-                                call lyp_e(density,densityb,gax,gay,gaz,gbx,gby,gbz,Ec)
-                                Exc=Ex+Ec
-                                call sswder(gridx,gridy,gridz,Exc,weight/sswt,Iatm)
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+!     write(ioutfile,'(/," Madu STEP 6-7: Values of dotmatrix ")')
+!       imadu=imadu+1 
+!     if (imadu .eq. 848) then
+!     write(ioutfile, '(A14,2X,I5,2X,I5,2X,I5)') "Loop Variables", Iatm, Irad, Iang
+!     write(ioutfile, '(A13,2X,F20.10)') "Value of sswt",sswt
+!     write(ioutfile,'(A6,I5,4X,F20.10,2X,F20.10,F20.10,2X,F20.10,F20.10,2X,F20.10,F20.10,2X,F20.10,2X,F20.10,2X,F20.10)')"ExEc", &
+!     imadu,density, densityb, gax, gay, gaz, gbx, gby, gbz, Ex, Ec
+!     endif
+!write(*,'(I3,2X,I3,2X,I3,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10)') Iatm, Irad, Iang &
+!,gridx,gridy,gridz,Ex,Ec,weight,sswt
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!
+
+                                call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
                             endif
                         endif
                     endif
@@ -566,24 +666,30 @@
         enddo
 !    ENDDO
 
+      do ifunc=1, quick_method%nof_functionals
+         call xc_f90_func_end(xc_func(ifunc))
+      enddo
+
         call cpu_time(timer_end%TGrad)
 
         write (ioutfile,'(" TIME of evaluation numerical integral gradient of DFT= ",F12.2)') &
         timer_end%TGrad-timer_begin%TGrad
         timer_cumer%TGrad=timer_end%TGrad-timer_begin%TGrad+timer_cumer%TGrad
 
+         write (ioutfile,'(" Cumulative time for dft gradient computation=",F12.2)') timer_cumer%TGrad
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-        write (ioutfile,'(/," Madu STEP7 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," Madu STEP7 :  ANALYTICAL GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (ioutfile,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
+                write (*,'(I5,A1,7x,F20.10)')Iatm,cartsym(imomentum), &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
-
+#endif
     end subroutine dftgrad
-
 
 
 

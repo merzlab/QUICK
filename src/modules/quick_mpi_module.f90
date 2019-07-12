@@ -29,7 +29,7 @@ module quick_mpi_module
     logical :: bMPI = .true.    ! flag to show if MPI is turn on
 
     integer, allocatable :: MPI_STATUS(:)
-    integer, parameter :: MIN_1E_MPI_BASIS=200
+    integer, parameter :: MIN_1E_MPI_BASIS=6
     
     contains
     

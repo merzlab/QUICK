@@ -45,6 +45,17 @@ subroutine hfoperator(oneElecO, deltaO)
    ! Step 1. evaluate 1e integrals
    !-----------------------------------------------------------------
 
+!---------------------Madu-----------------
+!   if(master) then
+!    do i=1,nbasis
+!     do j=1,nbasis
+!       write(*,*) "Madu: CPU before 1e O",quick_qm_struct%o(i,j)
+!     enddo
+!    enddo
+!   endif
+
+!---------------------Madu-----------------
+
    ! fetch 1e-integral from 1st time
    call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
 
@@ -109,6 +120,7 @@ subroutine hfoperator(oneElecO, deltaO)
       do II=1,jshell
          call get2e(II)
       enddo
+!stop
 
 #ifdef CUDA
    endif
@@ -485,7 +497,6 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
 
    ! sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-
    !------------------------------------------------------------------
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
    ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
@@ -495,11 +506,15 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
    !------------------------------------------------------------------
    do i=1,mpi_jshelln(mpirank)
       ii=mpi_jshell(mpirank,i)
+     ! write (*,'(A22,2x,I5,2x,I5,2x,I5)') "Madu: i,mpirank,ii",i,mpirank,ii  
       call get2e(II)
    enddo
 
    ! After evaluation of 2e integrals, we can communicate every node so
    ! that we can sum all integrals
+
+call MPI_BARRIER(MPI_COMM_WORLD,mpierror) !Madu
+!stop !Madu
 
    ! slave node will send infos
    if(.not.master) then
@@ -508,7 +523,9 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
       call copyDMat(quick_qm_struct%o,temp2d,nbasis)
       ! send operator to master node
       call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+
    else
+
       ! master node will receive infos from every nodes
       do i=1,mpisize-1
          ! receive opertors from slave nodes
@@ -524,7 +541,6 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
 
    ! sync all nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-
 
    ! recover density if calculate difference
    if (deltaO) call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
@@ -595,6 +611,7 @@ subroutine mpi_hfoperatordc(oneElecO)
 
    !------- MPI/MASTER -------------------
    if(MASTER) then
+
       call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
       !-----------------------------------------------------------------
       ! Now calculate 1e-Energy
@@ -640,6 +657,17 @@ subroutine mpi_hfoperatordc(oneElecO)
       enddo
    endif
 
+!-----------------Madu----------------
+   if(master) then
+   write (*,*) "Madu: Before 2e "
+   do i=1,nbasis
+      do j=1,nbasis
+         write (*,*) "Madu: O = ",quick_qm_struct%o(i,j) !Madu
+      enddo
+   enddo
+   endif
+!-----------------Madu----------------
+
    ! sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
@@ -659,6 +687,8 @@ subroutine mpi_hfoperatordc(oneElecO)
    ! that we can sum all integrals
 
    ! slave node will send infos
+
+
    if(.not.master) then
       do i=1,nbasis
          do j=1,nbasis
@@ -684,6 +714,18 @@ subroutine mpi_hfoperatordc(oneElecO)
 
    ! sync all nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+!-----------------Madu----------------
+   if(master) then
+   write (*,*) "Madu: after 2e "
+   do i=1,nbasis
+      do j=1,nbasis
+         write (*,*) "Madu: O = ",quick_qm_struct%o(i,j) !Madu
+      enddo
+   enddo
+   endif
+!-----------------Madu----------------
+   stop
 
    !--------- MPI/ MASTER NODE -------------------
    if (master) then
@@ -718,12 +760,15 @@ subroutine get2e(II_arg)
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    II = II_arg
    do JJ = II,jshell
+!       write (*,'(A32,2x,I5,2x,I5,2x,I5)') "Madu: II,JJ,jshell",II,JJ,jshell
       testtmp = Ycutoff(II,JJ)
       do KK = II,jshell
          do LL = KK,jshell
 
           cutoffTest = testtmp * Ycutoff(KK,LL)
           if (cutoffTest .gt. quick_method%integralCutoff) then
+!                  write(*,'(A30,2x,F20.10,2x,F20.10)') & !Madu
+! "cutoffTest, integralCutoff", cutoffTest, integralCutoff !Madu
             DNmax =  max(4.0d0*cutmatrix(II,JJ), &
                   4.0d0*cutmatrix(KK,LL), &
                   cutmatrix(II,LL), &
@@ -732,7 +777,10 @@ subroutine get2e(II_arg)
                   cutmatrix(JJ,LL))
             ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
             ! ignore the calculation to save computation time
+            
             if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
+!    write (*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5)') "Madu: CUTMTX I, J, K, L  ", &
+!           II, JJ, KK, LL !Madu            
                   call shell
            endif
          enddo

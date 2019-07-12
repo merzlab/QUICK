@@ -1,5 +1,6 @@
 #include "gpu.h"
 #include <cuda.h>
+#include "gpu_work_gga_x.cu"
 
 static __constant__ gpu_simulation_type devSim_dft;
 static __constant__ QUICKDouble radii[19] = {1.e0, 0.5882e0, 3.0769e0, 
@@ -63,7 +64,8 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
 static float totTime;
 #endif
 
-void getxc(_gpu_type gpu)
+//Madu Manathunga 07/01/2019 added libxc variable
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
 {
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -72,7 +74,7 @@ void getxc(_gpu_type gpu)
     cudaEventRecord(start, 0);
 #endif
     
-    getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>();
+    getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals);
     
 #ifdef DEBUG
     printf("Running getxc_kernel with BLOCK = %i, THREADS PER BLOCK = %i \n", gpu->blocks, gpu->XCThreadsPerBlock);
@@ -88,9 +90,11 @@ void getxc(_gpu_type gpu)
     
 }
 
+//Madu Manathunga 07/01/2019 added libxc variable
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1)
-__global__ void getxc_kernel()
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 {
+
     unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int totalThreads = blockDim.x * gridDim.x;
     QUICKULL currentPoint = 0;
@@ -126,7 +130,7 @@ __global__ void getxc_kernel()
             
             if (currentPoint <= myPoint && currentPoint + iiangt > myPoint) {
                 unsigned int pointId = (unsigned int) myPoint - currentPoint;
-                gpu_grid_xc(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId]);
+                gpu_grid_xc(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId], glinfo, nof_functionals);
                 myPoint = myPoint + totalThreads;
             }
             currentPoint = currentPoint + iiangt;
@@ -141,7 +145,8 @@ __global__ void getxc_kernel()
  This subroutine is to get energy, electron density, deviation and operator change
  if given a point in grid.
  */
-__device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng){
+//Madu Manathunga 07/01/2019 added libxc variable
+__device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals){
     
     
     QUICKDouble rad, rad3;    
@@ -167,9 +172,18 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
     QUICKDouble gridx = atomx + rad * RGRID[irad-1] * XAng;
     QUICKDouble gridy = atomy + rad * RGRID[irad-1] * YAng;
     QUICKDouble gridz = atomz + rad * RGRID[irad-1] * ZAng;
+
+#ifdef DEBUG
+        //printf("gridx: %f, gridy: %f, gridz: %f \n",gridx, gridy, gridz);
+#endif
     
     // calculate Scuseria-Stratmann weights, and times rad3 and the point basic weights to get comprhensive point weight
     QUICKDouble weight = SSW(gridx, gridy, gridz, iatm) * WAng * rad3;
+
+#ifdef DEBUG
+	//printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e \n",gridx, gridy, gridz, weight);
+       // printf("weight: %.10e, devSim_dft.DMCutoff: %.10e, devSim_dft.isg: %d \n",weight, devSim_dft.DMCutoff, devSim_dft.isg);
+#endif
     
     if (weight > devSim_dft.DMCutoff ) { 
         
@@ -177,36 +191,37 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
         QUICKDouble gax, gay, gaz;
         QUICKDouble gbx, gby, gbz;
         denspt(gridx, gridy, gridz, &density, &densityb, &gax, &gay, &gaz, &gbx, &gby, &gbz);
+
+#ifdef DEBUG
+       // printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e \n",gridx, gridy, gridz, weight, density);
+//        printf("rho: %f, rhob: %f, weight: %.10e, devSim_dft.DMCutoff: %.10e \n", density, densityb, weight, devSim_dft.DMCutoff);
+#endif
         
         if (density > devSim_dft.DMCutoff ) { 
             QUICKDouble sigma = 4.0 * (gax * gax + gay * gay + gaz * gaz);
-            
+
+#ifdef DEBUG
+//        printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e \n",gridx, gridy, gridz, weight, density, sigma);
+//        printf("rho: %f, rhob: %f, weight: %.10e, devSim_dft.DMCutoff: %.10e \n", density, densityb, weight, devSim_dft.DMCutoff);
+#endif
+  
             QUICKDouble _tmp ;
             
             if (devSim_dft.method == B3LYP) {
-                _tmp = b3lyp_e(2.0*density, sigma) * weight;
+                _tmp = b3lyp_e(2.0*density, sigma);
             }else if(devSim_dft.method == DFT){// !!! remember to change it to BLYP
-                _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
-                + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
-            }
-            QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
-            if ( _tmp * weight < (QUICKDouble)0.0)
-                val1 = 0ull - val1;                               
-            QUICKADD(devSim_dft.DFT_calculated[0].Eelxc, val1);
+		_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)* weight;
+                //+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+#ifdef DEBUG
+ __syncthreads();
+ //printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
+//                printf("rho: %.10e sigma: %.10e _tmp: %.10e \n", (density+densityb), sigma, _tmp);
+#endif
+            }else if(devSim_dft.method == LIBXC){ //Madu: Change this conditional statement content
+               // _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
+               // + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+	    }
 
-            _tmp = weight*density;
-            val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
-            if ( _tmp * weight < (QUICKDouble)0.0)
-                val1 = 0ull - val1;                               
-            QUICKADD(devSim_dft.DFT_calculated[0].aelec, val1);
-            
-            
-            _tmp = weight*densityb;
-            val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
-            if ( _tmp * weight < (QUICKDouble)0.0)
-                val1 = 0ull - val1;                               
-            QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
-            
             QUICKDouble dfdr;
             QUICKDouble dot, xdot, ydot, zdot;
             
@@ -220,14 +235,15 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 // This allows the calculation of the derivative of the functional
                 // with regard to the density (dfdr), with regard to the alpha-alpha
                 // density invariant (df/dgaa), and the alpha-beta density invariant.
+
                 QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
                 QUICKDouble dfdr2;
                 becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
-                lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+/*              lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
                 dfdr += dfdr2;
                 dfdgaa += dfdgaa2;
                 dfdgab += dfdgab2;
-                
+*/                
                 // This subroutine will never run,
                 // however, it will speed up the program for about 4 times. Yes, you are right, 4 times
                 // in another word, if you delete it, the program will be slown up to 25%.
@@ -239,8 +255,78 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
                 ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
                 zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
-            }
-            
+            }else if(devSim_dft.method == LIBXC){ //Madu: Change this conditional statement content
+
+
+		//gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_libxc_out* glout, int size);
+		//Prepare input for libxc call
+		double d_rho_sum = (double) (density+densityb);
+		double d_sigma = (double)sigma;		
+		double d_zk, d_vrho, d_vsigma;
+
+		gpu_libxc_info* tmp_glinfo = glinfo[0];
+
+		gpu_work_gga_x(tmp_glinfo, d_rho_sum, d_sigma, &d_zk, &d_vrho, &d_vsigma);
+
+		_tmp = (QUICKDouble) (d_zk * d_rho_sum * weight);
+
+		//_tmp = (QUICKDouble)d_zk[0] * (density+densityb) * weight;
+		//_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)*weight;
+#ifdef DEBUG
+	printf("rho: %.10e sigma: %.10e d_zk: %.10e  d_vrho: %.10e  d_vsigma: %.10e \n", d_rho_sum, d_sigma, d_zk, d_vrho, d_vsigma);
+//	 printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
+		//printf("rho: %f, d_rho[1]: %f, sigma: %f, d_sigma[1]: %f, d_zk[0]: %.10e \n", (density+densityb), d_rho[0], sigma, d_sigma[0],d_zk[0]);
+        //printf("FILE: %s, LINE: %d, FUNCTION: %s, rho: %f, sigma: %f, zk: %f, vrho: %f, vsigma: %f \n", __FILE__, __LINE__, __func__, d_rho[0],
+        //d_sigma[0], d_zk[0], d_vrho[0], d_vsigma[0]);
+#endif
+                //_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
+                //+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+	
+		QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
+                QUICKDouble dfdr2;
+                //becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
+                //lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+                //dfdr += dfdr2;
+                //dfdgaa += dfdgaa2;
+                //dfdgab += dfdgab2;
+
+		dfdr = (QUICKDouble)d_vrho;
+		dfdgaa = (QUICKDouble)d_vsigma;
+		dfdgab = (QUICKDouble)d_vsigma; //Currently we can only handle closed shell systems		
+
+#ifdef DEBUG
+        //printf("FILE: %s, LINE: %d, FUNCTION: %s, dfdgaa: %f, dfdgab: %f, gax: %f, gbx: %f \n", __FILE__, __LINE__, __func__, dfdgaa, dfdgab, gax, gbx);
+#endif
+
+                if (false) lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+                xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
+                ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
+                zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
+
+#ifdef DEBUG
+        //printf("FILE: %s, LINE: %d, FUNCTION: %s, xdot: %f, ydot: %f, zdot: %f \n", __FILE__, __LINE__, __func__, xdot, ydot, zdot);
+#endif
+	    }
+
+	           
+            QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+            if ( _tmp * weight < (QUICKDouble)0.0)
+                val1 = 0ull - val1;
+            QUICKADD(devSim_dft.DFT_calculated[0].Eelxc, val1);
+
+            _tmp = weight*density;
+            val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+            if ( _tmp * weight < (QUICKDouble)0.0)
+                val1 = 0ull - val1;
+            QUICKADD(devSim_dft.DFT_calculated[0].aelec, val1);
+
+
+            _tmp = weight*densityb;
+            val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+            if ( _tmp * weight < (QUICKDouble)0.0)
+                val1 = 0ull - val1;
+            QUICKADD(devSim_dft.DFT_calculated[0].belec, val1); 
+
             
             for (int i = 0; i< devSim_dft.nbasis; i++) {
                 QUICKDouble phi, dphidx, dphidy, dphidz;

@@ -383,7 +383,9 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
                         hybrid_coeff = 0.2;
                     }else if (devSim.method == DFT){
                         hybrid_coeff = 0.0;
-                    }
+                    }else if(devSim.method == LIBXC){
+			hybrid_coeff = 0.0; //Madu: Tempaorarily set this to 0.0 to test libxc with b88
+		    }
                     
                     addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, hybrid_coeff, devSim.dense, devSim.nbasis);
                 }

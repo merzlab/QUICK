@@ -53,6 +53,11 @@ subroutine fullx
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
+!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!
+
+! quick_method%DMCutoff=1.0d-15
+ write(ioutfile,'(A4,3X, F18.15)') "TOL:",quick_method%DMCutoff
+!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
 
@@ -1653,12 +1658,14 @@ subroutine get1eO(IBAS)
       xyzxj = xyz(1,quick_basis%ncenter(Jbas))
       xyzyj = xyz(2,quick_basis%ncenter(Jbas))
       xyzzj = xyz(3,quick_basis%ncenter(Jbas))
+
       OJI = 0.d0
       do Icon=1,ncontract(ibas)
          ai = aexp(Icon,Ibas)
+
          do Jcon=1,ncontract(jbas)
             F = dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)
-            aj = aexp(Jcon,Jbas)
+           aj = aexp(Jcon,Jbas)
             ! The first part is the kinetic energy.
             OJI = OJI + F*ekinetic(aj,   ai, &
                   jx,   jy,   jz,&
@@ -1710,10 +1717,14 @@ subroutine get1e(oneElecO)
    ! to oneElecO so we don't need to calculate it repeatly for
    ! every scf cycle
    !------------------------------------------------
+
+
 #ifdef MPI
    if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
 #endif
+
      if (master) then
+
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
@@ -1724,6 +1735,7 @@ subroutine get1e(oneElecO)
          do Ibas=1,nbasis
             call get1eO(Ibas)
          enddo
+
          !-----------------------------------------------------------------
          ! The second part is attraction part
          !-----------------------------------------------------------------
@@ -1747,6 +1759,7 @@ subroutine get1e(oneElecO)
       endif
 #ifdef MPI
    else
+
       !------- MPI/ ALL NODES -------------------
 
       !=================================================================
@@ -1862,12 +1875,15 @@ subroutine attrashell(IIsh,JJsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-
+        
+         !Eqn 14 O&S
          g = a+b
+         !Eqn 15 O&S
          Px = (a*Ax + b*Bx)/g
          Py = (a*Ay + b*By)/g
          Pz = (a*Az + b*Bz)/g
 
+         !Calculate first two terms of O&S Eqn A20
          constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) * 2.d0 * sqrt(g/Pi)
          constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))/g))
 
@@ -1885,14 +1901,23 @@ subroutine attrashell(IIsh,JJsh)
                Z=-quick_molspec%extchg(iatom-natom)
             endif
             constant2=constanttemp*Z
+
+            !Calculate the last term of O&S Eqn A21
             PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
-            if(quick_method%fMM .and. a*b*PCsquare/g.gt.33.0d0)then
-               xdistance=1.0d0/dsqrt(PCsquare)
-               call fmmone(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
-            else
+!            if(quick_method%fMM .and. a*b*PCsquare/g.gt.33.0d0)then
+!               xdistance=1.0d0/dsqrt(PCsquare)
+!               call fmmone(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
+!                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
+!            else
+
+               !Compute O&S Eqn A21 
                U = g* PCsquare
+
+               !Calculate the last term of O&S Eqn A20
                call FmT(Maxm,U,aux)
+
+               !Calculate all the auxilary integrals and store in attraxiao
+               !array
                do L = 0,maxm
                   aux(L) = aux(L)*constant*Z
                   attraxiao(1,1,L)=aux(L)
@@ -1909,15 +1934,20 @@ subroutine attrashell(IIsh,JJsh)
 
                !    write(*,'(I2,I2,I2,I2,I2,I2)')ips,jps,IIsh,JJsh,NIJ1,iatom
 
+!write(*,'(A8,2X,I3,2X,I3,2X,I3,2X,I3,2X,I3,F20.10,2X,F20.10,2X,F20.10)') "Ax,Ay,Az",&
+!ips,jps,IIsh,JJsh,NIJ1,Bx,By,Bz
+
                call nuclearattra(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz,iatom)
 
-            endif
+!            endif
 
          enddo
 
       enddo
    enddo
+
+!stop
 
    ! Xiao HE remember to multiply Z   01/12/2008
    !    attraction = attraction*(-1.d0)* Z

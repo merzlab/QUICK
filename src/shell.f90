@@ -484,6 +484,8 @@ subroutine shell
       RD(M)=xyz(M,quick_basis%katom(LL))
    enddo
 
+  ! Get angular momenta quantum number for each of the 4 shells
+  ! s=0~0, p=1~1, sp=0~1, d=2~2, f=3~3
 
    NII1=quick_basis%Qstart(II)
    NII2=quick_basis%Qfinal(II)
@@ -494,6 +496,12 @@ subroutine shell
    NLL1=quick_basis%Qstart(LL)
    NLL2=quick_basis%Qfinal(LL)
 
+!--------------------Madu---------------------------
+!  write(*,'(A40,1x,I2,1x,I2,1x,I2,1x,I2,1x,I2,1x,I2,1x,I2,1x,I2)') &
+!  "Madu: I1, I2, J1, J2, K1, K2, L1, L2", &
+!  NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+ ! stop
+!--------------------Madu---------------------------
 
    NNAB=(NII2+NJJ2)
    NNCD=(NKK2+NLL2)
@@ -505,39 +513,52 @@ subroutine shell
    NNCD=sumindex(NNCD)
    NNA=sumindex(NII1-1)+1
    NNC=sumindex(NKK1-1)+1
+
+   !The summation of the highest angular momentum number 
+   !of each shell. 
    NABCD=NII2+NJJ2+NKK2+NLL2
    ITT=0
 
+!--------------------Madu---------------------------
+!  write(*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: NABCDTYPE, NNAB, NNCD, NNA, NNC, NABCD", &
+!  NABCDTYPE, NNAB, NNCD, NNA, NNC, NABCD
+  !stop
+!--------------------Madu--------------------------
 
    !  the first cycle is for j prim
    !  JJJ and NpriJ are the tracking indices
    do JJJ=1,quick_basis%kprim(JJ)
+     
       Nprij=quick_basis%kstart(JJ)+JJJ-1
 
       ! the second cycle is for i prim
       ! II and NpriI are the tracking indices
       do III=1,quick_basis%kprim(II)
          Nprii=quick_basis%kstart(II)+III-1
-
-         AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ)
+         !For NpriI and NpriJ primitives, we calculate the following quantities
+         AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ). Eqn 8 of HGP.
          ABtemp=0.5d0/AB         ! ABtemp = 1/(2Apri) = 1/2(expo(NpriI)+expo(NpriJ))
+         ! This is term is required for Eqn 6 of HGP. 
          cutoffprim1=dnmax*cutprim(Nprii,Nprij)
 
          do M=1,3
-
+            !Eqn 9 of HGP
             ! P' is the weighting center of NpriI and NpriJ
             !                           --->           --->
             ! ->  ------>       expo(I)*xyz(I)+expo(J)*xyz(J)
             ! P = P'(I,J)  = ------------------------------
             !                       expo(I) + expo(J)
             P(M)=Ppri(M,Nprii,Nprij)
-
+           
+            !Multiplication of Eqns 9  by Eqn 8 of HGP.. 
             !                        -->            -->
             ! ----->         expo(I)*xyz(I)+expo(J)*xyz(J)                                 -->            -->
             ! AAtemp = ----------------------------------- * (expo(I) + expo(J)) = expo(I)*xyz(I)+expo(J)*xyz(J)
             !                  expo(I) + expo(J)
             AAtemp(M)=P(M)*AB
 
+            !Requires for HGP Eqn 6. 
             ! ----->   ->  ->
             ! Ptemp  = P - A
             Ptemp(M)=P(M)-RA(M)
@@ -557,22 +578,30 @@ subroutine shell
                cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
                if(cutoffprim.gt.quick_method%primLimit)then
 
+                  !Nita quantity of HGP Eqn 10. This is same as
+                  !zita (AB) above. 
                   CD=Apri(Nprik,Npril)  ! CD = Apri = expo(NpriK) + expo(NpriL)
+
+                  !First term of HGP Eqn 12 without sqrt. 
                   ABCD=AB+CD            ! ABCD = expo(NpriI)+expo(NpriJ)+expo(NpriK)+expo(NpriL)
 
+                  !First term of HGP Eqn 13.
                   !         AB * CD      (expo(I)+expo(J))*(expo(K)+expo(L))
                   ! Rou = ----------- = ------------------------------------
                   !         AB + CD         expo(I)+expo(J)+expo(K)+expo(L)
                   ROU=AB*CD/ABCD
 
                   RPQ=0.0d0
-
+                  
+                  !First term of HGP Eqn 12 with sqrt. 
                   !              _______________________________
                   ! ABCDxiao = \/expo(I)+expo(J)+expo(K)+expo(L)
                   ABCDxiao=dsqrt(ABCD)
 
+                  !Not sure why we calculate the following. 
                   CDtemp=0.5d0/CD       ! CDtemp =  1/2(expo(NpriK)+expo(NpriL))
 
+                  !These terms are required for HGP Eqn 6.
                   !                expo(I)+expo(J)                        expo(K)+expo(L)
                   ! ABcom = --------------------------------  CDcom = --------------------------------
                   !          expo(I)+expo(J)+expo(K)+expo(L)           expo(I)+expo(J)+expo(K)+expo(L)
@@ -584,6 +613,7 @@ subroutine shell
 
                   do M=1,3
 
+                     !Calculate Q of HGP 10, which is same as P above. 
                      ! Q' is the weighting center of NpriK and NpriL
                      !                           --->           --->
                      ! ->  ------>       expo(K)*xyz(K)+expo(L)*xyz(L)
@@ -591,17 +621,21 @@ subroutine shell
                      !                       expo(K) + expo(L)
                      Q(M)=Ppri(M,Nprik,Npril)
 
+                     !HGP Eqn 10. 
                      ! W' is the weight center for NpriI,NpriJ,NpriK and NpriL
                      !                --->             --->             --->            --->
                      ! ->     expo(I)*xyz(I) + expo(J)*xyz(J) + expo(K)*xyz(K) +expo(L)*xyz(L)
                      ! W = -------------------------------------------------------------------
                      !                    expo(I) + expo(J) + expo(K) + expo(L)
                      W(M)=(AAtemp(M)+Q(M)*CD)/ABCD
+
+                     !Required for HGP Eqn 13.
                      !        ->  ->  2
                      ! RPQ =| P - Q |
                      XXXtemp=P(M)-Q(M)
                      RPQ=RPQ+XXXtemp*XXXtemp
-
+                        
+                     !Not sure why we need the next two terms. 
                      ! ---->   ->  ->
                      ! Qtemp = Q - K
                      Qtemp(M)=Q(M)-RC(M)
@@ -611,9 +645,12 @@ subroutine shell
                      ! ----->   ->  ->
                      ! WPtemp = W - P
                      WQtemp(M)=W(M)-Q(M)
+
+                     !Required for HGP Eqns 6 and 16.
                      WPtemp(M)=W(M)-P(M)
                   enddo
 
+                  !HGP Eqn 13. 
                   !             ->  -> 2
                   ! T = ROU * | P - Q|
                   T=RPQ*ROU
@@ -622,6 +659,9 @@ subroutine shell
                   ! NABCD is the m value, and FM returns the FmT value
                   call FmT(NABCD,T,FM)
 
+                  !Go through all m values, obtain Fm values from FM array we
+                  !just computed and calculate quantities required for HGP Eqn
+                  !12. 
                   do iitemp=0,NABCD
                      ! Yxiaotemp(1,1,iitemp) is the starting point of recurrsion
                      Yxiaotemp(1,1,iitemp)=FM(iitemp)/ABCDxiao
@@ -651,6 +691,12 @@ subroutine shell
             NNC=Sumindex(k-1)+1
             do L=NLL1,NLL2
                NNCD=SumIndex(K+L)
+!--------------------Madu---------------------------
+!  write(*,'(A50,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: I, J, K, L, NNA, NNC, NNAB, NNCD", &
+!  I, J, K, L, NNA, NNC, NNAB, NNCD 
+!  stop
+!--------------------Madu--------------------------
                call iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
             enddo
          enddo
@@ -693,7 +739,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
          store(MM1,MM2) = 0
       enddo
    enddo
-
+!Madu: Following loop may be removed. 
+!Its not used anywhere within the subroutine
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
       RB(M)=xyz(M,quick_basis%katom(JJ))
@@ -721,6 +768,9 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
       do III=1,quick_basis%kprim(II)
          Nprii=quick_basis%kstart(II)+III-1
 
+         !X0 = 2.0d0*(PI)**(2.5d0), constants for HGP 15 
+         ! multiplied twice for KAB and KCD
+
          X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
          cutoffprim1=dnmax*cutprim(Nprii,Nprij)
 
@@ -734,6 +784,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                if(cutoffprim.gt.quick_method%primLimit)then
 
                   itt = itt+1
+                  !This is the KAB x KCD value reqired for HGP 12.
+                  !itt is the m value.
                   X44(ITT) = X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
                endif
             enddo
@@ -741,6 +793,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
       enddo
    enddo
 
+   !Here we complete HGP 12. 
    do MM2=NNC,NNCD
       do MM1=NNA,NNAB
          Ytemp=0.0d0
@@ -752,6 +805,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
       enddo
    enddo
 
+!Get the start and end basis numbers for each angular momentum. 
+!For eg. Qsbasis and Qfbasis are 1 and 3 for P basis. 
    NBI1=quick_basis%Qsbasis(II,I)
    NBI2=quick_basis%Qfbasis(II,I)
    NBJ1=quick_basis%Qsbasis(JJ,J)
@@ -761,6 +816,12 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
    NBL1=quick_basis%Qsbasis(LL,L)
    NBL2=quick_basis%Qfbasis(LL,L)
 
+!--------------------Madu---------------------------
+!  write(*,'(A50,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: I1, I2, J1, J2, K1, K2, L1, L2", &
+!  NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2 
+!  stop
+!--------------------Madu--------------------------
 
    IJtype=10*I+J
    KLtype=10*K+L
@@ -769,6 +830,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
    if((max(I,J,K,L).eq.2.and.(J.ne.0.or.L.ne.0)).or.(max(I,J,K,L).ge.3))IJKLtype=999
 
+!quick_basis%ksumtype array has a cumulative sum of number of components of all
+!shells 
    III1=quick_basis%ksumtype(II)+NBI1
    III2=quick_basis%ksumtype(II)+NBI2
    JJJ1=quick_basis%ksumtype(JJ)+NBJ1
@@ -778,6 +841,20 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
    LLL1=quick_basis%ksumtype(LL)+NBL1
    LLL2=quick_basis%ksumtype(LL)+NBL2
 
+!write(*,'(A20,2x,I3,2x,I3,2x,I3,2x,I3)') "Madu: II, JJ, KK,LL", &
+!quick_basis%ksumtype(II),quick_basis%ksumtype(JJ), quick_basis%ksumtype(KK),&
+!quick_basis%ksumtype(LL)
+
+!do imadu=1,size(quick_basis%ksumtype)
+!   write(*,*) imadu, quick_basis%ksumtype(imadu)
+!enddo
+!stop
+!--------------------Madu---------------------------
+!  write(*,'(A50,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: I1, I2, J1, J2, K1, K2, L1, L2", &
+!  III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
 
    if (quick_method%nodirect) then
       INTNUM = 0
@@ -800,7 +877,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                         else
                            bufferInt = bufferInt + 1
                            aBuffer(bufferInt) = A
-                           bBuffer(bufferInt) = B
+                           bBuffer(bufferInt) = B 
                            intBuffer(bufferInt) = Y
                         endif
                         if (bufferInt .eq. bufferSize) then
@@ -870,12 +947,20 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                      ! can be equal.
                      quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.d0*DENSELK*Y
                      quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+2.d0*DENSEJI*Y
-                     quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-.5d0*DENSELJ*Y
-                     quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-.5d0*DENSEKJ*Y
-                     quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-.5d0*DENSELI*Y
-                     quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-.5d0*DENSEKI*Y
-                     quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-.5d0*DENSELI*Y
-                     quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-.5d0*DENSEKI*Y
+                     quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSELJ*Y
+                     quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKJ*Y
+                     quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
+                     quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+                     quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
+                     quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = true"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+  !stop
+!--------------------Madu--------------------------
 
                   enddo
                enddo
@@ -902,12 +987,24 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
                            quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.d0*DENSELK*Y
                            quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+2.d0*DENSEJI*Y
-                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-.5d0*DENSELJ*Y
-                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-.5d0*DENSEKJ*Y
-                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-.5d0*DENSELI*Y
-                           quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-.5d0*DENSEKI*Y
-                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-.5d0*DENSELI*Y
-                           quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-.5d0*DENSEKI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSELJ*Y
+                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKJ*Y
+                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
+                           quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
+                           quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
+!write(*,*) "III<JJJ and KKK<LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+  !stop
+!--------------------Madu--------------------------
 
                            elseif(III.eq.JJJ.and.KKK.eq.LLL)then
 
@@ -917,19 +1014,40 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            ! Find  all the (ii|jj) integrals.
                            quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEJJ*Y
                            quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+DENSEII*Y
-                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-.5d0*DENSEJI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
+
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
+!write(*,*) "III==JJJ and KKK==LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
+
                            elseif(JJJ.eq.KKK.and.JJJ.eq.LLL)then
 
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
                            DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
 
                            ! Find  all the (ij|jj) integrals.
-                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+.5d0*DENSEJJ*Y
-                           quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+DENSEJI*Y
+                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEJJ*Y-quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
+                           quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*DENSEJI*Y 
                            !        ! Find  all the (ii|ij) integrals.
                            !        ! Find all the (ij|ij) integrals
 
                            ! Find all the (ij|ik) integrals where j>i,k>j
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
+!write(*,*) "JJJ==KKK and JJJ==LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+  !stop
+!--------------------Madu--------------------------
                            elseif(KKK.eq.LLL.and.III.lt.JJJ.and.JJJ.ne.KKK)then
                            DENSEKI=quick_qm_struct%dense(KKK,III)
                            DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
@@ -939,10 +1057,17 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            ! Find all the (ij|kk) integrals where j>i, k>j.
                            quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEKK*Y
                            quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+2.d0*DENSEJI*Y
-                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-.5d0*DENSEKJ*Y
-                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-.5d0*DENSEKI*Y
-                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-.5d0*DENSEKI*Y
-
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKJ*Y
+                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
+!write(*,*) "KKK==LLL and III<JJJ and JJJ != KKK"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
 
                            !        ! Find all the (ik|jj) integrals where j>i, k>j.
                            elseif(III.eq.JJJ.and.KKK.lt.LLL)then
@@ -954,8 +1079,16 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            ! Find all the (ii|jk) integrals where j>i, k>j.
                            quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+DENSEII*Y
                            quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.d0*DENSEKJ*Y
-                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-.5d0*DENSEKI*Y
-                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-.5d0*DENSEJI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
+!write(*,*) "III<JJJ and KKK<LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
                         endif
 
                      else
@@ -966,15 +1099,30 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! do all the (ii|ii) integrals.
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+.5d0*DENSEII*Y
-
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
+!write(*,*) "III==JJJ and III==KKK and III==LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
                               elseif(III.eq.JJJ.and.III.eq.KKK.and.III.lt.LLL)then
                               DENSEJI=quick_qm_struct%dense(LLL,III)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! Find  all the (ii|ij) integrals.
-                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+.5d0*DENSEII*Y
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEJI*Y
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+DENSEII*Y-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*DENSEJI*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
+!write(*,*) "III==JJJ and III==KKK and III<LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
 
                               elseif(III.eq.KKK.and.JJJ.eq.LLL.and.III.lt.JJJ)then
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
@@ -982,10 +1130,17 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! Find all the (ij|ij) integrals
-                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+1.50*DENSEJI*Y
-                              quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)-.5d0*DENSEII*Y
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-.5d0*DENSEJJ*Y
-
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
+                              quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
+!write(*,*) "III==KKK and JJJ==LLL and III<JJJ"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
                               elseif(III.eq.KKK.and.III.lt.JJJ.and.JJJ.lt.LLL)then
                               DENSEKI=quick_qm_struct%dense(LLL,III)
                               DENSEKJ=quick_qm_struct%dense(LLL,JJJ)
@@ -993,10 +1148,18 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
 
                               ! Find all the (ij|ik) integrals where j>i,k>j
-                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+1.5d0*DENSEKI*Y
-                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+1.5d0*DENSEJI*Y
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-1.d0*DENSEKJ*Y
-                              quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-.5d0*DENSEII*Y
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEKI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Y
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*1.d0*DENSEKJ*Y
+                              quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+!--------------------Madu---------------------------
+!write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
+!write(*,*) "III==KKK and III<JJJ and JJJ<LLL"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)')&
+!  "Madu: II, JJ, KK, LL, I1, I2, J1, J2, K1, K2, L1, L2", &
+!  II, JJ, KK, LL, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2
+  !stop
+!--------------------Madu--------------------------
 
                            endif
                         endif
@@ -1010,7 +1173,6 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
    201 return
 End subroutine iclass
-
 
 ! Ed Brothers. October 23, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
@@ -1753,7 +1915,9 @@ subroutine attrashellopt(IIsh,JJsh)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    double precision RA(3),RB(3),RP(3)
-
+#ifdef MPI
+   include "mpif.h"
+#endif
    ! Variables needed later:
    !    pi=3.1415926535897932385
 
@@ -1798,17 +1962,23 @@ subroutine attrashellopt(IIsh,JJsh)
          Pz = (a*Az + b*Bz)/g
 
          constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) &
-
                * 2.d0 * sqrt(g/Pi)
 
-         do iatom=1,natom
+         do iatom=1,natom+quick_molspec%nextatom
             if(quick_basis%katom(IIsh).eq.iatom.and.quick_basis%katom(JJsh).eq.iatom)then
-               continue
-            else
-               Cx=xyz(1,iatom)
-               Cy=xyz(2,iatom)
-               Cz=xyz(3,iatom)
-               Z=-1.0d0*quick_molspec%chg(iatom)
+                continue
+             else
+               if(iatom<=natom)then
+                Cx=xyz(1,iatom)
+                Cy=xyz(2,iatom)
+                Cz=xyz(3,iatom)
+                Z=-1.0d0*quick_molspec%chg(iatom)
+               else
+                Cx=quick_molspec%extxyz(1,iatom-natom)
+                Cy=quick_molspec%extxyz(2,iatom-natom)
+                Cz=quick_molspec%extxyz(3,iatom-natom)
+                Z=-1.0d0*quick_molspec%extchg(iatom-natom)
+               endif
 
                PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 
@@ -1819,13 +1989,12 @@ subroutine attrashellopt(IIsh,JJsh)
                   aux(L) = aux(L)*constant*Z
                   attraxiao(1,1,L)=aux(L)
                enddo
-
+               
                do L = 0,maxm-1
                   attraxiaoopt(1,1,1,L)=2.0d0*g*(Px-Cx)*aux(L+1)
                   attraxiaoopt(2,1,1,L)=2.0d0*g*(Py-Cy)*aux(L+1)
                   attraxiaoopt(3,1,1,L)=2.0d0*g*(Pz-Cz)*aux(L+1)
                enddo
-
 
                ! At this point all the auxillary integrals have been calculated.
                ! It is now time to decompase the attraction integral to it's
@@ -1836,6 +2005,9 @@ subroutine attrashellopt(IIsh,JJsh)
 
                      !    Cx,Cy,Cz,Px,Py,Pz,g)
                NIJ1=10*NII2+NJJ2
+
+!write(*,'(A8,2X,I3,2X,I3,2X,I3,2X,I3,2X,I3,F20.10,2X,F20.10,2X,F20.10)') "Ax,Ay,Az",&
+!ips,jps,IIsh,JJsh,NIJ1,Px,Py,Pz
 
                call nuclearattraopt(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
 
@@ -1917,6 +2089,7 @@ subroutine shellopt
 
    ! For first derivative of nuclui motion, the total angular momentum is raised by 1
    NABCD=NABCD+1+1
+
 
    !print*,'NABCD=',NABCD
 
@@ -2220,9 +2393,17 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                   !                        O(KKK,JJJ) = O(KKK,JJJ)-.5d0*DENSELI*Y
                   !                        O(LLL,JJJ) = O(LLL,JJJ)-.5d0*DENSEKI*Y
 
-                  constant = (4.d0*DENSEJI*DENSELK-DENSEKI*DENSELJ &
-                        -DENSELI*DENSEKJ)
+                  constant = (4.d0*DENSEJI*DENSELK-quick_method%x_hybrid_coeff*DENSEKI*DENSELJ &
+                        -quick_method%x_hybrid_coeff*DENSELI*DENSEKJ)
 
+!--------------------Madu---------------------------
+!  write(*,*) "II<JJ and II < KK and KK<LL = true"
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+  !stop
+
+!--------------------Madu--------------------------
 
                   !                    print*,'here',constant
 
@@ -2265,9 +2446,9 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         DENSEJI=quick_qm_struct%dense(JJJ,III)
                         ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
                         ! can be equal.
-                        constant = (4.d0*DENSEJI*DENSELK-DENSEKI*DENSELJ &
+                        constant = (4.d0*DENSEJI*DENSELK-quick_method%x_hybrid_coeff*DENSEKI*DENSELJ &
 
-                              -DENSELI*DENSEKJ)
+                              -quick_method%x_hybrid_coeff*DENSELI*DENSEKJ)
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -2298,7 +2479,11 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         !            O(KKK,KKK) = O(KKK,KKK)+DENSEII*Y
                         !            O(KKK,III) = O(KKK,III)-.5d0*DENSEJI*Y
 
-                        constant = (DENSEII*DENSEJJ-.5d0*DENSEJI*DENSEJI)
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+
+                        constant = (DENSEII*DENSEJJ-.5d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI)
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -2318,7 +2503,7 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         !            O(JJJ,III) = O(JJJ,III)+.5d0*DENSEJJ*Y
                         !            O(JJJ,JJJ) = O(JJJ,JJJ)+DENSEJI*Y
 
-                        constant =  DENSEJJ*DENSEJI
+                        constant = 2.0d0*DENSEJJ*DENSEJI-quick_method%x_hybrid_coeff*DENSEJJ*DENSEJI
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -2348,7 +2533,7 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         !                O(KKK,JJJ) = O(KKK,JJJ)-.5d0*DENSEKI*Y
                         !                O(JJJ,KKK) = O(JJJ,KKK)-.5d0*DENSEKI*Y
 
-                        constant=(2.d0*DENSEJI*DENSEKK-DENSEKI*DENSEKJ)
+                       constant=(2.d0*DENSEJI*DENSEKK-quick_method%x_hybrid_coeff*DENSEKI*DENSEKJ)
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -2373,7 +2558,11 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         !                O(KKK,III) = O(KKK,III)-.5d0*DENSEKI*Y
                         !                O(LLL,III) = O(LLL,III)-.5d0*DENSEJI*Y
 
-                        constant = (2.d0*DENSEKJ*DENSEII-DENSEJI*DENSEKI)
+!  write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+!  "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+!  II, JJ, KK, LL, III,JJJ,KKK,LLL
+
+                        constant = (2.d0*DENSEKJ*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI)
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -2409,7 +2598,7 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                            !            O(LLL,III) = O(LLL,III)+.5d0*DENSEII*Y
                            !            O(III,III) = O(III,III)+DENSEJI*Y
 
-                           constant= DENSEJI*DENSEII
+                           constant = 2.0d0*DENSEJI*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEII
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
@@ -2431,7 +2620,8 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                            !            O(JJJ,JJJ) = O(JJJ,JJJ)-.5d0*DENSEII*Y
                            !            O(III,III) = O(III,III)-.5d0*DENSEJJ*Y
 
-                           constant =(1.5d0*DENSEJI*DENSEJI-0.50d0*DENSEJJ*DENSEII)
+                           constant =(2.0d0*DENSEJI*DENSEJI-0.5d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI &
+                           -0.50d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
@@ -2456,7 +2646,12 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                            !                O(III,III) = O(III,III)-1.d0*DENSEKJ*Y
                            !                O(LLL,JJJ) = O(LLL,JJJ)-.5d0*DENSEII*Y
 
-                           constant = (3.0d0*DENSEJI*DENSEKI-DENSEKJ*DENSEII)
+  !write(*,'(A52,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3,1x,I3)') &
+ ! "Madu: II, JJ, KK, LL, III, JJJ, KKK, LLL", &
+ ! II, JJ, KK, LL, III,JJJ,KKK,LLL
+
+                           constant = (4.0d0*DENSEJI*DENSEKI-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI &
+                           -quick_method%x_hybrid_coeff*DENSEKJ*DENSEII)
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
@@ -2538,6 +2733,7 @@ End subroutine classopt
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
 subroutine shelldft(IItemp,JJtemp,KKtemp,LLtemp)
+
    use allmod
 
    Implicit double precision(a-h,o-z)
@@ -2548,10 +2744,9 @@ subroutine shelldft(IItemp,JJtemp,KKtemp,LLtemp)
 
    double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
-
    COMMON /COM1/RA,RB,RC,RD
 
    II=IItemp
@@ -2575,29 +2770,49 @@ subroutine shelldft(IItemp,JJtemp,KKtemp,LLtemp)
    NLL1=quick_basis%Qstart(LL)
    NLL2=quick_basis%Qfinal(LL)
 
+!--------------------Madu---------------------------
+!  write(*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2", &
+!  NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+!  stop
+!--------------------Madu--------------------------
 
    NNAB=(NII2+NJJ2)
    NNCD=(NKK2+NLL2)
 
    NABCDTYPE=NNAB*10+NNCD
 
+
    NNAB=sumindex(NNAB)
    NNCD=sumindex(NNCD)
-
    NNA=Sumindex(NII1-1)+1
-
    NNC=Sumindex(NKK1-1)+1
-
    NABCD=NII2+NJJ2+NKK2+NLL2
    ITT=0
+
+!--------------------Madu---------------------------
+!  write(*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: NABCDTYPE, NNAB, NNCD, NNA, NNC, NABCD", &
+!  NABCDTYPE, NNAB, NNCD, NNA, NNC, NABCD
+  !stop
+!--------------------Madu--------------------------
+
+   !  the first cycle is for j prim
+   !  JJJ and NpriJ are the tracking indices
    do JJJ=1,quick_basis%kprim(JJ)
       Nprij=quick_basis%kstart(JJ)+JJJ-1
+
+      ! the second cycle is for i prim
+      ! II and NpriI are the tracking indices
       do III=1,quick_basis%kprim(II)
          Nprii=quick_basis%kstart(II)+III-1
-         AB=Apri(Nprii,Nprij)
-         ABtemp=0.5d0/AB
+
+         AB=Apri(Nprii,Nprij) ! AB = Apri = expo(NpriI)+expo(NpriJ)
+         ABtemp=0.5d0/AB ! ABtemp = 1/(2Apri) = 1/2(expo(NpriI)+expo(NpriJ))
          cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+
          do M=1,3
+
             P(M)=Ppri(M,Nprii,Nprij)
             Ptemp(M)=P(M)-RA(M)
          enddo
@@ -2682,6 +2897,13 @@ subroutine shelldft(IItemp,JJtemp,KKtemp,LLtemp)
                NNCD=SumIndex(K+L)
                call classdft(I,J,K,L,NNA,NNC,NNAB,NNCD)
                !                   call class
+!--------------------Madu---------------------------
+!  write(*,'(A50,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5,2x,I5)') &
+!  "Madu: I, J, K, L, NNA, NNC, NNAB, NNCD", &
+!  I, J, K, L, NNA, NNC, NNAB, NNCD
+  !stop
+!--------------------Madu--------------------------
+               !call iclass(I,J,K,L,NNA,NNC,NNAB,NNCD) !Madu
             enddo
          enddo
       enddo
@@ -2711,6 +2933,36 @@ subroutine classdft(I,J,K,L,NNA,NNC,NNAB,NNCD)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+!-----Madu--------------
+   do MM2 = NNC, NNCD
+      do MM1 = NNA, NNAB
+         store(MM1,MM2) = 0
+      enddo
+   enddo
+
+   do M=1,3
+      RA(M)=xyz(M,quick_basis%katom(II))
+      RB(M)=xyz(M,quick_basis%katom(JJ))
+      RC(M)=xyz(M,quick_basis%katom(KK))
+      RD(M)=xyz(M,quick_basis%katom(LL))
+   enddo
+
+   NII1=quick_basis%Qstart(II)
+   NII2=quick_basis%Qfinal(II)
+   NJJ1=quick_basis%Qstart(JJ)
+   NJJ2=quick_basis%Qfinal(JJ)
+   NKK1=quick_basis%Qstart(KK) 
+   NKK2=quick_basis%Qfinal(KK)
+   NLL1=quick_basis%Qstart(LL)
+   NLL2=quick_basis%Qfinal(LL)
+    
+
+   NABCDTYPE=(NII2+NJJ2)*10+(NKK2+NLL2) 
+    
+   NABCD=NII2+NJJ2+NKK2+NLL2 
+
+ !-----Madu--------------
 
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
@@ -2818,7 +3070,6 @@ subroutine classdft(I,J,K,L,NNA,NNC,NNAB,NNCD)
                   quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+2.d0*DENSEJI*Y
 
                   !                      print*,III,JJJ,KKK,LLL,Y
-
                enddo
             enddo
          enddo
@@ -2938,7 +3189,6 @@ subroutine classdft(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
                      endif
                   endif
-
                enddo
             enddo
          enddo
@@ -3220,7 +3470,6 @@ subroutine classdftb3lyp(I,J,K,L,NNA,NNC,NNAB,NNCD)
                   quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-.1d0*DENSEKI*Y
 
                   !                      print*,III,JJJ,KKK,LLL,Y
-
                enddo
             enddo
          enddo
@@ -3380,7 +3629,6 @@ subroutine classdftb3lyp(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
                      endif
                   endif
-
                enddo
             enddo
          enddo

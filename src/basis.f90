@@ -410,6 +410,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%Qsbasis(jshell,0)=0
                            quick_basis%Qfbasis(jshell,0)=0
                            quick_basis%ksumtype(jshell)=Ninitial+1
+                           !Madu
+                           !write(*,*) "i, atm,shell,jshell,ksumtype ",i, atom,&
+                           !shell,jshell,quick_basis%ksumtype(jshell)                     
+
                            Ninitial=Ninitial+1
                            quick_basis%cons(Ninitial)=1.0d0
                            if (quick_method%ecp) then
@@ -483,8 +487,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%Qfbasis(jshell,0)=0
                            quick_basis%Qsbasis(jshell,1)=1
                            quick_basis%Qfbasis(jshell,1)=3
-
                            quick_basis%ksumtype(jshell)=Ninitial+1
+
+                           !Madu
+                           !write(*,*) "i, atm,shell,jshell,ksumtype ",i,atom,&
+                           !shell,jshell,quick_basis%ksumtype(jshell)
+
                            !                 do jjj=1,3
                            !                   Ninitial=Ninitial+1
                            !                   quick_basis%cons(Ninitial)=1.0d0
@@ -893,6 +901,15 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                aexp(ll,l) =  aex(k)
                if (quick_basis%ktype(i) == 1) then
                   dcoeff(ll,l) = gcs(k)
+
+!-------------------Madu--------------------------
+!   write (ioutfile,'(/," Madu: readInput.f90 variables")')
+!   write (ioutfile,'(A6,2x,I5)') "ll: ",ll
+!   write (ioutfile,'(A6,2x,I5)') "l: ",l
+!
+!   write (ioutfile,'(A8,2x,F20.10)') "gcs(k):",gcs(k)
+!-------------------Madu--------------------------
+
                   elseif (quick_basis%ktype(i) == 3) then
                   dcoeff(ll,l) = gcp(k)
                   elseif (quick_basis%ktype(i) == 4) then

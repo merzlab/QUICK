@@ -87,11 +87,6 @@ subroutine hfgrad
         HOLDJI = 0.d0
         do K=1,quick_molspec%nelec/2
            HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
-!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
-                write (ioutfile,'(A4,I5,I5,I5,7x,F20.10,7x,F20.10,7x,F20.10)')"Vars",I,J,K, &
-                quick_qm_struct%E(K),quick_qm_struct%co(J,K),quick_qm_struct%co(I,K)
-!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!
-
         enddo
         quick_scratch%hold(J,I) = 2.d0*HOLDJI
      enddo
@@ -241,6 +236,16 @@ subroutine hfgrad
      enddo
   enddo
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,'(/," Madu STEP 2-3 :  ANALYTICAL GRADIENT: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
   ! 4)  The derivative of the 1 electron nuclear attraction term ij times
   ! the density matrix element ij.
@@ -252,6 +257,16 @@ subroutine hfgrad
         call attrashellopt(IIsh,JJsh)
      enddo
   enddo
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,'(/," Madu STEP 4 :  ANALYTICAL GRADIENT: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
   !        write (ioutfile,'(/," ANALYTICAL GRADIENT first: ")')
   !        do Iatm=1,natom
@@ -328,6 +343,18 @@ endif
   write(ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")') timer_end%TGrad-timer_begin%TGrad
   timer_cumer%TGrad=timer_end%TGrad-timer_begin%TGrad+timer_cumer%TGrad
 
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+if(master) then
+        write (*,'(/," Madu STEP5: ANALYTICAL GRADIENT: ")')
+        do Iatm=1,natom*3
+                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+        enddo
+endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
   return
 end subroutine hfgrad
 
@@ -383,6 +410,8 @@ subroutine mpi_hfgrad
   ! that that atom A can never equal atom B, and A-B part of the derivative
   ! for A is the negative of the BA derivative for atom B.
 
+write(*,*) "Running gradient code.."
+
   do Iatm = 1,natom*3
      do Jatm = Iatm+1,natom
         RIJ  = (xyz(1,Iatm)-xyz(1,Jatm))*(xyz(1,Iatm)-xyz(1,Jatm)) &
@@ -405,7 +434,15 @@ subroutine mpi_hfgrad
      enddo
   enddo
 
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,*) " Madu STEP1 :ANALYTICAL GRADIENT: ",mpirank
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
   ! 2)  The negative of the energy weighted density matrix element i j
   ! with the derivative of the ij overlap.
@@ -434,9 +471,8 @@ subroutine mpi_hfgrad
      enddo
   enddo
   endif
-  
-!  call MPI_BCAST(HOLD,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!  call MPI_BCAST(quick_method%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   
   if (quick_method%debug) then
      write(ioutfile,'(/"THE ENERGY WEIGHTED DENSITY MATRIX")')
@@ -584,11 +620,22 @@ subroutine mpi_hfgrad
   enddo
   !endif
 
+call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,*) " Madu STEP 2-3 :  ANALYTICAL GRADIENT: ",mpirank
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
   ! 4)  The derivative of the 1 electron nuclear attraction term ij times
   ! the density matrix element ij.
 
   ! Please note that these are the three center terms.
-
 
   do i=1,mpi_jshelln(mpirank)
      IIsh=mpi_jshell(mpirank,i)
@@ -597,6 +644,16 @@ subroutine mpi_hfgrad
      enddo
   enddo
 
+call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+        write (*,*) "Madu STEP 4 :  ANALYTICAL GRADIENT:",mpirank
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)') Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
   do II=1,jshell
      do JJ=II,jshell
@@ -635,7 +692,7 @@ subroutine mpi_hfgrad
   enddo
 
 
-  ! stop
+   stop
 
   call cpu_time(timer_end%TGrad)
 
@@ -662,6 +719,19 @@ subroutine mpi_hfgrad
      enddo
   endif
 
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+if(master) then
+        write (*,'(/," Madu STEP5: ANALYTICAL GRADIENT: ")')
+        do Iatm=1,natom*3
+                write (*,'(I5,7x,F20.10)') Iatm,quick_qm_struct%gradient(Iatm)
+        enddo
+endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!-------------- Madu-------------------
   return
 end subroutine mpi_hfgrad
 #endif

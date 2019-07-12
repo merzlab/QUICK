@@ -167,12 +167,21 @@ subroutine optimize(failed)
                call mpi_hfgrad
             else
 #endif
-            call hfgrad
+             call hfgrad
 #ifdef MPI
-         endif
-#endif
-         endif
-                          if (quick_method%DFT) call DFTgrad
+            endif
+#endif             
+         elseif(quick_method%DFT) then
+#ifdef MPI
+            if (bMPI) then
+               call dftgradmpi 
+            else
+#endif         
+               call DFTgrad
+#ifdef MPI
+            endif
+#endif            
+         endif 
          !                if (quick_method%SEDFT) call SEDFTgrad
          !            endif
       endif
@@ -304,16 +313,16 @@ subroutine optimize(failed)
          if (quick_method%readdmx) call wrtrestart
       endif
 
+
       !-------------- END MPI/MASTER --------------------
 #ifdef MPI
       ! we now have new geometry, and let other nodes know the new geometry
       if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
+
       ! Notify every nodes if opt is done
       if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 #endif
-
-      !stop
 
    enddo
 

@@ -9,7 +9,7 @@ qhome=$PWD
 tstdir=${qhome}/tests
 qbasisdir=${qhome}/basis
 qbindir=${qhome}/bin
-qexe="quick"
+qexe="quick.cuda"
 export QUICK_BASIS=$qbasisdir
 
 echo ""

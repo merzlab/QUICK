@@ -274,6 +274,8 @@ extern "C" void gpu_upload_method_(int* quick_method)
         gpu -> gpu_sim.method = B3LYP;
     }else if (*quick_method == 2) {
         gpu -> gpu_sim.method = DFT;
+    }else if (*quick_method == 3) {
+	gpu -> gpu_sim.method = LIBXC;
     }
 }
 
@@ -1863,10 +1865,19 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
-extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
+/*Madu Manathunga 06/25/2019
+Integration of libxc GPU version. The included file below contains all libxc methods
+*/
+#include "gpu_libxc.cu"
+
+extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
     
+	//Madu: Initialize gpu libxc and upload information to GPU
+	gpu_libxc_info** glinfo = init_gpu_libxc(nof_functionals, functional_id, xc_polarization);
+
+	//libxc_cleanup(glinfo, nof_functionals);
     
     gpu -> gpu_sim.isg = *isg;
     gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
@@ -1908,7 +1919,8 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
     upload_sim_to_constant_dft(gpu);
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-    getxc(gpu);
+	//Madu Manathunga 07/01/2019 added libxc variable
+    getxc(gpu, glinfo, *nof_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
     

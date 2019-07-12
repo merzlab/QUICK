@@ -213,14 +213,19 @@ subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,
             do JJJ=max(III,JJJ1),JJJ2
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
 
+!              write(*,'(I5,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10,2X,F20.10)') JJJ,&
+!              quick_qm_struct%o(JJJ,III),Xconstant,quick_basis%cons(III),quick_basis%cons(JJJ)&
+!              ,attraxiao(itemp1,itemp2,0) 
+
                quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
                      Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+!write(*,*) "Madu O:", quick_qm_struct%o(JJJ,III)
             enddo
          enddo
 
       enddo
    enddo
-
+!write(*,*) "Returning.."
    201 return
 End subroutine nuclearattra
 
@@ -2281,13 +2286,18 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
             itemp1=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
             do JJJ=max(III,JJJ1),JJJ2
                DENSEJI=quick_qm_struct%dense(JJJ,III)
+
                if(III.ne.JJJ)DENSEJI=2.0d0*DENSEJI
                Xconstant2=Xconstant1*quick_basis%cons(JJJ)*DENSEJI
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
+
+!write(*,*) "itemp1,itemp2,attaraxiao",itemp1,itemp2,attraxiaoopt(1,itemp1,itemp2,0)
+!stop
                Cgrad1=Cgrad1+Xconstant2*attraxiaoopt(1,itemp1,itemp2,0)
                Cgrad2=Cgrad2+Xconstant2*attraxiaoopt(2,itemp1,itemp2,0)
                Cgrad3=Cgrad3+Xconstant2*attraxiaoopt(3,itemp1,itemp2,0)
-
+!write(*,*) "Cgrad1,Cgrad2,Cgrad3",Cgrad1,Cgrad2,Cgrad
+!stop
                itemp1new=trans(quick_basis%KLMN(1,III)+1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
                Agrad1=Agrad1+2.0d0*Xconstant2* &
                      quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))*attraxiao(itemp1new,itemp2,0)
@@ -2346,6 +2356,7 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
       enddo
    enddo
 
+!write(*,*) "Grad1",AGrad1,BGrad1,CGrad1
 
    quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+ AGrad1
    quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+ BGrad1
@@ -2358,7 +2369,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
    quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+ AGrad3
    quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+ BGrad3
    quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+ CGrad3
-
 End subroutine nuclearattraopt
 
 

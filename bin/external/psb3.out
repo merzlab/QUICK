@@ -1,0 +1,452 @@
+  ******************************************************************************
+ ***************************
+  **             . .. ...                                                       
+                          **
+  **         . .?888888888+.                                                    
+                          **
+  **         =88888888888888~.                                                  
+                          **
+  **      .78888888888888887                                                    
+                          **
+  **     :888888O+. .. .+ZO  .                                                  
+                          **
+  **    ,88888? $,8.8=.                                    .  .                 
+          . .             **
+  **   .8888I=,8:$Z.,+7ZI=.                               Z8888:                
+      ,8888:              **
+  **   =888~$~7=:888888888888Z  .                         Z8888:                
+      ,8888:              **
+  **   I88Z~=~78888888888888888?                          Z8888:          . .   
+      ,8888:              **
+  **   788:7?:8888888: . I8888888 .                            ..               
+      ,8888:              **
+  **   =88,$.88888I         888888    ,8888:     88888    ?8888.       888888888
+ I.   ,8888:   .888888.   **
+  **   .88+.88888$           88888:   ,8888:     88888    ?8888.     $8888888888
+ 88.  ,8888: . 88888=.    **
+  **    I8Z 88888..          .88888   ,8888:     88888    ?8888   ..888888I.~888
+ 8..  ,8888: Z88888       **
+  **    .8Z 88888     .  ..   88888   ,8888:     88888    ?8888    $8888+      ~
+      ,8888:88888.        **
+  **     8I 88888      .=88. .88888   ,8888:     88888    ?8888    88888       .
+      ,888888888?.        **
+  **  ..:8..88888      888888$8888$   ,8888:     88888    ?8888    8888O        
+      ,8888888888$ .      **
+  **  .,7.. +88888..    8888888888.   ,8888?     88888    ?8888  ..88888        
+      ,88888O88888O       **
+  **    .    $888888:. . .8888888      88888....$88888    ?8888  . ,88888......8
+ ~..  ,8888: .Z88888      **
+  **          I8888888888888888888~    888888888888888    ?8888     O88888888888
+ 8O   ,8888:   88888Z .   **
+  **            O88888888888888888=     88888888888888    ?8888     ..8888888888
+ 8$ . ,8888:  ..888888.   **
+  **              .~888888Z..  O8        .8888I. 88888   .?8888 .      .=88888Z 
+     .,8888:     O88888   **
+  **                ..  .   . .  ...   .. .    .  .. .        ..          . .   
+      .   ..     .        **
+  **                                                                            
+                          **
+  **                                         Copyright (c) 2011                 
+                          **
+  **                                 Regents of the University of Florida       
+                          **
+  **                                        All Rights Reserved.                
+                          **
+  **                                                                            
+                          **
+  **                   This software provided pursuant to a license agreement co
+ ntaining                 **
+  **                   restrictions on its disclosure, duplication, and use. Thi
+ s software               **
+  **                   contains confidential and proprietary information, and ma
+ y not be                 **
+  **                   extracted or distributed, in whole or in part, for any pu
+ rpose                    **
+  **                   whatsoever, without the express written permission of the
+  authors.                **
+  **                   This notice, and the associated author list, must be atta
+ ched to                  **
+  **                   all copies, or extracts, of this software. Any additional
+                          **
+  **                   restrictions set forth in the license agreement also appl
+ y to this                **
+  **                   software.                                                
+                          **
+  ******************************************************************************
+ ***************************
+ 
+  Cite this work as:
+  Manathunga, M.; Mu, D.; Miao,Y.; He, X.; Ayers,K; Brothers, E.; Götz, A.; Mer
+ z,K. M. QUICK
+  University of Florida, Gainesville, FL, 2019 and Michigan State University, Ea
+ st Lansing, MI, 2019
+ 
+  If you have any comments or queries, please send us an email for technical sup
+ port:
+  quick.merzlab@gmail.com
+ 
+ TASK STARTS ON: Thu May  2 13:40:32 2019
+ INPUT FILE :    psb3.in
+ OUTPUT FILE:    psb3.out
+ DATE FILE  :    psb3.dat
+ BASIS SET PATH: /users/PCS0202/bgs0374/bin/quick/ifort18/basis
+
+ ! WARNING: NODE=1, TURN OFF MPI
+
+
+ Madu: main.f90 ifdef test
+
+ @ Read Job And Atom
+
+  -------------------------------------
+KEYWORD=HF BASIS=6-31GSS CUTOFF=1.0D-10 ENERGY DENSERMS=1.0D-8 CHARGE=+1 EXTCHARGES                                                                                                                             
+  -------------------------------------
+ ============== JOB CARD =============
+| METHOD = HATREE FOCK
+| DIRECT SCF 
+| SAD INITAL GUESS 
+| USE DIIS SCF
+| PRINT ENERGY EVERY CYCLE
+| EXTERNAL CHARGES
+| MAX SCF CYCLES =    200
+| MAX DIIS CYCLES =   10
+| DELTA DENSITY START CYCLE = 1000
+| COMPUATIONAL CUTOFF: 
+|      TWO-e INTEGRAL   =  0.100E-09
+|      BASIS SET PRIME  =  0.100E-19
+|      MATRIX ELEMENTS  =  0.100E-09
+|      BASIS FUNCTION   =  0.100E-09
+| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-07
+| BASIS SET = 6-31GSS
+| BASIS FILE = /users/PCS0202/bgs0374/bin/quick/ifort18/basis/6-31GSS
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = C 
+BASIS FUNCTIONS =   15
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.06
+RMS CHANGE     = 0.126285E+00  MAX CHANGE= 0.907565E+00
+
+SCF CYCLE      =        2      TIME      =     0.05
+RMS CHANGE     = 0.797595E-01  MAX CHANGE= 0.779886E+00
+
+SCF CYCLE      =        3      TIME      =   0.04
+DIIS CYCLE     =        1      MAX ERROR = 0.361773E-01
+RMS CHANGE     = 0.904566E-02  MAX CHANGE= 0.646920E-01
+
+SCF CYCLE      =        4      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.624206E-02
+RMS CHANGE     = 0.229213E-02  MAX CHANGE= 0.240657E-01
+
+SCF CYCLE      =        5      TIME      =   0.03
+DIIS CYCLE     =        3      MAX ERROR = 0.302533E-02
+RMS CHANGE     = 0.169293E-02  MAX CHANGE= 0.184411E-01
+
+SCF CYCLE      =        6      TIME      =   0.03
+DIIS CYCLE     =        4      MAX ERROR = 0.549170E-03
+RMS CHANGE     = 0.331942E-03  MAX CHANGE= 0.369666E-02
+
+SCF CYCLE      =        7      TIME      =   0.03
+DIIS CYCLE     =        5      MAX ERROR = 0.657635E-05
+RMS CHANGE     = 0.171822E-05  MAX CHANGE= 0.173422E-04
+
+SCF CYCLE      =        8      TIME      =   0.03
+DIIS CYCLE     =        6      MAX ERROR = 0.377541E-06
+RMS CHANGE     = 0.178957E-11  MAX CHANGE= 0.108813E-10
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =        9      TIME      =     0.03
+RMS CHANGE     = 0.437196E-06  MAX CHANGE= 0.476780E-05
+NOT IMPROVING.  TRY MODifYING BETA DENSITY MATRIX.
+
+SCF CYCLE      =       10      TIME      =     0.03
+RMS CHANGE     = 0.355926E-06  MAX CHANGE= 0.389013E-05
+
+SCF CYCLE      =       11      TIME      =   0.03
+DIIS CYCLE     =        1      MAX ERROR = 0.235339E-06
+RMS CHANGE     = 0.973777E-07  MAX CHANGE= 0.110464E-05
+
+SCF CYCLE      =       12      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.103812E-06
+RMS CHANGE     = 0.202637E-14  MAX CHANGE= 0.103377E-13
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =       13      TIME      =     0.03
+RMS CHANGE     = 0.533586E-07  MAX CHANGE= 0.582764E-06
+NOT IMPROVING.  TRY MODifYING BETA DENSITY MATRIX.
+
+SCF CYCLE      =       14      TIME      =     0.03
+RMS CHANGE     = 0.438114E-07  MAX CHANGE= 0.479276E-06
+
+SCF CYCLE      =       15      TIME      =   0.03
+DIIS CYCLE     =        1      MAX ERROR = 0.357350E-07
+RMS CHANGE     = 0.120125E-07  MAX CHANGE= 0.136392E-06
+
+SCF CYCLE      =       16      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.149556E-07
+RMS CHANGE     = 0.111504E-13  MAX CHANGE= 0.622280E-13
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =       17      TIME      =     0.03
+RMS CHANGE     = 0.681365E-08  MAX CHANGE= 0.742483E-07
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+EXT CHARGE REPULSION =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+ For Atom Kind =    2
+ ELEMENT = N 
+BASIS FUNCTIONS =   15
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.03
+RMS CHANGE     = 0.118944E+00  MAX CHANGE= 0.903895E+00
+
+SCF CYCLE      =        2      TIME      =     0.03
+RMS CHANGE     = 0.699640E-01  MAX CHANGE= 0.411667E+00
+
+SCF CYCLE      =        3      TIME      =   0.03
+DIIS CYCLE     =        1      MAX ERROR = 0.264555E-01
+RMS CHANGE     = 0.501081E-02  MAX CHANGE= 0.292699E-01
+
+SCF CYCLE      =        4      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.807171E-02
+RMS CHANGE     = 0.174277E-02  MAX CHANGE= 0.198966E-01
+
+SCF CYCLE      =        5      TIME      =   0.03
+DIIS CYCLE     =        3      MAX ERROR = 0.250686E-02
+RMS CHANGE     = 0.877848E-03  MAX CHANGE= 0.102467E-01
+
+SCF CYCLE      =        6      TIME      =   0.03
+DIIS CYCLE     =        4      MAX ERROR = 0.741189E-03
+RMS CHANGE     = 0.266381E-03  MAX CHANGE= 0.308558E-02
+
+SCF CYCLE      =        7      TIME      =   0.03
+DIIS CYCLE     =        5      MAX ERROR = 0.673932E-05
+RMS CHANGE     = 0.491339E-05  MAX CHANGE= 0.565009E-04
+
+SCF CYCLE      =        8      TIME      =   0.03
+DIIS CYCLE     =        6      MAX ERROR = 0.424681E-05
+RMS CHANGE     = 0.200813E-13  MAX CHANGE= 0.808242E-13
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =        9      TIME      =     0.03
+RMS CHANGE     = 0.593066E-06  MAX CHANGE= 0.685519E-05
+NOT IMPROVING.  TRY MODifYING BETA DENSITY MATRIX.
+
+SCF CYCLE      =       10      TIME      =     0.03
+RMS CHANGE     = 0.476117E-06  MAX CHANGE= 0.551324E-05
+
+SCF CYCLE      =       11      TIME      =   0.03
+DIIS CYCLE     =        1      MAX ERROR = 0.424682E-05
+RMS CHANGE     = 0.125389E-06  MAX CHANGE= 0.149705E-05
+
+SCF CYCLE      =       12      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.424682E-05
+RMS CHANGE     = 0.122889E-13  MAX CHANGE= 0.495637E-13
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =       13      TIME      =     0.03
+RMS CHANGE     = 0.677264E-07  MAX CHANGE= 0.778310E-06
+NOT IMPROVING.  TRY MODifYING BETA DENSITY MATRIX.
+
+SCF CYCLE      =       14      TIME      =     0.03
+RMS CHANGE     = 0.542958E-07  MAX CHANGE= 0.625510E-06
+
+SCF CYCLE      =       15      TIME      =   0.03
+DIIS CYCLE     =        1      MAX ERROR = 0.424681E-05
+RMS CHANGE     = 0.143171E-07  MAX CHANGE= 0.170580E-06
+
+SCF CYCLE      =       16      TIME      =   0.03
+DIIS CYCLE     =        2      MAX ERROR = 0.424681E-05
+RMS CHANGE     = 0.106429E-13  MAX CHANGE= 0.448487E-13
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =       17      TIME      =     0.03
+RMS CHANGE     = 0.770305E-08  MAX CHANGE= 0.885077E-07
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+EXT CHARGE REPULSION =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+ For Atom Kind =    3
+ ELEMENT = H 
+BASIS FUNCTIONS =    5
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.00
+RMS CHANGE     = 0.124770E+00  MAX CHANGE= 0.375230E+00
+
+SCF CYCLE      =        2      TIME      =     0.00
+RMS CHANGE     = 0.225650E-01  MAX CHANGE= 0.909848E-01
+
+SCF CYCLE      =        3      TIME      =   0.00
+DIIS CYCLE     =        1      MAX ERROR = 0.192500E-01
+RMS CHANGE     = 0.706671E-02  MAX CHANGE= 0.282222E-01
+
+SCF CYCLE      =        4      TIME      =   0.00
+DIIS CYCLE     =        2      MAX ERROR = 0.619788E-02
+RMS CHANGE     = 0.332676E-02  MAX CHANGE= 0.132001E-01
+
+SCF CYCLE      =        5      TIME      =   0.00
+DIIS CYCLE     =        3      MAX ERROR = 0.232798E-08
+RMS CHANGE     = 0.000000E+00  MAX CHANGE= 0.000000E+00
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =        6      TIME      =     0.00
+RMS CHANGE     = 0.643466E-10  MAX CHANGE= 0.254612E-09
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+EXT CHARGE REPULSION =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+
+ @ Finish SAD initial guess
+
+
+ @ Begin to Read Mol Info
+
+
+ =========== Molecule Input ==========
+| TOTAL MOLECULAR CHARGE  =    1    MULTIPLICITY                =    1
+| TOTOAL ATOM NUMBER      =   14    NUMBER OF ATOM TYPES        =    3
+| NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
+| NUMBER OF ELECTRONS     =   44
+ 
+ -- INPUT GEOMETRY -- :
+    C          -2.7472      -0.8366       0.8589
+    C          -1.4569      -0.4717       0.9992
+    C          -0.6277      -0.2215      -0.1532
+    C           0.6894       0.1526      -0.2017
+    C           1.4882       0.3645       0.9508
+    N           2.7314       0.7179       0.9037
+    H           1.1530       0.2966      -1.1612
+    H          -1.1103      -0.3463      -1.1067
+    H           1.0827       0.2367       1.9358
+    H          -1.0483      -0.3680       1.9877
+    H           3.2687       0.8596       1.7368
+    H           3.2084       0.8645       0.0338
+    H          -3.3689      -1.0241       1.7130
+    H          -3.2011      -0.9533      -0.1081
+ 
+ -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- 
+    -1.0000    5.4230     0.5090     0.7600
+ 
+ -- DISTANCE MATRIX -- :
+              1           2           3           4           5
+      1     0.00000
+      2     2.54783     0.00000
+      3     4.58824     2.72422     0.00000
+      4     7.04901     4.79509     2.58914     0.00000
+      5     8.32128     5.78618     4.64407     2.67996     0.00000
+      6    10.76215     8.22979     6.88736     4.51608     2.44398
+      7     8.57213     6.56504     3.98880     2.03203     4.04312
+      8     4.92184     4.03998     2.03309     3.92175     6.40577
+      9     7.78692     5.28737     5.17510     4.11025     2.02752
+     10     3.95505     2.03091     4.13247     5.37308     5.36018
+     11    11.92755     9.38174     8.43475     6.24179     3.79493
+     12    11.80796     9.35025     7.54235     4.96652     3.80289
+     13     2.02747     3.99549     6.44755     8.76653     9.65437
+     14     2.03075     4.00891     5.05659     7.64543     9.41987
+              6           7           8           9          10
+      6     0.00000
+      7     4.97571     0.00000
+      8     8.43691     4.44738     0.00000
+      9     3.78663     5.85521     7.17246     0.00000
+     10     7.70867     7.36830     5.84893     4.18703     0.00000
+     11     1.89227     6.86346    10.12627     4.31181     8.49450
+     12     1.89512     4.61928     8.74549     5.51933     9.15220
+     13    12.08582    10.42828     6.94621     8.75320     4.58667
+     14    11.80313     8.78871     4.52637     9.24709     5.78457
+             11          12          13          14
+     11     0.00000
+     12     3.22015     0.00000
+     13    13.03851    13.31509     0.00000
+     14    13.16700    12.59278     3.45864     0.00000
+ 
+============== BASIS INFOS ==============
+| BASIS FUNCTIONS =  130
+| NSHELL =   48 NPRIM  =  106
+| JSHELL =   48 JBASIS =  106
+ 
+
+ @ End Reading Mol Info 
+
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+                                         SCF ENERGY
+------------------------------------------------------------------------------------------------------------------------
+NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+------------------------------------------------------------------------------------------------------------------------
+  1   -251.017292119      ------         1.561     1        0.01      1.55      0.00    0.2554E+01  0.2666E-01  0.5273E+00
+  2   -248.144486967  -.287281E+01       2.859     2        0.01      2.85      0.00    0.1397E+00  0.9120E-02  0.1534E+00
+  3   -248.322653969  0.178167E+00       2.858     3        0.01      2.85      0.00    0.7575E-01  0.3021E-02  0.5605E-01
+  4   -248.357934760  0.352808E-01       2.891     4        0.01      2.88      0.00    0.2614E-01  0.1548E-02  0.2153E-01
+  5   -248.365875569  0.794081E-02       2.881     5        0.01      2.87      0.00    0.7505E-02  0.4545E-03  0.6784E-02
+  6   -248.366627846  0.752277E-03       2.862     6        0.01      2.85      0.00    0.3347E-02  0.2073E-03  0.3659E-02
+  7   -248.366755922  0.128076E-03       2.840     7        0.01      2.83      0.00    0.1255E-02  0.6676E-04  0.1481E-02
+  8   -248.366768460  0.125378E-04       2.851     8        0.01      2.84      0.00    0.4137E-03  0.2438E-04  0.4097E-03
+  9   -248.366770065  0.160564E-05       2.850     9        0.01      2.84      0.00    0.1259E-03  0.1177E-04  0.2279E-03
+ 10   -248.366770369  0.304223E-06       2.873    10        0.01      2.86      0.00    0.6603E-04  0.4832E-05  0.9130E-04
+ 11   -248.366770415  0.459444E-07       2.857     1        0.01      2.84      0.00    0.2592E-04  0.2037E-05  0.3234E-04
+ 12   -248.366770422  0.670070E-08       2.849     2        0.01      2.84      0.00    0.6284E-05  0.5773E-06  0.8602E-05
+ 13   -248.366770423  0.618115E-09       2.882     3        0.01      2.87      0.00    0.2313E-05  0.2134E-06  0.3150E-05
+ 14   -248.366770423  0.794671E-10       2.863     4        0.01      2.85      0.00    0.6521E-06  0.6112E-07  0.1192E-05
+    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-10 -------------
+ 15   -248.366770423  0.194063E-09       2.991     5        0.01      2.98      0.00    0.1727E-06  0.9285E-08  0.1218E-06
+------------------------------------------------------------------------------------------------------------------------
+ REACH CONVERGENCE AFTER  15 CYLCES
+ MAX ERROR = 0.172657E-06   RMS CHANGE = 0.928468E-08   MAX CHANGE = 0.121765E-06
+ -----------------------------------------------
+ELECTRONIC ENERGY    =  -450.413387672
+CORE_CORE REPULSION  =   202.046617249
+EXT CHARGE REPULSION =     0.000000000
+TOTAL ENERGY         =  -248.366770423
+
+ @ End Energy calculation
+
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     1.056306000(  2.46%)
+TOTAL SCF TIME     =    41.815384000( 97.44%)
+      TOTAL OP TIME      =    41.653280000( 97.06%)
+            TOTAL 1e TIME      =     0.047497000(  0.11%)
+            TOTAL 2e TIME      =    41.604173000( 96.95%)
+            TOTAL ENERGY TIME  =     0.000650000(  0.00%)
+      TOTAL DII TIME     =     0.161477000(  0.38%)
+            TOTAL DIAG TIME    =     0.034778000(  0.08%)
+TOTAL TIME         =    42.914083000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes 42.9 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Thu May  2 13:41:15 2019

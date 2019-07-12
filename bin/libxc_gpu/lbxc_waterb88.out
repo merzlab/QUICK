@@ -1,0 +1,247 @@
+ *********************************************************************************************************
+ **                                                                                                     **
+ **           .?888888888+.                                                                             **
+ **         =88888888888888~.                                                                           **
+ **      .78888888888888887                                                                             **
+ **     :888888O+. .. .+ZO                                                                              **
+ **    ,88888? $,8.8=.                                                                                  **
+ **   .8888I=,8:$Z.,+7ZI=.                               88888                       8888:              **
+ **   =888~$~7=:888888888888Z                            88888                       8888:              **
+ **   I88Z~=~78888888888888888?                          88888                       8888:              **
+ **   788:7?:8888888: . I8888888                                        888888       8888:              **
+ **   =88,$.88888I         888888    ,8888:     88888    88888        888888888I     8888:    888888    **
+ **   .88+.88888$           88888:   ,8888:     88888    88888      $888888888888    8888:   888888     **
+ **    I8Z 88888             88888   ,8888:     88888    88888    .888888     8888   8888: 888888       **
+ **    .8Z 88888             88888   ,8888:     88888    88888    $88888             8888:88888         **
+ **     8I 88888      .=88. .88888   ,8888:     88888    88888    88888              8888888888         **
+ **    :8  88888      888888$8888$   ,8888:     88888    88888    8888O              88888888888        **
+ **   ,7   +88888.     8888888888.   ,8888:     88888    88888    888888             88888O888888       **
+ **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+ **          I8888888888888888888~    888888888888888    88888     O888888888888O    8888:   888888     **
+ **            O88888888888888888=     88888888888888    88888       88888888888$    8888:    888888    **
+ **              .~888888Z    O8        .8888I  88888    88888         8888888       8888:     888888   **
+ **                                                                                                     **
+ **                                                                                                     **
+ **                                         Copyright (c) 2011                                          **
+ **                                 Regents of the University of Florida                                **
+ **                                        All Rights Reserved.                                         **
+ **                                                                                                     **
+ **                   This software provided pursuant to a license agreement containing                 **
+ **                   restrictions on its disclosure, duplication, and use. This software               **
+ **                   contains confidential and proprietary information, and may not be                 **
+ **                   extracted or distributed, in whole or in part, for any purpose                    **
+ **                   whatsoever, without the express written permission of the authors.                **
+ **                   This notice, and the associated author list, must be attached to                  **
+ **                   all copies, or extracts, of this software. Any additional                         **
+ **                   restrictions set forth in the license agreement also apply to this                **
+ **                   software.                                                                         **
+ *********************************************************************************************************
+
+ Cite this work as:                                                                                       
+ Manathunga, M.; Miao, Y.; Mu, D.; He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK             
+ University of Florida, Gainesville, FL, 2019 and Michigan State University, East Lansing, MI, 2019       
+
+ If you have any comments or queries, please send us an email for technical support:                      
+ quick.merzlab@gmail.com                                                                                  
+
+ TASK STARTS ON: Fri Jul 12 10:00:39 2019
+ INPUT FILE :    lbxc_waterb88.in
+ OUTPUT FILE:    lbxc_waterb88.out
+ DATE FILE  :    lbxc_waterb88.dat
+ BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
+
+|------------ CUDA INFORMATION ---------------
+|  CUDA version of Quick in use
+|  Implemented by
+|                      Yipu Miao (Florida)
+|  CAUTION: CUDA Quick is currently experimental
+|           and you may at risk to use it. Be sure
+|           to check result carelly. Advise or 
+|           bug report are welcome.
+|---------------------------------------------
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12036
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
+
+ @ Read Job And Atom
+
+  -------------------------------------
+KEYWORD= LIBXC GGA_X_B88 BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                                      
+  -------------------------------------
+ ============== JOB CARD =============
+| METHOD = DENSTITY FUNCTIONAL THEORY
+| USING LIBXC VERSION: 4.3.4
+| FUNCTIONAL INFORMATION:
+| NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
+| DIRECT SCF 
+| SAD INITAL GUESS 
+| USE DIIS SCF
+| PRINT ENERGY EVERY CYCLE
+| STANDARD GRID = SG1
+| MAX SCF CYCLES =    200
+| MAX DIIS CYCLES =   10
+| DELTA DENSITY START CYCLE = 1000
+| COMPUATIONAL CUTOFF: 
+|      TWO-e INTEGRAL   =  0.100E-09
+|      BASIS SET PRIME  =  0.100E-19
+|      MATRIX ELEMENTS  =  0.100E-09
+|      BASIS FUNCTION   =  0.100E-09
+| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+| BASIS SET = 6-31G
+| BASIS FILE = /server-home1/madu/bin/quick/ifort18/basis/6-31G
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = O 
+BASIS FUNCTIONS =    9
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.06
+RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
+
+SCF CYCLE      =        2      TIME      =     0.04
+RMS CHANGE     = 0.813251E-01  MAX CHANGE= 0.292791E+00
+
+SCF CYCLE      =        3      TIME      =   0.04
+DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
+RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
+
+SCF CYCLE      =        4      TIME      =   0.04
+DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
+RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
+
+SCF CYCLE      =        5      TIME      =   0.04
+DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
+RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
+
+SCF CYCLE      =        6      TIME      =   0.04
+DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
+RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
+
+SCF CYCLE      =        7      TIME      =   0.05
+DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
+RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
+DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
+
+SCF CYCLE      =        8      TIME      =     0.04
+RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
+
+SCF CYCLE      =        9      TIME      =   0.05
+DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
+RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
+
+SCF CYCLE      =       10      TIME      =   0.04
+DIIS CYCLE     =        2      MAX ERROR = 0.121250E-05
+RMS CHANGE     = 0.882888E-06  MAX CHANGE= 0.354765E-05
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =       11      TIME      =     0.04
+RMS CHANGE     = 0.761164E-06  MAX CHANGE= 0.302067E-05
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+ For Atom Kind =    2
+ ELEMENT = H 
+BASIS FUNCTIONS =    2
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.00
+RMS CHANGE     = 0.256654E+00  MAX CHANGE= 0.291569E+00
+
+SCF CYCLE      =        2      TIME      =     0.00
+RMS CHANGE     = 0.152139E-01  MAX CHANGE= 0.238378E-01
+
+SCF CYCLE      =        3      TIME      =   0.00
+DIIS CYCLE     =        1      MAX ERROR = 0.543720E-02
+RMS CHANGE     = 0.492246E-02  MAX CHANGE= 0.776945E-02
+
+SCF CYCLE      =        4      TIME      =   0.00
+DIIS CYCLE     =        2      MAX ERROR = 0.175010E-02
+RMS CHANGE     = 0.234112E-02  MAX CHANGE= 0.370386E-02
+DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
+
+SCF CYCLE      =        5      TIME      =     0.00
+RMS CHANGE     = 0.142040E-10  MAX CHANGE= 0.224882E-10
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+
+ @ Finish SAD initial guess
+
+
+ @ Begin to Read Mol Info
+
+
+ =========== Molecule Input ==========
+| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+| TOTOAL ATOM NUMBER      =    3    NUMBER OF ATOM TYPES        =    2
+| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+| NUMBER OF ELECTRONS     =   10
+
+ -- INPUT GEOMETRY -- :
+    O          -0.0676      -0.3153       0.0000
+    H           0.8924      -0.3153       0.0000
+    H          -0.3880       0.5896       0.0000
+
+ -- DISTANCE MATRIX -- :
+              1           2           3
+      1     0.00000
+      2     1.81414     0.00000
+      3     1.81414     2.96300     0.00000
+
+============== BASIS INFOS ==============
+| BASIS FUNCTIONS =   13
+| NSHELL =    7 NPRIM  =   18
+| JSHELL =    7 JBASIS =   18
+
+
+RADII OF SIGNifIGANCE FOR THE BASIS FUNCTIONS
+   1           2.034000
+   2           4.731000
+   3           4.909000
+   4           4.909000
+   5           4.909000
+   6           8.965000
+   7           9.314000
+   8           9.314000
+   9           9.314000
+  10           5.909000
+  11          11.497000
+  12           5.909000
+  13          11.497000
+
+ @ End Reading Mol Info 
+
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+                                         SCF ENERGY
+------------------------------------------------------------------------------------------------------------------------
+NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+------------------------------------------------------------------------------------------------------------------------

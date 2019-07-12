@@ -1,0 +1,152 @@
+  **************************************************************************
+  **                            QUICK                                     **
+  **                                                                      **
+  **                        Copyright (c) 2011                            **
+  **                Regents of the University of Florida                  **
+  **                       All Rights Reserved.                           **
+  **                                                                      **
+  **  This software provided pursuant to a license agreement containing   **
+  **  restrictions on its disclosure, duplication, and use. This software **
+  **  contains confidential and proprietary information, and may not be   **
+  **  extracted or distributed, in whole or in part, for any purpose      **
+  **  whatsoever, without the express written permission of the authors.  **
+  **  This notice, and the associated author list, must be attached to    **
+  **  all copies, or extracts, of this software. Any additional           **
+  **  restrictions set forth in the license agreement also apply to this  **
+  **  software.                                                           **
+  **************************************************************************
+
+  Cite this work as:
+  Miao, Y.: He, X.: Ayers,K: Brothers, E.: Merz,K. M. QUICK;
+  University of Florida, Gainesville, FL, 2010
+
+  If you have any comment or queries, please send email for technic support:
+  quick@qtp.ufl.edu
+
+ TASK STARTS ON: Fri Mar 15 12:11:05 2019
+ INPUT FILE :    /users/PCS0202/bgs0374/Work/Pr
+ OUTPUT FILE:    /users/PCS0202/bgs0374/Work/Pr
+ DATE FILE  :    /users/PCS0202/bgs0374/Work/Pr
+ BASIS SET PATH: /users/PCS0202/bgs0374/bin/quick/ifort18/basis
+
+ @ Read Job And Atom
+
+  -------------------------------------
+KEYWORD=HF BASIS=STO-3G CUTOFF=1.0D-10 ENERGY DENSERMS=1.0D-8 OPTIMIZE                                                                                                                                          
+  -------------------------------------
+ ============== JOB CARD =============
+| METHOD = HATREE FOCK
+| DIRECT SCF 
+| SAD INITAL GUESS 
+| USE DIIS SCF
+| PRINT ENERGY EVERY CYCLE
+| GEOMETRY OPTIMIZATION| NUMERICAL GRADIENT
+| REQUEST CRITERIA FOR GEOMETRY CONVERGENCE: 
+|      MAX ALLOWED GEO CHANGE  =  0.189E+00
+|      MAX GEOMETRY CHANGE     =  0.180E-02
+|      GEOMETRY CHANGE RMS     =  0.120E-02
+|      MAX GRADIENT CHANGE     =  0.100E-02
+|      GRADIENT NORMALIZATION  =  0.300E-03
+| GRADIENT CALCULATION
+| MAX SCF CYCLES =    200
+| MAX DIIS CYCLES =   10
+| DELTA DENSITY START CYCLE = 1000
+| COMPUATIONAL CUTOFF: 
+|      TWO-e INTEGRAL   =  0.100E-09
+|      BASIS SET PRIME  =  0.100E-19
+|      MATRIX ELEMENTS  =  0.100E-09
+|      BASIS FUNCTION   =  0.100E-09
+|      GRADIENT CUTOFF  =  0.100E-09
+| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-07
+| BASIS SET = STO-3G
+| BASIS FILE = /users/PCS0202/bgs0374/bin/quick/ifort18/basis/STO-3G
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = O 
+
+ ! WARNING:  ONLY ONE ATOM, TURN OFF OPTIMIZATION.
+
+BASIS FUNCTIONS =    5
+
+ @ Begin Energy Calculation
+
+
+SCF CYCLE      =        1      TIME      =     0.01
+RMS CHANGE     = 0.238978E+00  MAX CHANGE= 0.504578E+00
+
+SCF CYCLE      =        2      TIME      =     0.01
+RMS CHANGE     = 0.307220E-10  MAX CHANGE= 0.827385E-10
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+ For Atom Kind =    2
+ ELEMENT = H 
+BASIS FUNCTIONS =    1
+
+ @ Begin Energy Calculation
+
+
+SCF CYCLE      =        1      TIME      =     0.00
+RMS CHANGE     = 0.100000E-07  MAX CHANGE= 0.100000E-07
+
+SCF CYCLE      =        2      TIME      =   0.00
+DIIS CYCLE     =        1      MAX ERROR = 0.000000E+00
+RMS CHANGE     = 0.000000E+00  MAX CHANGE= 0.000000E+00
+PREPARED FOR FINAL NO INTERPOLATION ITERATION
+
+SCF CYCLE      =        3      TIME      =     0.00
+RMS CHANGE     = 0.000000E+00  MAX CHANGE= 0.000000E+00
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+
+ @ Finish SAD initial guess
+
+
+ @ Begin to Read Mol Info
+
+
+ =========== Molecule Input ==========
+| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+| TOTOAL ATOM NUMBER      =    3    NUMBER OF ATOM TYPES        =    2
+| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+| NUMBER OF ELECTRONS     =   10
+
+ -- INPUT GEOMETRY -- :
+    O          -0.0676      -0.3153       0.0000
+    H           0.8924      -0.3153       0.0000
+    H          -0.3880       0.5896       0.0000
+
+ -- DISTANCE MATRIX -- :
+              1           2           3
+      1     0.00000
+      2     1.81414     0.00000
+      3     1.81414     2.96300     0.00000
+
+============== BASIS INFOS ==============
+| BASIS FUNCTIONS =    7
+| NSHELL =    4 NPRIM  =   12
+| JSHELL =    4 JBASIS =   12
+
+
+ @ End Reading Mol Info 
+
+
+ @ Begin Optimization Job
+
+
+ @ Optimize for New Step
+

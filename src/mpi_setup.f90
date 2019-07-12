@@ -157,9 +157,15 @@
     
 !    call MPI_BCAST(aexp,nprim,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 !    call MPI_BCAST(gcs,nprim,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(quick_basis%gccoeff,6*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(quick_basis%gcexpo,6*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!    call MPI_BCAST(quick_basis%gccoeff,6*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!    call MPI_BCAST(quick_basis%gcexpo,6*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 !    call MPI_BCAST(quick_basis%gcexpomin,nshell,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+    !Madu: 05/01/2019
+    call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(quick_method%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
     call MPI_BCAST(quick_basis%KLMN,3*nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(itype,3*nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -330,4 +336,59 @@
     
     end subroutine MPI_setup_hfoperator
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Setup DFT operator duties
+! Madu Manathunga 04/17/2019
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ subroutine MPI_setup_dftoperator()
+ use allmod
+ implicit none
+ !integer i, j, k, iatm, irad
+ !integer, dimension(:), allocatable :: temp1d 
+ include 'mpif.h'
+
+!The first step is to distribute shells and basis functions across the nodes. 
+!We achieve this task by simply calling the MPI_setup_hfoperator. 
+ if (MASTER) then
+
+        call MPI_setup_hfoperator() 
+
+!The second step is to distribute radial grid points among nodes
+!First finout what grid system is being used and get the number of
+!points and save int Irad variable
+!    do iatm=1,natom
+!         if(quick_method%ISG.eq.1)then
+!            irad=50
+!         else
+!            if(quick_molspec%iattype(iatm).le.10)then
+!               irad=23
+!            else
+!               irad=26
+!            endif
+!         endif
+    
+    !Now distribute the grid points among nodes
+    !mpi_rgptsn variable carries a list of nodes indices
+    !mpi_rgpts carries the number of points corresponding to 
+    !each index
+!    do i=0,mpisize-1
+!        mpi_rgptsn(i)=0
+!        do j=1, irad
+!            mpi_rgpts(i,j)=0
+!        enddo
+!    enddo        
+!
+!    do i=1, irad
+!        temp1d(i)=irad-i
+!    enddo
+!
+!    call greedy_distrubute(temp1d(1:irad),irad,mpisize, &
+!    mpi_rgptsn,mpi_rgpts)
+
+   !Go over mpi_rgpts and find out how many points from iatm
+   ! is in each node
+
+!    enddo
+ endif
+ end subroutine MPI_setup_dftoperator
 #endif

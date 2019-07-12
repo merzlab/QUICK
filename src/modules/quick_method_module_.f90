@@ -1,4 +1,4 @@
-#   include "../config.h"
+#include "../config.h"
 !
 !	quick_method_module.f90
 !	new_quick
@@ -17,12 +17,16 @@ module quick_method_module
         logical :: HF =  .false.       ! HF
         logical :: DFT =  .false.      ! DFT
         logical :: MP2 =  .false.      ! MP2
+
+        !Madu Manathunga 05/30/2019 We should get rid of these functional
+        !variables in future. Instead, we call funcationals from libxc
         logical :: B3LYP = .false.     ! B3LYP
         logical :: BLYP = .false.      ! BLYP
         logical :: BPW91 = .false.     ! BPW91
         logical :: MPW91LYP = .false.  ! MPW91LYP
         logical :: MPW91PW91 = .false. ! MPW91PW91
         logical :: SEDFT = .false.     ! Semi-Empirical DFT
+
         logical :: PBSOL = .false.     ! PB Solvent
         logical :: UNRST =  .false.    ! Unrestricted
 
@@ -104,6 +108,16 @@ module quick_method_module
         double precision :: gradMaxCrt     = .001d0 ! max gradient change
         double precision :: gNormCrt       = .00030d0 ! gradient normalization
         double precision :: EChange        = 1.0d-6   ! Energy change
+
+        !Madu Manathunga 05/30/2019
+        !Following variables facilitates the use of libxc functionals
+        logical :: uselibxc = .false.
+        integer :: xc_polarization = 0
+        !Following holds functional ids. Currently only holds two functionals. 
+        integer, dimension(10) :: functional_id        
+        double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF. 
+        integer :: nof_functionals = 0
+
 #ifdef CUDA
         logical :: bCUDA                ! if CUDA is used here
 #endif        
@@ -209,6 +223,11 @@ module quick_method_module
             call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gradMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gNormCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+            !mpi variables for libxc implementation
+            call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)            
+            call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             
         end subroutine broadcast_quick_method
         
@@ -218,9 +237,21 @@ module quick_method_module
         ! print quick_method
         !------------------------
         subroutine print_quick_method(self,io)
+!#ifndef CUDA
+            use xc_f90_types_m
+            use xc_f90_lib_m
+!#endif
             implicit none
             integer io
             type(quick_method_type) self
+
+!#ifndef CUDA
+            !libxc variables
+            type(xc_f90_pointer_t) :: xc_func
+            type(xc_f90_pointer_t) :: xc_info
+            character(len=120) :: f_name, f_kind, f_family
+            integer :: vmajor, vminor, vmicro, f_id
+!#endif
                 
             if (io.ne.0) then   
             write(io,'(" ============== JOB CARD =============")')
@@ -230,10 +261,63 @@ module quick_method_module
                 write(io,'("| METHOD = SECOND ORDER PERTURBATION THEORY")')
             else if (self%DFT) then
                 write(io,'("| METHOD = DENSTITY FUNCTIONAL THEORY")')
-                if (self%B3LYP) then
+                
+                if(self%uselibxc) then
+!#ifndef CUDA
+                     call xc_f90_version(vmajor, vminor, vmicro)
+                     write(io,'("| USING LIBXC VERSION: ",I1,".",I1,".",I1)') vmajor, &
+                     vminor, vmicro                
+                     write(io,'("| FUNCTIONAL INFORMATION:")')
+                !Get functional information from libxc and print
+
+                  do f_id=1, self%nof_functionals
+                     !Initiate libx function; but we only care unpolarized at
+                     !this point
+                     if(self%xc_polarization >0 ) then
+                        call xc_f90_func_init(xc_func, xc_info, self%functional_id(f_id),XC_POLARIZED)
+                     else
+                        call xc_f90_func_init(xc_func, xc_info,self%functional_id(f_id),XC_UNPOLARIZED)
+                     endif  
+                     call xc_f90_info_name(xc_info, f_name)
+
+                     select case(xc_f90_info_kind(xc_info))
+                        case (XC_EXCHANGE)
+                          write(f_kind, '(a)') 'EXCHANGE'
+                        case (XC_CORRELATION)
+                          write(f_kind, '(a)') 'CORRELATION'
+                        case (XC_EXCHANGE_CORRELATION)
+                          write(f_kind, '(a)') 'EXCHANGE CORRELATION'
+                        case (XC_KINETIC)
+                          write(f_kind, '(a)') 'KINETIC'
+                        case default
+                          write (f_kind, '(a)') 'UNKNOWN'
+                     end select
+
+                    select case (xc_f90_info_family(xc_info))
+                        case (XC_FAMILY_LDA);
+                          write(f_family,'(a)') "LDA"
+                        case (XC_FAMILY_GGA);
+                          write(f_family,'(a)') "GGA"
+                        case (XC_FAMILY_HYB_GGA);
+                          write(f_family,'(a)') "HYBRID GGA"
+                        case (XC_FAMILY_MGGA);
+                          write(f_family,'(a)') "MGGA"
+                        case (XC_FAMILY_HYB_MGGA);
+                          write(f_family,'(a)') "HYBRID MGGA"
+                        case default;
+                          write(f_family,'(a)') "UNKNOWN"
+                        end select
+                     
+                     write(io,'("| NAME = ",a, " FAMILY = ",a, " KIND = ",a)') &
+                     trim(f_name), trim(f_family), trim(f_kind)
+                     call xc_f90_func_end(xc_func)
+                  enddo
+                
+!#endif                    
+                elseif (self%B3LYP) then
                     write(io,'("| DENSITY FUNCTIONAL = B3LYP")')
                 elseif(self%BLYP) then
-                    write(io,'("| DENSITY FUNCTIONAL = B3YP")')
+                    write(io,'("| DENSITY FUNCTIONAL = BLYP")')
                 elseif(self%BPW91) then
                     write(io,'("| DENSITY FUNCTIONAL = BPW91")')
                 elseif(self%MPW91LYP) then
@@ -374,13 +458,25 @@ endif
             if (index(keyWD,'BPW91').ne.0)      self%BPW91=.true.
             if (index(keyWD,'MPW91LYP').ne.0)   self%MPW91LYP=.true.
             if (index(keyWD,'MPW91PW91').ne.0)  self%MPW91PW91=.true.
+
             if (index(keyWD,'CORE').ne.0)       self%CORE=.true.
             if (index(keyWD,'OPT').ne.0) then
                 self%opt=.true.
                 self%grad=.true.
             endif
-            if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. self%MPW91LYP) &
+            if (index(keyWD,'GRADIENT').ne.0) self%grad=.true.
+            if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
+                self%MPW91LYP) self%DFT=.true.
+
+!#ifndef CUDA
+            !Read libxc keywords and set variable values            
+            if (index(keyWD,'LIBXC').ne.0) then
+                self%uselibxc=.true.
                 self%DFT=.true.
+            call set_libxc_func_info(keyWD, self)
+            endif
+!#endif
+
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
             if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.
@@ -570,6 +666,15 @@ endif
             self%EChange        = 1.0d-6
             self%gridSpacing    = 0.1
             self%lapgridspacing = 0.1
+
+!#ifndef CUDA
+            !Initialize libxc variables
+            self%x_hybrid_coeff = 1.0d0 !Set the default exchange value
+            self%uselibxc = .false.
+            self%xc_polarization = 0            
+            self%nof_functionals = 0 
+!#endif
+
 #ifdef CUDA
             self%bCUDA  = .false.
 #endif            
@@ -605,9 +710,9 @@ endif
                 self%OPT = .false.
             endif
 
-            ! OPT not available for other DFT except BLYP            
-            if(self%DFT.and. self%OPT .and. (.not. self%BLYP))then
-                call PrtWrn(io,"GEOMETRY OPTIMIZATION is only available with HF, DFT/BLYP" )
+            ! OPT not available for BLYP and B3LYP DFT methods            
+            if(self%DFT.and. self%OPT .and. (.not. (self%BLYP .or. self%B3LYP) .and. .not.(self%uselibxc)))then
+                call PrtWrn(io,"GEOMETRY OPTIMIZATION is only available with HF, DFT/BLYP, DFT/B3LYP" )
                 self%OPT = .false.
             endif
 
@@ -658,5 +763,51 @@ endif
             endif
         
         end subroutine adjust_Cutoff
-        
+
+!#ifndef CUDA
+        !Madu Manathunga 05/31/2019
+        !This subroutine set the functional id and  x_hybrid_coeff
+        subroutine set_libxc_func_info(f_keywd, self)
+           use xc_f90_types_m
+           use xc_f90_lib_m
+           implicit none
+           character(len=200) :: f_keywd
+           type(quick_method_type) self
+           integer :: f_id, nof_f 
+           type(xc_f90_pointer_t) :: xc_func
+           type(xc_f90_pointer_t) :: xc_info
+           double precision :: x_hyb_coeff
+           character(len=256) :: functional_name
+
+        !We now set the functional ids corresponding to each functional.
+        !Note that these ids are coming from libxc. One should obtain them 
+        !by looking at the functional name (eg: PBE0) in libxc manual and 
+        !using xc_f90_functional_get_number() function in libxc library.
+
+        nof_f=0
+        do f_id=0,1000
+           call xc_f90_functional_get_name(f_id,functional_name)
+           if((index(functional_name,'unknown') .eq. 0) &
+            .and. (index(functional_name,'mgga') .eq. 0))  then
+                functional_name=trim(functional_name)
+                call upcase(functional_name,200) 
+                if(index(f_keywd,trim(functional_name)) .ne. 0) then 
+                        nof_f=nof_f+1
+                        if(self%xc_polarization > 0) then
+                                call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)
+                        else
+                                call xc_f90_func_init(xc_func, xc_info, f_id, XC_UNPOLARIZED)
+                        endif 
+
+                        self%functional_id(nof_f)=xc_f90_functional_get_number(functional_name)
+                        call xc_f90_hyb_exx_coef(xc_func, self%x_hybrid_coeff)
+                        call xc_f90_func_end(xc_func)
+                endif
+           endif       
+        enddo
+
+        self%nof_functionals=nof_f
+
+        end subroutine set_libxc_func_info
+!#endif
 end module quick_method_module

@@ -11,6 +11,11 @@
 
 #include "../config.h"
 #include "gpu_type.h"
+
+//Madu Manathunga 07/01/2019: Libxc header files
+#include "util.h"
+#include "gpu_work.cuh"
+
 //#include "cuda.h"
 
 // device initial and shutdown operation
@@ -45,14 +50,14 @@ extern "C" void gpu_cleanup_();
 
 // c interface [gpu_get2e]
 extern "C" void gpu_get2e_(QUICKDouble* o);
-extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o);
+extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
 extern "C" void gpu_grad_(QUICKDouble* grad);
 
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
-void getxc(_gpu_type gpu);
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals); //Madu Manathunga 07/01/2019: added libxc variable
 void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
@@ -94,7 +99,7 @@ __global__ void getGrad_kernel_spdf6();
 __global__ void getGrad_kernel_spdf7();
 __global__ void getGrad_kernel_spdf8();
 
-__global__ void getxc_kernel();
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals); //Madu Manathunga 07/01/2019: added libxc variable
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
 
@@ -438,7 +443,8 @@ __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
 
 
 //__device__ void gpu_grid_b3lyp(int irad, int iradtemp, int iatm);
-__device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng);
+//Madu Manathunga 07/01/2019: added libxc variable
+__device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals);
 
 __device__ int gridFormSG1(int iitype, QUICKDouble distance, \
                            QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng);

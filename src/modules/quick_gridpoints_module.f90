@@ -1,11 +1,12 @@
-!
+#include "../config.h"
 !	quick_gridpoints_module.f90
 !	new_quick
 !
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
+!       
+!       Madu Manathunga updated this module on 04/17/2017
 !
-
 !  Grid Points Module
 module quick_gridpoints_module
 
@@ -23,6 +24,14 @@ module quick_gridpoints_module
     RWT(MAXRADGRID)
     double precision,  dimension(:), allocatable :: sigrad2
     integer :: iradial(0:10), iangular(10),iregion
+
+!Madu: Variables for parallelizing Exc part of the DFT
+#ifdef MPI
+!   integer,allocatable:: mpi_rgptsn(:)  ! Number of radial grid points
+   !calculated on this node
+!   integer,allocatable:: mpi_rgpts(:,:) !Series of grid pts calculated
+   ! on this node 
+#endif
     
     contains
     

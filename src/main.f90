@@ -48,7 +48,6 @@
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
-
     ! Initial neccessary variables
     call initialize1(ierr)    
     !-------------------MPI/MASTER---------------------------------------
@@ -56,7 +55,6 @@
 
       ! read input argument
       call set_quick_files(ierr)    ! from quick_file_module
-
 
       ! open output file
       call quick_open(iOutFile,outFileName,'U','F','R',.false.)
