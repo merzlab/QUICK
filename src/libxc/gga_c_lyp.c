@@ -21,7 +21,10 @@ void xc_gga_c_lyp_init(xc_func_type *p)
   assert(p->params == NULL);
 
   p->params = malloc(sizeof(gga_c_lyp_params));
-
+#ifdef CUDA
+  p->params_byte_size = sizeof(gga_c_lyp_params); //Assign the value for param size
+  printf("p->params_byte_size: %d \n", p->params_byte_size);
+#endif
   /* values of constants in standard LYP functional */
   switch(p->info->number){
   case XC_GGA_C_LYP:
@@ -50,8 +53,9 @@ void xc_gga_c_lyp_set_params(xc_func_type *p, double A, double B, double c, doub
   params->d = d;
 }
 
-
+#ifndef CUDA
 #include "maple2c/gga_c_lyp.c"
+#endif
 
 #define func maple2c_func
 #include "work_gga_c.c"

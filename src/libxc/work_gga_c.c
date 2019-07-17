@@ -41,6 +41,28 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
 
   if(r.order < 0) return;
 
+#ifdef CUDA
+#include "gpu_extern.h"
+
+	if(GPU_DEBUG){
+		printf("FILE: %s, LINE: %d, FUNCTION: %s, work_gga_c at work.. \n",
+		__FILE__, __LINE__, __func__);
+	}
+
+	set_gpu_ggac_work_params(p->dens_threshold, p->info->number, (gpu_ggac_work_params*)gpu_work_params);
+
+	gpu_ggac_work_params *tmp_ggwp;
+	tmp_ggwp = (gpu_ggac_work_params*)gpu_work_params;
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s ggwp->id: %d \n",
+                                __FILE__, __LINE__, __func__, tmp_ggwp->func_id);
+        }
+	
+//if(!dryrun){
+	//test_cu(p, (gpu_ggac_work_params*) gpu_work_params, rho, sigma, np);
+//}
+#else
   for(ip = 0; ip < np; ip++){
     xc_rho2dzeta(p->nspin, rho, &(r.dens), &(r.z));
 
@@ -357,5 +379,6 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
       v3rhosigma2 += p->n_v3rhosigma2;
       v3sigma3    += p->n_v3sigma3;
     }
-  }    
+  }  
+#endif  
 }

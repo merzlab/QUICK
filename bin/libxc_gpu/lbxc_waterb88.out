@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Jul 12 10:00:39 2019
+ TASK STARTS ON: Sun Jul 14 14:52:27 2019
  INPUT FILE :    lbxc_waterb88.in
  OUTPUT FILE:    lbxc_waterb88.out
  DATE FILE  :    lbxc_waterb88.dat
@@ -110,10 +110,10 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.05
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
-SCF CYCLE      =        2      TIME      =     0.04
+SCF CYCLE      =        2      TIME      =     0.05
 RMS CHANGE     = 0.813251E-01  MAX CHANGE= 0.292791E+00
 
 SCF CYCLE      =        3      TIME      =   0.04
@@ -124,7 +124,7 @@ SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.04
+SCF CYCLE      =        5      TIME      =   0.05
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
@@ -132,15 +132,15 @@ SCF CYCLE      =        6      TIME      =   0.04
 DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
 RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
 
-SCF CYCLE      =        7      TIME      =   0.05
+SCF CYCLE      =        7      TIME      =   0.03
 DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.04
+SCF CYCLE      =        8      TIME      =     0.03
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.05
+SCF CYCLE      =        9      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 

@@ -10,9 +10,13 @@
   Maple source      : ../maple/gga_c_lyp.mpl
   Type of functional: work_gga_c
 */
-
+#ifdef CUDA
+__device__ void xc_gga_c_lyp_func
+(const void *p,  xc_gga_work_c_t *r)
+#else
 void xc_gga_c_lyp_func
   (const xc_func_type *p, xc_gga_work_c_t *r)
+#endif
 {
   double t7, t8, t10, t11, t12, t13, t15, t16;
   double t17, t20, t21, t22, t26, t27, t28, t30;
@@ -41,9 +45,12 @@ void xc_gga_c_lyp_func
   double t863, t864;
 
   gga_c_lyp_params *params;
-
+#ifndef CUDA
   assert(p->params != NULL);
   params = (gga_c_lyp_params * )(p->params);
+#else
+  params = (gga_c_lyp_params * )(p);
+#endif
 
   t7 = r->z * r->z;
   t8 = -t7 + 0.1e1;
@@ -310,5 +317,7 @@ void xc_gga_c_lyp_func
 
 }
 
+#ifndef CUDA
 #define maple2c_order 3
 #define maple2c_func  xc_gga_c_lyp_func
+#endif

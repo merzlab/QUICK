@@ -66,3 +66,6 @@ else
         CUDA_FLAGS2=$(CUDA_FLAGS)
         #CUDA_INT_OBJ=
 endif
+
+#LIBXC CUDA flags
+LIBXC_CUDA_FLAGS = -I$(libxcfolder) 

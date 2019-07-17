@@ -73,7 +73,7 @@ extern "C" void test_cu(const xc_func_type *p, gpu_ggax_work_params *ggwp, xc_gg
 	
 	//----------------- pointer hosting work parameters on device --------------------------
 	gpu_libxc_info* d_glinfo;
-	d_glinfo = gpu_upload_libxc_info(p, ggwp, h_r, np);
+	d_glinfo = gpu_upload_libxc_info(p, (void*)ggwp, np);
 
 	//rho and sigma pointers on device
 	gpu_libxc_in* d_glin;

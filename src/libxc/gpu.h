@@ -14,6 +14,10 @@ typedef struct{
 	int ggax_maple2c_psize;
 }gpu_ggax_work_params;
 
+typedef struct{
+        double dens_threshold;
+        int func_id;
+}gpu_ggac_work_params;
 
 //Define a parent struct to carry all the above structs
 /*typedef struct{
@@ -31,6 +35,8 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params);
 
 void set_gpu_ggax_work_params(double sfact, double dens_threshold, double alpha,                
         double beta, double c_zk0, double c_vrho0, double c_vrho1, double c_vrho2, double c_vsigma0, double c_vsigma1, int func_id, gpu_ggax_work_params *w);
+
+void set_gpu_ggac_work_params(double dens_threshold, int func_id, gpu_ggac_work_params *w);
 
 #ifdef __cplusplus
 }

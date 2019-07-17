@@ -1,6 +1,7 @@
 #include "gpu.h"
 #include <cuda.h>
 #include "gpu_work_gga_x.cu"
+#include "gpu_work_gga_c.cu"
 
 static __constant__ gpu_simulation_type devSim_dft;
 static __constant__ QUICKDouble radii[19] = {1.e0, 0.5882e0, 3.0769e0, 
@@ -210,12 +211,12 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
             if (devSim_dft.method == B3LYP) {
                 _tmp = b3lyp_e(2.0*density, sigma);
             }else if(devSim_dft.method == DFT){// !!! remember to change it to BLYP
-		_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)* weight;
+		//_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)* weight;
                 //+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+		_tmp = lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz) * weight;
 #ifdef DEBUG
- __syncthreads();
  //printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
-//                printf("rho: %.10e sigma: %.10e _tmp: %.10e \n", (density+densityb), sigma, _tmp);
+                printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e \n", (density+densityb), sigma, _tmp/weight);
 #endif
             }else if(devSim_dft.method == LIBXC){ //Madu: Change this conditional statement content
                // _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
@@ -238,12 +239,18 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 
                 QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
                 QUICKDouble dfdr2;
-                becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
-/*              lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
-                dfdr += dfdr2;
+                //becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
+                lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+/*                dfdr += dfdr2;
                 dfdgaa += dfdgaa2;
                 dfdgab += dfdgab2;
-*/                
+*/
+		dfdr = dfdr2;
+		dfdgaa = dfdgaa2;
+		dfdgab = dfdgab2;
+#ifdef DEBUG
+		printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e dfdr: %.10e dfdgaa: %.10e dfdgab: %.10e \n", density, sigma, _tmp/weight, dfdr2, dfdgaa2, dfdgab2);
+#endif    
                 // This subroutine will never run,
                 // however, it will speed up the program for about 4 times. Yes, you are right, 4 times
                 // in another word, if you delete it, the program will be slown up to 25%.
@@ -260,20 +267,24 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 
 		//gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_libxc_out* glout, int size);
 		//Prepare input for libxc call
-		double d_rho_sum = (double) (density+densityb);
-		double d_sigma = (double)sigma;		
+		double d_rhoa = (double) density;
+		double d_rhob = (double) densityb;
+		double d_rho_sum = (d_rhoa + d_rhob);
+		double d_sigma = (double)sigma;
 		double d_zk, d_vrho, d_vsigma;
 
 		gpu_libxc_info* tmp_glinfo = glinfo[0];
 
-		gpu_work_gga_x(tmp_glinfo, d_rho_sum, d_sigma, &d_zk, &d_vrho, &d_vsigma);
+		//gpu_work_gga_x(tmp_glinfo, (density+densityb), d_sigma, &d_zk, &d_vrho, &d_vsigma);
+		gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &d_zk, &d_vrho, &d_vsigma, 1);
 
-		_tmp = (QUICKDouble) (d_zk * d_rho_sum * weight);
+		_tmp = ((QUICKDouble) (d_zk * d_rho_sum)) * weight;
 
 		//_tmp = (QUICKDouble)d_zk[0] * (density+densityb) * weight;
 		//_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)*weight;
 #ifdef DEBUG
-	printf("rho: %.10e sigma: %.10e d_zk: %.10e  d_vrho: %.10e  d_vsigma: %.10e \n", d_rho_sum, d_sigma, d_zk, d_vrho, d_vsigma);
+//                printf("rho: %.10e sigma: %.10e zk: %.10e d_vrho: %.10e d_vsigma: %.10e \n", (d_rhoa+d_rhob), d_sigma, d_zk, d_vrho, d_vsigma);
+//	printf("rho: %.10e sigma: %.10e d_zk: %.10e  d_vrho: %.10e  d_vsigma: %.10e \n", d_rho_sum, d_sigma, d_zk, d_vrho, d_vsigma);
 //	 printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
 		//printf("rho: %f, d_rho[1]: %f, sigma: %f, d_sigma[1]: %f, d_zk[0]: %.10e \n", (density+densityb), d_rho[0], sigma, d_sigma[0],d_zk[0]);
         //printf("FILE: %s, LINE: %d, FUNCTION: %s, rho: %f, sigma: %f, zk: %f, vrho: %f, vsigma: %f \n", __FILE__, __LINE__, __func__, d_rho[0],

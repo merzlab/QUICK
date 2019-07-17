@@ -44,10 +44,10 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Sat Jul 13 12:29:15 2019
- INPUT FILE :    lbxc_waterb88.in
- OUTPUT FILE:    lbxc_waterb88.out
- DATE FILE  :    lbxc_waterb88.dat
+ TASK STARTS ON: Wed Jul 17 09:35:19 2019
+ INPUT FILE :    lbxc_waterlyp.in
+ OUTPUT FILE:    lbxc_waterlyp.out
+ DATE FILE  :    lbxc_waterlyp.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
 
 |------------ CUDA INFORMATION ---------------
@@ -73,13 +73,13 @@
  @ Read Job And Atom
 
   -------------------------------------
-KEYWORD= LIBXC GGA_X_B88 BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                                      
+KEYWORD= LIBXC GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                                      
   -------------------------------------
  ============== JOB CARD =============
 | METHOD = DENSTITY FUNCTIONAL THEORY
 | USING LIBXC VERSION: 4.3.4
 | FUNCTIONAL INFORMATION:
-| NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
+| NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
 | DIRECT SCF 
 | SAD INITAL GUESS 
 | USE DIIS SCF
@@ -110,7 +110,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.05
+SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -120,7 +120,7 @@ SCF CYCLE      =        3      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
 RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
 
-SCF CYCLE      =        4      TIME      =   0.05
+SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
@@ -137,10 +137,10 @@ DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.06
+SCF CYCLE      =        8      TIME      =     0.04
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.06
+SCF CYCLE      =        9      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 
@@ -245,3 +245,45 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
+  1    -67.553905926      ------         0.348     1        0.30      0.05      0.00    0.1761E+01  0.1930E+00  0.8360E+00
+  2    -67.235621055  -.318285E+00       0.047     2        0.00      0.05      0.00    0.6309E+00  0.1770E+00  0.8081E+00
+  3    -67.117808195  -.117813E+00       0.043     3        0.00      0.04      0.00    0.7502E+00  0.9096E-01  0.3926E+00
+  4    -67.615981425  0.498173E+00       0.044     4        0.00      0.04      0.00    0.2321E-01  0.1655E-01  0.5395E-01
+  5    -67.617209475  0.122805E-02       0.043     5        0.00      0.04      0.00    0.9453E-02  0.5457E-02  0.1912E-01
+  6    -67.617342660  0.133186E-03       0.044     6        0.00      0.04      0.00    0.2005E-02  0.9034E-03  0.3828E-02
+  7    -67.617350836  0.817599E-05       0.044     7        0.00      0.04      0.00    0.2245E-03  0.1265E-03  0.4880E-03
+  8    -67.617351164  0.328021E-06       0.043     8        0.00      0.04      0.00    0.4781E-04  0.3440E-04  0.1173E-03
+  9    -67.617351105  -.596491E-07       0.043     9        0.00      0.04      0.00    0.1739E-05  0.1409E-05  0.5666E-05
+ 10    -67.617351105  0.907185E-11       0.043    10        0.00      0.04      0.00    0.2224E-06  0.1315E-06  0.6238E-06
+------------------------------------------------------------------------------------------------------------------------
+ REACH CONVERGENCE AFTER  10 CYLCES
+ MAX ERROR = 0.222410E-06   RMS CHANGE = 0.131452E-06   MAX CHANGE = 0.623780E-06
+ -----------------------------------------------
+ALPHA ELECTRON DENSITY    =    4.9999835792
+BETA ELECTRON DENSITY     =    4.9999835792
+ELECTRONIC ENERGY    =   -76.774467088
+CORE_CORE REPULSION  =     9.157115983
+TOTAL ENERGY         =   -67.617351105
+
+ @ End Energy calculation
+
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     0.481699000( 25.56%)
+TOTAL SCF TIME     =     0.744471000( 39.50%)
+      TOTAL OP TIME      =     0.437423000( 23.21%)
+            TOTAL 1e TIME      =     0.049659000(  2.63%)
+            TOTAL 2e TIME      =     0.046971000(  2.49%)
+            TOTAL Exchange TIME=     0.340373000( 18.06%)
+            TOTAL ENERGY TIME  =     0.000021000(  0.00%)
+      TOTAL DII TIME     =     0.306935000( 16.29%)
+            TOTAL DIAG TIME    =     0.000307000(  0.02%)
+TOTAL TIME         =     1.884750000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes  1.9 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Wed Jul 17 09:35:22 2019
