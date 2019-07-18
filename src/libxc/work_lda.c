@@ -55,6 +55,17 @@ work_lda(const xc_func_type *p, int np, const double *rho,
   if(v3rho3 != NULL) r.order = 3;
   if(r.order < 0) return;
 
+#ifdef CUDA
+#include "gpu_extern.h"
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, work_lda at work.. \n",
+                __FILE__, __LINE__, __func__);
+        }
+	
+        set_gpu_lda_work_params(p->dens_threshold, p->info->number, cnst_rs, XC_DIMENSIONS,(gpu_lda_work_params*)gpu_work_params);
+
+#else
   for(ip = 0; ip < np; ip++){
     xc_rho2dzeta(p->nspin, rho, &dens, &r.z);
 
@@ -140,4 +151,5 @@ work_lda(const xc_func_type *p, int np, const double *rho,
       v3rho3 += p->n_v3rho3;
 
   } /* for(ip) */
+#endif
 }

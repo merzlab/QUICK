@@ -10,18 +10,24 @@
   Maple source      : ../maple/lda_x.mpl
   Type of functional: work_lda
 */
-
+#ifdef CUDA
+__device__ static void
+func0(const void *p, xc_lda_work_t *r)
+#else
 static void
 func0(const xc_func_type *p, xc_lda_work_t *r)
+#endif
 {
   double t1, t2, t4, t5, t7, t8, t9, t10;
   double t11, t16, t25;
 
   lda_x_params *params;
-
+#ifndef CUDA
   assert(p->params != NULL);
   params = (lda_x_params * )(p->params);
-
+#else
+  params = (lda_x_params * )(p);
+#endif
   t1 = M_CBRT3;
   t2 = t1 * t1;
   t4 = M_CBRT4;
@@ -52,18 +58,25 @@ func0(const xc_func_type *p, xc_lda_work_t *r)
 
 }
 
+#ifdef CUDA
+__device__ static void
+func1(const void *p, xc_lda_work_t *r)
+#else
 static void
 func1(const xc_func_type *p, xc_lda_work_t *r)
+#endif
 {
   double t1, t2, t4, t5, t7, t8, t9, t10;
   double t11, t12, t13, t15, t16, t18, t19, t24;
   double t25, t30, t36, t44, t46, t49, t54;
 
   lda_x_params *params;
-
+#ifndef CUDA
   assert(p->params != NULL);
   params = (lda_x_params * )(p->params);
-
+#else
+  params = (lda_x_params * )(p);
+#endif
   t1 = M_CBRT3;
   t2 = t1 * t1;
   t4 = M_CBRT4;
@@ -112,14 +125,23 @@ func1(const xc_func_type *p, xc_lda_work_t *r)
 
 }
 
+#ifdef CUDA
+__device__ void
+xc_lda_x_func(const void *p, xc_lda_work_t *r, int nspin)
+{
+if(nspin == XC_UNPOLARIZED)
+#else
 void 
 xc_lda_x_func(const xc_func_type *p, xc_lda_work_t *r)
 {
   if(p->nspin == XC_UNPOLARIZED)
+#endif
     func0(p, r);
   else
     func1(p, r);
 }
 
+#ifndef CUDA
 #define maple2c_order 3
 #define maple2c_func  xc_lda_x_func
+#endif

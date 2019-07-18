@@ -1118,6 +1118,7 @@ enddo
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
    write(*,*) "E1+E2+Eelxc=",quick_qm_struct%eel
 
+   stop
 
 end subroutine dftoperator
 

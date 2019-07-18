@@ -26,6 +26,19 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 		gpu_libxc_info* unkptr;
 		//void* ggwp;
         	switch(func.info->family){
+		case(XC_FAMILY_LDA):
+			gpu_lda_work_params *ldawp;
+			ldawp = (gpu_lda_work_params*)malloc(sizeof(gpu_lda_work_params));
+#ifdef DEBUG
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, Obtaining paramters \n", __FILE__, __LINE__, __func__);
+#endif
+			get_gpu_work_params(&func, (void*)ldawp);
+#ifdef DEBUG            
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, Uploading paramters \n", __FILE__, __LINE__, __func__);
+#endif
+			unkptr = gpu_upload_libxc_info(&func, (void*)ldawp, 1);
+			break;
+
         	case(XC_FAMILY_GGA):
 			//xc_gga_work_x_t* h_std_w_t;
 			//h_std_w_t = (xc_gga_work_x_t*)malloc(sizeof(xc_gga_work_x_t));
@@ -35,7 +48,6 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 				gpu_ggax_work_params *ggaxwp;
 				ggaxwp = (gpu_ggax_work_params*) malloc(sizeof(gpu_ggax_work_params));
 				get_gpu_work_params(&func, (void*)ggaxwp);
-				//unkptr = gpu_upload_libxc_info(&func, ggwp, *h_std_w_t, 1);
 				unkptr = gpu_upload_libxc_info(&func, (void*)ggaxwp, 1);
 
 #ifdef DEBUG
@@ -49,7 +61,6 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 				gpu_ggac_work_params *ggacwp;
 				ggacwp = (gpu_ggac_work_params*) malloc(sizeof(gpu_ggac_work_params));
 				get_gpu_work_params(&func, (void*)ggacwp);
-				//unkptr = gpu_upload_libxc_info(&func, (void*)ggwp, 1);
 				unkptr = gpu_upload_libxc_info(&func, (void*)ggacwp, 1);
 #ifdef DEBUG
         //printf("FILE: %s, LINE: %d, FUNCTION: %s, TEST ggwp VALUE: %f \n", __FILE__, __LINE__, __func__, ggwp->func_id);

@@ -19,6 +19,8 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
 
         //check the family
         switch(p->info->family){
+	case(XC_FAMILY_LDA):
+		 work_param_size = sizeof(gpu_lda_work_params);
         case(XC_FAMILY_GGA):
                 //Now check the kind. 
                 switch(p->info->kind){

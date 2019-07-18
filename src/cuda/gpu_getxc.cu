@@ -2,6 +2,7 @@
 #include <cuda.h>
 #include "gpu_work_gga_x.cu"
 #include "gpu_work_gga_c.cu"
+#include "gpu_work_lda.cu"
 
 static __constant__ gpu_simulation_type devSim_dft;
 static __constant__ QUICKDouble radii[19] = {1.e0, 0.5882e0, 3.0769e0, 
@@ -276,14 +277,16 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 		gpu_libxc_info* tmp_glinfo = glinfo[0];
 
 		//gpu_work_gga_x(tmp_glinfo, (density+densityb), d_sigma, &d_zk, &d_vrho, &d_vsigma);
-		gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &d_zk, &d_vrho, &d_vsigma, 1);
+		//gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &d_zk, &d_vrho, &d_vsigma, 1);
+
+		gpu_work_lda_c(tmp_glinfo, d_rhoa, d_rhob, &d_zk, &d_vrho, 1);
 
 		_tmp = ((QUICKDouble) (d_zk * d_rho_sum)) * weight;
 
 		//_tmp = (QUICKDouble)d_zk[0] * (density+densityb) * weight;
 		//_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)*weight;
 #ifdef DEBUG
-//                printf("rho: %.10e sigma: %.10e zk: %.10e d_vrho: %.10e d_vsigma: %.10e \n", (d_rhoa+d_rhob), d_sigma, d_zk, d_vrho, d_vsigma);
+                printf("rho: %.10e zk: %.10e d_vrho: %.10e \n", (d_rhoa+d_rhob), d_zk, d_vrho);
 //	printf("rho: %.10e sigma: %.10e d_zk: %.10e  d_vrho: %.10e  d_vsigma: %.10e \n", d_rho_sum, d_sigma, d_zk, d_vrho, d_vsigma);
 //	 printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
 		//printf("rho: %f, d_rho[1]: %f, sigma: %f, d_sigma[1]: %f, d_zk[0]: %.10e \n", (density+densityb), d_rho[0], sigma, d_sigma[0],d_zk[0]);
@@ -301,6 +304,9 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 //dfdgaa += dfdgaa2;
                 //dfdgab += dfdgab2;
 
+//---------------TEMPORARY- ONLY FOR LDA TESTING ---------------
+		d_vsigma = 0;
+//--------------------------------------------------------------
 		dfdr = (QUICKDouble)d_vrho;
 		dfdgaa = (QUICKDouble)d_vsigma;
 		dfdgab = (QUICKDouble)d_vsigma; //Currently we can only handle closed shell systems		

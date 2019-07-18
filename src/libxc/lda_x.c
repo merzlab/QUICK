@@ -39,6 +39,12 @@ lda_x_init(xc_func_type *p)
 
   assert(p != NULL && p->params == NULL);
   p->params = malloc(sizeof(lda_x_params));
+
+#ifdef CUDA
+  p->params_byte_size = sizeof(lda_x_params); //Assign the value for param size
+  printf("p->params_byte_size: %d \n", p->params_byte_size);
+#endif
+
   params = (lda_x_params *) (p->params);
 
   params->alpha = 1.0;
@@ -173,7 +179,9 @@ xc_lda_x_attenuation_function(int interaction, int order, double aa,
   }
 }
 
+#ifndef CUDA
 #include "maple2c/lda_x.c"
+#endif
 
 #define func maple2c_func
 #include "work_lda.c"
