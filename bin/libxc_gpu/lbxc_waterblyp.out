@@ -44,10 +44,10 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Jul 19 09:27:04 2019
- INPUT FILE :    lbxc_waterlda.in
- OUTPUT FILE:    lbxc_waterlda.out
- DATE FILE  :    lbxc_waterlda.dat
+ TASK STARTS ON: Fri Jul 19 11:54:27 2019
+ INPUT FILE :    lbxc_waterblyp.in
+ OUTPUT FILE:    lbxc_waterblyp.out
+ DATE FILE  :    lbxc_waterblyp.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
 
 |------------ CUDA INFORMATION ---------------
@@ -73,13 +73,14 @@
  @ Read Job And Atom
 
   -------------------------------------
-KEYWORD= LIBXC XC_LDA_X BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                                       
+KEYWORD= LIBXC GGA_X_B88 GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                            
   -------------------------------------
  ============== JOB CARD =============
 | METHOD = DENSTITY FUNCTIONAL THEORY
 | USING LIBXC VERSION: 4.3.4
 | FUNCTIONAL INFORMATION:
-| NAME = Slater exchange FAMILY = LDA KIND = EXCHANGE
+| NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
+| NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
 | DIRECT SCF 
 | SAD INITAL GUESS 
 | USE DIIS SCF
@@ -124,15 +125,15 @@ SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.03
+SCF CYCLE      =        5      TIME      =   0.04
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
-SCF CYCLE      =        6      TIME      =   0.03
+SCF CYCLE      =        6      TIME      =   0.04
 DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
 RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
 
-SCF CYCLE      =        7      TIME      =   0.03
+SCF CYCLE      =        7      TIME      =   0.04
 DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)

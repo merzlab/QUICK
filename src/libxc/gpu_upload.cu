@@ -112,6 +112,38 @@ double* gpu_upload_libxc_input_array(const double *h_input, int size){
         return d_double_arr;
 }
 
+//Returns an integer that uniquly identifies the gpu worker
+int get_gpu_worker(const xc_func_type *p){
+
+        int gpu_wt = 0;
+
+        //check the family
+        switch(p->info->family){
+        case(XC_FAMILY_LDA):
+                gpu_wt = GPU_WORK_LDA;
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, WORKER: %d \n", __FILE__, __LINE__, __func__, gpu_wt);
+        }
+
+		break;
+        case(XC_FAMILY_GGA):
+                //Now check the kind. 
+                switch(p->info->kind){
+                        case(XC_EXCHANGE):
+                                gpu_wt = GPU_WORK_GGA_X;
+                        break;
+                        case(XC_CORRELATION):
+                                gpu_wt = GPU_WORK_GGA_C;
+                        break;
+                }
+        break;
+        }
+
+        return gpu_wt;
+
+}
+
 gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, int np){
 	gpu_libxc_info h_glinfo;
 	h_glinfo.d_maple2c_params = gpu_upload_maple2c_params(p);
@@ -124,6 +156,7 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, int np)
         //h_glinfo.d_vrho = gpu_upload_libxc_out(np);
         //h_glinfo.d_vsigma = gpu_upload_libxc_out(np);
        // h_glinfo.d_std_libxc_work_params = gpu_upload_std_libxc_work_params(p, &h_r, np);
+	h_glinfo.gpu_worker = get_gpu_worker(p);
 
 	gpu_libxc_info* d_glinfo;
 	cudaMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));
@@ -157,3 +190,4 @@ gpu_libxc_in* gpu_upload_libxc_in(const double* h_rho, const double *h_sigma, in
 
         return d_glin;
 }
+

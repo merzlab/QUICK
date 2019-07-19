@@ -91,23 +91,10 @@ void set_gpu_ggac_work_params(double dens_threshold, int func_id, gpu_ggac_work_
 
 void set_gpu_lda_work_params(double dens_threshold, int func_id, double cnst_rs, int XC_DIMENSIONS, gpu_lda_work_params *w){
 
-        if(GPU_DEBUG){
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, Setting LDA params.. \n",
-                __FILE__, __LINE__, __func__);
-        }
-
 	w -> dens_threshold = dens_threshold;
 	w -> func_id = func_id;
 	w -> cnst_rs = cnst_rs;
-        if(GPU_DEBUG){
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, Setting LDA params partially done.. \n",
-                __FILE__, __LINE__, __func__);
-        }
 	w -> XC_DIMENSIONS = XC_DIMENSIONS;
-	
-        if(GPU_DEBUG){
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, Setting LDA params is done.. \n",
-                __FILE__, __LINE__, __func__);
-        }
+
 }
 #endif

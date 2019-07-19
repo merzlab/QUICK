@@ -1,10 +1,10 @@
 #ifndef GPU_WORKH
 #define GPU_WORKH
-//maple2c param typedefs
-/*typedef struct{
-  double beta, gamma;
-} gga_x_b88_params;
-*/
+
+#define GPU_WORK_LDA 0
+#define GPU_WORK_GGA_X 1
+#define GPU_WORK_GGA_C 2
+
 typedef struct{
         double *d_rho; //Input array, holds densities
         double *d_sigma; //Input array, holds the gradient of densities
@@ -12,15 +12,20 @@ typedef struct{
 
 //hosts device pointers reqired for libxc kernels
 typedef struct {
+	
         //common worker params
         void *d_maple2c_params;
         void *d_worker_params;
+	int gpu_worker; //0, 1, 2, 3 stands for LDA, GGA_X, GGA_C, HYB_GGA respectively
+
+	double mix_coeff; //mixing coefficient 
 
         //Specific for gga_x worker
         double *d_gdm;
         double *d_ds;
         double *d_rhoLDA;
         void *d_std_libxc_work_params;
+
 
 }gpu_libxc_info;
 

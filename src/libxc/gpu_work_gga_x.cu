@@ -6,9 +6,9 @@ typedef struct{
 #include "maple2c/gga_x_b88.c"
 
 #ifdef QUICK_LIBXC
-__device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rho, double d_sigma, double *d_zk, double *d_vrho, double *d_vsigma){
+__device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_rhob, double d_sigma, double *d_zk, double *d_vrho, double *d_vsigma){
 
-	int gid = 0;	
+	double d_rho=d_rhoa + d_rhob;
 #else
 __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_libxc_out* glout, int size){
 	int gid = blockIdx.x * blockDim.x + threadIdx.x;
