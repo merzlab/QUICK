@@ -781,12 +781,13 @@ write(*,*) "E0=",quick_qm_struct%Eel
 !Madu: A temproray change to test libxc 06/11/2019
 #ifdef CUDA
         if (quick_method%bCUDA) then
-                if(quick_method%B3LYP)then
-                        call gpu_upload_method(1)
+                if(quick_method%uselibxc)then
+                        call gpu_upload_method(3)
+                        call gpu_upload_hyb_coeff(quick_method%x_hybrid_coeff)
                 elseif(quick_method%BLYP)then
                         call gpu_upload_method(2)
-                elseif(quick_method%uselibxc)then
-                        call gpu_upload_method(3)
+                elseif(quick_method%B3LYP)then
+                        call gpu_upload_method(1)
                 endif
         endif
 
@@ -1118,7 +1119,7 @@ enddo
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
    write(*,*) "E1+E2+Eelxc=",quick_qm_struct%eel
 
-   stop
+!   stop
 
 end subroutine dftoperator
 

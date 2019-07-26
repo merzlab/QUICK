@@ -11,8 +11,13 @@
   Type of functional: work_lda
 */
 
+#ifdef CUDA
+__device__ static void
+xc_lda_c_vwn_rpa_func0(const void *p, xc_lda_work_t *r)
+#else
 static void
 func0(const xc_func_type *p, xc_lda_work_t *r)
+#endif
 {
   double t1, t3, t4, t6, t9, t12, t14, t15;
   double t17, t19, t20, t22, t24, t26, t27, t28;
@@ -95,8 +100,13 @@ func0(const xc_func_type *p, xc_lda_work_t *r)
 
 }
 
+#ifdef CUDA
+__device__ static void
+xc_lda_c_vwn_rpa_func1(const void *p, xc_lda_work_t *r)
+#else
 static void
 func1(const xc_func_type *p, xc_lda_work_t *r)
+#endif
 {
   double t1, t3, t4, t6, t8, t9, t12, t14;
   double t15, t17, t19, t20, t21, t23, t24, t26;
@@ -263,6 +273,16 @@ func1(const xc_func_type *p, xc_lda_work_t *r)
 
 }
 
+#ifdef CUDA
+__device__ void
+xc_lda_c_vwn_rpa_func(const void *p, xc_lda_work_t *r, int nspin)
+{
+  if(nspin == XC_UNPOLARIZED)
+    xc_lda_c_vwn_rpa_func0(p, r);
+  else
+    xc_lda_c_vwn_rpa_func1(p, r);
+}
+#else
 void 
 xc_lda_c_vwn_rpa_func(const xc_func_type *p, xc_lda_work_t *r)
 {
@@ -271,6 +291,9 @@ xc_lda_c_vwn_rpa_func(const xc_func_type *p, xc_lda_work_t *r)
   else
     func1(p, r);
 }
+#endif
 
+#ifndef CUDA
 #define maple2c_order 3
 #define maple2c_func  xc_lda_c_vwn_rpa_func
+#endif

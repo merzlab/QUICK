@@ -786,6 +786,8 @@ __device__ __forceinline__ void iclass_spdf10
         hybrid_coeff = 0.2;
     }else if (devSim.method == DFT){
         hybrid_coeff = 0.0;
+    }else if(devSim.method == LIBXC){
+        hybrid_coeff = devSim.hyb_coeff;                        
     }
     
     

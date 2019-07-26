@@ -49,15 +49,8 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
 		__FILE__, __LINE__, __func__);
 	}
 
-	set_gpu_ggac_work_params(p->dens_threshold, p->info->number, (gpu_ggac_work_params*)gpu_work_params);
+	set_gpu_ggac_work_params(p->dens_threshold, (gpu_ggac_work_params*)gpu_work_params);
 
-	gpu_ggac_work_params *tmp_ggwp;
-	tmp_ggwp = (gpu_ggac_work_params*)gpu_work_params;
-
-        if(GPU_DEBUG){
-                printf("FILE: %s, LINE: %d, FUNCTION: %s ggwp->id: %d \n",
-                                __FILE__, __LINE__, __func__, tmp_ggwp->func_id);
-        }
 	
 //if(!dryrun){
 	//test_cu(p, (gpu_ggac_work_params*) gpu_work_params, rho, sigma, np);

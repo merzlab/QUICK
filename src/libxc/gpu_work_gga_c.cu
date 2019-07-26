@@ -96,7 +96,7 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                                 //printf("FILE: %s, LINE: %d, FUNCTION: %s func_id: %d \n", __FILE__, __LINE__, __func__, d_w->func_id);
                         }
 
-			switch(d_w->func_id){
+			switch(d_glinfo->func_id){
 			case XC_GGA_C_LYP:
 			case XC_GGA_C_TM_LYP:
                  		if(GPU_DEBUG){

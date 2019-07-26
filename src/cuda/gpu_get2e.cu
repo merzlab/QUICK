@@ -329,6 +329,7 @@ void get2e(_gpu_type gpu)
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
+printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method \n", __FILE__, __LINE__, __func__);
     QUICK_SAFE_CALL((getAddInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(bufferSize, aoint_buffer)));
 }
 
@@ -358,7 +359,7 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
     int const batchSize = 20;
     ERI_entry a[batchSize];
     int j = 0;
-    
+ 
     QUICKULL myInt = (QUICKULL) (bufferSize) / totalThreads;
     if ((bufferSize - myInt*totalThreads)> offside) myInt++;
     
@@ -384,7 +385,7 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
                     }else if (devSim.method == DFT){
                         hybrid_coeff = 0.0;
                     }else if(devSim.method == LIBXC){
-			hybrid_coeff = 0.0; //Madu: Tempaorarily set this to 0.0 to test libxc with b88
+			hybrid_coeff = devSim.hyb_coeff;			
 		    }
                     
                     addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, hybrid_coeff, devSim.dense, devSim.nbasis);

@@ -20,7 +20,12 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
         //check the family
         switch(p->info->family){
 	case(XC_FAMILY_LDA):
-		 work_param_size = sizeof(gpu_lda_work_params);
+		work_param_size = sizeof(gpu_lda_work_params);
+                if(GPU_DEBUG){
+                        printf("FILE: %s, LINE: %d, FUNCTION: %s, lda_work_param_size: %d \n",
+                        __FILE__, __LINE__, __func__, work_param_size);
+                }
+		break;
         case(XC_FAMILY_GGA):
                 //Now check the kind. 
                 switch(p->info->kind){
@@ -144,8 +149,22 @@ int get_gpu_worker(const xc_func_type *p){
 
 }
 
-gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, int np){
+gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np){
 	gpu_libxc_info h_glinfo;
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, mix_coeff);
+        }
+
+	h_glinfo.func_id = p->info->number;
+	h_glinfo.gpu_worker = get_gpu_worker(p);	
+
+	h_glinfo.mix_coeff = mix_coeff;
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, h_glinfo.mix_coeff);
+        }
+
 	h_glinfo.d_maple2c_params = gpu_upload_maple2c_params(p);
 	h_glinfo.d_worker_params = gpu_upload_work_params(p, ggwp);
         //allocate device memory for some work params required by gga_x worker.
@@ -156,7 +175,6 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, int np)
         //h_glinfo.d_vrho = gpu_upload_libxc_out(np);
         //h_glinfo.d_vsigma = gpu_upload_libxc_out(np);
        // h_glinfo.d_std_libxc_work_params = gpu_upload_std_libxc_work_params(p, &h_r, np);
-	h_glinfo.gpu_worker = get_gpu_worker(p);
 
 	gpu_libxc_info* d_glinfo;
 	cudaMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));

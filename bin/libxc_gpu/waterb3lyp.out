@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Mon Jun 24 12:19:03 2019
+ TASK STARTS ON: Fri Jul 26 08:17:42 2019
  INPUT FILE :    waterb3lyp.in
  OUTPUT FILE:    waterb3lyp.out
  DATE FILE  :    waterb3lyp.dat
@@ -108,7 +108,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.04
+SCF CYCLE      =        1      TIME      =     0.05
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -135,19 +135,19 @@ DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.03
+SCF CYCLE      =        8      TIME      =     0.04
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.03
+SCF CYCLE      =        9      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 
-SCF CYCLE      =       10      TIME      =   0.03
+SCF CYCLE      =       10      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.121250E-05
 RMS CHANGE     = 0.882888E-06  MAX CHANGE= 0.354765E-05
 PREPARED FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =       11      TIME      =     0.03
+SCF CYCLE      =       11      TIME      =     0.04
 RMS CHANGE     = 0.761164E-06  MAX CHANGE= 0.302067E-05
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -243,43 +243,3 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.406956230      ------         0.305     1        0.26      0.05      0.00    0.1671E+01  0.1072E+00  0.4244E+00
-  2    -76.315624328  -.913319E-01       0.044     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
-  3    -76.283134665  -.324897E-01       0.044     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
-  4    -76.385674071  0.102539E+00       0.044     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
-  5    -76.385685063  0.109914E-04       0.044     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
-  6    -76.385685466  0.403872E-06       0.043     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
-  7    -76.385685474  0.781575E-08       0.044     7        0.00      0.04      0.00    0.2366E-05  0.1616E-05  0.7527E-05
-  8    -76.385685474  0.295355E-10       0.044     8        0.00      0.04      0.00    0.9764E-06  0.2029E-06  0.9948E-06
-------------------------------------------------------------------------------------------------------------------------
- REACH CONVERGENCE AFTER   8 CYLCES
- MAX ERROR = 0.976436E-06   RMS CHANGE = 0.202908E-06   MAX CHANGE = 0.994806E-06
- -----------------------------------------------
-ALPHA ELECTRON DENSITY    =    4.9999942864
-BETA ELECTRON DENSITY     =    4.9999942864
-ELECTRONIC ENERGY    =   -85.542801457
-CORE_CORE REPULSION  =     9.157115983
-TOTAL ENERGY         =   -76.385685474
-
- @ End Energy calculation
-
-
- @ Output Timing Infomration
-
-------------- TIMING ---------------
-INITIAL GUESS TIME =     0.426706000( 25.12%)
-TOTAL SCF TIME     =     0.613753000( 36.14%)
-      TOTAL OP TIME      =     0.347609000( 20.47%)
-            TOTAL 1e TIME      =     0.035986000(  2.12%)
-            TOTAL 2e TIME      =     0.038517000(  2.27%)
-            TOTAL Exchange TIME=     0.272715000( 16.06%)
-            TOTAL ENERGY TIME  =     0.000012000(  0.00%)
-      TOTAL DII TIME     =     0.266067000( 15.67%)
-            TOTAL DIAG TIME    =     0.000255000(  0.02%)
-TOTAL TIME         =     1.698477000
-------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  1.7 seconds.
-
- @ Finish Output Timing Infomration
-
- Normal Terminatation. Task Finished on: Mon Jun 24 12:19:05 2019

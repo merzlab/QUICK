@@ -10,7 +10,9 @@
 
 #define XC_LDA_C_VWN_RPA  8   /* Vosko, Wilk, & Nusair (RPA) */
 
+#ifndef CUDA
 #include "maple2c/lda_c_vwn_rpa.c"
+#endif
 
 #define func maple2c_func
 #include "work_lda.c"

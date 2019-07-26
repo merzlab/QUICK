@@ -278,6 +278,15 @@ extern "C" void gpu_upload_method_(int* quick_method)
 	gpu -> gpu_sim.method = LIBXC;
     }
 }
+//Madu Manathunga: 07/24/2019
+//-----------------------------------------------
+//  upload libxc hybrid coefficient
+//-----------------------------------------------
+extern "C" void gpu_upload_hyb_coeff_(double* hyb_coeff)
+{
+        gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
+}
+
 
 //-----------------------------------------------
 //  upload coordinates
@@ -1873,9 +1882,14 @@ Integration of libxc GPU version. The included file below contains all libxc met
 extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
-    
+
+	/*The following varialbe will hold the number of auxilary functionals in case of
+	//a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+	//from input. */
+	int nof_aux_functionals = *nof_functionals;    
+
 	//Madu: Initialize gpu libxc and upload information to GPU
-	gpu_libxc_info** glinfo = init_gpu_libxc(nof_functionals, functional_id, xc_polarization);
+	gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
 
 	//libxc_cleanup(glinfo, nof_functionals);
     
@@ -1920,7 +1934,11 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
 	//Madu Manathunga 07/01/2019 added libxc variable
-    getxc(gpu, glinfo, *nof_functionals);
+#ifdef DEBUG
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
+#endif
+
+    getxc(gpu, glinfo, nof_aux_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
     

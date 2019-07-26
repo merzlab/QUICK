@@ -29,6 +29,11 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, GET_GPU_WORK_PARAMS CALLING XC_LDA_EXC_VXC \n", __FILE__, __LINE__, __func__);
         }
 		xc_lda_exc_vxc(p, 1, rho, exc, vrho, gpu_work_params);
+
+        if(GPU_DEBUG){
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, w->xc_dim: %d, GET_GPU_WORK_PARAMS TESTING XC_LDA_EXC_VXC \n", __FILE__, __LINE__, __func__, ((gpu_lda_work_params*)gpu_work_params)->xc_dim);
+        }
+
 		break;
         case(XC_FAMILY_GGA):
 	//	switch(p->info->kind){
@@ -45,7 +50,7 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
                 gpu_ggac_work_params* tmp_ggwp;
                 tmp_ggwp = (gpu_ggac_work_params*)gpu_work_params;
 
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, TEST ggwp VALUE: %f \n", __FILE__, __LINE__, __func__, tmp_ggwp->func_id);
+                //printf("FILE: %s, LINE: %d, FUNCTION: %s, TEST ggwp VALUE: %f \n", __FILE__, __LINE__, __func__, tmp_ggwp->func_id);
 
 	}
 
@@ -66,7 +71,7 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
 }
 
 void set_gpu_ggax_work_params(double sfact, double dens_threshold, double alpha, 
-	double beta, double c_zk0, double c_vrho0, double c_vrho1, double c_vrho2, double c_vsigma0, double c_vsigma1, int func_id, gpu_ggax_work_params *w){
+	double beta, double c_zk0, double c_vrho0, double c_vrho1, double c_vrho2, double c_vsigma0, double c_vsigma1, gpu_ggax_work_params *w){
 
         w -> sfact = sfact;
         w -> dens_threshold = dens_threshold;
@@ -78,23 +83,21 @@ void set_gpu_ggax_work_params(double sfact, double dens_threshold, double alpha,
         w -> c_vrho2 = c_vrho2;
         w -> c_vsigma0 = c_vsigma0;
         w -> c_vsigma1 = c_vsigma1;
-	w -> func_id = func_id;
 
 }
 
-void set_gpu_ggac_work_params(double dens_threshold, int func_id, gpu_ggac_work_params *w){
+void set_gpu_ggac_work_params(double dens_threshold, gpu_ggac_work_params *w){
 
         w -> dens_threshold = dens_threshold;
-        w -> func_id = func_id;
 
 }
 
-void set_gpu_lda_work_params(double dens_threshold, int func_id, double cnst_rs, int XC_DIMENSIONS, gpu_lda_work_params *w){
+void set_gpu_lda_work_params(double dens_threshold, double cnst_rs, int xc_dim, gpu_lda_work_params *w){
 
 	w -> dens_threshold = dens_threshold;
-	w -> func_id = func_id;
 	w -> cnst_rs = cnst_rs;
-	w -> XC_DIMENSIONS = XC_DIMENSIONS;
+	w -> xc_dim = xc_dim;
+	printf("FILE: %s, LINE: %d, FUNCTION: %s,  w -> xc_dim: %d \n", __FILE__, __LINE__, __func__, w->xc_dim);
 
 }
 #endif

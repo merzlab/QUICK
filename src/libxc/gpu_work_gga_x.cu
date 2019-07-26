@@ -37,7 +37,7 @@ __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_l
 //			,test_gdm, test_ds, test_rhoLDA, d_rg->x); 
 		}
 
-	        switch(d_w->func_id){
+	        switch(d_glinfo->func_id){
 	        case XC_GGA_X_B88:
         	case XC_GGA_X_OPTB88_VDW:
         	case XC_GGA_K_LLP:
@@ -69,8 +69,8 @@ __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_l
         	}
 
 		if(GPU_DEBUG){
-                        printf("rho: %.10e  sigma: %.10e  test_gdm: %.10e  test_ds: %.10e  test_rhoLDA: %.10e  d_rg->x: %.10e \n ", d_rho,d_sigma
-                        ,test_gdm, test_ds, test_rhoLDA, d_rg.x);
+//                        printf("rho: %.10e  sigma: %.10e  test_gdm: %.10e  test_ds: %.10e  test_rhoLDA: %.10e  d_rg->x: %.10e \n ", d_rho,d_sigma
+//                        ,test_gdm, test_ds, test_rhoLDA, d_rg.x);
 
 //			printf("rho: %.10e  sigma: %.10e  d_rg->f: %.10e  d_rg->dfdx: %.10e \n",d_rho, d_sigma, d_rg.f, d_rg.dfdx);
 

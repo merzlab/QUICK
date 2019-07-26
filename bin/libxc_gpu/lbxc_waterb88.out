@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Jul 19 09:23:07 2019
+ TASK STARTS ON: Fri Jul 26 11:49:11 2019
  INPUT FILE :    lbxc_waterb88.in
  OUTPUT FILE:    lbxc_waterb88.out
  DATE FILE  :    lbxc_waterb88.dat
@@ -110,7 +110,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -124,7 +124,7 @@ SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.04
+SCF CYCLE      =        5      TIME      =   0.05
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
@@ -245,3 +245,43 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
+  1    -76.055679299      ------         0.388     1        0.32      0.07      0.00    0.1656E+01  0.1097E+00  0.4211E+00
+  2    -75.955768149  -.999111E-01       0.066     2        0.00      0.06      0.00    0.2651E+00  0.9392E-01  0.4709E+00
+  3    -75.840668247  -.115100E+00       0.066     3        0.00      0.06      0.00    0.4240E+00  0.6159E-01  0.3417E+00
+  4    -76.025618554  0.184950E+00       0.081     4        0.00      0.08      0.00    0.4291E-02  0.1266E-02  0.4570E-02
+  5    -76.025591402  -.271525E-04       0.066     5        0.00      0.06      0.00    0.1177E-02  0.1669E-03  0.6084E-03
+  6    -76.025598080  0.667823E-05       0.066     6        0.00      0.06      0.00    0.2499E-03  0.3831E-04  0.1378E-03
+  7    -76.025599359  0.127857E-05       0.066     7        0.00      0.06      0.00    0.2612E-04  0.4562E-05  0.1778E-04
+  8    -76.025599510  0.151304E-06       0.064     8        0.00      0.06      0.00    0.4420E-06  0.1122E-06  0.3678E-06
+------------------------------------------------------------------------------------------------------------------------
+ REACH CONVERGENCE AFTER   8 CYLCES
+ MAX ERROR = 0.442038E-06   RMS CHANGE = 0.112236E-06   MAX CHANGE = 0.367778E-06
+ -----------------------------------------------
+ALPHA ELECTRON DENSITY    =    4.9999938060
+BETA ELECTRON DENSITY     =    4.9999938060
+ELECTRONIC ENERGY    =   -85.182715493
+CORE_CORE REPULSION  =     9.157115983
+TOTAL ENERGY         =   -76.025599510
+
+ @ End Energy calculation
+
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     0.500272000( 25.61%)
+TOTAL SCF TIME     =     0.863081000( 44.18%)
+      TOTAL OP TIME      =     0.537918000( 27.54%)
+            TOTAL 1e TIME      =     0.036661000(  1.88%)
+            TOTAL 2e TIME      =     0.038868000(  1.99%)
+            TOTAL Exchange TIME=     0.462077000( 23.65%)
+            TOTAL ENERGY TIME  =     0.000017000(  0.00%)
+      TOTAL DII TIME     =     0.325094000( 16.64%)
+            TOTAL DIAG TIME    =     0.000221000(  0.01%)
+TOTAL TIME         =     1.953407000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes  2.0 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Fri Jul 26 11:49:14 2019

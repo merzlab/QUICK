@@ -75,6 +75,10 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
     cudaEventCreate(&end);
     cudaEventRecord(start, 0);
 #endif
+
+#ifdef DEBUG
+    printf("FILE: %s, LINE: %d, FUNCTION: %s, Calling getxc_kernal \n", __FILE__, __LINE__, __func__);
+#endif
     
     getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals);
     
@@ -96,7 +100,6 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1)
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 {
-
     unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int totalThreads = blockDim.x * gridDim.x;
     QUICKULL currentPoint = 0;
@@ -149,7 +152,6 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
  */
 //Madu Manathunga 07/01/2019 added libxc variable
 __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals){
-    
     
     QUICKDouble rad, rad3;    
     QUICKDouble atomx, atomy, atomz;
@@ -210,11 +212,14 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
             QUICKDouble _tmp ;
             
             if (devSim_dft.method == B3LYP) {
+
+#ifdef DEBUG
+    printf("FILE: %s, LINE: %d, FUNCTION: %s,  B3LYP enregy \n", __FILE__, __LINE__, __func__);
+#endif
                 _tmp = b3lyp_e(2.0*density, sigma);
             }else if(devSim_dft.method == DFT){// !!! remember to change it to BLYP
-		//_tmp = becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)* weight;
-                //+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
-		_tmp = lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz) * weight;
+		_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
+                + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
 #ifdef DEBUG
  //printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
                 printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e \n", (density+densityb), sigma, _tmp/weight);
@@ -232,6 +237,10 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 xdot = dot * gax;
                 ydot = dot * gay;
                 zdot = dot * gaz;
+#ifdef DEBUG
+    printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method == B3LYP \n", __FILE__, __LINE__, __func__);
+#endif
+
             }else if (devSim_dft.method == DFT){
                 
                 // This allows the calculation of the derivative of the functional
@@ -250,7 +259,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 		dfdgaa = dfdgaa2;
 		dfdgab = dfdgab2;
 #ifdef DEBUG
-		printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e dfdr: %.10e dfdgaa: %.10e dfdgab: %.10e \n", density, sigma, _tmp/weight, dfdr2, dfdgaa2, dfdgab2);
+//		printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e dfdr: %.10e dfdgaa: %.10e dfdgab: %.10e \n", density, sigma, _tmp/weight, dfdr2, dfdgaa2, dfdgab2);
 #endif    
                 // This subroutine will never run,
                 // however, it will speed up the program for about 4 times. Yes, you are right, 4 times
@@ -264,6 +273,10 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
                 zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
             }else if(devSim_dft.method == LIBXC){ //Madu: Change this conditional statement content
+
+#ifdef DEBUG
+    //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method == LIBXC \n", __FILE__, __LINE__, __func__);
+#endif
 
 		//Prepare in/out for libxc call
 		double d_rhoa = (double) density;
@@ -281,28 +294,38 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 			
 			switch(tmp_glinfo->gpu_worker){
 				case GPU_WORK_LDA:
+
 					gpu_work_lda_c(tmp_glinfo, d_rhoa, d_rhob, &tmp_d_zk, &tmp_d_vrho, 1);
+#ifdef DEBUG
+//                printf("func_id: %d rho: %.10e sigma: %.10e tmp_d_zk: %.10e tmp_d_vrho: %.10e \n", tmp_glinfo->func_id, (d_rhoa+d_rhob), 0.0, tmp_d_zk, tmp_d_vrho );
+#endif
 					break;
 				case GPU_WORK_GGA_X:
 					gpu_work_gga_x(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma);
+#ifdef DEBUG
+//                printf("func_id: %d rho: %.10e sigma: %.10e tmp_d_zk: %.10e tmp_d_vrho: %.10e tmp_d_sigma: %.10e \n", tmp_glinfo->func_id, (d_rhoa+d_rhob), d_sigma, tmp_d_zk, tmp_d_vrho, tmp_d_vsigma );
+#endif
 					break;
 				case GPU_WORK_GGA_C:
 					gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma, 1);
+#ifdef DEBUG                            
+//                printf("func_id: %d rho: %.10e sigma: %.10e tmp_d_zk: %.10e tmp_d_vrho: %.10e tmp_d_sigma: %.10e \n", tmp_glinfo->func_id, (d_rhoa+d_rhob), d_sigma, tmp_d_zk, tmp_d_vrho, tmp_d_vsigma );
+#endif
 					break;
 			}			
 
-			d_zk += tmp_d_zk;
-			d_vrho += tmp_d_vrho;
-			d_vsigma += tmp_d_vsigma;
+			d_zk += (tmp_d_zk*tmp_glinfo->mix_coeff) ;
+			d_vrho += (tmp_d_vrho*tmp_glinfo->mix_coeff) ;
+			d_vsigma += (tmp_d_vsigma*tmp_glinfo->mix_coeff);
 #ifdef DEBUG
-	//printf("FILE: %s, LINE: %d, FUNCTION: %s, functional_id: %d \n", __FILE__, __LINE__, __func__, tmp_glinfo->gpu_worker);
+	//printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_functionals: %d, functional_id: %d, worker_id: %d, mix_coeff: %f \n", __FILE__, __LINE__, __func__, nof_functionals, tmp_glinfo->func_id, tmp_glinfo->gpu_worker, tmp_glinfo->mix_coeff);
+//                printf("func_id: %d rho: %.10e zk: %.10e d_vrho: %.10e d_vsigma: %.10e \n", tmp_glinfo->func_id,(d_rhoa+d_rhob), d_zk, d_vrho, d_vsigma);
 #endif
 		}
 
 		_tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob))) * weight;
 
 #ifdef DEBUG
-                printf("rho: %.10e zk: %.10e d_vrho: %.10e d_vsigma: %.10e \n", (d_rhoa+d_rhob), d_zk, d_vrho, d_vsigma);
 //	printf("rho: %.10e sigma: %.10e d_zk: %.10e  d_vrho: %.10e  d_vsigma: %.10e \n", d_rho_sum, d_sigma, d_zk, d_vrho, d_vsigma);
 //	 printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
 		//printf("rho: %f, d_rho[1]: %f, sigma: %f, d_sigma[1]: %f, d_zk[0]: %.10e \n", (density+densityb), d_rho[0], sigma, d_sigma[0],d_zk[0]);
@@ -313,22 +336,33 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 		QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
                 QUICKDouble dfdr2;
 
+		//*******************************Only for testing********************************
+		//d_vsigma = 0.0;
+		//*******************************Only for testing********************************
+
 		dfdr = (QUICKDouble)d_vrho;
-		dfdgaa = (QUICKDouble)d_vsigma;
-		dfdgab = (QUICKDouble)d_vsigma; //Currently we can only handle closed shell systems		
+		dfdgaa = (QUICKDouble)d_vsigma*4.0;
+		//dfdgab = (QUICKDouble)d_vsigma*4.0; //Currently we can only handle closed shell systems		
 
 #ifdef DEBUG
         //printf("FILE: %s, LINE: %d, FUNCTION: %s, dfdgaa: %f, dfdgab: %f, gax: %f, gbx: %f \n", __FILE__, __LINE__, __func__, dfdgaa, dfdgab, gax, gbx);
 #endif
 
                 if (false) lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
-                xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
+
+                /*xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
                 ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
-                zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
+                zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;*/
+
+		xdot = dfdgaa * gax;
+		ydot = dfdgaa * gay;
+		zdot = dfdgaa * gaz;
 
 #ifdef DEBUG
         //printf("FILE: %s, LINE: %d, FUNCTION: %s, xdot: %f, ydot: %f, zdot: %f \n", __FILE__, __LINE__, __func__, xdot, ydot, zdot);
+	printf("rho: %.10e d_zk: %.10e dfdr: %.10e dfdgaa: %.10e xdot: %.10e ydot: %.10e zdot: %.10e \n", (d_rhoa + d_rhob), d_zk, dfdr, dfdgaa, xdot, ydot, zdot);
 #endif
+
 	    }
 
 	           

@@ -128,7 +128,7 @@ work_gga_x
 #include "gpu_extern.h"
         
 	set_gpu_ggax_work_params(sfact, p->dens_threshold, alpha,
-        beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], p->info->number, (gpu_ggax_work_params*)gpu_work_params);
+        beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], (gpu_ggax_work_params*)gpu_work_params);
 
 if(dryrun){
 

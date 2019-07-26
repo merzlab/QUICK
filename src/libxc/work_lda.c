@@ -59,11 +59,11 @@ work_lda(const xc_func_type *p, int np, const double *rho,
 #include "gpu_extern.h"
 
         if(GPU_DEBUG){
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, work_lda at work.. \n",
-                __FILE__, __LINE__, __func__);
+                printf("FILE: %s, LINE: %d, FUNCTION: %s, XC_DIMENSIONS: %d, work_lda at work.. \n",
+                __FILE__, __LINE__, __func__, XC_DIMENSIONS);
         }
-	
-        set_gpu_lda_work_params(p->dens_threshold, p->info->number, cnst_rs, XC_DIMENSIONS,(gpu_lda_work_params*)gpu_work_params);
+	int xc_dim = XC_DIMENSIONS;	
+        set_gpu_lda_work_params(p->dens_threshold, cnst_rs, xc_dim,(gpu_lda_work_params*)gpu_work_params);
 
 #else
   for(ip = 0; ip < np; ip++){

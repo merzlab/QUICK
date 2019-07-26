@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Jul 19 09:28:35 2019
+ TASK STARTS ON: Thu Jul 25 15:56:33 2019
  INPUT FILE :    lbxc_waterblyp.in
  OUTPUT FILE:    lbxc_waterblyp.out
  DATE FILE  :    lbxc_waterblyp.dat
@@ -73,7 +73,7 @@
  @ Read Job And Atom
 
   -------------------------------------
-KEYWORD= LIBXC GGA_X_B88 GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                                            
+KEYWORD= LIBXC GGA_X_B88 GGA_C_LYP GGA_X_B88M GGA_X_MB88 BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 ENERGY                                                                                                      
   -------------------------------------
  ============== JOB CARD =============
 | METHOD = DENSTITY FUNCTIONAL THEORY
@@ -81,6 +81,8 @@ KEYWORD= LIBXC GGA_X_B88 GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 EN
 | FUNCTIONAL INFORMATION:
 | NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
 | NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
+| NAME = Modified Becke 88 for proton transfer FAMILY = GGA KIND = EXCHANGE
+| NAME = Becke 88 reoptimized to be used with tau1 FAMILY = GGA KIND = EXCHANGE
 | DIRECT SCF 
 | SAD INITAL GUESS 
 | USE DIIS SCF
