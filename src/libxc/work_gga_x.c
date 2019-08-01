@@ -126,9 +126,23 @@ work_gga_x
 #ifdef CUDA
 
 #include "gpu_extern.h"
-        
+
+#define GET_XSTR(fval) GET_STR(fval)
+#define GET_STR(fval) #fval
+
+	char fname[50] = GET_XSTR(func); 
+	//gpu_ggax_work_params* w;
+	//w = (gpu_ggax_work_params*)gpu_work_params;
+
+	//w->pkernel = (point_kernel) func;
+
+	//memcpy (w->fname, fname,50);
+
+	//printf("Value of fname variable: %s \n", w->fname);
+		
+
 	set_gpu_ggax_work_params(sfact, p->dens_threshold, alpha,
-        beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], (gpu_ggax_work_params*)gpu_work_params);
+        beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], kernel_id, (gpu_ggax_work_params*)gpu_work_params);
 
 if(dryrun){
 

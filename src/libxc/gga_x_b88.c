@@ -73,7 +73,7 @@ xc_gga_x_b88_set_params(xc_func_type *p, double beta, double gamma)
   params->gamma = gamma;
 }
 
-#ifndef CUDA
+#ifndef DEVICE
 #include "maple2c/gga_x_b88.c"
 #endif
 

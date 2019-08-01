@@ -179,7 +179,7 @@ xc_lda_x_attenuation_function(int interaction, int order, double aa,
   }
 }
 
-#ifndef CUDA
+#ifndef DEVICE
 #include "maple2c/lda_x.c"
 #endif
 

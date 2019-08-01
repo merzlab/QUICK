@@ -90,7 +90,7 @@ xc_gga_enhancement_t
 xc_get_gga_enhancement_factor(int func_id)
 {
   switch(func_id){
-
+#ifndef CUDA //Madu: temporary blocked this in CUDA version
   case XC_GGA_X_WC:
     return xc_gga_x_wc_enhance;
 
@@ -124,9 +124,7 @@ xc_get_gga_enhancement_factor(int func_id)
   case XC_GGA_X_B88:
   case XC_GGA_X_OPTB88_VDW:
   case XC_GGA_X_MB88:
-#ifndef CUDA
-    return xc_gga_x_b88_enhance; //Madu: temporary blocked this in CUDA version
-#endif
+    return xc_gga_x_b88_enhance;
   case XC_GGA_X_G96:
     return xc_gga_x_g96_enhance;
 
@@ -183,7 +181,7 @@ xc_get_gga_enhancement_factor(int func_id)
   case XC_GGA_X_VMT84_PBE:
   case XC_GGA_X_VMT84_GE:
     return xc_gga_x_vmt_enhance;
-
+#endif
   default:
     fprintf(stderr, "Internal error in get_gga_enhancement\n");
     exit(1);

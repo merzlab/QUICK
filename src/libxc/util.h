@@ -83,8 +83,10 @@
 
 /* special functions */
 #define Heaviside(x) (((x) >= 0) ? 1.0 : 0.0)
+#ifndef DEVICE
 double LambertW(double z);
 double xc_dilogarithm(const double x);
+#endif
 
 /* we define this function here, so it can be properly inlined by all compilers */
 static inline double
@@ -173,6 +175,10 @@ typedef struct xc_lda_work_t {
   double dfdrs, dfdz;                         /*  first derivatives of e  */
   double d2fdrs2, d2fdrsz, d2fdz2;            /* second derivatives of e  */
   double d3fdrs3, d3fdrs2z, d3fdrsz2, d3fdz3; /*  third derivatives of e  */
+
+#ifdef CUDA
+  int nspin;
+#endif
 } xc_lda_work_t;
 
 #ifdef CUDA

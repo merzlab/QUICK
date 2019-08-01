@@ -53,7 +53,7 @@ void xc_gga_c_lyp_set_params(xc_func_type *p, double A, double B, double c, doub
   params->d = d;
 }
 
-#ifndef CUDA
+#ifndef DEVICE
 #include "maple2c/gga_c_lyp.c"
 #endif
 

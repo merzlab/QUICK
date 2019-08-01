@@ -1,11 +1,16 @@
 #include "util.h"
 #include "gpu_util.cu"
 
-typedef struct{
+/*typedef struct{
   double A, B, c, d;
 } gga_c_lyp_params;
+*/
 
-#include "maple2c/gga_c_lyp.c"
+typedef void (*ggac_ptr)(const void *p,  xc_gga_work_c_t *r);
+#include "gpu_finclude_ggac.h"
+#include "gpu_fsign_ggac.h"
+
+//#include "maple2c/gga_c_lyp.c"
 
 #define XC_GGA_C_LYP    131  /* Lee, Yang & Parr */
 #define XC_GGA_C_TM_LYP 559  /* Takkar and McCarthy reparametrization */
@@ -96,9 +101,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                                 //printf("FILE: %s, LINE: %d, FUNCTION: %s func_id: %d \n", __FILE__, __LINE__, __func__, d_w->func_id);
                         }
 
-			switch(d_glinfo->func_id){
-			case XC_GGA_C_LYP:
-			case XC_GGA_C_TM_LYP:
+			//switch(d_glinfo->func_id){
+			//case XC_GGA_C_LYP:
+			//case XC_GGA_C_TM_LYP:
                  		if(GPU_DEBUG){
                          	//	printf("FILE: %s, LINE: %d, FUNCTION: %s gpu_work_gga_c is working.. \n", __FILE__, __LINE__, __func__);
                  		}
@@ -107,9 +112,10 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                   //                     printf("FILE: %s, LINE: %d, FUNCTION: %s : Calling xc_gga_c_lyp_func.. \n", __FILE__, __LINE__, __func__);
                                 }			
 
-				xc_gga_c_lyp_func(d_glinfo->d_maple2c_params, &r);
-				break;
-			}
+//				xc_gga_c_lyp_func(d_glinfo->d_maple2c_params, &r);
+				(maple2cf_ggac[d_w->k_index])(d_glinfo->d_maple2c_params, &r);
+			//	break;
+			//}
 
 			*d_zk = r.f;
 

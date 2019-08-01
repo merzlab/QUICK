@@ -58,12 +58,18 @@ work_lda(const xc_func_type *p, int np, const double *rho,
 #ifdef CUDA
 #include "gpu_extern.h"
 
+#define GET_XSTR(fval) GET_STR(fval)
+#define GET_STR(fval) #fval
+
+        //char fname[50] = GET_XSTR(func);
+	//char fname[50] = "test_func";
+
         if(GPU_DEBUG){
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, XC_DIMENSIONS: %d, work_lda at work.. \n",
                 __FILE__, __LINE__, __func__, XC_DIMENSIONS);
         }
 	int xc_dim = XC_DIMENSIONS;	
-        set_gpu_lda_work_params(p->dens_threshold, cnst_rs, xc_dim,(gpu_lda_work_params*)gpu_work_params);
+        set_gpu_lda_work_params(p->dens_threshold, cnst_rs, xc_dim, kernel_id, (gpu_lda_work_params*)gpu_work_params);
 
 #else
   for(ip = 0; ip < np; ip++){

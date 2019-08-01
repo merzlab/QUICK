@@ -44,12 +44,18 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
 #ifdef CUDA
 #include "gpu_extern.h"
 
+#define GET_XSTR(fval) GET_STR(fval)
+#define GET_STR(fval) #fval
+
+        //char fname[50] = GET_XSTR(func);
+	//char fname[50] = "test_func";
+
 	if(GPU_DEBUG){
 		printf("FILE: %s, LINE: %d, FUNCTION: %s, work_gga_c at work.. \n",
 		__FILE__, __LINE__, __func__);
 	}
 
-	set_gpu_ggac_work_params(p->dens_threshold, (gpu_ggac_work_params*)gpu_work_params);
+	set_gpu_ggac_work_params(p->dens_threshold, kernel_id, (gpu_ggac_work_params*)gpu_work_params);
 
 	
 //if(!dryrun){

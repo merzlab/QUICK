@@ -1,9 +1,22 @@
 
-typedef struct{
+/*typedef struct{
   double beta, gamma;
 } gga_x_b88_params;
+*/
 
-#include "maple2c/gga_x_b88.c"
+#define DEVICE
+#include "special_functions.c"
+
+static const double B1 =  1.74959015598863046792081721182; /* 3*muGE/5 + 8 pi/15 */
+static const double B2 = -1.62613336586517367779736042170; /* muGE - B1 */
+
+typedef void (*ggaxk_ptr)(const void *p,  xc_gga_work_x_t *r);
+#include "gpu_fstructs.h"
+#include "gpu_finclude_ggaxk.h"
+#include "gpu_fsign_ggaxk.h"
+/*__device__ void test_func_ptr(void maple_func(const void *p,  xc_gga_work_x_t *r)){
+	maple_func(p, r);
+}*/
 
 #ifdef QUICK_LIBXC
 __device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_rhob, double d_sigma, double *d_zk, double *d_vrho, double *d_vsigma){
@@ -37,7 +50,7 @@ __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_l
 //			,test_gdm, test_ds, test_rhoLDA, d_rg->x); 
 		}
 
-	        switch(d_glinfo->func_id){
+/*	        switch(d_glinfo->func_id){
 	        case XC_GGA_X_B88:
         	case XC_GGA_X_OPTB88_VDW:
         	case XC_GGA_K_LLP:
@@ -45,11 +58,16 @@ __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_l
         	case XC_GGA_X_MB88:
         	case XC_GGA_X_EB88:
         	case XC_GGA_X_B88M:
-			
-			xc_gga_x_b88_enhance(d_glinfo->d_maple2c_params, &d_rg);
-			
-                	break;
-        	}
+*/			
+//			xc_gga_x_b88_enhance(d_glinfo->d_maple2c_params, &d_rg);
+			//point_kernel test_ptr = xc_gga_x_b88_enhance;
+			//point_kernel pkernel = (point_kernel) (d_w->pkernel)
+
+		
+
+		(maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);			
+                	//break;
+        	//}
 
 		if(GPU_DEBUG){
 //                        printf("rho: %.10e  sigma: %.10e  test_rhoLDA: %.10e  test_ds: %.10e  d_rg->f: %.10e \n ", d_rho, d_sigma,

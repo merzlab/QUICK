@@ -71,7 +71,7 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
 }
 
 void set_gpu_ggax_work_params(double sfact, double dens_threshold, double alpha, 
-	double beta, double c_zk0, double c_vrho0, double c_vrho1, double c_vrho2, double c_vsigma0, double c_vsigma1, gpu_ggax_work_params *w){
+	double beta, double c_zk0, double c_vrho0, double c_vrho1, double c_vrho2, double c_vsigma0, double c_vsigma1, int k_index, gpu_ggax_work_params *w){
 
         w -> sfact = sfact;
         w -> dens_threshold = dens_threshold;
@@ -83,21 +83,23 @@ void set_gpu_ggax_work_params(double sfact, double dens_threshold, double alpha,
         w -> c_vrho2 = c_vrho2;
         w -> c_vsigma0 = c_vsigma0;
         w -> c_vsigma1 = c_vsigma1;
+	w -> k_index = k_index;
 
 }
 
-void set_gpu_ggac_work_params(double dens_threshold, gpu_ggac_work_params *w){
+void set_gpu_ggac_work_params(double dens_threshold, int k_index, gpu_ggac_work_params *w){
 
         w -> dens_threshold = dens_threshold;
+        w -> k_index = k_index;
 
 }
 
-void set_gpu_lda_work_params(double dens_threshold, double cnst_rs, int xc_dim, gpu_lda_work_params *w){
+void set_gpu_lda_work_params(double dens_threshold, double cnst_rs, int xc_dim, int k_index, gpu_lda_work_params *w){
 
 	w -> dens_threshold = dens_threshold;
 	w -> cnst_rs = cnst_rs;
 	w -> xc_dim = xc_dim;
-	printf("FILE: %s, LINE: %d, FUNCTION: %s,  w -> xc_dim: %d \n", __FILE__, __LINE__, __func__, w->xc_dim);
+        w -> k_index = k_index;
 
 }
 #endif

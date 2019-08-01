@@ -1,12 +1,17 @@
-#include "util.h"
+//#include "util.h"
 //#include "gpu_util.cu"
 
-typedef struct{
-  double alpha;       /* parameter for Xalpha functional */
+/*typedef struct{
+  double alpha;       // parameter for Xalpha functional 
 } lda_x_params;
+*/
 
-#include "maple2c/lda_x.c"
-#include "maple2c/lda_c_vwn_rpa.c"
+typedef void (*lda_ptr)(const void *p,  xc_lda_work_t *r);
+#include "gpu_finclude_lda.h"
+#include "gpu_fsign_lda.h"
+
+//#include "maple2c/lda_x.c"
+//#include "maple2c/lda_c_vwn_rpa.c"
 
 #define XC_LDA_X         1   /* Exchange                            */
 #define XC_LDA_C_XALPHA  6   /* Slater Xalpha                       */
@@ -37,6 +42,7 @@ __device__ void gpu_work_lda_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 
 	xc_lda_work_t r;
 	r.order = 1;
+	r.nspin = nspin;
 
 	double dens, drs;
 	//double d2rs, d3rs; //Variables required for order >1. 
@@ -56,17 +62,19 @@ __device__ void gpu_work_lda_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                  //printf("FILE: %s, LINE: %d, FUNCTION: %s, CALLING MAPLE2C FUNCTION \n", __FILE__, __LINE__, __func__);
         }
 
-	if(d_glinfo->func_id == XC_LDA_C_VWN_RPA){
+	//if(d_glinfo->func_id == XC_LDA_C_VWN_RPA){
 
         if(GPU_DEBUG){
                  //printf("FILE: %s, LINE: %d, FUNCTION: %s, CALLING MAPLE2C FUNCTION \n", __FILE__, __LINE__, __func__);
         }
 
-		xc_lda_c_vwn_rpa_func(d_glinfo->d_maple2c_params, &r, nspin);
-	}
-	else{	
-		xc_lda_x_func(d_glinfo->d_maple2c_params, &r, nspin);
-	}
+		//xc_lda_c_vwn_rpa_func(d_glinfo->d_maple2c_params, &r);
+	//}
+	//else{	
+		//xc_lda_x_func(d_glinfo->d_maple2c_params, &r);
+	//}	
+
+	(maple2cf_lda[d_w->k_index])(d_glinfo->d_maple2c_params, &r);
 
 	*d_zk = r.f;
 

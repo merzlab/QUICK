@@ -68,7 +68,10 @@ work_mgga_x
 
   sfact = (p->nspin == XC_POLARIZED) ? 1.0 : 2.0;
   sfact2 = sfact*sfact;
+
+#ifdef CUDA
   
+#else
   for(ip = 0; ip < np; ip++){
     xc_rho2dzeta(p->nspin, rho, &dens, &r.zeta);
 
@@ -185,4 +188,5 @@ work_mgga_x
       v2lapltau   += p->n_v2lapltau;
     }
   }
+#endif
 }

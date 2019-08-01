@@ -16,7 +16,11 @@
          Adv. in Comp. Math. 5(4):329-359. 
 */
 
+/*#ifdef DEVICE
+__device__ double LambertW(double z)
+#else*/
 double LambertW(double z)
+//#endif
 {
   double w;
   int i;
@@ -125,8 +129,11 @@ static double spencs[38] =
     +.4742646808928671061333333333333e-31
   };
 
-
+/*#ifdef DEVICE
+__device__ double xc_dilogarithm(const double x)
+#else */
 double xc_dilogarithm(const double x)
+//#endif
 {
   const int nspenc = 38;
   double aux, dspenc;

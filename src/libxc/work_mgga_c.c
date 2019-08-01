@@ -36,6 +36,9 @@ work_mgga_c(const xc_func_type *p, int np, const double *rho, const double *sigm
 
   if(r.order < 0) return;
 
+#ifdef CUDA
+
+#else
   for(ip = 0; ip < np; ip++){
     double rho13[3], drs, dxt;
     double ndzdn[2], dxsdn[2];
@@ -225,4 +228,5 @@ work_mgga_c(const xc_func_type *p, int np, const double *rho, const double *sigm
       v2lapltau   += p->n_v2lapltau;
     }
   }
+#endif
 }
