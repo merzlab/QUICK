@@ -1038,11 +1038,18 @@ enddo
                      tsttmp_vsigmaa=0.0d0
 
                      do ifunc=1, quick_method%nof_functionals
-                        call xc_f90_gga_exc_vxc(xc_func(ifunc), 1,libxc_rho(1), libxc_sigma(1), &
-                        libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
-                        
+
+                        select case(xc_f90_info_family(xc_info(ifunc)))
+                        case(XC_FAMILY_LDA)
+                                call xc_f90_lda_exc_vxc(xc_func(ifunc), 1,libxc_rho(1), &
+                                libxc_exc(1), libxc_vrhoa(1))
+                        case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
+                                call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
+                                libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                        end select
+
                         tsttmp_exc=tsttmp_exc+libxc_exc(1)
-                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1) 
+                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
                         tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
                      enddo
 

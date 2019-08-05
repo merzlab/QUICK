@@ -214,7 +214,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
             if (devSim_dft.method == B3LYP) {
 
 #ifdef DEBUG
-    printf("FILE: %s, LINE: %d, FUNCTION: %s,  B3LYP enregy \n", __FILE__, __LINE__, __func__);
+//    printf("FILE: %s, LINE: %d, FUNCTION: %s,  B3LYP enregy \n", __FILE__, __LINE__, __func__);
 #endif
                 _tmp = b3lyp_e(2.0*density, sigma);
             }else if(devSim_dft.method == DFT){// !!! remember to change it to BLYP
@@ -222,7 +222,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
 #ifdef DEBUG
  //printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e sigma: %.10e _tmp: %.10e \n",gridx, gridy, gridz, weight, density, sigma, _tmp);
-                printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e \n", (density+densityb), sigma, _tmp/weight);
+//                printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e \n", (density+densityb), sigma, _tmp/weight);
 #endif
             }else if(devSim_dft.method == LIBXC){ //Madu: Change this conditional statement content
                // _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
@@ -238,7 +238,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
                 ydot = dot * gay;
                 zdot = dot * gaz;
 #ifdef DEBUG
-    printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method == B3LYP \n", __FILE__, __LINE__, __func__);
+//    printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method == B3LYP \n", __FILE__, __LINE__, __func__);
 #endif
 
             }else if (devSim_dft.method == DFT){
@@ -360,7 +360,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 
 #ifdef DEBUG
         //printf("FILE: %s, LINE: %d, FUNCTION: %s, xdot: %f, ydot: %f, zdot: %f \n", __FILE__, __LINE__, __func__, xdot, ydot, zdot);
-	printf("rho: %.10e d_zk: %.10e dfdr: %.10e dfdgaa: %.10e xdot: %.10e ydot: %.10e zdot: %.10e \n", (d_rhoa + d_rhob), d_zk, dfdr, dfdgaa, xdot, ydot, zdot);
+//	printf("rho: %.10e d_zk: %.10e dfdr: %.10e dfdgaa: %.10e xdot: %.10e ydot: %.10e zdot: %.10e \n", (d_rhoa + d_rhob), d_zk, dfdr, dfdgaa, xdot, ydot, zdot);
 #endif
 
 	    }

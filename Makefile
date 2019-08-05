@@ -152,9 +152,12 @@ quick_cuda:
 blas:
 	cd $(blasfolder) && make
 	cp $(blasfolder)/*.a $(libfolder)
-#================= quick module library =================================
-libxc:
-	cd $(libxcfolder) && make all
+#==================== libxc cpu library =================================
+libxc_cpu:
+	cd $(libxcfolder) && make libxc_cpu
+#==================== libxc cpu library =================================
+libxc_gpu:
+	cd $(libxcfolder) && make libxc_gpu
 #=============== targets for CUBLAS =====================================
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 	$(CPP) $(CPP_FLAG) -c $< -o $@
@@ -192,18 +195,18 @@ cpconfig.MPI:
 #                 C. Make Executables
 # 
 #**********************************************************************
-quick: makefolders cpconfig libxc quick_modules quick_subs $(OBJ) blas 
+quick: makefolders cpconfig libxc_cpu quick_modules quick_subs $(OBJ) blas 
 	$(FC) -o $(exefolder)/quick $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
-quick.cuda: makefolders cpconfig.cuda libxc quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
+quick.cuda: makefolders cpconfig.cuda libxc_gpu quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
 	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
 	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
 
-quick.MPI: makefolders cpconfig.MPI libxc quick_modules quick_subs $(OBJ) blas 
+quick.MPI: makefolders cpconfig.MPI libxc_cpu quick_modules quick_subs $(OBJ) blas 
 	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
