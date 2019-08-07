@@ -778,6 +778,26 @@ write(*,*) "E0=",quick_qm_struct%Eel
       enddo
    enddo
 
+!Madu: A temproray change to test libxc 06/11/2019
+#ifdef CUDA
+        if (quick_method%bCUDA) then
+                if(quick_method%uselibxc)then
+                        call gpu_upload_method(3)
+                        call gpu_upload_hyb_coeff(quick_method%x_hybrid_coeff)
+                elseif(quick_method%BLYP)then
+                        call gpu_upload_method(2)
+                elseif(quick_method%B3LYP)then
+                        call gpu_upload_method(1)
+                endif
+        endif
+
+        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+                  quick_qm_struct%vec,quick_qm_struct%dense)
+        call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
+        call gpu_get2e(quick_qm_struct%o);
+#endif
+
+
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
    ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
@@ -785,11 +805,11 @@ write(*,*) "E0=",quick_qm_struct%Eel
    if(quick_method%B3LYP)then
 #ifdef CUDA
       if (quick_method%bCUDA) then
-        call gpu_upload_method(1)
-        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-                  quick_qm_struct%vec,quick_qm_struct%dense)
-        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
-        call gpu_get2e(quick_qm_struct%o);
+!        call gpu_upload_method(1)
+!        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!                  quick_qm_struct%vec,quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
+!        call gpu_get2e(quick_qm_struct%o);
       else
 #endif
       do II=1,jshell
@@ -823,11 +843,11 @@ write(*,*) "E0=",quick_qm_struct%Eel
 
 #ifdef CUDA
       if (quick_method%bCUDA) then
-        call gpu_upload_method(2)
-        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-                  quick_qm_struct%vec,quick_qm_struct%dense)
-        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
-        call gpu_get2e(quick_qm_struct%o);
+!        call gpu_upload_method(2)
+!        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!                  quick_qm_struct%vec,quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
+!        call gpu_get2e(quick_qm_struct%o);
       else
 #endif
       do II=1,jshell
@@ -934,17 +954,15 @@ write(*,*) "E0=",quick_qm_struct%Eel
                              quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
                              quick_qm_struct%aelec, quick_qm_struct%belec, &
-                             quick_qm_struct%o)
-
-        call init_gpu_libxc(quick_method%nof_functionals, quick_method%functional_id, &
-        quick_method%xc_polarization)
+                             quick_qm_struct%o, quick_method%nof_functionals, &
+                             quick_method%functional_id, quick_method%xc_polarization)
      endif
 #else
 
    write(*,*)  Eelxc
 
 do ifunc=1, quick_method%nof_functionals
-     if(quick_method%xc_polarization) then
+     if(quick_method%xc_polarization > 0 ) then
           call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
           quick_method%functional_id(ifunc),XC_POLARIZED)
      else
@@ -1020,11 +1038,18 @@ enddo
                      tsttmp_vsigmaa=0.0d0
 
                      do ifunc=1, quick_method%nof_functionals
-                        call xc_f90_gga_exc_vxc(xc_func(ifunc), 1,libxc_rho(1), libxc_sigma(1), &
-                        libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
-                        
+
+                        select case(xc_f90_info_family(xc_info(ifunc)))
+                        case(XC_FAMILY_LDA)
+                                call xc_f90_lda_exc_vxc(xc_func(ifunc), 1,libxc_rho(1), &
+                                libxc_exc(1), libxc_vrhoa(1))
+                        case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
+                                call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
+                                libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                        end select
+
                         tsttmp_exc=tsttmp_exc+libxc_exc(1)
-                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1) 
+                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
                         tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
                      enddo
 
@@ -1095,14 +1120,13 @@ enddo
       enddo
    enddo
 
-
    !write (ioutfile,'(" TIME of evaluation numerical integral = ",F12.2)') &
     !     T3-T2
 
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
    write(*,*) "E1+E2+Eelxc=",quick_qm_struct%eel
 
-
+!   stop
 
 end subroutine dftoperator
 

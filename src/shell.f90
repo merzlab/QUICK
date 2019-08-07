@@ -741,6 +741,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
    enddo
 !Madu: Following loop may be removed. 
 !Its not used anywhere within the subroutine
+
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
       RB(M)=xyz(M,quick_basis%katom(JJ))
@@ -1014,7 +1015,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            ! Find  all the (ii|jj) integrals.
                            quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEJJ*Y
                            quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+DENSEII*Y
-                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III) &
+                                -quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
 
 !--------------------Madu---------------------------
 !write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = true"
@@ -1031,8 +1033,10 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
 
                            ! Find  all the (ij|jj) integrals.
-                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEJJ*Y-quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
-                           quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*DENSEJI*Y 
+                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEJJ*Y &
+                                -quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
+                           quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*DENSEJI*Y 
                            !        ! Find  all the (ii|ij) integrals.
                            !        ! Find all the (ij|ij) integrals
 
@@ -1099,7 +1103,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! do all the (ii|ii) integrals.
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y &
+                                -quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
 !--------------------Madu---------------------------
 !write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
 !write(*,*) "III==JJJ and III==KKK and III==LLL"
@@ -1113,8 +1118,10 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! Find  all the (ii|ij) integrals.
-                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+DENSEII*Y-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
-                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*DENSEJI*Y
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+DENSEII*Y &
+                                -quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*DENSEJI*Y
 !--------------------Madu---------------------------
 !write(*,*) "II<JJ and II < KK and KK<LL = false, III<KKK = false, JJJ<LLL=true"
 !write(*,*) "III==JJJ and III==KKK and III<LLL"
@@ -1130,7 +1137,8 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! Find all the (ij|ij) integrals
-                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
                               quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
 !--------------------Madu---------------------------
@@ -1148,8 +1156,10 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
 
                               ! Find all the (ij|ik) integrals where j>i,k>j
-                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEKI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Y
-                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+2.0d0*DENSEJI*Y-quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEKI*Y &
+                                -quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Y
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+2.0d0*DENSEJI*Y &
+                                - quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*1.d0*DENSEKJ*Y
                               quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
 !--------------------Madu---------------------------
