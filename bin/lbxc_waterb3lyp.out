@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Tue Aug  6 17:25:01 2019
+ TASK STARTS ON: Thu Aug  8 09:51:36 2019
  INPUT FILE :    lbxc_waterb3lyp.in
  OUTPUT FILE:    lbxc_waterb3lyp.out
  DATE FILE  :    lbxc_waterb3lyp.dat
@@ -110,7 +110,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.04
+SCF CYCLE      =        1      TIME      =     0.06
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -120,7 +120,7 @@ SCF CYCLE      =        3      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
 RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
 
-SCF CYCLE      =        4      TIME      =   0.05
+SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
@@ -245,9 +245,9 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.406956230      ------         0.437     1        0.36      0.07      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  1    -76.406956230      ------         0.436     1        0.36      0.07      0.00    0.1671E+01  0.1072E+00  0.4244E+00
   2    -76.315624328  -.913319E-01       0.041     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
-  3    -76.283134665  -.324897E-01       0.041     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
+  3    -76.283134665  -.324897E-01       0.040     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
   4    -76.385674071  0.102539E+00       0.041     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
   5    -76.385685063  0.109914E-04       0.041     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
   6    -76.385685466  0.403872E-06       0.041     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
@@ -269,19 +269,19 @@ TOTAL ENERGY         =   -76.385685474
  @ Output Timing Infomration
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME =     0.502332000( 25.93%)
-TOTAL SCF TIME     =     0.723642000( 37.35%)
-      TOTAL OP TIME      =     0.352129000( 18.18%)
-            TOTAL 1e TIME      =     0.001699000(  0.09%)
-            TOTAL 2e TIME      =     0.039275000(  2.03%)
-            TOTAL Exchange TIME=     0.310747000( 16.04%)
-            TOTAL ENERGY TIME  =     0.000036000(  0.00%)
-      TOTAL DII TIME     =     0.371425000( 19.17%)
-            TOTAL DIAG TIME    =     0.000269000(  0.01%)
-TOTAL TIME         =     1.937377000
+INITIAL GUESS TIME =     0.504962000( 26.31%)
+TOTAL SCF TIME     =     0.722305000( 37.63%)
+      TOTAL OP TIME      =     0.353079000( 18.40%)
+            TOTAL 1e TIME      =     0.001465000(  0.08%)
+            TOTAL 2e TIME      =     0.039001000(  2.03%)
+            TOTAL Exchange TIME=     0.312515000( 16.28%)
+            TOTAL ENERGY TIME  =     0.000032000(  0.00%)
+      TOTAL DII TIME     =     0.369143000( 19.23%)
+            TOTAL DIAG TIME    =     0.000258000(  0.01%)
+TOTAL TIME         =     1.919250000
 ------------------------------------
  Job cpu time:  0 days  0 hours  0 minutes  1.9 seconds.
 
  @ Finish Output Timing Infomration
 
- Normal Terminatation. Task Finished on: Tue Aug  6 17:25:04 2019
+ Normal Terminatation. Task Finished on: Thu Aug  8 09:51:39 2019

@@ -219,7 +219,7 @@ subroutine electdiis(jscf)
             call hfoperator(oneElecO, deltaO)     ! Non-MPI HF
          endif
 #else
-         call hfoperator(oneElecO, deltaO)
+         call scf_operator(oneElecO, deltaO)
 #endif
       else if (quick_method%DFT) then
 #ifdef MPI
@@ -227,9 +227,10 @@ subroutine electdiis(jscf)
             call MPI_dftoperator(oneElecO, deltaO) ! MPI DFT
          else
             call dftoperator(oneElecO, deltaO)     ! Non-MPI DFT
+            
          endif
 #else
-            call dftoperator(oneElecO, deltaO)
+        call scf_operator(oneElecO, deltaO)
 #endif
 
       else if (quick_method%SEDFT) then
