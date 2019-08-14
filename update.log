@@ -7,33 +7,57 @@
 !                                                                      **
 !************************************************************************
 
-===============================================
+- ORIGINALLY CREATED BY YIPU MIAO ON 05/21/2010
+- REORGANIZED BY MADU MANATHUNGA ON 08/14/2019
+
+=========================================================================
 UPDATE LOG
-===============================================
+=========================================================================
 
-Yipu Miao   2011-6-9_0.06_beta16sp  : fix some bugs.
-Yipu Miao   2011-2-23_0.06_beta5	: opt makefile, add subs folder. 
-Yipu Miao	2011-2-18_0.06_beta3	: rewrite method module and try to make quick as an Open-Object project. reorganize file system. now all source will be stored in src folder 
-Yipu Miao   2011-1-5_0.05_beta7     : milestone version
-Yipu Miao   2010-12-13_0.05_beta5   : Fix MP2 problem
-Yipu Miao   2010-11-22_0.05_beta3   : Add freq and hessian matrix calculation. But is broken from last author. not support MPI 
-Yipu Miao	2010-11-22_0.05_beta1	: Add optimization option. And MPI is valid for gradient calculation.
-Yipu Miao	2010-11-10_0.04_milestone:Complete MPI for MP2, only valid for HF MP2, not valid for Divcon MP2. Optimize code
-Yipu Miao	2010-11-4_0.04_beta4	: Complete MPI for HF and Divcon, valid for 1e,2e and diag(div-con only) part
-Yipu Miao	2010-11-3_0.03_milestone: Add MPI option for HF calculation. Not available for UHF and DFT
-					  Optimze output format
-Yipu Miao	2010-10-25_0.03_beta1   : Add MPI option for div&con diag.
-Yipu Miao	2010-7-27_0.01_final_sp1: Add elimination step, improve accuracy. kill some bugs.
-Yipu Miao	2010-7-23_0.01_final	: First final version. Divcon works. Some tests are done. But still buggy,
-					  especially the convergence problem.
-Yipu Miao	2010-7-14_0.01		: Add HF SCF calculation. Divcon is partly work, but under test.
-Yipu Miao	2010-5-24_0.01		: Add keyword "atombasis“ and "residuebasis" to specify fragment method. 
-					  if it's residue based, pdb file is needed, while atom based, no pdb file is needed
-Yipu Miao	2010-5-21_0.01		: new quick can now read pdb file as input. But hasn't reach the calculation part.
+NOTE TO AUTHORS:
+PLEASE USE THE FOLLOWING FORMAT TO KEEP TRACK
+OF YOUR CONTRIBUTION:
 
-===============================================
-PLEASE FOLLOW THE ABOVE FORMAT TO UPDATE
-KEY CHANGE OF NEW VERSION AND KEEP BUCK-UPING
-PREVIOUS VERSION FREQENTLY, DAY-TO-DAY IS
-RECOMMENDED
-===============================================
+NAME  DATE  MAJOR.MINOR.RELEASE.BUILD  NOTES
+
+MAJOR: A MAJOR VERSION WITH MANY NEW FEATURES
+MINOR: A VERSION WITH FEW ADDITIONAL FEATURES
+RELEASE: A RELEASE VERSION WITH BUG FIXES
+BUILD: A BUILD VERSION THAT MAY OR MAY NOT BE RELEASED 
+==========================================================================
+
+Yipu Miao	05/21/2010  1.1.0.0  : new quick can now read pdb file as input. But hasn't reach the calculation part.
+Yipu Miao	05/24/2010  1.2.0.0  : Add keyword "atombasis“ and "residuebasis" to specify fragment method.
+				       if it's residue based, pdb file is needed, while atom based, no pdb file is needed
+Yipu Miao	07/14/2010  1.3.0.0  : Add HF SCF calculation. Divcon is partly work, but under test.
+Yipu Miao	07/23/2010  1.4.0.0  : First final version. Divcon works. Some tests are done. But still buggy,
+				       especially the convergence problem.
+Yipu Miao	07/27/2010  1.5.0.0  : Add elimination step, improve accuracy. kill some bugs.
+Yipu Miao	10/25/2010  1.5.0.0  : Add MPI option for div&con diag.
+Yipu Miao	11/03/2010  1.5.0.0  : Add MPI option for HF calculation. Not available for UHF and DFT
+				       Optimze output format.
+Yipu Miao	11/04/2010  1.5.0.0  : Complete MPI for HF and Divcon, valid for 1e,2e and diag(div-con only) part.
+Yipu Miao  	11/10/2010  1.5.0.0  : Complete MPI for MP2, only valid for HF MP2, not valid for Divcon MP2. Optimize code
+Yipu Miao  	11/22/2010  1.5.0.0  : Add optimization option. And MPI is valid for gradient calculation.
+Yipu Miao  	11/22/2010  1.5.0.0  : Add freq and hessian matrix calculation. But is broken from last author. not support MPI
+Yipu Miao  	12/13/2010  1.5.0.0  : Fix MP2 problem
+Yipu Miao  	01/05/2011  1.5.0.0  : milestone version.
+Yipu Miao  	02/18/2011  1.5.0.0  : rewrite method module and try to make quick as an Open-Object project. reorganize file system.
+				       now all source will be stored in src folder.
+Yipu Miao  	02/23/2011  1.5.0.0  : opt makefile, add subs folder.
+Yipu Miao  	06/09/2011  1.5.0.0  : fix some bugs.
+Madu Manathunga 01/21/2019  2.1.0.0  : Fixed cuda code for working on pascal and volta type gpus.
+Madu Manathunga 03/12/2019  2.2.0.1  : Added tests folder, test cases and testqk.sh
+Madu Manathunga 03/15/2019  2.2.0.2  : Integrated dft gradient computation capability.
+Madu Manathunga 04/15/2019  2.2.1.3  : Fixed several bugs in HF MPI version
+Madu Manathunga 04/24/2019  2.2.1.4  : Updated Makefiles and make.in files
+Madu Manathunga 04/28/2019  2.2.1.5  : Implemented DFT enerrgy and gradient MPI versions.
+Madu Manathunga 06/14/2019  2.3.0.0  : Integrated Libxc library, CPU & MPI versions can compute energy and gradients using all LDA, GGA
+				       and hybrid GGA funtionals.   
+Madu Manathunga 08/07/2019  2.4.0.0  : Implemented GPU version of the Libxc library and tested. Approximately, 150 functionals
+				       (LDA, GGA and hybrid GGA) are working properly.   
+Madu Manathunga 08/10/2019  2.4.0.1  : Reorganized HF and DFT operators into a single scf operator. Cleaned up the code. 
+Madu Manathunga 08/13/2019  2.4.0.2  : Reorganized HF and DFT gradient subroutines into a single gradient subroutine. 
+				       Cleaned up the code.
+
+=========================================================================

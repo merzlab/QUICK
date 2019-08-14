@@ -44,11 +44,31 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Thu Aug  8 08:42:07 2019
+ TASK STARTS ON: Mon Aug 12 09:37:53 2019
  INPUT FILE :    lbxc_waterb3lyp.in
  OUTPUT FILE:    lbxc_waterb3lyp.out
  DATE FILE  :    lbxc_waterb3lyp.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
+
+|------------ CUDA INFORMATION ---------------
+|  CUDA version of Quick in use
+|  Implemented by
+|                      Yipu Miao (Florida)
+|  CAUTION: CUDA Quick is currently experimental
+|           and you may at risk to use it. Be sure
+|           to check result carelly. Advise or 
+|           bug report are welcome.
+|---------------------------------------------
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12036
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -90,7 +110,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.05
+SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -120,16 +140,16 @@ DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 SCF CYCLE      =        8      TIME      =     0.04
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.04
+SCF CYCLE      =        9      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 
-SCF CYCLE      =       10      TIME      =   0.04
+SCF CYCLE      =       10      TIME      =   0.03
 DIIS CYCLE     =        2      MAX ERROR = 0.121250E-05
 RMS CHANGE     = 0.882888E-06  MAX CHANGE= 0.354765E-05
 PREPARED FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =       11      TIME      =     0.04
+SCF CYCLE      =       11      TIME      =     0.03
 RMS CHANGE     = 0.761164E-06  MAX CHANGE= 0.302067E-05
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -220,3 +240,48 @@ RADII OF SIGNifIGANCE FOR THE BASIS FUNCTIONS
 
  @ Begin Energy Calculation
 
+TOL:    0.000000000100000
+                                         SCF ENERGY
+------------------------------------------------------------------------------------------------------------------------
+NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+------------------------------------------------------------------------------------------------------------------------
+  1    -76.406956230      ------         0.352     1        0.28      0.07      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  2    -76.315624328  -.913319E-01       0.040     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
+  3    -76.283134665  -.324897E-01       0.040     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
+  4    -76.385674071  0.102539E+00       0.041     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
+  5    -76.385685063  0.109914E-04       0.041     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
+  6    -76.385685466  0.403872E-06       0.041     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
+  7    -76.385685474  0.781589E-08       0.041     7        0.00      0.04      0.00    0.2366E-05  0.1616E-05  0.7527E-05
+  8    -76.385685474  0.294929E-10       0.041     8        0.00      0.04      0.00    0.9764E-06  0.2029E-06  0.9948E-06
+------------------------------------------------------------------------------------------------------------------------
+ REACH CONVERGENCE AFTER   8 CYLCES
+ MAX ERROR = 0.976436E-06   RMS CHANGE = 0.202908E-06   MAX CHANGE = 0.994806E-06
+ -----------------------------------------------
+ALPHA ELECTRON DENSITY    =    4.9999942864
+BETA ELECTRON DENSITY     =    4.9999942864
+ELECTRONIC ENERGY    =   -85.542801457
+CORE_CORE REPULSION  =     9.157115983
+TOTAL ENERGY         =   -76.385685474
+
+ @ End Energy calculation
+
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     0.462706000( 25.46%)
+TOTAL SCF TIME     =     0.637463000( 35.07%)
+      TOTAL OP TIME      =     0.347372000( 19.11%)
+            TOTAL 1e TIME      =     0.001035000(  0.06%)
+            TOTAL 2e TIME      =     0.036005000(  1.98%)
+            TOTAL Exchange TIME=     0.310235000( 17.07%)
+            TOTAL ENERGY TIME  =     0.000032000(  0.00%)
+      TOTAL DII TIME     =     0.290015000( 15.96%)
+            TOTAL DIAG TIME    =     0.000246000(  0.01%)
+TOTAL TIME         =     1.817647000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes  1.8 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Mon Aug 12 09:37:56 2019

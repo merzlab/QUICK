@@ -44,31 +44,15 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Thu Aug  8 09:51:36 2019
+ TASK STARTS ON: Tue Aug 13 18:37:24 2019
  INPUT FILE :    lbxc_waterb3lyp.in
  OUTPUT FILE:    lbxc_waterb3lyp.out
  DATE FILE  :    lbxc_waterb3lyp.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
 
-|------------ CUDA INFORMATION ---------------
-|  CUDA version of Quick in use
-|  Implemented by
-|                      Yipu Miao (Florida)
-|  CAUTION: CUDA Quick is currently experimental
-|           and you may at risk to use it. Be sure
-|           to check result carelly. Advise or 
-|           bug report are welcome.
-|---------------------------------------------
-
-|------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
-| CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12036
-| SUPPORTING CUDA VERSION     :      7.0
-|--------------------------------------------
+ - MPI Enabled -
+ TOTAL PROCESSOR =     2
+ MASTER NAME     = chinotto                      
 
  @ Read Job And Atom
 
@@ -110,29 +94,29 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.08
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
-SCF CYCLE      =        2      TIME      =     0.04
+SCF CYCLE      =        2      TIME      =     0.07
 RMS CHANGE     = 0.813251E-01  MAX CHANGE= 0.292791E+00
 
-SCF CYCLE      =        3      TIME      =   0.04
+SCF CYCLE      =        3      TIME      =   0.07
 DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
 RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
 
-SCF CYCLE      =        4      TIME      =   0.04
+SCF CYCLE      =        4      TIME      =   0.07
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.04
+SCF CYCLE      =        5      TIME      =   0.06
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
-SCF CYCLE      =        6      TIME      =   0.04
+SCF CYCLE      =        6      TIME      =   0.06
 DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
 RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
 
-SCF CYCLE      =        7      TIME      =   0.04
+SCF CYCLE      =        7      TIME      =   0.06
 DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
@@ -245,23 +229,23 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.406956230      ------         0.436     1        0.36      0.07      0.00    0.1671E+01  0.1072E+00  0.4244E+00
-  2    -76.315624328  -.913319E-01       0.041     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
-  3    -76.283134665  -.324897E-01       0.040     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
-  4    -76.385674071  0.102539E+00       0.041     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
-  5    -76.385685063  0.109914E-04       0.041     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
-  6    -76.385685466  0.403872E-06       0.041     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
-  7    -76.385685474  0.781589E-08       0.041     7        0.00      0.04      0.00    0.2366E-05  0.1616E-05  0.7527E-05
-  8    -76.385685474  0.294929E-10       0.041     8        0.00      0.04      0.00    0.9764E-06  0.2029E-06  0.9948E-06
+  1    -76.406957536      ------         0.104     1        0.00      0.10      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  2    -76.315625630  -.913319E-01       0.077     2        0.00      0.08      0.00    0.2761E+00  0.7099E-01  0.3222E+00
+  3    -76.283135978  -.324897E-01       6.418     3        0.00      6.42      0.00    0.3306E+00  0.3897E-01  0.1910E+00
+  4    -76.385675389  0.102539E+00       0.849     4        0.00      0.85      0.00    0.2855E-02  0.7437E-03  0.2928E-02
+  5    -76.385686380  0.109914E-04       1.038     5        0.00      1.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
+  6    -76.385686784  0.403876E-06       0.952     6        0.00      0.95      0.00    0.7456E-04  0.1734E-04  0.5257E-04
+  7    -76.385686792  0.781612E-08       0.088     7        0.00      0.09      0.00    0.2366E-05  0.1616E-05  0.7527E-05
+  8    -76.385686792  0.295355E-10       0.808     8        0.00      0.81      0.00    0.9764E-06  0.2029E-06  0.9948E-06
 ------------------------------------------------------------------------------------------------------------------------
  REACH CONVERGENCE AFTER   8 CYLCES
- MAX ERROR = 0.976436E-06   RMS CHANGE = 0.202908E-06   MAX CHANGE = 0.994806E-06
+ MAX ERROR = 0.976433E-06   RMS CHANGE = 0.202910E-06   MAX CHANGE = 0.994826E-06
  -----------------------------------------------
-ALPHA ELECTRON DENSITY    =    4.9999942864
-BETA ELECTRON DENSITY     =    4.9999942864
-ELECTRONIC ENERGY    =   -85.542801457
+ALPHA ELECTRON DENSITY    =    2.6357477186
+BETA ELECTRON DENSITY     =    2.6357477186
+ELECTRONIC ENERGY    =   -85.542802775
 CORE_CORE REPULSION  =     9.157115983
-TOTAL ENERGY         =   -76.385685474
+TOTAL ENERGY         =   -76.385686792
 
  @ End Energy calculation
 
@@ -269,19 +253,27 @@ TOTAL ENERGY         =   -76.385685474
  @ Output Timing Infomration
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME =     0.504962000( 26.31%)
-TOTAL SCF TIME     =     0.722305000( 37.63%)
-      TOTAL OP TIME      =     0.353079000( 18.40%)
-            TOTAL 1e TIME      =     0.001465000(  0.08%)
-            TOTAL 2e TIME      =     0.039001000(  2.03%)
-            TOTAL Exchange TIME=     0.312515000( 16.28%)
-            TOTAL ENERGY TIME  =     0.000032000(  0.00%)
-      TOTAL DII TIME     =     0.369143000( 19.23%)
-            TOTAL DIAG TIME    =     0.000258000(  0.01%)
-TOTAL TIME         =     1.919250000
+INITIAL GUESS TIME =     0.711669000(  6.43%)
+TOTAL SCF TIME     =    10.334882000( 93.41%)
+      TOTAL OP TIME      =    10.334340000( 93.40%)
+            TOTAL 1e TIME      =     0.001270000(  0.01%)
+            TOTAL 2e TIME      =     0.046352000(  0.42%)
+            TOTAL Exchange TIME=    10.286643000( 92.97%)
+            TOTAL ENERGY TIME  =     0.000021000(  0.00%)
+      TOTAL DII TIME     =     0.000504000(  0.00%)
+            TOTAL DIAG TIME    =     0.000148000(  0.00%)
+TOTAL TIME         =    11.064469000
+----------- MPI TIMING -------------
+MPI SCF TIME               =    10.334882000 (MASTER=100.00%)
+      MPI Op TIME                =    10.334340000 (MASTER=100.00%)
+            MPI 1e TIME                =     0.001270000 (MASTER=100.00%, MAX=100.00%)
+            MPI 2e TIME                =     0.046352000 (MASTER=100.00%, MAX=100.00%)
+      MPI DIIS TIME              =     0.000504000 (MASTER=100.00%)
+            MPI DIAG TIME              =     0.000148000 (MASTER=100.00%, MAX=100.00%)
+MPI TOTAL CPU TIME         =    11.064469000 (MASTER=100.00%)
 ------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  1.9 seconds.
+ Job cpu time:  0 days  0 hours  0 minutes 11.1 seconds.
 
  @ Finish Output Timing Infomration
 
- Normal Terminatation. Task Finished on: Thu Aug  8 09:51:39 2019
+ Normal Terminatation. Task Finished on: Tue Aug 13 18:37:37 2019

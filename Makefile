@@ -117,9 +117,7 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
-        $(objfolder)/dftgrad.o  \
-        $(objfolder)/fake_amber_interface.o $(objfolder)/dftmpi.o $(objfolder)/newblyp.o $(objfolder)/newdftoperator.o \
-        $(objfolder)/dftgradmpi.o $(objfolder)/scfoperator.o 
+        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
 
 
 all: quick quick.cuda
