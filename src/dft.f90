@@ -623,7 +623,7 @@ end subroutine
 ! Ed Brothers. November 27, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine dftoperator(oneElecO, deltaO)
+subroutine dftoperator
    use allmod
 
 !#ifndef CUDA
@@ -632,9 +632,6 @@ subroutine dftoperator(oneElecO, deltaO)
 !#endif
 
    implicit double precision(a-h,o-z)
-
-   double precision oneElecO(nbasis,nbasis)
-   logical :: deltaO
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -663,16 +660,82 @@ subroutine dftoperator(oneElecO, deltaO)
 
 
 write(*,*) "E0=",quick_qm_struct%Eel
-
    call cpu_time(timer_begin%T1e)
+   do Ibas=1,nbasis
+      do Jbas=Ibas,nbasis
+         quick_qm_struct%o(Jbas,Ibas) = 0.d0
+         do Icon=1,ncontract(ibas)
+            do Jcon=1,ncontract(jbas)
+ 
+               quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+ &
+                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)* &
+                     ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                     
+            enddo
+         enddo
+      enddo
+   enddo
 
-   call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
+   do IIsh=1,jshell
+      do JJsh=IIsh,jshell
+         call attrashell(IIsh,JJsh)
+      enddo
+   enddo
 
    Eelxc=0.0d0
+   if(quick_method%printEnergy)then
+      quick_qm_struct%Eel=0.d0
+      do Ibas=1,nbasis
+         do Icon=1,ncontract(Ibas)
+            do Jcon=1,ncontract(Ibas)
 
-   ! Now calculate kinetic and attraction energy first.
-   if (quick_method%printEnergy) call get1eEnergy()
-  
+               ! Kinetic energy.
+
+               quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%dense(Ibas,Ibas)* &
+                     dcoeff(Jcon,Ibas)*dcoeff(Icon,Ibas)* &
+                     ekinetic(aexp(Jcon,Ibas),aexp(Icon,Ibas), &
+                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)), &
+                     xyz(3,quick_basis%ncenter(Ibas)),xyz(1,quick_basis%ncenter(Ibas)), &
+                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+            enddo
+         enddo
+      enddo
+
+      do Ibas=1,nbasis
+         do Jbas=Ibas+1,nbasis
+            do Icon=1,ncontract(ibas)
+               do Jcon=1,ncontract(jbas)
+
+                  ! Kinetic energy.
+
+                  quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%dense(Jbas,Ibas)* &
+                        dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)* &
+                        2.d0*ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+              enddo
+            enddo
+         enddo
+      enddo
+
+      do IIsh=1,jshell
+         do JJsh=IIsh,jshell
+            call attrashellenergy(IIsh,JJsh)
+         enddo
+      enddo
+
+   endif
+   
    write(*,*) "E1=",quick_qm_struct%Eel
 
 !-----------------Madu----------------
@@ -696,29 +759,26 @@ write(*,*) "E0=",quick_qm_struct%Eel
    ! Alessandro GENONI 03/21/2007
    ! Sum the ECP integrals to the partial Fock matrix
    !
-   if (quick_method%ecp) call ecpoperator()
+   if (quick_method%ecp) then
+      call ecpoperator
+   end if
 
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next term defines the electron repulsion_prim.
 
-   ! if only calculate operation difference
-   if (deltaO) then
-      ! save density matrix
-      call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseSave,nbasis)
-      call CopyDMat(quick_qm_struct%oSave,quick_qm_struct%o,nbasis)
-
-      do I=1,nbasis; do J=1,nbasis
-         quick_qm_struct%dense(J,I)=quick_qm_struct%dense(J,I)-quick_qm_struct%denseOld(J,I)
-      enddo; enddo
-
-   endif
-
-   ! Delta density matrix cutoff
-   call densityCutoff()
-
    ! Delta density matrix cutoff
    call cpu_time(timer_begin%T2e)
    
+   do II=1,jshell
+      do JJ=II,jshell
+         DNtemp=0.0d0
+         call DNscreen(II,JJ,DNtemp)
+         Cutmatrix(II,JJ)=DNtemp
+         Cutmatrix(JJ,II)=DNtemp
+      enddo
+   enddo
+
+!Madu: A temproray change to test libxc 06/11/2019
 #ifdef CUDA
         if (quick_method%bCUDA) then
                 if(quick_method%uselibxc)then
@@ -729,49 +789,136 @@ write(*,*) "E0=",quick_qm_struct%Eel
                 elseif(quick_method%B3LYP)then
                         call gpu_upload_method(1)
                 endif
+        endif
 
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
                   quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
-        !call gpu_get2e(quick_qm_struct%o);
-        endif
+        call gpu_get2e(quick_qm_struct%o);
 #endif
 
-   if (quick_method%nodirect) then
+
+   ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
+   ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
+
+   ! print*,"before 2e"
+   if(quick_method%B3LYP)then
 #ifdef CUDA
-      call gpu_addint(quick_qm_struct%o, intindex, intFileName)
-#else
-      call addInt
+      if (quick_method%bCUDA) then
+!        call gpu_upload_method(1)
+!        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!                  quick_qm_struct%vec,quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
+!        call gpu_get2e(quick_qm_struct%o);
+      else
 #endif
+      do II=1,jshell
+         do JJ=II,jshell
+            Testtmp=Ycutoff(II,JJ)
+            do KK=II,jshell
+               do LL=KK,jshell
+                  !          Nxiao1=Nxiao1+1
+                  testCutoff = TESTtmp*Ycutoff(KK,LL)
+                  if(testCutoff.gt.quick_method%integralCutoff)then
+                     DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
+                           cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
+                     cutoffTest=testCutoff*DNmax
+                     if(cutoffTest.gt.quick_method%integralCutoff)then
+                        call shell
+                     endif
+                     !            else
+                     !             print*,II,JJ,KK,LL,cutoffTest,testCutoff,DNmax
+                     !            print*,'***',quick_qm_struct%O(1,1)
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+
+#ifdef CUDA
+    endif
+#endif
+
    else
 
 #ifdef CUDA
       if (quick_method%bCUDA) then
-         call gpu_get2e(quick_qm_struct%o)
+!        call gpu_upload_method(2)
+!        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!                  quick_qm_struct%vec,quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit, quick_method%DMCutoff)
+!        call gpu_get2e(quick_qm_struct%o);
       else
 #endif
-
       do II=1,jshell
-         call get2e(II)
+         do JJ=II,jshell
+            Testtmp=Ycutoff(II,JJ)
+            do KK=II,jshell
+               do LL=KK,jshell
+                  cutoffTest = TESTtmp*Ycutoff(KK,LL) 
+                  if(cutoffTest.gt.quick_method%integralCutoff)then
+                  DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
+                  cutmatrix(II,LL), &
+                  cutmatrix(II,KK), &
+                  cutmatrix(JJ,KK), &
+                  cutmatrix(JJ,LL))
+                     if(cutoffTest*DNmax.gt.quick_method%integralCutoff)then
+                        call shell
+                     endif
+                  endif
+               enddo
+            enddo
+         enddo
       enddo
 
 #ifdef CUDA
-   endif
+    endif
 #endif
+
    endif
 
-   ! Remember the operator is symmetry
-   call copySym(quick_qm_struct%o,nbasis)
+!-----------------Madu----------------
+!   if(master) then
+!   write (*,*) "Madu: CPU version after 2e "
+!   do i=1,nbasis
+!      do j=1,nbasis
+!         write (*,'(A10,2X,F20.10)') "MPI: O = ",quick_qm_struct%o(i,j) !Madu
+!      enddo
+!   enddo
+!   endif
+!-----------------Madu----------------
+!stop
 
-   ! recover density if calculate difference
-   if (deltaO) call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
-
-   ! Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-   if(quick_method%printEnergy) call get2eEnergy()
+   do I=1,nbasis
+      do J=1,nbasis
+         quick_qm_struct%Osavedft(i,j)=quick_qm_struct%o(i,j)
+      enddo
+   enddo
    
    call cpu_time(timer_end%T2e)
    timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e
   
+   do Ibas=1,nbasis
+      do Jbas=Ibas+1,nbasis
+         quick_qm_struct%o(Ibas,Jbas) = quick_qm_struct%o(Jbas,Ibas)
+      enddo
+   enddo
+
+
+   call cpu_time(timer_begin%TE)
+   if(quick_method%printEnergy)then
+      do Ibas=1,nbasis
+         do Jbas=1,nbasis
+            quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%dense(Ibas,Jbas)*quick_qm_struct%o(Jbas,Ibas)
+         enddo
+      enddo
+
+      quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
+   endif
+
+   call cpu_time(timer_end%TE)
+   timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
+   
    write(*,*) "E2=",quick_qm_struct%Eel
    ! The next portion is the exchange/correlation functional.
    ! The angular grid code came from CCL.net.  The radial grid

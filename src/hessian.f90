@@ -81,7 +81,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call hfgrad
+           if (quick_method%HF) call scf_gradient
            !                if (quick_method%DFT) call dftgrad
            !               if (quick_method%SEDFT) call sedftgrad
         endif
@@ -98,7 +98,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call hfgrad
+           if (quick_method%HF) call scf_gradient
            !                if (quick_method%DFT) call dftgrad
            !                if (quick_method%SEDFT) call sedftgrad
         endif

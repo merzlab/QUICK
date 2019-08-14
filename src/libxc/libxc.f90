@@ -1,7 +1,8 @@
 # 1 "./libxc_master.F90"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "/usr/include/stdc-predef.h" 1 3 4
+!!# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "/usr/include/stdc-predef.h" 1
 # 1 "<command-line>" 2
 # 1 "./libxc_master.F90"
 !! Copyright (C) 2003-2015 Miguel Marques

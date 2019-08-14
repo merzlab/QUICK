@@ -161,28 +161,7 @@ subroutine optimize(failed)
          !                if (quick_method%DFT) call uDFTgrad
          !                if (quick_method%SEDFT) call uSEDFTgrad
          !            else
-         if (quick_method%HF) then
-#ifdef MPI
-            if (bMPI) then
-               call mpi_hfgrad
-            else
-#endif
-             call hfgrad
-#ifdef MPI
-            endif
-#endif             
-         elseif(quick_method%DFT) then
-#ifdef MPI
-            if (bMPI) then
-               call dftgradmpi 
-            else
-#endif         
-               call DFTgrad
-#ifdef MPI
-            endif
-#endif            
-         endif 
-         !                if (quick_method%SEDFT) call SEDFTgrad
+         call scf_gradient
          !            endif
       endif
 

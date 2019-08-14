@@ -30,10 +30,12 @@ include $(MAKEIN)
 #Madu: intel and gnu use -module and -J options to direct module files. 
 #Therefore, we use the following if condition to handle this. 
 
-ifeq "$(FC)" "gfortran"
-  FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -J$(objfolder)
-else
+ifeq "$(FC)" "ifort"
   FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -module $(objfolder)
+else ifeq "$(FC)" "mpiifort"
+  FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -module $(objfolder)
+else
+  FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -J$(objfolder)
 endif
 
 #----------------------

@@ -207,42 +207,18 @@ subroutine electdiis(jscf)
       ! if want to calculate operator difference?
       if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
-      if (quick_method%debug)  write(ioutfile,*) "before hf"
+      if (quick_method%debug)  write(ioutfile,*) "before calling scf"
       if (quick_method%debug)  call debug_SCF(jscf)
 
-      ! Hatree-Fock Operator
-      if (quick_method%HF) then
-#ifdef MPI
-         if (bMPI) then
-            call MPI_hfoperator(oneElecO, deltaO) ! MPI HF
-         else
-            call hfoperator(oneElecO, deltaO)     ! Non-MPI HF
-         endif
-#else
-         call scf_operator(oneElecO, deltaO)
-#endif
-      else if (quick_method%DFT) then
-#ifdef MPI
-         if (bMPI) then
-            call MPI_dftoperator(oneElecO, deltaO) ! MPI DFT
-         else
-            call dftoperator(oneElecO, deltaO)     ! Non-MPI DFT
-            
-         endif
-#else
-        call scf_operator(oneElecO, deltaO)
-#endif
-
-      else if (quick_method%SEDFT) then
+      if (quick_method%SEDFT) then
          call sedftoperator ! Semi-emperical DFT Operator
+      else
+         call scf_operator(oneElecO, deltaO)
       endif
-      if (quick_method%debug)  write(ioutfile,*) "hehe hf"
+
+      if (quick_method%debug)  write(ioutfile,*) "after calling scf"
       if (quick_method%debug)  call debug_SCF(jscf)
-!do i = 1, nbasis
-!do j = 1, nbasis
-!write(*,*) i,j,quick_qm_struct%o(i,j)
-!enddo
-!enddo
+
       ! Terminate Operator timer
       call cpu_time(timer_end%TOp)
       !------------- MASTER NODE -------------------------------
