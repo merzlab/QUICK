@@ -1,8 +1,9 @@
 !************************************************************************
 !                              QUICK                                   **
 !                                                                      **
-!                        Copyright (c) 2010                            **
+!                        Copyright (c) 2019                            **
 !                Regents of the University of Florida                  **
+!		     & Michigan State University		       **
 !                       All Rights Reserved.                           **
 !                                                                      **
 !************************************************************************
@@ -20,8 +21,8 @@ OF YOUR CONTRIBUTION:
 
 NAME  DATE  MAJOR.MINOR.RELEASE.BUILD  NOTES
 
-MAJOR: A MAJOR VERSION WITH MANY NEW FEATURES
-MINOR: A VERSION WITH FEW ADDITIONAL FEATURES
+MAJOR: A MAJOR RELEASE VERSION WITH MANY NEW FEATURES
+MINOR: A MINO RELEASE VERSION WITH FEW ADDITIONAL FEATURES
 RELEASE: A RELEASE VERSION WITH BUG FIXES
 BUILD: A BUILD VERSION THAT MAY OR MAY NOT BE RELEASED 
 ==========================================================================
@@ -47,17 +48,17 @@ Yipu Miao  	02/18/2011  1.5.0.0  : rewrite method module and try to make quick a
 Yipu Miao  	02/23/2011  1.5.0.0  : opt makefile, add subs folder.
 Yipu Miao  	06/09/2011  1.5.0.0  : fix some bugs.
 Madu Manathunga 01/21/2019  2.1.0.0  : Fixed cuda code for working on pascal and volta type gpus.
-Madu Manathunga 03/12/2019  2.2.0.1  : Added tests folder, test cases and testqk.sh
-Madu Manathunga 03/15/2019  2.2.0.2  : Integrated dft gradient computation capability.
-Madu Manathunga 04/15/2019  2.2.1.3  : Fixed several bugs in HF MPI version
-Madu Manathunga 04/24/2019  2.2.1.4  : Updated Makefiles and make.in files
-Madu Manathunga 04/28/2019  2.2.1.5  : Implemented DFT enerrgy and gradient MPI versions.
-Madu Manathunga 06/14/2019  2.3.0.0  : Integrated Libxc library, CPU & MPI versions can compute energy and gradients using all LDA, GGA
+Madu Manathunga 03/12/2019  2.1.0.1  : Added tests folder, test cases and testqk.sh
+Madu Manathunga 03/15/2019  2.1.0.2  : Integrated dft gradient computation capability.
+Madu Manathunga 04/15/2019  2.1.1.0  : Fixed several bugs in HF MPI versions.
+Madu Manathunga 04/24/2019  2.1.1.1  : Updated Makefiles and make.in files.
+Madu Manathunga 04/28/2019  2.1.1.2  : Implemented DFT enerrgy and gradient MPI versions.
+Madu Manathunga 06/14/2019  2.1.1.3  : Integrated Libxc library, CPU & MPI versions can compute energy and gradients using all LDA, GGA
 				       and hybrid GGA funtionals.   
-Madu Manathunga 08/07/2019  2.4.0.0  : Implemented GPU version of the Libxc library and tested. Approximately, 150 functionals
+Madu Manathunga 08/07/2019  2.1.1.4  : Implemented GPU version of the Libxc library and tested. Approximately, 150 functionals
 				       (LDA, GGA and hybrid GGA) are working properly.   
-Madu Manathunga 08/10/2019  2.4.0.1  : Reorganized HF and DFT operators into a single scf operator. Cleaned up the code. 
-Madu Manathunga 08/13/2019  2.4.0.2  : Reorganized HF and DFT gradient subroutines into a single gradient subroutine. 
+Madu Manathunga 08/10/2019  2.1.1.5  : Reorganized HF and DFT operators into a single scf operator. Cleaned up the code. 
+Madu Manathunga 08/13/2019  2.1.1.6  : Reorganized HF and DFT gradient subroutines into a single gradient subroutine. 
 				       Cleaned up the code.
 
 =========================================================================
