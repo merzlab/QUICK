@@ -47,6 +47,7 @@ Yipu Miao  	02/18/2011  1.5.0.0  : rewrite method module and try to make quick a
 				       now all source will be stored in src folder.
 Yipu Miao  	02/23/2011  1.5.0.0  : opt makefile, add subs folder.
 Yipu Miao  	06/09/2011  1.5.0.0  : fix some bugs.
+Yipu Miao	xx/xx/2015  2.0.0.0  : Milestone version uploaded to github for public use. 
 Madu Manathunga 01/21/2019  2.1.0.0  : Fixed cuda code for working on pascal and volta type gpus.
 Madu Manathunga 03/12/2019  2.1.0.1  : Added tests folder, test cases and testqk.sh
 Madu Manathunga 03/15/2019  2.1.0.2  : Integrated dft gradient computation capability.
@@ -59,6 +60,5 @@ Madu Manathunga 08/07/2019  2.1.1.4  : Implemented GPU version of the Libxc libr
 				       (LDA, GGA and hybrid GGA) are working properly.   
 Madu Manathunga 08/10/2019  2.1.1.5  : Reorganized HF and DFT operators into a single scf operator. Cleaned up the code. 
 Madu Manathunga 08/13/2019  2.1.1.6  : Reorganized HF and DFT gradient subroutines into a single gradient subroutine. 
-				       Cleaned up the code.
-				       Enabled gradient only calculations.
+				       Cleaned up the code. Enabled gradient only calculations.
 =========================================================================
