@@ -16,6 +16,83 @@
 !  11/27/2001 Ed Brothers: wrote the original code
 !------------------------------------------------------------------
 
+subroutine gradient(failed)
+
+!------------------------------------------------------------------
+! This subroutine carries out a gradient calculation 
+!------------------------------------------------------------------
+
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   logical :: failed
+   character(len=1) cartsym(3)
+
+!  Curently, only analytical gradients are available. This should be changed later.
+   quick_method%analgrad=.true.
+
+!  Set the value of gradient vector to zero
+   do j=1,natom
+      do k=1,3
+         quick_qm_struct%gradient((j-1)*3+K)=0d0
+      enddo
+   enddo
+
+#ifdef CUDA
+   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
+        quick_molspec%molchg, quick_molspec%iAtomType)
+   call gpu_upload_xyz(xyz)
+   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
+#endif
+
+!  calculate energy first
+   call g2eshell
+   call schwarzoff
+
+#ifdef CUDA
+   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+        ncontract, itype, aexp, dcoeff, &
+        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+
+   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+   call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
+
+#endif
+
+   call getEnergy(failed)
+
+   if (quick_method%analgrad) then
+      call scf_gradient
+   endif
+
+#ifdef CUDA
+   if (quick_method%bCUDA) then
+      call gpu_cleanup()
+   endif
+#endif
+
+   write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
+   write (ioutfile,'(40("-"))')
+   write (ioutfile,'(" VARIBLES",4x,"XYZ",12x,"GRADIENT")')
+   write (ioutfile,'(40("-"))')
+   do Iatm=1,natom
+      do Imomentum=1,3
+         write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+         xyz(Imomentum,Iatm)*0.529177249d0,quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+      enddo
+   enddo
+
+   write(ioutfile,'(40("-"))')
+
+   return
+
+end subroutine gradient
+
 subroutine scf_gradient
    use allmod
    implicit double precision(a-h,o-z)

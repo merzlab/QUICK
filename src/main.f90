@@ -191,6 +191,7 @@
     ! available. A improvement is in optimzenew, which is based on 
     ! internal coordinates, but is under coding.    
     if (quick_method%opt)  call optimize(failed)     ! Cartesian 
+    if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)                             
     if (failed) call quick_exit(iOutFile,1)          ! If geometry optimization fails
 
     ! Now at this point we have an energy and a geometry.  If this is
