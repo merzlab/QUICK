@@ -308,10 +308,7 @@ subroutine get_xc
    double precision :: Eelxc, Eelxcslave
    allocate(temp2d(nbasis,nbasis))
 
-   !******************** Move these to mpi setup code *******************
-   call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-   call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-   call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!  Braodcast libxc information to slaves
    call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)        
    call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
    call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -346,7 +343,6 @@ subroutine get_xc
          call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
                quick_method%functional_id(ifunc),XC_POLARIZED)
       else
-!write (*,*) "Initializing libxc funcs: ", mpirank
          call xc_f90_func_init(xc_func(ifunc), &
                xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
       endif
@@ -365,39 +361,8 @@ subroutine get_xc
       endif
 
 #ifdef MPI
-      if(master) then
-         do impi=0, mpisize-1
-            itotgridspn(impi)=0
-            igridptul(impi)=0
-            igridptll(impi)=0
-         enddo
-
-         itmpgriddist=Iradtemp
-         do while(itmpgriddist .gt. 1)
-            do impi=0, mpisize-1
-               itotgridspn(impi)=itotgridspn(impi)+1
-               itmpgriddist=itmpgriddist-1
-               if (itmpgriddist .lt. 1) exit
-            enddo
-         enddo
-
-         itmpgridptul=0
-         do impi=0, mpisize-1
-            itmpgridptul=itmpgridptul+itotgridspn(impi)
-            igridptul(impi)=itmpgridptul
-            if(impi .eq. 0) then
-               igridptll(impi)=1
-            else
-               igridptll(impi)=igridptul(impi-1)+1
-            endif
-         enddo
-       endif
-
-      if (bMPI) then
-         call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      endif
+!  Distribute grid points among master and slaves
+   call setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
 #endif
 
 #ifdef MPI
@@ -473,16 +438,8 @@ subroutine get_xc
                            call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
                            libxc_exc(1), libxc_vrhoa(1))
                         case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
-!if(.not.master) then
-!        write (*,*) "Use functional: ",mpirank, libxc_rho(1), libxc_sigma(1), &
-!        libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1)
-!endif
                            call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
                            libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
-!if(.not.master) then
-!        write (*,*) "Functional used: ",mpirank
-!endif
-
                      end select
 
                      tsttmp_exc=tsttmp_exc+libxc_exc(1)
@@ -536,7 +493,6 @@ subroutine get_xc
       enddo
    enddo
 
-!write (*,*) "Destroy functional "
 !  Uninitilize libxc functionals
    do ifunc=1, quick_method%nof_functionals
       call xc_f90_func_end(xc_func(ifunc))
@@ -545,7 +501,6 @@ subroutine get_xc
 
 #ifdef MPI
    if(.not. master) then
-!   write (*,*) "XC Energy from slave: ",Eelxc
 !  Send the Exc energy value
       Eelxcslave=Eelxc
       call MPI_SEND(Eelxcslave,1,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)

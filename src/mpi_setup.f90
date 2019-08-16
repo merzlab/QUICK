@@ -336,59 +336,61 @@
     
     end subroutine MPI_setup_hfoperator
 
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-! Setup DFT operator duties
-! Madu Manathunga 04/17/2019
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- subroutine MPI_setup_dftoperator()
- use allmod
- implicit none
- !integer i, j, k, iatm, irad
- !integer, dimension(:), allocatable :: temp1d 
- include 'mpif.h'
+ subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
+!-----------------------------------------------------------------------------
+!  This subroutine sets the mpi environment required for exchange correlation 
+!  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
+!  Madu Manathunga 08/15/2019
+!-----------------------------------------------------------------------------
+   use allmod
+   implicit double precision(a-h,o-z)
 
-!The first step is to distribute shells and basis functions across the nodes. 
-!We achieve this task by simply calling the MPI_setup_hfoperator. 
- if (MASTER) then
+   integer, dimension(0:mpisize-1) :: itotgridspn
+   integer, dimension(0:mpisize-1) :: igridptul
+   integer, dimension(0:mpisize-1) :: igridptll
 
-        call MPI_setup_hfoperator() 
+   include 'mpif.h'
 
-!The second step is to distribute radial grid points among nodes
-!First finout what grid system is being used and get the number of
-!points and save int Irad variable
-!    do iatm=1,natom
-!         if(quick_method%ISG.eq.1)then
-!            irad=50
-!         else
-!            if(quick_molspec%iattype(iatm).le.10)then
-!               irad=23
-!            else
-!               irad=26
-!            endif
-!         endif
-    
-    !Now distribute the grid points among nodes
-    !mpi_rgptsn variable carries a list of nodes indices
-    !mpi_rgpts carries the number of points corresponding to 
-    !each index
-!    do i=0,mpisize-1
-!        mpi_rgptsn(i)=0
-!        do j=1, irad
-!            mpi_rgpts(i,j)=0
-!        enddo
-!    enddo        
-!
-!    do i=1, irad
-!        temp1d(i)=irad-i
-!    enddo
-!
-!    call greedy_distrubute(temp1d(1:irad),irad,mpisize, &
-!    mpi_rgptsn,mpi_rgpts)
+   if(master) then
+      do impi=0, mpisize-1
+         itotgridspn(impi)=0
+         igridptul(impi)=0
+         igridptll(impi)=0
+      enddo
 
-   !Go over mpi_rgpts and find out how many points from iatm
-   ! is in each node
+      itmpgriddist=Iradtemp
+      do while(itmpgriddist .gt. 1)
+         do impi=0, mpisize-1
+            itotgridspn(impi)=itotgridspn(impi)+1
+            itmpgriddist=itmpgriddist-1
+            if (itmpgriddist .lt. 1) exit
+         enddo
+      enddo
 
-!    enddo
- endif
- end subroutine MPI_setup_dftoperator
+      itmpgridptul=0
+      do impi=0, mpisize-1
+         itmpgridptul=itmpgridptul+itotgridspn(impi)
+         igridptul(impi)=itmpgridptul
+         if(impi .eq. 0) then
+            igridptll(impi)=1
+         else
+            igridptll(impi)=igridptul(impi-1)+1
+         endif
+      enddo
+   endif
+
+   if(bMPI) then
+
+      call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+   endif      
+
+   return
+ end subroutine setup_xc_mpi 
 #endif

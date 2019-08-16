@@ -28,13 +28,26 @@ subroutine gradient(failed)
    logical :: failed
    character(len=1) cartsym(3)
 
+#ifdef MPI
+   include "mpif.h"
+#endif
+
 !  Curently, only analytical gradients are available. This should be changed later.
    quick_method%analgrad=.true.
+
+   quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
+   quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
 
 !  Set the value of gradient vector to zero
    do j=1,natom
       do k=1,3
          quick_qm_struct%gradient((j-1)*3+K)=0d0
+      enddo
+   enddo
+
+   do II=1,nbasis
+      do J =1,nbasis
+         quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
       enddo
    enddo
 
@@ -353,6 +366,7 @@ subroutine get_kinetic_grad
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   logical :: ijcon
 #ifdef MPI
    include "mpif.h"
 #endif
@@ -391,8 +405,6 @@ subroutine get_kinetic_grad
    endif
    call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
-
-!write(*,*) "get_nuclear_repulsion_grad: HOLD array computed."
 
    if (quick_method%debug) then
       write(ioutfile,'(/"THE ENERGY WEIGHTED DENSITY MATRIX")')
@@ -439,114 +451,16 @@ subroutine get_kinetic_grad
 
 !  We have selected our two basis functions, now loop over angular momentum.
             do Imomentum=1,3
-               dSI = 0.d0
-               dSJ =0.d0
-               dKEI = 0.d0
-               dKEJ = 0.d0
 
-!  do the Ibas derivatives first.
-               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
-               do Icon=1,ncontract(Ibas)
-                  do Jcon=1,ncontract(Jbas)
-                     dSI = dSI + 2.d0*aexp(Icon,Ibas)* &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                     dKEI = dKEI + 2.d0*aexp(Icon,Ibas)* &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
+!  do the Ibas derivatives first. In order to prevent code duplication,
+!  this has been implemented in a seperate subroutine. 
+               ijcon = .true. 
+               call get_ijbas_derivative(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI) 
 
-               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
-               if (itype(Imomentum,Ibas) /= 0) then
-                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
-                  do Icon=1,ncontract(Ibas)
-                     do Jcon=1,ncontract(Jbas)
-                        dSI = dSI - dble(itype(Imomentum,Ibas)+1)* &
-                        dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                        *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                        dKEI = dKEI - dble(itype(Imomentum,Ibas)+1)* &
-                        dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                        *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                     enddo
-                  enddo
-                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
-               endif
-               quick_qm_struct%gradient(ISTART+Imomentum) = quick_qm_struct%gradient(ISTART+Imomentum) &
-               -dSI*quick_scratch%hold(Jbas,Ibas)*2.d0 &
-               +dKeI*DENSEJI*2.d0
+!  do the Jbas derivatives.
+               ijcon = .false.
+               call get_ijbas_derivative(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI)
 
-!  Now do the Jbas derivatives.
-               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
-               do Icon=1,ncontract(Ibas)
-                  do Jcon=1,ncontract(Jbas)
-                     dSJ = dSJ + 2.d0*aexp(Jcon,Jbas)* &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                     dKEJ = dKEJ + 2.d0*aexp(Jcon,Jbas)* &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
-
-               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
-               if (itype(Imomentum,Jbas) /= 0) then
-                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
-                  do Icon=1,ncontract(Ibas)
-                     do Jcon=1,ncontract(Jbas)
-                        dSJ = dSJ - dble(itype(Imomentum,Jbas)+1)* &
-                        dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                        *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                        dKEJ = dKEJ - dble(itype(Imomentum,Jbas)+1)* &
-                        dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                        *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                     enddo
-                  enddo
-                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
-               endif
-               quick_qm_struct%gradient(JSTART+Imomentum) = quick_qm_struct%gradient(JSTART+Imomentum) &
-               -dSJ*quick_scratch%hold(Jbas,Ibas)*2.d0 &
-               +dKEJ*DENSEJI*2.d0
             enddo
          enddo
       enddo
@@ -726,39 +640,8 @@ subroutine get_xc_grad
       endif
 
 #ifdef MPI
-      if(bMPI) then
-         if(master) then
-            do impi=0, mpisize-1
-               itotgridspn(impi)=0
-               igridptul(impi)=0
-               igridptll(impi)=0
-            enddo
-
-            itmpgriddist=Iradtemp
-            do while(itmpgriddist .gt. 1)
-               do impi=0, mpisize-1
-                  itotgridspn(impi)=itotgridspn(impi)+1
-                  itmpgriddist=itmpgriddist-1
-                  if (itmpgriddist .lt. 1) exit
-               enddo
-            enddo
-
-            itmpgridptul=0
-            do impi=0, mpisize-1
-               itmpgridptul=itmpgridptul+itotgridspn(impi)
-               igridptul(impi)=itmpgridptul
-               if(impi .eq. 0) then
-                  igridptll(impi)=1
-               else
-                  igridptll(impi)=igridptul(impi-1)+1
-               endif
-            enddo
-         endif
-
-      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      endif
+!  Distribute grid points among master and slaves
+   call setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)      
 #endif
 
 #ifdef MPI
@@ -832,16 +715,8 @@ subroutine get_xc_grad
                            call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
                            libxc_exc(1), libxc_vrhoa(1))
                         case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
-!if(.not.master) then
-!        write (*,*) "Use functional: ",mpirank, libxc_rho(1), libxc_sigma(1), &
-!        libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1)
-!endif
                            call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
                            libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
-!if(.not.master) then
-!        write (*,*) "Functional used: ",mpirank
-!endif
-
                      end select
 
                      tsttmp_exc=tsttmp_exc+libxc_exc(1)
@@ -926,3 +801,81 @@ subroutine get_xc_grad
    return
 
 end subroutine get_xc_grad
+
+
+subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
+
+!-------------------------------------------------------------------------
+!  The purpose of this subroutine is to compute the I and J basis function
+!  derivatives required for get_kinetic_grad subroutine. The input variables
+!  mbas, mstart and ijcon are used to differentiate between I and J
+!  basis functions. For I basis functions, ijcon should be  true and should
+!  be false for J.  
+!-------------------------------------------------------------------------   
+   use allmod
+   implicit double precision(a-h,o-z)
+   logical :: ijcon   
+
+   dSM = 0.0d0
+   dKEM = 0.0d0
+
+   itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+   do Icon=1,ncontract(Ibas)
+      do Jcon=1,ncontract(Jbas)
+         if(ijcon) then
+            mcon = Icon
+         else
+            mcon = Jcon
+         endif
+         dSM= dSM + 2.d0*aexp(mcon,mbas)* &
+         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
+         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+      enddo
+   enddo
+
+   itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+   if (itype(Imomentum,mbas) /= 0) then
+      itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+      do Icon=1,ncontract(Ibas)
+         do Jcon=1,ncontract(Jbas)
+            dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
+            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+            dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
+            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         enddo
+      enddo
+      itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+   endif
+
+   quick_qm_struct%gradient(mstart+Imomentum) = quick_qm_struct%gradient(mstart+Imomentum) &
+   -dSM*quick_scratch%hold(Jbas,Ibas)*2.d0 &
+   +dKEM*DENSEJI*2.d0
+
+   return
+
+end subroutine get_ijbas_derivative
