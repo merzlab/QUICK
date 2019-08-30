@@ -1,0 +1,218 @@
+ *********************************************************************************************************
+ **                                                                                                     **
+ **           .?888888888+.                                                                             **
+ **         =88888888888888~.                                                                           **
+ **      .78888888888888887                                                                             **
+ **     :888888O+. .. .+ZO                                                                              **
+ **    ,88888? $,8.8=.                                                                                  **
+ **   .8888I=,8:$Z.,+7ZI=.                               88888                       8888:              **
+ **   =888~$~7=:888888888888Z                            88888                       8888:              **
+ **   I88Z~=~78888888888888888?                          88888                       8888:              **
+ **   788:7?:8888888: . I8888888                                        888888       8888:              **
+ **   =88,$.88888I         888888    ,8888:     88888    88888        888888888I     8888:    888888    **
+ **   .88+.88888$           88888:   ,8888:     88888    88888      $888888888888    8888:   888888     **
+ **    I8Z 88888             88888   ,8888:     88888    88888    .888888     8888   8888: 888888       **
+ **    .8Z 88888             88888   ,8888:     88888    88888    $88888             8888:88888         **
+ **     8I 88888      .=88. .88888   ,8888:     88888    88888    88888              8888888888         **
+ **    :8  88888      888888$8888$   ,8888:     88888    88888    8888O              88888888888        **
+ **   ,7   +88888.     8888888888.   ,8888:     88888    88888    888888             88888O888888       **
+ **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+ **          I8888888888888888888~    888888888888888    88888     O888888888888O    8888:   888888     **
+ **            O88888888888888888=     88888888888888    88888       88888888888$    8888:    888888    **
+ **              .~888888Z    O8        .8888I  88888    88888         8888888       8888:     888888   **
+ **                                                                                                     **
+ **                                                                                                     **
+ **                                         Copyright (c) 2011                                          **
+ **                                 Regents of the University of Florida                                **
+ **                                        All Rights Reserved.                                         **
+ **                                                                                                     **
+ **                   This software provided pursuant to a license agreement containing                 **
+ **                   restrictions on its disclosure, duplication, and use. This software               **
+ **                   contains confidential and proprietary information, and may not be                 **
+ **                   extracted or distributed, in whole or in part, for any purpose                    **
+ **                   whatsoever, without the express written permission of the authors.                **
+ **                   This notice, and the associated author list, must be attached to                  **
+ **                   all copies, or extracts, of this software. Any additional                         **
+ **                   restrictions set forth in the license agreement also apply to this                **
+ **                   software.                                                                         **
+ *********************************************************************************************************
+
+ Cite this work as:                                                                                       
+ Manathunga, M.; Miao, Y.; Mu, D.; He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK             
+ University of Florida, Gainesville, FL, 2019 and Michigan State University, East Lansing, MI, 2019       
+
+ If you have any comments or queries, please send us an email for technical support:                      
+ quick.merzlab@gmail.com                                                                                  
+
+ TASK STARTS ON: Fri Aug 16 15:16:44 2019
+ INPUT FILE :    h2_hf.in
+ OUTPUT FILE:    h2_hf.out
+ DATE FILE  :    h2_hf.dat
+ BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
+
+|------------ CUDA INFORMATION ---------------
+|  CUDA version of Quick in use
+|  Implemented by
+|                      Yipu Miao (Florida)
+|  CAUTION: CUDA Quick is currently experimental
+|           and you may at risk to use it. Be sure
+|           to check result carelly. Advise or 
+|           bug report are welcome.
+|---------------------------------------------
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12036
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
+
+ @ Read Job And Atom
+
+  -------------------------------------
+KEYWORD= HF BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT                                                                                                                                                 
+  -------------------------------------
+ ============== JOB CARD =============
+| METHOD = HATREE FOCK
+| DIRECT SCF 
+| SAD INITAL GUESS 
+| USE DIIS SCF
+| PRINT ENERGY EVERY CYCLE
+| GRADIENT CALCULATION
+| MAX SCF CYCLES =    200
+| MAX DIIS CYCLES =   10
+| DELTA DENSITY START CYCLE = 1000
+| COMPUATIONAL CUTOFF: 
+|      TWO-e INTEGRAL   =  0.100E-09
+|      BASIS SET PRIME  =  0.100E-19
+|      MATRIX ELEMENTS  =  0.100E-09
+|      BASIS FUNCTION   =  0.100E-09
+|      GRADIENT CUTOFF  =  0.100E-09
+| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+| BASIS SET = 6-31G
+| BASIS FILE = /server-home1/madu/bin/quick/ifort18/basis/6-31G
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = H 
+BASIS FUNCTIONS =    2
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+
+SCF CYCLE      =        1      TIME      =     0.00
+RMS CHANGE     = 0.256654E+00  MAX CHANGE= 0.291569E+00
+
+SCF CYCLE      =        2      TIME      =     0.00
+RMS CHANGE     = 0.152139E-01  MAX CHANGE= 0.238378E-01
+
+SCF CYCLE      =        3      TIME      =   0.00
+DIIS CYCLE     =        1      MAX ERROR = 0.543720E-02
+RMS CHANGE     = 0.492246E-02  MAX CHANGE= 0.776945E-02
+
+SCF CYCLE      =        4      TIME      =   0.00
+DIIS CYCLE     =        2      MAX ERROR = 0.175010E-02
+RMS CHANGE     = 0.234112E-02  MAX CHANGE= 0.370386E-02
+DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
+
+SCF CYCLE      =        5      TIME      =     0.00
+RMS CHANGE     = 0.142040E-10  MAX CHANGE= 0.224882E-10
+CONVERGED!!!!!
+ELECTRONIC ENERGY    =     0.000000000
+CORE_CORE REPULSION  =     0.000000000
+TOTAL ENERGY         =     0.000000000
+
+ @ End Energy calculation
+
+
+ @ Finish SAD initial guess
+
+
+ @ Begin to Read Mol Info
+
+
+ =========== Molecule Input ==========
+| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+| TOTOAL ATOM NUMBER      =    2    NUMBER OF ATOM TYPES        =    1
+| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    0
+| NUMBER OF ELECTRONS     =    2
+
+ -- INPUT GEOMETRY -- :
+    H           0.0000       0.0000       0.0000
+    H           0.0000       0.0000       0.7000
+
+ -- DISTANCE MATRIX -- :
+              1           2
+      1     0.00000
+      2     1.32281     0.00000
+
+============== BASIS INFOS ==============
+| BASIS FUNCTIONS =    4
+| NSHELL =    4 NPRIM  =    8
+| JSHELL =    4 JBASIS =    8
+
+
+ @ End Reading Mol Info 
+
+
+ @ Begin Energy Calculation
+
+TOL:    0.000000000100000
+                                         SCF ENERGY
+------------------------------------------------------------------------------------------------------------------------
+NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+------------------------------------------------------------------------------------------------------------------------
+  1     -0.848050771      ------         0.300     1        0.29      0.01      0.00    0.1688E+00  0.1706E+00  0.2890E+00
+  2     -1.124897002  0.276846E+00       0.003     2        0.00      0.00      0.00    0.3154E-01  0.1431E-01  0.2288E-01
+  3     -1.126122697  0.122569E-02       0.003     3        0.00      0.00      0.00    0.6140E-03  0.2756E-03  0.4468E-03
+  4     -1.126123163  0.466430E-06       0.003     4        0.00      0.00      0.00    0.8150E-06  0.0000E+00  0.0000E+00
+------------------------------------------------------------------------------------------------------------------------
+ REACH CONVERGENCE AFTER   4 CYLCES
+ MAX ERROR = 0.815016E-06   RMS CHANGE = 0.000000E+00   MAX CHANGE = 0.000000E+00
+ -----------------------------------------------
+ELECTRONIC ENERGY    =    -1.882090604
+CORE_CORE REPULSION  =     0.755967441
+TOTAL ENERGY         =    -1.126123163
+
+ @ End Energy calculation
+
+  GRADIENT CALCULATION TIME    0.034379000 S
+
+ ANALYTICAL GRADIENT: 
+----------------------------------------
+ VARIBLES    XYZ            GRADIENT
+----------------------------------------
+    1P     0.0000000000   **************
+    1r     0.0000000000   **************
+    1     0.0000000000   **************
+    2P     0.0000000000   **************
+    2r     0.0000000000   **************
+    2     0.7000000535   921.9762314246
+----------------------------------------
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     0.008055000(  0.77%)
+TOTAL SCF TIME     =     0.307665000( 29.36%)
+      TOTAL OP TIME      =     0.012410000(  1.18%)
+            TOTAL 1e TIME      =     0.000119000(  0.01%)
+            TOTAL 2e TIME      =     0.012260000(  1.17%)
+            TOTAL ENERGY TIME  =     0.000009000(  0.00%)
+      TOTAL DII TIME     =     0.295213000( 28.17%)
+            TOTAL DIAG TIME    =     0.000053000(  0.01%)
+TOTAL TIME         =     1.047940000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes  1.0 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Fri Aug 16 15:16:45 2019

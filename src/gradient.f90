@@ -616,6 +616,16 @@ subroutine get_xc_grad
    include "mpif.h"
 #endif
 
+#ifdef CUDA
+   if(quick_method%bCUDA) then
+      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+      quick_qm_struct%vec,quick_qm_struct%dense)
+      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
+      call gpu_getxc_grad(quick_method%isg,quick_qm_struct%gradient,sigrad2,quick_method%nof_functionals, &
+      quick_method%functional_id,quick_method%xc_polarization)
+      stop
+   endif
+#else
 !  Initiate the libxc functionals
    do ifunc=1, quick_method%nof_functionals
       if(quick_method%xc_polarization > 0 ) then
@@ -742,7 +752,7 @@ subroutine get_xc_grad
 
                      quicktest = DABS(dphidx+dphidy+dphidz+phi)
                      
-                     if (quicktest < tol ) then
+                     if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
                         call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
@@ -797,6 +807,8 @@ subroutine get_xc_grad
    do ifunc=1, quick_method%nof_functionals
       call xc_f90_func_end(xc_func(ifunc))
    enddo
+
+#endif
 
    return
 

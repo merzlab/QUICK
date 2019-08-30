@@ -66,8 +66,10 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
 static float totTime;
 #endif
 
-//Madu Manathunga 07/01/2019 added libxc variable
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
+/*Madu Manathunga 07/01/2019 added 3 new variables
+glinfo and nof_functionals are for libxc. xc_calc_type determines where we would compute
+energy or gradient */
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type)
 {
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -76,12 +78,28 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
     cudaEventRecord(start, 0);
 #endif
 
-#ifdef DEBUG
-    printf("FILE: %s, LINE: %d, FUNCTION: %s, Calling getxc_kernal \n", __FILE__, __LINE__, __func__);
-#endif
-    
-    getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals);
-    
+/*********Madu: Dumb way of copying back gradients ********/
+   	int exc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
+	double* exc_dev_grad; 
+	
+	if(xc_calc_type>0){
+
+		cudaMalloc((void**)exc_dev_grad, exc_grad_byte_size);
+
+		getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals, xc_calc_type, exc_dev_grad);
+
+		double* grad_host;
+		grad_host = (double*)malloc(exc_grad_byte_size);
+		cudaMemcpyFromSymbol(grad_host, devSim_dft.grad, exc_grad_byte_size);
+		
+		for(int i=0;i<3*gpu->natom;i++){
+			printf("getxc i: %d, grad: %f \n", i, grad_host[i]);
+		}
+	}else{
+		getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals, xc_calc_type, exc_dev_grad);
+	}
+/*********Madu: Dumb way of copying back gradients ********/
+
 #ifdef DEBUG
     printf("Running getxc_kernel with BLOCK = %i, THREADS PER BLOCK = %i \n", gpu->blocks, gpu->XCThreadsPerBlock);
     cudaEventRecord(end, 0);
@@ -98,7 +116,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals)
 
 //Madu Manathunga 07/01/2019 added libxc variable
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1)
-__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type, double* exc_dev_grad)
 {
     unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int totalThreads = blockDim.x * gridDim.x;
@@ -135,14 +153,29 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
             
             if (currentPoint <= myPoint && currentPoint + iiangt > myPoint) {
                 unsigned int pointId = (unsigned int) myPoint - currentPoint;
-                gpu_grid_xc(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId], glinfo, nof_functionals);
+		if(xc_calc_type == 0){
+                	gpu_grid_xc(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId], 
+			glinfo, nof_functionals);
+		}else{
+			gpu_grid_xc_grad(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId],
+			glinfo, nof_functionals, exc_dev_grad);
+		}
                 myPoint = myPoint + totalThreads;
             }
             currentPoint = currentPoint + iiangt;
         }
     }
-    
-    
+
+//	********** Only for debugging ******************
+
+/*	if(xc_calc_type != 0){
+		for(int i=0; i< devSim_dft.natom*3;i++){
+			printf("Grad: %f \n",devSim_dft.gradULL[i]);
+		} 
+	}
+*/
+//	************************************************
+
 }
 
 
@@ -216,7 +249,7 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 #ifdef DEBUG
 //    printf("FILE: %s, LINE: %d, FUNCTION: %s,  B3LYP enregy \n", __FILE__, __LINE__, __func__);
 #endif
-                _tmp = b3lyp_e(2.0*density, sigma);
+                _tmp = b3lyp_e(2.0*density, sigma) * weight;
             }else if(devSim_dft.method == DFT){// !!! remember to change it to BLYP
 		_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
                 + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
@@ -410,6 +443,227 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 }
 
 
+/*	Madu Manathunga 08/16/2019
+	Following method calls the device kernel that computes exchange correlation
+	gradients
+*/
+__device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals, double* exc_dev_grad){
+
+    QUICKDouble rad, rad3;
+    QUICKDouble atomx, atomy, atomz;
+	
+
+    /*
+     Read atom coordinates(atomx, atomy and atomz) from global memory (DRAM). If the atom is shared by the 
+     whole block, we could put these variables into block memory (shared memory)
+     */
+    atomx = LOC2(devSim_dft.xyz, 0, iatm-1, 3, devSim_dft.natom);
+    atomy = LOC2(devSim_dft.xyz, 1, iatm-1, 3, devSim_dft.natom);
+    atomz = LOC2(devSim_dft.xyz, 2, iatm-1, 3, devSim_dft.natom);
+
+    if (devSim_dft.isg == 1){
+        rad = radii[devSim_dft.iattype[iatm-1]-1];
+        rad3 = pow(rad,3) * RWT[irad-1];
+    }else {
+        rad = radii2[devSim_dft.iattype[iatm-1]-1];
+        rad3 = pow(rad,3) * RWT[irad-1];
+    }
+
+
+    // grid point coordinates.
+    QUICKDouble gridx = atomx + rad * RGRID[irad-1] * XAng;
+    QUICKDouble gridy = atomy + rad * RGRID[irad-1] * YAng;
+    QUICKDouble gridz = atomz + rad * RGRID[irad-1] * ZAng;
+
+	QUICKDouble sswt = SSW(gridx, gridy, gridz, iatm);
+    QUICKDouble weight = sswt * WAng * rad3;
+
+    if (weight > devSim_dft.DMCutoff ) {
+        QUICKDouble density, densityb;
+        QUICKDouble gax, gay, gaz;
+        QUICKDouble gbx, gby, gbz;
+        denspt(gridx, gridy, gridz, &density, &densityb, &gax, &gay, &gaz, &gbx, &gby, &gbz);
+
+		if (density > devSim_dft.DMCutoff ) {
+
+			QUICKDouble sigma = 4.0 * (gax * gax + gay * gay + gaz * gaz);
+			QUICKDouble _tmp ;
+
+			if (devSim_dft.method == B3LYP) {
+				_tmp = b3lyp_e(2.0*density, sigma);
+			}else if(devSim_dft.method == DFT){
+				_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
+				+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+			}
+
+			QUICKDouble dfdr;
+			QUICKDouble dot, xdot, ydot, zdot;
+
+			if (devSim_dft.method == B3LYP) {
+				dot = b3lypf(2.0*density, sigma, &dfdr);
+				xdot = dot * gax;
+				ydot = dot * gay;
+				zdot = dot * gaz;
+			}else if(devSim_dft.method == DFT){
+
+				QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
+				QUICKDouble dfdr2;
+
+				lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+				dfdr = dfdr2;
+				dfdgaa = dfdgaa2;
+				dfdgab = dfdgab2;
+
+				// This subroutine will never run,
+				// however, it will speed up the program for about 4 times. Yes, you are right, 4 times
+				// in another word, if you delete it, the program will be slown up to 25%.
+				// you don't need to know why
+				if (false) lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+
+				//Calculate the first term in the dot product shown above,i.e.:
+				//(2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
+				xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
+				ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
+				zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
+				
+			}else if(devSim_dft.method == LIBXC){
+				//Prepare in/out for libxc call
+				double d_rhoa = (double) density;
+				double d_rhob = (double) densityb;
+				double d_sigma = (double)sigma;
+				double d_zk, d_vrho, d_vsigma;
+				d_zk = d_vrho = d_vsigma = 0.0;
+
+				for(int i=0; i<nof_functionals; i++){
+					double tmp_d_zk, tmp_d_vrho, tmp_d_vsigma;
+					tmp_d_zk=tmp_d_vrho=tmp_d_vsigma=0.0;
+
+					gpu_libxc_info* tmp_glinfo = glinfo[i];
+
+					switch(tmp_glinfo->gpu_worker){
+						case GPU_WORK_LDA:
+							gpu_work_lda_c(tmp_glinfo, d_rhoa, d_rhob, &tmp_d_zk, &tmp_d_vrho, 1);
+							break;
+					
+						case GPU_WORK_GGA_X:
+							gpu_work_gga_x(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma);
+							break;
+
+						case GPU_WORK_GGA_C:
+							gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma, 1);
+							break;
+					}
+					d_zk += (tmp_d_zk*tmp_glinfo->mix_coeff);
+					d_vrho += (tmp_d_vrho*tmp_glinfo->mix_coeff);
+					d_vsigma += (tmp_d_vsigma*tmp_glinfo->mix_coeff);
+				}
+			
+				_tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob))) * weight;
+
+				QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
+				QUICKDouble dfdr2;
+				dfdr = (QUICKDouble)d_vrho;
+				dfdgaa = (QUICKDouble)d_vsigma*4.0;
+
+				xdot = dfdgaa * gax;
+				ydot = dfdgaa * gay;
+				zdot = dfdgaa * gaz;
+			}
+
+	
+			for (int i = 0; i< devSim_dft.nbasis; i++) {
+				QUICKDouble phi, dphidx, dphidy, dphidz;
+				pteval(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, i+1);
+
+				if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+
+					QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
+
+					pt2der(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, i+1);
+					
+					QUICKDouble Gradx, Grady, Gradz;
+					Gradx = 0.0;
+					Grady = 0.0;
+					Gradz = 0.0;
+
+					int Istart = (devSim_dft.katom[i]-1) * 3;
+#ifdef DEBUG
+//	printf("gridx: %f, gridy: %f, gridz: %f, dxdx: %f, dxdy: %f, dxdz: %f, dydy: %f, dydz: %f, dzdz: %f, i+1: %d \n", gridx, gridy, gridz, dxdx, dxdy, dxdz, dydy, dydz, dzdz, i+1);
+#endif
+
+					for (int j = i; j<devSim_dft.nbasis; j++) {
+
+						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
+						pteval(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, j+1);
+						
+						QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, i, j, devSim_dft.nbasis, devSim_dft.nbasis);
+
+						Gradx = Gradx - 2.0 * denseij * weight * (dfdr * dphidx * phi2
+								+ xdot * (dxdx * phi2 + dphidx * dphidx2)
+								+ ydot * (dxdy * phi2 + dphidx * dphidy2)
+								+ zdot * (dxdz * phi2 + dphidx * dphidz2));
+ 						
+						Grady = Grady - 2.0 * denseij * weight * (dfdr * dphidy * phi2
+								+ xdot * (dxdy * phi2 + dphidy * dphidx2)
+								+ ydot * (dydy * phi2 + dphidy * dphidy2)
+								+ zdot * (dydz * phi2 + dphidy * dphidz2));
+
+						Gradz = Gradz - 2.0 * denseij * weight * (dfdr * dphidz * phi2
+								+ xdot * (dxdz * phi2 + dphidz * dphidx2)
+								+ ydot * (dydz * phi2 + dphidz * dphidy2)
+								+ zdot * (dydz * phi2 + dphidz * dphidz2));
+
+					}
+#ifdef DEBUG
+//        printf("Before: %d, Gradx: %f, Grady: %f, Gradz: %f, %f, %f, %f  \n", i, devSim_dft.grad[Istart], devSim_dft.grad[Istart + 1], devSim_dft.grad[Istart + 2], Gradx, Grady, Gradz);
+#endif
+
+/*				GRADADD(devSim_dft.grad[Istart], Gradx);
+				GRADADD(devSim_dft.grad[Istart + 1], Grady);
+				GRADADD(devSim_dft.grad[Istart + 2], Gradz);*/
+
+				atomicAdd(exc_dev_grad[Istart], Gradx);
+//				exc_dev_grad[Istart] = exc_dev_grad[Istart] + Gradx;
+//				devSim_dft.grad[Istart + 1] = devSim_dft.grad[Istart + 1] + Grady;
+//				devSim_dft.grad[Istart + 2] = devSim_dft.grad[Istart + 2] + Gradz;
+
+#ifdef DEBUG
+       // printf("After: %d, Gradx: %f, Grady: %f, Gradz: %f, %f, %f, %f  \n", i, devSim_dft.grad[Istart], devSim_dft.grad[Istart + 1], devSim_dft.grad[Istart + 2], Gradx, Grady, Gradz);
+
+        printf("After: %d, Gradx: %f, %f  \n", i, exc_dev_grad[Istart], Gradx);
+#endif
+
+				}
+			}
+			if(sswt != 1.0){
+#ifdef DEBUG
+//        printf("gridx: %f, gridy: %f, gridz: %f, _tmp: %f, weight/sswt: %f, iatm: %d \n", gridx, gridy, gridz, _tmp, weight/sswt,iatm);
+#endif
+
+/************** Only for debugging *************/
+				QUICKDouble tst_gridx = -0.733256;
+				QUICKDouble tst_gridy = -1.714206;
+				QUICKDouble tst_gridz = -2.828427;
+				QUICKDouble tst_zkec  = -0.000299;
+				QUICKDouble tst_wei_ss=  0.811378;
+				int imatm = 3;
+/************** Only for debugging *************/
+
+				//sswder(gridx, gridy, gridz, _tmp, weight/sswt, iatm);
+				sswder(tst_gridx, tst_gridy, tst_gridz, tst_zkec, tst_wei_ss, imatm);
+			}
+		}
+	}
+
+
+#ifdef DEBUG
+	
+    //printf("FILE: %s, LINE: %d, FUNCTION: %s, Running gpu_grid_xc_grad \n", __FILE__, __LINE__, __func__);
+#endif
+
+}
+
+
 __device__ int gridFormSG1(int iitype, QUICKDouble distance, \
     QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng){
     int iiang;
@@ -596,6 +850,346 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
     return ssw;
 }
 
+/*
+	Madu Manathunga 08/20/2019
+*/
+
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent){
+
+/*
+	This subroutine calculates the derivatives of weight found in
+	Stratmann, Scuseria, and Frisch, Chem. Phys. Lett., v 257,
+	1996, pg 213-223.  The mathematical development is similar to
+	the developement found in the papers of Gill and Pople, but uses
+	SSW method rather than Becke's weights.
+
+	The derivative of the weight with repsect to the displacement of the
+	parent atom is mathematically quite complicated, thus rotational
+	invariance is used.  Rotational invariance simply is the condition that
+	the sum of all derivatives must be zero.
+
+	Certain things will be needed again and again in this subroutine.  We
+	are therefore goint to store them.  They are the unnormalized weights.
+	The array is called UW for obvious reasons.
+*/	
+
+	QUICKDouble* uw;
+	QUICKDouble* wtgrad;
+
+	uw=(QUICKDouble*)malloc(devSim_dft.natom*sizeof(QUICKDouble));
+	wtgrad=(QUICKDouble*)malloc(3*devSim_dft.natom*sizeof(QUICKDouble));
+		
+	for(int iatm=0;iatm<devSim_dft.natom*3;iatm++){
+		wtgrad[iatm]=0.0;
+	}
+
+	QUICKDouble sumUW= 0.0;
+	QUICKDouble xiatm, yiatm, ziatm, xjatm, yjatm, zjatm, xlatm, ylatm, zlatm;
+	QUICKDouble rig, rjg, rlg, rij, rjl;
+		
+	for(int iatm=0;iatm<devSim_dft.natom;iatm++){
+		uw[iatm]=1.0;
+
+		xiatm = LOC2(devSim_dft.xyz, 0, iatm, 3, devSim_dft.natom);
+		yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, devSim_dft.natom);
+		ziatm = LOC2(devSim_dft.xyz, 2, iatm, 3, devSim_dft.natom);
+	
+		rig = sqrt(pow((gridx-xiatm),2) + pow((gridy-yiatm),2) + pow((gridz-ziatm),2));
+	
+		for(int jatm=0;jatm<devSim_dft.natom;jatm++){
+			if(jatm != iatm){
+
+				xjatm = LOC2(devSim_dft.xyz, 0, jatm, 3, devSim_dft.natom);
+				yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, devSim_dft.natom);
+				zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, devSim_dft.natom);
+
+				rjg = sqrt(pow((gridx-xjatm),2) + pow((gridy-yjatm),2) + pow((gridz-zjatm),2));
+				rij = sqrt(pow((xiatm-xjatm),2) + pow((yiatm-yjatm),2) + pow((ziatm-zjatm),2));
+
+				QUICKDouble confocal = (rig-rjg)/rij;
+
+				if(confocal >= 0.64){
+					uw[iatm] = 0.0;
+				}else if(confocal >= -0.64){
+
+					QUICKDouble frctn = confocal/0.64;
+
+					QUICKDouble gofconfocal = (35.0*frctn-35.0*pow(frctn,3)+21.0*pow(frctn,5)
+					-5.0*pow(frctn,7))/16.0;
+		
+					uw[iatm] = uw[iatm]*0.5*(1.0-gofconfocal);
+				}
+			}
+		}
+		sumUW = sumUW + uw[iatm];	
+	}
+
+        for(int i=0;i<devSim_dft.natom;i++){
+                //printf("i: %d, uw: %f \n", i, uw[i]);
+        }
+
+//printf("gridx: %f, gridy: %f, gridz: %f, Exc: %f, quadwt: %f, iparent: %d, sumUW: %f \n",gridx, gridy, gridz, Exc, quadwt, iparent, sumUW);
+	
+/*
+	At this point we now have the unnormalized weight and the sum of same.
+	Calculate the parent atom - grid point distance, and then start the loop.
+*/
+	
+	xiatm = LOC2(devSim_dft.xyz, 0, iparent-1, 3, devSim_dft.natom);
+	yiatm = LOC2(devSim_dft.xyz, 1, iparent-1, 3, devSim_dft.natom);
+	ziatm = LOC2(devSim_dft.xyz, 2, iparent-1, 3, devSim_dft.natom);
+
+	rig = sqrt(pow((gridx-xiatm),2) + pow((gridy-yiatm),2) + pow((gridz-ziatm),2));	
+
+	QUICKDouble a = 0.64;
+
+	for(int jatm=0;jatm<devSim_dft.natom;jatm++){
+
+		int jstart = jatm*3;
+		
+		if(jatm != iparent-1){
+
+			xjatm = LOC2(devSim_dft.xyz, 0, jatm, 3, devSim_dft.natom);
+			yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, devSim_dft.natom);
+			zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, devSim_dft.natom);
+
+			rjg = sqrt(pow((gridx-xjatm),2) + pow((gridy-yjatm),2) + pow((gridz-zjatm),2));
+			rij = sqrt(pow((xiatm-xjatm),2) + pow((yiatm-yjatm),2) + pow((ziatm-zjatm),2));	
+
+			QUICKDouble dmudx = (-1.0/rij)*(1/rjg)*(xjatm-gridx) + ((rig-rjg)/pow(rij,3))*(xiatm-xjatm);
+			QUICKDouble dmudy = (-1.0/rij)*(1/rjg)*(yjatm-gridy) + ((rig-rjg)/pow(rij,3))*(yiatm-yjatm);
+			QUICKDouble dmudz = (-1.0/rij)*(1/rjg)*(zjatm-gridz) + ((rig-rjg)/pow(rij,3))*(ziatm-zjatm);
+
+			QUICKDouble u = (rig-rjg)/rij;
+			QUICKDouble t = (-35.0*pow((a+u),3)) / ((a-u)*(16.0*pow(a,3)+29.0*pow(a,2)*u+20.0*a*pow(u,2)+5.0*pow(u,3)));
+
+			wtgrad[jstart+0] = wtgrad[jstart+0] + uw[iparent-1]*dmudx*t/sumUW;
+			wtgrad[jstart+1] = wtgrad[jstart+1] + uw[iparent-1]*dmudy*t/sumUW;
+			wtgrad[jstart+2] = wtgrad[jstart+2] + uw[iparent-1]*dmudz*t/sumUW;
+
+
+/*        for(int i=0;i<devSim_dft.natom*3;i++){
+                printf("i: %d, wtgrad: %f \n", i, wtgrad[i]);
+        }*/
+
+			for(int latm=0; latm<devSim_dft.natom;latm++){
+				if(latm != jatm){
+					xlatm = LOC2(devSim_dft.xyz, 0, latm, 3, devSim_dft.natom);
+					ylatm = LOC2(devSim_dft.xyz, 1, latm, 3, devSim_dft.natom);
+					zlatm = LOC2(devSim_dft.xyz, 2, latm, 3, devSim_dft.natom);
+
+					rlg = sqrt(pow((gridx-xlatm),2) + pow((gridy-ylatm),2) + pow((gridz-zlatm),2));
+					rjl = sqrt(pow((xjatm-xlatm),2) + pow((yjatm-ylatm),2) + pow((zjatm-zlatm),2));
+
+					dmudx = (-1.0/rjl)*(1/rjg)*(xjatm-gridx) + ((rlg-rjg)/pow(rjl,3))*(xlatm-xjatm);
+					dmudy = (-1.0/rjl)*(1/rjg)*(yjatm-gridy) + ((rlg-rjg)/pow(rjl,3))*(ylatm-yjatm);
+					dmudz = (-1.0/rjl)*(1/rjg)*(zjatm-gridz) + ((rlg-rjg)/pow(rjl,3))*(zlatm-zjatm);
+
+					u = (rlg-rjg)/rjl; 
+					t = (-35.0*pow((a+u),3)) / ((a-u)*(16.0*pow(a,3)+29.0*pow(a,2)*u+20.0*a*pow(u,2)+5.0*pow(u,3)));
+
+					wtgrad[jstart+0] = wtgrad[jstart+0] - uw[latm]*uw[iparent-1]*dmudx*t/pow(sumUW,2);
+					wtgrad[jstart+1] = wtgrad[jstart+1] - uw[latm]*uw[iparent-1]*dmudy*t/pow(sumUW,2);
+					wtgrad[jstart+2] = wtgrad[jstart+2] - uw[latm]*uw[iparent-1]*dmudz*t/pow(sumUW,2);
+				}
+			}
+
+			for(int latm=0; latm<devSim_dft.natom;latm++){
+				if(latm != jatm){
+					xlatm = LOC2(devSim_dft.xyz, 0, latm, 3, devSim_dft.natom);
+					ylatm = LOC2(devSim_dft.xyz, 1, latm, 3, devSim_dft.natom);
+					zlatm = LOC2(devSim_dft.xyz, 2, latm, 3, devSim_dft.natom);
+
+					rlg = sqrt(pow((gridx-xlatm),2) + pow((gridy-ylatm),2) + pow((gridz-zlatm),2));
+					rjl = sqrt(pow((xjatm-xlatm),2) + pow((yjatm-ylatm),2) + pow((zjatm-zlatm),2));
+
+					dmudx = (-1.0/rjl)*(1/rlg)*(xlatm-gridx) + ((rjg-rlg)/pow(rjl,3))*(xjatm-xlatm);
+					dmudy = (-1.0/rjl)*(1/rlg)*(ylatm-gridy) + ((rjg-rlg)/pow(rjl,3))*(yjatm-ylatm);
+					dmudz = (-1.0/rjl)*(1/rlg)*(zlatm-gridz) + ((rjg-rlg)/pow(rjl,3))*(zjatm-zlatm);
+
+					u = (rjg-rlg)/rjl;
+					t = (-35.0*pow((a+u),3)) / ((a-u)*(16.0*pow(a,3)+29.0*pow(a,2)*u+20.0*a*pow(u,2)+5.0*pow(u,3)));
+
+					wtgrad[jstart+0] = wtgrad[jstart+0] + uw[jatm]*uw[iparent-1]*dmudx*t/pow(sumUW,2);
+					wtgrad[jstart+1] = wtgrad[jstart+1] + uw[jatm]*uw[iparent-1]*dmudy*t/pow(sumUW,2);
+					wtgrad[jstart+2] = wtgrad[jstart+2] + uw[jatm]*uw[iparent-1]*dmudz*t/pow(sumUW,2);
+				}
+			}
+		}
+	}
+
+//	Now do the rotational invariance part of the derivatives.
+
+	int istart = (iparent-1)*3;
+
+	for(int jatm=0;jatm<devSim_dft.natom;jatm++){
+
+		if(jatm != iparent-1){
+			int jstart = jatm*3;
+
+			for(int i=0;i<3;i++){
+				wtgrad[istart+i] = wtgrad[istart+i]-wtgrad[jstart+i];				
+			}
+		}
+	}
+
+/*
+	We should now have the derivatives of the SS weights.  Now just add it into
+	the gradient.
+*/
+	for(int i=0;i<devSim_dft.natom*3;i++){
+
+		QUICKDouble sswder_grad = wtgrad[i]*Exc*quadwt;
+		devSim_dft.grad[i] = devSim_dft.grad[i] + sswder_grad;	
+
+//		GRADADD(devSim_dft.grad[i], sswder_grad);
+
+//		printf("i: %d, Grad from sswder: %f \n", i,devSim_dft.grad[i]);
+	}
+
+	free(uw);
+	free(wtgrad);
+
+}
+
+/*  Madu Manathunga 08/20/2019
+*/
+
+__device__ void pt2der(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
+                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int ibas){
+		
+	/*Given a point in space, this function calculates the value of basis
+	function I and the value of its cartesian derivatives in all three derivatives.
+	*/
+
+	// relative coordinates between grid point and basis function I.
+	QUICKDouble x1 = gridx - LOC2(devSim_dft.xyz, 0, devSim_dft.ncenter[ibas-1]-1, 3, devSim_dft.natom);
+	QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas-1]-1, 3, devSim_dft.natom);
+	QUICKDouble z1 = gridz - LOC2(devSim_dft.xyz, 2, devSim_dft.ncenter[ibas-1]-1, 3, devSim_dft.natom);	
+
+	QUICKDouble x1i, y1i, z1i;
+	QUICKDouble x1imin1, y1imin1, z1imin1, x1imin2, y1imin2, z1imin2;
+	QUICKDouble x1iplus1, y1iplus1, z1iplus1, x1iplus2, y1iplus2, z1iplus2;
+
+	*dxdx = 0.0;
+	*dxdy = 0.0;
+	*dxdz = 0.0;
+	*dydy = 0.0;
+	*dydz = 0.0;
+	*dzdz = 0.0;
+
+	int itypex = LOC2(devSim_dft.itype, 0, ibas-1, 3, devSim_dft.nbasis);
+	int itypey = LOC2(devSim_dft.itype, 1, ibas-1, 3, devSim_dft.nbasis);
+	int itypez = LOC2(devSim_dft.itype, 2, ibas-1, 3, devSim_dft.nbasis);
+
+	QUICKDouble dist = x1*x1+y1*y1+z1*z1;
+
+	if ( dist <= devSim_dft.sigrad2[ibas-1]){
+		if ( itypex == 0) {
+			x1imin2 = 0.0;
+			x1imin1 = 0.0;
+			x1i = 1.0;
+			x1iplus1 = x1;
+			x1iplus2 = x1*x1;
+		}else if(itypex == 1){
+			x1imin2 = 0.0;
+			x1imin1 = 1.0;
+			x1i = x1;
+			x1iplus1 = x1*x1;
+			x1iplus2 = x1*x1*x1;
+		}else{
+			x1imin2 = pow(x1, itypex-2);
+			x1imin1 = x1imin2*x1;
+			x1i = x1imin1 * x1;
+			x1iplus1 = x1i * x1;
+			x1iplus2 = x1iplus1 * x1;
+		}
+
+		if ( itypey == 0) {
+			y1imin2 = 0.0;
+			y1imin1 = 0.0;
+			y1i = 1.0;
+			y1iplus1 = y1;
+			y1iplus2 = y1*y1;
+		}else if(itypey == 1){
+			y1imin2 = 0.0;
+			y1imin1 = 1.0;
+			y1i = y1;
+			y1iplus1 = y1*y1;
+			y1iplus2 = y1iplus1*y1;
+		}else{
+			y1imin2 = pow(y1, itypey-2);
+			y1imin1 = y1imin2*y1; 
+			y1i = y1imin1 * y1;
+			y1iplus1 = y1i * y1;
+			y1iplus2 = y1iplus1 * y1;
+		}
+
+		if ( itypez == 0) {
+			z1imin2 = 0.0;
+			z1imin1 = 0.0;
+			z1i = 1.0;
+			z1iplus1 = z1;
+			z1iplus2 = z1*z1;
+		}else if(itypez == 1){
+			z1imin2 = 0.0;
+			z1imin1 = 0.0;
+			z1i = z1;
+			z1iplus1 = z1*z1;
+			z1iplus2 = z1iplus1*z1;
+		}else {
+			z1imin2 = pow(z1, itypez-2);
+			z1imin1 = z1imin2*z1;
+			z1i = z1imin1 * z1;
+			z1iplus1 = z1i * z1;
+			z1iplus2 = z1iplus1 * z1;
+		}
+
+		for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
+			QUICKDouble temp = LOC2(devSim_dft.dcoeff, i, ibas-1, devSim_dft.maxcontract, devSim_dft.nbasis) *
+							exp( - LOC2(devSim_dft.aexp, i, ibas-1, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);	
+			QUICKDouble twoA = 2.0 * LOC2(devSim_dft.aexp, i, ibas-1, devSim_dft.maxcontract, devSim_dft.nbasis);
+			QUICKDouble fourAsqr = twoA * twoA;
+
+			*dxdx = *dxdx + temp * ((QUICKDouble)itypex * ((QUICKDouble)itypex -1.0) * x1imin2 
+					- twoA * (2.0 * (QUICKDouble)itypex+1.0) * x1i
+					+ fourAsqr * x1iplus2 );
+			
+			*dydy = *dydy + temp * ((QUICKDouble)itypey * ((QUICKDouble)itypey -1.0) * y1imin2 
+					- twoA * (2.0 * (QUICKDouble)itypey+1.0) * y1i 
+					+ fourAsqr * y1iplus2 );
+
+			*dzdz = *dzdz + temp * ((QUICKDouble)itypez * ((QUICKDouble)itypez -1.0) * z1imin2
+					- twoA * (2.0 * (QUICKDouble)itypez+1.0) * z1i
+					+ fourAsqr * z1iplus2 );
+
+			*dxdy = *dxdy + temp * ((QUICKDouble)itypex * (QUICKDouble)itypey * x1imin1 * y1imin1
+					- twoA * (QUICKDouble)itypex * x1imin1 * y1iplus1
+					- twoA * (QUICKDouble)itypey * x1iplus1 * y1imin1
+					+ fourAsqr * x1iplus1 * y1iplus1);
+
+			*dxdz = *dxdz + temp * ((QUICKDouble)itypex * (QUICKDouble)itypez * x1imin1 * z1imin1
+					- twoA * (QUICKDouble)itypex * x1imin1 * z1iplus1
+					- twoA * (QUICKDouble)itypez * x1iplus1 * z1imin1
+					+ fourAsqr * x1iplus1 * z1iplus1);
+
+			*dydz = *dydz + temp * ((QUICKDouble)itypey * (QUICKDouble)itypez * y1imin1 * z1imin1
+					- twoA * (QUICKDouble)itypey * y1imin1 * z1iplus1
+					- twoA * (QUICKDouble)itypez * y1iplus1 * z1imin1
+					+ fourAsqr * y1iplus1 * z1iplus1);
+		}
+
+		*dxdx = *dxdx * y1i * z1i;
+		*dydy = *dydy * x1i * z1i;
+		*dzdz = *dzdz * x1i * y1i;
+		*dxdy = *dxdy * z1i;
+		*dxdz = *dxdz * y1i;
+		*dydz = *dydz * x1i;
+
+	}
+
+}
+
 __device__ void pteval(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
             QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, 
             int ibas)
@@ -732,7 +1326,7 @@ __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKD
              __  ->
             |\/ rho|
      s =    ---------
-            rou^(4/3)
+            rou^(4/3)int jstart = jatm*3;
                               -
      Ex = E(LDA)x[rou(r)] -  |  Fx[s]rou^(4/3) dr
                             -

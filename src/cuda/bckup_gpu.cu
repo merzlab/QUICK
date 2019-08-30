@@ -278,6 +278,15 @@ extern "C" void gpu_upload_method_(int* quick_method)
 	gpu -> gpu_sim.method = LIBXC;
     }
 }
+//Madu Manathunga: 07/24/2019
+//-----------------------------------------------
+//  upload libxc hybrid coefficient
+//-----------------------------------------------
+extern "C" void gpu_upload_hyb_coeff_(double* hyb_coeff)
+{
+        gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
+}
+
 
 //-----------------------------------------------
 //  upload coordinates
@@ -1865,10 +1874,24 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
-extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
+/*Madu Manathunga 06/25/2019
+Integration of libxc GPU version. The included file below contains all libxc methods
+*/
+#include "gpu_libxc.cu"
+
+extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
-    
+
+	/*The following varialbe will hold the number of auxilary functionals in case of
+	//a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+	//from input. */
+	int nof_aux_functionals = *nof_functionals;    
+
+	//Madu: Initialize gpu libxc and upload information to GPU
+	gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+
+	//libxc_cleanup(glinfo, nof_functionals);
     
     gpu -> gpu_sim.isg = *isg;
     gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
@@ -1910,7 +1933,12 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
     upload_sim_to_constant_dft(gpu);
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-    getxc(gpu);
+	//Madu Manathunga 07/01/2019 added libxc variable
+#ifdef DEBUG
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
+#endif
+
+    getxc(gpu, glinfo, nof_aux_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
     

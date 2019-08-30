@@ -31,3 +31,4 @@ static __constant__ lda_ptr maple2cf_lda[31] = {&xc_lda_c_1d_csc_func,
 &xc_lda_x_rel_func
 //&xc_lda_x_erf_func,
 };
+

@@ -1418,8 +1418,15 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
     gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
-    
-    
+   
+
+/***************Madu: Only for testing **************/
+    for(int i=0;i < 3 * gpu->natom;i++) {
+	//printf("Madu:**** i: %d, gpu_sim.grad: %f \n", i, gpu->gpu_sim.grad[i]);
+	printf("Madu:**** i: %d, grad: %f \n", i, gpu -> grad -> _hostData[i]);
+    }    
+/***************Madu: Only for testing **************/
+
     for (int i = 0; i<gpu->natom * 3; i++) {
         
         QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
@@ -1883,7 +1890,7 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
-	/*The following varialbe will hold the number of auxilary functionals in case of
+	/*The following variable will hold the number of auxilary functionals in case of
 	//a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
 	//from input. */
 	int nof_aux_functionals = *nof_functionals;    
@@ -1938,7 +1945,7 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
 #endif
 
-    getxc(gpu, glinfo, nof_aux_functionals);
+    getxc(gpu, glinfo, nof_aux_functionals, 0);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
     
@@ -2004,6 +2011,86 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
     
 }
 
+
+/*Madu Manathunga 08/16/2019
+Following method will calculate exchange correlation gradients on GPU
+*/
+extern "C" void gpu_getxc_grad_(int* isg, QUICKDouble* grad, QUICKDouble* sigrad2, int* nof_functionals, int* functional_id, int* xc_polarization)
+{
+	PRINTDEBUG("BEGIN TO RUN GETXC_GRAD")
+
+	/*The following varialbe will hold the number of auxilary functionals in case of
+	a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+	from input. */
+	int nof_aux_functionals = *nof_functionals;
+
+	//Madu: Initialize gpu libxc and upload information to GPU
+	gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+
+	gpu -> gpu_sim.isg = *isg;
+	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+	gpu -> gpu_basis -> sigrad2 -> Upload();
+	gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
+
+	upload_sim_to_constant_dft(gpu);
+	PRINTDEBUG("BEGIN TO RUN KERNEL")
+
+	for (int i = 0; i < gpu->natom * 3; i ++) {
+		printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
+	}
+
+	getxc(gpu, glinfo, nof_aux_functionals, 1);
+
+	PRINTDEBUG("COMPLETE KERNEL")
+
+	gpu -> grad -> Download();
+
+/*    for (int i = 0; i< 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+
+        if (valULL >= 0x8000000000000000ull) {
+            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+        }
+        else
+        {
+            valDB  = (QUICKDouble) valULL;
+        }
+
+        gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
+    }*/
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+
+	gpu -> grad -> Download(grad);
+
+    for (int i = 0; i < gpu->natom * 3; i ++) {
+        printf("after: %i %f \n", i, gpu -> grad -> _hostData[i]);
+    }
+
+	delete gpu -> grad;
+	delete gpu -> gradULL;
+	delete gpu->gpu_calculated->o;
+	delete gpu->gpu_calculated->dense;
+	delete gpu->gpu_calculated->oULL;
+
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("DOWNLOAD XC_GRAD",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("COMPLETE RUNNING GETXC_GRAD")
+}
 
 
 char *trim(char *s) {

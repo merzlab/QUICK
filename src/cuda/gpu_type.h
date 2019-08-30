@@ -69,7 +69,7 @@ struct gpu_simulation_type {
     // basic molecule information and method information
     QUICK_METHOD                    method;
     DFT_calculated_type*            DFT_calculated;
-	QUICKDouble						hyb_coeff;   
+    QUICKDouble                     hyb_coeff;   
  
     // used for DFT
     int                             isg;        // isg algrothm

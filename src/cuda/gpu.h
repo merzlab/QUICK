@@ -57,7 +57,7 @@ extern "C" void gpu_grad_(QUICKDouble* grad);
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals); //Madu Manathunga 07/01/2019: added libxc variable
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type); //Madu Manathunga 07/01/2019: added libxc variable
 void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
@@ -99,7 +99,7 @@ __global__ void getGrad_kernel_spdf6();
 __global__ void getGrad_kernel_spdf7();
 __global__ void getGrad_kernel_spdf8();
 
-__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals); //Madu Manathunga 07/01/2019: added libxc variable
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type, double* exc_dev_grad); //Madu Manathunga 07/01/2019: added libxc variable
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
 
@@ -446,10 +446,20 @@ __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
 //Madu Manathunga 07/01/2019: added libxc variable
 __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals);
 
+__device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals, double* exc_dev_grad);
+
 __device__ int gridFormSG1(int iitype, QUICKDouble distance, \
                            QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng);
 
+//Madu Manathunga 08/22/2019
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent);
+
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
+
+//Madu Manathunga 08/20/2019
+__device__ void pt2der(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
+                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int ibas);
+
 __device__ void pteval(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
                        QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, 
                        int ibas);
