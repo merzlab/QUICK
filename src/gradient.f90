@@ -243,6 +243,20 @@ endif
    endif
 #endif
 
+#ifdef MPI
+if(master) then
+#endif
+        write (*,'(/," Madu  :  Before get_xc_grad: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+#ifdef MPI
+endif
+#endif
+
       call get_xc_grad
 
 #ifdef MPI
@@ -296,7 +310,7 @@ endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
-
+stop
 
    return
 
@@ -501,6 +515,17 @@ subroutine get_electron_replusion_grad
 
 #ifdef CUDA
    if (quick_method%bCUDA) then
+
+      if(quick_method%HF)then
+         call gpu_upload_method(0, 1.0d0)
+      elseif(quick_method%uselibxc)then
+         call gpu_upload_method(3, quick_method%x_hybrid_coeff)
+      elseif(quick_method%BLYP)then
+         call gpu_upload_method(2, 0.0d0)
+      elseif(quick_method%B3LYP)then
+         call gpu_upload_method(1, 0.2d0)
+      endif
+
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
       quick_qm_struct%vec,quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
@@ -623,7 +648,6 @@ subroutine get_xc_grad
       call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
       call gpu_getxc_grad(quick_method%isg,quick_qm_struct%gradient,sigrad2,quick_method%nof_functionals, &
       quick_method%functional_id,quick_method%xc_polarization)
-      stop
    endif
 #else
 !  Initiate the libxc functionals

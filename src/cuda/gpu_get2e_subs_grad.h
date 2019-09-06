@@ -36,6 +36,7 @@ __global__ void getGrad_kernel_spdf7()
 __global__ void getGrad_kernel_spdf8()
 #endif
 {
+
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
     
@@ -106,6 +107,7 @@ __global__ void getGrad_kernel_spdf8()
                     int kkk = devSim.sorted_Qnumber[KK];
                     int lll = devSim.sorted_Qnumber[LL];
 #ifdef int_spd
+//printf("FILE: %s, LINE: %d, FUNCTION: %s, int_spd: %f \n", __FILE__, __LINE__, __func__, devSim.hyb_coeff);
                     iclass_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
 #elif defined int_spdf
                     if ( (kkk + lll) >= 4 ) {
@@ -397,7 +399,7 @@ __device__ __forceinline__ void iclass_grad
     int  IJKLTYPE = 999;
     
     int  nbasis = devSim.nbasis;
-    
+
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
             for (int KKK = MAX(III,KKK1); KKK <= KKK2; KKK++) {
@@ -433,17 +435,17 @@ __device__ __forceinline__ void iclass_grad
                         
                         if (II < JJ && II < KK && KK < LL ||
                             ( III < KKK && III < JJJ && KKK < LLL)) {
-                            constant = ( 4.0 * DENSEJI * DENSELK - DENSEKI * DENSELJ - DENSELI * DENSEKJ);
+                            constant = ( 4.0 * DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSELJ - devSim.hyb_coeff * DENSELI * DENSEKJ);
                         }else{
                             if (III < KKK) {
                                 if( III == JJJ && KKK == LLL){
-                                    constant = (DENSEJI * DENSELK - 0.5 * DENSEKI * DENSEKI);
+                                    constant = (DENSEJI * DENSELK - 0.5 * devSim.hyb_coeff * DENSEKI * DENSEKI);
                                 }else if (JJJ == KKK && JJJ == LLL){
-                                    constant = DENSELJ * DENSEJI;
+                                    constant = 2.0 * DENSELJ * DENSEJI - devSim.hyb_coeff * DENSELJ * DENSEJI;
                                 }else if (KKK == LLL && III < JJJ && JJJ != KKK){
-                                    constant = (2.0* DENSEJI * DENSELK - DENSEKI * DENSEKJ);
+                                    constant = (2.0* DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSEKJ);
                                 }else if ( III == JJJ && KKK < LLL){
-                                    constant = (2.0* DENSELK * DENSEJI - DENSEKI * DENSELI);
+                                    constant = (2.0* DENSELK * DENSEJI - devSim.hyb_coeff * DENSEKI * DENSELI);
                                 }
                             }
                             else{
@@ -451,11 +453,14 @@ __device__ __forceinline__ void iclass_grad
                                     if (III == JJJ && III == KKK && III == LLL) {
                                         // Do nothing
                                     }else if (III==JJJ && III==KKK && III < LLL){
-                                        constant = DENSELI * DENSEJI;
+                                        //constant = DENSELI * DENSEJI;
+					constant = 2.0 * DENSELI * DENSEJI - devSim.hyb_coeff * DENSELI * DENSEJI;
                                     }else if (III==KKK && JJJ==LLL && III < JJJ){
-                                        constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+                                        //constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+					constant = (2.0 * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSELJ * DENSEKI);
                                     }else if (III== KKK && III < JJJ && JJJ < LLL){
-                                        constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+                                        //constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+					constant = (4.0 * DENSEJI * DENSELI - devSim.hyb_coeff * DENSEJI * DENSELI - devSim.hyb_coeff * DENSELJ * DENSEKI);
                                     }
                                 }
                             }
@@ -810,17 +815,22 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                     
                                     if (II < JJ && II < KK && KK < LL ||
                                         ( III < KKK && III < JJJ && KKK < LLL)) {
-                                        constant = ( 4.0 * DENSEJI * DENSELK - DENSEKI * DENSELJ - DENSELI * DENSEKJ);
+                                        //constant = ( 4.0 * DENSEJI * DENSELK - DENSEKI * DENSELJ - DENSELI * DENSEKJ);
+					constant = ( 4.0 * DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSELJ - devSim.hyb_coeff * DENSELI * DENSEKJ);
                                     }else{
                                         if (III < KKK) {
                                             if( III == JJJ && KKK == LLL){
-                                                constant = (DENSEJI * DENSELK - 0.5 * DENSEKI * DENSEKI);
+                                                //constant = (DENSEJI * DENSELK - 0.5 * DENSEKI * DENSEKI);
+                                                constant = (DENSEJI * DENSELK - 0.5 * devSim.hyb_coeff * DENSEKI * DENSEKI);
                                             }else if (JJJ == KKK && JJJ == LLL){
-                                                constant = DENSELJ * DENSEJI;
+                                                //constant = DENSELJ * DENSEJI;
+                                                constant = 2.0 * DENSELJ * DENSEJI - devSim.hyb_coeff * DENSELJ * DENSEJI;
                                             }else if (KKK == LLL && III < JJJ && JJJ != KKK){
-                                                constant = (2.0* DENSEJI * DENSELK - DENSEKI * DENSEKJ);
+                                                //constant = (2.0* DENSEJI * DENSELK - DENSEKI * DENSEKJ);
+                                                constant = (2.0* DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSEKJ);
                                             }else if ( III == JJJ && KKK < LLL){
-                                                constant = (2.0* DENSELK * DENSEJI - DENSEKI * DENSELI);
+                                                //constant = (2.0* DENSELK * DENSEJI - DENSEKI * DENSELI);
+                                                constant = (2.0* DENSELK * DENSEJI - devSim.hyb_coeff * DENSEKI * DENSELI);
                                             }
                                         }
                                         else{
@@ -828,16 +838,19 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                                 if (III == JJJ && III == KKK && III == LLL) {
                                                     // Do nothing
                                                 }else if (III==JJJ && III==KKK && III < LLL){
-                                                    constant = DENSELI * DENSEJI;
+                                                    //constant = DENSELI * DENSEJI;
+						    constant = 2.0 * DENSELI * DENSEJI - devSim.hyb_coeff * DENSELI * DENSEJI;
                                                 }else if (III==KKK && JJJ==LLL && III < JJJ){
-                                                    constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+                                                    //constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+                                                    constant = (2.0 * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSELJ * DENSEKI);
+
                                                 }else if (III== KKK && III < JJJ && JJJ < LLL){
-                                                    constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+                                                    //constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+                                                    constant = (4.0 * DENSEJI * DENSELI - devSim.hyb_coeff * DENSEJI * DENSELI - devSim.hyb_coeff * DENSELJ * DENSEKI);
                                                 }
                                             }
                                         }
                                     }
-                                    
                                     
                                     AGradx += constant * Yaax;
                                     AGrady += constant * Yaay;
@@ -877,7 +890,9 @@ __device__ __forceinline__ void iclass_grad_spdf8
     }
     
     
-    
+#ifdef DEBUG
+    printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
+#endif    
     
     GRADADD(devSim.gradULL[AStart], AGradx);
     GRADADD(devSim.gradULL[AStart + 1], AGrady);

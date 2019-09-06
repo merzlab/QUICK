@@ -336,7 +336,7 @@ printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method \n", __FILE__, __LIN
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
 {
-    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+   QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
@@ -377,7 +377,7 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
                 int LLL = a[k].KL % devSim.nbasis + 1;
                 
                 if (III <= devSim.nbasis && III >= 1 && JJJ <= devSim.nbasis && JJJ >= 1 && KKK <= devSim.nbasis && KKK >= 1 && LLL <= devSim.nbasis && LLL >= 1){
-                    QUICKDouble hybrid_coeff = 0.0;
+                    /*QUICKDouble hybrid_coeff = 0.0;
                     if (devSim.method == HF){
                         hybrid_coeff = 1.0;
                     }else if (devSim.method == B3LYP){
@@ -387,8 +387,9 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
                     }else if(devSim.method == LIBXC){
 			hybrid_coeff = devSim.hyb_coeff;			
 		    }
-                    
-                    addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, hybrid_coeff, devSim.dense, devSim.nbasis);
+                    */
+
+                    addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
                 }
             }
             j = 0;

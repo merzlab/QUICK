@@ -69,7 +69,7 @@ static float totTime;
 /*Madu Manathunga 07/01/2019 added 3 new variables
 glinfo and nof_functionals are for libxc. xc_calc_type determines where we would compute
 energy or gradient */
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type)
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type, double* exc_dev_grad)
 {
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -77,29 +77,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_c
     cudaEventCreate(&end);
     cudaEventRecord(start, 0);
 #endif
-
-/*********Madu: Dumb way of copying back gradients ********/
-   	int exc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
-	double* exc_dev_grad; 
-	
-	if(xc_calc_type>0){
-
-		cudaMalloc((void**)exc_dev_grad, exc_grad_byte_size);
-
 		getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals, xc_calc_type, exc_dev_grad);
-
-		double* grad_host;
-		grad_host = (double*)malloc(exc_grad_byte_size);
-		cudaMemcpyFromSymbol(grad_host, devSim_dft.grad, exc_grad_byte_size);
-		
-		for(int i=0;i<3*gpu->natom;i++){
-			printf("getxc i: %d, grad: %f \n", i, grad_host[i]);
-		}
-	}else{
-		getxc_kernel<<<gpu->blocks, gpu->XCThreadsPerBlock>>>(glinfo, nof_functionals, xc_calc_type, exc_dev_grad);
-	}
-/*********Madu: Dumb way of copying back gradients ********/
-
 #ifdef DEBUG
     printf("Running getxc_kernel with BLOCK = %i, THREADS PER BLOCK = %i \n", gpu->blocks, gpu->XCThreadsPerBlock);
     cudaEventRecord(end, 0);
@@ -118,6 +96,9 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_c
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1)
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type, double* exc_dev_grad)
 {
+if(xc_calc_type == 1){
+	//printf("Running getxc_kernel..\n");
+}
     unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int totalThreads = blockDim.x * gridDim.x;
     QUICKULL currentPoint = 0;
@@ -157,6 +138,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, int x
                 	gpu_grid_xc(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId], 
 			glinfo, nof_functionals);
 		}else{
+		//	printf("Calling gpu_grid_xc_grad..\n");
 			gpu_grid_xc_grad(j+1, radTotal, i+1, XAng[pointId], YAng[pointId], ZAng[pointId], WAng[pointId],
 			glinfo, nof_functionals, exc_dev_grad);
 		}
@@ -165,17 +147,6 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, int x
             currentPoint = currentPoint + iiangt;
         }
     }
-
-//	********** Only for debugging ******************
-
-/*	if(xc_calc_type != 0){
-		for(int i=0; i< devSim_dft.natom*3;i++){
-			printf("Grad: %f \n",devSim_dft.gradULL[i]);
-		} 
-	}
-*/
-//	************************************************
-
 }
 
 
@@ -282,15 +253,13 @@ __device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, 
 
                 QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
                 QUICKDouble dfdr2;
-                //becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
+                becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
                 lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
-/*                dfdr += dfdr2;
+
+                dfdr += dfdr2;
                 dfdgaa += dfdgaa2;
                 dfdgab += dfdgab2;
-*/
-		dfdr = dfdr2;
-		dfdgaa = dfdgaa2;
-		dfdgab = dfdgab2;
+
 #ifdef DEBUG
 //		printf("rho: %.10e sigma: %.10e _tmp/weight: %.10e dfdr: %.10e dfdgaa: %.10e dfdgab: %.10e \n", density, sigma, _tmp/weight, dfdr2, dfdgaa2, dfdgab2);
 #endif    
@@ -451,7 +420,6 @@ __device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble X
 
     QUICKDouble rad, rad3;
     QUICKDouble atomx, atomy, atomz;
-	
 
     /*
      Read atom coordinates(atomx, atomy and atomz) from global memory (DRAM). If the atom is shared by the 
@@ -493,7 +461,7 @@ __device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble X
 				_tmp = b3lyp_e(2.0*density, sigma);
 			}else if(devSim_dft.method == DFT){
 				_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
-				+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+				+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz));
 			}
 
 			QUICKDouble dfdr;
@@ -578,88 +546,49 @@ __device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble X
 				if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
 					QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
-
+					
 					pt2der(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, i+1);
 					
-					QUICKDouble Gradx, Grady, Gradz;
-					Gradx = 0.0;
-					Grady = 0.0;
-					Gradz = 0.0;
+					int Istart = (devSim_dft.ncenter[i]-1) * 3;
 
-					int Istart = (devSim_dft.katom[i]-1) * 3;
-#ifdef DEBUG
-//	printf("gridx: %f, gridy: %f, gridz: %f, dxdx: %f, dxdy: %f, dxdz: %f, dydy: %f, dydz: %f, dzdz: %f, i+1: %d \n", gridx, gridy, gridz, dxdx, dxdy, dxdz, dydy, dydz, dzdz, i+1);
-#endif
-
-					for (int j = i; j<devSim_dft.nbasis; j++) {
+					for (int j = 0; j<devSim_dft.nbasis; j++) {
 
 						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
+
 						pteval(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, j+1);
 						
 						QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, i, j, devSim_dft.nbasis, devSim_dft.nbasis);
-
-						Gradx = Gradx - 2.0 * denseij * weight * (dfdr * dphidx * phi2
+						
+						QUICKDouble Gradx = - 2.0 * denseij * weight * (dfdr * dphidx * phi2
 								+ xdot * (dxdx * phi2 + dphidx * dphidx2)
 								+ ydot * (dxdy * phi2 + dphidx * dphidy2)
 								+ zdot * (dxdz * phi2 + dphidx * dphidz2));
- 						
-						Grady = Grady - 2.0 * denseij * weight * (dfdr * dphidy * phi2
+
+//        printf("iatm: %d, gridx: %f, gridy: %f, gridz: %f, i: %d, j:%d, denseij: %f, weight: %f, dfdr: %f, dphidx: %f, phi2: %f, dxdx: %f, dxdy: %f, dxdz: %f, dphidx2: %f, dphidy2: %f, dphidz2: %f, xdot: %f, ydot: %f, zdot: %f, Gradx: %f \n", iatm, gridx, gridy, gridz, i, j, denseij, weight, dfdr, dphidx, phi2, dxdx, dxdy, dxdz, dphidx2, dphidy2, dphidz2, xdot, ydot, zdot, Gradx); 
+				
+						QUICKDouble Grady = - 2.0 * denseij * weight * (dfdr * dphidy * phi2
 								+ xdot * (dxdy * phi2 + dphidy * dphidx2)
 								+ ydot * (dydy * phi2 + dphidy * dphidy2)
 								+ zdot * (dydz * phi2 + dphidy * dphidz2));
 
-						Gradz = Gradz - 2.0 * denseij * weight * (dfdr * dphidz * phi2
+						QUICKDouble Gradz = - 2.0 * denseij * weight * (dfdr * dphidz * phi2
 								+ xdot * (dxdz * phi2 + dphidz * dphidx2)
 								+ ydot * (dydz * phi2 + dphidz * dphidy2)
-								+ zdot * (dydz * phi2 + dphidz * dphidz2));
+								+ zdot * (dzdz * phi2 + dphidz * dphidz2));
 
+						atomicAdd(&(exc_dev_grad[Istart]), Gradx);
+						atomicAdd(&(exc_dev_grad[Istart+1]), Grady);
+						atomicAdd(&(exc_dev_grad[Istart+2]), Gradz);
 					}
-#ifdef DEBUG
-//        printf("Before: %d, Gradx: %f, Grady: %f, Gradz: %f, %f, %f, %f  \n", i, devSim_dft.grad[Istart], devSim_dft.grad[Istart + 1], devSim_dft.grad[Istart + 2], Gradx, Grady, Gradz);
-#endif
-
-/*				GRADADD(devSim_dft.grad[Istart], Gradx);
-				GRADADD(devSim_dft.grad[Istart + 1], Grady);
-				GRADADD(devSim_dft.grad[Istart + 2], Gradz);*/
-
-				atomicAdd(exc_dev_grad[Istart], Gradx);
-//				exc_dev_grad[Istart] = exc_dev_grad[Istart] + Gradx;
-//				devSim_dft.grad[Istart + 1] = devSim_dft.grad[Istart + 1] + Grady;
-//				devSim_dft.grad[Istart + 2] = devSim_dft.grad[Istart + 2] + Gradz;
-
-#ifdef DEBUG
-       // printf("After: %d, Gradx: %f, Grady: %f, Gradz: %f, %f, %f, %f  \n", i, devSim_dft.grad[Istart], devSim_dft.grad[Istart + 1], devSim_dft.grad[Istart + 2], Gradx, Grady, Gradz);
-
-        printf("After: %d, Gradx: %f, %f  \n", i, exc_dev_grad[Istart], Gradx);
-#endif
 
 				}
 			}
+
 			if(sswt != 1.0){
-#ifdef DEBUG
-//        printf("gridx: %f, gridy: %f, gridz: %f, _tmp: %f, weight/sswt: %f, iatm: %d \n", gridx, gridy, gridz, _tmp, weight/sswt,iatm);
-#endif
-
-/************** Only for debugging *************/
-				QUICKDouble tst_gridx = -0.733256;
-				QUICKDouble tst_gridy = -1.714206;
-				QUICKDouble tst_gridz = -2.828427;
-				QUICKDouble tst_zkec  = -0.000299;
-				QUICKDouble tst_wei_ss=  0.811378;
-				int imatm = 3;
-/************** Only for debugging *************/
-
-				//sswder(gridx, gridy, gridz, _tmp, weight/sswt, iatm);
-				sswder(tst_gridx, tst_gridy, tst_gridz, tst_zkec, tst_wei_ss, imatm);
+				sswder(gridx, gridy, gridz, _tmp, weight/sswt, iatm, exc_dev_grad);
 			}
 		}
 	}
-
-
-#ifdef DEBUG
-	
-    //printf("FILE: %s, LINE: %d, FUNCTION: %s, Running gpu_grid_xc_grad \n", __FILE__, __LINE__, __func__);
-#endif
 
 }
 
@@ -854,7 +783,7 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
 	Madu Manathunga 08/20/2019
 */
 
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent){
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, double* exc_dev_grad){
 
 /*
 	This subroutine calculates the derivatives of weight found in
@@ -923,12 +852,6 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 		}
 		sumUW = sumUW + uw[iatm];	
 	}
-
-        for(int i=0;i<devSim_dft.natom;i++){
-                //printf("i: %d, uw: %f \n", i, uw[i]);
-        }
-
-//printf("gridx: %f, gridy: %f, gridz: %f, Exc: %f, quadwt: %f, iparent: %d, sumUW: %f \n",gridx, gridy, gridz, Exc, quadwt, iparent, sumUW);
 	
 /*
 	At this point we now have the unnormalized weight and the sum of same.
@@ -1040,11 +963,7 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 	for(int i=0;i<devSim_dft.natom*3;i++){
 
 		QUICKDouble sswder_grad = wtgrad[i]*Exc*quadwt;
-		devSim_dft.grad[i] = devSim_dft.grad[i] + sswder_grad;	
-
-//		GRADADD(devSim_dft.grad[i], sswder_grad);
-
-//		printf("i: %d, Grad from sswder: %f \n", i,devSim_dft.grad[i]);
+		atomicAdd(&(exc_dev_grad[i]), sswder_grad);	
 	}
 
 	free(uw);
@@ -1133,7 +1052,7 @@ __device__ void pt2der(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 			z1iplus2 = z1*z1;
 		}else if(itypez == 1){
 			z1imin2 = 0.0;
-			z1imin1 = 0.0;
+			z1imin1 = 1.0;
 			z1i = z1;
 			z1iplus1 = z1*z1;
 			z1iplus2 = z1iplus1*z1;

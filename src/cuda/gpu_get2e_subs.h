@@ -779,7 +779,7 @@ __device__ __forceinline__ void iclass_spdf10
         IJKLTYPE = 999;
     }
     
-    QUICKDouble hybrid_coeff = 0.0;
+    /*QUICKDouble hybrid_coeff = 0.0;
     if (devSim.method == HF){
         hybrid_coeff = 1.0;
     }else if (devSim.method == B3LYP){
@@ -788,7 +788,7 @@ __device__ __forceinline__ void iclass_spdf10
         hybrid_coeff = 0.0;
     }else if(devSim.method == LIBXC){
         hybrid_coeff = devSim.hyb_coeff;                        
-    }
+    }*/
     
     
     for (int III = III1; III <= III2; III++) {
@@ -840,7 +840,7 @@ __device__ __forceinline__ void iclass_spdf10
                         if (abs(Y) > devSim.integralCutoff)
 #endif
                         {
-                            addint(devSim.oULL, Y, III, JJJ, KKK, LLL, hybrid_coeff, devSim.dense, devSim.nbasis);
+                            addint(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
                         }
                         
                     }

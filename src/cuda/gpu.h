@@ -29,7 +29,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 
 
 // molecule, basis sets, and some other information
-extern "C" void gpu_upload_method_(int* quick_method);
+extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff);
 extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg);
 extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
@@ -57,7 +57,7 @@ extern "C" void gpu_grad_(QUICKDouble* grad);
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type); //Madu Manathunga 07/01/2019: added libxc variable
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals, int xc_calc_type, double* exc_dev_grad); //Madu Manathunga 07/01/2019: added libxc variable
 void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
@@ -452,7 +452,7 @@ __device__ int gridFormSG1(int iitype, QUICKDouble distance, \
                            QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng);
 
 //Madu Manathunga 08/22/2019
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent);
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, double* exc_dev_grad);
 
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
 

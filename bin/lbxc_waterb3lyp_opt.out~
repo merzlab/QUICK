@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Mon Aug 19 05:47:30 2019
+ TASK STARTS ON: Sun Sep  1 15:19:24 2019
  INPUT FILE :    lbxc_waterb3lyp_opt.in
  OUTPUT FILE:    lbxc_waterb3lyp_opt.out
  DATE FILE  :    lbxc_waterb3lyp_opt.dat
@@ -122,7 +122,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -132,7 +132,7 @@ SCF CYCLE      =        3      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
 RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
 
-SCF CYCLE      =        4      TIME      =   0.05
+SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
@@ -149,19 +149,19 @@ DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.04
+SCF CYCLE      =        8      TIME      =     0.03
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.04
+SCF CYCLE      =        9      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 
-SCF CYCLE      =       10      TIME      =   0.04
+SCF CYCLE      =       10      TIME      =   0.03
 DIIS CYCLE     =        2      MAX ERROR = 0.121250E-05
 RMS CHANGE     = 0.882888E-06  MAX CHANGE= 0.354765E-05
 PREPARED FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =       11      TIME      =     0.04
+SCF CYCLE      =       11      TIME      =     0.03
 RMS CHANGE     = 0.761164E-06  MAX CHANGE= 0.302067E-05
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -265,30 +265,4 @@ ELEMENT      X              Y              Z
   H          -0.388022       0.589621       0.000000
 
  @ Begin Energy Calculation
-
-TOL:    0.000000000100000
-                                         SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
-  1    -76.406956227      ------         0.431     1        0.36      0.08      0.00    0.1671E+01  0.1072E+00  0.4244E+00
-  2    -76.315624335  -.913319E-01       0.041     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
-  3    -76.283134685  -.324896E-01       0.041     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
-  4    -76.385674086  0.102539E+00       0.041     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
-  5    -76.385685077  0.109914E-04       0.042     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
-  6    -76.385685481  0.403873E-06       0.042     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
-  7    -76.385685489  0.781583E-08       0.041     7        0.00      0.04      0.00    0.2366E-05  0.1616E-05  0.7527E-05
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-  8    -76.385685474  -.146577E-07       0.042     8        0.00      0.04      0.00    0.9754E-06  0.2013E-06  0.9955E-06
-------------------------------------------------------------------------------------------------------------------------
- REACH CONVERGENCE AFTER   8 CYLCES
- MAX ERROR = 0.975371E-06   RMS CHANGE = 0.201322E-06   MAX CHANGE = 0.995528E-06
- -----------------------------------------------
-ALPHA ELECTRON DENSITY    =    4.9999942864
-BETA ELECTRON DENSITY     =    4.9999942864
-ELECTRONIC ENERGY    =   -85.542801457
-CORE_CORE REPULSION  =     9.157115983
-TOTAL ENERGY         =   -76.385685474
-
- @ End Energy calculation
 

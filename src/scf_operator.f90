@@ -103,14 +103,12 @@ subroutine scf_operator(oneElecO, deltaO)
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
-         call gpu_upload_method(0)
+         call gpu_upload_method(0, 1.0d0)
       elseif(quick_method%uselibxc)then
-         call gpu_upload_method(3)
-         call gpu_upload_hyb_coeff(quick_method%x_hybrid_coeff)
       elseif(quick_method%BLYP)then
-         call gpu_upload_method(2)
+         call gpu_upload_method(2, 0.0d0)
       elseif(quick_method%B3LYP)then
-         call gpu_upload_method(1)
+         call gpu_upload_method(1, 0.2d0)
       endif
 
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &

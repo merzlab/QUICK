@@ -266,27 +266,26 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     PRINTDEBUG("FINISH SETUP")
 }
 
-extern "C" void gpu_upload_method_(int* quick_method)
+//Madu Manathunga: 08/31/2019
+//-----------------------------------------------
+//  upload method and hybrid coefficient
+//-----------------------------------------------
+extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
 {
     if (*quick_method == 0) {
         gpu -> gpu_sim.method = HF;
+	gpu -> gpu_sim.hyb_coeff = 1.0;
     }else if (*quick_method == 1) {
         gpu -> gpu_sim.method = B3LYP;
+	gpu -> gpu_sim.hyb_coeff = 0.2;
     }else if (*quick_method == 2) {
         gpu -> gpu_sim.method = DFT;
+	gpu -> gpu_sim.hyb_coeff = 0.0;
     }else if (*quick_method == 3) {
 	gpu -> gpu_sim.method = LIBXC;
+	gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
     }
 }
-//Madu Manathunga: 07/24/2019
-//-----------------------------------------------
-//  upload libxc hybrid coefficient
-//-----------------------------------------------
-extern "C" void gpu_upload_hyb_coeff_(double* hyb_coeff)
-{
-        gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
-}
-
 
 //-----------------------------------------------
 //  upload coordinates
@@ -1419,14 +1418,6 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
    
-
-/***************Madu: Only for testing **************/
-    for(int i=0;i < 3 * gpu->natom;i++) {
-	//printf("Madu:**** i: %d, gpu_sim.grad: %f \n", i, gpu->gpu_sim.grad[i]);
-	printf("Madu:**** i: %d, grad: %f \n", i, gpu -> grad -> _hostData[i]);
-    }    
-/***************Madu: Only for testing **************/
-
     for (int i = 0; i<gpu->natom * 3; i++) {
         
         QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
@@ -1945,7 +1936,7 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
 #endif
 
-    getxc(gpu, glinfo, nof_aux_functionals, 0);
+    getxc(gpu, glinfo, nof_aux_functionals, 0, NULL);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
     
@@ -2039,11 +2030,20 @@ extern "C" void gpu_getxc_grad_(int* isg, QUICKDouble* grad, QUICKDouble* sigrad
 		printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
 	}
 
-	getxc(gpu, glinfo, nof_aux_functionals, 1);
+	int exc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
+	double* exc_dev_grad;
+	double* exc_host_grad;
 
-	PRINTDEBUG("COMPLETE KERNEL")
+	cudaMalloc((void**)&exc_dev_grad, exc_grad_byte_size);
+	exc_host_grad = (double*)malloc(exc_grad_byte_size);
+	
+	cudaMemcpy(exc_dev_grad, grad, exc_grad_byte_size, cudaMemcpyHostToDevice);
 
-	gpu -> grad -> Download();
+	getxc(gpu, glinfo, nof_aux_functionals, 1, exc_dev_grad);
+
+	cudaMemcpy(exc_host_grad, exc_dev_grad, exc_grad_byte_size, cudaMemcpyDeviceToHost);	
+
+	PRINTDEBUG("COMPLETE KERNEL");
 
 /*    for (int i = 0; i< 3 * gpu->natom; i++) {
         QUICKULL valULL = gpu->gradULL->_hostData[i];
@@ -2060,6 +2060,8 @@ extern "C" void gpu_getxc_grad_(int* isg, QUICKDouble* grad, QUICKDouble* sigrad
         gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
     }*/
 
+printf("GPU part done..\n ");
+
 #ifdef DEBUG
     cudaEvent_t start,end;
     cudaEventCreate(&start);
@@ -2067,10 +2069,10 @@ extern "C" void gpu_getxc_grad_(int* isg, QUICKDouble* grad, QUICKDouble* sigrad
     cudaEventRecord(start, 0);
 #endif
 
-	gpu -> grad -> Download(grad);
-
     for (int i = 0; i < gpu->natom * 3; i ++) {
-        printf("after: %i %f \n", i, gpu -> grad -> _hostData[i]);
+	//grad[i] = grad[i]+exc_host_grad[i];
+        printf("after: %i, xc grad: %f, total grad: %f \n", i, exc_host_grad[i]-grad[i], exc_host_grad[i]);
+	grad[i] = exc_host_grad[i];
     }
 
 	delete gpu -> grad;
