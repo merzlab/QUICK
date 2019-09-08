@@ -44,15 +44,11 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Thu Aug 15 16:37:01 2019
+ TASK STARTS ON: Sat Sep  7 15:25:39 2019
  INPUT FILE :    lbxc_waterb3lyp.in
  OUTPUT FILE:    lbxc_waterb3lyp.out
  DATE FILE  :    lbxc_waterb3lyp.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
-
- - MPI Enabled -
- TOTAL PROCESSOR =     4
- MASTER NAME     = chinotto                      
 
  @ Read Job And Atom
 
@@ -229,20 +225,20 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.406957536      ------         0.023     1        0.00      0.02      0.00    0.1671E+01  0.1072E+00  0.4244E+00
-  2    -76.315625630  -.913319E-01       0.021     2        0.00      0.02      0.00    0.2761E+00  0.7099E-01  0.3222E+00
-  3    -76.283135978  -.324897E-01       0.018     3        0.00      0.02      0.00    0.3306E+00  0.3897E-01  0.1910E+00
-  4    -76.385675389  0.102539E+00       0.021     4        0.00      0.02      0.00    0.2855E-02  0.7437E-03  0.2928E-02
-  5    -76.385686380  0.109914E-04       0.020     5        0.00      0.02      0.00    0.6109E-03  0.1239E-03  0.3751E-03
-  6    -76.385686784  0.403876E-06       0.020     6        0.00      0.02      0.00    0.7456E-04  0.1734E-04  0.5257E-04
-  7    -76.385686792  0.781615E-08       0.020     7        0.00      0.02      0.00    0.2366E-05  0.1616E-05  0.7527E-05
-  8    -76.385686792  0.294360E-10       0.020     8        0.00      0.02      0.00    0.9764E-06  0.2029E-06  0.9948E-06
+  1    -76.406957536      ------         0.032     1        0.00      0.03      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  2    -76.315625630  -.913319E-01       0.046     2        0.00      0.05      0.00    0.2761E+00  0.7099E-01  0.3222E+00
+  3    -76.283135978  -.324897E-01       0.046     3        0.00      0.05      0.00    0.3306E+00  0.3897E-01  0.1910E+00
+  4    -76.385675389  0.102539E+00       0.046     4        0.00      0.05      0.00    0.2855E-02  0.7437E-03  0.2928E-02
+  5    -76.385686380  0.109914E-04       0.045     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
+  6    -76.385686784  0.403876E-06       0.046     6        0.00      0.05      0.00    0.7456E-04  0.1734E-04  0.5257E-04
+  7    -76.385686792  0.781606E-08       0.046     7        0.00      0.05      0.00    0.2366E-05  0.1616E-05  0.7527E-05
+  8    -76.385686792  0.294360E-10       0.046     8        0.00      0.05      0.00    0.9764E-06  0.2029E-06  0.9948E-06
 ------------------------------------------------------------------------------------------------------------------------
  REACH CONVERGENCE AFTER   8 CYLCES
  MAX ERROR = 0.976433E-06   RMS CHANGE = 0.202910E-06   MAX CHANGE = 0.994826E-06
  -----------------------------------------------
-ALPHA ELECTRON DENSITY    =    0.2678430882
-BETA ELECTRON DENSITY     =    0.2678430882
+ALPHA ELECTRON DENSITY    =    4.9999946221
+BETA ELECTRON DENSITY     =    4.9999946221
 ELECTRONIC ENERGY    =   -85.542802775
 CORE_CORE REPULSION  =     9.157115983
 TOTAL ENERGY         =   -76.385686792
@@ -253,27 +249,19 @@ TOTAL ENERGY         =   -76.385686792
  @ Output Timing Infomration
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME =     0.495144000( 73.44%)
-TOTAL SCF TIME     =     0.164811000( 24.44%)
-      TOTAL OP TIME      =     0.163986000( 24.32%)
-            TOTAL 1e TIME      =     0.002023000(  0.30%)
-            TOTAL 2e TIME      =     0.047029000(  6.98%)
-            TOTAL Exchange TIME=     0.114827000( 17.03%)
-            TOTAL ENERGY TIME  =     0.000027000(  0.00%)
-      TOTAL DII TIME     =     0.000770000(  0.11%)
-            TOTAL DIAG TIME    =     0.000254000(  0.04%)
-TOTAL TIME         =     0.674222000
------------ MPI TIMING -------------
-MPI SCF TIME               =     0.164811000 (MASTER=100.00%)
-      MPI Op TIME                =     0.163986000 (MASTER=100.00%)
-            MPI 1e TIME                =     0.002023000 (MASTER=100.00%, MAX=100.00%)
-            MPI 2e TIME                =     0.047029000 (MASTER=100.00%, MAX=100.00%)
-      MPI DIIS TIME              =     0.000770000 (MASTER=100.00%)
-            MPI DIAG TIME              =     0.000254000 (MASTER=100.00%, MAX=100.00%)
-MPI TOTAL CPU TIME         =     0.674222000 (MASTER=100.00%)
+INITIAL GUESS TIME =     0.504716000( 57.17%)
+TOTAL SCF TIME     =     0.355465000( 40.27%)
+      TOTAL OP TIME      =     0.354688000( 40.18%)
+            TOTAL 1e TIME      =     0.001573000(  0.18%)
+            TOTAL 2e TIME      =     0.052249000(  5.92%)
+            TOTAL Exchange TIME=     0.300773000( 34.07%)
+            TOTAL ENERGY TIME  =     0.000032000(  0.00%)
+      TOTAL DII TIME     =     0.000721000(  0.08%)
+            TOTAL DIAG TIME    =     0.000236000(  0.03%)
+TOTAL TIME         =     0.882784000
 ------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  0.7 seconds.
+ Job cpu time:  0 days  0 hours  0 minutes  0.9 seconds.
 
  @ Finish Output Timing Infomration
 
- Normal Terminatation. Task Finished on: Thu Aug 15 16:37:03 2019
+ Normal Terminatation. Task Finished on: Sat Sep  7 15:25:41 2019

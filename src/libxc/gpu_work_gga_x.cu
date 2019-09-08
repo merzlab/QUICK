@@ -12,10 +12,8 @@ static const double B2 = -1.62613336586517367779736042170; /* muGE - B1 */
 
 typedef void (*ggaxk_ptr)(const void *p,  xc_gga_work_x_t *r);
 #include "gpu_fstructs.h"
-//********Uncomment next two lines for compiling all functionals with libxc**********
-/*#include "gpu_finclude_ggaxk.h"
-#include "gpu_fsign_ggaxk.h"*/
-//***********************************************************************************
+#include "gpu_finclude_ggaxk.h"
+#include "gpu_fsign_ggaxk.h"
 /*__device__ void test_func_ptr(void maple_func(const void *p,  xc_gga_work_x_t *r)){
 	maple_func(p, r);
 }*/
@@ -67,9 +65,7 @@ __global__ void gpu_work_gga_x(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_l
 
 		
 
-//********Uncomment next two lines for compiling all functionals with libxc*******************
-//		(maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);	
-//********************************************************************************************		
+		(maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);			
                 	//break;
         	//}
 

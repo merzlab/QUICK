@@ -526,7 +526,8 @@ __device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble X
 					d_vsigma += (tmp_d_vsigma*tmp_glinfo->mix_coeff);
 				}
 			
-				_tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob))) * weight;
+				//_tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob))) * weight;
+				_tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob)));				
 
 				QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
 				QUICKDouble dfdr2;

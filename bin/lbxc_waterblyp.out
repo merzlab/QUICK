@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Tue Aug  6 12:18:54 2019
+ TASK STARTS ON: Sat Sep  7 15:25:55 2019
  INPUT FILE :    lbxc_waterblyp.in
  OUTPUT FILE:    lbxc_waterblyp.out
  DATE FILE  :    lbxc_waterblyp.dat
@@ -91,46 +91,46 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.05
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
-SCF CYCLE      =        2      TIME      =     0.07
+SCF CYCLE      =        2      TIME      =     0.04
 RMS CHANGE     = 0.813251E-01  MAX CHANGE= 0.292791E+00
 
-SCF CYCLE      =        3      TIME      =   0.06
+SCF CYCLE      =        3      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.237253E-01
 RMS CHANGE     = 0.640345E-02  MAX CHANGE= 0.247217E-01
 
-SCF CYCLE      =        4      TIME      =   0.06
+SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.07
+SCF CYCLE      =        5      TIME      =   0.04
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
-SCF CYCLE      =        6      TIME      =   0.06
+SCF CYCLE      =        6      TIME      =   0.04
 DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
 RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
 
-SCF CYCLE      =        7      TIME      =   0.06
+SCF CYCLE      =        7      TIME      =   0.04
 DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.07
+SCF CYCLE      =        8      TIME      =     0.04
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
-SCF CYCLE      =        9      TIME      =   0.06
+SCF CYCLE      =        9      TIME      =   0.04
 DIIS CYCLE     =        1      MAX ERROR = 0.502509E-05
 RMS CHANGE     = 0.228262E-05  MAX CHANGE= 0.102358E-04
 
-SCF CYCLE      =       10      TIME      =   0.07
+SCF CYCLE      =       10      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.121250E-05
 RMS CHANGE     = 0.882888E-06  MAX CHANGE= 0.354765E-05
 PREPARED FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =       11      TIME      =     0.06
+SCF CYCLE      =       11      TIME      =     0.04
 RMS CHANGE     = 0.761164E-06  MAX CHANGE= 0.302067E-05
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -226,14 +226,14 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.390298290      ------         0.047     1        0.00      0.05      0.00    0.1651E+01  0.1100E+00  0.4251E+00
-  2    -76.277288020  -.113010E+00       0.049     2        0.00      0.05      0.00    0.2916E+00  0.9868E-01  0.4891E+00
-  3    -76.162925132  -.114363E+00       0.048     3        0.00      0.05      0.00    0.4511E+00  0.6418E-01  0.3542E+00
-  4    -76.365267195  0.202342E+00       0.047     4        0.00      0.05      0.00    0.4901E-02  0.1402E-02  0.5016E-02
-  5    -76.365295794  0.285990E-04       0.047     5        0.00      0.05      0.00    0.1317E-02  0.1774E-03  0.6831E-03
-  6    -76.365296893  0.109908E-05       0.050     6        0.00      0.05      0.00    0.2352E-03  0.3705E-04  0.1336E-03
-  7    -76.365296932  0.388841E-07       0.047     7        0.00      0.05      0.00    0.1997E-04  0.3787E-05  0.1429E-04
-  8    -76.365296932  0.416867E-09       0.047     8        0.00      0.05      0.00    0.5123E-06  0.9398E-07  0.2747E-06
+  1    -76.390298290      ------         0.027     1        0.00      0.03      0.00    0.1651E+01  0.1100E+00  0.4251E+00
+  2    -76.277288020  -.113010E+00       0.039     2        0.00      0.04      0.00    0.2916E+00  0.9868E-01  0.4891E+00
+  3    -76.162925132  -.114363E+00       0.039     3        0.00      0.04      0.00    0.4511E+00  0.6418E-01  0.3542E+00
+  4    -76.365267195  0.202342E+00       0.040     4        0.00      0.04      0.00    0.4901E-02  0.1402E-02  0.5016E-02
+  5    -76.365295794  0.285990E-04       0.040     5        0.00      0.04      0.00    0.1317E-02  0.1774E-03  0.6831E-03
+  6    -76.365296893  0.109908E-05       0.040     6        0.00      0.04      0.00    0.2352E-03  0.3705E-04  0.1336E-03
+  7    -76.365296932  0.388841E-07       0.039     7        0.00      0.04      0.00    0.1997E-04  0.3787E-05  0.1429E-04
+  8    -76.365296932  0.416867E-09       0.038     8        0.00      0.04      0.00    0.5123E-06  0.9398E-07  0.2747E-06
 ------------------------------------------------------------------------------------------------------------------------
  REACH CONVERGENCE AFTER   8 CYLCES
  MAX ERROR = 0.512270E-06   RMS CHANGE = 0.939787E-07   MAX CHANGE = 0.274682E-06
@@ -250,19 +250,19 @@ TOTAL ENERGY         =   -76.365296932
  @ Output Timing Infomration
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME =     0.787311000( 65.67%)
-TOTAL SCF TIME     =     0.385343000( 32.14%)
-      TOTAL OP TIME      =     0.384083000( 32.04%)
-            TOTAL 1e TIME      =     0.002909000(  0.24%)
-            TOTAL 2e TIME      =     0.055693000(  4.65%)
-            TOTAL Exchange TIME=     0.324669000( 27.08%)
-            TOTAL ENERGY TIME  =     0.000029000(  0.00%)
-      TOTAL DII TIME     =     0.001161000(  0.10%)
-            TOTAL DIAG TIME    =     0.000298000(  0.02%)
-TOTAL TIME         =     1.198933000
+INITIAL GUESS TIME =     0.506915000( 61.02%)
+TOTAL SCF TIME     =     0.301735000( 36.32%)
+      TOTAL OP TIME      =     0.300923000( 36.22%)
+            TOTAL 1e TIME      =     0.001499000(  0.18%)
+            TOTAL 2e TIME      =     0.052147000(  6.28%)
+            TOTAL Exchange TIME=     0.247180000( 29.75%)
+            TOTAL ENERGY TIME  =     0.000032000(  0.00%)
+      TOTAL DII TIME     =     0.000753000(  0.09%)
+            TOTAL DIAG TIME    =     0.000250000(  0.03%)
+TOTAL TIME         =     0.830786000
 ------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  1.2 seconds.
+ Job cpu time:  0 days  0 hours  0 minutes  0.8 seconds.
 
  @ Finish Output Timing Infomration
 
- Normal Terminatation. Task Finished on: Tue Aug  6 12:18:56 2019
+ Normal Terminatation. Task Finished on: Sat Sep  7 15:25:57 2019

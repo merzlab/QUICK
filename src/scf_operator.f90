@@ -105,6 +105,7 @@ subroutine scf_operator(oneElecO, deltaO)
       if(quick_method%HF)then      
          call gpu_upload_method(0, 1.0d0)
       elseif(quick_method%uselibxc)then
+        call gpu_upload_method(3, quick_method%x_hybrid_coeff)
       elseif(quick_method%BLYP)then
          call gpu_upload_method(2, 0.0d0)
       elseif(quick_method%B3LYP)then
@@ -335,16 +336,18 @@ subroutine get_xc
    endif
 #else
 
+   if(quick_method%uselibxc) then
 !  Initiate the libxc functionals
-   do ifunc=1, quick_method%nof_functionals
-      if(quick_method%xc_polarization > 0 ) then
-         call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
-               quick_method%functional_id(ifunc),XC_POLARIZED)
-      else
-         call xc_f90_func_init(xc_func(ifunc), &
-               xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
-      endif
-   enddo
+      do ifunc=1, quick_method%nof_functionals
+         if(quick_method%xc_polarization > 0 ) then
+            call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
+                  quick_method%functional_id(ifunc),XC_POLARIZED)
+         else
+            call xc_f90_func_init(xc_func(ifunc), &
+                  xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
+         endif
+      enddo
+   endif
 
 !  Form the quadrature
    do Iatm=1,natom
@@ -430,35 +433,65 @@ subroutine get_xc
                   tsttmp_vrhoa=0.0d0
                   tsttmp_vsigmaa=0.0d0
 
-                  do ifunc=1, quick_method%nof_functionals
-                     select case(xc_f90_info_family(xc_info(ifunc)))
-                        case(XC_FAMILY_LDA)
-                           call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
-                           libxc_exc(1), libxc_vrhoa(1))
-                        case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
-                           call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
-                           libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
-                     end select
+                  if(quick_method%uselibxc) then
+                     do ifunc=1, quick_method%nof_functionals
+                        select case(xc_f90_info_family(xc_info(ifunc)))
+                           case(XC_FAMILY_LDA)
+                              call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
+                              libxc_exc(1), libxc_vrhoa(1))
+                           case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
+                              call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
+                              libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                        end select
 
-                     tsttmp_exc=tsttmp_exc+libxc_exc(1)
-                     tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
-                     tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
-                  enddo
+                        tsttmp_exc=tsttmp_exc+libxc_exc(1)
+                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
+                        tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
+                     enddo
 
-                  zkec=densitysum*tsttmp_exc
-                  dfdr=tsttmp_vrhoa
-                  xiaodot=tsttmp_vsigmaa*4
+                     zkec=densitysum*tsttmp_exc
+                     dfdr=tsttmp_vrhoa
+                     xiaodot=tsttmp_vsigmaa*4
+
+!  Calculate the first term in the dot product shown above,
+!  i.e.: (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
+                     xdot=xiaodot*gax
+                     ydot=xiaodot*gay
+                     zdot=xiaodot*gaz
+
+                  elseif(quick_method%BLYP) then
+
+                     call becke_E(density, densityb, gax, gay, gaz, gbx, gby,gbz, Ex)
+                     call lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz,Ec)
+
+                     zkec=Ex+Ec
+                     
+                     call becke(density, gax, gay, gaz, gbx, gby, gbz, dfdr, dfdgaa, dfdgab)
+                     call lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, dfdr2, dfdgaa2, dfdgab2)
+
+                     dfdr = dfdr + dfdr2
+                     dfdgaa = dfdgaa + dfdgaa2
+                     dfdgab = dfdgab + dfdgab2
+
+                     xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
+                     ydot = 2.d0*dfdgaa*gay + dfdgab*gby
+                     zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+
+                  elseif(quick_method%B3LYP) then
+
+                     call b3lyp_e(densitysum, sigma, zkec)
+                     call b3lypf(densitysum, sigma, dfdr, xiaodot)
+
+                     xdot=xiaodot*gax
+                     ydot=xiaodot*gay
+                     zdot=xiaodot*gaz
+
+                  endif
 
                   Eelxc = Eelxc + zkec*weight
 
                   quick_qm_struct%aelec = weight*density+quick_qm_struct%aelec
                   quick_qm_struct%belec = weight*densityb+quick_qm_struct%belec
-
-!  Calculate the first term in the dot product shown above,
-!  i.e.: (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
-                  xdot=xiaodot*gax
-                  ydot=xiaodot*gay
-                  zdot=xiaodot*gaz
 
 !  Now loop over basis functions and compute the addition to the matrix element.
                   do Ibas=1,nbasis
@@ -491,10 +524,12 @@ subroutine get_xc
       enddo
    enddo
 
+   if(quick_method%uselibxc) then
 !  Uninitilize libxc functionals
-   do ifunc=1, quick_method%nof_functionals
-      call xc_f90_func_end(xc_func(ifunc))
-   enddo
+      do ifunc=1, quick_method%nof_functionals
+         call xc_f90_func_end(xc_func(ifunc))
+      enddo
+   endif
 #endif
 
 #ifdef MPI

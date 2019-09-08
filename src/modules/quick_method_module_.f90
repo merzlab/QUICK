@@ -453,8 +453,6 @@ endif
             if (index(keyWD,'SEDFT').ne.0)      self%SEDFT=.true.    
             if (index(keyWD,'PBSOL').ne.0)      self%PBSOL=.true.
             if (index(keyWD,'ANNIHILATE').ne.0) self%annil=.true.
-            if (index(keyWD,'B3LYP').ne.0)      self%B3LYP=.true.
-            if (index(keyWD,'BLYP').ne.0)       self%BLYP=.true.
             if (index(keyWD,'BPW91').ne.0)      self%BPW91=.true.
             if (index(keyWD,'MPW91LYP').ne.0)   self%MPW91LYP=.true.
             if (index(keyWD,'MPW91PW91').ne.0)  self%MPW91PW91=.true.
@@ -465,18 +463,22 @@ endif
                 self%grad=.true.
             endif
             if (index(keyWD,'GRADIENT').ne.0) self%grad=.true.
-            if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
-                self%MPW91LYP) self%DFT=.true.
 
-!#ifndef CUDA
-            !Read libxc keywords and set variable values            
+            !Read dft functional keywords and set variable values            
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
-                self%DFT=.true.
-            call set_libxc_func_info(keyWD, self)
+                call set_libxc_func_info(keyWD, self)
+            elseif(index(keyWD,'B3LYP').ne.0) then
+                self%B3LYP=.true.
+                self%x_hybrid_coeff =0.2d0
+            elseif(index(keyWD,'BLYP').ne.0) then
+                self%BLYP=.true.
+                self%x_hybrid_coeff =0.0d0    
             endif
-!#endif
 
+            if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
+                self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
+            
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
             if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.

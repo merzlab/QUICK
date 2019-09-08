@@ -44,7 +44,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Sep  6 09:58:28 2019
+ TASK STARTS ON: Fri Sep  6 12:13:38 2019
  INPUT FILE :    water_b3lyp_opt.in
  OUTPUT FILE:    water_b3lyp_opt.out
  DATE FILE  :    water_b3lyp_opt.dat
@@ -120,7 +120,7 @@ BASIS FUNCTIONS =    9
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.06
+SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -134,11 +134,11 @@ SCF CYCLE      =        4      TIME      =   0.04
 DIIS CYCLE     =        2      MAX ERROR = 0.717996E-02
 RMS CHANGE     = 0.233510E-02  MAX CHANGE= 0.921819E-02
 
-SCF CYCLE      =        5      TIME      =   0.06
+SCF CYCLE      =        5      TIME      =   0.05
 DIIS CYCLE     =        3      MAX ERROR = 0.298399E-02
 RMS CHANGE     = 0.133240E-02  MAX CHANGE= 0.503608E-02
 
-SCF CYCLE      =        6      TIME      =   0.04
+SCF CYCLE      =        6      TIME      =   0.05
 DIIS CYCLE     =        4      MAX ERROR = 0.110807E-02
 RMS CHANGE     = 0.986522E-03  MAX CHANGE= 0.381572E-02
 
@@ -147,7 +147,7 @@ DIIS CYCLE     =        5      MAX ERROR = 0.364363E-04
 RMS CHANGE     = 0.292852E-04  MAX CHANGE= 0.127867E-03
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        8      TIME      =     0.06
+SCF CYCLE      =        8      TIME      =     0.04
 RMS CHANGE     = 0.515945E-05  MAX CHANGE= 0.209008E-04
 
 SCF CYCLE      =        9      TIME      =   0.04
@@ -269,12 +269,12 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.406956227      ------         0.413     1        0.37      0.05      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  1    -76.406956227      ------         0.402     1        0.35      0.05      0.00    0.1671E+01  0.1072E+00  0.4244E+00
   2    -76.315624335  -.913319E-01       0.039     2        0.00      0.04      0.00    0.2761E+00  0.7099E-01  0.3222E+00
   3    -76.283134685  -.324896E-01       0.039     3        0.00      0.04      0.00    0.3306E+00  0.3897E-01  0.1910E+00
-  4    -76.385674086  0.102539E+00       0.039     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
-  5    -76.385685077  0.109914E-04       0.039     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
-  6    -76.385685481  0.403874E-06       0.039     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
+  4    -76.385674086  0.102539E+00       0.038     4        0.00      0.04      0.00    0.2855E-02  0.7437E-03  0.2928E-02
+  5    -76.385685077  0.109914E-04       0.040     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
+  6    -76.385685481  0.403874E-06       0.038     6        0.00      0.04      0.00    0.7456E-04  0.1734E-04  0.5257E-04
   7    -76.385685489  0.781599E-08       0.039     7        0.00      0.04      0.00    0.2366E-05  0.1616E-05  0.7527E-05
     --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
   8    -76.385685474  -.146578E-07       0.039     8        0.00      0.04      0.00    0.9754E-06  0.2013E-06  0.9955E-06
@@ -290,4 +290,4 @@ TOTAL ENERGY         =   -76.385685474
 
  @ End Energy calculation
 
-  GRADIENT CALCULATION TIME   26.919701000 S
+  GRADIENT CALCULATION TIME    0.086242000 S

@@ -44,36 +44,16 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Sun Sep  1 15:19:30 2019
+ TASK STARTS ON: Sat Sep  7 18:33:35 2019
  INPUT FILE :    lbxc_waterb3lyp_opt.in
  OUTPUT FILE:    lbxc_waterb3lyp_opt.out
  DATE FILE  :    lbxc_waterb3lyp_opt.dat
  BASIS SET PATH: /server-home1/madu/bin/quick/ifort18/basis
 
-|------------ CUDA INFORMATION ---------------
-|  CUDA version of Quick in use
-|  Implemented by
-|                      Yipu Miao (Florida)
-|  CAUTION: CUDA Quick is currently experimental
-|           and you may at risk to use it. Be sure
-|           to check result carelly. Advise or 
-|           bug report are welcome.
-|---------------------------------------------
-
-|------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
-| CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12036
-| SUPPORTING CUDA VERSION     :      7.0
-|--------------------------------------------
-
  @ Read Job And Atom
 
   -------------------------------------
-KEYWORD= LIBXC HYB_GGA_XC_B3LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 OPTIMIZE                                                                                                                             
+KEYWORD= LIBXC HYB_GGA_XC_B3LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT                                                                                                                             
   -------------------------------------
  ============== JOB CARD =============
 | METHOD = DENSTITY FUNCTIONAL THEORY
@@ -85,13 +65,6 @@ KEYWORD= LIBXC HYB_GGA_XC_B3LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 OPTIM
 | USE DIIS SCF
 | PRINT ENERGY EVERY CYCLE
 | STANDARD GRID = SG1
-| GEOMETRY OPTIMIZATION| NUMERICAL GRADIENT
-| REQUEST CRITERIA FOR GEOMETRY CONVERGENCE: 
-|      MAX ALLOWED GEO CHANGE  =  0.189E+00
-|      MAX GEOMETRY CHANGE     =  0.180E-02
-|      GEOMETRY CHANGE RMS     =  0.120E-02
-|      MAX GRADIENT CHANGE     =  0.100E-02
-|      GRADIENT NORMALIZATION  =  0.300E-03
 | GRADIENT CALCULATION
 | MAX SCF CYCLES =    200
 | MAX DIIS CYCLES =   10
@@ -113,16 +86,13 @@ KEYWORD= LIBXC HYB_GGA_XC_B3LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 OPTIM
 
  For Atom Kind =    1
  ELEMENT = O 
-
- ! WARNING:  ONLY ONE ATOM, TURN OFF OPTIMIZATION.
-
 BASIS FUNCTIONS =    9
 
  @ Begin Energy Calculation
 
 TOL:    0.000000000100000
 
-SCF CYCLE      =        1      TIME      =     0.05
+SCF CYCLE      =        1      TIME      =     0.06
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
 SCF CYCLE      =        2      TIME      =     0.04
@@ -250,20 +220,6 @@ RADII OF SIGNifIGANCE FOR THE BASIS FUNCTIONS
  @ End Reading Mol Info 
 
 
- @ Begin Optimization Job
-
-
- @ Optimize for New Step
-
-
-============  GEOMETRY FOR OPTIMIZATION STEP   1 OUT OF   27  ============
-
-GEOMETRY INPUT
-ELEMENT      X              Y              Z
-  O          -0.067568      -0.315315       0.000000
-  H           0.892433      -0.315315       0.000000
-  H          -0.388022       0.589621       0.000000
-
  @ Begin Energy Calculation
 
 TOL:    0.000000000100000
@@ -271,50 +227,60 @@ TOL:    0.000000000100000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -69.618665946      ------         0.582     1        0.49      0.09      0.00    0.1771E+01  0.2264E+00  0.9647E+00
-  2    -66.713693871  -.290497E+01       0.101     2        0.03      0.08      0.00    0.6731E+00  0.2124E+00  0.1157E+01
-  3    -66.826607827  0.112914E+00       0.092     3        0.02      0.08      0.00    0.2941E+04  0.1614E-01  0.7340E-01
-  4    -66.822404981  -.420285E-02       0.102     4        0.03      0.08      0.00    0.7069E+00  0.1017E+00  0.4432E+00
-  5    -67.286519808  0.464115E+00       0.094     5        0.03      0.07      0.00    0.2658E+04  0.1513E-01  0.7956E-01
-  6    -67.286488807  -.310013E-04       0.096     6        0.02      0.08      0.00    0.2629E+04  0.7674E-02  0.2710E-01
-  7    -46.877044907  -.204094E+02       0.093     7        0.02      0.07      0.00    0.1902E+00  0.7735E-01  0.2744E+00
-  8    -67.262093272  0.203850E+02       0.100     8        0.03      0.07      0.00    0.2032E+04  0.2666E-02  0.1393E-01
-  9    -67.262029514  -.637579E-04       0.100     9        0.03      0.07      0.00    0.2304E+04  0.3448E-04  0.1237E-03
- 10    -84.505312239  0.172433E+02       0.100    10        0.03      0.08      0.00    0.2031E+00  0.1435E-01  0.5159E-01
- 11    -67.261297707  -.172440E+02       0.101     1        0.03      0.08      0.00    0.7539E-01  0.6893E-01  0.2522E+00
- 12    -67.283478464  0.221808E-01       0.094     2        0.03      0.07      0.00    0.7212E-01  0.1407E-01  0.5685E-01
- 13    -67.284801428  0.132296E-02       0.101     3        0.03      0.07      0.00    0.2082E+04  0.7042E-02  0.2866E-01
- 14    -67.284690554  -.110874E-03       0.094     4        0.03      0.07      0.00    0.3530E-01  0.1353E-01  0.4898E-01
- 15    -60.133913145  -.715078E+01       0.102     5        0.03      0.08      0.00    0.2288E+04  0.1513E-02  0.5362E-02
- 16    -67.287264378  0.715335E+01       0.101     6        0.03      0.08      0.00    0.2959E-01  0.1205E-01  0.4960E-01
- 17    204.398482079  -.271686E+03       0.098     7        0.02      0.08      0.00    0.2525E+04  0.1594E-02  0.5118E-02
- 18    -67.289077979  0.271688E+03       0.099     8        0.03      0.07      0.00    0.8147E-02  0.1093E-01  0.5134E-01
- 19    -67.289261036  0.183057E-03       0.102     9        0.03      0.07      0.00    0.9355E-02  0.4844E-02  0.2185E-01
- 20    -67.289364054  0.103018E-03       0.101    10        0.03      0.08      0.00    0.1340E+04  0.2881E-02  0.1016E-01
- 21    -67.289318618  -.454359E-04       0.101     1        0.03      0.07      0.00    0.5168E-02  0.4872E-02  0.2190E-01
- 22    -67.289384090  0.654725E-04       0.100     2        0.03      0.07      0.00    0.2022E+04  0.4181E-02  0.1700E-01
- 23    -67.289346170  -.379205E-04       0.100     3        0.03      0.07      0.00    0.2318E-02  0.2849E-02  0.1034E-01
- 24    -67.289381532  0.353621E-04       0.092     4        0.03      0.07      0.00    0.1432E-02  0.8409E-03  0.4121E-02
- 25    537.634476257  -.604924E+03       0.095     5        0.02      0.07      0.00    0.2056E+04  0.1713E-03  0.1101E-02
- 26    -67.289380387  0.604924E+03       0.102     6        0.03      0.08      0.00    0.1865E-02  0.1556E-02  0.9464E-02
- 27    -67.289364583  -.158041E-04       0.101     7        0.03      0.08      0.00    0.2482E+04  0.1025E-02  0.6068E-02
- 28   -342.638032109  0.275349E+03       0.095     8        0.03      0.07      0.00    0.2732E+04  0.1391E-03  0.1066E-02
- 29    -67.289383539  -.275349E+03       0.100     9        0.03      0.07      0.00    0.2285E+04  0.1327E-03  0.5435E-03
- 30    -67.289383637  0.977230E-07       0.102    10        0.03      0.08      0.00    0.1232E-03  0.2328E-03  0.1174E-02
- 31    -66.615009642  -.674374E+00       0.095     1        0.02      0.07      0.00    0.2000E+04  0.5193E-04  0.2044E-03
- 32   -209.119693504  0.142505E+03       0.099     2        0.03      0.07      0.00    0.1621E+00  0.3316E-04  0.1343E-03
- 33    -67.289383693  -.141830E+03       0.100     3        0.03      0.07      0.00    0.1683E-03  0.9558E-04  0.4734E-03
- 34    -67.289390596  0.690201E-05       0.091     4        0.03      0.06      0.00    0.2141E+04  0.3961E-06  0.1729E-05
+  1    -76.406957533      ------         0.032     1        0.00      0.03      0.00    0.1671E+01  0.1072E+00  0.4244E+00
+  2    -76.315625637  -.913319E-01       0.045     2        0.00      0.05      0.00    0.2761E+00  0.7099E-01  0.3222E+00
+  3    -76.283135998  -.324896E-01       0.045     3        0.00      0.05      0.00    0.3306E+00  0.3897E-01  0.1910E+00
+  4    -76.385675404  0.102539E+00       0.046     4        0.00      0.05      0.00    0.2855E-02  0.7437E-03  0.2928E-02
+  5    -76.385686395  0.109914E-04       0.045     5        0.00      0.04      0.00    0.6109E-03  0.1239E-03  0.3751E-03
+  6    -76.385686799  0.403878E-06       0.046     6        0.00      0.05      0.00    0.7456E-04  0.1734E-04  0.5257E-04
+  7    -76.385686807  0.781623E-08       0.045     7        0.00      0.05      0.00    0.2366E-05  0.1616E-05  0.7527E-05
+    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+  8    -76.385686792  -.146578E-07       0.046     8        0.00      0.05      0.00    0.9754E-06  0.2013E-06  0.9955E-06
 ------------------------------------------------------------------------------------------------------------------------
- REACH CONVERGENCE AFTER  34 CYLCES
- MAX ERROR = 0.214139E+04   RMS CHANGE = 0.396067E-06   MAX CHANGE = 0.172909E-05
+ REACH CONVERGENCE AFTER   8 CYLCES
+ MAX ERROR = 0.975368E-06   RMS CHANGE = 0.201325E-06   MAX CHANGE = 0.995548E-06
  -----------------------------------------------
-ALPHA ELECTRON DENSITY    =    4.9999832391
-BETA ELECTRON DENSITY     =    4.9999832391
-ELECTRONIC ENERGY    =   -76.446506579
+ALPHA ELECTRON DENSITY    =    4.9999946221
+BETA ELECTRON DENSITY     =    4.9999946221
+ELECTRONIC ENERGY    =   -85.542802775
 CORE_CORE REPULSION  =     9.157115983
-TOTAL ENERGY         =   -67.289390596
+TOTAL ENERGY         =   -76.385686792
 
  @ End Energy calculation
 
-  GRADIENT CALCULATION TIME    0.134673000 S
+  GRADIENT CALCULATION TIME    0.112528000 S
+
+ ANALYTICAL GRADIENT: 
+----------------------------------------
+ VARIBLES    XYZ            GRADIENT
+----------------------------------------
+    1    -0.0675675652     0.0097420009
+    1     -0.3153153341     0.0140256750
+    1      0.0000000000     0.0000000031
+    2     0.8924325081    -0.0140638532
+    2     -0.3153153341    -0.0004533077
+    2      0.0000000000    -0.0000000055
+    3    -0.3880221796     0.0043463430
+    3      0.5896205650    -0.0135413206
+    3      0.0000000000     0.0000000024
+----------------------------------------
+
+ @ Output Timing Infomration
+
+------------- TIMING ---------------
+INITIAL GUESS TIME =     0.521102000( 51.46%)
+TOTAL SCF TIME     =     0.351415000( 34.71%)
+      TOTAL OP TIME      =     0.350659000( 34.63%)
+            TOTAL 1e TIME      =     0.001476000(  0.15%)
+            TOTAL 2e TIME      =     0.045513000(  4.49%)
+            TOTAL Exchange TIME=     0.303578000( 29.98%)
+            TOTAL ENERGY TIME  =     0.000028000(  0.00%)
+      TOTAL DII TIME     =     0.000702000(  0.07%)
+            TOTAL DIAG TIME    =     0.000234000(  0.02%)
+TOTAL TIME         =     1.012566000
+------------------------------------
+ Job cpu time:  0 days  0 hours  0 minutes  1.0 seconds.
+
+ @ Finish Output Timing Infomration
+
+ Normal Terminatation. Task Finished on: Sat Sep  7 18:33:37 2019
