@@ -53,12 +53,6 @@ subroutine fullx
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
-!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!
-
-! quick_method%DMCutoff=1.0d-15
- write(ioutfile,'(A4,3X, F18.15)') "TOL:",quick_method%DMCutoff
-!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!
-
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
 
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)

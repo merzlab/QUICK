@@ -61,5 +61,7 @@ Madu Manathunga 08/07/2019  2.1.1.4  : Implemented GPU version of the Libxc libr
 Madu Manathunga 08/10/2019  2.1.1.5  : Reorganized HF and DFT operators into a single scf operator. Cleaned up the code. 
 Madu Manathunga 08/13/2019  2.1.1.6  : Reorganized HF and DFT gradient subroutines into a single gradient subroutine. 
 				       Cleaned up the code. Enabled gradient only calculations.
-Madu Manathunga 08/13/2019  2.1.1.7  : Implemented GPU version of XC gradient code. Debugged the implementation.
+Madu Manathunga 09/07/2019  2.1.1.7  : Implemented GPU version of XC gradient code. Debugged the implementation. 
+                                       Fixed a bug related to legacy BLYP and B3LYP calls in scf & gradient codes in CPU version. 
+Madu Manathunga 09/09/2019  2.1.1.8  : Implemented external potential gradients.
 =========================================================================

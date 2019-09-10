@@ -586,7 +586,7 @@ __device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble X
 			}
 
 			if(sswt != 1.0){
-				sswder(gridx, gridy, gridz, _tmp, weight/sswt, iatm, exc_dev_grad);
+//				sswder(gridx, gridy, gridz, _tmp, weight/sswt, iatm, exc_dev_grad);
 			}
 		}
 	}

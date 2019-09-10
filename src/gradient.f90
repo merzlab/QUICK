@@ -8,7 +8,8 @@
 !------------------------------------------------------------------
 !  08/12/2019 Madu Manathunga: Reorganized and improved content 
 !                             written by previous authors.
-!                             Also integrated exc gradients.
+!                             Also integrated exc gradients &
+!                             external potential gradient.
 !  11/21/2010 Yipu Miao: Cleaned up code and partially  implemented 
 !                        gpu and MPI capability
 !  09/12/2007 Xiao He: Modified the code
@@ -37,6 +38,11 @@ subroutine gradient(failed)
 
    quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
    quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
+
+!  Set array elements required for printing the gradients
+   cartsym(1) = 'X'
+   cartsym(2) = 'Y'
+   cartsym(3) = 'Z'
 
 !  Set the value of gradient vector to zero
    do j=1,natom
@@ -328,6 +334,7 @@ subroutine get_nuclear_repulsion_grad
    use allmod
    implicit double precision(a-h,o-z)
 
+   double precision, external :: rootSquare
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
@@ -353,24 +360,39 @@ subroutine get_nuclear_repulsion_grad
 !  that that atom A can never equal atom B, and A-B part of the derivative
 !  for A is the negative of the BA derivative for atom B.
 
-   do Iatm = 1,natom*3
-      do Jatm = Iatm+1,natom
-         RIJ  = (xyz(1,Iatm)-xyz(1,Jatm))*(xyz(1,Iatm)-xyz(1,Jatm)) &
-         +(xyz(2,Iatm)-xyz(2,Jatm))*(xyz(2,Iatm)-xyz(2,Jatm)) &
-         +(xyz(3,Iatm)-xyz(3,Jatm))*(xyz(3,Iatm)-xyz(3,Jatm))
-         ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-1.5d0))
-         XBminXA = xyz(1,Jatm)-xyz(1,Iatm)
-         YBminYA = xyz(2,Jatm)-xyz(2,Iatm)
-         ZBminZA = xyz(3,Jatm)-xyz(3,Iatm)
-         ISTART = (Iatm-1)*3
-         JSTART = (Jatm-1)*3
+   do Iatm = 1,(natom)*3
+      do Jatm = Iatm+1,(natom+quick_molspec%nextatom)
          if(master) then
-            quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART+1) = quick_qm_struct%gradient(JSTART+1)-XBminXA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART+2) = quick_qm_struct%gradient(JSTART+2)-YBminYA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART+3) = quick_qm_struct%gradient(JSTART+3)-ZBminZA*ZAZBdivRIJ3
+            if(Iatm<=natom .and. Jatm<=natom)then  
+
+               RIJ = rootSquare(xyz(1:3,Iatm), xyz(1:3,Jatm), 3)
+               ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-3.0d0))
+               XBminXA = xyz(1,Jatm)-xyz(1,Iatm)
+               YBminYA = xyz(2,Jatm)-xyz(2,Iatm)
+               ZBminZA = xyz(3,Jatm)-xyz(3,Iatm)
+               ISTART = (Iatm-1)*3
+               JSTART = (Jatm-1)*3
+               quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+1) = quick_qm_struct%gradient(JSTART+1)-XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+2) = quick_qm_struct%gradient(JSTART+2)-YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+3) = quick_qm_struct%gradient(JSTART+3)-ZBminZA*ZAZBdivRIJ3
+
+            elseif(Iatm<=natom .and. Jatm>natom)then 
+
+               RIJ = rootSquare(xyz(1:3,Iatm), quick_molspec%extxyz(1:3,Jatm-natom), 3)
+               ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%extchg(Jatm-natom)*(RIJ**(-3.0d0))
+               XBminXA = quick_molspec%extxyz(1,Jatm-natom)-xyz(1,Iatm)
+               YBminYA = quick_molspec%extxyz(2,Jatm-natom)-xyz(2,Iatm)
+               ZBminZA = quick_molspec%extxyz(3,Jatm-natom)-xyz(3,Iatm) 
+               ISTART = (Iatm-1)*3
+               quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
+
+            endif
+
          endif
       enddo
    enddo

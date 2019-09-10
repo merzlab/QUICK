@@ -2359,16 +2359,19 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
 !write(*,*) "Grad1",AGrad1,BGrad1,CGrad1
 
    quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+ AGrad1
-   quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+ BGrad1
-   quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+ CGrad1
-
    quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+ AGrad2
-   quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+ BGrad2
-   quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+ CGrad2
-
    quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+ AGrad3
+
+   quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+ BGrad1
+   quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+ BGrad2
    quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+ BGrad3
+
+if(iatom<=natom)then
+   quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+ CGrad1
+   quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+ CGrad2
    quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+ CGrad3
+endif
+
 End subroutine nuclearattraopt
 
 

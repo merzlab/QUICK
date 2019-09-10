@@ -7,8 +7,11 @@
 */
 
 typedef void (*ggac_ptr)(const void *p,  xc_gga_work_c_t *r);
+
+//****************** Uncomment to compile all libxc kernels*************************//
 #include "gpu_finclude_ggac.h"
 #include "gpu_fsign_ggac.h"
+//****************** Uncomment to compile all libxc kernels*************************//
 
 //#include "maple2c/gga_c_lyp.c"
 
@@ -113,7 +116,12 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                                 }			
 
 //				xc_gga_c_lyp_func(d_glinfo->d_maple2c_params, &r);
+
+//****************** Uncomment to compile all libxc kernels*************************//
 				(maple2cf_ggac[d_w->k_index])(d_glinfo->d_maple2c_params, &r);
+//****************** Uncomment to compile all libxc kernels*************************//
+
+
 			//	break;
 			//}
 

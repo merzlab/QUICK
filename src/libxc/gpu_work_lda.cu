@@ -7,8 +7,11 @@
 */
 
 typedef void (*lda_ptr)(const void *p,  xc_lda_work_t *r);
+
+//****************** Uncomment to compile all libxc kernels*************************//
 #include "gpu_finclude_lda.h"
 #include "gpu_fsign_lda.h"
+//****************** Uncomment to compile all libxc kernels*************************//
 
 //#include "maple2c/lda_x.c"
 //#include "maple2c/lda_c_vwn_rpa.c"
@@ -74,7 +77,10 @@ __device__ void gpu_work_lda_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 		//xc_lda_x_func(d_glinfo->d_maple2c_params, &r);
 	//}	
 
+//****************** Uncomment to compile all libxc kernels*************************//
 	(maple2cf_lda[d_w->k_index])(d_glinfo->d_maple2c_params, &r);
+//****************** Uncomment to compile all libxc kernels*************************//
+
 
 	*d_zk = r.f;
 
