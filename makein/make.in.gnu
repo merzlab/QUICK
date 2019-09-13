@@ -20,7 +20,9 @@
 #---------------------
 # b. Single CPU Version
 #---------------------
+#FC= /users/PCS0202/bgs0374/bin/gcc-4.5/bin/gfortran
 FC=gfortran
+CC = gcc
 #FC=ifort
 
 #---------------------

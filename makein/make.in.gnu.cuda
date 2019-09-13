@@ -22,6 +22,7 @@ CUDA_HOME=/usr/local/cuda
 # b. Single CPU Version
 #---------------------
 FC=gfortran
+CC=gcc
 #FC=ifort
 
 #---------------------
@@ -46,14 +47,14 @@ CPP_FLAG = -I$(CUDA_HOME)/include  -O3
 
 # CUDA Compiler
 CUDAC = nvcc
-CUDA_LIBPATH = -L/usr/local/gfortran/lib
+CUDA_LIBPATH = -L/usr/local/cuda/lib64
 #CUDA_FLAGS= -Xptxas=-v -m64 -g -G -use_fast_math -maxrregcount=63 -gencode arch=compute_20,code=sm_20
 #CUDA_FLAGS= -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT 
 CUDA_FLAGS= -O3  -Xptxas=-v -m64 -use_fast_math -gencode arch=compute_70,code=sm_70 -L$(CUDA_HOME)/lib64 -I$(CUDA_HOME)/include
 
 # G++ Compiler
 CXX = g++
-CFLAGS = -lgfortran -lgfortranbegin -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas
+CFLAGS = -lgfortran -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
 
 
 CUDA_SPDF=n
@@ -65,3 +66,6 @@ else
         CUDA_FLAGS2=$(CUDA_FLAGS)
         #CUDA_INT_OBJ=
 endif
+
+#LIBXC CUDA flags
+LIBXC_CUDA_FLAGS = -I$(libxcfolder) 

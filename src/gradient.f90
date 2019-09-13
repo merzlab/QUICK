@@ -108,6 +108,20 @@ subroutine gradient(failed)
 
    write(ioutfile,'(40("-"))')
 
+   if(quick_method%extCharges) then
+      write (ioutfile,'(/," POINT CHARGE GRADIENT: ")')
+      write (ioutfile,'(40("-"))')
+      write (ioutfile,'(" VARIBLES",4x,"XYZ",12x,"GRADIENT")')
+      write (ioutfile,'(40("-"))')
+      do Iatm=1,quick_molspec%nextatom
+         do Imomentum=1,3
+            write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+            quick_molspec%extxyz(Imomentum,Iatm)*0.529177249d0,quick_qm_struct%ptchg_gradient((Iatm-1)*3+Imomentum)
+         enddo
+      enddo
+      write(ioutfile,'(40("-"))')
+   endif   
+
    return
 
 end subroutine gradient
@@ -152,7 +166,7 @@ subroutine scf_gradient
 #ifdef MPI
 if(master) then
 #endif
-        write (*,'(/," Madu STEP 1 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
                 write (*,'(I5,7x,F20.10)')Iatm, &
@@ -173,7 +187,7 @@ endif
 #ifdef MPI
 if(master) then
 #endif
-        write (*,'(/," Madu STEP 2 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
                 write (*,'(I5,7x,F20.10)')Iatm, &
@@ -219,7 +233,7 @@ endif
 #ifdef MPI
 if(master) then
 #endif
-        write (*,'(/," Madu STEP 3 :  ANALYTICAL GRADIENT: ")')
+        write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
                 write (*,'(I5,7x,F20.10)')Iatm, &
@@ -249,20 +263,6 @@ endif
    endif
 #endif
 
-#ifdef MPI
-if(master) then
-#endif
-        write (*,'(/," Madu  :  Before get_xc_grad: ")')
-        do Iatm=1,natom
-            do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
-                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
-            enddo
-        enddo
-#ifdef MPI
-endif
-#endif
-
       call cpu_time(timer_end%TGrad)
       tmp_grad_time = timer_end%TGrad-timer_begin%TGrad
 
@@ -282,8 +282,6 @@ endif
 !  Stop the timer and add up the total gradient times
    call cpu_time(timer_end%TGrad)
    xc_grad_time = timer_end%TGrad-timer_begin%TGrad
-
-   write(*,'(2x,"XC GRADIENT TIME",F15.9, " S")')  xc_grad_time
 
    write(ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")') tmp_grad_time+xc_grad_time
    timer_cumer%TGrad=timer_cumer%TGrad+tmp_grad_time+xc_grad_time
@@ -314,10 +312,26 @@ endif
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
-        write (*,'(/," Madu STEP4: ANALYTICAL GRADIENT: ")')
+        write (*,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
         do Iatm=1,natom*3
                 write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
         enddo
+         write(*,'(2x,"XC GRADIENT TIME",F15.9, " S")')  xc_grad_time
+#ifdef MPI
+endif
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPI
+if(master) then
+#endif
+if(quick_method%extCharges) then
+        write (*,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
+        do Iatm=1,quick_molspec%nextatom*3
+                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
+        enddo
+endif
 #ifdef MPI
 endif
 #endif
@@ -360,11 +374,11 @@ subroutine get_nuclear_repulsion_grad
 !  that that atom A can never equal atom B, and A-B part of the derivative
 !  for A is the negative of the BA derivative for atom B.
 
-   do Iatm = 1,(natom)*3
+   do Iatm = 1,(natom+quick_molspec%nextatom)*3
       do Jatm = Iatm+1,(natom+quick_molspec%nextatom)
          if(master) then
             if(Iatm<=natom .and. Jatm<=natom)then  
-
+!  Nuclear-nuclear repulsion grdients, update nuclear gradient vector
                RIJ = rootSquare(xyz(1:3,Iatm), xyz(1:3,Jatm), 3)
                ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-3.0d0))
                XBminXA = xyz(1,Jatm)-xyz(1,Iatm)
@@ -381,6 +395,8 @@ subroutine get_nuclear_repulsion_grad
 
             elseif(Iatm<=natom .and. Jatm>natom)then 
 
+!  Nuclear-point charge repulsion grdients, update nuclear gradient vector               
+
                RIJ = rootSquare(xyz(1:3,Iatm), quick_molspec%extxyz(1:3,Jatm-natom), 3)
                ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%extchg(Jatm-natom)*(RIJ**(-3.0d0))
                XBminXA = quick_molspec%extxyz(1,Jatm-natom)-xyz(1,Iatm)
@@ -390,7 +406,13 @@ subroutine get_nuclear_repulsion_grad
                quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
                quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
                quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
+           
+!  Nuclear-point charge repulsion grdients, update point charge gradient vector
 
+               JSTART = (Jatm-natom-1)*3
+               quick_qm_struct%ptchg_gradient(JSTART+1) = quick_qm_struct%ptchg_gradient(JSTART+1)-XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%ptchg_gradient(JSTART+2) = quick_qm_struct%ptchg_gradient(JSTART+2)-YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%ptchg_gradient(JSTART+3) = quick_qm_struct%ptchg_gradient(JSTART+3)-ZBminZA*ZAZBdivRIJ3
             endif
 
          endif

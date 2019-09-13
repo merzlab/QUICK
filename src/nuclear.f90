@@ -2278,7 +2278,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
          iBstart = (iB-1)*3
          iCstart = (iC-1)*3
 
-
          Xconstant=X1temp*quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)+Jang)
 
          do III=III1,III2
@@ -2291,13 +2290,10 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
                Xconstant2=Xconstant1*quick_basis%cons(JJJ)*DENSEJI
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
 
-!write(*,*) "itemp1,itemp2,attaraxiao",itemp1,itemp2,attraxiaoopt(1,itemp1,itemp2,0)
-!stop
                Cgrad1=Cgrad1+Xconstant2*attraxiaoopt(1,itemp1,itemp2,0)
                Cgrad2=Cgrad2+Xconstant2*attraxiaoopt(2,itemp1,itemp2,0)
                Cgrad3=Cgrad3+Xconstant2*attraxiaoopt(3,itemp1,itemp2,0)
-!write(*,*) "Cgrad1,Cgrad2,Cgrad3",Cgrad1,Cgrad2,Cgrad
-!stop
+
                itemp1new=trans(quick_basis%KLMN(1,III)+1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
                Agrad1=Agrad1+2.0d0*Xconstant2* &
                      quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))*attraxiao(itemp1new,itemp2,0)
@@ -2356,8 +2352,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
       enddo
    enddo
 
-!write(*,*) "Grad1",AGrad1,BGrad1,CGrad1
-
    quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+ AGrad1
    quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+ AGrad2
    quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+ AGrad3
@@ -2370,6 +2364,12 @@ if(iatom<=natom)then
    quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+ CGrad1
    quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+ CGrad2
    quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+ CGrad3
+else
+!  One electron-point charge attraction grdients, update point charge gradient vector 
+   iCSTART = (iatom-natom-1)*3
+   quick_qm_struct%ptchg_gradient(iCSTART+1) = quick_qm_struct%ptchg_gradient(iCSTART+1)+ CGrad1
+   quick_qm_struct%ptchg_gradient(iCSTART+2) = quick_qm_struct%ptchg_gradient(iCSTART+2)+ CGrad2
+   quick_qm_struct%ptchg_gradient(iCSTART+3) = quick_qm_struct%ptchg_gradient(iCSTART+3)+ CGrad3
 endif
 
 End subroutine nuclearattraopt

@@ -64,4 +64,7 @@ Madu Manathunga 08/13/2019  2.1.1.6  : Reorganized HF and DFT gradient subroutin
 Madu Manathunga 09/07/2019  2.1.1.7  : Implemented GPU version of XC gradient code. Debugged the implementation. 
                                        Fixed a bug related to legacy BLYP and B3LYP calls in scf & gradient codes in CPU version. 
 Madu Manathunga 09/09/2019  2.1.1.8  : Implemented external potential gradients.
+Madu Manathunga 09/12/2019  2.1.1.9  : Reimplemented sswder device kernel by removing temporary arrays. This fixed the out of memory
+				       issue resulting from XC gradient code for large molecules. 
+Madu Manathunga 09/13/2019  2.1.1.10 : Implemented point charge gradient calculation capability.
 =========================================================================

@@ -91,6 +91,9 @@ module quick_calculated_module
       ! gradient with respect to atomic motion, the dimension is 3natom
       double precision,dimension(:), allocatable   :: gradient
 
+      ! gradient of the point charges, the dimension is 3 times nextatom
+      double precision,dimension(:), allocatable   :: ptchg_gradient
+
       ! hessian matrix and CPHF matrices, the dimension is 3natom*3natom
       double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb
 
@@ -210,6 +213,9 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          allocate(self%gradient(3*natom))
+         if (quick_method%extCharges) then
+            allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
+         endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
@@ -331,6 +337,9 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          deallocate(self%gradient)
+         if (quick_method%extCharges) then
+            deallocate(self%ptchg_gradient)
+         endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
