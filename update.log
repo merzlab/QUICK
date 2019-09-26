@@ -67,4 +67,5 @@ Madu Manathunga 09/09/2019  2.1.1.8  : Implemented external potential gradients.
 Madu Manathunga 09/12/2019  2.1.1.9  : Reimplemented sswder device kernel by removing temporary arrays. This fixed the out of memory
 				       issue resulting from XC gradient code for large molecules. 
 Madu Manathunga 09/13/2019  2.1.1.10 : Implemented point charge gradient calculation capability.
+Madu Manathunga 09/26/2019  2.1.1.11 : Fixed several bugs related to gradient timings. 
 =========================================================================

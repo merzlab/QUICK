@@ -97,7 +97,7 @@ subroutine gradient(failed)
 
    write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
    write (ioutfile,'(40("-"))')
-   write (ioutfile,'(" VARIBLES",4x,"XYZ",12x,"GRADIENT")')
+   write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
    write (ioutfile,'(40("-"))')
    do Iatm=1,natom
       do Imomentum=1,3
@@ -111,7 +111,7 @@ subroutine gradient(failed)
    if(quick_method%extCharges) then
       write (ioutfile,'(/," POINT CHARGE GRADIENT: ")')
       write (ioutfile,'(40("-"))')
-      write (ioutfile,'(" VARIBLES",4x,"XYZ",12x,"GRADIENT")')
+      write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
       write (ioutfile,'(40("-"))')
       do Iatm=1,quick_molspec%nextatom
          do Imomentum=1,3
@@ -160,7 +160,12 @@ subroutine scf_gradient
 !  1) The derivative of the nuclear repulsion.
 !---------------------------------------------------------------------
 
+   call cpu_time(timer_begin%TNucGrad)
+
    call get_nuclear_repulsion_grad
+
+   call cpu_time(timer_end%TNucGrad)
+   timer_cumer%TNucGrad = timer_cumer%TNucGrad + timer_end%TNucGrad-timer_begin%TNucGrad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPI
@@ -181,6 +186,8 @@ endif
 !---------------------------------------------------------------------
 !  2) The derivative of the kinetic term
 !---------------------------------------------------------------------
+   call cpu_time(timer_begin%T1eGrad)
+
    call get_kinetic_grad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
@@ -243,13 +250,21 @@ if(master) then
 #ifdef MPI
 endif
 #endif
+
+   call cpu_time(timer_end%T1eGrad)
+   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !---------------------------------------------------------------------
 !  4) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
+   call cpu_time(timer_begin%T2eGrad)
+
    call get_electron_replusion_grad
 
+   call cpu_time(timer_end%T2eGrad)
+   timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
 !---------------------------------------------------------------------
 !  5) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
@@ -263,11 +278,13 @@ endif
    endif
 #endif
 
-      call cpu_time(timer_end%TGrad)
-      tmp_grad_time = timer_end%TGrad-timer_begin%TGrad
 
-      call cpu_time(timer_begin%TGrad)
+      call cpu_time(timer_begin%TExGrad)
+
       call get_xc_grad
+
+      call cpu_time(timer_end%TExGrad)
+      timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
 
 #ifdef MPI
    if(master) then
@@ -281,10 +298,7 @@ endif
 
 !  Stop the timer and add up the total gradient times
    call cpu_time(timer_end%TGrad)
-   xc_grad_time = timer_end%TGrad-timer_begin%TGrad
-
-   write(ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")') tmp_grad_time+xc_grad_time
-   timer_cumer%TGrad=timer_cumer%TGrad+tmp_grad_time+xc_grad_time
+   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
 #ifdef MPI
 !  slave node will send infos
@@ -316,7 +330,6 @@ if(master) then
         do Iatm=1,natom*3
                 write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
         enddo
-         write(*,'(2x,"XC GRADIENT TIME",F15.9, " S")')  xc_grad_time
 #ifdef MPI
 endif
 #endif

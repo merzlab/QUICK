@@ -57,7 +57,7 @@ CXX = g++
 CFLAGS = -lgfortran -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
 
 
-CUDA_SPDF=n
+CUDA_SPDF=y
 
 ifeq ($(CUDA_SPDF), y)
         CUDA_FLAGS2=$(CUDA_FLAGS) -DCUDA_SPDF

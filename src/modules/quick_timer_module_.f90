@@ -32,6 +32,10 @@ module quick_timer_module
         double precision:: TE=0.0d0
         double precision:: TEx=0.0d0
         double precision:: TGrad=0.0d0
+        double precision:: TNucGrad=0.0d0
+        double precision:: T1eGrad=0.0d0
+        double precision:: T2eGrad=0.0d0
+        double precision:: TExGrad=0.0d0
     end type quick_timer
     
     type quick_timer_cumer
@@ -47,6 +51,10 @@ module quick_timer_module
         double precision:: TE=0.0d0
         double precision:: TEx=0.0d0
         double precision:: TGrad=0.0d0
+        double precision:: TNucGrad=0.0d0
+        double precision:: T1eGrad=0.0d0
+        double precision:: T2eGrad=0.0d0
+        double precision:: TExGrad=0.0d0
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -97,7 +105,7 @@ module quick_timer_module
                 timer_cumer%T2e/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
                 ! Time to evaluate exchange energy
-                write (io,'(12x,"TOTAL Exchange TIME=",F16.9,"( ",F5.2,"%)")') timer_cumer%TEx, &
+                write (io,'(12x,"TOTAL EXC TIME=",F16.9,"( ",F5.2,"%)")') timer_cumer%TEx, &
                     timer_cumer%TEx/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             write (io,'(12x,"TOTAL ENERGY TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TE, &
@@ -120,9 +128,23 @@ module quick_timer_module
                     (timer_end%TDip-timer_begin%TDip)/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             ! Grad Timing
-            if (quick_method%opt) then
-                write (io,'("GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TGrad, &
+            if (quick_method%opt .or. quick_method%grad ) then
+                write (io,'("TOTAL GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TGrad, &
                     timer_cumer%TGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(6x,"TOTAL NUCLEAR GRADIENT TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TNucGrad, &
+                        timer_cumer%TNucGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &  
+                        timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, & 
+                        timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                if(quick_method%DFT) then
+                   write (io,'(6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &     
+                           timer_cumer%TExGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+                endif
             endif
 
             ! MP2 Time

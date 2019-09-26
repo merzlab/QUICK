@@ -237,7 +237,7 @@ neat:
 	-rm -f $(TMPFILES)
 
 #Madu: Clean except libxc. Only for debugging
-dryclean: neat
+dryclean:
 	-rm -f $(objfolder)/* $(exefolder)/quick* $(libfolder)/*
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
