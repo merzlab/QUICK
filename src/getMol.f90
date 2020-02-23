@@ -14,7 +14,7 @@ subroutine getMol()
    use allmod
    implicit none
 
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
@@ -29,7 +29,7 @@ subroutine getMol()
          call read_AMBER_crd
       else
          call quick_open(infile,inFileName,'O','F','W',.true.)
-         call PrtAct(iOutfile,"Begin to Read Mol Info")
+         call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
          ! read molecule coordinates
          call read2(quick_molspec,inFile)
@@ -50,7 +50,7 @@ subroutine getMol()
       call check_quick_method_and_molspec(iOutFile,quick_molspec,quick_method)
    endif
    !-----------END MPI/MASTER-----------------------
-#ifdef MPI
+#ifdef MPIV
    !-----------MPI/ALL NODES------------------------
    if (bMPI)  call mpi_setup_mol1()
    !-----------END MPI/ALL NODES--------------------
@@ -100,7 +100,7 @@ subroutine getMol()
   ! calculate the radius of the sphere of basis function signifigance.
     if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
 
-#ifdef MPI
+#ifdef MPIV
     if (bMPI .and. quick_method%DFT) then
       call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
@@ -114,7 +114,7 @@ subroutine getMol()
       !  initialize density matrix
       call initialGuess
 
-      call PrtAct(iOutfile,"End Reading Mol Info ")
+      call PrtAct(iOutfile,"End Reading Molecular Information ")
 
    endif
    !-----------END MPI/MASTER------------------------

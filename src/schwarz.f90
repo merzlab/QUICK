@@ -14,7 +14,7 @@ subroutine schwarzoff
 
   Implicit none
 
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
@@ -31,7 +31,7 @@ subroutine schwarzoff
   enddo
   endif
 
-#ifdef MPI
+#ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

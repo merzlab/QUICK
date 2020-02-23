@@ -248,7 +248,7 @@ subroutine calmp2
 end subroutine calmp2
 
 
-#ifdef MPI
+#ifdef MPIV
 
 ! Ed Brothers. November 27, 2001
 ! Xiao HE. September 14,2008

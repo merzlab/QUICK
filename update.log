@@ -16,9 +16,11 @@ UPDATE LOG
 =========================================================================
 
 NOTE TO AUTHORS:
-PLEASE USE THE FOLLOWING FORMAT TO KEEP TRACK
-OF YOUR CONTRIBUTION:
+PLEASE USE THE FOLLOWING FORMAT TO KEEP TRACK OF YOUR CONTRIBUTION:
 
+NAME DATE YEAR.MONTH NOTES 
+
+------------------------- OLD FORMAT ------------------------------------
 NAME  DATE  MAJOR.MINOR.RELEASE.BUILD  NOTES
 
 MAJOR: A MAJOR RELEASE VERSION WITH MANY NEW FEATURES
@@ -68,4 +70,5 @@ Madu Manathunga 09/12/2019  2.1.1.9  : Reimplemented sswder device kernel by rem
 				       issue resulting from XC gradient code for large molecules. 
 Madu Manathunga 09/13/2019  2.1.1.10 : Implemented point charge gradient calculation capability.
 Madu Manathunga 09/26/2019  2.1.1.11 : Fixed several bugs related to gradient timings. 
+Madu Manathunga 02/21/2020  20.02    : Reimplemented XC scheme with an octree algorithm. Started new version naming procedure. 
 =========================================================================

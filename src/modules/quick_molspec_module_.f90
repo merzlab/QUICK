@@ -81,7 +81,7 @@ module quick_molspec_module
       module procedure init_quick_molspec
    end interface init
 
-#ifdef MPI   
+#ifdef MPIV   
    interface broadcast
       module procedure broadcast_quick_molspec
    end interface broadcast
@@ -187,7 +187,7 @@ contains
 
    end subroutine deallocate_quick_molspec
 
-#ifdef MPI
+#ifdef MPIV
    !-------------------
    ! broadcast variable list
    !-------------------

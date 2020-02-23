@@ -89,7 +89,7 @@ subroutine read_job_and_atom
    endif
 
 
-#ifdef MPI
+#ifdef MPIV
    !-------------------MPI/ALL NODES---------------------------------------
    if (bMPI) call mpi_setup_job() ! communicates nodes and pass job specs to all nodes
    !-------------------MPI/ALL NODES---------------------------------------

@@ -4,6 +4,10 @@
 void* gpu_upload_maple2c_params(const xc_func_type *p){
 
         void *d_maple_params;
+
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, p->params_byte_size: %d \n",
+        __FILE__, __LINE__, __func__, p->params_byte_size);
+
         cudaMalloc((void**)&d_maple_params, p->params_byte_size);
         cudaMemcpy(d_maple_params, (p->params), p->params_byte_size, cudaMemcpyHostToDevice);
         return d_maple_params;
@@ -26,18 +30,25 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
                         __FILE__, __LINE__, __func__, work_param_size);
                 }
 		break;
+
+	case(XC_FAMILY_HYB_GGA):
         case(XC_FAMILY_GGA):
                 //Now check the kind. 
                 switch(p->info->kind){
                         case(XC_EXCHANGE):
                                  work_param_size = sizeof(gpu_ggax_work_params);
                         break;
+				
 			case(XC_CORRELATION):
+			case(XC_EXCHANGE_CORRELATION):
 				work_param_size = sizeof(gpu_ggac_work_params);
 			break;
                 }
         break;
         }
+
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, gga_work_param_size: %d \n",
+        __FILE__, __LINE__, __func__, work_param_size);
 
         cudaMalloc((void**)&d_work_params, work_param_size);
         cudaMemcpy(d_work_params, gpu_work_params, work_param_size, cudaMemcpyHostToDevice);
@@ -132,6 +143,7 @@ int get_gpu_worker(const xc_func_type *p){
         }
 
 		break;
+	case(XC_FAMILY_HYB_GGA):
         case(XC_FAMILY_GGA):
                 //Now check the kind. 
                 switch(p->info->kind){
@@ -139,6 +151,7 @@ int get_gpu_worker(const xc_func_type *p){
                                 gpu_wt = GPU_WORK_GGA_X;
                         break;
                         case(XC_CORRELATION):
+			case(XC_EXCHANGE_CORRELATION):
                                 gpu_wt = GPU_WORK_GGA_C;
                         break;
                 }

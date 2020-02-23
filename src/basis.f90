@@ -24,7 +24,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    double precision AA(MAXPRIM),BB(MAXPRIM),CC(MAXPRIM)
    integer natomstart,natomfinal,nbasisstart,nbasisfinal
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
@@ -237,7 +237,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    endif masterwork
    ! =============END MPI/MASTER=====================
 
-#ifdef MPI
+#ifdef MPIV
    ! =============END MPI/ALL NODES=====================
    if (bMPI) then
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -781,7 +781,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    endif masterwork_readfile
    !======== END MPI/MASTER ================
 
-#ifdef MPI
+#ifdef MPIV
    !======== MPI/ALL NODES ====================
    if (bMPI) then
       call MPI_BCAST(maxcontract,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -948,7 +948,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    endif masterwork_setup
    !======== MPI/MASTER ====================
 
-#ifdef MPI
+#ifdef MPIV
    !======== MPI/ALL NODES ====================
    if (bMPI) then
       call mpi_setup_basis

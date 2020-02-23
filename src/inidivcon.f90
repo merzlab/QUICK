@@ -55,7 +55,7 @@ subroutine inidivcon(natomsaved)
   integer natomt,natomsaved
   logical bEliminate  ! if elimination step needed(test only)
 
-#ifdef MPI
+#ifdef MPIV
   include 'mpif.h'
 #endif
 
@@ -128,7 +128,7 @@ subroutine inidivcon(natomsaved)
   endif masterwork_inidivcon_readmol
   !--------------------End MPI/MASTER----------------------------------
 
-#ifdef MPI
+#ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
      call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -614,7 +614,7 @@ subroutine inidivcon(natomsaved)
   endif masterwork_inidivcon_buildsystem
   !--------------------End MPI/MASTER----------------------------------
 
-#ifdef MPI
+#ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
      call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -727,7 +727,7 @@ subroutine inidivcon(natomsaved)
   ! STEP 4. broadcast all the info and variables to other nodes
   !===================================================================
 
-#ifdef MPI
+#ifdef MPIV
   allocate(mpi_dc_fragn(0:mpisize-1))       ! frag no. a node has
   allocate(mpi_dc_frag(0:mpisize-1,np)) ! frag a node has
   allocate(mpi_dc_nbasis(0:mpisize-1))  ! total basis set a node has

@@ -32,7 +32,7 @@ subroutine initialize1(ierr)
    ! Parameter list
    integer ierr    ! Error Flag
 
-#ifdef MPI
+#ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
    call MPI_initialize()

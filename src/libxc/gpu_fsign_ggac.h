@@ -1,4 +1,4 @@
-static __constant__ ggac_ptr maple2cf_ggac[40] = {&xc_gga_c_am05_func,
+static __constant__ ggac_ptr maple2cf_ggac[41] = {&xc_gga_c_am05_func,
 &xc_gga_c_bcgp_func,
 &xc_gga_c_bmk_func,
 &xc_gga_c_cs1_func,
@@ -39,5 +39,5 @@ static __constant__ ggac_ptr maple2cf_ggac[40] = {&xc_gga_c_am05_func,
 &xc_gga_x_kt_func,
 &xc_gga_x_n12_func,
 //&xc_gga_c_ft97_func,
-//&xc_hyb_gga_xc_wb97_func
+&xc_hyb_gga_xc_wb97_func
 };

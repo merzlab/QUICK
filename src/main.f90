@@ -30,7 +30,7 @@
 
     implicit none
 
-#ifdef MPI
+#ifdef MPIV
     include 'mpif.h'
 #endif
 
@@ -69,7 +69,7 @@
       ! check MPI setup and output info
       call check_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
       
-#ifdef MPI      
+#ifdef MPIV      
       if (bMPI) call print_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
 #endif
     
@@ -145,6 +145,11 @@
     !    ignore this part and go to opt part. We will get variationally determined Energy.
     !-----------------------------------------------------------------
 
+    !Form the exchange-correlation quadrature if DFT is requested
+    !if (quick_method%DFT) then
+    !    call form_dft_grid(quick_dft_grid) 
+    !endif
+
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
     if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
@@ -175,6 +180,11 @@
     call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 #endif
 
+    !Form the exchange-correlation quadrature if DFT is requested
+    !if (quick_method%DFT) then
+    !    call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
+    !endif
+
     call cpu_time(timer_end%TIniGuess)
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         call getEnergy(failed)
@@ -199,10 +209,10 @@
 
 
     !------------------------------------------------------------------
-    ! 6. Other job option
+    ! 6. Other job options
     !-----------------------------------------------------------------
     
-    ! 6.a PB Solvant Model
+    ! 6.a PB Solvent Model
     ! 11/03/2010 Blocked by Yiao Miao
 !   if (PBSOL) then
 !       call initialize_DivPBVars()
@@ -212,13 +222,13 @@
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
         if(.not. quick_method%DIVCON) then
-#ifdef MPI
+#ifdef MPIV
            if (bMPI) then
              call mpi_calmp2    ! MPI-MP2
            else
 #endif
              call calmp2()      ! none-MPI MP2
-#ifdef MPI
+#ifdef MPIV
            endif
 #endif
         else

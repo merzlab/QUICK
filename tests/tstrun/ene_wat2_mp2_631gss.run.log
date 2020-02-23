@@ -1,7 +1,0 @@
-FILE:         gpu.cu, LINE:   31 DATE: Apr  6 2019 TIME:15:33:38 DEBUG : BEGIN TO WARM UP. 
-FILE:         gpu.cu, LINE:   36 DATE: Apr  6 2019 TIME:15:33:38 DEBUG : CREATE NEW GPU. 
-using gpu: -1
- gpu_device_id=          -1
-FILE:         gpu.cu, LINE:   46 DATE: Apr  6 2019 TIME:15:33:38 DEBUG : BEGIN TO INIT. 
-cudaGetDeviceCount gpu_init failed!: no CUDA-capable device is detected in gpu.cu at line 53
-NO CUDA-Enabled GPU FOUND.

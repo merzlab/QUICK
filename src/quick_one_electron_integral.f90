@@ -1702,7 +1702,7 @@ subroutine get1e(oneElecO)
    implicit double precision(a-h,o-z)
    double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -1713,7 +1713,7 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-#ifdef MPI
+#ifdef MPIV
    if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
 #endif
 
@@ -1751,7 +1751,7 @@ subroutine get1e(oneElecO)
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
       endif
-#ifdef MPI
+#ifdef MPIV
    else
 
       !------- MPI/ ALL NODES -------------------

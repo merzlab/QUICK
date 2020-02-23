@@ -891,7 +891,7 @@ __device__ __forceinline__ void iclass_grad_spdf8
     
     
 #ifdef DEBUG
-    printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
+    //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
 #endif    
     
     GRADADD(devSim.gradULL[AStart], AGradx);

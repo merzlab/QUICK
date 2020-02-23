@@ -395,7 +395,7 @@ subroutine hfoperatordc(oneElecO)
 end subroutine hfoperatordc
 
 
-#ifdef MPI
+#ifdef MPIV
 
 !*******************************************************
 ! mpi_hfoperator

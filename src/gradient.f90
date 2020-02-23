@@ -29,7 +29,7 @@ subroutine gradient(failed)
    logical :: failed
    character(len=1) cartsym(3)
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -132,7 +132,7 @@ subroutine scf_gradient
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-#ifdef MPI
+#ifdef MPIV
    double precision:: temp_grad(3*natom)
    include "mpif.h"
 #endif
@@ -168,7 +168,7 @@ subroutine scf_gradient
    timer_cumer%TNucGrad = timer_cumer%TNucGrad + timer_end%TNucGrad-timer_begin%TNucGrad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPI
+#ifdef MPIV
 if(master) then
 #endif
         write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
@@ -178,7 +178,7 @@ if(master) then
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
-#ifdef MPI
+#ifdef MPIV
 endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
@@ -191,7 +191,7 @@ endif
    call get_kinetic_grad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPI
+#ifdef MPIV
 if(master) then
 #endif
         write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
@@ -201,7 +201,7 @@ if(master) then
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
-#ifdef MPI
+#ifdef MPIV
 endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
@@ -211,7 +211,7 @@ endif
 !     the density matrix element ij.
 !---------------------------------------------------------------------
 
-#ifdef MPI
+#ifdef MPIV
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
    else
@@ -232,12 +232,12 @@ endif
       enddo
    enddo
 
-#ifdef MPI
+#ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPI
+#ifdef MPIV
 if(master) then
 #endif
         write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
@@ -247,7 +247,7 @@ if(master) then
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
-#ifdef MPI
+#ifdef MPIV
 endif
 #endif
 
@@ -270,11 +270,11 @@ endif
 !---------------------------------------------------------------------
 
    if (quick_method%DFT) then
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
    ! implement exc grad timer here
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -286,11 +286,11 @@ endif
       call cpu_time(timer_end%TExGrad)
       timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
    ! implement exc grad timer here
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -300,7 +300,7 @@ endif
    call cpu_time(timer_end%TGrad)
    timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
-#ifdef MPI
+#ifdef MPIV
 !  slave node will send infos
    if(.not.master) then
       do i=1,natom*3
@@ -322,7 +322,7 @@ endif
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPI
+#ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
@@ -330,13 +330,13 @@ if(master) then
         do Iatm=1,natom*3
                 write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
         enddo
-#ifdef MPI
+#ifdef MPIV
 endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPI
+#ifdef MPIV
 if(master) then
 #endif
 if(quick_method%extCharges) then
@@ -345,7 +345,7 @@ if(quick_method%extCharges) then
                 write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
         enddo
 endif
-#ifdef MPI
+#ifdef MPIV
 endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
@@ -445,7 +445,7 @@ subroutine get_kinetic_grad
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    logical :: ijcon
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -467,7 +467,7 @@ subroutine get_kinetic_grad
 
 !write(*,*) "get_nuclear_repulsion_grad: Calculating HOLD array"
 
-#ifdef MPI
+#ifdef MPIV
    if (master) then
 #endif
    do I=1,nbasis
@@ -479,7 +479,7 @@ subroutine get_kinetic_grad
          quick_scratch%hold(J,I) = 2.d0*HOLDJI
       enddo
    enddo
-#ifdef MPI
+#ifdef MPIV
    endif
    call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
@@ -506,7 +506,7 @@ subroutine get_kinetic_grad
 !  - i ((x-XA)^(i-1) (y-YA)^j (z-ZA)^k e^(-ar^2))
 
 !  Note that the negative on the final term comes from the form of (x-XA).
-#ifdef MPI
+#ifdef MPIV
    if (bMPI) then
       nbasis_mpi = mpi_nbasisn(mpirank)
    else
@@ -543,7 +543,7 @@ subroutine get_kinetic_grad
          enddo
       enddo
 
-#ifdef MPI
+#ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
@@ -559,7 +559,7 @@ subroutine get_electron_replusion_grad
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -598,7 +598,7 @@ subroutine get_electron_replusion_grad
    else
 #endif
 
-#ifdef MPI
+#ifdef MPIV
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
    else
@@ -640,7 +640,7 @@ subroutine get_electron_replusion_grad
    endif
 #endif
 
-#ifdef MPI
+#ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
@@ -698,20 +698,74 @@ subroutine get_xc_grad
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
-#ifdef MPI
-   integer, dimension(0:mpisize-1) :: itotgridspn
-   integer, dimension(0:mpisize-1) :: igridptul
-   integer, dimension(0:mpisize-1) :: igridptll
+   
+   double precision, dimension(natom*50*194) :: init_grid_ptx, init_grid_pty, init_grid_ptz, arr_wtang, arr_rwt, arr_rad3
+   integer, dimension(natom*50*194) :: init_grid_atm
+
+#ifdef MPIV
+!   integer, dimension(0:mpisize-1) :: itotgridspn
+!   integer, dimension(0:mpisize-1) :: igridptul
+!   integer, dimension(0:mpisize-1) :: igridptll
    include "mpif.h"
 #endif
 
 #ifdef CUDA
+
+!   idx_grid=1
+!   itst=1
+!   do Iatm=1,natom
+!        Iradtemp=50
+!       do Irad = 1, Iradtemp 
+!         if(quick_method%iSG.eq.1)then
+!            call gridformnew(iatm,RGRID(Irad),iiangt)
+!            rad = radii(quick_molspec%iattype(iatm))
+!         else
+!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+!            rad = radii2(quick_molspec%iattype(iatm))
+!         endif
+!
+!         rad3 = rad*rad*rad
+!         do Iang=1,iiangt
+!
+!            init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
+!            init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
+!            init_grid_ptz(idx_grid)=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
+!            init_grid_atm(idx_grid)=Iatm
+!
+!            arr_wtang(idx_grid) = WTANG(Iang)
+!            arr_rwt(idx_grid) = RWT(Irad)
+!            arr_rad3(idx_grid) = rad3
+!
+!            sswt=SSW(init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),Iatm)
+!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
+!            write(*,*) idx_grid,init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt
+!            if (weight < quick_method%DMCutoff ) then
+!                continue
+!            else
+                !write(*,*) Iatm,Iang,idx_grid
+!                write(*,*) itst-1,"grid_ptx:",init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt,weight
+!                itst=itst+1
+!            endif
+!            idx_grid=idx_grid+1
+!         enddo
+!      enddo
+!   enddo
+
+!    write(*,*) "Surving grid pts: ", itst, quick_method%DMCutoff
+
    if(quick_method%bCUDA) then
-      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-      quick_qm_struct%vec,quick_qm_struct%dense)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-      call gpu_getxc_grad(quick_method%isg,quick_qm_struct%gradient,sigrad2,quick_method%nof_functionals, &
-      quick_method%functional_id,quick_method%xc_polarization)
+
+      call gpu_upload_density_matrix(quick_qm_struct%dense)
+
+      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
+      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+
+      call gpu_xcgrad_new_imp(quick_qm_struct%gradient)
+
+      call gpu_delete_dft_grid()
+
    endif
 #else
 
@@ -729,72 +783,96 @@ subroutine get_xc_grad
    endif
 
 !  Generate the grid
-   do Iatm=1,natom
-      if(quick_method%iSG.eq.1)then
-         Iradtemp=50
-      else
-         if(quick_molspec%iattype(iatm).le.10)then
-            Iradtemp=23
-         else
-            Iradtemp=26
-         endif
-      endif
+!   do Iatm=1,natom
+!      if(quick_method%iSG.eq.1)then
+!         Iradtemp=50
+!      else
+!         if(quick_molspec%iattype(iatm).le.10)then
+!            Iradtemp=23
+!         else
+!            Iradtemp=26
+!         endif
+!      endif
 
-#ifdef MPI
+#ifdef MPIV
 !  Distribute grid points among master and slaves
-   call setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)      
+!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
 #endif
 
-#ifdef MPI
+#ifdef MPIV
       if(bMPI) then
-         irad_init = igridptll(mpirank)
-         irad_end = igridptul(mpirank)
+         irad_init = quick_dft_grid%igridptll(mpirank+1)
+         irad_end = quick_dft_grid%igridptul(mpirank+1)
       else
          irad_init = 1
-         irad_end = Iradtemp
+         irad_end = quick_dft_grid%nbins
       endif
-      do Irad=irad_init, irad_end
+      do Ibin=irad_init, irad_end
 #else
-      do Irad = 1, Iradtemp
+      do Ibin=1, quick_dft_grid%nbins
 #endif
 
-         if(quick_method%iSG.eq.1)then
-            call gridformnew(iatm,RGRID(Irad),iiangt)
-            rad = radii(quick_molspec%iattype(iatm))
-         else
-            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-            rad = radii2(quick_molspec%iattype(iatm))
-         endif
+!         if(quick_method%iSG.eq.1)then
+!            call gridformnew(iatm,RGRID(Irad),iiangt)
+!            rad = radii(quick_molspec%iattype(iatm))
+!         else
+!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+!            rad = radii2(quick_molspec%iattype(iatm))
+!         endif
 
-         rad3 = rad*rad*rad
-         do Iang=1,iiangt
-            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
+!         rad3 = rad*rad*rad
+!         do Iang=1,iiangt
+!            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
+!            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
+!            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
 
 !  Calculate the weight of the grid point in the SSW scheme.  If
 !  the grid point has a zero weight, we can skip it.
 
-            sswt=SSW(gridx,gridy,gridz,Iatm)
-            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
+!    do Ibin=1, quick_dft_grid%nbins
+        Igp=quick_dft_grid%bin_counter(Ibin)+1
+
+        do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
+
+           gridx=quick_dft_grid%gridxb(Igp)
+           gridy=quick_dft_grid%gridyb(Igp)
+           gridz=quick_dft_grid%gridzb(Igp)
+
+           sswt=quick_dft_grid%gridb_sswt(Igp)
+           weight=quick_dft_grid%gridb_weight(Igp)
+           Iatm=quick_dft_grid%gridb_atm(Igp)
+
+!            sswt=SSW(gridx,gridy,gridz,Iatm)
+!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
             
             if (weight < quick_method%DMCutoff ) then
                continue
             else
-               do Ibas=1,nbasis
-                  call pteval(gridx,gridy,gridz,phi,dphidx,dphidy, &
-                  dphidz,Ibas)
+
+               icount=quick_dft_grid%basf_counter(Ibin)+1
+               do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+                  Ibas=quick_dft_grid%basf(icount)+1
+
+                  call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                  dphidz,Ibas,icount)
+
                   phixiao(Ibas)=phi
                   dphidxxiao(Ibas)=dphidx
                   dphidyxiao(Ibas)=dphidy
                   dphidzxiao(Ibas)=dphidz
+
+                  icount=icount+1
                enddo
+
+               
+
 !  evaluate the densities at the grid point and the gradient at that grid point            
-               call denspt(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
-               gbx,gby,gbz)
+               call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+               gbx,gby,gbz,Ibin)
 
                if (density < quick_method%DMCutoff ) then
                   continue
+
                else
 !  This allows the calculation of the derivative of the functional
 !  with regard to the density (dfdr), with regard to the alpha-alpha
@@ -865,26 +943,40 @@ subroutine get_xc_grad
 
 ! Now loop over basis functions and compute the addition to the matrix
 ! element.
-                  do Ibas=1,nbasis
+                  icount=quick_dft_grid%basf_counter(Ibin)+1
+                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+                     Ibas=quick_dft_grid%basf(icount)+1
+
                      phi=phixiao(Ibas)
                      dphidx=dphidxxiao(Ibas)
                      dphidy=dphidyxiao(Ibas)
                      dphidz=dphidzxiao(Ibas)
+
+                     !call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                     !dphidz,Ibas,icount)
+
 
                      quicktest = DABS(dphidx+dphidy+dphidz+phi)
                      
                      if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
-                        call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
-                        dydy,dydz,dzdz,Ibas)
+                        call pt2der_new_imp(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
+                        dydy,dydz,dzdz,Ibas,icount)
+
                         Ibasstart=(quick_basis%ncenter(Ibas)-1)*3
 
-                        do Jbas=1,nbasis
+                        jcount=quick_dft_grid%basf_counter(Ibin)+1
+                        do while(jcount<quick_dft_grid%basf_counter(Ibin+1)+1)
+                           Jbas = quick_dft_grid%basf(jcount)+1 
+
                            phi2=phixiao(Jbas)
                            dphi2dx=dphidxxiao(Jbas)
                            dphi2dy=dphidyxiao(Jbas)
                            dphi2dz=dphidzxiao(Jbas)
+
+                           !call pteval_new_imp(gridx,gridy,gridz,phi2,dphi2dx,dphi2dy, &
+                           !dphi2dz,Jbas,jcount)
 
                            quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
                            2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
@@ -904,9 +996,13 @@ subroutine get_xc_grad
                            + xdot*(dxdz*phi2+dphidz*dphi2dx) &
                            + ydot*(dydz*phi2+dphidz*dphi2dy) &
                            + zdot*(dzdz*phi2+dphidz*dphi2dz))
+                           jcount=jcount+1
                         enddo
                      endif
+
+                  icount=icount+1
                   enddo
+
 !  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
 !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
 !  the density and the weight are not zero. Now check to see fi the weight is one. If it isn't, we need to
@@ -920,7 +1016,9 @@ subroutine get_xc_grad
                   endif
                endif
             endif
-         enddo
+!         enddo
+
+      Igp=Igp+1
       enddo
    enddo
 

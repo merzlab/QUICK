@@ -19,7 +19,7 @@ subroutine optimize(failed)
    integer IMCSRCH,nstor,ndiis
    double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
    double precision EChg
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -255,7 +255,7 @@ subroutine optimize(failed)
          georms = (georms/dble(natom*3))**.5d0
 
          if (i.gt.1) then
-            Write (ioutfile,'(" OPTIMZATION STATISTICS:")')
+            Write (ioutfile,'(" OPTIMIZATION STATISTICS:")')
             Write (ioutfile,'(" ENERGY CHANGE           =",E20.10," (REQUEST=",E12.5")")') quick_qm_struct%Etot-Elast, &
                                                                                         quick_method%EChange
             Write (ioutfile,'(" MAXIMUM GEOMETRY CHANGE =",E20.10," (REQUEST=",E12.5")")') geomax,quick_method%geoMaxCrt
@@ -275,7 +275,7 @@ subroutine optimize(failed)
             done = quick_method%gradMaxCrt.gt.gradmax
             done = done.and.quick_method%gNormCrt.gt.gradnorm
             if (done) then
-               Write (ioutfile,'(" NO SIGNAFICANT CHANGE, NO NEED TO OPTIMIZE. USE INITIAL GEOMETRY.")')
+               Write (ioutfile,'(" NO SIGNIFICANT CHANGE, NO NEED TO OPTIMIZE. USE INITIAL GEOMETRY.")')
                do j=1,natom
                   do k=1,3
                      xyz(k,j)=coordsold((j-1)*3+K)
@@ -292,9 +292,16 @@ subroutine optimize(failed)
          if (quick_method%readdmx) call wrtrestart
       endif
 
+      !For DFT geometry optimization, we should delete the grid variables here and 
+      !reinitiate them in getEnergy method. 
+      if (quick_method%DFT) then
+           if(I.le.quick_method%iopt.and..not.done) then
+                call deform_dft_grid(quick_dft_grid) 
+           endif
+      endif
 
       !-------------- END MPI/MASTER --------------------
-#ifdef MPI
+#ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
       if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
@@ -310,8 +317,8 @@ subroutine optimize(failed)
       if (done) then
          Write (ioutfile,'("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
       else
-         write (ioutfile,*) "WARNING: REACH MAX OPT CYCLE BUT CANNOT GET OPTIMIZED GEOMETRY"
-         write (ioutfile,*) "         BUT STILL OUTPUT THE GEOMETRY WE GET."
+         write (ioutfile,*) "WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED."
+         write (ioutfile,*) "         PRINTING THE GEOMETRY FROM LAST STEP."
          Write (ioutfile,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")')
       endif
       write (ioutfile,*)

@@ -28,14 +28,14 @@ subroutine scf_operator(oneElecO, deltaO)
    use allmod
    implicit none
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
    double precision oneElecO(nbasis,nbasis)
    logical :: deltaO
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-#ifdef MPI
+#ifdef MPIV
    integer ierror
    double precision,allocatable:: temp2d(:,:)
    allocate(temp2d(nbasis,nbasis))
@@ -44,7 +44,7 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Step 1. evaluate 1e integrals
 !-----------------------------------------------------------------
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
 
@@ -57,7 +57,7 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Sum the ECP integrals to the partial Fock matrix
    if (quick_method%ecp) call ecpoperator()
 
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -76,16 +76,16 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Delta density matrix cutoff
    call densityCutoff()
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
 !  Start the timer for 2e-integrals
    call cpu_time(timer_begin%T2e)
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
-#ifdef MPI
+#ifdef MPIV
 !  Reset the operator value for slave nodes.
    if (.not.master) then
       do i=1,nbasis
@@ -143,7 +143,7 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#ifdef MPI
+#ifdef MPIV
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -167,7 +167,7 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
    endif
 
-#ifdef MPI
+#ifdef MPIV
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 !  After evaluation of 2e integrals, we can communicate every node so
 !  that we can sum all integrals. slave node will send infos.
@@ -197,7 +197,7 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 !  recover density if calculate difference
    if (deltaO) call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
 
-#ifdef MPI
+#ifdef MPIV
    if (master) then
 #endif
 !  Remember the operator is symmetric
@@ -211,7 +211,7 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 !  add the time to cumer
    timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -222,12 +222,12 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    if (quick_method%DFT) then
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
 !  Start the timer for exchange correlation calculation
       call cpu_time(timer_begin%TEx)
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -237,7 +237,7 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 !  Remember the operator is symmetric
       call copySym(quick_qm_struct%o,nbasis)
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
 
@@ -246,9 +246,10 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 !  Add time total time
       timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
+      write(*,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
    endif
 
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
 
@@ -284,7 +285,7 @@ subroutine get_xc
    use xc_f90_lib_m
    implicit double precision(a-h,o-z)
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -298,11 +299,11 @@ subroutine get_xc
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info   
-#ifdef MPI
-   double precision,allocatable:: temp2d(:,:)
-   integer, dimension(0:mpisize-1) :: itotgridspn
-   integer, dimension(0:mpisize-1) :: igridptul
-   integer, dimension(0:mpisize-1) :: igridptll
+#ifdef MPIV
+   double precision, allocatable:: temp2d(:,:)
+!   integer, dimension(0:mpisize-1) :: itotgridspn
+!   integer, dimension(0:mpisize-1) :: igridptul
+!   integer, dimension(0:mpisize-1) :: igridptll
    integer :: ierror
    double precision :: Eelxc, Eelxcslave
    allocate(temp2d(nbasis,nbasis))
@@ -316,7 +317,7 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
-#ifdef MPI
+#ifdef MPIV
 !  Set the values of slave operators to zero
    if (.not.master) then
       call zeroMatrix(quick_qm_struct%o, nbasis)
@@ -326,13 +327,28 @@ subroutine get_xc
 #endif
 
 #ifdef CUDA
+
    if(quick_method%bCUDA) then
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
             quick_qm_struct%vec,quick_qm_struct%dense)
-      call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
-            quick_qm_struct%aelec, quick_qm_struct%belec, &
-            quick_qm_struct%o, quick_method%nof_functionals, &
-            quick_method%functional_id,quick_method%xc_polarization)
+
+!      call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
+!            quick_qm_struct%aelec, quick_qm_struct%belec, &
+!            quick_qm_struct%o, quick_method%nof_functionals, &
+!            quick_method%functional_id,quick_method%xc_polarization)
+
+!      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
+!      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
+!      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
+!      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+
+      write(*,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+
+      call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+      quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
+
+!      call gpu_delete_dft_grid()
+
    endif
 #else
 
@@ -350,70 +366,94 @@ subroutine get_xc
    endif
 
 !  Form the quadrature
-   do Iatm=1,natom
-      if(quick_method%ISG.eq.1)then
-         Iradtemp=50
-      else
-         if(quick_molspec%iattype(iatm).le.10)then
-            Iradtemp=23
-         else
-            Iradtemp=26
-         endif
-      endif
+!   do Iatm=1,natom
+!      if(quick_method%ISG.eq.1)then
+!         Iradtemp=50
+!      else
+!         if(quick_molspec%iattype(iatm).le.10)then
+!            Iradtemp=23
+!         else
+!            Iradtemp=26
+!         endif
+!      endif
 
-#ifdef MPI
+#ifdef MPIV
 !  Distribute grid points among master and slaves
-   call setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
+!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
 #endif
 
-#ifdef MPI
+#ifdef MPIV
       if(bMPI) then
-         irad_init = igridptll(mpirank)
-         irad_end = igridptul(mpirank)
+         irad_init = quick_dft_grid%igridptll(mpirank+1)
+         irad_end = quick_dft_grid%igridptul(mpirank+1)
       else
          irad_init = 1
-         irad_end = Iradtemp
+         irad_end = quick_dft_grid%nbins
       endif
-      do Irad=irad_init, irad_end
+!      do Irad=irad_init, irad_end
+   do Ibin=irad_init, irad_end
+   
 #else
-      do Irad=1,Iradtemp
+!      do Irad=1,Iradtemp
+    do Ibin=1, quick_dft_grid%nbins
 #endif
-         if(quick_method%ISG.eq.1)then
-            call gridformnew(iatm,RGRID(Irad),iiangt)
-            rad = radii(quick_molspec%iattype(iatm))
-         else
-            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-            rad = radii2(quick_molspec%iattype(iatm))
-         endif
+!         if(quick_method%ISG.eq.1)then
+!            call gridformnew(iatm,RGRID(Irad),iiangt)
+!            rad = radii(quick_molspec%iattype(iatm))
+!         else
+!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+!            rad = radii2(quick_molspec%iattype(iatm))
+!         endif
 
-         rad3 = rad*rad*rad
-         do Iang=1,iiangt
-            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
+!         rad3 = rad*rad*rad
+!         do Iang=1,iiangt
+!            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
+!            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
+!            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
 
 !  Next, calculate the weight of the grid point in the SSW scheme.
 !  if the grid point has a zero weight, we can skip it.
 
-            weight=SSW(gridx,gridy,gridz,Iatm)*WTANG(Iang)*RWT(Irad)*rad3
+!            weight=SSW(gridx,gridy,gridz,Iatm)*WTANG(Iang)*RWT(Irad)*rad3
+
+!    do Ibin=1, quick_dft_grid%nbins
+        Igp=quick_dft_grid%bin_counter(Ibin)+1
+
+        do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
+
+           gridx=quick_dft_grid%gridxb(Igp)
+           gridy=quick_dft_grid%gridyb(Igp)
+           gridz=quick_dft_grid%gridzb(Igp)
+
+           sswt=quick_dft_grid%gridb_sswt(Igp)
+           weight=quick_dft_grid%gridb_weight(Igp)
+           Iatm=quick_dft_grid%gridb_atm(Igp)
+
             if (weight < quick_method%DMCutoff ) then
                continue
             else
 
-               do Ibas=1,nbasis
+               icount=quick_dft_grid%basf_counter(Ibin)+1
+               do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+               Ibas=quick_dft_grid%basf(icount)+1
                   call pteval(gridx,gridy,gridz,phi,dphidx,dphidy, &
                   dphidz,Ibas)
                   phixiao(Ibas)=phi
                   dphidxxiao(Ibas)=dphidx
                   dphidyxiao(Ibas)=dphidy
                   dphidzxiao(Ibas)=dphidz
+
+                  icount=icount+1
                enddo
 
 !  Next, evaluate the densities at the grid point and the gradient
 !  at that grid point.
 
-               call denspt(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
-               gbx,gby,gbz)
+!               call denspt(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+!               gbx,gby,gbz)
+
+               call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+               gbx,gby,gbz,Ibin)
 
                if (density < quick_method%DMCutoff ) then
                   continue
@@ -494,7 +534,11 @@ subroutine get_xc
                   quick_qm_struct%belec = weight*densityb+quick_qm_struct%belec
 
 !  Now loop over basis functions and compute the addition to the matrix element.
-                  do Ibas=1,nbasis
+!                  do Ibas=1,nbasis
+                  icount=quick_dft_grid%basf_counter(Ibin)+1
+                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+                  Ibas=quick_dft_grid%basf(icount)+1
+
                      phi=phixiao(Ibas)
                      dphidx=dphidxxiao(Ibas)
                      dphidy=dphidyxiao(Ibas)
@@ -504,7 +548,10 @@ subroutine get_xc
                      if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
-                        do Jbas=Ibas,nbasis
+                        jcount=icount
+                        do while(jcount<quick_dft_grid%basf_counter(Ibin+1)+1)
+                        Jbas = quick_dft_grid%basf(jcount)+1
+                        !do Jbas=Ibas,nbasis
                            phi2=phixiao(Jbas)
                            dphi2dx=dphidxxiao(Jbas)
                            dphi2dy=dphidyxiao(Jbas)
@@ -515,12 +562,16 @@ subroutine get_xc
                            tempgz = phi*dphi2dz + phi2*dphidz
                            quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+(temp*dfdr+&
                            xdot*tempgx+ydot*tempgy+zdot*tempgz)*weight
+                           jcount=jcount+1
                         enddo
                      endif
+                     icount=icount+1
                   enddo
                endif
             endif
-         enddo
+         !enddo
+
+         Igp=Igp+1
       enddo
    enddo
 
@@ -532,7 +583,7 @@ subroutine get_xc
    endif
 #endif
 
-#ifdef MPI
+#ifdef MPIV
    if(.not. master) then
 !  Send the Exc energy value
       Eelxcslave=Eelxc
@@ -559,7 +610,7 @@ subroutine get_xc
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
-#ifdef MPI
+#ifdef MPIV
    if(master) then
 #endif
 !  Add the exchange correlation energy to total electronic energy
@@ -569,9 +620,12 @@ subroutine get_xc
       write(*,*) "Eelex=",Eelxc
       write(*,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
 !   endif
-#ifdef MPI
+#ifdef MPIV
    endif
 #endif
+
+!   call exit
+  
    return
 
 end subroutine get_xc

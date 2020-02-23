@@ -36,6 +36,7 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
 
 		break;
         case(XC_FAMILY_GGA):
+	case(XC_FAMILY_HYB_GGA):
 	//	switch(p->info->kind){
 	//		case(XC_EXCHANGE):
 	if(GPU_DEBUG){

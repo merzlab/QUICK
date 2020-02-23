@@ -151,7 +151,7 @@ module quick_calculated_module
    interface dealloc
       module procedure deallocate_quick_qm_struct
    end interface dealloc
-#ifdef MPI
+#ifdef MPIV
    interface broadcast
       module procedure broadcast_quick_qm_struct
    end interface broadcast
@@ -366,7 +366,7 @@ contains
 
    end subroutine
 
-#ifdef MPI
+#ifdef MPIV
    !-------------------
    ! broadcast variable list
    !-------------------

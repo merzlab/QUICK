@@ -160,6 +160,7 @@ typedef struct {
 
 typedef struct {
   double c_x[5], c_ss[5], c_ab[5];
+  double cam_omega;
 } gga_xc_wb97_params;
 
 typedef struct {

@@ -134,7 +134,7 @@ module quick_method_module
         module procedure read_quick_method
     end interface read
 
-#ifdef MPI    
+#ifdef MPIV    
     interface broadcast
         module procedure broadcast_quick_method
     end interface Broadcast
@@ -149,7 +149,7 @@ module quick_method_module
     end interface check
     
     contains
-#ifdef MPI        
+#ifdef MPIV        
         !------------------------
         ! Broadcast quick_method
         !------------------------
@@ -775,7 +775,7 @@ endif
            implicit none
            character(len=200) :: f_keywd
            type(quick_method_type) self
-           integer :: f_id, nof_f 
+           integer :: f_id, nof_f, istart, iend, imid, f_nlen, usf1_nlen, usf2_nlen 
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
            double precision :: x_hyb_coeff
@@ -786,14 +786,36 @@ endif
         !by looking at the functional name (eg: PBE0) in libxc manual and 
         !using xc_f90_functional_get_number() function in libxc library.
 
+        imid=0
+        if (index(f_keywd,'LIBXC=') /= 0) then
+           istart = index(f_keywd,'LIBXC=')
+           call rdword(f_keywd,istart,iend)
+           imid=index(f_keywd(istart+6:iend),',')
+
+           if(imid>0) then
+              usf1_nlen=imid-1              
+              usf2_nlen = iend-(istart+6+usf1_nlen)
+           else
+              usf1_nlen=iend-(istart+6)+1
+           endif
+           write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+        endif
+
         nof_f=0
         do f_id=0,1000
            call xc_f90_functional_get_name(f_id,functional_name)
            if((index(functional_name,'unknown') .eq. 0) &
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
+                f_nlen=len(trim(functional_name))
+
                 call upcase(functional_name,200) 
-                if(index(f_keywd,trim(functional_name)) .ne. 0) then 
+                
+                if((index(f_keywd,trim(functional_name)) .ne. 0) .and. ((usf1_nlen .eq. f_nlen) & 
+                .or. (usf2_nlen .eq. f_nlen))) then 
+
+                        write(*,*) "Length of functional name:", f_nlen
+
                         nof_f=nof_f+1
                         if(self%xc_polarization > 0) then
                                 call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)

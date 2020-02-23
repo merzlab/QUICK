@@ -578,7 +578,7 @@ subroutine uelectdiis(jscf,PRMS)
 
       if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
          write (ioutfile,' &
-               & ("PREPARED FOR FINAL NO INTERPOLATION ITERATION")')
+               & ("PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
          elseif(OLDPRMS <= PRMS) then
          write (ioutfile,' &

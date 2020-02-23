@@ -560,11 +560,11 @@ subroutine get_sigrad
    use allmod
    implicit double precision(a-h,o-z)
    
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
-   write (iOutFile,'(/"RADII OF SIGNifIGANCE FOR THE BASIS FUNCTIONS")')
+   write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
 
    do Ibas=1,nbasis
 
@@ -952,10 +952,10 @@ write(*,*) "E0=",quick_qm_struct%Eel
      if(quick_method%bCUDA) then
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
                              quick_qm_struct%vec,quick_qm_struct%dense)
-        call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
-                             quick_qm_struct%aelec, quick_qm_struct%belec, &
-                             quick_qm_struct%o, quick_method%nof_functionals, &
-                             quick_method%functional_id, quick_method%xc_polarization)
+!        call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
+!                             quick_qm_struct%aelec, quick_qm_struct%belec, &
+!                             quick_qm_struct%o, quick_method%nof_functionals, &
+!                             quick_method%functional_id, quick_method%xc_polarization)
      endif
 #else
 

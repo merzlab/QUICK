@@ -35,8 +35,8 @@ else
   FOR=$(FC) -c -I. -I$(objfolder) -J$(objfolder)
 endif
 
-CCC = $(CC) -c -I. -O2 -g
-CUDACC = $(CUDAC) -c -I. -O2 -g
+CCC = $(CC) -c -I. -O2 
+CUDACC = $(CUDAC) -c -I. -O2 
  
 #----------------------
 # quick modules and object files

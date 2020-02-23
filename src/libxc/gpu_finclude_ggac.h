@@ -39,4 +39,4 @@
 #include "maple2c/gga_x_kt.c"
 #include "maple2c/gga_x_n12.c"
 //#include "maple2c/gga_c_ft97.c"
-//#include "maple2c/hyb_gga_xc_wb97.c"
+#include "maple2c/hyb_gga_xc_wb97.c"

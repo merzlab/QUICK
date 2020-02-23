@@ -1,5 +1,5 @@
 #include "config.h"
-#ifdef MPI
+#ifdef MPIV
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup MPI environment
 ! Yipu Miao 08/03/2010
@@ -336,31 +336,106 @@
     
     end subroutine MPI_setup_hfoperator
 
- subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
+! subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
 !-----------------------------------------------------------------------------
 !  This subroutine sets the mpi environment required for exchange correlation 
 !  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
 !  Madu Manathunga 08/15/2019
 !-----------------------------------------------------------------------------
+!   use allmod
+!   implicit double precision(a-h,o-z)
+
+!   integer, dimension(0:mpisize-1) :: itotgridspn
+!   integer, dimension(0:mpisize-1) :: igridptul
+!   integer, dimension(0:mpisize-1) :: igridptll
+
+!   include 'mpif.h'
+
+!   if(master) then
+!      do impi=0, mpisize-1
+!         itotgridspn(impi)=0
+!         igridptul(impi)=0
+!         igridptll(impi)=0
+!      enddo
+!
+!      itmpgriddist=Iradtemp
+!      do while(itmpgriddist .gt. 1)
+!         do impi=0, mpisize-1
+!            itotgridspn(impi)=itotgridspn(impi)+1
+!            itmpgriddist=itmpgriddist-1
+!            if (itmpgriddist .lt. 1) exit
+!         enddo
+!      enddo
+!
+!      itmpgridptul=0
+!      do impi=0, mpisize-1
+!         itmpgridptul=itmpgridptul+itotgridspn(impi)
+!         igridptul(impi)=itmpgridptul
+!         if(impi .eq. 0) then
+!            igridptll(impi)=1
+!         else
+!            igridptll(impi)=igridptul(impi-1)+1
+!         endif
+!      enddo
+!   endif
+
+!   if(bMPI) then
+
+!      call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!   endif      
+
+!   return
+! end subroutine setup_xc_mpi 
+
+ subroutine setup_xc_mpi_1
    use allmod
    implicit double precision(a-h,o-z)
 
-   integer, dimension(0:mpisize-1) :: itotgridspn
-   integer, dimension(0:mpisize-1) :: igridptul
-   integer, dimension(0:mpisize-1) :: igridptll
-
    include 'mpif.h'
 
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridb_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+ 
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+ end subroutine setup_xc_mpi_1
+
+ subroutine setup_xc_mpi_new_imp
+!-----------------------------------------------------------------------------
+!  This subroutine sets the mpi environment required for exchange correlation 
+!  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
+!  Madu Manathunga 01/03/2020
+!-----------------------------------------------------------------------------
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   integer, dimension(1:mpisize) :: itotgridspn
+!   integer, dimension(0:mpisize-1) :: igridptul
+!   integer, dimension(0:mpisize-1) :: igridptll
+
+   include 'mpif.h'
+ 
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
    if(master) then
-      do impi=0, mpisize-1
+      do impi=1, mpisize
          itotgridspn(impi)=0
-         igridptul(impi)=0
-         igridptll(impi)=0
+         quick_dft_grid%igridptul(impi)=0
+         quick_dft_grid%igridptll(impi)=0
       enddo
 
-      itmpgriddist=Iradtemp
-      do while(itmpgriddist .gt. 1)
-         do impi=0, mpisize-1
+      itmpgriddist=quick_dft_grid%nbins
+      do while(itmpgriddist .gt. 0)
+         do impi=1, mpisize
             itotgridspn(impi)=itotgridspn(impi)+1
             itmpgriddist=itmpgriddist-1
             if (itmpgriddist .lt. 1) exit
@@ -368,29 +443,154 @@
       enddo
 
       itmpgridptul=0
-      do impi=0, mpisize-1
+      do impi=1, mpisize
          itmpgridptul=itmpgridptul+itotgridspn(impi)
-         igridptul(impi)=itmpgridptul
-         if(impi .eq. 0) then
-            igridptll(impi)=1
+         quick_dft_grid%igridptul(impi)=itmpgridptul
+         if(impi .eq. 1) then
+            quick_dft_grid%igridptll(impi)=1
          else
-            igridptll(impi)=igridptul(impi-1)+1
+            quick_dft_grid%igridptll(impi)=quick_dft_grid%igridptul(impi-1)+1
          endif
       enddo
+
    endif
 
    if(bMPI) then
 
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
       call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-   endif      
+      !call
+      !MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call
+      !MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call
+      !MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_dft_grid%gridb_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      call MPI_BCAST(quick_dft_grid%primf,quick_dft_grid%nbtotpf,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridxb,quick_dft_grid%gridb_count,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridyb,quick_dft_grid%gridb_count,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridzb,quick_dft_grid%gridb_count,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridb_sswt,quick_dft_grid%gridb_count,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridb_weight,quick_dft_grid%gridb_count,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%gridb_atm,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+   endif
 
    return
- end subroutine setup_xc_mpi 
+ end subroutine setup_xc_mpi_new_imp
+
+   subroutine setup_ssw_mpi
+
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   integer, dimension(1:mpisize) :: itotgridspn
+   include 'mpif.h'
+   
+   if(master) then
+
+      do impi=1, mpisize
+         itotgridspn(impi)=0
+         quick_dft_grid%igridptul(impi)=0
+         quick_dft_grid%igridptll(impi)=0
+      enddo
+
+      itmpgriddist=quick_xcg_tmp%idx_grid
+
+      do while(itmpgriddist .gt. 0)
+         do impi=1, mpisize
+            itotgridspn(impi)=itotgridspn(impi)+1
+            itmpgriddist=itmpgriddist-1
+            if (itmpgriddist .lt. 1) exit
+         enddo
+      enddo
+
+      itmpgridptul=0
+      do impi=1, mpisize
+         itmpgridptul=itmpgridptul+itotgridspn(impi)
+         quick_dft_grid%igridptul(impi)=itmpgridptul
+         if(impi .eq. 1) then
+            quick_dft_grid%igridptll(impi)=1
+         else
+            quick_dft_grid%igridptll(impi)=quick_dft_grid%igridptul(impi-1)+1
+         endif
+      enddo
+
+   endif  
+
+   if(bMPI) then
+
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+      call MPI_BCAST(quick_xcg_tmp%idx_grid, 1, mpi_integer, 0, MPI_COMM_WORLD,mpierror)      
+      call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_ptx,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_pty,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_ptz,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_atm,quick_xcg_tmp%idx_grid,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%tmp_sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%tmp_weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_wtang,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_rwt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_rad3,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+   !if(.not. master) then
+   !   do idx=1, quick_xcg_tmp%idx_grid
+   !      write(*,*) "ssw bounds:",quick_xcg_tmp%init_grid_ptx(idx),quick_xcg_tmp%init_grid_pty(idx), &
+   !      quick_xcg_tmp%init_grid_ptz(idx), quick_xcg_tmp%init_grid_atm(idx)
+   !   enddo
+   !endif
+
+call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   endif 
+
+   end subroutine setup_ssw_mpi
+
+   subroutine get_mpi_ssw
+
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   include 'mpif.h'
+
+   if(.not. master) then
+      call MPI_SEND(quick_xcg_tmp%sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(quick_xcg_tmp%weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+   else
+
+      do i=1,mpisize-1
+         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_xcg_tmp%idx_grid,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+
+         do j=1,quick_xcg_tmp%idx_grid
+            quick_xcg_tmp%sswt(j)=quick_xcg_tmp%sswt(j)+quick_xcg_tmp%tmp_sswt(j)
+            quick_xcg_tmp%weight(j)=quick_xcg_tmp%weight(j)+quick_xcg_tmp%tmp_weight(j)
+         enddo
+      enddo
+
+   endif
+ 
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+  
+   end subroutine get_mpi_ssw
+
 #endif

@@ -47,7 +47,10 @@ subroutine deallocateall
     call  dealloc(quick_molspec)
     call  dealloc(quick_qm_struct)
     call  deallocate_calculated
-
+    
+    if (quick_method%DFT) then
+    call  deform_dft_grid(quick_dft_grid)
+    endif
 end subroutine deallocateall
 
 
@@ -72,12 +75,12 @@ subroutine finalize(io,status)
         if (status /=0) then
             call PrtDate(io,'Error Occured. Task Finished on:')
         else
-            call PrtDate(io,'Normal Terminatation. Task Finished on:')
+            call PrtDate(io,'Normal Termination. Task Finished on:')
         endif
     endif master_finalize
     !-------------------- End MPI/MASTER ---------------------------------
 
-#ifdef MPI    
+#ifdef MPIV    
     !-------------------- MPI/ALL NODES ----------------------------------
     if (bMPI) call MPI_FINALIZE(mpierror)
     !-------------------- End MPI/ALL NODES-------------------------------
@@ -99,7 +102,7 @@ subroutine quick_exit(io, status)
    integer io           ! close this unit if greater than zero
    integer status       ! exit status; 1-error 0-normal
 
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
@@ -107,7 +110,7 @@ subroutine quick_exit(io, status)
    
    if (status /= 0) then
       call flush(io)
-#ifdef MPI
+#ifdef MPIV
       call mpi_abort(MPI_COMM_WORLD, status, ierr)
    else
       call mpi_finalize(ierr)

@@ -111,9 +111,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
                          	//	printf("FILE: %s, LINE: %d, FUNCTION: %s gpu_work_gga_c is working.. \n", __FILE__, __LINE__, __func__);
                  		}
 
-                                if(GPU_DEBUG){
-                  //                     printf("FILE: %s, LINE: %d, FUNCTION: %s : Calling xc_gga_c_lyp_func.. \n", __FILE__, __LINE__, __func__);
-                                }			
+//                                if(GPU_DEBUG){
+//                                      printf("FILE: %s, LINE: %d, FUNCTION: %s : Calling xc_gga_c_lyp_func.. \n", __FILE__, __LINE__, __func__);
+//                                }			
 
 //				xc_gga_c_lyp_func(d_glinfo->d_maple2c_params, &r);
 

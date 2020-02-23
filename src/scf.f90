@@ -57,7 +57,7 @@ subroutine electdiis(jscf)
    use allmod
    implicit none
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -144,7 +144,7 @@ subroutine electdiis(jscf)
 
 !Madu Manathunga changed this conditional statement on 04/17/2019 and 
 !added mpi_setup_dftoperator.
-#ifdef MPI
+#ifdef MPIV
    !-------------- MPI / ALL NODE ---------------
    ! Setup MPI integral configuration
    if (bMPI) then
@@ -160,7 +160,21 @@ subroutine electdiis(jscf)
    ! and store them in oneElecO and fetch it every scf time.
    call get1e(oneElecO)
 
-#ifdef MPI
+#ifdef CUDA
+   if(quick_method%bCUDA) then
+
+      if (quick_method%DFT) then
+
+      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
+      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)        
+
+      endif
+   endif
+#endif
+
+#ifdef MPIV
    if (bMPI) then
       call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -624,7 +638,7 @@ subroutine electdiis(jscf)
 
       endif
 
-#ifdef MPI
+#ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -640,6 +654,15 @@ subroutine electdiis(jscf)
       if (quick_method%debug)  write(ioutfile,*) "after hf"
       if (quick_method%debug)  call debug_SCF(jscf)
    enddo
+
+#ifdef CUDA
+   if(quick_method%bCUDA) then
+      if (quick_method%DFT) then
+         call gpu_delete_dft_grid()
+      endif
+   endif
+#endif
+
    return
 end subroutine electdiis
 
@@ -667,7 +690,7 @@ subroutine electdiisdc(jscf,PRMS)
    double precision efermi(10),oneElecO(nbasis,nbasis)
    integer :: lsolerr = 0
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
@@ -718,7 +741,7 @@ subroutine electdiisdc(jscf,PRMS)
    jscf=0
    if (bMPI) TdcDiagMPI=0.0d0
 
-#ifdef MPI
+#ifdef MPIV
    ! Setup MPI integral configuration
    if (bMPI)   call MPI_setup_hfoperator
 #endif
@@ -735,7 +758,7 @@ subroutine electdiisdc(jscf,PRMS)
 
       call cpu_time(timer_begin%TOp)
       if (quick_method%HF) then
-#ifdef MPI
+#ifdef MPIV
          if (bMPI) then
             call MPI_hfoperatordc(oneElecO)
          else
@@ -816,7 +839,7 @@ subroutine electdiisdc(jscf,PRMS)
       endif
       !------ END MPI/MASTER ----------------------
 
-#ifdef MPI
+#ifdef MPIV
       !------ MPI/ALL NODES -----------------------
       ! Broadcast the new density and operator
       if (bMPI) then
@@ -839,7 +862,7 @@ subroutine electdiisdc(jscf,PRMS)
 
       Ttmp=0.0d0
 
-#ifdef MPI
+#ifdef MPIV
       do Ittt=1,mpi_dc_fragn(mpirank)
          itt=mpi_dc_frag(mpirank,ittt)   ! aimed fragment
 #else
@@ -934,7 +957,7 @@ subroutine electdiisdc(jscf,PRMS)
          deallocate(dcco)
       enddo
 
-#ifdef MPI
+#ifdef MPIV
       !--------------------------------------------
       ! Communicate with master nodes, send energy, density matrix and other infomation
       ! to master nodes. Master nodes will integrate them with its job to complete div-con
@@ -1087,7 +1110,7 @@ subroutine electdiisdc(jscf,PRMS)
       endif
       !-------- END MPI/MASTER----------------
 
-#ifdef MPI
+#ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)

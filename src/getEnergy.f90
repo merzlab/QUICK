@@ -17,11 +17,16 @@ subroutine getEnergy(failed)
    double precision, external :: rootSquare
    integer i,j
 
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
 
    logical :: failed
+
+    !Form the exchange-correlation quadrature if DFT is requested
+    if (quick_method%DFT) then
+        call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
+    endif
 
    if (master) then
       call PrtAct(ioutfile,"Begin Energy Calculation")
@@ -64,7 +69,7 @@ subroutine getEnergy(failed)
 
    endif
    ! Converge the density matrix.
-#ifdef MPI
+#ifdef MPIV
    !-------------- MPI / ALL NODES ----------------------------------
    if (bMPI) then
       call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

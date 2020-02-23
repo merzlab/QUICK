@@ -10,7 +10,7 @@ subroutine g2eshell
    use allmod
    implicit none
 
-#ifdef MPI
+#ifdef MPIV
    include 'mpif.h'
 #endif
 
@@ -75,7 +75,7 @@ subroutine g2eshell
    endif
 
 
-#ifdef MPI
+#ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -1925,7 +1925,7 @@ subroutine attrashellopt(IIsh,JJsh)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    double precision RA(3),RB(3),RP(3)
-#ifdef MPI
+#ifdef MPIV
    include "mpif.h"
 #endif
    ! Variables needed later:

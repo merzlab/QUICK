@@ -13,6 +13,8 @@
 #include "../config.h"
 #include <stdio.h>
 #include <cuda.h>
+#include "nvToolsExt.h"
+#include "../octree/gpack_common.h"
 
 #define PRINTMETHOD(mtd)\
 {\
@@ -182,12 +184,15 @@ static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
 
 
 // constant for grad
 static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
 static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
+
+//Launch parameters for octree based Exchange-Correlation part
+static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;
@@ -229,4 +234,5 @@ struct ERI_entry{
     int KL;
     QUICKDouble value;
 };
+
 #endif

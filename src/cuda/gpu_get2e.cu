@@ -298,7 +298,10 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
 void get2e(_gpu_type gpu)
 {
     // Part spd
+//    nvtxRangePushA("SCF 2e");
+
     QUICK_SAFE_CALL((get2e_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
@@ -323,19 +326,25 @@ void get2e(_gpu_type gpu)
         QUICK_SAFE_CALL((get2e_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
+
+//    cudaDeviceSynchronize();
+//    nvtxRangePop();
+
 }
 
 
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
-printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim_dft.method \n", __FILE__, __LINE__, __func__);
     QUICK_SAFE_CALL((getAddInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(bufferSize, aoint_buffer)));
 }
 
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
 {
+
+//   nvtxRangePushA("Gradient 2e");
+
    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
@@ -347,6 +356,10 @@ void getGrad(_gpu_type gpu)
         //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
     }
+
+//    cudaDeviceSynchronize();
+//    nvtxRangePop();
+
 }
 
 
