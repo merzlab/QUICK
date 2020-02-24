@@ -143,3 +143,6 @@ Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GT
 K80, P100, V100 and Titan V. Our program is still in the experimental stage and we cannot guarantee that 
 it is flawless. If you have any questions, please feel free to contact us.
 
+6. DOCUMETATION
+
+An infant version of QUICK documentation is available on: https://quick-docs.readthedocs.io/en/latest/.
