@@ -7,8 +7,8 @@
 */  
   
 #ifdef DEVICE  
-__device__ static void   
-xc_mgga_k_pc07_enhance(const void *pt, xc_mgga_work_x_t *r)  
+__device__ void   
+xc_mgga_k_pc07_enhance_kernel(const void *pt, xc_mgga_work_x_t *r)  
 #else  
 static void   
 xc_mgga_k_pc07_enhance(const xc_func_type *pt, xc_mgga_work_x_t *r)  
@@ -182,4 +182,4 @@ xc_mgga_k_pc07_enhance(const xc_func_type *pt, xc_mgga_work_x_t *r)
 #define maple2c_order 3  
 #define maple2c_func  xc_mgga_k_pc07_enhance  
 #define kernel_id 2 
-#endif  
+#endif

@@ -9,7 +9,7 @@
 typedef void (*ggac_ptr)(const void *p,  xc_gga_work_c_t *r);
 
 //****************** Uncomment to compile all libxc kernels*************************//
-#include "gpu_finclude_ggac.h"
+//#include "gpu_finclude_ggac.h"
 #include "gpu_fsign_ggac.h"
 //****************** Uncomment to compile all libxc kernels*************************//
 
@@ -47,8 +47,8 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 		r.order = 1;		
 
 		double min_grad2 = d_w->dens_threshold * d_w->dens_threshold;
-
-		double drs, dxtdn, dxtds, ndzdn[2], dxsdn[2], dxsds[2];
+		//double  ndzdn[2];
+		double drs, dxtdn, dxtds, dxsdn[2], dxsds[2];
 		//Following variables are required for order >1.
 		//double d2rs, d2xtdn2, d2xtds2, d2xtdns, d2xsdn2[2], d2xsds2[2], d2xsdns[2];
 		//double d3rs, d3xtdn3, d3xtdn2s, d3xtdns2, d3xtds3, d3xsdn3[2], d3xsdn2s[2], d3xsdns2[2], d3xsds3[2];
@@ -151,8 +151,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 					dxsds[1] = r.xs[1]/(2.0*r.sigmas[2]);
 					dxsds[0] = r.xs[0]/(2.0*r.sigmas[0]);*/
 				}else{
-					dxsdn[0] = M_CBRT2*dxtdn;
-					dxsds[0] = M_CBRT2*dxtds;
+					double m_cbrt2 = (double)  M_CBRT2;
+					dxsdn[0] = m_cbrt2 * dxtdn;
+					dxsds[0] = m_cbrt2 * dxtds;
 				}
   
   				//if(vrho != NULL && (p->info->flags & XC_FLAGS_HAVE_VXC)){

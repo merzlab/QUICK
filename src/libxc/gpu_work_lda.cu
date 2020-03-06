@@ -9,7 +9,7 @@
 typedef void (*lda_ptr)(const void *p,  xc_lda_work_t *r);
 
 //****************** Uncomment to compile all libxc kernels*************************//
-#include "gpu_finclude_lda.h"
+//#include "gpu_finclude_lda.h"
 #include "gpu_fsign_lda.h"
 //****************** Uncomment to compile all libxc kernels*************************//
 

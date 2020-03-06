@@ -86,6 +86,9 @@
 #ifndef DEVICE
 double LambertW(double z);
 double xc_dilogarithm(const double x);
+#else
+__device__ double LambertW(double z);
+__device__ double xc_dilogarithm(const double x);
 #endif
 
 /* we define this function here, so it can be properly inlined by all compilers */
@@ -107,19 +110,33 @@ xc_cheb_eval(const double x, const double *cs, const int N)
   return 0.5*(b0 - b2);
 }
 
+#ifndef DEVICE
 double xc_bessel_I0_scaled(const double x);
 double xc_bessel_I0(const double x);
 double xc_bessel_K0_scaled(const double x);
 double xc_bessel_K0(const double x);
 double xc_bessel_K1_scaled(const double x);
 double xc_bessel_K1(const double x);
-
 double xc_expint_e1_impl(double x, const int scale);
 static inline double expint_e1(const double x)         { return  xc_expint_e1_impl( x, 0); }
 static inline double expint_e1_scaled(const double x)  { return  xc_expint_e1_impl( x, 1); }
 static inline double expint_Ei(const double x)         { return -xc_expint_e1_impl(-x, 0); }
 #define Ei(x) expint_Ei(x)
 static inline double expint_Ei_scaled(const double x)  { return -xc_expint_e1_impl(-x, 1); }
+#else
+double xc_bessel_I0_scaled(const double x);
+double xc_bessel_I0(const double x);
+double xc_bessel_K0_scaled(const double x);
+double xc_bessel_K0(const double x);
+double xc_bessel_K1_scaled(const double x);
+double xc_bessel_K1(const double x);
+__device__ double xc_expint_e1_impl(double x, const int scale);
+__device__ static __inline__ double expint_e1(const double x)         { return  xc_expint_e1_impl( x, 0); }
+__device__ static __inline__ double expint_e1_scaled(const double x)  { return  xc_expint_e1_impl( x, 1); }
+__device__ static __inline__ double expint_Ei(const double x)         { return -xc_expint_e1_impl(-x, 0); }
+#define Ei(x) expint_Ei(x)
+__device__ static __inline__ double expint_Ei_scaled(const double x)  { return -xc_expint_e1_impl(-x, 1); }
+#endif
 
 /* integration */
 typedef void integr_fn(double *x, int n, void *ex);

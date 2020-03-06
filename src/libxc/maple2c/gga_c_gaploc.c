@@ -12,7 +12,7 @@
 */   
    
 #ifdef DEVICE   
-__device__ void xc_gga_c_gaploc_func   
+__device__ void xc_gga_c_gaploc_func_kernel
   (const void *p, xc_gga_work_c_t *r)   
 #else   
 void xc_gga_c_gaploc_func   
@@ -1955,4 +1955,4 @@ void xc_gga_c_gaploc_func
 #define maple2c_order 3   
 #define maple2c_func  xc_gga_c_gaploc_func   
 #define kernel_id 5 
-#endif   
+#endif

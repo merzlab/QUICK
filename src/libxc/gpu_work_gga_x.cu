@@ -14,7 +14,7 @@ typedef void (*ggaxk_ptr)(const void *p,  xc_gga_work_x_t *r);
 
 //****************** Uncomment to compile all libxc kernels*************************//
 #include "gpu_fstructs.h"
-#include "gpu_finclude_ggaxk.h"
+//#include "gpu_finclude_ggaxk.h"
 #include "gpu_fsign_ggaxk.h"
 //****************** Uncomment to compile all libxc kernels*************************//
 

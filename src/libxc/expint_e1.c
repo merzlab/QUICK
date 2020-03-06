@@ -70,7 +70,11 @@ static double AE14_data[26] = {
 
 
 /* implementation for E1, allowing for scaling by exp(x) */
+#ifdef DEVICE
+__device__ double xc_expint_e1_impl(double x, const int scale){
+#else
 double xc_expint_e1_impl(double x, const int scale){
+#endif
   const double xmaxt = -LOG_DBL_MIN;        /* XMAXT = -log (R1MACH(1)) */
   const double xmax  = xmaxt - log(xmaxt);    /* XMAX = XMAXT - log(XMAXT) */
 

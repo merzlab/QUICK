@@ -1,2 +1,2 @@
 #undef CUDA
-#define MPIV
+#undef MPI

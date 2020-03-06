@@ -15,7 +15,6 @@
 //Madu Manathunga 07/01/2019: Libxc header files
 #include "util.h"
 #include "gpu_work.cuh"
-
 //#include "cuda.h"
 
 // device initial and shutdown operation
@@ -66,13 +65,12 @@ void get_ssw_new_imp(_gpu_type gpu);
 //void get_primf_contraf_lists(_gpu_type gpu);
 void get_primf_contraf_lists_new_imp(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
 void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
-void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad);
+void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
 void gpu_delete_sswgrad_vars();
 void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
-
 // global [get2e_kernel]
 __global__ void get2e_kernel();
 __global__ void get2e_kernel_spdf();
@@ -130,7 +128,7 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 //__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals, double* exc_dev_grad); //Madu Manathunga 07/01/2019: added libxc variable
 __global__ void getxc_kernel_new_imp(gpu_libxc_info** glinfo, int nof_functionals);
 //__global__ void getxc_grad_kernel(gpu_libxc_info** glinfo, int nof_functionals, double* exc_dev_grad);
-__global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad);
+__global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals);
 __global__ void get_sswgrad_kernel_new_imp(QUICKDouble* dev_grad);
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 

@@ -54,7 +54,7 @@ extern "C" void gpu_init_(void)
     if (gpuCount == 0)
     {
         printf("NO CUDA-Enabled GPU FOUND.\n");
-        cudaThreadExit();
+        cudaDeviceReset();
         exit(-1);
     }
     
@@ -92,7 +92,7 @@ extern "C" void gpu_init_(void)
         if (gpu->gpu_dev_id >= gpuCount)
         {
             printf("GPU ID IS ILLEGAL, PLEASE SELECT FROM 0 TO %i.\n", gpuCount-1);
-            cudaThreadExit();
+            cudaDeviceReset();
             exit(-1);
         }
         
@@ -101,7 +101,7 @@ extern "C" void gpu_init_(void)
         	device = gpu->gpu_dev_id;
     	else {
         	printf("SELECT GPU HAS CUDA SUPPORTING VERSION UNDER 1.3. EXITING. \n");
-        	cudaThreadExit();
+        	cudaDeviceReset();
         	exit(-1);
     	}
         device = gpu->gpu_dev_id;
@@ -120,7 +120,7 @@ extern "C" void gpu_init_(void)
     status = cudaSetDevice(device);
     cudaGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "cudaSetDevice gpu_init failed!");
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
     
     cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
     
@@ -185,7 +185,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     if (*gpu_dev_count == 0)
     {
         printf("NO CUDA DEVICE FOUNDED \n");
-        cudaThreadExit();
+        cudaDeviceReset();
         exit(-1);
     }
     cudaGetDeviceProperties(&prop,*gpu_dev_id);
@@ -210,7 +210,7 @@ extern "C" void gpu_shutdown_(void)
     fclose(debugFile);
 #endif
     delete gpu;
-    cudaThreadExit();
+    cudaDeviceReset();
 	PRINTDEBUG("SHUTDOWN NORMALLY")
     return;
 }
@@ -1459,78 +1459,6 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     
 }
 
-/*int prune_grid_ssw(QUICKDouble* gridx_in, QUICKDouble* gridy_in, QUICKDouble* gridz_in, int* grid_atm_in, QUICKDouble* sswt_in ,QUICKDouble* weights_in, int size, QUICKDouble* gridx_out, QUICKDouble* gridy_out, QUICKDouble* gridz_out, int* grid_atm_out, QUICKDouble* sswt_out, QUICKDouble* weights_out){
-
-        int count=0;
-        for(int i=0;i<size;i++){
-                if(weights_in[i] > gpu -> gpu_sim.DMCutoff){
-     
-                        gridx_out[count] = gridx_in[i];
-                        gridy_out[count] = gridy_in[i];
-                        gridz_out[count] = gridz_in[i];
-                        grid_atm_out[count] = grid_atm_in[i];
-			sswt_out[count] = sswt_in[i];
-                        weights_out[count] = weights_in[i];     
-
-                        count++;
-                }    
-        }    
-     
-        return count;
-
-}
-
-int prune_grid_density(QUICKDouble* gridx_in, QUICKDouble* gridy_in, QUICKDouble* gridz_in, int* grid_atm_in, QUICKDouble* sswt_in ,QUICKDouble* weights_in, QUICKDouble* density_in, QUICKDouble* densityb_in, QUICKDouble* gax_in, QUICKDouble* gay_in, QUICKDouble* gaz_in, QUICKDouble* gbx_in, QUICKDouble* gby_in, QUICKDouble* gbz_in, int size, QUICKDouble* gridx_out, QUICKDouble* gridy_out, QUICKDouble* gridz_out, int* grid_atm_out, QUICKDouble* sswt_out, QUICKDouble* weights_out, QUICKDouble* density_out, QUICKDouble* densityb_out, QUICKDouble* gax_out, QUICKDouble* gay_out, QUICKDouble* gaz_out, QUICKDouble* gbx_out, QUICKDouble* gby_out, QUICKDouble* gbz_out){
-
-        int count=0;
-        for(int i=0;i<size;i++){
-                if(density_in[i] > gpu -> gpu_sim.DMCutoff){
-
-                        gridx_out[count] = gridx_in[i];
-                        gridy_out[count] = gridy_in[i];
-                        gridz_out[count] = gridz_in[i];
-                        grid_atm_out[count] = grid_atm_in[i];
-                        sswt_out[count] = sswt_in[i];
-                        weights_out[count] = weights_in[i];
-			density_out[count] = density_in[i];
-			densityb_out[count] = densityb_in[i];
-			gax_out[count] = gax_in[i];
-			gay_out[count] = gay_in[i];
-			gaz_out[count] = gaz_in[i];
-			gbx_out[count] = gbx_in[i];
-			gby_out[count] = gby_in[i];
-			gbz_out[count] = gbz_in[i];
-                        count++;
-                }
-        }
-
-        return count;
-
-}
-
-//This method lines up arrays based on sswt criteria. This is only required for computing ssw gradients.
-int prune_grid_sswder(QUICKDouble* gridx_in, QUICKDouble* gridy_in, QUICKDouble* gridz_in, int* grid_atm_in, QUICKDouble* exc_in, QUICKDouble* sswt_in ,QUICKDouble* weights_in, int size, QUICKDouble* gridx_out, QUICKDouble* gridy_out, QUICKDouble* gridz_out, int* grid_atm_out, QUICKDouble* exc_out, QUICKDouble* sswt_out, QUICKDouble* weights_out){
-
-        int count=0;
-        for(int i=0;i<size;i++){
-                if(sswt_in[i] != 1){
-
-                        gridx_out[count] = gridx_in[i];
-                        gridy_out[count] = gridy_in[i];
-                        gridz_out[count] = gridz_in[i];
-                        grid_atm_out[count] = grid_atm_in[i];
-			exc_out[count] = exc_in[i];
-                        sswt_out[count] = sswt_in[i];
-                        weights_out[count] = weights_in[i];
-
-                        count++;
-                }
-        }
-
-        return count;
-
-}
-*/
 
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
@@ -1936,7 +1864,25 @@ void gpu_delete_sswgrad_vars(){
 
 }
 
-extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad){
+/*Madu Manathunga 06/25/2019
+Integration of libxc GPU version. The included file below contains all libxc methods
+*/
+#include "gpu_libxc.cu"
+
+extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
+
+        /*The following variable will hold the number of auxilary functionals in case of
+        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+        //from input. */
+        int nof_aux_functionals = *nof_functionals;
+
+#ifdef DEBUG
+        printf("Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+#endif
+        //Madu: Initialize gpu libxc and upload information to GPU
+        gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+
+        //libxc_cleanup(glinfo, nof_functionals);
 
 /*	gpu -> gpu_xcq -> xc_grad = new cuda_buffer_type<QUICKDouble>(grad, gpu->natom * 3);
 //	gpu -> gpu_xcq -> xc_grad -> Upload();
@@ -1963,7 +1909,7 @@ extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad){
 
         cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
 
-	getxc_grad_new_imp(gpu, d_xc_grad);
+	getxc_grad_new_imp(gpu, d_xc_grad, glinfo, nof_aux_functionals);
 
         cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
 
@@ -2399,136 +2345,6 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
-/*Madu Manathunga 06/25/2019
-Integration of libxc GPU version. The included file below contains all libxc methods
-*/
-#include "gpu_libxc.cu"
-
-/*extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
-{
-    PRINTDEBUG("BEGIN TO RUN GETXC")
-
-	The following variable will hold the number of auxilary functionals in case of
-	//a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-	//from input. 
-	int nof_aux_functionals = *nof_functionals;    
-
-	//Madu: Initialize gpu libxc and upload information to GPU
-	gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-
-	//libxc_cleanup(glinfo, nof_functionals);
-    
-    gpu -> gpu_sim.isg = *isg;
-    gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-    gpu -> gpu_basis -> sigrad2 -> Upload();
-    gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
-    
-    gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
-    
-    
-    QUICKULL valUII = (QUICKULL) (fabs ( *Eelxc * OSCALE + (QUICKDouble)0.5));
-    
-    if (*Eelxc<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-    
-    gpu -> DFT_calculated -> _hostData[0].Eelxc = valUII;
-    
-    valUII = (QUICKULL) (fabs ( *aelec * OSCALE + (QUICKDouble)0.5));
-    
-    if (*aelec<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-    gpu -> DFT_calculated -> _hostData[0].aelec = valUII;
-    
-    valUII = (QUICKULL) (fabs ( *belec * OSCALE + (QUICKDouble)0.5));
-    
-    if (*belec<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-    
-    gpu -> DFT_calculated -> _hostData[0].belec = valUII;
-    
-    gpu -> DFT_calculated -> Upload();
-    gpu -> gpu_sim.DFT_calculated= gpu -> DFT_calculated->_devData;
-    
-    upload_sim_to_constant_dft(gpu);
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
-    
-	//Madu Manathunga 07/01/2019 added libxc variable
-#ifdef DEBUG
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
-#endif
-
-    getxc(gpu, glinfo, nof_aux_functionals, 0, NULL);
-    gpu -> gpu_calculated -> oULL -> Download();
-    gpu -> DFT_calculated -> Download();
-    
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            }
-            else
-            {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-        }
-    }
-    gpu -> gpu_calculated -> o    -> Download(o);
-    
-    
-    QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
-    QUICKDouble valDB;
-    
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *Eelxc = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
-    valULL = gpu->DFT_calculated -> _hostData[0].aelec;
-    
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *aelec = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
-    valULL = gpu->DFT_calculated -> _hostData[0].belec;
-    
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *belec = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
-    
-    PRINTDEBUG("DELETE TEMP VARIABLES")
-    
-	delete gpu->gpu_calculated->o;
-	delete gpu->gpu_calculated->dense;
-	delete gpu->gpu_calculated->oULL;
-    
-}
-*/
 
 extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
@@ -2648,99 +2464,6 @@ extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
         delete gpu->gpu_calculated->oULL;
 
 }
-
-
-/*Madu Manathunga 08/16/2019
-Following method will calculate exchange correlation gradients on GPU
-*/
-/*extern "C" void gpu_getxc_grad_(int* isg, QUICKDouble* grad, QUICKDouble* sigrad2, int* nof_functionals, int* functional_id, int* xc_polarization)
-{
-	PRINTDEBUG("BEGIN TO RUN GETXC_GRAD")
-
-	The following varialbe will hold the number of auxilary functionals in case of
-	a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-	from input. 
-	int nof_aux_functionals = *nof_functionals;
-
-	//Madu: Initialize gpu libxc and upload information to GPU
-	gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-
-	gpu -> gpu_sim.isg = *isg;
-	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-	gpu -> gpu_basis -> sigrad2 -> Upload();
-	gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
-
-	upload_sim_to_constant_dft(gpu);
-	PRINTDEBUG("BEGIN TO RUN KERNEL")
-
-	for (int i = 0; i < gpu->natom * 3; i ++) {
-		printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
-	}
-
-	int exc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
-	double* exc_dev_grad;
-	double* exc_host_grad;
-
-	cudaMalloc((void**)&exc_dev_grad, exc_grad_byte_size);
-	exc_host_grad = (double*)malloc(exc_grad_byte_size);
-	
-	cudaMemcpy(exc_dev_grad, grad, exc_grad_byte_size, cudaMemcpyHostToDevice);
-
-	getxc(gpu, glinfo, nof_aux_functionals, 1, exc_dev_grad);
-
-	cudaMemcpy(exc_host_grad, exc_dev_grad, exc_grad_byte_size, cudaMemcpyDeviceToHost);	
-
-	PRINTDEBUG("COMPLETE KERNEL");
-
-    for (int i = 0; i< 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-
-        if (valULL >= 0x8000000000000000ull) {
-            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-        }
-        else
-        {
-            valDB  = (QUICKDouble) valULL;
-        }
-
-        gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
-    }
-
-printf("GPU part done..\n ");
-
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
-#endif
-
-    for (int i = 0; i < gpu->natom * 3; i ++) {
-	//grad[i] = grad[i]+exc_host_grad[i];
-        printf("after: %i, xc grad: %f, total grad: %f \n", i, exc_host_grad[i]-grad[i], exc_host_grad[i]);
-	grad[i] = exc_host_grad[i];
-    }
-
-	delete gpu -> grad;
-	delete gpu -> gradULL;
-	delete gpu->gpu_calculated->o;
-	delete gpu->gpu_calculated->dense;
-	delete gpu->gpu_calculated->oULL;
-
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    PRINTUSINGTIME("DOWNLOAD XC_GRAD",time);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
-#endif
-
-    PRINTDEBUG("COMPLETE RUNNING GETXC_GRAD")
-}
-*/
 
 char *trim(char *s) {
     char *ptr;

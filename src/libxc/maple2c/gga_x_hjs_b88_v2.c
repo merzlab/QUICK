@@ -12,7 +12,7 @@
 */   
    
 #ifdef DEVICE   
-__device__ void xc_gga_x_hjs_b88_v2_func   
+__device__ void xc_gga_x_hjs_b88_v2_func_kernel
   (const void *p, xc_gga_work_c_t *r)   
 #else   
 void xc_gga_x_hjs_b88_v2_func   
@@ -2711,4 +2711,4 @@ void xc_gga_x_hjs_b88_v2_func
 #define maple2c_order 3   
 #define maple2c_func  xc_gga_x_hjs_b88_v2_func   
 #define kernel_id 36 
-#endif   
+#endif

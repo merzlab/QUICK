@@ -12,7 +12,7 @@
 */   
    
 #ifdef DEVICE   
-__device__ void xc_gga_x_am05_enhance   
+__device__ void xc_gga_x_am05_enhance_kernel
   (const void *p,  xc_gga_work_x_t *r)   
 #else   
 void xc_gga_x_am05_enhance   
@@ -160,4 +160,4 @@ void xc_gga_x_am05_enhance
 #define maple2c_order 3   
 #define maple2c_func  xc_gga_x_am05_enhance   
 #define kernel_id 49 
-#endif   
+#endif

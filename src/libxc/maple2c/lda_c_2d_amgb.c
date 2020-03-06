@@ -13,7 +13,7 @@
    
 #ifdef DEVICE   
 __device__ static void   
-xc_lda_c_2d_amgb_func0(const void *p, xc_lda_work_t *r)   
+xc_lda_c_2d_amgb_func0_kernel(const void *p, xc_lda_work_t *r)   
 #else   
 static void   
 func0(const xc_func_type *p, xc_lda_work_t *r)   
@@ -78,7 +78,7 @@ func0(const xc_func_type *p, xc_lda_work_t *r)
    
 #ifdef DEVICE   
 __device__ static void   
-xc_lda_c_2d_amgb_func1(const void *p, xc_lda_work_t *r)   
+xc_lda_c_2d_amgb_func1_kernel(const void *p, xc_lda_work_t *r)   
 #else   
 static void   
 func1(const xc_func_type *p, xc_lda_work_t *r)   
@@ -250,12 +250,12 @@ func1(const xc_func_type *p, xc_lda_work_t *r)
    
 #ifdef DEVICE   
 __device__ void   
-xc_lda_c_2d_amgb_func(const void *p, xc_lda_work_t *r)   
+xc_lda_c_2d_amgb_func_kernel(const void *p, xc_lda_work_t *r)   
 {   
   if(r->nspin == XC_UNPOLARIZED)   
-    xc_lda_c_2d_amgb_func0(p, r);   
+xc_lda_c_2d_amgb_func0_kernel(p, r);   
   else   
-    xc_lda_c_2d_amgb_func1(p, r);   
+xc_lda_c_2d_amgb_func1_kernel(p, r);   
 }   
 #else   
 void    
@@ -272,4 +272,4 @@ xc_lda_c_2d_amgb_func(const xc_func_type *p, xc_lda_work_t *r)
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_c_2d_amgb_func   
 #define kernel_id 2 
-#endif   
+#endif

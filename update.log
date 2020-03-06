@@ -71,4 +71,5 @@ Madu Manathunga 09/12/2019  2.1.1.9  : Reimplemented sswder device kernel by rem
 Madu Manathunga 09/13/2019  2.1.1.10 : Implemented point charge gradient calculation capability.
 Madu Manathunga 09/26/2019  2.1.1.11 : Fixed several bugs related to gradient timings. 
 Madu Manathunga 02/21/2020  20.02    : Reimplemented XC scheme with an octree algorithm. Started new version naming procedure. 
+Madu Manathunga 03/05/2020  20.03    : Improved libxc compilation with device code linking. Fixed a LIBXC related bug in gradient code. 
 =========================================================================

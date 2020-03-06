@@ -1,5 +1,6 @@
 #include "gpu.h"
 #include <cuda.h>
+#include "libxc_dev_funcs.h"
 #include "gpu_work_gga_x.cu"
 #include "gpu_work_gga_c.cu"
 #include "gpu_work_lda.cu"
@@ -217,7 +218,8 @@ void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 }
 
-void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad){
+
+void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -236,7 +238,7 @@ void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad){
 
 //    nvtxRangePushA("XC grad");
 
-    get_xcgrad_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
+    get_xcgrad_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
 
     cudaDeviceSynchronize();
 
@@ -484,7 +486,7 @@ __global__ void getxc_kernel_new_imp(gpu_libxc_info** glinfo, int nof_functional
 }
 
 
-__global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad){
+__global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
 
 	int gid = blockIdx.x * blockDim.x + threadIdx.x;
 	
@@ -544,7 +546,7 @@ __global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad){
 	                                ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
 	                                zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;					
 				
-				}/*else if(devSim_dft.method == LIBXC){
+				}else if(devSim_dft.method == LIBXC){
 	                                //Prepare in/out for libxc call
         	                        double d_rhoa = (double) density;
 	                                double d_rhob = (double) densityb;
@@ -578,15 +580,16 @@ __global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad){
                         
 	                                _tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob)));                              
 
-	                                QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
-	                                QUICKDouble dfdr2;
+	                                QUICKDouble dfdgaa;
+					//QUICKDouble dfdgab, dfdgaa2, dfdgab2;
+	                                //QUICKDouble dfdr2;
 	                                dfdr = (QUICKDouble)d_vrho;
 	                                dfdgaa = (QUICKDouble)d_vsigma*4.0;
 
 	                                xdot = dfdgaa * gax;
 	                                ydot = dfdgaa * gay;
 	                                zdot = dfdgaa * gaz;
-				}*/
+				}
 				devSim_dft.exc[gid] = _tmp;
 			
 				for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
