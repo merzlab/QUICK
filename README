@@ -2,7 +2,7 @@
          !                                QUICK                                     **
          !                                                                          **
          !                          Copyright (c) 2019                              **
-         !                  Regents of the University of Florida                    **
+         !           Regents of the University of California San Diego              **
          !                     & Michigan State University                          **
          !                         All Rights Reserved.                             **
          !                                                                          **
@@ -19,8 +19,8 @@
          !                                                                           !
          !  Cite this work as:                                                       !	
          !  Manathunga, M.; Mu, D.; Miao,Y.; He, X.; Ayers,K; Brothers, E.; Götz, A.;!
-         !  Merz,K. M. QUICK. University of Florida, Gainesville, FL, 2019 and       !
-         !	Michigan State University, East Lansing, MI, 2019                    !
+         !      Merz,K. M. QUICK. University of California San Diego, CA and         !
+         !	      Michigan State University, East Lansing, MI, 2020              !
          !                                                                           !
          !                                                                           !
          !  If you want to use the GPU version, please cite:                         !
@@ -70,8 +70,8 @@ b) Open up the make.in file and set CUDA_HOME. This is essential to link or comp
 	CUDA_HOME=(your cuda home) 
 
 c) You may have to change the "-gencode arch=compute_70,code=sm_70" options in CUDA_FLAGS 
-variable depending on the type of your GPU. The default value (70) is for a Volta gpu. Use 30, 50, 60 
-and 75 for Kepler, Maxwell, Pascal and Turing GPUs respectively. 
+variable depending on the type of your GPU. The default value (70) is for a Volta gpu. Use 60 
+and 75 for Pascal and Turing GPUs respectively. 
 
 	-gencode arch=compute_(your gpu),code=sm_(your gpu)
 
@@ -139,9 +139,10 @@ To completely clean up a quick installation, run the following command from quic
 
 5. SPECIAL NOTE ON THE GPU VERSION 
 
-Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GTX580, M2090, K20, K40, 
-K80, P100, V100 and Titan V. Our program is still in the experimental stage and we cannot guarantee that 
-it is flawless. If you have any questions, please feel free to contact us.
+Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK-20.03 on GTX1080, P100, V100,
+Titan V and RTX2080Ti GPUs. Note that v20.03 is not capable of running on any Kepler or older GPUs. 
+Furthermore, our program is still in the experimental stage and we cannot guarantee that it is flawless. 
+If you have any questions, please feel free to contact us through: quick.merzlab@gmail.com.
 
 6. DOCUMETATION
 
