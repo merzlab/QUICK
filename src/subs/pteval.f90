@@ -13,11 +13,13 @@
     y1=(gridy-xyz(2,quick_basis%ncenter(Iphi)))
     z1=(gridz-xyz(3,quick_basis%ncenter(Iphi)))
     rsquared=x1*x1+y1*y1+z1*z1
-    !write(*,*) x1, y1, z1
+    
+
     phi=0.d0
     dphidx=0.d0
     dphidy=0.d0
     dphidz=0.d0
+
     if (rsquared > sigrad2(Iphi)) then
         continue
     else
@@ -58,7 +60,7 @@
         temp=0.d0
         do Icon=1,ncontract(IPhi)
             temp = dcoeff(Icon,IPhi)*DExp((-aexp(Icon,IPhi))*rsquared)
-            !write(*,*) Icon, IPhi, ncontract(IPhi), temp, dcoeff(Icon,IPhi), (-aexp(Icon,IPhi)), rsquared
+
             Phi=Phi+temp
             dphidx=dphidx+temp*(-2.d0*(aexp(Icon,IPhi))*x1iplus1+xtype*x1imin1)
             dphidy=dphidy+temp*(-2.d0*(aexp(Icon,IPhi))*y1iplus1+ytype*y1imin1)

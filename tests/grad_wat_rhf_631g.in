@@ -1,4 +1,4 @@
-HF BASIS=6-31G cutoff=1.0e-9 denserms=1.0e-8 ncyc=3 zmake OPT
+HF BASIS=6-31G cutoff=1.0e-9 denserms=1.0e-8  zmake OPT
 
   O         -0.741530        1.752130        2.896280
   H         -1.111151        0.979769        3.352290

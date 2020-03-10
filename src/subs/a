@@ -1,0 +1,31 @@
+            DO  Latm=1,natom
+                IF (Latm /= Jatm) THEN
+                    rlg=(gridx-xyz(1,Latm))*(gridx-xyz(1,Latm))
+                    rlg=rlg+(gridy-xyz(2,Latm))*(gridy-xyz(2,Latm))
+                    rlg=rlg+(gridz-xyz(3,Latm))*(gridz-xyz(3,Latm))
+                    rlg=Dsqrt(rlg)
+                    Rjl=(xyz(1,Jatm)-xyz(1,Latm))**2.d0
+                    Rjl=Rjl+(xyz(2,Jatm)-xyz(2,Latm))**2.d0
+                    Rjl=Rjl+(xyz(3,Jatm)-xyz(3,Latm))**2.d0
+                    Rjl=Dsqrt(Rjl)
+
+                    dmudx = (-1.d0/Rjl)*(1/rjg)*(xyz(1,Jatm)-gridx) &
+                    +((rlg-rjg)/(Rjl**3.d0))*(xyz(1,Latm)-xyz(1,Jatm))
+                    dmudy = (-1.d0/Rjl)*(1/rjg)*(xyz(2,Jatm)-gridy) &
+                    +((rlg-rjg)/(Rjl**3.d0))*(xyz(2,Latm)-xyz(2,Jatm))
+                    dmudz = (-1.d0/Rjl)*(1/rjg)*(xyz(3,Jatm)-gridz) &
+                    +((rlg-rjg)/(Rjl**3.d0))*(xyz(3,Latm)-xyz(3,Jatm))
+
+                    u = (rlg-rjg)/Rjl
+
+                    T =(-35.d0*(a + u)**3.d0)/((a - u)*(16.d0*a**3.d0 &
+                    +29.d0*a**2.d0*u + 20.d0*a*u**2.d0 + 5.d0*u**3.d0))
+
+                    wtgrad(jstart+1) = wtgrad(jstart+1) &
+                    -UW(Latm)*UW(Iparent)*dmudx*T/sumUW**2.d0
+                    wtgrad(jstart+2) = wtgrad(jstart+2) &
+                    -UW(Latm)*UW(Iparent)*dmudy*T/sumUW**2.d0
+                    wtgrad(jstart+3) = wtgrad(jstart+3) &
+                    -UW(Latm)*UW(Iparent)*dmudz*T/sumUW**2.d0
+                ENDIF
+            ENDDO

@@ -64,12 +64,70 @@ struct DFT_calculated_type {
     QUICKULL                     belec;      // beta electron
 };
 
+/*Madu Manathunga 11/21/2019*/
+struct XC_quadrature_type{
+	int npoints;								//Total number of packed grid points
+	int nbins;									//Total number of bins
+	int ntotbf;									//Total number of basis functions
+	int ntotpf;									//Total number of primitive functions
+	int bin_size;                               //Size of an octree bin
+
+	cuda_buffer_type<QUICKDouble>* gridx;		//X coordinate of a grid point
+	cuda_buffer_type<QUICKDouble>* gridy;		//Y coordinate of a grid point
+	cuda_buffer_type<QUICKDouble>* gridz;		//Z coordinate of a grid point
+	cuda_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
+	cuda_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
+	cuda_buffer_type<int>*	gatm;				//To which atom does a given grid point belongs to?
+	cuda_buffer_type<int>*	dweight;			//Dummy weight of grid points
+	cuda_buffer_type<int>*  dweight_ssd;                    //Dummy weight of grid points for sswder 
+	cuda_buffer_type<int>*	basf;				//Basis function indices of all grid points
+	cuda_buffer_type<int>*	primf;				//Primitive function inidices of all grid points
+	cuda_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
+	cuda_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
+
+	//Temporary variables
+	cuda_buffer_type<QUICKDouble>* densa;
+	cuda_buffer_type<QUICKDouble>* densb;
+	cuda_buffer_type<QUICKDouble>* gax;
+	cuda_buffer_type<QUICKDouble>* gbx;
+	cuda_buffer_type<QUICKDouble>* gay;
+	cuda_buffer_type<QUICKDouble>* gby;
+	cuda_buffer_type<QUICKDouble>* gaz;
+	cuda_buffer_type<QUICKDouble>* gbz;
+	cuda_buffer_type<QUICKDouble>* exc;
+	cuda_buffer_type<QUICKDouble>* xc_grad;
+
+        //Variables for ssw derivative calculation
+        int npoints_ssd; //Total number of input points for ssd
+
+        cuda_buffer_type<QUICKDouble>* gridx_ssd;       //X coordinate of a grid point
+        cuda_buffer_type<QUICKDouble>* gridy_ssd;       //Y coordinate of a grid point
+        cuda_buffer_type<QUICKDouble>* gridz_ssd;       //Z coordinate of a grid point
+        cuda_buffer_type<QUICKDouble>* exc_ssd;
+        cuda_buffer_type<QUICKDouble>* quadwt;          //quadrature weight
+        cuda_buffer_type<int>*  gatm_ssd;               //To which atom does a given grid point belongs to?
+	cuda_buffer_type<QUICKDouble>* uw_ssd;          //Holds unnormalized weights during ssd calculation
+	
+	//Variables for grid weight calculation
+	cuda_buffer_type<QUICKDouble>* wtang;
+	cuda_buffer_type<QUICKDouble>* rwt;
+	cuda_buffer_type<QUICKDouble>* rad3;
+
+	//Variables for obtaining octree info 
+	cuda_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
+	cuda_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
+	cuda_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
+};
+
+
 struct gpu_simulation_type {
     
     // basic molecule information and method information
     QUICK_METHOD                    method;
     DFT_calculated_type*            DFT_calculated;
-    
+    XC_quadrature_type*             xcq;
+    QUICKDouble                     hyb_coeff;   
+ 
     // used for DFT
     int                             isg;        // isg algrothm
     QUICKDouble*                    sigrad2;    // basis set range
@@ -89,7 +147,53 @@ struct gpu_simulation_type {
     int                             fStart;
     int                             ffStart;
     int                             maxL;
-    
+
+	//New XC implementation
+    int npoints;                                //Total number of packed grid points
+    int nbins;                                  //Total number of bins
+    int ntotbf;                                 //Total number of basis functions
+    int ntotpf;                                 //Total number of primitive functions
+    int bin_size;				//Size of an octree bin
+    int npoints_ssd;                  //Total number of input points for ssd
+
+    QUICKDouble* gridx;       //X coordinate of a grid point
+    QUICKDouble* gridy;       //Y coordinate of a grid point
+    QUICKDouble* gridz;       //Z coordinate of a grid point
+    QUICKDouble* gridx_ssd;
+    QUICKDouble* gridy_ssd;
+    QUICKDouble* gridz_ssd;
+    QUICKDouble* sswt;        //A version of weight required for gradients
+    QUICKDouble* weight;      //Scuzeria weight of a grid point
+    QUICKDouble* quadwt;      //quadrature weight for sswder
+    QUICKDouble* uw_ssd;      //unnormalized weight for sswder
+    QUICKDouble* densa;       //Alpha electron density
+    QUICKDouble* densb;       //Beta electron density
+    QUICKDouble* gax;         //Gradient of densities
+    QUICKDouble* gbx;
+    QUICKDouble* gay;
+    QUICKDouble* gby;
+    QUICKDouble* gaz;
+    QUICKDouble* gbz;
+    QUICKDouble* exc;         //Exchange correlation energy
+    QUICKDouble* exc_ssd;     //Exchange correlation energy for sswder calculation
+    QUICKDouble* xc_grad;     //Exchange correlation energy gradient
+    QUICKDouble* wtang;
+    QUICKDouble* rwt;
+    QUICKDouble* rad3;
+
+    int*  gatm;               //To which atom does a given grid point belongs to?
+    int*  gatm_ssd;           //Parent atom index for sswder calculation
+    int*  dweight;            //Dummy weight of grid points
+    int*  dweight_ssd;        //Dummy weight of grid points for sswder 
+    int*  basf;               //Basis function indices of all grid points
+    int*  primf;              //Primitive function inidices of all grid points
+    int*  basf_locator;       //Helps accessing b.f. indices of a grid point
+    int*  primf_locator;      //Helps accessing p.f. indices of a b.f.   
+    unsigned char*gpweight;   //keeps track of significant grid points for octree pruning
+    unsigned int* cfweight;   //keeps track of significant b.f. for octree pruning
+    unsigned int* pfweight;   //keeps track of significant p.f. for octree pruning
+
+
     // Gaussian Type function
     
     int*                            ncontract;
@@ -253,7 +357,9 @@ struct gpu_type {
     unsigned int                    twoEThreadsPerBlock;
     unsigned int                    XCThreadsPerBlock;
     unsigned int                    gradThreadsPerBlock;
-    
+    unsigned int                    xc_blocks;	//Num of blocks for octree based dft implementation
+    unsigned int                    xc_threadsPerBlock; //Num of threads/block for octree based dft implementation   
+ 
     // Molecule specification part
     int                             natom;
     int                             nbasis;
@@ -282,7 +388,8 @@ struct gpu_type {
     gpu_basis_type*                 gpu_basis;
     gpu_cutoff_type*                gpu_cutoff;
     gpu_simulation_type             gpu_sim;
-    
+    XC_quadrature_type*             gpu_xcq;
+
     cuda_buffer_type<ERI_entry>**   aoint_buffer;
     
     cuda_buffer_type<QUICKULL>*     intCount;

@@ -12,16 +12,47 @@ qbindir=${qhome}/bin
 qexe="quick.cuda"
 export QUICK_BASIS=$qbasisdir
 
+echo " Please select the QUICK executable you want to test (type the corresponding number and hit enter):"
+echo " 1 --> quick"
+echo " 2 --> quick.MPI"
+echo " 3 --> quick.cuda"
+
+read executable
 echo ""
-echo "Running quick tests... This will take several minutes!"
-echo ""
+case $executable in
+     1) echo "serial version selected." 
+	qexe="quick"
+     ;;
+     2) echo "MPI version selected." 
+	qexe="quick.MPI"
+     ;;
+     3) echo "CUDA version selected."
+	qexe="quick.cuda"
+     ;;
+     *) echo "Please select the QUICK version by selecting 1-3."
+	echo"Aborting.."
+        echo ""        
+        exit 0
+esac
+
+if [ -f "${qbindir}/${qexe}" ]; then
+	echo ""
+	echo "Running quick tests... This will take several minutes!"
+	echo ""
+
+else
+	echo "${qbindir}/${qexe} not found."
+	echo "Aborting.."
+	echo ""
+	exit 0
+fi
 
 #Make sure tstdir is existing
 if [ -d ${tstdir} ]; then
 	cd $tstdir
 else
 	echo "${tstdir} not found. Aborting.."
-	exit 
+	exit 0
 fi
 
 if [ -d tstrun ]; then
@@ -135,5 +166,5 @@ if [ -f tstlst ]; then
 	cd $qhome
 else
 	echo "File tstlst not found. Aborting.."
-	exit 
+	exit 0 
 fi

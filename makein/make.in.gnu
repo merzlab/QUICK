@@ -20,7 +20,9 @@
 #---------------------
 # b. Single CPU Version
 #---------------------
+#FC= /users/PCS0202/bgs0374/bin/gcc-4.5/bin/gfortran
 FC=gfortran
+CC = gcc
 #FC=ifort
 
 #---------------------
@@ -33,7 +35,7 @@ FC=gfortran
 #FFLAGS = -g -O3 -traceback
 FFLAGS = -O3 -lm  -mtune=native  -ffree-form  -DGNU -cpp
 LD = $(FC)
-LDFLAGS = $(FFLAGS)
+LDFLAGS = $(FFLAGS) -lstdc++
 #LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS) -static -L/opt/intel/ict/2.0/cmkl/8.0.1/lib/32
 TMPFILES = *.mod *.stb
@@ -52,5 +54,5 @@ CUDA_FLAGS= -O3  -Xptxas=-v -m64 -use_fast_math -gencode arch=compute_20,code=sm
 
 # G++ Compiler
 CXX = g++
-CFLAGS = -lgfortran -lgfortranbegin -g -L/usr/local/cuda/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas
-
+#CFLAGS = -lgfortran -lgfortranbegin -g -L/usr/local/cuda/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
+CFLAGS = -lgfortran L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++

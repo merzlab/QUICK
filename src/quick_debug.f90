@@ -1,9 +1,9 @@
 !
-!        quick_debug.f90
-!        new_quick
+!	quick_debug.f90
+!	new_quick
 !
-!        Created by Yipu Miao on 4/12/11.
-!        Copyright 2011 University of Florida. All rights reserved.
+!	Created by Yipu Miao on 4/12/11.
+!	Copyright 2011 University of Florida. All rights reserved.
 !
 !   This file contains debug subroutines
 !   Subroutine inventory:
@@ -18,51 +18,54 @@
 subroutine debug_SCF(jscf)
    use allmod
    implicit none
-   double precision total, overlap
-   integer i, j, k, l, jscf
+   double precision total,overlap
+   integer i,j,k,l,jscf
 
    !Densitry matrix
-   write (ioutfile, '("DENSITY MATRIX AT START OF CYCLE",I4)') jscf
-   call PriSym(iOutFile, nbasis, quick_qm_struct%dense, 'f14.8')
+   write(ioutfile,'("DENSITY MATRIX AT START OF CYCLE",I4)') jscf
+   call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 
    ! Operator matrix
-   write (ioutfile, '("OPERATOR MATRIX FOR CYCLE",I4)') jscf
-   call PriSym(iOutFile, nbasis, quick_qm_struct%o, 'f14.8')
+   write(ioutfile,'("OPERATOR MATRIX FOR CYCLE",I4)') jscf
+   call PriSym(iOutFile,nbasis,quick_qm_struct%o,'f14.8')
+
 
    ! Molecular orbital energy
-   write (ioutfile, '("MOLECULAR ORBITAL ENERGIES FOR CYCLE",I4)') jscf
-   do I = 1, nbasis
-      write (ioutfile, '(I4,F18.10)') I, quick_qm_struct%E(I)
+   write(ioutfile,'("MOLECULAR ORBITAL ENERGIES FOR CYCLE",I4)') jscf
+   do I=1,nbasis
+      write (ioutfile,'(I4,F18.10)') I,quick_qm_struct%E(I)
    enddo
 
    ! C matrix
-   write (ioutfile, '("C MATRIX FOR CYCLE",I4)') jscf
-   call PriSym(iOutFile, nbasis, quick_qm_struct%co, 'f14.8')
+   write(ioutfile,'("C MATRIX FOR CYCLE",I4)') jscf
+   call PriSym(iOutFile,nbasis,quick_qm_struct%co,'f14.8')
+
 
    ! Densitry matrix at end of this cycle
    !write(ioutfile,'("DENSITY MATRIX AT END OF CYCLE",I4)') jscf
    !call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 
+
    ! n=sigma(PS)
-   total = 0.d0
-   do I = 1, nbasis
-      do J = 1, nbasis
-         do K = 1, ncontract(I)
-            do L = 1, ncontract(J)
-               total = total + quick_qm_struct%dense(I, J)* &
-                       dcoeff(K, I)*dcoeff(L, J) &
-                       *overlap(aexp(L, J), aexp(K, I), &
-                                itype(1, J), itype(2, J), itype(3, J), &
-                                itype(1, I), itype(2, I), itype(3, I), &
-                                xyz(1, quick_basis%ncenter(J)), xyz(2, quick_basis%ncenter(J)), &
-                                xyz(3, quick_basis%ncenter(J)), xyz(1, quick_basis%ncenter(I)), &
-                                xyz(2, quick_basis%ncenter(I)), xyz(3, quick_basis%ncenter(I)))
+   total=0.d0
+   do I=1,nbasis
+      do J=1,nbasis
+         do K=1,ncontract(I)
+            do L=1,ncontract(J)
+               total = total + quick_qm_struct%dense(I,J)* &
+                     dcoeff(K,I)*dcoeff(L,J) &
+                     *overlap(aexp(L,J),aexp(K,I), &
+                     itype(1,J),itype(2,J),itype(3,J), &
+                     itype(1,I),itype(2,I),itype(3,I), &
+                     xyz(1,quick_basis%ncenter(J)),xyz(2,quick_basis%ncenter(J)), &
+                     xyz(3,quick_basis%ncenter(J)),xyz(1,quick_basis%ncenter(I)), &
+                     xyz(2,quick_basis%ncenter(I)),xyz(3,quick_basis%ncenter(I)))
             enddo
          enddo
       enddo
    enddo
 
-   write (ioutfile, '("TOTAL NUMBER OF ELECTRONS=",F18.10)') total
+   write(ioutfile,'("TOTAL NUMBER OF ELECTRONS=",F18.10)')total
 
 end subroutine debug_SCF
 
@@ -73,12 +76,13 @@ subroutine debugElecdii(jscf)
    implicit none
    integer jscf
 
-   write (iOutFile, *) "O OPERATOR for cycle ", jscf
-   call PriSym(iOutFile, nbasis, quick_qm_struct%o, 'f14.8')
+   write(iOutFile,*) "O OPERATOR for cycle ",jscf
+   call PriSym(iOutFile,nbasis,quick_qm_struct%o,'f14.8')
 
-   write (iOutFile, *) "DENSITY MATRIX for cycle ", jscf
-   call PriSym(iOutFile, nbasis, quick_qm_struct%dense, 'f14.8')
+   write(iOutFile,*) "DENSITY MATRIX for cycle ", jscf
+   call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 end subroutine debugElecdii
+
 
 ! debugDivconNorm
 ! this subroutine is to output normalization info for divcon
@@ -87,30 +91,30 @@ subroutine debugDivconNorm()
 
    implicit none
    double precision tmp
-   integer i, j, itt
+   integer i,j,itt
    ! Xiaotemp inidicates normalization infos for system
-   tmp = 0.0d0
-   do i = 1, nbasis
-      do j = 1, nbasis
-         tmp = tmp + quick_qm_struct%dense(j, i)*quick_qm_struct%s(j, i)
+   tmp=0.0d0
+   do i=1,nbasis
+      do j=1,nbasis
+         tmp=tmp+quick_qm_struct%dense(j,i)*quick_qm_struct%s(j,i)
       enddo
    enddo
 
    ! Write Normalization for both full system and subsystem
-   write (ioutfile, *) 'ELECTION NORMALIZATION'
-   write (ioutfile, *) '-------------------------------'
-   write (ioutfile, *) 'FULL=', tmp
-   write (ioutfile, *) 'SUBSYSTEM     NORMALIZATION'
-   do itt = 1, np
-      tmp = 0.0d0
-      do i = 1, nbasisdc(itt)
-         do j = 1, nbasisdc(itt)
-            tmp = tmp + Pdcsub(itt, j, i)*smatrixdcsub(itt, j, i)
+   write(ioutfile,*)'ELECTION NORMALIZATION'
+   write(ioutfile,*)'-------------------------------'
+   write(ioutfile,*)'FULL=',tmp
+   write(ioutfile,*)'SUBSYSTEM     NORMALIZATION'
+   do itt=1,np
+      tmp=0.0d0
+      do i=1,nbasisdc(itt)
+         do j=1,nbasisdc(itt)
+            tmp=tmp+Pdcsub(itt,j,i)*smatrixdcsub(itt,j,i)
          enddo
       enddo
-      write (ioutfile, *) itt, tmp
+      write(ioutfile,*) itt,tmp
    enddo
-   write (ioutfile, *) '-------------------------------'
+   write(ioutfile,*)'-------------------------------'
 
 end subroutine debugDivconNorm
 
@@ -118,68 +122,71 @@ end subroutine debugDivconNorm
 subroutine debugBasis
    use allmod
    implicit none
-   integer i, j
-   do I = 1, nbasis
-      write (iOutFile, '("FOR BASIS SET  ",I4)') i
-      write (iOutFile, '("BASIS FUNCTON ",I4," ON ATOM ",I4)') I, quick_basis%ncenter(I)
-      write (iOutFile, '("THIS IS AN ",I1,I1,I1," FUNCTION")') itype(1, I), itype(2, I), itype(3, I)
-      write (iOutFile, '("THERE ARE ",I4," CONTRACTED GAUSSIANS")') ncontract(I)
-      do J = 1, ncontract(I)
-         write (iOutFile, '(F10.6,6x,F10.6)') aexp(J, I), dcoeff(J, I)
+   integer i,j
+   do I=1,nbasis
+      write(iOutFile,'("FOR BASIS SET  ",I4)') i
+      write(iOutFile,'("BASIS FUNCTON ",I4," ON ATOM ",I4)') I,quick_basis%ncenter(I)
+      write(iOutFile,'("THIS IS AN ",I1,I1,I1," FUNCTION")') itype(1,I),itype(2,I),itype(3,I)
+      write(iOutFile,'("THERE ARE ",I4," CONTRACTED GAUSSIANS")') ncontract(I)
+      do J=1,ncontract(I)
+         write(iOutFile,'(F10.6,6x,F10.6)') aexp(J,I),dcoeff(J,I)
       enddo
-      write (iOutFile, '("CONS = ",F10.6)') quick_basis%cons(i)
-      write (iOutFile, '("KLMN = ",I4, 2x, I4, 2x, I4)') quick_basis%KLMN(1, i), quick_basis%KLMN(2, i), quick_basis%KLMN(3, i)
+      write(iOutFile,'("CONS = ",F10.6)') quick_basis%cons(i)
+      write(iOutFile,'("KLMN = ",I4, 2x, I4, 2x, I4)') quick_basis%KLMN(1,i),quick_basis%KLMN(2,i),quick_basis%KLMN(3,i)
    enddo
-
+   
    do i = 1, natom
-      write (iOutFile, '(" FOR ATOM ",I4)') i
-      write (iOutFile, '(" FIRST BASIS ",I4, " LAST BASIS",I4)') quick_basis%first_basis_function(i), &
-         quick_basis%last_basis_function(i)
-
-      write (iOutFile, '(" FIRST SHELL BASIS ",I4, " LAST SHELL BASIS",I4)') &
-         quick_basis%first_shell_basis_function(i), &
-         quick_basis%last_shell_basis_function(i)
-      write (iOutFile, *)
+    write(iOutFile,'(" FOR ATOM ",I4)') i
+    write(iOutFile,'(" FIRST BASIS ",I4, " LAST BASIS",I4)') quick_basis%first_basis_function(i), &
+                                                             quick_basis%last_basis_function(i)
+                                                             
+    write(iOutFile,'(" FIRST SHELL BASIS ",I4, " LAST SHELL BASIS",I4)')&
+                                                            quick_basis%first_shell_basis_function(i), &
+                                                            quick_basis%last_shell_basis_function(i)
+    write(iOutFile,*)                                                         
    enddo
-
+   
    do i = 1, nshell
-      write (iOutFile, '(" FOR SHELL ",I4)') i
-      write (iOutFile, '(" KSTART =  ",I4)') quick_basis%kstart(i)
-      write (iOutFile, '(" KATOM =  ",I4)') quick_basis%katom(i)
-      write (iOutFile, '(" KTYPE =  ",I4)') quick_basis%ktype(i)
-      write (iOutFile, '(" KPRIM =  ",I4)') quick_basis%kprim(i)
-
-      write (iOutFile, '(" QNUMBER =  ",I4)') quick_basis%QNUMBER(i)
-      write (iOutFile, '(" QSTART =  ",I4)') quick_basis%QSTART(i)
-      write (iOutFile, '(" QFINAL =  ",I4)') quick_basis%QFINAL(i)
-      write (iOutFile, '(" KSUMTYPE =  ",I4)') quick_basis%KSUMTYPE(i)
-
-      write (iOutFile, '(" Qsbasis =  ",I4,2x,I4,2x,I4,2x,I4)') &
-         quick_basis%Qsbasis(i, 0), quick_basis%Qsbasis(i, 1), &
-         quick_basis%Qsbasis(i, 2), quick_basis%Qsbasis(i, 3)
-      write (iOutFile, '(" Qfbasis =  ",I4,2x,I4,2x,I4,2x,I4)') &
-         quick_basis%Qfbasis(i, 0), quick_basis%Qfbasis(i, 1), &
-         quick_basis%Qfbasis(i, 2), quick_basis%Qfbasis(i, 3)
-      write (iOutFile, *)
+    write(iOutFile,'(" FOR SHELL ",I4)') i
+    write(iOutFile,'(" KSTART =  ",I4)') quick_basis%kstart(i)
+    write(iOutFile,'(" KATOM =  ",I4)') quick_basis%katom(i)
+    write(iOutFile,'(" KTYPE =  ",I4)') quick_basis%ktype(i)
+    write(iOutFile,'(" KPRIM =  ",I4)') quick_basis%kprim(i)
+    
+    write(iOutFile,'(" QNUMBER =  ",I4)') quick_basis%QNUMBER(i)
+    write(iOutFile,'(" QSTART =  ",I4)') quick_basis%QSTART(i)
+    write(iOutFile,'(" QFINAL =  ",I4)') quick_basis%QFINAL(i)
+    write(iOutFile,'(" KSUMTYPE =  ",I4)') quick_basis%KSUMTYPE(i)
+    
+    
+    write(iOutFile,'(" Qsbasis =  ",I4,2x,I4,2x,I4,2x,I4)') &
+                                          quick_basis%Qsbasis(i,0), quick_basis%Qsbasis(i,1), &
+                                          quick_basis%Qsbasis(i,2), quick_basis%Qsbasis(i,3)  
+    write(iOutFile,'(" Qfbasis =  ",I4,2x,I4,2x,I4,2x,I4)') &
+                                          quick_basis%Qfbasis(i,0), quick_basis%Qfbasis(i,1), &
+                                          quick_basis%Qfbasis(i,2), quick_basis%Qfbasis(i,3)
+    write(iOutFile,*)    
    enddo
-
+   
+   
 end subroutine debugBasis
+
 
 ! debugFullX
 subroutine debugFullX
-   use allmod
-   write (ioutfile, '("THE OVERLAP MATRIX")')
-   call PriSym(iOutFile, nbasis, quick_qm_struct%s, 'F18.10')
-   call flush(iOutFile)
-
-   write (ioutfile, '("THE X MATRIX")')
-   call PriSym(iOutFile, nbasis, quick_qm_struct%x, 'F18.10')
-
+    use allmod
+    write(ioutfile,'("THE OVERLAP MATRIX")')
+    call PriSym(iOutFile,nbasis,quick_qm_struct%s,'F18.10')
+    call flush(iOutFile)
+    
+    write(ioutfile,'("THE X MATRIX")')
+    call PriSym(iOutFile,nbasis,quick_qm_struct%x,'F18.10')
+    
 end subroutine debugFullX
 
 ! debugInitialGuess
 subroutine debugInitialGuess
-   use allmod
-   write (iOutFile, *) "DENSITY MATRIX AFTER INITIAL GUESS"
-   call PriSym(iOutFile, nbasis, quick_qm_struct%dense, 'f14.8')
+    use allmod
+         write(iOutFile,*) "DENSITY MATRIX AFTER INITIAL GUESS"
+         call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 end subroutine

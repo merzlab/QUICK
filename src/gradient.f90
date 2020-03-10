@@ -1,306 +1,633 @@
 #include "config.h"
-! Ed Brothers. May 23, 2002.
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine hfgrad
+!  Created by Madu Manathunga on 08/12/2019 
+!  Copyright 2019 Michigan State University. All rights reserved.
+!
+!------------------------------------------------------------------
+!  gradients
+!------------------------------------------------------------------
+!  08/12/2019 Madu Manathunga: Reorganized and improved content 
+!                             written by previous authors.
+!                             Also integrated exc gradients &
+!                             external potential gradient.
+!  11/21/2010 Yipu Miao: Cleaned up code and partially  implemented 
+!                        gpu and MPI capability
+!  09/12/2007 Xiao He: Modified the code
+!                       
+!  11/27/2001 Ed Brothers: wrote the original code
+!------------------------------------------------------------------
+
+subroutine gradient(failed)
+
+!------------------------------------------------------------------
+! This subroutine carries out a gradient calculation 
+!------------------------------------------------------------------
+
    use allmod
-   implicit double precision(a - h, o - z)
+   implicit double precision(a-h,o-z)
 
-   integer II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
-   common/hrrstore/II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+   logical :: failed
+   character(len=1) cartsym(3)
 
-   ! The purpose of this subroutine is to calculate the gradient of
-   ! the total energy with respect to nuclear displacement.  The results
-   ! of this are stored in Gradient, which is organized by atom and then
-   ! by direction of displacement, i.e. element 1 is the gradient of the
-   ! x diplacement of atom 1, element 5 is the y displacement of atom 2.
+#ifdef MPIV
+   include "mpif.h"
+#endif
 
-   ! Not that this is the RHF version of the code.  It is simplest of
-   ! the gradient codes in this program.
+!  Curently, only analytical gradients are available. This should be changed later.
+   quick_method%analgrad=.true.
 
-   !Xiao HE modified 09/12/2007
-   call cpu_time(timer_begin%TGrad)
-   do Iatm = 1, natom*3
-      quick_qm_struct%gradient(iatm) = 0.d0
-   enddo
+   quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
+   quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
 
-   ! The gradient at this level of theory is the sum of five terms.
-   ! 1)  The derivative of the nuclear repulsion.  Quick derivation:
-   ! Vnn = (Sum over A) (Sum over B>A) ZA ZB / RAB
-   ! where A and B are atoms, Z are charges, and RAB is the interatomic
-   ! seperation.  If we take the derivative, all terms not involving
-   ! A fall out. Thus:
-   ! Vnn/dXA = ZA (Sum over B) d/dXA (ZB /RAB)
-   ! Vnn/dXA = ZA (Sum over B) ZB d/dXA (RAB^-1)
-   ! Vnn/dXA = ZA (Sum over B) ZB d/dXA(((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-.5)
-   ! Vnn/dXA = ZA (Sum over B) ZB*-.5*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *2*(XA-XB)^1
-   ! Vnn/dXA = ZA (Sum over B) ZB*-((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *(XA-XB)^1
-   ! Vnn/dXA = ZA (Sum over B) ZB*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *(XB-XA)
-   ! Vnn/dXA = ZA (Sum over B) ZB*(XB-XA) RAB^-3
+!  Set array elements required for printing the gradients
+   cartsym(1) = 'X'
+   cartsym(2) = 'Y'
+   cartsym(3) = 'Z'
 
-   ! Thus this term is trivial, and can calculate it here. Note also
-   ! that that atom A can never equal atom B, and A-B part of the derivative
-   ! for A is the negative of the BA derivative for atom B.
-
-   do Iatm = 1, natom*3
-      do Jatm = Iatm + 1, natom
-         RIJ = (xyz(1, Iatm) - xyz(1, Jatm))*(xyz(1, Iatm) - xyz(1, Jatm)) &
-               + (xyz(2, Iatm) - xyz(2, Jatm))*(xyz(2, Iatm) - xyz(2, Jatm)) &
-               + (xyz(3, Iatm) - xyz(3, Jatm))*(xyz(3, Iatm) - xyz(3, Jatm))
-         ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-1.5d0))
-         XBminXA = xyz(1, Jatm) - xyz(1, Iatm)
-         YBminYA = xyz(2, Jatm) - xyz(2, Iatm)
-         ZBminZA = xyz(3, Jatm) - xyz(3, Iatm)
-         ISTART = (Iatm - 1)*3
-         JSTART = (Jatm - 1)*3
-         quick_qm_struct%gradient(ISTART + 1) = quick_qm_struct%gradient(ISTART + 1) + XBminXA*ZAZBdivRIJ3
-         quick_qm_struct%gradient(ISTART + 2) = quick_qm_struct%gradient(ISTART + 2) + YBminYA*ZAZBdivRIJ3
-         quick_qm_struct%gradient(ISTART + 3) = quick_qm_struct%gradient(ISTART + 3) + ZBminZA*ZAZBdivRIJ3
-         quick_qm_struct%gradient(JSTART + 1) = quick_qm_struct%gradient(JSTART + 1) - XBminXA*ZAZBdivRIJ3
-         quick_qm_struct%gradient(JSTART + 2) = quick_qm_struct%gradient(JSTART + 2) - YBminYA*ZAZBdivRIJ3
-         quick_qm_struct%gradient(JSTART + 3) = quick_qm_struct%gradient(JSTART + 3) - ZBminZA*ZAZBdivRIJ3
+!  Set the value of gradient vector to zero
+   do j=1,natom
+      do k=1,3
+         quick_qm_struct%gradient((j-1)*3+K)=0d0
       enddo
    enddo
 
-   ! 2)  The negative of the energy weighted density matrix element i j
-   ! with the derivative of the ij overlap.
+   do II=1,nbasis
+      do J =1,nbasis
+         quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
+      enddo
+   enddo
 
-   ! 3)  The derivative of the 1 electron kinetic energy term ij times
-   ! the density matrix element ij.
+#ifdef CUDA
+   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
+        quick_molspec%molchg, quick_molspec%iAtomType)
+   call gpu_upload_xyz(xyz)
+   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
+#endif
 
-   ! These terms are grouped together since we loop over the same terms.
-   ! Also note that these are the 2-center terms.
+!  calculate energy first
+   call g2eshell
+   call schwarzoff
 
-   ! The energy weighted denisty matrix is:
-   ! Q(i,j) =2*(Sum over alpha electrons a)  E(a) C(I,a) C(J,a)
-   ! Where C is the alpha or beta molecular orbital coefficients, and
-   ! E is the alpha or beta molecular orbital energies.
-   ! We'll store this in HOLD as we don't really need it (except for hessian
-   ! calculations later).
+#ifdef CUDA
+   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+        ncontract, itype, aexp, dcoeff, &
+        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
-   do I = 1, nbasis
-      do J = 1, nbasis
-         HOLDJI = 0.d0
-         do K = 1, quick_molspec%nelec/2
-            HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J, K)*quick_qm_struct%co(I, K))
+   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+   call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
+
+#endif
+
+   call getEnergy(failed)
+
+   if (quick_method%analgrad) then
+      call scf_gradient
+   endif
+
+#ifdef CUDA
+   if (quick_method%bCUDA) then
+      call gpu_cleanup()
+   endif
+#endif
+
+   write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
+   write (ioutfile,'(40("-"))')
+   write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
+   write (ioutfile,'(40("-"))')
+   do Iatm=1,natom
+      do Imomentum=1,3
+         write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+         xyz(Imomentum,Iatm)*0.529177249d0,quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+      enddo
+   enddo
+
+   write(ioutfile,'(40("-"))')
+
+   if(quick_method%extCharges) then
+      write (ioutfile,'(/," POINT CHARGE GRADIENT: ")')
+      write (ioutfile,'(40("-"))')
+      write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
+      write (ioutfile,'(40("-"))')
+      do Iatm=1,quick_molspec%nextatom
+         do Imomentum=1,3
+            write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+            quick_molspec%extxyz(Imomentum,Iatm)*0.529177249d0,quick_qm_struct%ptchg_gradient((Iatm-1)*3+Imomentum)
          enddo
-         quick_scratch%hold(J, I) = 2.d0*HOLDJI
+      enddo
+      write(ioutfile,'(40("-"))')
+   endif   
+
+   return
+
+end subroutine gradient
+
+subroutine scf_gradient
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+#ifdef MPIV
+   double precision:: temp_grad(3*natom)
+   include "mpif.h"
+#endif
+
+!---------------------------------------------------------------------
+!  The purpose of this subroutine is to calculate the gradient of
+!  the total energy with respect to nuclear displacement.  The results
+!  of this are stored in Gradient, which is organized by atom and then
+!  by direction of displacement, i.e. element 1 is the gradient of the
+!  x diplacement of atom 1, element 5 is the y displacement of atom 2.
+!  Not that this is the RHF version of the code.  It is simplest of
+!  the gradient codes in this program.
+!  The gradient at this level of theory is the sum of five terms.
+!---------------------------------------------------------------------
+
+!  Start the timer for gradient calculation
+   call cpu_time(timer_begin%TGrad)
+
+!  Set the values of gradient arry to zero 
+   do Iatm=1,natom*3
+      quick_qm_struct%gradient(iatm)=0.d0
+   enddo
+
+!---------------------------------------------------------------------
+!  1) The derivative of the nuclear repulsion.
+!---------------------------------------------------------------------
+
+   call cpu_time(timer_begin%TNucGrad)
+
+   call get_nuclear_repulsion_grad
+
+   call cpu_time(timer_end%TNucGrad)
+   timer_cumer%TNucGrad = timer_cumer%TNucGrad + timer_end%TNucGrad-timer_begin%TNucGrad
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPIV
+if(master) then
+#endif
+        write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+#ifdef MPIV
+endif
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!---------------------------------------------------------------------
+!  2) The derivative of the kinetic term
+!---------------------------------------------------------------------
+   call cpu_time(timer_begin%T1eGrad)
+
+   call get_kinetic_grad
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPIV
+if(master) then
+#endif
+        write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+#ifdef MPIV
+endif
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!---------------------------------------------------------------------
+!  3) The derivative of the 1 electron nuclear attraction term ij times
+!     the density matrix element ij.
+!---------------------------------------------------------------------
+
+#ifdef MPIV
+   if (bMPI) then
+      nshell_mpi = mpi_jshelln(mpirank)
+   else
+      nshell_mpi = jshell
+   endif
+
+   do i=1,nshell_mpi
+      if (bMPI) then
+         IIsh = mpi_jshell(mpirank,i)
+      else
+         IIsh = i
+      endif
+#else
+   do IIsh=1,jshell
+#endif
+      do JJsh=IIsh,jshell
+         call attrashellopt(IIsh,JJsh)
       enddo
    enddo
+
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPIV
+if(master) then
+#endif
+        write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (*,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+#ifdef MPIV
+endif
+#endif
+
+   call cpu_time(timer_end%T1eGrad)
+   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!---------------------------------------------------------------------
+!  4) The derivative of the electron repulsion term
+!---------------------------------------------------------------------
+   call cpu_time(timer_begin%T2eGrad)
+
+   call get_electron_replusion_grad
+
+   call cpu_time(timer_end%T2eGrad)
+   timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
+!---------------------------------------------------------------------
+!  5) If DFT, calculate the derivative of exchahnge correlation  term
+!---------------------------------------------------------------------
+
+   if (quick_method%DFT) then
+#ifdef MPIV
+   if(master) then
+#endif
+   ! implement exc grad timer here
+#ifdef MPIV
+   endif
+#endif
+
+
+      call cpu_time(timer_begin%TExGrad)
+
+      call get_xc_grad
+
+      call cpu_time(timer_end%TExGrad)
+      timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
+
+#ifdef MPIV
+   if(master) then
+#endif
+   ! implement exc grad timer here
+#ifdef MPIV
+   endif
+#endif
+
+   endif
+
+!  Stop the timer and add up the total gradient times
+   call cpu_time(timer_end%TGrad)
+   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
+
+#ifdef MPIV
+!  slave node will send infos
+   if(.not.master) then
+      do i=1,natom*3
+         temp_grad(i)=quick_qm_struct%gradient(i)
+      enddo
+!  send operator to master node
+   call MPI_SEND(temp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+   else
+!  master node will receive infos from every nodes
+      do i=1,mpisize-1
+!  receive opertors from slave nodes
+         call MPI_RECV(temp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!  and sum them into operator
+         do ii=1,natom*3
+            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+temp_grad(ii)
+         enddo
+      enddo
+  endif
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+if(master) then
+#endif
+        write (*,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
+        do Iatm=1,natom*3
+                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+        enddo
+#ifdef MPIV
+endif
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef MPIV
+if(master) then
+#endif
+if(quick_method%extCharges) then
+        write (*,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
+        do Iatm=1,quick_molspec%nextatom*3
+                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
+        enddo
+endif
+#ifdef MPIV
+endif
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
+
+!stop
+
+   return
+
+end subroutine scf_gradient
+
+subroutine get_nuclear_repulsion_grad
+
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   double precision, external :: rootSquare
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+!  This subroutine calculates the nuclear repulsion gradients. 
+
+!  Quick derivation:
+!  Vnn = (Sum over A) (Sum over B>A) ZA ZB / RAB
+!  where A and B are atoms, Z are charges, and RAB is the interatomic
+!  seperation.  If we take the derivative, all terms not involving
+!  A fall out. Thus:
+!  Vnn/dXA = ZA (Sum over B) d/dXA (ZB /RAB)
+!  Vnn/dXA = ZA (Sum over B) ZB d/dXA (RAB^-1)
+!  Vnn/dXA = ZA (Sum over B) ZB d/dXA(((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-.5)
+!  Vnn/dXA = ZA (Sum over B) ZB*-.5*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
+!  *2*(XA-XB)^1
+!  Vnn/dXA = ZA (Sum over B) ZB*-((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
+!  *(XA-XB)^1
+!  Vnn/dXA = ZA (Sum over B) ZB*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
+!  *(XB-XA)
+!  Vnn/dXA = ZA (Sum over B) ZB*(XB-XA) RAB^-3
+!
+!  Thus this term is trivial, and can calculate it here. Note also
+!  that that atom A can never equal atom B, and A-B part of the derivative
+!  for A is the negative of the BA derivative for atom B.
+
+   do Iatm = 1,(natom+quick_molspec%nextatom)*3
+      do Jatm = Iatm+1,(natom+quick_molspec%nextatom)
+         if(master) then
+            if(Iatm<=natom .and. Jatm<=natom)then  
+!  Nuclear-nuclear repulsion grdients, update nuclear gradient vector
+               RIJ = rootSquare(xyz(1:3,Iatm), xyz(1:3,Jatm), 3)
+               ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-3.0d0))
+               XBminXA = xyz(1,Jatm)-xyz(1,Iatm)
+               YBminYA = xyz(2,Jatm)-xyz(2,Iatm)
+               ZBminZA = xyz(3,Jatm)-xyz(3,Iatm)
+               ISTART = (Iatm-1)*3
+               JSTART = (Jatm-1)*3
+               quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+1) = quick_qm_struct%gradient(JSTART+1)-XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+2) = quick_qm_struct%gradient(JSTART+2)-YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(JSTART+3) = quick_qm_struct%gradient(JSTART+3)-ZBminZA*ZAZBdivRIJ3
+
+            elseif(Iatm<=natom .and. Jatm>natom)then 
+
+!  Nuclear-point charge repulsion grdients, update nuclear gradient vector               
+
+               RIJ = rootSquare(xyz(1:3,Iatm), quick_molspec%extxyz(1:3,Jatm-natom), 3)
+               ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%extchg(Jatm-natom)*(RIJ**(-3.0d0))
+               XBminXA = quick_molspec%extxyz(1,Jatm-natom)-xyz(1,Iatm)
+               YBminYA = quick_molspec%extxyz(2,Jatm-natom)-xyz(2,Iatm)
+               ZBminZA = quick_molspec%extxyz(3,Jatm-natom)-xyz(3,Iatm) 
+               ISTART = (Iatm-1)*3
+               quick_qm_struct%gradient(ISTART+1) = quick_qm_struct%gradient(ISTART+1)+XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+2) = quick_qm_struct%gradient(ISTART+2)+YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%gradient(ISTART+3) = quick_qm_struct%gradient(ISTART+3)+ZBminZA*ZAZBdivRIJ3
+           
+!  Nuclear-point charge repulsion grdients, update point charge gradient vector
+
+               JSTART = (Jatm-natom-1)*3
+               quick_qm_struct%ptchg_gradient(JSTART+1) = quick_qm_struct%ptchg_gradient(JSTART+1)-XBminXA*ZAZBdivRIJ3
+               quick_qm_struct%ptchg_gradient(JSTART+2) = quick_qm_struct%ptchg_gradient(JSTART+2)-YBminYA*ZAZBdivRIJ3
+               quick_qm_struct%ptchg_gradient(JSTART+3) = quick_qm_struct%ptchg_gradient(JSTART+3)-ZBminZA*ZAZBdivRIJ3
+            endif
+
+         endif
+      enddo
+   enddo
+
+   return
+
+end subroutine get_nuclear_repulsion_grad
+
+
+subroutine get_kinetic_grad
+
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   logical :: ijcon
+#ifdef MPIV
+   include "mpif.h"
+#endif
+
+!  1)  The negative of the energy weighted density matrix element i j
+!   with the derivative of the ij overlap.
+!
+!  2)  The derivative of the 1 electron kinetic energy term ij times
+!  the density matrix element ij.
+!
+!  These terms are grouped together since we loop over the same terms.
+!  Also note that these are the 2-center terms.
+!
+!  The energy weighted denisty matrix is:
+!  Q(i,j) =2*(Sum over alpha electrons a)  E(a) C(I,a) C(J,a)
+!  Where C is the alpha or beta molecular orbital coefficients, and
+!  E is the alpha or beta molecular orbital energies.
+!  We'll store this in HOLD as we don't really need it (except for hessian
+!  calculations later).
+
+!write(*,*) "get_nuclear_repulsion_grad: Calculating HOLD array"
+
+#ifdef MPIV
+   if (master) then
+#endif
+   do I=1,nbasis
+      do J=1,nbasis
+         HOLDJI = 0.d0
+         do K=1,quick_molspec%nelec/2
+         HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
+         enddo
+         quick_scratch%hold(J,I) = 2.d0*HOLDJI
+      enddo
+   enddo
+#ifdef MPIV
+   endif
+   call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+#endif
 
    if (quick_method%debug) then
-      write (ioutfile, '(/"THE ENERGY WEIGHTED DENSITY MATRIX")')
-      do I = 1, nbasis
-         do J = 1, nbasis
-            write (ioutfile, '("W[",I4,",",I4,"]=",F18.10)') &
-               J, I, quick_scratch%hold(J, I)
+      write(ioutfile,'(/"THE ENERGY WEIGHTED DENSITY MATRIX")')
+      do I=1,nbasis
+         do J=1,nbasis
+            write (ioutfile,'("W[",I4,",",I4,"]=",F18.10)') &
+            J,I,quick_scratch%hold(J,I)
          enddo
       enddo
    endif
 
-   ! The contribution to the derivative of energy with respect to nuclear
-   ! postion for this term is: -(Sum over i,j) Q(i,j) dS(ij)/dXA
-   ! Now Q is symmetric, and dS(ij)/dXA = dS(ji)/dXA.  Furthermore, if
-   ! i and j are on the same center, the term is zero. Thus we need to find
-   ! the i j pairs for i and j not on the same atom.
-   ! Also:  The derivative of a cartesian gtf is:
+!  The contribution to the derivative of energy with respect to nuclear
+!  postion for this term is: -(Sum over i,j) Q(i,j) dS(ij)/dXA
+!  Now Q is symmetric, and dS(ij)/dXA = dS(ji)/dXA.  Furthermore, if
+!  i and j are on the same center, the term is zero. Thus we need to find
+!  the i j pairs for i and j not on the same atom.
+!  Also:  The derivative of a cartesian gtf is:
+!
+!  d/dXA ((x-XA)^i (y-YA)^j (z-ZA)^k e^(-ar^2))
+!  = 2a((x-XA)^(i+1) (y-YA)^j (z-ZA)^k e^(-ar^2))
+!  - i ((x-XA)^(i-1) (y-YA)^j (z-ZA)^k e^(-ar^2))
 
-   ! d/dXA ((x-XA)^i (y-YA)^j (z-ZA)^k e^(-ar^2))
-   ! = 2a((x-XA)^(i+1) (y-YA)^j (z-ZA)^k e^(-ar^2))
-   ! - i ((x-XA)^(i-1) (y-YA)^j (z-ZA)^k e^(-ar^2))
+!  Note that the negative on the final term comes from the form of (x-XA).
+#ifdef MPIV
+   if (bMPI) then
+      nbasis_mpi = mpi_nbasisn(mpirank)
+   else
+      nbasis_mpi = nbasis
+   endif
 
-   ! Note that the negative on the final term comes from the form of (x-XA).
+   do i=1,nbasis_mpi
+      if (bMPI) then
+         Ibas = mpi_nbasis(mpirank,i)
+      else
+         Ibas = i
+   endif
+#else
+   do Ibas=1,nbasis
+#endif
+      ISTART = (quick_basis%ncenter(Ibas)-1) *3
+         do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
+            JSTART = (quick_basis%ncenter(Jbas)-1) *3
+            DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
 
-   do Ibas = 1, nbasis
-      ISTART = (quick_basis%ncenter(Ibas) - 1)*3
-      do Jbas = quick_basis%last_basis_function(quick_basis%ncenter(IBAS)) + 1, nbasis
-         JSTART = (quick_basis%ncenter(Jbas) - 1)*3
-         DENSEJI = quick_qm_struct%dense(Jbas, Ibas)
+!  We have selected our two basis functions, now loop over angular momentum.
+            do Imomentum=1,3
 
-         ! We have selected our two basis functions, now loop over angular momentum.
+!  do the Ibas derivatives first. In order to prevent code duplication,
+!  this has been implemented in a seperate subroutine. 
+               ijcon = .true. 
+               call get_ijbas_derivative(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI) 
 
-         do Imomentum = 1, 3
-            dSI = 0.d0
-            dSJ = 0.d0
-            dKEI = 0.d0
-            dKEJ = 0.d0
+!  do the Jbas derivatives.
+               ijcon = .false.
+               call get_ijbas_derivative(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI)
 
-            ! do the Ibas derivatives first.
-
-            itype(Imomentum, Ibas) = itype(Imomentum, Ibas) + 1
-            do Icon = 1, ncontract(Ibas)
-               do Jcon = 1, ncontract(Jbas)
-                  dSI = dSI + 2.d0*aexp(Icon, Ibas)* &
-                        dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                        *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                 itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                 itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                 xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                 xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                 xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  dKEI = dKEI + 2.d0*aexp(Icon, Ibas)* &
-                         dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                         *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                   itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                   itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                   xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                   xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                   xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-               enddo
             enddo
-            itype(Imomentum, Ibas) = itype(Imomentum, Ibas) - 1
-            if (itype(Imomentum, Ibas) /= 0) then
-               itype(Imomentum, Ibas) = itype(Imomentum, Ibas) - 1
-               do Icon = 1, ncontract(Ibas)
-                  do Jcon = 1, ncontract(Jbas)
-                     dSI = dSI - dble(itype(Imomentum, Ibas) + 1)* &
-                           dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                           *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                    itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                    itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                    xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                    xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                    xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                     dKEI = dKEI - dble(itype(Imomentum, Ibas) + 1)* &
-                            dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                            *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                      itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                      itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                      xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                      xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                      xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
-               itype(Imomentum, Ibas) = itype(Imomentum, Ibas) + 1
-            endif
-            quick_qm_struct%gradient(ISTART + Imomentum) = quick_qm_struct%gradient(ISTART + Imomentum) &
-                                                           - dSI*quick_scratch%hold(Jbas, Ibas)*2.d0 &
-                                                           + dKeI*DENSEJI*2.d0
-
-            ! Now do the Jbas derivatives.
-
-            itype(Imomentum, Jbas) = itype(Imomentum, Jbas) + 1
-            do Icon = 1, ncontract(Ibas)
-               do Jcon = 1, ncontract(Jbas)
-                  dSJ = dSJ + 2.d0*aexp(Jcon, Jbas)* &
-                        dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                        *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                 itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                 itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                 xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                 xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                 xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  dKEJ = dKEJ + 2.d0*aexp(Jcon, Jbas)* &
-                         dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                         *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                   itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                   itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                   xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                   xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                   xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-               enddo
-            enddo
-            itype(Imomentum, Jbas) = itype(Imomentum, Jbas) - 1
-            if (itype(Imomentum, Jbas) /= 0) then
-               itype(Imomentum, Jbas) = itype(Imomentum, Jbas) - 1
-               do Icon = 1, ncontract(Ibas)
-                  do Jcon = 1, ncontract(Jbas)
-                     dSJ = dSJ - dble(itype(Imomentum, Jbas) + 1)* &
-                           dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                           *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                    itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                    itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                    xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                    xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                    xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                     dKEJ = dKEJ - dble(itype(Imomentum, Jbas) + 1)* &
-                            dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                            *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                      itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                      itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                      xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                      xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                      xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
-               itype(Imomentum, Jbas) = itype(Imomentum, Jbas) + 1
-            endif
-            quick_qm_struct%gradient(JSTART + Imomentum) = quick_qm_struct%gradient(JSTART + Imomentum) &
-                                                           - dSJ*quick_scratch%hold(Jbas, Ibas)*2.d0 &
-                                                           + dKEJ*DENSEJI*2.d0
          enddo
       enddo
-   enddo
 
-   ! 4)  The derivative of the 1 electron nuclear attraction term ij times
-   ! the density matrix element ij.
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
-   ! Please note that these are the three center terms.
+   return
 
-   do IIsh = 1, jshell
-      do JJsh = IIsh, jshell
-         call attrashellopt(IIsh, JJsh)
-      enddo
-   enddo
+end subroutine get_kinetic_grad
 
-   !        write (ioutfile,'(/," ANALYTICAL GRADIENT first: ")')
-   !        do Iatm=1,natom
-   !            do Imomentum=1,3
-   !                write (ioutfile,'(I5,7x,F20.10)')Iatm, &
-   !                GRADIENT((Iatm-1)*3+Imomentum)
-   !            enddo
-   !        enddo
 
-   ! 5)  The derivative of the 4center 2e- terms with respect to X times
-   ! the coefficient found in the energy. (i.e. the multiplicative
-   ! constants from the density matrix that arise as these are both
-   ! the exchange and correlation integrals.
+subroutine get_electron_replusion_grad
 
-   !    call g2eshell
+   use allmod
+   implicit double precision(a-h,o-z)
 
-   ! Delta density matrix cutoff
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+#ifdef MPIV
+   include "mpif.h"
+#endif
 
-   do II = 1, jshell
-      do JJ = II, jshell
-         DNtemp = 0.0d0
-         call DNscreen(II, JJ, DNtemp)
-         Cutmatrix(II, JJ) = DNtemp
-         Cutmatrix(JJ, II) = DNtemp
+!  This subroutine calculates the derivative of 4center 2e- 
+!  terms with respect to X times the coefficient found in the energy.
+!  (i.e. the multiplicative constants from the density matrix that 
+!  arise as these are both the exchange and correlation integrals.
+
+   do II=1,jshell
+      do JJ=II,jshell
+         DNtemp=0.0d0
+         call DNscreen(II,JJ,DNtemp)
+         Cutmatrix(II,JJ)=DNtemp
+         Cutmatrix(JJ,II)=DNtemp
       enddo
    enddo
 
 #ifdef CUDA
    if (quick_method%bCUDA) then
-      call gpu_upload_calculated(quick_qm_struct%o, quick_qm_struct%co, &
-                                 quick_qm_struct%vec, quick_qm_struct%dense)
-      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff, quick_method%primLimit)
+
+      if(quick_method%HF)then
+         call gpu_upload_method(0, 1.0d0)
+      elseif(quick_method%uselibxc)then
+         call gpu_upload_method(3, quick_method%x_hybrid_coeff)
+      elseif(quick_method%BLYP)then
+         call gpu_upload_method(2, 0.0d0)
+      elseif(quick_method%B3LYP)then
+         call gpu_upload_method(1, 0.2d0)
+      endif
+
+      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+      quick_qm_struct%vec,quick_qm_struct%dense)
+      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
       call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
       call gpu_grad(quick_qm_struct%gradient)
    else
 #endif
 
-      ! ntempxiao1=0
-      ! ntempxiao2=0
+#ifdef MPIV
+   if (bMPI) then
+      nshell_mpi = mpi_jshelln(mpirank)
+   else
+      nshell_mpi = jshell
+   endif
 
-      do II = 1, jshell
-         do JJ = II, jshell
-            Testtmp = Ycutoff(II, JJ)
-            do KK = II, jshell
-               do LL = KK, jshell
-                  if (quick_basis%katom(II) .eq. quick_basis%katom(JJ) .and. quick_basis%katom(II) .eq. &
-                      quick_basis%katom(KK) .and. quick_basis%katom(II) .eq. quick_basis%katom(LL)) then
+   do i=1,nshell_mpi
+      if (bMPI) then
+         II = mpi_jshell(mpirank,i)
+      else
+         II = i
+   endif
+#else
+      do II=1,jshell
+#endif
+         do JJ=II,jshell
+         Testtmp=Ycutoff(II,JJ)
+            do KK=II,jshell
+               do LL=KK,jshell
+                  if(quick_basis%katom(II).eq.quick_basis%katom(JJ).and.quick_basis%katom(II).eq. &
+                  quick_basis%katom(KK).and.quick_basis%katom(II).eq.quick_basis%katom(LL))then
                      continue
-                     !          ntempxiao1=ntempxiao1+1
                   else
-                     testCutoff = TESTtmp*Ycutoff(KK, LL)
-                     if (testCutoff .gt. quick_method%gradCutoff) then
-                        DNmax = max(4.0d0*cutmatrix(II, JJ), 4.0d0*cutmatrix(KK, LL), &
-                                    cutmatrix(II, LL), cutmatrix(II, KK), cutmatrix(JJ, KK), cutmatrix(JJ, LL))
-                        cutoffTest = testCutoff*DNmax
-                        if (cutoffTest .gt. quick_method%gradCutoff) then
+                     testCutoff = TESTtmp*Ycutoff(KK,LL)
+                     if(testCutoff.gt.quick_method%gradCutoff)then
+                        DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
+                        cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
+                        cutoffTest=testCutoff*DNmax
+                        if(cutoffTest.gt.quick_method%gradCutoff)then
                            call shellopt
                         endif
                      endif
@@ -309,342 +636,479 @@ subroutine hfgrad
             enddo
          enddo
       enddo
-
 #ifdef CUDA
    endif
 #endif
 
-   call cpu_time(timer_end%TGrad)
-   write (ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")'), timer_end%TGrad - timer_begin%TGrad
-   timer_cumer%TGrad = timer_end%TGrad - timer_begin%TGrad + timer_cumer%TGrad
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
    return
-end subroutine hfgrad
 
-#ifdef MPI
+end subroutine get_electron_replusion_grad
 
-! Yipu Miao  11/21/2010 Add MPI option
-! Ed Brothers. May 23, 2002.
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine mpi_hfgrad
+subroutine get_xc_grad
+
+!-------------------------------------------------------------------------
+!  This subroutine will calculate:
+!  1) The derivative of the exchange/correlation functional energy
+!  with respect to nuclear displacement.
+!  2) The derivative of the weight of the quadrature points with respect
+!  to nuclear displacement.
+!
+!  These two terms arise because of the quadrature used to calculate the
+!  XC terms.
+!  Exc = (Sum over grid points) W(g) f(g)
+!  dExc/dXA = (Sum over grid points) dW(g)/dXA f(g) + W(g) df(g)/dXA
+!
+!  For the W(g) df(g)/dXA term, the derivation was done by Ed Brothers and
+!  is a varient of the method found in the Johnson-Gill-Pople paper.  It can
+!  be found in Ed's thesis, assuming he ever writes it.
+!
+!  One of the actuals element is:
+!  dExc/dXa =2*Dense(Mu,nu)*(Sum over mu centered on A)(Sumover all nu)
+!  Integral((df/drhoa dPhimu/dXA Phinu)-
+!  (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b))
+!  DOT Grad(dPhimu/dXa Phinu))
+!
+!  where F alpha mu nu is the the alpha spin portion of the operator matrix
+!  element mu, nu,
+!  df/drhoa is the derivative of the functional by the alpha density,
+!  df/dgaa is the derivative of the functional by the alpha gradient
+!  invariant, i.e. the dot product of the gradient of the alpha
+!  density with itself.
+!  df/dgab is the derivative of the functional by the dot product of
+!  the gradient of the alpha density with the beta density.
+!  Grad(Phimu Phinu) is the gradient of Phimu times Phinu.
+!-------------------------------------------------------------------------
+
    use allmod
-   implicit double precision(a - h, o - z)
+   use xc_f90_types_m
+   use xc_f90_lib_m
+   implicit double precision(a-h,o-z)
 
-   integer II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
-   common/hrrstore/II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
-   double precision:: temp_grad(3*natom)
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision, dimension(1) :: libxc_rho
+   double precision, dimension(1) :: libxc_sigma
+   double precision, dimension(1) :: libxc_exc
+   double precision, dimension(1) :: libxc_vrhoa
+   double precision, dimension(1) :: libxc_vsigmaa
+   type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
+   type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
+   
+   double precision, dimension(natom*50*194) :: init_grid_ptx, init_grid_pty, init_grid_ptz, arr_wtang, arr_rwt, arr_rad3
+   integer, dimension(natom*50*194) :: init_grid_atm
+
+#ifdef MPIV
+!   integer, dimension(0:mpisize-1) :: itotgridspn
+!   integer, dimension(0:mpisize-1) :: igridptul
+!   integer, dimension(0:mpisize-1) :: igridptll
    include "mpif.h"
+#endif
 
-   ! The purpose of this subroutine is to calculate the gradient of
-   ! the total energy with respect to nuclear displacement.  The results
-   ! of this are stored in Gradient, which is organized by atom and then
-   ! by direction of displacement, i.e. element 1 is the gradient of the
-   ! x diplacement of atom 1, element 5 is the y displacement of atom 2.
+#ifdef CUDA
 
-   ! Not that this is the RHF version of the code.  It is simplest of
-   ! the gradient codes in this program.
+!   idx_grid=1
+!   itst=1
+!   do Iatm=1,natom
+!        Iradtemp=50
+!       do Irad = 1, Iradtemp 
+!         if(quick_method%iSG.eq.1)then
+!            call gridformnew(iatm,RGRID(Irad),iiangt)
+!            rad = radii(quick_molspec%iattype(iatm))
+!         else
+!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+!            rad = radii2(quick_molspec%iattype(iatm))
+!         endif
+!
+!         rad3 = rad*rad*rad
+!         do Iang=1,iiangt
+!
+!            init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
+!            init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
+!            init_grid_ptz(idx_grid)=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
+!            init_grid_atm(idx_grid)=Iatm
+!
+!            arr_wtang(idx_grid) = WTANG(Iang)
+!            arr_rwt(idx_grid) = RWT(Irad)
+!            arr_rad3(idx_grid) = rad3
+!
+!            sswt=SSW(init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),Iatm)
+!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
+!            write(*,*) idx_grid,init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt
+!            if (weight < quick_method%DMCutoff ) then
+!                continue
+!            else
+                !write(*,*) Iatm,Iang,idx_grid
+!                write(*,*) itst-1,"grid_ptx:",init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt,weight
+!                itst=itst+1
+!            endif
+!            idx_grid=idx_grid+1
+!         enddo
+!      enddo
+!   enddo
 
-   !Xiao HE modified 09/12/2007
-   call cpu_time(timer_begin%TGrad)
+!    write(*,*) "Surving grid pts: ", itst, quick_method%DMCutoff
 
-   do Iatm = 1, natom*3
-      quick_qm_struct%gradient(iatm) = 0.d0
-   enddo
+   if(quick_method%bCUDA) then
 
-   ! The gradient at this level of theory is the sum of five terms.
-   ! 1)  The derivative of the nuclear repulsion.  Quick derivation:
-   ! Vnn = (Sum over A) (Sum over B>A) ZA ZB / RAB
-   ! where A and B are atoms, Z are charges, and RAB is the interatomic
-   ! seperation.  If we take the derivative, all terms not involving
-   ! A fall out. Thus:
-   ! Vnn/dXA = ZA (Sum over B) d/dXA (ZB /RAB)
-   ! Vnn/dXA = ZA (Sum over B) ZB d/dXA (RAB^-1)
-   ! Vnn/dXA = ZA (Sum over B) ZB d/dXA(((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-.5)
-   ! Vnn/dXA = ZA (Sum over B) ZB*-.5*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *2*(XA-XB)^1
-   ! Vnn/dXA = ZA (Sum over B) ZB*-((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *(XA-XB)^1
-   ! Vnn/dXA = ZA (Sum over B) ZB*((XA-XB)^2+(YA-YB)^2+(ZA-ZB)^2)^-1.5
-   ! *(XB-XA)
-   ! Vnn/dXA = ZA (Sum over B) ZB*(XB-XA) RAB^-3
+      call gpu_upload_density_matrix(quick_qm_struct%dense)
 
-   ! Thus this term is trivial, and can calculate it here. Note also
-   ! that that atom A can never equal atom B, and A-B part of the derivative
-   ! for A is the negative of the BA derivative for atom B.
+      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
+      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
-   do Iatm = 1, natom*3
-      do Jatm = Iatm + 1, natom
-         RIJ = (xyz(1, Iatm) - xyz(1, Jatm))*(xyz(1, Iatm) - xyz(1, Jatm)) &
-               + (xyz(2, Iatm) - xyz(2, Jatm))*(xyz(2, Iatm) - xyz(2, Jatm)) &
-               + (xyz(3, Iatm) - xyz(3, Jatm))*(xyz(3, Iatm) - xyz(3, Jatm))
-         ZAZBdivRIJ3 = quick_molspec%chg(Iatm)*quick_molspec%chg(Jatm)*(RIJ**(-1.5d0))
-         XBminXA = xyz(1, Jatm) - xyz(1, Iatm)
-         YBminYA = xyz(2, Jatm) - xyz(2, Iatm)
-         ZBminZA = xyz(3, Jatm) - xyz(3, Iatm)
-         ISTART = (Iatm - 1)*3
-         JSTART = (Jatm - 1)*3
-         if (master) then
-            quick_qm_struct%gradient(ISTART + 1) = quick_qm_struct%gradient(ISTART + 1) + XBminXA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(ISTART + 2) = quick_qm_struct%gradient(ISTART + 2) + YBminYA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(ISTART + 3) = quick_qm_struct%gradient(ISTART + 3) + ZBminZA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART + 1) = quick_qm_struct%gradient(JSTART + 1) - XBminXA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART + 2) = quick_qm_struct%gradient(JSTART + 2) - YBminYA*ZAZBdivRIJ3
-            quick_qm_struct%gradient(JSTART + 3) = quick_qm_struct%gradient(JSTART + 3) - ZBminZA*ZAZBdivRIJ3
+      call gpu_xcgrad_new_imp(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
+quick_method%xc_polarization)
+
+      call gpu_delete_dft_grid()
+
+   endif
+#else
+
+   if(quick_method%uselibxc) then
+!  Initiate the libxc functionals
+      do ifunc=1, quick_method%nof_functionals
+         if(quick_method%xc_polarization > 0 ) then
+            call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
+            quick_method%functional_id(ifunc),XC_POLARIZED)
+         else
+            call xc_f90_func_init(xc_func(ifunc), &
+            xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
          endif
       enddo
-   enddo
-
-   ! 2)  The negative of the energy weighted density matrix element i j
-   ! with the derivative of the ij overlap.
-
-   ! 3)  The derivative of the 1 electron kinetic energy term ij times
-   ! the density matrix element ij.
-
-   ! These terms are grouped together since we loop over the same terms.
-   ! Also note that these are the 2-center terms.
-
-   ! The energy weighted denisty matrix is:
-   ! Q(i,j) =2*(Sum over alpha electrons a)  E(a) C(I,a) C(J,a)
-   ! Where C is the alpha or beta molecular orbital coefficients, and
-   ! E is the alpha or beta molecular orbital energies.
-   ! We'll store this in HOLD as we don't really need it (except for hessian
-   ! calculations later).
-
-   if (master) then
-   do I = 1, nbasis
-      do J = 1, nbasis
-         HOLDJI = 0.d0
-         do K = 1, quick_molspec%nelec/2
-            HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J, K)*quick_qm_struct%co(I, K))
-         enddo
-         quick_scratch%hold(J, I) = 2.d0*HOLDJI
-      enddo
-   enddo
    endif
 
-!  call MPI_BCAST(HOLD,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!  call MPI_BCAST(quick_method%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!  Generate the grid
+!   do Iatm=1,natom
+!      if(quick_method%iSG.eq.1)then
+!         Iradtemp=50
+!      else
+!         if(quick_molspec%iattype(iatm).le.10)then
+!            Iradtemp=23
+!         else
+!            Iradtemp=26
+!         endif
+!      endif
 
-   if (quick_method%debug) then
-      write (ioutfile, '(/"THE ENERGY WEIGHTED DENSITY MATRIX")')
-      do I = 1, nbasis
-         do J = 1, nbasis
-            write (ioutfile, '("W[",I4,",",I4,"]=",F18.10)') &
-               J, I, quick_scratch%hold(J, I)
-         enddo
-      enddo
-   endif
+#ifdef MPIV
+!  Distribute grid points among master and slaves
+!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
+#endif
 
-   ! The contribution to the derivative of energy with respect to nuclear
-   ! postion for this term is: -(Sum over i,j) Q(i,j) dS(ij)/dXA
-   ! Now Q is symmetric, and dS(ij)/dXA = dS(ji)/dXA.  Furthermore, if
-   ! i and j are on the same center, the term is zero. Thus we need to find
-   ! the i j pairs for i and j not on the same atom.
-   ! Also:  The derivative of a cartesian gtf is:
+#ifdef MPIV
+      if(bMPI) then
+         irad_init = quick_dft_grid%igridptll(mpirank+1)
+         irad_end = quick_dft_grid%igridptul(mpirank+1)
+      else
+         irad_init = 1
+         irad_end = quick_dft_grid%nbins
+      endif
+      do Ibin=irad_init, irad_end
+#else
+      do Ibin=1, quick_dft_grid%nbins
+#endif
 
-   ! d/dXA ((x-XA)^i (y-YA)^j (z-ZA)^k e^(-ar^2))
-   ! = 2a((x-XA)^(i+1) (y-YA)^j (z-ZA)^k e^(-ar^2))
-   ! - i ((x-XA)^(i-1) (y-YA)^j (z-ZA)^k e^(-ar^2))
+!         if(quick_method%iSG.eq.1)then
+!            call gridformnew(iatm,RGRID(Irad),iiangt)
+!            rad = radii(quick_molspec%iattype(iatm))
+!         else
+!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+!            rad = radii2(quick_molspec%iattype(iatm))
+!         endif
 
-   ! Note that the negative on the final term comes from the form of (x-XA).
+!         rad3 = rad*rad*rad
+!         do Iang=1,iiangt
+!            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
+!            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
+!            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
 
-   do i = 1, mpi_nbasisn(mpirank)
-      Ibas = mpi_nbasis(mpirank, i)
-      ISTART = (quick_basis%ncenter(Ibas) - 1)*3
-      do Jbas = quick_basis%last_basis_function(quick_basis%ncenter(IBAS)) + 1, nbasis
-         JSTART = (quick_basis%ncenter(Jbas) - 1)*3
-         DENSEJI = quick_qm_struct%dense(Jbas, Ibas)
+!  Calculate the weight of the grid point in the SSW scheme.  If
+!  the grid point has a zero weight, we can skip it.
 
-         ! We have selected our two basis functions, now loop over angular momentum.
+!    do Ibin=1, quick_dft_grid%nbins
+        Igp=quick_dft_grid%bin_counter(Ibin)+1
 
-         do Imomentum = 1, 3
-            dSI = 0.d0
-            dSJ = 0.d0
-            dKEI = 0.d0
-            dKEJ = 0.d0
+        do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
 
-            ! do the Ibas derivatives first.
+           gridx=quick_dft_grid%gridxb(Igp)
+           gridy=quick_dft_grid%gridyb(Igp)
+           gridz=quick_dft_grid%gridzb(Igp)
 
-            itype(Imomentum, Ibas) = itype(Imomentum, Ibas) + 1
-            do Icon = 1, ncontract(Ibas)
-               do Jcon = 1, ncontract(Jbas)
-                  dSI = dSI + 2.d0*aexp(Icon, Ibas)* &
-                        dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                        *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                 itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                 itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                 xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                 xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                 xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  dKEI = dKEI + 2.d0*aexp(Icon, Ibas)* &
-                         dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                         *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                   itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                   itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                   xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                   xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                   xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
+           sswt=quick_dft_grid%gridb_sswt(Igp)
+           weight=quick_dft_grid%gridb_weight(Igp)
+           Iatm=quick_dft_grid%gridb_atm(Igp)
+
+!            sswt=SSW(gridx,gridy,gridz,Iatm)
+!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
+            
+            if (weight < quick_method%DMCutoff ) then
+               continue
+            else
+
+               icount=quick_dft_grid%basf_counter(Ibin)+1
+               do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+                  Ibas=quick_dft_grid%basf(icount)+1
+
+                  call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                  dphidz,Ibas,icount)
+
+                  phixiao(Ibas)=phi
+                  dphidxxiao(Ibas)=dphidx
+                  dphidyxiao(Ibas)=dphidy
+                  dphidzxiao(Ibas)=dphidz
+
+                  icount=icount+1
                enddo
-            enddo
-            itype(Imomentum, Ibas) = itype(Imomentum, Ibas) - 1
-            if (itype(Imomentum, Ibas) /= 0) then
-               itype(Imomentum, Ibas) = itype(Imomentum, Ibas) - 1
-               do Icon = 1, ncontract(Ibas)
-                  do Jcon = 1, ncontract(Jbas)
-                     dSI = dSI - dble(itype(Imomentum, Ibas) + 1)* &
-                           dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                           *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                    itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                    itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                    xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                    xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                    xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                     dKEI = dKEI - dble(itype(Imomentum, Ibas) + 1)* &
-                            dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                            *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                      itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                      itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                      xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                      xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                      xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
-               itype(Imomentum, Ibas) = itype(Imomentum, Ibas) + 1
-            endif
-            quick_qm_struct%gradient(ISTART + Imomentum) = quick_qm_struct%gradient(ISTART + Imomentum) &
-                                                           - dSI*quick_scratch%hold(Jbas, Ibas)*2.d0 &
-                                                           + dKeI*DENSEJI*2.d0
 
-            ! Now do the Jbas derivatives.
+               
 
-            itype(Imomentum, Jbas) = itype(Imomentum, Jbas) + 1
-            do Icon = 1, ncontract(Ibas)
-               do Jcon = 1, ncontract(Jbas)
-                  dSJ = dSJ + 2.d0*aexp(Jcon, Jbas)* &
-                        dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                        *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                 itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                 itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                 xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                 xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                 xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  dKEJ = dKEJ + 2.d0*aexp(Jcon, Jbas)* &
-                         dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                         *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                   itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                   itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                   xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                   xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                   xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-               enddo
-            enddo
-            itype(Imomentum, Jbas) = itype(Imomentum, Jbas) - 1
-            if (itype(Imomentum, Jbas) /= 0) then
-               itype(Imomentum, Jbas) = itype(Imomentum, Jbas) - 1
-               do Icon = 1, ncontract(Ibas)
-                  do Jcon = 1, ncontract(Jbas)
-                     dSJ = dSJ - dble(itype(Imomentum, Jbas) + 1)* &
-                           dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                           *overlap(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                    itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                    itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                    xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                    xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                    xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                     dKEJ = dKEJ - dble(itype(Imomentum, Jbas) + 1)* &
-                            dcoeff(Jcon, Jbas)*dcoeff(Icon, Ibas) &
-                            *ekinetic(aexp(Jcon, Jbas), aexp(Icon, Ibas), &
-                                      itype(1, Jbas), itype(2, Jbas), itype(3, Jbas), &
-                                      itype(1, Ibas), itype(2, Ibas), itype(3, Ibas), &
-                                      xyz(1, quick_basis%ncenter(Jbas)), xyz(2, quick_basis%ncenter(Jbas)), &
-                                      xyz(3, quick_basis%ncenter(Jbas)), xyz(1, quick_basis%ncenter(Ibas)), &
-                                      xyz(2, quick_basis%ncenter(Ibas)), xyz(3, quick_basis%ncenter(Ibas)))
-                  enddo
-               enddo
-               itype(Imomentum, Jbas) = itype(Imomentum, Jbas) + 1
-            endif
-            quick_qm_struct%gradient(JSTART + Imomentum) = quick_qm_struct%gradient(JSTART + Imomentum) &
-                                                           - dSJ*quick_scratch%hold(Jbas, Ibas)*2.d0 &
-                                                           + dKEJ*DENSEJI*2.d0
-         enddo
-      enddo
-   enddo
-   !endif
+!  evaluate the densities at the grid point and the gradient at that grid point            
+               call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+               gbx,gby,gbz,Ibin)
 
-   ! 4)  The derivative of the 1 electron nuclear attraction term ij times
-   ! the density matrix element ij.
-
-   ! Please note that these are the three center terms.
-
-   do i = 1, mpi_jshelln(mpirank)
-      IIsh = mpi_jshell(mpirank, i)
-      do JJsh = IIsh, jshell
-         call attrashellopt(IIsh, JJsh)
-      enddo
-   enddo
-
-   do II = 1, jshell
-      do JJ = II, jshell
-         DNtemp = 0.0d0
-         call DNscreen(II, JJ, DNtemp)
-         Cutmatrix(II, JJ) = DNtemp
-         Cutmatrix(JJ, II) = DNtemp
-      enddo
-   enddo
-
-   do i = 1, mpi_jshelln(mpirank)
-      II = mpi_jshell(mpirank, i)
-      do JJ = II, jshell
-         Testtmp = Ycutoff(II, JJ)
-         do KK = II, jshell
-            do LL = KK, jshell
-               if (quick_basis%katom(II) .eq. quick_basis%katom(JJ) .and. quick_basis%katom(II) .eq. quick_basis%katom(KK) &
-                   .and. quick_basis%katom(II) .eq. quick_basis%katom(LL)) then
+               if (density < quick_method%DMCutoff ) then
                   continue
+
                else
-                  testCutoff = TESTtmp*Ycutoff(KK, LL)
-                  if (testCutoff .gt. quick_method%gradCutoff) then
-                     DNmax = max(4.0d0*cutmatrix(II, JJ), 4.0d0*cutmatrix(KK, LL), &
-                                 cutmatrix(II, LL), cutmatrix(II, KK), cutmatrix(JJ, KK), cutmatrix(JJ, LL))
-                     cutoffTest = testCutoff*DNmax
-                     if (cutoffTest .gt. quick_method%gradCutoff) then
-                        call shellopt
+!  This allows the calculation of the derivative of the functional
+!  with regard to the density (dfdr), with regard to the alpha-alpha
+!  density invariant (df/dgaa), and the alpha-beta density invariant.
+
+                  densitysum=2.0d0*density
+                  sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
+
+                  libxc_rho(1)=densitysum
+                  libxc_sigma(1)=sigma
+
+                  tsttmp_exc=0.0d0
+                  tsttmp_vrhoa=0.0d0
+                  tsttmp_vsigmaa=0.0d0
+
+                  if(quick_method%uselibxc) then
+                     do ifunc=1, quick_method%nof_functionals
+                        select case(xc_f90_info_family(xc_info(ifunc)))
+                           case(XC_FAMILY_LDA)
+                              call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
+                              libxc_exc(1), libxc_vrhoa(1))
+                           case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
+                              call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
+                              libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                        end select
+
+                        tsttmp_exc=tsttmp_exc+libxc_exc(1)
+                        tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
+                        tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
+                     enddo
+
+                     zkec=densitysum*tsttmp_exc
+                     dfdr=tsttmp_vrhoa
+                     xiaodot=tsttmp_vsigmaa*4
+
+                     xdot=xiaodot*gax
+                     ydot=xiaodot*gay
+                     zdot=xiaodot*gaz
+                  
+                  elseif(quick_method%BLYP) then
+
+                     call becke_E(density, densityb, gax, gay, gaz, gbx, gby,gbz, Ex)
+                     call lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz,Ec)
+
+                     zkec=Ex+Ec
+
+                     call becke(density, gax, gay, gaz, gbx, gby, gbz, dfdr, dfdgaa, dfdgab)
+                     call lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, dfdr2, dfdgaa2, dfdgab2)
+            
+                     dfdr = dfdr + dfdr2
+                     dfdgaa = dfdgaa + dfdgaa2
+                     dfdgab = dfdgab + dfdgab2
+
+                     xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
+                     ydot = 2.d0*dfdgaa*gay + dfdgab*gby
+                     zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+
+                  elseif(quick_method%B3LYP) then
+
+                     call b3lyp_e(densitysum, sigma, zkec)
+                     call b3lypf(densitysum, sigma, dfdr, xiaodot)
+
+                     xdot=xiaodot*gax
+                     ydot=xiaodot*gay
+                     zdot=xiaodot*gaz
+
+                  endif
+
+! Now loop over basis functions and compute the addition to the matrix
+! element.
+                  icount=quick_dft_grid%basf_counter(Ibin)+1
+                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+                     Ibas=quick_dft_grid%basf(icount)+1
+
+                     phi=phixiao(Ibas)
+                     dphidx=dphidxxiao(Ibas)
+                     dphidy=dphidyxiao(Ibas)
+                     dphidz=dphidzxiao(Ibas)
+
+                     !call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                     !dphidz,Ibas,icount)
+
+
+                     quicktest = DABS(dphidx+dphidy+dphidz+phi)
+                     
+                     if (quicktest < quick_method%DMCutoff ) then
+                        continue
+                     else
+                        call pt2der_new_imp(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
+                        dydy,dydz,dzdz,Ibas,icount)
+
+                        Ibasstart=(quick_basis%ncenter(Ibas)-1)*3
+
+                        jcount=quick_dft_grid%basf_counter(Ibin)+1
+                        do while(jcount<quick_dft_grid%basf_counter(Ibin+1)+1)
+                           Jbas = quick_dft_grid%basf(jcount)+1 
+
+                           phi2=phixiao(Jbas)
+                           dphi2dx=dphidxxiao(Jbas)
+                           dphi2dy=dphidyxiao(Jbas)
+                           dphi2dz=dphidzxiao(Jbas)
+
+                           !call pteval_new_imp(gridx,gridy,gridz,phi2,dphi2dx,dphi2dy, &
+                           !dphi2dz,Jbas,jcount)
+
+                           quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
+                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+                           (dfdr*dphidx*phi2 &
+                           + xdot*(dxdx*phi2+dphidx*dphi2dx) &
+                           + ydot*(dxdy*phi2+dphidx*dphi2dy) &
+                           + zdot*(dxdz*phi2+dphidx*dphi2dz))
+                           quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) - &
+                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+                           (dfdr*dphidy*phi2 &
+                           + xdot*(dxdy*phi2+dphidy*dphi2dx) &
+                           + ydot*(dydy*phi2+dphidy*dphi2dy) &
+                           + zdot*(dydz*phi2+dphidy*dphi2dz))
+                           quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) - &
+                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+                           (dfdr*dphidz*phi2 &
+                           + xdot*(dxdz*phi2+dphidz*dphi2dx) &
+                           + ydot*(dydz*phi2+dphidz*dphi2dy) &
+                           + zdot*(dzdz*phi2+dphidz*dphi2dz))
+                           jcount=jcount+1
+                        enddo
                      endif
+
+                  icount=icount+1
+                  enddo
+
+!  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
+!  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
+!  the density and the weight are not zero. Now check to see fi the weight is one. If it isn't, we need to
+!  actually calculate the energy and the derivatives of the quadrature at this point. Due to the volume of code,
+!  this is done in sswder. Note that if a new weighting scheme is ever added, this needs
+!  to be modified with a second subprogram.
+                  if (sswt == 1.d0) then
+                     continue
+                  else
+                     call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
                   endif
                endif
-            enddo
-         enddo
+            endif
+!         enddo
+
+      Igp=Igp+1
       enddo
    enddo
 
-   ! stop
-
-   call cpu_time(timer_end%TGrad)
-
-   write (ioutfile, '(2x,"GRADIENT CALCULATION TIME",F15.9, " S")'), timer_end%TGrad - timer_begin%TGrad
-   timer_cumer%TGrad = timer_end%TGrad - timer_begin%TGrad + timer_cumer%TGrad
-
-   ! slave node will send infos
-   if (.not. master) then
-
-      do i = 1, natom*3
-         temp_grad(i) = quick_qm_struct%gradient(i)
-      enddo
-      ! send operator to master node
-      call MPI_SEND(temp_grad, 3*natom, mpi_double_precision, 0, mpirank, MPI_COMM_WORLD, IERROR)
-   else
-      ! master node will receive infos from every nodes
-      do i = 1, mpisize - 1
-         ! receive opertors from slave nodes
-         call MPI_RECV(temp_grad, 3*natom, mpi_double_precision, i, i, MPI_COMM_WORLD, MPI_STATUS, IERROR)
-         ! and sum them into operator
-         do ii = 1, natom*3
-            quick_qm_struct%gradient(ii) = quick_qm_struct%gradient(ii) + temp_grad(ii)
-         enddo
+   if(quick_method%uselibxc) then
+!  Uninitilize libxc functionals
+      do ifunc=1, quick_method%nof_functionals
+         call xc_f90_func_end(xc_func(ifunc))
       enddo
    endif
+#endif
 
    return
-end subroutine mpi_hfgrad
-#endif
+
+end subroutine get_xc_grad
+
+
+subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
+
+!-------------------------------------------------------------------------
+!  The purpose of this subroutine is to compute the I and J basis function
+!  derivatives required for get_kinetic_grad subroutine. The input variables
+!  mbas, mstart and ijcon are used to differentiate between I and J
+!  basis functions. For I basis functions, ijcon should be  true and should
+!  be false for J.  
+!-------------------------------------------------------------------------   
+   use allmod
+   implicit double precision(a-h,o-z)
+   logical :: ijcon   
+
+   dSM = 0.0d0
+   dKEM = 0.0d0
+
+   itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+   do Icon=1,ncontract(Ibas)
+      do Jcon=1,ncontract(Jbas)
+         if(ijcon) then
+            mcon = Icon
+         else
+            mcon = Jcon
+         endif
+         dSM= dSM + 2.d0*aexp(mcon,mbas)* &
+         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
+         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+      enddo
+   enddo
+
+   itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+   if (itype(Imomentum,mbas) /= 0) then
+      itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+      do Icon=1,ncontract(Ibas)
+         do Jcon=1,ncontract(Jbas)
+            dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
+            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+            dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
+            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         enddo
+      enddo
+      itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+   endif
+
+   quick_qm_struct%gradient(mstart+Imomentum) = quick_qm_struct%gradient(mstart+Imomentum) &
+   -dSM*quick_scratch%hold(Jbas,Ibas)*2.d0 &
+   +dKEM*DENSEJI*2.d0
+
+   return
+
+end subroutine get_ijbas_derivative
