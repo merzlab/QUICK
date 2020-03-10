@@ -298,7 +298,10 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
 void get2e(_gpu_type gpu)
 {
     // Part spd
+//    nvtxRangePushA("SCF 2e");
+
     QUICK_SAFE_CALL((get2e_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
@@ -323,6 +326,10 @@ void get2e(_gpu_type gpu)
         QUICK_SAFE_CALL((get2e_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
+
+//    cudaDeviceSynchronize();
+//    nvtxRangePop();
+
 }
 
 
@@ -335,7 +342,10 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
 {
-    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+//   nvtxRangePushA("Gradient 2e");
+
+   QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
@@ -346,6 +356,10 @@ void getGrad(_gpu_type gpu)
         //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
     }
+
+//    cudaDeviceSynchronize();
+//    nvtxRangePop();
+
 }
 
 
@@ -358,7 +372,7 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
     int const batchSize = 20;
     ERI_entry a[batchSize];
     int j = 0;
-    
+ 
     QUICKULL myInt = (QUICKULL) (bufferSize) / totalThreads;
     if ((bufferSize - myInt*totalThreads)> offside) myInt++;
     
@@ -376,16 +390,19 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
                 int LLL = a[k].KL % devSim.nbasis + 1;
                 
                 if (III <= devSim.nbasis && III >= 1 && JJJ <= devSim.nbasis && JJJ >= 1 && KKK <= devSim.nbasis && KKK >= 1 && LLL <= devSim.nbasis && LLL >= 1){
-                    QUICKDouble hybrid_coeff = 0.0;
+                    /*QUICKDouble hybrid_coeff = 0.0;
                     if (devSim.method == HF){
                         hybrid_coeff = 1.0;
                     }else if (devSim.method == B3LYP){
                         hybrid_coeff = 0.2;
                     }else if (devSim.method == DFT){
                         hybrid_coeff = 0.0;
-                    }
-                    
-                    addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, hybrid_coeff, devSim.dense, devSim.nbasis);
+                    }else if(devSim.method == LIBXC){
+			hybrid_coeff = devSim.hyb_coeff;			
+		    }
+                    */
+
+                    addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
                 }
             }
             j = 0;

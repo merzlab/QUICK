@@ -43,11 +43,14 @@ subroutine denspt(gridx, gridy, gridz, densitya, densityb, &
       if(DABS(quick_qm_struct%dense(Ibas,Ibas)) < quick_method%DMCutoff) then
          continue
       else
+
          DENSEBIJ=quick_qm_struct%dense(Ibas,Ibas)
          phi=phixiao(Ibas)
          dphidx=dphidxxiao(Ibas)
          dphidy=dphidyxiao(Ibas)
          dphidz=dphidzxiao(Ibas)
+
+
          if (DABS(dphidx+dphidy+dphidz+phi) < quick_method%DMCutoff ) then
             continue
          else

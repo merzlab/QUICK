@@ -32,6 +32,15 @@ include $(MAKEIN)
 
 #----------------------
 # src file location
+# #----------------------
+#libxc = /users/PCS0202/bgs0374/Work/Project/Qk/libxc-4.3.4/lib
+#
+# #----------------------
+# # obj file location
+# #----------------------
+# libxcinc = /users/PCS0202/bgs0374/Work/Project/Qk/libxc-4.3.4/include
+#----------------------
+# src file location
 #----------------------
 srcfolder = ./src
 
@@ -71,15 +80,68 @@ subfolder = ./src/subs
 blasfolder = ./src/BLAS
 
 #----------------------
+# BLAS file location
+# #----------------------
+libxcfolder = ./src/libxc
+
+#----------------------
 # cuda files
 #----------------------
 
 cudafolder = ./src/cuda
 cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_getxc.o \
-	       $(objfolder)/gpu_get2e.o 
-
+	       $(objfolder)/gpu_get2e.o
+cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
+	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
+	$(objfolder)/gga_c_lm.o $(objfolder)/gga_c_lyp.o $(objfolder)/gga_c_op_b88.o $(objfolder)/gga_c_op_g96.o \
+	$(objfolder)/gga_c_op_pbe.o $(objfolder)/gga_c_op_pw91.o $(objfolder)/gga_c_optc.o $(objfolder)/gga_c_op_xalpha.o \
+	$(objfolder)/gga_c_p86.o $(objfolder)/gga_c_pbe.o $(objfolder)/gga_c_pbeloc.o $(objfolder)/gga_c_pw91.o \
+	$(objfolder)/gga_c_q2d.o $(objfolder)/gga_c_regtpss.o $(objfolder)/gga_c_revtca.o $(objfolder)/gga_c_scan_e0.o \
+	$(objfolder)/gga_c_sg4.o $(objfolder)/gga_c_sogga11.o $(objfolder)/gga_c_tca.o $(objfolder)/gga_c_w94.o \
+	$(objfolder)/gga_c_wi.o $(objfolder)/gga_c_wl.o $(objfolder)/gga_c_zpbeint.o $(objfolder)/gga_c_zvpbeint.o \
+	$(objfolder)/gga_k_dk.o $(objfolder)/gga_k_exp4.o $(objfolder)/gga_k_meyer.o $(objfolder)/gga_k_ol1.o \
+	$(objfolder)/gga_k_ol2.o $(objfolder)/gga_k_pearson.o $(objfolder)/gga_k_tflw.o $(objfolder)/gga_k_thakkar.o \
+	$(objfolder)/gga_x_2d_b86.o $(objfolder)/gga_x_2d_b86_mgc.o $(objfolder)/gga_x_2d_b88.o $(objfolder)/gga_x_2d_pbe.o \
+	$(objfolder)/gga_x_airy.o $(objfolder)/gga_x_ak13.o $(objfolder)/gga_x_am05.o $(objfolder)/gga_x_b86.o \
+	$(objfolder)/gga_x_b88.o $(objfolder)/gga_x_bayesian.o $(objfolder)/gga_x_beefvdw.o $(objfolder)/gga_x_bpccac.o \
+	$(objfolder)/gga_x_c09x.o $(objfolder)/gga_x_cap.o $(objfolder)/gga_xc_b97.o $(objfolder)/gga_x_chachiyo.o \
+	$(objfolder)/gga_xc_th1.o $(objfolder)/gga_xc_th2.o $(objfolder)/gga_xc_th3.o $(objfolder)/gga_x_dk87.o \
+	$(objfolder)/gga_x_eg93.o $(objfolder)/gga_x_ft97.o $(objfolder)/gga_x_g96.o $(objfolder)/gga_x_hcth_a.o \
+	$(objfolder)/gga_x_herman.o $(objfolder)/gga_x_hjs_b88_v2.o $(objfolder)/gga_x_hjs.o $(objfolder)/gga_x_htbs.o \
+	$(objfolder)/gga_x_kt.o $(objfolder)/gga_x_lag.o $(objfolder)/gga_x_lg93.o $(objfolder)/gga_x_lv_rpw86.o \
+	$(objfolder)/gga_x_mpbe.o $(objfolder)/gga_x_n12.o $(objfolder)/gga_x_optx.o $(objfolder)/gga_x_pbea.o \
+	$(objfolder)/gga_x_pbe.o $(objfolder)/gga_x_pbeint.o $(objfolder)/gga_x_pbepow.o $(objfolder)/gga_x_pbetrans.o \
+	$(objfolder)/gga_x_pw86.o $(objfolder)/gga_x_pw91.o $(objfolder)/gga_x_q2d.o $(objfolder)/gga_x_rge2.o \
+	$(objfolder)/gga_x_rpbe.o $(objfolder)/gga_x_sg4.o $(objfolder)/gga_x_sogga11.o $(objfolder)/gga_x_ssb_sw.o \
+	$(objfolder)/gga_x_vmt84.o $(objfolder)/gga_x_vmt.o $(objfolder)/gga_x_wc.o $(objfolder)/hyb_gga_xc_wb97.o \
+	$(objfolder)/lda_c_1d_csc.o $(objfolder)/lda_c_1d_loos.o $(objfolder)/lda_c_2d_amgb.o $(objfolder)/lda_c_2d_prm.o \
+	$(objfolder)/lda_c_chachiyo.o $(objfolder)/lda_c_gk72.o $(objfolder)/lda_c_gombas.o $(objfolder)/lda_c_hl.o \
+	$(objfolder)/lda_c_lp96.o $(objfolder)/lda_c_ml1.o $(objfolder)/lda_c_pk09.o $(objfolder)/lda_c_pw.o \
+	$(objfolder)/lda_c_pz.o $(objfolder)/lda_c_rc04.o $(objfolder)/lda_c_rpa.o $(objfolder)/lda_c_vwn_1.o \
+	$(objfolder)/lda_c_vwn_2.o $(objfolder)/lda_c_vwn_3.o $(objfolder)/lda_c_vwn_4.o $(objfolder)/lda_c_vwn.o \
+	$(objfolder)/lda_c_vwn_rpa.o $(objfolder)/lda_c_wigner.o $(objfolder)/lda_k_tf.o $(objfolder)/lda_k_zlp.o \
+	$(objfolder)/lda_x_2d.o $(objfolder)/lda_xc_1d_ehwlrg.o $(objfolder)/lda_xc_ksdt.o $(objfolder)/lda_xc_teter93.o \
+	$(objfolder)/lda_x.o $(objfolder)/lda_xc_zlp.o $(objfolder)/lda_x_rel.o 
+#       $(objfolder)/lda_x_erf.o $(objfolder)/hyb_mgga_xc_wb97mv.o $(objfolder)/hyb_mgga_x_dldf.o $(objfolder)/hyb_mgga_x_m05.o \
+	$(objfolder)/mgga_c_b88.o $(objfolder)/mgga_c_bc95.o $(objfolder)/mgga_c_cs.o $(objfolder)/mgga_c_kcis.o \
+	$(objfolder)/mgga_c_m05.o $(objfolder)/mgga_c_m06l.o $(objfolder)/mgga_c_m08.o $(objfolder)/mgga_c_pkzb.o \
+	$(objfolder)/mgga_c_revscan.o $(objfolder)/mgga_c_revtpss.o $(objfolder)/mgga_c_scan.o $(objfolder)/mgga_c_tpss.o \
+	$(objfolder)/mgga_c_tpssloc.o $(objfolder)/mgga_c_vsxc.o $(objfolder)/mgga_k_pc07.o $(objfolder)/mgga_x_br89_explicit.o \
+	$(objfolder)/mgga_xc_b97mv.o $(objfolder)/mgga_xc_b98.o $(objfolder)/mgga_xc_cc06.o $(objfolder)/mgga_xc_lp90.o \
+	$(objfolder)/mgga_xc_zlp.o $(objfolder)/mgga_x_gvt4.o $(objfolder)/mgga_x_gx.o $(objfolder)/mgga_x_lta.o \
+	$(objfolder)/mgga_x_m06l.o $(objfolder)/mgga_x_m08.o $(objfolder)/mgga_x_m11.o $(objfolder)/mgga_x_m11_l.o \
+	$(objfolder)/mgga_x_mbeef.o $(objfolder)/mgga_x_mbeefvdw.o $(objfolder)/mgga_x_mk00.o $(objfolder)/mgga_x_mn12.o \
+	$(objfolder)/mgga_x_ms.o $(objfolder)/mgga_x_mvs.o $(objfolder)/mgga_x_pbe_gx.o $(objfolder)/mgga_x_pkzb.o \
+	$(objfolder)/mgga_x_sa_tpss.o $(objfolder)/mgga_x_scan.o $(objfolder)/mgga_x_tau_hcth.o $(objfolder)/mgga_x_tm.o \
+	$(objfolder)/mgga_x_tpss.o $(objfolder)/mgga_x_vt84.o
 cublasfolder  =$(cudafolder)/CUBLAS
 cublasobj     =$(objfolder)/fortran_thunking.o
+#----------------------
+# octree files
+#----------------------
+octfolder = ./src/octree
+octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
+
 #----------------------
 # quick modules and object files
 #----------------------
@@ -104,8 +166,8 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
-	$(objfolder)/fake_amber_interface.o 
-#        $(objfolder)/dftgrad.o $(objfolder)/pt2der.o $(objfolder)/2eshelloptdft.o $(objfolder)/sswder.o 
+        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
+
 
 all: quick quick.cuda
 #************************************************************************
@@ -129,15 +191,24 @@ quick_subs:
 #================= quick module library =================================
 quick_modules:
 	cd $(modfolder) && make all
+#================= octree subroutines   =================================
+octree:
+	cd $(octfolder) && make all
 #============= targets for cuda =========================================
 quick_cuda:
 	cd $(cudafolder) && make all 
-	
+		
 #================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
 	cp $(blasfolder)/*.a $(libfolder)
-
+#==================== libxc cpu library =================================
+libxc_cpu:
+	cd $(libxcfolder) && make libxc_cpu
+#==================== libxc cpu library =================================
+libxc_gpu:
+	cd $(libxcfolder) && make libxc_gpu
+	cd $(libxcfolder)/maple2c_device && make all
 #=============== targets for CUBLAS =====================================
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 	$(CPP) $(CPP_FLAG) -c $< -o $@
@@ -175,17 +246,20 @@ cpconfig.MPI:
 #                 C. Make Executables
 # 
 #**********************************************************************
-quick: makefolders cpconfig quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
+quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
+	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
-quick.cuda: makefolders cpconfig.cuda quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
-	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) $(LDFLAGS) 
+quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
+	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_all.o $(cudaobj) $(cudalibxcobj) \
+	$(libfolder)/quicklib.a $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
 	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
 
-quick.MPI: makefolders cpconfig.MPI quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
+quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
+	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
 quick_lib:$(OBJ) ambermod amber_interface.o
 
@@ -206,14 +280,23 @@ ambermod:
 
 # - 1. Clean object files
 clean: neat
-	-rm -f $(objfolder)/* $(exefolder)/quick* $(libfolder)/* 
+	-rm -f $(objfolder)/* $(libfolder)/* 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
 	cd $(modfolder) && make clean
-	
+	cd $(libxcfolder) && make clean
+	cd $(libxcfolder)/maple2c_device && make clean	
 neat:
 	-rm -f $(TMPFILES)
+
+#Madu: Clean except libxc. Only for debugging
+dryclean:
+	-rm -f $(objfolder)/* $(libfolder)/*
+	cd $(cudafolder) && make clean
+	cd $(subfolder) && make clean
+	cd $(blasfolder) && make clean
+	cd $(modfolder) && make clean	
 
 # - 2. Make tags for source files
 TAGS: $(SRC)

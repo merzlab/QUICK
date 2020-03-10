@@ -23,13 +23,13 @@ subroutine gpu_write_info(io)
 
     write(io,*)
     write(io,'(a)')   '|------------ CUDA INFORMATION ---------------'
-    write(io,'(a)')   '|  CUDA version of Quick in use'
+    write(io,'(a)')   '|  CUDA version of QUICK in use'
     write(io,'(a)')   '|  Implemented by'
     write(io,'(a)')   '|                      Yipu Miao (Florida)'
-    write(io,'(a)')   '|  CAUTION: CUDA Quick is currently experimental'
+    write(io,'(a)')   '|  CAUTION: CUDA QUICK is currently experimental'
     write(io,'(a)')   '|           and you may at risk to use it. Be sure'
-    write(io,'(a)')   '|           to check result carelly. Advise or '
-    write(io,'(a)')   '|           bug report are welcome.'
+    write(io,'(a)')   '|           to check result carefully. Advises or '
+    write(io,'(a)')   '|           bug reports are welcome.'
     write(io,'(a)')   '|---------------------------------------------'
     write(io,*)
     

@@ -181,7 +181,7 @@ integer, dimension(incoreSize) :: bIncore
    ! only for dft
    double precision, allocatable, dimension(:) :: phixiao,dphidxxiao,dphidyxiao,dphidzxiao
 
-#ifdef MPI
+#ifdef MPIV
    ! MPI
    integer,allocatable:: mpi_jshelln(:)    ! shell no. calculated this node
    integer,allocatable:: mpi_jshell(:,:)   ! shell series no. calcluated in this node

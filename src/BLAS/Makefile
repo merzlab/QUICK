@@ -165,7 +165,7 @@ FRC:
 	@FRC=$(FRC)
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a
 
 .f.o: 
 	$(FORTRAN) $(OPTS) -c $< -o $@

@@ -54,7 +54,7 @@ extern "C" void gpu_init_(void)
     if (gpuCount == 0)
     {
         printf("NO CUDA-Enabled GPU FOUND.\n");
-        cudaThreadExit();
+        cudaDeviceReset();
         exit(-1);
     }
     
@@ -92,7 +92,7 @@ extern "C" void gpu_init_(void)
         if (gpu->gpu_dev_id >= gpuCount)
         {
             printf("GPU ID IS ILLEGAL, PLEASE SELECT FROM 0 TO %i.\n", gpuCount-1);
-            cudaThreadExit();
+            cudaDeviceReset();
             exit(-1);
         }
         
@@ -101,7 +101,7 @@ extern "C" void gpu_init_(void)
         	device = gpu->gpu_dev_id;
     	else {
         	printf("SELECT GPU HAS CUDA SUPPORTING VERSION UNDER 1.3. EXITING. \n");
-        	cudaThreadExit();
+        	cudaDeviceReset();
         	exit(-1);
     	}
         device = gpu->gpu_dev_id;
@@ -120,7 +120,7 @@ extern "C" void gpu_init_(void)
     status = cudaSetDevice(device);
     cudaGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "cudaSetDevice gpu_init failed!");
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
     
     cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
     
@@ -185,7 +185,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     if (*gpu_dev_count == 0)
     {
         printf("NO CUDA DEVICE FOUNDED \n");
-        cudaThreadExit();
+        cudaDeviceReset();
         exit(-1);
     }
     cudaGetDeviceProperties(&prop,*gpu_dev_id);
@@ -210,7 +210,7 @@ extern "C" void gpu_shutdown_(void)
     fclose(debugFile);
 #endif
     delete gpu;
-    cudaThreadExit();
+    cudaDeviceReset();
 	PRINTDEBUG("SHUTDOWN NORMALLY")
     return;
 }
@@ -239,6 +239,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_calculated           =   new gpu_calculated_type;
     gpu -> gpu_basis                =   new gpu_basis_type;
     gpu -> gpu_cutoff               =   new gpu_cutoff_type;
+    gpu -> gpu_xcq                  =   new XC_quadrature_type;
     gpu -> gpu_calculated -> natom  =   *natom;
     gpu -> gpu_basis -> natom       =   *natom;
     gpu -> gpu_calculated -> nbasis =   *nbasis;
@@ -266,14 +267,24 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     PRINTDEBUG("FINISH SETUP")
 }
 
-extern "C" void gpu_upload_method_(int* quick_method)
+//Madu Manathunga: 08/31/2019
+//-----------------------------------------------
+//  upload method and hybrid coefficient
+//-----------------------------------------------
+extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
 {
     if (*quick_method == 0) {
         gpu -> gpu_sim.method = HF;
+	gpu -> gpu_sim.hyb_coeff = 1.0;
     }else if (*quick_method == 1) {
         gpu -> gpu_sim.method = B3LYP;
+	gpu -> gpu_sim.hyb_coeff = 0.2;
     }else if (*quick_method == 2) {
         gpu -> gpu_sim.method = DFT;
+	gpu -> gpu_sim.hyb_coeff = 0.0;
+    }else if (*quick_method == 3) {
+	gpu -> gpu_sim.method = LIBXC;
+	gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
     }
 }
 
@@ -1064,6 +1075,15 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     PRINTDEBUG("COMPLETE UPLOADING O MATRIX")
 }
 
+// Added by Madu Manathunga on 01/07/2020
+//This method uploads density matrix onto gpu for XC gradient calculation
+extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
+{
+    gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> dense    -> Upload();
+    gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+}
+
 //-----------------------------------------------
 //  upload basis set information
 //-----------------------------------------------
@@ -1407,8 +1427,7 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
     gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
-    
-    
+   
     for (int i = 0; i<gpu->natom * 3; i++) {
         
         QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
@@ -1436,11 +1455,474 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     cudaEventDestroy(end);
 #endif
     
-    
-    
     PRINTDEBUG("COMPLETE UPLOADING GRAD")
     
 }
+
+
+//Computes grid weights before grid point packing
+extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
+
+	PRINTDEBUG("BEGIN TO COMPUTE SSW")
+
+	gpu -> gpu_xcq -> npoints       = *count;
+        gpu -> xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
+	gpu -> xc_blocks = (int) ((*count/SM_2X_XC_THREADS_PER_BLOCK) +1 );
+	
+        gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridz = new cuda_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> wtang = new cuda_buffer_type<QUICKDouble>(wtang, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> rwt   = new cuda_buffer_type<QUICKDouble>(rwt, gpu -> gpu_xcq -> npoints);	
+	gpu -> gpu_xcq -> rad3  = new cuda_buffer_type<QUICKDouble>(rad3, gpu -> gpu_xcq -> npoints); 
+        gpu -> gpu_xcq -> gatm  = new cuda_buffer_type<int>(gatm, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> sswt  = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> weight= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+        gpu -> gpu_xcq -> gridx -> Upload();
+        gpu -> gpu_xcq -> gridy -> Upload();
+        gpu -> gpu_xcq -> gridz -> Upload();
+	gpu -> gpu_xcq -> wtang -> Upload();
+	gpu -> gpu_xcq -> rwt -> Upload();
+	gpu -> gpu_xcq -> rad3 -> Upload();
+        gpu -> gpu_xcq -> gatm -> Upload();
+        gpu -> gpu_xcq -> sswt -> Upload();
+        gpu -> gpu_xcq -> weight -> Upload();
+
+        gpu -> gpu_sim.npoints  = gpu -> gpu_xcq -> npoints;
+        gpu ->gpu_sim.gridx     = gpu -> gpu_xcq -> gridx -> _devData;
+        gpu ->gpu_sim.gridy     = gpu -> gpu_xcq -> gridy -> _devData;
+        gpu ->gpu_sim.gridz     = gpu -> gpu_xcq -> gridz -> _devData;
+	gpu ->gpu_sim.wtang     = gpu -> gpu_xcq -> wtang -> _devData;	
+	gpu ->gpu_sim.rwt       = gpu -> gpu_xcq -> rwt   -> _devData;
+	gpu ->gpu_sim.rad3      = gpu -> gpu_xcq -> rad3  -> _devData;
+        gpu ->gpu_sim.gatm      = gpu -> gpu_xcq -> gatm  -> _devData;
+        gpu ->gpu_sim.sswt      = gpu -> gpu_xcq -> sswt  -> _devData;
+        gpu ->gpu_sim.weight    = gpu -> gpu_xcq -> weight-> _devData;
+
+	upload_sim_to_constant_dft(gpu);
+
+	get_ssw_new_imp(gpu);	
+
+	gpu -> gpu_xcq -> sswt -> Download();	
+	gpu -> gpu_xcq -> weight -> Download();   
+
+	for(int i=0; i<*count;i++){
+		sswt[i] = gpu -> gpu_xcq -> sswt -> _hostData[i];
+		weight[i] = gpu -> gpu_xcq -> weight -> _hostData[i];
+	}
+
+	SAFE_DELETE(gpu -> gpu_xcq -> gridx);
+	SAFE_DELETE(gpu -> gpu_xcq -> gridy);
+	SAFE_DELETE(gpu -> gpu_xcq -> gridz);
+	SAFE_DELETE(gpu -> gpu_xcq -> wtang);
+	SAFE_DELETE(gpu -> gpu_xcq -> rwt);
+	SAFE_DELETE(gpu -> gpu_xcq -> rad3);
+        SAFE_DELETE(gpu -> gpu_xcq -> gatm);
+        SAFE_DELETE(gpu -> gpu_xcq -> sswt);
+        SAFE_DELETE(gpu -> gpu_xcq -> weight);
+	
+	PRINTDEBUG("END COMPUTE SSW")
+
+}
+
+void prune_grid_sswgrad(){
+
+
+        PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
+
+        gpu -> gpu_xcq -> dweight_ssd -> Download();
+        gpu -> gpu_xcq -> exc -> Download();
+
+        //Get the size of input arrays to sswgrad computation
+        int count = 0;
+        for(int i=0; i< gpu -> gpu_xcq -> npoints;i++){
+                count += gpu -> gpu_xcq -> dweight_ssd -> _hostData[i];
+        }
+
+        //Load data into temporary arrays
+        QUICKDouble *tmp_gridx, *tmp_gridy, *tmp_gridz, *tmp_exc, *tmp_quadwt;
+        int* tmp_gatm;
+        int dbyte_size = sizeof(QUICKDouble)*count;
+
+        tmp_gridx = (QUICKDouble*) malloc(dbyte_size);
+        tmp_gridy = (QUICKDouble*) malloc(dbyte_size);
+        tmp_gridz = (QUICKDouble*) malloc(dbyte_size);
+        tmp_exc = (QUICKDouble*) malloc(dbyte_size);
+        tmp_quadwt= (QUICKDouble*) malloc(dbyte_size);
+        tmp_gatm = (int*) malloc(sizeof(int)*count);
+
+        int j=0;
+        for(int i=0; i< gpu -> gpu_xcq -> npoints;i++){
+                if(gpu -> gpu_xcq -> dweight_ssd -> _hostData[i] > 0){
+                        tmp_gridx[j] = gpu -> gpu_xcq -> gridx -> _hostData[i];
+                        tmp_gridy[j] = gpu -> gpu_xcq -> gridy -> _hostData[i];
+                        tmp_gridz[j] = gpu -> gpu_xcq -> gridz -> _hostData[i];
+                        tmp_exc[j] = gpu -> gpu_xcq -> exc -> _hostData[i];
+
+                        double quadwt = (gpu -> gpu_xcq -> weight -> _hostData[i]) / (gpu -> gpu_xcq -> sswt -> _hostData[i]);
+                        tmp_quadwt[j] = quadwt;
+
+                        tmp_gatm[j] = gpu -> gpu_xcq -> gatm -> _hostData[i];
+                        j++;
+                }
+        }
+
+	gpu_delete_dft_grid_();
+	
+        //Upload data using templates
+        gpu -> gpu_xcq -> npoints_ssd = count;
+        gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridy, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridz_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridz, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> exc_ssd = new cuda_buffer_type<QUICKDouble>(tmp_exc, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(tmp_quadwt, gpu -> gpu_xcq -> npoints_ssd);
+	gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd * gpu->natom);
+        gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
+
+        gpu -> gpu_xcq -> gridx_ssd -> Upload();
+        gpu -> gpu_xcq -> gridy_ssd -> Upload();
+        gpu -> gpu_xcq -> gridz_ssd -> Upload();
+        gpu -> gpu_xcq -> exc_ssd -> Upload();
+        gpu -> gpu_xcq -> quadwt -> Upload();
+        gpu -> gpu_xcq -> gatm_ssd -> Upload();
+
+	gpu -> xc_blocks = (int) ((count / gpu->xc_threadsPerBlock) + 1);
+        gpu -> gpu_sim.npoints_ssd  = gpu -> gpu_xcq -> npoints_ssd;
+        gpu -> gpu_sim.gridx_ssd = gpu -> gpu_xcq -> gridx_ssd -> _devData;
+        gpu -> gpu_sim.gridy_ssd = gpu -> gpu_xcq -> gridy_ssd -> _devData;
+        gpu -> gpu_sim.gridz_ssd = gpu -> gpu_xcq -> gridz_ssd -> _devData;
+        gpu -> gpu_sim.exc_ssd = gpu -> gpu_xcq -> exc_ssd -> _devData;
+        gpu -> gpu_sim.quadwt = gpu -> gpu_xcq -> quadwt -> _devData;
+	gpu -> gpu_sim.uw_ssd = gpu -> gpu_xcq -> uw_ssd -> _devData;
+        gpu -> gpu_sim.gatm_ssd = gpu -> gpu_xcq -> gatm_ssd -> _devData;
+
+        upload_sim_to_constant_dft(gpu);
+
+        PRINTDEBUG("COMPLETE UPLOADING DFT GRID FOR SSWGRAD")
+
+/*        for(int i=0; i<count;i++){
+                printf("prune_grid_sswgrad: %i %f %f %f %f %f %i \n", i, tmp_gridx[i], tmp_gridy[i], tmp_gridz[i], tmp_exc[i], tmp_quadwt[i], tmp_gatm[i]);
+        }
+*/
+        //Clean up temporary arrays
+        free(tmp_gridx);
+        free(tmp_gridy);
+        free(tmp_gridz);
+        free(tmp_exc);
+        free(tmp_quadwt);
+        free(tmp_gatm);
+}	
+
+
+void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
+
+        PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
+
+	unsigned int nbins = (unsigned int) (count/SM_2X_XCGRAD_THREADS_PER_BLOCK);
+
+        gpu -> gpu_xcq -> npoints       = count;
+        gpu -> xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
+        gpu -> xc_blocks                = nbins;
+
+        gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridz = new cuda_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+
+        gpu -> gpu_xcq -> gridx -> Upload();
+        gpu -> gpu_xcq -> gridy -> Upload();
+        gpu -> gpu_xcq -> gridz -> Upload();
+	gpu -> gpu_basis -> sigrad2 -> Upload();
+
+        gpu -> gpu_sim.npoints  = gpu -> gpu_xcq -> npoints;
+        gpu -> gpu_sim.gridx    = gpu -> gpu_xcq -> gridx -> _devData;
+        gpu -> gpu_sim.gridy    = gpu -> gpu_xcq -> gridy -> _devData;
+        gpu -> gpu_sim.gridz    = gpu -> gpu_xcq -> gridz -> _devData;
+	gpu -> gpu_sim.sigrad2  = gpu->gpu_basis->sigrad2->_devData;
+
+	gpu -> gpu_cutoff -> DMCutoff   = 1E-9; //*DMCutoff;
+        gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
+
+	//Define cfweight and pfweight arrays seperately and uplaod to gpu until we solve the problem with atomicAdd
+	unsigned char *d_gpweight;
+	unsigned int  *d_cfweight, *d_pfweight;
+
+	cudaMalloc((void**)&d_gpweight, gpu -> gpu_xcq -> npoints * sizeof(unsigned char));
+	cudaMalloc((void**)&d_cfweight, nbins * gpu -> nbasis * sizeof(unsigned int));	
+	cudaMalloc((void**)&d_pfweight, nbins * gpu -> nbasis * gpu -> gpu_basis-> maxcontract * sizeof(unsigned int));
+
+	cudaMemcpy(d_gpweight, gpweight, gpu -> gpu_xcq -> npoints * sizeof(unsigned char), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_cfweight, cfweight, nbins * gpu -> nbasis * sizeof(unsigned int), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_pfweight, pfweight, nbins * gpu -> nbasis * gpu -> gpu_basis-> maxcontract * sizeof(unsigned int), cudaMemcpyHostToDevice);
+
+        upload_sim_to_constant_dft(gpu);
+
+/*        for(int i=0; i<nbins;i++){
+                //unsigned int cfweight_sum =0;
+                for(int j=0; j<gpu -> nbasis; j++){
+                        printf("bin id: %i basis id: %i cfcount: %i \n", i, j, cfweight[(i * gpu -> nbasis) + j]);
+                        //cfweight_sum += cfweight[ (nbins*gpu -> nbasis) + j];                 
+                }
+                //printf("bin id: %i cfweight_sum: %i", i, cfweight_sum);
+        }
+*/
+
+/*        for(int i=0; i<nbins;i++){
+                for(int j=0; j<gpu -> nbasis; j++){
+                        for(int k=0; k<gpu -> gpu_basis-> maxcontract;k++){
+                                printf("bin id: %i basis id: %i cfcount: %i pf id: %i pfcount: %i \n", i, j, cfweight[(i * gpu -> nbasis) + j], k, pfweight[(i * gpu -> nbasis * gpu -> gpu_basis-> maxcontract) + j*gpu -> gpu_basis-> maxcontract + k]);
+                        }
+                }
+        }
+*/
+        get_primf_contraf_lists_new_imp(gpu, d_gpweight, d_cfweight, d_pfweight);
+
+	cudaMemcpy(gpweight, d_gpweight, gpu -> gpu_xcq -> npoints * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+	cudaMemcpy(cfweight, d_cfweight, nbins * gpu -> nbasis * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(pfweight, d_pfweight, nbins * gpu -> nbasis * gpu -> gpu_basis -> maxcontract * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+
+/*	for(int i=0; i<nbins;i++){
+		//unsigned int cfweight_sum =0;
+		for(int j=0; j<gpu -> nbasis; j++){
+			printf("bin id: %i basis id: %i cfcount: %i \n", i, j, cfweight[(i * gpu -> nbasis) + j]);
+			//cfweight_sum += cfweight[ (nbins*gpu -> nbasis) + j];			
+		}
+		//printf("bin id: %i cfweight_sum: %i", i, cfweight_sum);
+	}
+
+
+	for(int i=0; i<nbins;i++){
+		for(int j=0; j<gpu -> nbasis; j++){
+			for(int k=0; k<gpu -> gpu_basis-> maxcontract;k++){
+				printf("bin id: %i basis id: %i cfcount: %i pf id: %i pfcount: %i \n", i, j, cfweight[(i * gpu -> nbasis) + j], k, pfweight[(i * gpu -> nbasis * gpu -> gpu_basis-> maxcontract) + j*gpu -> gpu_basis-> maxcontract + k]);
+			}
+		}
+	}
+
+
+        for(int i=0;i<gpu -> gpu_xcq -> npoints;i++){
+                gpweight[i] = gpu -> gpu_xcq -> gpweight -> _hostData[i];
+                for(int j=0; j< gpu -> nbasis; j++){
+                        cfweight[j+i * gpu -> nbasis] = gpu -> gpu_xcq -> cfweight -> _hostData[j+i * gpu -> nbasis];
+                        for(int k=0; k<gpu -> gpu_basis-> maxcontract;k++){
+                                pfweight[k + j * gpu -> gpu_basis-> maxcontract + i * gpu -> nbasis * gpu -> gpu_basis-> maxcontract] = gpu -> gpu_xcq -> pfweight -> _hostData[k + j * gpu -> gpu_basis-> maxcontract + i * gpu -> nbasis * gpu -> gpu_basis-> maxcontract];
+                                //printf("gp: %i gpw: %i cf: %i cfw: %i pf: %i pfw: %i \n", i, gpu -> gpu_xcq -> gpweight -> _hostData[i], j, gpu -> gpu_xcq -> cfweight -> _hostData[j+i * gpu -> nbasis], k, gpu -> gpu_xcq -> pfweight -> _hostData[k + j * gpu -> gpu_basis-> maxcontract + i * gpu -> nbasis * gpu -> gpu_basis-> maxcontract]);
+
+                        }
+                }
+        }
+*/
+
+        SAFE_DELETE(gpu -> gpu_xcq -> gridx);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridy);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridz);
+	SAFE_DELETE(gpu->gpu_basis->sigrad2);
+	cudaFree(d_gpweight);
+	cudaFree(d_cfweight);
+	cudaFree(d_pfweight);
+
+        PRINTDEBUG("PRIMITIVE & BASIS FUNCTION LISTS OBTAINED")
+}
+
+extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *dweight, int *basf, int *primf, int *basf_counter, int *primf_counter, int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2){
+
+	PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
+
+	gpu -> gpu_xcq -> npoints	= *gridb_count;
+	gpu -> gpu_xcq -> nbins		= *nbins;
+	gpu -> gpu_xcq -> ntotbf	= *nbtotbf;	
+	gpu -> gpu_xcq -> ntotpf	= *nbtotpf;
+	gpu -> gpu_xcq -> bin_size	= (int) (*gridb_count / *nbins);
+	gpu -> gpu_cutoff -> DMCutoff   = 1E-9; //*DMCutoff;
+
+	gpu -> gpu_xcq -> gridx	= new cuda_buffer_type<QUICKDouble>(gridxb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gridy	= new cuda_buffer_type<QUICKDouble>(gridyb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gridz	= new cuda_buffer_type<QUICKDouble>(gridzb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> sswt	= new cuda_buffer_type<QUICKDouble>(gridb_sswt, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> weight	= new cuda_buffer_type<QUICKDouble>(gridb_weight, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gatm		= new cuda_buffer_type<int>(gridb_atm, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> dweight	= new cuda_buffer_type<int>(dweight, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> dweight_ssd   = new cuda_buffer_type<int>(dweight, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> basf	= new cuda_buffer_type<int>(basf, gpu -> gpu_xcq -> ntotbf);
+	gpu -> gpu_xcq -> primf	= new cuda_buffer_type<int>(primf, gpu -> gpu_xcq -> ntotpf);
+	gpu -> gpu_xcq -> basf_locator     = new cuda_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
+	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
+	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+	gpu -> xc_blocks = gpu -> gpu_xcq -> nbins;
+	gpu -> xc_threadsPerBlock = gpu -> gpu_xcq -> bin_size;
+	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gax = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gbx = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gay = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gby = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gaz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gbz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> exc = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+	gpu -> gpu_xcq -> gridx -> Upload();
+	gpu -> gpu_xcq -> gridy -> Upload();
+	gpu -> gpu_xcq -> gridz -> Upload();
+	gpu -> gpu_xcq -> sswt -> Upload();
+	gpu -> gpu_xcq -> weight -> Upload();
+	gpu -> gpu_xcq -> gatm -> Upload();
+	gpu -> gpu_xcq -> dweight -> Upload();
+        gpu -> gpu_xcq -> dweight_ssd -> Upload();
+	gpu -> gpu_xcq -> basf -> Upload();
+	gpu -> gpu_xcq -> primf -> Upload();
+	gpu -> gpu_xcq -> basf_locator -> Upload();
+	gpu -> gpu_xcq -> primf_locator -> Upload();
+	gpu -> gpu_basis -> sigrad2 -> Upload();
+	gpu -> gpu_xcq -> densa -> Upload(); 
+	gpu -> gpu_xcq -> densb -> Upload();
+	gpu -> gpu_xcq -> gax -> Upload();
+	gpu -> gpu_xcq -> gbx -> Upload();
+	gpu -> gpu_xcq -> gay -> Upload();
+	gpu -> gpu_xcq -> gby -> Upload();
+	gpu -> gpu_xcq -> gaz -> Upload();
+	gpu -> gpu_xcq -> gbz -> Upload();
+	gpu -> gpu_xcq -> exc -> Upload();
+
+        gpu -> gpu_sim.npoints	= gpu -> gpu_xcq -> npoints;
+        gpu -> gpu_sim.nbins	= gpu -> gpu_xcq -> nbins;
+        gpu -> gpu_sim.ntotbf	= gpu -> gpu_xcq -> ntotbf;
+        gpu -> gpu_sim.ntotpf	= gpu -> gpu_xcq -> ntotpf;
+	gpu -> gpu_sim.bin_size = gpu -> gpu_xcq -> bin_size;
+	gpu ->gpu_sim.gridx 	= gpu -> gpu_xcq -> gridx -> _devData;
+	gpu ->gpu_sim.gridy 	= gpu -> gpu_xcq -> gridy -> _devData;	
+	gpu ->gpu_sim.gridz 	= gpu -> gpu_xcq -> gridz -> _devData;
+	gpu ->gpu_sim.sswt	= gpu -> gpu_xcq -> sswt -> _devData;
+	gpu ->gpu_sim.weight 	= gpu -> gpu_xcq -> weight -> _devData;
+	gpu ->gpu_sim.gatm 	= gpu -> gpu_xcq -> gatm -> _devData;
+	gpu ->gpu_sim.dweight 	= gpu -> gpu_xcq -> dweight -> _devData;
+        gpu ->gpu_sim.dweight_ssd   = gpu -> gpu_xcq -> dweight_ssd -> _devData;
+	gpu ->gpu_sim.basf 	= gpu -> gpu_xcq -> basf -> _devData;
+	gpu ->gpu_sim.primf 	= gpu -> gpu_xcq -> primf -> _devData;
+	gpu ->gpu_sim.basf_locator 	= gpu -> gpu_xcq -> basf_locator -> _devData;
+	gpu ->gpu_sim.primf_locator 	= gpu -> gpu_xcq -> primf_locator -> _devData;
+	gpu ->gpu_sim.densa     = gpu -> gpu_xcq -> densa -> _devData;
+	gpu ->gpu_sim.densb     = gpu -> gpu_xcq -> densb -> _devData;
+	gpu ->gpu_sim.gax     = gpu -> gpu_xcq -> gax -> _devData;
+	gpu ->gpu_sim.gbx     = gpu -> gpu_xcq -> gbx -> _devData;
+	gpu ->gpu_sim.gay     = gpu -> gpu_xcq -> gay -> _devData;
+	gpu ->gpu_sim.gby     = gpu -> gpu_xcq -> gby -> _devData;
+	gpu ->gpu_sim.gaz     = gpu -> gpu_xcq -> gaz -> _devData;
+	gpu ->gpu_sim.gbz     = gpu -> gpu_xcq -> gbz -> _devData;
+	gpu ->gpu_sim.exc     = gpu -> gpu_xcq -> exc -> _devData;
+	gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
+	gpu -> gpu_sim.isg = *isg;
+        gpu -> gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+
+	upload_sim_to_constant_dft(gpu);
+
+	PRINTDEBUG("COMPLETE UPLOADING DFT GRID")
+
+/*	int nblocks = (int) ((*gridb_count/SM_2X_XC_THREADS_PER_BLOCK)+1);
+
+	test_xc_upload <<<nblocks, SM_2X_XC_THREADS_PER_BLOCK>>>();
+
+	cudaDeviceSynchronize();
+*/	
+}
+
+extern "C" void gpu_delete_dft_grid_(){
+
+        SAFE_DELETE(gpu -> gpu_xcq -> gridx);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridy);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridz);
+        SAFE_DELETE(gpu -> gpu_xcq -> sswt);
+        SAFE_DELETE(gpu -> gpu_xcq -> weight);
+        SAFE_DELETE(gpu -> gpu_xcq -> gatm);
+        SAFE_DELETE(gpu -> gpu_xcq -> dweight);
+        SAFE_DELETE(gpu -> gpu_xcq -> dweight_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> basf);
+        SAFE_DELETE(gpu -> gpu_xcq -> primf);
+        SAFE_DELETE(gpu -> gpu_xcq -> basf_locator);
+        SAFE_DELETE(gpu -> gpu_xcq -> primf_locator);
+	SAFE_DELETE(gpu -> gpu_xcq -> densa);
+	SAFE_DELETE(gpu -> gpu_xcq -> densb);
+	SAFE_DELETE(gpu -> gpu_xcq -> gax);
+	SAFE_DELETE(gpu -> gpu_xcq -> gbx);
+	SAFE_DELETE(gpu -> gpu_xcq -> gay);
+	SAFE_DELETE(gpu -> gpu_xcq -> gby);
+	SAFE_DELETE(gpu -> gpu_xcq -> gaz);
+	SAFE_DELETE(gpu -> gpu_xcq -> gbz);
+	SAFE_DELETE(gpu -> gpu_xcq -> exc);
+	SAFE_DELETE(gpu->gpu_basis->sigrad2);
+}
+
+void gpu_delete_sswgrad_vars(){
+
+        SAFE_DELETE(gpu -> gpu_xcq -> gridx_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridy_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> gridz_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> exc_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> quadwt);
+	SAFE_DELETE(gpu -> gpu_xcq -> uw_ssd);
+        SAFE_DELETE(gpu -> gpu_xcq -> gatm_ssd);
+
+}
+
+/*Madu Manathunga 06/25/2019
+Integration of libxc GPU version. The included file below contains all libxc methods
+*/
+#include "gpu_libxc.cu"
+
+extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
+
+        /*The following variable will hold the number of auxilary functionals in case of
+        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+        //from input. */
+        int nof_aux_functionals = *nof_functionals;
+
+#ifdef DEBUG
+        printf("Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+#endif
+        //Madu: Initialize gpu libxc and upload information to GPU
+        gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+
+        //libxc_cleanup(glinfo, nof_functionals);
+
+/*	gpu -> gpu_xcq -> xc_grad = new cuda_buffer_type<QUICKDouble>(grad, gpu->natom * 3);
+//	gpu -> gpu_xcq -> xc_grad -> Upload();
+	gpu -> gpu_sim.xc_grad = gpu -> gpu_xcq -> xc_grad -> _devData;
+        gpu -> gpu_xcq -> xc_grad -> Upload();
+
+	getxc_grad_new_imp(gpu);
+
+	gpu -> gpu_xcq -> xc_grad -> Download();
+
+	for (int i = 0; i < gpu->natom * 3; i ++) {
+        	printf("new_imp_grad: %i %f \n", i, gpu -> grad -> _hostData[i]);
+    	}	
+
+	SAFE_DELETE(gpu -> gpu_xcq -> xc_grad);
+*/
+        int xc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
+        QUICKDouble *d_xc_grad, *h_xc_grad;
+
+        cudaMalloc((void**)&d_xc_grad, xc_grad_byte_size);
+	h_xc_grad = (double*) malloc(xc_grad_byte_size);	
+
+        h_xc_grad = (QUICKDouble*)malloc(xc_grad_byte_size);
+
+        cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
+
+	getxc_grad_new_imp(gpu, d_xc_grad, glinfo, nof_aux_functionals);
+
+        cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
+
+        for (int i = 0; i < gpu->natom * 3; i ++) {
+		grad[i] = h_xc_grad[i];
+
+        }	
+
+	cudaFree(d_xc_grad);
+	free(h_xc_grad);
+
+}
+
 
 extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_basis->ncontract);
@@ -1487,7 +1969,7 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
     for (int i = 0; i < gpu->natom * 3; i ++) {
-        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
+//        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
     }
     
     
@@ -1524,7 +2006,7 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     gpu -> grad -> Download(grad);
     
     for (int i = 0; i < gpu->natom * 3; i ++) {
-        printf("%i %f\n", i, gpu -> grad -> _hostData[i]);
+//        printf("%i %f\n", i, gpu -> grad -> _hostData[i]);
     }
     
     delete gpu -> grad;
@@ -1863,60 +2345,72 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
-extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
+
+extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
-    
-    
-    gpu -> gpu_sim.isg = *isg;
-    gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-    gpu -> gpu_basis -> sigrad2 -> Upload();
-    gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
-    
+
+        /*The following variable will hold the number of auxilary functionals in case of
+        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+        //from input. */
+        int nof_aux_functionals = *nof_functionals;
+
+#ifdef DEBUG
+	printf("Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+#endif
+        //Madu: Initialize gpu libxc and upload information to GPU
+        gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+
+        //libxc_cleanup(glinfo, nof_functionals);
+
     gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
-    
-    
+
     QUICKULL valUII = (QUICKULL) (fabs ( *Eelxc * OSCALE + (QUICKDouble)0.5));
-    
+
     if (*Eelxc<(QUICKDouble)0.0)
     {
         valUII = 0ull - valUII;
     }
-    
+
     gpu -> DFT_calculated -> _hostData[0].Eelxc = valUII;
-    
+
     valUII = (QUICKULL) (fabs ( *aelec * OSCALE + (QUICKDouble)0.5));
-    
+
     if (*aelec<(QUICKDouble)0.0)
     {
         valUII = 0ull - valUII;
     }
     gpu -> DFT_calculated -> _hostData[0].aelec = valUII;
-    
+
     valUII = (QUICKULL) (fabs ( *belec * OSCALE + (QUICKDouble)0.5));
-    
+
     if (*belec<(QUICKDouble)0.0)
     {
         valUII = 0ull - valUII;
     }
-    
+
     gpu -> DFT_calculated -> _hostData[0].belec = valUII;
-    
+
     gpu -> DFT_calculated -> Upload();
     gpu -> gpu_sim.DFT_calculated= gpu -> DFT_calculated->_devData;
-    
+
     upload_sim_to_constant_dft(gpu);
     PRINTDEBUG("BEGIN TO RUN KERNEL")
-    
-    getxc(gpu);
+
+        //Madu Manathunga 07/01/2019 added libxc variable
+#ifdef DEBUG
+        printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
+#endif
+
+    getxc_new_imp(gpu, glinfo, nof_aux_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
-    
+
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
             QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
             QUICKDouble valDB;
-            
+
             if (valULL >= 0x8000000000000000ull) {
                 valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
             }
@@ -1929,11 +2423,9 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         }
     }
     gpu -> gpu_calculated -> o    -> Download(o);
-    
-    
     QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
     QUICKDouble valDB;
-    
+
     if (valULL >= 0x8000000000000000ull) {
         valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
     }
@@ -1942,9 +2434,9 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         valDB  = (QUICKDouble) valULL;
     }
     *Eelxc = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
+
     valULL = gpu->DFT_calculated -> _hostData[0].aelec;
-    
+
     if (valULL >= 0x8000000000000000ull) {
         valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
     }
@@ -1953,9 +2445,9 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         valDB  = (QUICKDouble) valULL;
     }
     *aelec = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
+
     valULL = gpu->DFT_calculated -> _hostData[0].belec;
-    
+
     if (valULL >= 0x8000000000000000ull) {
         valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
     }
@@ -1964,17 +2456,14 @@ extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, Q
         valDB  = (QUICKDouble) valULL;
     }
     *belec = (QUICKDouble)valDB*ONEOVEROSCALE;
-    
-    
+
     PRINTDEBUG("DELETE TEMP VARIABLES")
-    
-	delete gpu->gpu_calculated->o;
-	delete gpu->gpu_calculated->dense;
-	delete gpu->gpu_calculated->oULL;
-    
+
+        delete gpu->gpu_calculated->o;
+        delete gpu->gpu_calculated->dense;
+        delete gpu->gpu_calculated->oULL;
+
 }
-
-
 
 char *trim(char *s) {
     char *ptr;

@@ -25,7 +25,7 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow)
     integer i,flen,k1,k2
    
     character(len=1) ch
-    character(len=100) run
+    character(len=132) run
     logical log_exist
     logical log_ow              ! if overwrite ?
 
