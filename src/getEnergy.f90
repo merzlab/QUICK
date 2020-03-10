@@ -1,10 +1,10 @@
 #include "config.h"
 !
-!	getEnergy.f90
-!	new_quick
+!        getEnergy.f90
+!        new_quick
 !
-!	Created by Yipu Miao on 3/4/11.
-!	Copyright 2011 University of Florida. All rights reserved.
+!        Created by Yipu Miao on 3/4/11.
+!        Copyright 2011 University of Florida. All rights reserved.
 !
 !   written by Ed Brothers. 08/15/02
 !   This subroutine calculates and ouptus the energy.
@@ -15,7 +15,7 @@ subroutine getEnergy(failed)
 
    double precision :: distance
    double precision, external :: rootSquare
-   integer i,j
+   integer i, j
 
 #ifdef MPIV
    include "mpif.h"
@@ -29,7 +29,7 @@ subroutine getEnergy(failed)
     endif
 
    if (master) then
-      call PrtAct(ioutfile,"Begin Energy Calculation")
+      call PrtAct(ioutfile, "Begin Energy Calculation")
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
@@ -41,27 +41,25 @@ subroutine getEnergy(failed)
       endif
 
       !Classical Nuclear-Nuclear interaction energy
-      quick_qm_struct%Ecore=0.d0      ! atom-extcharge and atom-atom replusion
-      quick_qm_struct%ECharge=0d0     ! extcharge-extcharge interaction
-
+      quick_qm_struct%Ecore = 0.d0      ! atom-extcharge and atom-atom replusion
+      quick_qm_struct%ECharge = 0d0     ! extcharge-extcharge interaction
 
       if (natom > 1) then
          !                    qi*qj
          ! E=sigma(i,j=1,n)----------
          !                   |ri-rj|
-         do I=1,natom+quick_molspec%nextatom
-            do J=I+1,natom+quick_molspec%nextatom
-               if(i<=natom .and. j<=natom)then                     ! the atom to atom replusion
-                  distance = rootSquare(xyz(1:3,i), xyz(1:3,j), 3)
-                  quick_qm_struct%Ecore = quick_molspec%chg(I)*quick_molspec%chg(J)/distance+quick_qm_struct%Ecore
-                  elseif(i<=natom .and. j>natom)then                  ! the atom to external point charge replusion
-                  distance = rootSquare(xyz(1:3,i), quick_molspec%extxyz(1:3,j-natom), 3)
-                  quick_qm_struct%Ecore = quick_molspec%chg(I)*quick_molspec%extchg(J-natom)/distance+quick_qm_struct%Ecore
-                  elseif(i>natom .and. j>natom)then                   ! external to external point charge repulsion
-                  distance = rootSquare(quick_molspec%extxyz(1:3,i-natom), quick_molspec%extxyz(1:3,j-natom), 3)
+         do I = 1, natom + quick_molspec%nextatom
+            do J = I + 1, natom + quick_molspec%nextatom
+               if (i <= natom .and. j <= natom) then                     ! the atom to atom replusion
+                  distance = rootSquare(xyz(1:3, i), xyz(1:3, j), 3)
+                  quick_qm_struct%Ecore = quick_molspec%chg(I)*quick_molspec%chg(J)/distance + quick_qm_struct%Ecore
+               elseif (i <= natom .and. j > natom) then                  ! the atom to external point charge replusion
+                  distance = rootSquare(xyz(1:3, i), quick_molspec%extxyz(1:3, j - natom), 3)
+                  quick_qm_struct%Ecore = quick_molspec%chg(I)*quick_molspec%extchg(J - natom)/distance + quick_qm_struct%Ecore
+               elseif (i > natom .and. j > natom) then                   ! external to external point charge repulsion
+                  distance = rootSquare(quick_molspec%extxyz(1:3, i - natom), quick_molspec%extxyz(1:3, j - natom), 3)
                   quick_qm_struct%ECharge = quick_qm_struct%ECharge + &
-
-                        quick_molspec%extchg(I-natom)*quick_molspec%extchg(J-natom)/distance
+                                            quick_molspec%extchg(I - natom)*quick_molspec%extchg(J - natom)/distance
                endif
             enddo
          enddo
@@ -72,9 +70,9 @@ subroutine getEnergy(failed)
 #ifdef MPIV
    !-------------- MPI / ALL NODES ----------------------------------
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%x,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_qm_struct%s, nbasis*nbasis, mpi_double_precision, 0, MPI_COMM_WORLD, mpierror)
+      call MPI_BCAST(quick_qm_struct%x, nbasis*nbasis, mpi_double_precision, 0, MPI_COMM_WORLD, mpierror)
+      call MPI_BCAST(quick_qm_struct%Ecore, 1, mpi_double_precision, 0, MPI_COMM_WORLD, mpierror)
    endif
    !-------------- END MPI / ALL NODES ------------------------------
 #endif
@@ -95,7 +93,7 @@ subroutine getEnergy(failed)
       !
       ! Blocked by Yipu Miao
       !
-      if(quick_method%PBSOL)then
+      if (quick_method%PBSOL) then
          if (quick_method%UNRST) then
             !       if (quick_method%HF) call UHFEnergy
             !       if (quick_method%DFT) call uDFTEnergy
@@ -111,20 +109,20 @@ subroutine getEnergy(failed)
       ! calculate the energy.  It equals to the summation of different
       ! parts: electronic energy, core-core repulsion, and some other energy
       ! for specific job
-      quick_qm_struct%Eelvac=quick_qm_struct%Eel
+      quick_qm_struct%Eelvac = quick_qm_struct%Eel
       if (quick_method%extcharges) then
          quick_qm_struct%Etot = quick_qm_struct%Etot + quick_qm_struct%ECharge
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
-      if (ioutfile.ne.0) then
-         write (ioutfile,'("ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
-         write (ioutfile,'("CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
+      if (ioutfile .ne. 0) then
+         write (ioutfile, '("ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
+         write (ioutfile, '("CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then
-            write (ioutfile,'("EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
+            write (ioutfile, '("EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
          endif
-         write (ioutfile,'("TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
-         call prtact(ioutfile,"End Energy calculation")
+         write (ioutfile, '("TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
+         call prtact(ioutfile, "End Energy calculation")
          call flush(ioutfile)
       endif
    endif

@@ -90,6 +90,7 @@ libxcfolder = ./src/libxc
 
 cudafolder = ./src/cuda
 cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_getxc.o \
+<<<<<<< HEAD
 	       $(objfolder)/gpu_get2e.o
 cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
 	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
@@ -141,7 +142,12 @@ cublasobj     =$(objfolder)/fortran_thunking.o
 #----------------------
 octfolder = ./src/octree
 octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
+=======
+	       $(objfolder)/gpu_get2e.o 
+>>>>>>> master
 
+cublasfolder  =$(cudafolder)/CUBLAS
+cublasobj     =$(objfolder)/fortran_thunking.o
 #----------------------
 # quick modules and object files
 #----------------------
@@ -166,8 +172,13 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
+<<<<<<< HEAD
         $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
 
+=======
+	$(objfolder)/fake_amber_interface.o 
+#        $(objfolder)/dftgrad.o $(objfolder)/pt2der.o $(objfolder)/2eshelloptdft.o $(objfolder)/sswder.o 
+>>>>>>> master
 
 all: quick quick.cuda
 #************************************************************************
@@ -191,6 +202,7 @@ quick_subs:
 #================= quick module library =================================
 quick_modules:
 	cd $(modfolder) && make all
+<<<<<<< HEAD
 #================= octree subroutines   =================================
 octree:
 	cd $(octfolder) && make all
@@ -198,6 +210,12 @@ octree:
 quick_cuda:
 	cd $(cudafolder) && make all 
 		
+=======
+#============= targets for cuda =========================================
+quick_cuda:
+	cd $(cudafolder) && make all 
+	
+>>>>>>> master
 #================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
@@ -213,8 +231,17 @@ libxc_gpu:
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 	$(CPP) $(CPP_FLAG) -c $< -o $@
 
+<<<<<<< HEAD
 #===================== target for main src files ========================
 
+=======
+#=============== targets for CUBLAS =====================================
+$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
+	$(CPP) $(CPP_FLAG) -c $< -o $@
+
+#===================== target for main src files ========================
+
+>>>>>>> master
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
@@ -246,6 +273,7 @@ cpconfig.MPI:
 #                 C. Make Executables
 # 
 #**********************************************************************
+<<<<<<< HEAD
 quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
 	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
@@ -260,6 +288,19 @@ quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs 
 quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
 	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+=======
+quick: makefolders cpconfig quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
+
+quick.cuda: makefolders cpconfig.cuda quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
+	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) $(LDFLAGS) 
+
+quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
+	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
+
+quick.MPI: makefolders cpconfig.MPI quick_modules quick_subs $(OBJ) blas 
+	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a $(LDFLAGS)
+>>>>>>> master
 
 quick_lib:$(OBJ) ambermod amber_interface.o
 
@@ -280,13 +321,21 @@ ambermod:
 
 # - 1. Clean object files
 clean: neat
+<<<<<<< HEAD
 	-rm -f $(objfolder)/* $(libfolder)/* 
+=======
+	-rm -f $(objfolder)/* $(exefolder)/quick* $(libfolder)/* 
+>>>>>>> master
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
 	cd $(modfolder) && make clean
+<<<<<<< HEAD
 	cd $(libxcfolder) && make clean
 	cd $(libxcfolder)/maple2c_device && make clean	
+=======
+	
+>>>>>>> master
 neat:
 	-rm -f $(TMPFILES)
 

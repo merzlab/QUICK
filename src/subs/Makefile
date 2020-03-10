@@ -40,8 +40,12 @@ SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
 	PrtAct.o PrtDat.o PrtLab.o PrtTim.o PrtWrn.o pteval.o quick_open.o \
 	random.o rdinum.o rdnml.o rdnum.o rdword.o readPDB.o spdfgh.o ssw.o \
 	sum2Mat.o transpose.o tridi.o upcase.o vett.o whatis.o whole.o \
+<<<<<<< HEAD
 	wrtRestart.o xnorm.o zeroMatrix.o zmake.o pt2der.o sswder.o \
 	denspt_new_imp.o pteval_new_imp.o pt2der_new_imp.o
+=======
+	wrtRestart.o xnorm.o zeroMatrix.o zmake.o
+>>>>>>> master
 
 #************************************************************************
 # 
@@ -49,7 +53,11 @@ SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
 # 
 #************************************************************************
 
+<<<<<<< HEAD
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) 
+=======
+FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder)
+>>>>>>> master
 
 $(SUBS):%.o:%.f90
 	$(FOR) -c $< -o $@

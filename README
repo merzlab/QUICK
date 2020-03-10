@@ -84,9 +84,15 @@ in ./bin directory, you can find executable files.
 
 2. TEST
 
+<<<<<<< HEAD
 Run testqk.sh script from the quick main folder. Depending on your installation, you might want to 
 change the qexe variable value in line 12. The default ("quick.cuda") is for the gpu version. To test 
 single cpu and MPI installations, change it to "quick" and "quick.MPI" respectively.   
+=======
+Run testqk.sh script from the quick main folder. Depending on your installation, you might want to change the qexe variable
+value in line 12. The default ("quick.cuda") is for the gpu version. To test single cpu and MPI installations, change it to 
+"quick" and "quick.MPI" respectively.   
+>>>>>>> master
 
 
 3. USAGE
@@ -139,6 +145,7 @@ To completely clean up a quick installation, run the following command from quic
 
 5. SPECIAL NOTE ON THE GPU VERSION 
 
+<<<<<<< HEAD
 Currently, QUICK supports CUDA version 8.0 and later. We have tested QUICK-20.03 on GTX1080, P100, V100,
 Titan V and RTX2080Ti GPUs. Note that v20.03 is not capable of running on any Kepler or older GPUs since we make use of
 double precision atomicAdd operators in our code. Furthermore, our program is still in the experimental stage and we cannot 
@@ -147,3 +154,8 @@ guarantee that it is flawless. If you have any questions, please feel free to co
 6. DOCUMENTATION
 
 An infant version of QUICK documentation is available on: https://quick-docs.readthedocs.io/en/latest/.
+=======
+Currently, QUICK supports CUDA version 4.6 and later. We have tested QUICK on GTX580, M2090, K20, K40, K80, P100, 
+V100 and Titan V. Our program is still in the experimental stage and we cannot guarantee that it is flawless.
+If you have any questions, please feel free to contact us.
+>>>>>>> master

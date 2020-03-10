@@ -4,6 +4,11 @@ MAKEIN = ../../make.in
 include $(MAKEIN)
 
 #all: quick_cuda
+<<<<<<< HEAD
+=======
+
+objfolder = ../../obj
+>>>>>>> master
 
 objfolder = ../../obj
 libxcfolder = ../libxc
@@ -17,6 +22,7 @@ libxcfolder = ../libxc
 CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o \
 	$(objfolder)/gpu_getxc.o
 CUDAFOBJ= $(objfolder)/gpu_write_info.o
+<<<<<<< HEAD
 #CUDALIBXCOBJ=$(objfolder)/gga_x_b88.o
 #CXXOBJ=$(objfolder)/octree.o $(objfolder)/grid_packer.o
 #CUDALIBXCOBJ=$(objfolder)/gpu_libxc.o
@@ -29,12 +35,18 @@ $(CUDACOBJ):
 	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_type.cu -o $(objfolder)/gpu_type.o
 	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_get2e.cu -o $(objfolder)/gpu_get2e.o
 	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_getxc.cu -o $(objfolder)/gpu_getxc.o
+=======
+
+$(CUDACOBJ):$(objfolder)/%.o:%.cu
+	$(CUDAC) $(CUDA_FLAGS2) -c $< -o $@
+>>>>>>> master
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
 $(CUDAFOBJ):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
+<<<<<<< HEAD
 #$(CUDALIBXCOBJ):$(objfolder)/%.o:%.cu
 #	$(CUDAC) $(CUDA_FLAGS2) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
@@ -44,12 +56,15 @@ $(CUDAFOBJ):$(objfolder)/%.o:%.f90
 #$(CUDALIBXCOBJ):$(objfolder)/%.o:%.cu
 #	$(CUDAC) $(CUDA_FLAGS2) -I. -I$(libxcfolder) -c $< -o $@
 
+=======
+>>>>>>> master
 #quick_cuda: 
 #	$(CUDAC) $(CUDA_FLAGS2) -c gpu.cu
 #	$(CUDAC) $(CUDA_FLAGS2) -c gpu_type.cu
 #	$(CUDAC) $(CUDA_FLAGS2) -c gpu_get2e.cu
 #	$(CUDAC) $(CUDA_FLAGS2) -c gpu_getxc.cu
 #	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c gpu_write_info.f90
+<<<<<<< HEAD
 #all: $(CUDACOBJ) $(CUDAFOBJ) $(CUDALIBXCOBJ)
 #all: $(CUDACOBJ) $(CUDAFOBJ) $(CXXOBJ)	
 all: $(CUDACOBJ) $(CUDAFOBJ)
@@ -99,6 +114,10 @@ all: $(CUDACOBJ) $(CUDAFOBJ)
 	$(objfolder)/mgga_x_sa_tpss.o $(objfolder)/mgga_x_scan.o $(objfolder)/mgga_x_tau_hcth.o $(objfolder)/mgga_x_tm.o \
 	$(objfolder)/mgga_x_tpss.o $(objfolder)/mgga_x_vt84.o
 
+=======
+all: $(CUDACOBJ) $(CUDAFOBJ)
+	
+>>>>>>> master
 #************************************************************************
 # 
 #                 C. Self-defined Option
@@ -107,5 +126,9 @@ all: $(CUDACOBJ) $(CUDAFOBJ)
 
 # - 1. Clean object files
 clean: 
+<<<<<<< HEAD
 	-rm -f *.o 
+=======
+	-rm -f *.o include/*.o
+>>>>>>> master
 	

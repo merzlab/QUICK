@@ -62,10 +62,17 @@ CUDA_INCL_FLAGS=-L$(CUDA_HOME)/lib64 -I$(CUDA_HOME)/include -DCUDA_SPDF
 
 # G++ Compiler
 CXX = g++
+<<<<<<< HEAD
 CFLAGS = -lgfortran -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcudadevrt -lcublas -lstdc++
 
 
 #CUDA_SPDF=y
+=======
+CFLAGS = -lgfortran -g -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
+
+
+CUDA_SPDF=y
+>>>>>>> master
 
 #ifeq ($(CUDA_SPDF), y)
 #        CUDA_INCL_FLAGS=$(CUDA_INCL_FLAGS) -DCUDA_SPDF

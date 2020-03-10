@@ -6,18 +6,18 @@
 
 subroutine optimize(failed)
    use allmod
-   implicit double precision(a-h,o-z)
+   implicit double precision(a - h, o - z)
 
-   logical :: done,diagco,failed
+   logical :: done, diagco, failed
    character(len=1) cartsym(3)
-   dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
-   dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
+   dimension W(3*natom*(2*MLBFGS + 1) + 2*MLBFGS)
+   dimension coordsnew(natom*3), hdiag(natom*3), iprint(2)
    EXTERNAL LB2
-   COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
+   COMMON/LB3/MP, LP, GTOL, STPMIN, STPMAX
 
-   logical lsearch,diis
-   integer IMCSRCH,nstor,ndiis
-   double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
+   logical lsearch, diis
+   integer IMCSRCH, nstor, ndiis
+   double precision gnorm, dnorm, diagter, safeDX, gntest, gtest, sqnpar, accls, oldGrad(3*natom), coordsold(natom*3)
    double precision EChg
 #ifdef MPIV
    include "mpif.h"
@@ -33,96 +33,94 @@ subroutine optimize(failed)
    cartsym(1) = 'X'
    cartsym(2) = 'Y'
    cartsym(3) = 'Z'
-   done=.false.      ! flag to show opt is done
-   diagco=.false.
-   iprint(1)=-1
-   iprint(2)=0
-   EPS=1.d-9
-   XTOL=1.d-11
-   EChg=0.0
+   done = .false.      ! flag to show opt is done
+   diagco = .false.
+   iprint(1) = -1
+   iprint(2) = 0
+   EPS = 1.d-9
+   XTOL = 1.d-11
+   EChg = 0.0
 
    ! For right now, there is no way to adjust these and only analytical gradients
    ! are available.  This should be changed later.
-   quick_method%analgrad=.true.
+   quick_method%analgrad = .true.
 
    ! Some varibles to determine the geometry optimization
-   IFLAG=0
-   I=0
+   IFLAG = 0
+   I = 0
 
-   do j=1,natom
-      do k=1,3
-         quick_qm_struct%gradient((j-1)*3+K)=0d0
+   do j = 1, natom
+      do k = 1, 3
+         quick_qm_struct%gradient((j - 1)*3 + K) = 0d0
       enddo
    enddo
 
    !------------- MPI/MASTER --------------------------------
    if (master) then
-      call PrtAct(ioutfile,"Begin Optimization Job")
+      call PrtAct(ioutfile, "Begin Optimization Job")
 
       ! At the start of this routine we have a converged density matrix.
       ! Check to be sure you should be here.
       if (natom == 1) then
-         write (ioutfile,'(" ONE ATOM = NO OPTIMIZATION ")')
+         write (ioutfile, '(" ONE ATOM = NO OPTIMIZATION ")')
          return
       endif
 
       if (quick_method%iopt < 0) then
-         error=0.d0
-         do I=1,natom*3
+         error = 0.d0
+         do I = 1, natom*3
             temp = quick_qm_struct%gradient(I)/5.D-4
-            error = temp*temp+error
+            error = temp*temp + error
          enddo
-         Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
+         Write (ioutfile, '(" GRADIENT BASED ERROR =",F20.10)') error
       endif
    endif
 
    !------------- END MPI/MASTER ----------------------------
 
-
-   do WHILE (I.le.quick_method%iopt.and..not.done)
-      I=I+1
+   do WHILE (I .le. quick_method%iopt .and. .not. done)
+      I = I + 1
 
       if (master) then
-         call PrtAct(ioutfile,"Optimize for New Step")
+         call PrtAct(ioutfile, "Optimize for New Step")
 
          ! First let's print input geometry
-         write(ioutfile,*)
-         write(ioutfile,'(12("="))',advance="no")
-         write(ioutfile,'(2x,"GEOMETRY FOR OPTIMIZATION STEP",I4," OUT OF ",I4,2x)',advance="no") I,quick_method%iopt
-         write(ioutfile,'(12("="))')
-         write(ioutfile,*)
-         write(ioutfile,'("GEOMETRY INPUT")')
-         write(ioutfile,'("ELEMENT",6x,"X",14x,"Y",14x,"Z")')
-         do J=1,natom
-            Write (ioutfile,'(2x,A2,6x,F12.6,3x,F12.6,3x,F12.6)') &
-                  symbol(quick_molspec%iattype(J)),xyz(1,J)*0.529177249d0, &
-                  xyz(2,J)*0.529177249d0,xyz(3,J)*0.529177249d0
+         write (ioutfile, *)
+         write (ioutfile, '(12("="))', advance="no")
+         write (ioutfile, '(2x,"GEOMETRY FOR OPTIMIZATION STEP",I4," OUT OF ",I4,2x)', advance="no") I, quick_method%iopt
+         write (ioutfile, '(12("="))')
+         write (ioutfile, *)
+         write (ioutfile, '("GEOMETRY INPUT")')
+         write (ioutfile, '("ELEMENT",6x,"X",14x,"Y",14x,"Z")')
+         do J = 1, natom
+            Write (ioutfile, '(2x,A2,6x,F12.6,3x,F12.6,3x,F12.6)') &
+               symbol(quick_molspec%iattype(J)), xyz(1, J)*0.529177249d0, &
+               xyz(2, J)*0.529177249d0, xyz(3, J)*0.529177249d0
          enddo
 
          !        Block temperorly, this is integralcutoff for opt step,
          !        should be larger than single point to save time
-         quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
-         quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
-
+         quick_method%integralCutoff = 1.0d0/(10.0d0**6.0d0)
+         quick_method%Primlimit = 1.0d0/(10.0d0**6.0d0)
 
          ! Save grad and coordinate for further use
-         do j=1,natom
-            do k=1,3
-               oldGrad((j-1)*3+K)=quick_qm_struct%gradient((j-1)*3+K)
-               coordsold((j-1)*3+K)=xyz(k,j)
+         do j = 1, natom
+            do k = 1, 3
+               oldGrad((j - 1)*3 + K) = quick_qm_struct%gradient((j - 1)*3 + K)
+               coordsold((j - 1)*3 + K) = xyz(k, j)
             enddo
          enddo
       endif
 
-      do II=1,nbasis
-         do J =1,nbasis
-            quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
+      do II = 1, nbasis
+         do J = 1, nbasis
+            quick_qm_struct%dense(J, Ii) = quick_qm_struct%denseInt(J, iI)
          enddo
       enddo
 
 #ifdef CUDA
-      call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-            quick_molspec%molchg, quick_molspec%iAtomType)
+      call gpu_setup(natom, nbasis, quick_molspec%nElec, quick_molspec%imult, &
+                     quick_molspec%molchg, quick_molspec%iAtomType)
       call gpu_upload_xyz(xyz)
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
 #endif
@@ -133,17 +131,16 @@ subroutine optimize(failed)
 
 #ifdef CUDA
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-            ncontract, itype, aexp, dcoeff, &
-            quick_basis%first_basis_function, quick_basis%last_basis_function, &
-            quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
-            quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-            quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-            quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
-            quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+                            ncontract, itype, aexp, dcoeff, &
+                            quick_basis%first_basis_function, quick_basis%last_basis_function, &
+                            quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
+                            quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+                            quick_basis%ktype, quick_basis%kprim, quick_basis%kshell, quick_basis%Ksumtype, &
+                            quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
+                            quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
       call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-
 
 #endif
 
@@ -161,46 +158,61 @@ subroutine optimize(failed)
          !                if (quick_method%DFT) call uDFTgrad
          !                if (quick_method%SEDFT) call uSEDFTgrad
          !            else
+<<<<<<< HEAD
          call scf_gradient
+=======
+         if (quick_method%HF) then
+#ifdef MPI
+            if (bMPI) then
+               call mpi_hfgrad
+            else
+#endif
+               call hfgrad
+#ifdef MPI
+            endif
+#endif
+         endif
+         !                if (quick_method%DFT) call DFTgrad
+         !                if (quick_method%SEDFT) call SEDFTgrad
+>>>>>>> master
          !            endif
       endif
 
 #ifdef CUDA
       if (quick_method%bCUDA) then
-        call gpu_cleanup()
+         call gpu_cleanup()
       endif
 #endif
-        !quick_method%bCUDA=.true.
+      !quick_method%bCUDA=.true.
       if (master) then
 
          if (failed) return
-
 
          !-----------------------------------------------------------------------
          ! Copy current geometry into coordsnew. Fill the rest of the array w/ zeros.
          ! Also fill the rest of gradient with zeros.
          !-----------------------------------------------------------------------
-         do J=1,natom
-            do K=1,3
-               coordsnew((J-1)*3 + K) = xyz(K,J)
+         do J = 1, natom
+            do K = 1, 3
+               coordsnew((J - 1)*3 + K) = xyz(K, J)
             enddo
          enddo
 
          ! Now let's call LBFGS.
-         call LBFGS(natom*3,MLBFGS,coordsnew,quick_qm_struct%Etot,quick_qm_struct%gradient,DIAGCO,HDIAG,IPRINT,EPS,XTOL,W,IFLAG)
+  call LBFGS(natom*3, MLBFGS, coordsnew, quick_qm_struct%Etot, quick_qm_struct%gradient, DIAGCO, HDIAG, IPRINT, EPS, XTOL, W, IFLAG)
 
-         lsearch=.false.
-         diis=.true.
-         imcsrch=0
-         nstor=10
-         dnorm=1.0d0
-         diagterm=1.0e-4
-         safeDX=0.10d0
+         lsearch = .false.
+         diis = .true.
+         imcsrch = 0
+         nstor = 10
+         dnorm = 1.0d0
+         diagterm = 1.0e-4
+         safeDX = 0.10d0
 
-         sqnpar=dsqrt(natom*3.0d0)
-         gtest=0.5d0
-         gntest = max(gtest*sqnpar*0.25d0,gtest)
-         accls=0.0d0
+         sqnpar = dsqrt(natom*3.0d0)
+         gtest = 0.5d0
+         gntest = max(gtest*sqnpar*0.25d0, gtest)
+         accls = 0.0d0
          !-----------------------------------------------------------------------
          ! We have a new set of coordinates, copy it onto the xyz array,
          ! and get a new energy and set of gradients. Be sure to check stepsize.
@@ -209,23 +221,23 @@ subroutine optimize(failed)
 
          geomax = -1.d0
          georms = 0.d0
-         do J=1,natom
-            do K=1,3
-               tempgeo =dabs(xyz(K,J)- coordsnew((J-1)*3 + K))
+         do J = 1, natom
+            do K = 1, 3
+               tempgeo = dabs(xyz(K, J) - coordsnew((J - 1)*3 + K))
 
                ! If the change is too much, then we have to have small change to avoid error
                if (tempgeo > quick_method%stepMax) then
-                  xyz(K,J) =  xyz(K,J)+(coordsnew((J-1)*3+K)-xyz(K,J))*quick_method%stepMax/tempgeo
+                  xyz(K, J) = xyz(K, J) + (coordsnew((J - 1)*3 + K) - xyz(K, J))*quick_method%stepMax/tempgeo
                   tempgeo = quick_method%stepMax*0.529177249d0
-               !else if (abs(quick_qm_struct%gradient((J-1)*3 + K))>0.001) then
-               !  xyz(K,J) = (coordsnew((J-1)*3 + K)-XYZ(K,J))*3+XYZ(K,J)
+                  !else if (abs(quick_qm_struct%gradient((J-1)*3 + K))>0.001) then
+                  !  xyz(K,J) = (coordsnew((J-1)*3 + K)-XYZ(K,J))*3+XYZ(K,J)
                else
                   tempgeo = tempgeo*0.529177249d0
-                  xyz(K,J) = coordsnew((J-1)*3 + K)
+                  xyz(K, J) = coordsnew((J - 1)*3 + K)
                endif
 
                ! Max geometry change
-               geomax = max(geomax,tempgeo)
+               geomax = max(geomax, tempgeo)
                ! geometry RMS
                georms = georms + tempgeo**2.d0
             enddo
@@ -233,59 +245,75 @@ subroutine optimize(failed)
 
          gradmax = -1.d0
          gradnorm = 0.d0
-         write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
-         write (ioutfile,'(76("-"))')
-         write (ioutfile,'(" VARIBLES",4x,"OLD_X",12x,"OLD_GRAD",8x,"NEW_GRAD",10x,"NEW_X")')
-         write (ioutfile,'(76("-"))')
-         do Iatm=1,natom
-            do Imomentum=1,3
+         write (ioutfile, '(/," ANALYTICAL GRADIENT: ")')
+         write (ioutfile, '(76("-"))')
+         write (ioutfile, '(" VARIBLES",4x,"OLD_X",12x,"OLD_GRAD",8x,"NEW_GRAD",10x,"NEW_X")')
+         write (ioutfile, '(76("-"))')
+         do Iatm = 1, natom
+            do Imomentum = 1, 3
                ! Max gradient change
-               gradmax = max(gradmax,dabs(quick_qm_struct%gradient((Iatm-1)*3+Imomentum)))
+               gradmax = max(gradmax, dabs(quick_qm_struct%gradient((Iatm - 1)*3 + Imomentum)))
                ! Grad change normalization
-               gradnorm = gradnorm + quick_qm_struct%gradient((Iatm-1)*3+Imomentum)**2.d0
-               write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
-                     coordsold((Iatm-1)*3+Imomentum)*0.529177249d0,oldGrad((Iatm-1)*3+Imomentum), &
-                     quick_qm_struct%gradient((Iatm-1)*3+Imomentum),xyz(Imomentum,Iatm)*0.529177249d0
+               gradnorm = gradnorm + quick_qm_struct%gradient((Iatm - 1)*3 + Imomentum)**2.d0
+               write (ioutfile, '(I5,A1,3x,F14.10,3x,F14.10,3x,F14.10,3x,F14.10)') Iatm, cartsym(imomentum), &
+                  coordsold((Iatm - 1)*3 + Imomentum)*0.529177249d0, oldGrad((Iatm - 1)*3 + Imomentum), &
+                  quick_qm_struct%gradient((Iatm - 1)*3 + Imomentum), xyz(Imomentum, Iatm)*0.529177249d0
             enddo
          enddo
-         write(ioutfile,'(76("-"))')
+         write (ioutfile, '(76("-"))')
          gradnorm = (gradnorm/dble(natom*3))**.5d0
 
          ! geometry RMS
          georms = (georms/dble(natom*3))**.5d0
 
+<<<<<<< HEAD
          if (i.gt.1) then
             Write (ioutfile,'(" OPTIMIZATION STATISTICS:")')
             Write (ioutfile,'(" ENERGY CHANGE           =",E20.10," (REQUEST=",E12.5")")') quick_qm_struct%Etot-Elast, &
                                                                                         quick_method%EChange
             Write (ioutfile,'(" MAXIMUM GEOMETRY CHANGE =",E20.10," (REQUEST=",E12.5")")') geomax,quick_method%geoMaxCrt
             Write (ioutfile,'(" GEOMETRY CHANGE RMS     =",E20.10," (REQUEST=",E12.5")")') georms,quick_method%gRMSCrt
+=======
+         if (i .gt. 1) then
+            Write (ioutfile, '(" OPTIMZATION STATISTICS:")')
+            Write (ioutfile, '(" ENERGY CHANGE           =",E20.10," (REQUEST=",E12.5")")') quick_qm_struct%Etot - Elast, &
+               quick_method%EChange
+            Write (ioutfile, '(" MAXIMUM GEOMETRY CHANGE =",E20.10," (REQUEST=",E12.5")")') geomax, quick_method%geoMaxCrt
+            Write (ioutfile, '(" GEOMETRY CHANGE RMS     =",E20.10," (REQUEST=",E12.5")")') georms, quick_method%gRMSCrt
+>>>>>>> master
             !Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT=",E20.10," (REQUEST=",E12.5")")') gradmax,quick_method%gradMaxCrt
-            Write (ioutfile,'(" GRADIENT NORM           =",E20.10," (REQUEST=",E12.5")")') gradnorm,quick_method%gNormCrt
-            
-            EChg = quick_qm_struct%Etot-Elast
-            done = quick_method%geoMaxCrt.gt.geomax
-            done = done.and.(quick_method%EChange.gt.abs(EChg))
-            done = done.and.(quick_method%gRMSCrt.gt.georms)
+            Write (ioutfile, '(" GRADIENT NORM           =",E20.10," (REQUEST=",E12.5")")') gradnorm, quick_method%gNormCrt
+
+            EChg = quick_qm_struct%Etot - Elast
+            done = quick_method%geoMaxCrt .gt. geomax
+            done = done .and. (quick_method%EChange .gt. abs(EChg))
+            done = done .and. (quick_method%gRMSCrt .gt. georms)
             !done = done.and.(quick_method%gradMaxCrt.gt.gradmax * 10 .or. (EChg.gt.0 .and. i.gt.5))
             !done = done.and.quick_method%gNormCrt.gt.gradnorm
          else
-            Write (ioutfile,'(" OPTIMZATION STATISTICS:")')
-            Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT=",E20.10,"(REQUEST=",E20.10")")') gradmax,quick_method%gradMaxCrt
-            done = quick_method%gradMaxCrt.gt.gradmax
-            done = done.and.quick_method%gNormCrt.gt.gradnorm
+            Write (ioutfile, '(" OPTIMZATION STATISTICS:")')
+            Write (ioutfile, '(" MAXIMUM GRADIENT ELEMENT=",E20.10,"(REQUEST=",E20.10")")') gradmax, quick_method%gradMaxCrt
+            done = quick_method%gradMaxCrt .gt. gradmax
+            done = done .and. quick_method%gNormCrt .gt. gradnorm
             if (done) then
+<<<<<<< HEAD
                Write (ioutfile,'(" NO SIGNIFICANT CHANGE, NO NEED TO OPTIMIZE. USE INITIAL GEOMETRY.")')
                do j=1,natom
                   do k=1,3
                      xyz(k,j)=coordsold((j-1)*3+K)
+=======
+               Write (ioutfile, '(" NO SIGNAFICANT CHANGE, NO NEED TO OPTIMIZE. USE INITIAL GEOMETRY.")')
+               do j = 1, natom
+                  do k = 1, 3
+                     xyz(k, j) = coordsold((j - 1)*3 + K)
+>>>>>>> master
                   enddo
                enddo
             endif
          endif
 
-         if (done)  Write (ioutfile,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') i
-         call PrtAct(ioutfile,"Finish Optimization for This Step")
+         if (done) Write (ioutfile, '(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') i
+         call PrtAct(ioutfile, "Finish Optimization for This Step")
          Elast = quick_qm_struct%Etot
 
          ! If read is on, write out a restart file.
@@ -295,11 +323,11 @@ subroutine optimize(failed)
       !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
-      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI) call MPI_BCAST(xyz, natom*3, mpi_double_precision, 0, MPI_COMM_WORLD, mpierror)
 
 
       ! Notify every nodes if opt is done
-      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI) call MPI_BCAST(done, 1, mpi_logical, 0, MPI_COMM_WORLD, mpierror)
 #endif
 
       !For DFT geometry optimization, we should delete the grid variables here
@@ -313,43 +341,46 @@ subroutine optimize(failed)
 
    enddo
 
-
    if (master) then
       if (done) then
-         Write (ioutfile,'("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
+         Write (ioutfile, '("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
       else
+<<<<<<< HEAD
          write (ioutfile,*) "WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED."
          write (ioutfile,*) "         PRINTING THE GEOMETRY FROM LAST STEP."
          Write (ioutfile,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")')
+=======
+         write (ioutfile, *) "WARNING: REACH MAX OPT CYCLE BUT CANNOT GET OPTIMIZED GEOMETRY"
+         write (ioutfile, *) "         BUT STILL OUTPUT THE GEOMETRY WE GET."
+         Write (ioutfile, '("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")')
+>>>>>>> master
       endif
-      write (ioutfile,*)
-      Write (ioutfile,'(" OPTIMIZED GEOMETRY IN CARTESIAN")')
-      write (ioutfile,'(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
+      write (ioutfile, *)
+      Write (ioutfile, '(" OPTIMIZED GEOMETRY IN CARTESIAN")')
+      write (ioutfile, '(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
 
-      do I=1,natom
-         Write (ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
-               symbol(quick_molspec%iattype(I)),xyz(1,I)*0.529177249d0, &
-               xyz(2,I)*0.529177249d0,xyz(3,I)*0.529177249d0
+      do I = 1, natom
+         Write (ioutfile, '(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
+            symbol(quick_molspec%iattype(I)), xyz(1, I)*0.529177249d0, &
+            xyz(2, I)*0.529177249d0, xyz(3, I)*0.529177249d0
       enddo
 
-      write(ioutfile,*)
-      write (ioutfile,'(" FORCE")')
-      write (ioutfile,'(" ELEMENT",6x, "X",9x,"Y",9x,"Z")')
-      do i=1,natom
-         write(ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
-               symbol(quick_molspec%iattype(I)),-quick_qm_struct%gradient((i-1)*3+1)*0.529177249d0, &
-               -quick_qm_struct%gradient((i-1)*3+2)*0.529177249d0,-quick_qm_struct%gradient((i-1)*3+3)*0.529177249d0
+      write (ioutfile, *)
+      write (ioutfile, '(" FORCE")')
+      write (ioutfile, '(" ELEMENT",6x, "X",9x,"Y",9x,"Z")')
+      do i = 1, natom
+         write (ioutfile, '(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
+            symbol(quick_molspec%iattype(I)), -quick_qm_struct%gradient((i - 1)*3 + 1)*0.529177249d0, &
+            -quick_qm_struct%gradient((i - 1)*3 + 2)*0.529177249d0, -quick_qm_struct%gradient((i - 1)*3 + 3)*0.529177249d0
       enddo
 
-      write (ioutfile,*)
-      write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
-      Write (ioutfile,'("===============================================================")')
+      write (ioutfile, *)
+      write (ioutfile, '(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
+      Write (ioutfile, '("===============================================================")')
 
-
-      call PrtAct(ioutfile,"Finish Optimization Job")
+      call PrtAct(ioutfile, "Finish Optimization Job")
    endif
 
    return
 end subroutine optimize
-
 
