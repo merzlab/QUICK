@@ -798,7 +798,7 @@ endif
            else
               usf1_nlen=iend-(istart+6)+1
            endif
-           write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+           !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
         endif
 
         nof_f=0

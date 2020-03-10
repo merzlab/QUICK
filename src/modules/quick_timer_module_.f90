@@ -198,76 +198,77 @@ module quick_timer_module
 
         timer_cumer%TTotal=timer_end%TTotal-timer_begin%TTotal
 
+! Madu Manathunga blocked following block on 03/10/2020
 #ifdef MPIV
-        !----------------------------------------------------
-        ! For MPI timing
-        !----------------------------------------------------
-        if (bMPI) then
-            if (.not.master) then
-                tmp_timer_cumer=timer_cumer
-                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,mpirank,MPI_COMM_WORLD,IERROR)
-            else
-                MPI_timer_cumer=timer_cumer
-                max_timer_cumer=timer_cumer
-                do i=1,mpisize-1
-                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
-                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
-                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
-                    MPI_timer_cumer%T2e=MPI_timer_cumer%T2e+tmp_timer_cumer%T2e
-                    MPI_timer_cumer%T1e=MPI_timer_cumer%T1e+tmp_timer_cumer%T1e
-                    MPI_timer_cumer%TDiag=MPI_timer_cumer%TDiag+tmp_timer_cumer%TDiag
-                    MPI_timer_cumer%TSCF=MPI_timer_cumer%TSCF+tmp_timer_cumer%TDiag+tmp_timer_cumer%T2e+ &
-                        tmp_timer_cumer%T1e
-                    MPI_timer_cumer%TDII=MPI_timer_cumer%TDII+tmp_timer_cumer%TDII
-                    MPI_timer_cumer%TMP2=MPI_timer_cumer%TMP2+tmp_timer_cumer%TMP2
-                    MPI_timer_cumer%TOp=MPI_timer_cumer%TOp+tmp_timer_cumer%T2e+tmp_timer_cumer%T1e
-                    MPI_timer_cumer%TGrad=MPI_timer_cumer%TGrad+tmp_timer_cumer%TGrad
-
-                    if (tmp_timer_cumer%T2e.ge.max_timer_cumer%T2e) max_timer_cumer%T2e=tmp_timer_cumer%T2e
-                    if (tmp_timer_cumer%T1e.ge.max_timer_cumer%T1e) max_timer_cumer%T1e=tmp_timer_cumer%T1e
-                    if (tmp_timer_cumer%TDiag.ge.max_timer_cumer%TDiag) max_timer_cumer%TDiag=tmp_timer_cumer%TDiag
-                    if (tmp_timer_cumer%TMP2.ge.max_timer_cumer%TMP2) max_timer_cumer%TMP2=tmp_timer_cumer%TMP2
-                    if (tmp_timer_cumer%TGrad.ge.max_timer_cumer%TGrad) max_timer_cumer%TGrad=tmp_timer_cumer%TGrad
-                enddo
-            endif
-
-            if (master) then
-                write (io,'("----------- MPI TIMING -------------")')
-                ! SCF Time
-                write (io,'("MPI SCF TIME               =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TSCF, &
-                    timer_cumer%TSCF/MPI_timer_cumer%TSCF*100
-                ! Op Time
-                write (io,'(6x,"MPI Op TIME                =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TOp, &
-                    timer_cumer%TOp/MPI_timer_cumer%TOp*100
-                ! 1e Time
-                write (io,'(12x,"MPI 1e TIME                =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%T1e, &
-                    timer_cumer%T1e/MPI_timer_cumer%T1e*100,max_timer_cumer%T1e/MPI_timer_cumer%T1e*100
-                ! 2e Time
-                write (io,'(12x,"MPI 2e TIME                =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%T2e, &
-                    timer_cumer%T2e/MPI_timer_cumer%T2e*100,max_timer_cumer%T2e/MPI_timer_cumer%T2e*100
-                ! DIIS Time
-                write (io,'(6x,"MPI DIIS TIME              =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TDII, &
-                    timer_cumer%TDII/MPI_timer_cumer%TDII*100
-                ! Diag Time
-                write (io,'(12x,"MPI DIAG TIME              =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TDiag,&
-                    timer_cumer%TDiag/MPI_timer_cumer%TDiag*100,max_timer_cumer%TDiag/MPI_timer_cumer%TDiag*100
-                ! MP2 Time
-                if (quick_method%MP2) then
-                    write (io,'("MPI MP2 TIME               =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TMP2, &
-                        timer_cumer%TMP2/MPI_timer_cumer%TMP2*100,max_timer_cumer%TMP2/MPI_timer_cumer%TMP2*100
-                endif
-                ! Gradient Time
-                if (quick_method%opt) then
-                    write (io,'("MPI GRAD TIME              =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TGrad,&
-                        timer_cumer%TGrad/MPI_timer_cumer%TGrad*100,max_timer_cumer%TGrad/MPI_timer_cumer%TGrad*100
-                endif
-
-                ! Most Important, total time
-                write (io,'("MPI TOTAL CPU TIME         =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TTotal, &
-                    timer_cumer%TTotal/MPI_timer_cumer%TTotal*100
-            endif
-        endif
+!        !----------------------------------------------------
+!        ! For MPI timing
+!        !----------------------------------------------------
+!        if (bMPI) then
+!            if (.not.master) then
+!                tmp_timer_cumer=timer_cumer
+!                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,mpirank,MPI_COMM_WORLD,IERROR)
+!            else
+!                MPI_timer_cumer=timer_cumer
+!                max_timer_cumer=timer_cumer
+!                do i=1,mpisize-1
+!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
+!                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
+!                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
+!                    MPI_timer_cumer%T2e=MPI_timer_cumer%T2e+tmp_timer_cumer%T2e
+!                    MPI_timer_cumer%T1e=MPI_timer_cumer%T1e+tmp_timer_cumer%T1e
+!                    MPI_timer_cumer%TDiag=MPI_timer_cumer%TDiag+tmp_timer_cumer%TDiag
+!                    MPI_timer_cumer%TSCF=MPI_timer_cumer%TSCF+tmp_timer_cumer%TDiag+tmp_timer_cumer%T2e+ &
+!                        tmp_timer_cumer%T1e
+!                    MPI_timer_cumer%TDII=MPI_timer_cumer%TDII+tmp_timer_cumer%TDII
+!                    MPI_timer_cumer%TMP2=MPI_timer_cumer%TMP2+tmp_timer_cumer%TMP2
+!                    MPI_timer_cumer%TOp=MPI_timer_cumer%TOp+tmp_timer_cumer%T2e+tmp_timer_cumer%T1e
+!                    MPI_timer_cumer%TGrad=MPI_timer_cumer%TGrad+tmp_timer_cumer%TGrad
+!
+!                    if (tmp_timer_cumer%T2e.ge.max_timer_cumer%T2e) max_timer_cumer%T2e=tmp_timer_cumer%T2e
+!                    if (tmp_timer_cumer%T1e.ge.max_timer_cumer%T1e) max_timer_cumer%T1e=tmp_timer_cumer%T1e
+!                    if (tmp_timer_cumer%TDiag.ge.max_timer_cumer%TDiag) max_timer_cumer%TDiag=tmp_timer_cumer%TDiag
+!                    if (tmp_timer_cumer%TMP2.ge.max_timer_cumer%TMP2) max_timer_cumer%TMP2=tmp_timer_cumer%TMP2
+!                    if (tmp_timer_cumer%TGrad.ge.max_timer_cumer%TGrad) max_timer_cumer%TGrad=tmp_timer_cumer%TGrad
+!                enddo
+!            endif
+! 
+!            if (master) then
+!                write (io,'("----------- MPI TIMING -------------")')
+!                ! SCF Time
+!                write (io,'("MPI SCF TIME               =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TSCF, &
+!                    timer_cumer%TSCF/MPI_timer_cumer%TSCF*100
+!                ! Op Time
+!                write (io,'(6x,"MPI Op TIME                =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TOp, &
+!                    timer_cumer%TOp/MPI_timer_cumer%TOp*100
+!                ! 1e Time
+!                write (io,'(12x,"MPI 1e TIME                =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%T1e, &
+!                    timer_cumer%T1e/MPI_timer_cumer%T1e*100,max_timer_cumer%T1e/MPI_timer_cumer%T1e*100
+!                ! 2e Time
+!                write (io,'(12x,"MPI 2e TIME                =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%T2e, &
+!                    timer_cumer%T2e/MPI_timer_cumer%T2e*100,max_timer_cumer%T2e/MPI_timer_cumer%T2e*100
+!                ! DIIS Time
+!                write (io,'(6x,"MPI DIIS TIME              =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TDII, &
+!                    timer_cumer%TDII/MPI_timer_cumer%TDII*100
+!                ! Diag Time
+!                write (io,'(12x,"MPI DIAG TIME              =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TDiag,&
+!                    timer_cumer%TDiag/MPI_timer_cumer%TDiag*100,max_timer_cumer%TDiag/MPI_timer_cumer%TDiag*100
+!                ! MP2 Time
+!                if (quick_method%MP2) then
+!                    write (io,'("MPI MP2 TIME               =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TMP2, &
+!                        timer_cumer%TMP2/MPI_timer_cumer%TMP2*100,max_timer_cumer%TMP2/MPI_timer_cumer%TMP2*100
+!                endif
+!                ! Gradient Time
+!                if (quick_method%opt) then
+!                    write (io,'("MPI GRAD TIME              =",F16.9," (MASTER=",F6.2,"%, MAX=",F6.2,"%)")') MPI_timer_cumer%TGrad,&
+!                        timer_cumer%TGrad/MPI_timer_cumer%TGrad*100,max_timer_cumer%TGrad/MPI_timer_cumer%TGrad*100
+!                endif
+!
+!                ! Most Important, total time
+!                write (io,'("MPI TOTAL CPU TIME         =",F16.9," (MASTER=",F6.2,"%)")') MPI_timer_cumer%TTotal, &
+!                    timer_cumer%TTotal/MPI_timer_cumer%TTotal*100
+!            endif
+!        endif
 #endif
         if (master) then
             write (io,'("------------------------------------")')

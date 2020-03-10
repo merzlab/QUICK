@@ -292,14 +292,6 @@ subroutine optimize(failed)
          if (quick_method%readdmx) call wrtrestart
       endif
 
-      !For DFT geometry optimization, we should delete the grid variables here and 
-      !reinitiate them in getEnergy method. 
-      if (quick_method%DFT) then
-           if(I.le.quick_method%iopt.and..not.done) then
-                call deform_dft_grid(quick_dft_grid) 
-           endif
-      endif
-
       !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
@@ -309,6 +301,15 @@ subroutine optimize(failed)
       ! Notify every nodes if opt is done
       if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 #endif
+
+      !For DFT geometry optimization, we should delete the grid variables here
+      !and 
+      !reinitiate them in getEnergy method. 
+      if (quick_method%DFT) then
+           if(I.le.quick_method%iopt.and..not.done) then
+                call deform_dft_grid(quick_dft_grid)
+           endif
+      endif
 
    enddo
 

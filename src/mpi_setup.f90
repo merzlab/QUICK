@@ -534,6 +534,14 @@
 
    endif  
 
+    do j=1,quick_xcg_tmp%idx_grid
+        quick_xcg_tmp%sswt(j) = 0.0d0
+        quick_xcg_tmp%tmp_sswt(j) = 0.0d0
+        quick_xcg_tmp%weight(j) = 0.0d0
+        quick_xcg_tmp%tmp_weight(j) = 0.0d0
+    enddo
+
+
    if(bMPI) then
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -545,13 +553,11 @@
       call MPI_BCAST(quick_xcg_tmp%init_grid_pty,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_xcg_tmp%init_grid_ptz,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_xcg_tmp%init_grid_atm,quick_xcg_tmp%idx_grid,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%tmp_sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%tmp_weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_xcg_tmp%arr_wtang,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_xcg_tmp%arr_rwt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_xcg_tmp%arr_rad3,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+
 
    !if(.not. master) then
    !   do idx=1, quick_xcg_tmp%idx_grid
@@ -572,6 +578,8 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    include 'mpif.h'
 
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
    if(.not. master) then
       call MPI_SEND(quick_xcg_tmp%sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
       call MPI_SEND(quick_xcg_tmp%weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
@@ -588,6 +596,7 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       enddo
 
    endif
+
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
   

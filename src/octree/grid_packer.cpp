@@ -74,8 +74,12 @@ void pack_grid_pts_f90_(double *grid_ptx, double *grid_pty, double *grid_ptz, in
 	/*Prune grid points based on ssw. This is written with stupid array memory allocations
  	Must be cleaned up with lists.*/
 
-        grd_pck_strct *gps_ssw, *gps;
-        gps_ssw = (grd_pck_strct*) malloc(sizeof(grd_pck_strct));
+	grd_pck_strct *gps_ssw, *gps;
+#ifdef MPIV
+    if(gmpi.mpirank==0){
+#endif
+//        grd_pck_strct *gps_ssw, *gps;
+	gps_ssw = (grd_pck_strct*) malloc(sizeof(grd_pck_strct));
 	gps = (grd_pck_strct*) malloc(sizeof(grd_pck_strct));
 
         gps_ssw->gridx = grid_ptx;
@@ -103,10 +107,18 @@ void pack_grid_pts_f90_(double *grid_ptx, double *grid_pty, double *grid_ptz, in
         gps->ncenter = ncenter;
         gps->itype = itype;
         gps->xyz = xyz;
-
 	gpst = *gps;
 
+#ifdef MPIV
+   }
+
+#endif
+
         pack_grid_pts(&gpst);
+
+#ifdef MPIV
+    if(gmpi.mpirank==0){
+#endif
 
 	*ngpts = gpst.gridb_count;
 	*nbins = gpst.nbins;
@@ -117,6 +129,10 @@ void pack_grid_pts_f90_(double *grid_ptx, double *grid_pty, double *grid_ptz, in
 	
 	free(gps_ssw);
 //	free(gps);
+
+#ifdef MPIV
+   }
+#endif
 
 }
 
@@ -572,11 +588,13 @@ void pack_grid_pts(grd_pck_strct *gps){
 
         clock_t start, end;
         double time_octree;
-//        double time_bfpf_prescreen;
-//        double time_pack_pts;
 
 #ifdef MPIV
+
 	setup_gpack_mpi_1(gps);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
 #endif
 
 	vector<node> octree;
@@ -598,294 +616,17 @@ void pack_grid_pts(grd_pck_strct *gps){
 
 	gps -> time_octree = time_octree;
 
-
-//----------------- Uncomment for old primitve function approach ----------------
-/*
-	start = clock();
-
-	//A vector to hold the basis function lists for each node
-	vector<bflist> bflst = get_pfbased_basis_function_lists(&octree, gps);	
-        //vector<bflist> bflst = get_cfbased_basis_function_lists(&octree, gps);
-
-	end = clock();
-
-	time_bfpf_prescreen = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-	printf("Time for prescreening basis and primitive functions: %f s \n", time_bfpf_prescreen);
-*/
-//----------------- End uncomment for old primitve function approach ----------------
-
 #ifdef CUDA
-
-//	start = clock();
 
 	vector<node> new_imp_signodes;
 
 	vector<bflist> new_imp_bflst;
 
-//	gpu_get_pfbased_basis_function_lists(&octree, gps);
 	int new_imp_total_pts = gpu_get_pfbased_basis_function_lists_new_imp(&octree, gps, &new_imp_signodes, &new_imp_bflst);
 
-//	end = clock();
-
-//	time_bfpf_prescreen = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-//	printf("Time for prescreening basis and primitive functions (new_imp): %f s \n", time_bfpf_prescreen);
-
-//	gps -> time_bfpf_prescreen = time_bfpf_prescreen;
-
 #else
-/*
-        start = clock();
-
-        //A vector to hold the basis function lists for each node
-        vector<bflist> bflst = get_pfbased_basis_function_lists(&octree, gps);  
-        //vector<bflist> bflst = get_cfbased_basis_function_lists(&octree, gps);
-
-        end = clock();
-
-        time_bfpf_prescreen = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-        printf("Time for prescreening basis and primitive functions: %.10e s \n", time_bfpf_prescreen);
-
-	gps -> time_bfpf_prescreen = time_bfpf_prescreen;
-
-	start = clock();
-
-	for(int i=0; i<bflst.size();i++){
-		bflist bflstn = bflst.at(i);
-
-		int node_id = bflstn.node_id;
-
-		vector<bas_func> bfs = bflstn.bfs;	
-		int bfs_count = bfs.size();
-
-#ifdef OCT_DEBUG
-		if(bfs_count >0){
-			for(int j=0;j<bfs_count;j++){
- 				bas_func bf = bfs.at(j);
-				vector<int> pf = bf.prim_list;
-				for(int k=0; k< pf.size(); k++){
-					printf("Node: %i basis function number: %i pf: %i \n", node_id, bf.bas_id, pf.at(k));
-				}
-			}
-			printf("Total number of basis functions for node: %i is %i. \n", node_id, bfs_count);
-		}
-#endif
-	}
-
-//----------------- Uncomment for old primitve function approach ----------------
-	
-	//At this point, we have binned all the grid points, listed out basis & primitive functions for each bin. 
- 	//We shall now prepare them as appropriate for gpu uploading. In doing so, we would neglect bins with 0 basis
-	//functions.
-
-	//Pick nodes with a list of basis functions from octree.
-	vector<node> signodes;
-
-	int total_pts=0;
-	for(int i=0; i<bflst.size();i++){
-		int id = bflst.at(i).node_id;
-		node n = octree.at(id);
-		signodes.push_back(n);
-	//	printf("Octree list id: %i Node id: %i Number of grid pts: %i Number of basis functions: %i \n", id, n.id, n.ptlst.size(), bflst.at(i).bfs.size());
-		total_pts += n.ptlst.size();
-	}
-
-//----------------- End uncomment for old primitve function approach ----------------
-
-	// Save the number of significant nodes
-	gps->nbins = signodes.size();
-
-	//printf("Total true grid points after pruning: %i \n", total_pts);	
-
-#ifdef OCT_DEBUG
-	// Write files for visualization
-	write_vmd_grid(signodes, "pgrid.tcl");
-	write_xyz(&signodes, NULL, false, "bgpts.xyz");
-
-	vector<node> oct0;
-	oct0.push_back(octree.at(0));
-	write_xyz(&oct0, NULL, false, "initgpts.xyz");
-#endif
-
-//	Prepare grid points, basis and primitive function lists to send back to gpu.cu
-//	gridxb, gridyb, gridzb are 1D arrays keeping binned grid points. Each bin is set to have cluster_size number of 
-//	grid points by using padding. Then each array is cluster_size*number_of_nodes long. 
-//	Ex. gridxb storing a node with 245 grid points. 246 to 255 will have a dummy value equal to the value of
-//	245th location.  
-//         *<------------------------ gridxb ---- -----------------
-//          <--------------- First bin -------------------> <------
-//	   0      1      2     .....                255    256 ...
-//	   0      1      2     245     ..           255     0  ...
-//        ________________________________________________________
-//        |      |      |      |      |      |      |      |
-//        | 0.1  | 0.2  | ...  | 0.8  |  0.8 | ...  | 0.8  |  ...
-//        |______|______|______|______|______|______|______|______
-//
-//        Dummy and true values are tracked by dweight integer array. Each location contains 0 or 1 value which stands for
-//	dummy and true respectively. 
-
-	//For cpu version, the output arrays sizes should eqaul to total number of grid points
-	int grid_out_size = total_pts;
-	int grid_out_double_byte_size = sizeof(double)*grid_out_size;
-	int grid_out_int_byte_size = sizeof(int)*grid_out_size;		
-
-	printf("cluster_size: %i bflst.size(): %i signodes.size(): %i grid_out_size: %i byte size: %i \n", MAX_POINTS_PER_CLUSTER, bflst.size(), signodes.size(), grid_out_size, grid_out_double_byte_size );	
-
-
-        double *gridxb, *gridyb, *gridzb, *ssw, *ss_weight;
-        int *gridb_atm;
-
-        gridxb = (double*) malloc(grid_out_double_byte_size);
-        gridyb = (double*) malloc(grid_out_double_byte_size);
-        gridzb = (double*) malloc(grid_out_double_byte_size);
-        ssw = (double*) malloc(grid_out_double_byte_size);
-        ss_weight = (double*) malloc(grid_out_double_byte_size);
-        gridb_atm = (int*) malloc(grid_out_int_byte_size);
-        int arr_loc=0;
-
-	int *bin_counter;
-	bin_counter = (int*) malloc(sizeof(int)* (signodes.size()+1));
-	bin_counter[0] = 0;
-
-	//load grid point info into output arrays
-	for(int i=0; i<signodes.size();i++){
-		node n = signodes.at(i);
-
-		//Update the bin_counter array
-		bin_counter[i+1] = bin_counter[i] + n.ptlst.size();
-
-                for(int j=0;j<n.ptlst.size();j++){
-			point p = n.ptlst.at(j);
-                        double *x = p.x;
-                        double *y = p.y;
-                        double *z = p.z;
-                        double *sswt = p.sswt;
-                        double *weight = p.weight;
-                        int *iatm = p.iatm;			
-
-                        gridxb[arr_loc] = *x;
-                        gridyb[arr_loc] = *y;
-                        gridzb[arr_loc] = *z;
-                        ssw[arr_loc] = *sswt;
-                        ss_weight[arr_loc] = *weight;
-                        gridb_atm[arr_loc] = *iatm;
-			arr_loc++;
-			
-                }
-
-	}
-
-	gps->gridxb = gridxb;
-	gps->gridyb = gridyb;
-	gps->gridzb = gridzb;
-        gps->gridb_sswt = ssw;
-        gps->gridb_weight = ss_weight;
-	gps->gridb_atm = gridb_atm;
-        gps->gridb_count = grid_out_size;
-	gps->bin_counter = bin_counter;
-
-	//Get the total counts of basis and primitive function ids
-        int tot_bf=0;
-        int tot_pf=0;
-
-	for(int i=0;i<bflst.size();i++){
-
-		vector<bas_func> bfs = bflst.at(i).bfs;
-		tot_bf += bfs.size();
-
-		for(int j=0;j<bfs.size();j++){
-			bas_func bf = bfs.at(j);
-			tot_pf += bf.prim_list.size();
-		}
-	}
-
-	//Save the total number of basis and primitive functions
-
-	gps->nbtotbf = tot_bf;
-	gps->nbtotpf = tot_pf;
-
-	printf("octree.size(): %i bflst.size(): %i Total number of basis functions: %i and primitive functions: %i \n", octree.size(), bflst.size(), tot_bf, tot_pf);	
-
-	//Arrays to store basis and primitive function ids 
-	//basf and primf arrays store basis and primitive function indices.
-	int *basf, *primf;
-
-	basf = (int*) malloc(sizeof(int)*tot_bf);
-	primf = (int*) malloc(sizeof(int)*tot_pf);
-
-	//We use the following counters to keep track of basis and primitive functions.
-	int *basf_counter, *primf_counter;
-	basf_counter = (int*) malloc(sizeof(int)*(bflst.size()+1));
-	primf_counter = (int*) malloc(sizeof(int)*(tot_bf+1));
-
-	tot_bf=0;
-	tot_pf=0;
-
-	int basf_loc=0;	
-	int primf_loc =0;
-
-	//Load data into arrays
-	basf_counter[0] = 0;
-	primf_counter[0] = 0;
-	for(int i=0; i<bflst.size();i++){
-		vector<bas_func> bfs = bflst.at(i).bfs;
-		tot_bf += bfs.size();
-		basf_counter[i+1]=tot_bf;
-//		printf("i: %i node: %i nbasis: %i \n", i, bflst.at(i).node_id, bflst.at(i).bfs.size());				
-		for(int j=0;j<bfs.size();j++){
-			
-			bas_func bf = bfs.at(j);
-			basf[basf_loc] = bf.bas_id;
-			tot_pf += bf.prim_list.size();
-			primf_counter[basf_loc+1] = tot_pf;			
-
-//			printf("i: %i j: %i node: %i nbasis: %i bf.bas_id: %i \n", i, j, bflst.at(i).node_id, bfs.size(), bf.bas_id);			
-
-			for(int k=0;k<bf.prim_list.size();k++){
-				primf[primf_loc] = bf.prim_list.at(k);
-				primf_loc += 1;					
-			}
-
-			basf_loc +=1;
-		}
-		
-	}
-
-#ifdef OCT_DEBUG
-	for(int i=0; i< (bflst.size());i++){
-		int nid = basf_counter[i+1] - basf_counter[i];
-		for(int j=basf_counter[i]; j<basf_counter[i+1]; j++){
-		//	printf("i: %i nbs: %i bf_cntr[i]: %i bf_cntr[i+1]: %i j: %i bf: %i \n", i, nid, basf_counter[i], basf_counter[i+1], j, basf[j]);
-			for(int k=primf_counter[j]; k< primf_counter[j+1]; k++){
-				printf("i: %i nbs: %i bf_cntr[i]: %i bf_cntr[i+1]: %i j: %i bf: %i k: %i primf: %i \n", i, nid, basf_counter[i], basf_counter[i+1], j, basf[j], k, primf[k]);
-			}
-		}
-
-	}
-#endif
-
-	gps->basf = basf;
-	gps->primf = primf;
-	gps->basf_counter = basf_counter;
-	gps->primf_counter = primf_counter;
-	
-//	for(int i=0; i< tot_bf; i++){
-//		printf("i: %i basf: %i \n", i, basf[i]);
-//	}
-
-        end = clock();
-
-        time_pack_pts = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-        printf("Time to pack points: %f s \n", time_pack_pts);
-*/
 
 #ifdef MPIV
-
-//	start = clock();
-
     }
 #endif
 	cpu_get_pfbased_basis_function_lists_new_imp(&octree, gps);
@@ -893,17 +634,6 @@ void pack_grid_pts(grd_pck_strct *gps){
 #ifdef MPIV
 	delete_gpack_mpi();
 
-//	if(gmpi.mpirank==0){
-
-//        end = clock();
-
-//        time_bfpf_prescreen = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-//        printf("Time for prescreening basis and primitive functions (new_imp): %f s \n", time_bfpf_prescreen);
-
-//        gps -> time_bfpf_prescreen = time_bfpf_prescreen;
-	
-//    }
 #endif
 
 #endif
@@ -960,6 +690,7 @@ void get_pruned_grid_ssw(grd_pck_strct *gps_in, grd_pck_strct *gps_out){
 	gps_out->ss_weight = arr_weight_out;
 	gps_out->grid_atm = arr_grid_atm_out;
 	gps_out->arr_size = gridx_out.size();
+
 }
 
 
@@ -1321,7 +1052,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, grd_pck_
         unsigned int leaf_count = 0;
 
 #ifdef CBFPF_DEBUG
-        vector<node> dbg_leaf_nodes; //Store leaves for grid visialization
+        vector<node> dbg_leaf_nodes; //Store leaves for grid visualization
         vector<node> dbg_signodes;   //Store significant nodes for grid visualization
         vector<int>  dbg_signdidx;    //Keeps track of leaf node indices to remove
         vector<point> dbg_pts;       //Keeps all pruned grid points
@@ -1428,7 +1159,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, grd_pck_
                 }
         }
 */
-        printf("Total number of true grid points before pruning: %i \n", init_arr_size);
+	printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of true grid points before pruning: %i \n", __FILE__, __LINE__, __func__, init_arr_size);
 #endif
         //Also set result arrays to zero
         for(int i=0; i<leaf_count * gps->nbasis;i++){
@@ -1501,8 +1232,6 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, grd_pck_
 
 
 #ifdef MPIV
-
-	MPI_Barrier(MPI_COMM_WORLD);
 
         get_slave_primf_contraf_lists(leaf_count, gps, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, bs_tracker);
 

@@ -264,6 +264,7 @@ module quick_gridpoints_module
     self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, timer_cumer%TDFTGrdOct, timer_cumer%TDFTPrscrn) 
 
 #ifdef MPIV
+
     if(master) then
 #endif
     write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
