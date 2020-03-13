@@ -15,7 +15,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    use allmod
    !
    implicit double precision(a-h,o-z)
-   character(len=80) :: line
+   character(len=120) :: line
    character(len=2) :: atom,shell
    logical :: isatom
    integer, dimension(0:92)  :: kcontract,kbasis
@@ -56,6 +56,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
            read(line,*,iostat=io) atom,ii
          if (io == 0 .and. ii == 0) then
             isatom = .true.
+            call upcase(atom,2)
             do i=1,92
                if (symbol(i) == atom) then
                   iat = i
@@ -118,6 +119,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                   read(ibasiscustfile,'(A80)',iostat=iofile) line
                   read(line,*,iostat=io) atom,ii
                   if (io == 0 .and. ii == 0) then
+                     call upcase(atom,2)
                      if (symbol(quick_molspec%iattype(jj)) == atom) then
                         iat=quick_molspec%iattype(jj)
                         iatom=0
@@ -392,6 +394,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                read(ibasisfile,'(A80)',iostat=iofile) line
                read(line,*,iostat=io) atom,ii
                if (io == 0 .and. ii == 0) then
+                  call upcase(atom,2)
                   if (symbol(quick_molspec%iattype(i)) == atom) then
                      iatom = 0
                      do while (iatom==0)
@@ -696,6 +699,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                read(ibasiscustfile,'(A80)',iostat=iofile) line
                read(line,*,iostat=io) atom,ii
                if (io == 0 .and. ii == 0) then
+                  call upcase(atom,2)
                   if (symbol(quick_molspec%iattype(i)) == atom) then
                      iatom = 0
                      do while (iatom==0)
