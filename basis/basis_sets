@@ -1,0 +1,28 @@
+***************************************************************************
+* Madu Manathunga 03/12/2020                                              *
+* This file links basis set keyword specified in the user input to file   *
+* names inside the basis folder. Please use the following table format.   *
+* 1. DO NOT CHANGE THE TABLE/COLUMN WIDTH! HORIZONTAL BORDERS MUST REMAIN *
+*    THE SAME.                                                            *
+* 2. A keyword starts with a single space followed by '#' and keyword.    *
+* 3. Keyword size must be less than 32 characters.                        *
+* 4. Filename must start at 24th position of line and must not be longer  *
+* than 36 characters.                                                     *
+***************************************************************************
+
+ _________________________________________________________________________ 
+| Keyword                           | Filename                            |
+|-------------------------------------------------------------------------|
+| #STO-3G                           | STO-3G.BAS                          |
+| #3-21G                            | 3-21G.BAS                           |
+| #6-31G                            | 6-31G.BAS                           |
+| #6-31G*                           | 6-31GS.BAS                          |
+| #6-31G**                          | 6-31GSS.BAS                         |
+| #6-311G                           | 6-311G.BAS                          |
+| #6-311G(d,p)                      | 6-311GDP.BAS                        |
+| #6-311G*                          | 6-311GS.BAS                         |
+| #6-311G**                         | 6-311GSS.BAS                        |
+| #cc-pVDZ                          | CC-PVDZ.BAS                         |
+| #cc-pVTZ                          | CC-PVTZ.BAS                         |
+|_________________________________________________________________________|
+

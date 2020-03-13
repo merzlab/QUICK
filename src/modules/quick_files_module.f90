@@ -31,7 +31,8 @@ module quick_files_module
     
     ! Basis set and directory
     character(len=80) :: basisDir
-    character(len=80) :: basisFileName
+    character(len=120) :: basisFileName
+    character(len=80) :: basisSetName    
     
     ! ecp basis set and directory
     character(len=80) :: ECPDir
@@ -101,13 +102,21 @@ module quick_files_module
         
         !Pass-in Parameter
         character keywd*(*)
-        
+        character(len=80) :: line
+        character(len=120) :: basis_sets  !stores full path to basis_sets file
+        character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
+        character(len=16) :: tmp_keywd
+        character(len=16) :: tmp_basisfilename
+
         ! local variables
-        integer i,j,k1,k2,k3,k4
+        integer i,j,k1,k2,k3,k4,iofile,io
         logical present
         
         i = 0
         j = 100 
+        iofile = 0
+        io = 0
+
         ! read basis directory and ECP basis directory
         call rdword(basisdir,i,j)
         call EffChar(basisdir,i,j,k1,k2)
@@ -119,7 +128,32 @@ module quick_files_module
         if (index(keywd,'BASIS=') /= 0) then
             i = index(keywd,'BASIS=')
             call rdword(keywd,i,j)
-            write(basisfilename,*) basisdir(k1+1:k2),"/",keywd(i+6:j) 
+           
+            write(basis_sets,*)  basisdir(k1+1:k2),"/basis_sets"
+            write(search_keywd,*) "#",keywd(i+6:j)
+            basisSetName = keywd(i+6:j)
+
+            call quick_open(ibasisfile,basis_sets,'O','F','W',.true.)
+
+            do while (iofile  == 0 )
+                read(ibasisfile,'(A80)',iostat=iofile) line
+                
+                    call upcase(line,80)
+                    if(index(line,trim(search_keywd)) .ne. 0) then
+                        tmp_basisfilename=trim(line(39:74))
+                        iofile=1
+                    endif
+            enddo
+
+            close(ibasisfile)
+
+            write(basisfilename,*) basisdir(k1+1:k2),"/",tmp_basisfilename
+
+            ! Check if basis file exists. Otherwise, quit program.
+!            inquire(file=basisfilename,exist=present)
+!            if (.not.present) then
+!              call quick_exit(6,1)
+!            endif
         else
             basisfilename = basisdir(k1:k2) // '/STO-3G.BAS'    ! default
         endif
@@ -160,7 +194,8 @@ module quick_files_module
             if (basisfilename(i:i).eq.'/') j=i
         enddo
         
-        write(io,'("| BASIS SET = ",a)') basisfilename(j+1:k2)
+        !write(io,'("| BASIS SET = ",a)') basisfilename(j+1:k2)
+        write(io,'("| BASIS SET = ",a)') basisSetName
         write(io,'("| BASIS FILE = ",a)') basisfilename(k1:k2)
     end subroutine
     
