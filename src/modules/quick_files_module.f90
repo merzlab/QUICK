@@ -129,7 +129,7 @@ module quick_files_module
             i = index(keywd,'BASIS=')
             call rdword(keywd,i,j)
            
-            write(basis_sets,*)  basisdir(k1+1:k2),"/basis_sets"
+            write(basis_sets,*)  basisdir(k1+1:k2),"/basis_link"
             write(search_keywd,*) "#",keywd(i+6:j)
             basisSetName = keywd(i+6:j)
 
