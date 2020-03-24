@@ -1,8 +1,7 @@
     ! Ed Brothers. July 11, 2002
     ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-    subroutine pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
-    dydy,dydz,dzdz,Iphi)
+    subroutine pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz,dydy,dydz,dzdz,Iphi,icount)
     use allmod
     implicit double precision(a-h,o-z)
 
@@ -89,7 +88,10 @@
         ytype=dble(itype(2,Iphi))
         ztype=dble(itype(3,Iphi))
 
-        do Icon=1,ncontract(IPhi)
+        kcount=quick_dft_grid%primf_counter(icount)+1
+        do while(kcount<quick_dft_grid%primf_counter(icount+1)+1)
+            Icon = quick_dft_grid%primf(kcount)+1
+
             temp = dcoeff(Icon,IPhi)*DExp((-aexp(Icon,IPhi))*rsquared)
             twoA = 2.d0*aexp(Icon,IPhi)
             fourAsqr=4.d0*aexp(Icon,IPhi)*aexp(Icon,IPhi)
@@ -114,6 +116,8 @@
             -twoA*ytype*y1imin1*z1iplus1 &
             -twoA*ztype*y1iplus1*z1imin1 &
             +fourAsqr*y1iplus1*z1iplus1)
+
+            kcount=kcount+1
         enddo
         dxdx = dxdx*y1i*z1i
         dydy = dydy*x1i*z1i

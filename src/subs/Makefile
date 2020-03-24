@@ -37,11 +37,11 @@ SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
 	EffChar.o eigval.o eigvec.o ekinetic.o findBlock.o fmt.o getinum.o \
 	getNum.o greedy_distrubute.o hrr.o iatoi.o iatoimp.o io.o iwhole.o \
 	lbfgs.o Lsolve.o matComp.o matMul.o order.o orthog.o PriCol.o PriSym.o \
-	PrtAct.o PrtDat.o PrtLab.o PrtTim.o PrtWrn.o pteval.o quick_open.o \
+	PrtAct.o PrtDat.o PrtErr.o PrtLab.o PrtMsg.o PrtTim.o PrtWrn.o pteval.o quick_open.o \
 	random.o rdinum.o rdnml.o rdnum.o rdword.o readPDB.o spdfgh.o ssw.o \
 	sum2Mat.o transpose.o tridi.o upcase.o vett.o whatis.o whole.o \
 	wrtRestart.o xnorm.o zeroMatrix.o zmake.o pt2der.o sswder.o \
-	denspt_new_imp.o pteval_new_imp.o pt2der_new_imp.o
+	denspt_new_imp.o pteval_new_imp.o
 
 #************************************************************************
 # 

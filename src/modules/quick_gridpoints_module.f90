@@ -354,7 +354,7 @@ module quick_gridpoints_module
     ! deallocate
     subroutine deallocate_quick_gridpoints
         implicit double precision(a-h,o-z)
-        deallocate(sigrad2)
+        if (allocated(sigrad2)) deallocate(sigrad2)
     end subroutine deallocate_quick_gridpoints
 
     ! Allocate memory for dft grid variables    
@@ -418,18 +418,18 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        deallocate(self%gridxb)
-        deallocate(self%gridyb)
-        deallocate(self%gridzb)
-        deallocate(self%gridb_sswt)
-        deallocate(self%gridb_weight)
-        deallocate(self%gridb_atm)
-        deallocate(self%dweight)
-        deallocate(self%basf)        
-        deallocate(self%primf)
-        deallocate(self%basf_counter)
-        deallocate(self%primf_counter)
-        deallocate(self%bin_counter)
+        if (allocated(self%gridxb)) deallocate(self%gridxb)
+        if (allocated(self%gridyb)) deallocate(self%gridyb)
+        if (allocated(self%gridzb)) deallocate(self%gridzb)
+        if (allocated(self%gridb_sswt)) deallocate(self%gridb_sswt)
+        if (allocated(self%gridb_weight)) deallocate(self%gridb_weight)
+        if (allocated(self%gridb_atm)) deallocate(self%gridb_atm)
+        if (allocated(self%dweight)) deallocate(self%dweight)
+        if (allocated(self%basf)) deallocate(self%basf)        
+        if (allocated(self%primf)) deallocate(self%primf)
+        if (allocated(self%basf_counter)) deallocate(self%basf_counter)
+        if (allocated(self%primf_counter)) deallocate(self%primf_counter)
+        if (allocated(self%bin_counter)) deallocate(self%bin_counter)
 #ifdef MPIV
         if(bMPI) then
                 call dealloc_mpi_grid_variables(self)
@@ -442,18 +442,18 @@ module quick_gridpoints_module
         implicit none
         type(quick_xcg_tmp_type) xcg_tmp
 
-        deallocate(xcg_tmp%init_grid_atm)
-        deallocate(xcg_tmp%init_grid_ptx)
-        deallocate(xcg_tmp%init_grid_pty)
-        deallocate(xcg_tmp%init_grid_ptz)
-        deallocate(xcg_tmp%arr_wtang)
-        deallocate(xcg_tmp%arr_rwt)
-        deallocate(xcg_tmp%arr_rad3)
-        deallocate(xcg_tmp%sswt)
-        deallocate(xcg_tmp%weight)
+        if (allocated(xcg_tmp%init_grid_atm)) deallocate(xcg_tmp%init_grid_atm)
+        if (allocated(xcg_tmp%init_grid_ptx)) deallocate(xcg_tmp%init_grid_ptx)
+        if (allocated(xcg_tmp%init_grid_pty)) deallocate(xcg_tmp%init_grid_pty)
+        if (allocated(xcg_tmp%init_grid_ptz)) deallocate(xcg_tmp%init_grid_ptz)
+        if (allocated(xcg_tmp%arr_wtang)) deallocate(xcg_tmp%arr_wtang)
+        if (allocated(xcg_tmp%arr_rwt)) deallocate(xcg_tmp%arr_rwt)
+        if (allocated(xcg_tmp%arr_rad3)) deallocate(xcg_tmp%arr_rad3)
+        if (allocated(xcg_tmp%sswt)) deallocate(xcg_tmp%sswt)
+        if (allocated(xcg_tmp%weight)) deallocate(xcg_tmp%weight)
 #ifdef MPIV
-        deallocate(xcg_tmp%tmp_sswt)
-        deallocate(xcg_tmp%tmp_weight)
+        if (allocated(xcg_tmp%tmp_sswt)) deallocate(xcg_tmp%tmp_sswt)
+        if (allocated(xcg_tmp%tmp_weight)) deallocate(xcg_tmp%tmp_weight)
 #endif
     end subroutine
 
@@ -463,8 +463,8 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        deallocate(self%igridptul)
-        deallocate(self%igridptll)
+        if (allocated(self%igridptul)) deallocate(self%igridptul)
+        if (allocated(self%igridptll)) deallocate(self%igridptll)
    end subroutine
 #endif
 

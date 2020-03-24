@@ -318,50 +318,50 @@ contains
       type (quick_qm_struct_type) self
       nullify(self%nbasis)
       ! those matrices is necessary for all calculation or the basic of other calculation
-      deallocate(self%s)
-      deallocate(self%x)
-      deallocate(self%o)
-      deallocate(self%oSave)
-      deallocate(self%co)
-      deallocate(self%vec)
-      deallocate(self%dense)
-      deallocate(self%denseSave)
-      deallocate(self%denseOld)
-      deallocate(self%denseInt)
-      deallocate(self%E)
-      deallocate(self%iDegen)
+      if (allocated(self%s)) deallocate(self%s)
+      if (allocated(self%x)) deallocate(self%x)
+      if (allocated(self%o)) deallocate(self%o)
+      if (allocated(self%oSave)) deallocate(self%oSave)
+      if (allocated(self%co)) deallocate(self%co)
+      if (allocated(self%vec)) deallocate(self%vec)
+      if (allocated(self%dense)) deallocate(self%dense)
+      if (allocated(self%denseSave)) deallocate(self%denseSave)
+      if (allocated(self%denseOld)) deallocate(self%denseOld)
+      if (allocated(self%denseInt)) deallocate(self%denseInt)
+      if (allocated(self%E)) deallocate(self%E)
+      if (allocated(self%iDegen)) deallocate(self%iDegen)
 
-      deallocate(self%Mulliken)
-      deallocate(self%Lowdin)
+      if (allocated(self%Mulliken)) deallocate(self%Mulliken)
+      if (allocated(self%Lowdin)) deallocate(self%Lowdin)
 
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
-         deallocate(self%gradient)
+         if (allocated(self%gradient)) deallocate(self%gradient)
          if (quick_method%extCharges) then
-            deallocate(self%ptchg_gradient)
+            if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
          endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
-         deallocate(self%hessian)
-         deallocate(self%CPHFA)
-         deallocate(self%CPHFB)
+         if (allocated(self%hessian)) deallocate(self%hessian)
+         if (allocated(self%CPHFA)) deallocate(self%CPHFA)
+         if (allocated(self%CPHFB)) deallocate(self%CPHFB)
       endif
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
-         deallocate(self%cob)
-         deallocate(self%Eb)
+         if (allocated(self%cob)) deallocate(self%cob)
+         if (allocated(self%Eb)) deallocate(self%Eb)
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
-         deallocate(self%denseb)
+         if (allocated(self%denseb)) deallocate(self%denseb)
       endif
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         deallocate(self%oSaveDFT)
+         if (allocated(self%oSaveDFT)) deallocate(self%oSaveDFT)
       endif
 
    end subroutine

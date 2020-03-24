@@ -33,7 +33,7 @@ CC = gcc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O3 -lm  -mtune=native  -ffree-form  -DGNU -cpp
+FFLAGS = -O2 -lm  -mtune=native  -ffree-form  -DGNU -cpp
 LD = $(FC)
 LDFLAGS = $(FFLAGS) -lstdc++
 #LDFLAGS = $(FFLAGS)
@@ -43,14 +43,14 @@ TMPFILES = *.mod *.stb
 # CPP Compiler
 FPP = cpp -traditional -P  -DBINTRAJ
 CPP = gcc -DCUBLAS_USE_THUNKING
-CPP_FLAG = -I/usr/local/cuda/include  -O3
+CPP_FLAG = -I/usr/local/cuda/include  -O2
 
 # CUDA Compiler
 CUDAC = nvcc
 CUDA_LIBPATH = -L/usr/local/gfortran/lib
 #CUDA_FLAGS= -Xptxas=-v -m64 -g -G -use_fast_math -maxrregcount=63 -gencode arch=compute_20,code=sm_20
 #CUDA_FLAGS= -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT 
-CUDA_FLAGS= -O3  -Xptxas=-v -m64 -use_fast_math -gencode arch=compute_20,code=sm_20
+CUDA_FLAGS= -O2  -Xptxas=-v -m64 -use_fast_math -gencode arch=compute_20,code=sm_20
 
 # G++ Compiler
 CXX = g++

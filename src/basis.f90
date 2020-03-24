@@ -18,6 +18,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    character(len=120) :: line
    character(len=2) :: atom,shell
    logical :: isatom
+   logical :: isbasis ! If basis file contains info for a given element
    integer, dimension(0:92)  :: kcontract,kbasis
    logical, dimension(0:92)  :: atmbs,atmbs2
    
@@ -57,6 +58,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
          if (io == 0 .and. ii == 0) then
             isatom = .true.
             call upcase(atom,2)
+
             do i=1,92
                if (symbol(i) == atom) then
                   iat = i
@@ -968,12 +970,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
 
    if (quick_method%debug.and.master) call debugBasis
    
-  deallocate(aex)
-  deallocate(gcs)
-  deallocate(gcp)
-  deallocate(gcd)
-  deallocate(gcf)
-  deallocate(gcg)
+  if (allocated(aex)) deallocate(aex)
+  if (allocated(gcs)) deallocate(gcs)
+  if (allocated(gcp)) deallocate(gcp)
+  if (allocated(gcd)) deallocate(gcd)
+  if (allocated(gcf)) deallocate(gcf)
+  if (allocated(gcg)) deallocate(gcg)
 end subroutine
 
 subroutine store_basis_to_ecp()

@@ -82,8 +82,14 @@ subroutine getmolsad()
          nsenhai=1
          call readbasis(nsenhai,0,0,0,0)
          atombasis(iitemp)=nbasis
+         write (ioutfile,'(" BASIS FUNCTIONS = ",I4)') nbasis
 
-         write (ioutfile,'("BASIS FUNCTIONS = ",I4)') nbasis
+         if(nbasis < 1) then
+                call PrtErr(iOutFile,'Unable to find basis set information for this atom.')
+                call PrtMsg(iOutFile,'Update the corresponding basis set file or use a different basis set.')
+                call quick_exit(iOutFile,1)                
+         endif
+
          quick_qm_struct%nbasis => nbasis
          call alloc(quick_qm_struct)
          call init(quick_qm_struct)
@@ -157,7 +163,7 @@ end subroutine allocate_mol_sad
 subroutine deallocate_mol_sad()
    use quick_basis_module
 
-   deallocate(atomDens)
-   deallocate(atomBasis)
+   if (allocated(atomDens)) deallocate(atomDens)
+   if (allocated(atomBasis)) deallocate(atomBasis)
 
 end subroutine deallocate_mol_sad
