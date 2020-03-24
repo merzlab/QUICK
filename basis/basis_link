@@ -20,7 +20,7 @@
 | #6-31G**                          | 6-31GSS.BAS                         |
 | #6-311G                           | 6-311G.BAS                          |
 | #6-311G(d,p)                      | 6-311GDP.BAS                        |
-| #6-311+G(2d,p)                    | 6-311+G2DP.BAS                      |
+| #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
 | #6-311G*                          | 6-311GS.BAS                         |
 | #6-311G**                         | 6-311GSS.BAS                        |
 | #cc-pVDZ                          | CC-PVDZ.BAS                         |

@@ -53,6 +53,8 @@ module quick_files_module
     integer :: iPDBFile = 23          ! PDB input file
     integer :: iDataFile = 24         ! Data file, similar to chk file in gaussian
     integer :: iIntFile = 25          ! integral file
+
+    logical :: fexist = .false.          ! Check if file exists
     
     contains
     
@@ -109,13 +111,14 @@ module quick_files_module
         character(len=16) :: tmp_basisfilename
 
         ! local variables
-        integer i,j,k1,k2,k3,k4,iofile,io
+        integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1
         logical present
         
         i = 0
         j = 100 
         iofile = 0
         io = 0
+        tmp_basisfilename = "NULL"
 
         ! read basis directory and ECP basis directory
         call rdword(basisdir,i,j)
@@ -133,8 +136,18 @@ module quick_files_module
             write(search_keywd,*) "#",keywd(i+6:j)
             basisSetName = keywd(i+6:j)
 
-            call quick_open(ibasisfile,basis_sets,'O','F','W',.true.)
+            ! Check if the basis_link file exists
+            flen=len(basis_sets)
+            call EffChar(basis_sets,1,flen,f0,f1)
+            inquire(file=basis_sets(f0:f1),exist=fexist)
+            if (.not.fexist) then
+                call PrtErr(iOutFile,'basis_link file is not accessible.')                
+                call PrtMsg(iOutFile,'Check if QUICK_BASIS environment variable is set.')
+                call quick_exit(iOutFile,1)
+            end if   
 
+            call quick_open(ibasisfile,basis_sets,'O','F','W',.true.)
+            
             do while (iofile  == 0 )
                 read(ibasisfile,'(A80)',iostat=iofile) line
                 
@@ -150,10 +163,16 @@ module quick_files_module
             write(basisfilename,*) basisdir(k1+1:k2),"/",tmp_basisfilename
 
             ! Check if basis file exists. Otherwise, quit program.
-!            inquire(file=basisfilename,exist=present)
-!            if (.not.present) then
-!              call quick_exit(6,1)
-!            endif
+            flen=len(basisfilename)
+            call EffChar(basisfilename,1,flen,f0,f1)
+            inquire(file=basisfilename(f0:f1),exist=fexist)
+            write(*,*) basisfilename(f0:f1)
+            if (.not.fexist) then
+                call PrtErr(iOutFile,'Requested basis set does not exist or basis_link file not properly configured.')
+                call PrtMsg(iOutFile,'Fix the basis_link file or add your basis set as a new entry. Check the user manual.')
+                call quick_exit(iOutFile,1)
+            end if
+
         else
             basisfilename = basisdir(k1:k2) // '/STO-3G.BAS'    ! default
         endif
@@ -172,10 +191,10 @@ module quick_files_module
         if (.not.present) then
             i=index(basisfilename,'.')
 !            basisfilename(k1:i+3)=basisfilename(k1:i-1)//'    '
-            inquire(file=basisfilename,exist=present)
-            if (.not.present) then
+        !    inquire(file=basisfilename,exist=present)
+        !    if (.not.present) then
         !        call quick_exit(6,1)
-            end if
+        !    end if
         endif
       
     end subroutine

@@ -801,12 +801,12 @@ end subroutine electdiis
                enddo
             enddo
 
-            deallocate(Odcsubtemp)
-            deallocate(VECtemp)
-            deallocate(Vtemp)
-            deallocate(EVAL1temp)
-            deallocate(IDEGEN1temp)
-            deallocate(dcco)
+            if (allocated(Odcsubtemp)) deallocate(Odcsubtemp)
+            if (allocated(VECtemp)) deallocate(VECtemp)
+            if (allocated(Vtemp)) deallocate(Vtemp)
+            if (allocated(EVAL1temp)) deallocate(EVAL1temp)
+            if (allocated(IDEGEN1temp)) deallocate(IDEGEN1temp)
+            if (allocated(dcco)) deallocate(dcco)
          enddo
 
          !--------------------------------------------
