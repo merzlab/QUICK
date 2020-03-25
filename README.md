@@ -1,7 +1,7 @@
 QUICK
 -----
 
-(./tools/logo.png)
+(https://github.com/merzlab/QUICK/blob/QUICK-20.03/tools/logo.png)
 
 A GPU enabled linear scaling *ab initio* and density functional theory program for
 calculation of energies, charges and geometries of organic/biomolecular systems.
