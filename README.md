@@ -15,21 +15,21 @@ Installation
 ------------
 Supported platforms: Linux and OSX
 
-* ![Installation Guide] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#installation-guide)
-   1. ![Compatible Compilers and Hardware] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#compatible-compilers-and-hardware)
-   2. ![Serial Installation] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#serial-installation)
-   3. ![MPI Installation] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#mpi-installation)
-   4. ![CUDA Installation] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#cuda-version-installation)
+* ![Installation Guide](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#installation-guide)
+   1. ![Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#compatible-compilers-and-hardware)
+   2. ![Serial Installation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#serial-installation)
+   3. ![MPI Installation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#mpi-installation)
+   4. ![CUDA Installation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#cuda-version-installation)
 
 Getting Started
 ---------------
-* ![Testing QUICK Installation] (https://quick-docs.readthedocs.io/en/latest/installation-guide.html#environment-variables-and-testing)
-* ![Hands-on Tutorials] (https://quick-docs.readthedocs.io/en/latest/hands-on-tutorials.html)
-* ![User Manual] (https://quick-docs.readthedocs.io/en/latest/user-manual.html)
+* ![Testing QUICK Installation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#environment-variables-and-testing)
+* ![Hands-on Tutorials](https://quick-docs.readthedocs.io/en/latest/hands-on-tutorials.html)
+* ![User Manual](https://quick-docs.readthedocs.io/en/latest/user-manual.html)
 
 Known Issues
 ------------
-A list of installation and runtime issues can be found ![here] (https://quick-docs.readthedocs.io/en/latest/known-issues.html#known-issues-of-current-version).
+A list of installation and runtime issues can be found ![here](https://quick-docs.readthedocs.io/en/latest/known-issues.html#known-issues-of-current-version).
 
 Citation
 --------
@@ -41,5 +41,5 @@ University, East Lansing, MI, 2020.
 
 License
 -------
-QUICK is licensed uder Mozilla Public License 2.0. More information can be found ![here] (https://quick-docs.readthedocs.io/en/latest/license.html#mozilla-public-license-version-2-0).
+QUICK is licensed uder Mozilla Public License 2.0. More information can be found ![here](https://quick-docs.readthedocs.io/en/latest/license.html#mozilla-public-license-version-2-0).
 
