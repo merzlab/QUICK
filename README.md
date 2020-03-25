@@ -1,7 +1,7 @@
 ![QUICK logo](./tools/logo.png)
 
 An open source, GPU enabled, linear scaling *ab initio* and density functional
-theory program developed by Goetz lab at San Diego Supercomputer Center and Merz
+theory program developed by Goetz lab at University of California San Diego and Merz
 lab at Michigan State University.
 
 Features
