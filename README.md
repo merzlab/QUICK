@@ -1,6 +1,5 @@
 QUICK
 -----
-
 ![QUICK logo](./tools/logo.png)
 
 A GPU enabled linear scaling *ab initio* and density functional theory program for
