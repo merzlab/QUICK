@@ -1,10 +1,11 @@
-#QUICK
+QUICK
+-----
 
 A GPU enabled linear scaling *ab initio* and density functional theory program for
 calculation of energies, charges and geometries of organic/biomolecular systems.
 
-#Features
-
+Features
+--------
 * Single point Hartree-Fock calculations (closhed shell only) 
 * Density functional theory calculations (LGA, GGA and Hybrid-GGA functionals available, closed shell only).
 * Gradient and geometry optimization calculations (LBFGS solver available)
