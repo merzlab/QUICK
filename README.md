@@ -1,9 +1,8 @@
-QUICK
------
 ![QUICK logo](./tools/logo.png)
 
-A GPU enabled linear scaling *ab initio* and density functional theory program for
-calculation of energies, charges and geometries of organic/biomolecular systems.
+An open source, GPU enabled, linear scaling *ab initio* and density functional
+theory program developed by Goetz lab at San Diego Supercomputer Center and Merz
+lab at Michigan State University.
 
 Features
 --------
