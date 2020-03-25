@@ -79,16 +79,18 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow)
     endif 
 
     if (i /= 0) then
-         write(6,'(2x,a,a)') 'Error: Fail to overwrite file ',filename
-         call quick_exit(6,1)
+        write(16,*)
+         write(16,'(a,a)') ' ERROR: Failed to overwrite file ',filename
+         call quick_exit(16,1)
     end if
     
     open(unit=funit,file=filename(k1:k2),status=fstat,form=fform,iostat=ios,position=pos)
    
    
     if (ios /= 0) then
-         write(6,'(2x,a,i4,a,a)') 'Error: Fail to opne Unit=',funit, ',file name=', filename
-         call quick_exit(6,1)
+        write(16,*)
+        write(16,'(a,i4,a,a)') ' ERROR: Failed to open Unit=',funit, ',file name=', filename
+        call quick_exit(16,1)
     end if
    
     if (pos /= "APPEND") rewind(funit)

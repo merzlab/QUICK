@@ -962,7 +962,7 @@ quick_method%xc_polarization)
                      if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
-                        call pt2der_new_imp(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
+                        call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
                         dydy,dydz,dzdz,Ibas,icount)
 
                         Ibasstart=(quick_basis%ncenter(Ibas)-1)*3

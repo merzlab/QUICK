@@ -308,7 +308,7 @@
         elseif (prms >= oldprms) then
             if (mod(dble(jscf),2.d0) == 0.d0) then
                 write (ioutfile,'("NOT IMPROVING.  ", &
-                & "TRY MODifYING ALPHA DENSITY MATRIX.")')
+                & "TRY MODIFYING ALPHA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
                         quick_qm_struct%dense(Jbas,Ibas) =.7d0*quick_scratch%hold(Jbas,Ibas) &
@@ -317,7 +317,7 @@
                 enddo
             else
                 write (ioutfile,'("NOT IMPROVING.  ", &
-                & "TRY MODifYING BETA DENSITY MATRIX.")')
+                & "TRY MODIFYING BETA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
                         quick_qm_struct%denseb(Jbas,Ibas) = .7d0*quick_scratch%hold2(Jbas,Ibas) &

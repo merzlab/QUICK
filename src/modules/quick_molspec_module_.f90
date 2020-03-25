@@ -173,16 +173,16 @@ contains
 
       type (quick_molspec_type) self
 
-      deallocate(xyz)
-      deallocate(self%distnbor)
+      if (allocated(xyz)) deallocate(xyz)
+      if (allocated(self%distnbor)) deallocate(self%distnbor)
 !      deallocate(self%xyz)
-      deallocate(self%iattype)
-      deallocate(self%chg)
+      if (allocated(self%iattype)) deallocate(self%iattype)
+      if (allocated(self%chg)) deallocate(self%chg)
 
       ! if exist external charge
       if (self%nextatom.gt.0) then
-         deallocate(self%extxyz)
-         deallocate(self%extchg)
+         if (allocated(self%extxyz)) deallocate(self%extxyz)
+         if (allocated(self%extchg)) deallocate(self%extchg)
       endif
 
    end subroutine deallocate_quick_molspec
