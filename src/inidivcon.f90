@@ -751,11 +751,12 @@ subroutine inidivcon(natomsaved)
   endif
 
   ! Deallocate some varibles
-  deallocate(templog2)
-  deallocate(divconmfcc)
-  deallocate(buffer2log)
-  deallocate(embedded)
-  deallocate(temp1d,temp2d)
+  if (allocated(templog2)) deallocate(templog2)
+  if (allocated(divconmfcc)) deallocate(divconmfcc)
+  if (allocated(buffer2log)) deallocate(buffer2log)
+  if (allocated(embedded)) deallocate(embedded)
+  if (allocated(temp1d)) deallocate(temp1d)
+  if (allocated(temp2d)) deallocate(temp2d)
 
   !===================================================================
   ! End of inidivcon
@@ -998,11 +999,11 @@ subroutine divideX
      ! to orthogonalize the operator matrix, and the overlap matrix (S) which
      ! is used in the DIIS-SCF procedure.
 
-     deallocate(Odcsubtemp)
-     deallocate(VECtemp)
-     deallocate(Vtemp)
-     deallocate(EVAL1temp)
-     deallocate(IDEGEN1temp)
+     if (allocated(Odcsubtemp)) deallocate(Odcsubtemp)
+     if (allocated(VECtemp)) deallocate(VECtemp)
+     if (allocated(Vtemp)) deallocate(Vtemp)
+     if (allocated(EVAL1temp)) deallocate(EVAL1temp)
+     if (allocated(IDEGEN1temp)) deallocate(IDEGEN1temp)
 
   enddo
 

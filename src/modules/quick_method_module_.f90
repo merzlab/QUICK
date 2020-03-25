@@ -814,8 +814,6 @@ endif
                 if((index(f_keywd,trim(functional_name)) .ne. 0) .and. ((usf1_nlen .eq. f_nlen) & 
                 .or. (usf2_nlen .eq. f_nlen))) then 
 
-                        write(*,*) "Length of functional name:", f_nlen
-
                         nof_f=nof_f+1
                         if(self%xc_polarization > 0) then
                                 call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)

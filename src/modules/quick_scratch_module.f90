@@ -56,8 +56,8 @@ module quick_scratch_module
             implicit none
             type (quick_scratch_type) self
             
-            deallocate(self%hold,self%hold2)
-
+            if (allocated(self%hold)) deallocate(self%hold)
+            if (allocated(self%hold2)) deallocate(self%hold2)
             return
             
         end subroutine deallocate_quick_scratch

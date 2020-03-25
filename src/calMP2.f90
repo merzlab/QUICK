@@ -919,12 +919,12 @@ write(*,*) iocc,ivir
      emp2temp=quick_qm_struct%EMP2
 
 !     deallocate(mp2shell)
-     deallocate(orbmp2)
-     deallocate(orbmp2i331)
-     deallocate(orbmp2j331)
-     deallocate(orbmp2k331)
-     deallocate(orbmp2dcsub)
-     deallocate(orbmp2k331dcsub)
+     if (allocated(orbmp2)) deallocate(orbmp2)
+     if (allocated(orbmp2i331)) deallocate(orbmp2i331)
+     if (allocated(orbmp2j331)) deallocate(orbmp2j331)
+     if (allocated(orbmp2k331)) deallocate(orbmp2k331)
+     if (allocated(orbmp2dcsub)) deallocate(orbmp2dcsub)
+     if (allocated(orbmp2k331dcsub)) deallocate(orbmp2k331dcsub)
 
   enddo
 

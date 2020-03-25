@@ -21,16 +21,16 @@ subroutine gpu_write_info(io)
     integer majorv
     integer minorv
 
-    write(io,*)
-    write(io,'(a)')   '|------------ CUDA INFORMATION ---------------'
-    write(io,'(a)')   '|  CUDA version of QUICK in use'
-    write(io,'(a)')   '|  Implemented by'
-    write(io,'(a)')   '|                      Yipu Miao (Florida)'
-    write(io,'(a)')   '|  CAUTION: CUDA QUICK is currently experimental'
-    write(io,'(a)')   '|           and you may at risk to use it. Be sure'
-    write(io,'(a)')   '|           to check result carefully. Advises or '
-    write(io,'(a)')   '|           bug reports are welcome.'
-    write(io,'(a)')   '|---------------------------------------------'
+!    write(io,*)
+!    write(io,'(a)')   '|------------ CUDA INFORMATION ---------------'
+!    write(io,'(a)')   '|  CUDA version of QUICK in use'
+!    write(io,'(a)')   '|  Implemented by'
+!    write(io,'(a)')   '|                      Yipu Miao (Florida)'
+!    write(io,'(a)')   '|  CAUTION: CUDA QUICK is currently experimental'
+!    write(io,'(a)')   '|           and you may at risk to use it. Be sure'
+!    write(io,'(a)')   '|           to check result carefully. Advises or '
+!    write(io,'(a)')   '|           bug reports are welcome.'
+!    write(io,'(a)')   '|---------------------------------------------'
     write(io,*)
     
     call gpu_get_device_info(gpu_dev_count,gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv)
