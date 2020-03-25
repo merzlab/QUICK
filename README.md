@@ -43,3 +43,9 @@ License
 -------
 QUICK is licensed uder Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/latest/license.html#mozilla-public-license-version-2-0).
 
+Special Note to Users
+---------------------
+QUICK is still in the experimental stage and we do not guarantee
+it will work flawlessly in all your applications. But we are working hard to
+detect and fix issues. If you experience any compile or runtime issues, please
+report to us through issues section of this repository.
