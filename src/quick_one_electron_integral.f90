@@ -30,7 +30,7 @@ subroutine fullx
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
 
    call cpu_time(timer_begin%T1eS)
-   
+
    do Ibas=1,nbasis
       do Jbas=Ibas,nbasis
          SJI =0.d0
@@ -59,8 +59,13 @@ subroutine fullx
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
+   call cpu_time(timer_begin%T1eSD)
 
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+
+   call cpu_time(timer_end%T1eSD)
+   timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
+
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -185,7 +190,7 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
    double precision a,b                 ! exponent of basis set 1 and 2
    integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-   
+
    ! INNER VARIBLES
    double precision element,g
    integer ig,jg,kg
@@ -1754,7 +1759,7 @@ subroutine get1e(oneElecO)
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
          timer_cumer%TOp = timer_cumer%T1e
          timer_cumer%TSCF = timer_cumer%T1e
-   
+
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
          if (quick_method%debug) then
@@ -1880,7 +1885,7 @@ subroutine attrashell(IIsh,JJsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-        
+
          !Eqn 14 O&S
          g = a+b
          !Eqn 15 O&S
@@ -1915,7 +1920,7 @@ subroutine attrashell(IIsh,JJsh)
 !                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
 !            else
 
-               !Compute O&S Eqn A21 
+               !Compute O&S Eqn A21
                U = g* PCsquare
 
                !Calculate the last term of O&S Eqn A20
@@ -2175,5 +2180,3 @@ double precision recursive function attrecurse(i,j,k,ii,jj,kk,m,aux,Ax,Ay, &
 
    return
 end
-
-
