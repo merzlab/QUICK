@@ -306,6 +306,13 @@ subroutine HFHessian
         DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
         if(quick_method%unrst) DENSEJI = DENSEJI+quick_qm_struct%denseb(Jbas,Ibas)
 
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+
         ! We have selected our two basis functions.  First,calculate the
         ! d^2/dXA^2 type terms.
 
@@ -318,48 +325,76 @@ subroutine HFHessian
            ! do the Ibas derivatives first.
 
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+2
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
+              b = aexp(Icon,Ibas)
               do Jcon=1,ncontract(Jbas)
-                 d2SI = d2SI + 4.d0*aexp(Icon,Ibas)*aexp(Icon,Ibas) &
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 d2SI = d2SI + 4.d0*b*b &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                 d2KEI = d2KEI + 4.d0*aexp(Icon,Ibas)*aexp(Icon,Ibas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                 d2KEI = d2KEI + 4.d0*b*b &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-2
 
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 d2SI = d2SI - 2.d0*aexp(Icon,Ibas) &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+              
+                 d2SI = d2SI - 2.d0*b &
                       *(1.d0+2.d0*dble(itype(Imomentum,Ibas))) &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                 d2KEI = d2KEI - 2.d0*aexp(Icon,Ibas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                 d2KEI = d2KEI - 2.d0*b &
                       *(1.d0+2.d0*dble(itype(Imomentum,Ibas))) &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
 
@@ -368,24 +403,40 @@ subroutine HFHessian
               const = dble(itype(Imomentum,Ibas)) &
                    *dble(itype(Imomentum,Ibas)-1)
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-2
+
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     d2SI = d2SI + const* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                         *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     d2KEI = d2KEI + const* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+2
@@ -398,48 +449,78 @@ subroutine HFHessian
            ! Now do the Jbas derivatives.
 
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+2
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 d2SJ = d2SJ + 4.d0*aexp(Jcon,Jbas)*aexp(Jcon,Jbas) &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 d2SJ = d2SJ + 4.d0*a*a &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                 d2KEJ = d2KEJ + 4.d0*aexp(Jcon,Jbas)*aexp(Jcon,Jbas) &
+                       *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                 d2KEJ = d2KEJ + 4.d0*a*a &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-2
 
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 d2SJ = d2SJ - 2.d0*aexp(Jcon,Jbas) &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 d2SJ = d2SJ - 2.d0*a &
                       *(1.d0+2.d0*dble(itype(Imomentum,Jbas))) &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                 d2KEJ = d2KEJ - 2.d0*aexp(Jcon,Jbas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                 d2KEJ = d2KEJ - 2.d0*a &
                       *(1.d0+2.d0*dble(itype(Imomentum,Jbas))) &
                       *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
 
@@ -448,24 +529,40 @@ subroutine HFHessian
               const = dble(itype(Imomentum,Jbas)) &
                    *dble(itype(Imomentum,Jbas)-1)
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-2
+
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+                    
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     d2SJ = d2SJ + const* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     d2KEJ = d2KEJ + const* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+2
@@ -489,24 +586,39 @@ subroutine HFHessian
 
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
               itype(Imomentum2,Ibas) = itype(Imomentum2,Ibas)+1
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
-                    d2SI = d2SI + 4.d0*aexp(Icon,Ibas)*aexp(Icon,Ibas) &
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                    d2SI = d2SI + 4.d0*b*b &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                    d2KEI = d2KEI + 4.d0*aexp(Icon,Ibas)*aexp(Icon,Ibas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                    d2KEI = d2KEI + 4.d0*b*b &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
@@ -516,24 +628,40 @@ subroutine HFHessian
                  const = dble(itype(Imomentum,Ibas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  itype(Imomentum2,Ibas) = itype(Imomentum2,Ibas)+1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SI = d2SI - 2.d0*aexp(Icon,Ibas)*const &
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SI = d2SI - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEI = d2KEI - 2.d0*aexp(Icon,Ibas)*const &
+                       *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                           *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEI = d2KEI - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -544,24 +672,40 @@ subroutine HFHessian
                  const = dble(itype(Imomentum2,Ibas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
                  itype(Imomentum2,Ibas) = itype(Imomentum2,Ibas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SI = d2SI - 2.d0*aexp(Icon,Ibas)*const &
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SI = d2SI - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEI = d2KEI - 2.d0*aexp(Icon,Ibas)*const &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEI = d2KEI - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
@@ -574,24 +718,40 @@ subroutine HFHessian
                       dble(itype(Imomentum,Ibas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  itype(Imomentum2,Ibas) = itype(Imomentum2,Ibas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                        d2SI = d2SI +const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                        d2KEI = d2KEI + const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -602,24 +762,40 @@ subroutine HFHessian
 
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
               itype(Imomentum2,Jbas) = itype(Imomentum2,Jbas)+1
+
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
-                    d2SJ = d2SJ + 4.d0*aexp(Jcon,Jbas)*aexp(Jcon,Jbas) &
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                    d2SJ = d2SJ + 4.d0*a*a &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                    d2KEJ = d2KEJ + 4.d0*aexp(Jcon,Jbas)*aexp(Jcon,Jbas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                    d2KEJ = d2KEJ + 4.d0*a*a &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
@@ -629,24 +805,39 @@ subroutine HFHessian
                  const = dble(itype(Imomentum,Jbas))
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
                  itype(Imomentum2,Jbas) = itype(Imomentum2,Jbas)+1
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SJ = d2SJ - 2.d0*aexp(Jcon,Jbas)*const &
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SJ = d2SJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEJ = d2KEJ - 2.d0*aexp(Jcon,Jbas)*const &
+                       *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                           *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEJ = d2KEJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
@@ -657,24 +848,40 @@ subroutine HFHessian
                  const = dble(itype(Imomentum2,Jbas))
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
                  itype(Imomentum2,Jbas) = itype(Imomentum2,Jbas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SJ = d2SJ - 2.d0*aexp(Jcon,Jbas)*const &
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SJ = d2SJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEJ = d2KEJ - 2.d0*aexp(Jcon,Jbas)*const &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEJ = d2KEJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
@@ -687,24 +894,40 @@ subroutine HFHessian
                       dble(itype(Imomentum,Jbas))
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
                  itype(Imomentum2,Jbas) = itype(Imomentum2,Jbas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+                 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                        d2SJ = d2SJ + const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                        d2KEJ = d2KEJ + const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
@@ -732,24 +955,40 @@ subroutine HFHessian
 
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
               itype(Jmomentum,Jbas) = itype(Jmomentum,Jbas)+1
+
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
-                    d2SIJ = d2SIJ + 4.d0*aexp(Icon,Ibas)*aexp(Jcon,Jbas) &
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                    d2SIJ = d2SIJ + 4.d0*a*b &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                    d2KEIJ = d2KEIJ + 4.d0*aexp(Icon,Ibas)*aexp(Jcon,Jbas) &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                    d2KEIJ = d2KEIJ + 4.d0*a*b &
                          *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+ !                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+ !                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
@@ -759,24 +998,41 @@ subroutine HFHessian
                  const = dble(itype(Jmomentum,Jbas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
                  itype(Jmomentum,Jbas) = itype(Jmomentum,Jbas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SIJ = d2SIJ - 2.d0*aexp(Icon,Ibas)*const &
+
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SIJ = d2SIJ - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEIJ = d2KEIJ - 2.d0*aexp(Icon,Ibas)*const &
+                       *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                           *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEIJ = d2KEIJ - 2.d0*b*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
@@ -787,24 +1043,41 @@ subroutine HFHessian
                  const = dble(itype(Imomentum,Ibas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  itype(Jmomentum,Jbas) = itype(Jmomentum,Jbas)+1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SIJ = d2SIJ - 2.d0*aexp(Jcon,Jbas)*const &
+
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                       d2SIJ = d2SIJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-                       d2KEIJ = d2KEIJ - 2.d0*aexp(Jcon,Jbas)*const &
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       d2KEIJ = d2KEIJ - 2.d0*a*const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -817,24 +1090,40 @@ subroutine HFHessian
                       dble(itype(Jmomentum,Jbas))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  itype(Jmomentum,Jbas) = itype(Jmomentum,Jbas)-1
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
-                       d2SIJ = d2SIJ +const &
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                      d2SIJ = d2SIJ +const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                           *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                        d2KEIJ = d2KEIJ +const &
                             *dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     enddo
                  enddo
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -3575,6 +3864,13 @@ subroutine hfdmxderuse(IDX)
         JSTART = (quick_basis%ncenter(Jbas)-1) *3
         DENSEJI = quick_scratch%hold(Jbas,Ibas)+quick_scratch%hold2(Jbas,Ibas)
 
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+
         ! We have selected our two basis functions, now loop over angular momentum.
 
         do Imomentum=1,3
@@ -3584,31 +3880,59 @@ subroutine hfdmxderuse(IDX)
            ! do the Ibas derivatives first.
 
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 dKEI = dKEI + 2.d0*aexp(Icon,Ibas)* &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dKEI = dKEI + 2.d0*b* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
            if (itype(Imomentum,Ibas) /= 0) then
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+                    
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     dKEI = dKEI - dble(itype(Imomentum,Ibas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                        *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -3619,31 +3943,59 @@ subroutine hfdmxderuse(IDX)
            ! Now do the Jbas derivatives.
 
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 dKEJ = dKEJ + 2.d0*aexp(Jcon,Jbas)* &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dKEJ = dKEJ + 2.d0*a* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                     *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
            if (itype(Imomentum,Jbas) /= 0) then
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
+
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     dKEJ = dKEJ - dble(itype(Imomentum,Jbas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                       *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                        *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
@@ -4576,33 +4928,67 @@ subroutine dmxderiv(IDX,BU)
         do Kbas = quick_basis%first_basis_function(Iatom),quick_basis%last_basis_function(Iatom)
            do Lbas = 1,nbasis
               if (Lbas < quick_basis%first_basis_function(Iatom) .OR. Lbas > quick_basis%last_basis_function(Iatom)) then
+                 Ax = xyz(1,quick_basis%ncenter(Lbas))
+                 Bx = xyz(1,quick_basis%ncenter(Kbas))
+                 Ay = xyz(2,quick_basis%ncenter(Lbas))
+                 By = xyz(2,quick_basis%ncenter(Kbas))
+                 Az = xyz(3,quick_basis%ncenter(Lbas))
+                 Bz = xyz(3,quick_basis%ncenter(Kbas))
+
                  dSK=0.d0
                  itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 i = itype(1,Lbas)
+                 j = itype(2,Lbas)
+                 k = itype(3,Lbas)
+                 ii = itype(1,Kbas)
+                 jj = itype(2,Kbas)
+                 kk = itype(3,Kbas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Kcon=1,ncontract(Kbas)
                     do Lcon=1,ncontract(Lbas)
+                       b = aexp(Lcon,Lbas)
+                       a = aexp(Kcon,Kbas)
+                       
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
                        dSK = dSK + 2.d0*aexp(Kcon,Kbas)* &
                             dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
-                            *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
-                            itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
-                            itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
-                            xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
-                            xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
-                            xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
+!                            itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
+!                            itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
+!                            xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
+!                            xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
+!                            xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
                     enddo
                  enddo
                  itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
                  if (itype(Imomentum,Kbas) /= 0) then
                     itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                    i = itype(1,Lbas)
+                    j = itype(2,Lbas)
+                    k = itype(3,Lbas)
+                    ii = itype(1,Kbas)
+                    jj = itype(2,Kbas)
+                    kk = itype(3,Kbas)
+                    g_count = i+ii+j+jj+k+kk
+
                     do Kcon=1,ncontract(Kbas)
                        do Lcon=1,ncontract(Lbas)
+                          b = aexp(Lcon,Lbas)
+                          a = aexp(Kcon,Kbas)
+                          
+                          call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                           dSK = dSK - dble(itype(Imomentum,Kbas)+1)* &
                                dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
-                               *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
-                               itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
-                               itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
-                               xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
-                               xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
-                               xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)  
+!                              *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
+!                               itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
+!                               itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
+!                               xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
+!                               xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
+!                               xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
                        enddo
                     enddo
                     itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
@@ -4639,33 +5025,68 @@ subroutine dmxderiv(IDX,BU)
         do Kbas = quick_basis%first_basis_function(Iatom),quick_basis%last_basis_function(Iatom)
            do Lbas = 1,nbasis
               if (Lbas < quick_basis%first_basis_function(Iatom) .OR. Lbas > quick_basis%last_basis_function(Iatom)) then
+                 Ax = xyz(1,quick_basis%ncenter(Lbas))
+                 Bx = xyz(1,quick_basis%ncenter(Kbas))
+                 Ay = xyz(2,quick_basis%ncenter(Lbas))
+                 By = xyz(2,quick_basis%ncenter(Kbas))
+                 Az = xyz(3,quick_basis%ncenter(Lbas))
+                 Bz = xyz(3,quick_basis%ncenter(Kbas))
+
                  dSK=0.d0
                  itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 i = itype(1,Lbas)
+                 j = itype(2,Lbas)
+                 k = itype(3,Lbas)
+                 ii = itype(1,Kbas)
+                 jj = itype(2,Kbas)
+                 kk = itype(3,Kbas)
+                 g_count = i+ii+j+jj+k+kk
+
                  do Kcon=1,ncontract(Kbas)
                     do Lcon=1,ncontract(Lbas)
+
+                       b = aexp(Lcon,Lbas)
+                       a = aexp(Kcon,Kbas)
+                       
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                        dSK = dSK + 2.d0*aexp(Kcon,Kbas)* &
                             dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
-                            *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
-                            itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
-                            itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
-                            xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
-                            xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
-                            xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                            *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
+!                            itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
+!                            itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
+!                            xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
+!                            xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
+!                            xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
                     enddo
                  enddo
                  itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
                  if (itype(Imomentum,Kbas) /= 0) then
                     itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                    i = itype(1,Lbas)
+                    j = itype(2,Lbas)
+                    k = itype(3,Lbas)
+                    ii = itype(1,Kbas)
+                    jj = itype(2,Kbas)
+                    kk = itype(3,Kbas)
+                    g_count = i+ii+j+jj+k+kk
+
                     do Kcon=1,ncontract(Kbas)
                        do Lcon=1,ncontract(Lbas)
+                          b = aexp(Lcon,Lbas)
+                          a = aexp(Kcon,Kbas)
+                          
+                          call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
                           dSK = dSK - dble(itype(Imomentum,Kbas)+1)* &
                                dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
-                               *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
-                               itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
-                               itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
-                               xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
-                               xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
-                               xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                               *overlap(aexp(Lcon,Lbas),aexp(Kcon,Kbas), &
+!                               itype(1,Lbas),itype(2,Lbas),itype(3,Lbas), &
+!                               itype(1,Kbas),itype(2,Kbas),itype(3,Kbas), &
+!                               xyz(1,quick_basis%ncenter(Lbas)),xyz(2,quick_basis%ncenter(Lbas)), &
+!                               xyz(3,quick_basis%ncenter(Lbas)),xyz(1,quick_basis%ncenter(Kbas)), &
+!                               xyz(2,quick_basis%ncenter(Kbas)),xyz(3,quick_basis%ncenter(Kbas)))
                        enddo
                     enddo
                     itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
@@ -4768,6 +5189,7 @@ double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
   Px = (a*Ax + b*Bx)/g
   Py = (a*Ay + b*By)/g
   Pz = (a*Az + b*Bz)/g
+  g_table = g**(-1.5)
 
   PCsquare = (Px-Cx)**2.d0 + (Py -Cy)**2.d0 + (Pz -Cz)**2.d0
 
@@ -4797,7 +5219,7 @@ double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
   U = g* PCsquare
   Maxm = i+j+k+ii+jj+kk+2
   call FmT(Maxm,U,aux)
-  constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) &
+  constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
        * 2.d0 * (g/Pi)**0.5d0
   do L = 0,maxm
      aux(L) = aux(L)*constant
@@ -5020,6 +5442,13 @@ subroutine ewtdmxder(IDX)
         JSTART = (quick_basis%ncenter(Jbas)-1) *3
         DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
 
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+
         ! We have selected our two basis functions, now loop over angular momentum.
 
         do Imomentum=1,3
@@ -5029,16 +5458,30 @@ subroutine ewtdmxder(IDX)
            ! do the Ibas derivatives first.
 
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 dSI = dSI + 2.d0*aexp(Icon,Ibas)* &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+                 
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dSI = dSI + 2.d0*b* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
@@ -5046,14 +5489,19 @@ subroutine ewtdmxder(IDX)
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
+                    b = aexp(Icon,Ibas)
+                    a = aexp(Jcon,Jbas)
+                    
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
                     dSI = dSI - dble(itype(Imomentum,Ibas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
@@ -5064,31 +5512,52 @@ subroutine ewtdmxder(IDX)
            ! Now do the Jbas derivatives.
 
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
+           i = itype(1,Jbas)
+           j = itype(2,Jbas)
+           k = itype(3,Jbas)
+           ii = itype(1,Ibas)
+           jj = itype(2,Ibas)
+           kk = itype(3,Ibas)
+           g_count = i+ii+j+jj+k+kk
+
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
-                 dSJ = dSJ + 2.d0*aexp(Jcon,Jbas)* &
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+                 dSJ = dSJ + 2.d0*a* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
            enddo
            itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
            if (itype(Imomentum,Jbas) /= 0) then
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
+              i = itype(1,Jbas)
+              j = itype(2,Jbas)
+              k = itype(3,Jbas)
+              ii = itype(1,Ibas)
+              jj = itype(2,Ibas)
+              kk = itype(3,Ibas)
+              g_count = i+ii+j+jj+k+kk
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
                     dSJ = dSJ - dble(itype(Imomentum,Jbas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *overlap(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  enddo
               enddo
               itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
@@ -5157,6 +5626,13 @@ subroutine duhfoperatora(IDX)
      do Jbas = Ibas,nbasis
         JonMove = quick_basis%ncenter(Jbas).eq.Iatom
 
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+
         ! If I is on Iatom (the moving atom) and J is not, the derivative  of
         ! the kinetic energy is non-zero.
 
@@ -5165,26 +5641,50 @@ subroutine duhfoperatora(IDX)
         if (IonMove .and. .not. Jonmove) then
            do Icon=1,ncontract(ibas)
               do Jcon=1,ncontract(jbas)
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
-                 dJI = dJI + 2.d0*aexp(Icon,Ibas)* &
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dJI = dJI + 2.d0*b* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  if (itype(Imomentum,Ibas) /= 0) then
                     itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
+
+                    i = itype(1,Jbas)
+                    j = itype(2,Jbas)
+                    k = itype(3,Jbas)
+                    ii = itype(1,Ibas)
+                    jj = itype(2,Ibas)
+                    kk = itype(3,Ibas)
+                    g_count = i+ii+j+jj+k+kk
+
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
                     dJI = dJI - dble(itype(Imomentum,Ibas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
                  endif
               enddo
@@ -5197,26 +5697,50 @@ subroutine duhfoperatora(IDX)
         if (JonMove .and. .not. Ionmove) then
            do Icon=1,ncontract(ibas)
               do Jcon=1,ncontract(jbas)
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
-                 dJI = dJI + 2.d0*aexp(Jcon,Jbas)* &
+
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+                 
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dJI = dJI + 2.d0*a* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
                  if (itype(Imomentum,Jbas) /= 0) then
                     itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
+                    i = itype(1,Jbas)
+                    j = itype(2,Jbas)
+                    k = itype(3,Jbas)
+                    ii = itype(1,Ibas)
+                    jj = itype(2,Ibas)
+                    kk = itype(3,Ibas)
+                    g_count = i+ii+j+jj+k+kk
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     dJI = dJI - dble(itype(Imomentum,Jbas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
                  endif
               enddo
@@ -5980,6 +6504,13 @@ subroutine duhfoperatorb(IDX)
      do Jbas = Ibas,nbasis
         JonMove = quick_basis%ncenter(Jbas).eq.Iatom
 
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+
         ! If I is on Iatom (the moving atom) and J is not, the derivative  of
         ! the kinetic energy is non-zero.
 
@@ -5987,26 +6518,49 @@ subroutine duhfoperatorb(IDX)
         if (IonMove .and. .not. Jonmove) then
            do Icon=1,ncontract(ibas)
               do Jcon=1,ncontract(jbas)
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
-                 dJI = dJI + 2.d0*aexp(Icon,Ibas)* &
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dJI = dJI + 2.d0*b* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
                  if (itype(Imomentum,Ibas) /= 0) then
                     itype(Imomentum,Ibas) = itype(Imomentum,Ibas)-1
+                    i = itype(1,Jbas)
+                    j = itype(2,Jbas)
+                    k = itype(3,Jbas)
+                    ii = itype(1,Ibas)
+                    jj = itype(2,Ibas)
+                    kk = itype(3,Ibas)
+                    g_count = i+ii+j+jj+k+kk
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     dJI = dJI - dble(itype(Imomentum,Ibas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     itype(Imomentum,Ibas) = itype(Imomentum,Ibas)+1
                  endif
               enddo
@@ -6019,26 +6573,49 @@ subroutine duhfoperatorb(IDX)
         if (JonMove .and. .not. Ionmove) then
            do Icon=1,ncontract(ibas)
               do Jcon=1,ncontract(jbas)
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
-                 dJI = dJI + 2.d0*aexp(Jcon,Jbas)* &
+                 i = itype(1,Jbas)
+                 j = itype(2,Jbas)
+                 k = itype(3,Jbas)
+                 ii = itype(1,Ibas)
+                 jj = itype(2,Ibas)
+                 kk = itype(3,Ibas)
+                 g_count = i+ii+j+jj+k+kk
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
+                 dJI = dJI + 2.d0*a* &
                       dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                      *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                      itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                      itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                      xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                      xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                      xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                  itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
                  if (itype(Imomentum,Jbas) /= 0) then
                     itype(Imomentum,Jbas) = itype(Imomentum,Jbas)-1
+                    i = itype(1,Jbas)
+                    j = itype(2,Jbas)
+                    k = itype(3,Jbas)
+                    ii = itype(1,Ibas)
+                    jj = itype(2,Ibas)
+                    kk = itype(3,Ibas)
+                    g_count = i+ii+j+jj+k+kk
+                    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                     dJI = dJI - dble(itype(Imomentum,Jbas)+1)* &
                          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                     itype(Imomentum,Jbas) = itype(Imomentum,Jbas)+1
                  endif
               enddo
