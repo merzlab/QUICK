@@ -25,6 +25,7 @@ module quick_timer_module
         double precision:: TDII=0.0d0
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
+        double precision:: Toverlap=0.0d0
         double precision:: T1e=0.0d0
         double precision:: T1eS=0.0d0
         double precision:: T1eSD=0.0d0
@@ -56,6 +57,7 @@ module quick_timer_module
         double precision:: TDII=0.0d0
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
+        double precision:: Toverlap=0.0d0
         double precision:: T1e=0.0d0
         double precision:: T1eS=0.0d0
         double precision:: T1eSD=0.0d0
@@ -224,6 +226,11 @@ module quick_timer_module
 
             ! Most Important, total time
             write (io,'("TOTAL TIME          =",F16.9)') timer_end%TTotal-timer_begin%TTotal
+
+            ! Time spent inside the overlap function
+            write (io,'("")')
+            write (io,'("TIME SPENT IN OVERLAP FUNCTION =",F16.9,"( ",F5.2,"%)")') timer_cumer%Toverlap, &
+                    timer_cumer%Toverlap/(timer_end%TTotal-timer_begin%TTotal)*100
         endif
 
         timer_cumer%TTotal=timer_end%TTotal-timer_begin%TTotal

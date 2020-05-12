@@ -199,6 +199,8 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
    double precision Px,py,pz
    double precision xnumfact
 
+   call cpu_time(timer_begin%Toverlap)
+
    ! The purpose of this subroutine is to calculate the overlap between
    ! two normalized gaussians. i,j and k are the x,y,
    ! and z exponents for the gaussian with exponent a, and ii,jj, and kk
@@ -306,6 +308,10 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
       overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
 
    endif
+
+   call cpu_time(timer_end%Toverlap)
+   timer_cumer%Toverlap=timer_cumer%Toverlap+timer_end%Toverlap-timer_begin%Toverlap
+
    return
 end function overlap
 
