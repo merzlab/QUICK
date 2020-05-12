@@ -224,8 +224,14 @@ end subroutine gpt
 
 ! Ed Brothers. October 3, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
+<<<<<<< HEAD
 double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_constants_module
+=======
+double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+   !use quick_constants_module
+   use allmod
+>>>>>>> 3574c8a798da4affb32dcdb68fec2aa21cf93336
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
