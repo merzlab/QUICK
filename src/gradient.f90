@@ -188,7 +188,12 @@ endif
 !---------------------------------------------------------------------
    call cpu_time(timer_begin%T1eGrad)
 
+   call cpu_time(timer_begin%T1eTGrad)
+
    call get_kinetic_grad
+
+   call cpu_time(timer_end%T1eTGrad)
+   timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
@@ -211,6 +216,8 @@ endif
 !     the density matrix element ij.
 !---------------------------------------------------------------------
 
+   call cpu_time(timer_begin%T1eVGrad)
+
 #ifdef MPIV
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
@@ -231,6 +238,9 @@ endif
          call attrashellopt(IIsh,JJsh)
       enddo
    enddo
+
+   call cpu_time(timer_end%T1eVGrad)
+   timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
 
 #ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)

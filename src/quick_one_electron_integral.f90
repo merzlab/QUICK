@@ -29,6 +29,8 @@ subroutine fullx
    double precision :: SJI,sum
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
 
+   call cpu_time(timer_begin%T1eS)
+   
    do Ibas=1,nbasis
       do Jbas=Ibas,nbasis
          SJI =0.d0
@@ -46,6 +48,9 @@ subroutine fullx
          quick_qm_struct%s(Jbas,Ibas) = SJI
       enddo
    enddo
+
+   call cpu_time(timer_end%T1eS)
+   timer_cumer%T1eS=timer_cumer%T1eS+timer_end%T1eS-timer_begin%T1eS
 
    call copySym(quick_qm_struct%s,nbasis)
 
@@ -1726,21 +1731,27 @@ subroutine get1e(oneElecO)
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1e)
+         call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
          enddo
+         call cpu_time(timer_end%T1eT)
 
          !-----------------------------------------------------------------
          ! The second part is attraction part
          !-----------------------------------------------------------------
+         call cpu_time(timer_begin%T1eV)
          do IIsh=1,jshell
             do JJsh=IIsh,jshell
                call attrashell(IIsh,JJsh)
             enddo
          enddo
+         call cpu_time(timer_end%T1eV)
 
          call cpu_time(timer_end%t1e)
          timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+         timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+         timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
          timer_cumer%TOp = timer_cumer%T1e
          timer_cumer%TSCF = timer_cumer%T1e
    
