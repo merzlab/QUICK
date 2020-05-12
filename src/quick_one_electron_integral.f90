@@ -28,9 +28,9 @@ subroutine fullx
    double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
-   double precision g_table(37),Px,Py,Pz
-   integer g_count,a,b,ii,jj,kk
-   double precision Ax,Ay,Az,Bx,By,Bz
+   double precision g_table(200),Px,Py,Pz
+   integer g_count,ii,jj,kk
+   double precision a,b,Ax,Ay,Az,Bx,By,Bz
 
    call cpu_time(timer_begin%T1eS)
 
@@ -162,7 +162,7 @@ double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz
    double precision :: Ax,Ay,Az,Bx,By,Bz
    double precision :: Px,Py,Pz
 
-   double precision :: xi,xj,xk,overlap_core,g_table(37)
+   double precision :: xi,xj,xk,overlap_core,g_table(200)
 
    ! The purpose of this subroutine is to calculate the kinetic energy
    ! of an electron  distributed between gtfs with orbital exponents a
@@ -206,12 +206,12 @@ end function ekinetic
 subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
   implicit none
 
-  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(37),g,inv_g
+  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
   integer g_count,ig
 
   g = a+b
   do ig=0,g_count
-     g_table(ig) = g**(dble(-3-ig)*0.5)
+     g_table(1+ig) = g**(dble(-3-ig)*0.5)
   enddo
   inv_g = 1.0d0 / dble(g)
   Px = (a*Ax + b*Bx)*inv_g
@@ -224,14 +224,9 @@ end subroutine gpt
 
 ! Ed Brothers. October 3, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-<<<<<<< HEAD
+
 double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_constants_module
-=======
-double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-   !use quick_constants_module
-   use allmod
->>>>>>> 3574c8a798da4affb32dcdb68fec2aa21cf93336
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
@@ -239,7 +234,7 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
    
    ! INNER VARIBLES
-   double precision g_table(37)
+   double precision g_table(200)
    double precision Px,py,pz,overlap_core
 
    overlap = overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
@@ -312,7 +307,7 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
                         jy=jloop+jjloop
                         kz=kloop+kkloop
 
-                        element = pito3half * g_table(ix+jy+kz)
+                        element = pito3half * g_table(1+ix+jy+kz)
 
                         ! Check to see if this element is zero.
 
@@ -1803,11 +1798,11 @@ subroutine get1e(oneElecO)
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1e)
-         call cpu_time(timer_begin%T1eT)
+!         call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
          enddo
-         call cpu_time(timer_end%T1eT)
+!         call cpu_time(timer_end%T1eT)
 
          !-----------------------------------------------------------------
          ! The second part is attraction part

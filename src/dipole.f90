@@ -283,8 +283,9 @@
 ! If i=j=k=ii=jj=kk=iux=iuy=iuz=0, this is simply an overlap integral.
 
     if (i+j+k+ii+jj+kk+iux+iuy+iuz == 0) then
+       g_table = g**(-1.5)
         xmomentrec=overlap(a,b,0,0,0,0,0,0, &
-        Ax,Ay,Az,Bx,By,Bz)
+        Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
 
     ! Otherwise, use the recusion relation from Obara and Saika.  The first
     ! step is to find the lowest nonzero angular momentum exponent or,
