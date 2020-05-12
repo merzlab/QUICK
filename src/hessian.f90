@@ -132,6 +132,8 @@ subroutine HFHessian
   allocatable W(:,:)
   character(len=1) cartsym(3)
     double precision, dimension(:), allocatable :: B0,BU
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
   cartsym(1) = 'X'
   cartsym(2) = 'Y'
   cartsym(3) = 'Z'
@@ -3835,6 +3837,8 @@ subroutine hfdmxderuse(IDX)
   use allmod
   implicit double precision(a-h,o-z)
   dimension GRADIENT2(natom*3)
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
 
   ! When calling this code, the derivative of the alpha and beta density
   ! matrices with respect to IDX are in HOLD and HOLD2.  We are going to
@@ -4848,6 +4852,8 @@ subroutine dmxderiv(IDX,BU)
   use allmod
   implicit double precision(a-h,o-z)
   double precision BU(*)
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
 
   ! The purpose of the subroutine is to calculate the first derivative of
   ! the alpha and beta density matrices given the u(ai) found in the
@@ -5246,6 +5252,8 @@ subroutine ewtdmxder(IDX)
   use allmod
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
 
   ! This program calculates and uses the first derivative of the energy
   ! weighted density matrix.
@@ -5593,6 +5601,8 @@ subroutine duhfoperatora(IDX)
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
 
   ! The purpose of this subroutine is to form the first derivative
   ! of the alpha fock matrix for use in forming the first derivative
@@ -6470,6 +6480,8 @@ subroutine duhfoperatorb(IDX)
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
 
   ! The purpose of this subroutine is to form the first derivative
   ! of the beta fock matrix for use in forming the first derivative

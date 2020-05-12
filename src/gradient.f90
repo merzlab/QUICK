@@ -1058,7 +1058,7 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
    use allmod
    implicit double precision(a-h,o-z)
    logical :: ijcon   
-   double precision g_table(37)
+   double precision g_table(200)
    integer i,j,k,ii,jj,kk,g_count
 
    dSM = 0.0d0
