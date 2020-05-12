@@ -661,6 +661,7 @@ subroutine dftoperator
 
 write(*,*) "E0=",quick_qm_struct%Eel
    call cpu_time(timer_begin%T1e)
+   call cpu_time(timer_begin%T1eT)
    do Ibas=1,nbasis
       do Jbas=Ibas,nbasis
          quick_qm_struct%o(Jbas,Ibas) = 0.d0
@@ -680,16 +681,22 @@ write(*,*) "E0=",quick_qm_struct%Eel
          enddo
       enddo
    enddo
+   call cpu_time(timer_end%T1eT)
+   timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
 
+   call cpu_time(timer_begin%T1eV)
    do IIsh=1,jshell
       do JJsh=IIsh,jshell
          call attrashell(IIsh,JJsh)
       enddo
    enddo
+   call cpu_time(timer_end%T1eV)
+   timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
    Eelxc=0.0d0
    if(quick_method%printEnergy)then
       quick_qm_struct%Eel=0.d0
+      call cpu_time(timer_begin%T1eT)
       do Ibas=1,nbasis
          do Icon=1,ncontract(Ibas)
             do Jcon=1,ncontract(Ibas)
@@ -727,12 +734,17 @@ write(*,*) "E0=",quick_qm_struct%Eel
             enddo
          enddo
       enddo
+      call cpu_time(timer_end%T1eT)
+      timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
 
+      call cpu_time(timer_begin%T1eV)
       do IIsh=1,jshell
          do JJsh=IIsh,jshell
             call attrashellenergy(IIsh,JJsh)
          enddo
       enddo
+      call cpu_time(timer_end%T1eV)
+      timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
    endif
    

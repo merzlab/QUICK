@@ -14,7 +14,7 @@ module quick_timer_module
     
     ! MPI timer data type
     integer MPI_timer_cumer_type,MPI_timer_type
-    parameter(TIMER_SIZE=12,TIMER_CUMER_SIZE=10)
+    parameter(TIMER_SIZE=17,TIMER_CUMER_SIZE=15)
     
     !timer type
     type quick_timer
@@ -26,6 +26,11 @@ module quick_timer_module
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
         double precision:: T1e=0.0d0
+        double precision:: T1eS=0.0d0
+        double precision:: T1eT=0.0d0
+        double precision:: T1eTGrad=0.0d0
+        double precision:: T1eV=0.0d0
+        double precision:: T1eVGrad=0.0d0
         double precision:: T2e=0.0d0
         double precision:: T2eAll=0.0d0
         double precision:: TDip=0.0d0
@@ -51,6 +56,11 @@ module quick_timer_module
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
         double precision:: T1e=0.0d0
+        double precision:: T1eS=0.0d0
+        double precision:: T1eT=0.0d0
+        double precision:: T1eTGrad=0.0d0
+        double precision:: T1eV=0.0d0
+        double precision:: T1eVGrad=0.0d0
         double precision:: T2e=0.0d0
         double precision:: T2eAll=0.0d0
         double precision:: TE=0.0d0
@@ -136,9 +146,19 @@ module quick_timer_module
             ! Time to evaluate operator
             write (io,'(6x,"TOTAL OP TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TOp, &
                 timer_cumer%TOp/(timer_end%TTotal-timer_begin%TTotal)*100
+
+            write (io,'(12x,"OVERLAP 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eS, &
+                timer_cumer%T1eS/(timer_end%TTotal-timer_begin%TTotal)*100
+
             ! Time to evaluate 1e integrals
             write (io,'(12x,"TOTAL 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1e, &
                 timer_cumer%T1e/(timer_end%TTotal-timer_begin%TTotal)*100
+
+            write (io,'(15x,"KINETIC 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eT, &
+                timer_cumer%T1eT/(timer_end%TTotal-timer_begin%TTotal)*100
+            write (io,'(15x,"ATTRACTION 1e TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eV, &
+                timer_cumer%T1eV/(timer_end%TTotal-timer_begin%TTotal)*100
+
             ! Time to evaluate 2e integrals
             write (io,'(12x,"TOTAL 2e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2e, &
                 timer_cumer%T2e/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -176,6 +196,12 @@ module quick_timer_module
 
                 write (io,'(6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &  
                         timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(9x,"KINETIC 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eTGrad, &
+                        timer_cumer%T1eTGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(9x,"ATTRACTION 1e GRADIENT TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eVGrad, &
+                        timer_cumer%T1eVGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
                 write (io,'(6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, & 
                         timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
