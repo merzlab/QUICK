@@ -184,7 +184,8 @@ end function ekinetic
 ! Ed Brothers. October 3, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-   use quick_constants_module
+   !use quick_constants_module
+   use allmod
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
