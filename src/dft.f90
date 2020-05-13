@@ -646,6 +646,8 @@ subroutine dftoperator
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info
 !#endif
+   double precision g_table(200)
+   integer k,g_count
 
    ! The purpose of this subroutine is to form the operator matrix
    ! for a full Density Functional calculation, i.e. the KS matrix.  The
@@ -664,18 +666,38 @@ write(*,*) "E0=",quick_qm_struct%Eel
    call cpu_time(timer_begin%T1eT)
    do Ibas=1,nbasis
       do Jbas=Ibas,nbasis
+
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+         ii = itype(1,Ibas)
+         jj = itype(2,Ibas)
+         kk = itype(3,Ibas)
+         i = itype(1,Jbas)
+         j = itype(2,Jbas)
+         k = itype(3,Jbas)
+         g_count = i+ii+j+jj+k+kk
+
          quick_qm_struct%o(Jbas,Ibas) = 0.d0
          do Icon=1,ncontract(ibas)
             do Jcon=1,ncontract(jbas)
  
+               b = aexp(Icon,Ibas)
+               a = aexp(Jcon,Jbas)
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
                quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+ &
                      dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)* &
-                     ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                     ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                     itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                     xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                      
             enddo
          enddo
@@ -698,38 +720,80 @@ write(*,*) "E0=",quick_qm_struct%Eel
       quick_qm_struct%Eel=0.d0
       call cpu_time(timer_begin%T1eT)
       do Ibas=1,nbasis
+
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+         ii = itype(1,Ibas)
+         jj = itype(2,Ibas)
+         kk = itype(3,Ibas)
+         i = itype(1,Jbas)
+         j = itype(2,Jbas)
+         k = itype(3,Jbas)
+         g_count = i+ii+j+jj+k+kk
+         
          do Icon=1,ncontract(Ibas)
             do Jcon=1,ncontract(Ibas)
+
+               b = aexp(Icon,Ibas)
+               a = aexp(Jcon,Jbas)
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                ! Kinetic energy.
 
                quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%dense(Ibas,Ibas)* &
                      dcoeff(Jcon,Ibas)*dcoeff(Icon,Ibas)* &
-                     ekinetic(aexp(Jcon,Ibas),aexp(Icon,Ibas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)), &
-                     xyz(3,quick_basis%ncenter(Ibas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                     ekinetic(aexp(Jcon,Ibas),aexp(Icon,Ibas), &
+!                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)), &
+!                     xyz(3,quick_basis%ncenter(Ibas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
             enddo
          enddo
       enddo
 
       do Ibas=1,nbasis
          do Jbas=Ibas+1,nbasis
+
+            Ax = xyz(1,quick_basis%ncenter(Jbas))
+            Bx = xyz(1,quick_basis%ncenter(Ibas))
+            Ay = xyz(2,quick_basis%ncenter(Jbas))
+            By = xyz(2,quick_basis%ncenter(Ibas))
+            Az = xyz(3,quick_basis%ncenter(Jbas))
+            Bz = xyz(3,quick_basis%ncenter(Ibas))
+            ii = itype(1,Ibas)
+            jj = itype(2,Ibas)
+            kk = itype(3,Ibas)
+            i = itype(1,Jbas)
+            j = itype(2,Jbas)
+            k = itype(3,Jbas)
+            g_count = i+ii+j+jj+k+kk
+
             do Icon=1,ncontract(ibas)
                do Jcon=1,ncontract(jbas)
+
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                   ! Kinetic energy.
 
                   quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%dense(Jbas,Ibas)* &
                         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)* &
-                        2.d0*ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                        2.d0* &
+                      ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+
+!                      ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
               enddo
             enddo
          enddo
@@ -1148,6 +1212,8 @@ end subroutine dftoperator
 subroutine dftoperatordelta
    use allmod
    implicit double precision(a-h,o-z)
+   double precision g_table(200)
+   integer i,j,k,ii,jj,kk,g_count
 
    ! The purpose of this subroutine is to form the operator matrix
    ! for a full Density Functional calculation, i.e. the KS matrix.  The
@@ -1165,19 +1231,33 @@ subroutine dftoperatordelta
    if(quick_method%printEnergy)then
       quick_qm_struct%Eel=0.d0
       do Ibas=1,nbasis
+
+         Bx = xyz(1,quick_basis%ncenter(Ibas))
+         By = xyz(2,quick_basis%ncenter(Ibas))
+         Bz = xyz(3,quick_basis%ncenter(Ibas))
+         ii = itype(1,Ibas)
+         jj = itype(2,Ibas)
+         kk = itype(3,Ibas)
+         g_count = ii+ii+jj+jj+kk+kk
+         
          do Icon=1,ncontract(Ibas)
             do Jcon=1,ncontract(Ibas)
+
+               b = aexp(Icon,Ibas)
+               a = aexp(Jcon,Ibas)
+               call gpt(a,b,Bx,By,Bz,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                ! Kinetic energy.
 
                quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%denseSave(Ibas,Ibas)* &
                      dcoeff(Jcon,Ibas)*dcoeff(Icon,Ibas)* &
-                     ekinetic(aexp(Jcon,Ibas),aexp(Icon,Ibas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)), &
-                     xyz(3,quick_basis%ncenter(Ibas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                      ekinetic(a,b,ii ,jj,kk,ii,jj,kk,Bx,By,Bz,Bx,By,Bz,Px,Py,Pz,g_table) 
+!                     ekinetic(aexp(Jcon,Ibas),aexp(Icon,Ibas), &
+!                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                     itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)), &
+!                     xyz(3,quick_basis%ncenter(Ibas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                     xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
 
                ! Nuclear attraction.
 
@@ -1199,19 +1279,42 @@ subroutine dftoperatordelta
 
       do Ibas=1,nbasis
          do Jbas=Ibas+1,nbasis
+
+            Ax = xyz(1,quick_basis%ncenter(Jbas))
+            Bx = xyz(1,quick_basis%ncenter(Ibas))
+            Ay = xyz(2,quick_basis%ncenter(Jbas))
+            By = xyz(2,quick_basis%ncenter(Ibas))
+            Az = xyz(3,quick_basis%ncenter(Jbas))
+            Bz = xyz(3,quick_basis%ncenter(Ibas))
+            
+            ii = itype(1,Ibas)
+            jj = itype(2,Ibas)
+            kk = itype(3,Ibas)
+            i = itype(1,Jbas)
+            j = itype(2,Jbas)
+            k = itype(3,Jbas)
+            g_count = i+ii+j+jj+k+kk
+
             do Icon=1,ncontract(ibas)
                do Jcon=1,ncontract(jbas)
+
+                 b = aexp(Icon,Ibas)
+                 a = aexp(Jcon,Jbas)
+                 call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                   ! Kinetic energy.
 
                   quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%denseSave(Jbas,Ibas)* &
                         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)* &
-                        2.d0*ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+                        2.d0* &
+                      ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+
+!                  ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                        xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!                        xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!                        xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
 
                   ! Nuclear attraction.
 
