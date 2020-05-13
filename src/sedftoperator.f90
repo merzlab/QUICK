@@ -4,6 +4,8 @@
     subroutine sedftoperator
     use allmod
     implicit double precision(a-h,o-z)
+    double precision g_table(200)
+    integer i,j,k,ii,jj,kk,g_count
 
 ! The purpose of this subroutine is to form the operator matrix
 ! for an sedft calculation.  Note this operator matrix is symmetric.
