@@ -56,7 +56,7 @@ subroutine fullx
             b = aexp(Icon,Ibas)
             do Jcon=1,ncontract(jbas)
                a = aexp(Jcon,Jbas)
-               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
 
                SJI =SJI + &
                      dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
@@ -66,7 +66,7 @@ subroutine fullx
 !                     itype(1,Ibas),       itype(2,Ibas),       itype(3,Ibas), &
 !                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)), &
 !                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)),
-                     Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) 
+                     Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
 !            *exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))*inv_g))
             enddo
          enddo
@@ -203,7 +203,7 @@ double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz
    return
 end function ekinetic
 
-subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
   implicit none
 
   double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
@@ -224,15 +224,16 @@ end subroutine gpt
 
 ! Ed Brothers. October 3, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-
 double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-   use quick_constants_module
+   !use quick_constants_module
+   use allmod
+
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
    integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-   
+
    ! INNER VARIBLES
    double precision g_table(200)
    double precision Px,py,pz,overlap_core
@@ -241,10 +242,9 @@ double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,
    overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
 
    return
-   end function overlap
-   
+end function overlap
 
- 
+
 double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_constants_module
    implicit none
@@ -252,7 +252,7 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
    double precision a,b                 ! exponent of basis set 1 and 2
    integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-   
+
    ! INNER VARIBLES
    double precision element,g,g_table(217),elfactor
    integer ig,jg,kg,ng
@@ -1821,7 +1821,7 @@ subroutine get1e(oneElecO)
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
          timer_cumer%TOp = timer_cumer%T1e
          timer_cumer%TSCF = timer_cumer%T1e
-   
+
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
          if (quick_method%debug) then
@@ -1947,9 +1947,9 @@ subroutine attrashell(IIsh,JJsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-        
+
          !Eqn 14 O&S
-         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)      
+         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)
          g = a+b
          !Eqn 15 O&S
          inv_g = 1.0d0 / dble(g)
@@ -1981,7 +1981,7 @@ subroutine attrashell(IIsh,JJsh)
 !                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
 !            else
 
-               !Compute O&S Eqn A21 
+               !Compute O&S Eqn A21
                U = g* PCsquare
 
                !Calculate the last term of O&S Eqn A20
@@ -2039,7 +2039,7 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    ! Variables needed later:
    !    pi=3.1415926535897932385
 
-   call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)      
+   call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)
 
    PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 
@@ -2241,5 +2241,3 @@ double precision recursive function attrecurse(i,j,k,ii,jj,kk,m,aux,Ax,Ay, &
 
    return
 end
-
-
