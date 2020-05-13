@@ -1709,6 +1709,8 @@ subroutine get1eO(IBAS)
    use allmod
    implicit double precision(a-h,o-z)
    integer Ibas
+   integer g_count
+   double precision g_table(200)
 
    ix = itype(1,Ibas)
    iy = itype(2,Ibas)
@@ -1725,6 +1727,8 @@ subroutine get1eO(IBAS)
       xyzyj = xyz(2,quick_basis%ncenter(Jbas))
       xyzzj = xyz(3,quick_basis%ncenter(Jbas))
 
+      g_count = ix+iy+iz+jx+jy+jz
+
       OJI = 0.d0
       do Icon=1,ncontract(ibas)
          ai = aexp(Icon,Ibas)
@@ -1733,11 +1737,13 @@ subroutine get1eO(IBAS)
             F = dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)
            aj = aexp(Jcon,Jbas)
             ! The first part is the kinetic energy.
+           call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)      
+
             OJI = OJI + F*ekinetic(aj,   ai, &
                   jx,   jy,   jz,&
                   ix,   iy,   iz, &
                   xyzxj,xyzyj,xyzzj,&
-                  xyzxi,xyzyi,xyzzi)
+                  xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_table)
          enddo
       enddo
       quick_qm_struct%o(Jbas,Ibas) = OJI
