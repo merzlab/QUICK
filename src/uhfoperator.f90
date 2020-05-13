@@ -32,7 +32,7 @@
             i = itype(1,Jbas)
             j = itype(2,Jbas)
             k = itype(3,Jbas)
-            g_count = i+ii+j+jj+k+kk
+            g_count = i+ii+j+jj+k+kk+2
 
             quick_qm_struct%o(Jbas,Ibas) = 0.d0
             do Icon=1,ncontract(ibas)
@@ -498,7 +498,7 @@
             i = itype(1,Jbas)
             j = itype(2,Jbas)
             k = itype(3,Jbas)
-            g_count = i+ii+j+jj+k+kk
+            g_count = i+ii+j+jj+k+kk+2
 
             quick_qm_struct%o(Jbas,Ibas) = 0.d0
             do Icon=1,ncontract(ibas)

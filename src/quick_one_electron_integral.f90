@@ -1727,7 +1727,7 @@ subroutine get1eO(IBAS)
       xyzyj = xyz(2,quick_basis%ncenter(Jbas))
       xyzzj = xyz(3,quick_basis%ncenter(Jbas))
 
-      g_count = ix+iy+iz+jx+jy+jz
+      g_count = ix+iy+iz+jx+jy+jz+2
 
       OJI = 0.d0
       do Icon=1,ncontract(ibas)

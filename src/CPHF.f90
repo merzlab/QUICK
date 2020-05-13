@@ -325,7 +325,7 @@ subroutine formCPHFB
            i = itype(1,Jbas)
            j = itype(2,Jbas)
            k = itype(3,Jbas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -363,7 +363,7 @@ subroutine formCPHFB
               i = itype(1,Jbas)
               j = itype(2,Jbas)
               k = itype(3,Jbas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -402,7 +402,7 @@ subroutine formCPHFB
            i = itype(1,Jbas)
            j = itype(2,Jbas)
            k = itype(3,Jbas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -439,7 +439,7 @@ subroutine formCPHFB
               i = itype(1,Jbas)
               j = itype(2,Jbas)
               k = itype(3,Jbas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)

@@ -679,7 +679,7 @@ write(*,*) "E0=",quick_qm_struct%Eel
          i = itype(1,Jbas)
          j = itype(2,Jbas)
          k = itype(3,Jbas)
-         g_count = i+ii+j+jj+k+kk
+         g_count = i+ii+j+jj+k+kk+2
 
          quick_qm_struct%o(Jbas,Ibas) = 0.d0
          do Icon=1,ncontract(ibas)
@@ -733,7 +733,7 @@ write(*,*) "E0=",quick_qm_struct%Eel
          i = itype(1,Jbas)
          j = itype(2,Jbas)
          k = itype(3,Jbas)
-         g_count = i+ii+j+jj+k+kk
+         g_count = i+ii+j+jj+k+kk+2
          
          do Icon=1,ncontract(Ibas)
             do Jcon=1,ncontract(Ibas)
@@ -772,7 +772,7 @@ write(*,*) "E0=",quick_qm_struct%Eel
             i = itype(1,Jbas)
             j = itype(2,Jbas)
             k = itype(3,Jbas)
-            g_count = i+ii+j+jj+k+kk
+            g_count = i+ii+j+jj+k+kk+2
 
             do Icon=1,ncontract(ibas)
                do Jcon=1,ncontract(jbas)
@@ -1238,7 +1238,7 @@ subroutine dftoperatordelta
          ii = itype(1,Ibas)
          jj = itype(2,Ibas)
          kk = itype(3,Ibas)
-         g_count = ii+ii+jj+jj+kk+kk
+         g_count = ii+ii+jj+jj+kk+kk+2
          
          do Icon=1,ncontract(Ibas)
             do Jcon=1,ncontract(Ibas)
@@ -1293,7 +1293,7 @@ subroutine dftoperatordelta
             i = itype(1,Jbas)
             j = itype(2,Jbas)
             k = itype(3,Jbas)
-            g_count = i+ii+j+jj+k+kk
+            g_count = i+ii+j+jj+k+kk+2
 
             do Icon=1,ncontract(ibas)
                do Jcon=1,ncontract(jbas)
