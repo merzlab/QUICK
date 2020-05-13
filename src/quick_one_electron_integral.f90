@@ -1955,7 +1955,7 @@ subroutine attrashell(IIsh,JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
 
          !Eqn 14 O&S
-         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)
+         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
          g = a+b
          !Eqn 15 O&S
          inv_g = 1.0d0 / dble(g)
@@ -2045,7 +2045,7 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    ! Variables needed later:
    !    pi=3.1415926535897932385
 
-   call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,1,g_table)
+   call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
 
    PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 
