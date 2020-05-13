@@ -47,7 +47,7 @@
                i = itype(1,Jbas)
                j = itype(2,Jbas)
                k = itype(3,Jbas)
-               g_count = i+ii+j+jj+k+kk
+               g_count = i+ii+j+jj+k+kk+2
 
                 param=(EK1prm(itype(1,Jbas),itype(2,Jbas),itype(3,Jbas),ITyp)+ &
                 EK1prm(itype(1,Ibas),itype(2,Ibas),itype(3,Ibas),ITyp)) &

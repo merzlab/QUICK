@@ -333,7 +333,7 @@ subroutine HFHessian
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               b = aexp(Icon,Ibas)
@@ -368,7 +368,7 @@ subroutine HFHessian
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -412,7 +412,7 @@ subroutine HFHessian
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -457,7 +457,7 @@ subroutine HFHessian
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -494,7 +494,7 @@ subroutine HFHessian
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -538,7 +538,7 @@ subroutine HFHessian
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -594,7 +594,7 @@ subroutine HFHessian
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -637,7 +637,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -681,7 +681,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -727,7 +727,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -771,7 +771,7 @@ subroutine HFHessian
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -813,7 +813,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -857,7 +857,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -903,7 +903,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
                  
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -964,7 +964,7 @@ subroutine HFHessian
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -1007,7 +1007,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -1052,7 +1052,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -1099,7 +1099,7 @@ subroutine HFHessian
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  do Icon=1,ncontract(Ibas)
                     do Jcon=1,ncontract(Jbas)
@@ -3890,7 +3890,7 @@ subroutine hfdmxderuse(IDX)
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -3919,7 +3919,7 @@ subroutine hfdmxderuse(IDX)
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -3953,7 +3953,7 @@ subroutine hfdmxderuse(IDX)
            ii = itype(1,Ibas)
            jj = itype(2,Ibas)
            kk = itype(3,Ibas)
-           g_count = i+ii+j+jj+k+kk
+           g_count = i+ii+j+jj+k+kk+2
 
            do Icon=1,ncontract(Ibas)
               do Jcon=1,ncontract(Jbas)
@@ -3982,7 +3982,7 @@ subroutine hfdmxderuse(IDX)
               ii = itype(1,Ibas)
               jj = itype(2,Ibas)
               kk = itype(3,Ibas)
-              g_count = i+ii+j+jj+k+kk
+              g_count = i+ii+j+jj+k+kk+2
 
               do Icon=1,ncontract(Ibas)
                  do Jcon=1,ncontract(Jbas)
@@ -5660,7 +5660,7 @@ subroutine duhfoperatora(IDX)
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
@@ -5683,7 +5683,7 @@ subroutine duhfoperatora(IDX)
                     ii = itype(1,Ibas)
                     jj = itype(2,Ibas)
                     kk = itype(3,Ibas)
-                    g_count = i+ii+j+jj+k+kk
+                    g_count = i+ii+j+jj+k+kk+2
 
                     call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
                     dJI = dJI - dble(itype(Imomentum,Ibas)+1)* &
@@ -5717,7 +5717,7 @@ subroutine duhfoperatora(IDX)
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
                  
                  call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
@@ -5739,7 +5739,7 @@ subroutine duhfoperatora(IDX)
                     ii = itype(1,Ibas)
                     jj = itype(2,Ibas)
                     kk = itype(3,Ibas)
-                    g_count = i+ii+j+jj+k+kk
+                    g_count = i+ii+j+jj+k+kk+2
                     call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                     dJI = dJI - dble(itype(Imomentum,Jbas)+1)* &
@@ -6539,7 +6539,7 @@ subroutine duhfoperatorb(IDX)
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
 
                  call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
@@ -6561,7 +6561,7 @@ subroutine duhfoperatorb(IDX)
                     ii = itype(1,Ibas)
                     jj = itype(2,Ibas)
                     kk = itype(3,Ibas)
-                    g_count = i+ii+j+jj+k+kk
+                    g_count = i+ii+j+jj+k+kk+2
                     call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                     dJI = dJI - dble(itype(Imomentum,Ibas)+1)* &
@@ -6595,7 +6595,7 @@ subroutine duhfoperatorb(IDX)
                  ii = itype(1,Ibas)
                  jj = itype(2,Ibas)
                  kk = itype(3,Ibas)
-                 g_count = i+ii+j+jj+k+kk
+                 g_count = i+ii+j+jj+k+kk+2
                  call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                  dJI = dJI + 2.d0*a* &
@@ -6616,7 +6616,7 @@ subroutine duhfoperatorb(IDX)
                     ii = itype(1,Ibas)
                     jj = itype(2,Ibas)
                     kk = itype(3,Ibas)
-                    g_count = i+ii+j+jj+k+kk
+                    g_count = i+ii+j+jj+k+kk+2
                     call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
 
                     dJI = dJI - dble(itype(Imomentum,Jbas)+1)* &

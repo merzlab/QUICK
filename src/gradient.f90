@@ -1079,7 +1079,7 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
    i = itype(1,Jbas)
    j = itype(2,Jbas)
    k = itype(3,Jbas)
-   g_count = i+ii+j+jj+k+kk
+   g_count = i+ii+j+jj+k+kk+2
 
    do Icon=1,ncontract(Ibas)
       b = aexp(Icon,Ibas)
@@ -1121,7 +1121,7 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
       i = itype(1,Jbas)
       j = itype(2,Jbas)
       k = itype(3,Jbas)
-      g_count = i+ii+j+jj+k+kk
+      g_count = i+ii+j+jj+k+kk+2
 
       do Icon=1,ncontract(Ibas)
          b = aexp(Icon,Ibas)
