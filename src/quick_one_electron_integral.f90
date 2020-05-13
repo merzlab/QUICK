@@ -2045,6 +2045,7 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    ! Variables needed later:
    !    pi=3.1415926535897932385
 
+   g = a+b
    call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
 
    PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
@@ -2067,7 +2068,7 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    Maxm = i+j+k+ii+jj+kk
    call FmT(Maxm,U,aux)
 
-   g_table = g**(-1.5)
+!   g_table = g**(-1.5)
    constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
          * 2.d0 * sqrt(g/Pi)
    do L = 0,maxm
