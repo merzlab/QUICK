@@ -1834,10 +1834,10 @@ subroutine get1e(oneElecO)
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
-         !if (quick_method%debug) then
-                write(100,*) "ONE ELECTRON MATRIX"
-                call PriSym(100,nbasis,oneElecO,'f14.8')
-         !endif
+         if (quick_method%debug) then
+                write(iOutFile,*) "ONE ELECTRON MATRIX"
+                call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
+         endif
       endif
 #ifdef MPIV
    else
