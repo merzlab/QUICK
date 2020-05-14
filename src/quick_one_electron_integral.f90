@@ -84,8 +84,12 @@ subroutine fullx
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
+   call cpu_time(timer_begin%T1eSD)
 
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+
+   call cpu_time(timer_end%T1eSD)
+   timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -1737,7 +1741,7 @@ subroutine get1eO(IBAS)
             F = dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)
            aj = aexp(Jcon,Jbas)
             ! The first part is the kinetic energy.
-           call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)      
+           call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)
 
             OJI = OJI + F*ekinetic(aj,   ai, &
                   jx,   jy,   jz,&
@@ -1830,10 +1834,10 @@ subroutine get1e(oneElecO)
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
-         if (quick_method%debug) then
-                write(iOutFile,*) "ONE ELECTRON MATRIX"
-                call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
-         endif
+         !if (quick_method%debug) then
+                write(100,*) "ONE ELECTRON MATRIX"
+                call PriSym(100,nbasis,oneElecO,'f14.8')
+         !endif
       endif
 #ifdef MPIV
    else
