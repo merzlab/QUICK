@@ -152,7 +152,7 @@ module quick_timer_module
             write (io,'(12x,"OVERLAP 1e INTEGRALS TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eS, &
                 timer_cumer%T1eS/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to diagnalize overlap 1e matrix
-            write (io,'(12x,"OVERLAP 1e DIAGNALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eSD, &
+            write (io,'(12x,"OVERLAP 1e DIAGONALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eSD, &
                 timer_cumer%T1eSD/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate 1e integrals
             write (io,'(12x,"TOTAL 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1e, &
