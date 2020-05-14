@@ -1808,11 +1808,11 @@ subroutine get1e(oneElecO)
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1e)
-!         call cpu_time(timer_begin%T1eT)
+         call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
          enddo
-!         call cpu_time(timer_end%T1eT)
+         call cpu_time(timer_end%T1eT)
 
          !-----------------------------------------------------------------
          ! The second part is attraction part
