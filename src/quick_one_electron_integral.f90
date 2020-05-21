@@ -1856,6 +1856,7 @@ subroutine get1e(oneElecO)
       ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
       !-----------------------------------------------------------------
       call cpu_time(timer_begin%t1e)
+      call cpu_time(timer_begin%T1eT)
       do i=1,nbasis
          do j=1,nbasis
             quick_qm_struct%o(i,j)=0
@@ -1865,19 +1866,24 @@ subroutine get1e(oneElecO)
          Ibas=mpi_nbasis(mpirank,i)
          call get1eO(Ibas)
       enddo
+      call cpu_time(timer_end%T1eT)
 
       !-----------------------------------------------------------------
       ! The second part is attraction part
       !-----------------------------------------------------------------
+      call cpu_time(timer_begin%T1eV)
       do i=1,mpi_jshelln(mpirank)
          IIsh=mpi_jshell(mpirank,i)
          do JJsh=IIsh,jshell
             call attrashell(IIsh,JJsh)
          enddo
       enddo
+      call cpu_time(timer_end%T1eV)
 
       call cpu_time(timer_end%t1e)
       timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+      timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+      timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
       ! slave node will send infos
       if(.not.master) then
