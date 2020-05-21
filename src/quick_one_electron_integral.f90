@@ -38,6 +38,11 @@ subroutine fullx
       ii = itype(1,Ibas)
       jj = itype(2,Ibas)
       kk = itype(3,Ibas)
+
+      Bx = xyz(1,quick_basis%ncenter(Ibas))
+      By = xyz(2,quick_basis%ncenter(Ibas))
+      Bz = xyz(3,quick_basis%ncenter(Ibas))
+
       do Jbas=Ibas,nbasis
          i = itype(1,Jbas)
          j = itype(2,Jbas)
@@ -45,11 +50,8 @@ subroutine fullx
          g_count = i+ii+j+jj+k+kk
 
          Ax = xyz(1,quick_basis%ncenter(Jbas))
-         Bx = xyz(1,quick_basis%ncenter(Ibas))
          Ay = xyz(2,quick_basis%ncenter(Jbas))
-         By = xyz(2,quick_basis%ncenter(Ibas))
          Az = xyz(3,quick_basis%ncenter(Jbas))
-         Bz = xyz(3,quick_basis%ncenter(Ibas))
 
          SJI =0.d0
          do Icon=1,ncontract(ibas)
