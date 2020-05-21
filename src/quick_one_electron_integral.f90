@@ -264,6 +264,7 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
    integer ig,jg,kg,ng
    integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
    double precision pAx,pAy,pAz,pBx,pBy,pBz
+   double precision fpAx,fpAy,fpAz,fpBx,fpBy,fpBz
    double precision Px,py,pz,overlap
 
    double precision xnumfact
@@ -302,16 +303,25 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
       ! Now start looping over i,ii,j,jj,k,kk to form all the required elements
 
       do iloop=0,i
+         fPAx=PAx**(i-iloop)/(fact(iloop)*fact(i-iloop))
+
          do iiloop=mod(iloop,2),ii,2
+            ix=iloop+iiloop
+            fPBx=PBx**(ii-iiloop)/(fact(iiloop)*fact(ii-iiloop))
+
             do jloop=0,j
+               fPAy=PAy**(j-jloop)/(fact(jloop)*fact(j-jloop))
+
                do jjloop=mod(jloop,2),jj,2
+                  jy=jloop+jjloop
+                  fPBy=PBy**(jj-jjloop)/(fact(jjloop)*fact(jj-jjloop))
+
                   do kloop=0,k
+                     fPAz=PAz**(k-kloop)/(fact(kloop)*fact(k-kloop))
+
                      do kkloop=mod(kloop,2),kk,2
-
-
-                        ix=iloop+iiloop
-                        jy=jloop+jjloop
                         kz=kloop+kkloop
+                        fPBz=PBz**(kk-kkloop)/(fact(kkloop)*fact(kk-kkloop))
 
                         element = pito3half * g_table(1+ix+jy+kz)
 
@@ -321,16 +331,7 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
                         ! Continue calculating the elements.  The next elements arise from the
                         ! different angular momentums portion of the GPT.
 
-                        element=element *PAx**(i-iloop)*PBx**(ii-iiloop) &
-                               *PAy**(j-jloop)*PBy**(jj-jjloop) &
-                               *PAz**(k-kloop)*PBz**(kk-kkloop) &
-                               *xnumfact &
-                               /(fact(iloop)*fact(iiloop)* &
-                                 fact(jloop)*fact(jjloop)* &
-                                 fact(kloop)*fact(kkloop)* &
-                                 fact(i-iloop)*fact(ii-iiloop)* &
-                                 fact(j-jloop)*fact(jj-jjloop)* &
-                                 fact(k-kloop)*fact(kk-kkloop))
+                        element=element*fPAx*fPBx*fPAy*fPBy*fPAz*fPBz*xnumfact
 
                         ! The next part arises from the integratation of a gaussian of arbitrary
                         ! angular momentum.
