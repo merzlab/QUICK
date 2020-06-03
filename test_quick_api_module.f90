@@ -67,11 +67,11 @@ module test_quick_api_module
 
 contains
 
-  subroutine load_test_data(natoms, nxt_charges, coord, xc_coord, frame)
+  subroutine load_test_data(frame, natoms, nxt_charges, coord, xc_coord)
 
     implicit none
 
-    integer, intent(in)    :: natoms, nxt_charges, frame
+    integer, intent(in)    :: frame, natoms, nxt_charges
     double precision, intent(inout) :: coord(3, natoms)
     double precision, intent(inout) :: xc_coord(4, nxt_charges)
     integer :: i, j, k
