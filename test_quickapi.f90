@@ -26,18 +26,31 @@
     include 'mpif.h'
 #endif
 
-    integer :: i, j,k, frames, ierr
+    ! i, j, k are some integers useful for loops, frames is the number of
+    ! test snapshots (mimics md steps), ierr is for error handling
+    integer :: i, j, frames, ierr
+   
+    ! number of atoms, number of atom types, number of external point charges
     integer :: natoms, natm_types, nxt_charges
+
+    ! atom type ids, atomic numbers, atomic coordinates and point charges and
+    !  coordinates
     integer, dimension(:), pointer            :: atom_type_id   => null()
     integer, dimension(:), pointer            :: atomic_numbers => null()
     double precision, dimension(:,:), pointer :: coord          => null()
     double precision, dimension(:,:), pointer :: xc_coord       => null()
+
+    ! name of the quick template input file
     character(len=80) :: fname
+
+    ! total qm energy, mulliken charges, forces and point charge gradients
     double precision :: totEne
-    double precision, dimension(:), pointer :: charge           => null()
+    double precision, dimension(:), pointer   :: charge         => null()
     double precision, dimension(:,:), pointer :: forces         => null()
     double precision, dimension(:,:), pointer :: ptchgGrad      => null()
+
 #ifdef QUAPI_MPIV
+    ! essential mpi information 
     integer :: mpierror = 0
     integer :: mpirank  = 0
     integer :: mpisize  = 1
@@ -52,12 +65,16 @@
     call setQuickMPI(mpirank,mpisize)
 #endif
 
-    ! set molecule size
+    ! set molecule size. We consider a water molecule surounded by 3 point
+    ! charges in this test case. 
     natoms      = 3
     natm_types  = 2
     nxt_charges = 3    
 
-    ! alocate memory
+    ! we consider 5 snapshots of this test system (mimics 5 md steps) 
+    frames = 5
+
+    ! alocate memory for input and output arrays
     if ( .not. associated(atom_type_id))   allocate(atom_type_id(natm_types), stat=ierr)
     if ( .not. associated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. associated(coord))          allocate(coord(3,natoms), stat=ierr)
@@ -75,8 +92,6 @@
     atomic_numbers(2)  = 1
     atomic_numbers(3)  = 1
 
-    frames = 5
-
     ! set result vectors and matrices to zero
     call zeroVec(charge, natoms)
     call zeroMatrix2(forces, natoms, 3)
@@ -87,6 +102,8 @@
     call setQuickJob(fname, natoms, natm_types, nxt_charges)
 
     do i=1, frames
+
+      ! load coordinates and external point charges for ith step
       call loadTestData(natoms, nxt_charges, coord, xc_coord, i)
 
       ! compute required quantities, call only a or b. 
