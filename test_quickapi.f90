@@ -27,13 +27,13 @@
 #endif
 
     ! i, j are some integers useful for loops, frames is the number of
-    ! test snapshots (mimics md steps), ierr is for error handling
+    ! test snapshots (md steps), ierr is for error handling
     integer :: i, j, frames, ierr
    
     ! number of atoms, number of atom types, number of external point charges
     integer :: natoms, natm_types, nxt_charges
 
-    ! atom type ids, atomic numbers, atomic coordinates and point charges and
+    ! atom type ids, atomic numbers, atomic coordinates, point charges and
     !  coordinates
     integer, dimension(:), pointer            :: atom_type_id   => null()
     integer, dimension(:), pointer            :: atomic_numbers => null()
@@ -83,7 +83,8 @@
     if ( .not. associated(forces))         allocate(forces(3,natoms), stat=ierr)
     if ( .not. associated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
 
-    ! fill up memory with test values
+    ! fill up memory with test values, coordinates and external charges will be loded inside 
+    ! the loop below.
     fname           = 'water'
     atom_type_id(1) = 8
     atom_type_id(2) = 1
@@ -104,7 +105,7 @@
     do i=1, frames
 
       ! load coordinates and external point charges for ith step
-      call loadTestData(natoms, nxt_charges, coord, xc_coord, i)
+      call loadTestData(i, natoms, nxt_charges, coord, xc_coord)
 
       ! compute required quantities, call only a or b. 
       ! a. compute energies and charges
