@@ -26,7 +26,7 @@
     include 'mpif.h'
 #endif
 
-    ! i, j, k are some integers useful for loops, frames is the number of
+    ! i, j are some integers useful for loops, frames is the number of
     ! test snapshots (mimics md steps), ierr is for error handling
     integer :: i, j, frames, ierr
    
