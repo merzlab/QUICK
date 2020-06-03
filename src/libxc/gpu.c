@@ -5,7 +5,7 @@
 //#include "gpu_work.h"
 
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 int dryrun;
 
 void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){

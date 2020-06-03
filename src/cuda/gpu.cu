@@ -12,6 +12,10 @@
 #include "gpu.h"
 #include <ctime>
 #include <time.h>
+
+#ifdef CUDA_MPIV
+#include "mgpu.cu"
+#endif
 //-----------------------------------------------
 // Set up specified device and be ready to ignite
 //-----------------------------------------------
@@ -50,6 +54,9 @@ extern "C" void gpu_init_(void)
     cudaError_t status;
     cudaDeviceProp deviceProp;
     status = cudaGetDeviceCount(&gpuCount);
+
+    printf("Number of gpus %i \n", gpuCount);
+
     PRINTERROR(status,"cudaGetDeviceCount gpu_init failed!");
     if (gpuCount == 0)
     {
@@ -227,9 +234,16 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     cudaEventCreate(&end);
     cudaEventRecord(start, 0);
 #endif
-    
+   
+#ifdef CUDA 
     PRINTDEBUG("BEGIN TO SETUP")
-    
+#endif
+
+#ifdef CUDA_MPIV
+
+    printf("mpirank %i natoms %i \n", gpu -> mpirank, *natom );    
+#endif
+
     gpu -> natom                    =   *natom;
     gpu -> nbasis                   =   *nbasis;
     gpu -> nElec                    =   *nElec;
@@ -259,12 +273,16 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     cudaEventSynchronize(end);
     float time;
     cudaEventElapsedTime(&time, start, end);
+#ifdef CUDA
     PRINTUSINGTIME("UPLOAD PARA TO CONST",time);
+#endif
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
-    
+
+#ifdef CUDA    
     PRINTDEBUG("FINISH SETUP")
+#endif
 }
 
 //Madu Manathunga: 08/31/2019
@@ -977,7 +995,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     
     printf("SS = %i\n",a);
     for (int i = 0; i<a; i++) {
-             printf("%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n", i, \
+        printf("%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n",i, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y, \
         LOC2(YCutoff, gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y], gpu->nshell, gpu->nshell),\
@@ -994,12 +1012,15 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_sim.YCutoff          = gpu -> gpu_cutoff -> YCutoff -> _devData;
     gpu -> gpu_sim.cutPrim          = gpu -> gpu_cutoff -> cutPrim -> _devData;
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
-    
-    
+
+#ifdef CUDA_MPIV
+   mgpu_eri_greedy_distribute();
+#endif   
+ 
     gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
     gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
     gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
-    
+ 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -1009,7 +1030,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
-    
+ 
     PRINTDEBUG("COMPLETE UPLOADING CUTOFF")
 }
 
@@ -1193,7 +1214,10 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
             LOC2(gpu->gpu_basis->Qfbasis->_hostData, i, j, gpu->gpu_basis->nshell, 4) += gpu->gpu_basis->Ksumtype->_hostData[i];
         }
     }
-    
+   
+    //MGPU_TESTING
+    printf("nshell: %i jshell: %i Qshell: %i \n",gpu->gpu_basis->nshell, gpu->gpu_basis->jshell, gpu->gpu_basis->Qshell);
+ 
     gpu -> gpu_sim.Qshell = gpu->gpu_basis->Qshell;
     
     gpu -> gpu_basis -> sorted_Q                    =   new cuda_buffer_type<int>( gpu->gpu_basis->Qshell);
@@ -2323,7 +2347,15 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 #endif
     
     gpu -> gpu_calculated -> o    -> Download(o);
-    
+
+#ifdef CUDA_MPIV
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+//           printf("Fock O: %i %i %i %f \n", gpu->mpirank,i,j,o[i,j]);
+        }    
+    }
+#endif
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -2724,3 +2756,5 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #endif
     
 }
+
+

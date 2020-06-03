@@ -106,7 +106,12 @@ module quick_basis_module
         double precision, allocatable, dimension(:,:) :: gcexpo
  
         integer, allocatable, dimension(:,:) :: KLMN  
-        
+
+#ifdef CUDA_MPIV
+        integer :: mpi_qshell                   ! Total number or sorted shells 
+
+        integer,allocatable :: mpi_qshelln(:)   ! qshell ranges calculated by each gpu
+#endif         
         
    end type quick_basis_type
     
@@ -210,30 +215,31 @@ contains
    subroutine allocate_quick_basis(self,natom_arg,nshell_arg,nbasis_arg)
         use quick_gaussian_class_module
         use quick_size_module
+        use quick_mpi_module
         implicit none
         integer natom_arg,nshell_arg,nbasis_arg,i,j
         type(quick_basis_type) self
         
-        allocate(self%gauss_fnc(nbasis_arg))
-        allocate(self%ncenter(nbasis_arg))
-        allocate(self%first_basis_function(natom_arg))
-        allocate(self%last_basis_function(natom_arg))
-        allocate(self%first_shell_basis_function(natom_arg))
-        allocate(self%last_shell_basis_function(natom_arg))
+        if(.not. associated (self%gauss_fnc)) allocate(self%gauss_fnc(nbasis_arg))
+        if(.not. allocated(self%ncenter)) allocate(self%ncenter(nbasis_arg))
+        if(.not. allocated(self%first_basis_function)) allocate(self%first_basis_function(natom_arg))
+        if(.not. allocated(self%last_basis_function)) allocate(self%last_basis_function(natom_arg))
+        if(.not. allocated(self%first_shell_basis_function)) allocate(self%first_shell_basis_function(natom_arg))
+        if(.not. allocated(self%last_shell_basis_function)) allocate(self%last_shell_basis_function(natom_arg))
    
-        allocate(self%kstart(nshell_arg))
-        allocate(self%katom(nshell_arg))
-        allocate(self%ktype(nshell_arg))
-        allocate(self%kprim(nshell_arg))
+        if(.not. allocated(self%kstart)) allocate(self%kstart(nshell_arg))
+        if(.not. allocated(self%katom)) allocate(self%katom(nshell_arg))
+        if(.not. allocated(self%ktype)) allocate(self%ktype(nshell_arg))
+        if(.not. allocated(self%kprim)) allocate(self%kprim(nshell_arg))
    
-        allocate(self%Qnumber(nshell_arg))
-        allocate(self%Qstart(nshell_arg))
-        allocate(self%Qfinal(nshell_arg))
-        allocate(self%Ksumtype(nshell_arg+1))
-        allocate(self%gcexpomin(nshell_arg))
+        if(.not. allocated(self%Qnumber)) allocate(self%Qnumber(nshell_arg))
+        if(.not. allocated(self%Qstart)) allocate(self%Qstart(nshell_arg))
+        if(.not. allocated(self%Qfinal)) allocate(self%Qfinal(nshell_arg))
+        if(.not. allocated(self%Ksumtype)) allocate(self%Ksumtype(nshell_arg+1))
+        if(.not. allocated(self%gcexpomin)) allocate(self%gcexpomin(nshell_arg))
         
-        allocate(self%Qsbasis(nshell_arg,0:3))
-        allocate(self%Qfbasis(nshell_arg,0:3))
+        if(.not. allocated(self%Qsbasis)) allocate(self%Qsbasis(nshell_arg,0:3))
+        if(.not. allocated(self%Qfbasis)) allocate(self%Qfbasis(nshell_arg,0:3))
         
         do i = 1, nshell_arg
             do j = 0, 3
@@ -242,9 +248,9 @@ contains
             enddo
         enddo
         
-        allocate(self%gcexpo(MAXPRIM,nbasis_arg))
-        allocate(self%gccoeff(MAXPRIM,nbasis_arg))
-        allocate(self%cons(nbasis_arg))
+        if(.not. allocated(self%gcexpo)) allocate(self%gcexpo(MAXPRIM,nbasis_arg))
+        if(.not. allocated(self%gccoeff)) allocate(self%gccoeff(MAXPRIM,nbasis_arg))
+        if(.not. allocated(self%cons)) allocate(self%cons(nbasis_arg))
         do i = 1, MAXPRIM
             do j = 1, nbasis_arg
                 self%gcexpo( i, j) = 0.0
@@ -256,7 +262,10 @@ contains
             self%cons(i) = 0.0
         enddo
         
-        allocate(self%KLMN(3,nbasis_arg))
+        if(.not. allocated(self%KLMN)) allocate(self%KLMN(3,nbasis_arg))
+#ifdef CUDA_MPIV
+        if(.not. allocated(self%mpi_qshelln)) allocate(self%mpi_qshelln(mpisize+1))
+#endif
    end subroutine allocate_quick_basis
    
    
@@ -291,6 +300,10 @@ contains
         if (allocated(self%gccoeff)) deallocate(self%gccoeff)
         if (allocated(self%KLMN)) deallocate(self%KLMN)
 
+#ifdef CUDA_MPIV
+        if (allocated(self%mpi_qshelln)) deallocate(self%mpi_qshelln)
+#endif
+
    end subroutine deallocate_quick_basis
    
    
@@ -299,18 +312,17 @@ contains
       implicit none
       type(quick_method_type) quick_method_arg
       
-      allocate(Apri(jbasis,jbasis))
-      allocate(Kpri(jbasis,jbasis))
-      allocate(cutprim(jbasis,jbasis))
-      allocate(Ppri(3,jbasis,jbasis))
-      allocate(quick_basis%Xcoeff(jbasis,jbasis,0:3,0:3))
+      if(.not. allocated(Apri)) allocate(Apri(jbasis,jbasis))
+      if(.not. allocated(Kpri)) allocate(Kpri(jbasis,jbasis))
+      if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
+      if(.not. allocated(Ppri)) allocate(Ppri(3,jbasis,jbasis))
+      if(.not. allocated(quick_basis%Xcoeff)) allocate(quick_basis%Xcoeff(jbasis,jbasis,0:3,0:3))
       if(quick_method_arg%DFT)then
-         allocate(phiXiao(nbasis))
-         allocate(dPhidXXiao(nbasis))
-         allocate(dPhidYXiao(nbasis))
-         allocate(dPhidZXiao(nbasis))
+         if(.not. allocated(phiXiao)) allocate(phiXiao(nbasis))
+         if(.not. allocated(dPhidXXiao)) allocate(dPhidXXiao(nbasis))
+         if(.not. allocated(dPhidYXiao)) allocate(dPhidYXiao(nbasis))
+         if(.not. allocated(dPhidZXiao)) allocate(dPhidZXiao(nbasis))
       end if
-
    end subroutine
    
    subroutine print_quick_basis(self,ioutfile)

@@ -24,7 +24,7 @@
  * @param[in,out] func_type: pointer to pspdata structure to be initialized
  */
 static void 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 work_lda(const xc_func_type *p, int np, const double *rho,
          double *zk, double *vrho, double *v2rho2, double *v3rho3, void *gpu_work_params)
 #else
@@ -55,7 +55,7 @@ work_lda(const xc_func_type *p, int np, const double *rho,
   if(v3rho3 != NULL) r.order = 3;
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 #include "gpu_extern.h"
 
 #define GET_XSTR(fval) GET_STR(fval)

@@ -58,7 +58,7 @@ gga_c_bmk_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_c_bmk_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_c_bmk_params); 
 #endif 
   params = (gga_c_bmk_params *)(p->params); 

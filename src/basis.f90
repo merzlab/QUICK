@@ -259,17 +259,17 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    ! Allocate the arrays now that we know the sizes
 
    if(quick_method%ffunxiao)then
-      allocate(Yxiao(4096,56,56))
-      allocate(Yxiaotemp(56,56,0:10))
-      allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
-      allocate(attraxiao(56,56,0:6))
-      allocate(attraxiaoopt(3,56,56,0:5))
+      if(.not. allocated(Yxiao))        allocate(Yxiao(4096,56,56))
+      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(56,56,0:10))
+      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
+      if(.not. allocated(attraxiao))    allocate(attraxiao(56,56,0:6))
+      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,56,56,0:5))
    else
-      allocate(Yxiao(4096,120,120))
-      allocate(Yxiaotemp(120,120,0:14))
-      allocate(Yxiaoprim(MAXPRIM,MAXPRIM,120,120))
-      allocate(attraxiao(120,120,0:8))
-      allocate(attraxiaoopt(3,120,120,0:7))
+      if(.not. allocated(Yxiao))        allocate(Yxiao(4096,120,120))
+      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(120,120,0:14))
+      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,120,120))
+      if(.not. allocated(attraxiao))    allocate(attraxiao(120,120,0:8))
+      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,120,120,0:7))
    endif
 
    ! allocate(Yxiao(1296,35,35))
@@ -277,8 +277,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    ! allocate(Yxiaoprim(6,6,35,35))
    !  allocate(Yxiao(81,10,10))
    !  allocate(Yxiaotemp(10,10,0:4))
-   allocate(Ycutoff(nshell,nshell))
-   allocate(cutmatrix(nshell,nshell))
+   if(.not. allocated(Ycutoff)) allocate(Ycutoff(nshell,nshell))
+   if(.not. allocated(cutmatrix)) allocate(cutmatrix(nshell,nshell))
 !   allocate(allerror(quick_method%maxdiisscf,nbasis,nbasis))
 !   allocate(alloperator(quick_method%maxdiisscf,nbasis,nbasis))
    !  allocate(debug1(nbasis,nbasis))
@@ -301,37 +301,37 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
 !   allocate(gcexpo(6,nbasis))
 !   allocate(gcexpomin(nshell))
    
-   allocate(aex(nprim ))
-   allocate(gcs(nprim ))
-   allocate(gcp(nprim ))
-   allocate(gcd(nprim ))
-   allocate(gcf(nprim ))
-   allocate(gcg(nprim ))
+   if(.not. allocated(aex)) allocate(aex(nprim ))
+   if(.not. allocated(gcs)) allocate(gcs(nprim ))
+   if(.not. allocated(gcp)) allocate(gcp(nprim ))
+   if(.not. allocated(gcd)) allocate(gcd(nprim ))
+   if(.not. allocated(gcf)) allocate(gcf(nprim ))
+   if(.not. allocated(gcg)) allocate(gcg(nprim ))
    
    if (quick_method%ecp) then
       nbf12=nbasis*(nbasis+1)/2
-      allocate(kmin(nshell))
-      allocate(kmax(nshell))
-      allocate(eta(nprim))
-      allocate(ecp_int(nbf12))
-      allocate(kvett(nbf12))
-      allocate(gout(25*25))
-      allocate(ktypecp(nshell))
+      if(.not. allocated(kmin)) allocate(kmin(nshell))
+      if(.not. allocated(kmax)) allocate(kmax(nshell))
+      if(.not. allocated(eta)) allocate(eta(nprim))
+      if(.not. allocated(ecp_int)) allocate(ecp_int(nbf12))
+      if(.not. allocated(kvett)) allocate(kvett(nbf12))
+      if(.not. allocated(gout)) allocate(gout(25*25))
+      if(.not. allocated(ktypecp)) allocate(ktypecp(nshell))
       !
-      allocate(zlm(lmxdim))
-      allocate(flmtx(len_fac,3))
-      allocate(lf(lfdim))
-      allocate(lmf(lmfdim))
-      allocate(lml(lmfdim))
-      allocate(lmx(lmxdim))
-      allocate(lmy(lmxdim))
-      allocate(lmz(lmxdim))
-      allocate(mc(mc1dim,3))
-      allocate(mr(mc1dim,3))
-      allocate(dfac(len_dfac))
-      allocate(dfaci(len_dfac))
-      allocate(factorial(len_fac))
-      allocate(fprod(lfdim,lfdim))
+      if(.not. allocated(zlm)) allocate(zlm(lmxdim))
+      if(.not. allocated(flmtx)) allocate(flmtx(len_fac,3))
+      if(.not. allocated(lf)) allocate(lf(lfdim))
+      if(.not. allocated(lmf)) allocate(lmf(lmfdim))
+      if(.not. allocated(lml)) allocate(lml(lmfdim))
+      if(.not. allocated(lmx)) allocate(lmx(lmxdim))
+      if(.not. allocated(lmy)) allocate(lmy(lmxdim))
+      if(.not. allocated(lmz)) allocate(lmz(lmxdim))
+      if(.not. allocated(mc)) allocate(mc(mc1dim,3))
+      if(.not. allocated(mr)) allocate(mr(mc1dim,3))
+      if(.not. allocated(dfac)) allocate(dfac(len_dfac))
+      if(.not. allocated(dfaci)) allocate(dfaci(len_dfac))
+      if(.not. allocated(factorial)) allocate(factorial(len_fac))
+      if(.not. allocated(fprod)) allocate(fprod(lfdim,lfdim))
       !
       call vett
    end if
@@ -346,9 +346,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    !    allocate(gauss(i)%aexp(maxcontract))
    !    allocate(gauss(i)%dcoeff(maxcontract))
    !enddo
-   allocate(itype(3,nbasis))
+   if(.not. allocated(itype)) allocate(itype(3,nbasis))
 !   allocate(quick_basis%ncenter(nbasis))
-   allocate(ncontract(nbasis))
+   if(.not. allocated(ncontract)) allocate(ncontract(nbasis))
    
    
    call alloc(quick_basis,natom,nshell,nbasis)
@@ -795,9 +795,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    !======== END MPI/ALL NODES ================
 #endif
 
-   allocate(aexp(maxcontract,nbasis))
-   allocate(dcoeff(maxcontract,nbasis))
-   allocate(gauss(nbasis))
+   if(.not. allocated(aexp)) allocate(aexp(maxcontract,nbasis))
+
+   if(.not. allocated(dcoeff)) allocate(dcoeff(maxcontract,nbasis))
+   if(.not. allocated(gauss)) allocate(gauss(nbasis))
 
    !======== MPI/MASTER ====================
    masterwork_setup: if(master) then
@@ -958,11 +959,11 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    !======== MPI/ALL NODES ====================
    if (bMPI) then
       call mpi_setup_basis
-      allocate(mpi_jshelln(0:mpisize-1))
-      allocate(mpi_jshell(0:mpisize-1,jshell))
+      if(.not. allocated(mpi_jshelln)) allocate(mpi_jshelln(0:mpisize-1))
+      if(.not. allocated(mpi_jshell)) allocate(mpi_jshell(0:mpisize-1,jshell))
 
-      allocate(mpi_nbasisn(0:mpisize-1))
-      allocate(mpi_nbasis(0:mpisize-1,nbasis))
+      if(.not. allocated(mpi_nbasisn)) allocate(mpi_nbasisn(0:mpisize-1))
+      if(.not. allocated(mpi_nbasis)) allocate(mpi_nbasis(0:mpisize-1,nbasis))
 
    endif
    !======== END MPI/ALL NODES ====================

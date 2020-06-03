@@ -33,9 +33,9 @@ CC = gcc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O2 -lm  -mtune=native  -ffree-form  -DGNU -cpp
+FFLAGS = -O2 -lm  -mtune=native  -ffree-form  -DGNU -cpp -g
 LD = $(FC)
-LDFLAGS = $(FFLAGS) -lstdc++
+LDFLAGS = $(FFLAGS) -lstdc++ -g
 #LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS) -static -L/opt/intel/ict/2.0/cmkl/8.0.1/lib/32
 TMPFILES = *.mod *.stb

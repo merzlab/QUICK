@@ -118,7 +118,7 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF. 
         integer :: nof_functionals = 0
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV 
         logical :: bCUDA                ! if CUDA is used here
 #endif        
         
@@ -237,21 +237,17 @@ module quick_method_module
         ! print quick_method
         !------------------------
         subroutine print_quick_method(self,io)
-!#ifndef CUDA
             use xc_f90_types_m
             use xc_f90_lib_m
-!#endif
             implicit none
             integer io
             type(quick_method_type) self
 
-!#ifndef CUDA
             !libxc variables
             type(xc_f90_pointer_t) :: xc_func
             type(xc_f90_pointer_t) :: xc_info
             character(len=120) :: f_name, f_kind, f_family
             integer :: vmajor, vminor, vmicro, f_id
-!#endif
                 
             if (io.ne.0) then   
             write(io,'(" ============== JOB CARD =============")')
@@ -263,7 +259,6 @@ module quick_method_module
                 write(io,'("| METHOD = DENSTITY FUNCTIONAL THEORY")')
                 
                 if(self%uselibxc) then
-!#ifndef CUDA
                      call xc_f90_version(vmajor, vminor, vmicro)
                      write(io,'("| USING LIBXC VERSION: ",I1,".",I1,".",I1)') vmajor, &
                      vminor, vmicro                
@@ -313,7 +308,6 @@ module quick_method_module
                      call xc_f90_func_end(xc_func)
                   enddo
                 
-!#endif                    
                 elseif (self%B3LYP) then
                     write(io,'("| DENSITY FUNCTIONAL = B3LYP")')
                 elseif(self%BLYP) then
@@ -669,15 +663,13 @@ endif
             self%gridSpacing    = 0.1
             self%lapgridspacing = 0.1
 
-!#ifndef CUDA
             !Initialize libxc variables
             self%x_hybrid_coeff = 1.0d0 !Set the default exchange value
             self%uselibxc = .false.
             self%xc_polarization = 0            
             self%nof_functionals = 0 
-!#endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV 
             self%bCUDA  = .false.
 #endif            
             
@@ -766,7 +758,6 @@ endif
         
         end subroutine adjust_Cutoff
 
-!#ifndef CUDA
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
         subroutine set_libxc_func_info(f_keywd, self)
@@ -831,5 +822,4 @@ endif
         self%nof_functionals=nof_f
 
         end subroutine set_libxc_func_info
-!#endif
 end module quick_method_module

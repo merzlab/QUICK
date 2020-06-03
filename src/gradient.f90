@@ -57,44 +57,55 @@ subroutine gradient(failed)
       enddo
    enddo
 
-#ifdef CUDA
-   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-        quick_molspec%molchg, quick_molspec%iAtomType)
-   call gpu_upload_xyz(xyz)
-   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
+#if defined CUDA || defined CUDA_MPIV
+!   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
+!        quick_molspec%molchg, quick_molspec%iAtomType)
+!   call gpu_upload_xyz(xyz)
+!   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
 #endif
 
 !  calculate energy first
-   call g2eshell
-   call schwarzoff
+!   call g2eshell
+!   call schwarzoff
 
-#ifdef CUDA
-   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-        ncontract, itype, aexp, dcoeff, &
-        quick_basis%first_basis_function, quick_basis%last_basis_function, &
-        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
-        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
-        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+#if defined CUDA || defined CUDA_MPIV
+!   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+!        ncontract, itype, aexp, dcoeff, &
+!        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+!        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
+!        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+!        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+!        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
+!        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
-   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+!   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
    call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
 
 #endif
 
    call getEnergy(failed)
 
+   do Ibas=1,nbasis
+      do Jbas=1,nbasis
+!          write(*,*) "Density
+!          matrix:",Ibas,Jbas,quick_qm_struct%dense(Jbas,Ibas)
+!           write(*,*) "Coefficient matrix:",Ibas,Jbas,quick_qm_struct%co(Jbas,Ibas)
+      enddo
+   enddo
+
    if (quick_method%analgrad) then
       call scf_gradient
    endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
       call gpu_cleanup()
    endif
 #endif
 
+#ifdef MPIV
+   if(master) then
+#endif
    write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
    write (ioutfile,'(40("-"))')
    write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
@@ -121,6 +132,10 @@ subroutine gradient(failed)
       enddo
       write(ioutfile,'(40("-"))')
    endif   
+
+#ifdef MPIV
+   endif
+#endif
 
    return
 
@@ -152,9 +167,8 @@ subroutine scf_gradient
    call cpu_time(timer_begin%TGrad)
 
 !  Set the values of gradient arry to zero 
-   do Iatm=1,natom*3
-      quick_qm_struct%gradient(iatm)=0.d0
-   enddo
+   call zeroVec(quick_qm_struct%gradient, 3*natom)
+   if (quick_method%extCharges) call zeroVec(quick_qm_struct%ptchg_gradient, 3*quick_molspec%nextatom)
 
 !---------------------------------------------------------------------
 !  1) The derivative of the nuclear repulsion.
@@ -577,7 +591,7 @@ subroutine get_electron_replusion_grad
       enddo
    enddo
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then
@@ -598,7 +612,8 @@ subroutine get_electron_replusion_grad
    else
 #endif
 
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV 
+
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
    else
@@ -636,7 +651,7 @@ subroutine get_electron_replusion_grad
             enddo
          enddo
       enddo
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    endif
 #endif
 

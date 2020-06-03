@@ -33,7 +33,7 @@ CC=gcc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O2 -lm -mtune=native  -ffree-form  -DGNU -cpp 
+FFLAGS = -O2 -lm -mtune=native  -ffree-form  -DGNU -cpp -g
 LD = $(FC)
 LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS)
@@ -62,7 +62,7 @@ CUDA_INCL_FLAGS=-L$(CUDA_HOME)/lib64 -I$(CUDA_HOME)/include -DCUDA_SPDF
 
 # G++ Compiler
 CXX = g++
-CFLAGS = -lgfortran -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcudadevrt -lcublas -lstdc++
+CFLAGS = -lgfortran -L$(CUDA_HOME)/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcudadevrt -lcublas -lcusolver -lstdc++
 
 
 #CUDA_SPDF=y

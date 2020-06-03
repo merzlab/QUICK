@@ -149,13 +149,19 @@ subroutine electdiis(jscf)
    ! Setup MPI integral configuration
    if (bMPI) then
         !if (quick_method%HF) then
-                call MPI_setup_hfoperator
+        call MPI_setup_hfoperator
+#ifdef CUDA_MPIV
+        call MPI_setup_mgpu_eri
+        call MPI_setup_arr_bsd_mgpu_eri
+
+#endif
         !else if (quick_method%DFT) then
         !        call MPI_setup_dftoperator
         !endif
    endif
    !-------------- END MPI / ALL NODE -----------
 #endif
+
    ! First, let's get 1e opertor which only need 1-time calculation
    ! and store them in oneElecO and fetch it every scf time.
    call get1e(oneElecO)
@@ -259,7 +265,9 @@ subroutine electdiis(jscf)
          ! matrix.
 
          ! The first part is ODS
-#ifdef CUDA
+
+#if defined(CUDA) || defined(CUDA_MPIV)
+
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
@@ -282,7 +290,8 @@ subroutine electdiis(jscf)
          ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
          ! This means we now have the e(i) matrix.
          ! allerror=ODS-SDO
-#ifdef CUDA
+
+#if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
@@ -315,7 +324,7 @@ subroutine electdiis(jscf)
             enddo
          enddo
 
-#ifdef CUDA
+#if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
@@ -456,7 +465,7 @@ subroutine electdiis(jscf)
 
          IDIIS_Error_Start = 1
          IDIIS_Error_End   = IDIISfinal
-         111     IF (LSOLERR.ne.0)then
+         111     IF (LSOLERR.ne.0 .and. IDIISfinal > 0)then
             IDIISfinal=Idiisfinal-1
             do I=1,IDIISfinal+1
                do J=1,IDIISfinal+1
@@ -498,21 +507,23 @@ subroutine electdiis(jscf)
          ! First you have to transpose this into an orthogonal basis, which
          ! is accomplished by calculating Transpose[X] . O . X.
          !-----------------------------------------------
-#ifdef CUDA
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-               nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+#if defined(CUDA) || defined(CUDA_MPIV)
+
+        call cpu_time(timer_begin%TDiag)
+        call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
+              quick_qm_struct%E, quick_qm_struct%idegen, &
+              quick_qm_struct%vec, quick_qm_struct%co, &
+              V2, nbasis)
+         call cpu_time(timer_end%TDiag)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-         !call Dmatmul(nbasis, quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold)
-         !call Dmatmul(nbasis, quick_qm_struct%x, quick_scratch%hold, quick_qm_struct%o)
 #else
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#endif
 
          ! Now diagonalize the operator matrix.
          call cpu_time(timer_begin%TDiag)
@@ -520,13 +531,14 @@ subroutine electdiis(jscf)
                quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
          call cpu_time(timer_end%TDiag)
 
+#endif
 
          ! Calculate C = XC' and form a new density matrix.
          ! The C' is from the above diagonalization.  Also, save the previous
          ! Density matrix to check for convergence.
          !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
 
-#ifdef CUDA
+#if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
@@ -635,7 +647,6 @@ subroutine electdiis(jscf)
          if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
             write(ioutfile, '(4x, "--------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " -------------")') quick_method%integralCutoff
          endif
-
       endif
 
 #ifdef MPIV
@@ -654,6 +665,14 @@ subroutine electdiis(jscf)
       if (quick_method%debug)  write(ioutfile,*) "after hf"
       if (quick_method%debug)  call debug_SCF(jscf)
    enddo
+
+#if defined CUDA || defined CUDA_MPIV
+   if(quick_method%bCUDA) then
+      ! sign of the coefficient matrix resulting from cusolver is not consistent
+      ! with rest of the code (e.g. gradients). We have to correct this.
+      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)       
+   endif
+#endif
 
 #ifdef CUDA
    if(quick_method%bCUDA) then

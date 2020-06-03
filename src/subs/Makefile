@@ -41,7 +41,7 @@ SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
 	random.o rdinum.o rdnml.o rdnum.o rdword.o readPDB.o spdfgh.o ssw.o \
 	sum2Mat.o transpose.o tridi.o upcase.o vett.o whatis.o whole.o \
 	wrtRestart.o xnorm.o zeroMatrix.o zmake.o pt2der.o sswder.o \
-	denspt_new_imp.o pteval_new_imp.o
+	denspt_new_imp.o pteval_new_imp.o scaMatMul.o 
 
 #************************************************************************
 # 
@@ -57,7 +57,7 @@ $(SUBS):%.o:%.f90
 #================= quick subroutine library =================================
 
 quick_subs:$(SUBS)
-	ar -r $(libfolder)/quicklib.a *.o
+	ar -r $(libfolder)/quicksublib.a *.o
 
 all: quick_subs	
 

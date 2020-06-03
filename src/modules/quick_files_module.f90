@@ -1,10 +1,16 @@
-!
-!	quick_files_module.f90
-!	new_quick
-!
-!	Created by Yipu Miao on 2/18/11.
-!	Copyright 2011 University of Florida. All rights reserved.
-!
+!---------------------------------------------------------------------!
+! Updated by Madu Manathunga on 05/28/2020                            !
+!                                                                     !
+! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
+!                         Ken Ayers & Ed Brothers                     !
+!                                                                     ! 
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
 
 !  File module.
 module quick_files_module
@@ -55,6 +61,9 @@ module quick_files_module
     integer :: iIntFile = 25          ! integral file
 
     logical :: fexist = .false.          ! Check if file exists
+
+    logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
+    integer :: wrtStep = 1            ! current step for writing to output file. 
     
     contains
     
@@ -62,18 +71,21 @@ module quick_files_module
     ! Setup input output files and basis dir
     !------------
     subroutine set_quick_files(ierr)
+
         implicit none
         ! Pass-in parameter:
-        integer ierr    ! Error Flag
+        integer :: ierr    ! Error Flag
         
         ! Local Varibles
-        integer i
+        integer :: i
         
         ierr=1
         
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
         call getenv("QUICK_BASIS",basisdir)
+        basisdir=trim(basisdir)
+        
         call getenv("ECPs",ecpdir)
       
         ! Read argument, which is input file, usually ".in" file and prepare files:
@@ -82,17 +94,31 @@ module quick_files_module
         ! .rst: coordinates file
         ! .pdb: PDB file (can be input if use PDB keyword)
         ! .cphf: CPHF file
-        call getarg(1,inFileName)
+
+        ! if quick is in libary mode, use .qin and .qout extensions 
+        ! for input and output files.  
+
+        if(.not. isTemplate) call getarg(1,inFileName)
+
         i = index(inFileName,'.')
+
         if(i .eq. 0) i = index(inFileName,' ')
       
-        outFileName=inFileName(1:i-1)//'.out'
+        if(isTemplate) then
+          outFileName=inFileName(1:i-1)//'.qout'
+        else
+          outFileName=inFileName(1:i-1)//'.out'
+        endif
+
         dmxFileName=inFileName(1:i-1)//'.dmx'
         rstFileName=inFileName(1:i-1)//'.rst'
         CPHFFileName=inFileName(1:i-1)//'.cphf'
         pdbFileName=inFileName(1:i-1)//'.pdb'
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
+        
+
+        write(*,*) inFileName, outFileName
 
         ierr=0
         return
@@ -111,35 +137,42 @@ module quick_files_module
         character(len=16) :: tmp_basisfilename
 
         ! local variables
-        integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1
+        integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1,lenkwd
         logical present
         
-        i = 0
+        i = 1
         j = 100 
         iofile = 0
         io = 0
         tmp_basisfilename = "NULL"
 
-        ! read basis directory and ECP basis directory
-        call rdword(basisdir,i,j)
-        call EffChar(basisdir,i,j,k1,k2)
+
+!        call EffChar(basisdir,i,j,k1,k2)
         
-        call rdword(ecpdir,i,j) !AG 03/05/2007
-        call EffChar(ecpdir,i,j,k3,k4)
+        call rdword(ecpdir,k3,k4) !AG 03/05/2007
+!        call EffChar(ecpdir,i,j,k3,k4)
               
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
         if (index(keywd,'BASIS=') /= 0) then
-            i = index(keywd,'BASIS=')
-            call rdword(keywd,i,j)
+
+            !Get the length of keywd
+            lenkwd=len_trim(keywd)
+
+            i = index(keywd,'BASIS=',.false.)
+
+            j = scan(keywd(i:lenkwd),' ',.false.)
            
-            write(basis_sets,*)  basisdir(k1+1:k2),"/basis_link"
-            write(search_keywd,*) "#",keywd(i+6:j)
-            basisSetName = keywd(i+6:j)
+            !write(basis_sets,*)  trim(basisdir),"/basis_link"
+            basis_sets=trim(basisdir) // "/basis_link"
+
+            basisSetName = keywd(i+6:i+j-2)
+            search_keywd= "#" // trim(basisSetName)
 
             ! Check if the basis_link file exists
-            flen=len(basis_sets)
-            call EffChar(basis_sets,1,flen,f0,f1)
-            inquire(file=basis_sets(f0:f1),exist=fexist)
+            !flen=len(basis_sets)
+            !call EffChar(basis_sets,1,flen,f0,f1)
+
+            inquire(file=trim(basis_sets),exist=fexist)
             if (.not.fexist) then
                 call PrtErr(iOutFile,'basis_link file is not accessible.')                
                 call PrtMsg(iOutFile,'Check if QUICK_BASIS environment variable is set.')
@@ -160,13 +193,11 @@ module quick_files_module
 
             close(ibasisfile)
 
-            write(basisfilename,*) basisdir(k1+1:k2),"/",tmp_basisfilename
+            basisfilename=trim(basisdir) // "/" // tmp_basisfilename
 
             ! Check if basis file exists. Otherwise, quit program.
-            flen=len(basisfilename)
-            call EffChar(basisfilename,1,flen,f0,f1)
-            inquire(file=basisfilename(f0:f1),exist=fexist)
-            write(*,*) basisfilename(f0:f1)
+            inquire(file=trim(basisfilename),exist=fexist)
+            write(*,*) trim(basisfilename)
             if (.not.fexist) then
                 call PrtErr(iOutFile,'Requested basis set does not exist or basis_link file not properly configured.')
                 call PrtMsg(iOutFile,'Fix the basis_link file or add your basis set as a new entry. Check the user manual.')
@@ -174,15 +205,15 @@ module quick_files_module
             end if
 
         else
-            basisfilename = basisdir(k1:k2) // '/STO-3G.BAS'    ! default
+            basisfilename = trim(basisdir) // '/STO-3G.BAS'    ! default
         endif
         
         if (index(keywd,'ECP=') /= 0) then
             i = index(keywd,'ECP=')
             call rdword(keywd,i,j)
             ecpfilename = ecpdir(k3:k4) // '/' // keywd(i+4:j)
-            basisfilename = basisdir(k1:k2) // '/' //keywd(i+4:j)
-            if (keywd(i+4:j) == "CUSTOM") BasisCustName = basisdir(k1:k2)// '/CUSTOM'
+            basisfilename = trim(basisdir) // '/' //keywd(i+4:j)
+            if (keywd(i+4:j) == "CUSTOM") BasisCustName = trim(basisdir) // '/CUSTOM'
         endif
         
         ! a compatible mode for basis set file if files like STO-3G.BAS didn't exist, 

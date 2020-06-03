@@ -766,7 +766,7 @@ subroutine get2e(II_arg)
          do LL = KK,jshell
 
           cutoffTest = testtmp * Ycutoff(KK,LL)
-          if (cutoffTest .gt. quick_method%integralCutoff) then
+!          if (cutoffTest .gt. quick_method%integralCutoff) then
 !                  write(*,'(A30,2x,F20.10,2x,F20.10)') & !Madu
 ! "cutoffTest, integralCutoff", cutoffTest, integralCutoff !Madu
             DNmax =  max(4.0d0*cutmatrix(II,JJ), &
@@ -778,11 +778,11 @@ subroutine get2e(II_arg)
             ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
             ! ignore the calculation to save computation time
             
-            if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
+!            if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
 !    write (*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5)') "Madu: CUTMTX I, J, K, L  ", &
 !           II, JJ, KK, LL !Madu            
                   call shell
-           endif
+!           endif
          enddo
       enddo
    enddo

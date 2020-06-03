@@ -5,7 +5,7 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
-    subroutine mpi_initialize()
+    subroutine initialize_quick_mpi()
     use allmod
     implicit none
     logical mpi_initialized_flag
@@ -14,13 +14,17 @@
 
     ! Initinalize MPI evironment, and determind master node
     if (bMPI) then
-      call MPI_INIT(mpierror)
-      call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
-      call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
+
+      if(.not. libMPIMode) then
+        call MPI_INIT(mpierror)
+        call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
+        call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
+      endif
+
       call MPI_GET_PROCESSOR_NAME(pname,namelen,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
-      allocate(MPI_STATUS(MPI_STATUS_SIZE))
+      if(.not. allocated(MPI_STATUS)) allocate(MPI_STATUS(MPI_STATUS_SIZE))
     
       if (mpirank.eq.0) then
         master=.true.
@@ -331,10 +335,93 @@
         call MPI_BCAST(mpi_nbasis,mpisize*nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
         
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+#ifdef CUDA_MPIV
+!        call mgpu_upload_basis_setup(mpi_jshelln,mpi_jshell,mpi_nbasisn,mpi_nbasis)
+#endif
+
     endif
 
     
     end subroutine MPI_setup_hfoperator
+
+#ifdef CUDA_MPIV
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Setup eri calculation on multi GPUs
+! Madu Manathunga 05/08/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    subroutine MPI_setup_mgpu_eri()
+    use allmod
+    implicit none
+
+    include 'mpif.h'
+
+    if (master) then
+        call mgpu_distribute_qshell(quick_basis%mpi_qshell,quick_basis%mpi_qshelln)
+    endif
+
+    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(quick_basis%mpi_qshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(quick_basis%mpi_qshelln,mpisize+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+    call mgpu_upload_qshell(quick_basis%mpi_qshell, quick_basis%mpi_qshelln)
+
+    end subroutine MPI_setup_mgpu_eri
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Setup eri calculation on multi GPUs
+! Madu Manathunga 05/08/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    subroutine MPI_setup_arr_bsd_mgpu_eri()
+    use allmod
+    implicit none
+    integer :: nqshell      ! Number of sorted shells
+    integer :: remainder, idx, impi, icount 
+    integer, allocatable, dimension(:)  :: mpi_qshell
+    integer, allocatable, dimension(:)  :: mpi_qshelln
+
+    include 'mpif.h'
+
+    if (master) then
+        call mgpu_get_nqshell(nqshell)
+    endif
+
+    call MPI_BCAST(nqshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+ 
+    ! All nodes allocate memory and initialize values to zero
+    if(.not. allocated(mpi_qshell)) allocate(mpi_qshell(mpisize))
+    if(.not. allocated(mpi_qshelln)) allocate(mpi_qshelln(mpisize*nqshell))
+    call zeroiVec(mpi_qshell,mpisize)
+    call zeroiVec(mpi_qshelln,mpisize*nqshell) 
+
+    ! Now master will distribute the qshells 
+    if(master) then
+       icount=1
+       remainder = nqshell
+       do while(remainder .gt. 0)
+           do impi=1, mpisize
+              idx=nqshell-remainder
+              mpi_qshell(impi) = mpi_qshell(impi)+1
+              mpi_qshelln((impi-1)*nqshell+icount)=idx   
+              remainder=remainder-1
+              if (remainder .lt. 1) exit
+           enddo
+           icount=icount+1
+       enddo    
+    endif    
+
+    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(mpi_qshell,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BCAST(mpi_qshelln,mpisize*nqshell,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+    call mgpu_upload_arr_bsd_qshell(mpi_qshell,mpi_qshelln)
+
+    end subroutine MPI_setup_arr_bsd_mgpu_eri
+
+#endif
 
 ! subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
 !-----------------------------------------------------------------------------

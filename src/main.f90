@@ -34,7 +34,7 @@
     include 'mpif.h'
 #endif
 
-#ifdef CUDA
+#ifdef CUDA 
     integer :: gpu_device_id = -1
 #endif
 
@@ -76,13 +76,15 @@
     endif masterwork_readInput
     !--------------------End MPI/MASTER----------------------------------
 
-#ifdef CUDA
+#ifdef CUDA 
+
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
     call gpu_startup()
     iarg = iargc()
     call gpu_set_device(-1)
 
+    ! Handles an old mechanism where the user can specify GPU id from CLI
     if (iarg .ne. 0) then
         do i = 1, iarg
             call getarg(int(i,4), arg)
@@ -100,8 +102,19 @@
     call gpu_init()
  
     ! write cuda information
-    if(master) call gpu_write_info(iOutFile)
+    call gpu_write_info(iOutFile)
     !------------------- END CUDA ---------------------------------------
+#endif
+
+#ifdef CUDA_MPIV
+
+    if(master) then
+        call mgpu_query(mpisize)
+        call mgpu_write_info(iOutFile)
+    endif
+
+    call mgpu_init(mpirank, mpisize)
+
 #endif
 
 
@@ -133,7 +146,7 @@
     !-----------------------------------------------------------------
     call getMol()
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
                    quick_molspec%molchg, quick_molspec%iAtomType)
     call gpu_upload_xyz(xyz)
@@ -153,6 +166,7 @@
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
     if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+
     ! if it is not opt job, begin single point calculation
     if(.not.quick_method%opt)then
 !      if(.NOT.PBSOL)then
@@ -167,7 +181,7 @@
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
-#ifdef CUDA    
+#if defined CUDA || defined CUDA_MPIV    
     call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
     ncontract, itype, aexp, dcoeff, &
     quick_basis%first_basis_function, quick_basis%last_basis_function, & 
@@ -270,10 +284,17 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
-#ifdef CUDA
-    call gpu_shutdown()
+#ifdef CUDA 
+    if (master) then
+       call gpu_shutdown()
+    endif
 #endif
+
+#ifdef CUDA_MPIV
+!    call mgpu_delete_mpi_setup()
+    call mgpu_shutdown()
+#endif
+
     call finalize(iOutFile,0)
     
-
     end program quick

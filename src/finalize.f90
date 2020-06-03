@@ -50,6 +50,9 @@ subroutine deallocateall
     if (quick_method%DFT) then
     call  deform_dft_grid(quick_dft_grid)
     endif
+
+
+
 end subroutine deallocateall
 
 

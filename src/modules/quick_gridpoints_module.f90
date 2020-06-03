@@ -348,7 +348,7 @@ module quick_gridpoints_module
     subroutine allocate_quick_gridpoints(nbasis)
         implicit double precision(a-h,o-z)
         integer nbasis
-        allocate(sigrad2(nbasis))
+        if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
     end subroutine allocate_quick_gridpoints
 
     ! deallocate
@@ -363,18 +363,18 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        allocate(self%gridxb(self%gridb_count))
-        allocate(self%gridyb(self%gridb_count))
-        allocate(self%gridzb(self%gridb_count))
-        allocate(self%gridb_sswt(self%gridb_count))
-        allocate(self%gridb_weight(self%gridb_count))
-        allocate(self%gridb_atm(self%gridb_count))
-        allocate(self%dweight(self%gridb_count))
-        allocate(self%basf(self%nbtotbf))
-        allocate(self%primf(self%nbtotpf))
-        allocate(self%basf_counter(self%nbins + 1))
-        allocate(self%primf_counter(self%nbtotbf + 1))
-        allocate(self%bin_counter(self%nbins+1))
+        if (.not. allocated(self%gridxb)) allocate(self%gridxb(self%gridb_count))
+        if (.not. allocated(self%gridyb)) allocate(self%gridyb(self%gridb_count))
+        if (.not. allocated(self%gridzb)) allocate(self%gridzb(self%gridb_count))
+        if (.not. allocated(self%gridb_sswt)) allocate(self%gridb_sswt(self%gridb_count))
+        if (.not. allocated(self%gridb_weight)) allocate(self%gridb_weight(self%gridb_count))
+        if (.not. allocated(self%gridb_atm)) allocate(self%gridb_atm(self%gridb_count))
+        if (.not. allocated(self%dweight)) allocate(self%dweight(self%gridb_count))
+        if (.not. allocated(self%basf)) allocate(self%basf(self%nbtotbf))
+        if (.not. allocated(self%primf)) allocate(self%primf(self%nbtotpf))
+        if (.not. allocated(self%basf_counter)) allocate(self%basf_counter(self%nbins + 1))
+        if (.not. allocated(self%primf_counter)) allocate(self%primf_counter(self%nbtotbf + 1))
+        if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
     end subroutine
 
     subroutine alloc_xcg_tmp_variables(xcg_tmp)
@@ -385,18 +385,18 @@ module quick_gridpoints_module
         
         tot_gps = natom*xcg_tmp%rad_gps*xcg_tmp%ang_gps
 
-        allocate(xcg_tmp%init_grid_atm(tot_gps))
-        allocate(xcg_tmp%init_grid_ptx(tot_gps))
-        allocate(xcg_tmp%init_grid_pty(tot_gps))
-        allocate(xcg_tmp%init_grid_ptz(tot_gps))
-        allocate(xcg_tmp%arr_wtang(tot_gps))
-        allocate(xcg_tmp%arr_rwt(tot_gps))
-        allocate(xcg_tmp%arr_rad3(tot_gps))
-        allocate(xcg_tmp%sswt(tot_gps))
-        allocate(xcg_tmp%weight(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_atm)) allocate(xcg_tmp%init_grid_atm(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_ptx)) allocate(xcg_tmp%init_grid_ptx(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_pty)) allocate(xcg_tmp%init_grid_pty(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_ptz)) allocate(xcg_tmp%init_grid_ptz(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_wtang)) allocate(xcg_tmp%arr_wtang(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_rwt)) allocate(xcg_tmp%arr_rwt(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_rad3)) allocate(xcg_tmp%arr_rad3(tot_gps))
+        if (.not. allocated(xcg_tmp%sswt)) allocate(xcg_tmp%sswt(tot_gps))
+        if (.not. allocated(xcg_tmp%weight)) allocate(xcg_tmp%weight(tot_gps))
 #ifdef MPIV
-        allocate(xcg_tmp%tmp_sswt(tot_gps))
-        allocate(xcg_tmp%tmp_weight(tot_gps))        
+        if (.not. allocated(xcg_tmp%tmp_sswt)) allocate(xcg_tmp%tmp_sswt(tot_gps))
+        if (.not. allocated(xcg_tmp%tmp_weight)) allocate(xcg_tmp%tmp_weight(tot_gps))        
 #endif
     end subroutine
 
@@ -406,8 +406,8 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        allocate(self%igridptul(mpisize))
-        allocate(self%igridptll(mpisize))
+        if (.not. allocated(self%igridptul)) allocate(self%igridptul(mpisize))
+        if (.not. allocated(self%igridptll)) allocate(self%igridptll(mpisize))
 
    end subroutine
 #endif    

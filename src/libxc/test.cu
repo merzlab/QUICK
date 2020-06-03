@@ -12,7 +12,7 @@
 #define XC_GGA_K_FR_B88       514
 #define XC_GGA_X_B88M         570
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
 //maple2c param typedefs
 /*typedef struct{
