@@ -45,7 +45,7 @@ if nspin == 2
    v3sigma(10)     = (uu_uu_uu, uu_uu_ud, uu_uu_dd, uu_ud_ud, uu_ud_dd, uu_dd_dd, ud_ud_ud, ud_ud_dd, ud_dd_dd, dd_dd_dd)
    
 */
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 void xc_gga(const xc_func_type *func, int np, const double *rho, const double *sigma,
              double *zk, double *vrho, double *vsigma,
              double *v2rho2, double *v2rhosigma, double *v2sigma2,
@@ -115,7 +115,7 @@ void xc_gga(const xc_func_type *func, int np, const double *rho, const double *s
 
   /* call functional */
   if(func->info->gga != NULL){
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     func->info->gga(func, np, rho, sigma, zk, vrho, vsigma,
                     v2rho2, v2rhosigma, v2sigma2,
                     v3rho3, v3rho2sigma, v3rhosigma2, v3sigma3, gpu_work_params);
@@ -126,7 +126,7 @@ void xc_gga(const xc_func_type *func, int np, const double *rho, const double *s
 #endif
   }
   if(func->mix_coef != NULL){
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     xc_mix_func(func, np, rho, sigma, NULL, NULL, zk, vrho, vsigma, NULL, NULL,
                  v2rho2, v2sigma2, NULL, NULL, v2rhosigma, NULL, NULL, NULL, NULL, NULL, gpu_work_params);
 #else
@@ -138,7 +138,7 @@ void xc_gga(const xc_func_type *func, int np, const double *rho, const double *s
 
 /* specializations */
 /* returns only energy */
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 void
 xc_gga_exc(const xc_func_type *p, int np, const double *rho, const double *sigma,
             double *zk, void *gpu_work_params)

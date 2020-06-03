@@ -27,7 +27,7 @@ work_mgga_k
 #else
 work_mgga_x
 #endif
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 (const xc_func_type *p, int np,
  const double *rho, const double *sigma, const double *lapl, const double *tau,
  double *zk, double *vrho, double *vsigma, double *vlapl, double *vtau,
@@ -69,7 +69,7 @@ work_mgga_x
   sfact = (p->nspin == XC_POLARIZED) ? 1.0 : 2.0;
   sfact2 = sfact*sfact;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   
 #else
   for(ip = 0; ip < np; ip++){

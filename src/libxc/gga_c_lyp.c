@@ -21,7 +21,7 @@ void xc_gga_c_lyp_init(xc_func_type *p)
   assert(p->params == NULL);
 
   p->params = malloc(sizeof(gga_c_lyp_params));
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   p->params_byte_size = sizeof(gga_c_lyp_params); //Assign the value for param size
   printf("p->params_byte_size: %d \n", p->params_byte_size);
 #endif

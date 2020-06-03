@@ -38,6 +38,15 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    integer ierror
    double precision,allocatable:: temp2d(:,:)
+
+#ifdef CUDA_MPIV                                           
+   double precision, allocatable:: tst_mgpuO(:,:)          ! MGPU_TESTING
+
+   allocate(tst_mgpuO(nbasis,nbasis))                      ! MGPU_TESTING
+   call zeroMatrix(tst_mgpuO, nbasis)                      ! MGPU_TESTING
+   if(master) call copyDMat(oneElecO,tst_mgpuO,nbasis)     ! MGPU_TESTING
+
+#endif
    allocate(temp2d(nbasis,nbasis))
 #endif
 !-----------------------------------------------------------------
@@ -88,18 +97,14 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
 !  Reset the operator value for slave nodes.
    if (.not.master) then
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
+      call zeroMatrix(quick_qm_struct%o, nbasis)
    endif   
 
 !  sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
@@ -112,9 +117,17 @@ subroutine scf_operator(oneElecO, deltaO)
          call gpu_upload_method(1, 0.2d0)
       endif
 
+! MGPU_TESTING
+
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
       quick_qm_struct%vec,quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
+
+! MGPU_TESTING
+
+!      call gpu_upload_calculated(tst_mgpuO,quick_qm_struct%co, &
+!      quick_qm_struct%vec,quick_qm_struct%dense)
+!      call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
 
    endif
 #endif
@@ -135,15 +148,15 @@ subroutine scf_operator(oneElecO, deltaO)
 ! The previous two terms are the one electron part of the Fock matrix.
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
-#ifdef CUDA
-      if (quick_method%bCUDA) then
-         call gpu_get2e(quick_qm_struct%o)
-      else
+#if defined CUDA || defined CUDA_MPIV
+      if (quick_method%bCUDA) then          
+         call gpu_get2e(quick_qm_struct%o)  
+      else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV 
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -162,13 +175,20 @@ subroutine scf_operator(oneElecO, deltaO)
       enddo
 #endif
 
-#ifdef CUDA
-      endif
+#if defined CUDA || defined CUDA_MPIV 
+      endif                             
 #endif
    endif
 
 #ifdef MPIV
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+!         do ii=1,nbasis                      ! MGPU_TESTING
+!            do jj=ii,nbasis
+!               write(*,*) "CPU Fock O:",mpirank,ii-1,jj-1,quick_qm_struct%o(ii,jj)
+!            enddo
+!         enddo                               ! MGPU_TESTING
+
 !  After evaluation of 2e integrals, we can communicate every node so
 !  that we can sum all integrals. slave node will send infos.
    if(.not.master) then
@@ -321,7 +341,7 @@ subroutine get_xc
 !  Set the values of slave operators to zero
    if (.not.master) then
       call zeroMatrix(quick_qm_struct%o, nbasis)
-      Eelxc=0
+      Eelxc=0.0d0
    endif
    call zeroMatrix(temp2d, nbasis)
 #endif

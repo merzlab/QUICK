@@ -75,7 +75,7 @@ mgga_c_vsxc_init(xc_func_type *p)
  
   assert(p!=NULL && p->params == NULL); 
   p->params = malloc(sizeof(mgga_c_m06l_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(mgga_c_m06l_params); 
 #endif 
   params = (mgga_c_m06l_params *)p->params; 

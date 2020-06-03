@@ -193,12 +193,12 @@ typedef struct xc_lda_work_t {
   double d2fdrs2, d2fdrsz, d2fdz2;            /* second derivatives of e  */
   double d3fdrs3, d3fdrs2z, d3fdrsz2, d3fdz3; /*  third derivatives of e  */
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   int nspin;
 #endif
 } xc_lda_work_t;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 void xc_lda_fxc_fd(const xc_func_type *p, int np, const double *rho, double *fxc, void *gpu_work_params);
 void xc_lda_kxc_fd(const xc_func_type *p, int np, const double *rho, double *kxc, void *gpu_work_params);
 #else
@@ -356,7 +356,7 @@ const char *get_kind(const xc_func_type *func);
 const char *get_family(const xc_func_type *func);
 
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 #include "gpu.h"
 #endif
 

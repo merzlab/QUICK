@@ -26,7 +26,7 @@ subroutine fullx
    double precision :: Sminhalf(nbasis)
    double precision :: V(3,nbasis)
    double precision :: IDEGEN1(nbasis)
-   double precision :: SJI,sum
+   double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
 
    do Ibas=1,nbasis
@@ -34,13 +34,13 @@ subroutine fullx
          SJI =0.d0
          do Icon=1,ncontract(ibas)
             do Jcon=1,ncontract(jbas)
-               SJI =SJI + &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+               SJI_temp = overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
                      itype(1,Jbas),       itype(2,Jbas),       itype(3,Jbas), &
                      itype(1,Ibas),       itype(2,Ibas),       itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)), &
+                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)),&
                      xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+
+               SJI =SJI + dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) * SJI_temp
             enddo
          enddo
          quick_qm_struct%s(Jbas,Ibas) = SJI
@@ -49,13 +49,13 @@ subroutine fullx
 
    call copySym(quick_qm_struct%s,nbasis)
 
-
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
 
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -108,7 +108,6 @@ subroutine fullx
          sum = 0.d0
          do K=1,nbasis
             sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-!write(*,*)  k,j,quick_scratch%hold2(K,J),Sminhalf(K),sum
          enddo
          quick_qm_struct%x(I,J) = sum
          quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)

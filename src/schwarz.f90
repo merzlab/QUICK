@@ -18,7 +18,7 @@ subroutine schwarzoff
    include 'mpif.h'
 #endif
 
-  integer ii,jj
+  integer i,ii,jj
   double precision Ymaxtemp
 
   if (master) then
@@ -586,6 +586,7 @@ subroutine densityCutoff
    !------------------------------------------------
    use allmod
    implicit double precision(a-h,o-z)
+
    ! Cutmatrix(II,JJ) indicated for ii shell and jj shell, the max dense
    do II=1,jshell
       do JJ=II,jshell
@@ -595,5 +596,4 @@ subroutine densityCutoff
          Cutmatrix(JJ,II)=DNtemp
       enddo
    enddo
-
 end subroutine densityCutoff
