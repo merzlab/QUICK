@@ -10,7 +10,6 @@
 !_____________________________________________________________________!
 
 ! Test module for QUICK library API
-
 module test_quick_api_module
 
   implicit none
