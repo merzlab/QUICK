@@ -564,7 +564,13 @@ subroutine get_sigrad
    include 'mpif.h'
 #endif
 
-   write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+#ifdef MPIV
+   if(master) then
+#endif
+     write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+#ifdef MPIV
+   endif
+#endif
 
    do Ibas=1,nbasis
 
@@ -613,7 +619,15 @@ subroutine get_sigrad
       ! denisty calculator works in.
 
       sigrad2(Ibas)=radial*radial
-      write (iOutFile,'(I4,7x,F12.6)') Ibas,radial
+
+#ifdef MPIV
+      if(master) then
+#endif
+        write (iOutFile,'(I4,7x,F12.6)') Ibas,radial
+#ifdef MPIV
+      endif
+#endif
+
    enddo
 
 

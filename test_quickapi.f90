@@ -31,11 +31,10 @@
     integer :: i, j, frames, ierr
    
     ! number of atoms, number of atom types, number of external point charges
-    integer :: natoms, natm_types, nxt_charges
+    integer :: natoms, nxt_charges
 
     ! atom type ids, atomic numbers, atomic coordinates, point charges and
     !  coordinates
-    integer, dimension(:), pointer            :: atom_type_id   => null()
     integer, dimension(:), pointer            :: atomic_numbers => null()
     double precision, dimension(:,:), pointer :: coord          => null()
     double precision, dimension(:,:), pointer :: xc_coord       => null()
@@ -68,14 +67,12 @@
     ! set molecule size. We consider a water molecule surounded by 3 point
     ! charges in this test case. 
     natoms      = 3
-    natm_types  = 2
     nxt_charges = 3    
 
     ! we consider 5 snapshots of this test system (mimics 5 md steps) 
     frames = 5
 
     ! alocate memory for input and output arrays
-    if ( .not. associated(atom_type_id))   allocate(atom_type_id(natm_types), stat=ierr)
     if ( .not. associated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. associated(coord))          allocate(coord(3,natoms), stat=ierr)
     if ( .not. associated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
@@ -86,8 +83,6 @@
     ! fill up memory with test values, coordinates and external charges will be loded inside 
     ! the loop below.
     fname           = 'water'
-    atom_type_id(1) = 8
-    atom_type_id(2) = 1
 
     atomic_numbers(1)  = 8
     atomic_numbers(2)  = 1
@@ -100,7 +95,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, natoms, natm_types, nxt_charges)
+    call setQuickJob(fname, natoms, atomic_numbers, nxt_charges)
 
     do i=1, frames
 
@@ -109,11 +104,10 @@
 
       ! compute required quantities, call only a or b. 
       ! a. compute energies and charges
-!      call getQuickEnergy(i, atom_type_id, atomic_numbers, coord, xc_coord, totEne, charge)
+!      call getQuickEnergy(i, coord, xc_coord, totEne, charge)
 
       ! b. compute energies, charges, gradients and point charge gradients
-      call getQuickEnergyForces(i, atom_type_id, atomic_numbers, coord, xc_coord, &
-           totEne, charge, forces, ptchgGrad)    
+      call getQuickEnergyForces(i, coord, xc_coord, totEne, charge, forces, ptchgGrad)    
 
       ! print values obtained from quick library
 #ifdef QUAPI_MPIV
@@ -136,7 +130,6 @@
     call deleteQuickJob()
 
     ! deallocate memory
-    if ( associated(atom_type_id))   deallocate(atom_type_id, stat=ierr)
     if ( associated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
     if ( associated(coord))          deallocate(coord, stat=ierr)
     if ( associated(xc_coord))       deallocate(xc_coord, stat=ierr)
