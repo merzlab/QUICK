@@ -33,7 +33,7 @@ CC = mpicc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O2 -lm  -mtune=native  -ffree-form  -DGNU -cpp 
+FFLAGS = -O0 -lm  -mtune=native  -ffree-form  -DGNU -cpp 
 LD = $(FC)
 LDFLAGS = $(FFLAGS) -lstdc++ -g
 #LDFLAGS = $(FFLAGS)
@@ -43,7 +43,7 @@ TMPFILES = *.mod *.stb
 # CPP Compiler
 FPP = cpp -traditional -P  -DBINTRAJ
 CPP = gcc -DCUBLAS_USE_THUNKING
-CPP_FLAG = -I/usr/local/cuda/include  -O2
+CPP_FLAG = -I/usr/local/cuda/include  -O0
 
 # CUDA Compiler
 CUDAC = nvcc

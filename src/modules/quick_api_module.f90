@@ -63,6 +63,10 @@ module quick_api_module
     ! template file name with job card
     character(len=80) :: fqin
 
+    ! if density matrix of the previous step should be used for the current
+    ! md step
+    logical :: reuse_dmx = .true.
+
     ! total energy in hartree
     double precision :: tot_ene = 0.0d0
 
@@ -109,17 +113,18 @@ contains
 
 
 ! allocates memory for a new quick_api_type variable
-subroutine new_quick_api_type(self, natoms, natm_type, nxt_ptchg)
+subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer, intent(in)   :: natoms, natm_type, nxt_ptchg
-  integer :: ierr  
+  integer, intent(in)   :: natoms, nxt_ptchg
+  integer, intent(in) :: atomic_numbers(natoms)
+  integer :: atm_type_id(natoms)
+  integer :: i, natm_type, ierr  
 
-  self%natoms    = natoms
-  self%natm_type = natm_type
-  self%nxt_ptchg = nxt_ptchg 
+  ! get atom types and number of types
+  call get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 
   if ( .not. associated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. associated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
@@ -129,6 +134,16 @@ subroutine new_quick_api_type(self, natoms, natm_type, nxt_ptchg)
   if ( .not. associated(self%charge))         allocate(self%charge(natoms), stat=ierr)
   if ( .not. associated(self%force))          allocate(self%force(3,natoms), stat=ierr)
   if ( .not. associated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
+
+  ! save values in the quick_api struct
+  self%natoms         = natoms
+  self%natm_type      = natm_type
+  self%nxt_ptchg      = nxt_ptchg
+  self%atomic_numbers = atomic_numbers
+
+  do i=1, natm_type
+    self%atm_type_id(i) = atm_type_id(i)
+  enddo
 
   ! set result vectors and matrices to zero
   call zeroVec(self%charge, natoms)
@@ -140,7 +155,7 @@ end subroutine new_quick_api_type
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, natoms, natm_type, nxt_ptchg)
+subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -152,13 +167,14 @@ subroutine set_quick_job(fqin, natoms, natm_type, nxt_ptchg)
   implicit none
 
   character(len=80), intent(in) :: fqin
-  integer, intent(in) :: natoms, natm_type, nxt_ptchg
+  integer, intent(in) :: natoms, nxt_ptchg
+  integer, intent(in) :: atomic_numbers(natoms)
   integer :: flen, ierr
 
   ierr = 1
 
   ! allocate memory for quick_api_type 
-  call new_quick_api_type(quick_api, natoms, natm_type, nxt_ptchg)
+  call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg)
 
   flen = LEN_TRIM(fqin)
   
@@ -245,22 +261,56 @@ subroutine set_quick_job(fqin, natoms, natm_type, nxt_ptchg)
 end subroutine set_quick_job
 
 
+! computes atom types 
+subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id) 
+
+  implicit none
+
+  integer, intent(in)  :: natoms
+  integer, intent(in)  :: atomic_numbers(natoms)
+  integer, intent(out) :: natm_type
+  integer, intent(out) :: atm_type_id(natoms)
+  integer :: i, j, iatm
+  logical :: new_atm_type
+
+  ! set atm_type_id to zero
+  call zeroiVec(atm_type_id, natoms)
+  
+  ! go through the atomic numbers, find out atom types and save them in
+  ! atm_type_id vector
+  natm_type = 1
+  do i=1, natoms
+
+    new_atm_type = .true.
+    iatm = atomic_numbers(i)
+    
+    do j=1, natm_type
+      if(atm_type_id(j) .eq. iatm) new_atm_type = .false.
+    enddo
+
+    if(new_atm_type) then
+      atm_type_id(natm_type) = iatm
+      natm_type = natm_type+1
+    endif
+
+  enddo  
+
+  natm_type = natm_type-1   
+
+end subroutine get_atom_types
+
 ! returns quick qm energy
-subroutine get_quick_energy(step, atm_type_id, atomic_numbers, coords, xt_chg_crd, energy, charge)
+subroutine get_quick_energy(step, coords, xt_chg_crd, energy, charge)
 
   implicit none
 
   integer, intent(in)           :: step
-  integer, intent(in)           :: atm_type_id(quick_api%natm_type)
-  integer, intent(in)           :: atomic_numbers(quick_api%natoms)
   double precision, intent(in)  :: coords(3,quick_api%natoms)
   double precision, intent(in)  :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
   double precision, intent(out) :: charge(quick_api%natoms) 
 
   ! assign passed parameter values into quick_api struct
-  quick_api%atm_type_id    = atm_type_id
-  quick_api%atomic_numbers = atomic_numbers 
   quick_api%coords         = coords
   quick_api%xt_chg_crd     = xt_chg_crd
   quick_api%step           = step
@@ -275,14 +325,12 @@ end subroutine get_quick_energy
 
 
 ! calculates and returns energy, forces and point charge gradients
-subroutine get_quick_energy_forces(step, atm_type_id, atomic_numbers, coords, xt_chg_crd, &
+subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
            energy, charge, forces, ptchg_grad)
 
   implicit none
 
   integer, intent(in)          :: step
-  integer, intent(in)          :: atm_type_id(quick_api%natm_type)
-  integer, intent(in)          :: atomic_numbers(quick_api%natoms)
   double precision, intent(in) :: coords(3,quick_api%natoms)
   double precision, intent(in) :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out):: energy
@@ -291,8 +339,6 @@ subroutine get_quick_energy_forces(step, atm_type_id, atomic_numbers, coords, xt
   double precision, intent(out):: ptchg_grad(3,quick_api%nxt_ptchg)
 
   ! assign passed parameter values into quick_api struct
-  quick_api%atm_type_id    = atm_type_id
-  quick_api%atomic_numbers = atomic_numbers
   quick_api%coords         = coords
   quick_api%xt_chg_crd     = xt_chg_crd
   quick_api%step           = step
@@ -315,6 +361,7 @@ subroutine run_quick(self)
   use quick_method_module, only : quick_method
   use quick_files_module
   use quick_calculated_module, only : quick_qm_struct
+  use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -328,17 +375,27 @@ subroutine run_quick(self)
   ! print step into quick output file
   call print_step(self)  
 
+  ! if dft is requested, make sure to delete dft grid variables from previous 
+  ! the md step before proceeding
+  if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
+
   ! set molecular information into quick_molspec
   call set_quick_molspecs(quick_api)
 
   ! start the timer for initial guess
   call cpu_time(timer_begin%TIniGuess)
 
-  ! perform the initial guess
-  if (quick_method%SAD) call getMolSad()  
+  ! we will reuse density matrix for steps above 1. For the 1st step, we should
+  ! read basis file and run SAD guess. 
+  if( self%step .lt. 2 .and. self%reuse_dmx) then
 
-  ! assign basis functions 
-  call getMol()
+    ! perform the initial guess
+    if (quick_method%SAD) call getMolSad()  
+
+    ! assign basis functions 
+    call getMol()
+
+  endif
 
   ! pre-calculate 2 index coefficients and schwarz cutoff criteria
   if(.not.quick_method%opt) then
@@ -364,6 +421,12 @@ subroutine run_quick(self)
 
   ! run optimization
   if (quick_method%opt)  call optimize(failed)
+
+#if defined CUDA || defined CUDA_MPIV
+      if (quick_method%bCUDA) then
+        call gpu_cleanup()
+      endif
+#endif
 
   if (failed) call quick_exit(iOutFile,1)
 
@@ -458,7 +521,6 @@ subroutine set_quick_molspecs(self)
   do i=1, self%natm_type
     quick_molspec%atom_type_sym(i) = symbol(self%atm_type_id(i))
   enddo
-
 
   ! save the coordinates and atomic numbers
   do i=1, self%natoms

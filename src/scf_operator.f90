@@ -303,7 +303,7 @@ subroutine get_xc
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
-   implicit double precision(a-h,o-z)
+   implicit none
 
 #ifdef MPIV
    include "mpif.h"
@@ -319,13 +319,18 @@ subroutine get_xc
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info   
+   integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ierror 
+   double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, &
+   dfdgab2, dfdr, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+   gax, gay, gaz, gbx, gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
+   sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+   tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc
+
 #ifdef MPIV
+   integer :: i, ii, irad_end, irad_init, jj
+   double precision :: Eelxcslave
    double precision, allocatable:: temp2d(:,:)
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
-   integer :: ierror
-   double precision :: Eelxc, Eelxcslave
+
    allocate(temp2d(nbasis,nbasis))
 
 !  Braodcast libxc information to slaves
@@ -337,11 +342,13 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
+   Eelxc=0.0d0
+
 #ifdef MPIV
 !  Set the values of slave operators to zero
    if (.not.master) then
       call zeroMatrix(quick_qm_struct%o, nbasis)
-      Eelxc=0.0d0
+!      Eelxc=0.0d0
    endif
    call zeroMatrix(temp2d, nbasis)
 #endif

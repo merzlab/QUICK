@@ -164,7 +164,7 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
         $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
         $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
-        $(objfolder)/dft.o $(objfolder)/sedftoperator.o $(objfolder)/dipole.o \
+        $(objfolder)/dft.o $(objfolder)/sedftoperator.o \
         $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
         $(objfolder)/udftoperator.o $(objfolder)/usedftoperator.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
@@ -172,6 +172,23 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
         $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
 
+SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
+	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
+	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
+	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
+	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
+	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \
+	$(objfolder)/PrtMsg.o $(objfolder)/PrtTim.o $(objfolder)/PrtWrn.o $(objfolder)/pteval.o \
+	$(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o $(objfolder)/rdnml.o \
+	$(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
+	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/transpose.o $(objfolder)/tridi.o \
+	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
+	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
+	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
 
 all: quick quick.cuda
 #************************************************************************
@@ -260,53 +277,53 @@ cpconfig.MPI:
 # 
 #**********************************************************************
 quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(libfolder)/quicksublib.a $(libfolder)/blas.a \
+	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(SUBS) $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
 quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
 	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
-	$(libfolder)/quicksublib.a $(cusolverobj) $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
+	$(SUBS) $(cusolverobj) $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
-	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicksublib.a $(cusolverobj) $(cublasobj) $(CFLAGS) 
+	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
 
 quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(libfolder)/quicksublib.a $(libfolder)/blas.a \
+	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(SUBS) $(libfolder)/blas.a \
 	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
 quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) blas $(cusolverobj) $(cublasobj)
 	$(FC) -o $(exefolder)/quick.cuda.MPI  $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
-	$(libfolder)/quicksublib.a $(cusolverobj) $(cublasobj) $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
+	$(SUBS) $(cusolverobj) $(cublasobj) $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
 
-quick_lib:$(OBJ) ambermod amber_interface.o
+#quick_lib:$(OBJ) ambermod amber_interface.o
 
 quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas
 	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
 	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
-	$(libfolder)/quicksublib.a $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
 
 quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
-	ar -r $(libfolder)/quickculib.a $(objfolder)/*.o
-	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quickculib.a \
-	$(libfolder)/quicksublib.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
+	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
+	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
+	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
 
 quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas
-	ar -r $(libfolder)/quickmpilib.a $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quickmpilib.a \
-	$(libfolder)/quicksublib.a $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS)
+	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
+	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
+	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS)
 
 quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) blas $(cusolverobj) $(cublasobj)
-	ar -r $(libfolder)/quickcumpilib.a $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quickcumpilib.a \
-	$(libfolder)/blas.a $(libfolder)/quicksublib.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
+	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
+	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
+	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
 
-ambermod:
-	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
-	cp ../../../AmberTools/src/sqm/qmmm_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_vsolv_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_struct_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_nml_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_module.o .
+#ambermod:
+#	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
+#	cp ../../../AmberTools/src/sqm/qmmm_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_vsolv_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_struct_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_nml_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_module.o .
 
 		
 #************************************************************************

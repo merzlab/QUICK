@@ -206,6 +206,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
          ! MFCC
 
          !   print*,nshell,nbasis,nprim,quick_basis%kshell(iattype(i)),kbasis(iattype(i)),kcontract(iattype(i))
+        
          nshell = nshell + quick_basis%kshell(quick_molspec%iattype(i))
          nbasis = nbasis + kbasis(quick_molspec%iattype(i))
          nprim = nprim + kcontract(quick_molspec%iattype(i))
