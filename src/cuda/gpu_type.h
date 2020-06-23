@@ -649,7 +649,8 @@ void cuda_buffer_type<T> :: Deallocate()
         }
         
         if (_hostData != NULL) {
-            free(_hostData);
+//            free(_hostData);
+            delete [] _hostData;
             gpu->totalCPUMemory -= _length*_length2*sizeof(T);
         }
     }else{
@@ -718,7 +719,8 @@ void cuda_buffer_type<T> :: DeleteCPU()
     PRINTDEBUG(">>BEGIN TO DELETE CPU")
     
     if (_hostData != NULL) {
-        free(_hostData);
+//        free(_hostData);
+        delete [] _hostData;
         _hostData = NULL;
 #ifdef DEBUG
         gpu->totalCPUMemory -= _length*_length2*sizeof(T);
