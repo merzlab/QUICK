@@ -28,15 +28,15 @@ include $(MAKEIN)
 #Therefore, we use the following if condition to handle this. 
 
 ifeq "$(FC)" "ifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
+  FOR = $(FC) -c -I. -O0 -g -module $(objfolder)
 else ifeq "$(FC)" "mpiifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
+  FOR = $(FC) -c -I. -O0 -g -module $(objfolder)
 else 
-  FOR=$(FC) -c -I. -I$(objfolder) -J$(objfolder)
+  FOR=$(FC) -c -I. -O0 -g -I$(objfolder) -J$(objfolder)
 endif
 
-CCC = $(CC) -c -I. -O2 
-CUDACC = $(CUDAC) -c -I. -O2 
+CCC = $(CC) -c -I. -O0 -g 
+CUDACC = $(CUDAC) -c -I. -O0
  
 #----------------------
 # quick modules and object files

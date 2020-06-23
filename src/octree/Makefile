@@ -3,6 +3,10 @@
 MAKEIN = ../../make.in
 include $(MAKEIN)
 
+#CXX_FLAGS= -O0 -g -check-pointers=rw -debug all
+CXX_FLAGS= -O0 -g -debug all
+
+
 objfolder = ../../obj
 libxcfolder = ../libxc
 #************************************************************************
@@ -15,7 +19,7 @@ libxcfolder = ../libxc
 CXXOBJ=$(objfolder)/octree.o $(objfolder)/grid_packer.o
 
 $(CXXOBJ):$(objfolder)/%.o:%.cpp
-	$(CXX) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 all: $(CXXOBJ)	
 #************************************************************************
