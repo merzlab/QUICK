@@ -26,13 +26,13 @@ module quick_files_module
 
     implicit none
 
-    character(len=80) :: inFileName
-    character(len=80) :: outFileName
-    character(len=80) :: dmxFileName
-    character(len=80) :: rstFileName
-    character(len=80) :: CPHFFileName
-    character(len=80) :: dataFileName
-    character(len=80) :: intFileName
+    character(len=80) :: inFileName   = ''
+    character(len=80) :: outFileName  = ''
+    character(len=80) :: dmxFileName  = ''
+    character(len=80) :: rstFileName  = ''
+    character(len=80) :: CPHFFileName = ''
+    character(len=80) :: dataFileName = ''
+    character(len=80) :: intFileName  = ''
     
     
     ! Basis set and directory
@@ -80,7 +80,7 @@ module quick_files_module
         integer :: i
         
         ierr=1
-        
+
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
         call getenv("QUICK_BASIS",basisdir)
@@ -118,7 +118,7 @@ module quick_files_module
         intFileName=inFileName(1:i-1)//'.int'
         
 
-        write(*,*) inFileName, outFileName
+!        write(*,*) inFileName, outFileName
 
         ierr=0
         return

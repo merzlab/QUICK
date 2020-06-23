@@ -27,7 +27,12 @@ subroutine getmolsad()
 
    ! first save some important value
    quick_method_save=quick_method
-   quick_molspec_save=quick_molspec
+!   quick_molspec_save=quick_molspec
+   ! quick_molspec_type has pointers which may lead to memory leaks
+   ! therefore, assign individual variable values
+   quick_molspec_save%imult = quick_molspec%imult
+   quick_molspec_save%nelec = quick_molspec%nelec
+
    natomsaved=natom
    xyzsaved=xyz
    MPIsaved=bMPI
@@ -167,9 +172,14 @@ subroutine getmolsad()
    xyz=xyzsaved
 
    quick_method=quick_method_save
-   quick_molspec=quick_molspec_save
+!   quick_molspec=quick_molspec_save
+   quick_molspec%imult = quick_molspec_save%imult
+   quick_molspec%nelec = quick_molspec_save%nelec
+
    bMPI=MPIsaved
+
    return
+
 end subroutine getmolsad
 
 
