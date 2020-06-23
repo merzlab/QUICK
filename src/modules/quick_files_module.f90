@@ -149,7 +149,7 @@ module quick_files_module
 
 !        call EffChar(basisdir,i,j,k1,k2)
         
-        call rdword(ecpdir,k3,k4) !AG 03/05/2007
+!        call rdword(ecpdir,k3,k4) !AG 03/05/2007
 !        call EffChar(ecpdir,i,j,k3,k4)
               
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
