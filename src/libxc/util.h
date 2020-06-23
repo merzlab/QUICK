@@ -92,8 +92,12 @@ __device__ double xc_dilogarithm(const double x);
 #endif
 
 /* we define this function here, so it can be properly inlined by all compilers */
+#ifndef DEVICE
 static inline double
 xc_cheb_eval(const double x, const double *cs, const int N)
+#else
+__device__ static inline  double xc_cheb_eval(const double x, const double *cs, const int N)
+#endif
 {
   int i;
   double twox, b0, b1, b2;

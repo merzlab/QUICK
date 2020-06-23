@@ -19,7 +19,7 @@ PLAT = _LINUX
 #  desired load options for your machine.
 #
 FORTRAN  = $(FC)
-OPTS     = -O3
+OPTS     = -O0
 DRVOPTS  = $(OPTS)
 NOOPT    =
 LOADER   = $(FC)
