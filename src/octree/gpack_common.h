@@ -6,7 +6,7 @@
 static const int MAX_POINTS_PER_CLUSTER = 256;
 static const int OCTREE_DEPTH = 64;
 
-struct grd_pck_strct{
+/*struct grd_pck_strct{
 
         double *gridx; //gridx_in, gridy_in, gridz_in: xyz coordinates of grid points
         double *gridy;
@@ -47,8 +47,9 @@ struct grd_pck_strct{
 	double time_octree; //Time for running octree algorithm
         double time_bfpf_prescreen; //Time for prescreening basis and primitive functions
 };
+*/
 
-void pack_grid_pts(grd_pck_strct *gps);
-void get_pruned_grid_ssw(grd_pck_strct *gps_in, grd_pck_strct *gps_out);
+void pack_grid_pts();
+//void get_pruned_grid_ssw(grd_pck_strct *gps_in, grd_pck_strct *gps_out);
 //extern "C" void gpu_get_octree_info(double *gridx, double *gridy, double *gridz, unsigned char *gpweight, unsigned char *cfweight, unsigned char *pfweight, int count);
 extern "C" void gpu_get_octree_info_new_imp(double *gridx, double *gridy, double *gridz, double *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count);
