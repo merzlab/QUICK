@@ -216,11 +216,11 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
 
     //kwk
 
-	printf("started diag copy\n");    
+	//printf("started diag copy\n");    
         cudaStat1 = cudaMemcpy(vec, devPtr_o, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
         cudaStat2 = cudaMemcpy(E, devPtr_E, sizeof(double)*dim, cudaMemcpyDeviceToHost);
         assert(cudaSuccess == cudaStat1 && cudaSuccess == cudaStat2);
-	printf("finished diag copy\n");	
+	//printf("finished diag copy\n");	
 
 
     //stat1=cublasGetMatrix(dim, dim, sizeof(vec[0]), devPtr_o, dim, vec, dim);
@@ -250,7 +250,7 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
 	printf("%d %f\n", i, o[i]);
       }    
     
-
+    */
 
 
     if (devPtr_o) cudaFree(devPtr_o);
@@ -265,5 +265,5 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
     if (cublasH) cublasDestroy(cublasH);
 
     //    cudaDeviceReset();
-    */    
+        
 }
