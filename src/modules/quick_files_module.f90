@@ -26,27 +26,27 @@ module quick_files_module
 
     implicit none
 
-    character(len=80) :: inFileName   = ''
-    character(len=80) :: outFileName  = ''
-    character(len=80) :: dmxFileName  = ''
-    character(len=80) :: rstFileName  = ''
-    character(len=80) :: CPHFFileName = ''
-    character(len=80) :: dataFileName = ''
-    character(len=80) :: intFileName  = ''
+    character(len=80) :: inFileName     = ''
+    character(len=80) :: outFileName    = ''
+    character(len=80) :: dmxFileName    = ''
+    character(len=80) :: rstFileName    = ''
+    character(len=80) :: CPHFFileName   = ''
+    character(len=80) :: dataFileName   = ''
+    character(len=80) :: intFileName    = ''
     
     
     ! Basis set and directory
-    character(len=80) :: basisDir
-    character(len=120) :: basisFileName
-    character(len=80) :: basisSetName    
+    character(len=80) :: basisDir       = ''
+    character(len=120) :: basisFileName = ''
+    character(len=80) :: basisSetName   = '' 
     
     ! ecp basis set and directory
-    character(len=80) :: ECPDir
-    character(len=80) :: ECPFileName
+    character(len=80) :: ECPDir         = ''
+    character(len=80) :: ECPFileName    = ''
     
     ! custom basis set and directory
-    character(len=80) :: basisCustName
-    character(len=80) :: PDBFileName
+    character(len=80) :: basisCustName  = ''
+    character(len=80) :: PDBFileName    = ''
     
     integer :: inFile = 15            ! input file
     integer :: iOutFile = 16          ! output file
@@ -197,7 +197,7 @@ module quick_files_module
 
             ! Check if basis file exists. Otherwise, quit program.
             inquire(file=trim(basisfilename),exist=fexist)
-            write(*,*) trim(basisfilename)
+            
             if (.not.fexist) then
                 call PrtErr(iOutFile,'Requested basis set does not exist or basis_link file not properly configured.')
                 call PrtMsg(iOutFile,'Fix the basis_link file or add your basis set as a new entry. Check the user manual.')

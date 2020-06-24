@@ -38,6 +38,8 @@ subroutine scf(failed)
    ! if not direct SCF, generate 2e int file
    if (quick_method%nodirect) call aoint
 
+   write(*,*) "Calling diis.."
+
    if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf)       ! normal scf
    if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
 
@@ -54,7 +56,10 @@ end subroutine scf
 !-------------------------------------------------------
 ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
 subroutine electdiis(jscf)
+
    use allmod
+   use quick_scf_module
+
    implicit none
 
 #ifdef MPIV
@@ -75,16 +80,20 @@ subroutine electdiis(jscf)
    integer :: I,J,K,L,IERROR
 
    double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-   double precision :: PRMS,PCHANGE, V2(3,nbasis), tmp
-   double precision :: oneElecO(nbasis,nbasis)
-   double precision :: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
-   double precision :: BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
-   double precision :: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
-   double precision :: W(quick_method%maxdiisscf+1)
-   double precision :: COEFF(quick_method%maxdiisscf+1)
-   double precision :: RHS(quick_method%maxdiisscf+1)
-   double precision :: allerror(quick_method%maxdiisscf,nbasis,nbasis)
-   double precision :: alloperator(quick_method%maxdiisscf,nbasis,nbasis)
+   double precision :: PRMS,PCHANGE, tmp
+
+   !double precision :: V2(3,nbasis)
+   !double precision :: oneElecO(nbasis,nbasis)
+   !double precision :: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
+   !double precision :: BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
+   !double precision :: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
+   !double precision :: W(quick_method%maxdiisscf+1)
+   !double precision :: COEFF(quick_method%maxdiisscf+1)
+   !double precision :: RHS(quick_method%maxdiisscf+1)
+   !double precision :: allerror(quick_method%maxdiisscf,nbasis,nbasis)
+   !double precision :: alloperator(quick_method%maxdiisscf,nbasis,nbasis)
+   
+   
 
    !---------------------------------------------------------------------------
    ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -124,6 +133,9 @@ subroutine electdiis(jscf)
    ! 8) Diagonalize the operator matrix to form a new density matrix.
    ! As in scf.F, each step wil be reviewed as we pass through the code.
    !---------------------------------------------------------------------------
+
+   call allocate_quick_scf()
+
    if(master) then
       write(ioutfile,'(40x," SCF ENERGY")')
       if (quick_method%printEnergy) then
@@ -681,6 +693,8 @@ subroutine electdiis(jscf)
       endif
    endif
 #endif
+
+   call deallocate_quick_scf()
 
    return
 end subroutine electdiis
