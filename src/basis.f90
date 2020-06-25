@@ -29,6 +29,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    include 'mpif.h'
 #endif
 
+   ! initialize the arra
+
    ! =============MPI/ MASTER========================
    masterwork: if (master) then
       ! =============END MPI/MASTER=====================
@@ -260,55 +262,43 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    ! Allocate the arrays now that we know the sizes
 
    if(quick_method%ffunxiao)then
-      if(.not. allocated(Yxiao))        allocate(Yxiao(4096,56,56))
+      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,56,56))
       if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(56,56,0:10))
       if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
       if(.not. allocated(attraxiao))    allocate(attraxiao(56,56,0:6))
       if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,56,56,0:5))
    else
-      if(.not. allocated(Yxiao))        allocate(Yxiao(4096,120,120))
+      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,120,120))
       if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(120,120,0:14))
       if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,120,120))
       if(.not. allocated(attraxiao))    allocate(attraxiao(120,120,0:8))
       if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,120,120,0:7))
    endif
 
-   ! allocate(Yxiao(1296,35,35))
-   ! allocate(Yxiaotemp(35,35,0:8))
-   ! allocate(Yxiaoprim(6,6,35,35))
-   !  allocate(Yxiao(81,10,10))
-   !  allocate(Yxiaotemp(10,10,0:4))
    if(.not. allocated(Ycutoff)) allocate(Ycutoff(nshell,nshell))
    if(.not. allocated(cutmatrix)) allocate(cutmatrix(nshell,nshell))
-!   allocate(allerror(quick_method%maxdiisscf,nbasis,nbasis))
-!   allocate(alloperator(quick_method%maxdiisscf,nbasis,nbasis))
-   !  allocate(debug1(nbasis,nbasis))
-   !  allocate(debug2(nbasis,nbasis))
-   ! allocate(CPMEM(10,10,0:4))
-   ! allocate(MEM(10,10,0:4))
-!   allocate(kstart(nshell))
-!   allocate(quick_basis%katom(nshell))
-!   allocate(ktype(nshell))
-!   allocate(kprim(nshell))
-!   allocate(Qnumber(nshell))
-!   allocate(Qstart(nshell))
-!   allocate(quick_basis%Qfinal(nshell))
-!   allocate(Qsbasis(nshell,0:3))
-!   allocate(Qfbasis(nshell,0:3))
-!   allocate(quick_basis%ksumtype(nshell+1))
-!   allocate(KLMN(3,nbasis))
-!   allocate(cons(nbasis))
-!   allocate(gccoeff(6,nbasis))
-!   allocate(gcexpo(6,nbasis))
-!   allocate(gcexpomin(nshell))
-   
    if(.not. allocated(aex)) allocate(aex(nprim ))
    if(.not. allocated(gcs)) allocate(gcs(nprim ))
    if(.not. allocated(gcp)) allocate(gcp(nprim ))
    if(.not. allocated(gcd)) allocate(gcd(nprim ))
    if(.not. allocated(gcf)) allocate(gcf(nprim ))
    if(.not. allocated(gcg)) allocate(gcg(nprim ))
-   
+
+   ! initialize the array values to zero
+   Yxiao        = 0.0d0
+   Yxiaotemp    = 0.0d0
+   Yxiaoprim    = 0.0d0
+   attraxiao    = 0.0d0
+   attraxiaoopt = 0.0d0
+   Ycutoff      = 0.0d0
+   cutmatrix    = 0.0d0
+   aex          = 0.0d0
+   gcs          = 0.0d0
+   gcp          = 0.0d0
+   gcd          = 0.0d0
+   gcf          = 0.0d0
+   gcg          = 0.0d0
+
    if (quick_method%ecp) then
       nbf12=nbasis*(nbasis+1)/2
       if(.not. allocated(kmin)) allocate(kmin(nshell))
@@ -318,7 +308,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
       if(.not. allocated(kvett)) allocate(kvett(nbf12))
       if(.not. allocated(gout)) allocate(gout(25*25))
       if(.not. allocated(ktypecp)) allocate(ktypecp(nshell))
-      !
       if(.not. allocated(zlm)) allocate(zlm(lmxdim))
       if(.not. allocated(flmtx)) allocate(flmtx(len_fac,3))
       if(.not. allocated(lf)) allocate(lf(lfdim))
@@ -333,38 +322,51 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
       if(.not. allocated(dfaci)) allocate(dfaci(len_dfac))
       if(.not. allocated(factorial)) allocate(factorial(len_fac))
       if(.not. allocated(fprod)) allocate(fprod(lfdim,lfdim))
-      !
+     
+      ! initialize the array values to zero 
+      kmin      = 0.0d0
+      kmax      = 0.0d0
+      eta       = 0.0d0
+      ecp_int   = 0.0d0
+      kvett     = 0.0d0
+      gout      = 0.0d0
+      ktypecp   = 0.0d0
+      zlm       = 0.0d0
+      flmtx     = 0.0d0
+      lf        = 0.0d0
+      lmf       = 0.0d0
+      lmx       = 0.0d0
+      lmy       = 0.0d0
+      lmz       = 0.0d0
+      mc        = 0.0d0
+      mr        = 0.0d0
+      dfac      = 0.0d0
+      dfaci     = 0.0d0
+      factorial = 0.0d0
+      fprod     = 0.0d0
+
       call vett
    end if
 
-   !
    ! Support for old memory model, to be deleted eventually
 
-   !allocate(aexp(maxcontract,nbasis))
-   !allocate(dcoeff(maxcontract,nbasis))
-   !allocate(gauss(nbasis))
-   !do i=1,nbasis
-   !    allocate(gauss(i)%aexp(maxcontract))
-   !    allocate(gauss(i)%dcoeff(maxcontract))
-   !enddo
    if(.not. allocated(itype)) allocate(itype(3,nbasis))
-!   allocate(quick_basis%ncenter(nbasis))
    if(.not. allocated(ncontract)) allocate(ncontract(nbasis))
    
+   ! initialize the array values to zero
+   itype     = 0
+   ncontract = 0
    
    call alloc(quick_basis,natom,nshell,nbasis)
    
    do ixiao=1,nshell
       quick_basis%gcexpomin(ixiao)=99999.0d0
    enddo
-   itype = 0
    quick_basis%ncenter = 0
-   ncontract = 0
 
    ! various arrays that depend on the # of basis functions
 
    call allocate_quick_gridpoints(nbasis)
-!   allocate(V2(3,nbasis))
 
    ! xiao He may reconsider this
    call alloc(quick_scratch,nbasis)
@@ -416,9 +418,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%Qsbasis(jshell,0)=0
                            quick_basis%Qfbasis(jshell,0)=0
                            quick_basis%ksumtype(jshell)=Ninitial+1
-                           !Madu
-                           !write(*,*) "i, atm,shell,jshell,ksumtype ",i, atom,&
-                           !shell,jshell,quick_basis%ksumtype(jshell)                     
 
                            Ninitial=Ninitial+1
                            quick_basis%cons(Ninitial)=1.0d0
@@ -495,18 +494,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%Qfbasis(jshell,1)=3
                            quick_basis%ksumtype(jshell)=Ninitial+1
 
-                           !Madu
-                           !write(*,*) "i, atm,shell,jshell,ksumtype ",i,atom,&
-                           !shell,jshell,quick_basis%ksumtype(jshell)
-
-                           !                 do jjj=1,3
-                           !                   Ninitial=Ninitial+1
-                           !                   quick_basis%cons(Ninitial)=1.0d0
-                           !                   quick_basis%KLMN(JJJ,Ninitial)=1
-                           !                 enddo
                            do k=1,iprim
                               read(ibasisfile,'(A80)',iostat=iofile) line
-                              !                 read(line,*) aex(jbasis),gcs(jbasis),gcp(jbasis)
                               read(line,*) AA(k),BB(k),CC(k)
                               aex(jbasis)=AA(k)
                               gcs(jbasis)=BB(k)
@@ -556,7 +545,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%ksumtype(jshell)=Ninitial+1
                            do k=1,iprim
                               read(ibasisfile,'(A80)',iostat=iofile) line
-                              !                   read(line,*) aex(jbasis),gcd(jbasis)
                               read(line,*) AA(k),BB(k)
                               aex(jbasis)=AA(k)
                               gcd(jbasis)=BB(k)
@@ -626,7 +614,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            quick_basis%ksumtype(jshell)=Ninitial+1
                            do k=1,iprim
                               read(ibasisfile,'(A80)',iostat=iofile) line
-                              !                   read(line,*) aex(jbasis),gcf(jbasis)
                               read(line,*) AA(k),BB(k)
                               aex(jbasis)=AA(k)
                               gcf(jbasis)=BB(k)
@@ -908,18 +895,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
             do k=quick_basis%kstart(i),(quick_basis%kstart(i)+quick_basis%kprim(i))-1
                aexp(ll,l) =  aex(k)
                if (quick_basis%ktype(i) == 1) then
-                  dcoeff(ll,l) = gcs(k)
-
-!-------------------Madu--------------------------
-!   write (ioutfile,'(/," Madu: readInput.f90 variables")')
-!   write (ioutfile,'(A6,2x,I5)') "ll: ",ll
-!   write (ioutfile,'(A6,2x,I5)') "l: ",l
-!
-!   write (ioutfile,'(A8,2x,F20.10)') "gcs(k):",gcs(k)
-!-------------------Madu--------------------------
-
+                     dcoeff(ll,l) = gcs(k)
                   elseif (quick_basis%ktype(i) == 3) then
-                  dcoeff(ll,l) = gcp(k)
+                     dcoeff(ll,l) = gcp(k)
                   elseif (quick_basis%ktype(i) == 4) then
                   if (j==1) then
                      dcoeff(ll,l) = gcs(k)
