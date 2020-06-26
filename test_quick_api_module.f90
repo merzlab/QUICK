@@ -71,9 +71,9 @@ contains
 
     implicit none
 
-    integer, intent(in)    :: frame, natoms, nxt_charges
+    integer, intent(in)             :: frame, natoms, nxt_charges
     double precision, intent(inout) :: coord(3, natoms)
-    double precision, intent(inout) :: xc_coord(4, nxt_charges)
+    double precision, intent(out)   :: xc_coord(4, nxt_charges)
     integer :: i, j, k
 
     k=natoms*3*(frame-1) + 1
@@ -84,13 +84,15 @@ contains
       enddo
     enddo
 
-    k=nxt_charges*4*(frame-1) + 1
-    do i=1,nxt_charges
-      do j=1,4
-        xc_coord(j,i) = all_extchg(k)
-        k=k+1
+    if(nxt_charges>0) then
+      k=nxt_charges*4*(frame-1) + 1
+      do i=1,nxt_charges
+        do j=1,4
+          xc_coord(j,i) = all_extchg(k)
+          k=k+1
+        enddo
       enddo
-    enddo
+    endif
 
   end subroutine load_test_data
 
@@ -185,15 +187,17 @@ contains
     enddo
 
     ! print point charge gradients
-    write(*,*) ""
-    write(*,*) "PRINTING POINT CHARGE GRADIENTS"
-    write(*,*) "-------------------------------"
-    write(*,*) ""
-    write(*, '(A14, 3x, A6, 2x, A6, 2x, A6)') "CHARGE NUMBER","GRAD-X","GRAD-Y","GRAD-Z"
+    if(nxt_charges>0) then
+      write(*,*) ""
+      write(*,*) "PRINTING POINT CHARGE GRADIENTS"
+      write(*,*) "-------------------------------"
+      write(*,*) ""
+      write(*, '(A14, 3x, A6, 2x, A6, 2x, A6)') "CHARGE NUMBER","GRAD-X","GRAD-Y","GRAD-Z"
 
-    do i=1,nxt_charges
-      write(*,'(6x, I5, 2x, F14.10, 2x, F14.10, 2x, F14.10)') i, ptchg_grad(1,i), ptchg_grad(2,i), ptchg_grad(3,i)
-    enddo
+      do i=1,nxt_charges
+        write(*,'(6x, I5, 2x, F14.10, 2x, F14.10, 2x, F14.10)') i, ptchg_grad(1,i), ptchg_grad(2,i), ptchg_grad(3,i)
+      enddo
+    endif
 
     write(*,*) ""
 

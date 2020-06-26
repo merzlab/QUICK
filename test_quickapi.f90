@@ -35,18 +35,20 @@
 
     ! atom type ids, atomic numbers, atomic coordinates, point charges and
     !  coordinates
-    integer, dimension(:), pointer            :: atomic_numbers => null()
-    double precision, dimension(:,:), pointer :: coord          => null()
-    double precision, dimension(:,:), pointer :: xc_coord       => null()
+    integer, allocatable, dimension(:)            :: atomic_numbers 
+    double precision, allocatable, dimension(:,:) :: coord          
+    double precision, allocatable, dimension(:,:) :: xc_coord       
 
     ! name of the quick template input file
     character(len=80) :: fname
 
     ! total qm energy, mulliken charges, forces and point charge gradients
     double precision :: totEne
-    double precision, dimension(:), pointer   :: charge         => null()
-    double precision, dimension(:,:), pointer :: forces         => null()
-    double precision, dimension(:,:), pointer :: ptchgGrad      => null()
+    double precision, allocatable, dimension(:)   :: charge         
+    double precision, allocatable, dimension(:,:) :: forces         
+    double precision, allocatable, dimension(:,:) :: ptchgGrad      
+
+    ierr = 0
 
 #ifdef QUAPI_MPIV
     ! essential mpi information 
@@ -73,12 +75,12 @@
     frames = 5
 
     ! alocate memory for input and output arrays
-    if ( .not. associated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
-    if ( .not. associated(coord))          allocate(coord(3,natoms), stat=ierr)
-    if ( .not. associated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
-    if ( .not. associated(charge))         allocate(charge(natoms), stat=ierr)
-    if ( .not. associated(forces))         allocate(forces(3,natoms), stat=ierr)
-    if ( .not. associated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
+    if ( .not. allocated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
+    if ( .not. allocated(coord))          allocate(coord(3,natoms), stat=ierr)
+    if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
+    if ( .not. allocated(charge))         allocate(charge(natoms), stat=ierr)
+    if ( .not. allocated(forces))         allocate(forces(3,natoms), stat=ierr)
+    if ( .not. allocated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
 
     ! fill up memory with test values, coordinates and external charges will be loded inside 
     ! the loop below.
@@ -89,9 +91,9 @@
     atomic_numbers(3)  = 1
 
     ! set result vectors and matrices to zero
-    call zeroVec(charge, natoms)
-    call zeroMatrix2(forces, natoms, 3)
-    call zeroMatrix2(ptchgGrad, nxt_charges, 3)
+    charge    = 0.0d0
+    forces    = 0.0d0
+    ptchgGrad = 0.0d0
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
@@ -130,12 +132,12 @@
     call deleteQuickJob()
 
     ! deallocate memory
-    if ( associated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
-    if ( associated(coord))          deallocate(coord, stat=ierr)
-    if ( associated(xc_coord))       deallocate(xc_coord, stat=ierr)
-    if ( associated(charge))         deallocate(charge, stat=ierr)
-    if ( associated(forces))         deallocate(forces, stat=ierr)
-    if ( associated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
+    if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
+    if ( allocated(coord))          deallocate(coord, stat=ierr)
+    if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
+    if ( allocated(charge))         deallocate(charge, stat=ierr)
+    if ( allocated(forces))         deallocate(forces, stat=ierr)
+    if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
 
   end program test_quick_api
 
