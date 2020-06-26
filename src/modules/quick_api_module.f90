@@ -41,17 +41,17 @@ module quick_api_module
     integer :: nxt_ptchg = 0
 
     ! atom type/atomic number of each atom
-    integer, dimension(:), pointer :: atm_type_id => null()
+    integer, allocatable, dimension(:) :: atm_type_id
 
     ! atomic numbers of atoms
-    integer, dimension(:), pointer :: atomic_numbers => null()
+    integer, allocatable, dimension(:) :: atomic_numbers
 
     ! xyz coordinates of atoms, size is 3*natoms
-    double precision, dimension(:,:), pointer :: coords => null()
+    double precision, allocatable, dimension(:,:) :: coords
 
     ! charge and the coordinates of external point charges
     ! size is 4*nxt_ptchg, where first element of a row holds the charge
-    double precision, dimension(:,:), pointer :: xt_chg_crd => null()
+    double precision, allocatable, dimension(:,:) :: xt_chg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
     ! default length is 200 characters
@@ -74,13 +74,13 @@ module quick_api_module
     logical :: isForce = .false.    
 
     ! mulliken charges
-    double precision, dimension(:), pointer   :: charge => null()
+    double precision, allocatable, dimension(:)   :: charge
 
     ! forces
-    double precision, dimension(:,:), pointer :: force => null()
+    double precision, allocatable, dimension(:,:) :: force
 
     ! point charge gradients
-    double precision, dimension(:,:), pointer :: ptchg_grad => null()
+    double precision, allocatable, dimension(:,:) :: ptchg_grad
 
   end type quick_api_type
 
@@ -126,14 +126,17 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
   ! get atom types and number of types
   call get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 
-  if ( .not. associated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
-  if ( .not. associated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
-  if ( .not. associated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
-  if ( .not. associated(self%xt_chg_crd))     allocate(self%xt_chg_crd(4,nxt_ptchg), stat=ierr)
+  if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
+  if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
+  if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
+  if ( .not. allocated(self%charge))         allocate(self%charge(natoms), stat=ierr)
+  if ( .not. allocated(self%force))          allocate(self%force(3,natoms), stat=ierr)
 
-  if ( .not. associated(self%charge))         allocate(self%charge(natoms), stat=ierr)
-  if ( .not. associated(self%force))          allocate(self%force(3,natoms), stat=ierr)
-  if ( .not. associated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
+  ! allocate memory only if external charges exist
+  if(nxt_ptchg>0) then
+    if ( .not. allocated(self%xt_chg_crd))     allocate(self%xt_chg_crd(4,nxt_ptchg), stat=ierr)
+    if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
+  endif
 
   ! save values in the quick_api struct
   self%natoms         = natoms
@@ -146,9 +149,10 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
   enddo
 
   ! set result vectors and matrices to zero
-  call zeroVec(self%charge, natoms)
-  call zeroMatrix2(self%force, natoms, 3)
-  call zeroMatrix2(self%ptchg_grad, nxt_ptchg, 3)
+  self%charge = 0.0d0
+  self%force  = 0.0d0
+
+  if(nxt_ptchg>0) self%ptchg_grad = 0.0d0
 
 end subroutine new_quick_api_type
 
@@ -214,7 +218,7 @@ subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
     call PrtDate(iOutFile,'TASK STARTS ON:')
     call print_quick_io_file(iOutFile,ierr)
 
-#ifdef MPIV
+#ifdef MPIV 
     ! check the mpisize and turn on mpi mode
     call check_quick_mpi(iOutFile,ierr)
 
@@ -330,18 +334,21 @@ subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
 
   implicit none
 
-  integer, intent(in)          :: step
-  double precision, intent(in) :: coords(3,quick_api%natoms)
-  double precision, intent(in) :: xt_chg_crd(4,quick_api%nxt_ptchg)
-  double precision, intent(out):: energy
-  double precision, intent(out):: charge(quick_api%natoms)
-  double precision, intent(out):: forces(3,quick_api%natoms)
-  double precision, intent(out):: ptchg_grad(3,quick_api%nxt_ptchg)
+  integer, intent(in)             :: step
+  double precision, intent(in)    :: coords(3,quick_api%natoms)
+  double precision, intent(in)    :: xt_chg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(out)   :: energy
+  double precision, intent(out)   :: charge(quick_api%natoms)
+  double precision, intent(out)   :: forces(3,quick_api%natoms)
+  double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
 
   ! assign passed parameter values into quick_api struct
-  quick_api%coords         = coords
-  quick_api%xt_chg_crd     = xt_chg_crd
   quick_api%step           = step
+  quick_api%coords         = coords
+  if(quick_api%nxt_ptchg>0) then 
+    quick_api%xt_chg_crd = xt_chg_crd
+    quick_api%ptchg_grad = ptchg_grad
+  endif
 
   call run_quick(quick_api)
 
@@ -349,7 +356,8 @@ subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
   energy     = quick_api%tot_ene
   charge     = quick_api%charge  
   forces     = quick_api%force
-  ptchg_grad = quick_api%ptchg_grad
+
+  if(quick_api%nxt_ptchg>0) ptchg_grad = quick_api%ptchg_grad
 
 end subroutine get_quick_energy_forces
 
@@ -413,6 +421,7 @@ subroutine run_quick(self)
 
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
+    write(*,*) "Calling get energy"
     call getEnergy(failed)
   endif
   
@@ -454,7 +463,7 @@ subroutine run_quick(self)
       enddo
     enddo
 
-    if (quick_method%extCharges) then
+    if (quick_method%extCharges .and. self%nxt_ptchg>0) then
       k=1
       do i=1,self%nxt_ptchg
         do j=1,3
@@ -533,12 +542,14 @@ subroutine set_quick_molspecs(self)
   quick_molspec%xyz => xyz
 
   ! save the external point charges and coordinates
-  do i=1, self%nxt_ptchg
-    quick_molspec%extchg(i)     = self%xt_chg_crd(1,i)
-    do j=1,3
-      quick_molspec%extxyz(j,i) = self%xt_chg_crd(j+1,i) * A_TO_BOHRS
-    enddo
-  enddo  
+  if(self%nxt_ptchg>0) then
+    do i=1, self%nxt_ptchg
+      quick_molspec%extchg(i)     = self%xt_chg_crd(1,i)
+      do j=1,3
+        quick_molspec%extxyz(j,i) = self%xt_chg_crd(j+1,i) * A_TO_BOHRS
+      enddo
+    enddo  
+  endif
 
 end subroutine set_quick_molspecs
 
@@ -643,13 +654,14 @@ subroutine delete_quick_api_type(self)
   type(quick_api_type), intent(inout) :: self
   integer :: ierr
 
-  if ( associated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
-  if ( associated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
-  if ( associated(self%coords))         deallocate(self%coords, stat=ierr)
-  if ( associated(self%xt_chg_crd))     deallocate(self%xt_chg_crd, stat=ierr)
-  if ( associated(self%charge))         deallocate(self%charge, stat=ierr)
-  if ( associated(self%force))          deallocate(self%force, stat=ierr)
-  if ( associated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
+  if ( allocated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
+  if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
+  if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
+  if ( allocated(self%charge))         deallocate(self%charge, stat=ierr)
+  if ( allocated(self%force))          deallocate(self%force, stat=ierr)
+
+  if ( allocated(self%xt_chg_crd))     deallocate(self%xt_chg_crd, stat=ierr)
+  if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
 
 end subroutine delete_quick_api_type
 
