@@ -534,10 +534,10 @@ subroutine set_quick_molspecs(self)
   ! save the external point charges and coordinates
   if(self%nxt_ptchg>0) then
     do i=1, self%nxt_ptchg
-      quick_molspec%extchg(i)     = self%xt_chg_crd(1,i)
       do j=1,3
-        quick_molspec%extxyz(j,i) = self%xt_chg_crd(j+1,i) * A_TO_BOHRS
+        quick_molspec%extxyz(j,i) = self%xt_chg_crd(j,i) * A_TO_BOHRS
       enddo
+      quick_molspec%extchg(i)     = self%xt_chg_crd(4,i)
     enddo  
   endif
 
