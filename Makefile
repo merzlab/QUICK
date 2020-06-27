@@ -159,8 +159,9 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
         $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_all_module.o
 
-OBJ =   $(objfolder)/main.o \
-        $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
+MAIN = $(objfolder)/main.o
+
+OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
         $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
         $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
@@ -223,7 +224,7 @@ quick_cuda:
 #================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
-	cp $(blasfolder)/*.a $(libfolder)
+	cp $(blasfolder)/libblas.so $(libfolder)
 #==================== libxc cpu library =================================
 libxc_cpu:
 	cd $(libxcfolder) && make libxc_cpu
@@ -241,11 +242,13 @@ $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 	$(CPP) $(CPP_FLAG) -c $< -o $@
 
-#===================== target for main src files ========================
+#===================== target for general src files =====================
 
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
-
+#===================== target for main src files ========================
+$(MAIN):$(objfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #==================== target configuration files ========================
 
 cpconfig:
@@ -276,9 +279,9 @@ cpconfig.MPI:
 #                 C. Make Executables
 # 
 #**********************************************************************
-quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(SUBS) $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
+	$(FC) -shared -Wl,-rpath=$(libfolder) -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
 quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
 	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
@@ -298,9 +301,9 @@ quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_
 #quick_lib:$(OBJ) ambermod amber_interface.o
 
 quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas
-	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
-	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
-	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	-L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
 quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
 	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o

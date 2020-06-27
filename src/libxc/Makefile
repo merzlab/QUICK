@@ -28,14 +28,14 @@ include $(MAKEIN)
 #Therefore, we use the following if condition to handle this. 
 
 ifeq "$(FC)" "ifort"
-  FOR = $(FC) -c -I. -O0 -g -module $(objfolder)
+  FOR = $(FC) -c -I. -O0 -g -fPIC -module $(objfolder)
 else ifeq "$(FC)" "mpiifort"
-  FOR = $(FC) -c -I. -O0 -g -module $(objfolder)
+  FOR = $(FC) -c -I. -O0 -g -fPIC -module $(objfolder)
 else 
-  FOR=$(FC) -c -I. -O0 -g -I$(objfolder) -J$(objfolder)
+  FOR=$(FC) -c -I. -O0 -g -FPIC -I$(objfolder) -J$(objfolder)
 endif
 
-CCC = $(CC) -c -I. -O0 -g 
+CCC = $(CC) -c -I. -O0 -g -fPIC
 CUDACC = $(CUDAC) -c -I. -O0
  
 #----------------------
@@ -135,8 +135,9 @@ libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_fu
 	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o	
 
 libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+	$(FC) -shared *.o -o $(libfolder)/libxc.so
+#	ar -r $(libfolder)/libxc.a *.o
+#	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
 
 all: libxc_libs
 #************************************************************************
