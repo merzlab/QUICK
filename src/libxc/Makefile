@@ -36,7 +36,7 @@ else
 endif
 
 CCC = $(CC) -c -I. -O0 -g -fPIC
-CUDACC = $(CUDAC) -c -I. -O0
+CUDACC = $(CUDAC) -c -I. -O0 --compiler-options '-fPIC'
  
 #----------------------
 # quick modules and object files
@@ -131,13 +131,10 @@ libxcf90_la-libxc.o:
 
 #libxc_libs:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
 libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o	
+	$(FC) -shared *.o -o $(libfolder)/libxc.so
 
 libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
 	$(FC) -shared *.o -o $(libfolder)/libxc.so
-#	ar -r $(libfolder)/libxc.a *.o
-#	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
 
 all: libxc_libs
 #************************************************************************

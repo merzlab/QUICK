@@ -283,8 +283,10 @@ quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(M
 	$(FC) -shared -Wl,-rpath=$(libfolder) -o $(libfolder)/libquick.so $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
-quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
-	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
+quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
+	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(CFLAGS) $(LDFLAGS)
+#	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
 	$(SUBS) $(cusolverobj) $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
@@ -306,9 +308,9 @@ quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) 
 	-L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
 quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
-	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
-	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
+	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	-L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS) 
 
 quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas
 	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
