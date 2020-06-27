@@ -73,7 +73,9 @@
     ! we consider 5 snapshots of this test system (mimics 5 md steps) 
     frames = 5
 
-    ! alocate memory for input and output arrays
+    ! alocate memory for input and output arrays. Note that in xc_coord array,
+    ! the first 3 columns are the xyz coordinates of the point charges. The
+    ! fourth column is the charge. 
     if ( .not. allocated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. allocated(coord))          allocate(coord(3,natoms), stat=ierr)
     if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
