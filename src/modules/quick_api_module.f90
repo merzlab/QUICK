@@ -73,9 +73,6 @@ module quick_api_module
     ! if forces and point charge gradients are requested
     logical :: isForce = .false.    
 
-    ! mulliken charges
-    double precision, allocatable, dimension(:)   :: charge
-
     ! forces
     double precision, allocatable, dimension(:,:) :: force
 
@@ -113,15 +110,16 @@ contains
 
 
 ! allocates memory for a new quick_api_type variable
-subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
+subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
   integer, intent(in)   :: natoms, nxt_ptchg
-  integer, intent(in) :: atomic_numbers(natoms)
+  integer, intent(in)   :: atomic_numbers(natoms)
+  integer, intent(out)  :: ierr
   integer :: atm_type_id(natoms)
-  integer :: i, natm_type, ierr  
+  integer :: i, natm_type
 
   ! get atom types and number of types
   call get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
@@ -129,7 +127,6 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
   if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
-  if ( .not. allocated(self%charge))         allocate(self%charge(natoms), stat=ierr)
   if ( .not. allocated(self%force))          allocate(self%force(3,natoms), stat=ierr)
 
   ! allocate memory only if external charges exist
@@ -149,7 +146,6 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg)
   enddo
 
   ! set result vectors and matrices to zero
-  self%charge = 0.0d0
   self%force  = 0.0d0
 
   if(nxt_ptchg>0) self%ptchg_grad = 0.0d0
@@ -173,12 +169,11 @@ subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
   character(len=80), intent(in) :: fqin
   integer, intent(in) :: natoms, nxt_ptchg
   integer, intent(in) :: atomic_numbers(natoms)
-  integer :: flen, ierr
-
-  ierr = 1
+  integer :: ierr
+  integer :: flen
 
   ! allocate memory for quick_api_type 
-  call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg)
+  call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   flen = LEN_TRIM(fqin)
   
@@ -304,7 +299,7 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 end subroutine get_atom_types
 
 ! returns quick qm energy
-subroutine get_quick_energy(step, coords, xt_chg_crd, energy, charge)
+subroutine get_quick_energy(step, coords, xt_chg_crd, energy)
 
   implicit none
 
@@ -312,7 +307,6 @@ subroutine get_quick_energy(step, coords, xt_chg_crd, energy, charge)
   double precision, intent(in)  :: coords(3,quick_api%natoms)
   double precision, intent(in)  :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
-  double precision, intent(out) :: charge(quick_api%natoms) 
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
@@ -323,14 +317,13 @@ subroutine get_quick_energy(step, coords, xt_chg_crd, energy, charge)
 
   ! send back total energy and charges 
   energy = quick_api%tot_ene
-  charge = quick_api%charge
 
 end subroutine get_quick_energy
 
 
 ! calculates and returns energy, forces and point charge gradients
 subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
-           energy, charge, forces, ptchg_grad)
+           energy, forces, ptchg_grad)
 
   implicit none
 
@@ -338,7 +331,6 @@ subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
   double precision, intent(in)    :: coords(3,quick_api%natoms)
   double precision, intent(in)    :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out)   :: energy
-  double precision, intent(out)   :: charge(quick_api%natoms)
   double precision, intent(out)   :: forces(3,quick_api%natoms)
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
 
@@ -352,9 +344,8 @@ subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
 
   call run_quick(quick_api)
 
-  ! send back total energy, charges, forces and point charge gradients
+  ! send back total energy, forces and point charge gradients
   energy     = quick_api%tot_ene
-  charge     = quick_api%charge  
   forces     = quick_api%force
 
   if(quick_api%nxt_ptchg>0) ptchg_grad = quick_api%ptchg_grad
@@ -448,7 +439,6 @@ subroutine run_quick(self)
 
 ! save the results in quick_api struct
   self%tot_ene = quick_qm_struct%Etot
-  self%charge  = quick_qm_struct%Mulliken
 
 ! convert gradients into forces and save in quick_api struct &
 ! save point charge gradients too. Note that quick_qm_struct saves
@@ -614,7 +604,6 @@ subroutine broadcast_quick_mpi_results(self)
   include 'mpif.h'
 
   call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%charge,self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   call MPI_BCAST(self%force,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
@@ -657,7 +646,6 @@ subroutine delete_quick_api_type(self)
   if ( allocated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
   if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
   if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
-  if ( allocated(self%charge))         deallocate(self%charge, stat=ierr)
   if ( allocated(self%force))          deallocate(self%force, stat=ierr)
 
   if ( allocated(self%xt_chg_crd))     deallocate(self%xt_chg_crd, stat=ierr)
