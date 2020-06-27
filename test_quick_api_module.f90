@@ -121,14 +121,13 @@ contains
   end subroutine mpi_initialize
 
   ! prints mpi output sequentially
-  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, charge, forces, ptchg_grad, mpirank)
+  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad, mpirank)
 
     implicit none
 
     integer, intent(in)          :: natoms, nxt_charges, mpirank
     integer, intent(in)          :: atomic_numbers(natoms)
     double precision, intent(in) :: totEne
-    double precision, intent(in) :: charge(natoms)
     double precision, intent(in) :: forces(3,natoms)
     double precision, intent(in) :: ptchg_grad(3,nxt_charges)
 
@@ -136,21 +135,20 @@ contains
     write(*,'(A11, 1X, I3, 1x, A3)') "--- MPIRANK", mpirank, "---"
     write(*,*) ""
 
-    call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, charge, forces, ptchg_grad)
+    call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad)
 
   end subroutine printQuickMPIOutput
 
 #endif
 
 
-  subroutine printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, charge, forces, ptchg_grad)
+  subroutine printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad)
 
     implicit none
 
     integer, intent(in)          :: natoms, nxt_charges
     integer, intent(in)          :: atomic_numbers(natoms)
     double precision, intent(in) :: totEne
-    double precision, intent(in) :: charge(natoms)
     double precision, intent(in) :: forces(3,natoms)
     double precision, intent(in) :: ptchg_grad(3,nxt_charges)
     integer :: i, j
@@ -163,17 +161,6 @@ contains
     write(*,*) "---------------"
     write(*,*) ""
     write(*, '(A14, 3x, F14.10, 1x, A4)') "TOTAL ENERGY =",totEne,"A.U."
-
-    ! print charges
-    write(*,*) ""
-    write(*,*) "PRINTING CHARGES"
-    write(*,*) "----------------"
-    write(*,*) ""
-    write(*, '(A14, 3x, A14)') "ATOMIC NUMBER","CHARGE (A.U.)"
-
-    do i=1,natoms
-      write(*,'(6x,I5,6x,F14.10)') atomic_numbers(i), charge(i)
-    enddo
 
     ! print forces
     write(*,*) ""

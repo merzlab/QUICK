@@ -44,7 +44,6 @@
 
     ! total qm energy, mulliken charges, forces and point charge gradients
     double precision :: totEne
-    double precision, allocatable, dimension(:)   :: charge         
     double precision, allocatable, dimension(:,:) :: forces         
     double precision, allocatable, dimension(:,:) :: ptchgGrad      
 
@@ -78,7 +77,6 @@
     if ( .not. allocated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. allocated(coord))          allocate(coord(3,natoms), stat=ierr)
     if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
-    if ( .not. allocated(charge))         allocate(charge(natoms), stat=ierr)
     if ( .not. allocated(forces))         allocate(forces(3,natoms), stat=ierr)
     if ( .not. allocated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
 
@@ -91,7 +89,6 @@
     atomic_numbers(3)  = 1
 
     ! set result vectors and matrices to zero
-    charge    = 0.0d0
     forces    = 0.0d0
     ptchgGrad = 0.0d0
 
@@ -105,11 +102,11 @@
       call loadTestData(i, natoms, nxt_charges, coord, xc_coord)
 
       ! compute required quantities, call only a or b. 
-      ! a. compute energies and charges
-!      call getQuickEnergy(i, coord, xc_coord, totEne, charge)
+      ! a. compute energy
+!      call getQuickEnergy(i, coord, xc_coord, totEne)
 
-      ! b. compute energies, charges, gradients and point charge gradients
-      call getQuickEnergyForces(i, coord, xc_coord, totEne, charge, forces, ptchgGrad)    
+      ! b. compute energies, forces and point charge gradients
+      call getQuickEnergyForces(i, coord, xc_coord, totEne, forces, ptchgGrad)    
 
       ! print values obtained from quick library
 #ifdef QUAPI_MPIV
@@ -118,12 +115,12 @@
 
       do j=0, mpisize-1
         if(j .eq. mpirank) then
-          call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, charge, forces, ptchgGrad, mpirank)
+          call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchgGrad, mpirank)
         endif
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       enddo 
 #else
-      call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, charge, forces, ptchgGrad)
+      call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchgGrad)
 #endif
 
     enddo
@@ -135,7 +132,6 @@
     if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
     if ( allocated(coord))          deallocate(coord, stat=ierr)
     if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
-    if ( allocated(charge))         deallocate(charge, stat=ierr)
     if ( allocated(forces))         deallocate(forces, stat=ierr)
     if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
 
