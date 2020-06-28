@@ -11,3 +11,5 @@ src/config.in
 *.o
 *.mod
 *.dat
+*~
+*.bak
