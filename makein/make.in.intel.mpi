@@ -21,8 +21,8 @@
 # b. Single CPU Version
 #---------------------
 #FC=gfortran
-FC=ifort
-CC=icc
+FC=mpiifort
+CC=mpiicc
 #---------------------
 # other compiler options
 #---------------------
@@ -66,6 +66,6 @@ endif
 
 
 # G++ Compiler
-CXX = icpc
+CXX = mpiicpc
 #CFLAGS = -lgfortran -lgfortranbegin -g -L/usr/local/cuda/lib64 -lcuda -lm $(CUDA_LIBPATH) -lcudart -lcublas
 CFLAGS= -ip -lgfortran  -lifcore -lgfortranbegin -I/opt/cuda/include -L/opt/cuda/lib64 -L$(CUDA_HOME)/lib64 -L$(CUDA_HOME)/lib -L$(CUDA_HOME)/lib -lcuda -lm -L$(CUDA_LIBPATH) -lcudart -lcublas -lstdc++
