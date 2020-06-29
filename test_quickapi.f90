@@ -47,8 +47,6 @@
     double precision, allocatable, dimension(:,:) :: forces         
     double precision, allocatable, dimension(:,:) :: ptchgGrad      
 
-    ierr = 0
-
 #ifdef QUAPI_MPIV
     ! essential mpi information 
     integer :: mpierror = 0
@@ -56,6 +54,8 @@
     integer :: mpisize  = 1
     logical :: master   = .true.
 #endif
+
+    ierr = 0
 
 #ifdef QUAPI_MPIV
     ! initialize mpi library and get mpirank, mpisize
