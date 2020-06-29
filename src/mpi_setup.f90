@@ -57,6 +57,9 @@
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
+
+    call MPI_BCAST(quick_molspec%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
     end
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,9 +70,10 @@
     subroutine mpi_setup_mol1()
     use allmod
     implicit none
-    
+
+    integer :: i    
     include 'mpif.h'
-    
+
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    
 ! mols specs
@@ -79,8 +83,9 @@
 ! DFT and SEDFT specs
     call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(RWT,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    
+
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    
     end
 
 
