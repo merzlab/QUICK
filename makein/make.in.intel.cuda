@@ -32,7 +32,7 @@ CC=icc
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
 #FFLAGS = -O0 -lm -mtune=native  -ffree-form  -DGNU -cpp 
-FFLAGS = -O0 -ip -cpp -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT -no-prec-div -DCUDA -g -traceback -check bounds -fp-stack-check
+FFLAGS = -O0 -ip -cpp -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT -no-prec-div -DCUDA -g -traceback -check bounds -fp-stack-check -fPIC
 LD = $(FC)
 LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS)
@@ -41,7 +41,7 @@ TMPFILES = *.mod *.stb
 
 # CPP Compiler
 FPP = cpp -traditional -P  -DBINTRAJ
-CPP = $(CC) -DCUBLAS_USE_THUNKING
+CPP = $(CC) -DCUBLAS_USE_THUNKING -fPIC
 CPP_FLAG = -I$(CUDA_HOME)/include  -O0
 
 # CUDA Compiler
@@ -51,7 +51,7 @@ CUDA_LIBPATH = -L$(CUDA_HOME)/lib64
 #CUDA_FLAGS= -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT 
 
 # Optimization flags
-CUDA_OPT_FLAGS= -O0  -Xptxas=-v -m64 -use_fast_math -g -G 
+CUDA_OPT_FLAGS= -O0  -Xptxas=-v -m64 -use_fast_math -g -G --compiler-options '-fPIC' 
 # Architecture flags
 CUDA_ARCH_FLAGS= -gencode arch=compute_70,code=sm_70
 # Include flags

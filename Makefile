@@ -284,20 +284,20 @@ quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(M
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
 quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -shared -o $(libfolder)/libquickcu.so $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lblas -lxc $(CFLAGS) $(LDFLAGS)
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
 	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
 
 quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
-	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
-#	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(SUBS) $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+	$(FC) -shared -o $(libfolder)/libquickmpi.so $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
-quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) blas $(cusolverobj) $(cublasobj)
-	$(FC) -o $(exefolder)/quick.cuda.MPI  $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
+quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
+	$(FC) -shared -o $(libfolder)/libquickcumpi.so $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
+#	$(FC) -o $(exefolder)/quick.cuda.MPI  $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
 	$(SUBS) $(cusolverobj) $(cublasobj) $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
 
 #quick_lib:$(OBJ) ambermod amber_interface.o
@@ -308,19 +308,20 @@ quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) 
 	-L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
 quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(FC) -shared -o $(libfolder)/libquickcu.so $(objfolder)/*.o
 	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
-	-L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS) 
+	-L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
 
 quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas
-	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
-	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS)
+	$(FC) -shared -o $(libfolder)/libquickmpi.so $(objfolder)/*.o
+	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	-L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
 quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) blas $(cusolverobj) $(cublasobj)
-	ar -r $(libfolder)/quicklib.a $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) $(libfolder)/quicklib.a \
-	$(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
+	$(FC) -shared -o $(libfolder)/libquickcumpi.so $(objfolder)/*.o
+	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	-L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
+
 
 #ambermod:
 #	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
