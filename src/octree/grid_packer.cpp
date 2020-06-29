@@ -1686,9 +1686,9 @@ void setup_gpack_mpi_1(){
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &gmpi.mpirank);
 	MPI_Comm_size(MPI_COMM_WORLD, &gmpi.mpisize);
-	MPI_Bcast(gps->arr_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gps->nbasis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gps->maxcontract, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&gps->nbasis, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&gps->maxcontract, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 }
 
