@@ -33,7 +33,7 @@ CC = gcc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O0 -lm  -mtune=native  -ffree-form  -DGNU -cpp -g
+FFLAGS = -O0 -lm  -mtune=native  -ffree-form  -DGNU -cpp -g -fPIC
 LD = $(FC)
 LDFLAGS = $(FFLAGS) -lstdc++ -g
 #LDFLAGS = $(FFLAGS)

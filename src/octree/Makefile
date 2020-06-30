@@ -4,7 +4,7 @@ MAKEIN = ../../make.in
 include $(MAKEIN)
 
 #CXX_FLAGS= -O0 -g -check-pointers=rw -debug all
-CXX_FLAGS= -O0 -g -debug all -fPIC
+CXX_FLAGS= -O0 -g -fPIC
 
 
 objfolder = ../../obj
