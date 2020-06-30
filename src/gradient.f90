@@ -143,12 +143,13 @@ end subroutine gradient
 
 subroutine scf_gradient
    use allmod
+   use quick_gradient_module
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
-   double precision:: temp_grad(3*natom)
+!   double precision:: tmp_grad(3*natom)
    include "mpif.h"
 #endif
 
@@ -165,6 +166,10 @@ subroutine scf_gradient
 
 !  Start the timer for gradient calculation
    call cpu_time(timer_begin%TGrad)
+
+#ifdef MPIV
+   call allocate_quick_gradient()
+#endif
 
 !  Set the values of gradient arry to zero 
    quick_qm_struct%gradient       = 0.0d0
@@ -318,19 +323,37 @@ endif
 !  slave node will send infos
    if(.not.master) then
       do i=1,natom*3
-         temp_grad(i)=quick_qm_struct%gradient(i)
+         tmp_grad(i)=quick_qm_struct%gradient(i)
       enddo
-!  send operator to master node
-   call MPI_SEND(temp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+
+   call MPI_SEND(tmp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+
+   if(quick_molspec%nextatom.gt.0) then
+      do i=1,quick_molspec%nextatom*3
+         tmp_ptchg_grad(i) = quick_qm_struct%ptchg_gradient(i)
+      enddo
+      call MPI_SEND(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+   endif
+
    else
 !  master node will receive infos from every nodes
       do i=1,mpisize-1
 !  receive opertors from slave nodes
-         call MPI_RECV(temp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(tmp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
 !  and sum them into operator
          do ii=1,natom*3
-            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+temp_grad(ii)
+            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+tmp_grad(ii)
          enddo
+
+         if(quick_molspec%nextatom.gt.0) then
+
+            call MPI_RECV(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+
+            do ii=1,quick_molspec%nextatom*3
+               quick_qm_struct%ptchg_gradient(ii) = quick_qm_struct%ptchg_gradient(ii) + tmp_ptchg_grad(ii)
+            enddo
+
+         endif
       enddo
   endif
 #endif
@@ -365,6 +388,10 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !stop
+
+#ifdef MPIV
+   call deallocate_quick_gradient()
+#endif
 
    return
 
