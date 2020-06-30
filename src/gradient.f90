@@ -167,8 +167,8 @@ subroutine scf_gradient
    call cpu_time(timer_begin%TGrad)
 
 !  Set the values of gradient arry to zero 
-   call zeroVec(quick_qm_struct%gradient, 3*natom)
-   if (quick_method%extCharges) call zeroVec(quick_qm_struct%ptchg_gradient, 3*quick_molspec%nextatom)
+   quick_qm_struct%gradient       = 0.0d0
+   if (quick_method%extCharges) quick_qm_struct%ptchg_gradient = 0.0d0
 
 !---------------------------------------------------------------------
 !  1) The derivative of the nuclear repulsion.
