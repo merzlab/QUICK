@@ -4,7 +4,7 @@ bin/
 lib/
 obj/
 tests/tstrun/
-src/config.in
+src/config.h
 *.out
 *.a
 *.so
