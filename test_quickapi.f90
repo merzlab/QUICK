@@ -105,10 +105,10 @@
 
       ! compute required quantities, call only a or b. 
       ! a. compute energy
-!      call getQuickEnergy(i, coord, xc_coord, totEne)
+!      call getQuickEnergy(coord, xc_coord, totEne)
 
       ! b. compute energies, forces and point charge gradients
-      call getQuickEnergyForces(i, coord, xc_coord, totEne, forces, ptchgGrad)    
+      call getQuickEnergyForces(coord, xc_coord, totEne, forces, ptchgGrad)    
 
       ! print values obtained from quick library
 #ifdef QUAPI_MPIV

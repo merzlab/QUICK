@@ -28,7 +28,14 @@ module quick_api_module
     ! setting up files for quick run. 
     logical :: apiMode = .false.
 
-    ! current md step
+    ! used to determine if memory should be allocated and SAD guess should
+    ! be performed
+    logical :: firstStep = .true.
+
+    ! current md step, should come from MM code
+    integer :: mdstep = 1
+
+    ! keeps track of how many times quick is called by MM code 
     integer :: step = 1
 
     ! number of atoms
@@ -299,11 +306,10 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 end subroutine get_atom_types
 
 ! returns quick qm energy
-subroutine get_quick_energy(step, coords, xt_chg_crd, energy)
+subroutine get_quick_energy(coords, xt_chg_crd, energy)
 
   implicit none
 
-  integer, intent(in)           :: step
   double precision, intent(in)  :: coords(3,quick_api%natoms)
   double precision, intent(in)  :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
@@ -311,7 +317,6 @@ subroutine get_quick_energy(step, coords, xt_chg_crd, energy)
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
   quick_api%xt_chg_crd     = xt_chg_crd
-  quick_api%step           = step
 
   call run_quick(quick_api)
 
@@ -322,12 +327,11 @@ end subroutine get_quick_energy
 
 
 ! calculates and returns energy, forces and point charge gradients
-subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
+subroutine get_quick_energy_forces(coords, xt_chg_crd, &
            energy, forces, ptchg_grad)
 
   implicit none
 
-  integer, intent(in)             :: step
   double precision, intent(in)    :: coords(3,quick_api%natoms)
   double precision, intent(in)    :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out)   :: energy
@@ -335,7 +339,6 @@ subroutine get_quick_energy_forces(step, coords, xt_chg_crd, &
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
 
   ! assign passed parameter values into quick_api struct
-  quick_api%step           = step
   quick_api%coords         = coords
   if(quick_api%nxt_ptchg>0) then 
     quick_api%xt_chg_crd = xt_chg_crd
@@ -386,13 +389,15 @@ subroutine run_quick(self)
 
   ! we will reuse density matrix for steps above 1. For the 1st step, we should
   ! read basis file and run SAD guess. 
-  if( self%step .lt. 2 .and. self%reuse_dmx) then
+  if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
     if (quick_method%SAD) call getMolSad()  
 
     ! assign basis functions 
     call getMol()
+
+    self%firstStep = .false.
 
   endif
 
@@ -412,7 +417,6 @@ subroutine run_quick(self)
 
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
-    write(*,*) "Calling get energy"
     call getEnergy(failed)
   endif
   
@@ -470,6 +474,9 @@ subroutine run_quick(self)
   ! broadcast results from master to slaves
   call broadcast_quick_mpi_results(self)
 #endif
+
+  ! increase internal quick step by one
+  quick_api%step = quick_api%step + 1
 
 end subroutine run_quick
 
