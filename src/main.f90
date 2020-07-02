@@ -96,7 +96,6 @@
                 exit
             endif
         enddo
-        write(*,*) "gpu_device_id=",gpu_device_id
     endif
 
     call gpu_init()
