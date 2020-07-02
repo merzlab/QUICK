@@ -227,13 +227,17 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 //-----------------------------------------------
 extern "C" void gpu_shutdown_(void)
 {
-	PRINTDEBUG("BEGIN TO SHUTDOWN")
+    PRINTDEBUG("BEGIN TO SHUTDOWN")
+
+    delete gpu;
+    cudaDeviceReset();
+
+    PRINTDEBUG("SHUTDOWN NORMALLY")
+
 #ifdef DEBUG
     fclose(debugFile);
 #endif
-    delete gpu;
-    cudaDeviceReset();
-	PRINTDEBUG("SHUTDOWN NORMALLY")
+
     return;
 }
 ;
