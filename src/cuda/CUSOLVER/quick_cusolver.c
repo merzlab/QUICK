@@ -190,8 +190,6 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
         &lwork);
     assert (cusolver_status == CUSOLVER_STATUS_SUCCESS);
 
-    printf("lwork bufferSize is: %d\n", lwork);
-
     double* devPtr_work = NULL;
 
     // Allocate work space    
