@@ -27,6 +27,7 @@
 
 #include "mgpu.h"
 #include "mpi.h"
+#include "string.h"
 //-----------------------------------------------
 // Get information about available GPUs and prepare
 // a list of usable GPUs. Only master cpu runs this.
@@ -35,7 +36,7 @@
 extern "C" void mgpu_query_(int *mpisize)
 {
 
-    PRINTDEBUG("BEGIN QUERYING DEVICES")
+//    PRINTDEBUG("BEGIN QUERYING DEVICES")
     int gpuCount = 0;           // Total number of cuda devices available
     size_t minMem = 8000000000; // Threshold  memory (in bytes) for device selection criteria
     cudaError_t status;
@@ -51,8 +52,6 @@ extern "C" void mgpu_query_(int *mpisize)
         isZeroID = true;
         gpuCount = *mpisize; 
     }
-
-    printf("Number of gpus %i \n", gpuCount);
 
     int tmp_gpu_dev_id[gpuCount];        // Temporarily holds device IDs 
     unsigned int idx_tmp_gpu_dev_id = 0; // Array index counter for tmp_gpu_dev_id
@@ -99,7 +98,7 @@ extern "C" void mgpu_query_(int *mpisize)
     }
     
 
-    PRINTDEBUG("END QUERYING DEVICES")
+//    PRINTDEBUG("END QUERYING DEVICES")
 
     return;
 }
@@ -109,14 +108,23 @@ extern "C" void mgpu_query_(int *mpisize)
 //-----------------------------------------------
 void mgpu_startup(int mpirank)
 {
-        PRINTDEBUG("BEGIN TO WARM UP")
+
 #ifdef DEBUG
-    if(mpirank == 0){
-        debugFile = fopen("DEBUG", "w+");
-    }
+    char fname[16];
+    sprintf(fname, "debug.cuda.%i", mpirank);    
+
+    debugFile = fopen(fname, "w+");
 #endif
+
+    PRINTDEBUG("BEGIN TO WARM UP")
+
     gpu = new gpu_type;
-        PRINTDEBUG("CREATE NEW GPU")
+
+#ifdef DEBUG
+    gpu->debugFile = debugFile;
+#endif
+
+    PRINTDEBUG("CREATE NEW GPU")
 }
 
 //-----------------------------------------------
@@ -124,27 +132,26 @@ void mgpu_startup(int mpirank)
 //-----------------------------------------------
 extern "C" void mgpu_shutdown_(void)
 { 
-    PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
 
-#ifdef DEBUG
-    if(gpu -> mpirank == 0){
-        fclose(debugFile);
-    }
-#endif
+    PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
 
     delete gpu;
     cudaDeviceReset();
+
     free(gpu_dev_id);
 
     PRINTDEBUG("END DEVICE SHUTDOWN")    
+
+#ifdef DEBUG
+    fclose(debugFile);
+#endif
+
 }
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
 extern "C" void mgpu_init_(int *mpirank, int *mpisize)
 {
-
-    PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION")
 
     int device = -1;
     cudaError_t status;
@@ -159,14 +166,18 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize)
 
     MPI_Bcast(gpu_dev_id, validDevCount, MPI_INT, 0, MPI_COMM_WORLD);
 
-    printf("mpirank %i mpisize %i validDevCount %i \n", *mpirank, *mpisize, validDevCount);
-
-    for(int i=0; i<validDevCount; i++){
-        printf("mpirank %i %i \n", *mpirank, gpu_dev_id[i]);
-    }
-
     // Each node starts up GPUs
     mgpu_startup(*mpirank);
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank %i mpisize %i validDevCount %i \n", *mpirank, *mpisize, validDevCount);
+
+    for(int i=0; i<validDevCount; i++){
+        fprintf(gpu->debugFile,"mpirank %i %i \n", *mpirank, gpu_dev_id[i]);
+    }
+#endif
+
+    PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION")
 
     gpu -> mpirank = *mpirank;
     gpu -> mpisize = *mpisize;
@@ -185,18 +196,26 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize)
     size_t val;
 
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
-    printf("mpirank: %i Stack size limit:    %zu\n", gpu -> mpirank,val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank: %i Stack size limit:    %zu\n", gpu -> mpirank,val);
+#endif
 
     cudaDeviceGetLimit(&val, cudaLimitPrintfFifoSize);
-    printf("mpirank: %i Printf fifo limit:   %zu\n", gpu -> mpirank,val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank: %i Printf fifo limit:   %zu\n", gpu -> mpirank,val);
+#endif
 
     cudaDeviceGetLimit(&val, cudaLimitMallocHeapSize);
-    printf("mpirank: %i Heap size limit:     %zu\n", gpu -> mpirank,val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank: %i Heap size limit:     %zu\n", gpu -> mpirank,val);
+#endif
 
     cudaDeviceSetLimit(cudaLimitStackSize, 8192);
 
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
-    printf("mpirank: %i New Stack size limit:    %zu\n", gpu -> mpirank,val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank: %i New Stack size limit:    %zu\n", gpu -> mpirank,val);
+#endif
 
     gpu->blocks = deviceProp.multiProcessorCount;
 
@@ -226,7 +245,9 @@ extern "C" void mgpu_distribute_qshell_(int *mpi_qshell, int *mpi_qshelln){
         mpi_qshelln[gpu->mpisize] +=1;
     }
     
-    printf("mpi_qshelln: %i %i %i %i \n",mpi_qshelln[0],mpi_qshelln[1],mpi_qshelln[2],mpi_qshelln[3]);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpi_qshelln: %i %i %i %i \n",mpi_qshelln[0],mpi_qshelln[1],mpi_qshelln[2],mpi_qshelln[3]);
+#endif
 
 }
 
@@ -259,9 +280,11 @@ extern "C" void mgpu_get_nqshell_(int *nqshell){
 //--------------------------------------------------------
 extern "C" void mgpu_upload_arr_bsd_qshell_(int *mpi_qshell, int *mpi_qshelln){
 
+#ifdef DEBUG
     for(int i=0;i<mpi_qshell[gpu->mpirank];i++){
-        printf("Distributed Qindex: %i %i %i \n ",gpu->mpirank,i,mpi_qshelln[(gpu->gpu_basis->Qshell * gpu->mpirank) + i]);
+        fprintf(gpu->debugFile,"Distributed Qindex: %i %i %i \n ",gpu->mpirank,i,mpi_qshelln[(gpu->gpu_basis->Qshell * gpu->mpirank) + i]);
     }
+#endif
 
 }
 
@@ -272,9 +295,10 @@ extern "C" void mgpu_upload_arr_bsd_qshell_(int *mpi_qshell, int *mpi_qshelln){
 extern "C" void mgpu_upload_basis_setup_(int *mpi_jshelln, int* mpi_jshell, int* mpi_nbasisn, int* mpi_nbasis){
 
     PRINTDEBUG("UPLOADING MULTI GPU BASIS SETUP")
-    printf("mgpu_upload_basis_setup %i %i %i \n ", gpu->mpisize,gpu->jshell,gpu->nbasis);   
-    printf("mgpu_upload_basis_setup %i %i %i %i \n ", gpu->mpirank,mpi_jshelln[0],mpi_jshelln[1],mpi_jshelln[2]);
- 
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mgpu_upload_basis_setup %i %i %i \n ", gpu->mpisize,gpu->jshell,gpu->nbasis);   
+    fprintf(gpu->debugFile,"mgpu_upload_basis_setup %i %i %i %i \n ", gpu->mpirank,mpi_jshelln[0],mpi_jshelln[1],mpi_jshelln[2]);
+#endif
 
     gpu -> gpu_basis -> mpi_jshelln = new cuda_buffer_type<int>(mpi_jshelln, gpu->mpisize);
     gpu -> gpu_basis -> mpi_jshell  = new cuda_buffer_type<int>(mpi_jshell, gpu->mpisize, gpu->jshell);
@@ -358,7 +382,9 @@ void mgpu_eri_greedy_distribute(){
     memset(tot_pval,0,sizeof(int)*gpu->mpisize);
     memset(qtype_pcore,0,sizeof(int2)*gpu->mpisize*16);
 
-    printf(" Greedy distribute sqrQshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+#ifdef DEBUG
+    fprintf(gpu->debugFile," Greedy distribute sqrQshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+#endif
 
     int q1_idx, q2_idx, q1, q2, p1, p2, psum, minp, min_core;
     // Helps to store shell types per each core
@@ -427,22 +453,24 @@ void mgpu_eri_greedy_distribute(){
         }
     }
 
+#ifdef DEBUG
     // Print information for debugging
     for(int impi=0; impi<gpu->mpisize; impi++){
         for(int icount=0; icount<tot_pcore[impi]; icount++){
-            printf(" Greedy Distribute GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y, \
+            fprintf(gpu->debugFile," Greedy Distribute GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y, \
             qtypes[impi][icount].x, qtypes[impi][icount].y, mpi_pidx[impi][icount].x, mpi_pidx[impi][icount].y);
         }
     }
 
     for(int impi=0; impi<gpu->mpisize;impi++){
-        printf(" Greedy Distribute GPU: %i ss= %i sp= %i sd= %i sf= %i ps= %i pp= %i pd= %i pf= %i ds= %i dp= %i dd= %i df= %i fs= %i fp=%i fd=%i ff=%i \n",impi, qtype_pcore[impi][0], \
+        fprintf(gpu->debugFile," Greedy Distribute GPU: %i ss= %i sp= %i sd= %i sf= %i ps= %i pp= %i pd= %i pf= %i ds= %i dp= %i dd= %i df= %i fs= %i fp=%i fd=%i ff=%i \n",impi, qtype_pcore[impi][0], \
         qtype_pcore[impi][1], qtype_pcore[impi][2], qtype_pcore[impi][3], qtype_pcore[impi][4], qtype_pcore[impi][5], \
         qtype_pcore[impi][6], qtype_pcore[impi][7], qtype_pcore[impi][8], qtype_pcore[impi][9], qtype_pcore[impi][10],\
         qtype_pcore[impi][11], qtype_pcore[impi][12], qtype_pcore[impi][13], qtype_pcore[impi][14], qtype_pcore[impi][15]);
     }
 
-    printf(" Greedy Distribute GPU: %i Total shell pairs for this GPU= %i \n", gpu -> mpirank, tot_pcore[gpu -> mpirank]);
+    fprintf(gpu->debugFile," Greedy Distribute GPU: %i Total shell pairs for this GPU= %i \n", gpu -> mpirank, tot_pcore[gpu -> mpirank]);
+#endif
 
     // Upload the flags to GPU
     gpu -> gpu_basis -> mpi_bcompute = new cuda_buffer_type<char>(nitems);

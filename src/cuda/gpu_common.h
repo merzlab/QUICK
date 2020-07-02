@@ -16,9 +16,13 @@
 #include "nvToolsExt.h"
 #include "../octree/gpack_common.h"
 
+#ifdef DEBUG
+static FILE *debugFile = NULL;
+#endif
+
 #define PRINTMETHOD(mtd)\
 {\
-printf("METHOD:%s\n",mtd);\
+fprintf(debugFile,"METHOD:%s\n",mtd);\
 fflush(stdout);\
 }
 
@@ -63,23 +67,19 @@ fflush(stdout);\
 }
 
 #ifdef DEBUG
-static FILE *debugFile;
-#endif
-
-#ifdef DEBUG
 #define PRINTDEBUG(s) \
 {\
-    printf("FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+    fprintf(debugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
 }
 
 #define PRINTUSINGTIME(s,time)\
 {\
-    printf("TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
+    fprintf(debugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
 }
 
 #define PRINTMEM(s,a) \
 {\
-	printf("MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
+	fprintf(debugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
 }
 #else
 #define PRINTDEBUG(s)
@@ -102,7 +102,7 @@ cudaEventRecord(end, 0); \
 cudaEventSynchronize(end); \
 cudaEventElapsedTime(&time, start, end); \
 totTime+=time; \
-printf("this cycle:%f ms total time:%f ms\n", time, totTime); \
+fprintf(gpu->debugFile,"this cycle:%f ms total time:%f ms\n", time, totTime); \
 cudaEventDestroy(start); \
 cudaEventDestroy(end); 
 
@@ -130,15 +130,14 @@ cudaEventDestroy(end);
 }
 
 
-
-
 // CUDA safe call
+#ifdef DEBUG
 #define QUICK_SAFE_CALL(x)\
 {\
 TIMERSTART()\
-printf("%s.%s.%d: %s\n", __FILE__, __FUNCTION__, __LINE__, #x); fflush(stdout);\
-printf("LAUCHBOUND = %i %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);\
-printf("METHOD = %i\n", gpu->gpu_sim.method);\
+fprintf(gpu->debugFile,"%s.%s.%d: %s\n", __FILE__, __FUNCTION__, __LINE__, #x);fflush(gpu->debugFile);\
+fprintf(gpu->debugFile,"LAUCHBOUND = %i %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);\
+fprintf(gpu->debugFile,"METHOD = %i\n", gpu->gpu_sim.method);\
 x;\
 TIMERSTOP()\
 cudaError_t error = cudaGetLastError();\
@@ -147,6 +146,9 @@ if (error != cudaSuccess && error != cudaErrorNotReady)\
   exit(1);                                                                                              \
 }\
 }
+#else
+#define QUICK_SAFE_CALL(x) {x;}
+#endif
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
 

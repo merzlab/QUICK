@@ -385,6 +385,11 @@ struct multi_gpu_information_type {
 
 // a type to define a graphic card
 struct gpu_type {
+
+#ifdef DEBUG
+    FILE                            *debugFile;
+#endif
+
     SM_VERSION                      sm_version;
     
     // Memory parameters
