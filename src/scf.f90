@@ -224,7 +224,6 @@ subroutine electdiis(jscf)
       ! if want to calculate operator difference?
       if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
-      if (quick_method%debug)  write(ioutfile,*) "before calling scf"
       if (quick_method%debug)  call debug_SCF(jscf)
 
       if (quick_method%SEDFT) then
@@ -233,7 +232,6 @@ subroutine electdiis(jscf)
          call scf_operator(oneElecO, deltaO)
       endif
 
-      if (quick_method%debug)  write(ioutfile,*) "after calling scf"
       if (quick_method%debug)  call debug_SCF(jscf)
 
       ! Terminate Operator timer
@@ -602,7 +600,6 @@ subroutine electdiis(jscf)
             endif
             oldEnergy=quick_qm_struct%Eel+quick_qm_struct%Ecore
          endif
-         write(*,'(f50.40)') quick_qm_struct%Eel
          write (ioutfile,'(F10.3,4x)',advance="no") timer_end%TSCF-timer_begin%TSCF
          write (ioutfile,'(I2,4x,F8.2,2x,F8.2,2x)',advance="no") current_diis,timer_end%TDII-timer_begin%TDII, &
                timer_end%TOp-timer_begin%TOp
@@ -659,7 +656,6 @@ subroutine electdiis(jscf)
          call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       endif
 #endif
-      if (quick_method%debug)  write(ioutfile,*) "after hf"
       if (quick_method%debug)  call debug_SCF(jscf)
    enddo
 

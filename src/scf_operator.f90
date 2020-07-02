@@ -266,7 +266,9 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 !  Add time total time
       timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
-      write(*,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#ifdef DEBUG
+      if (quick_method%debug) write(iOutFile,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#endif
    endif
 
 #ifdef MPIV
@@ -369,7 +371,9 @@ subroutine get_xc
 !      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
 !      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
-      write(*,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+#ifdef DEBUG
+      if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+#endif
 
       call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
@@ -645,8 +649,12 @@ subroutine get_xc
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
 
 !   if(quick_method%debug) then
-      write(*,*) "Eelex=",Eelxc
-      write(*,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+#ifdef DEBUG
+   if (quick_method%debug) then
+     write(iOutFile,*) "Eelex=",Eelxc
+     write(iOutFile,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+   endif
+#endif
 !   endif
 #ifdef MPIV
    endif
