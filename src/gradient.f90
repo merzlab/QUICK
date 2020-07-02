@@ -190,13 +190,19 @@ subroutine scf_gradient
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
+
+#ifdef DEBUG
+   if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+   endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -213,13 +219,19 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -259,13 +271,19 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -363,10 +381,16 @@ endif
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
         do Iatm=1,natom*3
-                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+                write (iOutFile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -376,12 +400,19 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-if(quick_method%extCharges) then
-        write (*,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+    if(quick_method%extCharges) then
+        write (iOutFile,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
         do Iatm=1,quick_molspec%nextatom*3
-                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
+                write (iOutFile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
         enddo
-endif
+    endif
+  endif
+
+#endif
+
 #ifdef MPIV
 endif
 #endif
