@@ -5,6 +5,7 @@ lib/
 obj/
 tests/tstrun/
 src/config.h
+debug.*
 *.out
 *.a
 *.so
