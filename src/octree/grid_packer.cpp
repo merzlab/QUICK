@@ -36,7 +36,6 @@ void gpack_initialize_(){
     MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
 #endif
 
-
 // setup debug file if necessary
 #ifdef DEBUG
 
@@ -290,89 +289,6 @@ void write_xyz(vector<node> *octree, vector<point> *ptlst, bool isptlst, string 
 	txtOut.close();
 }
 
-//Calculates the value of a basis function at a given grid point
-/*void pteval(grd_pck_strct *gps, double gridx, double gridy, double gridz, double* phi, double* dphidx, double* dphidy,  double* dphidz, int ibas, vector<int> *prim_lst){
-
-	int nc = (gps->ncenter[ibas])-1;
-
-	double x1 = gridx - gps->xyz[0+nc*3];
-	double y1 = gridy - gps->xyz[1+nc*3];
-	double z1 = gridz - gps->xyz[2+nc*3];
-
-	double x1i, y1i, z1i;
-	double x1imin1, y1imin1, z1imin1;
-	double x1iplus1, y1iplus1, z1iplus1;
-	
-	*phi = 0.0;
-	*dphidx = 0.0;
-	*dphidy = 0.0;
-	*dphidz = 0.0;
-
-	int itypex = gps->itype[0+ibas*3];
-	int itypey = gps->itype[1+ibas*3];
-	int itypez = gps->itype[2+ibas*3];
-
-	double dist = x1*x1+y1*y1+z1*z1;
-
-	if ( dist <= gps->sigrad2[ibas]){
-        	if ( itypex == 0) {
-	            x1imin1 = 0.0;
-	            x1i = 1.0;
-	            x1iplus1 = x1;
-	        }else {
-	            x1imin1 = pow(x1, itypex-1);
-	            x1i = x1imin1 * x1;
-	            x1iplus1 = x1i * x1;
-	        }
-
-	        if ( itypey == 0) {
-	            y1imin1 = 0.0;
-	            y1i = 1.0;
-	            y1iplus1 = y1;
-	        }else {
-	            y1imin1 = pow(y1, itypey-1);
-	            y1i = y1imin1 * y1;
-	            y1iplus1 = y1i * y1;
-	        }
-
-	        if ( itypez == 0) {
-	            z1imin1 = 0.0;
-	            z1i = 1.0;
-	            z1iplus1 = z1;
-	        }else {
-	            z1imin1 = pow(z1, itypez-1);
-	            z1i = z1imin1 * z1;
-	            z1iplus1 = z1i * z1;
-	        }
-
-        for (int i = 0; i < gps->ncontract[ibas]; i++) {
-		double alpha = gps->aexp[i + ibas * gps->maxcontract];
-		double tmp = (gps->dcoeff[i + ibas * gps->maxcontract]) * exp( -alpha * dist);
-
-		double tmpdx = tmp * ( -2.0 * alpha * x1iplus1 + (double)itypex * x1imin1);
-		double tmpdy = tmp * ( -2.0 * alpha * y1iplus1 + (double)itypey * y1imin1);
-		double tmpdz = tmp * ( -2.0 * alpha * z1iplus1 + (double)itypez * z1imin1);
-
-		*phi = *phi + tmp;		
-		*dphidx = *dphidx + tmpdx;
-		*dphidy = *dphidy + tmpdy;
-		*dphidz = *dphidz + tmpdz;
-
-		// Check the significance of the primitive and add the corresponding index to prim_lst
-		if(abs(tmp+tmpdx+tmpdy+tmpdz) > gps->DMCutoff){
-			prim_lst->push_back(i);	
-		}
-        }
-
-        *phi = *phi * x1i * y1i * z1i;
-        *dphidx = *dphidx * y1i * z1i;
-        *dphidy = *dphidy * x1i * z1i;
-        *dphidz = *dphidz * x1i * y1i;
-
-	}
-		
-}
-*/
 
 /*Computes representive points for a bin*/
 void get_rep_pts(node *n, vector<point> *rep_pts){
@@ -435,215 +351,9 @@ void get_rep_pts(node *n, vector<point> *rep_pts){
 
 }
 
-//This method goes though representative points for a bin and select the significant basis functions
-//based on value the of contracted functions
-/*
-vector<bflist> get_cfbased_basis_function_lists(vector<node> *octree, grd_pck_strct *gps){
-
-        // A vector to hold basis function lists for each node. Size of the vector equals to the number of nodes
-        vector<bflist> bflst;
-
-        // store all the basis function indices in a list
-        vector<int> all_bfs;
-        for(int j=0; j < gps->nbasis; j++){
-                all_bfs.push_back(j);
-        }
-
-        for(int i=0;i<octree->size();i++){
-                node n = octree->at(i);
-                if(n.has_children == false || n.level == OCTREE_DEPTH-1){
-
-                        // Get the representative points
-                        vector<point> rep_pts;
-                        get_rep_pts(&n, &rep_pts);
-
-                        // define a bflist type variable to store basis functions of the node
-                        bflist bflstn;
-
-                        //Set the corresponding node id
-                        bflstn.node_id = n.id;
-
-                        //basis function list of node n
-                        vector<bas_func> bfs;
-
-                        //Load all the basis functions into a temporary list
-                        vector<int> tmp_bfs = all_bfs;
-
-                        //Go through rep_pts, pick significant basis functions from tmp_bfs and store them in bflstn 
-                        for(int r=0;r<rep_pts.size();r++){
-
-                                point rp = rep_pts.at(r);
-
-                                //We will use an iterator since we have to remove basis functions from tmp_bfs as we pick them
-                                vector<int>:: iterator j = tmp_bfs.begin();
-
-                                while( j != tmp_bfs.end()){
-                                        //Get the jth basis function
-                                        int jbas = *j;
-
-                                        //Define a bas_func type variable to hold the primitives of jbas basis function
-                                        bas_func bf;
-                                        bf.bas_id = jbas;
-
-                                        //Define an integer vector to keep a list of primitive functions belonging to jth basis function
-                                        vector<int> pl;
-					
-					//Also define a dummy primitive array to call pteval. We wont be using the pf indices it sends. 
-					vector<int> dummy_pl;
-
-                                        //Evalute the value and the gradient of jbas at point rp
-                                        double phi, dphidx, dphidy, dphidz;
-                                        pteval(gps, *rp.x, *rp.y, *rp.z, &phi, &dphidx, &dphidy, &dphidz, jbas, &dummy_pl);
-
-                                        if (abs(phi+dphidx+dphidy+dphidz)> gps->DMCutoff ){
-
-                                                //Go through primitives of jth basis function and list the significant ones
-                                                for(int jprim=0; jprim < gps->ncontract[jbas]; jprim++){
-                                                        pl.push_back(jprim);
-                                                }
-
-                                                //Save the primitive list only if it is non-empty
-                                                if(pl.size() > 0){
-                                                        bf.prim_list = pl;
-                                                        bfs.push_back(bf);
-                                                }
-
-                                                //Remove the jth basis index from tmp_bfs list and update
-                                                j = tmp_bfs.erase(j);
-                                        }else{
-                                                j++;
-                                        }
-                                }
-
-                        }
-
-                        //Save the basis function list only if it is non-empty
-                        if(bfs.size()>0){
-                                bflstn.bfs = bfs;
-                                bflst.push_back(bflstn);
-                        }
-
-                }
-        }
-
-        printf("octree->size(): %i bflst.size(): %i \n", octree->size(), bflst.size());
-
-        return bflst;
-}
-*/
-
-
-//This method goes through each each grid point in a bin and select the significant basis functions
-//based on value of the primitive functions
-/*
-vector<bflist> get_pfbased_basis_function_lists(vector<node> *octree, grd_pck_strct *gps){
-
-	//A vector to hold basis function lists for each node. Size of the vector equals to the number of nodes
-	vector<bflist> bflst;
-
-	//Store all the basis function indices in a list
-	vector<int> all_bfs;
- 	for(int j=0; j < gps->nbasis; j++){
-		all_bfs.push_back(j);
-	}
-
-        for(int i=0;i<octree->size();i++){
-                node n = octree->at(i);
-                if(n.has_children == false || n.level == OCTREE_DEPTH-1){
-
-			//Get the representative points, which in this case are all points
-			vector<point> rep_pts;
-
-			rep_pts = n.ptlst;
-			
-			// define a bflist type variable to store basis functions of the node
-			bflist bflstn;
-			
-			//Set the corresponding node id
-			bflstn.node_id = n.id;
-
-			//basis function list of node n
-			vector<bas_func> bfs;
-
-			//We will use an iterator since we have to remove basis functions from tmp_bfs as we pick them
-			vector<int>:: iterator j = all_bfs.begin();
-
-			while( j != all_bfs.end()){
-
-				//Get the jth basis function
-				int jbas = *j;
-	
-				//Define a bas_func type variable to hold the primitives of jbas basis function
-				bas_func bf;
-				bf.bas_id = jbas;
-
-				//Define a list to hold primitive function lists from each rep_pt
-				vector<int> pl;
-
-				double func_tst_val = 0.0;
-
-				//Go through rep_pts, pick significant basis functions from tmp_bfs and store them in bflstn 
-				for(int r=0;r<rep_pts.size();r++){
-
-					point rp = rep_pts.at(r);
-
-					//Define an integer vector to keep a list of primitive functions belonging to jth basis function 
-					vector<int> tmp_pl;
-
-					//Evalute the value and the gradient of jbas at point rp
-					double phi, dphidx, dphidy, dphidz;
-					pteval(gps, *rp.x, *rp.y, *rp.z, &phi, &dphidx, &dphidy, &dphidz, jbas, &tmp_pl);
-
-					double tmp_func_tst_val = abs(phi+dphidx+dphidy+dphidz);
-
-					if( func_tst_val < tmp_func_tst_val ){
-						func_tst_val = tmp_func_tst_val;
-						//Insert the primitive list from rth rep_pt to the end of list
-						pl.insert(pl.end(), tmp_pl.begin(), tmp_pl.end());
-					}					
-
-				}
-
-				if(func_tst_val > gps->DMCutoff){
-
-					//Remove duplicate prim indices
-				        sort( pl.begin(), pl.end() );
-				        pl.erase( unique( pl.begin(), pl.end() ), pl.end() );	
-
-					 //Save the primitive list and basis functon
-					bf.prim_list = pl;
-					bfs.push_back(bf);
-				}
-				j++;
-			}	
-
-                        //Save the basis function list only if it is non-empty
-                        if(bfs.size()>0){
-                                bflstn.bfs = bfs;
-                                bflst.push_back(bflstn);
-                        }
-
-                }
-        }
-
-#ifdef OCT_DEBUG
-	printf("octree->size(): %i bflst.size(): %i \n", octree->size(), bflst.size());	
-#endif
-
-	return bflst;
-}
-*/
-
-
-/*This method packs a given set of grid points by using an octree algorithm. The parameters are as follows*/
 
 void pack_grid_pts(){
 
-//	printf("num grid points after pruning: %i DMCutoff: %.10e \n", gps->arr_size, gps->DMCutoff);
-
-//	int mpisize, mpirank;
-
-//	MPI_Comm_rank(MPI_COMM_WORLD, &mpirank);
 
         clock_t start, end;
         double time_octree;
@@ -755,7 +465,7 @@ void get_ssw_pruned_grid(){
 }
 
 
-//#define GPACK_DEBUG
+//#define DEBUG
 
 #ifdef CUDA
 int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst){
@@ -763,12 +473,12 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
         double *gridx, *gridy, *gridz, *sswt, *weight;	                 			//Keeps all grid points
         unsigned int *cfweight, *pfweight;   //Holds 1 or 0 depending on the significance of each candidate
 	unsigned char *gpweight;
-	int *iatm; //**************** Has to be changed into unsigned int later ************
+	int *iatm;
 
 	//get the number of octree leaves 
 	unsigned int leaf_count = 0;
 
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 	vector<node> dbg_leaf_nodes; //Store leaves for grid visialization
 	vector<node> dbg_signodes;   //Store significant nodes for grid visualization
 	vector<int>  dbg_signdidx;    //Keeps track of leaf node indices to remove
@@ -781,13 +491,13 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
                 if(n.has_children == false || n.level == OCTREE_DEPTH-1){
 			leaf_count++;
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 			dbg_leaf_nodes.push_back(n);
 #endif
 		}
 	}
 
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 	printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of leaf nodes: %i \n", __FILE__, __LINE__, __func__, leaf_count);
 #endif
 	
@@ -854,7 +564,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
         }
 
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 	unsigned int init_true_gpcount=0;
 
 	for(int i=0; i<leaf_count*MAX_POINTS_PER_CLUSTER; i++){
@@ -909,7 +619,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 	vector<int> ppf_counter;
 	
 
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
         int dbg_totncf = 0;
 #endif
 
@@ -925,7 +635,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 		for(int j=0; j<gps -> nbasis; j++){
 			if(cfweight[(i * gps -> nbasis) + j] >0){
 				cfcount++;
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 				dbg_totncf++;
 #endif
 			}
@@ -940,7 +650,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 				psswt.push_back(sswt[i*MAX_POINTS_PER_CLUSTER+j]);
 				pweight.push_back(weight[i*MAX_POINTS_PER_CLUSTER+j]);
 				piatm.push_back(iatm[i*MAX_POINTS_PER_CLUSTER+j]);
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 				point db_p;
 				db_p.x = &gridx[i*MAX_POINTS_PER_CLUSTER+j];
 				db_p.y = &gridy[i*MAX_POINTS_PER_CLUSTER+j];
@@ -968,14 +678,14 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 			}
 		
 			pcf_counter.push_back(pcf_count);					
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
 			dbg_signodes.push_back(dbg_leaf_nodes.at(i));
 #endif
 
 		}
 	}
 
-#ifdef GPACK_DEBUG
+#ifdef DEBUG
         printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions from GPU: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
         printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions from GPU: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
 
@@ -1013,7 +723,6 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 #endif
 
 	//Convert lists into arrays
-//	int pgridinfo_arr_size = pgpweight.size();
          
         gps->gridb_count   = pgpweight.size();
         gps->nbins         = (gps->gridb_count)/MAX_POINTS_PER_CLUSTER;
@@ -1032,21 +741,6 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
         gps->basf_counter  = new gpack_buffer_type<int>(gps->nbins + 1);
         gps->primf_counter = new gpack_buffer_type<int>(gps->nbtotbf + 1);
 
-/*	double *apgridx, *apgridy, *apgridz, *apsswt, *apweight;
-	int *apgpweight, *apiatm, *apcfweight, *appfweight, *apcf_counter, *appf_counter; 
-
-	apgridx    = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apgridy    = (double*) malloc(pgridinfo_arr_size * sizeof(double));	
-        apgridz    = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apsswt     = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apweight   = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-	apgpweight = (int*) malloc(pgridinfo_arr_size * sizeof(int));
-	apiatm     = (int*) malloc(pgridinfo_arr_size * sizeof(int));
-	apcfweight = (int*) malloc(pcfweight.size() * sizeof(int));
-	appfweight = (int*) malloc(ppfweight.size() * sizeof(int));
-	apcf_counter = (int*) malloc((pcfweight.size() + 1) * sizeof(int));
-	appf_counter = (int*) malloc((ppfweight.size() + 1) * sizeof(int));
-*/
 	copy(pgridx.begin(), pgridx.end(), gps->gridxb->_cppData);
 	copy(pgridy.begin(), pgridy.end(), gps->gridyb->_cppData);
 	copy(pgridz.begin(), pgridz.end(), gps->gridzb->_cppData);
@@ -1069,23 +763,6 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
         gps->ntgpts = ntgpts;
 
-	//Save info into gps struct
-/*	gps->nbins  = pgridinfo_arr_size/MAX_POINTS_PER_CLUSTER;
-	gps->gridxb = apgridx;
-	gps->gridyb = apgridy;
-	gps->gridzb = apgridz;
-        gps->gridb_sswt   = apsswt;
-        gps->gridb_weight = apweight;
-        gps->gridb_atm   = apiatm;
-        gps->gridb_count = pgridinfo_arr_size;
-	gps->dweight = apgpweight;
-	gps->nbtotbf = pcfweight.size();
-	gps->nbtotpf = ppfweight.size(); 	
-        gps->basf  = apcfweight;
-        gps->primf = appfweight;
-        gps->basf_counter  = apcf_counter;
-        gps->primf_counter = appf_counter;	
-*/
         free(gridx);
         free(gridy);
         free(gridz);
@@ -1105,14 +782,6 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
 }
 #endif
-
-
-
-
-
-
-
-
 
 //#define CBFPF_DEBUG
 
@@ -1491,22 +1160,6 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         gps->primf_counter = new gpack_buffer_type<int>(gps->nbtotbf + 1);
         gps->bin_counter   = new gpack_buffer_type<int>(gps->nbins + 1);
 
-/*        double *apgridx, *apgridy, *apgridz, *apsswt, *apweight;
-        int *apgpweight, *apiatm, *apcfweight, *appfweight, *apcf_counter, *appf_counter;
-	int *apbs_tracker;
-
-        apgridx    = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apgridy    = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apgridz    = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apsswt     = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apweight   = (double*) malloc(pgridinfo_arr_size * sizeof(double));
-        apiatm     = (int*) malloc(pgridinfo_arr_size * sizeof(int));
-        apcfweight = (int*) malloc(pcfweight.size() * sizeof(int));
-        appfweight = (int*) malloc(ppfweight.size() * sizeof(int));
-        apcf_counter = (int*) malloc((pcfweight.size() + 1) * sizeof(int));
-        appf_counter = (int*) malloc((ppfweight.size() + 1) * sizeof(int));
-	apbs_tracker = (int*) malloc(pbs_tracker.size() * sizeof(int));
-*/
         copy(pgridx.begin(), pgridx.end(), gps->gridxb->_cppData);
         copy(pgridy.begin(), pgridy.end(), gps->gridyb->_cppData);
         copy(pgridz.begin(), pgridz.end(), gps->gridzb->_cppData);
@@ -1519,31 +1172,6 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         copy(ppf_counter.begin(), ppf_counter.end(), gps->primf_counter->_cppData);
 	copy(pbs_tracker.begin(), pbs_tracker.end(), gps->bin_counter->_cppData);
 
-//        int true_pruned_gps=0;
-//        for(int i=0; i<pgridinfo_arr_size; i++){
-//                if(apgpweight[i] > 0){
-//
-//                        true_pruned_gps++;
-//                }
-//        }
-
-        //Save info into gps struct
-/*        gps->nbins  = pbs_tracker.size() - 1;
-        gps->gridxb = apgridx;
-        gps->gridyb = apgridy;
-        gps->gridzb = apgridz;
-        gps->gridb_sswt   = apsswt;
-        gps->gridb_weight = apweight;
-        gps->gridb_atm   = apiatm;
-        gps->gridb_count = pgridinfo_arr_size;
-        gps->nbtotbf = pcfweight.size();
-        gps->nbtotpf = ppfweight.size();
-        gps->basf  = apcfweight;
-        gps->primf = appfweight;
-        gps->basf_counter  = apcf_counter;
-        gps->primf_counter = appf_counter;
-	gps->bin_counter = apbs_tracker;
-*/
         printf("Grid pruning: Significant nodes: %i grid points after pruning: %i \n", gps->nbins, gps->gridb_count);
 
         end = clock();
@@ -1751,21 +1379,6 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight, 
         MPI_Status status;
 	clock_t start, end;
 
-/*		unsigned int bstart=gmpi.mpi_binlst[gmpi.mpirank];
-		unsigned int bend=gmpi.mpi_binlst[gmpi.mpirank+1];
-
-		for(unsigned int j=0; j< bstart; j++){
-			for(unsigned int k=bs_tracker[j]; k<bs_tracker[j+1]; k++){
-				gpweight[k]=0;
-			}
-		}
-
-                for(unsigned int j=bend; j< nbins; j++){
-                        for(unsigned int k=bs_tracker[j]; k<bs_tracker[j+1]; k++){
-                                gpweight[k]=0;
-                        }
-                }		
-*/
         if(mpirank != 0){
 
                         MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpirank+600, MPI_COMM_WORLD);
@@ -1806,14 +1419,6 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight, 
 
 			}
 
-/*                	for(int j=0; j<nbins*gps->nbasis; j++){
-                        	cfweight[j] += tmp_cfweight[j];
-                	}
-
-                	for(int j=0; j<nbins*gps->nbasis*gps->maxcontract; j++){
-                        	pfweight[j] += tmp_pfweight[j];
-                	}
-*/
 		}
 
 		end = clock();
