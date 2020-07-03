@@ -1,5 +1,7 @@
 #include "octree.h"
 
+// Enable to generate coordinate files for the visualization
+//#define WRITE_TCL_XYZ
 
 struct bas_func{
 

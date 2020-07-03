@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <iostream>
+using namespace std;
 
 // setup a debug file
 #ifdef DEBUG
@@ -28,7 +30,7 @@ static FILE *gpackDebugFile = NULL;
         fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
 }
 
-#define PRINTOCTMEMCOUNT(s,a) \
+#define PRINTOCTMEMCOUNT(s,a,b) \
 {\
         fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s %10s : %5d ELEMENTS, %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a,b);\
 }

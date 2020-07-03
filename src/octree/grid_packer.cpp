@@ -24,7 +24,6 @@
 #include <time.h>
 
 
-
 // initialize data structure for grid partitioning algorithm
 void gpack_initialize_(){
 
@@ -465,8 +464,6 @@ void get_ssw_pruned_grid(){
 }
 
 
-//#define DEBUG
-
 #ifdef CUDA
 int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst){
 
@@ -498,7 +495,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 	}
 
 #ifdef DEBUG
-	printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of leaf nodes: %i \n", __FILE__, __LINE__, __func__, leaf_count);
+	fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of leaf nodes: %i \n", __FILE__, __LINE__, __func__, leaf_count);
 #endif
 	
 	unsigned int init_arr_size = leaf_count * MAX_POINTS_PER_CLUSTER;
@@ -573,7 +570,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 		}
 	}
 
-	printf("Total number of true grid points before pruning: %i \n", init_true_gpcount);
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true grid points before pruning: %i \n", __FILE__, __LINE__, __func__, init_true_gpcount);
 #endif
 	//Also set result arrays to zero
 	for(int i=0; i<leaf_count * gps->nbasis;i++){
@@ -588,8 +585,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
         time_prep_gpu_input = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): Prep GPU input: %f s \n", time_prep_gpu_input);
-
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PREP GPU INPUT", time_prep_gpu_input)
 
 	start = clock();
 
@@ -599,7 +595,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 
         time_run_gpu = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): GPU run: %f s \n", time_run_gpu);
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : GPU RUN", time_run_gpu)
 
 	gps -> time_bfpf_prescreen = time_run_gpu;
 
@@ -685,10 +681,10 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 		}
 	}
 
-#ifdef DEBUG
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions from GPU: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions from GPU: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
+#if defined DEBUG && WRITE_TCL_XYZ
 
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
 
 	//print grid for vmd visualization
         write_vmd_grid(dbg_leaf_nodes, "initgrid.tcl");
@@ -773,18 +769,21 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
         free(weight);
         free(iatm);
 
-	printf("gpu grid pruning: Significant nodes: %i grid points after pruning: %i \n", gps->nbins, gps->ntgpts);
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true bins & grid points after pruning: %i %i\n", __FILE__, __LINE__, __func__, gps->nbins, gps->ntgpts);
+
         end = clock();
 
         time_proc_gpu_output = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): Process GPU output: %f s \n", time_proc_gpu_output);
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS GPU OUTPUT", time_proc_gpu_output)
 
 }
 #endif
 
 //#define CBFPF_DEBUG
 
+
+// This function prepares primitive and contracted function lists in serial and mpi versions
 void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         double *gridx, *gridy, *gridz, *sswt, *weight;                                          //Keeps all grid points
@@ -818,8 +817,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         }
 
 #ifdef CBFPF_DEBUG
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of leaf nodes: %i \n", __FILE__, __LINE__, __func__, leaf_count);
-	printf("FILE: %s, LINE: %d, FUNCTION: %s, Size for temporary memory allocation: %i \n", __FILE__, __LINE__, __func__, gps->arr_size);
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of leaf nodes: %i \n", __FILE__, __LINE__, __func__, leaf_count);
 #endif
 
         unsigned int init_arr_size = gps->arr_size;
@@ -848,9 +846,9 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	unsigned int cb = 0;
 
         clock_t start, end;
-        double time_prep_gpu_input;
-        double time_run_gpu;
-        double time_proc_gpu_output;
+        double time_prep_input;
+        double run_time;
+        double time_proc_output;
 
 #ifdef MPIV
 	double mpi_prep_time;
@@ -898,15 +896,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         }
 
 #ifdef CBFPF_DEBUG
-/*        unsigned int init_true_gpcount=0;
-
-        for(int i=0; i<leaf_count*MAX_POINTS_PER_CLUSTER; i++){
-                if(gpweight[i]>0){
-                        init_true_gpcount++;
-                }
-        }
-*/
-	printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of true grid points before pruning: %i \n", __FILE__, __LINE__, __func__, init_arr_size);
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true grid points before pruning: %i \n", __FILE__, __LINE__, __func__, init_arr_size);
 #endif
         //Also set result arrays to zero
         for(int i=0; i<leaf_count * gps->nbasis;i++){
@@ -921,10 +911,9 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         end = clock();
 
-        time_prep_gpu_input = ((double) (end - start)) / CLOCKS_PER_SEC;
+        time_prep_input = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): Prep GPU input: %f s \n", time_prep_gpu_input);
-
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PREP INPUT", time_prep_input)
 
         start = clock();
 
@@ -940,7 +929,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         mpi_prep_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-	printf("Time for prescreening basis and primitive functions (new_imp): MPI broadcast time: %f s \n", mpi_prep_time);		
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : BROADCAST INPUT", mpi_prep_time)
 
 	start = clock();
 	}
@@ -969,7 +958,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         mpi_run_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): Actual MPI run time: %f s \n", mpi_run_time);
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : RUN TIME", mpi_run_time)
         
         start = clock();
         }
@@ -987,18 +976,19 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	end = clock();
 
 	mpi_post_proc_time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("Time for prescreening basis and primitive functions (new_imp): MPI post processing time: %f s \n", mpi_post_proc_time);
+
+        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", mpi_post_proc_time)
 
 	gps -> time_bfpf_prescreen = mpi_post_proc_time+mpi_run_time+mpi_prep_time;
 #else
 
         end = clock();
 
-        time_run_gpu = ((double) (end - start)) / CLOCKS_PER_SEC;
+        run_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): GPU run: %f s \n", time_run_gpu);
+	PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : RUN TIME", run_time)        
 
-        gps -> time_bfpf_prescreen = time_run_gpu;
+        gps -> time_bfpf_prescreen = run_time;
 #endif
         start = clock();
 
@@ -1100,9 +1090,10 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
                 }
         }
 
-#ifdef CBFPF_DEBUG
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions from GPU: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions from GPU: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
+#if defined DEBUG && WRITE_TCL_XYZ
+
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
 
 
         //print grid for vmd visualization
@@ -1146,8 +1137,6 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         gps->nbtotpf       = ppfweight.size();
         gps->ntgpts        = gps->gridb_count;
 
-        printf("gridb_count %i nbins %i nbtotbf %i nbtotpf %i ntgpts %i \n", gps->gridb_count, gps->nbins, gps->nbtotbf, gps->nbtotpf, gps->ntgpts);
-
         gps->gridxb        = new gpack_buffer_type<double>(gps->gridb_count);
         gps->gridyb        = new gpack_buffer_type<double>(gps->gridb_count);
         gps->gridzb        = new gpack_buffer_type<double>(gps->gridb_count);
@@ -1172,13 +1161,16 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         copy(ppf_counter.begin(), ppf_counter.end(), gps->primf_counter->_cppData);
 	copy(pbs_tracker.begin(), pbs_tracker.end(), gps->bin_counter->_cppData);
 
-        printf("Grid pruning: Significant nodes: %i grid points after pruning: %i \n", gps->nbins, gps->gridb_count);
+#ifdef DEBUG
+        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true bins & grid points after pruning: %i %i\n", __FILE__, __LINE__, __func__, gps->nbins, gps->ntgpts);
+#endif
 
         end = clock();
 
-        time_proc_gpu_output = ((double) (end - start)) / CLOCKS_PER_SEC;
+        time_proc_output = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        printf("Time for prescreening basis and primitive functions (new_imp): Post processing: %f s \n", time_proc_gpu_output);
+         PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", time_proc_output)
+
 #ifdef MPIV
 	}
 #endif
@@ -1423,7 +1415,7 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight, 
 
 		end = clock();
 
-		printf("Time for running through data: %f \n",  ((double) (end - start)) / CLOCKS_PER_SEC);
+	//	printf("Time for running through data: %f \n",  ((double) (end - start)) / CLOCKS_PER_SEC);
 
         }
 
