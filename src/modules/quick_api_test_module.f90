@@ -8,6 +8,7 @@
 ! License, v. 2.0. If a copy of the MPL was not distributed with this !
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
+#   include "../config.h"
 
 ! Test module for QUICK library API
 module test_quick_api_module
@@ -17,7 +18,7 @@ module test_quick_api_module
 
   public :: loadTestData, printQuickOutput
 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
   public :: mpi_initialize, printQuickMPIOutput
 #endif
 
@@ -96,7 +97,7 @@ contains
 
   end subroutine load_test_data
 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
   ! initialize mpi library and save mpirank and mpisize
   subroutine mpi_initialize(mpisize, mpirank, master, mpierror)
 

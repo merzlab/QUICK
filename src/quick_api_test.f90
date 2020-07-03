@@ -8,21 +8,21 @@
 ! License, v. 2.0. If a copy of the MPL was not distributed with this !
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
-
+#   include "config.h"
 
 ! Program for testing QUICK library API
   program test_quick_api
 
     use test_quick_api_module, only : loadTestData, printQuickOutput
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyForces, deleteQuickJob 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
 #endif
 
     implicit none
 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
     include 'mpif.h'
 #endif
 
@@ -47,7 +47,7 @@
     double precision, allocatable, dimension(:,:) :: forces         
     double precision, allocatable, dimension(:,:) :: ptchgGrad      
 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
     ! essential mpi information 
     integer :: mpierror = 0
     integer :: mpirank  = 0
@@ -57,7 +57,7 @@
 
     ierr = 0
 
-#ifdef QUAPI_MPIV
+#ifdef MPIV
     ! initialize mpi library and get mpirank, mpisize
     call mpi_initialize(mpisize, mpirank, master, mpierror)
 
@@ -111,7 +111,7 @@
       call getQuickEnergyForces(coord, xc_coord, totEne, forces, ptchgGrad)    
 
       ! print values obtained from quick library
-#ifdef QUAPI_MPIV
+#ifdef MPIV
       ! dumb way to sequantially print from all cores..
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
