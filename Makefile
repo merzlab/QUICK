@@ -160,7 +160,7 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 	$(objfolder)/quick_all_module.o
 
-MAIN = $(objfolder)/main.o
+MAIN = $(srcfolder)/main.o
 
 OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
@@ -191,6 +191,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
 	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
+
+TESTAPI=$(srcfolder)/quick_api_test.o
 
 all: quick quick.cuda
 #************************************************************************
@@ -248,10 +250,12 @@ $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for main src files ========================
-$(MAIN):$(objfolder)/%.o:$(srcfolder)/%.f90
+$(MAIN):$(srcfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+#===================== target for compiling api test ====================
+$(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #==================== target configuration files ========================
-
 cpconfig:
 	cp $(configfolder)/config.h $(srcfolder)/config.h
 cpconfig.cuda:
@@ -303,24 +307,24 @@ quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_
 
 #quick_lib:$(OBJ) ambermod amber_interface.o
 
-quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas
+quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(TESTAPI) blas
 	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
-	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
 	-L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
-quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cusolverobj) $(cublasobj)
+quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(TESTAPI) $(cusolverobj) $(cublasobj)
 	$(FC) -shared -o $(libfolder)/libquickcu.so $(objfolder)/*.o
-	$(FC) -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
 	-L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
 
-quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas
+quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(TESTAPI) blas
 	$(FC) -shared -o $(libfolder)/libquickmpi.so $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
 	-L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
-quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) blas $(cusolverobj) $(cublasobj)
+quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(TESTAPI) blas $(cusolverobj) $(cublasobj)
 	$(FC) -shared -o $(libfolder)/libquickcumpi.so $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o test_quickapi.o test_quick_api_module.f90 test_quickapi.f90 -I$(objfolder) \
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
 	-L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
 
 
@@ -341,7 +345,7 @@ quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_mo
 
 # - 1. Clean object files
 clean: neat
-	-rm -f $(objfolder)/* $(libfolder)/* 
+	-rm -f $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
