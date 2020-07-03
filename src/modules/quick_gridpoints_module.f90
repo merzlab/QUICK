@@ -282,8 +282,8 @@ module quick_gridpoints_module
 
     if(master) then
 #endif
-    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
-    "total pfs:", self%nbtotpf
+!    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
+!    "total pfs:", self%nbtotpf
 #ifdef MPIV
     endif
 #endif
@@ -363,8 +363,8 @@ module quick_gridpoints_module
 
     timer_cumer%TDFTGrdPck = timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct - timer_cumer%TDFTPrscrn
 
-    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
-    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
+!    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
+!    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
 
 
 !    call exit
