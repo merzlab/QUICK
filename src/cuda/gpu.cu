@@ -35,7 +35,7 @@ extern "C" void gpu_startup_(void)
 #ifdef DEBUG
         debugFile = fopen("debug.cuda", "w+");
 #endif
-	PRINTDEBUG("BEGIN TO WARM UP")
+	PRINTDEBUGNS("BEGIN TO WARM UP")
 
         gpu = new gpu_type;
 
@@ -232,7 +232,7 @@ extern "C" void gpu_shutdown_(void)
     delete gpu;
     cudaDeviceReset();
 
-    PRINTDEBUG("SHUTDOWN NORMALLY")
+    PRINTDEBUGNS("SHUTDOWN NORMALLY")
 
 #ifdef DEBUG
     fclose(debugFile);

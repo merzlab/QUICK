@@ -67,21 +67,26 @@ fflush(stdout);\
 }
 
 #ifdef DEBUG
-#define PRINTDEBUG(s) \
+#define PRINTDEBUGNS(s) \
 {\
     fprintf(debugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+}
+#define PRINTDEBUG(s) \
+{\
+    fprintf(gpu->debugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
 }
 
 #define PRINTUSINGTIME(s,time)\
 {\
-    fprintf(debugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
+    fprintf(gpu->debugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
 }
 
 #define PRINTMEM(s,a) \
 {\
-	fprintf(debugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
+	fprintf(gpu->debugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
 }
 #else
+#define PRINTDEBUGNS(s)
 #define PRINTDEBUG(s)
 #define PRINTUSINGTIME(s,time)
 #define PRINTMEM(s,a)

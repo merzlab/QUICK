@@ -116,7 +116,7 @@ void mgpu_startup(int mpirank)
     debugFile = fopen(fname, "w+");
 #endif
 
-    PRINTDEBUG("BEGIN TO WARM UP")
+    PRINTDEBUGNS("BEGIN TO WARM UP")
 
     gpu = new gpu_type;
 
@@ -140,7 +140,7 @@ extern "C" void mgpu_shutdown_(void)
 
     free(gpu_dev_id);
 
-    PRINTDEBUG("END DEVICE SHUTDOWN")    
+    PRINTDEBUGNS("END DEVICE SHUTDOWN")    
 
 #ifdef DEBUG
     fclose(debugFile);
