@@ -16,8 +16,11 @@
 */
 
 #include "octree.h"
+#include "gpack_type.h"
 
 void get_boundaries(vector<point> *ptlst, double *xmin, double *xmax, double *ymin, double *ymax, double *zmin, double *zmax){
+
+	PRINTOCTDEBUG("COMPUTING GRID BOUNDARIES")
 
         point pt0= ptlst->at(0);
         double *x0 = (double*) pt0.x;
@@ -69,6 +72,8 @@ void get_boundaries(vector<point> *ptlst, double *xmin, double *xmax, double *ym
         *xmax += 1.0;
         *ymax += 1.0;
         *zmax += 1.0;
+
+        PRINTOCTDEBUG("END COMPUTING GRID BOUNDARIES")
 
 }
 
@@ -124,6 +129,8 @@ void distribute_grid_pts(vector<point> *ptlst, node *n){
  properties. bin_size is the maximum amount of grid points for a node. max_lvl is the depth of tree.*/
 vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *sswt, double *weight, int *iatm, int count, int bin_size, int max_lvl){
 
+        PRINTOCTDEBUG("STARTING OCTREE ALGORITHM")
+
 	/*Organize the coordinates into point type*/
 	vector<point> ptlst;
 
@@ -134,8 +141,8 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 
 	get_boundaries(&ptlst, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax);	
 
-#ifdef OCT_DEBUG	
-	printf("minX: %f, maxX: %f, minY: %f, maxY: %f, minZ: %f, maxZ: %f \n",xmin,xmax,ymin,ymax,zmin,zmax);
+#ifdef DEBUG	
+        fprintf(gps->gpackDebugFile,"Computed grid boundaries: minX: %f, maxX: %f, minY: %f, maxY: %f, minZ: %f, maxZ: %f \n", xmin,xmax,ymin,ymax,zmin,zmax);
 #endif
 	/*Create the octree in terms of a node list*/
 	vector<node> octree; /*We would store ONLY SIGNIFICANT NODES (i.e. nodes with at least one grid point) in this vector as follows.*/
@@ -214,8 +221,8 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 		
 		}
 
-#ifdef OCT_DEBUG
-		printf("i: %i nlvls: %i lvlstart: %i lvlend: %i nnodes_at_lvl: %i \n", i, nlvls, lvlstart, lvlend ,nnodes_at_lvl);
+#ifdef DEBUG
+		fprintf(gps->gpackDebugFile," i: %i nlvls: %i lvlstart: %i lvlend: %i nnodes_at_lvl: %i \n", i, nlvls, lvlstart, lvlend ,nnodes_at_lvl);
 #endif
 
 		/*This loops goes through each node at a given level*/
@@ -325,8 +332,8 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 						nk.has_children = false;
 					}
 
-#ifdef OCT_DEBUG
-                                        printf("i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
+#ifdef DEBUG
+                                        fprintf(gps->gpackDebugFile," i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
                                         , nk.xmax, nk.ymin, nk.ymax, nk.zmin, nk.zmax, numpts);
 #endif
 
@@ -342,14 +349,16 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 			}
 		}
 
-#ifdef OCT_DEBUG
-		printf("i: %i lvl_node_counter.at(i): %i child_count: %i\n", i, lvl_node_counter.at(i), child_count);
+#ifdef DEBUG
+		fprintf(gps->gpackDebugFile," i: %i lvl_node_counter.at(i): %i child_count: %i\n", i, lvl_node_counter.at(i), child_count);
 #endif
 
 		/*Update the lvl_node_counter for new generation*/
 		lvl_node_counter.push_back(lvl_node_counter.back()+child_count);
 
 	}
+
+        PRINTOCTDEBUG("END RUNNING OCTREE ALGORITHM")
 
 	return octree;
 
