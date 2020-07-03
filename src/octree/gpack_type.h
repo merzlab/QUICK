@@ -15,26 +15,32 @@ static FILE *gpackDebugFile = NULL;
 
 //Some useful macros
 #ifdef DEBUG
-#define PRINTOCTDEBUG(s) \
+#define PRINTOCTDEBUGNS(s) \
 {\
     fprintf(gpackDebugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
 }
 
+#define PRINTOCTDEBUG(s) \
+{\
+    fprintf(gps->gpackDebugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+}
+
 #define PRINTOCTTIME(s,time)\
 {\
-    fprintf(gpackDebugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f s =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
+    fprintf(gps->gpackDebugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f s =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
 }
 
 #define PRINTOCTMEM(s,a) \
 {\
-        fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
+        fprintf(gps->gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
 }
 
 #define PRINTOCTMEMCOUNT(s,a,b) \
 {\
-        fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s %10s : %5d ELEMENTS, %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a,b);\
+        fprintf(gps->gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s %10s : %5d ELEMENTS, %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a,b);\
 }
 #else
+#define PRINTOCTDEBUGNS(s)
 #define PRINTOCTDEBUG(s)
 #define PRINTOCTTIME(s,time)
 #define PRINTOCTMEM(s,a)
