@@ -149,6 +149,9 @@ vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
 #ifdef DEBUG	
         fprintf(gps->gpackDebugFile,"Computed grid boundaries: minX: %f, maxX: %f, minY: %f, maxY: %f, minZ: %f, maxZ: %f \n", xmin,xmax,ymin,ymax,zmin,zmax);
 #endif
+
+        PRINTOCTDEBUG("RUNNING OCTREE ALGORITHM")
+
 	/*Create the octree in terms of a node list*/
 	vector<node> octree; /*We would store ONLY SIGNIFICANT NODES (i.e. nodes with at least one grid point) in this vector as follows.*/
 
@@ -337,7 +340,7 @@ vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
 						nk.has_children = false;
 					}
 
-#ifdef DEBUG
+#if defined DEBUG && WRITE_OCTREE
                                         fprintf(gps->gpackDebugFile," i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
                                         , nk.xmax, nk.ymin, nk.ymax, nk.zmin, nk.zmax, numpts);
 #endif

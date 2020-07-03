@@ -10,6 +10,9 @@
 
 using namespace std;
 
+// Write octree into the debug file
+//#define WRITE_OCTREE
+
 /*Struct to hold grid point value pointers*/
 struct point{
         double *x;
