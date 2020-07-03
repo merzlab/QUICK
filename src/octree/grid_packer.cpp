@@ -374,8 +374,7 @@ void pack_grid_pts(){
 	start = clock();
 
 	//Generate the octree
-        octree = generate_octree(gps->gridx->_cppData, gps->gridy->_cppData, gps->gridz->_cppData, gps->sswt->_cppData, gps->ss_weight->_cppData, 
-                 gps->grid_atm->_cppData, gps->arr_size, MAX_POINTS_PER_CLUSTER, OCTREE_DEPTH);
+        octree = generate_octree(gps, MAX_POINTS_PER_CLUSTER, OCTREE_DEPTH);
 
 	end = clock();
 

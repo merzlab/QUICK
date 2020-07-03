@@ -1,9 +1,8 @@
-#include "../config.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
-#include "gpack_common.h"
+#include "gpack_type.h"
 
 #ifdef MPIV
 #include <mpi.h>
@@ -42,5 +41,5 @@ struct node{
         vector<point> ptlst; /*Keeps a list of points belonging to each node*/
 };
 
-vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *sswt, double *weight, int *iatm, int count, int bin_size, int max_lvl);
+vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl);
 
