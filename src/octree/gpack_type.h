@@ -1,8 +1,44 @@
+#ifndef QUICK_GPACK_COMMON_H
+#define QUICK_GPACK_COMMON_H
+
+#include "../config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#define DEBUG
+// setup a debug file
+#ifdef DEBUG
+static FILE *gpackDebugFile = NULL;
+#endif
+
+//Some useful macros
+#ifdef DEBUG
+#define PRINTOCTDEBUG(s) \
+{\
+    fprintf(gpackDebugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+}
+
+#define PRINTOCTTIME(s,time)\
+{\
+    fprintf(gpackDebugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f s =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
+}
+
+#define PRINTOCTMEM(s,a) \
+{\
+        fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
+}
+
+#define PRINTOCTMEMCOUNT(s,a) \
+{\
+        fprintf(gpackDebugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s %10s : %5d ELEMENTS, %lli BYTES\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a,b);\
+}
+#else
+#define PRINTOCTDEBUG(s)
+#define PRINTOCTTIME(s,time)
+#define PRINTOCTMEM(s,a)
+#define PRINTOCTMEMCOUNT(s,a,b)
+#endif
+
 
 template <typename T> struct gpack_buffer_type;
 
@@ -50,6 +86,10 @@ struct gpack_type{
 
    double time_octree; // time for running octree algorithm
    double time_bfpf_prescreen; // time for prescreening basis and primitive functions
+
+#ifdef DEBUG
+   FILE *gpackDebugFile;
+#endif
 
 };
 
@@ -176,10 +216,12 @@ void gpack_buffer_type<T> :: Allocate()
         }         
     }
 
+    PRINTOCTMEMCOUNT("ALLOCATING",_length*_length2,(unsigned long long int)_length*_length2*sizeof(T))
+    PRINTOCTMEM("TOTAL OCTREE MEMORY++", gps->totalGPACKMemory)
 
 #ifdef DEBUG
-    printf(">> ALLOCATING OCTREE MEMORY %i, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
-    printf(">> TOTAL OCTREE MEMORY++ %i \n",gps->totalGPACKMemory);
+//    printf(">> ALLOCATING OCTREE MEMORY %i, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
+//    printf("TOTAL OCTREE MEMORY++ %i \n",gps->totalGPACKMemory);
 #endif
 
 }
@@ -195,9 +237,12 @@ void gpack_buffer_type<T> :: Deallocate()
     _cppData = NULL;
     _f90Data = NULL;
 
+    PRINTOCTMEMCOUNT("DEALLOCATING",_length*_length2,(unsigned long long int)_length*_length2*sizeof(T))
+    PRINTOCTMEM("TOTAL OCTREE MEMORY--", gps->totalGPACKMemory)
+
 #ifdef DEBUG
-    printf(">> DEALLOCATING OCTREE MEMORY %i, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
-    printf(">> TOTAL OCTREE MEMORY-- %i \n",gps->totalGPACKMemory);
+//    printf(">> DEALLOCATING OCTREE MEMORY %i, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
+//    printf(">> TOTAL OCTREE MEMORY-- %i \n",gps->totalGPACKMemory);
 #endif
 }
 
@@ -214,10 +259,12 @@ void gpack_buffer_type<T> :: Transfer(T* f90Data)
         }
     }
 
+    PRINTOCTMEMCOUNT("TRANSFERRING TO F90 SIDE",_length*_length2,(unsigned long long int)_length*_length2*sizeof(T))
+
 #ifdef DEBUG
-    printf(">> TRANSFERRING %i BYTES TO F90 SIDE, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
+//    printf(">> TRANSFERRING %i BYTES TO F90 SIDE, NUMBER OF ELEMENTS %i \n", (unsigned long long int)_length*_length2*sizeof(T), _length*_length2);
 #endif
 }
 
 
-
+#endif
