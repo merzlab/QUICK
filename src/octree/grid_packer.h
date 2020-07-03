@@ -1,6 +1,5 @@
 #include "octree.h"
 
-//grd_pck_strct gpst;
 
 struct bas_func{
 
@@ -24,6 +23,8 @@ extern "C" {
 void gpack_initialize_();
 
 void gpack_finalize_();
+
+void pack_grid_pts();
 
 /*Fortran interface to prune & pack grid points*/
 void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *ntgpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn);
@@ -52,15 +53,11 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree);
 //MPI setup for the grid operations
 #ifdef MPIV
 
-struct gpack_mpi{
-	int mpisize;
-	int mpirank;
+  int mpisize;
+  int mpirank;
 
 //Prescreening is parallelized by sharing bins among slaves, this array keeps track of that.
-	unsigned int *mpi_binlst;
-};
-
-gpack_mpi gmpi;
+  unsigned int *mpi_binlst;
 
 void setup_gpack_mpi_1();
 
