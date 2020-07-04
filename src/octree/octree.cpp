@@ -340,7 +340,7 @@ vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
 						nk.has_children = false;
 					}
 
-#if defined DEBUG && WRITE_OCTREE
+#if defined DEBUG && defined WRITE_OCTREE
                                         fprintf(gps->gpackDebugFile," i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
                                         , nk.xmax, nk.ymin, nk.ymax, nk.zmin, nk.zmax, numpts);
 #endif
