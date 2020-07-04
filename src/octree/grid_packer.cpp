@@ -54,13 +54,6 @@ void gpack_initialize_(){
 // finalize data structure of grid partitioning algorithm
 void gpack_finalize_(){
 
-    delete gps->gridx;
-    delete gps->gridy;
-    delete gps->gridz;
-    delete gps->sswt;
-    delete gps->ss_weight;
-    delete gps->grid_atm;
-
     delete gps->sigrad2;
     delete gps->ncontract;
     delete gps->aexp;
@@ -69,16 +62,29 @@ void gpack_finalize_(){
     delete gps->ncenter;
     delete gps->itype;
 
-    delete gps->gridxb;
-    delete gps->gridyb;
-    delete gps->gridzb;
-    delete gps->gridb_sswt;
-    delete gps->gridb_weight;
-    delete gps->gridb_atm;
-    delete gps->basf;
-    delete gps->primf;
-    delete gps->basf_counter;
-    delete gps->primf_counter;
+#ifdef MPIV
+    if(mpirank == 0){
+#endif
+      delete gps->gridx;
+      delete gps->gridy;
+      delete gps->gridz;
+      delete gps->sswt;
+      delete gps->ss_weight;
+      delete gps->grid_atm;
+
+      delete gps->gridxb;
+      delete gps->gridyb;
+      delete gps->gridzb;
+      delete gps->gridb_sswt;
+      delete gps->gridb_weight;
+      delete gps->gridb_atm;
+      delete gps->basf;
+      delete gps->primf;
+      delete gps->basf_counter;
+      delete gps->primf_counter;
+#ifdef MPIV
+    }
+#endif
 
 #ifdef CUDA
     delete gps->dweight;    
@@ -134,26 +140,11 @@ void get_cpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw
 /*Fortran accessible method to pack grid points*/
 void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *ntgpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn){
         
-
-#ifdef MPIV
-    if(mpirank==0){
-#endif
-
         gps->arr_size    = *arr_size;
         gps->natoms      = *natoms;
         gps->nbasis      = *nbasis;
         gps->maxcontract = *maxcontract;
         gps->DMCutoff    = *DMCutoff;
-
-
-        gps->gridx       = new gpack_buffer_type<double>(grid_ptx, gps->arr_size);
-        gps->gridy       = new gpack_buffer_type<double>(grid_pty, gps->arr_size);
-        gps->gridz       = new gpack_buffer_type<double>(grid_ptz, gps->arr_size);
-        gps->sswt        = new gpack_buffer_type<double>(grid_sswt, gps->arr_size);
-        gps->ss_weight   = new gpack_buffer_type<double>(grid_weight, gps->arr_size);
-        gps->grid_atm    = new gpack_buffer_type<int>(grid_atm, gps->arr_size);
-
-        get_ssw_pruned_grid();
 
         gps->sigrad2     = new gpack_buffer_type<double>(sigrad2, gps->nbasis);
         gps->ncontract   = new gpack_buffer_type<int>(ncontract, gps->nbasis);
@@ -164,8 +155,19 @@ void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *
         gps->itype       = new gpack_buffer_type<int>(itype, 3, gps->nbasis);
 
 #ifdef MPIV
-   }
+    if(mpirank==0){
+#endif
+        gps->gridx       = new gpack_buffer_type<double>(grid_ptx, gps->arr_size);
+        gps->gridy       = new gpack_buffer_type<double>(grid_pty, gps->arr_size);
+        gps->gridz       = new gpack_buffer_type<double>(grid_ptz, gps->arr_size);
+        gps->sswt        = new gpack_buffer_type<double>(grid_sswt, gps->arr_size);
+        gps->ss_weight   = new gpack_buffer_type<double>(grid_weight, gps->arr_size);
+        gps->grid_atm    = new gpack_buffer_type<int>(grid_atm, gps->arr_size);
 
+        get_ssw_pruned_grid();
+
+#ifdef MPIV
+    }
 #endif
 
         pack_grid_pts();
@@ -358,11 +360,7 @@ void pack_grid_pts(){
         double time_octree;
 
 #ifdef MPIV
-
 	setup_gpack_mpi_1();
-
-	MPI_Barrier(MPI_COMM_WORLD);
-
 #endif
 
 	vector<node> octree;
@@ -396,12 +394,14 @@ void pack_grid_pts(){
 
 #ifdef MPIV
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
 #endif
-	cpu_get_pfbased_basis_function_lists_new_imp(&octree);
+
+    cpu_get_pfbased_basis_function_lists_new_imp(&octree);
 
 #ifdef MPIV
-	delete_gpack_mpi();
-
+    delete_gpack_mpi();
 #endif
 
 #endif
@@ -680,7 +680,7 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
 		}
 	}
 
-#if defined DEBUG && WRITE_TCL_XYZ
+#if defined DEBUG && defined WRITE_TCL_XYZ
 
         fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
         fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
@@ -920,6 +920,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	}
 
 	setup_gpack_mpi_2(leaf_count, gridx, gridy, gridz, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, sswt, weight, iatm, bs_tracker);
+
 #endif
 
 #ifdef MPIV
@@ -943,7 +944,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 #else
 	bstart=mpi_binlst[mpirank];
 	bend=mpi_binlst[mpirank+1];
-
+        
 #endif
 	for(unsigned int i=bstart; i< bend; i++){
 		for(unsigned int j=bs_tracker[i]; j<bs_tracker[i+1]; j++){
@@ -967,8 +968,12 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 
 #ifdef MPIV
+        
+        printf("get_slave_primf_contraf_lists %i \n", mpirank);
 
         get_slave_primf_contraf_lists(leaf_count, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, bs_tracker);
+
+        printf("get_slave_primf_contraf_lists done %i \n", mpirank);
 
         if(mpirank == 0){
 
@@ -1089,7 +1094,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
                 }
         }
 
-#if defined DEBUG && WRITE_TCL_XYZ
+#if defined DEBUG && defined WRITE_TCL_XYZ
 
         fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
         fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
@@ -1173,6 +1178,8 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 #ifdef MPIV
 	}
 #endif
+
+        printf("done %i \n", mpirank);
 
         free(gridx);
         free(gridy);
@@ -1298,8 +1305,6 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
 void setup_gpack_mpi_1(){
 
 	MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&gps->nbasis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&gps->maxcontract, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 }
 
