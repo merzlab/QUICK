@@ -969,11 +969,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 #ifdef MPIV
         
-        printf("get_slave_primf_contraf_lists %i \n", mpirank);
-
         get_slave_primf_contraf_lists(leaf_count, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, bs_tracker);
-
-        printf("get_slave_primf_contraf_lists done %i \n", mpirank);
 
         if(mpirank == 0){
 
@@ -1178,8 +1174,6 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 #ifdef MPIV
 	}
 #endif
-
-        printf("done %i \n", mpirank);
 
         free(gridx);
         free(gridy);
