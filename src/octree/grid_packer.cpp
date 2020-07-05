@@ -89,7 +89,13 @@ void gpack_finalize_(){
 #ifdef CUDA
     delete gps->dweight;    
 #else
-    delete gps->bin_counter;
+#ifdef MPIV
+    if(mpirank == 0){
+#endif
+      delete gps->bin_counter;
+#ifdef MPIV
+    }
+#endif
 #endif
 
     delete gps;
@@ -973,69 +979,69 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         if(mpirank == 0){
 
-	end = clock();
+	  end = clock();
 
-	mpi_post_proc_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	  mpi_post_proc_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-        PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", mpi_post_proc_time)
+          PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", mpi_post_proc_time)
 
-	gps -> time_bfpf_prescreen = mpi_post_proc_time+mpi_run_time+mpi_prep_time;
+	  gps -> time_bfpf_prescreen = mpi_post_proc_time+mpi_run_time+mpi_prep_time;
 #else
 
-        end = clock();
+          end = clock();
 
-        run_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+          run_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-	PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : RUN TIME", run_time)        
+	  PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : RUN TIME", run_time)        
 
-        gps -> time_bfpf_prescreen = run_time;
+          gps -> time_bfpf_prescreen = run_time;
 #endif
-        start = clock();
+          start = clock();
 
-        //pruned grid info lists
-        vector<int> pgpweight;
-        vector<double> pgridx;
-        vector<double> pgridy;
-        vector<double> pgridz;
-        vector<double> psswt;
-        vector<double> pweight;
-        vector<int> piatm;
-        vector<int> pcfweight;
-        vector<int> ppfweight;
-        vector<int> pcf_counter;
-        vector<int> ppf_counter;
-	vector<int> pbs_tracker;
+          //pruned grid info lists
+          vector<int> pgpweight;
+          vector<double> pgridx;
+          vector<double> pgridy;
+          vector<double> pgridz;
+          vector<double> psswt;
+          vector<double> pweight;
+          vector<int> piatm;
+          vector<int> pcfweight;
+          vector<int> ppfweight;
+          vector<int> pcf_counter;
+          vector<int> ppf_counter;
+	  vector<int> pbs_tracker;
 
 
 #ifdef CBFPF_DEBUG
-        int dbg_totncf = 0;
+          int dbg_totncf = 0;
 #endif
 
-        unsigned int pcf_count=0;
-        unsigned int ppf_count=0;
-	unsigned int ppt_count=0;
+          unsigned int pcf_count=0;
+          unsigned int ppf_count=0;
+	  unsigned int ppt_count=0;
 
-        pcf_counter.push_back(pcf_count);
-        ppf_counter.push_back(ppf_count);
-	pbs_tracker.push_back(ppt_count);	
+          pcf_counter.push_back(pcf_count);
+          ppf_counter.push_back(ppf_count);
+	  pbs_tracker.push_back(ppt_count);	
 
-        //Get the pruned grid
-        for(int i=0; i<leaf_count;i++){
-                int cfcount = 0;
-                for(int j=0; j<gps -> nbasis; j++){
-                        if(cfweight[(i * gps -> nbasis) + j] >0){
-                                cfcount++;
+          //Get the pruned grid
+          for(int i=0; i<leaf_count;i++){
+                  int cfcount = 0;
+                  for(int j=0; j<gps -> nbasis; j++){
+                          if(cfweight[(i * gps -> nbasis) + j] >0){
+                                  cfcount++;
 #ifdef CBFPF_DEBUG
-                                dbg_totncf++;
+                                  dbg_totncf++;
 #endif
-                        }
-                }
-                //If there is at least one cf per bin, the bin is significant
-                if(cfcount>0){
+                          }
+                  }
+                  //If there is at least one cf per bin, the bin is significant
+                  if(cfcount>0){
 
                         for(int j=bs_tracker[i]; j< bs_tracker[i+1]; j++){
-				if(gpweight[j]>0){				
-                                	pgridx.push_back(gridx[j]);
+		  		if(gpweight[j]>0){				
+                                  	pgridx.push_back(gridx[j]);
                                 	pgridy.push_back(gridy[j]);
                                 	pgridz.push_back(gridz[j]);
                                 	psswt.push_back(sswt[j]);
@@ -1087,26 +1093,26 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 #endif
 
-                }
-        }
+                  }
+          }
 
 #if defined DEBUG && defined WRITE_TCL_XYZ
 
-        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
-        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
+          fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of contracted functions: %i \n", __FILE__, __LINE__, __func__, pcfweight.size());
+          fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of primitive functions: %i \n", __FILE__, __LINE__, __func__, ppfweight.size());
 
 
-        //print grid for vmd visualization
-        write_vmd_grid(dbg_leaf_nodes, "initgrid.tcl");
-        write_xyz(&dbg_leaf_nodes, NULL, false, "initgpts.xyz");
+          //print grid for vmd visualization
+          write_vmd_grid(dbg_leaf_nodes, "initgrid.tcl");
+          write_xyz(&dbg_leaf_nodes, NULL, false, "initgpts.xyz");
 
-        //dbg_signodes = dbg_leaf_nodes;
-        //write first 3 levels of the octree for vmd visualization
-        vector<node> dbg_lvl0_nodes;
-        vector<node> dbg_lvl1_nodes;
-        vector<node> dbg_lvl2_nodes;
+          //dbg_signodes = dbg_leaf_nodes;
+          //write first 3 levels of the octree for vmd visualization
+          vector<node> dbg_lvl0_nodes;
+          vector<node> dbg_lvl1_nodes;
+          vector<node> dbg_lvl2_nodes;
 
-        for(int i=0; i<octree -> size();i++){
+          for(int i=0; i<octree -> size();i++){
 
                 node n = octree->at(i);
 
@@ -1117,59 +1123,59 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
                 }else if(n.level == 2){
                         dbg_lvl2_nodes.push_back(n);
                 }
-        }
+          }
 
-        write_vmd_grid(dbg_lvl0_nodes, "octgrid0.tcl");
-        write_vmd_grid(dbg_lvl1_nodes, "octgrid1.tcl");
-        write_vmd_grid(dbg_lvl2_nodes, "octgrid2.tcl");
+          write_vmd_grid(dbg_lvl0_nodes, "octgrid0.tcl");
+          write_vmd_grid(dbg_lvl1_nodes, "octgrid1.tcl");
+          write_vmd_grid(dbg_lvl2_nodes, "octgrid2.tcl");
 
-        //Prints only the significant bins and points 
-        write_vmd_grid(dbg_signodes, "pgrid.tcl");
-        write_xyz(NULL, &dbg_pts, true, "bgpts.xyz");
+          //Prints only the significant bins and points 
+          write_vmd_grid(dbg_signodes, "pgrid.tcl");
+          write_xyz(NULL, &dbg_pts, true, "bgpts.xyz");
 #endif
 
-        //Convert lists into arrays
+          //Convert lists into arrays
 //        int pgridinfo_arr_size = ppt_count;
 
-        gps->gridb_count   = ppt_count;
-        gps->nbins         = pbs_tracker.size() - 1;
-        gps->nbtotbf       = pcfweight.size();
-        gps->nbtotpf       = ppfweight.size();
-        gps->ntgpts        = gps->gridb_count;
+          gps->gridb_count   = ppt_count;
+          gps->nbins         = pbs_tracker.size() - 1;
+          gps->nbtotbf       = pcfweight.size();
+          gps->nbtotpf       = ppfweight.size();
+          gps->ntgpts        = gps->gridb_count;
 
-        gps->gridxb        = new gpack_buffer_type<double>(gps->gridb_count);
-        gps->gridyb        = new gpack_buffer_type<double>(gps->gridb_count);
-        gps->gridzb        = new gpack_buffer_type<double>(gps->gridb_count);
-        gps->gridb_sswt    = new gpack_buffer_type<double>(gps->gridb_count);
-        gps->gridb_weight  = new gpack_buffer_type<double>(gps->gridb_count);
-        gps->gridb_atm     = new gpack_buffer_type<int>(gps->gridb_count);
-        gps->basf          = new gpack_buffer_type<int>(gps->nbtotbf);
-        gps->primf         = new gpack_buffer_type<int>(gps->nbtotpf);
-        gps->basf_counter  = new gpack_buffer_type<int>(gps->nbins + 1);
-        gps->primf_counter = new gpack_buffer_type<int>(gps->nbtotbf + 1);
-        gps->bin_counter   = new gpack_buffer_type<int>(gps->nbins + 1);
+          gps->gridxb        = new gpack_buffer_type<double>(gps->gridb_count);
+          gps->gridyb        = new gpack_buffer_type<double>(gps->gridb_count);
+          gps->gridzb        = new gpack_buffer_type<double>(gps->gridb_count);
+          gps->gridb_sswt    = new gpack_buffer_type<double>(gps->gridb_count);
+          gps->gridb_weight  = new gpack_buffer_type<double>(gps->gridb_count);
+          gps->gridb_atm     = new gpack_buffer_type<int>(gps->gridb_count);
+          gps->basf          = new gpack_buffer_type<int>(gps->nbtotbf);
+          gps->primf         = new gpack_buffer_type<int>(gps->nbtotpf);
+          gps->basf_counter  = new gpack_buffer_type<int>(gps->nbins + 1);
+          gps->primf_counter = new gpack_buffer_type<int>(gps->nbtotbf + 1);
+          gps->bin_counter   = new gpack_buffer_type<int>(gps->nbins + 1);
 
-        copy(pgridx.begin(), pgridx.end(), gps->gridxb->_cppData);
-        copy(pgridy.begin(), pgridy.end(), gps->gridyb->_cppData);
-        copy(pgridz.begin(), pgridz.end(), gps->gridzb->_cppData);
-        copy(psswt.begin(), psswt.end(), gps->gridb_sswt->_cppData);
-        copy(pweight.begin(), pweight.end(), gps->gridb_weight->_cppData);
-        copy(piatm.begin(), piatm.end(), gps->gridb_atm->_cppData);
-        copy(pcfweight.begin(), pcfweight.end(), gps->basf->_cppData);
-        copy(ppfweight.begin(), ppfweight.end(), gps->primf->_cppData);
-        copy(pcf_counter.begin(), pcf_counter.end(), gps->basf_counter->_cppData);
-        copy(ppf_counter.begin(), ppf_counter.end(), gps->primf_counter->_cppData);
-	copy(pbs_tracker.begin(), pbs_tracker.end(), gps->bin_counter->_cppData);
+          copy(pgridx.begin(), pgridx.end(), gps->gridxb->_cppData);
+          copy(pgridy.begin(), pgridy.end(), gps->gridyb->_cppData);
+          copy(pgridz.begin(), pgridz.end(), gps->gridzb->_cppData);
+          copy(psswt.begin(), psswt.end(), gps->gridb_sswt->_cppData);
+          copy(pweight.begin(), pweight.end(), gps->gridb_weight->_cppData);
+          copy(piatm.begin(), piatm.end(), gps->gridb_atm->_cppData);
+          copy(pcfweight.begin(), pcfweight.end(), gps->basf->_cppData);
+          copy(ppfweight.begin(), ppfweight.end(), gps->primf->_cppData);
+          copy(pcf_counter.begin(), pcf_counter.end(), gps->basf_counter->_cppData);
+          copy(ppf_counter.begin(), ppf_counter.end(), gps->primf_counter->_cppData);
+	  copy(pbs_tracker.begin(), pbs_tracker.end(), gps->bin_counter->_cppData);
 
 #ifdef DEBUG
-        fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true bins & grid points after pruning: %i %i\n", __FILE__, __LINE__, __func__, gps->nbins, gps->ntgpts);
+          fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true bins & grid points after pruning: %i %i\n", __FILE__, __LINE__, __func__, gps->nbins, gps->ntgpts);
 #endif
 
-        end = clock();
+          end = clock();
 
-        time_proc_output = ((double) (end - start)) / CLOCKS_PER_SEC;
+          time_proc_output = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-         PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", time_proc_output)
+          PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", time_proc_output)
 
 #ifdef MPIV
 	}
