@@ -32,6 +32,7 @@ extern "C" void gpu_set_device_(int* gpu_dev_id)
 //-----------------------------------------------
 extern "C" void gpu_startup_(void)
 {
+
 #ifdef DEBUG
         debugFile = fopen("debug.cuda", "w+");
 #endif
@@ -43,6 +44,7 @@ extern "C" void gpu_startup_(void)
         gpu->debugFile = debugFile;
 #endif
 	PRINTDEBUG("CREATE NEW GPU")
+	
 }
 
 
@@ -281,8 +283,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
     
-	upload_para_to_const();
-    
+    upload_para_to_const();
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -296,6 +298,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 
     PRINTDEBUG("FINISH SETUP")
 #endif
+    
 }
 
 //Madu Manathunga: 08/31/2019
@@ -366,7 +369,7 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
 #endif
     
     PRINTDEBUG("COMPLETE UPLOADING COORDINATES")
-    
+     
 }
 
 
@@ -388,6 +391,7 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
     gpu -> gpu_sim.iattype          = gpu -> iattype -> _devData;
     
     PRINTDEBUG("COMPLETE UPLOADING ATOM AND CHARGE")
+    
 }
 
 
@@ -442,7 +446,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
 //-----------------------------------------------
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim)
 {
-    
+
 #ifdef DEBUG
     cudaEvent_t start,end;
     cudaEventCreate(&start);
@@ -1060,6 +1064,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 #endif
  
     PRINTDEBUG("COMPLETE UPLOADING CUTOFF")
+
 }
 
 //-----------------------------------------------
@@ -1380,18 +1385,43 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
             }
         }
     }
-    
-    gpu -> gpu_basis -> upload_all();
-    
+
+//    gpu -> gpu_basis -> upload_all();
+    gpu -> gpu_basis -> ncontract -> Upload();
+    gpu -> gpu_basis ->itype->Upload();
+    gpu -> gpu_basis ->aexp->Upload();
+    gpu -> gpu_basis ->dcoeff->Upload();    
+    gpu -> gpu_basis ->ncenter->Upload();
+    gpu -> gpu_basis ->kstart->Upload();
+    gpu -> gpu_basis ->katom->Upload();
+    gpu -> gpu_basis ->kprim->Upload();
+    gpu -> gpu_basis ->Ksumtype->Upload();
+    gpu -> gpu_basis ->Qnumber->Upload();
+    gpu -> gpu_basis ->Qstart->Upload();
+    gpu -> gpu_basis ->Qfinal->Upload();
+    gpu -> gpu_basis ->Qsbasis->Upload();
+    gpu -> gpu_basis ->Qfbasis->Upload();
+    gpu -> gpu_basis ->gccoeff->Upload();
+    gpu -> gpu_basis ->cons->Upload();
+    gpu -> gpu_basis ->Xcoeff->Upload();
+    gpu -> gpu_basis ->gcexpo->Upload();
+    gpu -> gpu_basis ->KLMN->Upload();
+    gpu -> gpu_basis ->prim_start->Upload();
+    gpu -> gpu_basis ->Xcoeff->Upload();
+    gpu -> gpu_basis ->expoSum->Upload();
+    gpu -> gpu_basis ->weightedCenterX->Upload();
+    gpu -> gpu_basis ->weightedCenterY->Upload();
+    gpu -> gpu_basis ->weightedCenterZ->Upload();
+    gpu -> gpu_basis ->sorted_Q->Upload();
+    gpu -> gpu_basis ->sorted_Qnumber->Upload();
+
     gpu -> gpu_sim.expoSum                      =   gpu -> gpu_basis -> expoSum -> _devData;
     gpu -> gpu_sim.weightedCenterX              =   gpu -> gpu_basis -> weightedCenterX -> _devData;
     gpu -> gpu_sim.weightedCenterY              =   gpu -> gpu_basis -> weightedCenterY -> _devData;
     gpu -> gpu_sim.weightedCenterZ              =   gpu -> gpu_basis -> weightedCenterZ -> _devData;
     gpu -> gpu_sim.sorted_Q                     =   gpu -> gpu_basis -> sorted_Q -> _devData;
     gpu -> gpu_sim.sorted_Qnumber               =   gpu -> gpu_basis -> sorted_Qnumber -> _devData;
-    
     gpu -> gpu_sim.Xcoeff                       =   gpu -> gpu_basis -> Xcoeff -> _devData;
-    
     gpu -> gpu_sim.ncontract                    =   gpu -> gpu_basis -> ncontract -> _devData;
     gpu -> gpu_sim.dcoeff                       =   gpu -> gpu_basis -> dcoeff -> _devData;
     gpu -> gpu_sim.aexp                         =   gpu -> gpu_basis -> aexp -> _devData;
@@ -1465,6 +1495,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
 #endif
     
     PRINTDEBUG("COMPLETE UPLOADING BASIS")
+
 }
 
 
@@ -2026,10 +2057,10 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-    for (int i = 0; i < gpu->natom * 3; i ++) {
-//        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
+/*    for (int i = 0; i < gpu->natom * 3; i ++) {
+        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
     }
-    
+*/    
     
     getGrad(gpu);
     
