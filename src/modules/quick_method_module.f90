@@ -256,7 +256,7 @@ module quick_method_module
             else if (self%MP2) then
                 write(io,'("| METHOD = SECOND ORDER PERTURBATION THEORY")')
             else if (self%DFT) then
-                write(io,'("| METHOD = DENSTITY FUNCTIONAL THEORY")')
+                write(io,'("| METHOD = DENSITY FUNCTIONAL THEORY")')
                 
                 if(self%uselibxc) then
                      call xc_f90_version(vmajor, vminor, vmicro)
