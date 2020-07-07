@@ -19,7 +19,7 @@ PLAT = _LINUX
 #  desired load options for your machine.
 #
 FORTRAN  = $(FC)
-OPTS     = -O0 -g -fPIC
+OPTS     = -O3 $(LIB_FLAGS)
 DRVOPTS  = $(OPTS)
 NOOPT    =
 LOADER   = $(FC)
@@ -28,10 +28,20 @@ LOADOPTS =
 #  The archiver and the flag(s) to use when building archive (library)
 #  If you system has no ranlib, set RANLIB = echo.
 #
-ARCH     = $(FC)
-ARCHFLAGS= -shared -o
-RANLIB   = echo
+ifeq "$(LIB_TYPE)" "SHARED"
+  ARCH     = $(FC)
+  ARCHFLAGS= -shared -o
+  RANLIB   = echo
+else
+  ARCH     = ar
+  ARCHFLAGS= cr
+  RANLIB   = ranlib
+endif
 #
 #  The location and name of the Reference BLAS library.
 #
-BLASLIB      = libblas.so 
+ifeq "$(LIB_TYPE)" "SHARED"
+  BLASLIB      = libblas.so 
+else
+  BLASLIB      = libblas.a
+endif

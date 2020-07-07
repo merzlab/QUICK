@@ -3,9 +3,7 @@
 MAKEIN = ../../make.in
 include $(MAKEIN)
 
-#CXX_FLAGS= -O0 -g -check-pointers=rw -debug all
-CXX_FLAGS= -O0 -g -fPIC
-
+CXX_FLAGS= $(OPT_FLAGS) $(LIB_FLAGS)
 
 objfolder = ../../obj
 libxcfolder = ../libxc

@@ -7,6 +7,7 @@ include $(MAKEIN)
 
 objfolder = ../../obj
 libxcfolder = ../libxc
+LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 #************************************************************************
 # 
 #                 B. Make Object Files

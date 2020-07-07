@@ -30,6 +30,18 @@ include $(MAKEIN)
 
 # See compiler information and flag in make.in
 
+# set variables based on library type (i.e. shared or static)
+
+ifeq "$(LIB_TYPE)" "SHARED"
+  ARCH      = $(FC)
+  ARCHFLAGS = -shared -o
+  libext    =so
+else
+  ARCH     = ar
+  ARCHFLAGS= -r
+  libext   =a
+endif
+
 #----------------------
 # src file location
 # #----------------------
@@ -227,7 +239,7 @@ quick_cuda:
 #================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
-	cp $(blasfolder)/libblas.so $(libfolder)
+	cp $(blasfolder)/libblas.$(libext) $(libfolder)
 #==================== libxc cpu library =================================
 libxc_cpu:
 	cd $(libxcfolder) && make libxc_cpu
@@ -238,12 +250,12 @@ libxc_gpu:
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CPP) $(CPP_FLAG) -c $< -o $@
+	$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
-	$(CPP) $(CPP_FLAG) -c $< -o $@
+	$(CC) $(CPP_FLAG) -c $< -o $@
 
 #===================== target for general src files =====================
 
@@ -285,47 +297,36 @@ cpconfig.MPI:
 # 
 #**********************************************************************
 quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
-	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(libext) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
 quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquickcu.so $(objfolder)/*.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcu.$(libext) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS)
 
 quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
 	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
 
 quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
-	$(FC) -shared -o $(libfolder)/libquickmpi.so $(objfolder)/*.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(libext) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
 quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquickcumpi.so $(objfolder)/*.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(libext) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
-#	$(FC) -o $(exefolder)/quick.cuda.MPI  $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_xcall.o $(cudaobj) $(cudaxcobj) $(cudalibxcobj) \
-	$(SUBS) $(cusolverobj) $(cublasobj) $(libfolder)/blas.a $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS)
 
-#quick_lib:$(OBJ) ambermod amber_interface.o
 
-quicklib: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(TESTAPI) blas
-	$(FC) -shared -o $(libfolder)/libquick.so $(objfolder)/*.o
-	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
-	-L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
+quicklib: quick $(TESTAPI)
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
-quickculib:makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(TESTAPI) $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquickcu.so $(objfolder)/*.o
-	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
-	-L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
+quickculib: quick.cuda $(TESTAPI)
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
 
-quickmpilib: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(TESTAPI) blas
-	$(FC) -shared -o $(libfolder)/libquickmpi.so $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
-	-L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
+quickmpilib: quick.MPI $(TESTAPI)
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
-quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(TESTAPI) blas $(cusolverobj) $(cublasobj)
-	$(FC) -shared -o $(libfolder)/libquickcumpi.so $(objfolder)/*.o
-	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) \
-	-L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
+quickcumpilib: quick.cuda.MPI $(TESTAPI) 
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
 
 
 #ambermod:
@@ -345,7 +346,7 @@ quickcumpilib:makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_mo
 
 # - 1. Clean object files
 clean: neat
-	-rm -f $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
+	-rm -f $(objfolder)/* $(srcfolder)/*.o 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
@@ -355,13 +356,14 @@ clean: neat
 neat:
 	-rm -f $(TMPFILES)
 
-#Madu: Clean except libxc. Only for debugging
-dryclean:
-	-rm -f $(objfolder)/* $(libfolder)/*
+uninstall: neat
+	-rm -f $(exefolder)/quick* $(exefolder)/testapi.o $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean	
+	cd $(modfolder) && make clean
+	cd $(libxcfolder) && make clean
+	cd $(libxcfolder)/maple2c_device && make clean
 
 # - 2. Make tags for source files
 TAGS: $(SRC)
