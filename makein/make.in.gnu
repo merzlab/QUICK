@@ -33,9 +33,9 @@ CC = gcc
 #FFLAGS = -O3
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
-FFLAGS = -O0 -lm  -mtune=native  -ffree-form  -DGNU -cpp -g -fPIC
+FFLAGS = -O3 -lm  -mtune=native  -ffree-form  -DGNU -cpp -fPIC
 LD = $(FC)
-LDFLAGS = $(FFLAGS) -lstdc++ -g
+LDFLAGS = $(FFLAGS) -lstdc++
 #LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS) -static -L/opt/intel/ict/2.0/cmkl/8.0.1/lib/32
 TMPFILES = *.mod *.stb
@@ -43,7 +43,7 @@ TMPFILES = *.mod *.stb
 # CPP Compiler
 FPP = cpp -traditional -P  -DBINTRAJ
 CPP = gcc -DCUBLAS_USE_THUNKING
-CPP_FLAG = -I/usr/local/cuda/include  -O0
+CPP_FLAG = -I/usr/local/cuda/include  -O3
 
 # CUDA Compiler
 CUDAC = nvcc

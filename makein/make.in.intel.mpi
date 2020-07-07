@@ -32,7 +32,7 @@ CC=mpiicc
 #FFLAGS = -i4 -O3 -auto -assume byterecl -w95 -cm 
 #FFLAGS = -g -O3 -traceback
 #FFLAGS = -O3 -lm -fdefault-real-8  -mtune=native  -ffree-form
-FFLAGS = -O0 -ip -cpp -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT -no-prec-div -DCUDA -g -traceback -check bounds -fp-stack-check -fPIC
+FFLAGS = -O2 -ip -cpp -DBINTRAJ -DDIRFRC_EFS -DDIRFRC_COMTRANS -DDIRFRC_NOVEC -DFFTLOADBAL_2PROC -DPUBFFT -no-prec-div -fPIC
 LD = $(FC)
 LDFLAGS = $(FFLAGS) -lstdc++
 #LDFLAGS = $(FFLAGS)
@@ -44,7 +44,7 @@ FPP = cpp -traditional -P  -DBINTRAJ
 #CPP = gcc -DCUBLAS_USE_THUNKING
 CPP = icc  -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DCUBLAS_USE_THUNKING
 #CPP_FLAG = -I/usr/local/cuda/include  -O3
-CPP_FLAG = -I/opt/cuda/include  -O0
+CPP_FLAG = -I/opt/cuda/include  -O2
 
 # CUDA Compiler
 CUDAC = nvcc
