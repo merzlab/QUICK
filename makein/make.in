@@ -7,17 +7,18 @@
 #--------------------------------------------------
 # a. Select QUICK version (SERIAL/MPI/CUDA/CUDAMPI)
 #--------------------------------------------------
-QUICK_VERSION = CUDAMPI
+QUICK_VERSION = MPI
 #--------------------------------------------------
 # b. Set the compiler tool chain (GNU/INTEL)
 #--------------------------------------------------
-COMPILER_TOOL_CHAIN = INTEL
+COMPILER_TOOL_CHAIN = GNU
 #--------------------------------------------------
-# c. Set CUDA installation directory 
+# c. Set CUDA installation directory if you compile 
+#    CUDA or CUDAMPI version
 #--------------------------------------------------
 CUDA_HOME=/usr/local/cuda-10.1
 #--------------------------------------------------
-# d. Set MPI paths 
+# d. Set MPI paths if you compile CUDAMPI version 
 #--------------------------------------------------
 MPI_INCLUDES =/opt/intel/2018.1.163/compilers_and_libraries_2018.1.163/linux/mpi/intel64/include
 MPI_LIBS =/opt/intel/2018.1.163/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib
@@ -74,9 +75,15 @@ else
 endif
 
 # Merge fortran compiler flags
-FFLAGS = $(OPT_FLAGS) -ip -cpp $(LIB_FLAGS)
-LD = $(FC)
-LDFLAGS = $(FFLAGS) -lstdc++
+ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+  FFLAGS = $(OPT_FLAGS) -mtune=native -ffree-form -cpp -DGNU $(LIB_FLAGS)
+else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
+  FFLAGS = $(OPT_FLAGS) -ip -cpp $(LIB_FLAGS)
+endif
+
+#LD = $(FC)
+# set linker flags for fortran objects
+LDFLAGS = $(FFLAGS) -lstdc++ 
 
 # set c flags
 CPP_FLAG=-I$(CUDA_HOME)/include $(OPT_FLAGS) $(LIB_FLAGS) -DCUBLAS_USE_THUNKING
@@ -87,6 +94,6 @@ CUDA_INCL_FLAGS=-L$(CUDA_HOME)/lib64 -I$(CUDA_HOME)/include -I$(MPI_INCLUDES) -I
 # set linker flags for cuda, c and cpp objects
 ifeq ($(COMPILER_TOOL_CHAIN), GNU)
   CFLAGS = -lgfortran -L$(CUDA_HOME)/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver -lstdc++
-else
+else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
   CFLAGS = -L$(CUDA_HOME)/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver -lstdc++
 endif
