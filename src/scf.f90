@@ -641,6 +641,9 @@ subroutine electdiis(jscf)
          if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
             write(ioutfile, '(4x, "--------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " -------------")') quick_method%integralCutoff
          endif
+
+         flush(ioutfile)
+
       endif
 
 #ifdef MPIV
