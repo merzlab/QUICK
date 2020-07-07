@@ -11,11 +11,13 @@ qbasisdir=${qhome}/basis
 qbindir=${qhome}/bin
 qexe="quick.cuda"
 export QUICK_BASIS=$qbasisdir
+nprocs=4
 
 echo " Please select the QUICK executable you want to test (type the corresponding number and hit enter):"
 echo " 1 --> quick"
 echo " 2 --> quick.MPI"
 echo " 3 --> quick.cuda"
+echo " 4 --> quick.cuda.MPI"
 
 read executable
 echo ""
@@ -29,12 +31,16 @@ case $executable in
      3) echo "CUDA version selected."
 	qexe="quick.cuda"
      ;;
-     *) echo "Please select the QUICK version by selecting 1-3."
+     4) echo "CUDA MPI version selected."
+        qexe="quick.cuda.MPI"
+     ;;
+     *) echo "Please select the QUICK version by selecting 1-4."
 	echo"Aborting.."
         echo ""        
         exit 0
 esac
 
+# check if the executable is available
 if [ -f "${qbindir}/${qexe}" ]; then
 	echo ""
 	echo "Running quick tests... This will take several minutes!"
@@ -47,7 +53,18 @@ else
 	exit 0
 fi
 
-#Make sure tstdir is existing
+# if the mpi version is selected check if mpirun is available
+#ismpirun=$(mpirun --version | grep "Version" | wc -l)
+
+#if [ ("${qexe}"  == 'quick.MPI') && ($ismpirun -gt 0) ]; then
+#     echo "mpirun found. Tests will be carried out with ${nprocs} cores."
+#     echo ""
+#else
+#     echo "mpirun executable not found. Tests will be carried out in serial mode."
+#     echo ""
+#fi
+
+# Make sure tstdir is existing
 if [ -d ${tstdir} ]; then
 	cd $tstdir
 else
@@ -130,8 +147,11 @@ if [ -f tstlst ]; then
                         fi      
 
                 #Run the test case
-                ${qbindir}/${qexe} ${i}.in >${i}.run.log
-		
+#                if [ (${qexe} == "quick.MPI") && (${ismpirun} > 0) ]; then
+#                else
+                    ${qbindir}/${qexe} ${i}.in >${i}.run.log
+#                fi		
+
 		#Check the accuracy of gradients of first step
 		grep "#ref_grad" ${i}.in |awk '{print $2}'>refGrad.txt
 		sed -n '/GEOMETRY FOR OPTIMIZATION STEP   1/,/GEOMETRY FOR OPTIMIZATION STEP   2/p' ${i}.out | sed -n '/NEW_GRAD/,/OPTIMZATION STATISTICS/p' |grep '[0-9]' |awk '{print $4}'>newGrad.txt
