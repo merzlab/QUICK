@@ -1,5 +1,5 @@
 !---------------------------------------------------------------------!
-! Updated by Madu Manathunga on 05/28/2020                            !
+! Updated by Madu Manathunga on 07/07/2020                            !
 !                                                                     !
 ! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
 !                         Ken Ayers & Ed Brothers                     !
@@ -48,19 +48,19 @@ module quick_files_module
     character(len=80) :: basisCustName  = ''
     character(len=80) :: PDBFileName    = ''
     
-    integer :: inFile = 15            ! input file
-    integer :: iOutFile = 16          ! output file
-    integer :: iDmxFile = 17          ! density matrix file
-    integer :: iRstFile = 18          ! Restricted file
-    integer :: iCPHFFile = 19         ! CPHF file
-    integer :: iBasisFile = 20        ! basis set file
-    integer :: iECPFile = 21          ! ECP file
-    integer :: iBasisCustFile = 22    ! custom basis set file
-    integer :: iPDBFile = 23          ! PDB input file
-    integer :: iDataFile = 24         ! Data file, similar to chk file in gaussian
-    integer :: iIntFile = 25          ! integral file
+    integer :: inFile         = 2020    ! input file
+    integer :: iOutFile       = 2021    ! output file
+    integer :: iDmxFile       = 2022    ! density matrix file
+    integer :: iRstFile       = 2023    ! Restricted file
+    integer :: iCPHFFile      = 2024    ! CPHF file
+    integer :: iBasisFile     = 2025    ! basis set file
+    integer :: iECPFile       = 2026    ! ECP file
+    integer :: iBasisCustFile = 2027    ! custom basis set file
+    integer :: iPDBFile       = 2028    ! PDB input file
+    integer :: iDataFile      = 2029    ! Data file, similar to chk file in gaussian
+    integer :: iIntFile       = 2030    ! integral file
 
-    logical :: fexist = .false.          ! Check if file exists
+    logical :: fexist = .false.         ! Check if file exists
 
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file. 
