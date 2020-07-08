@@ -2,6 +2,8 @@
 #
 #                  Input File for QUICK Compilation 
 #
+#                   Please modify a-g as required. 
+#
 #************************************************************************
 #
 #--------------------------------------------------
@@ -28,7 +30,7 @@ MPI_LIBS =/opt/intel/2018.1.163/compilers_and_libraries_2018.1.163/linux/mpi/int
 OPT_FLAGS=-O2
 CUDA_OPT_FLAGS=-O2  -Xptxas=-v -m64 -use_fast_math
 #--------------------------------------------------
-# f. Set cuda architecture flgs
+# f. Set cuda architecture flags
 #--------------------------------------------------
 CUDA_ARCH_FLAGS= -gencode arch=compute_70,code=sm_70
 #--------------------------------------------------
