@@ -7,7 +7,7 @@
 #--------------------------------------------------
 # a. Select QUICK version (SERIAL/MPI/CUDA/CUDAMPI)
 #--------------------------------------------------
-QUICK_VERSION = MPI
+QUICK_VERSION = CUDA
 #--------------------------------------------------
 # b. Set the compiler tool chain (GNU/INTEL)
 #--------------------------------------------------
@@ -16,7 +16,7 @@ COMPILER_TOOL_CHAIN = GNU
 # c. Set CUDA installation directory if you compile 
 #    CUDA or CUDAMPI version
 #--------------------------------------------------
-CUDA_HOME=/usr/local/cuda-10.1
+CUDA_HOME=/usr/local/cuda-10.2
 #--------------------------------------------------
 # d. Set MPI paths if you compile CUDAMPI version 
 #--------------------------------------------------
@@ -34,7 +34,7 @@ CUDA_ARCH_FLAGS= -gencode arch=compute_70,code=sm_70
 #--------------------------------------------------
 # g. Set the library type (y/n)
 #--------------------------------------------------
-IS_SHARED_LIB = n
+IS_SHARED_LIB = y
 #************************************************************************
 
 # Select compiler based on version and tool chain
@@ -69,9 +69,11 @@ CUDAC=nvcc
 ifeq ($(IS_SHARED_LIB), y)
   LIB_TYPE=SHARED
   LIB_FLAGS = -fPIC
+  CUDA_LIB_FLAGS = --compiler-options '-fPIC'
 else
   LIB_TYPE=STATIC
   LIB_FLAGS = 
+  CUDA_LIB_FLAGS =
 endif
 
 # Merge fortran compiler flags

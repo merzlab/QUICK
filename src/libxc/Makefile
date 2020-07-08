@@ -35,11 +35,7 @@ endif
 
 CCC = $(CC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS)
 
-ifeq ($(LIB_TYPE), SHARED)
-  CUDACC = $(CUDAC) -c -I. $(CUDA_OPT_FLAGS) --compiler-options '-fPIC'
-else
-  CUDACC = $(CUDAC) -c -I. $(CUDA_OPT_FLAGS) 
-endif 
+CUDACC = $(CUDAC) -c -I. $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) 
 
 #----------------------
 # quick modules and object files
