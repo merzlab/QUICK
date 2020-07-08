@@ -20,11 +20,11 @@ CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 CUDAFOBJ= $(objfolder)/gpu_write_info.o
 
 $(CUDACOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 
 $(CUDAXCOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
@@ -34,7 +34,7 @@ $(CUDAFOBJ):$(objfolder)/%.o:%.f90
 allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
 
 xc: $(CUDAXCOBJ)
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o \
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o \
 	$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
 	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
 	$(objfolder)/gga_c_lm.o $(objfolder)/gga_c_lyp.o $(objfolder)/gga_c_op_b88.o $(objfolder)/gga_c_op_g96.o \
