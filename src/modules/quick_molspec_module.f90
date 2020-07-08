@@ -260,7 +260,7 @@ contains
     ! PART I
     !---------------------
     ! The first line is Keyword
-    read (input,'(A80)') keywd
+    read (input,'(A132)') keywd
     call upcase(keywd,200)
 
     ! Read Charge
