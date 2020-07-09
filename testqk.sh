@@ -95,10 +95,16 @@ if [ -f tstlst ]; then
 		jobcard=$(head -1 ${i}.in)	
                 if [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"HF"*) ]]; then
                         echo "This is a RHF energy test..."
+                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"LDA"*) ]]; then
+                        echo "This is a DFT energy test... A representative LIBXC LDA functional is used."
+                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"GGA"*) ]]; then
+                        echo "This is a DFT energy test... A representative LIBXC GGA functional is used."
+                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"HYB_GGA"*) ]]; then
+                        echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used."
 		elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"BLYP"*) ]]; then
-                        echo "This is a BLYP energy test..."
+                        echo "This is a DFT energy test... Native BLYP functional is used."
 		elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"B3LYP"*) ]]; then
-                        echo "This is a B3LYP energy test..."
+                        echo "This is a DFT energy test... Native B3LYP functional is used."
                 elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"MP2"*) ]];then
                         echo "This is a MP2 energy test..."
 		fi
@@ -134,8 +140,9 @@ if [ -f tstlst ]; then
 		a=$((a+1))
 	done
 
+
 	#Run gradient tests
-	for i in $(awk '{print $1}' ../tstlst|grep "grad")
+	for i in $(awk '{print $1}' ../tstlst|grep "opt")
 	do
 		echo "Running test ${a} of ${total}"
 		cp ../${i}.in ./
@@ -143,7 +150,7 @@ if [ -f tstlst ]; then
                 #This variable will keep the information of jobcard
                 jobcard=$(head -1 ${i}.in)      
                         if [[ ($jobcard == *"OPT"*) && ($jobcard == *"HF"*) ]]; then
-                                echo "This is a RHF gradient test..."
+                                echo "This is a RHF geometry optimization test..."
                         fi      
 
                 #Run the test case
@@ -159,7 +166,7 @@ if [ -f tstlst ]; then
                 awk '{
                         x=sqrt(($1-$2)^2); 
                         if(x>=0.00001) stat="failed"; else stat="passed"; 
-                        print "Gradient: " $2 ", Reference value: " $1 ". Test " stat "."
+                        print "Final gradient: " $2 ", Reference value: " $1 ". Test " stat "."
                 }' compGrad.txt
                 echo ""
 		
