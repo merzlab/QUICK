@@ -38,6 +38,15 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    integer ierror
    double precision,allocatable:: temp2d(:,:)
+
+#ifdef CUDA_MPIV                                           
+   double precision, allocatable:: tst_mgpuO(:,:)          ! MGPU_TESTING
+
+   allocate(tst_mgpuO(nbasis,nbasis))                      ! MGPU_TESTING
+   call zeroMatrix(tst_mgpuO, nbasis)                      ! MGPU_TESTING
+   if(master) call copyDMat(oneElecO,tst_mgpuO,nbasis)     ! MGPU_TESTING
+
+#endif
    allocate(temp2d(nbasis,nbasis))
 #endif
 !-----------------------------------------------------------------
@@ -88,18 +97,14 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
 !  Reset the operator value for slave nodes.
    if (.not.master) then
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
+      call zeroMatrix(quick_qm_struct%o, nbasis)
    endif   
 
 !  sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
@@ -112,9 +117,17 @@ subroutine scf_operator(oneElecO, deltaO)
          call gpu_upload_method(1, 0.2d0)
       endif
 
+! MGPU_TESTING
+
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
       quick_qm_struct%vec,quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
+
+! MGPU_TESTING
+
+!      call gpu_upload_calculated(tst_mgpuO,quick_qm_struct%co, &
+!      quick_qm_struct%vec,quick_qm_struct%dense)
+!      call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
 
    endif
 #endif
@@ -135,15 +148,15 @@ subroutine scf_operator(oneElecO, deltaO)
 ! The previous two terms are the one electron part of the Fock matrix.
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
-#ifdef CUDA
-      if (quick_method%bCUDA) then
-         call gpu_get2e(quick_qm_struct%o)
-      else
+#if defined CUDA || defined CUDA_MPIV
+      if (quick_method%bCUDA) then          
+         call gpu_get2e(quick_qm_struct%o)  
+      else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV 
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -162,13 +175,20 @@ subroutine scf_operator(oneElecO, deltaO)
       enddo
 #endif
 
-#ifdef CUDA
-      endif
+#if defined CUDA || defined CUDA_MPIV 
+      endif                             
 #endif
    endif
 
 #ifdef MPIV
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+!         do ii=1,nbasis                      ! MGPU_TESTING
+!            do jj=ii,nbasis
+!               write(*,*) "CPU Fock O:",mpirank,ii-1,jj-1,quick_qm_struct%o(ii,jj)
+!            enddo
+!         enddo                               ! MGPU_TESTING
+
 !  After evaluation of 2e integrals, we can communicate every node so
 !  that we can sum all integrals. slave node will send infos.
    if(.not.master) then
@@ -246,7 +266,9 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 !  Add time total time
       timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
-      write(*,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#ifdef DEBUG
+      if (quick_method%debug) write(iOutFile,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#endif
    endif
 
 #ifdef MPIV
@@ -283,7 +305,7 @@ subroutine get_xc
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
-   implicit double precision(a-h,o-z)
+   implicit none
 
 #ifdef MPIV
    include "mpif.h"
@@ -299,13 +321,18 @@ subroutine get_xc
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info   
+   integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ierror 
+   double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, &
+   dfdgab2, dfdr, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+   gax, gay, gaz, gbx, gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
+   sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+   tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc
+
 #ifdef MPIV
+   integer :: i, ii, irad_end, irad_init, jj
+   double precision :: Eelxcslave
    double precision, allocatable:: temp2d(:,:)
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
-   integer :: ierror
-   double precision :: Eelxc, Eelxcslave
+
    allocate(temp2d(nbasis,nbasis))
 
 !  Braodcast libxc information to slaves
@@ -317,11 +344,13 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
+   Eelxc=0.0d0
+
 #ifdef MPIV
 !  Set the values of slave operators to zero
    if (.not.master) then
       call zeroMatrix(quick_qm_struct%o, nbasis)
-      Eelxc=0
+!      Eelxc=0.0d0
    endif
    call zeroMatrix(temp2d, nbasis)
 #endif
@@ -342,7 +371,9 @@ subroutine get_xc
 !      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
 !      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
-      write(*,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+#ifdef DEBUG
+      if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+#endif
 
       call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
@@ -618,8 +649,12 @@ subroutine get_xc
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
 
 !   if(quick_method%debug) then
-      write(*,*) "Eelex=",Eelxc
-      write(*,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+#ifdef DEBUG
+   if (quick_method%debug) then
+     write(iOutFile,*) "Eelex=",Eelxc
+     write(iOutFile,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+   endif
+#endif
 !   endif
 #ifdef MPIV
    endif

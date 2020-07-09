@@ -194,55 +194,55 @@ contains
       nelecb=quick_molspec%nelecb
 
       ! those matrices is necessary for all calculation or the basic of other calculation
-      allocate(self%s(nbasis,nbasis))
-      allocate(self%x(nbasis,nbasis))
-      allocate(self%o(nbasis,nbasis))
-      allocate(self%oSave(nbasis,nbasis))
-      allocate(self%co(nbasis,nbasis))
-      allocate(self%vec(nbasis,nbasis))
-      allocate(self%dense(nbasis,nbasis))
-      allocate(self%denseSave(nbasis,nbasis))
-      allocate(self%denseOld(nbasis,nbasis))
-      allocate(self%denseInt(nbasis,nbasis))
-      allocate(self%E(nbasis))
-      allocate(self%iDegen(nbasis))
+      if(.not. allocated(self%s)) allocate(self%s(nbasis,nbasis))
+      if(.not. allocated(self%x)) allocate(self%x(nbasis,nbasis))
+      if(.not. allocated(self%o)) allocate(self%o(nbasis,nbasis))
+      if(.not. allocated(self%oSave)) allocate(self%oSave(nbasis,nbasis))
+      if(.not. allocated(self%co)) allocate(self%co(nbasis,nbasis))
+      if(.not. allocated(self%vec)) allocate(self%vec(nbasis,nbasis))
+      if(.not. allocated(self%dense)) allocate(self%dense(nbasis,nbasis))
+      if(.not. allocated(self%denseSave)) allocate(self%denseSave(nbasis,nbasis))
+      if(.not. allocated(self%denseOld)) allocate(self%denseOld(nbasis,nbasis))
+      if(.not. allocated(self%denseInt)) allocate(self%denseInt(nbasis,nbasis))
+      if(.not. allocated(self%E)) allocate(self%E(nbasis))
+      if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
-      allocate(self%Mulliken(natom))
-      allocate(self%Lowdin(natom))
+      if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
+      if(.not. allocated(self%Lowdin)) allocate(self%Lowdin(natom))
 
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
-         allocate(self%gradient(3*natom))
+         if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
          if (quick_method%extCharges) then
-            allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
+            if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
          endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
-         allocate(self%hessian(3*natom,3*natom))
+         if(.not. allocated(self%hessian)) allocate(self%hessian(3*natom,3*natom))
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
-         allocate(self%CPHFA(idimA,idimA))
-         allocate(self%CPHFB(idimA,natom*3))
+         if(.not. allocated(self%CPHFA)) allocate(self%CPHFA(idimA,idimA))
+         if(.not. allocated(self%CPHFB)) allocate(self%CPHFB(idimA,natom*3))
       endif
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
-         allocate(self%cob(nbasis,nbasis))
-         allocate(self%Eb(nbasis))
+         if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
+         if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
-         allocate(self%denseb(nbasis,nbasis))
+         if(.not. allocated(self%denseb)) allocate(self%denseb(nbasis,nbasis))
       endif
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         allocate(self%oSaveDFT(nbasis,nbasis))
+         if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
       endif
 
    end subroutine

@@ -26,7 +26,7 @@ lda_c_chachiyo_init(xc_func_type *p)
  
   assert(p!=NULL && p->params == NULL); 
   p->params = malloc(sizeof(lda_c_chachiyo_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(lda_c_chachiyo_params); 
 #endif 
   params = (lda_c_chachiyo_params *) (p->params); 

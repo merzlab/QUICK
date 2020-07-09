@@ -11,7 +11,7 @@
 #include "funcs_mgga.c"
 #include "funcs_hyb_mgga.c"
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 void
 xc_mgga(const xc_func_type *func, int np,
          const double *rho, const double *sigma, const double *lapl, const double *tau,
@@ -87,7 +87,7 @@ xc_mgga(const xc_func_type *func, int np,
 
   /* call functional */
   if(func->info->mgga != NULL)
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     func->info->mgga(func, np, rho, sigma, lapl, tau, zk, vrho, vsigma, vlapl, vtau, 
 		     v2rho2, v2sigma2, v2lapl2, v2tau2, v2rhosigma, v2rholapl, v2rhotau,
 		     v2sigmalapl, v2sigmatau, v2lapltau, gpu_work_params);
@@ -98,7 +98,7 @@ xc_mgga(const xc_func_type *func, int np,
 #endif
 
   if(func->mix_coef != NULL)
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     xc_mix_func(func, np, rho, sigma, lapl, tau, zk, vrho, vsigma, vlapl, vtau, 
 		 v2rho2, v2sigma2, v2lapl2, v2tau2, v2rhosigma, v2rholapl, v2rhotau,
 		 v2sigmalapl, v2sigmatau, v2lapltau, gpu_work_params);
@@ -110,7 +110,7 @@ xc_mgga(const xc_func_type *func, int np,
 }
 
 /* specializations */
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 void
 xc_mgga_exc(const xc_func_type *p, int np,
              const double *rho, const double *sigma, const double *lapl, const double *tau,

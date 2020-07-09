@@ -23,7 +23,7 @@ work_gga_k
 #else
 work_gga_x
 #endif
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 (const xc_func_type *p, int np, const double *rho, const double *sigma,
  double *zk, double *vrho, double *vsigma,
  double *v2rho2, double *v2rhosigma, double *v2sigma2,
@@ -123,7 +123,7 @@ work_gga_x
   }
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
 #include "gpu_extern.h"
 

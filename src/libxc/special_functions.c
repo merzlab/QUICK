@@ -16,19 +16,21 @@
          Adv. in Comp. Math. 5(4):329-359. 
 */
 
-/*#ifdef DEVICE
+#ifdef DEVICE
 __device__ double LambertW(double z)
-#else*/
+#else
 double LambertW(double z)
-//#endif
+#endif
 {
   double w;
   int i;
 
   /* Sanity check - function is only defined for z >= -1/e */
   if(z + 1.0/M_E < -10*DBL_EPSILON) {
+#ifndef DEVICE
     fprintf(stderr,"Error - Lambert function called with argument z = %e.\n",z);
     exit(1);
+#endif
   } else if(z < -1.0/M_E)
     /* Value of W(x) at x=-1/e is -1 */
     return -1.0;
@@ -73,10 +75,12 @@ double LambertW(double z)
       return w;
   }
 
+#ifndef DEVICE
   /* This should never happen! */
   fprintf(stderr, "%s\n%s\n", "lambert_w: iteration limit reached",
 	  "Should never happen: execution aborted");
   exit(1);
+#endif
 }
 
 /*
@@ -85,8 +89,15 @@ double LambertW(double z)
   based on the SLATEC routine by W. Fullerton
 */
 
-
+#ifdef DEVICE
+__device__
+#endif
 static double pi26 = 1.644934066848226436472415166646025189219;
+
+
+#ifdef DEVICE
+__device__
+#endif
 static double spencs[38] = 
   {
     +.1527365598892405872946684910028e+0,
@@ -129,11 +140,11 @@ static double spencs[38] =
     +.4742646808928671061333333333333e-31
   };
 
-/*#ifdef DEVICE
+#ifdef DEVICE
 __device__ double xc_dilogarithm(const double x)
-#else */
+#else
 double xc_dilogarithm(const double x)
-//#endif
+#endif
 {
   const int nspenc = 38;
   double aux, dspenc;

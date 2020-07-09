@@ -7,6 +7,7 @@ include $(MAKEIN)
 
 objfolder = ../../../obj
 libxcfolder = ../
+LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 #************************************************************************
 # 
 #                 B. Make Object Files
@@ -64,7 +65,7 @@ CUDALIBXCOBJ=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gg
 #CUDALIBXCOBJ=$(objfolder)/gpu_libxc.o
 
 $(CUDALIBXCOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_OPT_FLAGS) -dc $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) -dc $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 #$(CXXOBJ):$(objfolder)/%.o:%.cpp
 #	$(CXX) -c $< -o $@

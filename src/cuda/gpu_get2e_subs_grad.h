@@ -70,8 +70,11 @@ __global__ void getGrad_kernel_spdf8()
         
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
-        
-        
+
+#ifdef CUDA_MPIV
+        if(devSim.mpi_bcompute[a] > 0){
+#endif
+                
         int II = devSim.sorted_YCutoffIJ[a].x;
         int KK = devSim.sorted_YCutoffIJ[b].x;
         
@@ -107,7 +110,6 @@ __global__ void getGrad_kernel_spdf8()
                     int kkk = devSim.sorted_Qnumber[KK];
                     int lll = devSim.sorted_Qnumber[LL];
 #ifdef int_spd
-//printf("FILE: %s, LINE: %d, FUNCTION: %s, int_spd: %f \n", __FILE__, __LINE__, __func__, devSim.hyb_coeff);
                     iclass_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
 #elif defined int_spdf
                     if ( (kkk + lll) >= 4 ) {
@@ -134,6 +136,11 @@ __global__ void getGrad_kernel_spdf8()
                 }
             }
         }
+
+#ifdef CUDA_MPIV
+        }
+#endif
+
     }
 }
 

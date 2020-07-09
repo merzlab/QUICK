@@ -7,7 +7,7 @@
 !
 !   
 
-module AMBER_interface_module
+module amber_interface_module
 
 !------------------------------------------------------------------------
 !  ATTRIBUTES  : AMBER_interface_logic
@@ -18,9 +18,10 @@ module AMBER_interface_module
 !                quick to impliment ab initio QM/MM calculation
 !  AUTHOR      : Yipu Miao
 !------------------------------------------------------------------------
+  implicit none
+  logical:: AMBER_interface_logic = .false.   ! flag to enable AMBER-quick interface 
+  logical:: quick_first_call = .true.         ! flag to indicate if quick is first called
 
-    implicit none
-    logical:: AMBER_interface_logic = .false.   ! flag to enable AMBER-quick interface 
-    logical:: quick_first_call = .true.         ! flag to indicate if quick is first called
+  contains
     
-end module AMBER_interface_module
+end module amber_interface_module

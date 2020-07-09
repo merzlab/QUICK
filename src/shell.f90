@@ -2212,10 +2212,10 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
    double precision RA(3),RB(3),RC(3),RD(3)
    double precision X44(129600)
 
-   double precision X44aa(1296)
-   double precision X44bb(1296)
-   double precision X44cc(1296)
-   double precision X44dd(1296)
+   double precision X44aa(4096)
+   double precision X44bb(4096)
+   double precision X44cc(4096)
+   double precision X44dd(4096)
    double precision AA,BB,CC,DD
 
    COMMON /COM1/RA,RB,RC,RD

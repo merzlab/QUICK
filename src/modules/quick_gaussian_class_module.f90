@@ -17,7 +17,8 @@ module quick_gaussian_class_module
     type gaussian
         integer :: ncontract
         integer, dimension(3) :: itype
-        double precision, pointer, dimension(:) :: aexp,dcoeff
+        double precision, pointer, dimension(:) :: aexp   => null()
+        double precision, pointer, dimension(:) :: dcoeff => null()
     end type gaussian
     
 end module quick_gaussian_class_module

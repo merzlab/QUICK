@@ -4,4 +4,5 @@
 #include "../util.h"
 #include "../gpu_fstructs.h"
 
+#include "special_functions.c"
 #include "../maple2c/gga_x_am05.c"

@@ -50,7 +50,7 @@ gga_lb_init(xc_func_type *p)
   xc_func_init(p->func_aux[0], XC_LDA_X, p->nspin); 
  
   p->params = malloc(sizeof(xc_gga_x_lb_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(xc_gga_x_lb_params); 
 #endif 
  
@@ -67,7 +67,7 @@ gga_lb_init(xc_func_type *p)
   } 
 } 
  
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
 void  
 xc_gga_lb_modified(const xc_func_type *func, int np, const double *rho, const double *sigma, double r, double *vrho, void *gpu_work_params) 
 #else 
@@ -84,7 +84,7 @@ xc_gga_lb_modified(const xc_func_type *func, int np, const double *rho, const do
  
   assert(func->params != NULL); 
   params = (xc_gga_x_lb_params *) (func->params); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   xc_lda_vxc(func->func_aux[0], np, rho, vrho, gpu_work_params); 
 #else 
   xc_lda_vxc(func->func_aux[0], np, rho, vrho); 
@@ -135,7 +135,7 @@ xc_gga_lb_modified(const xc_func_type *func, int np, const double *rho, const do
   } /* ip loop */ 
 } 
  
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
 static void  
 gga_x_lb(const xc_func_type *p, int np, const double *rho, const double *sigma, 
 	 double *zk, double *vrho, double *vsigma, 
@@ -150,7 +150,7 @@ gga_x_lb(const xc_func_type *p, int np, const double *rho, const double *sigma,
 #endif 
 { 
   if (vrho != NULL) 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
     xc_gga_lb_modified(p, np, rho, sigma, 0.0, vrho, gpu_work_params); 
 #else 
 	xc_gga_lb_modified(p, np, rho, sigma, 0.0, vrho); 

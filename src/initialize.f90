@@ -35,7 +35,7 @@ subroutine initialize1(ierr)
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
-   call MPI_initialize()
+   call initialize_quick_mpi()
    !------------------- End MPI  -----------------------------------
 #endif
 

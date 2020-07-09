@@ -50,7 +50,7 @@ gga_x_n12_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_x_n12_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_x_n12_params); 
 #endif 
   params = (gga_x_n12_params *) (p->params); 

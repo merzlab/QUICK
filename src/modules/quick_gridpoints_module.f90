@@ -1,12 +1,17 @@
 #include "../config.h"
-!	quick_gridpoints_module.f90
-!	new_quick
-!
-!	Created by Yipu Miao on 2/18/11.
-!	Copyright 2011 University of Florida. All rights reserved.
-!       
-!       Madu Manathunga updated this module on 04/17/2017
-!
+!---------------------------------------------------------------------!
+! Updated by Madu Manathunga on 06/09/2020                            !
+!                                                                     !
+! Previous contributors: Yipu Miao                                    !
+!                                                                     ! 
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
+
 !  Grid Points Module
 module quick_gridpoints_module
 
@@ -54,15 +59,20 @@ module quick_gridpoints_module
     !function
     integer,dimension(:), allocatable   :: primf_counter
 
+#ifdef CUDA
     !an array indicating if a binned grid point is true or a dummy grid point
     integer,dimension(:), allocatable   :: dweight
-
+#else
     !in cpu case, we will have bins with different number of points. This array keeps track
     !of the size of each bin
     integer,dimension(:), allocatable   :: bin_counter
+#endif
 
     !length of binned grid arrays
     integer :: gridb_count
+
+    !number of true grid points
+    integer :: ntgpts
 
     !number of bins 
     integer :: nbins
@@ -258,17 +268,22 @@ module quick_gridpoints_module
 #ifdef MPIV
    endif
 #endif
-    call pack_grid_pts_f90(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
-    xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%idx_grid, &
+
+    ! initialize cpp data structure for octree and grid point packing
+    call gpack_initialize()
+
+    ! run octree, pack grid points and get the array sizes for f90 memory allocation
+    call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
+    xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%idx_grid, natom, &
     nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, & 
-    self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, timer_cumer%TDFTGrdOct, timer_cumer%TDFTPrscrn) 
+    self%gridb_count, self%ntgpts, self%nbins, self%nbtotbf, self%nbtotpf, timer_cumer%TDFTGrdOct, timer_cumer%TDFTPrscrn) 
 
 #ifdef MPIV
 
     if(master) then
 #endif
-    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
-    "total pfs:", self%nbtotpf
+!    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
+!    "total pfs:", self%nbtotpf
 #ifdef MPIV
     endif
 #endif
@@ -277,14 +292,23 @@ module quick_gridpoints_module
 #ifdef MPIV
    call setup_xc_mpi_1
 #endif
-
+   ! allocate f90 memory for pruned grid info from cpp side
    call alloc_grid_variables(self)
 
 #ifdef MPIV
     if(master) then
 #endif
-    call save_dft_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
-    self%dweight, self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
+
+#ifdef CUDA
+    ! save packed grid information into f90 data structures 
+     call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
+     self%dweight, self%basf, self%primf, self%basf_counter, self%primf_counter)
+#else
+    ! save packed grid information into f90 data structures 
+    call get_cpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
+    self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
+
+#endif
 
 #ifdef MPIV
     endif
@@ -325,6 +349,10 @@ module quick_gridpoints_module
 !            end do
 !    enddo
 
+    ! relinquish memory allocated for octree and grid point packing
+    call gpack_finalize()
+
+    ! relinquish memory allocated for temporary f90 variables
     call dealloc_xcg_tmp_variables(xcg_tmp)
 
 #ifdef MPIV
@@ -335,8 +363,11 @@ module quick_gridpoints_module
 
     timer_cumer%TDFTGrdPck = timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct - timer_cumer%TDFTPrscrn
 
-    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
-    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
+!    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
+!    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
+
+
+!    call exit
 
 #ifdef MPIV
     endif
@@ -348,7 +379,7 @@ module quick_gridpoints_module
     subroutine allocate_quick_gridpoints(nbasis)
         implicit double precision(a-h,o-z)
         integer nbasis
-        allocate(sigrad2(nbasis))
+        if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
     end subroutine allocate_quick_gridpoints
 
     ! deallocate
@@ -363,18 +394,23 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        allocate(self%gridxb(self%gridb_count))
-        allocate(self%gridyb(self%gridb_count))
-        allocate(self%gridzb(self%gridb_count))
-        allocate(self%gridb_sswt(self%gridb_count))
-        allocate(self%gridb_weight(self%gridb_count))
-        allocate(self%gridb_atm(self%gridb_count))
-        allocate(self%dweight(self%gridb_count))
-        allocate(self%basf(self%nbtotbf))
-        allocate(self%primf(self%nbtotpf))
-        allocate(self%basf_counter(self%nbins + 1))
-        allocate(self%primf_counter(self%nbtotbf + 1))
-        allocate(self%bin_counter(self%nbins+1))
+        if (.not. allocated(self%gridxb)) allocate(self%gridxb(self%gridb_count))
+        if (.not. allocated(self%gridyb)) allocate(self%gridyb(self%gridb_count))
+        if (.not. allocated(self%gridzb)) allocate(self%gridzb(self%gridb_count))
+        if (.not. allocated(self%gridb_sswt)) allocate(self%gridb_sswt(self%gridb_count))
+        if (.not. allocated(self%gridb_weight)) allocate(self%gridb_weight(self%gridb_count))
+        if (.not. allocated(self%gridb_atm)) allocate(self%gridb_atm(self%gridb_count))
+        if (.not. allocated(self%basf)) allocate(self%basf(self%nbtotbf))
+        if (.not. allocated(self%primf)) allocate(self%primf(self%nbtotpf))
+        if (.not. allocated(self%basf_counter)) allocate(self%basf_counter(self%nbins + 1))
+        if (.not. allocated(self%primf_counter)) allocate(self%primf_counter(self%nbtotbf + 1))
+
+#ifdef CUDA
+        if (.not. allocated(self%dweight)) allocate(self%dweight(self%gridb_count))
+#else
+        if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
+#endif
+
     end subroutine
 
     subroutine alloc_xcg_tmp_variables(xcg_tmp)
@@ -385,18 +421,18 @@ module quick_gridpoints_module
         
         tot_gps = natom*xcg_tmp%rad_gps*xcg_tmp%ang_gps
 
-        allocate(xcg_tmp%init_grid_atm(tot_gps))
-        allocate(xcg_tmp%init_grid_ptx(tot_gps))
-        allocate(xcg_tmp%init_grid_pty(tot_gps))
-        allocate(xcg_tmp%init_grid_ptz(tot_gps))
-        allocate(xcg_tmp%arr_wtang(tot_gps))
-        allocate(xcg_tmp%arr_rwt(tot_gps))
-        allocate(xcg_tmp%arr_rad3(tot_gps))
-        allocate(xcg_tmp%sswt(tot_gps))
-        allocate(xcg_tmp%weight(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_atm)) allocate(xcg_tmp%init_grid_atm(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_ptx)) allocate(xcg_tmp%init_grid_ptx(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_pty)) allocate(xcg_tmp%init_grid_pty(tot_gps))
+        if (.not. allocated(xcg_tmp%init_grid_ptz)) allocate(xcg_tmp%init_grid_ptz(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_wtang)) allocate(xcg_tmp%arr_wtang(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_rwt)) allocate(xcg_tmp%arr_rwt(tot_gps))
+        if (.not. allocated(xcg_tmp%arr_rad3)) allocate(xcg_tmp%arr_rad3(tot_gps))
+        if (.not. allocated(xcg_tmp%sswt)) allocate(xcg_tmp%sswt(tot_gps))
+        if (.not. allocated(xcg_tmp%weight)) allocate(xcg_tmp%weight(tot_gps))
 #ifdef MPIV
-        allocate(xcg_tmp%tmp_sswt(tot_gps))
-        allocate(xcg_tmp%tmp_weight(tot_gps))        
+        if (.not. allocated(xcg_tmp%tmp_sswt)) allocate(xcg_tmp%tmp_sswt(tot_gps))
+        if (.not. allocated(xcg_tmp%tmp_weight)) allocate(xcg_tmp%tmp_weight(tot_gps))        
 #endif
     end subroutine
 
@@ -406,8 +442,8 @@ module quick_gridpoints_module
         implicit none
         type(quick_xc_grid_type) self
 
-        allocate(self%igridptul(mpisize))
-        allocate(self%igridptll(mpisize))
+        if (.not. allocated(self%igridptul)) allocate(self%igridptul(mpisize))
+        if (.not. allocated(self%igridptll)) allocate(self%igridptll(mpisize))
 
    end subroutine
 #endif    
@@ -424,12 +460,16 @@ module quick_gridpoints_module
         if (allocated(self%gridb_sswt)) deallocate(self%gridb_sswt)
         if (allocated(self%gridb_weight)) deallocate(self%gridb_weight)
         if (allocated(self%gridb_atm)) deallocate(self%gridb_atm)
-        if (allocated(self%dweight)) deallocate(self%dweight)
         if (allocated(self%basf)) deallocate(self%basf)        
         if (allocated(self%primf)) deallocate(self%primf)
         if (allocated(self%basf_counter)) deallocate(self%basf_counter)
         if (allocated(self%primf_counter)) deallocate(self%primf_counter)
+#ifdef CUDA
+        if (allocated(self%dweight)) deallocate(self%dweight)
+#else
         if (allocated(self%bin_counter)) deallocate(self%bin_counter)
+#endif
+
 #ifdef MPIV
         if(bMPI) then
                 call dealloc_mpi_grid_variables(self)

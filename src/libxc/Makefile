@@ -27,17 +27,16 @@ include $(MAKEIN)
 #Madu: intel and gnu use -module and -J options to direct module files. 
 #Therefore, we use the following if condition to handle this. 
 
-ifeq "$(FC)" "ifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
-else ifeq "$(FC)" "mpiifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
-else 
-  FOR=$(FC) -c -I. -I$(objfolder) -J$(objfolder)
+ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+  FOR=$(FC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS) -I$(objfolder) -J$(objfolder)
+else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
+  FOR = $(FC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS) -module $(objfolder)
 endif
 
-CCC = $(CC) -c -I. -O2 
-CUDACC = $(CUDAC) -c -I. -O2 
- 
+CCC = $(CC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS)
+
+CUDACC = $(CUDAC) -c -I. $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) 
+
 #----------------------
 # quick modules and object files
 #----------------------
@@ -130,13 +129,19 @@ libxcf90_la-libxc.o:
 #================= quick subroutine library =================================
 
 #libxc_libs:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+ifeq "$(LIB_TYPE)" "SHARED"
 libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o	
+	$(FC) -shared *.o -o $(libfolder)/libxc.so
 
 libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+	$(FC) -shared *.o -o $(libfolder)/libxc.so
+else
+libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+	ar rcs $(libfolder)/libxc.a *.o
+
+libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+	ar rcs $(libfolder)/libxc.a *.o
+endif
 
 all: libxc_libs
 #************************************************************************
