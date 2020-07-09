@@ -17,23 +17,32 @@
 #endif
 
 #ifdef int_spd
-__global__ void getGrad_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel()
 #elif defined int_spdf
-__global__ void getGrad_kernel_spdf()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf()
 #elif defined int_spdf2
-__global__ void getGrad_kernel_spdf2()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf2()
 #elif defined int_spdf3
-__global__ void getGrad_kernel_spdf3()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf3()
 #elif defined int_spdf4
-__global__ void getGrad_kernel_spdf4()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf4()
 #elif defined int_spdf5
-__global__ void getGrad_kernel_spdf5()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf5()
 #elif defined int_spdf6
-__global__ void getGrad_kernel_spdf6()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf6()
 #elif defined int_spdf7
-__global__ void getGrad_kernel_spdf7()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf7()
 #elif defined int_spdf8
-__global__ void getGrad_kernel_spdf8()
+__global__ void 
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
 #endif
 {
 
