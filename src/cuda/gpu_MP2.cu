@@ -68,7 +68,8 @@ void get2e_MP2(_gpu_type gpu)
 }
 
 
-__global__ void get2e_MP2_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
 {
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
