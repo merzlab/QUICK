@@ -5,7 +5,6 @@
 */
 
 #define DEVICE
-#include "special_functions.c"
 
 static const double B1 =  1.74959015598863046792081721182; /* 3*muGE/5 + 8 pi/15 */
 static const double B2 = -1.62613336586517367779736042170; /* muGE - B1 */

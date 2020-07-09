@@ -1,0 +1,103 @@
+#************************************************************************
+#
+#                  Input File for QUICK Compilation 
+#
+#                   Please modify a-g as required. 
+#
+#************************************************************************
+#
+#--------------------------------------------------
+# a. Select QUICK version (SERIAL/MPI/CUDA/CUDAMPI)
+#--------------------------------------------------
+QUICK_VERSION = CUDA
+#--------------------------------------------------
+# b. Set the compiler tool chain (GNU/INTEL)
+#--------------------------------------------------
+COMPILER_TOOL_CHAIN = GNU
+#--------------------------------------------------
+# c. Set CUDA installation directory if you compile 
+#    CUDA or CUDAMPI version
+#--------------------------------------------------
+CUDA_HOME=/usr/local/cuda-10.2
+#--------------------------------------------------
+# d. Set MPI paths if you compile CUDAMPI version 
+#--------------------------------------------------
+MPI_INCLUDES =/opt/intel/2018.1.163/compilers_and_libraries_2018.1.163/linux/mpi/intel64/include
+MPI_LIBS =/opt/intel/2018.1.163/compilers_and_libraries_2018.1.163/linux/mpi/intel64/lib
+#-------------------------------------------------
+# e. Optimization flags
+#-------------------------------------------------
+OPT_FLAGS=-O2
+CUDA_OPT_FLAGS=-O2  -Xptxas=-v -m64 -use_fast_math
+#--------------------------------------------------
+# f. Set cuda architecture flags
+#--------------------------------------------------
+CUDA_ARCH_FLAGS= -gencode arch=compute_70,code=sm_70
+#--------------------------------------------------
+# g. Set the library type (y/n)
+#--------------------------------------------------
+IS_SHARED_LIB = y
+#************************************************************************
+
+# Select compiler based on version and tool chain
+ifeq ($(QUICK_VERSION), $(filter $(QUICK_VERSION), SERIAL CUDA ))
+  ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+    FC  = gfortran
+    CC  = gcc
+    CXX = g++    
+  else
+    FC  = ifort
+    CC  = icc
+    CXX = icpc
+  endif
+endif
+
+ifeq ($(QUICK_VERSION), $(filter $(QUICK_VERSION), MPI CUDAMPI ))
+  ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+    FC  = mpif90
+    CC  = mpicc
+    CXX = mpicxx 
+  else
+    FC  = mpiifort
+    CC  = mpiicc
+    CXX = mpiicpc
+  endif
+endif
+
+# Set cuda compiler
+CUDAC=nvcc
+
+# Set variables based on the selected library type
+ifeq ($(IS_SHARED_LIB), y)
+  LIB_TYPE=SHARED
+  LIB_FLAGS = -fPIC
+  CUDA_LIB_FLAGS = --compiler-options '-fPIC'
+else
+  LIB_TYPE=STATIC
+  LIB_FLAGS = 
+  CUDA_LIB_FLAGS =
+endif
+
+# Merge fortran compiler flags
+ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+  FFLAGS = $(OPT_FLAGS) -mtune=native -ffree-form -cpp -DGNU $(LIB_FLAGS)
+else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
+  FFLAGS = $(OPT_FLAGS) -ip -cpp $(LIB_FLAGS)
+endif
+
+#LD = $(FC)
+# set linker flags for fortran objects
+LDFLAGS = $(FFLAGS) -lstdc++ 
+
+# set c flags
+CPP_FLAG=-I$(CUDA_HOME)/include $(OPT_FLAGS) $(LIB_FLAGS) -DCUBLAS_USE_THUNKING
+
+# set cuda link flags
+CUDA_INCL_FLAGS=-L$(CUDA_HOME)/lib64 -I$(CUDA_HOME)/include -I$(MPI_INCLUDES) -I$(MPI_LIBS) -DCUDA_SPDF
+
+# set linker flags for cuda, c and cpp objects
+ifeq ($(COMPILER_TOOL_CHAIN), GNU)
+  CFLAGS = -lgfortran -L$(CUDA_HOME)/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver -lstdc++
+else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
+  CFLAGS = -L$(CUDA_HOME)/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver -lstdc++
+endif

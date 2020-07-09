@@ -28,18 +28,23 @@ subroutine getMol()
       if (amber_interface_logic) then
          call read_AMBER_crd
       else
-         call quick_open(infile,inFileName,'O','F','W',.true.)
          call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
-         ! read molecule coordinates
-         call read2(quick_molspec,inFile)
+         ! read xyz coordinates from the .in file 
+         if(.not. isTemplate) then
+           call quick_open(infile,inFileName,'O','F','W',.true.)
+
+           ! read molecule coordinates
+           call read2(quick_molspec,inFile)
+           close(inFile)
+         endif
+
          quick_molspec%nbasis   => nbasis
          quick_qm_struct%nbasis => nbasis
          call set(quick_molspec)
 
          ! quick forward coordinates stored in namelist to instant variables
          xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
-         close(inFile)
       end if   !amber_interface_logic
 
       ! Now read in another line
@@ -56,7 +61,7 @@ subroutine getMol()
    !-----------END MPI/ALL NODES--------------------
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV 
    quick_method%bCUDA = .true.
 #endif
 
@@ -231,6 +236,7 @@ subroutine initialGuess
    integer Iatm,i,j
    double precision temp
 
+
    ! Initialize Density arrays. Create initial density matrix guess.
    call zeroMatrix(quick_qm_struct%dense,nbasis)
    if (quick_method%unrst) call zeroMatrix(quick_qm_struct%denseb,nbasis)
@@ -239,6 +245,7 @@ subroutine initialGuess
 
    ! if read matrix is requested, begin to read dmx file
    if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
+
    if (present) then
       call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.)
 
@@ -262,6 +269,8 @@ subroutine initialGuess
       close(iDataFile)
 
    else
+
+
       ! MFCC Initial Guess
       if(quick_method%MFCC)then
          call MFCC_initial_guess
@@ -269,13 +278,16 @@ subroutine initialGuess
 
       !  SAD inital guess
       if (quick_method%SAD) then
+
          n=0
          do Iatm=1,natom
             do sadAtom=1,10
+
                if(symbol(quick_molspec%iattype(Iatm)).eq. &
                      quick_molspec%atom_type_sym(sadAtom))then
                   do i=1,atombasis(sadAtom)
                      do j=1,atombasis(sadAtom)
+
                         quick_qm_struct%dense(i+n,j+n)=atomdens(sadAtom,i,j)
                      enddo
                   enddo

@@ -25,9 +25,9 @@ module quick_mpi_module
     integer :: namelen
     integer :: mpisize
     character(len=80) pname
-    logical :: master = .true.  ! flag to show if the node is master node
-    logical :: bMPI = .true.    ! flag to show if MPI is turn on
-
+    logical :: master = .true.      ! flag to show if the node is master node
+    logical :: bMPI = .true.        ! flag to show if MPI is turn on
+    logical :: libMPIMode = .false. ! if mpi is initialized somewhere other than quick
     integer, allocatable :: MPI_STATUS(:)
     integer, parameter :: MIN_1E_MPI_BASIS=6
     

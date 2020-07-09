@@ -19,7 +19,7 @@ gga_x_wpbeh_init(xc_func_type *p)
 { 
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_x_wpbeh_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_x_wpbeh_params); 
 #endif 
  
@@ -562,7 +562,7 @@ func(const xc_func_type *p, xc_gga_work_c_t *r)
   } 
 } 
  
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 #define kernel_id -1
 #endif 
 #include "work_gga_c.c" 

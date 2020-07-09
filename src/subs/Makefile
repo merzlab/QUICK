@@ -30,18 +30,26 @@ include $(MAKEIN)
 #----------------------
 # quick modules and object files
 #----------------------
-libfolder = ../../lib
+#libfolder = ../../lib
 objfolder = ../../obj
 
-SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
-	EffChar.o eigval.o eigvec.o ekinetic.o findBlock.o fmt.o getinum.o \
-	getNum.o greedy_distrubute.o hrr.o iatoi.o iatoimp.o io.o iwhole.o \
-	lbfgs.o Lsolve.o matComp.o matMul.o order.o orthog.o PriCol.o PriSym.o \
-	PrtAct.o PrtDat.o PrtErr.o PrtLab.o PrtMsg.o PrtTim.o PrtWrn.o pteval.o quick_open.o \
-	random.o rdinum.o rdnml.o rdnum.o rdword.o readPDB.o spdfgh.o ssw.o \
-	sum2Mat.o transpose.o tridi.o upcase.o vett.o whatis.o whole.o \
-	wrtRestart.o xnorm.o zeroMatrix.o zmake.o pt2der.o sswder.o \
-	denspt_new_imp.o pteval_new_imp.o
+SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
+	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
+	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
+	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
+	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
+	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \
+	$(objfolder)/PrtMsg.o $(objfolder)/PrtTim.o $(objfolder)/PrtWrn.o $(objfolder)/pteval.o \
+	$(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o $(objfolder)/rdnml.o \
+	$(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
+	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/transpose.o $(objfolder)/tridi.o \
+	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
+	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
+	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o 
 
 #************************************************************************
 # 
@@ -49,17 +57,17 @@ SUBS = Angles.o copyDMat.o copySym.o degen.o denspt.o diag.o dipole.o \
 # 
 #************************************************************************
 
-FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) 
+FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder)
 
-$(SUBS):%.o:%.f90
+$(SUBS):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
 #================= quick subroutine library =================================
 
-quick_subs:$(SUBS)
-	ar -r $(libfolder)/quicklib.a *.o
+#quick_subs:$(SUBS)
+#	ar -r $(libfolder)/quicksublib.a *.o
 
-all: quick_subs	
+all: $(SUBS)
 
 #************************************************************************
 # 

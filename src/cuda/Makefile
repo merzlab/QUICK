@@ -7,6 +7,7 @@ include $(MAKEIN)
 
 objfolder = ../../obj
 libxcfolder = ../libxc
+LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 #************************************************************************
 # 
 #                 B. Make Object Files
@@ -14,48 +15,27 @@ libxcfolder = ../libxc
 #************************************************************************
 
 #================= quick module library =================================
-CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o \
-	$(objfolder)/gpu_getxc.o
+CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o 
+CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 CUDAFOBJ= $(objfolder)/gpu_write_info.o
-#CUDALIBXCOBJ=$(objfolder)/gga_x_b88.o
-#CXXOBJ=$(objfolder)/octree.o $(objfolder)/grid_packer.o
-#CUDALIBXCOBJ=$(objfolder)/gpu_libxc.o
 
-#$(CUDACOBJ):$(objfolder)/%.o:%.cu
-#	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+$(CUDACOBJ):$(objfolder)/%.o:%.cu
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
-$(CUDACOBJ):
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu.cu -o $(objfolder)/gpu.o
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_type.cu -o $(objfolder)/gpu_type.o
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_get2e.cu -o $(objfolder)/gpu_get2e.o
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c gpu_getxc.cu -o $(objfolder)/gpu_getxc.o
+
+$(CUDAXCOBJ):$(objfolder)/%.o:%.cu
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
 $(CUDAFOBJ):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
-#$(CUDALIBXCOBJ):$(objfolder)/%.o:%.cu
-#	$(CUDAC) $(CUDA_FLAGS2) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
 
-#$(CXXOBJ):$(objfolder)/%.o:%.cpp
-#	$(CXX) -c $< -o $@
-
-#$(CUDALIBXCOBJ):$(objfolder)/%.o:%.cu
-#	$(CUDAC) $(CUDA_FLAGS2) -I. -I$(libxcfolder) -c $< -o $@
-
-#quick_cuda: 
-#	$(CUDAC) $(CUDA_FLAGS2) -c gpu.cu
-#	$(CUDAC) $(CUDA_FLAGS2) -c gpu_type.cu
-#	$(CUDAC) $(CUDA_FLAGS2) -c gpu_get2e.cu
-#	$(CUDAC) $(CUDA_FLAGS2) -c gpu_getxc.cu
-#	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c gpu_write_info.f90
-#all: $(CUDACOBJ) $(CUDAFOBJ) $(CUDALIBXCOBJ)
-#all: $(CUDACOBJ) $(CUDAFOBJ) $(CXXOBJ)	
-all: $(CUDACOBJ) $(CUDAFOBJ)
-	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu.o \
-	$(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_getxc.o $(objfolder)/gga_c_am05.o \
-	$(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
+xc: $(CUDAXCOBJ)
+	$(CUDAC) $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) $(CUDA_ARCH_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o \
+	$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
 	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
 	$(objfolder)/gga_c_lm.o $(objfolder)/gga_c_lyp.o $(objfolder)/gga_c_op_b88.o $(objfolder)/gga_c_op_g96.o \
 	$(objfolder)/gga_c_op_pbe.o $(objfolder)/gga_c_op_pw91.o $(objfolder)/gga_c_optc.o $(objfolder)/gga_c_op_xalpha.o \
@@ -85,7 +65,7 @@ all: $(CUDACOBJ) $(CUDAFOBJ)
 	$(objfolder)/lda_c_vwn_2.o $(objfolder)/lda_c_vwn_3.o $(objfolder)/lda_c_vwn_4.o $(objfolder)/lda_c_vwn.o \
 	$(objfolder)/lda_c_vwn_rpa.o $(objfolder)/lda_c_wigner.o $(objfolder)/lda_k_tf.o $(objfolder)/lda_k_zlp.o \
 	$(objfolder)/lda_x_2d.o $(objfolder)/lda_xc_1d_ehwlrg.o $(objfolder)/lda_xc_ksdt.o $(objfolder)/lda_xc_teter93.o \
-	$(objfolder)/lda_x.o $(objfolder)/lda_xc_zlp.o $(objfolder)/lda_x_rel.o -o $(objfolder)/gpu_all.o
+	$(objfolder)/lda_x.o $(objfolder)/lda_xc_zlp.o $(objfolder)/lda_x_rel.o -o $(objfolder)/gpu_xcall.o
 #	$(objfolder)/lda_x_erf.o $(objfolder)/hyb_mgga_xc_wb97mv.o $(objfolder)/hyb_mgga_x_dldf.o $(objfolder)/hyb_mgga_x_m05.o \
 	$(objfolder)/mgga_c_b88.o $(objfolder)/mgga_c_bc95.o $(objfolder)/mgga_c_cs.o $(objfolder)/mgga_c_kcis.o \
 	$(objfolder)/mgga_c_m05.o $(objfolder)/mgga_c_m06l.o $(objfolder)/mgga_c_m08.o $(objfolder)/mgga_c_pkzb.o \
@@ -108,4 +88,4 @@ all: $(CUDACOBJ) $(CUDAFOBJ)
 # - 1. Clean object files
 clean: 
 	-rm -f *.o 
-	
+	-rm ./CUBLAS/*.o

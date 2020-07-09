@@ -13,4 +13,4 @@ HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-8  zmake OPT
 #ref_grad  0.0122178866
 #ref_grad  0.0344091903
 #ref_grad -0.0303553100
-#ref_min_ene -76.0273754551 
+#ref_min_ene -76.0273891243 

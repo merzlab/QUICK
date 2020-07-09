@@ -235,7 +235,7 @@ struct gpu_simulation_type {
     int*                            KLMN;
     int                             prim_total;
     int*                            prim_start;
-    
+
     // Some more infos about pre-calculated values
     QUICKDouble*                    o;
     QUICKULL*                       oULL;
@@ -271,6 +271,19 @@ struct gpu_simulation_type {
     // For Grad
     QUICKDouble*                    grad;
     QUICKULL*                       gradULL;
+  
+    // mpi variable definitions
+    int                             mpirank;
+    int                             mpisize;
+    int                             nqshell;
+
+    int*                            mpi_jshelln;
+    int*                            mpi_jshell;
+    int*                            mpi_nbasisn;
+    int*                            mpi_nbasis;
+    int                             mpi_qshell;
+    int*                            mpi_qshelln;
+    char*                            mpi_bcompute;
 };
 
 struct gpu_basis_type {
@@ -334,16 +347,49 @@ struct gpu_basis_type {
     cuda_buffer_type<QUICKDouble>*  PpriY;
     cuda_buffer_type<QUICKDouble>*  PpriZ;
     cuda_buffer_type<int>*          prim_start;
-    
-    
+
+    // For multi GPU version
+    cuda_buffer_type<int>*           mpi_jshelln;
+    cuda_buffer_type<int>*           mpi_jshell;
+    cuda_buffer_type<int>*           mpi_nbasisn;
+    cuda_buffer_type<int>*           mpi_nbasis;    
+    cuda_buffer_type<int>*           mpi_qshelln;    
+    cuda_buffer_type<char>*           mpi_bcompute;
+
     void upload_all();
     
 };
 
 
+// A type definition for device information in multi GPU version 
+struct multi_gpu_information_type {
+
+        //Varible declarations for multi GPU
+/*    SM_VERSION*                     sm_version; // Multi GPU SM versions
+    long long int*                  totalCPUMemory;// total CPU memory allocated by each GPU
+    long long int*                  totalGPUMemory;// total GPU memory allocated in each GPU by CUDA code    
+
+    // Launch parameters for multi GPU
+    int*                             gpu_dev_id;  // Multi GPU device IDS
+    unsigned int*                    blocks;  // Number of blocks for kernel launching on each GPU
+    unsigned int*                    threadsPerBlock; // Number of threads per block for kernel launching on each GPU
+    unsigned int*                    twoEThreadsPerBlock;
+    unsigned int*                    XCThreadsPerBlock;
+    unsigned int*                    gradThreadsPerBlock;
+    unsigned int*                    xc_blocks;  //Num of blocks each GPU will use for octree based dft implementation
+    unsigned int*                    xc_threadsPerBlock; //Num of threads/block each GPU wil use for octree based dft implementation 
+*/
+
+};
+
 
 // a type to define a graphic card
 struct gpu_type {
+
+#ifdef DEBUG
+    FILE                            *debugFile;
+#endif
+
     SM_VERSION                      sm_version;
     
     // Memory parameters
@@ -359,7 +405,13 @@ struct gpu_type {
     unsigned int                    gradThreadsPerBlock;
     unsigned int                    xc_blocks;	//Num of blocks for octree based dft implementation
     unsigned int                    xc_threadsPerBlock; //Num of threads/block for octree based dft implementation   
- 
+
+    multi_gpu_information_type*     mgpu_info;
+
+    // mpi variable definitions
+    int                             mpirank;
+    int                             mpisize;    
+
     // Molecule specification part
     int                             natom;
     int                             nbasis;
@@ -602,7 +654,8 @@ void cuda_buffer_type<T> :: Deallocate()
         }
         
         if (_hostData != NULL) {
-            free(_hostData);
+//            free(_hostData);
+            delete [] _hostData;
             gpu->totalCPUMemory -= _length*_length2*sizeof(T);
         }
     }else{
@@ -671,7 +724,8 @@ void cuda_buffer_type<T> :: DeleteCPU()
     PRINTDEBUG(">>BEGIN TO DELETE CPU")
     
     if (_hostData != NULL) {
-        free(_hostData);
+//        free(_hostData);
+        delete [] _hostData;
         _hostData = NULL;
 #ifdef DEBUG
         gpu->totalCPUMemory -= _length*_length2*sizeof(T);

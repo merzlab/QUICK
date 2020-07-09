@@ -123,7 +123,7 @@ void get_ssw_new_imp(_gpu_type gpu){
     float time;
     cudaEventElapsedTime(&time, start, end);
     totTime+=time;
-    printf("Time to compute grid weights on gpu:%f ms total time:%f ms\n", time, totTime);
+    fprintf(gpu->debugFile,"Time to compute grid weights on gpu:%f ms total time:%f ms\n", time, totTime);
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
@@ -175,7 +175,7 @@ void get_primf_contraf_lists_new_imp(_gpu_type gpu, unsigned char *gpweight, uns
     float time;
     cudaEventElapsedTime(&time, start, end);
     totTime+=time;
-    printf("Time to compute primitive and contracted indices on gpu: %f ms total time:%f ms\n", time, totTime);
+    fprintf(gpu->debugFile, "Time to compute primitive and contracted indices on gpu: %f ms total time:%f ms\n", time, totTime);
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
@@ -209,7 +209,7 @@ void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
     float time;
     cudaEventElapsedTime(&time, start, end);
     totTime+=time;
-    printf("this DFT cycle:%f ms total time:%f ms\n", time, totTime);
+    fprintf(gpu->debugFile,"this DFT cycle:%f ms total time:%f ms\n", time, totTime);
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
@@ -254,7 +254,7 @@ void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** g
     float time;
     cudaEventElapsedTime(&time, start, end);
     totTime+=time;
-    printf("this DFT cycle:%f ms total time:%f ms\n", time, totTime);
+    fprintf(gpu->debugFile,"this DFT cycle:%f ms total time:%f ms\n", time, totTime);
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif

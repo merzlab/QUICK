@@ -1,11 +1,18 @@
+!---------------------------------------------------------------------!
+! Updated by Madu Manathunga on 05/28/2020                            !
+!                                                                     !
+! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
+!                         Ken Ayers & Ed Brothers                     !
+!                                                                     ! 
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
+
 #   include "../config.h"
-!
-!	quick_molspec_module.f90
-!	new_quick
-!
-!	Created by Yipu Miao on 2/18/11.
-!	Copyright 2011 University of Florida. All rights reserved.
-!
 
 ! molecule specification Module
 module quick_molspec_module
@@ -49,7 +56,7 @@ module quick_molspec_module
       double precision, dimension(:,:), allocatable :: AtomDistance
 
       ! coordinate of atoms and external atoms
-      double precision, dimension(:,:), pointer :: xyz
+      double precision, dimension(:,:), pointer :: xyz => null()
       double precision, dimension(:,:), allocatable :: extxyz
 
       ! which atom type id every atom crosponds to
@@ -103,7 +110,6 @@ module quick_molspec_module
       module procedure set_quick_molspec
    end interface set
 
-
 contains
 
    !-------------------
@@ -114,12 +120,13 @@ contains
       integer i,j
 
       type (quick_molspec_type) self
-      allocate(xyz(3,natom))
+
+      if (.not. allocated(xyz)) allocate(xyz(3,natom))
 !      allocate(self%xyz(3,natom))
-      allocate(self%distnbor(natom))
-      allocate(self%iattype(natom))
-      allocate(self%chg(natom))
-      allocate(self%AtomDistance(natom,natom))
+      if (.not. allocated(self%distnbor))  allocate(self%distnbor(natom))
+      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+      if (.not. allocated(self%chg)) allocate(self%chg(natom))
+      if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
       do i=1,natom
          self%distnbor(i)=0
          self%iattype(i)=0
@@ -133,8 +140,8 @@ contains
       enddo
       ! if exist external charge
       if (self%nextatom.gt.0) then
-         allocate(self%extxyz(3, self%nextatom))
-         allocate(self%extchg(self%nextatom))
+         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3, self%nextatom))
+         if (.not. allocated(self%extchg)) allocate(self%extchg(self%nextatom))
          do i=1,self%nextatom
             do j=1,3
                self%extxyz(j,i)=0d0
@@ -230,83 +237,91 @@ contains
    ! this subroutine is to read charge, multiplicity, and number
    ! and kind of atom.
    !----------------------
-   subroutine read_quick_molspec(self,input)
-      use quick_constants_module
-      implicit none
-      type (quick_molspec_type) self
-      integer input,rdinml,i,j,k
-      integer ierror
-      integer iAtomType
-      integer nextatom
-      double precision temp,rdnml
-      character(len=200) keywd
-      logical :: is_extcharge = .false.
-      logical :: is_blank
+  subroutine read_quick_molspec(self,input,isTemplate)
 
+    use quick_constants_module
 
-      rewind(input)
+    implicit none
+    type (quick_molspec_type) :: self
+    integer :: input,rdinml,i,j,k
+    integer :: ierror
+    integer :: iAtomType
+    integer :: nextatom
+    double precision :: temp,rdnml
+    character(len=200) :: keywd
+    logical :: is_extcharge = .false.
+    logical :: is_blank
+    logical, intent(in) :: isTemplate
+    
 
-      !---------------------
-      ! PART I
-      !---------------------
-      ! The first line is Keyword
-      read (input,'(A80)') keywd
-      call upcase(keywd,200)
+    rewind(input)
 
-      ! Read Charge
-      if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
+    !---------------------
+    ! PART I
+    !---------------------
+    ! The first line is Keyword
+    read (input,'(A132)') keywd
+    call upcase(keywd,200)
 
-      ! read multipilicity
-      if (index(keywd,'MULT=') /= 0) self%imult = rdinml(keywd,'MULT')
+    ! Read Charge
+    if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
 
-      ! determine if external charge exists
-      if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
+    ! read multipilicity
+    if (index(keywd,'MULT=') /= 0) self%imult = rdinml(keywd,'MULT')
 
-      call findBlock(input,1)
+    ! determine if external charge exists
+    if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
 
-      ! first is to read atom and atom kind
-      iAtomType = 1
-      natom = 0
-      nextatom = 0
-      do
-         read(input,'(A80)',end=111,err=111) keywd
-         i=1;j=80
-         call upcase(keywd,80)
-         call rdword(keywd,i,j)
-         if (is_blank(keywd,1,80)) exit
-         
-         do k=0,71
-            if (keywd(i:j) == symbol(k)) then
-               natom=natom+1
-               ! check if atom type has been shown before
-               if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
-                  self%atom_type_sym(iAtomType)=symbol(k)
-                  iAtomType=iAtomType+1
-               endif
-            endif
-         enddo
-      enddo
+    call findBlock(input,1)
 
-      111     continue
+    ! get the atom number, type and number of external charges
 
-      ! read external charge part
-      if (is_extcharge)  then
-         rewind(input)
-         call findBlock(input,2)
-         do
-            read(input,'(A80)',end=112,err=112) keywd
-            if (is_blank(keywd,1,80)) exit
-            nextatom=nextatom+1
-         enddo
-      endif
+  if( .not. isTemplate) then
+    ! first is to read atom and atom kind
+    iAtomType = 1
+    natom = 0
+    nextatom = 0
+    do
+       read(input,'(A80)',end=111,err=111) keywd
+       i=1;j=80
+       call upcase(keywd,80)
+       call rdword(keywd,i,j)
+       if (is_blank(keywd,1,80)) exit
 
-      112     continue
+       do k=0,71
+          if (keywd(i:j) == symbol(k)) then
+             natom=natom+1
+             ! check if atom type has been shown before
+             if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
+                !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
+                self%atom_type_sym(iAtomType)=symbol(k)
+                iAtomType=iAtomType+1
+             endif
+          endif
+       enddo
+    enddo
 
-      iAtomType=iAtomType-1
-      self%iAtomType = iAtomType
-      self%nextatom = nextatom
+    111     continue
 
-   end subroutine read_quick_molspec
+    ! read external charge part
+    if (is_extcharge)  then
+       rewind(input)
+       call findBlock(input,2)
+       do
+          read(input,'(A80)',end=112,err=112) keywd
+          if (is_blank(keywd,1,80)) exit
+          nextatom=nextatom+1
+       enddo
+    endif
+
+    112     continue
+
+    iAtomType=iAtomType-1
+    self%iAtomType = iAtomType
+    self%nextatom = nextatom
+  endif
+
+  end subroutine read_quick_molspec
 
    !----------------
    ! read external charge
@@ -387,16 +402,18 @@ contains
             ifinal = 80
             
             read(input,'(A80)') keywd
-            call rdword(keywd,istart,ifinal)
-            call rdnum(keywd,istart,self%extchg(i),ierror)
-        
+
             do j=1,3
-                istart=ifinal+1
                 ifinal=80
                 call rdword(keywd,istart,ifinal)
                 call rdnum(keywd,istart,temp,ierror)
                 self%extxyz(j,i) = temp*A_TO_BOHRS
-            enddo 
+                istart=ifinal+1
+            enddo
+
+            call rdword(keywd,istart,ifinal)
+            call rdnum(keywd,istart,self%extchg(i),ierror)
+
         enddo
         
     end subroutine read_quick_molespec_extcharges

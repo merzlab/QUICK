@@ -57,11 +57,8 @@ subroutine read_job_and_atom
 
       ! read molecule specfication. Note this is step 1 for molspec reading
       ! and this is mainly to read atom number, atom kind and external charge number. 
-      call read(quick_molspec,inFile)
+      call read(quick_molspec,inFile, isTemplate)
       close(inFile)
-
-
-
 
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
       if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then

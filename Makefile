@@ -30,6 +30,18 @@ include $(MAKEIN)
 
 # See compiler information and flag in make.in
 
+# set variables based on library type (i.e. shared or static)
+
+ifeq "$(LIB_TYPE)" "SHARED"
+  ARCH      = $(FC)
+  ARCHFLAGS = -shared -o
+  libext    =so
+else
+  ARCH     = ar
+  ARCHFLAGS= -r
+  libext   =a
+endif
+
 #----------------------
 # src file location
 # #----------------------
@@ -89,8 +101,10 @@ libxcfolder = ./src/libxc
 #----------------------
 
 cudafolder = ./src/cuda
-cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_getxc.o \
-	       $(objfolder)/gpu_get2e.o
+cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o \
+	$(objfolder)/gpu_get2e.o
+cudaxcobj = $(objfolder)/gpu_getxc.o
+
 cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
 	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
 	$(objfolder)/gga_c_lm.o $(objfolder)/gga_c_lyp.o $(objfolder)/gga_c_op_b88.o $(objfolder)/gga_c_op_g96.o \
@@ -134,8 +148,10 @@ cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gg
 	$(objfolder)/mgga_x_ms.o $(objfolder)/mgga_x_mvs.o $(objfolder)/mgga_x_pbe_gx.o $(objfolder)/mgga_x_pkzb.o \
 	$(objfolder)/mgga_x_sa_tpss.o $(objfolder)/mgga_x_scan.o $(objfolder)/mgga_x_tau_hcth.o $(objfolder)/mgga_x_tm.o \
 	$(objfolder)/mgga_x_tpss.o $(objfolder)/mgga_x_vt84.o
-cublasfolder  =$(cudafolder)/CUBLAS
-cublasobj     =$(objfolder)/fortran_thunking.o
+cublasfolder    = $(cudafolder)/CUBLAS
+cusolverfolder  = $(cudafolder)/CUSOLVER
+cublasobj       = $(objfolder)/fortran_thunking.o
+cusolverobj     = $(objfolder)/quick_cusolver.o 
 #----------------------
 # octree files
 #----------------------
@@ -153,14 +169,16 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
         $(objfolder)/quick_files_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_mfcc_module.o \
         $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
-        $(objfolder)/quick_timer_module.o $(objfolder)/quick_all_module.o
+        $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
+	$(objfolder)/quick_all_module.o
 
-OBJ =   $(objfolder)/main.o \
-        $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
+MAIN = $(srcfolder)/main.o
+
+OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
         $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
         $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
-        $(objfolder)/dft.o $(objfolder)/sedftoperator.o $(objfolder)/dipole.o \
+        $(objfolder)/dft.o $(objfolder)/sedftoperator.o \
         $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
         $(objfolder)/udftoperator.o $(objfolder)/usedftoperator.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
@@ -168,6 +186,25 @@ OBJ =   $(objfolder)/main.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
         $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
 
+SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
+	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
+	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
+	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
+	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
+	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \
+	$(objfolder)/PrtMsg.o $(objfolder)/PrtTim.o $(objfolder)/PrtWrn.o $(objfolder)/pteval.o \
+	$(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o $(objfolder)/rdnml.o \
+	$(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
+	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/transpose.o $(objfolder)/tridi.o \
+	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
+	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
+	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
+
+TESTAPI=$(srcfolder)/quick_api_test.o
 
 all: quick quick.cuda
 #************************************************************************
@@ -196,12 +233,13 @@ octree:
 	cd $(octfolder) && make all
 #============= targets for cuda =========================================
 quick_cuda:
-	cd $(cudafolder) && make all 
+	cd $(cudafolder) && make allbutxc
+	cd $(cudafolder) && make xc 
 		
 #================= targets for BLAS =====================================
 blas:
 	cd $(blasfolder) && make
-	cp $(blasfolder)/*.a $(libfolder)
+	cp $(blasfolder)/libblas.$(libext) $(libfolder)
 #==================== libxc cpu library =================================
 libxc_cpu:
 	cd $(libxcfolder) && make libxc_cpu
@@ -210,22 +248,34 @@ libxc_gpu:
 	cd $(libxcfolder) && make libxc_gpu
 	cd $(libxcfolder)/maple2c_device && make all
 #=============== targets for CUBLAS =====================================
-$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CPP) $(CPP_FLAG) -c $< -o $@
 
-#===================== target for main src files ========================
+$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
+	$(CC) $(CPP_FLAG) -c $< -o $@
+
+#=============== targets for CUSOLVER ===================================
+
+$(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
+	$(CC) $(CPP_FLAG) -c $< -o $@
+
+#===================== target for general src files =====================
 
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
-
+#===================== target for main src files ========================
+$(MAIN):$(srcfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+#===================== target for compiling api test ====================
+$(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #==================== target configuration files ========================
-
 cpconfig:
 	cp $(configfolder)/config.h $(srcfolder)/config.h
 cpconfig.cuda:
 	cp $(configfolder)/config.cuda.h $(srcfolder)/config.h
 cpconfig.cuda.SP:
 	cp $(configfolder)/config.cuda.SP.h $(srcfolder)/config.h
+cpconfig.cuda.MPI:
+	cp $(configfolder)/config.cuda.MPI.h $(srcfolder)/config.h
 cpconfig.MPI:
 	cp $(configfolder)/config.MPI.h $(srcfolder)/config.h
 
@@ -246,30 +296,46 @@ cpconfig.MPI:
 #                 C. Make Executables
 # 
 #**********************************************************************
-quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(libext) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
-quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
-	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_all.o $(cudaobj) $(cudalibxcobj) \
-	$(libfolder)/quicklib.a $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
+quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcu.$(libext) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS)
 
-quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
-	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
+quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
+	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
 
-quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(libext) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
-quick_lib:$(OBJ) ambermod amber_interface.o
+quick.cuda.MPI: makefolders cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(libext) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
 
-ambermod:
-	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
-	cp ../../../AmberTools/src/sqm/qmmm_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_vsolv_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_struct_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_nml_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_module.o .
+
+quicklib: quick $(TESTAPI)
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
+
+quickculib: quick.cuda $(TESTAPI)
+	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
+
+quickmpilib: quick.MPI $(TESTAPI)
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
+
+quickcumpilib: quick.cuda.MPI $(TESTAPI) 
+	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
+
+
+#ambermod:
+#	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
+#	cp ../../../AmberTools/src/sqm/qmmm_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_vsolv_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_struct_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_nml_module.mod .
+#	cp ../../../AmberTools/src/sqm/qmmm_module.o .
 
 		
 #************************************************************************
@@ -280,7 +346,7 @@ ambermod:
 
 # - 1. Clean object files
 clean: neat
-	-rm -f $(objfolder)/* $(libfolder)/* 
+	-rm -f $(objfolder)/* $(srcfolder)/*.o 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
@@ -290,13 +356,14 @@ clean: neat
 neat:
 	-rm -f $(TMPFILES)
 
-#Madu: Clean except libxc. Only for debugging
-dryclean:
-	-rm -f $(objfolder)/* $(libfolder)/*
+uninstall: neat
+	-rm -f $(exefolder)/quick* $(exefolder)/testapi.o $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean	
+	cd $(modfolder) && make clean
+	cd $(libxcfolder) && make clean
+	cd $(libxcfolder)/maple2c_device && make clean
 
 # - 2. Make tags for source files
 TAGS: $(SRC)
