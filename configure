@@ -1,0 +1,249 @@
+#!/bin/sh
+
+#  !---------------------------------------------------------------------!
+#  ! Written by Madu Manathunga on 07/09/2020                            !
+#  !                                                                     ! 
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This source code sets up the environment for QUICK compilation and  !
+#  ! writes input file for make.                                         ! 
+#  !---------------------------------------------------------------------!
+
+#  !---------------------------------------------------------------------!
+#  ! Set version                                                         ! 
+#  !---------------------------------------------------------------------!
+QUICK_VERSION='QUICK-20.06'
+QUICK_HOME=`pwd`
+FC='gfortran'
+CC='gcc'
+CXX='g++'
+NVCC='nvcc'
+
+#  !---------------------------------------------------------------------!
+#  ! function to print how to use this script                            ! 
+#  !---------------------------------------------------------------------!
+print_help(){
+
+cat<<EOF
+
+  Use this script as ./configure [flags] compiler
+
+  Available flags are:
+      -serial        Builds a serial version
+      -mpi           Compiles MPI prallel version
+      -gpu           Builds GPU version that utilizes a single NVIDIA GPU
+      -multigpu      Builds GPU version that utilizes multiple NVIDIA GPUs
+      -debug         Compiles debug version
+      -shared        Build shared object libraries
+      --prefix <dir> User specified installation directory
+
+  Supported compilers are: gnu, intel
+  
+  For example, GPU version with intel compiler tool chain can be compiled as
+  follows:
+                    ./configure -gpu intel              
+
+EOF
+exit 0;
+
+}
+
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               ! 
+#  !---------------------------------------------------------------------!
+
+serial='no'
+mpi='no'
+cuda='no'
+cudampi='no'
+debug='no'
+fort='no'
+cc='no'
+cxx='no'
+nvcc='no'
+useprefix='false'
+quick_prefix="$QUICK_HOME"
+shared='no'
+lib_flags=''
+cuda_lib_flags=''
+opt_flags='-O2'
+blas_opt_flags='-O3'
+
+
+#  !---------------------------------------------------------------------!
+#  ! Check user input                                                    ! 
+#  !---------------------------------------------------------------------!
+if [ $# -lt 1 ]; then print_help; fi
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -serial)      serial='yes';mpi='no';cuda='no';cudampi='no';;
+    -mpi)         serial='no';mpi='yes';cuda='no';cudampi='no';;
+    -gpu)         serial='no';mpi='no';cuda='yes';cudampi='no';;
+    -multigpu)    serial='no';mpi='no';cuda='no';cudampi='yes';;
+    -debug)       debug='yes';;
+    -shared)      shared='yes';; 
+    --prefix)     shift; quick_prefix=$1; useprefix='true';;
+    -h| -H| -help| --help) print_help;;
+    -*)  echo "Error: $1 is an unknown flag"
+         echo "       Run this script as './configure [flags] compiler'"
+         echo "       Run './configure --help' for more information"
+         exit 1;;
+
+     *)  if [ $# -gt 1 ]; then
+           echo "Error: $1 is an unknown compiler"
+           echo "       Run this script as './configure [flags] compiler'"
+           echo "       Run './configure --help' for more information"
+           exit 1
+         fi
+
+         compiler=$1;;
+  esac
+  shift
+done
+
+echo "serial=$serial, mpi=$mpi, cuda=$cuda, cudampi=$cudampi compiler=$compiler "
+
+# check prefix and perform necessary operations 
+if [ "$useprefix" = "true" ]; then
+  if [ "$QUICK_HOME" = "$quick_prefix" ]; then
+    echo "Specified --prefix and the current folder is the same. Please choose a different location."
+    exit 1
+  fi
+
+  # create tests and basis directories if they dont exist
+  if [ ! -d $quick_prefix/tests ]; then
+    mkdir -p "$quick_prefix/tests"
+    echo "Creating symlink for $quick_prefix/tests"
+    cd "$quick_prefix/tests"
+    lndir "$QUICK_HOME/tests"
+    cd "$QUICK_HOME"
+  fi
+
+  # copy the contents of basis folder since user may delete/relocate
+  # QUICK_HOME folder after installation
+  if [ ! -d $quick_prefix/basis ]; then
+    mkdir -p "$quick_prefix/basis"
+    cp -rf "$QUICK_HOME/basis/"* "$quick_prefix/basis/"
+  fi
+fi
+
+echo ""
+echo "QUICK will be installed in $quick_prefix"
+echo ""
+
+#  !---------------------------------------------------------------------!
+#  ! Create essential directories                                        ! 
+#  !---------------------------------------------------------------------!
+if [ ! -d $quick_prefix/bin ]; then
+  mkdir -p "$quick_prefix/bin"
+fi
+
+if [ ! -d $quick_prefix/lib ]; then
+  mkdir -p "$quick_prefix/lib"
+fi
+
+if [ ! -d $quick_prefix/obj ]; then
+  mkdir -p "$quick_prefix/obj"
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Set compilers                                                       ! 
+#  !---------------------------------------------------------------------!
+
+case "$compiler" in
+  gnu)
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi      
+    fi
+    ;;
+
+  intel)
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpiifort'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpiicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
+    fi
+    ;;
+esac
+
+#  !---------------------------------------------------------------------!
+#  ! Check for CUDA tool kit and compiler                                ! 
+#  !---------------------------------------------------------------------!
+
+if [ "$cuda" = 'yes' | "$cudampi" = 'yes' ]; then
+  if [ -z "$CUDA_HOME" ]; then
+    echo "Error: CUDA_HOME environment variable is not set."
+    echo "Please make sure CUDA toolkit is loaded."
+    exit 1
+  fi
+
+  if [ ! -x "$CUDA_HOME/bin/nvcc" ]; then
+    echo "Error: nvcc compiler is not available in $CUDA_HOME/bin/"
+    exit 1
+  fi
+
+  if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi  
+
+    #SM8.0 = A100
+    sm80flags='-gencode arch=compute_80,code=sm_80'
+    #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
+    sm75flags='-gencode arch=compute_60,code=sm_75'
+    #SM7.0 = V100, Titan V
+    sm70flags='-gencode arch=compute_60,code=sm_70'
+    #SM6.2 = ???
+    sm62flags='-gencode arch=compute_62,code=sm_62'
+    #SM6.1 = GP106 = GTX-1070, GP104 = GTX-1080, GP102 = Titan-X[P]
+    sm61flags='-gencode arch=compute_61,code=sm_61'
+    #SM6.0 = GP100 / P100 = DGX-1
+    sm60flags='-gencode arch=compute_60,code=sm_60'
+
+    cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
+
+    if [ "$cudaversion" = "11.0" ]; then
+      # Implement the standard, not warp synchronous, compilation
+      sm75flags='-gencode arch=compute_75,code=sm_75'
+      sm70flags='-gencode arch=compute_70,code=sm_70'
+      echo "CUDA Version $cudaversion detected"
+      echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5 and SM8.0"
+      nvccflags="$sm60flags $sm61flags $sm70flags $sm75flags $sm80flags -Wno-deprecated-declarations"
+    elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
+      echo "CUDA Version $cudaversion detected"
+      echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
+      nvccflags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+    elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
+      echo "CUDA Version $cudaversion detected"
+      echo "Configuring for SM6.0, SM6.1 and SM7.0"
+      nvccflags="$sm60flags $sm61flags $sm70flags -Wno-deprecated-declarations"
+    elif [ "$cudaversion" = "8.0" ]; then
+      echo "CUDA Version $cudaversion detected"
+      echo "Configuring for SM6.0 and SM6.1"
+      nvccflags="$sm60flags $sm61flags"
+    else
+      echo "Error: Unsupported CUDA version $cudaversion detected."
+      echo "       QUICK requires at least CUDA version 8.0"
+      exit 1
+    fi
+    nvcc="$nvcc $nvccflags"
+
+fi
+
+
+
