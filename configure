@@ -21,10 +21,8 @@
 #  !---------------------------------------------------------------------!
 QUICK_VERSION='QUICK-20.06'
 QUICK_HOME=`pwd`
-FC='gfortran'
-CC='gcc'
-CXX='g++'
-NVCC='nvcc'
+cdate=`date +'%m/%d/%Y'`
+ctime=`date +'%r'`
 
 #  !---------------------------------------------------------------------!
 #  ! function to print how to use this script                            ! 
@@ -36,13 +34,18 @@ cat<<EOF
   Use this script as ./configure [flags] compiler
 
   Available flags are:
+      --prefix <dir> User specified installation directory
       -serial        Builds a serial version
       -mpi           Compiles MPI prallel version
-      -gpu           Builds GPU version that utilizes a single NVIDIA GPU
-      -multigpu      Builds GPU version that utilizes multiple NVIDIA GPUs
+      -cuda          Builds GPU version that utilizes a single NVIDIA GPU
+      -cudampi       Builds GPU version that utilizes multiple NVIDIA GPUs
       -debug         Compiles debug version
       -shared        Build shared object libraries
-      --prefix <dir> User specified installation directory
+      -arch <pascal|volta|turing>  
+                     Specify gpu architecture. Applicable for cuda and 
+                     cudampi versions only. If unspecified, QUICK will be 
+                     compiled for several architectures based on the CUDA
+                     toolkit version.
 
   Supported compilers are: gnu, intel
   
@@ -59,23 +62,68 @@ exit 0;
 #  ! Variable declarations                                               ! 
 #  !---------------------------------------------------------------------!
 
+# quick version flags
 serial='no'
 mpi='no'
 cuda='no'
 cudampi='no'
 debug='no'
+installer=''
+
+# keeps track of what compilers being used
 fort='no'
 cc='no'
 cxx='no'
 nvcc='no'
+
+# where to install
 useprefix='false'
 quick_prefix="$QUICK_HOME"
+
+# flag to indicate if a so library compilation is required
 shared='no'
-lib_flags=''
-cuda_lib_flags=''
+
+# compiler specific flags
+fort_flags=''
+cc_flags=''
+cxx_flags=''
+cuda_flags=''
+cpp_flags=''
+
+# archiver related variables
+arch='ar'
+arch_flags='cr'
+ranlib='ranlib'
+libext='a'
+
+# linker flags
+ldflags=''
+cflags=''
+
+# optimization levels
 opt_flags='-O2'
 blas_opt_flags='-O3'
 
+# cuda architecture flags
+uspec_arch='false'
+cuda_arch=''
+cuda_arch_flags=''
+
+# extra cuda flags
+cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+
+# cuda include flags
+cuda_incl_flags=''
+
+# flags to generate PIC in so library case 
+lib_flags=''
+cuda_lib_flags=''
+
+# debug flags
+fort_debug_flags=''
+cc_debug_flags=''
+cxx_debug_flags=''
+cuda_debug_flags=''
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    ! 
@@ -86,10 +134,11 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -serial)      serial='yes';mpi='no';cuda='no';cudampi='no';;
     -mpi)         serial='no';mpi='yes';cuda='no';cudampi='no';;
-    -gpu)         serial='no';mpi='no';cuda='yes';cudampi='no';;
-    -multigpu)    serial='no';mpi='no';cuda='no';cudampi='yes';;
+    -cuda)        serial='no';mpi='no';cuda='yes';cudampi='no';;
+    -cudampi)     serial='no';mpi='no';cuda='no';cudampi='yes';;
     -debug)       debug='yes';;
     -shared)      shared='yes';; 
+    -arch)        shift; cuda_arch=$1; uspec_arch='true';;
     --prefix)     shift; quick_prefix=$1; useprefix='true';;
     -h| -H| -help| --help) print_help;;
     -*)  echo "Error: $1 is an unknown flag"
@@ -188,7 +237,22 @@ esac
 #  ! Check for CUDA tool kit and compiler                                ! 
 #  !---------------------------------------------------------------------!
 
-if [ "$cuda" = 'yes' | "$cudampi" = 'yes' ]; then
+# this function sets the user defined cuda architecture flags, if specified
+set_uspec_arch(){
+  case "$cuda_arch" in
+    pascal)
+      echo "Configuring for SM6.0"
+      cuda_arch_flags="-gencode arch=compute_60,code=sm_60";;
+    volta)
+      echo "Configuring for SM7.0"
+      cuda_arch_flags="-gencode arch=compute_70,code=sm_70";;
+    turing)
+      echo "Configuring for SM7.5"
+      cuda_arch_flags="-gencode arch=compute_75,code=sm_75";;
+  esac
+}
+
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
   if [ -z "$CUDA_HOME" ]; then
     echo "Error: CUDA_HOME environment variable is not set."
     echo "Please make sure CUDA toolkit is loaded."
@@ -203,7 +267,7 @@ if [ "$cuda" = 'yes' | "$cudampi" = 'yes' ]; then
   if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi  
 
     #SM8.0 = A100
-    sm80flags='-gencode arch=compute_80,code=sm_80'
+    #sm80flags='-gencode arch=compute_80,code=sm_80'
     #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
     sm75flags='-gencode arch=compute_60,code=sm_75'
     #SM7.0 = V100, Titan V
@@ -218,32 +282,221 @@ if [ "$cuda" = 'yes' | "$cudampi" = 'yes' ]; then
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
     if [ "$cudaversion" = "11.0" ]; then
-      # Implement the standard, not warp synchronous, compilation
-      sm75flags='-gencode arch=compute_75,code=sm_75'
-      sm70flags='-gencode arch=compute_70,code=sm_70'
+
       echo "CUDA Version $cudaversion detected"
-      echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5 and SM8.0"
-      nvccflags="$sm60flags $sm61flags $sm70flags $sm75flags $sm80flags -Wno-deprecated-declarations"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+
+        sm75flags='-gencode arch=compute_75,code=sm_75'
+        sm70flags='-gencode arch=compute_70,code=sm_70'          
+        echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+      fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
       echo "CUDA Version $cudaversion detected"
-      echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
-      nvccflags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+      fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
       echo "CUDA Version $cudaversion detected"
-      echo "Configuring for SM6.0, SM6.1 and SM7.0"
-      nvccflags="$sm60flags $sm61flags $sm70flags -Wno-deprecated-declarations"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0, SM6.1 and SM7.0"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags -Wno-deprecated-declarations"
+      fi
     elif [ "$cudaversion" = "8.0" ]; then
       echo "CUDA Version $cudaversion detected"
-      echo "Configuring for SM6.0 and SM6.1"
-      nvccflags="$sm60flags $sm61flags"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0 and SM6.1"
+        cuda_arch_flags="$sm60flags $sm61flags"
+      fi
     else
       echo "Error: Unsupported CUDA version $cudaversion detected."
       echo "       QUICK requires at least CUDA version 8.0"
       exit 1
     fi
-    nvcc="$nvcc $nvccflags"
 
 fi
 
+#  !---------------------------------------------------------------------!
+#  ! Set compiler flags                                                  ! 
+#  !---------------------------------------------------------------------!
 
+# set debug flags
+if [ "$debug" = 'yes' ]; then
+  opt_flags='-O0'
+  blas_opt_flags='-O0'
+
+  case "$compiler" in
+    gnu)
+      fort_debug_flags='-g'
+      cc_debug_flags='-g'
+      cxx_debug_flags='-g'
+      ;;
+    intel)
+      fort_debug_flags='-g'
+      cc_debug_flags='-g'
+      cxx_debug_flags='-g'
+      ;;
+  esac
+
+  if [ "$cuda" = 'yes' | "$cudampi" = 'yes' ]; then
+    cuda_debug_flags='-g -G'
+  fi
+fi
+
+# set library flags if so library is requested
+if [ "$shared" = 'yes' ]; then
+  lib_flags='-fPIC'
+  cuda_lib_flags="--compiler-options '-fPIC'"
+  arch="$FC"
+  arch_flag='-shared -o'
+  ranlib='echo'
+  libext='so'
+fi
+
+# sed compiler specific flags
+case "$compiler" in
+  gnu)
+    fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$quick_prefix/obj -J$quick_prefix/obj"
+    if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+      cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+    fi    
+    ;;
+  intel)
+    fort_flags="$opt_flags $fort_debug_flags -ip -cpp $lib_flags -I$quick_prefix/obj -module $quick_prefix/obj"
+    if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+      cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+    fi
+    ;;
+esac
+
+cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$quick_prefix/obj"
+cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$quick_prefix/obj"
+ldflags="$fort_flags -lstdc++"
+
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+
+  cpp_flags="$opt_flags -I$CUDA_HOME/include $lib_flags -DCUBLAS_USE_THUNKING"
+
+  cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $lib_flags"
+
+  cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+
+  if [ "$compiler" = 'gnu' ]; then cflags="-lgfortran $cflags"; fi
+
+  cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include -DCUDA_SPDF"
+
+  if [ "$cudampi" = 'yes' ]; then
+    cuda_incl_flags="$cuda_incl_flags -I$MPI_INCLUDES -I$MPI_LIBS"
+  fi
+
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Set installer and generate make input file                          ! 
+#  !---------------------------------------------------------------------!
+
+if [ "$serial" = 'yes' ]; then
+  installer='serial'
+elif [ "$mpi" = 'yes' ]; then
+  installer='mpi'
+elif [ "$cuda" = 'yes' ]; then
+  installer='cuda'
+elif [ "$cudampi" = 'yes' ]; then
+  installer='cudampi'
+fi
+
+cat > make.in << EOF
+
+# $QUICK_VERSION configuration file
+# Created on $cdate at $ctime
+
+#!---------------------------------------------------------------------!
+#! Set installer                                                       ! 
+#!---------------------------------------------------------------------!
+
+INSTALLER=$installer
+
+#!---------------------------------------------------------------------!
+#! Set directories                                                     ! 
+#!---------------------------------------------------------------------!
+
+srcfolder=$QUICK_HOME/src
+objfolder=$quick_prefix/obj
+exefolder=$quick_prefix/bin
+libfolder=$quick_prefix/lib
+configfolder=$QUICK_HOME/src/config
+subfolder=$QUICK_HOME/src/subs
+blasfolder=$QUICK_HOME/src/BLAS
+libxcfolder=$QUICK_HOME/src/libxc
+cudafolder=$QUICK_HOME/src/cuda
+cublasfolder=$QUICK_HOME/src/cuda/CUBLAS
+cusolverfolder=$QUICK_HOME/src/cuda/CUSOLVER
+octfolder=$QUICK_HOME/src/octree
+modfolder=$QUICK_HOME/src/modules
+
+#!---------------------------------------------------------------------!
+#! Set compilers                                                       ! 
+#!---------------------------------------------------------------------!
+
+FC=$fort
+CC=$cc
+CXX=$cxx  
+CUDAC=$nvcc
+
+#!---------------------------------------------------------------------!
+#! Set archiver and flags for the libraries                            ! 
+#!---------------------------------------------------------------------!
+
+ARCH=$arch
+ARCHFLAGS=$arch_flags
+RANLIB=$ranlib
+LIBEXT=$libext
+BLAS_FLAGS=$blas_opt_flags $lib_flags
+
+#!---------------------------------------------------------------------!
+#! Common compiler  flags                                              ! 
+#!---------------------------------------------------------------------!
+
+FFLAGS=$fort_flags
+LDFLAGS=$ldflags
+CCFLAGS=$cc_flags
+CXXFLAGS=$cxx_flags
+
+EOF
+
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+cat >> make.in << EOF
+#!---------------------------------------------------------------------!
+#! CUDA specific flags                                                 ! 
+#!---------------------------------------------------------------------!
+
+CPP_FLAG=$cpp_flags
+CUDA_FLAGS=$cuda_flags
+CUDA_INCL_FLAGS=$cuda_incl_flags
+CFLAGS=$cflags
+
+EOF
+fi
+
+echo "Input file for GNU make was successfully created."
+echo ""
+
+#  !---------------------------------------------------------------------!
+#  ! Clean directories                                                   ! 
+#  !---------------------------------------------------------------------!
+
+make clean > /dev/null 
 
