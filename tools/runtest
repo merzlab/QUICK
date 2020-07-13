@@ -2,13 +2,12 @@
 # Written by Madu Manathunga 03/07/2019
 
 # This script runs a series of test cases saved in tests folder and verifies the correctness of quick
-# You should run from the quick home directory
 
 #Set values for the variables
-qhome=`pwd`
-tstdir=${qhome}/tests
-qbasisdir=${qhome}/basis
-qbindir=${qhome}/bin
+installdir='unknown-installdir'
+tstdir=${installdir}/tests
+qbasisdir=${installdir}/basis
+qbindir=${installdir}/bin
 qexe='unknown-qexe'
 export QUICK_BASIS=$qbasisdir
 nprocs=4
@@ -182,7 +181,7 @@ if [ -f tstlst ]; then
 		
 	echo "All tests are done!"
 	echo ""
-	cd $qhome
+	cd $installdir
 else
 	echo "File tstlst not found. Aborting.."
 	exit 0 
