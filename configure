@@ -2,7 +2,7 @@
 
 #  !---------------------------------------------------------------------!
 #  ! Written by Madu Manathunga on 07/09/2020                            !
-#  !                                                                     ! 
+#  !                                                                     !
 #  ! Copyright (C) 2020-2021 Merz lab                                    !
 #  ! Copyright (C) 2020-2021 Götz lab                                    !
 #  !                                                                     !
@@ -13,11 +13,11 @@
 #
 #  !---------------------------------------------------------------------!
 #  ! This source code sets up the environment for QUICK compilation and  !
-#  ! writes input file for make.                                         ! 
+#  ! writes input file for make.                                         !
 #  !---------------------------------------------------------------------!
 
 #  !---------------------------------------------------------------------!
-#  ! Set version                                                         ! 
+#  ! Set version                                                         !
 #  !---------------------------------------------------------------------!
 QUICK_VERSION='QUICK-20.06'
 QUICK_HOME=`pwd`
@@ -25,7 +25,7 @@ cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
 
 #  !---------------------------------------------------------------------!
-#  ! function to print how to use this script                            ! 
+#  ! function to print how to use this script                            !
 #  !---------------------------------------------------------------------!
 print_help(){
 
@@ -59,7 +59,7 @@ exit 0;
 }
 
 #  !---------------------------------------------------------------------!
-#  ! Variable declarations                                               ! 
+#  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
 # quick version flags
@@ -69,6 +69,7 @@ cuda='no'
 cudampi='no'
 debug='no'
 installer=''
+exename=''
 
 # keeps track of what compilers being used
 fort='no'
@@ -126,7 +127,7 @@ cxx_debug_flags=''
 cuda_debug_flags=''
 
 #  !---------------------------------------------------------------------!
-#  ! Check user input                                                    ! 
+#  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
 if [ $# -lt 1 ]; then print_help; fi
 
@@ -189,7 +190,7 @@ echo "QUICK will be installed in $quick_prefix"
 echo ""
 
 #  !---------------------------------------------------------------------!
-#  ! Create essential directories                                        ! 
+#  ! Create essential directories                                        !
 #  !---------------------------------------------------------------------!
 if [ ! -d $quick_prefix/bin ]; then
   mkdir -p "$quick_prefix/bin"
@@ -204,7 +205,7 @@ if [ ! -d $quick_prefix/obj ]; then
 fi
 
 #  !---------------------------------------------------------------------!
-#  ! Set compilers                                                       ! 
+#  ! Set compilers                                                       !
 #  !---------------------------------------------------------------------!
 
 case "$compiler" in
@@ -234,7 +235,7 @@ case "$compiler" in
 esac
 
 #  !---------------------------------------------------------------------!
-#  ! Check for CUDA tool kit and compiler                                ! 
+#  ! Check for CUDA tool kit and compiler                                !
 #  !---------------------------------------------------------------------!
 
 # this function sets the user defined cuda architecture flags, if specified
@@ -330,7 +331,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 fi
 
 #  !---------------------------------------------------------------------!
-#  ! Set compiler flags                                                  ! 
+#  ! Set compiler flags                                                  !
 #  !---------------------------------------------------------------------!
 
 # set debug flags
@@ -405,17 +406,21 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 fi
 
 #  !---------------------------------------------------------------------!
-#  ! Set installer and generate make input file                          ! 
+#  ! Set installer and generate make input file                          !
 #  !---------------------------------------------------------------------!
 
 if [ "$serial" = 'yes' ]; then
   installer='serial'
+  exename='quick'
 elif [ "$mpi" = 'yes' ]; then
   installer='mpi'
+  exename='quick.MPI'
 elif [ "$cuda" = 'yes' ]; then
   installer='cuda'
+  exename='quick.cuda'
 elif [ "$cudampi" = 'yes' ]; then
   installer='cudampi'
+  exename='quick.cuda.MPI'
 fi
 
 cat > make.in << EOF
@@ -424,15 +429,16 @@ cat > make.in << EOF
 # Created on $cdate at $ctime
 
 #!---------------------------------------------------------------------!
-#! Set installer                                                       ! 
+#! Set installer                                                       !
 #!---------------------------------------------------------------------!
 
 INSTALLER=$installer
 
 #!---------------------------------------------------------------------!
-#! Set directories                                                     ! 
+#! Set directories                                                     !
 #!---------------------------------------------------------------------!
 
+installfolder=$quick_prefix
 srcfolder=$QUICK_HOME/src
 objfolder=$quick_prefix/obj
 exefolder=$quick_prefix/bin
@@ -448,7 +454,7 @@ octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
 #!---------------------------------------------------------------------!
-#! Set compilers                                                       ! 
+#! Set compilers                                                       !
 #!---------------------------------------------------------------------!
 
 FC=$fort
@@ -457,7 +463,7 @@ CXX=$cxx
 CUDAC=$nvcc
 
 #!---------------------------------------------------------------------!
-#! Set archiver and flags for the libraries                            ! 
+#! Set archiver and flags for the libraries                            !
 #!---------------------------------------------------------------------!
 
 ARCH=$arch
@@ -467,7 +473,7 @@ LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
 
 #!---------------------------------------------------------------------!
-#! Common compiler  flags                                              ! 
+#! Common compiler  flags                                              !
 #!---------------------------------------------------------------------!
 
 FFLAGS=$fort_flags
@@ -480,7 +486,7 @@ EOF
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 cat >> make.in << EOF
 #!---------------------------------------------------------------------!
-#! CUDA specific flags                                                 ! 
+#! CUDA specific flags                                                 !
 #!---------------------------------------------------------------------!
 
 CPP_FLAG=$cpp_flags
@@ -495,7 +501,15 @@ echo "Input file for GNU make was successfully created."
 echo ""
 
 #  !---------------------------------------------------------------------!
-#  ! Clean directories                                                   ! 
+#  ! Setup test script                                                   !
+#  !---------------------------------------------------------------------!
+
+cp -f "$QUICK_HOME/tools/runtest" "$quick_prefix/"
+sed -i 's:unknown-installdir:'$quick_prefix':g' "$quick_prefix/runtest"
+sed -i 's/unknown-qexe/'$exename'/g' "$quick_prefix/runtest"
+
+#  !---------------------------------------------------------------------!
+#  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
 make clean > /dev/null 
