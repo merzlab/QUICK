@@ -38,7 +38,6 @@ cat<<EOF
       -serial        Builds a serial version
       -mpi           Compiles MPI prallel version
       -cuda          Builds GPU version that utilizes a single NVIDIA GPU
-      -cudampi       Builds GPU version that utilizes multiple NVIDIA GPUs
       -debug         Compiles debug version
       -shared        Build shared object libraries
       -arch <pascal|volta|turing>  
