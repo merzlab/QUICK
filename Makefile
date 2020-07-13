@@ -245,7 +245,20 @@ quickmpilib: quick.MPI $(TESTAPI)
 
 quickcumpilib: quick.cuda.MPI $(TESTAPI) 
 	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
-		
+
+#************************************************************************
+# 
+#                  D. Self-defined Option
+#  
+# ************************************************************************		
+
+.PHONY: test
+
+test:
+	cd $(installfolder)
+	sh $(installfolder)/runtest
+	 
+
 #************************************************************************
 # 
 #                 D. Self-defined Option
