@@ -1,4 +1,5 @@
-include make.inc
+MAKEIN = ../../make.in
+include $(MAKEIN)
 
 #######################################################################
 #  This is the makefile to create a library for the BLAS.
@@ -54,6 +55,8 @@ include make.inc
 #  Julie Langou, March 2007
 #
 #######################################################################
+
+BLASLIB      = $(libfolder)/libblas.$(LIBEXT)
 
 all: $(BLASLIB)
  
@@ -168,4 +171,4 @@ clean:
 	rm -f *.o *.a *.so
 
 .f.o: 
-	$(FORTRAN) $(OPTS) -c $< -o $@
+	$(FC) $(BLAS_FLAGS) -c $< -o $@
