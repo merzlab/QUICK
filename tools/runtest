@@ -5,7 +5,7 @@
 
 #Set values for the variables
 installdir='unknown-installdir'
-tstdir=${installdir}/tests
+tstdir=${installdir}/test
 qbasisdir=${installdir}/basis
 qbindir=${installdir}/bin
 qexe='unknown-qexe'

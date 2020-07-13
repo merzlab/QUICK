@@ -169,11 +169,11 @@ if [ "$useprefix" = "true" ]; then
   fi
 
   # create tests and basis directories if they dont exist
-  if [ ! -d $quick_prefix/tests ]; then
-    mkdir -p "$quick_prefix/tests"
-    echo "Creating symlink for $quick_prefix/tests"
-    cd "$quick_prefix/tests"
-    lndir "$QUICK_HOME/tests"
+  if [ ! -d $quick_prefix/test ]; then
+    mkdir -p "$quick_prefix/test"
+    echo "Creating symlink for $quick_prefix/test"
+    cd "$quick_prefix/test"
+    lndir "$QUICK_HOME/test"
     cd "$QUICK_HOME"
   fi
 
