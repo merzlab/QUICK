@@ -3,10 +3,6 @@
 MAKEIN = ../../make.in
 include $(MAKEIN)
 
-CXX_FLAGS= $(OPT_FLAGS) $(LIB_FLAGS)
-
-objfolder = ../../obj
-libxcfolder = ../libxc
 #************************************************************************
 # 
 #                 B. Make Object Files
@@ -17,7 +13,7 @@ libxcfolder = ../libxc
 CXXOBJ=$(objfolder)/octree.o $(objfolder)/grid_packer.o
 
 $(CXXOBJ):$(objfolder)/%.o:%.cpp
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 all: $(CXXOBJ)	
 #************************************************************************

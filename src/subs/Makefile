@@ -30,8 +30,6 @@ include $(MAKEIN)
 #----------------------
 # quick modules and object files
 #----------------------
-#libfolder = ../../lib
-objfolder = ../../obj
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
@@ -57,15 +55,12 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 # 
 #************************************************************************
 
-FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder)
+FOR=$(FC) $(FFLAGS)
 
 $(SUBS):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
 #================= quick subroutine library =================================
-
-#quick_subs:$(SUBS)
-#	ar -r $(libfolder)/quicksublib.a *.o
 
 all: $(SUBS)
 
