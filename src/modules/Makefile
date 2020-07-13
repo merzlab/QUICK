@@ -27,18 +27,11 @@ include $(MAKEIN)
 #
 #************************************************************************
 
-#Madu: intel and gnu use -module and -J options to direct module files. 
-#Therefore, we use the following if condition to handle this. 
-ifeq ($(COMPILER_TOOL_CHAIN), GNU)
-  FOR=$(FC) $(FFLAGS) -J$(objfolder)
-else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
-  FOR=$(FC) $(FFLAGS) -I$(objfolder) -module $(objfolder)
-endif
+FOR=$(FC) $(FFLAGS)
+
 #----------------------
 # quick modules and object files
 #----------------------
-modfolder = ./modules
-objfolder = ../../obj
 
 modobj=$(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
 		$(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \

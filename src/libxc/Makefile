@@ -24,24 +24,15 @@ include $(MAKEIN)
 #
 #************************************************************************
 
-#Madu: intel and gnu use -module and -J options to direct module files. 
-#Therefore, we use the following if condition to handle this. 
+FOR=$(FC) -c -I. $(FFLAGS) 
 
-ifeq ($(COMPILER_TOOL_CHAIN), GNU)
-  FOR=$(FC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS) -I$(objfolder) -J$(objfolder)
-else ifeq ($(COMPILER_TOOL_CHAIN), INTEL)
-  FOR = $(FC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS) -module $(objfolder)
-endif
+CCC = $(CC) -c -I. $(CCFLAGS) 
 
-CCC = $(CC) -c -I. $(OPT_FLAGS) $(LIB_FLAGS)
-
-CUDACC = $(CUDAC) -c -I. $(CUDA_OPT_FLAGS) $(CUDA_LIB_FLAGS) 
+CUDACC = $(CUDAC) -c -I. $(CUDA_FLAGS)  
 
 #----------------------
 # quick modules and object files
 #----------------------
-libfolder = ../../lib
-objfolder = ../../obj
 
 SUBS =  special_functions.o bessel.o expint_e1.o integrate.o util.o     \
         mix_func.o func_info.o functionals.o version.o func_reference.o \
@@ -112,7 +103,6 @@ GPUCUOBJ = test.o
 # 
 #************************************************************************
 
-
 $(SUBS):%.o:%.c
 	$(CCC) $< -o $@
 $(GPUCOBJ):%.o:%.c
@@ -128,20 +118,11 @@ libxcf90_la-libxc.o:
 
 #================= quick subroutine library =================================
 
-#libxc_libs:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-ifeq "$(LIB_TYPE)" "SHARED"
 libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	$(FC) -shared *.o -o $(libfolder)/libxc.so
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) *.o
 
 libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	$(FC) -shared *.o -o $(libfolder)/libxc.so
-else
-libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar rcs $(libfolder)/libxc.a *.o
-
-libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar rcs $(libfolder)/libxc.a *.o
-endif
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) *.o
 
 all: libxc_libs
 #************************************************************************
