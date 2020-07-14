@@ -386,6 +386,63 @@ cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$quick_prefix/obj"
 cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$quick_prefix/obj"
 ldflags="$fort_flags -lstdc++"
 
+# For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be silently checked. 
+if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
+  mpi_cxx_flag=''
+  
+  # clean test files if they already exist
+  rm -f test_mpicxx.cpp test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+
+  # create the dummy source files
+  cat > test_mpicxx.cpp << EOF
+  #include <mpi.h>
+  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
+  extern "C" {void test_func_(){test_func();}}
+EOF
+
+  cat > test_prog.f90 << EOF
+  program test
+    call test_func()
+  end program test
+EOF
+
+  # compile the test sources
+  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: MPI/C++ source cannot be compiled using $cxx"
+    echo ""
+    exit 1
+  fi
+
+  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: Fortran90 source cannot be compiled using $fort"
+    echo ""
+    exit 1
+  fi
+
+  # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
+  $fort test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    mpi_cxx_flag="-lmpi_cxx"
+  fi
+
+  #try to link with libmpi_cxx
+  $fort $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: Fortran90 and C++ code cannot be linked using $fort $mpi_cxx_flag"
+    echo "Try to check the commands using 'mpif90 -show'"
+    exit 1
+  fi
+
+  ldflags="$ldflags $mpi_cxx_flag"
+
+  rm -f test_mpicxx.cpp test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+
+fi
+
+echo "$ldflags"
+
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
   cpp_flags="$opt_flags -I$CUDA_HOME/include $lib_flags -DCUBLAS_USE_THUNKING"
