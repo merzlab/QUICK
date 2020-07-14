@@ -444,11 +444,11 @@ exefolder=$quick_prefix/bin
 libfolder=$quick_prefix/lib
 configfolder=$QUICK_HOME/src/config
 subfolder=$QUICK_HOME/src/subs
-blasfolder=$QUICK_HOME/src/BLAS
+blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
 cudafolder=$QUICK_HOME/src/cuda
-cublasfolder=$QUICK_HOME/src/cuda/CUBLAS
-cusolverfolder=$QUICK_HOME/src/cuda/CUSOLVER
+cublasfolder=$QUICK_HOME/src/cuda/cublas
+cusolverfolder=$QUICK_HOME/src/cuda/cusolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
