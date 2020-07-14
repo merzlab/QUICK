@@ -4,11 +4,11 @@
 # This script runs a series of test cases saved in tests folder and verifies the correctness of quick
 
 #Set values for the variables
-installdir='/home/bgs0367/Work/Qk/git-test/master-madu/serial-gnu'
+installdir='unknown-installdir'
 tstdir=${installdir}/test
 qbasisdir=${installdir}/basis
 qbindir=${installdir}/bin
-qexe='quick'
+qexe='unknown-qexe'
 export QUICK_BASIS=$qbasisdir
 nprocs=4
 
