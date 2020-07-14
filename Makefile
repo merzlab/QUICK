@@ -189,17 +189,6 @@ $(MAIN):$(srcfolder)/%.o:$(srcfolder)/%.f90
 #===================== target for compiling api test ====================
 $(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
-#==================== target configuration files ========================
-cpconfig:
-	cp $(configfolder)/config.h $(srcfolder)/config.h
-cpconfig.cuda:
-	cp $(configfolder)/config.cuda.h $(srcfolder)/config.h
-cpconfig.cuda.SP:
-	cp $(configfolder)/config.cuda.SP.h $(srcfolder)/config.h
-cpconfig.cuda.MPI:
-	cp $(configfolder)/config.cuda.MPI.h $(srcfolder)/config.h
-cpconfig.MPI:
-	cp $(configfolder)/config.MPI.h $(srcfolder)/config.h
 
 #**********************************************************************
 # 
