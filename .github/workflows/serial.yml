@@ -1,0 +1,15 @@
+name: Basic CI Serial
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: sudo apt-get -y install gfortran
+      - name: Build serial
+        run: cp ./makein/make.in.gnu ./make.in && make quick
+      - name: Test serial
+        run: echo 1 | ./testqk.sh 
