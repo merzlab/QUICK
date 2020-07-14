@@ -407,14 +407,17 @@ EOF
 EOF
 
   # compile the test sources
-  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
+
+#  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
+  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 
   if [ "$?" -ne 0 ]; then
     echo "Error: MPI/C++ source cannot be compiled using $cxx"
     echo ""
     exit 1
   fi
 
-  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
+#  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
+  $fort -c test_prog.f90 -o test_prog.o 
   if [ "$?" -ne 0 ]; then
     echo "Error: Fortran90 source cannot be compiled using $fort"
     echo ""
@@ -422,13 +425,15 @@ EOF
   fi
 
   # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
-  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
-  if [ "$?" -ne 0 ]; then
+#  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
+  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 
+  if [ "$?" -ne 0 ]; thet
     mpi_cxx_flag="-lmpi_cxx"
   fi
 
   #try to link with libmpi_cxx
-  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
+#  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
+  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 
   if [ "$?" -ne 0 ]; then
     echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
     echo "Try to check the commands using 'mpif90 -show'"
