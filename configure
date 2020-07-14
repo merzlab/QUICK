@@ -427,7 +427,7 @@ EOF
   # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
 #  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
   $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 
-  if [ "$?" -ne 0 ]; thet
+  if [ "$?" -ne 0 ]; then
     mpi_cxx_flag="-lmpi_cxx"
   fi
 
