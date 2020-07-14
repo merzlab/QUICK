@@ -432,6 +432,7 @@ EOF
   if [ "$?" -ne 0 ]; then
     echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
     echo "Try to check the commands using 'mpif90 -show'"
+    mpif90 -show
     exit 1
   fi
 
