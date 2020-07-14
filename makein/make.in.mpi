@@ -35,7 +35,7 @@ CC = mpicc
 #FFLAGS = -g -O3 -traceback
 FFLAGS = -O2 -lm  -mtune=native  -ffree-form  -DGNU -cpp 
 LD = $(FC)
-LDFLAGS = $(FFLAGS) -lstdc++ -g
+LDFLAGS = $(FFLAGS) -lstdc++ -g -lmpi_cxx
 #LDFLAGS = $(FFLAGS)
 #LDFLAGS = $(FFLAGS) -static -L/opt/intel/ict/2.0/cmkl/8.0.1/lib/32
 TMPFILES = *.mod *.stb
