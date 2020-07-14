@@ -4,11 +4,11 @@
 # This script runs a series of test cases saved in tests folder and verifies the correctness of quick
 
 #Set values for the variables
-installdir='unknown-installdir'
+installdir='/home/bgs0367/Work/Qk/git-test/master-madu/serial-gnu'
 tstdir=${installdir}/test
 qbasisdir=${installdir}/basis
 qbindir=${installdir}/bin
-qexe='unknown-qexe'
+qexe='quick'
 export QUICK_BASIS=$qbasisdir
 nprocs=4
 
@@ -53,7 +53,7 @@ fi
 #Check if tstlst is located inside the tstdir
 if [ -f tstlst ]; then
 	#If the file exists, run tests
-	total=$(cat tstlst |wc -l)
+	total=`cat tstlst |wc -l`
 	a=1
 	cd tstrun
 
@@ -64,47 +64,56 @@ if [ -f tstlst ]; then
 		cp ../${i}.in ./
 		
 		#This variable will keep the information of jobcard
-		jobcard=$(head -1 ${i}.in)	
-                if [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"HF"*) ]]; then
-                        echo "This is a RHF energy test..."
-                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"LDA"*) ]]; then
-                        echo "This is a DFT energy test... A representative LIBXC LDA functional is used."
-                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"GGA"*) ]]; then
-                        echo "This is a DFT energy test... A representative LIBXC GGA functional is used."
-                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"HYB_GGA"*) ]]; then
-                        echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used."
-		elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"BLYP"*) ]]; then
-                        echo "This is a DFT energy test... Native BLYP functional is used."
-		elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"B3LYP"*) ]]; then
-                        echo "This is a DFT energy test... Native B3LYP functional is used."
-                elif [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"MP2"*) ]];then
-                        echo "This is a MP2 energy test..."
-		fi
+		jobcard=`head -1 ${i}.in`
+                enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
+                ismp2='no'
+
+                if [ $enecalc -gt 0 ];then  
+
+                  case $jobcard in
+                    *HF*)
+                      echo "This is a RHF energy test...";;
+                    *LDA*)
+                      echo "This is a DFT energy test... A representative LIBXC LDA functional is used.";;
+                    *HYB_GGA*)
+                      echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used.";;
+                    *GGA*)
+                      echo "This is a DFT energy test... A representative LIBXC GGA functional is used.";;
+                    *BLYP*)
+                      echo "This is a DFT energy test... Native BLYP functional is used.";;
+                    *B3LYP*)
+                      echo "This is a DFT energy test... Native B3LYP functional is used.";;
+                     *MP2*)
+                       ismp2='yes'
+                       echo "This is a MP2 energy test...";;
+                  esac
+                fi
+               	
 
 		#Run the test case
-		${qbindir}/${qexe} ${i}.in >${i}.run.log	
+		${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null 	
 
 		#Check the accuracy
 		#For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
-                if [[ ($jobcard == *"ENERGY"*) && ($jobcard == *"MP2"*) ]];then
+                if [ $enecalc -gt 0 -a "$ismp2" = "yes" ]; then
 
-                refval=$(grep "#MP2_ENERGY" ${i}.in |awk '{print $2}')
-                newval=$(grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}')
-                echo "$refval  $newval"|awk '{
+                  refval=`grep "#MP2_ENERGY" ${i}.in |awk '{print $2}'`
+                  newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
+                  echo "$refval  $newval"|awk '{
                         x=sqrt(($1-$2)^2); 
                         if(x>=0.00001) stat="failed"; else stat="passed"; 
                         print "MP2 energy: " $2 ", Reference value: " $1 ". Test " stat "."
-                }'                         
+                  }'                         
 
 		else 
 
-		refval=$(grep "#TOTAL_ENERGY" ${i}.in |awk '{print $2}')
-		newval=$(grep -A 8 "REACH CONVERGENCE AFTER" ${i}.out| grep "TOTAL" | awk '{print $4}')
-		echo "$refval  $newval"|awk '{
+	  	  refval=`grep "#TOTAL_ENERGY" ${i}.in |awk '{print $2}'`
+		  newval=`grep -A 8 "REACH CONVERGENCE AFTER" ${i}.out| grep "TOTAL" | awk '{print $4}'`
+		  echo "$refval  $newval"|awk '{
 			x=sqrt(($1-$2)^2); 
 			if(x>=0.00001) stat="failed"; else stat="passed"; 
 			print "Total energy: " $2 ", Reference value: " $1 ". Test " stat "."
-		}'	
+		  }'	
 
 		fi
 
@@ -113,22 +122,32 @@ if [ -f tstlst ]; then
 	done
 
         # Run gradient tests
-        for i in $(awk '{print $1}' ../tstlst|grep "opt")
+        for i in $(awk '{print $1}' ../tstlst|grep "grad")
         do
         	echo "Running test ${a} of ${total}"
 		cp ../${i}.in ./
 
 		#This variable will keep the information of jobcard
-		jobcard=$(head -1 ${i}.in)
-			if [[ ($jobcard == *"OPT"*) && ($jobcard == *"HF"*) ]]; then
-				echo "This is a DFT gradient test... NATIVE B3LYP functional is used."
-			fi
+		jobcard=`head -1 ${i}.in`
+                gradcalc=`echo $jobcard | grep 'GRADIENT' |wc -l`
+                  if [ "$gradcalc" -gt 0 ]; then
+                    case "$jobcard" in
+                      *HF*)
+                        echo "This is a RHF gradient test...";;
+                      *HYB_GGA*)
+                        echo "This is a DFT gradient test... A representative LIBXC hybrid GGA functional is used.";;
+                      *B3LYP*)
+                        echo "This is a DFT gradient test... Native B3LYP functional is used.";;
+                    esac                    
+                  fi
 
-			${qbindir}/${qexe} ${i}.in >${i}.run.log
+		${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null
 			
-			#Check the accuracy of gradients of first step
-			grep "#ref_grad" ${i}.in |awk '{print $2}'>refGrad.txt
-			
+		#Check the accuracy of gradients of first step
+		grep "#ref_grad" ${i}.in |awk '{print $2}'>refGrad.txt
+
+	  echo ""
+          a=$((a+1))	
         done
 
 
@@ -139,15 +158,22 @@ if [ -f tstlst ]; then
 		cp ../${i}.in ./
 		
                 #This variable will keep the information of jobcard
-                jobcard=$(head -1 ${i}.in)      
-                        if [[ ($jobcard == *"OPT"*) && ($jobcard == *"HF"*) ]]; then
-                                echo "This is a RHF geometry optimization test..."
-                        fi      
+                jobcard=`head -1 ${i}.in`
+                  optcalc=`echo $jobcard | grep 'OPT' |wc -l`  
+                        if [ "$optcalc" -gt 0 ]; then
+                          case "$jobcard" in
+                            *HF*)
+                              echo "This is a RHF geometry optimization test...";;
+
+                            *B3LYP*)
+                              echo "This is a DFT geometry optimization test...";;
+                          esac
+                        fi
 
                 #Run the test case
 #                if [ (${qexe} == "quick.MPI") && (${ismpirun} > 0) ]; then
 #                else
-                    ${qbindir}/${qexe} ${i}.in >${i}.run.log
+                    ${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null
 #                fi		
 
 		#Check the accuracy of gradients of first step
