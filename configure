@@ -396,7 +396,7 @@ if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
   # create the dummy source files
   cat > test_mpicxx.cpp << EOF
   #include <mpi.h>
-  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
+  void test_func(){MPI_Start((MPI_Request *)0);}
   extern "C" {void test_func_(){test_func();}}
 EOF
 
@@ -409,7 +409,7 @@ EOF
   # compile the test sources
 
 #  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
-  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 
+  $cxx $ldflags -c test_mpicxx.cpp -o test_mpicxx.o 
   if [ "$?" -ne 0 ]; then
     echo "Error: MPI/C++ source cannot be compiled using $cxx"
     echo ""
