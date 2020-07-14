@@ -774,7 +774,9 @@ int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<no
         free(weight);
         free(iatm);
 
+#ifdef DEBUG
         fprintf(gps->gpackDebugFile,"FILE: %s, LINE: %d, FUNCTION: %s, Total number of true bins & grid points after pruning: %i %i\n", __FILE__, __LINE__, __func__, gps->nbins, gps->ntgpts);
+#endif
 
         end = clock();
 

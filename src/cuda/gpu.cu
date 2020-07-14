@@ -2593,7 +2593,9 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     intFile = fopen(trim(intFileName), "wb");
 
     if (! intFile) {
+#ifdef DEBUG
         fprintf(gpu->debugFile,"UNABLE TO OPEN INT FILE\n");
+#endif
     }
  	
     int iBatchCount = 0;
