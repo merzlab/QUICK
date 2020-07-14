@@ -208,25 +208,25 @@ cpconfig.MPI:
 #**********************************************************************
 
 ifeq ($(INSTALLER), serial)
-install: cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
+install: libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 endif
 
 ifeq ($(INSTALLER), cuda)
-install: cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
+install: libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcu.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS)
 endif
 
 ifeq ($(INSTALLER), mpi)
-install: cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
+install: libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS)
 endif
 
 ifeq ($(INSTALLER), cudampi)
-install: cpconfig.cuda.MPI libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
+install: libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
 endif
@@ -234,17 +234,17 @@ endif
 #quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
 #	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
 
-quicklib: quick $(TESTAPI)
-	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
+#quicklib: quick $(TESTAPI)
+#	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
 
-quickculib: quick.cuda $(TESTAPI)
-	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
+#quickculib: quick.cuda $(TESTAPI)
+#	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
 
-quickmpilib: quick.MPI $(TESTAPI)
-	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
+#quickmpilib: quick.MPI $(TESTAPI)
+#	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
 
-quickcumpilib: quick.cuda.MPI $(TESTAPI) 
-	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
+#quickcumpilib: quick.cuda.MPI $(TESTAPI) 
+#	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
 
 #************************************************************************
 # 

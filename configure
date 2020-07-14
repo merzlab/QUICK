@@ -168,7 +168,7 @@ if [ "$useprefix" = "true" ]; then
   fi
 
   # create tests and basis directories if they dont exist
-  if [ ! -d $quick_prefix/test ]; then
+  if [ ! -d "$quick_prefix/test" ]; then
     mkdir -p "$quick_prefix/test"
     echo "Creating symlink for $quick_prefix/test"
     cd "$quick_prefix/test"
@@ -178,7 +178,7 @@ if [ "$useprefix" = "true" ]; then
 
   # copy the contents of basis folder since user may delete/relocate
   # QUICK_HOME folder after installation
-  if [ ! -d $quick_prefix/basis ]; then
+  if [ ! -d "$quick_prefix/basis" ]; then
     mkdir -p "$quick_prefix/basis"
     cp -rf "$QUICK_HOME/basis/"* "$quick_prefix/basis/"
   fi
@@ -498,6 +498,54 @@ fi
 
 echo "Input file for GNU make was successfully created."
 echo ""
+
+#  !---------------------------------------------------------------------!
+#  ! Generate config.h in src directory                                  !
+#  !---------------------------------------------------------------------!
+
+if [ "$serial" = 'yes' ]; then
+  cat > "$QUICK_HOME/src/config.h" << EOF
+#undef CUDA
+#undef MPI
+EOF
+elif [ "$mpi" = 'yes' ]; then
+  cat > "$QUICK_HOME/src/config.h" << EOF
+#undef CUDA
+#define MPIV
+EOF
+elif [ "$cuda" = 'yes' ]; then
+  cat > "$QUICK_HOME/src/config.h" << EOF
+#define CUDA
+#define QUICK_LIBXC
+#undef MPI
+EOF
+elif [ "$cudampi" = 'yes' ]; then
+  cat > "$QUICK_HOME/src/config.h" << EOF
+#undef CUDA
+#define MPIV
+#define CUDA_MPIV
+#define QUICK_LIBXC
+EOF
+fi
+
+if [ "$debug" = 'yes' ]; then
+  cat >> "$QUICK_HOME/src/config.h" << EOF
+#define DEBUG 
+EOF
+fi
+
+# this must be fixed with libxc code refactoring
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ];then
+  if [ "$debug" = 'yes' ]; then
+    cat >> "$QUICK_HOME/src/config.h" << EOF
+#define GPU_DEBUG 1 //this is for libxc gpu debugging
+EOF
+  else
+    cat >> "$QUICK_HOME/src/config.h" << EOF
+#define GPU_DEBUG 0 //this is for libxc gpu debugging
+EOF
+  fi
+fi
 
 #  !---------------------------------------------------------------------!
 #  ! Setup test script                                                   !
