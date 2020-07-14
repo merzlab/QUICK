@@ -1,0 +1,17 @@
+name: Basic CI MPI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: sudo apt-get install -y gfortran openmpi-bin
+      - name: Configure mpi
+        run: ./configure -mpi gnu
+      - name: Build mpi
+        run: make install
+      - name: Test mpi
+        run: make test
