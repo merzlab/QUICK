@@ -409,7 +409,8 @@ EOF
   # compile the test sources
 
 #  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
-  $cxx $ldflags -c test_mpicxx.cpp -o test_mpicxx.o 
+  $cxx -show
+  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 
   if [ "$?" -ne 0 ]; then
     echo "Error: MPI/C++ source cannot be compiled using $cxx"
     echo ""
