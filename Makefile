@@ -244,8 +244,8 @@ endif
 .PHONY: test
 
 test:
-	cd $(installfolder)
-	sh $(installfolder)/runtest
+	@cd $(installfolder)
+	@sh $(installfolder)/runtest
 	 
 
 #************************************************************************
