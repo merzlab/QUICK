@@ -217,8 +217,6 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-echo "serial=$serial, mpi=$mpi, cuda=$cuda, cudampi=$cudampi compiler=$compiler "
-
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
