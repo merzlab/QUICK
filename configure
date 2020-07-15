@@ -391,12 +391,12 @@ if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
   mpi_cxx_flag=''
   
   # clean test files if they already exist
-  rm -f test_mpicxx.cpp test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
 
   # create the dummy source files
-  cat > test_mpicxx.cpp << EOF
+  cat > test_mpicxx.c << EOF
   #include <mpi.h>
-  void test_func(){MPI_Start((MPI_Request *)0);}
+  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
   extern "C" {void test_func_(){test_func();}}
 EOF
 
@@ -407,10 +407,8 @@ EOF
 EOF
 
   # compile the test sources
-
-#  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 2>/dev/null >/dev/null
-  $cxx -show
-  $cxx -c test_mpicxx.cpp -o test_mpicxx.o 
+#  $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
+  $cxx -c test_mpicxx.c -o test_mpicxx.o 
   if [ "$?" -ne 0 ]; then
     echo "Error: MPI/C++ source cannot be compiled using $cxx"
     echo ""
@@ -426,31 +424,27 @@ EOF
   fi
 
   # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
-#  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
-  $fort $ldflags test_mpicxx.o test_prog.o -o test_prog 
+#  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags 2>/dev/null >/dev/null
+  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags
   if [ "$?" -ne 0 ]; then
     mpi_cxx_flag="-lmpi_cxx"
   fi
 
   #try to link with libmpi_cxx
-#  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
-  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag  
+#  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null 
+  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag
   if [ "$?" -ne 0 ]; then
     echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
     echo "Try to check the commands using 'mpif90 -show'"
-    mpif90 -show
     exit 1
   fi
 
   ldflags="$ldflags $mpi_cxx_flag"
 
-  rm -f test_mpicxx.cpp test_prog.f90 test_mpicxx.o test_prog test_mpicxx
-
-  mpif90 -show
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
 
 fi
 
-echo "$ldflags"
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
