@@ -1,2 +1,0 @@
-#undef CUDA
-#undef MPI
