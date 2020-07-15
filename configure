@@ -25,8 +25,10 @@ cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
 
 #  !---------------------------------------------------------------------!
-#  ! function to print how to use this script                            !
+#  ! function definitions                                                !
 #  !---------------------------------------------------------------------!
+
+# this function prints help page
 print_help(){
 
 cat<<EOF
@@ -57,8 +59,65 @@ exit 0;
 
 }
 
+# this function checks if we should link libmpi_cxx.so in the mpi/cudampi version
+set_mpicxx(){
+
+  mpi_cxx_flag=''
+
+  # clean test files if they already exist
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+
+  # create the dummy source files
+  cat > test_mpicxx.c << EOF
+  #include <mpi.h>
+  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
+  extern "C" {void test_func_(){test_func();}}
+EOF
+
+  cat > test_prog.f90 << EOF
+  program test
+    call test_func()
+  end program test
+EOF
+
+  # compile the test sources
+  $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: MPI/C++ source cannot be compiled using $cxx"
+    echo ""
+    exit 1
+  fi
+
+  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: Fortran90 source cannot be compiled using $fort"
+    echo ""
+    exit 1
+  fi
+
+  # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
+  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    mpi_cxx_flag="-lmpi_cxx"
+  fi
+
+  #try to link with libmpi_cxx
+  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
+    echo "Try to check the commands using 'mpif90 -show'"
+    exit 1
+  fi
+
+  ldflags="$ldflags $mpi_cxx_flag"
+
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+
+
+}
+
 #  !---------------------------------------------------------------------!
-#  ! Variable declarations                                               !
+#  ! Variable definitions                                                !
 #  !---------------------------------------------------------------------!
 
 # quick version flags
@@ -292,7 +351,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         sm75flags='-gencode arch=compute_75,code=sm_75'
         sm70flags='-gencode arch=compute_70,code=sm_70'          
         echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -301,7 +360,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
         echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags -Wno-deprecated-declarations"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -310,7 +369,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
         echo "Configuring for SM6.0, SM6.1 and SM7.0"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags -Wno-deprecated-declarations"
+        cuda_arch_flags="$sm60flags $sm61flags $sm70flags"
       fi
     elif [ "$cudaversion" = "8.0" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -386,65 +445,10 @@ cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$quick_prefix/obj"
 cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$quick_prefix/obj"
 ldflags="$fort_flags -lstdc++"
 
-# For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be silently checked. 
+# For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-  mpi_cxx_flag=''
-  
-  # clean test files if they already exist
-  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
-
-  # create the dummy source files
-  cat > test_mpicxx.c << EOF
-  #include <mpi.h>
-  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
-  extern "C" {void test_func_(){test_func();}}
-EOF
-
-  cat > test_prog.f90 << EOF
-  program test
-    call test_func()
-  end program test
-EOF
-
-  # compile the test sources
-#  $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
-  $cxx -c test_mpicxx.c -o test_mpicxx.o 
-  if [ "$?" -ne 0 ]; then
-    echo "Error: MPI/C++ source cannot be compiled using $cxx"
-    echo ""
-    exit 1
-  fi
-
-#  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
-  $fort -c test_prog.f90 -o test_prog.o 
-  if [ "$?" -ne 0 ]; then
-    echo "Error: Fortran90 source cannot be compiled using $fort"
-    echo ""
-    exit 1
-  fi
-
-  # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
-#  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags 2>/dev/null >/dev/null
-  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags
-  if [ "$?" -ne 0 ]; then
-    mpi_cxx_flag="-lmpi_cxx"
-  fi
-
-  #try to link with libmpi_cxx
-#  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null 
-  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag
-  if [ "$?" -ne 0 ]; then
-    echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
-    echo "Try to check the commands using 'mpif90 -show'"
-    exit 1
-  fi
-
-  ldflags="$ldflags $mpi_cxx_flag"
-
-  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
-
+  set_mpicxx
 fi
-
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
