@@ -434,7 +434,7 @@ EOF
 
   #try to link with libmpi_cxx
 #  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 2>/dev/null >/dev/null
-  $fort $ldflags $mpi_cxx_flag test_mpicxx.o test_prog.o -o test_prog 
+  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag  
   if [ "$?" -ne 0 ]; then
     echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
     echo "Try to check the commands using 'mpif90 -show'"
@@ -445,6 +445,8 @@ EOF
   ldflags="$ldflags $mpi_cxx_flag"
 
   rm -f test_mpicxx.cpp test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+
+  mpif90 -show
 
 fi
 
