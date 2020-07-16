@@ -264,6 +264,19 @@ if [ "$useprefix" = "true" ]; then
     cp -rf "$QUICK_HOME/basis/"* "$quick_prefix/basis/"
   fi
 
+  # create bin, lib and include directories
+  if [ ! -d "$quick_prefix/bin" ]; then
+    mkdir -p "$quick_prefix/bin"
+  fi
+
+  if [ ! -d "$quick_prefix/lib/$buildtype" ]; then
+    mkdir -p "$quick_prefix/lib/$buildtype"
+  fi
+
+  if [ ! -d "$quick_prefix/include/$buildtype" ]; then
+    mkdir -p "$quick_prefix/include/$buildtype"
+  fi
+
 fi
 
 echo ""
@@ -271,18 +284,23 @@ echo "QUICK will be installed in $quick_prefix"
 echo ""
 
 #  !---------------------------------------------------------------------!
-#  ! Create essential directories                                        !
+#  ! Create essential build directories                                  !
 #  !---------------------------------------------------------------------!
-if [ ! -d $quick_prefix/bin ]; then
-  mkdir -p "$quick_prefix/bin"
+
+if [ ! -d "$QUICK_HOME/bin" ]; then
+  mkdir -p "$QUICK_HOME/bin"
 fi
 
-if [ ! -d $quick_prefix/lib ]; then
-  mkdir -p "$quick_prefix/lib"
+if [ ! -d "$QUICK_HOME/build/$buildtype/lib" ]; then
+  mkdir -p "$QUICK_HOME/build/$buildtype/lib"
 fi
 
-if [ ! -d $quick_prefix/obj ]; then
-  mkdir -p "$quick_prefix/obj"
+if [ ! -d "$QUICK_HOME/build/$buildtype/obj" ]; then
+  mkdir -p "$QUICK_HOME/build/$buildtype/obj"
+fi
+
+if [ ! -d "$QUICK_HOME/build/$buildtype/include" ]; then
+  mkdir -p "$QUICK_HOME/build/$buildtype/include"
 fi
 
 #  !---------------------------------------------------------------------!
@@ -451,21 +469,21 @@ fi
 # sed compiler specific flags
 case "$compiler" in
   gnu)
-    fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$quick_prefix/obj -J$quick_prefix/obj"
+    fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/$buildtype/include -J$QUICK_HOME/build/$buildtype/include"
     if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
     fi    
     ;;
   intel)
-    fort_flags="$opt_flags $fort_debug_flags -ip -cpp $lib_flags -I$quick_prefix/obj -module $quick_prefix/obj"
+    fort_flags="$opt_flags $fort_debug_flags -ip -cpp $lib_flags -I$QUICK_HOME/build/$buildtype/include -module $QUICK_HOME/build/$buildtype/include"
     if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
     fi
     ;;
 esac
 
-cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$quick_prefix/obj"
-cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$quick_prefix/obj"
+cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
+cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
 ldflags="$fort_flags -lstdc++"
 
 # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
@@ -512,10 +530,10 @@ BUILDTYPE=$buildtype
 
 installfolder=$quick_prefix
 srcfolder=$QUICK_HOME/src
-objfolder=$quick_prefix/obj
-exefolder=$quick_prefix/bin
-libfolder=$quick_prefix/lib
-configfolder=$QUICK_HOME/src/config
+exefolder=$QUICK_HOME/bin
+objfolder=$QUICK_HOME/build/$buildtype/obj
+libfolder=$QUICK_HOME/build/$buildtype/lib
+inclfolder=$QUICK_HOME/build/$buildtype/include
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
