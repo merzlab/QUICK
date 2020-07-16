@@ -227,9 +227,17 @@ if [ "$useprefix" = "true" ]; then
   # create tests and basis directories if they dont exist
   if [ ! -d "$quick_prefix/test" ]; then
     mkdir -p "$quick_prefix/test"
-    echo "Creating symlink for $quick_prefix/test"
-    cd "$quick_prefix/test"
-    lndir "$QUICK_HOME/test"
+    cd "$quick_prefix/test"    
+
+    # create a symlink if lndir command exists. Otherwise copy the content.
+    if [ `command -v lndir | wc -l` -gt 0 ];then
+      echo "Creating symlink for $quick_prefix/test"
+      lndir "$QUICK_HOME/test"
+    else
+      echo "Copying test cases into $quick_prefix/test"
+      cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
+    fi
+
     cd "$QUICK_HOME"
   fi
 
