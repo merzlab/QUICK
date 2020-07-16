@@ -126,8 +126,8 @@ mpi='no'
 cuda='no'
 cudampi='no'
 debug='no'
+buildtype=''
 installer=''
-exename=''
 
 # keeps track of what compilers being used
 fort='no'
@@ -217,6 +217,22 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# set build type and installer
+if [ "$serial" = 'yes' ]; then
+  buildtype='serial'
+  installer='quick'
+elif [ "$mpi" = 'yes' ]; then
+  buildtype='mpi'
+  installer='quick.MPI'
+elif [ "$cuda" = 'yes' ]; then
+  buildtype='cuda'
+  installer='quick.cuda'
+elif [ "$cudampi" = 'yes' ]; then
+  buildtype='cudampi'
+  installer='quick.cuda.MPI'
+fi
+
+
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
@@ -247,6 +263,7 @@ if [ "$useprefix" = "true" ]; then
     mkdir -p "$quick_prefix/basis"
     cp -rf "$QUICK_HOME/basis/"* "$quick_prefix/basis/"
   fi
+
 fi
 
 echo ""
@@ -475,22 +492,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 fi
 
 #  !---------------------------------------------------------------------!
-#  ! Set installer and generate make input file                          !
+#  ! Set buildtype and generate make input file                          !
 #  !---------------------------------------------------------------------!
-
-if [ "$serial" = 'yes' ]; then
-  installer='serial'
-  exename='quick'
-elif [ "$mpi" = 'yes' ]; then
-  installer='mpi'
-  exename='quick.MPI'
-elif [ "$cuda" = 'yes' ]; then
-  installer='cuda'
-  exename='quick.cuda'
-elif [ "$cudampi" = 'yes' ]; then
-  installer='cudampi'
-  exename='quick.cuda.MPI'
-fi
 
 cat > make.in << EOF
 
@@ -501,7 +504,7 @@ cat > make.in << EOF
 #! Set installer                                                       !
 #!---------------------------------------------------------------------!
 
-INSTALLER=$installer
+BUILDTYPE=$buildtype
 
 #!---------------------------------------------------------------------!
 #! Set directories                                                     !
@@ -623,7 +626,7 @@ fi
 
 cp -f "$QUICK_HOME/tools/runtest" "$quick_prefix/"
 sed -i 's:unknown-installdir:'$quick_prefix':g' "$quick_prefix/runtest"
-sed -i 's/unknown-qexe/'$exename'/g' "$quick_prefix/runtest"
+sed -i 's/unknown-qexe/'$installer'/g' "$quick_prefix/runtest"
 
 #  !---------------------------------------------------------------------!
 #  ! Clean directories                                                   !

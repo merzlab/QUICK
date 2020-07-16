@@ -196,25 +196,25 @@ $(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
 # 
 #**********************************************************************
 
-ifeq ($(INSTALLER), serial)
+ifeq ($(BUILDTYPE), serial)
 install: libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 endif
 
-ifeq ($(INSTALLER), cuda)
+ifeq ($(BUILDTYPE), cuda)
 install: libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcu.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS)
 endif
 
-ifeq ($(INSTALLER), mpi)
+ifeq ($(BUILDTYPE), mpi)
 install: libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS)
 endif
 
-ifeq ($(INSTALLER), cudampi)
+ifeq ($(BUILDTYPE), cudampi)
 install: libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
