@@ -56,119 +56,58 @@ include $(MAKEIN)
 #
 #######################################################################
 
-BLASLIB      = $(libfolder)/libblas.$(LIBEXT)
+BLOBJ = $(blasobjfolder)/isamax.o \
+	$(blasobjfolder)/sasum.o $(blasobjfolder)/saxpy.o $(blasobjfolder)/scopy.o \
+	$(blasobjfolder)/sdot.o $(blasobjfolder)/snrm2.o $(blasobjfolder)/srot.o $(blasobjfolder)/srotg.o \
+	$(blasobjfolder)/sscal.o $(blasobjfolder)/sswap.o $(blasobjfolder)/sdsdot.o $(blasobjfolder)/srotmg.o \
+	$(blasobjfolder)/srotm.o \
+	$(blasobjfolder)/sgemv.o $(blasobjfolder)/sgbmv.o $(blasobjfolder)/ssymv.o $(blasobjfolder)/ssbmv.o \
+        $(blasobjfolder)/sspmv.o $(blasobjfolder)/strmv.o $(blasobjfolder)/stbmv.o $(blasobjfolder)/stpmv.o \
+        $(blasobjfolder)/strsv.o $(blasobjfolder)/stbsv.o $(blasobjfolder)/stpsv.o $(blasobjfolder)/sger.o \
+        $(blasobjfolder)/ssyr.o $(blasobjfolder)/sspr.o $(blasobjfolder)/ssyr2.o $(blasobjfolder)/sspr2.o \
+	$(blasobjfolder)/sgemm.o $(blasobjfolder)/ssymm.o $(blasobjfolder)/ssyrk.o $(blasobjfolder)/ssyr2k.o \
+        $(blasobjfolder)/strmm.o $(blasobjfolder)/strsm.o \
+	$(blasobjfolder)/idamax.o $(blasobjfolder)/dasum.o $(blasobjfolder)/daxpy.o $(blasobjfolder)/dcopy.o \
+        $(blasobjfolder)/ddot.o $(blasobjfolder)/dnrm2.o $(blasobjfolder)/drot.o $(blasobjfolder)/drotg.o \
+        $(blasobjfolder)/dscal.o $(blasobjfolder)/dsdot.o $(blasobjfolder)/dswap.o $(blasobjfolder)/drotmg.o \
+        $(blasobjfolder)/drotm.o \
+	$(blasobjfolder)/dgemv.o $(blasobjfolder)/dgbmv.o $(blasobjfolder)/dsymv.o $(blasobjfolder)/dsbmv.o \
+        $(blasobjfolder)/dspmv.o $(blasobjfolder)/dtrmv.o $(blasobjfolder)/dtbmv.o $(blasobjfolder)/dtpmv.o \
+        $(blasobjfolder)/dtrsv.o $(blasobjfolder)/dtbsv.o $(blasobjfolder)/dtpsv.o $(blasobjfolder)/dger.o \
+        $(blasobjfolder)/dsyr.o $(blasobjfolder)/dspr.o $(blasobjfolder)/dsyr2.o $(blasobjfolder)/dspr2.o \
+	$(blasobjfolder)/dgemm.o $(blasobjfolder)/dsymm.o $(blasobjfolder)/dsyrk.o $(blasobjfolder)/dsyr2k.o \
+        $(blasobjfolder)/dtrmm.o $(blasobjfolder)/dtrsm.o \
+	$(blasobjfolder)/scabs1.o $(blasobjfolder)/scasum.o $(blasobjfolder)/scnrm2.o $(blasobjfolder)/icamax.o \
+	$(blasobjfolder)/caxpy.o $(blasobjfolder)/ccopy.o $(blasobjfolder)/cdotc.o $(blasobjfolder)/cdotu.o \
+	$(blasobjfolder)/csscal.o $(blasobjfolder)/crotg.o $(blasobjfolder)/cscal.o $(blasobjfolder)/cswap.o \
+	$(blasobjfolder)/csrot.o \
+	$(blasobjfolder)/cgemv.o $(blasobjfolder)/cgbmv.o $(blasobjfolder)/chemv.o $(blasobjfolder)/chbmv.o \
+        $(blasobjfolder)/chpmv.o $(blasobjfolder)/ctrmv.o $(blasobjfolder)/ctbmv.o $(blasobjfolder)/ctpmv.o \
+        $(blasobjfolder)/ctrsv.o $(blasobjfolder)/ctbsv.o $(blasobjfolder)/ctpsv.o $(blasobjfolder)/cgerc.o \
+        $(blasobjfolder)/cgeru.o $(blasobjfolder)/cher.o $(blasobjfolder)/chpr.o $(blasobjfolder)/cher2.o \
+        $(blasobjfolder)/chpr2.o \
+	$(blasobjfolder)/cgemm.o $(blasobjfolder)/csymm.o $(blasobjfolder)/csyrk.o $(blasobjfolder)/csyr2k.o \
+        $(blasobjfolder)/ctrmm.o $(blasobjfolder)/ctrsm.o $(blasobjfolder)/chemm.o $(blasobjfolder)/cherk.o \
+        $(blasobjfolder)/cher2k.o \
+	$(blasobjfolder)/dcabs1.o $(blasobjfolder)/dzasum.o $(blasobjfolder)/dznrm2.o $(blasobjfolder)/izamax.o \
+	$(blasobjfolder)/zaxpy.o $(blasobjfolder)/zcopy.o $(blasobjfolder)/zdotc.o $(blasobjfolder)/zdotu.o \
+	$(blasobjfolder)/zdscal.o $(blasobjfolder)/zrotg.o $(blasobjfolder)/zscal.o $(blasobjfolder)/zswap.o \
+	$(blasobjfolder)/zdrot.o \
+	$(blasobjfolder)/zgemv.o $(blasobjfolder)/zgbmv.o $(blasobjfolder)/zhemv.o $(blasobjfolder)/zhbmv.o \
+        $(blasobjfolder)/zhpmv.o $(blasobjfolder)/ztrmv.o $(blasobjfolder)/ztbmv.o $(blasobjfolder)/ztpmv.o \
+        $(blasobjfolder)/ztrsv.o $(blasobjfolder)/ztbsv.o $(blasobjfolder)/ztpsv.o $(blasobjfolder)/zgerc.o \
+        $(blasobjfolder)/zgeru.o $(blasobjfolder)/zher.o $(blasobjfolder)/zhpr.o $(blasobjfolder)/zher2.o \
+        $(blasobjfolder)/zhpr2.o \
+	$(blasobjfolder)/zgemm.o $(blasobjfolder)/zsymm.o $(blasobjfolder)/zsyrk.o $(blasobjfolder)/zsyr2k.o \
+        $(blasobjfolder)/ztrmm.o $(blasobjfolder)/ztrsm.o $(blasobjfolder)/zhemm.o $(blasobjfolder)/zherk.o \
+        $(blasobjfolder)/zher2k.o $(blasobjfolder)/lsame.o $(blasobjfolder)/xerbla.o
 
-all: $(BLASLIB)
- 
-#---------------------------------------------------------
-#  Comment out the next 6 definitions if you already have
-#  the Level 1 BLAS.
-#---------------------------------------------------------
-SBLAS1 = isamax.o sasum.o saxpy.o scopy.o sdot.o snrm2.o \
-	srot.o srotg.o sscal.o sswap.o sdsdot.o srotmg.o srotm.o
-$(SBLAS1): $(FRC)
+$(BLOBJ):$(blasobjfolder)/%.o:%.f
+	 $(FC) $(BLAS_FLAGS) -c $< -o $@
 
-CBLAS1 = scabs1.o scasum.o scnrm2.o icamax.o caxpy.o ccopy.o \
-	cdotc.o cdotu.o csscal.o crotg.o cscal.o cswap.o csrot.o
-$(CBLAS1): $(FRC)
-
-DBLAS1 = idamax.o dasum.o daxpy.o dcopy.o ddot.o dnrm2.o \
-	drot.o drotg.o dscal.o dsdot.o dswap.o drotmg.o drotm.o
-$(DBLAS1): $(FRC)
-
-ZBLAS1 = dcabs1.o dzasum.o dznrm2.o izamax.o zaxpy.o zcopy.o \
-	zdotc.o zdotu.o zdscal.o zrotg.o zscal.o zswap.o zdrot.o
-$(ZBLAS1): $(FRC)
-
-CB1AUX = isamax.o sasum.o saxpy.o scopy.o snrm2.o sscal.o
-$(CB1AUX): $(FRC)
-
-ZB1AUX = idamax.o dasum.o daxpy.o dcopy.o dnrm2.o dscal.o
-$(ZB1AUX): $(FRC)
-
-#---------------------------------------------------------------------
-#  The following line defines auxiliary routines needed by both the
-#  Level 2 and Level 3 BLAS.  Comment it out only if you already have
-#  both the Level 2 and 3 BLAS.
-#---------------------------------------------------------------------
-ALLBLAS  = lsame.o xerbla.o
-$(ALLBLAS) : $(FRC)
-
-#---------------------------------------------------------
-#  Comment out the next 4 definitions if you already have
-#  the Level 2 BLAS.
-#---------------------------------------------------------
-SBLAS2 = sgemv.o sgbmv.o ssymv.o ssbmv.o sspmv.o \
-	strmv.o stbmv.o stpmv.o strsv.o stbsv.o stpsv.o \
-	sger.o ssyr.o sspr.o ssyr2.o sspr2.o
-$(SBLAS2): $(FRC)
-
-CBLAS2 = cgemv.o cgbmv.o chemv.o chbmv.o chpmv.o \
-	ctrmv.o ctbmv.o ctpmv.o ctrsv.o ctbsv.o ctpsv.o \
-	cgerc.o cgeru.o cher.o chpr.o cher2.o chpr2.o
-$(CBLAS2): $(FRC)
-
-DBLAS2 = dgemv.o dgbmv.o dsymv.o dsbmv.o dspmv.o \
-	dtrmv.o dtbmv.o dtpmv.o dtrsv.o dtbsv.o dtpsv.o \
-	dger.o dsyr.o dspr.o dsyr2.o dspr2.o
-$(DBLAS2): $(FRC)
-
-ZBLAS2 = zgemv.o zgbmv.o zhemv.o zhbmv.o zhpmv.o \
-	ztrmv.o ztbmv.o ztpmv.o ztrsv.o ztbsv.o ztpsv.o \
-	zgerc.o zgeru.o zher.o zhpr.o zher2.o zhpr2.o
-$(ZBLAS2): $(FRC)
-
-#---------------------------------------------------------
-#  Comment out the next 4 definitions if you already have
-#  the Level 3 BLAS.
-#---------------------------------------------------------
-SBLAS3 = sgemm.o ssymm.o ssyrk.o ssyr2k.o strmm.o strsm.o 
-$(SBLAS3): $(FRC)
-
-CBLAS3 = cgemm.o csymm.o csyrk.o csyr2k.o ctrmm.o ctrsm.o \
-	chemm.o cherk.o cher2k.o
-$(CBLAS3): $(FRC)
-
-DBLAS3 = dgemm.o dsymm.o dsyrk.o dsyr2k.o dtrmm.o dtrsm.o
-$(DBLAS3): $(FRC)
-
-ZBLAS3 = zgemm.o zsymm.o zsyrk.o zsyr2k.o ztrmm.o ztrsm.o \
-	zhemm.o zherk.o zher2k.o
-$(ZBLAS3): $(FRC)
-
-ALLOBJ=$(SBLAS1) $(SBLAS2) $(SBLAS3) $(DBLAS1) $(DBLAS2) $(DBLAS3)	\
-	$(CBLAS1) $(CBLAS2) $(CBLAS3) $(ZBLAS1) 	\
-	$(ZBLAS2) $(ZBLAS3) $(ALLBLAS)
-
-$(BLASLIB): $(ALLOBJ)
-	$(ARCH) $(ARCHFLAGS) $@ $(ALLOBJ)
-	$(RANLIB) $@
-
-single: $(SBLAS1) $(ALLBLAS) $(SBLAS2) $(SBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(SBLAS1) $(ALLBLAS) \
-	$(SBLAS2) $(SBLAS3)
-	$(RANLIB) $(BLASLIB)
-
-double: $(DBLAS1) $(ALLBLAS) $(DBLAS2) $(DBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(DBLAS1) $(ALLBLAS) \
-	$(DBLAS2) $(DBLAS3)
-	$(RANLIB) $(BLASLIB)
-
-complex: $(CBLAS1) $(CB1AUX) $(ALLBLAS) $(CBLAS2) $(CBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(CBLAS1) $(CB1AUX) \
-	$(ALLBLAS) $(CBLAS2) $(CBLAS3)
-	$(RANLIB) $(BLASLIB)
-
-complex16: $(ZBLAS1) $(ZB1AUX) $(ALLBLAS) $(ZBLAS2) $(ZBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(ZBLAS1) $(ZB1AUX) \
-	$(ALLBLAS) $(ZBLAS2) $(ZBLAS3)
-	$(RANLIB) $(BLASLIB)
-
-FRC:
-	@FRC=$(FRC)
+all:$(BLOBJ)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
 
 clean:
 	rm -f *.o *.a *.so
 
-.f.o: 
-	$(FC) $(BLAS_FLAGS) -c $< -o $@

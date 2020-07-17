@@ -161,7 +161,7 @@ quick_cuda:
 		
 #================= targets for BLAS =====================================
 blas:
-	cd $(blasfolder) && make
+	cd $(blasfolder) && make all
 #==================== libxc cpu library =================================
 libxc_cpu:
 	cd $(libxcfolder) && make libxc_cpu
@@ -256,7 +256,7 @@ test:
 
 # - 1. Clean object files
 clean: 
-	-rm -f $(objfolder)/* $(srcfolder)/*.o 
+	-rm -f $(objfolder)/*.o $(inclfolder)/* $(libfolder)/* $(srcfolder)/*.o  
 	cd $(cudafolder) && make clean
 	cd $(subfolder) && make clean
 	cd $(blasfolder) && make clean

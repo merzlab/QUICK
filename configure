@@ -184,8 +184,9 @@ cc_debug_flags=''
 cxx_debug_flags=''
 cuda_debug_flags=''
 
-# set common folder
+# set common folders
 libxcobjfolder=''
+blasobjfolder=''
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
@@ -307,10 +308,15 @@ if [ ! -d "$QUICK_HOME/build/$buildtype/obj" ]; then
 fi
 
 if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
-  if [ ! -d "$QUICK_HOME/build/common/cpu" ]; then
-    mkdir -p "$QUICK_HOME/build/common/cpu"
+  if [ ! -d "$QUICK_HOME/build/common/cpu/libxcobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/libxcobj"
   fi
-  libxcobjfolder="$QUICK_HOME/build/common/cpu"
+  libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
+  
+  if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
+  fi
+  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
 fi
 
 if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
@@ -561,6 +567,7 @@ modfolder=$QUICK_HOME/src/modules
 exefolder=$QUICK_HOME/bin
 objfolder=$QUICK_HOME/build/$buildtype/obj
 libxcobjfolder=$libxcobjfolder
+blasobjfolder=$blasobjfolder
 libfolder=$QUICK_HOME/build/$buildtype/lib
 inclfolder=$QUICK_HOME/build/$buildtype/include
 
