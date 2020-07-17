@@ -65,7 +65,7 @@ set_mpicxx(){
   mpi_cxx_flag=''
 
   # clean test files if they already exist
-  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o test_prog
 
   # create the dummy source files
   cat > test_mpicxx.c << EOF
@@ -111,7 +111,7 @@ EOF
 
   ldflags="$ldflags $mpi_cxx_flag"
 
-  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog test_mpicxx
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o test_prog
 
 
 }
@@ -183,6 +183,9 @@ fort_debug_flags=''
 cc_debug_flags=''
 cxx_debug_flags=''
 cuda_debug_flags=''
+
+# set common folder
+libxcobjfolder=''
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
@@ -295,12 +298,27 @@ if [ ! -d "$QUICK_HOME/build/$buildtype/lib" ]; then
   mkdir -p "$QUICK_HOME/build/$buildtype/lib"
 fi
 
+if [ ! -d "$QUICK_HOME/build/$buildtype/include" ]; then
+  mkdir -p "$QUICK_HOME/build/$buildtype/include"
+fi
+
 if [ ! -d "$QUICK_HOME/build/$buildtype/obj" ]; then
   mkdir -p "$QUICK_HOME/build/$buildtype/obj"
 fi
 
-if [ ! -d "$QUICK_HOME/build/$buildtype/include" ]; then
-  mkdir -p "$QUICK_HOME/build/$buildtype/include"
+if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+  if [ ! -d "$QUICK_HOME/build/common/cpu" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu"
+  fi
+  libxcobjfolder="$QUICK_HOME/build/common/cpu"
+fi
+
+if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
+  if [ ! -d "$QUICK_HOME/build/common/gpu" ]; then
+    mkdir -p "$QUICK_HOME/build/common/gpu"
+    libxcobjfolder="$QUICK_HOME/build/common/gpu"
+  fi
+  libxcobjfolder="$QUICK_HOME/build/common/gpu"
 fi
 
 #  !---------------------------------------------------------------------!
@@ -528,12 +546,8 @@ BUILDTYPE=$buildtype
 #! Set directories                                                     !
 #!---------------------------------------------------------------------!
 
-installfolder=$quick_prefix
+# source directories
 srcfolder=$QUICK_HOME/src
-exefolder=$QUICK_HOME/bin
-objfolder=$QUICK_HOME/build/$buildtype/obj
-libfolder=$QUICK_HOME/build/$buildtype/lib
-inclfolder=$QUICK_HOME/build/$buildtype/include
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
@@ -542,6 +556,16 @@ cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
+
+# build directories
+exefolder=$QUICK_HOME/bin
+objfolder=$QUICK_HOME/build/$buildtype/obj
+libxcobjfolder=$libxcobjfolder
+libfolder=$QUICK_HOME/build/$buildtype/lib
+inclfolder=$QUICK_HOME/build/$buildtype/include
+
+# install directories
+installfolder=$quick_prefix
 
 #!---------------------------------------------------------------------!
 #! Set compilers                                                       !
