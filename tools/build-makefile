@@ -212,11 +212,11 @@ cuda: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAI
 
 mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS)
+	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS)
 
 cudampi: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
 
 #quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
 #	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
