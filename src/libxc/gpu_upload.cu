@@ -5,9 +5,10 @@ void* gpu_upload_maple2c_params(const xc_func_type *p){
 
         void *d_maple_params;
 
+#ifdef DEBUG 
         printf("FILE: %s, LINE: %d, FUNCTION: %s, p->params_byte_size: %d \n",
         __FILE__, __LINE__, __func__, p->params_byte_size);
-
+#endif
         cudaMalloc((void**)&d_maple_params, p->params_byte_size);
         cudaMemcpy(d_maple_params, (p->params), p->params_byte_size, cudaMemcpyHostToDevice);
         return d_maple_params;
@@ -25,10 +26,10 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
         switch(p->info->family){
 	case(XC_FAMILY_LDA):
 		work_param_size = sizeof(gpu_lda_work_params);
-                if(GPU_DEBUG){
+#ifdef DEBUG                 
                         printf("FILE: %s, LINE: %d, FUNCTION: %s, lda_work_param_size: %d \n",
                         __FILE__, __LINE__, __func__, work_param_size);
-                }
+#endif                
 		break;
 
 	case(XC_FAMILY_HYB_GGA):
@@ -47,8 +48,10 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
         break;
         }
 
+#ifdef DEBUG 
         printf("FILE: %s, LINE: %d, FUNCTION: %s, gga_work_param_size: %d \n",
         __FILE__, __LINE__, __func__, work_param_size);
+#endif
 
         cudaMalloc((void**)&d_work_params, work_param_size);
         cudaMemcpy(d_work_params, gpu_work_params, work_param_size, cudaMemcpyHostToDevice);
@@ -137,11 +140,9 @@ int get_gpu_worker(const xc_func_type *p){
         switch(p->info->family){
         case(XC_FAMILY_LDA):
                 gpu_wt = GPU_WORK_LDA;
-
-        if(GPU_DEBUG){
+#ifdef DEBUG 
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, WORKER: %d \n", __FILE__, __LINE__, __func__, gpu_wt);
-        }
-
+#endif
 		break;
 	case(XC_FAMILY_HYB_GGA):
         case(XC_FAMILY_GGA):
@@ -165,18 +166,18 @@ int get_gpu_worker(const xc_func_type *p){
 gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np){
 	gpu_libxc_info h_glinfo;
 
-        if(GPU_DEBUG){
+#ifdef DEBUG 
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, mix_coeff);
-        }
+#endif
 
 	h_glinfo.func_id = p->info->number;
 	h_glinfo.gpu_worker = get_gpu_worker(p);	
 
 	h_glinfo.mix_coeff = mix_coeff;
 
-        if(GPU_DEBUG){
+#ifdef DEBUG 
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, h_glinfo.mix_coeff);
-        }
+#endif
 
 	h_glinfo.d_maple2c_params = gpu_upload_maple2c_params(p);
 	h_glinfo.d_worker_params = gpu_upload_work_params(p, ggwp);

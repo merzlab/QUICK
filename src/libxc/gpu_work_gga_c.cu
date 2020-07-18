@@ -18,14 +18,11 @@ typedef void (*ggac_ptr)(const void *p,  xc_gga_work_c_t *r);
 #define XC_GGA_C_LYP    131  /* Lee, Yang & Parr */
 #define XC_GGA_C_TM_LYP 559  /* Takkar and McCarthy reparametrization */
 
-#ifdef QUICK_LIBXC
 __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, const double d_rhob, double d_sigma, double *d_zk, double *d_vrho, double *d_vsigma, int nspin){
 
-#else
 //__global__ void gpu_work_gga_c(gpu_libxc_info* glinfo, gpu_libxc_in* glin, gpu_libxc_out* glout, int nspin, int size){
 //        int gid = blockIdx.x * blockDim.x + threadIdx.x;
 //    if(gid<size){
-#endif
 
 		gpu_libxc_info* d_glinfo;
 		d_glinfo = (gpu_libxc_info*)glinfo;
@@ -34,11 +31,11 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 		gpu_ggac_work_params *d_w;
 		d_w = (gpu_ggac_work_params*)(d_glinfo->d_worker_params);
 
- if(GPU_DEBUG){
+#ifdef DEBUG  
         //gga_c_lyp_params *p;
 	//p = (gga_c_lyp_params*) (d_glinfo->d_maple2c_params);
 	//printf("FILE: %s, LINE: %d, FUNCTION: %s, A: %.10e, B: %.10e, c: %.10e, d: %.10e \n", __FILE__, __LINE__, __func__, p->A, p->B, p->c, p->d);
-}
+#endif
 	
 		//xc_gga_work_c_t* d_r;
 		//d_r = (xc_gga_work_c_t*) (d_glinfo->d_std_libxc_work_params);
@@ -55,9 +52,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 
 		gpu_xc_rho2dzeta(nspin, d_rhoa, d_rhob, &(r.dens), &(r.z));
 
-                 if(GPU_DEBUG){
+#ifdef DEBUG       
                          //printf("FILE: %s, LINE: %d, FUNCTION: %s, density: %.10e, r.dens: %.10e, r.z: %.10e \n", __FILE__, __LINE__, __func__, (d_rhoa+d_rhob), r.dens, r.z);
-                 }
+#endif                 
 
 
 		if(r.dens > d_w->dens_threshold){
@@ -65,9 +62,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 			r.rs = RS(r.dens);
 			if(nspin == XC_UNPOLARIZED){
 
-                 if(GPU_DEBUG){
+#ifdef DEBUG 
 //                         printf("FILE: %s, LINE: %d, FUNCTION: %s, density: %.10e, r.dens: %.10e, r.z: %.10e \n", __FILE__, __LINE__, __func__, d_rhoa, r.dens, r.z);
-                 }
+#endif             
 				r.ds[0]  = r.dens/2.0;
 				r.ds[1]  = r.ds[0];
 				
@@ -100,16 +97,16 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 				r.xs[1] = sqrt(r.sigmas[2])/pow(r.ds[1], 4.0/3.0); */
 			}
 
-                        if(GPU_DEBUG){
+#ifdef DEBUG       
                                 //printf("FILE: %s, LINE: %d, FUNCTION: %s func_id: %d \n", __FILE__, __LINE__, __func__, d_w->func_id);
-                        }
+#endif
 
 			//switch(d_glinfo->func_id){
 			//case XC_GGA_C_LYP:
 			//case XC_GGA_C_TM_LYP:
-                 		if(GPU_DEBUG){
+#ifdef DEBUG       
                          	//	printf("FILE: %s, LINE: %d, FUNCTION: %s gpu_work_gga_c is working.. \n", __FILE__, __LINE__, __func__);
-                 		}
+#endif             
 
 //                                if(GPU_DEBUG){
 //                                      printf("FILE: %s, LINE: %d, FUNCTION: %s : Calling xc_gga_c_lyp_func.. \n", __FILE__, __LINE__, __func__);
@@ -127,9 +124,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 
 			*d_zk = r.f;
 
-                                if(GPU_DEBUG){
+#ifdef DEBUG       
                                 //       printf("FILE: %s, LINE: %d, FUNCTION: %s, rho: %.10e r.f: %.10e  \n", __FILE__, __LINE__, __func__, d_rhoa, r.f);
-                                }
+#endif
 
 			if(r.order > 0){
 				/* setup auxiliary variables */
@@ -137,9 +134,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 				dxtdn = -4.0*r.xt/(3.0*r.dens);
 				dxtds = r.xt/(2.0*r.sigmat);
 
-                 if(GPU_DEBUG){
+#ifdef DEBUG       
   //                       printf("FILE: %s, LINE: %d, FUNCTION: %s, drs: %.10e, dxtdn: %.10e, dxtds: %.10e \n", __FILE__, __LINE__, __func__, drs, dxtdn, dxtds);
-                 }
+#endif             
 				
 				if(nspin == XC_POLARIZED){
 					/*ndzdn[1] = -(r.z + 1.0);
@@ -182,9 +179,9 @@ __device__ void gpu_work_gga_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 
 			}
 
-                                if(GPU_DEBUG){
+#ifdef DEBUG       
                                        // printf("FILE: %s, LINE: %d, FUNCTION: %s, zk: %.10e, vrho: %.10e, vsigma: %.10e \n", __FILE__, __LINE__, __func__, *d_zk, *d_vrho, *d_vsigma);
-                                }
+#endif             
 			//Madu Manathunga: 07/14/2019 Temporarly blocked order >1 code
 			/*
 			if(r.order > 1){*/
