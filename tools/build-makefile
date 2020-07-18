@@ -253,14 +253,20 @@ test:
 #************************************************************************
 
 # - 1. Clean object files
-clean: 
-	-rm -f $(objfolder)/*.o $(inclfolder)/* $(libfolder)/* $(srcfolder)/*.o  
-	cd $(cudafolder) && make clean
-	cd $(subfolder) && make clean
-	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean
-	cd $(libxcfolder) && make clean
-	cd $(libxcfolder)/maple2c_device && make clean	
+clean:
+	@-rm -f $(exefolder)/$(installer) $(objfolder)/* $(inclfolder)/* $(libfolder)/* $(srcfolder)/*.o  
+	@-rm -f $(libxcobjfolder)/* $(blasobjfolder)/*
+	@cd $(cudafolder) && make clean
+	@cd $(subfolder) && make clean
+	@cd $(blasfolder) && make clean
+	@cd $(modfolder) && make clean
+	@cd $(libxcfolder) && make clean
+	@cd $(libxcfolder)/maple2c_device && make clean	
+	
+        
+cleanmakein:
+	@-rm -f $(libxcfolder)/make.in $(libxcfolder)/maple2c_device/make.in $(cudafolder)/make.in \
+	$(octfolder)/make.in $(subfolder)/make.in $(modfolder)/make.in $(blasfolder)/make.in
 
 uninstall: 
 	-rm -f $(exefolder)/quick* $(exefolder)/testapi.o $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
@@ -277,4 +283,4 @@ TAGS: $(SRC)
 tags: $(SRC)
 	ctags $(SRC)
 
-include $(srcfolder)/depend 
+#include $(srcfolder)/depend 
