@@ -127,7 +127,7 @@ cuda='no'
 cudampi='no'
 debug='no'
 buildtypes=''
-installer=''
+installers=''
 
 # keeps track of what compilers being used
 fort='no'
@@ -198,10 +198,10 @@ if [ $# -lt 1 ]; then print_help; fi
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean";;
-    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean";;
-    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean";;
-    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean";;
+    -serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
+    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
+    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
+    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
     -debug)       debug='yes';;
     -shared)      shared='yes';; 
     -arch)        shift; cuda_arch=$1; uspec_arch='true';;
@@ -551,6 +551,18 @@ for buildtype in $buildtypes; do
   # set fortran linking flags
   ldflags="$fort_flags -lstdc++"
 
+  # set the installer
+  installer=''
+  if [ "$buildtype" = 'serial' ]; then
+    installer='quick'
+  elif [ "$buildtype" = 'mpi' ]; then
+    installer='quick.mpi'
+  elif [ "$buildtype" = 'cuda' ]; then
+    installer='quick.cuda'
+  elif [ "$buildtype" = 'cudampi' ]; then
+    installer='quick.cuda.mpi'
+  fi
+
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/$buildtype/Makefile"
 
@@ -566,6 +578,7 @@ cat > "$QUICK_HOME/build/$buildtype/make.in" << EOF
 #!---------------------------------------------------------------------!
 
 BUILDTYPE=$buildtype
+installer=$installer
 
 #!---------------------------------------------------------------------!
 #! Set directories                                                     !
@@ -662,6 +675,7 @@ CLEANTYPES=$cleantypes
 #! Set directories                                                     !
 #!---------------------------------------------------------------------!
 
+exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
 installfolder=$quick_prefix
 
