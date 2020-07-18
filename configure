@@ -188,8 +188,8 @@ cuda_debug_flags=''
 libxcobjfolder=''
 blasobjfolder=''
 
-# flag to record if mpi_cxx has been checked
-mpi_checked='no'
+# keep track of which build types to clean
+cleantypes=''
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
@@ -198,10 +198,10 @@ if [ $# -lt 1 ]; then print_help; fi
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -serial)      serial='yes'; buildtypes="$buildtypes serial" ;;
-    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
-    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
-    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
+    -serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean";;
+    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean";;
+    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean";;
+    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean";;
     -debug)       debug='yes';;
     -shared)      shared='yes';; 
     -arch)        shift; cuda_arch=$1; uspec_arch='true';;
@@ -656,6 +656,7 @@ cat > "$QUICK_HOME/make.in" << EOF
 #!---------------------------------------------------------------------!
 
 BUILDTYPES=$buildtypes
+CLEANTYPES=$cleantypes
 
 #!---------------------------------------------------------------------!
 #! Set directories                                                     !
