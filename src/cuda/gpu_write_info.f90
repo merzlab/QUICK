@@ -6,8 +6,6 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
-#include "../config.h"
-
 subroutine gpu_write_info(io)
     implicit none
     ! io unit

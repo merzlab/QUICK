@@ -12,8 +12,6 @@
 ! This module contains subroutines and data structures related to scf
 ! and diis procedures
 
-#include "../config.h"
-
 module quick_scf_module
 
   implicit none

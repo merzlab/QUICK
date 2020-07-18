@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	getMol.f90
 !	new_quick

@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	initialize.f90
 !	new_quick

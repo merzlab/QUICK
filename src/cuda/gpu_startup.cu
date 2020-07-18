@@ -8,7 +8,6 @@
  */
 
 #include "gpu_startup.h"
-#include "../config.h"
 
 extern "C" void gpu_set_device_(int* gpu_dev_id)
 {

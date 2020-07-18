@@ -12,7 +12,6 @@
 ! This module contains subroutines and data structures related to
 ! scf gradient calculation
 
-#include "../config.h"
 
 module quick_gradient_module
 

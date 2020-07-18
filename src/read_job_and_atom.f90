@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	read_job_and_atom.f90
 !	new_quick

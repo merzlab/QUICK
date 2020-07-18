@@ -10,7 +10,6 @@
 !_____________________________________________________________________!
 
 ! Interface for quick libarary
-#include "../config.h"
 module quick_api_module
 
   implicit none

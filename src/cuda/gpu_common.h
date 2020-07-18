@@ -10,7 +10,6 @@
 #ifndef QUICK_GPU_COMMON_H
 #define QUICK_GPU_COMMON_H
 
-#include "../config.h"
 #include <stdio.h>
 #include <cuda.h>
 #include "nvToolsExt.h"

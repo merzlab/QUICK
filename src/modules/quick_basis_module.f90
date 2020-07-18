@@ -1,4 +1,3 @@
-#include "../config.h"
 
 !
 !	quick_basis_module.f90

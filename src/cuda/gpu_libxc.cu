@@ -1,5 +1,7 @@
 #include "util.h"
 #include "gpu_work.cuh"
+#include "gpu_upload.cu"
+#include "gpu_cleanup.cu"
 
 gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_polarization){
 
