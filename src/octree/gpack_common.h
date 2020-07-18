@@ -1,6 +1,4 @@
 
-#include "../config.h"
-
 //Constants for packing grid points
 static const int MAX_POINTS_PER_CLUSTER = 256;
 static const int OCTREE_DEPTH = 64;

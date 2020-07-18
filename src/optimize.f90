@@ -1,4 +1,3 @@
-#include "config.h"
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.

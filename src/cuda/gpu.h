@@ -9,7 +9,6 @@
 #ifndef QUICK_GPU_H
 #define QUICK_GPU_H
 
-#include "../config.h"
 #include "gpu_type.h"
 
 //Madu Manathunga 07/01/2019: Libxc header files

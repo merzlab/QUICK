@@ -1,4 +1,3 @@
-#include "config.h"
 
 ! change call g2eshell in hfgrad.f? Answer:NO
 ! change shreshold!!!!!!!

@@ -12,7 +12,6 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
-#   include "../config.h"
 
 ! molecule specification Module
 module quick_molspec_module

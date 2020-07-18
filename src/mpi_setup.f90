@@ -1,4 +1,3 @@
-#include "config.h"
 #ifdef MPIV
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup MPI environment

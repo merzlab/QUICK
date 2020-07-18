@@ -1,4 +1,3 @@
-#include "config.h"
 
 !  Created by Madu Manathunga on 08/12/2019 
 !  Copyright 2019 Michigan State University. All rights reserved.

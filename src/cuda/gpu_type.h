@@ -14,7 +14,6 @@
  */
 
 #include <stdio.h>
-#include "../config.h"
 #include "gpu_common.h"
 
 // CUDA-C includes

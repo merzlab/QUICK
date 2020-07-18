@@ -1,7 +1,6 @@
 #ifndef QUICK_GPACK_COMMON_H
 #define QUICK_GPACK_COMMON_H
 
-#include "../config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

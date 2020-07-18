@@ -1,4 +1,3 @@
-#   include "../config.h"
 !
 !
 !	quick_timer_module.f90
