@@ -48,5 +48,23 @@ cudampi:
 #  ! Set cleaning targets                                                !
 #  !---------------------------------------------------------------------!
 
+.PHONY:serialclean mpiclean cudaclean cudampiclean
 	
+clean:$(CLEANTYPES)
+	@echo "Successfully cleaned up."
+
+serialclean:
+	@cd $(buildfolder)/serial && make clean 
+
+mpiclean:
+	@cd $(buildfolder)/mpi && make clean
+
+cudaclean:
+	@cd $(buildfolder)/cuda && make clean
+
+cudampiclean:
+	@cd $(buildfolder)/cudampi && make clean
+
+distclean:
+	@-rm -rf $(buildfolder) $(exefolder)
 
