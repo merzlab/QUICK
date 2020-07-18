@@ -296,6 +296,10 @@ for buildtype in $buildtypes; do
     mkdir -p "$QUICK_HOME/build/$buildtype/obj"
   fi
 
+  if [ ! -d "$QUICK_HOME/build/$buildtype/obj/main" ]; then
+    mkdir -p "$QUICK_HOME/build/$buildtype/obj/main"
+  fi
+
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/cpu/libxcobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/cpu/libxcobj"
@@ -599,6 +603,7 @@ modfolder=$QUICK_HOME/src/modules
 exefolder=$QUICK_HOME/bin
 objfolder=$QUICK_HOME/build/$buildtype/obj
 libxcobjfolder=$libxcobjfolder
+mainobjfolder=$QUICK_HOME/build/$buildtype/obj/main
 blasobjfolder=$blasobjfolder
 libfolder=$QUICK_HOME/build/$buildtype/lib
 inclfolder=$QUICK_HOME/build/$buildtype/include

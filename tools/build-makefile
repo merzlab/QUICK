@@ -95,7 +95,7 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 	$(objfolder)/quick_all_module.o
 
-MAIN = $(srcfolder)/main.o
+MAIN = $(mainobjfolder)/main.o
 
 OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
@@ -190,7 +190,7 @@ $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for main src files ========================
-$(MAIN):$(srcfolder)/%.o:$(srcfolder)/%.f90
+$(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for compiling api test ====================
 $(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
@@ -254,8 +254,8 @@ test:
 
 # - 1. Clean object files
 clean:
-	@-rm -f $(exefolder)/$(installer) $(objfolder)/* $(inclfolder)/* $(libfolder)/* $(srcfolder)/*.o  
-	@-rm -f $(libxcobjfolder)/* $(blasobjfolder)/*
+	@-rm -f $(exefolder)/$(installer) $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(libfolder)/*
+	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o
 	@cd $(cudafolder) && make clean
 	@cd $(subfolder) && make clean
 	@cd $(blasfolder) && make clean
