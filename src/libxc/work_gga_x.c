@@ -144,17 +144,6 @@ work_gga_x
 	set_gpu_ggax_work_params(sfact, p->dens_threshold, alpha,
         beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], kernel_id, (gpu_ggax_work_params*)gpu_work_params);
 
-if(dryrun){
-
-	//place paramter return code here. 
-	//gpu_ggax_w_t = ggwp;
-
-}else{
-
-	test_cu(p, (gpu_ggax_work_params*) gpu_work_params, r, rho, sigma, np);
-
-}
-
 #else
   /* the loop over the points starts */
   for(ip = 0; ip < np; ip++){
