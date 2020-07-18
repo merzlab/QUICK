@@ -1,6 +1,6 @@
 #!/bin/sh
 
-MAKEIN = ../../make.in
+MAKEIN = ./make.in
 include $(MAKEIN)
 
 LIBXC_CUDA_FLAGS = -I$(libxcfolder)
