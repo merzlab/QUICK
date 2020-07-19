@@ -18,7 +18,7 @@ MAKEIN=./make.in
 include $(MAKEIN)
 
 #  !---------------------------------------------------------------------!
-#  ! Set build targets                                                   !
+#  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
 .PHONY: nobuildtypes serial mpi cuda cudampi all
@@ -45,7 +45,40 @@ cudampi:
 	@cd $(buildfolder)/cudampi && make cudampi 
 
 #  !---------------------------------------------------------------------!
-#  ! Set cleaning targets                                                !
+#  ! Installation targets                                                !
+#  !---------------------------------------------------------------------!
+
+.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall
+
+install: $(INSTALLTYPES)
+	@echo "Installation sucessful."
+
+noinstall:
+	@echo "Error: No prefix to install. You must specify a prefix during the configuration."
+	@echo "       Please find QUICK executables in $(exefolder)."
+
+serialinstall:
+	@-cp -f $(exefolder)/quick $(installfolder)/bin
+	@-cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
+	@-cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
+
+mpiinstall:
+	@-cp -f $(exefolder)/quick.mpi $(installfolder)/bin
+	@-cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
+	@-cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
+
+cudainstall:
+	@-cp -f $(exefolder)/quick.cuda $(installfolder)/bin
+	@-cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
+	@-cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
+
+cudampiinstall:
+	@-cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
+	@-cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
+	@-cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
+
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
 
 .PHONY:serialclean mpiclean cudaclean cudampiclean
@@ -67,4 +100,36 @@ cudampiclean:
 
 distclean:
 	@-rm -rf $(buildfolder) $(exefolder)
+
+#  !---------------------------------------------------------------------!
+#  ! Uninstall targets                                                   !
+#  !---------------------------------------------------------------------!
+
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
+
+uninstall: $(UNINSTALLTYPES)
+	@echo "Uninstallation sucessful."
+
+nouninstall:
+	@echo "Nothing to uninstall."
+
+serialuninstall:
+	@-rm -f $(installfolder)/bin/quick
+	@-rm -f $(installfolder)/include/serial/*
+	@-rm -f $(installfolder)/lib/serial/*
+
+mpiuninstall:
+	@-rm -f $(installfolder)/bin/quick.mpi
+	@-rm -f $(installfolder)/include/mpi/*
+	@-rm -f $(installfolder)/lib/mpi/*
+
+cudauninstall:
+	@-rm -f $(installfolder)/bin/quick.cuda
+	@-rm -f $(installfolder)/include/cuda/*
+	@-rm -f $(installfolder)/lib/cuda/*
+
+cudampiuninstall:
+	@-rm -f $(installfolder)/bin/quick.cuda.mpi
+	@-rm -f $(installfolder)/include/cudampi/*
+	@-rm -f $(installfolder)/lib/cudampi/*
 

@@ -194,6 +194,10 @@ blasobjfolder=''
 # keep track of which build types to clean
 cleantypes=''
 
+# keep track of which versions to install and uninstall
+installtypes=''
+uninstalltypes=''
+
 # numbers of cores to be used for make
 uspec_ncores='no'
 ncores=''
@@ -232,10 +236,12 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+echo "$compiler"
+
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
-    echo -e "\033[91mError: Specified --prefix and the current folder is the same. Please choose a different location. \033[0m"
+    echo -e "\033[91mError: Specified --prefix and current folder is the same. Please choose a different location. \033[0m"
     exit 1
   fi
 
@@ -279,9 +285,22 @@ if [ "$useprefix" = "true" ]; then
       mkdir -p "$quick_prefix/include/$buildtype"
     fi
   done
+
+  # set install and uninstall types
+  install_string='install'
+  uninstall_string='uninstall'
+
+  for buildtype in $buildtypes; do    
+    installtypes="$installtypes $buildtype$install_string"
+    uninstalltypes="$uninstalltypes $buildtype$uninstall_string"
+  done
+
 else
 
   echo "No prefix specified for the installation."
+
+  installtypes='noinstall'
+  uninstalltypes='nouninstall'
 
 fi
 
@@ -700,11 +719,14 @@ cat > "$QUICK_HOME/make.in" << EOF
 # Created on $cdate at $ctime
 
 #!---------------------------------------------------------------------!
-#! Build settings                                                      !
+#! Build & install settings                                            !
 #!---------------------------------------------------------------------!
 
 BUILDTYPES=$buildtypes
 CLEANTYPES=$cleantypes
+
+INSTALLTYPES=$installtypes
+UNINSTALLTYPES=$uninstalltypes
 
 #!---------------------------------------------------------------------!
 #! Directories                                                         !
