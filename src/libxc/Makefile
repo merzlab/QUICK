@@ -28,8 +28,6 @@ FOR=$(FC) -c -I. $(FFLAGS)
 
 CCC = $(CC) -c -I. $(CCFLAGS) 
 
-CUDACC = $(CUDAC) -c -I. $(CUDA_FLAGS)  
-
 #----------------------
 # quick modules and object files
 #----------------------
@@ -142,8 +140,6 @@ LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/mgga_c_revscan.o $(libxcobjfolder)/mgga_x_br89_explicit.o\
 	$(libxcobjfolder)/mgga_xc_b98.o \
 
-GPUCOBJ = $(libxcobjfolder)/gpu.o
-GPUCUOBJ = $(libxcobjfolder)/test.o
 #************************************************************************
 # 
 #                 B. Make Object Files
@@ -152,10 +148,6 @@ GPUCUOBJ = $(libxcobjfolder)/test.o
 
 $(LIBXCOBJ):$(libxcobjfolder)/%.o:%.c
 	$(CCC) $< -o $@
-$(GPUCOBJ):$(libxcobjfolder)/%.o:%.c
-	$(CCC) $< -o $@
-$(GPUCUOBJ):$(libxcobjfolder)/%.o:%.cu
-	$(CUDACC) $< -o $@
 libxcf90_la-xc_f.o:
 	$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
 libxcf90_la-libxc_funcs.o:
@@ -165,7 +157,8 @@ libxcf90_la-libxc.o:
 
 #================= quick subroutine library =================================
 
-libxc_gpu:$(LIBXCOBJ) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+libxc_gpu:$(LIBXCOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+	$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 
 libxc_cpu:$(LIBXCOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
