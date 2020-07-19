@@ -47,6 +47,10 @@ cat<<EOF
                      cudampi versions only. If unspecified, QUICK will be 
                      compiled for several architectures based on the CUDA
                      toolkit version.
+      -ncores <ncore>
+                     Specify the number of cores to be used in compilation
+                     If unspecified, QUICK will attempt to automatically 
+                     detect the number of cores in your system. 
 
   Supported compilers are: gnu, intel
   
@@ -192,6 +196,7 @@ blasobjfolder=''
 cleantypes=''
 
 # numbers of cores to be used for make
+uspec_ncores='no'
 ncores=''
 
 #  !---------------------------------------------------------------------!
@@ -208,6 +213,7 @@ while [ $# -gt 0 ]; do
     -debug)       debug='yes';;
     -shared)      shared='yes';; 
     -arch)        shift; cuda_arch=$1; uspec_arch='true';;
+    -ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)     shift; quick_prefix=$1; useprefix='true';;
     -h| -H| -help| --help) print_help;;
     -*)  echo "Error: $1 is an unknown flag"
@@ -328,12 +334,17 @@ done
 #  ! Query system information                                            !
 #  !---------------------------------------------------------------------!
 
-  if [ `command -v nproc | wc -l` -gt 0 ];then
-    ncores=`nproc --all`
-    echo "A total of $cores cores will be used for the compilation."
+# set number of cores for the compilation
+  if [ "$uspec_ncores" = 'yes' ]; then
+    echo "Number of cores requested for the compilation: $ncores"
   else
-    ncores=1
-    echo "Only a single core will be used for the compilation."
+    if [ `command -v nproc | wc -l` -gt 0 ];then
+      ncores=`nproc --all`
+      echo "A total of $ncores cores will be used for the compilation."
+    else
+      ncores=1
+      echo "Only a single core will be used for the compilation."
+    fi
   fi
 
 #  !---------------------------------------------------------------------!
