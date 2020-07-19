@@ -31,34 +31,33 @@ ctime=`date +'%r'`
 # this function prints help page
 print_help(){
 
-cat<<EOF
-
-  Use this script as ./configure [flags] compiler
-
-  Available flags are:
-      --prefix <dir> User specified installation directory
-      -serial        Builds a serial version
-      -mpi           Compiles MPI prallel version
-      -cuda          Builds GPU version that utilizes a single NVIDIA GPU
-      -debug         Compiles debug version
-      -shared        Build shared object libraries
-      -arch <pascal|volta|turing>  
-                     Specify gpu architecture. Applicable for cuda and 
-                     cudampi versions only. If unspecified, QUICK will be 
-                     compiled for several architectures based on the CUDA
-                     toolkit version.
-      -ncores <ncore>
-                     Specify the number of cores to be used in compilation
-                     If unspecified, QUICK will attempt to automatically 
-                     detect the number of cores in your system. 
-
-  Supported compilers are: gnu, intel
-  
+echo -e "\033[92m                                                                                                                                       
+  Use this script as ./configure [flags] compiler                           
+                                                                            
+  Available flags are:                                                      
+      --prefix <dir> User specified installation directory                  
+      -serial        Builds a serial version                                
+      -mpi           Compiles MPI prallel version                           
+      -cuda          Builds GPU version that utilizes a single NVIDIA GPU   
+      -debug         Compiles debug version                                 
+      -shared        Build shared object libraries                          
+      -arch <pascal|volta|turing>                                           
+                     Specify gpu architecture. Applicable for cuda and      
+                     cudampi versions only. If unspecified, QUICK will be   
+                     compiled for several architectures based on the CUDA   
+                     toolkit version.                                       
+      -ncores <ncore>                                                       
+                     Specify the number of cores to be used in compilation. 
+                     If unspecified, QUICK will attempt to automatically    
+                     detect the number of cores in your system.             
+                                                                            
+  Supported compilers are: gnu, intel                                       
+                                                                            
   For example, GPU version with intel compiler tool chain can be compiled as
-  follows:
-                    ./configure -gpu intel              
+  follows:                                                                  
+                    ./configure -gpu intel                                  
+  \033[0m"
 
-EOF
 exit 0;
 
 }
@@ -87,14 +86,14 @@ EOF
   # compile the test sources
   $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo "Error: MPI/C++ source cannot be compiled using $cxx"
+    echo -e "\033[91mError: MPI/C++ source cannot be compiled using $cxx \033[0m"
     echo ""
     exit 1
   fi
 
   $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo "Error: Fortran90 source cannot be compiled using $fort"
+    echo -e "\033[91mError: Fortran90 source cannot be compiled using $fort \033[0m"
     echo ""
     exit 1
   fi
@@ -108,8 +107,8 @@ EOF
   #try to link with libmpi_cxx
   $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag"
-    echo "Try to check the commands using 'mpif90 -show'"
+    echo -e "\033[91mError: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag \033[0m"
+    echo -e "\033[91mTry to check the commands using 'mpif90 -show' \033[0m"
     exit 1
   fi
 
@@ -216,15 +215,15 @@ while [ $# -gt 0 ]; do
     -ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)     shift; quick_prefix=$1; useprefix='true';;
     -h| -H| -help| --help) print_help;;
-    -*)  echo "Error: $1 is an unknown flag"
-         echo "       Run this script as './configure [flags] compiler'"
-         echo "       Run './configure --help' for more information"
+    -*)  echo -e "\033[91mError: $1 is an unknown flag \033[0m"
+         echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
+         echo -e "       \033[91mRun './configure --help' for more information \033[0m"
          exit 1;;
 
      *)  if [ $# -gt 1 ]; then
-           echo "Error: $1 is an unknown compiler"
-           echo "       Run this script as './configure [flags] compiler'"
-           echo "       Run './configure --help' for more information"
+           echo -e "\033[91mError: $1 is an unknown compiler \033[0m"
+           echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
+           echo -e "       \033[91mRun './configure --help' for more information \033[0m"
            exit 1
          fi
 
@@ -236,9 +235,11 @@ done
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
-    echo "Specified --prefix and the current folder is the same. Please choose a different location."
+    echo -e "\033[91mError: Specified --prefix and the current folder is the same. Please choose a different location. \033[0m"
     exit 1
   fi
+
+  echo "QUICK will be installed in $quick_prefix"
 
   # create tests and basis directories if they dont exist
   if [ ! -d "$quick_prefix/test" ]; then
@@ -278,11 +279,11 @@ if [ "$useprefix" = "true" ]; then
       mkdir -p "$quick_prefix/include/$buildtype"
     fi
   done
-fi
+else
 
-echo ""
-echo "QUICK will be installed in $quick_prefix"
-echo ""
+  echo "No prefix specified for the installation."
+
+fi
 
 #  !---------------------------------------------------------------------!
 #  ! Create essential build directories                                  !
@@ -398,13 +399,13 @@ set_uspec_arch(){
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
   if [ -z "$CUDA_HOME" ]; then
-    echo "Error: CUDA_HOME environment variable is not set."
-    echo "Please make sure CUDA toolkit is loaded."
+    echo -e "\033[91mError: CUDA_HOME environment variable is not set.\033[0m"
+    echo -e "\033[91mPlease make sure CUDA toolkit is loaded.\033[0m"
     exit 1
   fi
 
   if [ ! -x "$CUDA_HOME/bin/nvcc" ]; then
-    echo "Error: nvcc compiler is not available in $CUDA_HOME/bin/"
+    echo -e "\033[91mError: nvcc compiler is not available in $CUDA_HOME/bin/\033[0m"
     exit 1
   fi
 
@@ -466,8 +467,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cuda_arch_flags="$sm60flags $sm61flags"
       fi
     else
-      echo "Error: Unsupported CUDA version $cudaversion detected."
-      echo "       QUICK requires at least CUDA version 8.0"
+      echo -e "\033[91mError: Unsupported CUDA version $cudaversion detected. \033[0m"
+      echo -e "       \033[91mQUICK requires at least CUDA version 8.0 \033[0m"
       exit 1
     fi
 
