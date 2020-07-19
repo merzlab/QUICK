@@ -152,7 +152,7 @@ cpmakein:
 
 #================= common subroutine library ============================
 quick_subs:
-	cd $(subfolder) && make all
+	cd $(subfolder) && make -j$(ncores) all
 
 #================= quick module library =================================
 quick_modules:
@@ -167,14 +167,16 @@ quick_cuda:
 		
 #================= targets for BLAS =====================================
 blas:
-	cd $(blasfolder) && make all
+	cd $(blasfolder) && make -j$(ncores) all
 #==================== libxc cpu library =================================
 libxc_cpu:
-	cd $(libxcfolder) && make libxc_cpu
-#==================== libxc cpu library =================================
+	cd $(libxcfolder) && make -j$(ncores) libxc_cpu
+#==================== libxc cuda library =================================
 libxc_gpu:
-	cd $(libxcfolder) && make libxc_gpu
-	cd $(libxcfolder)/maple2c_device && make all
+	cd $(libxcfolder) && make -j$(ncores) libxc_gpu
+
+libxc_cuda:libxc_gpu
+	cd $(libxcfolder)/maple2c_device && make -j$(ncores) all
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
@@ -206,7 +208,7 @@ serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
-cuda: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
+cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcu.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS)
 
@@ -214,7 +216,7 @@ mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickmpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS)
 
-cudampi: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
+cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquickcumpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS)
 
