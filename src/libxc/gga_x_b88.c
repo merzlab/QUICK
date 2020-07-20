@@ -28,7 +28,6 @@ gga_x_b88_init(xc_func_type *p)
   p->params = malloc(sizeof(gga_x_b88_params));
 #if defined CUDA || defined CUDA_MPIV
   p->params_byte_size = sizeof(gga_x_b88_params); //Assign the value for param size
-  printf("p->params_byte_size: %d \n", p->params_byte_size);
 #endif
   /* value of beta in standard Becke 88 functional */
   switch(p->info->number){
