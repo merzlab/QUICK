@@ -198,6 +198,9 @@ cleantypes=''
 installtypes=''
 uninstalltypes=''
 
+# keep track of type of testing (i.e. build or install)
+testtype='buildtest'
+
 # numbers of cores to be used for make
 uspec_ncores='no'
 ncores=''
@@ -218,25 +221,22 @@ while [ $# -gt 0 ]; do
     -arch)        shift; cuda_arch=$1; uspec_arch='true';;
     -ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)     shift; quick_prefix=$1; useprefix='true';;
+    gnu)          compiler='gnu';;
+    intel)        compiler='intel';;
     -h| -H| -help| --help) print_help;;
     -*)  echo -e "\033[91mError: $1 is an unknown flag \033[0m"
          echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
          echo -e "       \033[91mRun './configure --help' for more information \033[0m"
          exit 1;;
-
      *)  if [ $# -gt 1 ]; then
            echo -e "\033[91mError: $1 is an unknown compiler \033[0m"
            echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
            echo -e "       \033[91mRun './configure --help' for more information \033[0m"
            exit 1
          fi
-
-         compiler=$1;;
   esac
   shift
 done
-
-echo "$compiler"
 
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
@@ -613,6 +613,11 @@ for buildtype in $buildtypes; do
     installer='quick.cuda.mpi'
   fi
 
+  # set the test type
+  if [ "$useprefix" = "true" ]; then
+    testtype='installtest'
+  fi
+
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/$buildtype/Makefile"
 
@@ -728,12 +733,16 @@ CLEANTYPES=$cleantypes
 INSTALLTYPES=$installtypes
 UNINSTALLTYPES=$uninstalltypes
 
+TESTTYPE=$testtype
+
 #!---------------------------------------------------------------------!
 #! Directories                                                         !
 #!---------------------------------------------------------------------!
 
+homefolder=$QUICK_HOME
 exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
+toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
 
 EOF
