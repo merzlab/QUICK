@@ -47,6 +47,35 @@ cudampi='no'
 # number of cores for mpi tests
 nprocs=2
 
+# flag for a mp2 calculation
+ismp2=''
+
+#  !---------------------------------------------------------------------!
+#  ! Function definitions                                                !
+#  !---------------------------------------------------------------------!
+
+print_test_info(){
+
+  ismp2='no'
+
+  case "$i" in
+    ene_psb5_rhf_631g)        echo "RHF energy test: s and p basis functions";;
+    ene_psb5_rhf_631gss)      echo "RHF energy test: s, p and d basis functions";;
+    ene_psb3_blyp_631g)       echo "DFT energy test: s and p basis functions, native BLYP functional";;
+    ene_psb3_blyp_631gss)     echo "DFT energy test: s, p and d basis functions, native BLYP functional";;
+    ene_psb3_b3lyp_631g)      echo "DFT energy test: s and p basis functions, native B3LYP functional";;
+    ene_psb3_b3lyp_631gss)    echo "DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_psb3_libxc_lda_631g)  echo "DFT energy test: s and p basis functions, libxc LDA functional";;
+    ene_psb3_libxc_gga_631g)  echo "DFT energy test: s and p basis functions, libxc GGA functional";;
+    ene_psb3_libxc_hgga_631g) echo "DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
+    ene_wat2_mp2_631g)        echo "MP2 energy test: s and p basis functions"; ismp2='yes';;
+    ene_wat2_mp2_631gss)      echo "MP2 energy test: s, p and d basis functions"; ismp2='yes';;
+    opt_wat_rhf_631g)         echo "RHF geometry optimization test: s and p basis functions";;
+    opt_wat_rhf_ccpvdz)       echo "RHF geometry optimization test: s, p and d basis functions";;
+  esac
+
+}
+
 
 #  !---------------------------------------------------------------------!
 #  ! Check directories & executables                                     !
@@ -103,6 +132,7 @@ fi
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
   echo "MPI tests will be carried out using a single core."
+  echo ""
 fi
 
 #  !---------------------------------------------------------------------!
@@ -126,6 +156,8 @@ done
 cd "$testdir"
 
 for buildtype in $buildtypes; do
+
+  echo -e "\033[92mTesting $buildtype version..\033[0m"
 
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
@@ -151,31 +183,11 @@ for buildtype in $buildtypes; do
     # This variable will keep the information of jobcard
     jobcard=`head -1 "$i.in"`
     enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
-    ismp2='no'
 
-    if [ "$enecalc" -gt 0 ]; then  
-      case "$jobcard" in
-        *HF*)
-          echo "This is a RHF energy test...";;
-        *LDA*)
-          echo "This is a DFT energy test... A representative LIBXC LDA functional is used.";;
-        *HYB_GGA*)
-          echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used.";;
-        *GGA*)
-          echo "This is a DFT energy test... A representative LIBXC GGA functional is used.";;
-        *BLYP*)
-          echo "This is a DFT energy test... Native BLYP functional is used.";;
-        *B3LYP*)
-          echo "This is a DFT energy test... Native B3LYP functional is used.";;
-        *MP2*)
-          ismp2='yes'
-          echo "This is a MP2 energy test...";;
-      esac
-    fi
-     	
+    print_test_info "$i"
 
     # Run the test case
-    "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null 	
+    "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
 
     # Check the accuracy
     # For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
@@ -185,8 +197,8 @@ for buildtype in $buildtypes; do
       newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
       echo "$refval  $newval"|awk '{
         x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="failed"; else stat="passed"; 
-        print "MP2 energy: " $2 ", Reference value: " $1 ". Test " stat "."
+        if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+        print "MP2 energy: " $2 ", Reference value: " $1 ". " stat""
       }'                         
 
     else 
@@ -195,8 +207,8 @@ for buildtype in $buildtypes; do
       newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
       echo "$refval  $newval"|awk '{
         x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="failed"; else stat="passed"; 
-        print "Total energy: " $2 ", Reference value: " $1 ". Test " stat "."
+        if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+        print "Total energy: " $2 ", Reference value: " $1 ". " stat""
       }'	
 
     fi
@@ -216,16 +228,7 @@ for buildtype in $buildtypes; do
     jobcard=`head -1 "$i.in"`
     gradcalc=`echo $jobcard | grep 'GRADIENT' | wc -l`
 
-    if [ "$gradcalc" -gt 0 ]; then
-      case "$jobcard" in
-        *HF*)
-          echo "This is a RHF gradient test...";;
-        *HYB_GGA*)
-          echo "This is a DFT gradient test... A representative LIBXC hybrid GGA functional is used.";;
-        *B3LYP*)
-          echo "This is a DFT gradient test... Native B3LYP functional is used.";;
-      esac                    
-    fi
+    print_test_info "$i"
 
     "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
 		
@@ -241,19 +244,8 @@ for buildtype in $buildtypes; do
   for i in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
     echo "Running test $a of $total"
     cp "$testdir/${i}.in" ./
-	
-    # This variable will keep the information of jobcard
-    jobcard=`head -1 "$i.in"`
-    optcalc=`echo $jobcard | grep 'OPT' |wc -l`  
-    if [ "$optcalc" -gt 0 ]; then
-      case "$jobcard" in
-        *HF*)
-          echo "This is a RHF geometry optimization test...";;
 
-        *B3LYP*)
-          echo "This is a DFT geometry optimization test...";;
-      esac
-    fi
+    print_test_info "$i"
 
     # Run the test case
     "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
@@ -264,8 +256,8 @@ for buildtype in $buildtypes; do
     paste refGrad.txt newGrad.txt >compGrad.txt
     awk '{
       x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="failed"; else stat="passed"; 
-      print "Final gradient: " $2 ", Reference value: " $1 ". Test " stat "."
+      if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+      print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
       }' compGrad.txt
     echo ""
       
@@ -277,8 +269,8 @@ for buildtype in $buildtypes; do
     newval=$(grep "MINIMIZED ENERGY" "$i.out" | awk '{print $3}')
     echo "$refval  $newval"|awk '{
       x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="failed"; else stat="passed"; 
-      print "Minimized energy: " $2 ", Reference value: " $1 ". Test " stat "."
+      if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+      print "Minimized energy: " $2 ", Reference value: " $1 ". " stat""
       }'
     echo ""
 
