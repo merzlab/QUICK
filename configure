@@ -618,6 +618,15 @@ for buildtype in $buildtypes; do
     testtype='installtest'
   fi
 
+  # set libxcobj and blasobj folder
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+    libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj" 
+  elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
+    blasobjfolder=""
+    libxcobjfolder="$QUICK_HOME/build/common/gpu"
+  fi
+
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/$buildtype/Makefile"
 
