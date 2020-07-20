@@ -14,7 +14,6 @@ extern "C" {
 #endif
 
 //Madu Manathunga 06/19/2019
-#include "../config.h" //Read quick config.h
 
 #include <xc_version.h>
 
