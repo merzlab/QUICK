@@ -1,214 +1,300 @@
 #!/bin/sh
-# Written by Madu Manathunga 03/07/2019
 
-# This script runs a series of test cases saved in tests folder and verifies the correctness of quick
+#  !---------------------------------------------------------------------!
+#  ! Written by Madu Manathunga on 07/19/2020                            !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This source code runs a series test cases saved in test folder and  !
+#  ! verifies the correctness of a QUICK installation.                   !
+#  ! ** Must be executed from QUICK_HOME or installation directories.    !
+#  !---------------------------------------------------------------------!
 
-#Set values for the variables
-installdir='unknown-installdir'
-tstdir=${installdir}/test
-qbasisdir=${installdir}/basis
-qbindir=${installdir}/bin
-qexe='unknown-qexe'
-export QUICK_BASIS=$qbasisdir
-nprocs=4
+#  !---------------------------------------------------------------------!
+#  ! QUICK version and time                                              !
+#  !---------------------------------------------------------------------!
 
-# check if the executable is available
-if [ -f "${qbindir}/${qexe}" ]; then
-	echo ""
-	echo "Running quick tests... This will take several minutes!"
-	echo ""
+QUICK_VERSION='QUICK-20.06'
+cdate=`date +'%m/%d/%Y'`
+ctime=`date +'%r'`
 
-else
-	echo "${qbindir}/${qexe} not found."
-	echo "Aborting.."
-	echo ""
-	exit 0
+#  !---------------------------------------------------------------------!
+#  ! Variable definitions                                                !
+#  !---------------------------------------------------------------------!
+
+# directories
+installdir=`pwd`
+testdir="$installdir/test"
+qbasisdir="$installdir/basis"
+qbindir="$installdir/bin"
+
+# executables
+
+qexe=''
+buildtypes=''
+serial='no'
+mpi='no'
+cuda='no'
+cudampi='no'
+
+# number of cores for mpi tests
+nprocs=2
+
+
+#  !---------------------------------------------------------------------!
+#  ! Check directories & executables                                     !
+#  !---------------------------------------------------------------------!
+
+if [ ! -d "$qbindir" ]; then
+  echo -e "\033[91mError: QUICK bin folder not found. \033[0m"
+  exit 1
 fi
 
-# if the mpi version is selected check if mpirun is available
-#ismpirun=$(mpirun --version | grep "Version" | wc -l)
-
-#if [ ("${qexe}"  == 'quick.MPI') && ($ismpirun -gt 0) ]; then
-#     echo "mpirun found. Tests will be carried out with ${nprocs} cores."
-#     echo ""
-#else
-#     echo "mpirun executable not found. Tests will be carried out in serial mode."
-#     echo ""
-#fi
-
-# Make sure tstdir is existing
-if [ -d ${tstdir} ]; then
-	cd $tstdir
+if [ ! -d "$qbasisdir" ]; then
+  echo -e "\033[91mError: QUICK basis folder not found. \033[0m"
+  exit 1
 else
-	echo "${tstdir} not found. Aborting.."
-	exit 0
+  export QUICK_BASIS=$qbasisdir
 fi
 
-if [ -d tstrun ]; then
-	rm -f ./tstrun/*
-else
-	mkdir tstrun
+if [ ! -d "$testdir" ]; then
+  echo -e "\033[91mError: QUICK test folder not found. \033[0m"
+  exit 1
 fi
 
-#Check if tstlst is located inside the tstdir
-if [ -f tstlst ]; then
-	#If the file exists, run tests
-	total=`cat tstlst |wc -l`
-	a=1
-	cd tstrun
-
-	#Run energy tests
-	for i in $(awk '{print $1}' ../tstlst| grep "ene")
-	do
-		echo "Running test ${a} of ${total}"
-		cp ../${i}.in ./
-		
-		#This variable will keep the information of jobcard
-		jobcard=`head -1 ${i}.in`
-                enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
-                ismp2='no'
-
-                if [ $enecalc -gt 0 ];then  
-
-                  case $jobcard in
-                    *HF*)
-                      echo "This is a RHF energy test...";;
-                    *LDA*)
-                      echo "This is a DFT energy test... A representative LIBXC LDA functional is used.";;
-                    *HYB_GGA*)
-                      echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used.";;
-                    *GGA*)
-                      echo "This is a DFT energy test... A representative LIBXC GGA functional is used.";;
-                    *BLYP*)
-                      echo "This is a DFT energy test... Native BLYP functional is used.";;
-                    *B3LYP*)
-                      echo "This is a DFT energy test... Native B3LYP functional is used.";;
-                     *MP2*)
-                       ismp2='yes'
-                       echo "This is a MP2 energy test...";;
-                  esac
-                fi
-               	
-
-		#Run the test case
-		${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null 	
-
-		#Check the accuracy
-		#For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
-                if [ $enecalc -gt 0 -a "$ismp2" = "yes" ]; then
-
-                  refval=`grep "#MP2_ENERGY" ${i}.in |awk '{print $2}'`
-                  newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
-                  echo "$refval  $newval"|awk '{
-                        x=sqrt(($1-$2)^2); 
-                        if(x>=0.00001) stat="failed"; else stat="passed"; 
-                        print "MP2 energy: " $2 ", Reference value: " $1 ". Test " stat "."
-                  }'                         
-
-		else 
-
-	  	  refval=`grep "#TOTAL_ENERGY" ${i}.in |awk '{print $2}'`
-		  newval=`grep -A 8 "REACH CONVERGENCE AFTER" ${i}.out| grep "TOTAL" | awk '{print $4}'`
-		  echo "$refval  $newval"|awk '{
-			x=sqrt(($1-$2)^2); 
-			if(x>=0.00001) stat="failed"; else stat="passed"; 
-			print "Total energy: " $2 ", Reference value: " $1 ". Test " stat "."
-		  }'	
-
-		fi
-
-		echo ""
-		a=$((a+1))
-	done
-
-        # Run gradient tests
-        for i in $(awk '{print $1}' ../tstlst|grep "grad")
-        do
-        	echo "Running test ${a} of ${total}"
-		cp ../${i}.in ./
-
-		#This variable will keep the information of jobcard
-		jobcard=`head -1 ${i}.in`
-                gradcalc=`echo $jobcard | grep 'GRADIENT' |wc -l`
-                  if [ "$gradcalc" -gt 0 ]; then
-                    case "$jobcard" in
-                      *HF*)
-                        echo "This is a RHF gradient test...";;
-                      *HYB_GGA*)
-                        echo "This is a DFT gradient test... A representative LIBXC hybrid GGA functional is used.";;
-                      *B3LYP*)
-                        echo "This is a DFT gradient test... Native B3LYP functional is used.";;
-                    esac                    
-                  fi
-
-		${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null
-			
-		#Check the accuracy of gradients of first step
-		grep "#ref_grad" ${i}.in |awk '{print $2}'>refGrad.txt
-
-	  echo ""
-          a=$((a+1))	
-        done
-
-
-	# Run geometry optimization tests
-	for i in $(awk '{print $1}' ../tstlst|grep "opt")
-	do
-		echo "Running test ${a} of ${total}"
-		cp ../${i}.in ./
-		
-                #This variable will keep the information of jobcard
-                jobcard=`head -1 ${i}.in`
-                  optcalc=`echo $jobcard | grep 'OPT' |wc -l`  
-                        if [ "$optcalc" -gt 0 ]; then
-                          case "$jobcard" in
-                            *HF*)
-                              echo "This is a RHF geometry optimization test...";;
-
-                            *B3LYP*)
-                              echo "This is a DFT geometry optimization test...";;
-                          esac
-                        fi
-
-                #Run the test case
-#                if [ (${qexe} == "quick.MPI") && (${ismpirun} > 0) ]; then
-#                else
-                    ${qbindir}/${qexe} ${i}.in >${i}.run.log 2> /dev/null
-#                fi		
-
-		#Check the accuracy of gradients of first step
-		grep "#ref_grad" ${i}.in |awk '{print $2}'>refGrad.txt
-		sed -n '/GEOMETRY FOR OPTIMIZATION STEP   1/,/GEOMETRY FOR OPTIMIZATION STEP   2/p' ${i}.out | sed -n '/NEW_GRAD/,/OPTIMZATION STATISTICS/p' |grep '[0-9]' |awk '{print $4}'>newGrad.txt
-		paste refGrad.txt newGrad.txt >compGrad.txt
-                awk '{
-                        x=sqrt(($1-$2)^2); 
-                        if(x>=0.00001) stat="failed"; else stat="passed"; 
-                        print "Final gradient: " $2 ", Reference value: " $1 ". Test " stat "."
-                }' compGrad.txt
-                echo ""
-		
-		#remove gradient info files
-		rm refGrad.txt newGrad.txt compGrad.txt
-		
-		#Check the minimum energy
-                refval=$(grep "#ref_min_ene" ${i}.in |awk '{print $2}')
-                newval=$(grep "MINIMIZED ENERGY" ${i}.out| awk '{print $3}')
-                echo "$refval  $newval"|awk '{
-                        x=sqrt(($1-$2)^2); 
-                        if(x>=0.00001) stat="failed"; else stat="passed"; 
-                        print "Minimized energy: " $2 ", Reference value: " $1 ". Test " stat "."
-                }'
-                echo ""
-
-
-                a=$((a+1))		
-
-	done
-		
-	echo "All tests are done!"
-	echo ""
-	cd $installdir
-else
-	echo "File tstlst not found. Aborting.."
-	exit 0 
+# check for executables
+if [ -x "$qbindir/quick.cuda.mpi" ]; then
+  serial='cudampi'
+  buildtypes="$buildtypes cudampi"
 fi
+
+if [ -x "$qbindir/quick.cuda" ]; then
+  cuda='yes'
+  buildtypes="$buildtypes cuda"
+fi
+
+if [ -x "$qbindir/quick.mpi" ]; then
+  mpi='yes'
+  buildtypes="$buildtypes mpi"
+fi
+
+if [ -x "$qbindir/quick" ]; then
+  serial='yes'
+  buildtypes="$buildtypes serial"
+fi
+
+if [ -z "${buildtypes// }" ]; then
+  echo -e "\033[91mError: No QUICK executables found in $qbindir. \033[0m"
+  exit 1
+fi
+
+if [ ! -f "$testdir/testlist.txt" ]; then
+  echo -e "\033[91mError: testlist.txt not found in $testdir. \033[0m"
+  exit 1
+fi
+
+# check for mpirun 
+if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
+  echo "MPI tests will be carried out using a single core."
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Create required directories                                         !
+#  !---------------------------------------------------------------------!
+
+if [ -d "$testdir/runs" ]; then
+  rm -rf "$testdir/runs/"*
+else
+  mkdir -p "$testdir/runs"
+fi
+
+for buildtype in $buildtypes; do
+  mkdir -p "$testdir/runs/$buildtype"
+done
+
+#  !---------------------------------------------------------------------!
+#  ! Run tests                                                           !
+#  !---------------------------------------------------------------------!
+
+cd "$testdir"
+
+for buildtype in $buildtypes; do
+
+  # set qexe
+  if [ "$buildtype" = 'serial' ]; then
+    qexe='quick'
+  elif [ "$buildtype" = 'mpi' ]; then
+    qexe='quick.mpi'
+  elif [ "$buildtype" = 'cuda' ]; then
+    qexe='quick.cuda'
+  elif [ "$buildtype" = 'cudampi' ]; then
+    qexe='quick.cuda.mpi'
+  fi
+
+
+  total=`cat "$testdir/testlist.txt" |wc -l`
+  a=1
+  cd "$testdir/runs/$buildtype"
+
+  # Run energy tests
+  for i in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+    echo "Running test $a of $total"
+    cp "$testdir/$i.in" ./
+	
+    # This variable will keep the information of jobcard
+    jobcard=`head -1 "$i.in"`
+    enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
+    ismp2='no'
+
+    if [ "$enecalc" -gt 0 ]; then  
+      case "$jobcard" in
+        *HF*)
+          echo "This is a RHF energy test...";;
+        *LDA*)
+          echo "This is a DFT energy test... A representative LIBXC LDA functional is used.";;
+        *HYB_GGA*)
+          echo "This is a DFT energy test... A representative LIBXC hybrid GGA functional is used.";;
+        *GGA*)
+          echo "This is a DFT energy test... A representative LIBXC GGA functional is used.";;
+        *BLYP*)
+          echo "This is a DFT energy test... Native BLYP functional is used.";;
+        *B3LYP*)
+          echo "This is a DFT energy test... Native B3LYP functional is used.";;
+        *MP2*)
+          ismp2='yes'
+          echo "This is a MP2 energy test...";;
+      esac
+    fi
+     	
+
+    # Run the test case
+    "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null 	
+
+    # Check the accuracy
+    # For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
+    if [ "$enecalc" -gt 0 -a "$ismp2" = 'yes' ]; then
+
+      refval=`grep "#MP2_ENERGY" "$i.in" |awk '{print $2}'`
+      newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
+      echo "$refval  $newval"|awk '{
+        x=sqrt(($1-$2)^2); 
+        if(x>=0.00001) stat="failed"; else stat="passed"; 
+        print "MP2 energy: " $2 ", Reference value: " $1 ". Test " stat "."
+      }'                         
+
+    else 
+
+      refval=`grep "#TOTAL_ENERGY" "$i.in" | awk '{print $2}'`
+      newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
+      echo "$refval  $newval"|awk '{
+        x=sqrt(($1-$2)^2); 
+        if(x>=0.00001) stat="failed"; else stat="passed"; 
+        print "Total energy: " $2 ", Reference value: " $1 ". Test " stat "."
+      }'	
+
+    fi
+
+    echo ""
+    a=$((a+1))
+  done
+
+
+
+  # Run gradient tests
+  for i in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+    echo "Running test $a of $total"
+    cp "$testdir/$i.in" ./
+
+    #This variable will keep the information of jobcard
+    jobcard=`head -1 "$i.in"`
+    gradcalc=`echo $jobcard | grep 'GRADIENT' | wc -l`
+
+    if [ "$gradcalc" -gt 0 ]; then
+      case "$jobcard" in
+        *HF*)
+          echo "This is a RHF gradient test...";;
+        *HYB_GGA*)
+          echo "This is a DFT gradient test... A representative LIBXC hybrid GGA functional is used.";;
+        *B3LYP*)
+          echo "This is a DFT gradient test... Native B3LYP functional is used.";;
+      esac                    
+    fi
+
+    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
+		
+	#Check the accuracy of gradients of first step
+	grep "#ref_grad" "$i.in" |awk '{print $2}'>refGrad.txt
+
+    echo ""
+    a=$((a+1))	
+  done
+
+
+  # Run geometry optimization tests
+  for i in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+    echo "Running test $a of $total"
+    cp "$testdir/${i}.in" ./
+	
+    # This variable will keep the information of jobcard
+    jobcard=`head -1 "$i.in"`
+    optcalc=`echo $jobcard | grep 'OPT' |wc -l`  
+    if [ "$optcalc" -gt 0 ]; then
+      case "$jobcard" in
+        *HF*)
+          echo "This is a RHF geometry optimization test...";;
+
+        *B3LYP*)
+          echo "This is a DFT geometry optimization test...";;
+      esac
+    fi
+
+    # Run the test case
+    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
+
+    # Check the accuracy of gradients of first step
+    grep "#ref_grad" "$i.in" | awk '{print $2}'>refGrad.txt
+    sed -n '/GEOMETRY FOR OPTIMIZATION STEP   1/,/GEOMETRY FOR OPTIMIZATION STEP   2/p' "$i.out" | sed -n '/NEW_GRAD/,/OPTIMZATION STATISTICS/p' |grep '[0-9]' |awk '{print $4}'>newGrad.txt
+    paste refGrad.txt newGrad.txt >compGrad.txt
+    awk '{
+      x=sqrt(($1-$2)^2); 
+      if(x>=0.00001) stat="failed"; else stat="passed"; 
+      print "Final gradient: " $2 ", Reference value: " $1 ". Test " stat "."
+      }' compGrad.txt
+    echo ""
+      
+    # remove gradient info files
+    rm refGrad.txt newGrad.txt compGrad.txt
+      
+    # Check the minimum energy
+    refval=$(grep "#ref_min_ene" "$i.in" | awk '{print $2}')
+    newval=$(grep "MINIMIZED ENERGY" "$i.out" | awk '{print $3}')
+    echo "$refval  $newval"|awk '{
+      x=sqrt(($1-$2)^2); 
+      if(x>=0.00001) stat="failed"; else stat="passed"; 
+      print "Minimized energy: " $2 ", Reference value: " $1 ". Test " stat "."
+      }'
+    echo ""
+
+    a=$((a+1))		
+
+  done
+	
+  echo "$buildtype tests are done!"
+  echo ""
+  cd "$testdir"
+done
+
+echo -e "\033[92mAll tests are done! \033[0m"
+
+cd $installdir
+
+exit 0
+
+
