@@ -278,7 +278,7 @@ for buildtype in $buildtypes; do
 
   done
 	
-  echo "$buildtype tests are done!"
+  echo "$buildtype tests are done. All input and output files are located in $testdir/runs/$buildtype."
   echo ""
   cd "$testdir"
 done
