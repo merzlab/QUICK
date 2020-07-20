@@ -196,7 +196,7 @@ subroutine calmp2
             do l3=1,nbasis-nelec/2
             L3new=l3+nelec/2
                 do lll=1,nbasis
-                 write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
                 enddo
             enddo
             enddo
@@ -603,7 +603,7 @@ subroutine calmp2divcon
             do l3=1,ivir
                 L3new=j3+iocc
                 do lll=1,nbasisdc(itt)
-                 write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
                 enddo
             enddo
             enddo
@@ -638,7 +638,7 @@ subroutine calmp2divcon
         iocc=Nelecmp2sub(itt)/2
         ivir=nbasisdc(itt)-iocc
      endif
-write(*,*) iocc,ivir
+!write(*,*) iocc,ivir
      ! with f orbital
      if (quick_method%ffunxiao) then
         nbasistemp=6
@@ -869,7 +869,7 @@ write(*,*) iocc,ivir
             do l3=1,ivir
                 L3new=j3+iocc
                 do lll=1,nbasisdc(itt)
-                 write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
                 enddo
             enddo
             enddo
