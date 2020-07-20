@@ -253,7 +253,7 @@ if [ "$useprefix" = "true" ]; then
     cd "$quick_prefix/test"    
 
     # create a symlink if lndir command exists. Otherwise copy the content.
-    if [ `command -v lndir | wc -l` -gt 0 ];then
+    if [ `command -v lndir | wc -l` -gt 0 ]; then
       echo "Creating symlink for $quick_prefix/test"
       lndir "$QUICK_HOME/test"
     else
@@ -358,7 +358,7 @@ done
   if [ "$uspec_ncores" = 'yes' ]; then
     echo "Number of cores requested for the compilation: $ncores"
   else
-    if [ `command -v nproc | wc -l` -gt 0 ];then
+    if [ `command -v nproc | wc -l` -gt 0 ]; then
       ncores=`nproc --all`
       echo "A total of $ncores cores will be used for the compilation."
     else
