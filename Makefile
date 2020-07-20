@@ -58,24 +58,41 @@ noinstall:
 	@echo "       Please find QUICK executables in $(exefolder)."
 
 serialinstall:
-	@-cp -f $(exefolder)/quick $(installfolder)/bin
-	@-cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
-	@-cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
+	@cp -f $(exefolder)/quick $(installfolder)/bin
+	@cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
+	@cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
 
 mpiinstall:
-	@-cp -f $(exefolder)/quick.mpi $(installfolder)/bin
-	@-cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
-	@-cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
+	@cp -f $(exefolder)/quick.mpi $(installfolder)/bin
+	@cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
+	@cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
 
 cudainstall:
-	@-cp -f $(exefolder)/quick.cuda $(installfolder)/bin
-	@-cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
-	@-cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
+	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
+	@cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
+	@cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
 
 cudampiinstall:
-	@-cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
-	@-cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
-	@-cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
+	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
+	@cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
+	@cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
+
+#  !---------------------------------------------------------------------!
+#  ! Installation targets                                                !
+#  !---------------------------------------------------------------------!
+
+.PHONY: test buildtest installtest
+
+test:$(TESTTYPE)
+
+buildtest:
+	@cp $(toolsfolder)/runtest $(homefolder)
+	@sh $(homefolder)/runtest
+
+installtest:
+	@cp $(toolsfolder)/runtest $(installfolder)
+	@cd $(installfolder)
+	@sh $(installfolder)/runtest
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -84,6 +101,7 @@ cudampiinstall:
 .PHONY:serialclean mpiclean cudaclean cudampiclean
 	
 clean:$(CLEANTYPES)
+	@-rm -f $(homefolder)/runtest 
 	@echo "Successfully cleaned up."
 
 serialclean:
@@ -99,6 +117,7 @@ cudampiclean:
 	@cd $(buildfolder)/cudampi && make clean
 
 distclean:
+	@-rm -f $(homefolder)/runtest 
 	@-rm -rf $(buildfolder) $(exefolder)
 
 #  !---------------------------------------------------------------------!
@@ -108,6 +127,7 @@ distclean:
 .PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
 
 uninstall: $(UNINSTALLTYPES)
+	@-rm -f $(installfolder)/runtest
 	@echo "Uninstallation sucessful."
 
 nouninstall:
