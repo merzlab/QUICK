@@ -53,9 +53,9 @@ echo -e "\033[92m
                                                                             
   Supported compilers are: gnu, intel                                       
                                                                             
-  For example, GPU version with intel compiler tool chain can be compiled as
+  For example, cuda version with intel compiler tool chain can be compiled as
   follows:                                                                  
-                    ./configure -gpu intel                                  
+                    ./configure -cuda -arch volta --prefix /home/install intel                                  
   \033[0m"
 
 exit 0;
