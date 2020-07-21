@@ -509,9 +509,9 @@ if [ "$debug" = 'yes' ]; then
       cxx_debug_flags='-g -DDEBUG'
       ;;
     intel)
-      fort_debug_flags='-g -DDEBUG'
-      cc_debug_flags='-g -DDEBUG'
-      cxx_debug_flags='-g -DDEBUG'
+      fort_debug_flags='-g -traceback -DDEBUG'
+      cc_debug_flags='-g -traceback -DDEBUG'
+      cxx_debug_flags='-g -traceback -DDEBUG'
       ;;
   esac
 
