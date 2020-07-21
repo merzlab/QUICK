@@ -105,7 +105,7 @@ EOF
   fi
 
   #try to link with libmpi_cxx
-  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
+  $fort test_mpicxx.o test_prog.o -o testmpi $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
     echo -e "\033[91mError: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag \033[0m"
     echo -e "\033[91mTry to check the commands using 'mpif90 -show' \033[0m"
@@ -114,7 +114,7 @@ EOF
 
   ldflags="$ldflags $mpi_cxx_flag"
 
-  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o test_prog
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o testmpi
 
 
 }
@@ -720,9 +720,6 @@ fi
 
 done
 
-echo "Input file for GNU make was successfully created."
-echo ""
-
 #  !---------------------------------------------------------------------!
 #  ! Generate config.h in src directory                                  !
 #  !---------------------------------------------------------------------!
@@ -757,16 +754,10 @@ installfolder=$quick_prefix
 EOF
 
 #  !---------------------------------------------------------------------!
-#  ! Setup test script                                                   !
-#  !---------------------------------------------------------------------!
-
-cp -f "$QUICK_HOME/tools/runtest" "$quick_prefix/"
-sed -i 's:unknown-installdir:'$quick_prefix':g' "$quick_prefix/runtest"
-sed -i 's/unknown-qexe/'$installer'/g' "$quick_prefix/runtest"
-
-#  !---------------------------------------------------------------------!
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
-#make clean > /dev/null 
+make clean > /dev/null 
 
+echo -e "\033[92mInput file for GNU make was successfully created.\033[0m"
+echo ""
