@@ -26,22 +26,22 @@ include $(MAKEIN)
 all:$(BUILDTYPES)
 
 nobuildtypes:
-	@echo "Error: No build type found. Plesae run configure script first."
+	@echo -e "\033[91mError: No build type found. Plesae run configure script first.\033[0m"
 
 serial:
-	@echo "Building serial version.."
+	@echo -e "\033[92mBuilding serial version..\033[0m"
 	@cd $(buildfolder)/serial && make serial
 
 mpi:
-	@echo "Building mpi version.."
+	@echo -e "\033[92mBuilding mpi version..\033[0m"
 	@cd $(buildfolder)/mpi && make mpi
 
 cuda:
-	@echo "Building cuda version.."
+	@echo -e "\033[92mBuilding cuda version..\033[0m"
 	@cd $(buildfolder)/cuda && make cuda
 
 cudampi:
-	@echo "Building cuda-mpi version.."
+	@echo -e "\033[92mBuilding cuda-mpi version..\033[0m"
 	@cd $(buildfolder)/cudampi && make cudampi 
 
 #  !---------------------------------------------------------------------!
@@ -51,11 +51,11 @@ cudampi:
 .PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall
 
 install: $(INSTALLTYPES)
-	@echo "Installation sucessful."
+	@echo -e "\033[92mInstallation sucessful.\033[0m"
 
 noinstall:
-	@echo "Error: No prefix to install. You must specify a prefix during the configuration."
-	@echo "       Please find QUICK executables in $(exefolder)."
+	@echo -e "\033[91mError: No prefix to install. You must specify a prefix during the configuration.\033[0m"
+	@echo -e "\033[91m       Please find QUICK executables in $(exefolder).\033[0m"
 
 serialinstall:
 	@cp -f $(exefolder)/quick $(installfolder)/bin
@@ -102,7 +102,7 @@ installtest:
 	
 clean:$(CLEANTYPES)
 	@-rm -f $(homefolder)/runtest 
-	@echo "Successfully cleaned up."
+	@echo -e "\033[92mCleaned up successfully.\033[0m"
 
 serialclean:
 	@cd $(buildfolder)/serial && make clean 
@@ -128,10 +128,10 @@ distclean:
 
 uninstall: $(UNINSTALLTYPES)
 	@-rm -f $(installfolder)/runtest
-	@echo "Uninstallation sucessful."
+	@echo -e "\033[92mUninstallation sucessful.\033[0m"
 
 nouninstall:
-	@echo "Nothing to uninstall."
+	@echo -e "\033[92mNothing to uninstall.\033[0m"
 
 serialuninstall:
 	@-rm -f $(installfolder)/bin/quick
