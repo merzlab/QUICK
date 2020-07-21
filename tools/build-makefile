@@ -1,32 +1,26 @@
-#!/bin/sh
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/20/2020                         !
+#  !                                                                     !
+#  ! Previous contributors: Yipu Miao, John Faver                        !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
 
-#include "config.h"
 MAKEIN = ./make.in
 include $(MAKEIN)
 
-# --- Makefile for Quick Program ---
-#  				- v 3.00 2019/03/30 Madu Manathunga
-#				- v 2.00 2010/10/25 Yipu Miao
-#				- v 1.18 2009/09/16 John Faver Exp $ 
-#				- Makefile created by mkmf.pl $Id:
-#	--------
-#	 INDEX
-#	--------
-#	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#	B. Make folders
-#		! mpif90 is recommended for MPI Multi-CPU Version
-#	C. Make Object Files		! Source files --> Object files
-#	D. Make Executed files		! Object files --> Executed files
-#	E. Self-defined Option		! Make option
-
-#************************************************************************
-#                  A. Compiler Settings
-# 
-#   FC specifies f90 compiler
-#   FFLAGS are compliation options
-#   LFLAGS are linking flags
-#
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
 cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o \
 	$(objfolder)/gpu_get2e.o
@@ -76,15 +70,10 @@ cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gg
 	$(objfolder)/mgga_x_sa_tpss.o $(objfolder)/mgga_x_scan.o $(objfolder)/mgga_x_tau_hcth.o $(objfolder)/mgga_x_tm.o \
 	$(objfolder)/mgga_x_tpss.o $(objfolder)/mgga_x_vt84.o
 cublasobj       = $(objfolder)/fortran_thunking.o
-cusolverobj     = $(objfolder)/quick_cusolver.o 
-#----------------------
-# octree files
-#----------------------
-octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
-#----------------------
-# quick modules and object files
-#----------------------
+cusolverobj     = $(objfolder)/quick_cusolver.o 
+
+octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
 modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
         $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
@@ -94,8 +83,6 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
         $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 	$(objfolder)/quick_all_module.o
-
-MAIN = $(mainobjfolder)/main.o
 
 OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
@@ -127,14 +114,14 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
 	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
 
-TESTAPI=$(srcfolder)/quick_api_test.o
+MAIN = $(mainobjfolder)/main.o
 
-all: quick quick.cuda
-#************************************************************************
-# 
-#                  B. Copy necessary files
-#  
-#************************************************************************
+TESTAPI=$(mainobjfolder)/quick_api_test.o
+
+#  !---------------------------------------------------------------------!
+#  ! Child build targets                                                 !
+#  !---------------------------------------------------------------------!
+
 cpmakein:
 	@cp ./make.in $(libxcfolder)
 	@cp ./make.in $(libxcfolder)/maple2c_device
@@ -144,11 +131,6 @@ cpmakein:
 	@cp ./make.in $(modfolder)
 	@cp ./make.in $(blasfolder)
 
-#************************************************************************
-# 
-#                 C. Make Object Files
-# 
-#************************************************************************
 
 #================= common subroutine library ============================
 quick_subs:
@@ -195,14 +177,14 @@ $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
 $(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for compiling api test ====================
-$(TESTAPI):$(srcfolder)/%.o:$(srcfolder)/%.f90
+$(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
-#**********************************************************************
-# 
-#                 C. Make Executables
-# 
-#**********************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Parent build targets                                                !
+#  !---------------------------------------------------------------------!
+
+.PHONY: serial cuda mpi cudampi
 
 serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas 
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
@@ -219,42 +201,13 @@ mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas
 cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(CFLAGS) $(LDFLAGS)
-
-#quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cusolverobj) $(cublasobj)
-#	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(SUBS) $(cusolverobj) $(cublasobj) $(CFLAGS) 
-
-#quicklib: quick $(TESTAPI)
-#	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS) 
-
-#quickculib: quick.cuda $(TESTAPI)
-#	$(FC) -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcu -lxc $(CFLAGS) $(LDFLAGS) 
-
-#quickmpilib: quick.MPI $(TESTAPI)
-#	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickmpi -lblas -lxc $(LDFLAGS) 
-
-#quickcumpilib: quick.cuda.MPI $(TESTAPI) 
-#	$(FC) -DQUAPI_MPIV -o $(exefolder)/testapi.o $(TESTAPI) -I$(objfolder) -L$(libfolder) -lquickcumpi -lblas -lxc $(CFLAGS) $(LDFLAGS) 
-
-#************************************************************************
-# 
-#                  D. Self-defined Option
-#  
-# ************************************************************************		
-
-.PHONY: test
-
-test:
-	@cd $(installfolder)
-	@sh $(installfolder)/runtest
 	 
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-#************************************************************************
-# 
-#                 D. Self-defined Option
-# 
-#************************************************************************
+.PHONY: clean
 
-# - 1. Clean object files
 clean:
 	@-rm -f $(exefolder)/$(installer) $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(libfolder)/*
 	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o
@@ -264,25 +217,4 @@ clean:
 	@cd $(modfolder) && make clean
 	@cd $(libxcfolder) && make clean
 	@cd $(libxcfolder)/maple2c_device && make clean	
-	
         
-cleanmakein:
-	@-rm -f $(libxcfolder)/make.in $(libxcfolder)/maple2c_device/make.in $(cudafolder)/make.in \
-	$(octfolder)/make.in $(subfolder)/make.in $(modfolder)/make.in $(blasfolder)/make.in
-
-uninstall: 
-	-rm -f $(exefolder)/quick* $(exefolder)/testapi.o $(objfolder)/* $(libfolder)/* $(srcfolder)/*.o 
-	cd $(cudafolder) && make clean
-	cd $(subfolder) && make clean
-	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean
-	cd $(libxcfolder) && make clean
-	cd $(libxcfolder)/maple2c_device && make clean
-
-# - 2. Make tags for source files
-TAGS: $(SRC)
-	etags $(SRC)
-tags: $(SRC)
-	ctags $(SRC)
-
-#include $(srcfolder)/depend 
