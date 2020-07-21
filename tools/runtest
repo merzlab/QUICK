@@ -100,7 +100,7 @@ fi
 
 # check for executables
 if [ -x "$qbindir/quick.cuda.mpi" ]; then
-  serial='cudampi'
+  cudampi='yes'
   buildtypes="$buildtypes cudampi"
 fi
 
@@ -119,7 +119,7 @@ if [ -x "$qbindir/quick" ]; then
   buildtypes="$buildtypes serial"
 fi
 
-if [ -z "${buildtypes// }" ]; then
+if [ "$serial" = 'no' -a "$mpi" = 'no' -a "$cuda" = 'no' -a "$cudampi" = 'no' ]; then
   echo -e "\033[91mError: No QUICK executables found in $qbindir. \033[0m"
   exit 1
 fi
