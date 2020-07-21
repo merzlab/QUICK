@@ -99,7 +99,7 @@ EOF
   fi
 
   # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
-  $fort test_mpicxx.o test_prog.o -o test_prog $ldflags 2>/dev/null >/dev/null
+  $fort test_mpicxx.o test_prog.o -o testmpi $ldflags 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
     mpi_cxx_flag="-lmpi_cxx"
   fi
@@ -757,7 +757,7 @@ EOF
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
-make clean > /dev/null 
+#make clean > /dev/null 
 
 echo -e "\033[92mInput file for GNU make was successfully created.\033[0m"
 echo ""
