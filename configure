@@ -545,7 +545,7 @@ for buildtype in $buildtypes; do
       fi    
       ;;
     intel)
-      fort_flags="$opt_flags $fort_debug_flags -ip -cpp $lib_flags -I$QUICK_HOME/build/$buildtype/include -module $QUICK_HOME/build/$buildtype/include"
+      fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/$buildtype/include -module $QUICK_HOME/build/$buildtype/include"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi
