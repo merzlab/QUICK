@@ -42,8 +42,10 @@ mpi='no'
 cuda='no'
 cudampi='no'
 
+# flag to indicate if mpirun is available
+ismpirun='no'
 # number of cores for mpi tests
-nprocs=2
+ncores=2
 
 # flag for a mp2 calculation
 ismp2=''
@@ -135,7 +137,12 @@ echo ""
 
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-  echo -e "\033[93mMPI tests will be carried out using a single core. \033[0m"
+  if [ `command -v mpirun | wc -l` -gt 0 ]; then
+    ismpirun='yes'
+    echo -e "\033[93mMPI tests will be carried out with $ncores cores. \033[0m"
+  else
+    echo -e "\033[93mMPI tests will be carried out with a single core. \033[0m"
+  fi
   echo ""
 fi
 
@@ -195,7 +202,11 @@ for buildtype in $buildtypes; do
     print_test_info "$i"
 
     # Run the test case
-    "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
+    if [ "$mpi" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+    else
+      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
+    fi
 
     # Check the accuracy
     # For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
@@ -238,7 +249,12 @@ for buildtype in $buildtypes; do
 
     print_test_info "$i"
 
-    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
+    # run the test case
+    if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' -a "$ismpirun" = 'yes' ]; then
+      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+    else
+      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+    fi    
 		
 	#Check the accuracy of gradients of first step
 	grep "#ref_grad" "$i.in" |awk '{print $2}'>refGrad.txt
