@@ -68,10 +68,10 @@ quick_modules: $(modobj)
 # - 1. Clean object files
 .PHONY: clean neat
 clean: neat
-	-rm -f .cppdefs *.mod *.o subs/*.o quick 
+	@-rm -f .cppdefs *.mod *.o subs/*.o quick 
 	
 neat:
-	-rm -f $(TMPFILES) 
+	@-rm -f $(TMPFILES) 
 
 # - 2. Make tags for source files
 TAGS: $(SRC)

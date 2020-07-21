@@ -71,4 +71,4 @@ all: $(SUBS)
 
 # - 1. Clean object files
 clean:
-	-rm -f *.o  
+	@-rm -f *.o  
