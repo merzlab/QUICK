@@ -18,12 +18,10 @@
 #  !---------------------------------------------------------------------!
 
 #  !---------------------------------------------------------------------!
-#  ! QUICK version and time                                              !
+#  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
 
 QUICK_VERSION='QUICK-20.06'
-cdate=`date +'%m/%d/%Y'`
-ctime=`date +'%r'`
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -49,6 +47,10 @@ nprocs=2
 
 # flag for a mp2 calculation
 ismp2=''
+
+# current date time variable
+cdate=''
+ctime=''
 
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
@@ -157,7 +159,10 @@ cd "$testdir"
 
 for buildtype in $buildtypes; do
 
-  echo -e "\033[92mTesting $buildtype version..\033[0m"
+  cdate=`date +'%m/%d/%Y'`
+  ctime=`date +'%r'`
+
+  echo -e "\033[92mTesting $buildtype version started on $cdate ad $ctime. \033[0m"
 
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
