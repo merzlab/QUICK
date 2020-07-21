@@ -496,6 +496,7 @@
       call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
  
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
  end subroutine setup_xc_mpi_1
