@@ -1701,9 +1701,9 @@ subroutine get1e(oneElecO)
    implicit double precision(a-h,o-z)
    double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
-#ifdef MPIV
-   include "mpif.h"
-#endif
+!#ifdef MPIV
+!   include "mpif.h"
+!#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -1712,9 +1712,9 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-#ifdef MPIV
-   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
-#endif
+!#ifdef MPIV
+!   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
+!#endif
 
      if (master) then
 
@@ -1750,68 +1750,65 @@ subroutine get1e(oneElecO)
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
       endif
-#ifdef MPIV
-   else
-
-      !------- MPI/ ALL NODES -------------------
-
-      !=================================================================
-      ! Step 1. evaluate 1e integrals
-      ! This job is only done on master node since it won't cost much resource
-      ! and parallel will even waste more than it saves
-      !-----------------------------------------------------------------
-      ! The first part is kinetic part
-      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-      !-----------------------------------------------------------------
-      call cpu_time(timer_begin%t1e)
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
-      do i=1,mpi_nbasisn(mpirank)
-         Ibas=mpi_nbasis(mpirank,i)
-         call get1eO(Ibas)
-      enddo
-
-      !-----------------------------------------------------------------
-      ! The second part is attraction part
-      !-----------------------------------------------------------------
-      do i=1,mpi_jshelln(mpirank)
-         IIsh=mpi_jshell(mpirank,i)
-         do JJsh=IIsh,jshell
-            call attrashell(IIsh,JJsh)
-         enddo
-      enddo
-
-      call cpu_time(timer_end%t1e)
-      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-
-      ! slave node will send infos
-      if(.not.master) then
-
-         ! Copy Opertor to a temp array and then send it to master
-         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
-         ! send operator to master node
-         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-      else
-         ! master node will receive infos from every nodes
-         do i=1,mpisize-1
-            ! receive opertors from slave nodes
-            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-            ! and sum them into operator
-            do ii=1,nbasis
-               do jj=1,nbasis
-                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-               enddo
-            enddo
-         enddo
-         call copySym(quick_qm_struct%o,nbasis)
-         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
-      endif
-      !------- END MPI/ALL NODES ------------
-   endif
-#endif
+!#ifdef MPIV
+!   else
+!
+!      !------- MPI/ ALL NODES -------------------
+!
+!      !=================================================================
+!      ! Step 1. evaluate 1e integrals
+!      ! This job is only done on master node since it won't cost much resource
+!      ! and parallel will even waste more than it saves
+!      !-----------------------------------------------------------------
+!      ! The first part is kinetic part
+!      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
+!      !-----------------------------------------------------------------
+!      call cpu_time(timer_begin%t1e)
+!      quick_qm_struct%o=0.0d0
+!
+!      do i=1,mpi_nbasisn(mpirank)
+!         Ibas=mpi_nbasis(mpirank,i)
+!         call get1eO(Ibas)
+!      enddo
+!
+!      !-----------------------------------------------------------------
+!      ! The second part is attraction part
+!      !-----------------------------------------------------------------
+!      do i=1,mpi_jshelln(mpirank)
+!         IIsh=mpi_jshell(mpirank,i)
+!         do JJsh=IIsh,jshell
+!            call attrashell(IIsh,JJsh)
+!         enddo
+!      enddo
+!
+!      call cpu_time(timer_end%t1e)
+!      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+!
+!      ! slave node will send infos
+!      if(.not.master) then
+!
+!         ! Copy Opertor to a temp array and then send it to master
+!         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
+!         ! send operator to master node
+!         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+!      else
+!         ! master node will receive infos from every nodes
+!         do i=1,mpisize-1
+!            ! receive opertors from slave nodes
+!            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!            ! and sum them into operator
+!            do ii=1,nbasis
+!               do jj=1,nbasis
+!                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
+!               enddo
+!            enddo
+!         enddo
+!         call copySym(quick_qm_struct%o,nbasis)
+!         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
+!      endif
+!      !------- END MPI/ALL NODES ------------
+!   endif
+!#endif
 end subroutine get1e
 
 ! Ed Brothers. October 23, 2001
