@@ -24,6 +24,7 @@ include $(MAKEIN)
 .PHONY: nobuildtypes serial mpi cuda cudampi all
 
 all:$(BUILDTYPES)
+	@echo -e "\033[92mBuilding successful.\033[0m"
 
 nobuildtypes:
 	@echo -e "\033[91mError: No build type found. Plesae run configure script first.\033[0m"
