@@ -556,9 +556,9 @@ for buildtype in $buildtypes; do
   cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
 
   # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
-  if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
-    set_mpicxx
-  fi
+  #if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+  #  set_mpicxx
+  #fi
 
   if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
 
@@ -600,6 +600,11 @@ for buildtype in $buildtypes; do
 
   # set fortran linking flags
   ldflags="$fort_flags -lstdc++"
+
+  # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
+  if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+    set_mpicxx
+  fi
 
   # set the installer
   installer=''
