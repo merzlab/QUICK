@@ -131,9 +131,11 @@ if [ ! -f "$testdir/testlist.txt" ]; then
   exit 1
 fi
 
+echo ""
+
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-  echo "MPI tests will be carried out using a single core."
+  echo -e "\033[93mMPI tests will be carried out using a single core. \033[0m"
   echo ""
 fi
 
@@ -162,7 +164,8 @@ for buildtype in $buildtypes; do
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo -e "\033[92mTesting $buildtype version started on $cdate ad $ctime. \033[0m"
+  echo -e "\033[92mTesting $buildtype version started on $cdate at $ctime. \033[0m"
+  echo ""
 
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
