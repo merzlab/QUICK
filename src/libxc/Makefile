@@ -172,4 +172,4 @@ all: libxc_libs
 
 # - 1. Clean object files
 clean:
-	-rm -f *.o *.a *.mod 
+	@-rm -f *.o *.a *.mod 

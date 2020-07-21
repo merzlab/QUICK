@@ -83,6 +83,6 @@ xc: $(CUDAXCOBJ)
 
 # - 1. Clean object files
 clean: 
-	-rm -f *.o 
-	-rm -f ./CUBLAS/*.o
-	-rm -f ./CUSOLVER/*.o
+	@-rm -f *.o 
+	@-rm -f ./CUBLAS/*.o
+	@-rm -f ./CUSOLVER/*.o
