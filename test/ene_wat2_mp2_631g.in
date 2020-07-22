@@ -1,4 +1,4 @@
-MP2 BASIS=6-31G cutoff=1.0e-9 denserms=1.0e-8  zmake ENERGY 
+MP2 BASIS=6-31G cutoff=1.0e-9 denserms=1.0e-6  zmake ENERGY 
 
   O         -1.794470       -0.923410        2.768350
   O         -0.741530        1.752130        2.896280
