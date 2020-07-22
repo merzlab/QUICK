@@ -15,6 +15,8 @@ subroutine read_job_and_atom
    use quick_files_module
    use quick_calculated_module
    use quick_ecp_module
+   use quick_api_module
+
    implicit none
    
    ! Instant variables
@@ -29,10 +31,15 @@ subroutine read_job_and_atom
       itolecp=0
 
       ! Open input file
-      call quick_open(infile,inFileName,'O','F','W',.true.)
       call PrtAct(iOutFile,"Read Job And Atom")
 
-      read (inFile,'(A200)') keyWD
+      if(quick_api%apiMode .and. quick_api%hasKeywd) then 
+        keyWD=quick_api%Keywd
+      else
+        call quick_open(infile,inFileName,'O','F','W',.true.)
+        read (inFile,'(A200)') keyWD
+      endif
+
       call upcase(keyWD,200)
       write(iOutFile,*) " -------------------------------------"
       write(iOutFile,'("KEYWORD=",a)') keyWD
@@ -52,12 +59,14 @@ subroutine read_job_and_atom
       ! If PDB flag is on, then call readPDB to read PDB file and 
       ! rewrite input file so that there will be no difference between
       ! PDB input and normal quick input file
+
       if (quick_method%PDB) call readPDB(infile)
 
       ! read molecule specfication. Note this is step 1 for molspec reading
       ! and this is mainly to read atom number, atom kind and external charge number. 
-      call read(quick_molspec,inFile, isTemplate)
-      close(inFile)
+      call read(quick_molspec,inFile, isTemplate, quick_api%hasKeywd, quick_api%Keywd)
+
+      if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
       if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then
