@@ -41,6 +41,9 @@
     ! name of the quick template input file
     character(len=80) :: fname
 
+    ! job card
+    character(len=200) :: keywd
+
     ! total qm energy, mulliken charges, gradients and point charge gradients
     double precision :: totEne
     double precision, allocatable, dimension(:,:) :: gradients         
@@ -84,6 +87,8 @@
     ! fill up memory with test values, coordinates and external charges will be loded inside 
     ! the loop below.
     fname           = 'water'
+    keywd           = 'HF BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT EXTCHARGES'
+    !keywd =''
 
     atomic_numbers(1)  = 8
     atomic_numbers(2)  = 1
@@ -95,7 +100,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, natoms, atomic_numbers, nxt_charges)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges)
 
     do i=1, frames
 

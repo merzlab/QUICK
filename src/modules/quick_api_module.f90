@@ -64,7 +64,7 @@ module quick_api_module
     character(len=200) :: keywd
 
     ! Is the job card provided by passing a string? default is false
-    logical :: isKeywd = .false.
+    logical :: hasKeywd = .false.
 
     ! template file name with job card
     character(len=80) :: fqin
@@ -158,10 +158,31 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
 
 end subroutine new_quick_api_type
 
+! this subroutine checks if the string passed through api is a file name
+! or a job card
+subroutine check_fqin(fqin, keywd)
+
+  implicit none
+
+  character(len=80), intent(in)  :: fqin
+  character(len=200), intent(in) :: keywd
+
+  call upcase(keywd, 200)
+
+  quick_api%fqin    = trim(fqin) // '.qin'
+
+  if ((index(keywd, 'HF') .ne. 0) .or. (index(keywd, 'DFT') .ne. 0) .and. (index(keywd, 'BASIS=') .ne. 0 )) then
+    quick_api%hasKeywd = .true.
+    quick_api%Keywd = keywd
+  endif
+
+  quick_api%fqin    = trim(fqin) // '.qin'
+
+end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -172,7 +193,8 @@ subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
 
   implicit none
 
-  character(len=80), intent(in) :: fqin
+  character(len=80), intent(in)  :: fqin
+  character(len=200), intent(in) :: keywd
   integer, intent(in) :: natoms, nxt_ptchg
   integer, intent(in) :: atomic_numbers(natoms)
   integer :: ierr
@@ -181,13 +203,15 @@ subroutine set_quick_job(fqin, natoms, atomic_numbers, nxt_ptchg)
   ! allocate memory for quick_api_type 
   call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
 
+  ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
   
   if(flen .gt. 1) then
-    quick_api%fqin    = trim(fqin) // '.qin'
+
     quick_api%apiMode = .true.
-  else
-    ! implement error handling here
+
+    call check_fqin(fqin, keywd)
+
   endif
 
   ! Quick calling flow is extremely horrible. Modules are
