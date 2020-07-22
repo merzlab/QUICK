@@ -236,7 +236,7 @@ contains
    ! this subroutine is to read charge, multiplicity, and number
    ! and kind of atom.
    !----------------------
-  subroutine read_quick_molspec(self,input,isTemplate)
+  subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd)
 
     use quick_constants_module
 
@@ -250,16 +250,22 @@ contains
     character(len=200) :: keywd
     logical :: is_extcharge = .false.
     logical :: is_blank
-    logical, intent(in) :: isTemplate
-    
-
-    rewind(input)
+    logical, intent(in)   :: isTemplate
+    logical, intent(in)   :: hasKeywd
+    character(len=200), intent(in) :: apikeywd
 
     !---------------------
     ! PART I
     !---------------------
     ! The first line is Keyword
-    read (input,'(A132)') keywd
+
+    if( .not. hasKeywd ) then
+      rewind(input)
+      read (input,'(A132)') keywd
+    else
+      keywd = apikeywd
+    endif
+
     call upcase(keywd,200)
 
     ! Read Charge
@@ -271,11 +277,12 @@ contains
     ! determine if external charge exists
     if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
 
-    call findBlock(input,1)
-
     ! get the atom number, type and number of external charges
 
   if( .not. isTemplate) then
+
+    call findBlock(input,1)
+
     ! first is to read atom and atom kind
     iAtomType = 1
     natom = 0
