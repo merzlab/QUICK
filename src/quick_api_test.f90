@@ -13,7 +13,7 @@
   program test_quick_api
 
     use test_quick_api_module, only : loadTestData, printQuickOutput
-    use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyForces, deleteQuickJob 
+    use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
 #ifdef MPIV
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
@@ -41,9 +41,9 @@
     ! name of the quick template input file
     character(len=80) :: fname
 
-    ! total qm energy, mulliken charges, forces and point charge gradients
+    ! total qm energy, mulliken charges, gradients and point charge gradients
     double precision :: totEne
-    double precision, allocatable, dimension(:,:) :: forces         
+    double precision, allocatable, dimension(:,:) :: gradients         
     double precision, allocatable, dimension(:,:) :: ptchgGrad      
 
 #ifdef MPIV
@@ -78,7 +78,7 @@
     if ( .not. allocated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. allocated(coord))          allocate(coord(3,natoms), stat=ierr)
     if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
-    if ( .not. allocated(forces))         allocate(forces(3,natoms), stat=ierr)
+    if ( .not. allocated(gradients))         allocate(gradients(3,natoms), stat=ierr)
     if ( .not. allocated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
 
     ! fill up memory with test values, coordinates and external charges will be loded inside 
@@ -90,7 +90,7 @@
     atomic_numbers(3)  = 1
 
     ! set result vectors and matrices to zero
-    forces    = 0.0d0
+    gradients    = 0.0d0
     ptchgGrad = 0.0d0
 
     ! initialize QUICK, required only once. Assumes keywords for
@@ -106,8 +106,8 @@
       ! a. compute energy
 !      call getQuickEnergy(coord, xc_coord, totEne)
 
-      ! b. compute energies, forces and point charge gradients
-      call getQuickEnergyForces(coord, xc_coord, totEne, forces, ptchgGrad)    
+      ! b. compute energies, gradients and point charge gradients
+      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad)    
 
       ! print values obtained from quick library
 #ifdef MPIV
@@ -116,12 +116,12 @@
 
       do j=0, mpisize-1
         if(j .eq. mpirank) then
-          call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchgGrad, mpirank)
+          call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad, mpirank)
         endif
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       enddo 
 #else
-      call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchgGrad)
+      call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad)
 #endif
 
     enddo
@@ -133,7 +133,7 @@
     if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
     if ( allocated(coord))          deallocate(coord, stat=ierr)
     if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
-    if ( allocated(forces))         deallocate(forces, stat=ierr)
+    if ( allocated(gradients))         deallocate(gradients, stat=ierr)
     if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
 
   end program test_quick_api

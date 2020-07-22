@@ -121,35 +121,35 @@ contains
   end subroutine mpi_initialize
 
   ! prints mpi output sequentially
-  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad, mpirank)
+  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad, mpirank)
 
     implicit none
 
     integer, intent(in)          :: natoms, nxt_charges, mpirank
     integer, intent(in)          :: atomic_numbers(natoms)
     double precision, intent(in) :: totEne
-    double precision, intent(in) :: forces(3,natoms)
+    double precision, intent(in) :: gradients(3,natoms)
     double precision, intent(in) :: ptchg_grad(3,nxt_charges)
 
     write(*,*) ""
     write(*,'(A11, 1X, I3, 1x, A3)') "--- MPIRANK", mpirank, "---"
     write(*,*) ""
 
-    call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad)
+    call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad)
 
   end subroutine printQuickMPIOutput
 
 #endif
 
 
-  subroutine printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, forces, ptchg_grad)
+  subroutine printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad)
 
     implicit none
 
     integer, intent(in)          :: natoms, nxt_charges
     integer, intent(in)          :: atomic_numbers(natoms)
     double precision, intent(in) :: totEne
-    double precision, intent(in) :: forces(3,natoms)
+    double precision, intent(in) :: gradients(3,natoms)
     double precision, intent(in) :: ptchg_grad(3,nxt_charges)
     integer :: i, j
 
@@ -162,15 +162,15 @@ contains
     write(*,*) ""
     write(*, '(A14, 3x, F14.10, 1x, A4)') "TOTAL ENERGY =",totEne,"A.U."
 
-    ! print forces
+    ! print gradients
     write(*,*) ""
-    write(*,*) "PRINTING FORCES"
+    write(*,*) "PRINTING GRADIENTS"
     write(*,*) "------------------"
     write(*,*) ""
-    write(*, '(A14, 3x, A8, 2x, A8, 2x, A8)') "ATOMIC NUMBER","FORCE-X","FORCE-Y","FORCE-Z"
+    write(*, '(A14, 3x, A6, 10x, A6, 10x, A6)') "ATOMIC NUMBER","GRAD-X","GRAD-Y","GRAD-Z"
 
     do i=1,natoms
-      write(*,'(6x, I5, 2x, F14.10, 2x, F14.10, 2x, F14.10)') atomic_numbers(i), forces(1,i), forces(2,i), forces(3,i)
+      write(*,'(6x, I5, 2x, F14.10, 2x, F14.10, 2x, F14.10)') atomic_numbers(i), gradients(1,i), gradients(2,i), gradients(3,i)
     enddo
 
     ! print point charge gradients
@@ -179,7 +179,7 @@ contains
       write(*,*) "PRINTING POINT CHARGE GRADIENTS"
       write(*,*) "-------------------------------"
       write(*,*) ""
-      write(*, '(A14, 3x, A6, 2x, A6, 2x, A6)') "CHARGE NUMBER","GRAD-X","GRAD-Y","GRAD-Z"
+      write(*, '(A14, 3x, A6, 10x, A6, 10x, A6)') "CHARGE NUMBER","GRAD-X","GRAD-Y","GRAD-Z"
 
       do i=1,nxt_charges
         write(*,'(6x, I5, 2x, F14.10, 2x, F14.10, 2x, F14.10)') i, ptchg_grad(1,i), ptchg_grad(2,i), ptchg_grad(3,i)

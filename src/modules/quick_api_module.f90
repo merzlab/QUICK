@@ -16,7 +16,7 @@ module quick_api_module
   private
 
   public :: quick_api
-  public :: setQuickJob, getQuickEnergy, getQuickEnergyForces, deleteQuickJob
+  public :: setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob
 
 #ifdef MPIV
   public :: setQuickMPI
@@ -76,11 +76,11 @@ module quick_api_module
     ! total energy in hartree
     double precision :: tot_ene = 0.0d0
 
-    ! if forces and point charge gradients are requested
+    ! if gradients and point charge gradients are requested
     logical :: isForce = .false.    
 
-    ! forces
-    double precision, allocatable, dimension(:,:) :: force
+    ! gradients
+    double precision, allocatable, dimension(:,:) :: gradient
 
     ! point charge gradients
     double precision, allocatable, dimension(:,:) :: ptchg_grad
@@ -104,8 +104,8 @@ module quick_api_module
     module procedure get_quick_energy
   end interface
 
-  interface getQuickEnergyForces
-    module procedure get_quick_energy_forces
+  interface getQuickEnergyGradients
+    module procedure get_quick_energy_gradients
   end interface  
 
   interface deleteQuickJob
@@ -133,7 +133,7 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
   if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
-  if ( .not. allocated(self%force))          allocate(self%force(3,natoms), stat=ierr)
+  if ( .not. allocated(self%gradient))          allocate(self%gradient(3,natoms), stat=ierr)
 
   ! allocate memory only if external charges exist
   if(nxt_ptchg>0) then
@@ -152,7 +152,7 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
   enddo
 
   ! set result vectors and matrices to zero
-  self%force  = 0.0d0
+  self%gradient  = 0.0d0
 
   if(nxt_ptchg>0) self%ptchg_grad = 0.0d0
 
@@ -325,16 +325,16 @@ subroutine get_quick_energy(coords, xt_chg_crd, energy)
 end subroutine get_quick_energy
 
 
-! calculates and returns energy, forces and point charge gradients
-subroutine get_quick_energy_forces(coords, xt_chg_crd, &
-           energy, forces, ptchg_grad)
+! calculates and returns energy, gradients and point charge gradients
+subroutine get_quick_energy_gradients(coords, xt_chg_crd, &
+           energy, gradients, ptchg_grad)
 
   implicit none
 
   double precision, intent(in)    :: coords(3,quick_api%natoms)
   double precision, intent(in)    :: xt_chg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out)   :: energy
-  double precision, intent(out)   :: forces(3,quick_api%natoms)
+  double precision, intent(out)   :: gradients(3,quick_api%natoms)
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
 
   ! assign passed parameter values into quick_api struct
@@ -346,13 +346,13 @@ subroutine get_quick_energy_forces(coords, xt_chg_crd, &
 
   call run_quick(quick_api)
 
-  ! send back total energy, forces and point charge gradients
+  ! send back total energy, gradients and point charge gradients
   energy     = quick_api%tot_ene
-  forces     = quick_api%force
+  gradients     = quick_api%gradient
 
   if(quick_api%nxt_ptchg>0) ptchg_grad = quick_api%ptchg_grad
 
-end subroutine get_quick_energy_forces
+end subroutine get_quick_energy_gradients
 
 
 ! runs quick, partially resembles quick main program
@@ -443,7 +443,7 @@ subroutine run_quick(self)
 ! save the results in quick_api struct
   self%tot_ene = quick_qm_struct%Etot
 
-! convert gradients into forces and save in quick_api struct &
+! convert gradients into gradients and save in quick_api struct &
 ! save point charge gradients too. Note that quick_qm_struct saves
 ! both gradients in vector formats and we should organize them
 ! back into matrix format.
@@ -451,7 +451,7 @@ subroutine run_quick(self)
     k=1
     do i=1,self%natoms
       do j=1,3
-        self%force(j,i) = -1.0d0 * quick_qm_struct%gradient(k)
+        self%gradient(j,i) = quick_qm_struct%gradient(k)
         k=k+1
       enddo
     enddo
@@ -610,7 +610,7 @@ subroutine broadcast_quick_mpi_results(self)
   include 'mpif.h'
 
   call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%force,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
 end subroutine 
@@ -652,7 +652,7 @@ subroutine delete_quick_api_type(self)
   if ( allocated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
   if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
   if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
-  if ( allocated(self%force))          deallocate(self%force, stat=ierr)
+  if ( allocated(self%gradient))          deallocate(self%gradient, stat=ierr)
 
   if ( allocated(self%xt_chg_crd))     deallocate(self%xt_chg_crd, stat=ierr)
   if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
