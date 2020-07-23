@@ -471,63 +471,6 @@
 
 #endif
 
-! subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
-!-----------------------------------------------------------------------------
-!  This subroutine sets the mpi environment required for exchange correlation 
-!  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
-!  Madu Manathunga 08/15/2019
-!-----------------------------------------------------------------------------
-!   use allmod
-!   implicit double precision(a-h,o-z)
-
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
-
-!   include 'mpif.h'
-
-!   if(master) then
-!      do impi=0, mpisize-1
-!         itotgridspn(impi)=0
-!         igridptul(impi)=0
-!         igridptll(impi)=0
-!      enddo
-!
-!      itmpgriddist=Iradtemp
-!      do while(itmpgriddist .gt. 1)
-!         do impi=0, mpisize-1
-!            itotgridspn(impi)=itotgridspn(impi)+1
-!            itmpgriddist=itmpgriddist-1
-!            if (itmpgriddist .lt. 1) exit
-!         enddo
-!      enddo
-!
-!      itmpgridptul=0
-!      do impi=0, mpisize-1
-!         itmpgridptul=itmpgridptul+itotgridspn(impi)
-!         igridptul(impi)=itmpgridptul
-!         if(impi .eq. 0) then
-!            igridptll(impi)=1
-!         else
-!            igridptll(impi)=igridptul(impi-1)+1
-!         endif
-!      enddo
-!   endif
-
-!   if(bMPI) then
-
-!      call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!   endif      
-
-!   return
-! end subroutine setup_xc_mpi 
 
  subroutine setup_xc_mpi_1
    use allmod
@@ -695,12 +638,6 @@
 
 
 
-   !if(.not. master) then
-   !   do idx=1, quick_xcg_tmp%idx_grid
-   !      write(*,*) "ssw bounds:",quick_xcg_tmp%init_grid_ptx(idx),quick_xcg_tmp%init_grid_pty(idx), &
-   !      quick_xcg_tmp%init_grid_ptz(idx), quick_xcg_tmp%init_grid_atm(idx)
-   !   enddo
-   !endif
 
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif 
