@@ -59,21 +59,31 @@ noinstall:
 	@echo -e "\033[91m       Please find QUICK executables in $(exefolder).\033[0m"
 
 serialinstall:
-	@cp -f $(exefolder)/quick $(installfolder)/bin
+	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
+	else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+	exit 1; fi
 	@cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
 	@cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
 
 mpiinstall:
-	@cp -f $(exefolder)/quick.mpi $(installfolder)/bin
+	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
+        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        exit 1; fi
 	@cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
 	@cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
 
 cudainstall:
+	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
+        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        exit 1; fi
 	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
 	@cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
 	@cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
 
 cudampiinstall:
+	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
+        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        exit 1; fi
 	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
 	@cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
