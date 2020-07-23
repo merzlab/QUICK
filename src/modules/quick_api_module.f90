@@ -266,12 +266,13 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
 #ifdef CUDA_MPIV
 
-  if(master) then
-      call mgpu_query(mpisize)
-      call mgpu_write_info(iOutFile)
-  endif
+  if(master) call mgpu_query(mpisize, mgpu_count)
 
-  call mgpu_init(mpirank, mpisize)
+  call mgpu_setup()
+
+  if(master) call mgpu_write_info(iOutFile)
+  
+  call mgpu_init(mpirank, mpisize, mgpu_id)
 
 #endif
   
@@ -645,6 +646,7 @@ end subroutine
 subroutine delete_quick_job
 
   use quick_files_module
+  use quick_mpi_module
 
   implicit none
 
@@ -653,7 +655,7 @@ subroutine delete_quick_job
 #endif
 
 #ifdef CUDA_MPIV
-!    call mgpu_delete_mpi_setup()
+    call delete_mgpu_setup()
     call mgpu_shutdown()
 #endif
 

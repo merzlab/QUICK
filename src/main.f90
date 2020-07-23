@@ -21,7 +21,7 @@
 !  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
 !  University of Florida, Gainesville, FL, 2010
 !************************************************************************
-!
+
     program quick
     
     use allMod
@@ -106,12 +106,13 @@
 
 #ifdef CUDA_MPIV
 
-    if(master) then
-        call mgpu_query(mpisize)
-        call mgpu_write_info(iOutFile)
-    endif
+    if(master) call mgpu_query(mpisize, mgpu_count)
 
-    call mgpu_init(mpirank, mpisize)
+    call mgpu_setup()
+
+    if(master) call mgpu_write_info(iOutFile)
+    
+    call mgpu_init(mpirank, mpisize, mgpu_id)
 
 #endif
 
@@ -289,7 +290,7 @@
 #endif
 
 #ifdef CUDA_MPIV
-!    call mgpu_delete_mpi_setup()
+    call delete_mgpu_setup()
     call mgpu_shutdown()
 #endif
 
