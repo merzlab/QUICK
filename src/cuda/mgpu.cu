@@ -26,14 +26,14 @@
 #ifdef CUDA_MPIV
 
 #include "mgpu.h"
-#include "mpi.h"
+//#include "mpi.h"
 #include "string.h"
 //-----------------------------------------------
 // Get information about available GPUs and prepare
 // a list of usable GPUs. Only master cpu runs this.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int *mpisize)
+extern "C" void mgpu_query_(int *mpisize, int *devcount)
 {
 
 //    PRINTDEBUG("BEGIN QUERYING DEVICES")
@@ -96,11 +96,27 @@ extern "C" void mgpu_query_(int *mpisize)
         }
 
     }
-    
-
+ 
+    // send the device count back to f90 side
+    *devcount = validDevCount;   
+ 
 //    PRINTDEBUG("END QUERYING DEVICES")
 
     return;
+}
+
+//-----------------------------------------------
+// send gpu ids to f90 side for broadcasting
+//-----------------------------------------------
+
+extern "C" void mgpu_get_devices_(int *gpu_dev_ids)
+{
+
+    for(int i=0; i<validDevCount; i++){
+	    gpu_dev_ids[i] = gpu_dev_id[i];
+    }    
+
+	return;
 }
 
 //-----------------------------------------------
@@ -138,7 +154,7 @@ extern "C" void mgpu_shutdown_(void)
     delete gpu;
     cudaDeviceReset();
 
-    free(gpu_dev_id);
+    //free(gpu_dev_id);
 
     PRINTDEBUGNS("END DEVICE SHUTDOWN")    
 
@@ -150,44 +166,54 @@ extern "C" void mgpu_shutdown_(void)
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_(int *mpirank, int *mpisize)
+extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
 {
 
-    int device = -1;
+    //int device = -1;
     cudaError_t status;
     cudaDeviceProp deviceProp;
 
     // Broadcast device information to slaves
-    MPI_Bcast(&validDevCount, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(&validDevCount, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if(*mpirank != 0){
-        gpu_dev_id = (int*) malloc(validDevCount*sizeof(int)); 
-    }
+    //if(*mpirank != 0){
+    //    gpu_dev_id = (int*) malloc(validDevCount*sizeof(int)); 
+    //}
 
-    MPI_Bcast(gpu_dev_id, validDevCount, MPI_INT, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(gpu_dev_id, validDevCount, MPI_INT, 0, MPI_COMM_WORLD);
 
     // Each node starts up GPUs
     mgpu_startup(*mpirank);
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank %i mpisize %i validDevCount %i \n", *mpirank, *mpisize, validDevCount);
+    //fprintf(gpu->debugFile,"mpirank %i mpisize %i validDevCount %i \n", *mpirank, *mpisize, validDevCount);
 
-    for(int i=0; i<validDevCount; i++){
-        fprintf(gpu->debugFile,"mpirank %i %i \n", *mpirank, gpu_dev_id[i]);
-    }
+    //for(int i=0; i<validDevCount; i++){
+    //    fprintf(gpu->debugFile,"mpirank %i %i \n", *mpirank, gpu_dev_id[i]);
+    //}
 #endif
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION")
 
     gpu -> mpirank = *mpirank;
     gpu -> mpisize = *mpisize;
+    gpu -> gpu_dev_id = *device;
 
-    device = gpu_dev_id[gpu -> mpirank];
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"mpirank %i mpisize %i dev_id %i \n", *mpirank, *mpisize, *device);
 
-    gpu -> gpu_dev_id = device;
+    //for(int i=0; i<validDevCount; i++){
+    //    fprintf(gpu->debugFile,"mpirank %i %i \n", *mpirank, gpu_dev_id[i]);
+    //}
+#endif
 
-    status = cudaSetDevice(device);
-    cudaGetDeviceProperties(&deviceProp, device);
+    //device = gpu_dev_id[gpu -> mpirank];
+
+    gpu -> gpu_dev_id = *device;
+
+
+    status = cudaSetDevice(gpu -> gpu_dev_id);
+    cudaGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     PRINTERROR(status, "cudaSetDevice gpu_init failed!");
     cudaDeviceSynchronize();
 

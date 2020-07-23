@@ -352,6 +352,50 @@
 #ifdef CUDA_MPIV
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Setup multi GPUs
+! Madu Manathunga 07/22/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    subroutine mgpu_setup()
+
+      use quick_mpi_module
+      implicit none
+
+      include 'mpif.h'
+
+      ! broadcast device count to slaves
+      call MPI_BCAST(mgpu_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      ! allocate memory for device ids
+      call allocate_mgpu
+
+      ! get device ids
+      if (master) then
+        call mgpu_get_devices(mgpu_ids)
+      endif
+
+      ! broadcast device ids
+      call MPI_BCAST(mgpu_ids,mgpu_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      ! assign a gpu id for each worker
+      mgpu_id = mgpu_ids(mpirank+1)
+
+    end subroutine mgpu_setup
+
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Delete multi GPU setup
+! Madu Manathunga 07/22/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    subroutine delete_mgpu_setup()
+
+      use quick_mpi_module
+      implicit none
+
+      call deallocate_mgpu()
+
+    end subroutine delete_mgpu_setup
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup eri calculation on multi GPUs
 ! Madu Manathunga 05/08/2020
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
