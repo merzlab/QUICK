@@ -14,7 +14,7 @@
 #include <time.h>
 
 #ifdef CUDA_MPIV
-#include "mgpu.cu"
+#include "mgpu.h"
 #endif
 //-----------------------------------------------
 // Set up specified device and be ready to ignite
