@@ -201,10 +201,10 @@ mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TE
 	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 	$(FC) -o $(exefolder)/test-api.mpi $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
-cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) blas $(cusolverobj) $(cublasobj) $(TESTAPI)
+cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda.mpi $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.cuda.mpi $(TESTAPI) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
 	 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
