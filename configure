@@ -133,8 +133,11 @@ check_os(){
     *)        osname="unknown";;
   esac
 
-  echo "Operating system: $OSTYPE"
-
+  if [ -z `echo "$OSTYPE"` ]; then 
+    echo "Operating system: unknown"
+  else
+    echo "Operating system: $OSTYPE"
+  fi
 }
 
 # this function print compiler mistmach 
@@ -230,7 +233,7 @@ fi
 
 fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
 
-if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` > 0 ]; then
+if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
   has_fort_version='yes'
   fort_version_major=`echo $fort_version | cut -d '.' -f1`
   fort_version_minor=`echo $fort_version | cut -d '.' -f2`
@@ -477,18 +480,18 @@ if [ "$useprefix" = "true" ]; then
   # create tests and basis directories if they dont exist
   if [ ! -d "$quick_prefix/test" ]; then
     mkdir -p "$quick_prefix/test"
-    cd "$quick_prefix/test"    
 
     # create a symlink if lndir command exists. Otherwise copy the content.
     if [ `command -v lndir | wc -l` -gt 0 ]; then
       echo "Creating symlink for $quick_prefix/test"
+      cd "$quick_prefix/test"
       lndir "$QUICK_HOME/test"
+      cd "$QUICK_HOME"
     else
       echo "Copying test cases into $quick_prefix/test"
       cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
     fi
 
-    cd "$QUICK_HOME"
   fi
 
   # copy the contents of basis folder since user may delete/relocate
@@ -721,8 +724,8 @@ fi
 if [ "$shared" = 'yes' ]; then
   lib_flags='-fPIC'
   cuda_lib_flags="--compiler-options '-fPIC'"
-  arch="$FC"
-  arch_flag='-shared -o'
+  arch="$fort"
+  arch_flags='-shared -o'
   ranlib='echo'
   libext='so'
 fi
@@ -756,7 +759,7 @@ for buildtype in $buildtypes; do
 
     cpp_flags="$opt_flags -I$CUDA_HOME/include $lib_flags -DCUBLAS_USE_THUNKING"
 
-    cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $lib_flags"
+    cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $cuda_lib_flags"
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include -DCUDA_SPDF"
 
