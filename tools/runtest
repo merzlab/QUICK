@@ -202,7 +202,7 @@ for buildtype in $buildtypes; do
     print_test_info "$i"
 
     # Run the test case
-    if [ "$mpi" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
       mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
     else
       "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
@@ -250,7 +250,7 @@ for buildtype in $buildtypes; do
     print_test_info "$i"
 
     # run the test case
-    if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' -a "$ismpirun" = 'yes' ]; then
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
       mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
     else
       "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
