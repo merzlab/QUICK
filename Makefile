@@ -29,21 +29,27 @@ all:$(BUILDTYPES)
 nobuildtypes:
 	@echo -e "\033[91mError: No build type found. Plesae run configure script first.\033[0m"
 
-serial:
+serial: checkfolders
 	@echo -e "\033[92mBuilding serial version..\033[0m"
 	@cd $(buildfolder)/serial && make serial
 
-mpi:
+mpi: checkfolders
 	@echo -e "\033[92mBuilding mpi version..\033[0m"
 	@cd $(buildfolder)/mpi && make mpi
 
-cuda:
+cuda: checkfolders
 	@echo -e "\033[92mBuilding cuda version..\033[0m"
 	@cd $(buildfolder)/cuda && make cuda
 
-cudampi:
+cudampi: checkfolders
 	@echo -e "\033[92mBuilding cuda-mpi version..\033[0m"
 	@cd $(buildfolder)/cudampi && make cudampi 
+
+checkfolders:
+	@if [ ! -d $(exefolder) ]; then echo -e "\033[91mError: $(exefolder) not found. Please configure first.\033[0m"; \
+	exit 1; fi
+	@if [ ! -d $(buildfolder) ]; then echo -e "\033[91mError: $(buildfolder) not found. Please configure first.\033[0m"; \
+	exit 1; fi 	
 
 #  !---------------------------------------------------------------------!
 #  ! Installation targets                                                !
@@ -109,7 +115,7 @@ installtest:
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
 
-.PHONY:serialclean mpiclean cudaclean cudampiclean
+.PHONY:serialclean mpiclean cudaclean cudampiclean makeinclean
 	
 clean:$(CLEANTYPES)
 	@-rm -f $(homefolder)/runtest 
@@ -127,10 +133,19 @@ cudaclean:
 cudampiclean:
 	@cd $(buildfolder)/cudampi && make clean
 
-distclean:
+distclean: makeinclean
 	@-rm -f $(homefolder)/runtest 
 	@-rm -rf $(buildfolder) $(exefolder)
 	@echo -e "\033[92mRemoved build and bin directories.\033[0m"
+
+makeinclean:
+	@-rm -f $(libxcfolder)/make.in
+	@-rm -f $(libxcfolder)/maple2c_device/make.in 
+	@-rm -f $(subfolder)/make.in
+	@-rm -f $(modfolder)/make.in  
+	@-rm -f $(octfolder)/make.in 
+	@-rm -f $(blasfolder)/make.in 
+	@-rm -f $(cudafolder)/make.in 
 
 #  !---------------------------------------------------------------------!
 #  ! Uninstall targets                                                   !
