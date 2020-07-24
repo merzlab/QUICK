@@ -130,6 +130,7 @@ cudampiclean:
 distclean:
 	@-rm -f $(homefolder)/runtest 
 	@-rm -rf $(buildfolder) $(exefolder)
+	@echo -e "\033[92mRemoved build and bin directories.\033[0m"
 
 #  !---------------------------------------------------------------------!
 #  ! Uninstall targets                                                   !
