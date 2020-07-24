@@ -456,7 +456,7 @@ echo "Requested installation type/s: $buildtypes"
 # check the os first
 check_os
 
-if [ ! "$osname" = 'linux' ] && [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] ; then 
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then 
   echo -e "\033[93mWarning: QUICK cuda and cuda-mpi versions have never been tested on $osname os.\033[0m"
 fi
 
@@ -947,6 +947,14 @@ exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
+
+# source directories
+subfolder=$QUICK_HOME/src/subs
+blasfolder=$QUICK_HOME/src/blas
+libxcfolder=$QUICK_HOME/src/libxc
+cudafolder=$QUICK_HOME/src/cuda
+octfolder=$QUICK_HOME/src/octree
+modfolder=$QUICK_HOME/src/modules
 
 EOF
 
