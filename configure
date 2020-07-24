@@ -24,6 +24,9 @@ QUICK_HOME=`pwd`
 cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
 
+echo ""
+echo -e "\033[92mConfiguring $QUICK_VERSION installation started on $cdate at $ctime..\033[0m" 
+
 #  !---------------------------------------------------------------------!
 #  ! function definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -119,6 +122,213 @@ EOF
 
 }
 
+# this function checks for the operating system
+check_os(){
+
+  case "$OSTYPE" in
+    linux*)   osname='linux';;
+    darwin*)  osname='osx';;
+    bsd)*     osname='bsd';;
+    solaris*) osname='solaris';;
+    *)        osname="unknown";;
+  esac
+
+  echo "Operating system: $OSTYPE"
+
+}
+
+# this function print compiler mistmach 
+print_compiler_mistmatch(){
+  echo -e "\033[91mError: Compiler version mistmatch.\033[0m"
+  echo -e "\033[91m       Fortran compiler version: $fort_version.\033[0m"
+  echo -e "\033[91m       C compiler version: $cc_version.\033[0m"
+  echo -e "\033[91m       C++ compiler version: $cxx_version.\033[0m"
+}
+
+# check compiler
+check_compiler(){
+
+# variables to assist detecting compiler versions
+fort_search=''
+cc_search=''
+cxx_search=''
+
+case "$compiler" in
+
+  gnu)
+    echo "Requested compiler: GNU."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='gfortran'
+      cc_search='gcc'
+      cxx_search='g++'
+    ;;
+
+  intel)
+    echo "Requested compiler: Intel"
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpiifort'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpiicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='ifort'
+      cc_search='icc'
+      cxx_search='icpc'
+    ;;
+  *)
+    echo -e "\033[91mError: $compiler compiler tool chain is not supported.\033[0m"
+    exit 1;;
+esac
+
+# check for the existance of each compiler
+if [ -z "`which $fort 2> /dev/null`" ]; then
+  echo -e "\033[91mError: $fort is not found.\033[0m"
+  exit 1
+fi
+
+if [ -z "`which $cc 2> /dev/null`" ]; then
+  echo -e "\033[91mError: $cc is not found.\033[0m"
+  exit 1
+fi
+
+if [ -z "`which $cxx 2> /dev/null`" ]; then
+  echo -e "\033[91mError: $cxx is not found.\033[0m"
+  exit 1
+fi
+
+# check the fortran compiler version
+has_fort_version='no'
+fort_version='not'
+fort_version_major=''
+fort_version_minor=''
+fort_version_patch=''
+
+
+
+
+fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
+if [ -z "$fort_version_info" ]; then
+  fort_version_info=`$fort_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fi 
+
+fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` > 0 ]; then
+  has_fort_version='yes'
+  fort_version_major=`echo $fort_version | cut -d '.' -f1`
+  fort_version_minor=`echo $fort_version | cut -d '.' -f2`
+  fort_version_patch=`echo $fort_version | cut -d '.' -f3`
+fi
+
+if [ "$has_fort_version" = 'yes' ]; then
+  echo "  $fort version $fort_version found.."
+else
+   echo -e "\033[93mWarning: Failed to detect $fort version.\033[0m"
+fi
+
+# check the c compiler version
+has_cc_version='no'
+cc_version='not'
+cc_version_major=''
+cc_version_minor=''
+cc_version_patch=''
+
+cc_version_info=`$cc_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+cc_version=`echo $cc_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+  has_cc_version='yes'
+  cc_version_major=`echo $cc_version | cut -d '.' -f1`
+  cc_version_minor=`echo $cc_version | cut -d '.' -f2`
+  cc_version_patch=`echo $cc_version | cut -d '.' -f3`
+fi
+
+if [ "$has_cc_version" = 'yes' ]; then
+  echo "  $cc version $cc_version found.."
+else
+   echo -e "\033[93mWarning: Failed to detect $cc version.\033[0m"
+fi
+
+if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
+  cc_version=`$cc_search -v 2>&1 | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+  if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
+    echo -e "\033[91mError: $cc compiler was requested but clang c compiler is loaded.\033[0m"
+    echo -e "\033[91m       Please load the correct compiler.\033[0m"
+    exit 1
+  fi
+fi
+
+# check the cxx compiler version
+has_cxx_version='no'
+cxx_version='not'
+cxx_version_major=''
+cxx_version_minor=''
+cxx_version_patch=''
+
+cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cxx_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
+if [ -z "$cxx_version_info" ]; then
+  cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fi
+
+cxx_version=`echo $cxx_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+  has_cxx_version='yes'
+  cxx_version_major=`echo $cxx_version | cut -d '.' -f1`
+  cxx_version_minor=`echo $cxx_version | cut -d '.' -f2`
+  cxx_version_patch=`echo $cxx_version | cut -d '.' -f3`
+fi
+
+if [ "$has_cxx_version" = 'yes' ]; then
+  echo "  $cxx version $cxx_version found.."
+else
+   echo -e "\033[93mWarning: Failed to detect $cxx version.\033[0m"
+fi
+
+if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
+  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+  if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
+    echo -e "\033[91mError: $cxx compiler was requested but clang c++ compiler is loaded.\033[0m"
+    echo -e "\033[91m       Please load the correct compiler.\033[0m"
+    exit 1
+  fi
+fi
+
+# check for version compatibility
+if [ "$has_fort_version" = 'yes' ] && [ "$has_cc_version" = 'yes' ] && [ "$has_cxx_version" = 'yes' ]; then
+  if [ ! "$fort_version_major" = "$cc_version_major" ] && [ ! "$fort_version_major" = "$cxx_version_major" ]; then
+     print_compiler_mistmatch
+     exit 1 
+   elif [ ! "$fort_version_minor" = "$cc_version_minor" ] && [ ! "$fort_version_minor" = "$cxx_version_minor" ]; then
+     print_compiler_mistmatch
+     exit 1
+   elif [ ! "$fort_version_patch" = "$cc_version_patch" ] && [ ! "$fort_version_patch" = "$cxx_version_patch" ]; then
+    print_compiler_mistmatch
+    exit 1    
+  fi
+fi
+
+
+}
+
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -141,6 +351,9 @@ nvcc='no'
 # where to install
 useprefix='false'
 quick_prefix="$QUICK_HOME"
+
+# operating system
+osname=''
 
 # flag to indicate if a so library compilation is required
 shared='no'
@@ -237,6 +450,20 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+echo "Requested installation type/s: $buildtypes"
+
+# check the os first
+check_os
+
+if [ ! "$osname" = 'linux' ] && [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] ; then 
+  echo -e "\033[93mWarning: QUICK cuda and cuda-mpi versions have never been tested on $osname os.\033[0m"
+fi
+
+
+# check compiler
+check_compiler
+
 
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
@@ -366,36 +593,6 @@ done
       echo "Only a single core will be used for the compilation."
     fi
   fi
-
-#  !---------------------------------------------------------------------!
-#  ! Set compilers                                                       !
-#  !---------------------------------------------------------------------!
-
-case "$compiler" in
-  gnu)
-    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
-      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
-      if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
-      if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
-    else
-      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
-      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
-      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi      
-    fi
-    ;;
-
-  intel)
-    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
-      if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
-      if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
-      if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
-    else
-      if [ -z "$MPIF90" ]; then fort='mpiifort'; else fort="$MPIF90";fi
-      if [ -z "$MPICC" ]; then cc='mpiicc'; else cc="$MPICC";fi
-      if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
-    fi
-    ;;
-esac
 
 #  !---------------------------------------------------------------------!
 #  ! Check for CUDA tool kit and compiler                                !
