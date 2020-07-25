@@ -1,5 +1,5 @@
-![Serial build status] (https://github.com/Madu86/QUICK/blob/master/.github/workflows/serial.yml/badge.svg)
-![MPI build status] (https://github.com/Madu86/QUICK/blob/master/.github/workflows/mpi.yml/badge.svg)
+![Serial build status] (https://github.com/Madu86/QUICK/workflows/serial.yml/badge.svg)
+![MPI build status] (https://github.com/Madu86/QUICK/workflows/mpi.yml/badge.svg)
 ![QUICK logo](./tools/logo.png)
 
 An open source, GPU enabled, linear scaling *ab initio* and density functional
