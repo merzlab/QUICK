@@ -481,6 +481,9 @@ if [ "$useprefix" = "true" ]; then
   if [ ! -d "$quick_prefix/test" ]; then
     mkdir -p "$quick_prefix/test"
 
+    # delete the runs directory from QUICK_HOME/test if it exists
+    if [ -d "$QUICK_HOME/test/runs" ]; then rm -rf $QUICK_HOME/test/runs; fi
+
     # create a symlink if lndir command exists. Otherwise copy the content.
     if [ `command -v lndir | wc -l` -gt 0 ]; then
       echo "Creating symlink for $quick_prefix/test"
