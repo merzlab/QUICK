@@ -2,8 +2,9 @@
 <img src="https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg">
 <img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
 </p>
-
-![QUICK logo](./tools/logo.png)
+<p align="left">
+<img src="./tools/logo.png">
+</p>
 
 An open source, GPU enabled, linear scaling *ab initio* and density functional
 theory program developed by Goetz lab at University of California San Diego and Merz
