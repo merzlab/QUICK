@@ -1,4 +1,4 @@
-name: MPI%20Build
+name: MPI Build
 
 on: [push, pull_request]
 
