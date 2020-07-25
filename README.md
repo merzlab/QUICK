@@ -1,5 +1,6 @@
-![Serial build status](https://github.com/Madu86/QUICK/workflows/.github/workflows/serial.yml/badge.svg)
-![MPI build status](https://github.com/Madu86/QUICK/workflows/.github/workflows/mpi.yml/badge.svg)
+![Serial build status](https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg)
+![MPI build status](https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg)
+
 
 ![QUICK logo](./tools/logo.png)
 
