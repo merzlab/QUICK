@@ -405,6 +405,7 @@ cuda_debug_flags=''
 
 # set common folders
 libxcobjfolder=''
+libxcdevobjfolder=''
 blasobjfolder=''
 
 # keep track of which build types to clean
@@ -574,13 +575,21 @@ for buildtype in $buildtypes; do
     blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
   fi
 
+  
+
   if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
-    if [ ! -d "$QUICK_HOME/build/common/gpu" ]; then
-      mkdir -p "$QUICK_HOME/build/common/gpu"
-      libxcobjfolder="$QUICK_HOME/build/common/gpu"
+    if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/gpu/libxcobj"
     fi
-    libxcobjfolder="$QUICK_HOME/build/common/gpu"
+    libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
+
+    if [ ! -d "$QUICK_HOME/build/common/gpu/libxcdevobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/gpu/libxcdevobj"
+    fi
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"    
+
   fi
+
 done
 
 #  !---------------------------------------------------------------------!
@@ -825,9 +834,11 @@ for buildtype in $buildtypes; do
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj" 
+    libxcdevobjfolder=""
   elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     blasobjfolder=""
-    libxcobjfolder="$QUICK_HOME/build/common/gpu"
+    libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
 
   # copy template Makefile into each buildtype directory
@@ -869,6 +880,7 @@ modfolder=$QUICK_HOME/src/modules
 exefolder=$QUICK_HOME/bin
 objfolder=$QUICK_HOME/build/$buildtype/obj
 libxcobjfolder=$libxcobjfolder
+libxcdevobjfolder=$libxcdevobjfolder
 mainobjfolder=$QUICK_HOME/build/$buildtype/obj/main
 blasobjfolder=$blasobjfolder
 libfolder=$QUICK_HOME/build/$buildtype/lib
