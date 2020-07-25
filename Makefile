@@ -107,9 +107,11 @@ buildtest:
 	@sh $(homefolder)/runtest
 
 installtest:
+	@if [ ! -x $(installfolder)/bin/quick* ]; then \
+        echo -e "\033[91mError: Executables not found. You must run 'make install' before running 'make test'.\033[m"; \
+        exit 1; fi	
 	@cp $(toolsfolder)/runtest $(installfolder)
-	@cd $(installfolder)
-	@sh $(installfolder)/runtest
+	@cd $(installfolder) && sh runtest
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
