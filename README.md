@@ -1,6 +1,7 @@
+<p align="right">
 ![Serial build status](https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg)
 ![MPI build status](https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg)
-
+</p>
 
 ![QUICK logo](./tools/logo.png)
 
