@@ -3,7 +3,7 @@
 <img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
 </p>
 <p align="left">
-<img src="./tools/logo.png">
+<img width="299" height="107" src="./tools/logo.png">
 </p>
 
 An open source, GPU enabled, linear scaling *ab initio* and density functional
