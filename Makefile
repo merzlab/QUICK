@@ -156,6 +156,8 @@ makeinclean:
 .PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
 
 uninstall: $(UNINSTALLTYPES)
+	@-rm -rf $(installfolder)/basis
+	@-rm -rf $(installfolder)/test
 	@-rm -f $(installfolder)/runtest
 	@echo -e "\033[92mUninstallation sucessful.\033[0m"
 
@@ -164,21 +166,21 @@ nouninstall:
 
 serialuninstall:
 	@-rm -f $(installfolder)/bin/quick
-	@-rm -f $(installfolder)/include/serial/*
-	@-rm -f $(installfolder)/lib/serial/*
+	@-rm -rf $(installfolder)/include/serial
+	@-rm -rf $(installfolder)/lib/serial
 
 mpiuninstall:
 	@-rm -f $(installfolder)/bin/quick.mpi
-	@-rm -f $(installfolder)/include/mpi/*
-	@-rm -f $(installfolder)/lib/mpi/*
+	@-rm -rf $(installfolder)/include/mpi
+	@-rm -rf $(installfolder)/lib/mpi
 
 cudauninstall:
 	@-rm -f $(installfolder)/bin/quick.cuda
-	@-rm -f $(installfolder)/include/cuda/*
-	@-rm -f $(installfolder)/lib/cuda/*
+	@-rm -rf $(installfolder)/include/cuda
+	@-rm -rf $(installfolder)/lib/cuda
 
 cudampiuninstall:
 	@-rm -f $(installfolder)/bin/quick.cuda.mpi
-	@-rm -f $(installfolder)/include/cudampi/*
-	@-rm -f $(installfolder)/lib/cudampi/*
+	@-rm -rf $(installfolder)/include/cudampi
+	@-rm -rf $(installfolder)/lib/cudampi
 
