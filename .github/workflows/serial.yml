@@ -1,4 +1,4 @@
-name: Basic CI Serial
+name: Serial%20Build
 
 on: [push, pull_request]
 
