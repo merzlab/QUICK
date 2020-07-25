@@ -972,3 +972,10 @@ EOF
 
 echo -e "\033[92mInput file for GNU make was successfully created.\033[0m"
 echo ""
+
+echo -e "\033[92mNext steps:\033[0m"
+echo -e "\033[92m          Run 'make' to build QUICK.\033[0m"
+if [ "$testtype" = 'installtest' ]; then 
+  echo -e "\033[92m          Run 'make install' to install executable/s, libraries and header files into $quick_prefix.\033[0m"
+fi
+echo -e "\033[92m          Run 'make test' to verify the executables.\033[0m"
