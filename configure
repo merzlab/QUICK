@@ -470,15 +470,17 @@ check_compiler
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
 
+  if [ "$QUICK_HOME" = "$quick_prefix" ]; then
+    echo -e "\033[91mError: Specified --prefix and current folder is the same. Please choose a different location. \033[0m"
+    exit 1
+  elif [ ! -d "$quick_prefix" ]; then
+    mkdir -p "$quick_prefix"
+  fi
+
   # do this trick to get absolute path
   cd "$quick_prefix"
   quick_prefix=`pwd`
   cd "$QUICK_HOME" 
-
-  if [ "$QUICK_HOME" = "$quick_prefix" ]; then
-    echo -e "\033[91mError: Specified --prefix and current folder is the same. Please choose a different location. \033[0m"
-    exit 1
-  fi
 
   echo "QUICK will be installed in $quick_prefix"
 
