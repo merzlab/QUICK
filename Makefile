@@ -59,6 +59,8 @@ checkfolders:
 
 install: $(INSTALLTYPES)
 	@echo -e "\033[92mInstallation sucessful.\033[0m"
+	@echo -e "\033[92mPlease add the following into your .bash_profile or .bashrc file.\033[0m"
+	@echo -e "\033[92m      export QUICK_BASIS=$(installfolder)/basis\033[0m"
 
 noinstall:
 	@echo -e "\033[91mError: No prefix to install. You must specify a prefix during the configuration.\033[0m"
