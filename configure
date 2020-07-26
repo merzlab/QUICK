@@ -437,7 +437,7 @@ while [ $# -gt 0 ]; do
     -shared)      shared='yes';; 
     -arch)        shift; cuda_arch=$1; uspec_arch='true';;
     -ncores)      shift; ncores=$1; uspec_ncores='yes';;
-    --prefix)     shift; quick_prefix=$1; useprefix='true';;
+    --prefix)     shift; quick_prefix=${1%/}; useprefix='true';;
     gnu)          compiler='gnu';;
     intel)        compiler='intel';;
     -h| -H| -help| --help) print_help;;
@@ -464,13 +464,17 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; t
   echo -e "\033[93mWarning: QUICK cuda and cuda-mpi versions have never been tested on $osname os.\033[0m"
 fi
 
-
 # check compiler
 check_compiler
 
-
 # check prefix and perform necessary operations 
 if [ "$useprefix" = "true" ]; then
+
+  # do this trick to get absolute path
+  cd "$quick_prefix"
+  quick_prefix=`pwd`
+  cd "$QUICK_HOME" 
+
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
     echo -e "\033[91mError: Specified --prefix and current folder is the same. Please choose a different location. \033[0m"
     exit 1
