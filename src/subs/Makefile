@@ -1,34 +1,28 @@
-#!/bin/sh
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/25/2020                         !
+#  !                                                                     !
+#  ! Previous contributors: Yipu Miao, John Faver                        !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
 
 MAKEIN = ./make.in
 include $(MAKEIN)
 
-# --- Makefile for Quick Program ---
-#  				- v 3.00 2019/03/25 Madu Manathunga
-#				- v 2.00 2010/10/25 Yipu Miao
-#				- v 1.18 2009/09/16 John Faver Exp $ 
-#				- Makefile created by mkmf.pl $Id:
-#	--------
-#	 INDEX
-#	--------
-#	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#								! mpif90 is recommended for MPI Multi-CPU Version
-#	B. Make Object Files		! Source files --> Object files
-#	C. Make Executed files		! Object files --> Executed files
-#	D. Self-defined Option		! Make option
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
-#************************************************************************
-#                  A. Compiler Settings
-# 
-#   FC specifies f90 compiler
-#   FFLAGS are compliation options
-#   LFLAGS are linking flags
-#
-#************************************************************************
-
-#----------------------
-# quick modules and object files
-#----------------------
+FOR=$(FC) $(FFLAGS)
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
@@ -48,27 +42,20 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
 	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o 
 
-#************************************************************************
-# 
-#                 B. Make Object Files
-# 
-#************************************************************************
-
-FOR=$(FC) $(FFLAGS)
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
 
 $(SUBS):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
-#================= quick subroutine library =================================
-
 all: $(SUBS)
 
-#************************************************************************
-# 
-#                 C. Self-defined Option
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-# - 1. Clean object files
+.PHONY: clean
+
 clean:
 	@-rm -f *.o  

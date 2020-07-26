@@ -1,36 +1,28 @@
-#!/bin/sh
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/25/2020                         !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
 
 MAKEIN = ./make.in
 include $(MAKEIN)
 
-# --- Makefile for libxc  ---
-#  				- v 1.00 2019/06/03 Madu Manathunga
-#	--------
-#	 INDEX
-#	--------
-#	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#								! mpif90 is recommended for MPI Multi-CPU Version
-#	B. Make Object Files		! Source files --> Object files
-#	C. Make Executed files		! Object files --> Executed files
-#	D. Self-defined Option		! Make option
-
-#************************************************************************
-#                  A. Compiler Settings
-#
-#   CC specifies gcc/icc compiler
-#   FOR specifies f90 compiler
-#   FFLAGS are compliation options
-#   
-#
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
 FOR=$(FC) -c -I. $(FFLAGS) 
 
 CCC = $(CC) -c -I. $(CCFLAGS) 
-
-#----------------------
-# quick modules and object files
-#----------------------
 
 LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/expint_e1.o $(libxcobjfolder)/integrate.o\
@@ -140,11 +132,9 @@ LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/mgga_c_revscan.o $(libxcobjfolder)/mgga_x_br89_explicit.o\
 	$(libxcobjfolder)/mgga_xc_b98.o \
 
-#************************************************************************
-# 
-#                 B. Make Object Files
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
 
 $(LIBXCOBJ):$(libxcobjfolder)/%.o:%.c
 	$(CCC) $< -o $@
@@ -154,8 +144,6 @@ libxc_f90:
 	$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
 	$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
-#================= quick subroutine library =================================
-
 libxc_gpu:$(LIBXCOBJ) libxc_f90
 	$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
@@ -163,13 +151,11 @@ libxc_gpu:$(LIBXCOBJ) libxc_f90
 libxc_cpu:$(LIBXCOBJ) libxc_f90
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 
-all: libxc_libs
-#************************************************************************
-# 
-#                 C. Self-defined Option
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-# - 1. Clean object files
+.PHONY: clean
+
 clean:
 	@-rm -f *.o *.a *.mod 
