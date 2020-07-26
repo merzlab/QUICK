@@ -374,7 +374,7 @@ subroutine get_xc
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
 #endif
 
-      call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+      call gpu_getxc(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
 
 !      call gpu_delete_dft_grid()

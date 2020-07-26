@@ -1591,7 +1591,7 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
 
 	upload_sim_to_constant_dft(gpu);
 
-	get_ssw_new_imp(gpu);	
+	get_ssw(gpu);	
 
 	gpu -> gpu_xcq -> sswt -> Download();	
 	gpu -> gpu_xcq -> weight -> Download();   
@@ -1704,7 +1704,7 @@ void prune_grid_sswgrad(){
 }	
 
 
-void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
 
@@ -1765,7 +1765,7 @@ void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDo
                 }
         }
 */
-        get_primf_contraf_lists_new_imp(gpu, d_gpweight, d_cfweight, d_pfweight);
+        get_primf_contraf_lists(gpu, d_gpweight, d_cfweight, d_pfweight);
 
 	cudaMemcpy(gpweight, d_gpweight, gpu -> gpu_xcq -> npoints * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 	cudaMemcpy(cfweight, d_cfweight, nbins * gpu -> nbasis * sizeof(unsigned int), cudaMemcpyDeviceToHost);
@@ -1958,7 +1958,7 @@ Integration of libxc GPU version. The included file below contains all libxc met
 */
 #include "gpu_libxc.cu"
 
-extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
+extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
 
         /*The following variable will hold the number of auxilary functionals in case of
         //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
@@ -1998,7 +1998,7 @@ extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int
 
         cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
 
-	getxc_grad_new_imp(gpu, d_xc_grad, glinfo, nof_aux_functionals);
+	getxc_grad(gpu, d_xc_grad, glinfo, nof_aux_functionals);
 
         cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
 
@@ -2453,7 +2453,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 }
 
 
-extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
+extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
@@ -2509,7 +2509,7 @@ extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
         fprintf(gpu->debugFile,"FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
 #endif
 
-    getxc_new_imp(gpu, glinfo, nof_aux_functionals);
+    getxc(gpu, glinfo, nof_aux_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
 

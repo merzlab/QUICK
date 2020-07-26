@@ -834,7 +834,7 @@ subroutine get_xc_grad
       quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
       quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
-      call gpu_xcgrad_new_imp(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
+      call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)
 
       call gpu_delete_dft_grid()

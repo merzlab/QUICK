@@ -29,7 +29,7 @@ static float totTime;
 #endif
 
 
-void get_ssw_new_imp(_gpu_type gpu){
+void get_ssw(_gpu_type gpu){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -38,7 +38,7 @@ void get_ssw_new_imp(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-	get_ssw_kernel_new_imp<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>();
+	get_ssw_kernel<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>();
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -54,7 +54,7 @@ void get_ssw_new_imp(_gpu_type gpu){
 }
 
 
-void get_primf_contraf_lists_new_imp(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
+void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -63,7 +63,7 @@ void get_primf_contraf_lists_new_imp(_gpu_type gpu, unsigned char *gpweight, uns
     cudaEventRecord(start, 0);
 #endif
 
-    get_primf_contraf_lists_kernel_new_imp<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight);
+    get_primf_contraf_lists_kernel<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -78,7 +78,7 @@ void get_primf_contraf_lists_new_imp(_gpu_type gpu, unsigned char *gpweight, uns
 
 }
 
-void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
+void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -89,7 +89,7 @@ void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 //        nvtxRangePushA("SCF XC: density");
 
-	get_density_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
+	get_density_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
 
 	cudaDeviceSynchronize();
 
@@ -97,7 +97,7 @@ void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 //	nvtxRangePushA("SCF XC");
 
-	getxc_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals);
+	getxc_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -115,7 +115,7 @@ void getxc_new_imp(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 }
 
 
-void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
+void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -126,7 +126,7 @@ void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** g
 
 //    nvtxRangePushA("XC grad: density");	
 
-    get_density_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
+    get_density_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
 
     cudaDeviceSynchronize();
  
@@ -134,13 +134,13 @@ void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** g
 
 //    nvtxRangePushA("XC grad");
 
-    get_xcgrad_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
+    get_xcgrad_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    get_sswgrad_kernel_new_imp<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
+    get_sswgrad_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
 
     gpu_delete_sswgrad_vars();
 
@@ -159,7 +159,7 @@ void getxc_grad_new_imp(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** g
 
 }
 
-__global__ void get_density_kernel_new_imp()
+__global__ void get_density_kernel()
 {
         int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -228,7 +228,7 @@ __global__ void get_density_kernel_new_imp()
 	}
 }
 
-__global__ void getxc_kernel_new_imp(gpu_libxc_info** glinfo, int nof_functionals){
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -382,7 +382,7 @@ __global__ void getxc_kernel_new_imp(gpu_libxc_info** glinfo, int nof_functional
 }
 
 
-__global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
+__global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
 
 	int gid = blockIdx.x * blockDim.x + threadIdx.x;
 	
@@ -553,7 +553,7 @@ __global__ void get_xcgrad_kernel_new_imp(QUICKDouble* dev_grad, gpu_libxc_info*
 
 
 //device kernel to compute significant grid pts, contracted and primitive functions for octree
-__global__ void get_primf_contraf_lists_kernel_new_imp(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
+__global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
 
         int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -667,7 +667,7 @@ __global__ void get_primf_contraf_lists_kernel_new_imp(unsigned char *gpweight, 
 
 }
 
-__global__ void get_ssw_kernel_new_imp(){
+__global__ void get_ssw_kernel(){
 
         int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -692,7 +692,7 @@ __global__ void get_ssw_kernel_new_imp(){
 }
 
 
-__global__ void get_sswgrad_kernel_new_imp(QUICKDouble* dev_grad){
+__global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 
         int gid = blockIdx.x * blockDim.x + threadIdx.x;
      
@@ -706,7 +706,7 @@ __global__ void get_sswgrad_kernel_new_imp(QUICKDouble* dev_grad){
                 int gatm = devSim_dft.gatm_ssd[gid];
 
 		//sswder(gridx, gridy, gridz, exc, quadwt, gatm, dev_grad);
-		sswder_new_imp(gridx, gridy, gridz, exc, quadwt, gatm, gid, dev_grad);
+		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid, dev_grad);
 	}
 
 }
@@ -900,7 +900,7 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
 }
 
 
-__device__ void sswder_new_imp(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* exc_dev_grad){
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* exc_dev_grad){
 
 /*
         This subroutine calculates the derivatives of weight found in
