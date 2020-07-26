@@ -1,16 +1,27 @@
-#!/bin/sh
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/25/2020                         !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
 
 MAKEIN = ./make.in
 include $(MAKEIN)
 
-LIBXC_CUDA_FLAGS = -I$(libxcfolder)
-#************************************************************************
-# 
-#                 B. Make Object Files
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
-#================= quick module library =================================
+LIBXC_CUDA_FLAGS = -I$(libxcfolder)
+
 CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
 	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
@@ -55,18 +66,21 @@ CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o
 	$(libxcdevobjfolder)/mgga_x_sa_tpss.o $(libxcdevobjfolder)/mgga_x_scan.o $(libxcdevobjfolder)/mgga_x_tau_hcth.o $(libxcdevobjfolder)/mgga_x_tm.o \
 	$(libxcdevobjfolder)/mgga_x_tpss.o $(libxcdevobjfolder)/mgga_x_vt84.o
 
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
+
 $(CUDALIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
 	$(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 all: $(CUDALIBXCOBJ)
 
-#************************************************************************
-# 
-#                 C. Self-defined Option
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-# - 1. Clean object files
+.PHONY: clean
+
 clean: 
 	@-rm -f *.o 
 	

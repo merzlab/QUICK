@@ -1,6 +1,3 @@
-MAKEIN = ./make.in
-include $(MAKEIN)
-
 #######################################################################
 #
 #  Edward Anderson, University of Tennessee
@@ -9,6 +6,13 @@ include $(MAKEIN)
 #  Julie Langou, March 2007
 #
 #######################################################################
+
+MAKEIN = ./make.in
+include $(MAKEIN)
+
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
 BLOBJ = $(blasobjfolder)/isamax.o \
 	$(blasobjfolder)/sasum.o $(blasobjfolder)/saxpy.o $(blasobjfolder)/scopy.o \
@@ -56,11 +60,19 @@ BLOBJ = $(blasobjfolder)/isamax.o \
         $(blasobjfolder)/ztrmm.o $(blasobjfolder)/ztrsm.o $(blasobjfolder)/zhemm.o $(blasobjfolder)/zherk.o \
         $(blasobjfolder)/zher2k.o $(blasobjfolder)/lsame.o $(blasobjfolder)/xerbla.o
 
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
+
 $(BLOBJ):$(blasobjfolder)/%.o:%.f
 	 $(FC) $(BLAS_FLAGS) -c $< -o $@
 
 all:$(BLOBJ)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
+
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
 .PHONY: clean
 
