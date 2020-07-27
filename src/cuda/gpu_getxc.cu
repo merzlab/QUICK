@@ -38,7 +38,7 @@ void get_ssw(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-	get_ssw_kernel<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>();
+	get_ssw_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>();
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -63,7 +63,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
     cudaEventRecord(start, 0);
 #endif
 
-    get_primf_contraf_lists_kernel<<< gpu -> xc_blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight);
+    get_primf_contraf_lists_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -89,7 +89,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 //        nvtxRangePushA("SCF XC: density");
 
-	get_density_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
+	get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>();
 
 	cudaDeviceSynchronize();
 
@@ -97,7 +97,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 //	nvtxRangePushA("SCF XC");
 
-	getxc_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals);
+	getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -126,7 +126,7 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad: density");	
 
-    get_density_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>();
+    get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>();
 
     cudaDeviceSynchronize();
  
@@ -134,13 +134,13 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad");
 
-    get_xcgrad_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
+    get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    get_sswgrad_kernel<<<gpu->xc_blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
+    get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
 
     gpu_delete_sswgrad_vars();
 
@@ -161,9 +161,11 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 __global__ void get_density_kernel()
 {
-        int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
-        if(gid<devSim_dft.npoints){
+        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+        int totalThreads = blockDim.x*gridDim.x;
+
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
                 int dweight = devSim_dft.dweight[gid];
 
@@ -175,7 +177,6 @@ __global__ void get_density_kernel()
         	        QUICKDouble gaz = 0.0;
 
                         int bin_id = (int) (gid/devSim_dft.bin_size);
-                        //int nofbfs = devSim_dft.basf_locator[bin_id+1] - devSim_dft.basf_locator[bin_id];
 
                         QUICKDouble gridx = devSim_dft.gridx[gid];
                         QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -230,9 +231,10 @@ __global__ void get_density_kernel()
 
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
-        int gid = blockIdx.x * blockDim.x + threadIdx.x;
+        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+        int totalThreads = blockDim.x*gridDim.x;
 
-        if(gid<devSim_dft.npoints){
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
                 int dweight = devSim_dft.dweight[gid];
 
@@ -384,16 +386,16 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
 __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
 
-	int gid = blockIdx.x * blockDim.x + threadIdx.x;
-	
-	if(gid<devSim_dft.npoints){
+        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+        int totalThreads = blockDim.x*gridDim.x;
+
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
 		int dweight = devSim_dft.dweight[gid];
 
 		if(dweight>0){
 
                         int bin_id = (int) (gid/devSim_dft.bin_size);
-                        //int nofbfs = devSim_dft.basf_locator[bin_id+1] - devSim_dft.basf_locator[bin_id];
 
                         QUICKDouble gridx = devSim_dft.gridx[gid];
                         QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -555,10 +557,14 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 //device kernel to compute significant grid pts, contracted and primitive functions for octree
 __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
 
-        int gid = blockIdx.x * blockDim.x + threadIdx.x;
+        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+        int totalThreads = blockDim.x*gridDim.x;
 
-        if(gid < devSim_dft.npoints){
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
+
 		if(gpweight[gid]>0){
+
+			unsigned int binIdx = (unsigned int) (gid/blockDim.x);
 
         	        QUICKDouble gridx = devSim_dft.gridx[gid];
 	                QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -570,7 +576,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
                 	for(int ibas=0; ibas<devSim_dft.nbasis;ibas++){
 
-                        	unsigned long cfwid = blockIdx.x * devSim_dft.nbasis + ibas; 
+                        	unsigned long cfwid = binIdx * devSim_dft.nbasis + ibas; 
 
                         	QUICKDouble x1 = gridx - LOC2(devSim_dft.xyz, 0, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
                         	QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
@@ -626,7 +632,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
                                 	for(int kprim=0; kprim< devSim_dft.ncontract[ibas]; kprim++){
 
-                                        	unsigned long pfwid = blockIdx.x * devSim_dft.nbasis * devSim_dft.maxcontract + ibas * devSim_dft.maxcontract + kprim;
+                                        	unsigned long pfwid = binIdx * devSim_dft.nbasis * devSim_dft.maxcontract + ibas * devSim_dft.maxcontract + kprim;
 
                                         	QUICKDouble tmp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) *
                                                 	exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
@@ -669,9 +675,10 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
 __global__ void get_ssw_kernel(){
 
-        int gid = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+	int totalThreads = blockDim.x*gridDim.x;
 
-        if(gid<devSim_dft.npoints){
+	for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
                 QUICKDouble gridx = devSim_dft.gridx[gid];
                 QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -687,16 +694,17 @@ __global__ void get_ssw_kernel(){
 		devSim_dft.sswt[gid] = sswt;
 		devSim_dft.weight[gid] = weight;
 
-        }
+	}
 
 }
 
 
 __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 
-        int gid = blockIdx.x * blockDim.x + threadIdx.x;
-     
-        if(gid<devSim_dft.npoints_ssd){
+        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+        int totalThreads = blockDim.x*gridDim.x;
+
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
                 QUICKDouble gridx = devSim_dft.gridx_ssd[gid];
                 QUICKDouble gridy = devSim_dft.gridy_ssd[gid];
@@ -705,7 +713,6 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		//sswder(gridx, gridy, gridz, exc, quadwt, gatm, dev_grad);
 		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid, dev_grad);
 	}
 
