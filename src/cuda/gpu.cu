@@ -1556,7 +1556,6 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
 
 	gpu -> gpu_xcq -> npoints       = *count;
         gpu -> xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
-	gpu -> xc_blocks = (int) ((*count/SM_2X_XC_THREADS_PER_BLOCK) +1 );
 	
         gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
         gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
@@ -1676,7 +1675,6 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt -> Upload();
         gpu -> gpu_xcq -> gatm_ssd -> Upload();
 
-	gpu -> xc_blocks = (int) ((count / gpu->xc_threadsPerBlock) + 1);
         gpu -> gpu_sim.npoints_ssd  = gpu -> gpu_xcq -> npoints_ssd;
         gpu -> gpu_sim.gridx_ssd = gpu -> gpu_xcq -> gridx_ssd -> _devData;
         gpu -> gpu_sim.gridy_ssd = gpu -> gpu_xcq -> gridy_ssd -> _devData;
@@ -1712,7 +1710,6 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
 
         gpu -> gpu_xcq -> npoints       = count;
         gpu -> xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
-        gpu -> xc_blocks                = nbins;
 
         gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
         gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
@@ -1838,7 +1835,6 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> basf_locator     = new cuda_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
 	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-	gpu -> xc_blocks = gpu -> gpu_xcq -> nbins;
 	gpu -> xc_threadsPerBlock = gpu -> gpu_xcq -> bin_size;
 	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
