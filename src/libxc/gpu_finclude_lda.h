@@ -8,7 +8,9 @@
 #include "maple2c/lda_c_hl.c"
 #include "maple2c/lda_c_lp96.c"
 #include "maple2c/lda_c_ml1.c"
+#ifdef COMPILE_PK09
 #include "maple2c/lda_c_pk09.c"
+#endif
 #include "maple2c/lda_c_pw.c"
 #include "maple2c/lda_c_pz.c"
 #include "maple2c/lda_c_rc04.c"

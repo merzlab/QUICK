@@ -8,7 +8,9 @@ static __constant__ lda_ptr maple2cf_lda[31] = {&xc_lda_c_1d_csc_func_kernel,
 &xc_lda_c_hl_func_kernel,
 &xc_lda_c_lp96_func_kernel,
 &xc_lda_c_ml1_func_kernel,
+#ifdef COMPILE_PK09
 &xc_lda_c_pk09_func_kernel,
+#endif
 &xc_lda_c_pw_func_kernel,
 &xc_lda_c_pz_func_kernel,
 &xc_lda_c_rc04_func_kernel,
