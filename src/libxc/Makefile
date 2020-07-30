@@ -37,7 +37,7 @@ LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/lda_c_vwn_2.o $(libxcobjfolder)/lda_c_vwn_3.o\
 	$(libxcobjfolder)/lda_c_vwn_4.o $(libxcobjfolder)/lda_c_vwn_rpa.o\
 	$(libxcobjfolder)/lda_c_pz.o $(libxcobjfolder)/lda_c_pw.o\
-	$(libxcobjfolder)/lda_c_pk09.o $(libxcobjfolder)/lda_c_lp96.o\
+	$(libxcobjfolder)/lda_c_lp96.o\
 	$(libxcobjfolder)/lda_c_ml1.o $(libxcobjfolder)/lda_c_rc04.o\
 	$(libxcobjfolder)/lda_xc_teter93.o $(libxcobjfolder)/lda_c_1d_csc.o\
 	$(libxcobjfolder)/lda_c_1d_loos.o $(libxcobjfolder)/lda_c_2d_amgb.o\
@@ -131,6 +131,10 @@ LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/mgga_x_gx.o $(libxcobjfolder)/mgga_x_pbe_gx.o\
 	$(libxcobjfolder)/mgga_c_revscan.o $(libxcobjfolder)/mgga_x_br89_explicit.o\
 	$(libxcobjfolder)/mgga_xc_b98.o \
+
+ifdef COMPILE_PK09
+LIBXCOBJ += $(libxcobjfolder)/lda_c_pk09.o
+endif
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
