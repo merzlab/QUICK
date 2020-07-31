@@ -39,17 +39,17 @@ echo  "
                                                                             
   Available flags are:                                                      
       --prefix <dir> User specified installation directory                  
-      -serial        Builds a serial version                                
-      -mpi           Compiles MPI prallel version                           
-      -cuda          Builds GPU version that utilizes a single NVIDIA GPU   
-      -debug         Compiles debug version                                 
-      -shared        Build shared object libraries                          
-      -arch <pascal|volta|turing>                                           
+      --serial       Builds a serial version                                
+      --mpi          Compiles MPI prallel version                           
+      --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --debug        Compiles debug version                                 
+      --shared       Build shared object libraries                          
+      --arch <pascal|volta|turing>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
                      toolkit version.                                       
-      -ncores <ncore>                                                       
+      --ncores <ncore>                                                       
                      Specify the number of cores to be used in compilation. 
                      If unspecified, QUICK will attempt to automatically    
                      detect the number of cores in your system.             
@@ -58,7 +58,7 @@ echo  "
                                                                             
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:                                                                  
-                    ./configure -cuda -arch volta --prefix /home/install intel                                  
+                    ./configure --cuda --arch volta --prefix /home/install intel                                  
   "
 
 exit 0;
@@ -429,24 +429,24 @@ if [ $# -lt 1 ]; then print_help; fi
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
-    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
-    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
-    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
-    -debug)       debug='yes';;
-    -shared)      shared='yes';; 
-    -arch)        shift; cuda_arch=$1; uspec_arch='true';;
-    -ncores)      shift; ncores=$1; uspec_ncores='yes';;
-    --prefix)     shift; quick_prefix=${1%/}; useprefix='true';;
-    gnu)          compiler='gnu';;
-    intel)        compiler='intel';;
+    --serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
+    --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
+    --debug)       debug='yes';;
+    --shared)      shared='yes';; 
+    --arch)        shift; cuda_arch=$1; uspec_arch='true';;
+    --ncores)      shift; ncores=$1; uspec_ncores='yes';;
+    --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
+    gnu)           compiler='gnu';;
+    intel)         compiler='intel';;
     -h| -H| -help| --help) print_help;;
     -*)  echo  "Error: $1 is an unknown flag "
          echo  "       Run this script as './configure [flags] compiler' "
          echo  "       Run './configure --help' for more information "
          exit 1;;
      *)  if [ $# -gt 1 ]; then
-           echo  "Error: $1 is an unknown compiler "
+           echo  "Error: $1 is an unknown flag"
            echo  "       Run this script as './configure [flags] compiler' "
            echo  "       Run './configure --help' for more information "
            exit 1
