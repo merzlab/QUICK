@@ -97,17 +97,11 @@ subroutine getMol()
       ! calculate the radius of the sphere of basis function signifigance.
 !      if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
 
-!--------------Madu----------------
-!Orginally, this block was only ran by master node and sigrad2 variable values
-!were not available for slaves in dft MPI. 
-
   ! calculate the radius of the sphere of basis function signifigance.
     if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
 
 #ifdef MPIV
-    if (bMPI .and. quick_method%DFT) then
-      call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    endif
+   if (bMPI) call mpi_setup_mol2()
 #endif
 !--------------Madu----------------
 
