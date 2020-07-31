@@ -1458,7 +1458,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> Xcoeff -> DeleteCPU();
     
     gpu -> gpu_basis -> ncontract -> DeleteCPU();
-    gpu -> gpu_basis -> dcoeff -> DeleteCPU();
+//    gpu -> gpu_basis -> dcoeff -> DeleteCPU();
     gpu -> gpu_basis -> aexp -> DeleteCPU();
     gpu -> gpu_basis -> ncenter -> DeleteCPU();
     gpu -> gpu_basis -> itype -> DeleteCPU();
@@ -1688,10 +1688,6 @@ void prune_grid_sswgrad(){
 
         PRINTDEBUG("COMPLETE UPLOADING DFT GRID FOR SSWGRAD")
 
-/*        for(int i=0; i<count;i++){
-                printf("prune_grid_sswgrad: %i %f %f %f %f %f %i \n", i, tmp_gridx[i], tmp_gridy[i], tmp_gridz[i], tmp_exc[i], tmp_quadwt[i], tmp_gatm[i]);
-        }
-*/
         //Clean up temporary arrays
         free(tmp_gridx);
         free(tmp_gridy);
@@ -1811,6 +1807,62 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
         PRINTDEBUG("PRIMITIVE & BASIS FUNCTION LISTS OBTAINED")
 }
 
+#ifdef DEBUG
+void print_uploaded_dft_info(){
+
+  PRINTDEBUG("PRINTING UPLOADED DFT DATA")
+
+  fprintf(gpu->debugFile,"Number of grid points: %i \n", gpu -> gpu_xcq -> npoints);
+  fprintf(gpu->debugFile,"Bin size: %i \n", gpu -> gpu_xcq -> bin_size);
+  fprintf(gpu->debugFile,"Number of bins: %i \n", gpu -> gpu_xcq -> nbins);
+  fprintf(gpu->debugFile,"Number of total basis functions: %i \n", gpu -> gpu_xcq -> ntotbf);
+  fprintf(gpu->debugFile,"Number of total primitive functions: %i \n", gpu -> gpu_xcq -> ntotpf);
+  
+  PRINTDEBUG("GRID POINTS & WEIGHTS")
+  
+  for(int i=0; i<gpu -> gpu_xcq -> npoints; i++){
+    fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight=%i dweight_ssd=%i \n",i,
+    gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i],
+    gpu -> gpu_xcq -> sswt -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm -> _hostData[i],
+    gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
+  }
+
+  PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS")
+
+  for(int bin_id=0; bin_id<gpu -> gpu_xcq -> nbins; bin_id++){  
+
+    for(int i=gpu -> gpu_xcq -> basf_locator -> _hostData[bin_id]; i<gpu -> gpu_xcq -> basf_locator -> _hostData[bin_id+1] ; i++){
+
+      for(int j=gpu -> gpu_xcq -> primf_locator -> _hostData[i]; j< gpu -> gpu_xcq -> primf_locator -> _hostData[i+1]; j++){
+
+        fprintf(gpu->debugFile,"Bin ID= %i basf location= %i ibas= %i primf location= %i jprim= %i \n", bin_id, i, 
+        gpu -> gpu_xcq -> basf -> _hostData[i], j, gpu -> gpu_xcq -> primf -> _hostData[j]);
+
+      }
+
+    }
+
+  }
+
+  PRINTDEBUG("RADIUS OF SIGNIFICANCE")
+
+  for(int i=0; i<gpu -> nbasis; i++){
+    fprintf(gpu->debugFile,"ibas=%i sigrad2=%f \n", i, gpu -> gpu_basis -> sigrad2 -> _hostData[i]);
+  }
+
+  for(int i=0; i<gpu -> nbasis; i++){
+    for(int j=0; j<gpu -> gpu_basis -> maxcontract; j++){
+
+      fprintf(gpu->debugFile,"ibas=%i jprim=%i dcoeff=%f \n",i,j, gpu -> gpu_basis -> dcoeff -> _hostData[ j + i * gpu -> gpu_basis -> maxcontract]);
+
+    }
+  }
+
+  PRINTDEBUG("END PRINTING UPLOADED DFT DATA")
+
+}
+#endif
+
 extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *dweight, int *basf, int *primf, int *basf_counter, int *primf_counter, int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2){
 
 	PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
@@ -1835,6 +1887,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> basf_locator     = new cuda_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
 	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+
 	gpu -> xc_threadsPerBlock = gpu -> gpu_xcq -> bin_size;
 	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
@@ -1845,6 +1898,8 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> gaz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> gbz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> exc = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+
 
 	gpu -> gpu_xcq -> gridx -> Upload();
 	gpu -> gpu_xcq -> gridy -> Upload();
@@ -1868,6 +1923,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> gaz -> Upload();
 	gpu -> gpu_xcq -> gbz -> Upload();
 	gpu -> gpu_xcq -> exc -> Upload();
+
 
         gpu -> gpu_sim.npoints	= gpu -> gpu_xcq -> npoints;
         gpu -> gpu_sim.nbins	= gpu -> gpu_xcq -> nbins;
@@ -1895,9 +1951,20 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu ->gpu_sim.gaz     = gpu -> gpu_xcq -> gaz -> _devData;
 	gpu ->gpu_sim.gbz     = gpu -> gpu_xcq -> gbz -> _devData;
 	gpu ->gpu_sim.exc     = gpu -> gpu_xcq -> exc -> _devData;
-	gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
-	gpu -> gpu_sim.isg = *isg;
-        gpu -> gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+	gpu ->gpu_sim.sigrad2 = gpu->gpu_basis->sigrad2->_devData;
+	gpu ->gpu_sim.isg = *isg;
+        gpu ->gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+
+#ifdef DEBUG
+        print_uploaded_dft_info();
+#endif
+
+#ifdef CUDA_MPIV
+//        mgpu_xc_naive_distribute();
+        mgpu_xc_greedy_distribute();
+        gpu ->gpu_sim.mpirank = gpu -> mpirank;
+        gpu ->gpu_sim.mpisize = gpu -> mpisize;
+#endif
 
 	upload_sim_to_constant_dft(gpu);
 
@@ -1934,7 +2001,10 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> gaz);
 	SAFE_DELETE(gpu -> gpu_xcq -> gbz);
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
-	SAFE_DELETE(gpu->gpu_basis->sigrad2);
+	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
+#ifdef CUDA_MPIV
+        SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
+#endif
 }
 
 void gpu_delete_sswgrad_vars(){
@@ -1946,6 +2016,9 @@ void gpu_delete_sswgrad_vars(){
         SAFE_DELETE(gpu -> gpu_xcq -> quadwt);
 	SAFE_DELETE(gpu -> gpu_xcq -> uw_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> gatm_ssd);
+#ifdef CUDA_MPIV
+        SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
+#endif
 
 }
 
