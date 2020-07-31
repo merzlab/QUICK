@@ -38,7 +38,7 @@ void get_ssw(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-	get_ssw_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>();
+	QUICK_SAFE_CALL((get_ssw_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -63,7 +63,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
     cudaEventRecord(start, 0);
 #endif
 
-    get_primf_contraf_lists_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight);
+    QUICK_SAFE_CALL((get_primf_contraf_lists_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight)));
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -89,15 +89,15 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 //        nvtxRangePushA("SCF XC: density");
 
-	get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>();
-
+	QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+    
 	cudaDeviceSynchronize();
 
 //	nvtxRangePop();
 
 //	nvtxRangePushA("SCF XC");
 
-	getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals);
+	QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -126,7 +126,7 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad: density");	
 
-    get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>();
+    QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     cudaDeviceSynchronize();
  
@@ -134,13 +134,13 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad");
 
-    get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals);
+    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals)));
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad);
+    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad)));
 
     gpu_delete_sswgrad_vars();
 
@@ -167,6 +167,13 @@ __global__ void get_density_kernel()
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
+            int bin_id = (int) (gid/devSim_dft.bin_size);
+
+#ifdef CUDA_MPIV
+
+            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
+#endif
+
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight >0){
@@ -175,8 +182,6 @@ __global__ void get_density_kernel()
         	        QUICKDouble gax = 0.0;
 	                QUICKDouble gay = 0.0;
         	        QUICKDouble gaz = 0.0;
-
-                        int bin_id = (int) (gid/devSim_dft.bin_size);
 
                         QUICKDouble gridx = devSim_dft.gridx[gid];
                         QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -187,6 +192,10 @@ __global__ void get_density_kernel()
                 	        QUICKDouble phi, dphidx, dphidy, dphidz;
 			
 				pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+
+#ifdef DEBUG
+//        printf("i=%i ibas=%i x=%f  y=%f  z=%f  phi=%.10e dx=%.10e dy=%.10e dz=%.10e\n", i, ibas, gridx, gridy, gridz, phi, dphidx, dphidz, dphidz);
+#endif
 
 				if (abs(phi+dphidx+dphidy+dphidz) >= devSim_dft.DMCutoff ) {
 
@@ -223,9 +232,12 @@ __global__ void get_density_kernel()
 #endif
 
 #ifdef DEBUG
-//        printf("gridx: %f  gridy: %f  gridz: %f, weight: %.10e, density: %.10e \n",gridx, gridy, gridz, weight, density);
+//        printf("x=%f  y=%f  z=%f  density=%.10e  gax=%.10e gay=%.10e gaz=%.10e \n",gridx, gridy, gridz, density, gax, gay, gaz);
 #endif
 		}
+#ifdef CUDA_MPIV
+            }
+#endif
 	}
 }
 
@@ -236,11 +248,14 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
+            int bin_id = (int) (gid/devSim_dft.bin_size);
+
+#ifdef CUDA_MPIV
+            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
+#endif
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight>0){
-                        int bin_id = (int) (gid/devSim_dft.bin_size);
-                        //int nofbfs = devSim_dft.basf_locator[bin_id+1] - devSim_dft.basf_locator[bin_id];
 
                         QUICKDouble gridx = devSim_dft.gridx[gid];
                         QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -380,6 +395,9 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 }
                         }
                 }
+#ifdef CUDA_MPIV
+            }
+#endif
         }
 }
 
@@ -391,11 +409,14 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
+            int bin_id = (int) (gid/devSim_dft.bin_size);
+
+#ifdef CUDA_MPIV
+            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
+#endif
 		int dweight = devSim_dft.dweight[gid];
 
 		if(dweight>0){
-
-                        int bin_id = (int) (gid/devSim_dft.bin_size);
 
                         QUICKDouble gridx = devSim_dft.gridx[gid];
                         QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -549,6 +570,9 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
                                 devSim_dft.dweight_ssd[gid] = 0;
                         }				
 		}
+#ifdef CUDA_MPIV      
+            }
+#endif
 	}
 }
 
@@ -704,7 +728,7 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
-        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
+        for (QUICKULL gid = offset; gid < devSim_dft.npoints_ssd; gid += totalThreads) {
 
                 QUICKDouble gridx = devSim_dft.gridx_ssd[gid];
                 QUICKDouble gridy = devSim_dft.gridy_ssd[gid];
@@ -1274,7 +1298,6 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
     QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
     QUICKDouble z1 = gridz - LOC2(devSim_dft.xyz, 2, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
 
-
     QUICKDouble x1i, y1i, z1i;
     QUICKDouble x1imin1, y1imin1, z1imin1;
     QUICKDouble x1iplus1, y1iplus1, z1iplus1;
@@ -1321,12 +1344,12 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
             z1iplus1 = z1i * z1;
         }    
      
-     
 //        for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
 	for(int i=primf_counter[ibasp]; i< primf_counter[ibasp+1]; i++){
 	    int kprim = primf[i]; 
             QUICKDouble tmp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * 
                               exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
+
             *phi = *phi + tmp; 
             *dphidx = *dphidx + tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* x1iplus1 + (QUICKDouble)itypex * x1imin1);
             *dphidy = *dphidy + tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* y1iplus1 + (QUICKDouble)itypey * y1imin1);
