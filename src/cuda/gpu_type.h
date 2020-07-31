@@ -116,6 +116,9 @@ struct XC_quadrature_type{
 	cuda_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
 	cuda_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
 	cuda_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
+
+        // mpi variables
+        cuda_buffer_type<char>*          mpi_bxccompute;
 };
 
 
@@ -276,13 +279,18 @@ struct gpu_simulation_type {
     int                             mpisize;
     int                             nqshell;
 
+    // multi-GPU variables
     int*                            mpi_jshelln;
     int*                            mpi_jshell;
     int*                            mpi_nbasisn;
     int*                            mpi_nbasis;
     int                             mpi_qshell;
     int*                            mpi_qshelln;
-    char*                            mpi_bcompute;
+    char*                           mpi_bcompute;
+    char*                           mpi_bxccompute;
+
+    int                             mpi_xcstart;
+    int                             mpi_xcend;
 };
 
 struct gpu_basis_type {
