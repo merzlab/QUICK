@@ -441,21 +441,28 @@ while [ $# -gt 0 ]; do
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     -h| -H| -help| --help) print_help;;
-    -*)  echo  "Error: $1 is an unknown flag "
-         echo  "       Run this script as './configure [flags] compiler' "
-         echo  "       Run './configure --help' for more information "
+    -*)  echo  "Error: $1 is an unknown flag."
+         echo  "       Run this script as './configure [flags] compiler'."
+         echo  "       Run './configure --help' for more information."
          exit 1;;
      *)  if [ $# -gt 1 ]; then
-           echo  "Error: $1 is an unknown flag"
-           echo  "       Run this script as './configure [flags] compiler' "
-           echo  "       Run './configure --help' for more information "
+           echo  "Error: $1 is an unknown flag."
+           echo  "       Run this script as './configure [flags] compiler'."
+           echo  "       Run './configure --help' for more information."
            exit 1
          fi
   esac
   shift
 done
 
-echo "Requested installation type/s: $buildtypes"
+# check the build type
+if [ -z "$buildtypes" ]; then
+  echo "No build type specified."
+  echo "Proceeding with a serial build."
+  serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick"
+else
+  echo "Requested installation type/s: $buildtypes"
+fi
 
 # check the os first
 check_os
