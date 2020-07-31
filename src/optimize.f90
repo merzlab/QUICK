@@ -119,7 +119,7 @@ subroutine optimize(failed)
          enddo
       enddo
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
             quick_molspec%molchg, quick_molspec%iAtomType)
       call gpu_upload_xyz(xyz)
@@ -130,7 +130,7 @@ subroutine optimize(failed)
       call g2eshell
       call schwarzoff
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
             ncontract, itype, aexp, dcoeff, &
             quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -164,7 +164,7 @@ subroutine optimize(failed)
          !            endif
       endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then
         call gpu_cleanup()
       endif
