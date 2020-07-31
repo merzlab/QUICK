@@ -775,55 +775,10 @@ subroutine get_xc_grad
    integer, dimension(natom*50*194) :: init_grid_atm
 
 #ifdef MPIV
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
    include "mpif.h"
 #endif
 
-#ifdef CUDA
-
-!   idx_grid=1
-!   itst=1
-!   do Iatm=1,natom
-!        Iradtemp=50
-!       do Irad = 1, Iradtemp 
-!         if(quick_method%iSG.eq.1)then
-!            call gridformnew(iatm,RGRID(Irad),iiangt)
-!            rad = radii(quick_molspec%iattype(iatm))
-!         else
-!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-!            rad = radii2(quick_molspec%iattype(iatm))
-!         endif
-!
-!         rad3 = rad*rad*rad
-!         do Iang=1,iiangt
-!
-!            init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-!            init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-!            init_grid_ptz(idx_grid)=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-!            init_grid_atm(idx_grid)=Iatm
-!
-!            arr_wtang(idx_grid) = WTANG(Iang)
-!            arr_rwt(idx_grid) = RWT(Irad)
-!            arr_rad3(idx_grid) = rad3
-!
-!            sswt=SSW(init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),Iatm)
-!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
-!            write(*,*) idx_grid,init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt
-!            if (weight < quick_method%DMCutoff ) then
-!                continue
-!            else
-                !write(*,*) Iatm,Iang,idx_grid
-!                write(*,*) itst-1,"grid_ptx:",init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt,weight
-!                itst=itst+1
-!            endif
-!            idx_grid=idx_grid+1
-!         enddo
-!      enddo
-!   enddo
-
-!    write(*,*) "Surving grid pts: ", itst, quick_method%DMCutoff
+#if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
 
@@ -855,24 +810,7 @@ quick_method%xc_polarization)
       enddo
    endif
 
-!  Generate the grid
-!   do Iatm=1,natom
-!      if(quick_method%iSG.eq.1)then
-!         Iradtemp=50
-!      else
-!         if(quick_molspec%iattype(iatm).le.10)then
-!            Iradtemp=23
-!         else
-!            Iradtemp=26
-!         endif
-!      endif
-
-#ifdef MPIV
-!  Distribute grid points among master and slaves
-!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
-#endif
-
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
