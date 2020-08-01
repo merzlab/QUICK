@@ -58,7 +58,7 @@ echo  "
                                                                             
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:                                                                  
-                    ./configure --cuda --arch volta --prefix /home/install intel                                  
+         ./configure --cuda --arch volta --prefix /home/install intel                                  
   "
 
 exit 0;
@@ -435,7 +435,7 @@ while [ $# -gt 0 ]; do
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
     --debug)       debug='yes';;
     --shared)      shared='yes';; 
-    --arch)        shift; cuda_arch=$1; uspec_arch='true';;
+    --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
     gnu)           compiler='gnu';;
@@ -628,17 +628,19 @@ done
 
 # this function sets the user defined cuda architecture flags, if specified
 set_uspec_arch(){
-  case "$cuda_arch" in
-    pascal)
-      echo "Configuring for SM6.0"
-      cuda_arch_flags="-gencode arch=compute_60,code=sm_60";;
-    volta)
-      echo "Configuring for SM7.0"
-      cuda_arch_flags="-gencode arch=compute_70,code=sm_70";;
-    turing)
-      echo "Configuring for SM7.5"
-      cuda_arch_flags="-gencode arch=compute_75,code=sm_75";;
-  esac
+  for carch in $cuda_arch; do
+    case "$carch" in
+      pascal)
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$cuda_arch_flags $sm60flags";;
+      volta)
+        echo "Configuring for SM7.0"
+        cuda_arch_flags="$cuda_arch_flags $sm70flags";;
+      turing)
+        echo "Configuring for SM7.5"
+        cuda_arch_flags="$cuda_arch_flags $sm75flags";;
+    esac
+  done
 }
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
@@ -658,13 +660,9 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     #SM8.0 = A100
     #sm80flags='-gencode arch=compute_80,code=sm_80'
     #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
-    sm75flags='-gencode arch=compute_60,code=sm_75'
+    sm75flags='-gencode arch=compute_75,code=sm_75'
     #SM7.0 = V100, Titan V
-    sm70flags='-gencode arch=compute_60,code=sm_70'
-    #SM6.2 = ???
-    sm62flags='-gencode arch=compute_62,code=sm_62'
-    #SM6.1 = GP106 = GTX-1070, GP104 = GTX-1080, GP102 = Titan-X[P]
-    sm61flags='-gencode arch=compute_61,code=sm_61'
+    sm70flags='-gencode arch=compute_70,code=sm_70'
     #SM6.0 = GP100 / P100 = DGX-1
     sm60flags='-gencode arch=compute_60,code=sm_60'
 
@@ -678,10 +676,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        sm75flags='-gencode arch=compute_75,code=sm_75'
-        sm70flags='-gencode arch=compute_70,code=sm_70'          
-        echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
+        echo "Configuring for SM6.0, SM7.0, SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -689,8 +685,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
+        echo "Configuring for SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -698,8 +694,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0, SM6.1 and SM7.0"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags"
+        echo "Configuring for SM6.0 and SM7.0"
+        cuda_arch_flags="$sm60flags $sm70flags"
       fi
     elif [ "$cudaversion" = "8.0" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -707,8 +703,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0 and SM6.1"
-        cuda_arch_flags="$sm60flags $sm61flags"
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$sm60flags"
       fi
     else
       echo  "Error: Unsupported CUDA version $cudaversion detected. "
