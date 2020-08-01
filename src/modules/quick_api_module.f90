@@ -56,7 +56,7 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: coords
 
     ! charge and the coordinates of external point charges
-    ! size is 4*nxt_ptchg, where first element of a row holds the charge
+    ! size is 4*nxt_ptchg, where last element of a row holds the charge
     double precision, allocatable, dimension(:,:) :: xt_chg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
