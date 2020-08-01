@@ -498,16 +498,9 @@ if [ "$useprefix" = "true" ]; then
     # delete the runs directory from QUICK_HOME/test if it exists
     if [ -d "$QUICK_HOME/test/runs" ]; then rm -rf $QUICK_HOME/test/runs; fi
 
-    # create a symlink if lndir command exists. Otherwise copy the content.
-    if [ `command -v lndir | wc -l` -gt 0 ]; then
-      echo "Creating symlink for $quick_prefix/test"
-      cd "$quick_prefix/test"
-      lndir "$QUICK_HOME/test"
-      cd "$QUICK_HOME"
-    else
-      echo "Copying test cases into $quick_prefix/test"
-      cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
-    fi
+    # Copy test folder from QUICK_HOME to install folder.
+    echo "Copying test cases into $quick_prefix/test"
+    cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
 
   fi
 
