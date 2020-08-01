@@ -158,8 +158,8 @@ makeinclean:
 .PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
 
 uninstall: $(UNINSTALLTYPES)
-	@-rm -rf $(installfolder)/basis
-	@-rm -rf $(installfolder)/test
+	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
+	rm -rf $(installfolder)/test; fi
 	@-rm -f $(installfolder)/runtest
 	@echo  "Uninstallation sucessful."
 
