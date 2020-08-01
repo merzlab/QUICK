@@ -59,12 +59,12 @@ checkfolders:
 
 install: $(INSTALLTYPES)
 	@echo  "Installation sucessful."
+	@echo  ""
 	@echo  "Please add the following into your .bash_profile or .bashrc file."
 	@echo  "      export QUICK_BASIS=$(installfolder)/basis"
 
 noinstall:
-	@echo  "Error: No prefix to install. You must specify a prefix during the configuration."
-	@echo  "       Please find QUICK executables in $(exefolder)."
+	@echo  "Please find QUICK executables in $(exefolder)."
 
 serialinstall:
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
