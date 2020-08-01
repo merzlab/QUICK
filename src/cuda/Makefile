@@ -101,5 +101,5 @@ xc: $(CUDAXCOBJ)
 
 clean: 
 	@-rm -f *.o 
-	@-rm -f ./CUBLAS/*.o
-	@-rm -f ./CUSOLVER/*.o
+	@-rm -f ./cublas/*.o
+	@-rm -f ./cusolver/*.o
