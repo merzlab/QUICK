@@ -10,7 +10,7 @@ jobs:
       - name: Install deps
         run: sudo apt-get -y install gfortran
       - name: Configure serial
-        run: ./configure -serial --prefix $PWD/install gnu
+        run: ./configure --serial --prefix $PWD/install gnu
       - name: Build serial
         run: make
       - name: Install serial
