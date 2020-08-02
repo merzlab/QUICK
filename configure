@@ -389,6 +389,7 @@ cuda_arch_flags=''
 
 # extra cuda flags
 cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+cuda_dc_flags=''
 
 # cuda include flags
 cuda_incl_flags=''
@@ -625,7 +626,8 @@ set_uspec_arch(){
     case "$carch" in
       pascal)
         echo "Configuring for SM6.0"
-        cuda_arch_flags="$cuda_arch_flags $sm60flags";;
+        cuda_arch_flags="$cuda_arch_flags $sm60flags"
+	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       volta)
         echo "Configuring for SM7.0"
         cuda_arch_flags="$cuda_arch_flags $sm70flags";;
@@ -671,6 +673,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
         echo "Configuring for SM6.0, SM7.0, SM7.5"
         cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -680,6 +683,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       else
         echo "Configuring for SM6.0, SM7.0 and SM7.5"
         cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -689,6 +693,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       else
         echo "Configuring for SM6.0 and SM7.0"
         cuda_arch_flags="$sm60flags $sm70flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -698,6 +703,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       else
         echo "Configuring for SM6.0"
         cuda_arch_flags="$sm60flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
       echo  "Error: Unsupported CUDA version $cudaversion detected. "
@@ -930,6 +936,7 @@ cat >> "$QUICK_HOME/build/$buildtype/make.in" << EOF
 CPP_FLAG=$cpp_flags
 CUDA_FLAGS=$cuda_flags
 CUDA_INCL_FLAGS=$cuda_incl_flags
+CUDA_DC_FLAGS=$cuda_dc_flags
 CFLAGS=$cflags
 
 EOF
