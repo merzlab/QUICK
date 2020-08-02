@@ -58,6 +58,30 @@ ctime=''
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
 
+# this function prints help page
+print_help(){
+
+echo  "                                                                                                                                       
+  Use this script as ./runtest [flags]                            
+                                                                            
+  Available flags are:                                                      
+      --serial       Tests QUICK serial version                                
+      --mpi          Tests QUICK MPI prallel version                           
+      --cuda         Tests QUICK GPU version
+      --ncores <ncore>
+                     Specify the number of cores to be used in MPI tests.
+                     If unspecified, 2 cores will be used.    
+                                                                            
+  If the version flags are not specified, the script will try to detect
+  the executables and test them.
+  
+  "
+
+exit 0;
+
+}
+
+
 print_test_info(){
 
   ismp2='no'
@@ -80,6 +104,23 @@ print_test_info(){
 
 }
 
+#  !---------------------------------------------------------------------!
+#  ! Read input                                                          !
+#  !---------------------------------------------------------------------
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --serial)      serial='yes'; buildtypes="$buildtypes serial";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
+    --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
+    --ncores)      shift; ncores=$1;;
+    -h| -H| -help| --help) print_help;;
+     *) 
+         echo  "Neglecting unknown flag: $1";;
+  esac
+  shift
+done
 
 #  !---------------------------------------------------------------------!
 #  ! Check directories & executables                                     !
@@ -102,30 +143,56 @@ if [ ! -d "$testdir" ]; then
   exit 1
 fi
 
-# check for executables
-if [ -x "$qbindir/quick.cuda.mpi" ]; then
-  cudampi='yes'
-  buildtypes="$buildtypes cudampi"
-fi
+if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
 
-if [ -x "$qbindir/quick.cuda" ]; then
-  cuda='yes'
-  buildtypes="$buildtypes cuda"
-fi
+  if [ "$serial" = 'yes' ] && [ ! -x "$qbindir/quick" ]; then
+    echo  "Error: $qbindir/quick not found."
+    exit 1
+  fi
 
-if [ -x "$qbindir/quick.mpi" ]; then
-  mpi='yes'
-  buildtypes="$buildtypes mpi"
-fi
+  if [ "$mpi" = 'yes' ] && [ ! -x "$qbindir/quick.mpi" ]; then
+    echo  "Error: $qbindir/quick.mpi not found."
+    exit 1
+  fi
 
-if [ -x "$qbindir/quick" ]; then
-  serial='yes'
-  buildtypes="$buildtypes serial"
-fi
+  if [ "$cuda" = 'yes' ] && [ ! -x "$qbindir/quick.cuda" ]; then
+    echo  "Error: $qbindir/quick.cuda not found."
+    exit 1
+  fi
 
-if [ "$serial" = 'no' -a "$mpi" = 'no' -a "$cuda" = 'no' -a "$cudampi" = 'no' ]; then
-  echo  "Error: No QUICK executables found in $qbindir. "
-  exit 1
+  if [ "$cudampi" = 'yes' ] && [ ! -x "$qbindir/quick.cuda.mpi" ]; then
+    echo  "Error: $qbindir/quick.cuda.mpi not found."
+    exit 1
+  fi
+
+else
+
+  # automatically check for executables
+  if [ -x "$qbindir/quick.cuda.mpi" ]; then
+    cudampi='yes'
+    buildtypes="$buildtypes cudampi"
+  fi
+
+  if [ -x "$qbindir/quick.cuda" ]; then
+    cuda='yes'
+    buildtypes="$buildtypes cuda"
+  fi
+
+  if [ -x "$qbindir/quick.mpi" ]; then
+    mpi='yes'
+    buildtypes="$buildtypes mpi"
+  fi
+
+  if [ -x "$qbindir/quick" ]; then
+    serial='yes'
+    buildtypes="$buildtypes serial"
+  fi
+
+  if [ "$serial" = 'no' -a "$mpi" = 'no' -a "$cuda" = 'no' -a "$cudampi" = 'no' ]; then
+    echo  "Error: No QUICK executables found in $qbindir. "
+    exit 1
+  fi
+
 fi
 
 if [ ! -f "$testdir/testlist.txt" ]; then
