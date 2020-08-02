@@ -23,9 +23,9 @@ Supported platforms: Linux and OSX
 
 * [Installation Guide](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#installation-guide)
    1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#compatible-compilers-and-hardware)
-   2. [Serial Installation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#serial-installation)
-   3. [MPI Installation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#mpi-installation)
-   4. [CUDA Installation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#cuda-version-installation)
+   2. [Installation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#installation)
+   3. [Testing](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#environment-variables-and-testing)
+   4. [Uninstallation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#uninstallation-and-cleaning)
 
 Getting Started
 ---------------
