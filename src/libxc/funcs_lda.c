@@ -48,7 +48,9 @@ extern xc_func_info_type xc_func_info_lda_x_rae;
 extern xc_func_info_type xc_func_info_lda_k_zlp;
 extern xc_func_info_type xc_func_info_lda_c_mcweeny;
 extern xc_func_info_type xc_func_info_lda_c_br78;
+#ifdef COMPILE_PK09
 extern xc_func_info_type xc_func_info_lda_c_pk09;
+#endif
 extern xc_func_info_type xc_func_info_lda_c_ow_lyp;
 extern xc_func_info_type xc_func_info_lda_c_ow;
 extern xc_func_info_type xc_func_info_lda_xc_gdsmfb;
@@ -106,7 +108,9 @@ const xc_func_info_type *xc_lda_known_funct[] = {
   &xc_func_info_lda_k_zlp,
   &xc_func_info_lda_c_mcweeny,
   &xc_func_info_lda_c_br78,
+#ifdef COMPILE_PK09
   &xc_func_info_lda_c_pk09,
+#endif
   &xc_func_info_lda_c_ow_lyp,
   &xc_func_info_lda_c_ow,
   &xc_func_info_lda_xc_gdsmfb,
