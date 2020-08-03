@@ -58,6 +58,30 @@ ctime=''
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
 
+# this function prints help page
+print_help(){
+
+echo  "                                                                                                                                       
+  Use this script as ./runtest [flags]                            
+                                                                            
+  Available flags are:                                                      
+      --serial       Tests QUICK serial version                                
+      --mpi          Tests QUICK MPI prallel version                           
+      --cuda         Tests QUICK GPU version
+      --ncores <ncore>
+                     Specify the number of cores to be used in MPI tests.
+                     If unspecified, 2 cores will be used.    
+                                                                            
+  If the version flags are not specified, the script will try to detect
+  the executables and test them.
+  
+  "
+
+exit 0;
+
+}
+
+
 print_test_info(){
 
   ismp2='no'
@@ -80,56 +104,99 @@ print_test_info(){
 
 }
 
+#  !---------------------------------------------------------------------!
+#  ! Read input                                                          !
+#  !---------------------------------------------------------------------
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --serial)      serial='yes'; buildtypes="$buildtypes serial";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
+    --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
+    --ncores)      shift; ncores=$1;;
+    -h| -H| -help| --help) print_help;;
+     *) 
+         echo  "Neglecting unknown flag: $1";;
+  esac
+  shift
+done
 
 #  !---------------------------------------------------------------------!
 #  ! Check directories & executables                                     !
 #  !---------------------------------------------------------------------!
 
 if [ ! -d "$qbindir" ]; then
-  echo -e "\033[91mError: QUICK bin folder not found. \033[0m"
+  echo  "Error: QUICK bin folder not found. "
   exit 1
 fi
 
 if [ ! -d "$qbasisdir" ]; then
-  echo -e "\033[91mError: QUICK basis folder not found. \033[0m"
+  echo  "Error: QUICK basis folder not found. "
   exit 1
 else
   export QUICK_BASIS=$qbasisdir
 fi
 
 if [ ! -d "$testdir" ]; then
-  echo -e "\033[91mError: QUICK test folder not found. \033[0m"
+  echo  "Error: QUICK test folder not found. "
   exit 1
 fi
 
-# check for executables
-if [ -x "$qbindir/quick.cuda.mpi" ]; then
-  cudampi='yes'
-  buildtypes="$buildtypes cudampi"
-fi
+if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
 
-if [ -x "$qbindir/quick.cuda" ]; then
-  cuda='yes'
-  buildtypes="$buildtypes cuda"
-fi
+  if [ "$serial" = 'yes' ] && [ ! -x "$qbindir/quick" ]; then
+    echo  "Error: $qbindir/quick not found."
+    exit 1
+  fi
 
-if [ -x "$qbindir/quick.mpi" ]; then
-  mpi='yes'
-  buildtypes="$buildtypes mpi"
-fi
+  if [ "$mpi" = 'yes' ] && [ ! -x "$qbindir/quick.mpi" ]; then
+    echo  "Error: $qbindir/quick.mpi not found."
+    exit 1
+  fi
 
-if [ -x "$qbindir/quick" ]; then
-  serial='yes'
-  buildtypes="$buildtypes serial"
-fi
+  if [ "$cuda" = 'yes' ] && [ ! -x "$qbindir/quick.cuda" ]; then
+    echo  "Error: $qbindir/quick.cuda not found."
+    exit 1
+  fi
 
-if [ "$serial" = 'no' -a "$mpi" = 'no' -a "$cuda" = 'no' -a "$cudampi" = 'no' ]; then
-  echo -e "\033[91mError: No QUICK executables found in $qbindir. \033[0m"
-  exit 1
+  if [ "$cudampi" = 'yes' ] && [ ! -x "$qbindir/quick.cuda.mpi" ]; then
+    echo  "Error: $qbindir/quick.cuda.mpi not found."
+    exit 1
+  fi
+
+else
+
+  # automatically check for executables
+  if [ -x "$qbindir/quick.cuda.mpi" ]; then
+    cudampi='yes'
+    buildtypes="$buildtypes cudampi"
+  fi
+
+  if [ -x "$qbindir/quick.cuda" ]; then
+    cuda='yes'
+    buildtypes="$buildtypes cuda"
+  fi
+
+  if [ -x "$qbindir/quick.mpi" ]; then
+    mpi='yes'
+    buildtypes="$buildtypes mpi"
+  fi
+
+  if [ -x "$qbindir/quick" ]; then
+    serial='yes'
+    buildtypes="$buildtypes serial"
+  fi
+
+  if [ "$serial" = 'no' -a "$mpi" = 'no' -a "$cuda" = 'no' -a "$cudampi" = 'no' ]; then
+    echo  "Error: No QUICK executables found in $qbindir. "
+    exit 1
+  fi
+
 fi
 
 if [ ! -f "$testdir/testlist.txt" ]; then
-  echo -e "\033[91mError: testlist.txt not found in $testdir. \033[0m"
+  echo  "Error: testlist.txt not found in $testdir. "
   exit 1
 fi
 
@@ -139,9 +206,9 @@ echo ""
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
   if [ `command -v mpirun | wc -l` -gt 0 ]; then
     ismpirun='yes'
-    echo -e "\033[93mMPI tests will be carried out with $ncores cores. \033[0m"
+    echo  "MPI tests will be carried out with $ncores cores. "
   else
-    echo -e "\033[93mMPI tests will be carried out with a single core. \033[0m"
+    echo  "MPI tests will be carried out with a single core. "
   fi
   echo ""
 fi
@@ -171,7 +238,7 @@ for buildtype in $buildtypes; do
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo -e "\033[92mTesting $buildtype version started on $cdate at $ctime. \033[0m"
+  echo  "Testing $buildtype version started on $cdate at $ctime. "
   echo ""
 
   # set qexe
@@ -216,7 +283,7 @@ for buildtype in $buildtypes; do
       newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
       echo "$refval  $newval"|awk '{
         x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
         print "MP2 energy: " $2 ", Reference value: " $1 ". " stat""
       }'                         
 
@@ -226,7 +293,7 @@ for buildtype in $buildtypes; do
       newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
       echo "$refval  $newval"|awk '{
         x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
         print "Total energy: " $2 ", Reference value: " $1 ". " stat""
       }'	
 
@@ -280,7 +347,7 @@ for buildtype in $buildtypes; do
     paste refGrad.txt newGrad.txt >compGrad.txt
     awk '{
       x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
       print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
       }' compGrad.txt
     echo ""
@@ -293,7 +360,7 @@ for buildtype in $buildtypes; do
     newval=$(grep "MINIMIZED ENERGY" "$i.out" | awk '{print $3}')
     echo "$refval  $newval"|awk '{
       x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="\033[1;31mFailed\033[0m"; else stat="\033[1;32mPassed\033[0m"; 
+      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
       print "Minimized energy: " $2 ", Reference value: " $1 ". " stat""
       }'
     echo ""
@@ -307,7 +374,7 @@ for buildtype in $buildtypes; do
   cd "$testdir"
 done
 
-echo -e "\033[92mAll tests are done! \033[0m"
+echo  "All tests are done! "
 
 cd $installdir
 

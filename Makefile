@@ -24,31 +24,31 @@ include $(MAKEIN)
 .PHONY: nobuildtypes serial mpi cuda cudampi all
 
 all:$(BUILDTYPES)
-	@echo -e "\033[92mBuilding successful.\033[0m"
+	@echo  "Building successful."
 
 nobuildtypes:
-	@echo -e "\033[91mError: No build type found. Plesae run configure script first.\033[0m"
+	@echo  "Error: No build type found. Plesae run configure script first."
 
 serial: checkfolders
-	@echo -e "\033[92mBuilding serial version..\033[0m"
+	@echo  "Building serial version.."
 	@cd $(buildfolder)/serial && make serial
 
 mpi: checkfolders
-	@echo -e "\033[92mBuilding mpi version..\033[0m"
+	@echo  "Building mpi version.."
 	@cd $(buildfolder)/mpi && make mpi
 
 cuda: checkfolders
-	@echo -e "\033[92mBuilding cuda version..\033[0m"
+	@echo  "Building cuda version.."
 	@cd $(buildfolder)/cuda && make cuda
 
 cudampi: checkfolders
-	@echo -e "\033[92mBuilding cuda-mpi version..\033[0m"
+	@echo  "Building cuda-mpi version.."
 	@cd $(buildfolder)/cudampi && make cudampi 
 
 checkfolders:
-	@if [ ! -d $(exefolder) ]; then echo -e "\033[91mError: $(exefolder) not found. Please configure first.\033[0m"; \
+	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
 	exit 1; fi
-	@if [ ! -d $(buildfolder) ]; then echo -e "\033[91mError: $(buildfolder) not found. Please configure first.\033[0m"; \
+	@if [ ! -d $(buildfolder) ]; then echo  "Error: $(buildfolder) not found. Please configure first."; \
 	exit 1; fi 	
 
 #  !---------------------------------------------------------------------!
@@ -58,31 +58,31 @@ checkfolders:
 .PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall
 
 install: $(INSTALLTYPES)
-	@echo -e "\033[92mInstallation sucessful.\033[0m"
-	@echo -e "\033[92mPlease add the following into your .bash_profile or .bashrc file.\033[0m"
-	@echo -e "\033[92m      export QUICK_BASIS=$(installfolder)/basis\033[0m"
+	@echo  "Installation sucessful."
+	@echo  ""
+	@echo  "Please add the following into your .bash_profile or .bashrc file."
+	@echo  "      export QUICK_BASIS=$(installfolder)/basis"
 
 noinstall:
-	@echo -e "\033[91mError: No prefix to install. You must specify a prefix during the configuration.\033[0m"
-	@echo -e "\033[91m       Please find QUICK executables in $(exefolder).\033[0m"
+	@echo  "Please find QUICK executables in $(exefolder)."
 
 serialinstall:
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
-	else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
 	exit 1; fi
 	@cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
 	@cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
 
 mpiinstall:
 	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
-        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
 	@cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
 
 cudainstall:
 	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
-        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
 	@cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
@@ -90,7 +90,7 @@ cudainstall:
 
 cudampiinstall:
 	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
-        else echo -e "\033[91mError: Executable not found. You must run 'make' before running 'make install'.\033[m"; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
 	@cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
@@ -110,7 +110,7 @@ buildtest:
 
 installtest:
 	@if [ ! -x $(installfolder)/bin/quick* ]; then \
-        echo -e "\033[91mError: Executables not found. You must run 'make install' before running 'make test'.\033[m"; \
+        echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
         exit 1; fi	
 	@cp $(toolsfolder)/runtest $(installfolder)
 	@cd $(installfolder) && sh runtest
@@ -123,7 +123,7 @@ installtest:
 	
 clean:$(CLEANTYPES)
 	@-rm -f $(homefolder)/runtest 
-	@echo -e "\033[92mCleaned up successfully.\033[0m"
+	@echo  "Cleaned up successfully."
 
 serialclean:
 	@cd $(buildfolder)/serial && make clean 
@@ -140,7 +140,7 @@ cudampiclean:
 distclean: makeinclean
 	@-rm -f $(homefolder)/runtest 
 	@-rm -rf $(buildfolder) $(exefolder)
-	@echo -e "\033[92mRemoved build and bin directories.\033[0m"
+	@echo  "Removed build and bin directories."
 
 makeinclean:
 	@-rm -f $(libxcfolder)/make.in
@@ -158,13 +158,13 @@ makeinclean:
 .PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
 
 uninstall: $(UNINSTALLTYPES)
-	@-rm -rf $(installfolder)/basis
-	@-rm -rf $(installfolder)/test
+	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
+	rm -rf $(installfolder)/test; fi
 	@-rm -f $(installfolder)/runtest
-	@echo -e "\033[92mUninstallation sucessful.\033[0m"
+	@echo  "Uninstallation sucessful."
 
 nouninstall:
-	@echo -e "\033[92mNothing to uninstall.\033[0m"
+	@echo  "Nothing to uninstall."
 
 serialuninstall:
 	@-rm -f $(installfolder)/bin/quick

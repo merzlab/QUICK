@@ -100,7 +100,7 @@
     include 'mpif.h'
 
     call Broadcast(quick_molspec)
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     call MPI_BCAST(dcoeff,nbasis*maxcontract,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     if (quick_method%ecp) then
@@ -118,7 +118,7 @@
       call MPI_BCAST(bndprm,3*3*3*84,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
     
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     end
 
@@ -132,6 +132,7 @@
     
     include 'mpif.h'
     
+    integer :: i, j
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(jshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -188,6 +189,7 @@
     call MPI_BCAST(quick_basis%last_basis_function,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)   
+
     end
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -340,10 +342,6 @@
         
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
-#ifdef CUDA_MPIV
-!        call mgpu_upload_basis_setup(mpi_jshelln,mpi_jshell,mpi_nbasisn,mpi_nbasis)
-#endif
-
     endif
 
     
@@ -395,79 +393,6 @@
       call deallocate_mgpu()
 
     end subroutine delete_mgpu_setup
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-! Setup eri calculation on multi GPUs
-! Madu Manathunga 05/08/2020
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    subroutine MPI_setup_mgpu_eri()
-    use allmod
-    implicit none
-
-    include 'mpif.h'
-
-    if (master) then
-        call mgpu_distribute_qshell(quick_basis%mpi_qshell,quick_basis%mpi_qshelln)
-    endif
-
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(quick_basis%mpi_qshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(quick_basis%mpi_qshelln,mpisize+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
-    call mgpu_upload_qshell(quick_basis%mpi_qshell, quick_basis%mpi_qshelln)
-
-    end subroutine MPI_setup_mgpu_eri
-
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-! Setup eri calculation on multi GPUs
-! Madu Manathunga 05/08/2020
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    subroutine MPI_setup_arr_bsd_mgpu_eri()
-    use allmod
-    implicit none
-    integer :: nqshell      ! Number of sorted shells
-    integer :: remainder, idx, impi, icount 
-    integer, allocatable, dimension(:)  :: mpi_qshell
-    integer, allocatable, dimension(:)  :: mpi_qshelln
-
-    include 'mpif.h'
-
-    if (master) then
-        call mgpu_get_nqshell(nqshell)
-    endif
-
-    call MPI_BCAST(nqshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
- 
-    ! All nodes allocate memory and initialize values to zero
-    if(.not. allocated(mpi_qshell)) allocate(mpi_qshell(mpisize))
-    if(.not. allocated(mpi_qshelln)) allocate(mpi_qshelln(mpisize*nqshell))
-    call zeroiVec(mpi_qshell,mpisize)
-    call zeroiVec(mpi_qshelln,mpisize*nqshell) 
-
-    ! Now master will distribute the qshells 
-    if(master) then
-       icount=1
-       remainder = nqshell
-       do while(remainder .gt. 0)
-           do impi=1, mpisize
-              idx=nqshell-remainder
-              mpi_qshell(impi) = mpi_qshell(impi)+1
-              mpi_qshelln((impi-1)*nqshell+icount)=idx   
-              remainder=remainder-1
-              if (remainder .lt. 1) exit
-           enddo
-           icount=icount+1
-       enddo    
-    endif    
-
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(mpi_qshell,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(mpi_qshelln,mpisize*nqshell,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
-    call mgpu_upload_arr_bsd_qshell(mpi_qshell,mpi_qshelln)
-
-    end subroutine MPI_setup_arr_bsd_mgpu_eri
 
 #endif
 
@@ -505,6 +430,8 @@
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
+#ifndef CUDA_MPIV
+
    if(master) then
       do impi=1, mpisize
          itotgridspn(impi)=0
@@ -534,6 +461,9 @@
 
    endif
 
+#endif
+
+
    if(bMPI) then
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -541,20 +471,15 @@
       call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+#ifdef CUDA_MPIV
+      call MPI_BCAST(quick_dft_grid%dweight,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+#else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%gridb_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
       call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+#endif
+
       call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)

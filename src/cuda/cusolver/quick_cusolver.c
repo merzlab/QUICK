@@ -215,8 +215,8 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
     //kwk
 
 	//printf("started diag copy\n");    
-        cudaStat1 = cudaMemcpy(vec, devPtr_o, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
-        cudaStat2 = cudaMemcpy(E, devPtr_E, sizeof(double)*dim, cudaMemcpyDeviceToHost);
+        cudaStat1 = cudaMemcpy((void*) vec, devPtr_o, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
+        cudaStat2 = cudaMemcpy((void*) E, devPtr_E, sizeof(double)*dim, cudaMemcpyDeviceToHost);
         assert(cudaSuccess == cudaStat1 && cudaSuccess == cudaStat2);
 	//printf("finished diag copy\n");	
 

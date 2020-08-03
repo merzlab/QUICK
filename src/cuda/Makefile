@@ -34,7 +34,7 @@ $(CUDACOBJ):$(objfolder)/%.o:%.cu
 	$(CUDAC) $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 $(CUDAXCOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
@@ -71,7 +71,7 @@ LIBXC_DEV_OBJ = $(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcg
 	$(libxcdevobjfolder)/lda_c_vwn_2.o $(libxcdevobjfolder)/lda_c_vwn_3.o $(libxcdevobjfolder)/lda_c_vwn_4.o $(libxcdevobjfolder)/lda_c_vwn.o \
 	$(libxcdevobjfolder)/lda_c_vwn_rpa.o $(libxcdevobjfolder)/lda_c_wigner.o $(libxcdevobjfolder)/lda_k_tf.o $(libxcdevobjfolder)/lda_k_zlp.o \
 	$(libxcdevobjfolder)/lda_x_2d.o $(libxcdevobjfolder)/lda_xc_1d_ehwlrg.o $(libxcdevobjfolder)/lda_xc_ksdt.o $(libxcdevobjfolder)/lda_xc_teter93.o \
-	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o -o $(objfolder)/gpu_xcall.o
+	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o
 #	$(libxcdevobjfolder)/lda_x_erf.o $(libxcdevobjfolder)/hyb_mgga_xc_wb97mv.o $(libxcdevobjfolder)/hyb_mgga_x_dldf.o $(libxcdevobjfolder)/hyb_mgga_x_m05.o \
 	$(libxcdevobjfolder)/mgga_c_b88.o $(libxcdevobjfolder)/mgga_c_bc95.o $(libxcdevobjfolder)/mgga_c_cs.o $(libxcdevobjfolder)/mgga_c_kcis.o \
 	$(libxcdevobjfolder)/mgga_c_m05.o $(libxcdevobjfolder)/mgga_c_m06l.o $(libxcdevobjfolder)/mgga_c_m08.o $(libxcdevobjfolder)/mgga_c_pkzb.o \
@@ -96,7 +96,7 @@ endif
 allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
 
 xc: $(CUDAXCOBJ)
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ)
+	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -106,5 +106,5 @@ xc: $(CUDAXCOBJ)
 
 clean: 
 	@-rm -f *.o 
-	@-rm -f ./CUBLAS/*.o
-	@-rm -f ./CUSOLVER/*.o
+	@-rm -f ./cublas/*.o
+	@-rm -f ./cusolver/*.o

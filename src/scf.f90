@@ -138,23 +138,10 @@ subroutine electdiis(jscf)
       endif
    endif
 
-!Madu Manathunga changed this conditional statement on 04/17/2019 and 
-!added mpi_setup_dftoperator.
 #ifdef MPIV
    !-------------- MPI / ALL NODE ---------------
    ! Setup MPI integral configuration
-   if (bMPI) then
-        !if (quick_method%HF) then
-        call MPI_setup_hfoperator
-#ifdef CUDA_MPIV
-        call MPI_setup_mgpu_eri
-        call MPI_setup_arr_bsd_mgpu_eri
-
-#endif
-        !else if (quick_method%DFT) then
-        !        call MPI_setup_dftoperator
-        !endif
-   endif
+   if (bMPI) call MPI_setup_hfoperator
    !-------------- END MPI / ALL NODE -----------
 #endif
 
@@ -162,7 +149,20 @@ subroutine electdiis(jscf)
    ! and store them in oneElecO and fetch it every scf time.
    call get1e(oneElecO)
 
-#ifdef CUDA
+#ifdef MPIV
+   if (bMPI) then
+      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   endif
+#endif
+
+#if defined CUDA || defined CUDA_MPIV
    if(quick_method%bCUDA) then
 
       if (quick_method%DFT) then
@@ -176,22 +176,6 @@ subroutine electdiis(jscf)
    endif
 #endif
 
-#ifdef MPIV
-   if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
-!-------Madu-------
-   call MPI_BCAST(dcoeff,nbasis*maxcontract,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
-!-------Madu-------
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-   endif
-#endif
    diisdone = .false.
    deltaO = .false.
    idiis = 0
@@ -669,7 +653,7 @@ subroutine electdiis(jscf)
    endif
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if(quick_method%bCUDA) then
       if (quick_method%DFT) then
          call gpu_delete_dft_grid()

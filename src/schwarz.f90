@@ -17,8 +17,8 @@ subroutine schwarzoff
    include 'mpif.h'
 #endif
 
-  integer i,ii,jj
-  double precision Ymaxtemp
+  integer :: ii,jj
+  double precision :: Ymaxtemp
 
   if (master) then
   do II=1,nshell
