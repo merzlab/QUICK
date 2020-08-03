@@ -41,15 +41,7 @@ FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 $(CUDAFOBJ):$(objfolder)/%.o:%.f90
 	$(FOR) -c $< -o $@
 
-#  !---------------------------------------------------------------------!
-#  ! Build targets                                                       !
-#  !---------------------------------------------------------------------!
-
-allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
-
-xc: $(CUDAXCOBJ)
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o \
-	$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
+LIBXC_DEV_OBJ = $(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
 	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
 	$(libxcdevobjfolder)/gga_c_op_pbe.o $(libxcdevobjfolder)/gga_c_op_pw91.o $(libxcdevobjfolder)/gga_c_optc.o $(libxcdevobjfolder)/gga_c_op_xalpha.o \
@@ -74,12 +66,12 @@ xc: $(CUDAXCOBJ)
 	$(libxcdevobjfolder)/gga_x_vmt84.o $(libxcdevobjfolder)/gga_x_vmt.o $(libxcdevobjfolder)/gga_x_wc.o $(libxcdevobjfolder)/hyb_gga_xc_wb97.o \
 	$(libxcdevobjfolder)/lda_c_1d_csc.o $(libxcdevobjfolder)/lda_c_1d_loos.o $(libxcdevobjfolder)/lda_c_2d_amgb.o $(libxcdevobjfolder)/lda_c_2d_prm.o \
 	$(libxcdevobjfolder)/lda_c_chachiyo.o $(libxcdevobjfolder)/lda_c_gk72.o $(libxcdevobjfolder)/lda_c_gombas.o $(libxcdevobjfolder)/lda_c_hl.o \
-	$(libxcdevobjfolder)/lda_c_lp96.o $(libxcdevobjfolder)/lda_c_ml1.o $(libxcdevobjfolder)/lda_c_pk09.o $(libxcdevobjfolder)/lda_c_pw.o \
+	$(libxcdevobjfolder)/lda_c_lp96.o $(libxcdevobjfolder)/lda_c_ml1.o $(libxcdevobjfolder)/lda_c_pw.o \
 	$(libxcdevobjfolder)/lda_c_pz.o $(libxcdevobjfolder)/lda_c_rc04.o $(libxcdevobjfolder)/lda_c_rpa.o $(libxcdevobjfolder)/lda_c_vwn_1.o \
 	$(libxcdevobjfolder)/lda_c_vwn_2.o $(libxcdevobjfolder)/lda_c_vwn_3.o $(libxcdevobjfolder)/lda_c_vwn_4.o $(libxcdevobjfolder)/lda_c_vwn.o \
 	$(libxcdevobjfolder)/lda_c_vwn_rpa.o $(libxcdevobjfolder)/lda_c_wigner.o $(libxcdevobjfolder)/lda_k_tf.o $(libxcdevobjfolder)/lda_k_zlp.o \
 	$(libxcdevobjfolder)/lda_x_2d.o $(libxcdevobjfolder)/lda_xc_1d_ehwlrg.o $(libxcdevobjfolder)/lda_xc_ksdt.o $(libxcdevobjfolder)/lda_xc_teter93.o \
-	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o -o $(objfolder)/gpu_xcall.o
+	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o
 #	$(libxcdevobjfolder)/lda_x_erf.o $(libxcdevobjfolder)/hyb_mgga_xc_wb97mv.o $(libxcdevobjfolder)/hyb_mgga_x_dldf.o $(libxcdevobjfolder)/hyb_mgga_x_m05.o \
 	$(libxcdevobjfolder)/mgga_c_b88.o $(libxcdevobjfolder)/mgga_c_bc95.o $(libxcdevobjfolder)/mgga_c_cs.o $(libxcdevobjfolder)/mgga_c_kcis.o \
 	$(libxcdevobjfolder)/mgga_c_m05.o $(libxcdevobjfolder)/mgga_c_m06l.o $(libxcdevobjfolder)/mgga_c_m08.o $(libxcdevobjfolder)/mgga_c_pkzb.o \
@@ -92,6 +84,19 @@ xc: $(CUDAXCOBJ)
 	$(libxcdevobjfolder)/mgga_x_ms.o $(libxcdevobjfolder)/mgga_x_mvs.o $(libxcdevobjfolder)/mgga_x_pbe_gx.o $(libxcdevobjfolder)/mgga_x_pkzb.o \
 	$(libxcdevobjfolder)/mgga_x_sa_tpss.o $(libxcdevobjfolder)/mgga_x_scan.o $(libxcdevobjfolder)/mgga_x_tau_hcth.o $(libxcdevobjfolder)/mgga_x_tm.o \
 	$(libxcdevobjfolder)/mgga_x_tpss.o $(libxcdevobjfolder)/mgga_x_vt84.o
+
+ifdef COMPILE_PK09
+LIBXC_DEV_OBJ += $(libxcdevobjfolder)/lda_c_pk09.o
+endif
+
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
+
+allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
+
+xc: $(CUDAXCOBJ)
+	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
