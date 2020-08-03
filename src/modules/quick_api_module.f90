@@ -56,8 +56,8 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: coords
 
     ! charge and the coordinates of external point charges
-    ! size is 4*nxt_ptchg, where first element of a row holds the charge
-    double precision, allocatable, dimension(:,:) :: xt_chg_crd
+    ! size is 4*nxt_ptchg, where last element of a row holds the charge
+    double precision, allocatable, dimension(:,:) :: ptchg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
     ! default length is 200 characters
@@ -137,7 +137,7 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   ! allocate memory only if external charges exist
   if(nxt_ptchg>0) then
-    if ( .not. allocated(self%xt_chg_crd))     allocate(self%xt_chg_crd(4,nxt_ptchg), stat=ierr)
+    if ( .not. allocated(self%ptchg_crd))     allocate(self%ptchg_crd(4,nxt_ptchg), stat=ierr)
     if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
   endif
 
@@ -330,17 +330,17 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 end subroutine get_atom_types
 
 ! returns quick qm energy
-subroutine get_quick_energy(coords, xt_chg_crd, energy)
+subroutine get_quick_energy(coords, ptchg_crd, energy)
 
   implicit none
 
   double precision, intent(in)  :: coords(3,quick_api%natoms)
-  double precision, intent(in)  :: xt_chg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)  :: ptchg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
-  quick_api%xt_chg_crd     = xt_chg_crd
+  quick_api%ptchg_crd     = ptchg_crd
 
   call run_quick(quick_api)
 
@@ -351,13 +351,13 @@ end subroutine get_quick_energy
 
 
 ! calculates and returns energy, gradients and point charge gradients
-subroutine get_quick_energy_gradients(coords, xt_chg_crd, &
+subroutine get_quick_energy_gradients(coords, ptchg_crd, &
            energy, gradients, ptchg_grad)
 
   implicit none
 
   double precision, intent(in)    :: coords(3,quick_api%natoms)
-  double precision, intent(in)    :: xt_chg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)    :: ptchg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
@@ -365,7 +365,7 @@ subroutine get_quick_energy_gradients(coords, xt_chg_crd, &
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
   if(quick_api%nxt_ptchg>0) then 
-    quick_api%xt_chg_crd = xt_chg_crd
+    quick_api%ptchg_crd = ptchg_crd
     quick_api%ptchg_grad = ptchg_grad
   endif
 
@@ -468,10 +468,9 @@ subroutine run_quick(self)
 ! save the results in quick_api struct
   self%tot_ene = quick_qm_struct%Etot
 
-! convert gradients into gradients and save in quick_api struct &
-! save point charge gradients too. Note that quick_qm_struct saves
-! both gradients in vector formats and we should organize them
-! back into matrix format.
+! save gradients and point charge gradients in quick_api struct.
+! Note that quick_qm_struct saves both gradients in vector formats and 
+! we should organize them back into matrix format.
   if (quick_method%grad) then
     k=1
     do i=1,self%natoms
@@ -566,9 +565,9 @@ subroutine set_quick_molspecs(self)
   if(self%nxt_ptchg>0) then
     do i=1, self%nxt_ptchg
       do j=1,3
-        quick_molspec%extxyz(j,i) = self%xt_chg_crd(j,i) * A_TO_BOHRS
+        quick_molspec%extxyz(j,i) = self%ptchg_crd(j,i) * A_TO_BOHRS
       enddo
-      quick_molspec%extchg(i)     = self%xt_chg_crd(4,i)
+      quick_molspec%extchg(i)     = self%ptchg_crd(4,i)
     enddo  
   endif
 
@@ -680,7 +679,7 @@ subroutine delete_quick_api_type(self)
   if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
   if ( allocated(self%gradient))          deallocate(self%gradient, stat=ierr)
 
-  if ( allocated(self%xt_chg_crd))     deallocate(self%xt_chg_crd, stat=ierr)
+  if ( allocated(self%ptchg_crd))     deallocate(self%ptchg_crd, stat=ierr)
   if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
 
 end subroutine delete_quick_api_type

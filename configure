@@ -25,7 +25,7 @@ cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
 
 echo ""
-echo -e "\033[92mConfiguring $QUICK_VERSION installation started on $cdate at $ctime..\033[0m" 
+echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.." 
 
 #  !---------------------------------------------------------------------!
 #  ! function definitions                                                !
@@ -34,22 +34,22 @@ echo -e "\033[92mConfiguring $QUICK_VERSION installation started on $cdate at $c
 # this function prints help page
 print_help(){
 
-echo -e "\033[92m                                                                                                                                       
+echo  "                                                                                                                                       
   Use this script as ./configure [flags] compiler                           
                                                                             
   Available flags are:                                                      
       --prefix <dir> User specified installation directory                  
-      -serial        Builds a serial version                                
-      -mpi           Compiles MPI prallel version                           
-      -cuda          Builds GPU version that utilizes a single NVIDIA GPU   
-      -debug         Compiles debug version                                 
-      -shared        Build shared object libraries                          
-      -arch <pascal|volta|turing>                                           
+      --serial       Builds a serial version                                
+      --mpi          Compiles MPI prallel version                           
+      --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --debug        Compiles debug version                                 
+      --shared       Build shared object libraries                          
+      --arch <pascal|volta|turing>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
                      toolkit version.                                       
-      -ncores <ncore>                                                       
+      --ncores <ncore>                                                       
                      Specify the number of cores to be used in compilation. 
                      If unspecified, QUICK will attempt to automatically    
                      detect the number of cores in your system.             
@@ -58,8 +58,8 @@ echo -e "\033[92m
                                                                             
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:                                                                  
-                    ./configure -cuda -arch volta --prefix /home/install intel                                  
-  \033[0m"
+         ./configure --cuda --arch volta --prefix /home/install intel                                  
+  "
 
 exit 0;
 
@@ -89,14 +89,14 @@ EOF
   # compile the test sources
   $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo -e "\033[91mError: MPI/C++ source cannot be compiled using $cxx \033[0m"
+    echo  "Error: MPI/C++ source cannot be compiled using $cxx "
     echo ""
     exit 1
   fi
 
   $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo -e "\033[91mError: Fortran90 source cannot be compiled using $fort \033[0m"
+    echo  "Error: Fortran90 source cannot be compiled using $fort "
     echo ""
     exit 1
   fi
@@ -110,8 +110,8 @@ EOF
   #try to link with libmpi_cxx
   $fort test_mpicxx.o test_prog.o -o testmpi $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
-    echo -e "\033[91mError: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag \033[0m"
-    echo -e "\033[91mTry to check the commands using 'mpif90 -show' \033[0m"
+    echo  "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag "
+    echo  "Try to check the commands using 'mpif90 -show' "
     exit 1
   fi
 
@@ -142,10 +142,10 @@ check_os(){
 
 # this function print compiler mistmach 
 print_compiler_mistmatch(){
-  echo -e "\033[91mError: Compiler version mistmatch.\033[0m"
-  echo -e "\033[91m       Fortran compiler version: $fort_version.\033[0m"
-  echo -e "\033[91m       C compiler version: $cc_version.\033[0m"
-  echo -e "\033[91m       C++ compiler version: $cxx_version.\033[0m"
+  echo  "Error: Compiler version mistmatch."
+  echo  "       Fortran compiler version: $fort_version."
+  echo  "       C compiler version: $cc_version."
+  echo  "       C++ compiler version: $cxx_version."
 }
 
 # check compiler
@@ -194,23 +194,23 @@ case "$compiler" in
       cxx_search='icpc'
     ;;
   *)
-    echo -e "\033[91mError: $compiler compiler tool chain is not supported.\033[0m"
+    echo  "Error: $compiler compiler tool chain is not supported."
     exit 1;;
 esac
 
 # check for the existance of each compiler
 if [ -z "`which $fort 2> /dev/null`" ]; then
-  echo -e "\033[91mError: $fort is not found.\033[0m"
+  echo  "Error: $fort is not found."
   exit 1
 fi
 
 if [ -z "`which $cc 2> /dev/null`" ]; then
-  echo -e "\033[91mError: $cc is not found.\033[0m"
+  echo  "Error: $cc is not found."
   exit 1
 fi
 
 if [ -z "`which $cxx 2> /dev/null`" ]; then
-  echo -e "\033[91mError: $cxx is not found.\033[0m"
+  echo  "Error: $cxx is not found."
   exit 1
 fi
 
@@ -243,7 +243,7 @@ fi
 if [ "$has_fort_version" = 'yes' ]; then
   echo "  $fort version $fort_version found.."
 else
-   echo -e "\033[93mWarning: Failed to detect $fort version.\033[0m"
+   echo  "Warning: Failed to detect $fort version."
 fi
 
 # check the c compiler version
@@ -266,14 +266,14 @@ fi
 if [ "$has_cc_version" = 'yes' ]; then
   echo "  $cc version $cc_version found.."
 else
-   echo -e "\033[93mWarning: Failed to detect $cc version.\033[0m"
+   echo  "Warning: Failed to detect $cc version."
 fi
 
 if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
   cc_version=`$cc_search -v 2>&1 | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
   if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
-    echo -e "\033[91mError: $cc compiler was requested but clang c compiler is loaded.\033[0m"
-    echo -e "\033[91m       Please load the correct compiler.\033[0m"
+    echo  "Error: $cc compiler was requested but clang c compiler is loaded."
+    echo  "       Please load the correct compiler."
     exit 1
   fi
 fi
@@ -303,14 +303,14 @@ fi
 if [ "$has_cxx_version" = 'yes' ]; then
   echo "  $cxx version $cxx_version found.."
 else
-   echo -e "\033[93mWarning: Failed to detect $cxx version.\033[0m"
+   echo  "Warning: Failed to detect $cxx version."
 fi
 
 if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
   cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
   if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
-    echo -e "\033[91mError: $cxx compiler was requested but clang c++ compiler is loaded.\033[0m"
-    echo -e "\033[91m       Please load the correct compiler.\033[0m"
+    echo  "Error: $cxx compiler was requested but clang c++ compiler is loaded."
+    echo  "       Please load the correct compiler."
     exit 1
   fi
 fi
@@ -389,6 +389,7 @@ cuda_arch_flags=''
 
 # extra cuda flags
 cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+cuda_dc_flags=''
 
 # cuda include flags
 cuda_incl_flags=''
@@ -429,39 +430,40 @@ if [ $# -lt 1 ]; then print_help; fi
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
-    -mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
-    -cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
-    -cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
-    -debug)       debug='yes';;
-    -shared)      shared='yes';; 
-    -arch)        shift; cuda_arch=$1; uspec_arch='true';;
-    -ncores)      shift; ncores=$1; uspec_ncores='yes';;
-    --prefix)     shift; quick_prefix=${1%/}; useprefix='true';;
-    gnu)          compiler='gnu';;
-    intel)        compiler='intel';;
+    --serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
+    --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
+    --debug)       debug='yes';;
+    --shared)      shared='yes';; 
+    --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
+    --ncores)      shift; ncores=$1; uspec_ncores='yes';;
+    --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
+    gnu)           compiler='gnu';;
+    intel)         compiler='intel';;
     -h| -H| -help| --help) print_help;;
-    -*)  echo -e "\033[91mError: $1 is an unknown flag \033[0m"
-         echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
-         echo -e "       \033[91mRun './configure --help' for more information \033[0m"
+     *)  echo  "Error: $1 is an unknown flag."
+         echo  "       Run this script as './configure [flags] compiler'."
+         echo  "       Run './configure --help' for more information."
          exit 1;;
-     *)  if [ $# -gt 1 ]; then
-           echo -e "\033[91mError: $1 is an unknown compiler \033[0m"
-           echo -e "       \033[91mRun this script as './configure [flags] compiler' \033[0m"
-           echo -e "       \033[91mRun './configure --help' for more information \033[0m"
-           exit 1
-         fi
   esac
   shift
 done
 
-echo "Requested installation type/s: $buildtypes"
+# check the build type
+if [ -z "$buildtypes" ]; then
+  echo "No build type specified."
+  echo "Proceeding with a serial build."
+  serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick"
+else
+  echo "Requested installation type/s: $buildtypes"
+fi
 
 # check the os first
 check_os
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then 
-  echo -e "\033[93mWarning: QUICK cuda and cuda-mpi versions have never been tested on $osname os.\033[0m"
+  echo  "Warning: QUICK cuda and cuda-mpi versions have never been tested on $osname os."
 fi
 
 # check compiler
@@ -471,7 +473,7 @@ check_compiler
 if [ "$useprefix" = "true" ]; then
 
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
-    echo -e "\033[91mError: Specified --prefix and current folder is the same. Please choose a different location. \033[0m"
+    echo  "Error: Specified --prefix and current folder is the same. Please choose a different location. "
     exit 1
   elif [ ! -d "$quick_prefix" ]; then
     mkdir -p "$quick_prefix"
@@ -491,16 +493,9 @@ if [ "$useprefix" = "true" ]; then
     # delete the runs directory from QUICK_HOME/test if it exists
     if [ -d "$QUICK_HOME/test/runs" ]; then rm -rf $QUICK_HOME/test/runs; fi
 
-    # create a symlink if lndir command exists. Otherwise copy the content.
-    if [ `command -v lndir | wc -l` -gt 0 ]; then
-      echo "Creating symlink for $quick_prefix/test"
-      cd "$quick_prefix/test"
-      lndir "$QUICK_HOME/test"
-      cd "$QUICK_HOME"
-    else
-      echo "Copying test cases into $quick_prefix/test"
-      cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
-    fi
+    # Copy test folder from QUICK_HOME to install folder.
+    echo "Copying test cases into $quick_prefix/test"
+    cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
 
   fi
 
@@ -621,28 +616,31 @@ done
 
 # this function sets the user defined cuda architecture flags, if specified
 set_uspec_arch(){
-  case "$cuda_arch" in
-    pascal)
-      echo "Configuring for SM6.0"
-      cuda_arch_flags="-gencode arch=compute_60,code=sm_60";;
-    volta)
-      echo "Configuring for SM7.0"
-      cuda_arch_flags="-gencode arch=compute_70,code=sm_70";;
-    turing)
-      echo "Configuring for SM7.5"
-      cuda_arch_flags="-gencode arch=compute_75,code=sm_75";;
-  esac
+  for carch in $cuda_arch; do
+    case "$carch" in
+      pascal)
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$cuda_arch_flags $sm60flags"
+	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
+      volta)
+        echo "Configuring for SM7.0"
+        cuda_arch_flags="$cuda_arch_flags $sm70flags";;
+      turing)
+        echo "Configuring for SM7.5"
+        cuda_arch_flags="$cuda_arch_flags $sm75flags";;
+    esac
+  done
 }
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
   if [ -z "$CUDA_HOME" ]; then
-    echo -e "\033[91mError: CUDA_HOME environment variable is not set.\033[0m"
-    echo -e "\033[91mPlease make sure CUDA toolkit is loaded.\033[0m"
+    echo  "Error: CUDA_HOME environment variable is not set."
+    echo  "Please make sure CUDA toolkit is loaded."
     exit 1
   fi
 
   if [ ! -x "$CUDA_HOME/bin/nvcc" ]; then
-    echo -e "\033[91mError: nvcc compiler is not available in $CUDA_HOME/bin/\033[0m"
+    echo  "Error: nvcc compiler is not available in $CUDA_HOME/bin/"
     exit 1
   fi
 
@@ -651,13 +649,9 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     #SM8.0 = A100
     #sm80flags='-gencode arch=compute_80,code=sm_80'
     #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
-    sm75flags='-gencode arch=compute_60,code=sm_75'
+    sm75flags='-gencode arch=compute_75,code=sm_75'
     #SM7.0 = V100, Titan V
-    sm70flags='-gencode arch=compute_60,code=sm_70'
-    #SM6.2 = ???
-    sm62flags='-gencode arch=compute_62,code=sm_62'
-    #SM6.1 = GP106 = GTX-1070, GP104 = GTX-1080, GP102 = Titan-X[P]
-    sm61flags='-gencode arch=compute_61,code=sm_61'
+    sm70flags='-gencode arch=compute_70,code=sm_70'
     #SM6.0 = GP100 / P100 = DGX-1
     sm60flags='-gencode arch=compute_60,code=sm_60'
 
@@ -671,10 +665,9 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        sm75flags='-gencode arch=compute_75,code=sm_75'
-        sm70flags='-gencode arch=compute_70,code=sm_70'          
-        echo "Configuring for SM6.0, SM6.1, SM7.0, SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
+        echo "Configuring for SM6.0, SM7.0, SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -682,8 +675,9 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0, SM6.1, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags $sm75flags"
+        echo "Configuring for SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -691,8 +685,9 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0, SM6.1 and SM7.0"
-        cuda_arch_flags="$sm60flags $sm61flags $sm70flags"
+        echo "Configuring for SM6.0 and SM7.0"
+        cuda_arch_flags="$sm60flags $sm70flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
       echo "CUDA Version $cudaversion detected"
@@ -700,12 +695,13 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0 and SM6.1"
-        cuda_arch_flags="$sm60flags $sm61flags"
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$sm60flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
-      echo -e "\033[91mError: Unsupported CUDA version $cudaversion detected. \033[0m"
-      echo -e "       \033[91mQUICK requires at least CUDA version 8.0 \033[0m"
+      echo  "Error: Unsupported CUDA version $cudaversion detected. "
+      echo  "       QUICK requires at least CUDA version 8.0 "
       exit 1
     fi
 
@@ -934,6 +930,7 @@ cat >> "$QUICK_HOME/build/$buildtype/make.in" << EOF
 CPP_FLAG=$cpp_flags
 CUDA_FLAGS=$cuda_flags
 CUDA_INCL_FLAGS=$cuda_incl_flags
+CUDA_DC_FLAGS=$cuda_dc_flags
 CFLAGS=$cflags
 
 EOF
@@ -988,12 +985,12 @@ EOF
 
 #make clean > /dev/null 
 
-echo -e "\033[92mInput file for GNU make was successfully created.\033[0m"
+echo  "Input file for GNU make was successfully created."
 echo ""
 
-echo -e "\033[92mNext steps:\033[0m"
-echo -e "\033[92m          Run 'make' to build QUICK.\033[0m"
+echo  "Next steps:"
+echo  "          Run 'make' to build QUICK."
 if [ "$testtype" = 'installtest' ]; then 
-  echo -e "\033[92m          Run 'make install' to install executable/s, libraries and header files into $quick_prefix.\033[0m"
+  echo  "          Run 'make install' to install executable/s, libraries and header files into $quick_prefix."
 fi
-echo -e "\033[92m          Run 'make test' to verify the executables.\033[0m"
+echo  "          Run 'make test' to verify the executables."

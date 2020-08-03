@@ -75,7 +75,7 @@ endif
 #  !---------------------------------------------------------------------!
 
 $(CUDALIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
-	$(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	$(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 all: $(CUDALIBXCOBJ)
 

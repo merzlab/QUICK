@@ -218,8 +218,8 @@ cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $
 .PHONY: clean
 
 clean:
-	@-rm -f $(exefolder)/$(installer) $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(libfolder)/*
-	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o
+	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/*
+	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
 	@cd $(cudafolder) && make clean
 	@cd $(subfolder) && make clean
 	@cd $(blasfolder) && make clean

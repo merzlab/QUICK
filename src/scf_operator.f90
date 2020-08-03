@@ -38,14 +38,6 @@ subroutine scf_operator(oneElecO, deltaO)
    integer ierror
    double precision,allocatable:: temp2d(:,:)
 
-#ifdef CUDA_MPIV                                           
-   double precision, allocatable:: tst_mgpuO(:,:)          ! MGPU_TESTING
-
-   allocate(tst_mgpuO(nbasis,nbasis))                      ! MGPU_TESTING
-   call zeroMatrix(tst_mgpuO, nbasis)                      ! MGPU_TESTING
-   if(master) call copyDMat(oneElecO,tst_mgpuO,nbasis)     ! MGPU_TESTING
-
-#endif
    allocate(temp2d(nbasis,nbasis))
 #endif
 !-----------------------------------------------------------------
@@ -95,9 +87,7 @@ subroutine scf_operator(oneElecO, deltaO)
 
 #ifdef MPIV
 !  Reset the operator value for slave nodes.
-   if (.not.master) then
-      call zeroMatrix(quick_qm_struct%o, nbasis)
-   endif   
+   if (.not.master) quick_qm_struct%o = 0.0d0
 
 !  sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -116,17 +106,9 @@ subroutine scf_operator(oneElecO, deltaO)
          call gpu_upload_method(1, 0.2d0)
       endif
 
-! MGPU_TESTING
-
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
       quick_qm_struct%vec,quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
-
-! MGPU_TESTING
-
-!      call gpu_upload_calculated(tst_mgpuO,quick_qm_struct%co, &
-!      quick_qm_struct%vec,quick_qm_struct%dense)
-!      call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
 
    endif
 #endif
@@ -181,12 +163,6 @@ subroutine scf_operator(oneElecO, deltaO)
 
 #ifdef MPIV
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-
-!         do ii=1,nbasis                      ! MGPU_TESTING
-!            do jj=ii,nbasis
-!               write(*,*) "CPU Fock O:",mpirank,ii-1,jj-1,quick_qm_struct%o(ii,jj)
-!            enddo
-!         enddo                               ! MGPU_TESTING
 
 !  After evaluation of 2e integrals, we can communicate every node so
 !  that we can sum all integrals. slave node will send infos.
@@ -347,37 +323,22 @@ subroutine get_xc
 
 #ifdef MPIV
 !  Set the values of slave operators to zero
-   if (.not.master) then
-      call zeroMatrix(quick_qm_struct%o, nbasis)
-!      Eelxc=0.0d0
-   endif
-   call zeroMatrix(temp2d, nbasis)
+   if (.not.master) quick_qm_struct%o = 0.0d0
+   temp2d = 0.0d0
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
             quick_qm_struct%vec,quick_qm_struct%dense)
 
-!      call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
-!            quick_qm_struct%aelec, quick_qm_struct%belec, &
-!            quick_qm_struct%o, quick_method%nof_functionals, &
-!            quick_method%functional_id,quick_method%xc_polarization)
-
-!      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-!      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-!      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-!      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
-
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
 #endif
 
-      call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+      call gpu_getxc(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
-
-!      call gpu_delete_dft_grid()
 
    endif
 #else
@@ -395,24 +356,8 @@ subroutine get_xc
       enddo
    endif
 
-!  Form the quadrature
-!   do Iatm=1,natom
-!      if(quick_method%ISG.eq.1)then
-!         Iradtemp=50
-!      else
-!         if(quick_molspec%iattype(iatm).le.10)then
-!            Iradtemp=23
-!         else
-!            Iradtemp=26
-!         endif
-!      endif
 
-#ifdef MPIV
-!  Distribute grid points among master and slaves
-!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
-#endif
-
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
@@ -420,33 +365,12 @@ subroutine get_xc
          irad_init = 1
          irad_end = quick_dft_grid%nbins
       endif
-!      do Irad=irad_init, irad_end
    do Ibin=irad_init, irad_end
    
 #else
-!      do Irad=1,Iradtemp
     do Ibin=1, quick_dft_grid%nbins
 #endif
-!         if(quick_method%ISG.eq.1)then
-!            call gridformnew(iatm,RGRID(Irad),iiangt)
-!            rad = radii(quick_molspec%iattype(iatm))
-!         else
-!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-!            rad = radii2(quick_molspec%iattype(iatm))
-!         endif
 
-!         rad3 = rad*rad*rad
-!         do Iang=1,iiangt
-!            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-!            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-!            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-
-!  Next, calculate the weight of the grid point in the SSW scheme.
-!  if the grid point has a zero weight, we can skip it.
-
-!            weight=SSW(gridx,gridy,gridz,Iatm)*WTANG(Iang)*RWT(Irad)*rad3
-
-!    do Ibin=1, quick_dft_grid%nbins
         Igp=quick_dft_grid%bin_counter(Ibin)+1
 
         do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
@@ -658,8 +582,6 @@ subroutine get_xc
 #ifdef MPIV
    endif
 #endif
-
-!   call exit
   
    return
 

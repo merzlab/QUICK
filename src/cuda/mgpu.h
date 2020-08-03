@@ -228,118 +228,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
 //--------------------------------------------------------
 // Method to distribute sorted shell information among nodes  
 //--------------------------------------------------------
-extern "C" void mgpu_distribute_qshell_(int *mpi_qshell, int *mpi_qshelln){    
-
-    int qshellpn=(int)(gpu->gpu_basis->Qshell)/gpu->mpisize;
-
-    for(int i=0;i<gpu->mpisize+1;i++){
-        mpi_qshelln[i]=i*qshellpn;
-    }
-
-    if((gpu->gpu_basis->Qshell) % gpu->mpisize != 0){
-        mpi_qshelln[gpu->mpisize] +=1;
-    }
-    
-#ifdef DEBUG
-    fprintf(gpu->debugFile,"mpi_qshelln: %i %i %i %i \n",mpi_qshelln[0],mpi_qshelln[1],mpi_qshelln[2],mpi_qshelln[3]);
-#endif
-
-}
-
-//--------------------------------------------------------
-// Method to upload qshell work load  
-//--------------------------------------------------------
-extern "C" void mgpu_upload_qshell_(int *mpi_qshell, int *mpi_qshelln){
-
-    PRINTDEBUG("UPLOADING QSHELL SETUP FOR MULTI GPU")
-
-    gpu -> gpu_basis -> mpi_qshelln  = new cuda_buffer_type<int>(mpi_qshelln, gpu->mpisize+1);
-    gpu -> gpu_basis -> mpi_qshelln -> Upload();
-    gpu -> gpu_sim.mpi_qshelln = gpu -> gpu_basis -> mpi_qshelln -> _devData;
-
-    PRINTDEBUG("END UPLOADING QSHELL SETUP FOR MULTI GPU")
-
-}
-
-//--------------------------------------------------------
-// Method to send number of qshells to f90 side  
-//--------------------------------------------------------
-extern "C" void mgpu_get_nqshell_(int *nqshell){
-
-    *nqshell = gpu->gpu_basis->Qshell;
-
-}
-
-//--------------------------------------------------------
-// Method to upload distributed qshell indices
-//--------------------------------------------------------
-extern "C" void mgpu_upload_arr_bsd_qshell_(int *mpi_qshell, int *mpi_qshelln){
-
-#ifdef DEBUG
-    for(int i=0;i<mpi_qshell[gpu->mpirank];i++){
-        fprintf(gpu->debugFile,"Distributed Qindex: %i %i %i \n ",gpu->mpirank,i,mpi_qshelln[(gpu->gpu_basis->Qshell * gpu->mpirank) + i]);
-    }
-#endif
-
-}
-
-//--------------------------------------------------------
-// Method to upload shell and basis information for mpi  
-//--------------------------------------------------------
-
-extern "C" void mgpu_upload_basis_setup_(int *mpi_jshelln, int* mpi_jshell, int* mpi_nbasisn, int* mpi_nbasis){
-
-    PRINTDEBUG("UPLOADING MULTI GPU BASIS SETUP")
-#ifdef DEBUG
-    fprintf(gpu->debugFile,"mgpu_upload_basis_setup %i %i %i \n ", gpu->mpisize,gpu->jshell,gpu->nbasis);   
-    fprintf(gpu->debugFile,"mgpu_upload_basis_setup %i %i %i %i \n ", gpu->mpirank,mpi_jshelln[0],mpi_jshelln[1],mpi_jshelln[2]);
-#endif
-
-    gpu -> gpu_basis -> mpi_jshelln = new cuda_buffer_type<int>(mpi_jshelln, gpu->mpisize);
-    gpu -> gpu_basis -> mpi_jshell  = new cuda_buffer_type<int>(mpi_jshell, gpu->mpisize, gpu->jshell);
-    gpu -> gpu_basis -> mpi_nbasisn = new cuda_buffer_type<int>(mpi_nbasisn, gpu->mpisize);
-    gpu -> gpu_basis -> mpi_nbasis  = new cuda_buffer_type<int>(mpi_nbasis, gpu->mpisize, gpu->nbasis);
-
-    gpu -> gpu_basis -> mpi_jshelln -> Upload();
-    gpu -> gpu_basis -> mpi_jshell  -> Upload();
-    gpu -> gpu_basis -> mpi_nbasisn -> Upload();
-    gpu -> gpu_basis -> mpi_nbasis  -> Upload();
-
-    gpu -> gpu_sim.mpi_jshelln = gpu -> gpu_basis -> mpi_jshelln -> _devData;
-    gpu -> gpu_sim.mpi_jshell  = gpu -> gpu_basis -> mpi_jshell  -> _devData;
-    gpu -> gpu_sim.mpi_nbasisn = gpu -> gpu_basis -> mpi_nbasisn -> _devData;
-    gpu -> gpu_sim.mpi_nbasis  = gpu -> gpu_basis -> mpi_nbasis  -> _devData;
-
-    // Following assignments are more appropriate inside a function that performs
-    // initial setup. Lets leave them for the time being. 
-    gpu -> gpu_sim.mpirank = gpu -> mpirank;
-    gpu -> gpu_sim.mpisize = gpu -> mpisize;
-    gpu -> gpu_sim.nqshell = gpu -> gpu_basis -> Qshell;
-
-    PRINTDEBUG("END UPLOADING MULTI GPU BASIS SETUP")
-
-}
-
-//--------------------------------------------------------
-// Method to upload shell and basis information for mpi  
-//--------------------------------------------------------
-
-extern "C" void mgpu_delete_mpi_setup_(){
-
-    PRINTDEBUG("DELETING MULTI GPU BASIS SETUP")
-
-    SAFE_DELETE(gpu -> gpu_basis -> mpi_jshelln);
-    SAFE_DELETE(gpu -> gpu_basis -> mpi_jshell); 
-    SAFE_DELETE(gpu -> gpu_basis -> mpi_nbasisn);
-    SAFE_DELETE(gpu -> gpu_basis -> mpi_nbasis); 
-
-    PRINTDEBUG("FINISH DELETING MULTI GPU BASIS SETUP")
-
-}
-
-//--------------------------------------------------------
-// Method to distribute sorted shell information among nodes  
-//--------------------------------------------------------
 void mgpu_eri_greedy_distribute(){
 
     // Total number of items to distribute
@@ -476,6 +364,204 @@ void mgpu_eri_greedy_distribute(){
     gpu -> gpu_sim.mpi_bcompute  = gpu -> gpu_basis -> mpi_bcompute  -> _devData;
 
 }
+
+//--------------------------------------------------------
+// Function to distribute XC quadrature bins among nodes. 
+// Note that here we naively distribute packed bins. 
+//--------------------------------------------------------
+void mgpu_xc_naive_distribute(){
+
+    // due to grid point packing, npoints is always a multiple of bin_size
+    int nbins    = gpu -> gpu_xcq -> nbins;
+    int bin_size = gpu -> gpu_xcq -> bin_size;
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+#endif
+
+    // array to keep track of how many bins per core
+    int bins_pcore[gpu->mpisize];
+
+    memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
+
+    int dividend  = (int) (nbins/gpu->mpisize);  
+    int remainder = nbins - (dividend * gpu->mpisize);
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i dividend= %i remainder= %i \n", gpu->mpirank, dividend, remainder);
+#endif
+
+    for(int i=0; i< gpu->mpisize; i++){
+        bins_pcore[i] = dividend;
+    }
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpirank, bins_pcore[0], bins_pcore[1]);
+#endif
+
+    // distribute the remainder among cores
+    int cremainder = remainder;
+    for(int i=0; i<remainder; i+=gpu->mpisize ){
+        for(int j=0; j< gpu->mpisize; j++){
+            bins_pcore[j] += 1;
+            cremainder--;
+
+            if(cremainder < 1) {
+                break;
+            }
+        } 
+    }
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpirank, bins_pcore[0], bins_pcore[1]);
+#endif
+
+    // compute lower and upper grid point limits
+    int xcstart, xcend, count;
+    count = 0;
+
+    if(gpu->mpirank == 0){
+        xcstart = 0;
+        xcend   = bins_pcore[gpu->mpirank] * bin_size;
+    }else{
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i setting borders.. \n", gpu -> mpirank);
+#endif
+
+        for(int i=0; i < gpu->mpirank; i++){
+            count += bins_pcore[i];
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i count= %i \n", gpu -> mpirank, count);
+#endif
+        }
+     
+        xcstart = count * bin_size;
+        xcend   = (count + bins_pcore[gpu->mpirank]) * bin_size;
+#ifdef DEBUG
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, xcstart, xcend);
+#endif
+
+    }
+
+    gpu -> gpu_sim.mpi_xcstart = xcstart;
+    gpu -> gpu_sim.mpi_xcend   = xcend;
+
+#ifdef DEBUG
+    // print information for debugging
+
+    for(int i=0; i<gpu->mpisize; i++){
+        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of bins for gpu %i = %i \n", gpu -> mpirank, i, bins_pcore[i]);
+    }
+
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, xcstart, xcend);
+
+    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, gpu -> gpu_sim.mpi_xcstart, gpu -> gpu_sim.mpi_xcend);
+
+#endif
+
+}
+
+
+//--------------------------------------------------------
+// Function to distribute XC quadrature points among nodes.  
+// Note that here we consider number of true grid points in 
+// each bin during the distribution.
+//--------------------------------------------------------
+void mgpu_xc_greedy_distribute(){
+
+    PRINTDEBUG("BEGIN TO DISTRIBUTE XC GRID POINTS")
+
+    // due to grid point packing, npoints is always a multiple of bin_size
+    int nbins    = gpu -> gpu_xcq -> nbins;
+    int bin_size = gpu -> gpu_xcq -> bin_size;
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+#endif
+
+    // array to keep track of how many true grid points per bin
+    int tpoints[nbins];
+
+    // save a set of flags to indicate if a given node should work on a particular bin
+    char mpi_xcflags[gpu->mpisize][nbins];
+
+    // array to keep track of how many bins per gpu
+    int bins_pcore[gpu->mpisize];
+
+    // array to keep track of how many true grid points per core
+    int tpts_pcore[gpu->mpisize];
+
+    // initialize all arrays to zero
+    memset(tpoints,0, sizeof(int)*nbins);
+    memset(mpi_xcflags,0, sizeof(char)*nbins*gpu->mpisize);
+    memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
+    memset(tpts_pcore,0, sizeof(int)*gpu->mpisize);
+
+    // count how many true grid point in each bin and store in tpoints
+    int tot_tpts=0;
+    for(int i=0; i<nbins; i++){
+        for(int j=0; j<bin_size; j++){
+            if(gpu -> gpu_xcq -> dweight -> _hostData[i*bin_size + j] > 0 ){
+                tpoints[i]++;
+                tot_tpts++;
+            }
+        }
+    }
+
+#ifdef DEBUG
+    for(int i=0; i<nbins; i++){
+        fprintf(gpu->debugFile,"GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i]);
+    }
+#endif
+
+    // now distribute the bins considering the total number of true grid points each core would receive 
+
+    int mincore, min_tpts;
+
+    for(int i=0; i<nbins; i++){
+
+        // find out the core with minimum number of true grid points
+        mincore  = 0;             // assume master has the lowest number of points
+        min_tpts = tpts_pcore[0]; // set master's point count as default
+
+        for(int impi=0; impi< gpu->mpisize; impi++){
+            if(min_tpts > tpts_pcore[impi]){
+                mincore  = impi;
+                min_tpts = tpts_pcore[impi];
+            }
+        }
+
+        // increase the point counter by the amount in current bin
+        tpts_pcore[mincore] += tpoints[i];
+
+        // assign the bin to corresponding core        
+        mpi_xcflags[mincore][i] = 1;
+
+    }
+
+#ifdef DEBUG
+
+    // print information for debugging
+    for(int i=0; i<gpu->mpisize; i++){
+        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, i, tpts_pcore[i]);
+    }
+
+#endif
+
+    // upload flags to gpu
+    gpu -> gpu_xcq -> mpi_bxccompute = new cuda_buffer_type<char>(nbins);
+
+    memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
+
+    gpu -> gpu_xcq -> mpi_bxccompute -> Upload();
+
+    gpu -> gpu_sim.mpi_bxccompute  = gpu -> gpu_xcq -> mpi_bxccompute  -> _devData;
+
+    PRINTDEBUG("END DISTRIBUTING XC GRID POINTS")
+
+}
+
 
 //--------------------------------------------------------
 // Methods passing gpu information to f90 side for printing
