@@ -29,7 +29,6 @@ Supported platforms: Linux and OSX
 
 Getting Started
 ---------------
-* [Testing QUICK Installation](https://quick-docs.readthedocs.io/en/20.6.0/installation-guide.html#environment-variables-and-testing)
 * [Hands-on Tutorials](https://quick-docs.readthedocs.io/en/20.6.0/hands-on-tutorials.html)
 * [User Manual](https://quick-docs.readthedocs.io/en/20.6.0/user-manual.html)
 
