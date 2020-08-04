@@ -108,5 +108,5 @@ xc_lda_c_rpa_func(const xc_func_type *p, xc_lda_work_t *r)
 #ifndef DEVICE   
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_c_rpa_func   
-#define kernel_id 14 
+#define kernel_id 13 
 #endif
