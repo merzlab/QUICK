@@ -47,7 +47,7 @@ CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o
 	$(libxcdevobjfolder)/gga_x_vmt84.o $(libxcdevobjfolder)/gga_x_vmt.o $(libxcdevobjfolder)/gga_x_wc.o $(libxcdevobjfolder)/hyb_gga_xc_wb97.o \
 	$(libxcdevobjfolder)/lda_c_1d_csc.o $(libxcdevobjfolder)/lda_c_1d_loos.o $(libxcdevobjfolder)/lda_c_2d_amgb.o $(libxcdevobjfolder)/lda_c_2d_prm.o \
 	$(libxcdevobjfolder)/lda_c_chachiyo.o $(libxcdevobjfolder)/lda_c_gk72.o $(libxcdevobjfolder)/lda_c_gombas.o $(libxcdevobjfolder)/lda_c_hl.o \
-	$(libxcdevobjfolder)/lda_c_lp96.o $(libxcdevobjfolder)/lda_c_ml1.o $(libxcdevobjfolder)/lda_c_pk09.o $(libxcdevobjfolder)/lda_c_pw.o \
+	$(libxcdevobjfolder)/lda_c_lp96.o $(libxcdevobjfolder)/lda_c_ml1.o $(libxcdevobjfolder)/lda_c_pw.o \
 	$(libxcdevobjfolder)/lda_c_pz.o $(libxcdevobjfolder)/lda_c_rc04.o $(libxcdevobjfolder)/lda_c_rpa.o $(libxcdevobjfolder)/lda_c_vwn_1.o \
 	$(libxcdevobjfolder)/lda_c_vwn_2.o $(libxcdevobjfolder)/lda_c_vwn_3.o $(libxcdevobjfolder)/lda_c_vwn_4.o $(libxcdevobjfolder)/lda_c_vwn.o \
 	$(libxcdevobjfolder)/lda_c_vwn_rpa.o $(libxcdevobjfolder)/lda_c_wigner.o $(libxcdevobjfolder)/lda_k_tf.o $(libxcdevobjfolder)/lda_k_zlp.o \
@@ -66,6 +66,10 @@ CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o
 	$(libxcdevobjfolder)/mgga_x_sa_tpss.o $(libxcdevobjfolder)/mgga_x_scan.o $(libxcdevobjfolder)/mgga_x_tau_hcth.o $(libxcdevobjfolder)/mgga_x_tm.o \
 	$(libxcdevobjfolder)/mgga_x_tpss.o $(libxcdevobjfolder)/mgga_x_vt84.o
 
+ifdef COMPILE_PK09
+CUDALIBXCOBJ += $(libxcdevobjfolder)/lda_c_pk09.o 
+endif
+
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
@@ -83,4 +87,3 @@ all: $(CUDALIBXCOBJ)
 
 clean: 
 	@-rm -f *.o 
-	
