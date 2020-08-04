@@ -186,5 +186,5 @@ xc_lda_xc_teter93_func(const xc_func_type *p, xc_lda_work_t *r)
 #ifndef DEVICE   
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_xc_teter93_func   
-#define kernel_id 28 
+#define kernel_id 27 
 #endif

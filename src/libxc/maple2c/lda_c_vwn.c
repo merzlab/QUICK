@@ -415,5 +415,5 @@ xc_lda_c_vwn_func(const xc_func_type *p, xc_lda_work_t *r)
 #ifndef DEVICE   
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_c_vwn_func   
-#define kernel_id 19 
+#define kernel_id 18 
 #endif
