@@ -40,7 +40,7 @@ echo  "
   Available flags are:                                                      
       --prefix <dir> User specified installation directory                  
       --serial       Builds a serial version                                
-      --mpi          Compiles MPI prallel version                           
+      --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --debug        Compiles debug version                                 
       --shared       Build shared object libraries                          
