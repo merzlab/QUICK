@@ -10,7 +10,7 @@
 #include "util.h"
 
 static void 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
 work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma,
            double *zk, double *vrho, double *vsigma,
            double *v2rho2, double *v2rhosigma, double *v2sigma2,
@@ -41,7 +41,7 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
 
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 #include "gpu_extern.h"
 
 #define GET_XSTR(fval) GET_STR(fval)
@@ -50,10 +50,10 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
         //char fname[50] = GET_XSTR(func);
 	//char fname[50] = "test_func";
 
-	if(GPU_DEBUG){
+#ifdef DEBUG 	
 		printf("FILE: %s, LINE: %d, FUNCTION: %s, work_gga_c at work.. \n",
 		__FILE__, __LINE__, __func__);
-	}
+#endif	
 
 	set_gpu_ggac_work_params(p->dens_threshold, kernel_id, (gpu_ggac_work_params*)gpu_work_params);
 

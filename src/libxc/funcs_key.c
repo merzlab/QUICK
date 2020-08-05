@@ -49,7 +49,9 @@ xc_functional_key_t xc_functional_keys[] = {
 {"lda_k_zlp", 550},
 {"lda_c_mcweeny", 551},
 {"lda_c_br78", 552},
+#ifdef COMPILE_PK09
 {"lda_c_pk09", 554},
+#endif
 {"lda_c_ow_lyp", 573},
 {"lda_c_ow", 574},
 {"lda_xc_gdsmfb", 577},

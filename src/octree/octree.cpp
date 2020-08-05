@@ -1,9 +1,26 @@
+/*
+  !---------------------------------------------------------------------!
+  ! Written by Madu Manathunga on 10/17/2019                            !
+  !                                                                     ! 
+  ! Copyright (C) 2020-2021 Merz lab                                    !
+  ! Copyright (C) 2020-2021 Götz lab                                    !
+  !                                                                     !
+  ! This Source Code Form is subject to the terms of the Mozilla Public !
+  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+  !_____________________________________________________________________!
 
-/* Written by Madu Manathunga 10/17/2019*/
+  !---------------------------------------------------------------------!
+  ! This source file contains functions required for octree algorithm.  !
+  !---------------------------------------------------------------------!
+*/
 
 #include "octree.h"
+#include "gpack_type.h"
 
-void get_boundaries(vector<point> *ptlst, double *xmin, double *xmax, double *ymin, double *ymax, double *zmin, double *zmax){
+void get_boundaries(_gpack_type gps, vector<point> *ptlst, double *xmin, double *xmax, double *ymin, double *ymax, double *zmin, double *zmax){
+
+	PRINTOCTDEBUG("COMPUTING GRID BOUNDARIES")
 
         point pt0= ptlst->at(0);
         double *x0 = (double*) pt0.x;
@@ -56,21 +73,27 @@ void get_boundaries(vector<point> *ptlst, double *xmin, double *xmax, double *ym
         *ymax += 1.0;
         *zmax += 1.0;
 
+        PRINTOCTDEBUG("END COMPUTING GRID BOUNDARIES")
+
 }
 
-void generate_gridpt_list(double *arrx, double *arry, double *arrz, double *sswt, double *weight, int *iatm, int count, vector<point> *ptlst){
+void generate_gridpt_list(_gpack_type gps, vector<point> *ptlst){
 
-	for(int i=0;i<count;i++){
+        PRINTOCTDEBUG("GENERATING GRID POINT LISTS")
+
+	for(int i=0;i<gps->arr_size;i++){
 		point pt;
-		pt.x = &arrx[i];
-		pt.y = &arry[i];
-		pt.z = &arrz[i];
-		pt.sswt = &sswt[i];
-		pt.weight = &weight[i];	
-		pt.iatm = &iatm[i];		
+		pt.x      = &gps->gridx->_cppData[i];
+		pt.y      = &gps->gridy->_cppData[i];
+		pt.z      = &gps->gridz->_cppData[i];
+		pt.sswt   = &gps->sswt->_cppData[i];
+		pt.weight = &gps->ss_weight->_cppData[i];	
+		pt.iatm   = &gps->grid_atm->_cppData[i];		
 
 		ptlst->push_back(pt);
 	}
+
+        PRINTOCTDEBUG("END GENERATING GRID POINT LISTS")
 
 }
 
@@ -105,24 +128,30 @@ void distribute_grid_pts(vector<point> *ptlst, node *n){
 
 }
 
-/*For a given series of grid points, this method will generate an octree and return it as a vector of nodes.*/
-/* arrx, arry, arrz are pointers to grid point arrays and count is their size. sswt and weight are grid point
- properties. bin_size is the maximum amount of grid points for a node. max_lvl is the depth of tree.*/
-vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *sswt, double *weight, int *iatm, int count, int bin_size, int max_lvl){
+/*For a given series of grid points, this function will generate an octree and return it as a vector of nodes.
+  The required grid point properties are x, y, z coordinates and weights of the grid points. The total grid point
+  count is also required. These are provided through gps struct. Furthermore, bin_size is the maximum amount of grid 
+  points for a node. max_lvl is the depth of tree.*/
+vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
+
+        PRINTOCTDEBUG("STARTING OCTREE ALGORITHM")
 
 	/*Organize the coordinates into point type*/
 	vector<point> ptlst;
 
-	generate_gridpt_list(arrx, arry, arrz, sswt, weight, iatm, count, &ptlst);
+	generate_gridpt_list(gps, &ptlst);
 
 	/*Calculate the boundaries of the grid*/
 	double xmin, ymin, zmin, xmax, ymax, zmax;
 
-	get_boundaries(&ptlst, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax);	
+	get_boundaries(gps, &ptlst, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax);	
 
-#ifdef OCT_DEBUG	
-	printf("minX: %f, maxX: %f, minY: %f, maxY: %f, minZ: %f, maxZ: %f \n",xmin,xmax,ymin,ymax,zmin,zmax);
+#ifdef DEBUG	
+        fprintf(gps->gpackDebugFile,"Computed grid boundaries: minX: %f, maxX: %f, minY: %f, maxY: %f, minZ: %f, maxZ: %f \n", xmin,xmax,ymin,ymax,zmin,zmax);
 #endif
+
+        PRINTOCTDEBUG("RUNNING OCTREE ALGORITHM")
+
 	/*Create the octree in terms of a node list*/
 	vector<node> octree; /*We would store ONLY SIGNIFICANT NODES (i.e. nodes with at least one grid point) in this vector as follows.*/
 
@@ -200,8 +229,8 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 		
 		}
 
-#ifdef OCT_DEBUG
-		printf("i: %i nlvls: %i lvlstart: %i lvlend: %i nnodes_at_lvl: %i \n", i, nlvls, lvlstart, lvlend ,nnodes_at_lvl);
+#ifdef DEBUG
+		fprintf(gps->gpackDebugFile," i: %i nlvls: %i lvlstart: %i lvlend: %i nnodes_at_lvl: %i \n", i, nlvls, lvlstart, lvlend ,nnodes_at_lvl);
 #endif
 
 		/*This loops goes through each node at a given level*/
@@ -311,8 +340,8 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 						nk.has_children = false;
 					}
 
-#ifdef OCT_DEBUG
-                                        printf("i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
+#if defined DEBUG && defined WRITE_OCTREE
+                                        fprintf(gps->gpackDebugFile," i: %i j: %i k: %i xmin: %f xmax: %f ymin: %f ymax: %f zmin: %f zmax: %f numpts: %i \n", i, j, k, nk.xmin
                                         , nk.xmax, nk.ymin, nk.ymax, nk.zmin, nk.zmax, numpts);
 #endif
 
@@ -328,14 +357,16 @@ vector<node> generate_octree(double *arrx, double *arry, double *arrz, double *s
 			}
 		}
 
-#ifdef OCT_DEBUG
-		printf("i: %i lvl_node_counter.at(i): %i child_count: %i\n", i, lvl_node_counter.at(i), child_count);
+#ifdef DEBUG
+		fprintf(gps->gpackDebugFile," i: %i lvl_node_counter.at(i): %i child_count: %i\n", i, lvl_node_counter.at(i), child_count);
 #endif
 
 		/*Update the lvl_node_counter for new generation*/
 		lvl_node_counter.push_back(lvl_node_counter.back()+child_count);
 
 	}
+
+        PRINTOCTDEBUG("END RUNNING OCTREE ALGORITHM")
 
 	return octree;
 

@@ -304,8 +304,10 @@ xc_lda_c_lp96_func_kernel(const void *p, xc_lda_work_t *r);
  __device__ void   
 xc_lda_c_ml1_func_kernel(const void *p, xc_lda_work_t *r);   
 
+#ifdef COMPILE_PK09
 __device__ void   
 xc_lda_c_pk09_func_kernel(const void *p, xc_lda_work_t *r);   
+#endif
 
 __device__ void   
 xc_lda_c_pw_func_kernel(const void *p, xc_lda_work_t *r);   

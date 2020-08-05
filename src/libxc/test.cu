@@ -12,7 +12,7 @@
 #define XC_GGA_K_FR_B88       514
 #define XC_GGA_X_B88M         570
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
 //maple2c param typedefs
 /*typedef struct{
@@ -61,16 +61,12 @@ extern "C" void test_cu(const xc_func_type *p, gpu_ggax_work_params *ggwp, xc_gg
 
 #ifndef QUICK_LIBXC
 
-        if(GPU_DEBUG){
+#ifdef DEBUG 
                 printf("\n ============ Testing GPU LIBXC ============ \n");
                 printf("test_cu.cu:dens_threshold: %f \n", p->dens_threshold);
                 printf("test_cu.cu:work parameter ggwp.beta: %f \n", ggwp->beta);
-        }
+#endif
 
-       if(GPU_DEBUG){
-               printf("FILE: %s, LINE: %d, FUNCTION: %s \n", __FILE__, __LINE__, __func__);
-        }
-	
 	//----------------- pointer hosting work parameters on device --------------------------
 	gpu_libxc_info* d_glinfo;
 	d_glinfo = gpu_upload_libxc_info(p, (void*)ggwp, np);
@@ -86,9 +82,6 @@ extern "C" void test_cu(const xc_func_type *p, gpu_ggax_work_params *ggwp, xc_gg
 	//cudaMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));
 	//cudaMemcpy(d_glinfo, &h_glinfo, sizeof(gpu_libxc_info), cudaMemcpyHostToDevice);
 
-       if(GPU_DEBUG){
-               printf("FILE: %s, LINE: %d, FUNCTION: %s \n", __FILE__, __LINE__, __func__);
-        }
 
 	//------------------ Allocate host memory for results ------------------------	
         gpu_libxc_out* h_glout;
@@ -117,9 +110,9 @@ extern "C" void test_cu(const xc_func_type *p, gpu_ggax_work_params *ggwp, xc_gg
 		switch(p->info->kind){
 			case(XC_EXCHANGE):
 
-				if(GPU_DEBUG){
+#ifdef DEBUG 
 					printf("FILE: %s, LINE: %d, FUNCTION: %s \n", __FILE__, __LINE__, __func__);
-				}
+#endif
 				gpu_work_gga_x <<< grid, block >>> (d_glinfo, d_glin, d_glout, np);
 			break;
 		}
@@ -179,9 +172,9 @@ extern "C" void test_cu(const xc_func_type *p, gpu_ggax_work_params *ggwp, xc_gg
 	cudaDeviceReset();
 	//------------------------------------------------------
 
-        if(GPU_DEBUG){
+#ifdef DEBUG       
 		printf("\n =========== Test end GPU LIBXC ============ \n");
-	}
+#endif
 #endif
 }
 

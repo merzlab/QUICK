@@ -93,7 +93,9 @@ module libxc_funcs_m
   integer, parameter :: XC_LDA_K_ZLP                   = 550  ! kinetic energy version of ZLP
   integer, parameter :: XC_LDA_C_MCWEENY               = 551  !  McWeeny 76 
   integer, parameter :: XC_LDA_C_BR78                  = 552  !  Brual & Rothstein 78 
+#ifdef COMPILE_PK09
   integer, parameter :: XC_LDA_C_PK09                  = 554  ! Proynov and Kong 2009
+#endif
   integer, parameter :: XC_LDA_C_OW_LYP                = 573  !  Wigner with corresponding LYP parameters 
   integer, parameter :: XC_LDA_C_OW                    = 574  !  Optimized Wigner 
   integer, parameter :: XC_LDA_XC_GDSMFB               = 577  !  Groth et al. parametrization 

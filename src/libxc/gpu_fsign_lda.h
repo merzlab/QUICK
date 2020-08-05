@@ -1,4 +1,9 @@
-static __constant__ lda_ptr maple2cf_lda[31] = {&xc_lda_c_1d_csc_func_kernel,
+#ifdef COMPILE_PK09
+static __constant__ lda_ptr maple2cf_lda[31] = 
+#else
+static __constant__ lda_ptr maple2cf_lda[30] = 
+#endif
+{&xc_lda_c_1d_csc_func_kernel,
 &xc_lda_c_1d_loos_func_kernel,
 &xc_lda_c_2d_amgb_func_kernel,
 &xc_lda_c_2d_prm_func_kernel,
@@ -8,7 +13,6 @@ static __constant__ lda_ptr maple2cf_lda[31] = {&xc_lda_c_1d_csc_func_kernel,
 &xc_lda_c_hl_func_kernel,
 &xc_lda_c_lp96_func_kernel,
 &xc_lda_c_ml1_func_kernel,
-&xc_lda_c_pk09_func_kernel,
 &xc_lda_c_pw_func_kernel,
 &xc_lda_c_pz_func_kernel,
 &xc_lda_c_rc04_func_kernel,
@@ -29,5 +33,8 @@ static __constant__ lda_ptr maple2cf_lda[31] = {&xc_lda_c_1d_csc_func_kernel,
 &xc_lda_xc_teter93_func_kernel,
 &xc_lda_xc_zlp_func_kernel,
 &xc_lda_x_rel_func_kernel
-//&xc_lda_x_erf_func_kernel,
+#ifdef COMPILE_PK09
+,&xc_lda_c_pk09_func_kernel
+#endif
+//,&xc_lda_x_erf_func_kernel
 };

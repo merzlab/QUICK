@@ -26,7 +26,7 @@ subroutine fullx
    double precision :: Sminhalf(nbasis)
    double precision :: V(3,nbasis)
    double precision :: IDEGEN1(nbasis)
-   double precision :: SJI,sum
+   double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
 
    do Ibas=1,nbasis
@@ -34,13 +34,13 @@ subroutine fullx
          SJI =0.d0
          do Icon=1,ncontract(ibas)
             do Jcon=1,ncontract(jbas)
-               SJI =SJI + &
-                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+               SJI_temp = overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
                      itype(1,Jbas),       itype(2,Jbas),       itype(3,Jbas), &
                      itype(1,Ibas),       itype(2,Ibas),       itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)), &
+                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)),&
                      xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+
+               SJI =SJI + dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) * SJI_temp
             enddo
          enddo
          quick_qm_struct%s(Jbas,Ibas) = SJI
@@ -49,13 +49,13 @@ subroutine fullx
 
    call copySym(quick_qm_struct%s,nbasis)
 
-
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
 
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -108,7 +108,6 @@ subroutine fullx
          sum = 0.d0
          do K=1,nbasis
             sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-!write(*,*)  k,j,quick_scratch%hold2(K,J),Sminhalf(K),sum
          enddo
          quick_qm_struct%x(I,J) = sum
          quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
@@ -124,51 +123,51 @@ subroutine fullx
    return
 end subroutine fullx
 
-double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-   implicit none
-   double precision :: kinetic
-   double precision :: a,b
-   integer :: i,j,k,ii,jj,kk
-   double precision :: Ax,Ay,Az,Bx,By,Bz
-
-   double precision :: xi,xj,xk,overlap
-
-   ! The purpose of this subroutine is to calculate the kinetic energy
-   ! of an electron  distributed between gtfs with orbital exponents a
-   ! and b on A and B with angular momentums defined by i,j,k (a's x, y
-   ! and z exponents, respectively) and ii,jj,and kk on B.
-
-   ! The first step is to see if this function is zero due to symmetry.
-   ! If it is not, reset kinetic to 0.
-
-   kinetic = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk)) &
-         +(Ax-Bx)**2 + (Ay-By)**2 + (Az-Bz)**2
-   if (kinetic .ne. 0.d0) then
-      kinetic=0.d0
-
-      ! Kinetic energy is the integral of an orbital times the second derivative
-      ! over space of the other orbital.  For GTFs, this means that it is just a
-      ! sum of various overlap integrals with the powers adjusted.
-
-      xi = dble(i)
-      xj = dble(j)
-      xk = dble(k)
-      kinetic = kinetic &
-            +        (-1.d0+     xi)*xi  *overlap(a,b,i-2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            - 2.d0*a*( 1.d0+2.d0*xi)     *overlap(a,b,i  ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            + 4.d0*(a**2.d0)             *overlap(a,b,i+2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-      kinetic = kinetic &
-            +         (-1.d0+     xj)*xj *overlap(a,b,i,j-2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            - 2.d0*a* ( 1.d0+2.d0*xj)    *overlap(a,b,i,j  ,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            + 4.d0*(a**2.d0)             *overlap(a,b,i,j+2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-      kinetic = kinetic &
-            +         (-1.d0+     xk)*xk *overlap(a,b,i,j,k-2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            - 2.d0*a* ( 1.d0+2.d0*xk)    *overlap(a,b,i,j,k  ,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-            + 4.d0*(a**2.d0)             *overlap(a,b,i,j,k+2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-   endif
-   ekinetic = kinetic/(-2.d0)
-   return
-end function ekinetic
+!double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+!   implicit none
+!   double precision :: kinetic
+!   double precision :: a,b
+!   integer :: i,j,k,ii,jj,kk
+!   double precision :: Ax,Ay,Az,Bx,By,Bz
+!
+!   double precision :: xi,xj,xk,overlap
+!
+!   ! The purpose of this subroutine is to calculate the kinetic energy
+!   ! of an electron  distributed between gtfs with orbital exponents a
+!   ! and b on A and B with angular momentums defined by i,j,k (a's x, y
+!   ! and z exponents, respectively) and ii,jj,and kk on B.
+!
+!   ! The first step is to see if this function is zero due to symmetry.
+!   ! If it is not, reset kinetic to 0.
+!
+!   kinetic = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk)) &
+!         +(Ax-Bx)**2 + (Ay-By)**2 + (Az-Bz)**2
+!   if (kinetic .ne. 0.d0) then
+!      kinetic=0.d0
+!
+!      ! Kinetic energy is the integral of an orbital times the second derivative
+!      ! over space of the other orbital.  For GTFs, this means that it is just a
+!      ! sum of various overlap integrals with the powers adjusted.
+!
+!      xi = dble(i)
+!      xj = dble(j)
+!      xk = dble(k)
+!      kinetic = kinetic &
+!            +        (-1.d0+     xi)*xi  *overlap(a,b,i-2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            - 2.d0*a*( 1.d0+2.d0*xi)     *overlap(a,b,i  ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            + 4.d0*(a**2.d0)             *overlap(a,b,i+2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+!      kinetic = kinetic &
+!            +         (-1.d0+     xj)*xj *overlap(a,b,i,j-2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            - 2.d0*a* ( 1.d0+2.d0*xj)    *overlap(a,b,i,j  ,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            + 4.d0*(a**2.d0)             *overlap(a,b,i,j+2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+!      kinetic = kinetic &
+!            +         (-1.d0+     xk)*xk *overlap(a,b,i,j,k-2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            - 2.d0*a* ( 1.d0+2.d0*xk)    *overlap(a,b,i,j,k  ,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
+!            + 4.d0*(a**2.d0)             *overlap(a,b,i,j,k+2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+!   endif
+!   ekinetic = kinetic/(-2.d0)
+!   return
+!end function ekinetic
 
 
 ! Ed Brothers. October 3, 2001
@@ -1702,9 +1701,9 @@ subroutine get1e(oneElecO)
    implicit double precision(a-h,o-z)
    double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
-#ifdef MPIV
-   include "mpif.h"
-#endif
+!#ifdef MPIV
+!   include "mpif.h"
+!#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -1713,9 +1712,9 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-#ifdef MPIV
-   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
-#endif
+!#ifdef MPIV
+!   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
+!#endif
 
      if (master) then
 
@@ -1751,68 +1750,65 @@ subroutine get1e(oneElecO)
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
       endif
-#ifdef MPIV
-   else
-
-      !------- MPI/ ALL NODES -------------------
-
-      !=================================================================
-      ! Step 1. evaluate 1e integrals
-      ! This job is only done on master node since it won't cost much resource
-      ! and parallel will even waste more than it saves
-      !-----------------------------------------------------------------
-      ! The first part is kinetic part
-      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-      !-----------------------------------------------------------------
-      call cpu_time(timer_begin%t1e)
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
-      do i=1,mpi_nbasisn(mpirank)
-         Ibas=mpi_nbasis(mpirank,i)
-         call get1eO(Ibas)
-      enddo
-
-      !-----------------------------------------------------------------
-      ! The second part is attraction part
-      !-----------------------------------------------------------------
-      do i=1,mpi_jshelln(mpirank)
-         IIsh=mpi_jshell(mpirank,i)
-         do JJsh=IIsh,jshell
-            call attrashell(IIsh,JJsh)
-         enddo
-      enddo
-
-      call cpu_time(timer_end%t1e)
-      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-
-      ! slave node will send infos
-      if(.not.master) then
-
-         ! Copy Opertor to a temp array and then send it to master
-         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
-         ! send operator to master node
-         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-      else
-         ! master node will receive infos from every nodes
-         do i=1,mpisize-1
-            ! receive opertors from slave nodes
-            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-            ! and sum them into operator
-            do ii=1,nbasis
-               do jj=1,nbasis
-                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-               enddo
-            enddo
-         enddo
-         call copySym(quick_qm_struct%o,nbasis)
-         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
-      endif
-      !------- END MPI/ALL NODES ------------
-   endif
-#endif
+!#ifdef MPIV
+!   else
+!
+!      !------- MPI/ ALL NODES -------------------
+!
+!      !=================================================================
+!      ! Step 1. evaluate 1e integrals
+!      ! This job is only done on master node since it won't cost much resource
+!      ! and parallel will even waste more than it saves
+!      !-----------------------------------------------------------------
+!      ! The first part is kinetic part
+!      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
+!      !-----------------------------------------------------------------
+!      call cpu_time(timer_begin%t1e)
+!      quick_qm_struct%o=0.0d0
+!
+!      do i=1,mpi_nbasisn(mpirank)
+!         Ibas=mpi_nbasis(mpirank,i)
+!         call get1eO(Ibas)
+!      enddo
+!
+!      !-----------------------------------------------------------------
+!      ! The second part is attraction part
+!      !-----------------------------------------------------------------
+!      do i=1,mpi_jshelln(mpirank)
+!         IIsh=mpi_jshell(mpirank,i)
+!         do JJsh=IIsh,jshell
+!            call attrashell(IIsh,JJsh)
+!         enddo
+!      enddo
+!
+!      call cpu_time(timer_end%t1e)
+!      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+!
+!      ! slave node will send infos
+!      if(.not.master) then
+!
+!         ! Copy Opertor to a temp array and then send it to master
+!         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
+!         ! send operator to master node
+!         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+!      else
+!         ! master node will receive infos from every nodes
+!         do i=1,mpisize-1
+!            ! receive opertors from slave nodes
+!            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!            ! and sum them into operator
+!            do ii=1,nbasis
+!               do jj=1,nbasis
+!                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
+!               enddo
+!            enddo
+!         enddo
+!         call copySym(quick_qm_struct%o,nbasis)
+!         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
+!      endif
+!      !------- END MPI/ALL NODES ------------
+!   endif
+!#endif
 end subroutine get1e
 
 ! Ed Brothers. October 23, 2001

@@ -23,7 +23,7 @@ work_gga_k
 #else
 work_gga_x
 #endif
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 (const xc_func_type *p, int np, const double *rho, const double *sigma,
  double *zk, double *vrho, double *vsigma,
  double *v2rho2, double *v2rhosigma, double *v2sigma2,
@@ -123,7 +123,7 @@ work_gga_x
   }
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
 #include "gpu_extern.h"
 
@@ -143,17 +143,6 @@ work_gga_x
 
 	set_gpu_ggax_work_params(sfact, p->dens_threshold, alpha,
         beta, c_zk[0], c_vrho[0], c_vrho[1], c_vrho[2], c_vsigma[0], c_vsigma[1], kernel_id, (gpu_ggax_work_params*)gpu_work_params);
-
-if(dryrun){
-
-	//place paramter return code here. 
-	//gpu_ggax_w_t = ggwp;
-
-}else{
-
-	test_cu(p, (gpu_ggax_work_params*) gpu_work_params, r, rho, sigma, np);
-
-}
 
 #else
   /* the loop over the points starts */

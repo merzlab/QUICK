@@ -1,4 +1,4 @@
-name: Basic CI Serial
+name: Serial Build
 
 on: [push, pull_request]
 
@@ -9,7 +9,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install deps
         run: sudo apt-get -y install gfortran
+      - name: Configure serial
+        run: ./configure --serial --prefix $PWD/install gnu
       - name: Build serial
-        run: cp ./makein/make.in.gnu ./make.in && make quick
+        run: make
+      - name: Install serial
+        run: make install
       - name: Test serial
-        run: echo 1 | ./testqk.sh 
+        run: make test

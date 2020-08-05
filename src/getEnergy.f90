@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	getEnergy.f90
 !	new_quick

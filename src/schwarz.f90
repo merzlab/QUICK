@@ -1,4 +1,3 @@
-#include "config.h"
 
 ! change call g2eshell in hfgrad.f? Answer:NO
 ! change shreshold!!!!!!!
@@ -18,8 +17,8 @@ subroutine schwarzoff
    include 'mpif.h'
 #endif
 
-  integer ii,jj
-  double precision Ymaxtemp
+  integer :: ii,jj
+  double precision :: Ymaxtemp
 
   if (master) then
   do II=1,nshell
@@ -586,6 +585,7 @@ subroutine densityCutoff
    !------------------------------------------------
    use allmod
    implicit double precision(a-h,o-z)
+
    ! Cutmatrix(II,JJ) indicated for ii shell and jj shell, the max dense
    do II=1,jshell
       do JJ=II,jshell
@@ -595,5 +595,4 @@ subroutine densityCutoff
          Cutmatrix(JJ,II)=DNtemp
       enddo
    enddo
-
 end subroutine densityCutoff
