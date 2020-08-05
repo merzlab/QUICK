@@ -1,307 +1,188 @@
-#!/bin/sh
 
-#include "config.h"
-MAKEIN = ./make.in
+#  !---------------------------------------------------------------------!
+#  ! Written by Madu Manathunga on 07/17/2020                            !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This is the main Makefile for compiling QUICK source code           !
+#  !---------------------------------------------------------------------!
+
+MAKEIN=./make.in
 include $(MAKEIN)
 
-# --- Makefile for Quick Program ---
-#  				- v 3.00 2019/03/30 Madu Manathunga
-#				- v 2.00 2010/10/25 Yipu Miao
-#				- v 1.18 2009/09/16 John Faver Exp $ 
-#				- Makefile created by mkmf.pl $Id:
-#	--------
-#	 INDEX
-#	--------
-#	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#	B. Make folders
-#		! mpif90 is recommended for MPI Multi-CPU Version
-#	C. Make Object Files		! Source files --> Object files
-#	D. Make Executed files		! Object files --> Executed files
-#	E. Self-defined Option		! Make option
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
 
-#************************************************************************
-#                  A. Compiler Settings
-# 
-#   FC specifies f90 compiler
-#   FFLAGS are compliation options
-#   LFLAGS are linking flags
-#
-#************************************************************************
+.PHONY: nobuildtypes serial mpi cuda cudampi all
 
-# See compiler information and flag in make.in
+all:$(BUILDTYPES)
+	@echo  "Building successful."
 
-#----------------------
-# src file location
-# #----------------------
-#libxc = /users/PCS0202/bgs0374/Work/Project/Qk/libxc-4.3.4/lib
-#
-# #----------------------
-# # obj file location
-# #----------------------
-# libxcinc = /users/PCS0202/bgs0374/Work/Project/Qk/libxc-4.3.4/include
-#----------------------
-# src file location
-#----------------------
-srcfolder = ./src
+nobuildtypes:
+	@echo  "Error: No build type found. Plesae run configure script first."
 
-#----------------------
-# obj file location
-#----------------------
-objfolder = ./obj
+serial: checkfolders
+	@echo  "Building serial version.."
+	@cd $(buildfolder)/serial && make serial
 
-#----------------------
-# exe file location
-#----------------------
-exefile = ./bin/quick
+mpi: checkfolders
+	@echo  "Building mpi version.."
+	@cd $(buildfolder)/mpi && make mpi
 
-#----------------------
-# exe folder location
-#----------------------
-exefolder = ./bin
+cuda: checkfolders
+	@echo  "Building cuda version.."
+	@cd $(buildfolder)/cuda && make cuda
 
-#----------------------
-# library file location
-#----------------------
-libfolder = ./lib
+cudampi: checkfolders
+	@echo  "Building cuda-mpi version.."
+	@cd $(buildfolder)/cudampi && make cudampi 
 
-#----------------------
-# config file location
-#----------------------
-configfolder = ./src/config
+checkfolders:
+	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
+	exit 1; fi
+	@if [ ! -d $(buildfolder) ]; then echo  "Error: $(buildfolder) not found. Please configure first."; \
+	exit 1; fi 	
 
-#----------------------
-# subroutine file location
-#----------------------
-subfolder = ./src/subs
+#  !---------------------------------------------------------------------!
+#  ! Installation targets                                                !
+#  !---------------------------------------------------------------------!
 
-#----------------------
-# BLAS file location
-#----------------------
-blasfolder = ./src/BLAS
+.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall
 
-#----------------------
-# BLAS file location
-# #----------------------
-libxcfolder = ./src/libxc
+install: $(INSTALLTYPES)
+	@echo  "Installation sucessful."
+	@echo  ""
+	@echo  "Please add the following into your .bash_profile or .bashrc file."
+	@echo  "      export QUICK_BASIS=$(installfolder)/basis"
 
-#----------------------
-# cuda files
-#----------------------
+noinstall:
+	@echo  "Please find QUICK executables in $(exefolder)."
 
-cudafolder = ./src/cuda
-cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_getxc.o \
-	       $(objfolder)/gpu_get2e.o
-cudalibxcobj=$(objfolder)/gga_c_am05.o $(objfolder)/gga_c_bcgp.o $(objfolder)/gga_c_bmk.o $(objfolder)/gga_c_cs1.o \
-	$(objfolder)/gga_c_ft97.o $(objfolder)/gga_c_gapc.o $(objfolder)/gga_c_gaploc.o $(objfolder)/gga_c_hcth_a.o \
-	$(objfolder)/gga_c_lm.o $(objfolder)/gga_c_lyp.o $(objfolder)/gga_c_op_b88.o $(objfolder)/gga_c_op_g96.o \
-	$(objfolder)/gga_c_op_pbe.o $(objfolder)/gga_c_op_pw91.o $(objfolder)/gga_c_optc.o $(objfolder)/gga_c_op_xalpha.o \
-	$(objfolder)/gga_c_p86.o $(objfolder)/gga_c_pbe.o $(objfolder)/gga_c_pbeloc.o $(objfolder)/gga_c_pw91.o \
-	$(objfolder)/gga_c_q2d.o $(objfolder)/gga_c_regtpss.o $(objfolder)/gga_c_revtca.o $(objfolder)/gga_c_scan_e0.o \
-	$(objfolder)/gga_c_sg4.o $(objfolder)/gga_c_sogga11.o $(objfolder)/gga_c_tca.o $(objfolder)/gga_c_w94.o \
-	$(objfolder)/gga_c_wi.o $(objfolder)/gga_c_wl.o $(objfolder)/gga_c_zpbeint.o $(objfolder)/gga_c_zvpbeint.o \
-	$(objfolder)/gga_k_dk.o $(objfolder)/gga_k_exp4.o $(objfolder)/gga_k_meyer.o $(objfolder)/gga_k_ol1.o \
-	$(objfolder)/gga_k_ol2.o $(objfolder)/gga_k_pearson.o $(objfolder)/gga_k_tflw.o $(objfolder)/gga_k_thakkar.o \
-	$(objfolder)/gga_x_2d_b86.o $(objfolder)/gga_x_2d_b86_mgc.o $(objfolder)/gga_x_2d_b88.o $(objfolder)/gga_x_2d_pbe.o \
-	$(objfolder)/gga_x_airy.o $(objfolder)/gga_x_ak13.o $(objfolder)/gga_x_am05.o $(objfolder)/gga_x_b86.o \
-	$(objfolder)/gga_x_b88.o $(objfolder)/gga_x_bayesian.o $(objfolder)/gga_x_beefvdw.o $(objfolder)/gga_x_bpccac.o \
-	$(objfolder)/gga_x_c09x.o $(objfolder)/gga_x_cap.o $(objfolder)/gga_xc_b97.o $(objfolder)/gga_x_chachiyo.o \
-	$(objfolder)/gga_xc_th1.o $(objfolder)/gga_xc_th2.o $(objfolder)/gga_xc_th3.o $(objfolder)/gga_x_dk87.o \
-	$(objfolder)/gga_x_eg93.o $(objfolder)/gga_x_ft97.o $(objfolder)/gga_x_g96.o $(objfolder)/gga_x_hcth_a.o \
-	$(objfolder)/gga_x_herman.o $(objfolder)/gga_x_hjs_b88_v2.o $(objfolder)/gga_x_hjs.o $(objfolder)/gga_x_htbs.o \
-	$(objfolder)/gga_x_kt.o $(objfolder)/gga_x_lag.o $(objfolder)/gga_x_lg93.o $(objfolder)/gga_x_lv_rpw86.o \
-	$(objfolder)/gga_x_mpbe.o $(objfolder)/gga_x_n12.o $(objfolder)/gga_x_optx.o $(objfolder)/gga_x_pbea.o \
-	$(objfolder)/gga_x_pbe.o $(objfolder)/gga_x_pbeint.o $(objfolder)/gga_x_pbepow.o $(objfolder)/gga_x_pbetrans.o \
-	$(objfolder)/gga_x_pw86.o $(objfolder)/gga_x_pw91.o $(objfolder)/gga_x_q2d.o $(objfolder)/gga_x_rge2.o \
-	$(objfolder)/gga_x_rpbe.o $(objfolder)/gga_x_sg4.o $(objfolder)/gga_x_sogga11.o $(objfolder)/gga_x_ssb_sw.o \
-	$(objfolder)/gga_x_vmt84.o $(objfolder)/gga_x_vmt.o $(objfolder)/gga_x_wc.o $(objfolder)/hyb_gga_xc_wb97.o \
-	$(objfolder)/lda_c_1d_csc.o $(objfolder)/lda_c_1d_loos.o $(objfolder)/lda_c_2d_amgb.o $(objfolder)/lda_c_2d_prm.o \
-	$(objfolder)/lda_c_chachiyo.o $(objfolder)/lda_c_gk72.o $(objfolder)/lda_c_gombas.o $(objfolder)/lda_c_hl.o \
-	$(objfolder)/lda_c_lp96.o $(objfolder)/lda_c_ml1.o $(objfolder)/lda_c_pk09.o $(objfolder)/lda_c_pw.o \
-	$(objfolder)/lda_c_pz.o $(objfolder)/lda_c_rc04.o $(objfolder)/lda_c_rpa.o $(objfolder)/lda_c_vwn_1.o \
-	$(objfolder)/lda_c_vwn_2.o $(objfolder)/lda_c_vwn_3.o $(objfolder)/lda_c_vwn_4.o $(objfolder)/lda_c_vwn.o \
-	$(objfolder)/lda_c_vwn_rpa.o $(objfolder)/lda_c_wigner.o $(objfolder)/lda_k_tf.o $(objfolder)/lda_k_zlp.o \
-	$(objfolder)/lda_x_2d.o $(objfolder)/lda_xc_1d_ehwlrg.o $(objfolder)/lda_xc_ksdt.o $(objfolder)/lda_xc_teter93.o \
-	$(objfolder)/lda_x.o $(objfolder)/lda_xc_zlp.o $(objfolder)/lda_x_rel.o 
-#       $(objfolder)/lda_x_erf.o $(objfolder)/hyb_mgga_xc_wb97mv.o $(objfolder)/hyb_mgga_x_dldf.o $(objfolder)/hyb_mgga_x_m05.o \
-	$(objfolder)/mgga_c_b88.o $(objfolder)/mgga_c_bc95.o $(objfolder)/mgga_c_cs.o $(objfolder)/mgga_c_kcis.o \
-	$(objfolder)/mgga_c_m05.o $(objfolder)/mgga_c_m06l.o $(objfolder)/mgga_c_m08.o $(objfolder)/mgga_c_pkzb.o \
-	$(objfolder)/mgga_c_revscan.o $(objfolder)/mgga_c_revtpss.o $(objfolder)/mgga_c_scan.o $(objfolder)/mgga_c_tpss.o \
-	$(objfolder)/mgga_c_tpssloc.o $(objfolder)/mgga_c_vsxc.o $(objfolder)/mgga_k_pc07.o $(objfolder)/mgga_x_br89_explicit.o \
-	$(objfolder)/mgga_xc_b97mv.o $(objfolder)/mgga_xc_b98.o $(objfolder)/mgga_xc_cc06.o $(objfolder)/mgga_xc_lp90.o \
-	$(objfolder)/mgga_xc_zlp.o $(objfolder)/mgga_x_gvt4.o $(objfolder)/mgga_x_gx.o $(objfolder)/mgga_x_lta.o \
-	$(objfolder)/mgga_x_m06l.o $(objfolder)/mgga_x_m08.o $(objfolder)/mgga_x_m11.o $(objfolder)/mgga_x_m11_l.o \
-	$(objfolder)/mgga_x_mbeef.o $(objfolder)/mgga_x_mbeefvdw.o $(objfolder)/mgga_x_mk00.o $(objfolder)/mgga_x_mn12.o \
-	$(objfolder)/mgga_x_ms.o $(objfolder)/mgga_x_mvs.o $(objfolder)/mgga_x_pbe_gx.o $(objfolder)/mgga_x_pkzb.o \
-	$(objfolder)/mgga_x_sa_tpss.o $(objfolder)/mgga_x_scan.o $(objfolder)/mgga_x_tau_hcth.o $(objfolder)/mgga_x_tm.o \
-	$(objfolder)/mgga_x_tpss.o $(objfolder)/mgga_x_vt84.o
-cublasfolder  =$(cudafolder)/CUBLAS
-cublasobj     =$(objfolder)/fortran_thunking.o
-#----------------------
-# octree files
-#----------------------
-octfolder = ./src/octree
-octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
+serialinstall:
+	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
+	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+	exit 1; fi
+	@cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
+	@cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
 
-#----------------------
-# quick modules and object files
-#----------------------
-modfolder = ./src/modules
+mpiinstall:
+	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+        exit 1; fi
+	@cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
+	@cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
 
-modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
-        $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
-        $(objfolder)/quick_amber_interface_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
-        $(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
-        $(objfolder)/quick_files_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_mfcc_module.o \
-        $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
-        $(objfolder)/quick_timer_module.o $(objfolder)/quick_all_module.o
+cudainstall:
+	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+        exit 1; fi
+	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
+	@cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
+	@cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
 
-OBJ =   $(objfolder)/main.o \
-        $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
-        $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
-        $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
-        $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
-        $(objfolder)/dft.o $(objfolder)/sedftoperator.o $(objfolder)/dipole.o \
-        $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
-        $(objfolder)/udftoperator.o $(objfolder)/usedftoperator.o \
-        $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
-        $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
-        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
-        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
+cudampiinstall:
+	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+        exit 1; fi
+	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
+	@cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
+	@cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
 
+#  !---------------------------------------------------------------------!
+#  ! Installation targets                                                !
+#  !---------------------------------------------------------------------!
 
-all: quick quick.cuda
-#************************************************************************
-# 
-#                  B. Make necessary directories
-#  
-#************************************************************************
-makefolders:
-	mkdir -p $(objfolder) $(exefolder) $(libfolder)
+.PHONY: test buildtest installtest
 
-#************************************************************************
-# 
-#                 C. Make Object Files
-# 
-#************************************************************************
+test:$(TESTTYPE)
 
-#================= common subroutine library ============================
-quick_subs:
-	cd $(subfolder) && make all
+buildtest:
+	@cp $(toolsfolder)/runtest $(homefolder)
+	$(homefolder)/runtest
 
-#================= quick module library =================================
-quick_modules:
-	cd $(modfolder) && make all
-#================= octree subroutines   =================================
-octree:
-	cd $(octfolder) && make all
-#============= targets for cuda =========================================
-quick_cuda:
-	cd $(cudafolder) && make all 
-		
-#================= targets for BLAS =====================================
-blas:
-	cd $(blasfolder) && make
-	cp $(blasfolder)/*.a $(libfolder)
-#==================== libxc cpu library =================================
-libxc_cpu:
-	cd $(libxcfolder) && make libxc_cpu
-#==================== libxc cpu library =================================
-libxc_gpu:
-	cd $(libxcfolder) && make libxc_gpu
-	cd $(libxcfolder)/maple2c_device && make all
-#=============== targets for CUBLAS =====================================
-$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CPP) $(CPP_FLAG) -c $< -o $@
+installtest:
+	@if [ ! -x $(installfolder)/bin/quick* ]; then \
+        echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
+        exit 1; fi	
+	@cp $(toolsfolder)/runtest $(installfolder)
+	@cd $(installfolder) && ./runtest
 
-#===================== target for main src files ========================
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-$(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+.PHONY:serialclean mpiclean cudaclean cudampiclean makeinclean
+	
+clean:$(CLEANTYPES)
+	@-rm -f $(homefolder)/runtest 
+	@echo  "Cleaned up successfully."
 
-#==================== target configuration files ========================
+serialclean:
+	@cd $(buildfolder)/serial && make clean 
 
-cpconfig:
-	cp $(configfolder)/config.h $(srcfolder)/config.h
-cpconfig.cuda:
-	cp $(configfolder)/config.cuda.h $(srcfolder)/config.h
-cpconfig.cuda.SP:
-	cp $(configfolder)/config.cuda.SP.h $(srcfolder)/config.h
-cpconfig.MPI:
-	cp $(configfolder)/config.MPI.h $(srcfolder)/config.h
+mpiclean:
+	@cd $(buildfolder)/mpi && make clean
 
-#=========== targets for amber-quick interface ========================
-# This is for amber-quick interface
-# #amber_interface.o: amber_interface.f90 quick_modules qmmm_module.mod
-# #       $(FC) -o $(objfolder)/amber_interface.o $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -c  $(srcfolder)/amber_interface.f90
-#
-#===================== preprocess files ===============================
-#quick_pprs:
-#	$(FPP) $(srcfolder)/main.f90 > $(srcfolder)/main_.f90
-#
-#================= quick core subroutines ===============================
+cudaclean:
+	@cd $(buildfolder)/cuda && make clean
 
+cudampiclean:
+	@cd $(buildfolder)/cudampi && make clean
 
-#**********************************************************************
-# 
-#                 C. Make Executables
-# 
-#**********************************************************************
-quick: makefolders cpconfig libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+distclean: makeinclean
+	@-rm -f $(homefolder)/runtest 
+	@-rm -rf $(buildfolder) $(exefolder)
+	@echo  "Removed build and bin directories."
 
-quick.cuda: makefolders cpconfig.cuda libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(cublasobj)
-	$(FC) -o $(exefolder)/quick.cuda $(OBJ) $(octobj) $(modobj) $(objfolder)/gpu_all.o $(cudaobj) $(cudalibxcobj) \
-	$(libfolder)/quicklib.a $(cublasobj) $(libfolder)/libxcf90.a $(libfolder)/libxc.a $(CFLAGS) $(LDFLAGS) 
+makeinclean:
+	@-rm -f $(libxcfolder)/make.in
+	@-rm -f $(libxcfolder)/maple2c_device/make.in 
+	@-rm -f $(subfolder)/make.in
+	@-rm -f $(modfolder)/make.in  
+	@-rm -f $(octfolder)/make.in 
+	@-rm -f $(blasfolder)/make.in 
+	@-rm -f $(cudafolder)/make.in 
 
-quick.cuda.SP: makefolders cpconfig.cuda.SP quick_cuda quick_modules quick_subs quick_pprs $(OBJ) $(cublasobj)
-	$(FC) -o quick.cuda.SP $(OBJ) $(modobj) $(cudaobj) $(libfolder)/quicklib.a $(cublasobj) $(CFLAGS) 
+#  !---------------------------------------------------------------------!
+#  ! Uninstall targets                                                   !
+#  !---------------------------------------------------------------------!
 
-quick.MPI: makefolders cpconfig.MPI libxc_cpu octree quick_modules quick_subs $(OBJ) blas 
-	$(FC) -o $(exefolder)/quick.MPI  $(OBJ) $(octobj) $(modobj) $(libfolder)/quicklib.a $(libfolder)/blas.a \
-	$(libfolder)/libxcf90.a $(libfolder)/libxc.a $(LDFLAGS) 
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
 
-quick_lib:$(OBJ) ambermod amber_interface.o
+uninstall: $(UNINSTALLTYPES)
+	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
+	rm -rf $(installfolder)/test; fi
+	@-rm -f $(installfolder)/runtest
+	@echo  "Uninstallation sucessful."
 
-ambermod:
-	cd ../../../AmberTools/src/sqm && $(MAKE) qmmm_module.o
-	cp ../../../AmberTools/src/sqm/qmmm_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_vsolv_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_struct_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_nml_module.mod .
-	cp ../../../AmberTools/src/sqm/qmmm_module.o .
+nouninstall:
+	@echo  "Nothing to uninstall."
 
-		
-#************************************************************************
-# 
-#                 D. Self-defined Option
-# 
-#************************************************************************
+serialuninstall:
+	@-rm -f $(installfolder)/bin/quick
+	@-rm -rf $(installfolder)/include/serial
+	@-rm -rf $(installfolder)/lib/serial
 
-# - 1. Clean object files
-clean: neat
-	-rm -f $(objfolder)/* $(libfolder)/* 
-	cd $(cudafolder) && make clean
-	cd $(subfolder) && make clean
-	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean
-	cd $(libxcfolder) && make clean
-	cd $(libxcfolder)/maple2c_device && make clean	
-neat:
-	-rm -f $(TMPFILES)
+mpiuninstall:
+	@-rm -f $(installfolder)/bin/quick.mpi
+	@-rm -rf $(installfolder)/include/mpi
+	@-rm -rf $(installfolder)/lib/mpi
 
-#Madu: Clean except libxc. Only for debugging
-dryclean:
-	-rm -f $(objfolder)/* $(libfolder)/*
-	cd $(cudafolder) && make clean
-	cd $(subfolder) && make clean
-	cd $(blasfolder) && make clean
-	cd $(modfolder) && make clean	
+cudauninstall:
+	@-rm -f $(installfolder)/bin/quick.cuda
+	@-rm -rf $(installfolder)/include/cuda
+	@-rm -rf $(installfolder)/lib/cuda
 
-# - 2. Make tags for source files
-TAGS: $(SRC)
-	etags $(SRC)
-tags: $(SRC)
-	ctags $(SRC)
+cudampiuninstall:
+	@-rm -f $(installfolder)/bin/quick.cuda.mpi
+	@-rm -rf $(installfolder)/include/cudampi
+	@-rm -rf $(installfolder)/lib/cudampi
 
-include $(srcfolder)/depend 

@@ -8,7 +8,7 @@
 
 
 static void 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 work_mgga_c(const xc_func_type *p, int np, const double *rho, const double *sigma, const double *lapl, const double *tau,
             double *zk, double *vrho, double *vsigma, double *vlapl, double *vtau,
             double *v2rho2, double *v2sigma2, double *v2lapl2, double *v2tau2,
@@ -36,7 +36,7 @@ work_mgga_c(const xc_func_type *p, int np, const double *rho, const double *sigm
 
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
 #else
   for(ip = 0; ip < np; ip++){

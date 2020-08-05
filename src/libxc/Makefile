@@ -1,150 +1,165 @@
-#!/bin/sh
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/25/2020                         !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
 
-MAKEIN = ../../make.in
+MAKEIN = ./make.in
 include $(MAKEIN)
 
-# --- Makefile for libxc  ---
-#  				- v 1.00 2019/06/03 Madu Manathunga
-#	--------
-#	 INDEX
-#	--------
-#	A. Compiler Setting			! Intel Fortran 9.0+ or GNU Fortran is recommended for single CPU Version
-#								! mpif90 is recommended for MPI Multi-CPU Version
-#	B. Make Object Files		! Source files --> Object files
-#	C. Make Executed files		! Object files --> Executed files
-#	D. Self-defined Option		! Make option
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
 
-#************************************************************************
-#                  A. Compiler Settings
-#
-#   CC specifies gcc/icc compiler
-#   FOR specifies f90 compiler
-#   FFLAGS are compliation options
-#   
-#
-#************************************************************************
+FOR=$(FC) -c -I. $(FFLAGS) 
 
-#Madu: intel and gnu use -module and -J options to direct module files. 
-#Therefore, we use the following if condition to handle this. 
+CCC = $(CC) -c -I. $(CCFLAGS) 
 
-ifeq "$(FC)" "ifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
-else ifeq "$(FC)" "mpiifort"
-  FOR = $(FC) -c -I. -O2 -module $(objfolder)
-else 
-  FOR=$(FC) -c -I. -I$(objfolder) -J$(objfolder)
+LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
+	$(libxcobjfolder)/expint_e1.o $(libxcobjfolder)/integrate.o\
+	$(libxcobjfolder)/util.o $(libxcobjfolder)/mix_func.o\
+	$(libxcobjfolder)/func_info.o $(libxcobjfolder)/functionals.o\
+	$(libxcobjfolder)/version.o $(libxcobjfolder)/func_reference.o\
+	$(libxcobjfolder)/references.o $(libxcobjfolder)/lda.o $(libxcobjfolder)/lda_x.o\
+	$(libxcobjfolder)/lda_x_1d.o $(libxcobjfolder)/lda_x_2d.o\
+	$(libxcobjfolder)/lda_c_wigner.o $(libxcobjfolder)/lda_c_gombas.o\
+	$(libxcobjfolder)/lda_c_rpa.o $(libxcobjfolder)/lda_c_hl.o\
+	$(libxcobjfolder)/lda_c_vwn.o $(libxcobjfolder)/lda_c_vwn_1.o\
+	$(libxcobjfolder)/lda_c_vwn_2.o $(libxcobjfolder)/lda_c_vwn_3.o\
+	$(libxcobjfolder)/lda_c_vwn_4.o $(libxcobjfolder)/lda_c_vwn_rpa.o\
+	$(libxcobjfolder)/lda_c_pz.o $(libxcobjfolder)/lda_c_pw.o\
+	$(libxcobjfolder)/lda_c_lp96.o\
+	$(libxcobjfolder)/lda_c_ml1.o $(libxcobjfolder)/lda_c_rc04.o\
+	$(libxcobjfolder)/lda_xc_teter93.o $(libxcobjfolder)/lda_c_1d_csc.o\
+	$(libxcobjfolder)/lda_c_1d_loos.o $(libxcobjfolder)/lda_c_2d_amgb.o\
+	$(libxcobjfolder)/lda_c_2d_prm.o $(libxcobjfolder)/lda_k_tf.o\
+	$(libxcobjfolder)/lda_xc_zlp.o $(libxcobjfolder)/lda_xc_ksdt.o\
+	$(libxcobjfolder)/lda_c_chachiyo.o $(libxcobjfolder)/lda_xc_1d_ehwlrg.o\
+	$(libxcobjfolder)/lda_x_rel.o $(libxcobjfolder)/lda_x_erf.o\
+	$(libxcobjfolder)/lda_k_zlp.o $(libxcobjfolder)/lda_c_gk72.o\
+	$(libxcobjfolder)/gga.o $(libxcobjfolder)/gga_x_lg93.o\
+	$(libxcobjfolder)/gga_x_pbe.o $(libxcobjfolder)/gga_x_rpbe.o\
+	$(libxcobjfolder)/gga_x_pbea.o $(libxcobjfolder)/gga_x_mpbe.o\
+	$(libxcobjfolder)/gga_x_herman.o $(libxcobjfolder)/gga_x_b86.o\
+	$(libxcobjfolder)/gga_x_b88.o $(libxcobjfolder)/gga_x_g96.o\
+	$(libxcobjfolder)/gga_x_pw86.o $(libxcobjfolder)/gga_x_pw91.o\
+	$(libxcobjfolder)/gga_x_optx.o $(libxcobjfolder)/gga_x_airy.o\
+	$(libxcobjfolder)/gga_x_c09x.o $(libxcobjfolder)/gga_x_dk87.o\
+	$(libxcobjfolder)/gga_x_ft97.o $(libxcobjfolder)/gga_x_wc.o\
+	$(libxcobjfolder)/gga_x_am05.o $(libxcobjfolder)/gga_x_bayesian.o\
+	$(libxcobjfolder)/gga_x_kt.o $(libxcobjfolder)/gga_x_htbs.o\
+	$(libxcobjfolder)/gga_c_pbe.o $(libxcobjfolder)/gga_c_lyp.o\
+	$(libxcobjfolder)/gga_c_p86.o $(libxcobjfolder)/gga_c_pw91.o\
+	$(libxcobjfolder)/gga_c_am05.o $(libxcobjfolder)/gga_c_lm.o\
+	$(libxcobjfolder)/gga_c_wl.o $(libxcobjfolder)/gga_c_wi.o\
+	$(libxcobjfolder)/gga_x_lb.o $(libxcobjfolder)/gga_xc_b97.o\
+	$(libxcobjfolder)/gga_xc_edf1.o $(libxcobjfolder)/gga_xc_1w.o\
+	$(libxcobjfolder)/gga_c_optc.o $(libxcobjfolder)/gga_c_tca.o\
+	$(libxcobjfolder)/gga_x_bpccac.o $(libxcobjfolder)/gga_x_sogga11.o\
+	$(libxcobjfolder)/gga_c_sogga11.o $(libxcobjfolder)/gga_xc_th1.o\
+	$(libxcobjfolder)/gga_x_wpbeh.o $(libxcobjfolder)/gga_x_hjs.o\
+	$(libxcobjfolder)/gga_x_ityh.o $(libxcobjfolder)/gga_x_sfat.o\
+	$(libxcobjfolder)/gga_x_ev93.o $(libxcobjfolder)/gga_x_ak13.o\
+	$(libxcobjfolder)/gga_x_q2d.o $(libxcobjfolder)/gga_c_q2d.o\
+	$(libxcobjfolder)/gga_x_ssb_sw.o $(libxcobjfolder)/gga_c_ft97.o\
+	$(libxcobjfolder)/gga_x_n12.o $(libxcobjfolder)/gga_x_lv_rpw86.o\
+	$(libxcobjfolder)/gga_x_2d_b86.o $(libxcobjfolder)/gga_x_2d_b86_mgc.o\
+	$(libxcobjfolder)/gga_x_2d_b88.o $(libxcobjfolder)/gga_x_2d_pbe.o\
+	$(libxcobjfolder)/gga_k_tflw.o $(libxcobjfolder)/gga_k_pearson.o\
+	$(libxcobjfolder)/gga_k_ol1.o $(libxcobjfolder)/gga_k_ol2.o\
+	$(libxcobjfolder)/gga_k_dk.o $(libxcobjfolder)/gga_k_meyer.o\
+	$(libxcobjfolder)/gga_x_vmt.o $(libxcobjfolder)/gga_x_hcth_a.o\
+	$(libxcobjfolder)/gga_x_cap.o $(libxcobjfolder)/gga_x_beefvdw.o\
+	$(libxcobjfolder)/gga_x_sg4.o $(libxcobjfolder)/gga_x_gg99.o\
+	$(libxcobjfolder)/gga_x_pbepow.o $(libxcobjfolder)/gga_x_lag.o\
+	$(libxcobjfolder)/gga_k_thakkar.o $(libxcobjfolder)/gga_xc_oblyp_d.o\
+	$(libxcobjfolder)/hyb_gga_xc_b3lyp.o $(libxcobjfolder)/hyb_gga_xc_o3lyp.o\
+	$(libxcobjfolder)/gga_x_pbeint.o $(libxcobjfolder)/gga_x_rge2.o\
+	$(libxcobjfolder)/gga_x_vmt84.o $(libxcobjfolder)/gga_x_hjs_b88_v2.o\
+	$(libxcobjfolder)/gga_c_revtca.o $(libxcobjfolder)/gga_c_bcgp.o\
+	$(libxcobjfolder)/gga_c_zpbeint.o $(libxcobjfolder)/gga_c_pbeloc.o\
+	$(libxcobjfolder)/gga_c_sg4.o $(libxcobjfolder)/gga_c_regtpss.o\
+	$(libxcobjfolder)/gga_c_scan_e0.o $(libxcobjfolder)/gga_xc_th2.o\
+	$(libxcobjfolder)/gga_xc_th3.o $(libxcobjfolder)/gga_c_hcth_a.o\
+	$(libxcobjfolder)/hyb_gga_xc_wb97.o $(libxcobjfolder)/gga_c_bmk.o\
+	$(libxcobjfolder)/gga_c_gapc.o $(libxcobjfolder)/gga_c_gaploc.o\
+	$(libxcobjfolder)/gga_c_zvpbeint.o $(libxcobjfolder)/gga_c_w94.o\
+	$(libxcobjfolder)/gga_c_cs1.o $(libxcobjfolder)/gga_c_op_xalpha.o\
+	$(libxcobjfolder)/gga_c_op_b88.o $(libxcobjfolder)/gga_c_op_pbe.o\
+	$(libxcobjfolder)/gga_c_op_g96.o $(libxcobjfolder)/gga_c_op_pw91.o\
+	$(libxcobjfolder)/gga_x_pbetrans.o $(libxcobjfolder)/gga_x_chachiyo.o\
+	$(libxcobjfolder)/gga_k_exp4.o $(libxcobjfolder)/hyb_gga_xc_pbeh.o\
+	$(libxcobjfolder)/hyb_gga_xc_b1wc.o $(libxcobjfolder)/hyb_gga_xc_hse.o\
+	$(libxcobjfolder)/hyb_gga_xc_cam_b3lyp.o\
+	$(libxcobjfolder)/hyb_gga_xc_camy_blyp.o\
+	$(libxcobjfolder)/hyb_gga_xc_camy_b3lyp.o $(libxcobjfolder)/hyb_gga_xc_lcy_pbe.o\
+	$(libxcobjfolder)/hyb_gga_xc_lcy_blyp.o $(libxcobjfolder)/gga_xc_vv10.o\
+	$(libxcobjfolder)/hyb_gga_xc_edf2.o $(libxcobjfolder)/mgga.o\
+	$(libxcobjfolder)/mgga_x_lta.o $(libxcobjfolder)/mgga_x_tpss.o\
+	$(libxcobjfolder)/mgga_x_br89.o $(libxcobjfolder)/mgga_x_gvt4.o\
+	$(libxcobjfolder)/mgga_x_m06l.o $(libxcobjfolder)/mgga_x_tau_hcth.o\
+	$(libxcobjfolder)/mgga_x_2d_prhg07.o $(libxcobjfolder)/mgga_x_pkzb.o\
+	$(libxcobjfolder)/hyb_mgga_x_m05.o $(libxcobjfolder)/mgga_x_m08.o\
+	$(libxcobjfolder)/mgga_x_ms.o $(libxcobjfolder)/mgga_x_mn12.o\
+	$(libxcobjfolder)/mgga_x_mk00.o $(libxcobjfolder)/mgga_c_vsxc.o\
+	$(libxcobjfolder)/mgga_c_pkzb.o $(libxcobjfolder)/mgga_c_bc95.o\
+	$(libxcobjfolder)/mgga_c_m08.o $(libxcobjfolder)/mgga_xc_cc06.o\
+	$(libxcobjfolder)/mgga_c_cs.o $(libxcobjfolder)/mgga_xc_otpss_d.o\
+	$(libxcobjfolder)/mgga_xc_zlp.o $(libxcobjfolder)/hyb_mgga_xc_b88b95.o\
+	$(libxcobjfolder)/mgga_x_mbeef.o $(libxcobjfolder)/mgga_xc_b97mv.o\
+	$(libxcobjfolder)/mgga_x_scan.o $(libxcobjfolder)/mgga_c_scan.o\
+	$(libxcobjfolder)/hyb_mgga_xc_tpssh.o $(libxcobjfolder)/mgga_x_mvs.o\
+	$(libxcobjfolder)/hyb_mgga_x_mvsh.o $(libxcobjfolder)/mgga_x_tm.o\
+	$(libxcobjfolder)/mgga_x_vt84.o $(libxcobjfolder)/mgga_x_sa_tpss.o\
+	$(libxcobjfolder)/mgga_k_pc07.o $(libxcobjfolder)/mgga_x_mbeefvdw.o\
+	$(libxcobjfolder)/mgga_x_m11.o $(libxcobjfolder)/mgga_x_m11_l.o\
+	$(libxcobjfolder)/hyb_mgga_xc_wb97mv.o $(libxcobjfolder)/mgga_c_m05.o\
+	$(libxcobjfolder)/mgga_c_m06l.o $(libxcobjfolder)/hyb_mgga_x_dldf.o\
+	$(libxcobjfolder)/mgga_c_tpss.o $(libxcobjfolder)/mgga_c_revtpss.o\
+	$(libxcobjfolder)/mgga_c_tpssloc.o $(libxcobjfolder)/mgga_xc_hle17.o\
+	$(libxcobjfolder)/mgga_c_kcis.o $(libxcobjfolder)/mgga_xc_lp90.o\
+	$(libxcobjfolder)/hyb_mgga_xc_kcis.o $(libxcobjfolder)/mgga_c_b88.o\
+	$(libxcobjfolder)/mgga_x_gx.o $(libxcobjfolder)/mgga_x_pbe_gx.o\
+	$(libxcobjfolder)/mgga_c_revscan.o $(libxcobjfolder)/mgga_x_br89_explicit.o\
+	$(libxcobjfolder)/mgga_xc_b98.o \
+
+ifdef COMPILE_PK09
+LIBXCOBJ += $(libxcobjfolder)/lda_c_pk09.o
 endif
 
-CCC = $(CC) -c -I. -O2 
-CUDACC = $(CUDAC) -c -I. -O2 
- 
-#----------------------
-# quick modules and object files
-#----------------------
-libfolder = ../../lib
-objfolder = ../../obj
+#  !---------------------------------------------------------------------!
+#  ! Build targets                                                       !
+#  !---------------------------------------------------------------------!
 
-SUBS =  special_functions.o bessel.o expint_e1.o integrate.o util.o     \
-        mix_func.o func_info.o functionals.o version.o func_reference.o \
-        references.o lda.o 						\
-        lda_x.o lda_x_1d.o lda_x_2d.o lda_c_wigner.o lda_c_gombas.o     \
-        lda_c_rpa.o lda_c_hl.o lda_c_vwn.o lda_c_vwn_1.o lda_c_vwn_2.o  \
-        lda_c_vwn_3.o lda_c_vwn_4.o lda_c_vwn_rpa.o lda_c_pz.o          \
-        lda_c_pw.o lda_c_pk09.o lda_c_lp96.o 				\
-        lda_c_ml1.o lda_c_rc04.o lda_xc_teter93.o lda_c_1d_csc.o        \
-        lda_c_1d_loos.o lda_c_2d_amgb.o lda_c_2d_prm.o          	\
-        lda_k_tf.o lda_xc_zlp.o lda_xc_ksdt.o lda_c_chachiyo.o          \
-        lda_xc_1d_ehwlrg.o lda_x_rel.o lda_x_erf.o lda_k_zlp.o          \
-        lda_c_gk72.o 							\
-        gga.o 								\
-        gga_x_lg93.o gga_x_pbe.o gga_x_rpbe.o gga_x_pbea.o              \
-        gga_x_mpbe.o gga_x_herman.o gga_x_b86.o gga_x_b88.o             \
-        gga_x_g96.o gga_x_pw86.o gga_x_pw91.o gga_x_optx.o              \
-        gga_x_airy.o gga_x_c09x.o gga_x_dk87.o gga_x_ft97.o             \
-        gga_x_wc.o gga_x_am05.o gga_x_bayesian.o gga_x_kt.o             \
-        gga_x_htbs.o gga_c_pbe.o gga_c_lyp.o gga_c_p86.o gga_c_pw91.o   \
-        gga_c_am05.o gga_c_lm.o gga_c_wl.o gga_c_wi.o gga_x_lb.o        \
-        gga_xc_b97.o gga_xc_edf1.o gga_xc_1w.o gga_c_optc.o             \
-        gga_c_tca.o gga_x_bpccac.o gga_x_sogga11.o gga_c_sogga11.o      \
-        gga_xc_th1.o gga_x_wpbeh.o gga_x_hjs.o gga_x_ityh.o             \
-        gga_x_sfat.o gga_x_ev93.o gga_x_ak13.o gga_x_q2d.o gga_c_q2d.o  \
-        gga_x_ssb_sw.o gga_c_ft97.o gga_x_n12.o gga_x_lv_rpw86.o        \
-        gga_x_2d_b86.o gga_x_2d_b86_mgc.o               		\
-        gga_x_2d_b88.o gga_x_2d_pbe.o gga_k_tflw.o gga_k_pearson.o      \
-        gga_k_ol1.o gga_k_ol2.o gga_k_dk.o gga_k_meyer.o gga_x_vmt.o    \
-        gga_x_hcth_a.o gga_x_cap.o gga_x_beefvdw.o gga_x_sg4.o          \
-        gga_x_gg99.o gga_x_pbepow.o gga_x_lag.o gga_k_thakkar.o         \
-        gga_xc_oblyp_d.o hyb_gga_xc_b3lyp.o hyb_gga_xc_o3lyp.o          \
-        gga_x_pbeint.o gga_x_rge2.o gga_x_vmt84.o gga_x_hjs_b88_v2.o    \
-        gga_c_revtca.o gga_c_bcgp.o gga_c_zpbeint.o gga_c_pbeloc.o      \
-        gga_c_sg4.o gga_c_regtpss.o gga_c_scan_e0.o gga_xc_th2.o        \
-        gga_xc_th3.o gga_c_hcth_a.o hyb_gga_xc_wb97.o gga_c_bmk.o       \
-        gga_c_gapc.o gga_c_gaploc.o gga_c_zvpbeint.o gga_c_w94.o        \
-        gga_c_cs1.o gga_c_op_xalpha.o gga_c_op_b88.o gga_c_op_pbe.o     \
-        gga_c_op_g96.o gga_c_op_pw91.o gga_x_pbetrans.o 		\
-        gga_x_chachiyo.o gga_k_exp4.o 					\
-        hyb_gga_xc_pbeh.o hyb_gga_xc_b1wc.o                             \
-        hyb_gga_xc_hse.o hyb_gga_xc_cam_b3lyp.o                         \
-        hyb_gga_xc_camy_blyp.o hyb_gga_xc_camy_b3lyp.o                  \
-        hyb_gga_xc_lcy_pbe.o hyb_gga_xc_lcy_blyp.o gga_xc_vv10.o        \
-        hyb_gga_xc_edf2.o                                               \
-        mgga.o 								\
-        mgga_x_lta.o mgga_x_tpss.o mgga_x_br89.o mgga_x_gvt4.o          \
-        mgga_x_m06l.o mgga_x_tau_hcth.o mgga_x_2d_prhg07.o              \
-        mgga_x_pkzb.o hyb_mgga_x_m05.o mgga_x_m08.o mgga_x_ms.o         \
-        mgga_x_mn12.o mgga_x_mk00.o mgga_c_vsxc.o mgga_c_pkzb.o         \
-        mgga_c_bc95.o mgga_c_m08.o mgga_xc_cc06.o mgga_c_cs.o           \
-        mgga_xc_otpss_d.o mgga_xc_zlp.o hyb_mgga_xc_b88b95.o            \
-        mgga_x_mbeef.o mgga_xc_b97mv.o mgga_x_scan.o mgga_c_scan.o      \
-        hyb_mgga_xc_tpssh.o mgga_x_mvs.o hyb_mgga_x_mvsh.o              \
-        mgga_x_tm.o mgga_x_vt84.o mgga_x_sa_tpss.o mgga_k_pc07.o        \
-        mgga_x_mbeefvdw.o mgga_x_m11.o mgga_x_m11_l.o                   \
-        hyb_mgga_xc_wb97mv.o mgga_c_m05.o mgga_c_m06l.o                 \
-        hyb_mgga_x_dldf.o mgga_c_tpss.o mgga_c_revtpss.o                \
-        mgga_c_tpssloc.o mgga_xc_hle17.o mgga_c_kcis.o mgga_xc_lp90.o   \
-        hyb_mgga_xc_kcis.o mgga_c_b88.o mgga_x_gx.o mgga_x_pbe_gx.o     \
-        mgga_c_revscan.o mgga_x_br89_explicit.o mgga_xc_b98.o
-
-GPUCOBJ = gpu.o
-GPUCUOBJ = test.o
-#************************************************************************
-# 
-#                 B. Make Object Files
-# 
-#************************************************************************
-
-
-$(SUBS):%.o:%.c
+$(LIBXCOBJ):$(libxcobjfolder)/%.o:%.c
 	$(CCC) $< -o $@
-$(GPUCOBJ):%.o:%.c
-	$(CCC) $< -o $@
-$(GPUCUOBJ):%.o:%.cu
-	$(CUDACC) $< -o $@
-libxcf90_la-xc_f.o:
-	$(CCC) xc_f.c -o libxcf90_la-xc_f.o
-libxcf90_la-libxc_funcs.o:
-	$(FOR) libxc_funcs.f90 -o libxcf90_la-libxc_funcs.o
-libxcf90_la-libxc.o:
-	$(FOR) libxc.f90 -o libxcf90_la-libxc.o
 
-#================= quick subroutine library =================================
+libxc_f90:
+	$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
+	$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
+	$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
-#libxc_libs:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-libxc_gpu:$(SUBS) $(GPUCOBJ) $(GPUCUOBJ) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o	
+libxc_gpu:$(LIBXCOBJ) libxc_f90
+	$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 
-libxc_cpu:$(SUBS) libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
-	ar -r $(libfolder)/libxc.a *.o
-	ar cru $(libfolder)/libxcf90.a  libxcf90_la-xc_f.o libxcf90_la-libxc_funcs.o libxcf90_la-libxc.o
+libxc_cpu:$(LIBXCOBJ) libxc_f90
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 
-all: libxc_libs
-#************************************************************************
-# 
-#                 C. Self-defined Option
-# 
-#************************************************************************
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
 
-# - 1. Clean object files
+.PHONY: clean
+
 clean:
-	-rm -f *.o *.a *.mod 
+	@-rm -f *.o *.a *.mod 

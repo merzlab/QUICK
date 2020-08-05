@@ -24,7 +24,7 @@
  * @param[in,out] func_type: pointer to pspdata structure to be initialized
  */
 static void 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 work_lda(const xc_func_type *p, int np, const double *rho,
          double *zk, double *vrho, double *v2rho2, double *v3rho3, void *gpu_work_params)
 #else
@@ -55,7 +55,7 @@ work_lda(const xc_func_type *p, int np, const double *rho,
   if(v3rho3 != NULL) r.order = 3;
   if(r.order < 0) return;
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 #include "gpu_extern.h"
 
 #define GET_XSTR(fval) GET_STR(fval)
@@ -64,10 +64,10 @@ work_lda(const xc_func_type *p, int np, const double *rho,
         //char fname[50] = GET_XSTR(func);
 	//char fname[50] = "test_func";
 
-        if(GPU_DEBUG){
+#ifdef DEBUG         
                 printf("FILE: %s, LINE: %d, FUNCTION: %s, XC_DIMENSIONS: %d, work_lda at work.. \n",
                 __FILE__, __LINE__, __func__, XC_DIMENSIONS);
-        }
+#endif
 	int xc_dim = XC_DIMENSIONS;	
         set_gpu_lda_work_params(p->dens_threshold, cnst_rs, xc_dim, kernel_id, (gpu_lda_work_params*)gpu_work_params);
 

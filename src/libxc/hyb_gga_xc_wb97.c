@@ -15,7 +15,7 @@
  
 typedef struct { 
   double c_x[5], c_ss[5], c_ab[5]; 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   double cam_omega; 
 #endif
 } gga_xc_wb97_params; 
@@ -24,7 +24,7 @@ static const gga_xc_wb97_params par_wb97 = {
   { 1.00000e+00,  1.13116e+00, -2.74915e+00,  1.20900e+01, -5.71642e+00}, 
   { 1.00000e+00, -2.55352e+00,  1.18926e+01, -2.69452e+01,  1.70927e+01}, 
   { 1.00000e+00,  3.99051e+00, -1.70066e+01,  1.07292e+00,  8.88211e+00} 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   ,0.4
 #endif
 }; 
@@ -33,7 +33,7 @@ static const gga_xc_wb97_params par_wb97x = {
   { 8.42294e-01,  7.26479e-01,  1.04760e+00, -5.70635e+00,  1.32794e+01}, 
   { 1.00000e+00, -4.33879e+00,  1.82308e+01, -3.17430e+01,  1.72901e+01}, 
   { 1.00000e+00,  2.37031e+00, -1.13995e+01,  6.58405e+00, -3.78132e+00} 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   ,0.3
 #endif
 }; 
@@ -42,7 +42,7 @@ static const gga_xc_wb97_params par_wb97x_v = {
   { 0.833,        0.603,        1.194,        0.0,          0.0        }, 
   { 0.556,       -0.257,        0.0,          0.0,          0.0        }, 
   { 1.219,       -1.850,        0.0,          0.0,          0.0        } 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   ,0.3
 #endif
 }; 
@@ -51,7 +51,7 @@ static const gga_xc_wb97_params par_wb97x_d = {
   { 7.77964e-01,  6.61160e-01,  5.74541e-01, -5.25671e+00,  1.16386e+01}, 
   { 1.00000e+00, -6.90539e+00,  3.13343e+01, -5.10533e+01,  2.64423e+01}, 
   { 1.00000e+00,  1.79413e+00, -1.20477e+01,  1.40847e+01, -8.50809e+00} 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   ,0.2
 #endif
 }; 
@@ -63,7 +63,7 @@ gga_xc_wb97_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_xc_wb97_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_xc_wb97_params); 
 #endif 
   params = (gga_xc_wb97_params *)(p->params); 

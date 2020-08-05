@@ -220,5 +220,5 @@ xc_lda_x_rel_func(const xc_func_type *p, xc_lda_work_t *r)
 #ifndef DEVICE   
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_x_rel_func   
-#define kernel_id 30 
+#define kernel_id 29 
 #endif

@@ -26,7 +26,7 @@ gga_k_dk_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_k_dk_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_k_dk_params); 
 #endif 
  

@@ -12,6 +12,10 @@
 #include "gpu.h"
 #include <ctime>
 #include <time.h>
+
+#ifdef CUDA_MPIV
+#include "mgpu.h"
+#endif
 //-----------------------------------------------
 // Set up specified device and be ready to ignite
 //-----------------------------------------------
@@ -19,7 +23,7 @@ extern "C" void gpu_set_device_(int* gpu_dev_id)
 {
     gpu->gpu_dev_id = *gpu_dev_id;
 #ifdef DEBUG
-    printf("using gpu: %i\n", *gpu_dev_id);
+    fprintf(gpu->debugFile,"using gpu: %i\n", *gpu_dev_id);
 #endif
 }
 
@@ -28,12 +32,19 @@ extern "C" void gpu_set_device_(int* gpu_dev_id)
 //-----------------------------------------------
 extern "C" void gpu_startup_(void)
 {
-	PRINTDEBUG("BEGIN TO WARM UP")
+
 #ifdef DEBUG
-    debugFile = fopen("DEBUG", "w+");
+        debugFile = fopen("debug.cuda", "w+");
 #endif
-    gpu = new gpu_type;
+	PRINTDEBUGNS("BEGIN TO WARM UP")
+
+        gpu = new gpu_type;
+
+#ifdef DEBUG
+        gpu->debugFile = debugFile;
+#endif
 	PRINTDEBUG("CREATE NEW GPU")
+	
 }
 
 
@@ -50,6 +61,11 @@ extern "C" void gpu_init_(void)
     cudaError_t status;
     cudaDeviceProp deviceProp;
     status = cudaGetDeviceCount(&gpuCount);
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"Number of gpus %i \n", gpuCount);
+#endif
+
     PRINTERROR(status,"cudaGetDeviceCount gpu_init failed!");
     if (gpuCount == 0)
     {
@@ -108,7 +124,7 @@ extern "C" void gpu_init_(void)
     }
     
 #ifdef DEBUG
-    printf("using gpu: %i\n", device);
+    fprintf(gpu->debugFile,"using gpu: %i\n", device);
 #endif
     
     if (device == -1) {
@@ -127,18 +143,26 @@ extern "C" void gpu_init_(void)
     size_t val;
     
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
-    printf("Stack size limit:    %zu\n", val);
-    
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"Stack size limit:    %zu\n", val);
+#endif    
+
     cudaDeviceGetLimit(&val, cudaLimitPrintfFifoSize);
-    printf("Printf fifo limit:   %zu\n", val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"Printf fifo limit:   %zu\n", val);
+#endif
     
     cudaDeviceGetLimit(&val, cudaLimitMallocHeapSize);
-    printf("Heap size limit:     %zu\n", val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"Heap size limit:     %zu\n", val);
+#endif
     
     cudaDeviceSetLimit(cudaLimitStackSize, 8192);
     
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
-    printf("New Stack size limit:    %zu\n", val);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"New Stack size limit:    %zu\n", val);
+#endif
     
 	gpu->blocks = deviceProp.multiProcessorCount;
     if (deviceProp.major ==1) {
@@ -179,7 +203,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     cudaDeviceProp prop;
     size_t device_mem;
     
-    *gpu_dev_id = gpu->gpu_dev_id;  // currently one single GPU is supported
+    *gpu_dev_id = gpu->gpu_dev_id;  // currently one GPU is supported
     cuda_error = cudaGetDeviceCount(gpu_dev_count);
     PRINTERROR(cuda_error,"cudaGetDeviceCount gpu_get_device_info failed!");
     if (*gpu_dev_count == 0)
@@ -205,13 +229,17 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 //-----------------------------------------------
 extern "C" void gpu_shutdown_(void)
 {
-	PRINTDEBUG("BEGIN TO SHUTDOWN")
+    PRINTDEBUG("BEGIN TO SHUTDOWN")
+
+    delete gpu;
+    cudaDeviceReset();
+
+    PRINTDEBUGNS("SHUTDOWN NORMALLY")
+
 #ifdef DEBUG
     fclose(debugFile);
 #endif
-    delete gpu;
-    cudaDeviceReset();
-	PRINTDEBUG("SHUTDOWN NORMALLY")
+
     return;
 }
 ;
@@ -226,10 +254,13 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     cudaEventCreate(&start);
     cudaEventCreate(&end);
     cudaEventRecord(start, 0);
-#endif
-    
     PRINTDEBUG("BEGIN TO SETUP")
-    
+
+#ifdef CUDA_MPIV
+    fprintf(gpu->debugFile,"mpirank %i natoms %i \n", gpu -> mpirank, *natom );    
+#endif
+#endif
+
     gpu -> natom                    =   *natom;
     gpu -> nbasis                   =   *nbasis;
     gpu -> nElec                    =   *nElec;
@@ -252,19 +283,22 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
     
-	upload_para_to_const();
-    
+    upload_para_to_const();
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
     float time;
     cudaEventElapsedTime(&time, start, end);
+#ifdef CUDA
     PRINTUSINGTIME("UPLOAD PARA TO CONST",time);
+#endif
     cudaEventDestroy(start);
     cudaEventDestroy(end);
+
+    PRINTDEBUG("FINISH SETUP")
 #endif
     
-    PRINTDEBUG("FINISH SETUP")
 }
 
 //Madu Manathunga: 08/31/2019
@@ -335,7 +369,7 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
 #endif
     
     PRINTDEBUG("COMPLETE UPLOADING COORDINATES")
-    
+     
 }
 
 
@@ -357,6 +391,7 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
     gpu -> gpu_sim.iattype          = gpu -> iattype -> _devData;
     
     PRINTDEBUG("COMPLETE UPLOADING ATOM AND CHARGE")
+    
 }
 
 
@@ -390,7 +425,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     gpu -> gpu_sim.integralCutoff   = gpu -> gpu_cutoff -> integralCutoff;
     gpu -> gpu_sim.primLimit        = gpu -> gpu_cutoff -> primLimit;
     gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
-   printf("cutoff=%18.13f %18.13f\n", gpu -> gpu_cutoff -> primLimit, gpu -> gpu_cutoff -> integralCutoff); 
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -411,7 +446,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
 //-----------------------------------------------
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim)
 {
-    
+
 #ifdef DEBUG
     cudaEvent_t start,end;
     cudaEventCreate(&start);
@@ -443,9 +478,11 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
             maxL = gpu->gpu_basis->sorted_Qnumber->_hostData[i];
         }
     }
-    
-    printf("MAX ANGULAR MOMENT = %i\n", maxL);
-    
+   
+#ifdef DEBUG  
+    fprintf(gpu->debugFile,"MAX ANGULAR MOMENT = %i\n", maxL);
+#endif    
+
     gpu -> maxL = maxL;
     gpu -> gpu_sim.maxL = maxL;
     
@@ -516,14 +553,17 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                         if (b != 0) {
                             
                             if (q==2 && p==3){
-                                printf("df, fd, or ff starts from %i \n", a);
+#ifdef DEBUG
+                                fprintf(gpu->debugFile,"df, fd, or ff starts from %i \n", a);
+#endif
                                 gpu -> gpu_basis -> fStart = a - b;
                                 gpu -> gpu_sim.fStart = a - b;
                             }
                             
                             if (p+q==6){
-                                
-                                printf("df, fd, or ff starts from %i \n", a);
+#ifdef DEBUG                                
+                                fprintf(gpu->debugFile,"df, fd, or ff starts from %i \n", a);
+#endif
                                 gpu -> gpu_basis -> ffStart = a - b;
                                 gpu -> gpu_sim.ffStart = a - b;
                             }
@@ -562,7 +602,9 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                         }
                         
                         PRINTDEBUG("FINISH STEP 1")
-                        printf("a=%i b=%i\n", a, b);
+#ifdef DEBUG
+                        fprintf(gpu->debugFile,"a=%i b=%i\n", a, b);
+#endif
                         for (int i = 0; i < b - 1; i ++)
                         {
                             flag = true;
@@ -627,14 +669,17 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                         
                         if (b != 0) {
                             if (q==2 && p==3 && gpu -> gpu_sim.fStart == 0){
-                                printf("df, fd, or ff starts from %i \n", a);
+#ifdef DEBUG
+                                fprintf(gpu->debugFile,"df, fd, or ff starts from %i \n", a);
+#endif
                                 gpu -> gpu_basis -> fStart = a - b;
                                 gpu -> gpu_sim.fStart = a - b;
                             }
                             
                             if (p+q==6 && gpu -> gpu_sim.ffStart == 0){
-                                
-                                printf("df, fd, or ff starts from %i \n", a);
+#ifdef DEBUG                                
+                                fprintf(gpu->debugFile,"df, fd, or ff starts from %i \n", a);
+#endif
                                 gpu -> gpu_basis -> ffStart = a - b;
                                 gpu -> gpu_sim.ffStart = a - b;
                             }
@@ -851,7 +896,9 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                     
                     
                     PRINTDEBUG("FINISH STEP 1")
-                    printf("a=%i b=%i\n", a, b);
+#ifdef DEBUG
+                    fprintf(gpu->debugFile,"a=%i b=%i\n", a, b);
+#endif
                     for (int i = 0; i < b - 1; i ++)
                     {
                         flag = true;
@@ -970,14 +1017,16 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     }
     
     
-    
-    printf("a = %i, total = %i, pect= %f\n", a, gpu->gpu_basis->Qshell * (gpu->gpu_basis->Qshell+1)/2, (float) 2*a/(gpu->gpu_basis->Qshell*(gpu->gpu_basis->Qshell)));
+#ifdef DEBUG    
+    fprintf(gpu->debugFile,"a = %i, total = %i, pect= %f\n", a, gpu->gpu_basis->Qshell * (gpu->gpu_basis->Qshell+1)/2, (float) 2*a/(gpu->gpu_basis->Qshell*(gpu->gpu_basis->Qshell)));
+#endif
     
     gpu->gpu_cutoff->sqrQshell  = a;
-    
-    printf("SS = %i\n",a);
+
+#ifdef DEBUG    
+    fprintf(gpu->debugFile,"SS = %i\n",a);
     for (int i = 0; i<a; i++) {
-             printf("%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n", i, \
+        fprintf(gpu->debugFile,"%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n",i, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y, \
         LOC2(YCutoff, gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y], gpu->nshell, gpu->nshell),\
@@ -988,18 +1037,22 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
         gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]], \
         gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]]);
     }
+#endif
     
     gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> Upload();
     gpu -> gpu_sim.sqrQshell        = gpu -> gpu_cutoff -> sqrQshell;
     gpu -> gpu_sim.YCutoff          = gpu -> gpu_cutoff -> YCutoff -> _devData;
     gpu -> gpu_sim.cutPrim          = gpu -> gpu_cutoff -> cutPrim -> _devData;
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
-    
-    
+
+#ifdef CUDA_MPIV
+   mgpu_eri_greedy_distribute();
+#endif   
+ 
     gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
     gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
     gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
-    
+ 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -1009,8 +1062,9 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     cudaEventDestroy(start);
     cudaEventDestroy(end);
 #endif
-    
+ 
     PRINTDEBUG("COMPLETE UPLOADING CUTOFF")
+
 }
 
 //-----------------------------------------------
@@ -1161,11 +1215,14 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
         gpu -> gpu_basis -> prim_start -> _hostData[i] = gpu -> gpu_basis -> prim_total;
         gpu -> gpu_basis -> prim_total += gpu -> gpu_basis -> kprim -> _hostData[i];
     }
-    
+
+#ifdef DEBUG    
     for (int i = 0; i<gpu->gpu_basis->nshell; i++) {
-        printf("for %i prim= %i, start= %i\n", i, gpu -> gpu_basis -> kprim -> _hostData[i], gpu -> gpu_basis -> prim_start -> _hostData[i]);
+        fprintf(gpu->debugFile,"for %i prim= %i, start= %i\n", i, gpu -> gpu_basis -> kprim -> _hostData[i], gpu -> gpu_basis -> prim_start -> _hostData[i]);
     }
-    printf("total=%i\n", gpu -> gpu_basis -> prim_total);
+    fprintf(gpu->debugFile,"total=%i\n", gpu -> gpu_basis -> prim_total);
+#endif
+
     int prim_total = gpu -> gpu_basis -> prim_total;
     gpu -> gpu_sim.prim_total = gpu -> gpu_basis -> prim_total;
     
@@ -1193,7 +1250,12 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
             LOC2(gpu->gpu_basis->Qfbasis->_hostData, i, j, gpu->gpu_basis->nshell, 4) += gpu->gpu_basis->Ksumtype->_hostData[i];
         }
     }
-    
+   
+#ifdef DEBUG
+    //MGPU_TESTING
+    fprintf(gpu->debugFile,"nshell: %i jshell: %i Qshell: %i \n",gpu->gpu_basis->nshell, gpu->gpu_basis->jshell, gpu->gpu_basis->Qshell);
+#endif 
+
     gpu -> gpu_sim.Qshell = gpu->gpu_basis->Qshell;
     
     gpu -> gpu_basis -> sorted_Q                    =   new cuda_buffer_type<int>( gpu->gpu_basis->Qshell);
@@ -1251,14 +1313,15 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
      }
      }
      }*/
-    
-    printf("Pre-Sorted orbitals:\n");
-    printf("Qshell = %i\n", gpu->gpu_basis->Qshell);
+
+#ifdef DEBUG    
+    fprintf(gpu->debugFile,"Pre-Sorted orbitals:\n");
+    fprintf(gpu->debugFile,"Qshell = %i\n", gpu->gpu_basis->Qshell);
     for (int i = 0; i<gpu->gpu_basis->Qshell; i++) {
-        printf("i= %i, Q=%i, Qnumber= %i, nprim = %i \n", i, gpu->gpu_basis->sorted_Q->_hostData[i], gpu->gpu_basis->sorted_Qnumber->_hostData[i],
+        fprintf(gpu->debugFile,"i= %i, Q=%i, Qnumber= %i, nprim = %i \n", i, gpu->gpu_basis->sorted_Q->_hostData[i], gpu->gpu_basis->sorted_Qnumber->_hostData[i],
                gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[i]]);
     }
-    
+#endif    
     
     /*
      some pre-calculated variables includes
@@ -1322,18 +1385,43 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
             }
         }
     }
-    
-    gpu -> gpu_basis -> upload_all();
-    
+
+//    gpu -> gpu_basis -> upload_all();
+    gpu -> gpu_basis -> ncontract -> Upload();
+    gpu -> gpu_basis ->itype->Upload();
+    gpu -> gpu_basis ->aexp->Upload();
+    gpu -> gpu_basis ->dcoeff->Upload();    
+    gpu -> gpu_basis ->ncenter->Upload();
+    gpu -> gpu_basis ->kstart->Upload();
+    gpu -> gpu_basis ->katom->Upload();
+    gpu -> gpu_basis ->kprim->Upload();
+    gpu -> gpu_basis ->Ksumtype->Upload();
+    gpu -> gpu_basis ->Qnumber->Upload();
+    gpu -> gpu_basis ->Qstart->Upload();
+    gpu -> gpu_basis ->Qfinal->Upload();
+    gpu -> gpu_basis ->Qsbasis->Upload();
+    gpu -> gpu_basis ->Qfbasis->Upload();
+    gpu -> gpu_basis ->gccoeff->Upload();
+    gpu -> gpu_basis ->cons->Upload();
+    gpu -> gpu_basis ->Xcoeff->Upload();
+    gpu -> gpu_basis ->gcexpo->Upload();
+    gpu -> gpu_basis ->KLMN->Upload();
+    gpu -> gpu_basis ->prim_start->Upload();
+    gpu -> gpu_basis ->Xcoeff->Upload();
+    gpu -> gpu_basis ->expoSum->Upload();
+    gpu -> gpu_basis ->weightedCenterX->Upload();
+    gpu -> gpu_basis ->weightedCenterY->Upload();
+    gpu -> gpu_basis ->weightedCenterZ->Upload();
+    gpu -> gpu_basis ->sorted_Q->Upload();
+    gpu -> gpu_basis ->sorted_Qnumber->Upload();
+
     gpu -> gpu_sim.expoSum                      =   gpu -> gpu_basis -> expoSum -> _devData;
     gpu -> gpu_sim.weightedCenterX              =   gpu -> gpu_basis -> weightedCenterX -> _devData;
     gpu -> gpu_sim.weightedCenterY              =   gpu -> gpu_basis -> weightedCenterY -> _devData;
     gpu -> gpu_sim.weightedCenterZ              =   gpu -> gpu_basis -> weightedCenterZ -> _devData;
     gpu -> gpu_sim.sorted_Q                     =   gpu -> gpu_basis -> sorted_Q -> _devData;
     gpu -> gpu_sim.sorted_Qnumber               =   gpu -> gpu_basis -> sorted_Qnumber -> _devData;
-    
     gpu -> gpu_sim.Xcoeff                       =   gpu -> gpu_basis -> Xcoeff -> _devData;
-    
     gpu -> gpu_sim.ncontract                    =   gpu -> gpu_basis -> ncontract -> _devData;
     gpu -> gpu_sim.dcoeff                       =   gpu -> gpu_basis -> dcoeff -> _devData;
     gpu -> gpu_sim.aexp                         =   gpu -> gpu_basis -> aexp -> _devData;
@@ -1370,7 +1458,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> Xcoeff -> DeleteCPU();
     
     gpu -> gpu_basis -> ncontract -> DeleteCPU();
-    gpu -> gpu_basis -> dcoeff -> DeleteCPU();
+//    gpu -> gpu_basis -> dcoeff -> DeleteCPU();
     gpu -> gpu_basis -> aexp -> DeleteCPU();
     gpu -> gpu_basis -> ncenter -> DeleteCPU();
     gpu -> gpu_basis -> itype -> DeleteCPU();
@@ -1407,6 +1495,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
 #endif
     
     PRINTDEBUG("COMPLETE UPLOADING BASIS")
+
 }
 
 
@@ -1467,7 +1556,6 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
 
 	gpu -> gpu_xcq -> npoints       = *count;
         gpu -> xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
-	gpu -> xc_blocks = (int) ((*count/SM_2X_XC_THREADS_PER_BLOCK) +1 );
 	
         gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
         gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
@@ -1502,7 +1590,7 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
 
 	upload_sim_to_constant_dft(gpu);
 
-	get_ssw_new_imp(gpu);	
+	get_ssw(gpu);	
 
 	gpu -> gpu_xcq -> sswt -> Download();	
 	gpu -> gpu_xcq -> weight -> Download();   
@@ -1587,7 +1675,6 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt -> Upload();
         gpu -> gpu_xcq -> gatm_ssd -> Upload();
 
-	gpu -> xc_blocks = (int) ((count / gpu->xc_threadsPerBlock) + 1);
         gpu -> gpu_sim.npoints_ssd  = gpu -> gpu_xcq -> npoints_ssd;
         gpu -> gpu_sim.gridx_ssd = gpu -> gpu_xcq -> gridx_ssd -> _devData;
         gpu -> gpu_sim.gridy_ssd = gpu -> gpu_xcq -> gridy_ssd -> _devData;
@@ -1601,10 +1688,6 @@ void prune_grid_sswgrad(){
 
         PRINTDEBUG("COMPLETE UPLOADING DFT GRID FOR SSWGRAD")
 
-/*        for(int i=0; i<count;i++){
-                printf("prune_grid_sswgrad: %i %f %f %f %f %f %i \n", i, tmp_gridx[i], tmp_gridy[i], tmp_gridz[i], tmp_exc[i], tmp_quadwt[i], tmp_gatm[i]);
-        }
-*/
         //Clean up temporary arrays
         free(tmp_gridx);
         free(tmp_gridy);
@@ -1615,7 +1698,7 @@ void prune_grid_sswgrad(){
 }	
 
 
-void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
 
@@ -1623,7 +1706,6 @@ void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDo
 
         gpu -> gpu_xcq -> npoints       = count;
         gpu -> xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
-        gpu -> xc_blocks                = nbins;
 
         gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
         gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
@@ -1676,7 +1758,7 @@ void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDo
                 }
         }
 */
-        get_primf_contraf_lists_new_imp(gpu, d_gpweight, d_cfweight, d_pfweight);
+        get_primf_contraf_lists(gpu, d_gpweight, d_cfweight, d_pfweight);
 
 	cudaMemcpy(gpweight, d_gpweight, gpu -> gpu_xcq -> npoints * sizeof(unsigned char), cudaMemcpyDeviceToHost);
 	cudaMemcpy(cfweight, d_cfweight, nbins * gpu -> nbasis * sizeof(unsigned int), cudaMemcpyDeviceToHost);
@@ -1725,6 +1807,62 @@ void gpu_get_octree_info_new_imp(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDo
         PRINTDEBUG("PRIMITIVE & BASIS FUNCTION LISTS OBTAINED")
 }
 
+#ifdef DEBUG
+void print_uploaded_dft_info(){
+
+  PRINTDEBUG("PRINTING UPLOADED DFT DATA")
+
+  fprintf(gpu->debugFile,"Number of grid points: %i \n", gpu -> gpu_xcq -> npoints);
+  fprintf(gpu->debugFile,"Bin size: %i \n", gpu -> gpu_xcq -> bin_size);
+  fprintf(gpu->debugFile,"Number of bins: %i \n", gpu -> gpu_xcq -> nbins);
+  fprintf(gpu->debugFile,"Number of total basis functions: %i \n", gpu -> gpu_xcq -> ntotbf);
+  fprintf(gpu->debugFile,"Number of total primitive functions: %i \n", gpu -> gpu_xcq -> ntotpf);
+  
+  PRINTDEBUG("GRID POINTS & WEIGHTS")
+  
+  for(int i=0; i<gpu -> gpu_xcq -> npoints; i++){
+    fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight=%i dweight_ssd=%i \n",i,
+    gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i],
+    gpu -> gpu_xcq -> sswt -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm -> _hostData[i],
+    gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
+  }
+
+  PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS")
+
+  for(int bin_id=0; bin_id<gpu -> gpu_xcq -> nbins; bin_id++){  
+
+    for(int i=gpu -> gpu_xcq -> basf_locator -> _hostData[bin_id]; i<gpu -> gpu_xcq -> basf_locator -> _hostData[bin_id+1] ; i++){
+
+      for(int j=gpu -> gpu_xcq -> primf_locator -> _hostData[i]; j< gpu -> gpu_xcq -> primf_locator -> _hostData[i+1]; j++){
+
+        fprintf(gpu->debugFile,"Bin ID= %i basf location= %i ibas= %i primf location= %i jprim= %i \n", bin_id, i, 
+        gpu -> gpu_xcq -> basf -> _hostData[i], j, gpu -> gpu_xcq -> primf -> _hostData[j]);
+
+      }
+
+    }
+
+  }
+
+  PRINTDEBUG("RADIUS OF SIGNIFICANCE")
+
+  for(int i=0; i<gpu -> nbasis; i++){
+    fprintf(gpu->debugFile,"ibas=%i sigrad2=%f \n", i, gpu -> gpu_basis -> sigrad2 -> _hostData[i]);
+  }
+
+  for(int i=0; i<gpu -> nbasis; i++){
+    for(int j=0; j<gpu -> gpu_basis -> maxcontract; j++){
+
+      fprintf(gpu->debugFile,"ibas=%i jprim=%i dcoeff=%f \n",i,j, gpu -> gpu_basis -> dcoeff -> _hostData[ j + i * gpu -> gpu_basis -> maxcontract]);
+
+    }
+  }
+
+  PRINTDEBUG("END PRINTING UPLOADED DFT DATA")
+
+}
+#endif
+
 extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *dweight, int *basf, int *primf, int *basf_counter, int *primf_counter, int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2){
 
 	PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
@@ -1749,7 +1887,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> basf_locator     = new cuda_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
 	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-	gpu -> xc_blocks = gpu -> gpu_xcq -> nbins;
+
 	gpu -> xc_threadsPerBlock = gpu -> gpu_xcq -> bin_size;
 	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
@@ -1760,6 +1898,8 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> gaz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> gbz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> exc = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+
 
 	gpu -> gpu_xcq -> gridx -> Upload();
 	gpu -> gpu_xcq -> gridy -> Upload();
@@ -1783,6 +1923,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> gaz -> Upload();
 	gpu -> gpu_xcq -> gbz -> Upload();
 	gpu -> gpu_xcq -> exc -> Upload();
+
 
         gpu -> gpu_sim.npoints	= gpu -> gpu_xcq -> npoints;
         gpu -> gpu_sim.nbins	= gpu -> gpu_xcq -> nbins;
@@ -1810,9 +1951,20 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu ->gpu_sim.gaz     = gpu -> gpu_xcq -> gaz -> _devData;
 	gpu ->gpu_sim.gbz     = gpu -> gpu_xcq -> gbz -> _devData;
 	gpu ->gpu_sim.exc     = gpu -> gpu_xcq -> exc -> _devData;
-	gpu -> gpu_sim.sigrad2      = gpu->gpu_basis->sigrad2->_devData;
-	gpu -> gpu_sim.isg = *isg;
-        gpu -> gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+	gpu ->gpu_sim.sigrad2 = gpu->gpu_basis->sigrad2->_devData;
+	gpu ->gpu_sim.isg = *isg;
+        gpu ->gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+
+#ifdef DEBUG
+        print_uploaded_dft_info();
+#endif
+
+#ifdef CUDA_MPIV
+//        mgpu_xc_naive_distribute();
+        mgpu_xc_greedy_distribute();
+        gpu ->gpu_sim.mpirank = gpu -> mpirank;
+        gpu ->gpu_sim.mpisize = gpu -> mpisize;
+#endif
 
 	upload_sim_to_constant_dft(gpu);
 
@@ -1849,7 +2001,10 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> gaz);
 	SAFE_DELETE(gpu -> gpu_xcq -> gbz);
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
-	SAFE_DELETE(gpu->gpu_basis->sigrad2);
+	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
+#ifdef CUDA_MPIV
+        SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
+#endif
 }
 
 void gpu_delete_sswgrad_vars(){
@@ -1861,6 +2016,9 @@ void gpu_delete_sswgrad_vars(){
         SAFE_DELETE(gpu -> gpu_xcq -> quadwt);
 	SAFE_DELETE(gpu -> gpu_xcq -> uw_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> gatm_ssd);
+#ifdef CUDA_MPIV
+        SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
+#endif
 
 }
 
@@ -1869,7 +2027,7 @@ Integration of libxc GPU version. The included file below contains all libxc met
 */
 #include "gpu_libxc.cu"
 
-extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
+extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
 
         /*The following variable will hold the number of auxilary functionals in case of
         //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
@@ -1877,7 +2035,7 @@ extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int
         int nof_aux_functionals = *nof_functionals;
 
 #ifdef DEBUG
-        printf("Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+        fprintf(gpu->debugFile,"Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
         //Madu: Initialize gpu libxc and upload information to GPU
         gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
@@ -1909,7 +2067,7 @@ extern "C" void gpu_xcgrad_new_imp_(QUICKDouble *grad, int* nof_functionals, int
 
         cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
 
-	getxc_grad_new_imp(gpu, d_xc_grad, glinfo, nof_aux_functionals);
+	getxc_grad(gpu, d_xc_grad, glinfo, nof_aux_functionals);
 
         cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
 
@@ -1968,10 +2126,10 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-    for (int i = 0; i < gpu->natom * 3; i ++) {
-//        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
+/*    for (int i = 0; i < gpu->natom * 3; i ++) {
+        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
     }
-    
+*/    
     
     getGrad(gpu);
     
@@ -2080,8 +2238,9 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     
     upload_sim_to_constant(gpu);
     
-    printf("int total from addint = %i\n", *intindex);
-    
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"int total from addint = %i\n", *intindex);
+#endif    
     
     // Now begin to allocate AO INT space
     gpu -> aoint_buffer = new cuda_buffer_type<ERI_entry>*[1];//(cuda_buffer_type<ERI_entry> **) malloc(sizeof(cuda_buffer_type<ERI_entry>*) * streamNum);
@@ -2092,7 +2251,9 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     gpu -> aoint_buffer[0]                 = new cuda_buffer_type<ERI_entry>( availableERI, false );
     gpu -> gpu_sim.aoint_buffer[0]         = gpu -> aoint_buffer[0] -> _devData;
     
-    printf("Total buffer pack = %i\n", bufferPackNum);
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"Total buffer pack = %i\n", bufferPackNum);
+#endif
     
     if (incoreInt && debut) {
         ERI_entry* intERIEntry_tmp  = new ERI_entry[*intindex];
@@ -2111,8 +2272,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
             }else{
                 thisBuffer = remainingBuffer;
             }
-            
-            printf(" For buffer pack %i, %i Entry is read.\n", i, thisBuffer);
+
+#ifdef DEBUG            
+            fprintf(gpu->debugFile," For buffer pack %i, %i Entry is read.\n", i, thisBuffer);
+#endif
             
             ERIRead = fread(&aBuffer,   sizeof(int),         thisBuffer, intFile);
             ERIRead = fread(&bBuffer,   sizeof(int),         thisBuffer, intFile);
@@ -2133,22 +2296,25 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
                 ERIEntryByBasis[III] ++;
             }
         }
-        
+
+#ifdef DEBUG        
         for (int i = 0; i<gpu->nbasis; i++) {
-            printf("for basis %i = %i\n", i, ERIEntryByBasis[i]);
+            fprintf(gpu->debugFile,"for basis %i = %i\n", i, ERIEntryByBasis[i]);
         }
-        
+#endif        
+
         int* ERIEntryByBasisIndex = new int[gpu->nbasis];
         ERIEntryByBasisIndex[0] = 0;
         for (int i = 1; i < gpu->nbasis; i++) {
             ERIEntryByBasisIndex[i] = ERIEntryByBasisIndex[i-1] + ERIEntryByBasis[i-1] ;
         }
         
-        
+#ifdef DEBUG        
         for (int i = 0; i<gpu->nbasis; i++) {
-            printf("for basis %i = %i\n", i, ERIEntryByBasisIndex[i]);
+            fprintf(gpu->debugFile,"for basis %i = %i\n", i, ERIEntryByBasisIndex[i]);
         }
-        
+#endif        
+
         for (int i = 0; i < bufferIndex; i++) {
             int III = intERIEntry_tmp[i].IJ / gpu->nbasis;
             intERIEntry[ERIEntryByBasisIndex[III]] = intERIEntry_tmp[i];
@@ -2200,8 +2366,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
             }else{
                 thisBuffer = remainingBuffer;
             }
-            
-            printf(" For buffer pack %i, %i Entry is read.\n", i, thisBuffer);
+
+#ifdef DEBUG            
+            fprintf(gpu->debugFile," For buffer pack %i, %i Entry is read.\n", i, thisBuffer);
+#endif
             
             ERIRead = fread(&aBuffer,   sizeof(int),         thisBuffer, intFile);
             ERIRead = fread(&bBuffer,   sizeof(int),         thisBuffer, intFile);
@@ -2294,7 +2462,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
     get2e(gpu);
-    
+ 
     PRINTDEBUG("COMPLETE KERNEL")
     gpu -> gpu_calculated -> oULL -> Download();
     
@@ -2323,7 +2491,15 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 #endif
     
     gpu -> gpu_calculated -> o    -> Download(o);
-    
+
+#ifdef CUDA_MPIV
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+//           printf("Fock O: %i %i %i %f \n", gpu->mpirank,i,j,o[i,j]);
+        }    
+    }
+#endif
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -2346,7 +2522,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 }
 
 
-extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
+extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
@@ -2356,7 +2532,7 @@ extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
         int nof_aux_functionals = *nof_functionals;
 
 #ifdef DEBUG
-	printf("Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
         //Madu: Initialize gpu libxc and upload information to GPU
         gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
@@ -2399,10 +2575,10 @@ extern "C" void gpu_getxc_new_imp_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
 
         //Madu Manathunga 07/01/2019 added libxc variable
 #ifdef DEBUG
-        printf("FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
+        fprintf(gpu->debugFile,"FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
 #endif
 
-    getxc_new_imp(gpu, glinfo, nof_aux_functionals);
+    getxc(gpu, glinfo, nof_aux_functionals);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
 
@@ -2484,8 +2660,11 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     ERI_entry a;
     FILE *intFile;
     intFile = fopen(trim(intFileName), "wb");
+
     if (! intFile) {
-        printf("UNABLE TO OPEN INT FILE\n");
+#ifdef DEBUG
+        fprintf(gpu->debugFile,"UNABLE TO OPEN INT FILE\n");
+#endif
     }
  	
     int iBatchCount = 0;
@@ -2531,13 +2710,15 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
             maxIntCount = nIntSize[i];
         }
     }
-    
+
+#ifdef DEBUG    
     // List all the batches
-    printf("batch count = %i\n", iBatchCount);
-    printf("max int count = %i\n", maxIntCount * sizeof(ERI_entry));
+    fprintf(gpu->debugFile,"batch count = %i\n", iBatchCount);
+    fprintf(gpu->debugFile,"max int count = %i\n", maxIntCount * sizeof(ERI_entry));
     for (int i = 0; i<iBatchCount; i++) {
-        printf(" %i from %i to %i %i\n", i, nIntStart[i], nIntEnd[i], nIntSize[i] * sizeof(ERI_entry));
+        fprintf(gpu->debugFile," %i from %i to %i %i\n", i, nIntStart[i], nIntEnd[i], nIntSize[i] * sizeof(ERI_entry));
     }
+#endif
     
     int nBatchERICount = maxIntCount;
     
@@ -2580,10 +2761,10 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     }
     
     for (int iBatch = 0; iBatch < iBatchCount; iBatch = iBatch + streamNum) {
+      
+#ifdef DEBUG  
+        fprintf(gpu->debugFile,"batch %i start %i end %i\n", iBatch, nIntStart[iBatch], nIntEnd[iBatch]);
         
-        printf("batch %i start %i end %i\n", iBatch, nIntStart[iBatch], nIntEnd[iBatch]);
-        
-#ifdef DEBUG
         cudaEvent_t start,end;
         cudaEventCreate(&start);
         cudaEventCreate(&end);
@@ -2631,7 +2812,9 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
         for ( int i = 0; i<streamNum && iBatch + i < iBatchCount; i++) {
             
             cudaStreamSynchronize(stream[i]);
-            printf("none-sync intCount = %i\n", gpu->intCount->_hostData[i]);
+#ifdef DEBUG
+            fprintf(gpu->debugFile,"none-sync intCount = %i\n", gpu->intCount->_hostData[i]);
+#endif
             
             // write to in-memory buffer.
             for (int j = 0; j < gpu->intCount->_hostData[i]  ; j++) {
@@ -2701,8 +2884,9 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     cudaEventDestroy(end);
 #endif
     
-    
-    printf(" TOTAL INT = %i \n", *intNum);
+#ifdef DEBUG 
+    fprintf(gpu->debugFile," TOTAL INT = %i \n", *intNum);
+#endif
     PRINTDEBUG("END TO RUN AOINT KERNEL")
     
 #ifdef DEBUG
@@ -2724,3 +2908,5 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #endif
     
 }
+
+

@@ -72,4 +72,7 @@ Madu Manathunga 09/13/2019  2.1.1.10 : Implemented point charge gradient calcula
 Madu Manathunga 09/26/2019  2.1.1.11 : Fixed several bugs related to gradient timings. 
 Madu Manathunga 02/21/2020  20.02    : Reimplemented XC scheme with an octree algorithm. Started new version naming procedure. 
 Madu Manathunga 03/05/2020  20.03    : Improved libxc compilation with device code linking. Fixed a LIBXC related bug in gradient code. 
+Madu Manathunga 05/24/2020  20.05    : Implemented multi GPU version. Kris Keipert integrated cusolver for matrix diagonalization.
+Madu Manathunga 06/02/2020  20.06    : Implemented QUICK API. QUICK can now be incorporated as a libary into MM codes for performing
+                                       QM/MM calculations.
 =========================================================================

@@ -22,7 +22,7 @@ gga_k_ol2_init(xc_func_type *p)
  
   assert(p!=NULL && p->params == NULL); 
   p->params = malloc(sizeof(gga_k_ol2_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(gga_k_ol2_params); 
 #endif 
   params = (gga_k_ol2_params *) (p->params); 

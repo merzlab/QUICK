@@ -15,7 +15,7 @@
 subroutine copySym(O,n)
 implicit none
 integer n,i,j
-double precision O(n,n)
+double precision, intent(inout) :: O(n,n)
 
 do i=1,n
     do j=i+1,n

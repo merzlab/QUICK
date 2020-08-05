@@ -44,8 +44,8 @@ module quick_scratch_module
             integer nbasis
             type (quick_scratch_type) self
             
-            allocate(self%hold(nbasis,nbasis))
-            allocate(self%hold2(nbasis,nbasis))
+            if(.not. allocated(self%hold)) allocate(self%hold(nbasis,nbasis))
+            if(.not. allocated(self%hold2)) allocate(self%hold2(nbasis,nbasis))
 
             return
             
