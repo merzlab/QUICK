@@ -1,4 +1,3 @@
-#   include "./config.h"
 ! 
 !************************************************************************
 !                              QUICK                                   **
@@ -22,7 +21,7 @@
 !  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
 !  University of Florida, Gainesville, FL, 2010
 !************************************************************************
-!
+
     program quick
     
     use allMod
@@ -34,7 +33,7 @@
     include 'mpif.h'
 #endif
 
-#ifdef CUDA
+#ifdef CUDA 
     integer :: gpu_device_id = -1
 #endif
 
@@ -76,13 +75,15 @@
     endif masterwork_readInput
     !--------------------End MPI/MASTER----------------------------------
 
-#ifdef CUDA
+#ifdef CUDA 
+
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
     call gpu_startup()
     iarg = iargc()
     call gpu_set_device(-1)
 
+    ! Handles an old mechanism where the user can specify GPU id from CLI
     if (iarg .ne. 0) then
         do i = 1, iarg
             call getarg(int(i,4), arg)
@@ -94,14 +95,25 @@
                 exit
             endif
         enddo
-        write(*,*) "gpu_device_id=",gpu_device_id
     endif
 
     call gpu_init()
  
     ! write cuda information
-    if(master) call gpu_write_info(iOutFile)
+    call gpu_write_info(iOutFile)
     !------------------- END CUDA ---------------------------------------
+#endif
+
+#ifdef CUDA_MPIV
+
+    if(master) call mgpu_query(mpisize, mgpu_count)
+
+    call mgpu_setup()
+
+    if(master) call mgpu_write_info(iOutFile)
+    
+    call mgpu_init(mpirank, mpisize, mgpu_id)
+
 #endif
 
 
@@ -133,7 +145,7 @@
     !-----------------------------------------------------------------
     call getMol()
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
     call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
                    quick_molspec%molchg, quick_molspec%iAtomType)
     call gpu_upload_xyz(xyz)
@@ -153,6 +165,7 @@
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
     if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+
     ! if it is not opt job, begin single point calculation
     if(.not.quick_method%opt)then
 !      if(.NOT.PBSOL)then
@@ -167,7 +180,7 @@
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
-#ifdef CUDA    
+#if defined CUDA || defined CUDA_MPIV    
     call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
     ncontract, itype, aexp, dcoeff, &
     quick_basis%first_basis_function, quick_basis%last_basis_function, & 
@@ -176,7 +189,7 @@
     quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
     quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
     quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
-    
+   
     call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 #endif
 
@@ -270,10 +283,17 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
-#ifdef CUDA
-    call gpu_shutdown()
+#ifdef CUDA 
+    if (master) then
+       call gpu_shutdown()
+    endif
 #endif
+
+#ifdef CUDA_MPIV
+    call delete_mgpu_setup()
+    call mgpu_shutdown()
+#endif
+
     call finalize(iOutFile,0)
     
-
     end program quick

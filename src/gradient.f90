@@ -1,4 +1,3 @@
-#include "config.h"
 
 !  Created by Madu Manathunga on 08/12/2019 
 !  Copyright 2019 Michigan State University. All rights reserved.
@@ -57,44 +56,55 @@ subroutine gradient(failed)
       enddo
    enddo
 
-#ifdef CUDA
-   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-        quick_molspec%molchg, quick_molspec%iAtomType)
-   call gpu_upload_xyz(xyz)
-   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
+#if defined CUDA || defined CUDA_MPIV
+!   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
+!        quick_molspec%molchg, quick_molspec%iAtomType)
+!   call gpu_upload_xyz(xyz)
+!   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
 #endif
 
 !  calculate energy first
-   call g2eshell
-   call schwarzoff
+!   call g2eshell
+!   call schwarzoff
 
-#ifdef CUDA
-   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-        ncontract, itype, aexp, dcoeff, &
-        quick_basis%first_basis_function, quick_basis%last_basis_function, &
-        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
-        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
-        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+#if defined CUDA || defined CUDA_MPIV
+!   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+!        ncontract, itype, aexp, dcoeff, &
+!        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+!        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
+!        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+!        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+!        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
+!        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
-   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+!   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
    call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
 
 #endif
 
    call getEnergy(failed)
 
+   do Ibas=1,nbasis
+      do Jbas=1,nbasis
+!          write(*,*) "Density
+!          matrix:",Ibas,Jbas,quick_qm_struct%dense(Jbas,Ibas)
+!           write(*,*) "Coefficient matrix:",Ibas,Jbas,quick_qm_struct%co(Jbas,Ibas)
+      enddo
+   enddo
+
    if (quick_method%analgrad) then
       call scf_gradient
    endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
       call gpu_cleanup()
    endif
 #endif
 
+#ifdef MPIV
+   if(master) then
+#endif
    write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
    write (ioutfile,'(40("-"))')
    write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
@@ -122,18 +132,23 @@ subroutine gradient(failed)
       write(ioutfile,'(40("-"))')
    endif   
 
+#ifdef MPIV
+   endif
+#endif
+
    return
 
 end subroutine gradient
 
 subroutine scf_gradient
    use allmod
+   use quick_gradient_module
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
-   double precision:: temp_grad(3*natom)
+!   double precision:: tmp_grad(3*natom)
    include "mpif.h"
 #endif
 
@@ -151,10 +166,13 @@ subroutine scf_gradient
 !  Start the timer for gradient calculation
    call cpu_time(timer_begin%TGrad)
 
+#ifdef MPIV
+   call allocate_quick_gradient()
+#endif
+
 !  Set the values of gradient arry to zero 
-   do Iatm=1,natom*3
-      quick_qm_struct%gradient(iatm)=0.d0
-   enddo
+   quick_qm_struct%gradient       = 0.0d0
+   if (quick_method%extCharges) quick_qm_struct%ptchg_gradient = 0.0d0
 
 !---------------------------------------------------------------------
 !  1) The derivative of the nuclear repulsion.
@@ -171,13 +189,19 @@ subroutine scf_gradient
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
+
+#ifdef DEBUG
+   if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+   endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -199,13 +223,19 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -250,13 +280,19 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
         do Iatm=1,natom
             do Imomentum=1,3
-                write (*,'(I5,7x,F20.10)')Iatm, &
+                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
                 quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
             enddo
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -314,19 +350,37 @@ endif
 !  slave node will send infos
    if(.not.master) then
       do i=1,natom*3
-         temp_grad(i)=quick_qm_struct%gradient(i)
+         tmp_grad(i)=quick_qm_struct%gradient(i)
       enddo
-!  send operator to master node
-   call MPI_SEND(temp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+
+   call MPI_SEND(tmp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+
+   if(quick_molspec%nextatom.gt.0) then
+      do i=1,quick_molspec%nextatom*3
+         tmp_ptchg_grad(i) = quick_qm_struct%ptchg_gradient(i)
+      enddo
+      call MPI_SEND(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+   endif
+
    else
 !  master node will receive infos from every nodes
       do i=1,mpisize-1
 !  receive opertors from slave nodes
-         call MPI_RECV(temp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(tmp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
 !  and sum them into operator
          do ii=1,natom*3
-            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+temp_grad(ii)
+            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+tmp_grad(ii)
          enddo
+
+         if(quick_molspec%nextatom.gt.0) then
+
+            call MPI_RECV(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+
+            do ii=1,quick_molspec%nextatom*3
+               quick_qm_struct%ptchg_gradient(ii) = quick_qm_struct%ptchg_gradient(ii) + tmp_ptchg_grad(ii)
+            enddo
+
+         endif
       enddo
   endif
 #endif
@@ -336,10 +390,16 @@ endif
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
-        write (*,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutFile,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
         do Iatm=1,natom*3
-                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+                write (iOutFile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
         enddo
+  endif
+#endif
+
 #ifdef MPIV
 endif
 #endif
@@ -349,18 +409,29 @@ endif
 #ifdef MPIV
 if(master) then
 #endif
-if(quick_method%extCharges) then
-        write (*,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+    if(quick_method%extCharges) then
+        write (iOutFile,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
         do Iatm=1,quick_molspec%nextatom*3
-                write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
+                write (iOutFile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%ptchg_gradient(Iatm)
         enddo
-endif
+    endif
+  endif
+
+#endif
+
 #ifdef MPIV
 endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !stop
+
+#ifdef MPIV
+   call deallocate_quick_gradient()
+#endif
 
    return
 
@@ -587,7 +658,7 @@ subroutine get_electron_replusion_grad
       enddo
    enddo
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then
@@ -608,7 +679,8 @@ subroutine get_electron_replusion_grad
    else
 #endif
 
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV 
+
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
    else
@@ -646,7 +718,7 @@ subroutine get_electron_replusion_grad
             enddo
          enddo
       enddo
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    endif
 #endif
 
@@ -713,55 +785,10 @@ subroutine get_xc_grad
    integer, dimension(natom*50*194) :: init_grid_atm
 
 #ifdef MPIV
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
    include "mpif.h"
 #endif
 
-#ifdef CUDA
-
-!   idx_grid=1
-!   itst=1
-!   do Iatm=1,natom
-!        Iradtemp=50
-!       do Irad = 1, Iradtemp 
-!         if(quick_method%iSG.eq.1)then
-!            call gridformnew(iatm,RGRID(Irad),iiangt)
-!            rad = radii(quick_molspec%iattype(iatm))
-!         else
-!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-!            rad = radii2(quick_molspec%iattype(iatm))
-!         endif
-!
-!         rad3 = rad*rad*rad
-!         do Iang=1,iiangt
-!
-!            init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-!            init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-!            init_grid_ptz(idx_grid)=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-!            init_grid_atm(idx_grid)=Iatm
-!
-!            arr_wtang(idx_grid) = WTANG(Iang)
-!            arr_rwt(idx_grid) = RWT(Irad)
-!            arr_rad3(idx_grid) = rad3
-!
-!            sswt=SSW(init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),Iatm)
-!            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
-!            write(*,*) idx_grid,init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt
-!            if (weight < quick_method%DMCutoff ) then
-!                continue
-!            else
-                !write(*,*) Iatm,Iang,idx_grid
-!                write(*,*) itst-1,"grid_ptx:",init_grid_ptx(idx_grid),init_grid_pty(idx_grid),init_grid_ptz(idx_grid),sswt,weight
-!                itst=itst+1
-!            endif
-!            idx_grid=idx_grid+1
-!         enddo
-!      enddo
-!   enddo
-
-!    write(*,*) "Surving grid pts: ", itst, quick_method%DMCutoff
+#if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
 
@@ -772,7 +799,7 @@ subroutine get_xc_grad
       quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
       quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
-      call gpu_xcgrad_new_imp(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
+      call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)
 
       call gpu_delete_dft_grid()
@@ -793,24 +820,7 @@ quick_method%xc_polarization)
       enddo
    endif
 
-!  Generate the grid
-!   do Iatm=1,natom
-!      if(quick_method%iSG.eq.1)then
-!         Iradtemp=50
-!      else
-!         if(quick_molspec%iattype(iatm).le.10)then
-!            Iradtemp=23
-!         else
-!            Iradtemp=26
-!         endif
-!      endif
-
-#ifdef MPIV
-!  Distribute grid points among master and slaves
-!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
-#endif
-
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)

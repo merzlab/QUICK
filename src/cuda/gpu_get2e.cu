@@ -301,7 +301,7 @@ void get2e(_gpu_type gpu)
 //    nvtxRangePushA("SCF 2e");
 
     QUICK_SAFE_CALL((get2e_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-    
+ 
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
@@ -366,7 +366,8 @@ void getGrad(_gpu_type gpu)
 
 
 // =======   KERNEL SECTION ===========================
-__global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
     int const batchSize = 20;

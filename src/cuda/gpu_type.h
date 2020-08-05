@@ -14,7 +14,6 @@
  */
 
 #include <stdio.h>
-#include "../config.h"
 #include "gpu_common.h"
 
 // CUDA-C includes
@@ -117,6 +116,9 @@ struct XC_quadrature_type{
 	cuda_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
 	cuda_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
 	cuda_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
+
+        // mpi variables
+        cuda_buffer_type<char>*          mpi_bxccompute;
 };
 
 
@@ -235,7 +237,7 @@ struct gpu_simulation_type {
     int*                            KLMN;
     int                             prim_total;
     int*                            prim_start;
-    
+
     // Some more infos about pre-calculated values
     QUICKDouble*                    o;
     QUICKULL*                       oULL;
@@ -271,6 +273,17 @@ struct gpu_simulation_type {
     // For Grad
     QUICKDouble*                    grad;
     QUICKULL*                       gradULL;
+  
+    // mpi variable definitions
+    int                             mpirank;
+    int                             mpisize;
+
+    // multi-GPU variables
+    char*                           mpi_bcompute;
+    char*                           mpi_bxccompute;
+
+    int                             mpi_xcstart;
+    int                             mpi_xcend;
 };
 
 struct gpu_basis_type {
@@ -334,16 +347,22 @@ struct gpu_basis_type {
     cuda_buffer_type<QUICKDouble>*  PpriY;
     cuda_buffer_type<QUICKDouble>*  PpriZ;
     cuda_buffer_type<int>*          prim_start;
-    
-    
+
+    // For multi GPU version
+    cuda_buffer_type<char>*           mpi_bcompute;
+
     void upload_all();
     
 };
 
 
-
 // a type to define a graphic card
 struct gpu_type {
+
+#ifdef DEBUG
+    FILE                            *debugFile;
+#endif
+
     SM_VERSION                      sm_version;
     
     // Memory parameters
@@ -359,7 +378,11 @@ struct gpu_type {
     unsigned int                    gradThreadsPerBlock;
     unsigned int                    xc_blocks;	//Num of blocks for octree based dft implementation
     unsigned int                    xc_threadsPerBlock; //Num of threads/block for octree based dft implementation   
- 
+
+    // mpi variable definitions
+    int                             mpirank;
+    int                             mpisize;    
+
     // Molecule specification part
     int                             natom;
     int                             nbasis;
@@ -602,7 +625,8 @@ void cuda_buffer_type<T> :: Deallocate()
         }
         
         if (_hostData != NULL) {
-            free(_hostData);
+//            free(_hostData);
+            delete [] _hostData;
             gpu->totalCPUMemory -= _length*_length2*sizeof(T);
         }
     }else{
@@ -671,7 +695,8 @@ void cuda_buffer_type<T> :: DeleteCPU()
     PRINTDEBUG(">>BEGIN TO DELETE CPU")
     
     if (_hostData != NULL) {
-        free(_hostData);
+//        free(_hostData);
+        delete [] _hostData;
         _hostData = NULL;
 #ifdef DEBUG
         gpu->totalCPUMemory -= _length*_length2*sizeof(T);

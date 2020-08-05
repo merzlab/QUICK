@@ -133,5 +133,5 @@ xc_lda_k_tf_func(const xc_func_type *p, xc_lda_work_t *r)
 #ifndef DEVICE   
 #define maple2c_order 3   
 #define maple2c_func  xc_lda_k_tf_func   
-#define kernel_id 22 
+#define kernel_id 21 
 #endif

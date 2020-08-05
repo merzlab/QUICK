@@ -1,11 +1,10 @@
-#include "config.h"
 #ifdef MPIV
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup MPI environment
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
-    subroutine mpi_initialize()
+    subroutine initialize_quick_mpi()
     use allmod
     implicit none
     logical mpi_initialized_flag
@@ -14,13 +13,17 @@
 
     ! Initinalize MPI evironment, and determind master node
     if (bMPI) then
-      call MPI_INIT(mpierror)
-      call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
-      call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
+
+      if(.not. libMPIMode) then
+        call MPI_INIT(mpierror)
+        call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
+        call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
+      endif
+
       call MPI_GET_PROCESSOR_NAME(pname,namelen,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
-      allocate(MPI_STATUS(MPI_STATUS_SIZE))
+      if(.not. allocated(MPI_STATUS)) allocate(MPI_STATUS(MPI_STATUS_SIZE))
     
       if (mpirank.eq.0) then
         master=.true.
@@ -53,6 +56,9 @@
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
+
+    call MPI_BCAST(quick_molspec%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
     end
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -63,9 +69,10 @@
     subroutine mpi_setup_mol1()
     use allmod
     implicit none
-    
+
+    integer :: i    
     include 'mpif.h'
-    
+
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    
 ! mols specs
@@ -75,8 +82,9 @@
 ! DFT and SEDFT specs
     call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(RWT,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    
+
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    
     end
 
 
@@ -92,7 +100,7 @@
     include 'mpif.h'
 
     call Broadcast(quick_molspec)
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     call MPI_BCAST(dcoeff,nbasis*maxcontract,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     if (quick_method%ecp) then
@@ -110,7 +118,7 @@
       call MPI_BCAST(bndprm,3*3*3*84,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
     
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     end
 
@@ -124,6 +132,7 @@
     
     include 'mpif.h'
     
+    integer :: i, j
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(jshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -180,6 +189,7 @@
     call MPI_BCAST(quick_basis%last_basis_function,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)   
+
     end
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -331,68 +341,61 @@
         call MPI_BCAST(mpi_nbasis,mpisize*nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
         
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
     endif
 
     
     end subroutine MPI_setup_hfoperator
 
-! subroutine setup_xc_mpi(itotgridspn, igridptul, igridptll, Iradtemp)
-!-----------------------------------------------------------------------------
-!  This subroutine sets the mpi environment required for exchange correlation 
-!  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
-!  Madu Manathunga 08/15/2019
-!-----------------------------------------------------------------------------
-!   use allmod
-!   implicit double precision(a-h,o-z)
+#ifdef CUDA_MPIV
 
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Setup multi GPUs
+! Madu Manathunga 07/22/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    subroutine mgpu_setup()
 
-!   include 'mpif.h'
+      use quick_mpi_module
+      implicit none
 
-!   if(master) then
-!      do impi=0, mpisize-1
-!         itotgridspn(impi)=0
-!         igridptul(impi)=0
-!         igridptll(impi)=0
-!      enddo
-!
-!      itmpgriddist=Iradtemp
-!      do while(itmpgriddist .gt. 1)
-!         do impi=0, mpisize-1
-!            itotgridspn(impi)=itotgridspn(impi)+1
-!            itmpgriddist=itmpgriddist-1
-!            if (itmpgriddist .lt. 1) exit
-!         enddo
-!      enddo
-!
-!      itmpgridptul=0
-!      do impi=0, mpisize-1
-!         itmpgridptul=itmpgridptul+itotgridspn(impi)
-!         igridptul(impi)=itmpgridptul
-!         if(impi .eq. 0) then
-!            igridptll(impi)=1
-!         else
-!            igridptll(impi)=igridptul(impi-1)+1
-!         endif
-!      enddo
-!   endif
+      include 'mpif.h'
 
-!   if(bMPI) then
+      ! broadcast device count to slaves
+      call MPI_BCAST(mgpu_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
-!      call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!   endif      
+      ! allocate memory for device ids
+      call allocate_mgpu
 
-!   return
-! end subroutine setup_xc_mpi 
+      ! get device ids
+      if (master) then
+        call mgpu_get_devices(mgpu_ids)
+      endif
+
+      ! broadcast device ids
+      call MPI_BCAST(mgpu_ids,mgpu_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+      ! assign a gpu id for each worker
+      mgpu_id = mgpu_ids(mpirank+1)
+
+    end subroutine mgpu_setup
+
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+! Delete multi GPU setup
+! Madu Manathunga 07/22/2020
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    subroutine delete_mgpu_setup()
+
+      use quick_mpi_module
+      implicit none
+
+      call deallocate_mgpu()
+
+    end subroutine delete_mgpu_setup
+
+#endif
+
 
  subroutine setup_xc_mpi_1
    use allmod
@@ -405,6 +408,7 @@
       call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
  
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
  end subroutine setup_xc_mpi_1
@@ -425,6 +429,8 @@
    include 'mpif.h'
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+#ifndef CUDA_MPIV
 
    if(master) then
       do impi=1, mpisize
@@ -455,6 +461,9 @@
 
    endif
 
+#endif
+
+
    if(bMPI) then
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -462,20 +471,15 @@
       call MPI_BCAST(quick_basis%gccoeff,size(quick_basis%gccoeff),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      !call
-      !MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+#ifdef CUDA_MPIV
+      call MPI_BCAST(quick_dft_grid%dweight,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+#else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%gridb_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbtotbf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbtotpf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!      call MPI_BCAST(quick_dft_grid%nbins,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
       call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+#endif
+
       call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -559,12 +563,6 @@
 
 
 
-   !if(.not. master) then
-   !   do idx=1, quick_xcg_tmp%idx_grid
-   !      write(*,*) "ssw bounds:",quick_xcg_tmp%init_grid_ptx(idx),quick_xcg_tmp%init_grid_pty(idx), &
-   !      quick_xcg_tmp%init_grid_ptz(idx), quick_xcg_tmp%init_grid_atm(idx)
-   !   enddo
-   !endif
 
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif 
