@@ -1,4 +1,3 @@
-#include "config.h"
 
 !  Created by Madu Manathunga on 08/07/2019 
 !  Copyright 2019 Michigan State University. All rights reserved.
@@ -38,6 +37,7 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    integer ierror
    double precision,allocatable:: temp2d(:,:)
+
    allocate(temp2d(nbasis,nbasis))
 #endif
 !-----------------------------------------------------------------
@@ -87,19 +87,13 @@ subroutine scf_operator(oneElecO, deltaO)
 
 #ifdef MPIV
 !  Reset the operator value for slave nodes.
-   if (.not.master) then
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
-   endif   
+   if (.not.master) quick_qm_struct%o = 0.0d0
 
 !  sync every nodes
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
@@ -135,15 +129,15 @@ subroutine scf_operator(oneElecO, deltaO)
 ! The previous two terms are the one electron part of the Fock matrix.
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
-#ifdef CUDA
-      if (quick_method%bCUDA) then
-         call gpu_get2e(quick_qm_struct%o)
-      else
+#if defined CUDA || defined CUDA_MPIV
+      if (quick_method%bCUDA) then          
+         call gpu_get2e(quick_qm_struct%o)  
+      else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV 
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -162,13 +156,14 @@ subroutine scf_operator(oneElecO, deltaO)
       enddo
 #endif
 
-#ifdef CUDA
-      endif
+#if defined CUDA || defined CUDA_MPIV 
+      endif                             
 #endif
    endif
 
 #ifdef MPIV
 call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
 !  After evaluation of 2e integrals, we can communicate every node so
 !  that we can sum all integrals. slave node will send infos.
    if(.not.master) then
@@ -246,7 +241,9 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 !  Add time total time
       timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
-      write(*,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#ifdef DEBUG
+      if (quick_method%debug) write(iOutFile,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
+#endif
    endif
 
 #ifdef MPIV
@@ -283,7 +280,7 @@ subroutine get_xc
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
-   implicit double precision(a-h,o-z)
+   implicit none
 
 #ifdef MPIV
    include "mpif.h"
@@ -299,13 +296,18 @@ subroutine get_xc
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info   
+   integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ierror 
+   double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, &
+   dfdgab2, dfdr, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+   gax, gay, gaz, gbx, gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
+   sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+   tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc
+
 #ifdef MPIV
+   integer :: i, ii, irad_end, irad_init, jj
+   double precision :: Eelxcslave
    double precision, allocatable:: temp2d(:,:)
-!   integer, dimension(0:mpisize-1) :: itotgridspn
-!   integer, dimension(0:mpisize-1) :: igridptul
-!   integer, dimension(0:mpisize-1) :: igridptll
-   integer :: ierror
-   double precision :: Eelxc, Eelxcslave
+
    allocate(temp2d(nbasis,nbasis))
 
 !  Braodcast libxc information to slaves
@@ -317,37 +319,26 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
+   Eelxc=0.0d0
+
 #ifdef MPIV
 !  Set the values of slave operators to zero
-   if (.not.master) then
-      call zeroMatrix(quick_qm_struct%o, nbasis)
-      Eelxc=0
-   endif
-   call zeroMatrix(temp2d, nbasis)
+   if (.not.master) quick_qm_struct%o = 0.0d0
+   temp2d = 0.0d0
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
             quick_qm_struct%vec,quick_qm_struct%dense)
 
-!      call gpu_getxc(quick_method%isg, sigrad2, Eelxc, &
-!            quick_qm_struct%aelec, quick_qm_struct%belec, &
-!            quick_qm_struct%o, quick_method%nof_functionals, &
-!            quick_method%functional_id,quick_method%xc_polarization)
+#ifdef DEBUG
+      if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
+#endif
 
-!      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-!      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-!      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-!      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
-
-      write(*,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
-
-      call gpu_getxc_new_imp(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+      call gpu_getxc(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
-
-!      call gpu_delete_dft_grid()
 
    endif
 #else
@@ -365,24 +356,8 @@ subroutine get_xc
       enddo
    endif
 
-!  Form the quadrature
-!   do Iatm=1,natom
-!      if(quick_method%ISG.eq.1)then
-!         Iradtemp=50
-!      else
-!         if(quick_molspec%iattype(iatm).le.10)then
-!            Iradtemp=23
-!         else
-!            Iradtemp=26
-!         endif
-!      endif
 
-#ifdef MPIV
-!  Distribute grid points among master and slaves
-!   call setup_xc_mpi_new_imp(itotgridspn, igridptul, igridptll)
-#endif
-
-#ifdef MPIV
+#if defined MPIV && !defined CUDA_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
@@ -390,33 +365,12 @@ subroutine get_xc
          irad_init = 1
          irad_end = quick_dft_grid%nbins
       endif
-!      do Irad=irad_init, irad_end
    do Ibin=irad_init, irad_end
    
 #else
-!      do Irad=1,Iradtemp
     do Ibin=1, quick_dft_grid%nbins
 #endif
-!         if(quick_method%ISG.eq.1)then
-!            call gridformnew(iatm,RGRID(Irad),iiangt)
-!            rad = radii(quick_molspec%iattype(iatm))
-!         else
-!            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-!            rad = radii2(quick_molspec%iattype(iatm))
-!         endif
 
-!         rad3 = rad*rad*rad
-!         do Iang=1,iiangt
-!            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-!            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-!            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-
-!  Next, calculate the weight of the grid point in the SSW scheme.
-!  if the grid point has a zero weight, we can skip it.
-
-!            weight=SSW(gridx,gridy,gridz,Iatm)*WTANG(Iang)*RWT(Irad)*rad3
-
-!    do Ibin=1, quick_dft_grid%nbins
         Igp=quick_dft_grid%bin_counter(Ibin)+1
 
         do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
@@ -618,14 +572,16 @@ subroutine get_xc
    quick_qm_struct%Eel=quick_qm_struct%Eel+Eelxc
 
 !   if(quick_method%debug) then
-      write(*,*) "Eelex=",Eelxc
-      write(*,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+#ifdef DEBUG
+   if (quick_method%debug) then
+     write(iOutFile,*) "Eelex=",Eelxc
+     write(iOutFile,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
+   endif
+#endif
 !   endif
 #ifdef MPIV
    endif
 #endif
-
-!   call exit
   
    return
 

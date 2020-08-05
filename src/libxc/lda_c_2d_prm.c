@@ -29,7 +29,7 @@ lda_c_2d_prm_init(xc_func_type *p)
   assert(p != NULL && p->params == NULL); 
  
   p->params = malloc(sizeof(lda_c_2d_prm_params)); 
-#ifdef CUDA 
+#if defined CUDA || defined CUDA_MPIV 
   p->params_byte_size = sizeof(lda_c_2d_prm_params); 
 #endif 
 } 

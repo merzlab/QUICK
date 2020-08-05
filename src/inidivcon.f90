@@ -1,4 +1,3 @@
-#include "config.h"
 !*******************************************************
 ! inidivcon
 !------------------------------------------------------
@@ -607,7 +606,7 @@ subroutine inidivcon(natomsaved)
 
      write(iOutfile,'("-----------------------------------------------------------")')
      write(iOutfile,'("Total Frag=",i4)') np
-     write(iOutfile,'("NBasis Max=",i4)'),NNmax
+     write(iOutfile,'("NBasis Max=",i4)') NNmax
      write(iOutfile,'("===========================================================")')
 
      !-------------------MPI/MASTER---------------------------------------

@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	getMol.f90
 !	new_quick
@@ -796,15 +795,12 @@ subroutine get2e(II_arg)
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    II = II_arg
    do JJ = II,jshell
-!       write (*,'(A32,2x,I5,2x,I5,2x,I5)') "Madu: II,JJ,jshell",II,JJ,jshell
       testtmp = Ycutoff(II,JJ)
       do KK = II,jshell
          do LL = KK,jshell
 
           cutoffTest = testtmp * Ycutoff(KK,LL)
           if (cutoffTest .gt. quick_method%integralCutoff) then
-!                  write(*,'(A30,2x,F20.10,2x,F20.10)') & !Madu
-! "cutoffTest, integralCutoff", cutoffTest, integralCutoff !Madu
             DNmax =  max(4.0d0*cutmatrix(II,JJ), &
                   4.0d0*cutmatrix(KK,LL), &
                   cutmatrix(II,LL), &
@@ -815,8 +811,6 @@ subroutine get2e(II_arg)
             ! ignore the calculation to save computation time
             
             if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
-!    write (*,'(A30,2x,I5,2x,I5,2x,I5,2x,I5)') "Madu: CUTMTX I, J, K, L  ", &
-!           II, JJ, KK, LL !Madu            
                   call shell
            endif
          enddo

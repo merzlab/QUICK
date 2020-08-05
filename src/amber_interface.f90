@@ -1,4 +1,3 @@
-#include "config.h"
 !
 !	amber_interface.f90
 !	amber_interface

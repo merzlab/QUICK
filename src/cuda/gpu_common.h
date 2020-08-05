@@ -10,15 +10,18 @@
 #ifndef QUICK_GPU_COMMON_H
 #define QUICK_GPU_COMMON_H
 
-#include "../config.h"
 #include <stdio.h>
 #include <cuda.h>
 #include "nvToolsExt.h"
 #include "../octree/gpack_common.h"
 
+#ifdef DEBUG
+static FILE *debugFile = NULL;
+#endif
+
 #define PRINTMETHOD(mtd)\
 {\
-printf("METHOD:%s\n",mtd);\
+fprintf(debugFile,"METHOD:%s\n",mtd);\
 fflush(stdout);\
 }
 
@@ -63,25 +66,26 @@ fflush(stdout);\
 }
 
 #ifdef DEBUG
-static FILE *debugFile;
-#endif
-
-#ifdef DEBUG
+#define PRINTDEBUGNS(s) \
+{\
+    fprintf(debugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+}
 #define PRINTDEBUG(s) \
 {\
-    printf("FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
+    fprintf(gpu->debugFile,"FILE:%15s, LINE:%5d DATE: %s TIME:%s DEBUG : %s. \n", __FILE__,__LINE__,__DATE__,__TIME__,s );\
 }
 
 #define PRINTUSINGTIME(s,time)\
 {\
-    printf("TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
+    fprintf(gpu->debugFile,"TIME:%15s, LINE:%5d DATE: %s TIME:%s TIMING:%20s ======= %f ms =======.\n", __FILE__, __LINE__, __DATE__,__TIME__,s,time);\
 }
 
 #define PRINTMEM(s,a) \
 {\
-	printf("MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
+	fprintf(gpu->debugFile,"MEM :%15s, LINE:%5d DATE: %s TIME:%s MEM   : %10s %lli\n", __FILE__,__LINE__,__DATE__,__TIME__,s,a);\
 }
 #else
+#define PRINTDEBUGNS(s)
 #define PRINTDEBUG(s)
 #define PRINTUSINGTIME(s,time)
 #define PRINTMEM(s,a)
@@ -102,7 +106,7 @@ cudaEventRecord(end, 0); \
 cudaEventSynchronize(end); \
 cudaEventElapsedTime(&time, start, end); \
 totTime+=time; \
-printf("this cycle:%f ms total time:%f ms\n", time, totTime); \
+fprintf(gpu->debugFile,"this cycle:%f ms total time:%f ms\n", time, totTime); \
 cudaEventDestroy(start); \
 cudaEventDestroy(end); 
 
@@ -130,15 +134,14 @@ cudaEventDestroy(end);
 }
 
 
-
-
 // CUDA safe call
+#ifdef DEBUG
 #define QUICK_SAFE_CALL(x)\
 {\
 TIMERSTART()\
-printf("%s.%s.%d: %s\n", __FILE__, __FUNCTION__, __LINE__, #x); fflush(stdout);\
-printf("LAUCHBOUND = %i %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);\
-printf("METHOD = %i\n", gpu->gpu_sim.method);\
+fprintf(gpu->debugFile,"%s.%s.%d: %s\n", __FILE__, __FUNCTION__, __LINE__, #x);fflush(gpu->debugFile);\
+fprintf(gpu->debugFile,"LAUCHBOUND = %i %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);\
+fprintf(gpu->debugFile,"METHOD = %i\n", gpu->gpu_sim.method);\
 x;\
 TIMERSTOP()\
 cudaError_t error = cudaGetLastError();\
@@ -147,6 +150,9 @@ if (error != cudaSuccess && error != cudaErrorNotReady)\
   exit(1);                                                                                              \
 }\
 }
+#else
+#define QUICK_SAFE_CALL(x) {x;}
+#endif
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
 
@@ -184,7 +190,7 @@ static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
 
 
 // constant for grad

@@ -268,7 +268,7 @@ int xc_func_init(xc_func_type *func, int functional, int nspin)
     }
   }
 
-#ifdef CUDA
+#if defined CUDA || defined CUDA_MPIV
   func->params_byte_size = 0; //To allocate GPU memory without worrying about the param type
 #endif
 

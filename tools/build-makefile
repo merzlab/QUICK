@@ -1,0 +1,229 @@
+#  !---------------------------------------------------------------------!
+#  ! Refactored by Madu Manathunga on 07/20/2020                         !
+#  !                                                                     !
+#  ! Previous contributors: Yipu Miao, John Faver                        !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This Makefile builds a QUICK version from source code               !
+#  !---------------------------------------------------------------------!
+
+MAKEIN = ./make.in
+include $(MAKEIN)
+
+#  !---------------------------------------------------------------------!
+#  ! Variable declarations                                               !
+#  !---------------------------------------------------------------------!
+
+cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o \
+	$(objfolder)/gpu_get2e.o
+cudaxcobj = $(objfolder)/gpu_getxc.o
+
+cudalibxcobj=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
+	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
+	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
+	$(libxcdevobjfolder)/gga_c_op_pbe.o $(libxcdevobjfolder)/gga_c_op_pw91.o $(libxcdevobjfolder)/gga_c_optc.o $(libxcdevobjfolder)/gga_c_op_xalpha.o \
+	$(libxcdevobjfolder)/gga_c_p86.o $(libxcdevobjfolder)/gga_c_pbe.o $(libxcdevobjfolder)/gga_c_pbeloc.o $(libxcdevobjfolder)/gga_c_pw91.o \
+	$(libxcdevobjfolder)/gga_c_q2d.o $(libxcdevobjfolder)/gga_c_regtpss.o $(libxcdevobjfolder)/gga_c_revtca.o $(libxcdevobjfolder)/gga_c_scan_e0.o \
+	$(libxcdevobjfolder)/gga_c_sg4.o $(libxcdevobjfolder)/gga_c_sogga11.o $(libxcdevobjfolder)/gga_c_tca.o $(libxcdevobjfolder)/gga_c_w94.o \
+	$(libxcdevobjfolder)/gga_c_wi.o $(libxcdevobjfolder)/gga_c_wl.o $(libxcdevobjfolder)/gga_c_zpbeint.o $(libxcdevobjfolder)/gga_c_zvpbeint.o \
+	$(libxcdevobjfolder)/gga_k_dk.o $(libxcdevobjfolder)/gga_k_exp4.o $(libxcdevobjfolder)/gga_k_meyer.o $(libxcdevobjfolder)/gga_k_ol1.o \
+	$(libxcdevobjfolder)/gga_k_ol2.o $(libxcdevobjfolder)/gga_k_pearson.o $(libxcdevobjfolder)/gga_k_tflw.o $(libxcdevobjfolder)/gga_k_thakkar.o \
+	$(libxcdevobjfolder)/gga_x_2d_b86.o $(libxcdevobjfolder)/gga_x_2d_b86_mgc.o $(libxcdevobjfolder)/gga_x_2d_b88.o $(libxcdevobjfolder)/gga_x_2d_pbe.o \
+	$(libxcdevobjfolder)/gga_x_airy.o $(libxcdevobjfolder)/gga_x_ak13.o $(libxcdevobjfolder)/gga_x_am05.o $(libxcdevobjfolder)/gga_x_b86.o \
+	$(libxcdevobjfolder)/gga_x_b88.o $(libxcdevobjfolder)/gga_x_bayesian.o $(libxcdevobjfolder)/gga_x_beefvdw.o $(libxcdevobjfolder)/gga_x_bpccac.o \
+	$(libxcdevobjfolder)/gga_x_c09x.o $(libxcdevobjfolder)/gga_x_cap.o $(libxcdevobjfolder)/gga_xc_b97.o $(libxcdevobjfolder)/gga_x_chachiyo.o \
+	$(libxcdevobjfolder)/gga_xc_th1.o $(libxcdevobjfolder)/gga_xc_th2.o $(libxcdevobjfolder)/gga_xc_th3.o $(libxcdevobjfolder)/gga_x_dk87.o \
+	$(libxcdevobjfolder)/gga_x_eg93.o $(libxcdevobjfolder)/gga_x_ft97.o $(libxcdevobjfolder)/gga_x_g96.o $(libxcdevobjfolder)/gga_x_hcth_a.o \
+	$(libxcdevobjfolder)/gga_x_herman.o $(libxcdevobjfolder)/gga_x_hjs_b88_v2.o $(libxcdevobjfolder)/gga_x_hjs.o $(libxcdevobjfolder)/gga_x_htbs.o \
+	$(libxcdevobjfolder)/gga_x_kt.o $(libxcdevobjfolder)/gga_x_lag.o $(libxcdevobjfolder)/gga_x_lg93.o $(libxcdevobjfolder)/gga_x_lv_rpw86.o \
+	$(libxcdevobjfolder)/gga_x_mpbe.o $(libxcdevobjfolder)/gga_x_n12.o $(libxcdevobjfolder)/gga_x_optx.o $(libxcdevobjfolder)/gga_x_pbea.o \
+	$(libxcdevobjfolder)/gga_x_pbe.o $(libxcdevobjfolder)/gga_x_pbeint.o $(libxcdevobjfolder)/gga_x_pbepow.o $(libxcdevobjfolder)/gga_x_pbetrans.o \
+	$(libxcdevobjfolder)/gga_x_pw86.o $(libxcdevobjfolder)/gga_x_pw91.o $(libxcdevobjfolder)/gga_x_q2d.o $(libxcdevobjfolder)/gga_x_rge2.o \
+	$(libxcdevobjfolder)/gga_x_rpbe.o $(libxcdevobjfolder)/gga_x_sg4.o $(libxcdevobjfolder)/gga_x_sogga11.o $(libxcdevobjfolder)/gga_x_ssb_sw.o \
+	$(libxcdevobjfolder)/gga_x_vmt84.o $(libxcdevobjfolder)/gga_x_vmt.o $(libxcdevobjfolder)/gga_x_wc.o $(libxcdevobjfolder)/hyb_gga_xc_wb97.o \
+	$(libxcdevobjfolder)/lda_c_1d_csc.o $(libxcdevobjfolder)/lda_c_1d_loos.o $(libxcdevobjfolder)/lda_c_2d_amgb.o $(libxcdevobjfolder)/lda_c_2d_prm.o \
+	$(libxcdevobjfolder)/lda_c_chachiyo.o $(libxcdevobjfolder)/lda_c_gk72.o $(libxcdevobjfolder)/lda_c_gombas.o $(libxcdevobjfolder)/lda_c_hl.o \
+	$(libxcdevobjfolder)/lda_c_lp96.o $(libxcdevobjfolder)/lda_c_ml1.o $(libxcdevobjfolder)/lda_c_pw.o \
+	$(libxcdevobjfolder)/lda_c_pz.o $(libxcdevobjfolder)/lda_c_rc04.o $(libxcdevobjfolder)/lda_c_rpa.o $(libxcdevobjfolder)/lda_c_vwn_1.o \
+	$(libxcdevobjfolder)/lda_c_vwn_2.o $(libxcdevobjfolder)/lda_c_vwn_3.o $(libxcdevobjfolder)/lda_c_vwn_4.o $(libxcdevobjfolder)/lda_c_vwn.o \
+	$(libxcdevobjfolder)/lda_c_vwn_rpa.o $(libxcdevobjfolder)/lda_c_wigner.o $(libxcdevobjfolder)/lda_k_tf.o $(libxcdevobjfolder)/lda_k_zlp.o \
+	$(libxcdevobjfolder)/lda_x_2d.o $(libxcdevobjfolder)/lda_xc_1d_ehwlrg.o $(libxcdevobjfolder)/lda_xc_ksdt.o $(libxcdevobjfolder)/lda_xc_teter93.o \
+	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o 
+#       $(libxcdevobjfolder)/lda_x_erf.o $(libxcdevobjfolder)/hyb_mgga_xc_wb97mv.o $(libxcdevobjfolder)/hyb_mgga_x_dldf.o $(libxcdevobjfolder)/hyb_mgga_x_m05.o \
+	$(libxcdevobjfolder)/mgga_c_b88.o $(libxcdevobjfolder)/mgga_c_bc95.o $(libxcdevobjfolder)/mgga_c_cs.o $(libxcdevobjfolder)/mgga_c_kcis.o \
+	$(libxcdevobjfolder)/mgga_c_m05.o $(libxcdevobjfolder)/mgga_c_m06l.o $(libxcdevobjfolder)/mgga_c_m08.o $(libxcdevobjfolder)/mgga_c_pkzb.o \
+	$(libxcdevobjfolder)/mgga_c_revscan.o $(libxcdevobjfolder)/mgga_c_revtpss.o $(libxcdevobjfolder)/mgga_c_scan.o $(libxcdevobjfolder)/mgga_c_tpss.o \
+	$(libxcdevobjfolder)/mgga_c_tpssloc.o $(libxcdevobjfolder)/mgga_c_vsxc.o $(libxcdevobjfolder)/mgga_k_pc07.o $(libxcdevobjfolder)/mgga_x_br89_explicit.o \
+	$(libxcdevobjfolder)/mgga_xc_b97mv.o $(libxcdevobjfolder)/mgga_xc_b98.o $(libxcdevobjfolder)/mgga_xc_cc06.o $(libxcdevobjfolder)/mgga_xc_lp90.o \
+	$(libxcdevobjfolder)/mgga_xc_zlp.o $(libxcdevobjfolder)/mgga_x_gvt4.o $(libxcdevobjfolder)/mgga_x_gx.o $(libxcdevobjfolder)/mgga_x_lta.o \
+	$(libxcdevobjfolder)/mgga_x_m06l.o $(libxcdevobjfolder)/mgga_x_m08.o $(libxcdevobjfolder)/mgga_x_m11.o $(libxcdevobjfolder)/mgga_x_m11_l.o \
+	$(libxcdevobjfolder)/mgga_x_mbeef.o $(libxcdevobjfolder)/mgga_x_mbeefvdw.o $(libxcdevobjfolder)/mgga_x_mk00.o $(libxcdevobjfolder)/mgga_x_mn12.o \
+	$(libxcdevobjfolder)/mgga_x_ms.o $(libxcdevobjfolder)/mgga_x_mvs.o $(libxcdevobjfolder)/mgga_x_pbe_gx.o $(libxcdevobjfolder)/mgga_x_pkzb.o \
+	$(libxcdevobjfolder)/mgga_x_sa_tpss.o $(libxcdevobjfolder)/mgga_x_scan.o $(libxcdevobjfolder)/mgga_x_tau_hcth.o $(libxcdevobjfolder)/mgga_x_tm.o \
+	$(libxcdevobjfolder)/mgga_x_tpss.o $(libxcdevobjfolder)/mgga_x_vt84.o
+
+ifdef COMPILE_PK09
+cudalibxcobj += $(libxcdevobjfolder)/lda_c_pk09.o
+endif
+
+cublasobj       = $(objfolder)/fortran_thunking.o
+
+cusolverobj     = $(objfolder)/quick_cusolver.o 
+
+octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
+
+modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
+        $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
+        $(objfolder)/quick_amber_interface_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
+        $(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
+        $(objfolder)/quick_files_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_mfcc_module.o \
+        $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
+        $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
+	$(objfolder)/quick_all_module.o
+
+OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
+        $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
+        $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
+        $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
+        $(objfolder)/dft.o $(objfolder)/sedftoperator.o \
+        $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
+        $(objfolder)/udftoperator.o $(objfolder)/usedftoperator.o \
+        $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
+        $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
+        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
+        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
+
+SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
+	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
+	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
+	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
+	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
+	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \
+	$(objfolder)/PrtMsg.o $(objfolder)/PrtTim.o $(objfolder)/PrtWrn.o $(objfolder)/pteval.o \
+	$(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o $(objfolder)/rdnml.o \
+	$(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
+	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/transpose.o $(objfolder)/tridi.o \
+	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
+	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
+	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
+
+MAIN = $(mainobjfolder)/main.o
+
+TESTAPI=$(mainobjfolder)/quick_api_test.o
+
+#  !---------------------------------------------------------------------!
+#  ! Child build targets                                                 !
+#  !---------------------------------------------------------------------!
+
+cpmakein:
+	@cp ./make.in $(libxcfolder)
+	@cp ./make.in $(libxcfolder)/maple2c_device
+	@cp ./make.in $(cudafolder)
+	@cp ./make.in $(octfolder)
+	@cp ./make.in $(subfolder)
+	@cp ./make.in $(modfolder)
+	@cp ./make.in $(blasfolder)
+
+
+#================= common subroutine library ============================
+quick_subs:
+	cd $(subfolder) && make -j$(ncores) all
+
+#================= quick module library =================================
+quick_modules:
+	cd $(modfolder) && make all
+#================= octree subroutines   =================================
+octree:
+	cd $(octfolder) && make all
+#============= targets for cuda =========================================
+quick_cuda:
+	cd $(cudafolder) && make allbutxc
+	cd $(cudafolder) && make xc 
+
+#================= targets for BLAS =====================================
+blas:
+	cd $(blasfolder) && make -j$(ncores) all
+#==================== libxc cpu library =================================
+libxc_cpu:
+	cd $(libxcfolder) && make -j$(ncores) libxc_cpu
+#==================== libxc cuda library =================================
+libxc_gpu:
+	cd $(libxcfolder) && make -j$(ncores) libxc_gpu
+
+libxc_cuda:libxc_gpu
+	cd $(libxcfolder)/maple2c_device && make -j$(ncores) all
+#=============== targets for CUBLAS =====================================
+
+$(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
+	$(CC) $(CPP_FLAG) -c $< -o $@
+
+#=============== targets for CUSOLVER ===================================
+
+$(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
+	$(CC) $(CPP_FLAG) -c $< -o $@
+
+#===================== target for general src files =====================
+
+$(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+#===================== target for main src files ========================
+$(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+#===================== target for compiling api test ====================
+$(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
+	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+
+#  !---------------------------------------------------------------------!
+#  ! Parent build targets                                                !
+#  !---------------------------------------------------------------------!
+
+.PHONY: serial cuda mpi cudampi
+
+serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI) 
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+
+cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+
+mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
+	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.mpi $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+
+cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.cuda.mpi $(TESTAPI) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+	 
+#  !---------------------------------------------------------------------!
+#  ! Cleaning targets                                                    !
+#  !---------------------------------------------------------------------!
+
+.PHONY: clean
+
+clean:
+	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/*
+	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
+	@cd $(cudafolder) && make clean
+	@cd $(subfolder) && make clean
+	@cd $(blasfolder) && make clean
+	@cd $(modfolder) && make clean
+	@cd $(libxcfolder) && make clean
+	@cd $(libxcfolder)/maple2c_device && make clean	
+        

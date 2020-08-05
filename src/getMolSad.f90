@@ -1,8 +1,20 @@
-! Ed Brothers. 11/26/01
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
+!---------------------------------------------------------------------!
+! Updated by Madu Manathunga on 06/02/2020                            !
+!                                                                     !
+! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
+!                         Ken Ayers & Ed Brothers                     !
+!                                                                     ! 
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
 
 subroutine getmolsad()
    use allmod
+   use quick_files_module
    implicit double precision(a-h,o-z)
 
    logical :: present,MPIsaved
@@ -16,6 +28,11 @@ subroutine getmolsad()
    ! first save some important value
    quick_method_save=quick_method
    quick_molspec_save=quick_molspec
+   ! quick_molspec_type has pointers which may lead to memory leaks
+   ! therefore, assign individual variable values
+!   quick_molspec_save%imult = quick_molspec%imult
+!   quick_molspec_save%nelec = quick_molspec%nelec
+
    natomsaved=natom
    xyzsaved=xyz
    MPIsaved=bMPI
@@ -50,8 +67,15 @@ subroutine getmolsad()
 
       do iitemp=1,quick_molspec%iatomtype
          write(ioutfile,'(" For Atom Kind = ",i4)') iitemp
+
+         ! if quick is called through api multiple times, this is necessary
+         if(wrtStep .gt. 1) then
+           call deallocate_calculated
+         endif
+
          do i=1,90
             if(symbol(i).eq.quick_molspec%atom_type_sym(iitemp))then
+
                if(mod(i,2).eq.0)then
                   quick_molspec%imult=1
                else
@@ -88,6 +112,11 @@ subroutine getmolsad()
                 call PrtErr(iOutFile,'Unable to find basis set information for this atom.')
                 call PrtMsg(iOutFile,'Update the corresponding basis set file or use a different basis set.')
                 call quick_exit(iOutFile,1)                
+         endif
+
+         ! if quick is called through api multiple times, this is necessary
+         if(wrtStep .gt. 1) then
+           call dealloc(quick_qm_struct)
          endif
 
          quick_qm_struct%nbasis => nbasis
@@ -144,8 +173,13 @@ subroutine getmolsad()
 
    quick_method=quick_method_save
    quick_molspec=quick_molspec_save
+!   quick_molspec%imult = quick_molspec_save%imult
+!   quick_molspec%nelec = quick_molspec_save%nelec
+
    bMPI=MPIsaved
+
    return
+
 end subroutine getmolsad
 
 
@@ -153,8 +187,8 @@ subroutine allocate_mol_sad(n)
    use quick_basis_module
    integer n
 
-   allocate(atomDens(n,100,100))
-   allocate(atomBasis(n))
+   if(.not. allocated(atomDens))  allocate(atomDens(n,100,100))
+   if(.not. allocated(atomBasis)) allocate(atomBasis(n))
 
 end subroutine allocate_mol_sad
 

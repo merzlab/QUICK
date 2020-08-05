@@ -1,0 +1,996 @@
+#!/bin/sh
+
+#  !---------------------------------------------------------------------!
+#  ! Written by Madu Manathunga on 07/09/2020                            !
+#  !                                                                     !
+#  ! Copyright (C) 2020-2021 Merz lab                                    !
+#  ! Copyright (C) 2020-2021 Götz lab                                    !
+#  !                                                                     !
+#  ! This Source Code Form is subject to the terms of the Mozilla Public !
+#  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+#  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+#  !_____________________________________________________________________!
+#
+#  !---------------------------------------------------------------------!
+#  ! This source code sets up the environment for QUICK compilation and  !
+#  ! writes input file for make.                                         !
+#  !---------------------------------------------------------------------!
+
+#  !---------------------------------------------------------------------!
+#  ! Set version                                                         !
+#  !---------------------------------------------------------------------!
+QUICK_VERSION='QUICK-20.06'
+QUICK_HOME=`pwd`
+cdate=`date +'%m/%d/%Y'`
+ctime=`date +'%r'`
+
+echo ""
+echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.." 
+
+#  !---------------------------------------------------------------------!
+#  ! function definitions                                                !
+#  !---------------------------------------------------------------------!
+
+# this function prints help page
+print_help(){
+
+echo  "                                                                                                                                       
+  Use this script as ./configure [flags] compiler                           
+                                                                            
+  Available flags are:                                                      
+      --prefix <dir> User specified installation directory                  
+      --serial       Builds a serial version                                
+      --mpi          Compiles MPI parallel version                           
+      --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --debug        Compiles debug version                                 
+      --shared       Build shared object libraries                          
+      --arch <pascal|volta|turing>                                           
+                     Specify gpu architecture. Applicable for cuda and      
+                     cudampi versions only. If unspecified, QUICK will be   
+                     compiled for several architectures based on the CUDA   
+                     toolkit version.                                       
+      --ncores <ncore>                                                       
+                     Specify the number of cores to be used in compilation. 
+                     If unspecified, QUICK will attempt to automatically    
+                     detect the number of cores in your system.             
+                                                                            
+  Supported compilers are: gnu, intel                                       
+                                                                            
+  For example, cuda version with intel compiler tool chain can be compiled as
+  follows:                                                                  
+         ./configure --cuda --arch volta --prefix /home/install intel                                  
+  "
+
+exit 0;
+
+}
+
+# this function checks if we should link libmpi_cxx.so in the mpi/cudampi version
+set_mpicxx(){
+
+  mpi_cxx_flag=''
+
+  # clean test files if they already exist
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o test_prog
+
+  # create the dummy source files
+  cat > test_mpicxx.c << EOF
+  #include <mpi.h>
+  void test_func(){MPI_Init(NULL, NULL); MPI_Finalize();}
+  extern "C" {void test_func_(){test_func();}}
+EOF
+
+  cat > test_prog.f90 << EOF
+  program test
+    call test_func()
+  end program test
+EOF
+
+  # compile the test sources
+  $cxx -c test_mpicxx.c -o test_mpicxx.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo  "Error: MPI/C++ source cannot be compiled using $cxx "
+    echo ""
+    exit 1
+  fi
+
+  $fort -c test_prog.f90 -o test_prog.o 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo  "Error: Fortran90 source cannot be compiled using $fort "
+    echo ""
+    exit 1
+  fi
+
+  # try to link the object files without -lmpi_cxx and if it doesnt work set mpi_cxx_flag.
+  $fort test_mpicxx.o test_prog.o -o testmpi $ldflags 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    mpi_cxx_flag="-lmpi_cxx"
+  fi
+
+  #try to link with libmpi_cxx
+  $fort test_mpicxx.o test_prog.o -o testmpi $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
+  if [ "$?" -ne 0 ]; then
+    echo  "Error: Fortran90 and C++ code cannot be linked using $fort $ldflags $mpi_cxx_flag "
+    echo  "Try to check the commands using 'mpif90 -show' "
+    exit 1
+  fi
+
+  ldflags="$ldflags $mpi_cxx_flag"
+
+  rm -f test_mpicxx.c test_prog.f90 test_mpicxx.o test_prog.o testmpi
+
+
+}
+
+# this function checks for the operating system
+check_os(){
+
+  case "$OSTYPE" in
+    linux*)   osname='linux';;
+    darwin*)  osname='osx';;
+    bsd)*     osname='bsd';;
+    solaris*) osname='solaris';;
+    *)        osname="unknown";;
+  esac
+
+  if [ -z `echo "$OSTYPE"` ]; then 
+    echo "Operating system: unknown"
+  else
+    echo "Operating system: $OSTYPE"
+  fi
+}
+
+# this function print compiler mistmach 
+print_compiler_mistmatch(){
+  echo  "Error: Compiler version mistmatch."
+  echo  "       Fortran compiler version: $fort_version."
+  echo  "       C compiler version: $cc_version."
+  echo  "       C++ compiler version: $cxx_version."
+}
+
+# check compiler
+check_compiler(){
+
+# variables to assist detecting compiler versions
+fort_search=''
+cc_search=''
+cxx_search=''
+
+case "$compiler" in
+
+  gnu)
+    echo "Requested compiler: GNU."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='gfortran'
+      cc_search='gcc'
+      cxx_search='g++'
+    ;;
+
+  intel)
+    echo "Requested compiler: Intel"
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpiifort'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpiicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='ifort'
+      cc_search='icc'
+      cxx_search='icpc'
+    ;;
+  *)
+    echo  "Error: $compiler compiler tool chain is not supported."
+    exit 1;;
+esac
+
+# check for the existance of each compiler
+if [ -z "`which $fort 2> /dev/null`" ]; then
+  echo  "Error: $fort is not found."
+  exit 1
+fi
+
+if [ -z "`which $cc 2> /dev/null`" ]; then
+  echo  "Error: $cc is not found."
+  exit 1
+fi
+
+if [ -z "`which $cxx 2> /dev/null`" ]; then
+  echo  "Error: $cxx is not found."
+  exit 1
+fi
+
+# check the fortran compiler version
+has_fort_version='no'
+fort_version='not'
+fort_version_major=''
+fort_version_minor=''
+fort_version_patch=''
+
+
+
+
+fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
+if [ -z "$fort_version_info" ]; then
+  fort_version_info=`$fort_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fi 
+
+fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+  has_fort_version='yes'
+  fort_version_major=`echo $fort_version | cut -d '.' -f1`
+  fort_version_minor=`echo $fort_version | cut -d '.' -f2`
+  fort_version_patch=`echo $fort_version | cut -d '.' -f3`
+fi
+
+if [ "$has_fort_version" = 'yes' ]; then
+  echo "  $fort version $fort_version found.."
+else
+   echo  "Warning: Failed to detect $fort version."
+fi
+
+# check the c compiler version
+has_cc_version='no'
+cc_version='not'
+cc_version_major=''
+cc_version_minor=''
+cc_version_patch=''
+
+cc_version_info=`$cc_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+cc_version=`echo $cc_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+  has_cc_version='yes'
+  cc_version_major=`echo $cc_version | cut -d '.' -f1`
+  cc_version_minor=`echo $cc_version | cut -d '.' -f2`
+  cc_version_patch=`echo $cc_version | cut -d '.' -f3`
+fi
+
+if [ "$has_cc_version" = 'yes' ]; then
+  echo "  $cc version $cc_version found.."
+else
+   echo  "Warning: Failed to detect $cc version."
+fi
+
+if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
+  cc_version=`$cc_search -v 2>&1 | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+  if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
+    echo  "Error: $cc compiler was requested but clang c compiler is loaded."
+    echo  "       Please load the correct compiler."
+    exit 1
+  fi
+fi
+
+# check the cxx compiler version
+has_cxx_version='no'
+cxx_version='not'
+cxx_version_major=''
+cxx_version_minor=''
+cxx_version_patch=''
+
+cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cxx_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
+if [ -z "$cxx_version_info" ]; then
+  cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fi
+
+cxx_version=`echo $cxx_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+
+if [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+  has_cxx_version='yes'
+  cxx_version_major=`echo $cxx_version | cut -d '.' -f1`
+  cxx_version_minor=`echo $cxx_version | cut -d '.' -f2`
+  cxx_version_patch=`echo $cxx_version | cut -d '.' -f3`
+fi
+
+if [ "$has_cxx_version" = 'yes' ]; then
+  echo "  $cxx version $cxx_version found.."
+else
+   echo  "Warning: Failed to detect $cxx version."
+fi
+
+if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
+  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+  if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
+    echo  "Error: $cxx compiler was requested but clang c++ compiler is loaded."
+    echo  "       Please load the correct compiler."
+    exit 1
+  fi
+fi
+
+# check for version compatibility
+if [ "$has_fort_version" = 'yes' ] && [ "$has_cc_version" = 'yes' ] && [ "$has_cxx_version" = 'yes' ]; then
+  if [ ! "$fort_version_major" = "$cc_version_major" ] && [ ! "$fort_version_major" = "$cxx_version_major" ]; then
+     print_compiler_mistmatch
+     exit 1 
+   elif [ ! "$fort_version_minor" = "$cc_version_minor" ] && [ ! "$fort_version_minor" = "$cxx_version_minor" ]; then
+     print_compiler_mistmatch
+     exit 1
+   elif [ ! "$fort_version_patch" = "$cc_version_patch" ] && [ ! "$fort_version_patch" = "$cxx_version_patch" ]; then
+    print_compiler_mistmatch
+    exit 1    
+  fi
+fi
+
+
+}
+
+#  !---------------------------------------------------------------------!
+#  ! Variable definitions                                                !
+#  !---------------------------------------------------------------------!
+
+# quick version flags
+serial='no'
+mpi='no'
+cuda='no'
+cudampi='no'
+debug='no'
+buildtypes=''
+installers=''
+
+# keeps track of what compilers being used
+fort='no'
+cc='no'
+cxx='no'
+nvcc='no'
+
+# where to install
+useprefix='false'
+quick_prefix="$QUICK_HOME"
+
+# operating system
+osname=''
+
+# flag to indicate if a so library compilation is required
+shared='no'
+
+# compiler specific flags
+fort_flags=''
+cc_flags=''
+cxx_flags=''
+cuda_flags=''
+cpp_flags=''
+
+# archiver related variables
+arch='ar'
+arch_flags='cr'
+ranlib='ranlib'
+libext='a'
+
+# linker flags
+ldflags=''
+cflags=''
+
+# optimization levels
+opt_flags='-O2'
+blas_opt_flags='-O3'
+
+# cuda architecture flags
+uspec_arch='false'
+cuda_arch=''
+cuda_arch_flags=''
+
+# extra cuda flags
+cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+cuda_dc_flags=''
+
+# cuda include flags
+cuda_incl_flags=''
+
+# flags to generate PIC in so library case 
+lib_flags=''
+cuda_lib_flags=''
+
+# debug flags
+fort_debug_flags=''
+cc_debug_flags=''
+cxx_debug_flags=''
+cuda_debug_flags=''
+
+# set common folders
+libxcobjfolder=''
+libxcdevobjfolder=''
+blasobjfolder=''
+
+# keep track of which build types to clean
+cleantypes=''
+
+# keep track of which versions to install and uninstall
+installtypes=''
+uninstalltypes=''
+
+# keep track of type of testing (i.e. build or install)
+testtype='buildtest'
+
+# numbers of cores to be used for make
+uspec_ncores='no'
+ncores=''
+
+#  !---------------------------------------------------------------------!
+#  ! Check user input                                                    !
+#  !---------------------------------------------------------------------!
+if [ $# -lt 1 ]; then print_help; fi
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
+    --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
+    --debug)       debug='yes';;
+    --shared)      shared='yes';; 
+    --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
+    --ncores)      shift; ncores=$1; uspec_ncores='yes';;
+    --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
+    gnu)           compiler='gnu';;
+    intel)         compiler='intel';;
+    -h| -H| -help| --help) print_help;;
+     *)  echo  "Error: $1 is an unknown flag."
+         echo  "       Run this script as './configure [flags] compiler'."
+         echo  "       Run './configure --help' for more information."
+         exit 1;;
+  esac
+  shift
+done
+
+# check the build type
+if [ -z "$buildtypes" ]; then
+  echo "No build type specified."
+  echo "Proceeding with a serial build."
+  serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick"
+else
+  echo "Requested installation type/s: $buildtypes"
+fi
+
+# check the os first
+check_os
+
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then 
+  echo  "Warning: QUICK cuda and cuda-mpi versions have never been tested on $osname os."
+fi
+
+# check compiler
+check_compiler
+
+# check prefix and perform necessary operations 
+if [ "$useprefix" = "true" ]; then
+
+  if [ "$QUICK_HOME" = "$quick_prefix" ]; then
+    echo  "Error: Specified --prefix and current folder is the same. Please choose a different location. "
+    exit 1
+  elif [ ! -d "$quick_prefix" ]; then
+    mkdir -p "$quick_prefix"
+  fi
+
+  # do this trick to get absolute path
+  cd "$quick_prefix"
+  quick_prefix=`pwd`
+  cd "$QUICK_HOME" 
+
+  echo "QUICK will be installed in $quick_prefix"
+
+  # create tests and basis directories if they dont exist
+  if [ ! -d "$quick_prefix/test" ]; then
+    mkdir -p "$quick_prefix/test"
+
+    # delete the runs directory from QUICK_HOME/test if it exists
+    if [ -d "$QUICK_HOME/test/runs" ]; then rm -rf $QUICK_HOME/test/runs; fi
+
+    # Copy test folder from QUICK_HOME to install folder.
+    echo "Copying test cases into $quick_prefix/test"
+    cp -rf "$QUICK_HOME/test/"* "$quick_prefix/test/"
+
+  fi
+
+  # copy the contents of basis folder since user may delete/relocate
+  # QUICK_HOME folder after installation
+  if [ ! -d "$quick_prefix/basis" ]; then
+    mkdir -p "$quick_prefix/basis"
+    cp -rf "$QUICK_HOME/basis/"* "$quick_prefix/basis/"
+  fi
+
+  # create bin, lib and include directories
+  if [ ! -d "$quick_prefix/bin" ]; then
+    mkdir -p "$quick_prefix/bin"
+  fi
+
+  for buildtype in $buildtypes; do
+    if [ ! -d "$quick_prefix/lib/$buildtype" ]; then
+      mkdir -p "$quick_prefix/lib/$buildtype"
+    fi
+
+    if [ ! -d "$quick_prefix/include/$buildtype" ]; then
+      mkdir -p "$quick_prefix/include/$buildtype"
+    fi
+  done
+
+  # set install and uninstall types
+  install_string='install'
+  uninstall_string='uninstall'
+
+  for buildtype in $buildtypes; do    
+    installtypes="$installtypes $buildtype$install_string"
+    uninstalltypes="$uninstalltypes $buildtype$uninstall_string"
+  done
+
+else
+
+  echo "No prefix specified for the installation."
+
+  installtypes='noinstall'
+  uninstalltypes='nouninstall'
+
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Create essential build directories                                  !
+#  !---------------------------------------------------------------------!
+
+if [ ! -d "$QUICK_HOME/bin" ]; then
+  mkdir -p "$QUICK_HOME/bin"
+fi
+
+for buildtype in $buildtypes; do
+  if [ ! -d "$QUICK_HOME/build/$buildtype/lib" ]; then
+    mkdir -p "$QUICK_HOME/build/$buildtype/lib"
+  fi
+
+  if [ ! -d "$QUICK_HOME/build/$buildtype/include" ]; then
+    mkdir -p "$QUICK_HOME/build/$buildtype/include"
+  fi
+
+  if [ ! -d "$QUICK_HOME/build/$buildtype/obj" ]; then
+    mkdir -p "$QUICK_HOME/build/$buildtype/obj"
+  fi
+
+  if [ ! -d "$QUICK_HOME/build/$buildtype/obj/main" ]; then
+    mkdir -p "$QUICK_HOME/build/$buildtype/obj/main"
+  fi
+
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    if [ ! -d "$QUICK_HOME/build/common/cpu/libxcobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/cpu/libxcobj"
+    fi
+    libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
+  
+    if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
+    fi
+    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+  fi
+
+  
+
+  if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
+    if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/gpu/libxcobj"
+    fi
+    libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
+
+    if [ ! -d "$QUICK_HOME/build/common/gpu/libxcdevobj" ]; then
+      mkdir -p "$QUICK_HOME/build/common/gpu/libxcdevobj"
+    fi
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"    
+
+  fi
+
+done
+
+#  !---------------------------------------------------------------------!
+#  ! Query system information                                            !
+#  !---------------------------------------------------------------------!
+
+# set number of cores for the compilation
+  if [ "$uspec_ncores" = 'yes' ]; then
+    echo "Number of cores requested for the compilation: $ncores"
+  else
+    if [ `command -v nproc | wc -l` -gt 0 ]; then
+      ncores=`nproc --all`
+      echo "A total of $ncores cores will be used for the compilation."
+    else
+      ncores=1
+      echo "Only a single core will be used for the compilation."
+    fi
+  fi
+
+#  !---------------------------------------------------------------------!
+#  ! Check for CUDA tool kit and compiler                                !
+#  !---------------------------------------------------------------------!
+
+# this function sets the user defined cuda architecture flags, if specified
+set_uspec_arch(){
+  for carch in $cuda_arch; do
+    case "$carch" in
+      pascal)
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$cuda_arch_flags $sm60flags"
+	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
+      volta)
+        echo "Configuring for SM7.0"
+        cuda_arch_flags="$cuda_arch_flags $sm70flags";;
+      turing)
+        echo "Configuring for SM7.5"
+        cuda_arch_flags="$cuda_arch_flags $sm75flags";;
+    esac
+  done
+}
+
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+  if [ -z "$CUDA_HOME" ]; then
+    echo  "Error: CUDA_HOME environment variable is not set."
+    echo  "Please make sure CUDA toolkit is loaded."
+    exit 1
+  fi
+
+  if [ ! -x "$CUDA_HOME/bin/nvcc" ]; then
+    echo  "Error: nvcc compiler is not available in $CUDA_HOME/bin/"
+    exit 1
+  fi
+
+  if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi  
+
+    #SM8.0 = A100
+    #sm80flags='-gencode arch=compute_80,code=sm_80'
+    #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
+    sm75flags='-gencode arch=compute_75,code=sm_75'
+    #SM7.0 = V100, Titan V
+    sm70flags='-gencode arch=compute_70,code=sm_70'
+    #SM6.0 = GP100 / P100 = DGX-1
+    sm60flags='-gencode arch=compute_60,code=sm_60'
+
+    cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
+
+    if [ "$cudaversion" = "11.0" ]; then
+
+      echo "CUDA Version $cudaversion detected"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+
+        echo "Configuring for SM6.0, SM7.0, SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
+      fi
+    elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
+      echo "CUDA Version $cudaversion detected"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
+      fi
+    elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
+      echo "CUDA Version $cudaversion detected"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0 and SM7.0"
+        cuda_arch_flags="$sm60flags $sm70flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
+      fi
+    elif [ "$cudaversion" = "8.0" ]; then
+      echo "CUDA Version $cudaversion detected"
+
+      if [ "$uspec_arch" = 'true' ]; then
+        set_uspec_arch
+      else
+        echo "Configuring for SM6.0"
+        cuda_arch_flags="$sm60flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants'
+      fi
+    else
+      echo  "Error: Unsupported CUDA version $cudaversion detected. "
+      echo  "       QUICK requires at least CUDA version 8.0 "
+      exit 1
+    fi
+
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Set common flags                                                    !
+#  !---------------------------------------------------------------------!
+
+# set debug flags
+if [ "$debug" = 'yes' ]; then
+  opt_flags='-O0'
+  blas_opt_flags='-O0'
+
+  case "$compiler" in
+    gnu)
+      fort_debug_flags='-g -DDEBUG'
+      cc_debug_flags='-g -DDEBUG'
+      cxx_debug_flags='-g -DDEBUG'
+      ;;
+    intel)
+      fort_debug_flags='-g -traceback -DDEBUG'
+      cc_debug_flags='-g -traceback -DDEBUG'
+      cxx_debug_flags='-g -traceback -DDEBUG'
+      ;;
+  esac
+
+  if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
+    cuda_debug_flags='-g -G -DDEBUG'
+  fi
+fi
+
+# set library flags if so library is requested
+if [ "$shared" = 'yes' ]; then
+  lib_flags='-fPIC'
+  cuda_lib_flags="--compiler-options '-fPIC'"
+  arch="$fort"
+  arch_flags='-shared -o'
+  ranlib='echo'
+  libext='so'
+fi
+
+#  !---------------------------------------------------------------------!
+#  ! Set flags & generate make input files                               !
+#  !---------------------------------------------------------------------!
+
+for buildtype in $buildtypes; do
+
+  # set compiler specific flags
+  case "$compiler" in
+    gnu)
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/$buildtype/include -J$QUICK_HOME/build/$buildtype/include"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+      fi    
+      ;;
+    intel)
+      fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/$buildtype/include -module $QUICK_HOME/build/$buildtype/include"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+      fi
+      ;;
+  esac
+
+  cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
+  cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
+
+  if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
+
+    cpp_flags="$opt_flags -I$CUDA_HOME/include $lib_flags -DCUBLAS_USE_THUNKING"
+
+    cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $cuda_lib_flags"
+
+    cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include -DCUDA_SPDF"
+
+  # eliminate this after eliminating mpi calls from cuda code
+  #  if [ "$cudampi" = 'yes' ]; then
+  #    cuda_incl_flags="$cuda_incl_flags -I$MPI_INCLUDES -I$MPI_LIBS"
+  #  fi
+
+  fi
+
+  # set directives based on the build type. These stuff were previously in config.h
+    
+  if [ "$buildtype" = 'mpi' ]; then
+
+    fort_flags="$fort_flags -DMPIV"
+    cxx_flags="$cxx_flags -DMPIV"
+
+  elif [ "$buildtype" = 'cuda' ]; then
+
+    fort_flags="$fort_flags -DCUDA"
+    cc_flags="$cc_flags -DCUDA"
+    cxx_flags="$cxx_flags -DCUDA"
+    cuda_incl_flags="$cuda_incl_flags -DCUDA"
+
+  elif [ "$buildtype" = 'cudampi' ]; then
+
+    fort_flags="$fort_flags -DMPIV -DCUDA_MPIV"
+    cc_flags="$cc_flags -DMPIV -DCUDA_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DCUDA_MPIV"
+    cuda_incl_flags="$cuda_incl_flags -DMPIV -DCUDA_MPIV"
+
+  fi
+
+  # set fortran linking flags
+  ldflags="$fort_flags -lstdc++"
+
+  # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
+  if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+    set_mpicxx
+  fi
+
+  # set the installer
+  installer=''
+  if [ "$buildtype" = 'serial' ]; then
+    installer='quick'
+  elif [ "$buildtype" = 'mpi' ]; then
+    installer='quick.mpi'
+  elif [ "$buildtype" = 'cuda' ]; then
+    installer='quick.cuda'
+  elif [ "$buildtype" = 'cudampi' ]; then
+    installer='quick.cuda.mpi'
+  fi
+
+  # set the test type
+  if [ "$useprefix" = "true" ]; then
+    testtype='installtest'
+  fi
+
+  # set libxcobj and blasobj folder
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+    libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj" 
+    libxcdevobjfolder=""
+  elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
+    blasobjfolder=""
+    libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
+  fi
+
+  # copy template Makefile into each buildtype directory
+  cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/$buildtype/Makefile"
+
+  # write make.in for each build type
+
+cat > "$QUICK_HOME/build/$buildtype/make.in" << EOF
+
+# $QUICK_VERSION configuration file
+# Created on $cdate at $ctime
+
+#!---------------------------------------------------------------------!
+#! Build settings                                                      !
+#!---------------------------------------------------------------------!
+
+BUILDTYPE=$buildtype
+installer=$installer
+
+# number of cores for the compilation
+ncores=$ncores
+
+#!---------------------------------------------------------------------!
+#! Directories                                                         !
+#!---------------------------------------------------------------------!
+
+# source directories
+srcfolder=$QUICK_HOME/src
+subfolder=$QUICK_HOME/src/subs
+blasfolder=$QUICK_HOME/src/blas
+libxcfolder=$QUICK_HOME/src/libxc
+cudafolder=$QUICK_HOME/src/cuda
+cublasfolder=$QUICK_HOME/src/cuda/cublas
+cusolverfolder=$QUICK_HOME/src/cuda/cusolver
+octfolder=$QUICK_HOME/src/octree
+modfolder=$QUICK_HOME/src/modules
+
+# build directories
+exefolder=$QUICK_HOME/bin
+objfolder=$QUICK_HOME/build/$buildtype/obj
+libxcobjfolder=$libxcobjfolder
+libxcdevobjfolder=$libxcdevobjfolder
+mainobjfolder=$QUICK_HOME/build/$buildtype/obj/main
+blasobjfolder=$blasobjfolder
+libfolder=$QUICK_HOME/build/$buildtype/lib
+inclfolder=$QUICK_HOME/build/$buildtype/include
+
+# install directories
+installfolder=$quick_prefix
+
+#!---------------------------------------------------------------------!
+#! Compilers                                                           !
+#!---------------------------------------------------------------------!
+
+FC=$fort
+CC=$cc
+CXX=$cxx  
+CUDAC=$nvcc
+
+#!---------------------------------------------------------------------!
+#! Archiver and flags for the libraries                                !
+#!---------------------------------------------------------------------!
+
+ARCH=$arch
+ARCHFLAGS=$arch_flags
+RANLIB=$ranlib
+LIBEXT=$libext
+BLAS_FLAGS=$blas_opt_flags $lib_flags
+
+#!---------------------------------------------------------------------!
+#! Common compiler  flags                                              !
+#!---------------------------------------------------------------------!
+
+FFLAGS=$fort_flags
+LDFLAGS=$ldflags
+CCFLAGS=$cc_flags
+CXXFLAGS=$cxx_flags
+
+EOF
+
+if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
+cat >> "$QUICK_HOME/build/$buildtype/make.in" << EOF
+#!---------------------------------------------------------------------!
+#! CUDA specific flags                                                 !
+#!---------------------------------------------------------------------!
+
+CPP_FLAG=$cpp_flags
+CUDA_FLAGS=$cuda_flags
+CUDA_INCL_FLAGS=$cuda_incl_flags
+CUDA_DC_FLAGS=$cuda_dc_flags
+CFLAGS=$cflags
+
+EOF
+fi
+
+done
+
+#  !---------------------------------------------------------------------!
+#  ! Generate config.h in src directory                                  !
+#  !---------------------------------------------------------------------!
+
+cat > "$QUICK_HOME/make.in" << EOF
+
+# $QUICK_VERSION configuration file
+# Created on $cdate at $ctime
+
+#!---------------------------------------------------------------------!
+#! Build & install settings                                            !
+#!---------------------------------------------------------------------!
+
+BUILDTYPES=$buildtypes
+CLEANTYPES=$cleantypes
+
+INSTALLTYPES=$installtypes
+UNINSTALLTYPES=$uninstalltypes
+
+TESTTYPE=$testtype
+
+#!---------------------------------------------------------------------!
+#! Directories                                                         !
+#!---------------------------------------------------------------------!
+
+homefolder=$QUICK_HOME
+exefolder=$QUICK_HOME/bin
+buildfolder=$QUICK_HOME/build
+toolsfolder=$QUICK_HOME/tools
+installfolder=$quick_prefix
+
+# source directories
+subfolder=$QUICK_HOME/src/subs
+blasfolder=$QUICK_HOME/src/blas
+libxcfolder=$QUICK_HOME/src/libxc
+cudafolder=$QUICK_HOME/src/cuda
+octfolder=$QUICK_HOME/src/octree
+modfolder=$QUICK_HOME/src/modules
+
+EOF
+
+#  !---------------------------------------------------------------------!
+#  ! Clean directories                                                   !
+#  !---------------------------------------------------------------------!
+
+#make clean > /dev/null 
+
+echo  "Input file for GNU make was successfully created."
+echo ""
+
+echo  "Next steps:"
+echo  "          Run 'make' to build QUICK."
+if [ "$testtype" = 'installtest' ]; then 
+  echo  "          Run 'make install' to install executable/s, libraries and header files into $quick_prefix."
+fi
+echo  "          Run 'make test' to verify the executables."

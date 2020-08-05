@@ -17,6 +17,8 @@
 
 
 /*
+To understand the following comments better, please refer to Figure 2(b) and 2(d) in Miao and Merz 2015 paper. 
+
  In the following kernel, we treat f orbital into 5 parts.
  
  type:   ss sp ps sd ds pp dd sf pf | df ff |
@@ -69,52 +71,94 @@
  then,     kernel 2: zone 2,3,4(get2e_kernel_spdf2())
  then,     kernel 3: zone 3,4(get2e_kernel_spdf3())
  finally,  kernel 4: zone 4(get2e_kernel_spdf4())
- 
+
  */
 #ifdef int_spd
-__global__ void get2e_kernel()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel()
 #elif defined int_spdf
-__global__ void get2e_kernel_spdf()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf()
 #elif defined int_spdf2
-__global__ void get2e_kernel_spdf2()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf2()
 #elif defined int_spdf3
-__global__ void get2e_kernel_spdf3()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf3()
 #elif defined int_spdf4
-__global__ void get2e_kernel_spdf4()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf4()
 #elif defined int_spdf5
-__global__ void get2e_kernel_spdf5()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf5()
 #elif defined int_spdf6
-__global__ void get2e_kernel_spdf6()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf6()
 #elif defined int_spdf7
-__global__ void get2e_kernel_spdf7()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf7()
 #elif defined int_spdf8
-__global__ void get2e_kernel_spdf8()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf8()
 #elif defined int_spdf9
-__global__ void get2e_kernel_spdf9()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf9()
 #elif defined int_spdf10
-__global__ void get2e_kernel_spdf10()
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 #endif
 {
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
     
-    
-    
+    // jshell and jshell2 defines the regions in i+j and k+l axes respectively.    
+    // sqrQshell= Qshell x Qshell; where Qshell is the number of sorted shells (see gpu_upload_basis_ in gpu.cu)
+    // for details on sorting. 
+ 
 #ifdef int_spd
+/*
+ Here we walk through full cutoff matrix.
+
+ --sqrQshell --
+ _______________ 
+ |             |  |
+ |             |  |
+ |             | sqrQshell
+ |             |  |
+ |             |  |
+ |_____________|  |
+
+*/
+
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell;
+
 #elif defined int_spdf
-    
+
+/*  
+ Here we walk through following region of the cutoff matrix.
+
+ --sqrQshell --
+ _______________ 
+ |             |  
+ |             |  
+ |             |  
+ |_____________|  
+ |             |  | sqrQshell - fStart
+ |_____________|  |
+
+*/
+  
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - devSim.fStart;
     
 #elif defined int_spdf2
-    
+
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - devSim.fStart;
-    
+
 #elif defined int_spdf3
-    
+
     QUICKULL jshell0 = (QUICKULL) devSim.fStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell0;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell0;
@@ -142,27 +186,30 @@ __global__ void get2e_kernel_spdf10()
     QUICKULL jshell00 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell0;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell00;
-    
+
 #elif defined int_spdf8
     
     QUICKULL jshell0 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell00 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell00;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell0;
-    
+
 #elif defined int_spdf9
     
     QUICKULL jshell0 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell00 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell00;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell0;
+
 #elif defined int_spdf10
     
     QUICKULL jshell0 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell00 = (QUICKULL) devSim.ffStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell00;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell0;
+
 #endif
+
     for (QUICKULL i = offside; i < jshell * jshell2; i+= totalThreads) {
         
 #ifdef int_spd
@@ -185,9 +232,10 @@ __global__ void get2e_kernel_spdf10()
         }
         */
         // Zone 0
+
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
-        
+
 #elif defined int_spdf
         
         
@@ -195,17 +243,14 @@ __global__ void get2e_kernel_spdf10()
         QUICKULL b = (QUICKULL) i/jshell;
         QUICKULL a = (QUICKULL) (i - b*jshell);
         b = b + devSim.fStart;
-        
-        
+                
 #elif defined int_spdf2
         
         // Zone 2
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
         a = a + devSim.fStart;
-        
-        
-        
+
 #elif defined int_spdf3
         
         // Zone 3
@@ -219,6 +264,7 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
+
 #elif defined int_spdf4
         
         // Zone 4
@@ -232,6 +278,7 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
+
 #elif defined int_spdf5
         
         // Zone 5
@@ -246,7 +293,6 @@ __global__ void get2e_kernel_spdf10()
         QUICKULL b = (QUICKULL) (i - a*jshell);
         a = a + devSim.ffStart;
 
-        
 #elif defined int_spdf7
         
         // Zone 3
@@ -260,6 +306,7 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
+
 #elif defined int_spdf8
         
         // Zone 4
@@ -273,7 +320,7 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
-        
+      
 #elif defined int_spdf9
         
         // Zone 4
@@ -287,6 +334,7 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
+
 #elif defined int_spdf10
         
         // Zone 4
@@ -300,13 +348,18 @@ __global__ void get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
+
 #endif
+
+#ifdef CUDA_MPIV
+        if(devSim.mpi_bcompute[a] > 0){
+#endif 
+
         int II = devSim.sorted_YCutoffIJ[a].x;
-        int KK = devSim.sorted_YCutoffIJ[b].x;
-        
+        int KK = devSim.sorted_YCutoffIJ[b].x;        
+
         int ii = devSim.sorted_Q[II];
         int kk = devSim.sorted_Q[KK];
-        
         
         if (ii<=kk){
             
@@ -331,6 +384,8 @@ __global__ void get2e_kernel_spdf10()
                 int jjj = devSim.sorted_Qnumber[JJ];
                 int kkk = devSim.sorted_Qnumber[KK];
                 int lll = devSim.sorted_Qnumber[LL];
+
+                
                 
 #ifdef int_spd
                     iclass(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
@@ -401,8 +456,10 @@ __global__ void get2e_kernel_spdf10()
                 
             }
         }
-            
-        
+
+#ifdef CUDA_MPIV
+        }      
+#endif        
     }
 }
 
@@ -855,27 +912,38 @@ __device__ __forceinline__ void iclass_spdf10
 
 
 #ifdef int_spd
-__global__ void getAOInt_kernel(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf
-__global__ void getAOInt_kernel_spdf(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf2
-__global__ void getAOInt_kernel_spdf2(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf2(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf3
-__global__ void getAOInt_kernel_spdf3(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf3(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf4
-__global__ void getAOInt_kernel_spdf4(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf4(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf5
-__global__ void getAOInt_kernel_spdf5(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf5(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf6
-__global__ void getAOInt_kernel_spdf6(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf6(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf7
-__global__ void getAOInt_kernel_spdf7(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf7(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf8
-__global__ void getAOInt_kernel_spdf8(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf8(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf9
-__global__ void getAOInt_kernel_spdf9(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf9(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #elif defined int_spdf10
-__global__ void getAOInt_kernel_spdf10(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf10(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
 #endif
 {
     
