@@ -106,14 +106,14 @@ test:$(TESTTYPE)
 
 buildtest:
 	@cp $(toolsfolder)/runtest $(homefolder)
-	@sh $(homefolder)/runtest
+	$(homefolder)/runtest
 
 installtest:
 	@if [ ! -x $(installfolder)/bin/quick* ]; then \
         echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
         exit 1; fi	
 	@cp $(toolsfolder)/runtest $(installfolder)
-	@cd $(installfolder) && sh runtest
+	@cd $(installfolder) && ./runtest
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
