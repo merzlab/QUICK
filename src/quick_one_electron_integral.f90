@@ -26,7 +26,7 @@ subroutine fullx
    double precision :: Sminhalf(nbasis)
    double precision :: V(3,nbasis)
    double precision :: IDEGEN1(nbasis)
-   double precision :: SJI,sum
+   double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
@@ -62,14 +62,8 @@ subroutine fullx
 
                SJI =SJI + &
                      dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-!                     *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
                      *overlap(a,b, i,j,k,ii,jj,kk, &
-!                     itype(1,Jbas),       itype(2,Jbas),       itype(3,Jbas), &
-!                     itype(1,Ibas),       itype(2,Ibas),       itype(3,Ibas), &
-!                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)), &
-!                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)),
                      Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-!            *exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))*inv_g))
             enddo
          enddo
          quick_qm_struct%s(Jbas,Ibas) = SJI
@@ -80,7 +74,6 @@ subroutine fullx
    timer_cumer%T1eS=timer_cumer%T1eS+timer_end%T1eS-timer_begin%T1eS
 
    call copySym(quick_qm_struct%s,nbasis)
-
 
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
@@ -144,7 +137,6 @@ subroutine fullx
          sum = 0.d0
          do K=1,nbasis
             sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-!write(*,*)  k,j,quick_scratch%hold2(K,J),Sminhalf(K),sum
          enddo
          quick_qm_struct%x(I,J) = sum
          quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
@@ -260,7 +252,7 @@ double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
 
    ! INNER VARIBLES
-   double precision element,g,g_table(217),elfactor
+   double precision element,g,g_table(200),elfactor
    integer ig,jg,kg,ng
    integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
    double precision pAx,pAy,pAz,pBx,pBy,pBz
@@ -1787,9 +1779,9 @@ subroutine get1e(oneElecO)
    implicit double precision(a-h,o-z)
    double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
-#ifdef MPIV
-   include "mpif.h"
-#endif
+!#ifdef MPIV
+!   include "mpif.h"
+!#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -1798,9 +1790,9 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-#ifdef MPIV
-   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
-#endif
+!#ifdef MPIV
+!   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
+!#endif
 
      if (master) then
 
