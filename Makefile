@@ -131,19 +131,19 @@ clean:$(CLEANTYPES)
 
 serialclean:
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make clean 
+	@cd $(buildfolder) && make --no-print-directory clean 
 
 mpiclean:
 	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make clean
+	@cd $(buildfolder) && make --no-print-directory clean
 
 cudaclean:
 	@cp -f $(buildfolder)/make.cuda.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make clean
+	@cd $(buildfolder) && make --no-print-directory clean
 
 cudampiclean:
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make clean
+	@cd $(buildfolder) && make --no-print-directory clean
 
 distclean: makeinclean
 	@-rm -f $(homefolder)/runtest 
