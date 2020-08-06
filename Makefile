@@ -31,19 +31,23 @@ nobuildtypes:
 
 serial: checkfolders
 	@echo  "Building serial version.."
-	@cd $(buildfolder)/serial && make serial
+	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make serial
 
 mpi: checkfolders
 	@echo  "Building mpi version.."
-	@cd $(buildfolder)/mpi && make mpi
+	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make mpi
 
 cuda: checkfolders
 	@echo  "Building cuda version.."
-	@cd $(buildfolder)/cuda && make cuda
+	@cp -f $(buildfolder)/make.cuda.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make cuda
 
 cudampi: checkfolders
 	@echo  "Building cuda-mpi version.."
-	@cd $(buildfolder)/cudampi && make cudampi 
+	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make cudampi 
 
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
@@ -70,31 +74,31 @@ serialinstall:
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
 	exit 1; fi
-	@cp -f $(buildfolder)/serial/include/* $(installfolder)/include/serial
-	@cp -f $(buildfolder)/serial/lib/* $(installfolder)/lib/serial
+	@cp -f $(buildfolder)/include/serial/* $(installfolder)/include/serial
+	@cp -f $(buildfolder)/lib/serial/* $(installfolder)/lib/serial
 
 mpiinstall:
 	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
-	@cp -f $(buildfolder)/mpi/include/* $(installfolder)/include/mpi
-	@cp -f $(buildfolder)/mpi/lib/* $(installfolder)/lib/mpi
+	@cp -f $(buildfolder)/include/mpi/* $(installfolder)/include/mpi
+	@cp -f $(buildfolder)/lib/mpi/* $(installfolder)/lib/mpi
 
 cudainstall:
 	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
-	@cp -f $(buildfolder)/cuda/include/* $(installfolder)/include/cuda
-	@cp -f $(buildfolder)/cuda/lib/* $(installfolder)/lib/cuda
+	@cp -f $(buildfolder)/include/cuda/* $(installfolder)/include/cuda
+	@cp -f $(buildfolder)/lib/cuda/* $(installfolder)/lib/cuda
 
 cudampiinstall:
 	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
-	@cp -f $(buildfolder)/cudampi/include/* $(installfolder)/include/cudampi
-	@cp -f $(buildfolder)/cudampi/lib/* $(installfolder)/lib/cudampi
+	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
+	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 #  !---------------------------------------------------------------------!
 #  ! Installation targets                                                !
@@ -126,16 +130,20 @@ clean:$(CLEANTYPES)
 	@echo  "Cleaned up successfully."
 
 serialclean:
-	@cd $(buildfolder)/serial && make clean 
+	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make clean 
 
 mpiclean:
-	@cd $(buildfolder)/mpi && make clean
+	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make clean
 
 cudaclean:
-	@cd $(buildfolder)/cuda && make clean
+	@cp -f $(buildfolder)/make.cuda.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make clean
 
 cudampiclean:
-	@cd $(buildfolder)/cudampi && make clean
+	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make clean
 
 distclean: makeinclean
 	@-rm -f $(homefolder)/runtest 
