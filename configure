@@ -548,20 +548,20 @@ if [ ! -d "$QUICK_HOME/bin" ]; then
 fi
 
 for buildtype in $buildtypes; do
-  if [ ! -d "$QUICK_HOME/build/$buildtype/lib" ]; then
-    mkdir -p "$QUICK_HOME/build/$buildtype/lib"
+  if [ ! -d "$QUICK_HOME/build/lib/$buildtype" ]; then
+    mkdir -p "$QUICK_HOME/build/lib/$buildtype"
   fi
 
-  if [ ! -d "$QUICK_HOME/build/$buildtype/include" ]; then
-    mkdir -p "$QUICK_HOME/build/$buildtype/include"
+  if [ ! -d "$QUICK_HOME/build/include/$buildtype" ]; then
+    mkdir -p "$QUICK_HOME/build/include/$buildtype"
   fi
 
-  if [ ! -d "$QUICK_HOME/build/$buildtype/obj" ]; then
-    mkdir -p "$QUICK_HOME/build/$buildtype/obj"
+  if [ ! -d "$QUICK_HOME/build/obj/$buildtype" ]; then
+    mkdir -p "$QUICK_HOME/build/obj/$buildtype"
   fi
 
-  if [ ! -d "$QUICK_HOME/build/$buildtype/obj/main" ]; then
-    mkdir -p "$QUICK_HOME/build/$buildtype/obj/main"
+  if [ ! -d "$QUICK_HOME/build/obj/$buildtype/main" ]; then
+    mkdir -p "$QUICK_HOME/build/obj/$buildtype/main"
   fi
 
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
@@ -753,21 +753,21 @@ for buildtype in $buildtypes; do
   # set compiler specific flags
   case "$compiler" in
     gnu)
-      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/$buildtype/include -J$QUICK_HOME/build/$buildtype/include"
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi    
       ;;
     intel)
-      fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/$buildtype/include -module $QUICK_HOME/build/$buildtype/include"
+      fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi
       ;;
   esac
 
-  cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
-  cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/$buildtype/include"
+  cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
+  cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
 
   if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
 
@@ -776,11 +776,6 @@ for buildtype in $buildtypes; do
     cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $cuda_lib_flags"
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include -DCUDA_SPDF"
-
-  # eliminate this after eliminating mpi calls from cuda code
-  #  if [ "$cudampi" = 'yes' ]; then
-  #    cuda_incl_flags="$cuda_incl_flags -I$MPI_INCLUDES -I$MPI_LIBS"
-  #  fi
 
   fi
 
@@ -844,11 +839,11 @@ for buildtype in $buildtypes; do
   fi
 
   # copy template Makefile into each buildtype directory
-  cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/$buildtype/Makefile"
+  cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
 
   # write make.in for each build type
 
-cat > "$QUICK_HOME/build/$buildtype/make.in" << EOF
+cat > "$QUICK_HOME/build/make.$buildtype.in" << EOF
 
 # $QUICK_VERSION configuration file
 # Created on $cdate at $ctime
@@ -880,13 +875,13 @@ modfolder=$QUICK_HOME/src/modules
 
 # build directories
 exefolder=$QUICK_HOME/bin
-objfolder=$QUICK_HOME/build/$buildtype/obj
+objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
-mainobjfolder=$QUICK_HOME/build/$buildtype/obj/main
+mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
 blasobjfolder=$blasobjfolder
-libfolder=$QUICK_HOME/build/$buildtype/lib
-inclfolder=$QUICK_HOME/build/$buildtype/include
+libfolder=$QUICK_HOME/build/lib/$buildtype
+inclfolder=$QUICK_HOME/build/include/$buildtype
 
 # install directories
 installfolder=$quick_prefix
@@ -922,7 +917,7 @@ CXXFLAGS=$cxx_flags
 EOF
 
 if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
-cat >> "$QUICK_HOME/build/$buildtype/make.in" << EOF
+cat >> "$QUICK_HOME/build/make.$buildtype.in" << EOF
 #!---------------------------------------------------------------------!
 #! CUDA specific flags                                                 !
 #!---------------------------------------------------------------------!
