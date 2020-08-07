@@ -218,7 +218,7 @@
 
 ! GENERAL INFORMATION
 
-! Other routines called directly:  DAXPY, DDOT, LB1, MCSRCH
+! Other routines called directly:  LBFGS_DAXPY, LBFGS_DDOT, LB1, MCSRCH
 
 ! Input/Output  :  No input; diagnostic messages on unit MP and
 ! error messages on unit LP.
@@ -226,7 +226,7 @@
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    double precision :: GTOL,ONE,ZERO,GNORM,DDOT,STP1,FTOL,STPMIN, &
+    double precision :: GTOL,ONE,ZERO,GNORM,LBFGS_DDOT,STP1,FTOL,STPMIN, &
     STPMAX,STP,YS,YY,SQ,YR,BETA,XNORM
     INTEGER :: MP,LP,ITER,NFUN,POINT,ISPT,IYPT,MAXFEV,INFO, &
     BOUND,NPT,CP,I,NFEV,INMC,IYCN,ISCN
@@ -280,7 +280,7 @@
     do I=1,N
         W(ISPT+I)= -G(I)*DIAG(I)
     enddo
-    GNORM= DSQRT(DDOT(N,G,1,G,1))
+    GNORM= DSQRT(LBFGS_DDOT(N,G,1,G,1))
     STP1=ONE/GNORM
 
 ! PARAMETERS FOR LINE SEARCH ROUTINE
@@ -301,9 +301,9 @@
     IF(ITER == 1) GO TO 165
     IF (ITER > M)BOUND=M
 
-    YS= DDOT(N,W(IYPT+NPT+1),1,W(ISPT+NPT+1),1)
+    YS= LBFGS_DDOT(N,W(IYPT+NPT+1),1,W(ISPT+NPT+1),1)
     IF( .not. DIAGCO) then
-        YY= DDOT(N,W(IYPT+NPT+1),1,W(IYPT+NPT+1),1)
+        YY= LBFGS_DDOT(N,W(IYPT+NPT+1),1,W(IYPT+NPT+1),1)
         do I=1,N
             DIAG(I)= YS/YY
         enddo
@@ -333,11 +333,11 @@
     do I= 1,BOUND
         CP=CP-1
         IF (CP == -1)CP=M-1
-        SQ= DDOT(N,W(ISPT+CP*N+1),1,W,1)
+        SQ= LBFGS_DDOT(N,W(ISPT+CP*N+1),1,W,1)
         INMC=N+M+CP+1
         IYCN=IYPT+CP*N
         W(INMC)= W(N+CP+1)*SQ
-        CALL DAXPY(N,-W(INMC),W(IYCN+1),1,W,1)
+        CALL LBFGS_DAXPY(N,-W(INMC),W(IYCN+1),1,W,1)
     enddo
 
     do I=1,N
@@ -345,12 +345,12 @@
     enddo
 
     do I=1,BOUND
-        YR= DDOT(N,W(IYPT+CP*N+1),1,W,1)
+        YR= LBFGS_DDOT(N,W(IYPT+CP*N+1),1,W,1)
         BETA= W(N+CP+1)*YR
         INMC=N+M+CP+1
         BETA= W(INMC)-BETA
         ISCN=ISPT+CP*N
-        CALL DAXPY(N,BETA,W(ISCN+1),1,W,1)
+        CALL LBFGS_DAXPY(N,BETA,W(ISCN+1),1,W,1)
         CP=CP+1
         IF (CP == M)CP=0
     enddo
@@ -395,8 +395,8 @@
 ! TERMINATION TEST
 ! ----------------
 
-    GNORM= DSQRT(DDOT(N,G,1,G,1))
-    XNORM= DSQRT(DDOT(N,X,1,X,1))
+    GNORM= DSQRT(LBFGS_DDOT(N,G,1,G,1))
+    XNORM= DSQRT(LBFGS_DDOT(N,X,1,X,1))
     XNORM= DMAX1(1.0D0,XNORM)
     IF (GNORM/XNORM <= EPS) FINISH= .TRUE. 
 
@@ -528,7 +528,7 @@
 
 ! ----------------------------------------------------------
 
-    subroutine daxpy(n,da,dx,incx,dy,incy)
+    subroutine lbfgs_daxpy(n,da,dx,incx,dy,incy)
 
 ! constant times a vector plus a vector.
 ! uses unrolled loops for increments equal to one.
@@ -574,21 +574,20 @@
         dy(i + 3) = dy(i + 3) + da*dx(i + 3)
     50 enddo
     return
-    end subroutine daxpy
+    end subroutine lbfgs_daxpy
 
 
 ! ----------------------------------------------------------
 
-    double precision function ddot(n,dx,incx,dy,incy)
+    double precision function lbfgs_ddot(n,dx,incx,dy,incy)
 
 ! forms the dot product of two vectors.
 ! uses unrolled loops for increments equal to one.
 ! jack dongarra, linpack, 3/11/78.
-
     double precision :: dx(1),dy(1),dtemp
     integer :: i,incx,incy,ix,iy,m,mp1,n
 
-    ddot = 0.0d0
+    lbfgs_ddot = 0.0d0
     dtemp = 0.0d0
     if(n <= 0)return
     if(incx == 1 .and. incy == 1)go to 20
@@ -605,7 +604,7 @@
         ix = ix + incx
         iy = iy + incy
     10 enddo
-    ddot = dtemp
+    lbfgs_ddot = dtemp
     return
 
 ! code for both increments equal to 1
@@ -624,9 +623,9 @@
         dtemp = dtemp + dx(i)*dy(i) + dx(i + 1)*dy(i + 1) + &
         dx(i + 2)*dy(i + 2) + dx(i + 3)*dy(i + 3) + dx(i + 4)*dy(i + 4)
     50 enddo
-    60 ddot = dtemp
+    60 lbfgs_ddot = dtemp
     return
-    end function ddot
+    end function lbfgs_ddot
 ! ------------------------------------------------------------------
 
 ! **************************
