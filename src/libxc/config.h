@@ -22,12 +22,20 @@
 /* Define if F77 and FC dummy `main' functions are identical. */
 /* #undef FC_DUMMY_MAIN_EQ_F77 */
 
+#ifdef USE_CMAKE_MANGLING
+#  include <xc-fortran-mangling.h>
+#  define FC_FUNC(name, NAME) FortranCInterface_GLOBAL(name, NAME)
+#  define FC_FUNC_(name, NAME) FortranCInterface_GLOBAL_(name, NAME)
+#else
+
 /* Define to a macro mangling the given C identifier (in lower and upper
    case), which must not contain underscores, for linking with Fortran. */
 #define FC_FUNC(name,NAME) name ## _
 
 /* As FC_FUNC, but for C identifiers containing underscores. */
 #define FC_FUNC_(name,NAME) name ## _
+
+#endif
 
 /* The size of a Fortran integer */
 #define FC_INTEGER_SIZE 4
