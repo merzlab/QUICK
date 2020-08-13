@@ -77,22 +77,24 @@ endforeach()
 
 add_library(libquick ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
-config_module_dirs(libquick ${QUICK_SERIAL_MOD_DIR} ${XC_SERIAL_MOD_DIR})
-target_link_libraries(libquick xc octree blas)
-install_libraries(libquick)
+config_module_dirs(libquick quick/serial libxc/serial)
+target_link_libraries(libquick PRIVATE xc octree blas)
+install_libraries(libquick EXPORT QUICK)
 
 # "liblibquick" -> "libquick"
 set_property(TARGET libquick PROPERTY OUTPUT_NAME quick)
 
 if(MPI)
-	make_mpi_version(libquick libquick_mpi LANGUAGES Fortran INSTALL)
+	make_mpi_version(libquick libquick_mpi LANGUAGES Fortran)
 	target_compile_definitions(libquick_mpi PRIVATE MPIV)
 	set_property(TARGET libquick_mpi PROPERTY OUTPUT_NAME quick_mpi)
 
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi xc octree)
 	target_link_libraries(libquick_mpi xc_mpi octree_mpi)
-	config_module_dirs(libquick_mpi ${QUICK_MPI_MOD_DIR} ${XC_MPI_MOD_DIR})
+	config_module_dirs(libquick_mpi quick/mpi libxc/mpi)
+
+	install_libraries(libquick_mpi)
 endif()
 
 if(CUDA)
@@ -102,8 +104,10 @@ if(CUDA)
 
 	# change link libraries and mod dirs for CUDA
 	remove_link_libraries(libquick_cuda xc octree)
-	target_link_libraries(libquick_cuda xc_gpu xc_cuda octree_gpu quick_cuda cublas cusolver)
-	config_module_dirs(libquick_cuda ${QUICK_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda cublas cusolver)
+	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
+
+	install_libraries(libquick_cuda EXPORT QUICK)
 endif()
 
 if(MPI AND CUDA)
@@ -113,7 +117,7 @@ if(MPI AND CUDA)
 
 	remove_link_libraries(libquick_mpi_cuda octree_mpi xc_mpi)
 	target_link_libraries(libquick_mpi_cuda xc_gpu xc_cuda octree_gpu quick_cuda_mpi cublas cusolver)
-	config_module_dirs(libquick_mpi_cuda ${QUICK_MPI_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 endif()
 
 # create executables
@@ -121,29 +125,33 @@ endif()
 
 add_executable(quick ${MAIN_SOURCES})
 target_compile_options(quick PRIVATE ${OPT_FFLAGS})
+config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
 target_compile_options(test-api PRIVATE ${OPT_FFLAGS})
+config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 
-install(TARGETS quick test-api DESTINATION ${BINDIR})
+install(TARGETS quick DESTINATION ${BINDIR} EXPORT QUICK)
 
 if(MPI)
-	make_mpi_version(quick quick.mpi LANGUAGES Fortran INSTALL)
+	make_mpi_version(quick quick.mpi LANGUAGES Fortran)
 	target_compile_definitions(quick.mpi PRIVATE MPIV)
 
-	make_mpi_version(test-api test-api.mpi LANGUAGES Fortran INSTALL)
+	make_mpi_version(test-api test-api.mpi LANGUAGES Fortran)
 	target_compile_definitions(test-api.mpi PRIVATE MPIV)
 
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(quick.mpi libquick)
 	target_link_libraries(quick.mpi libquick_mpi)
-	config_module_dirs(quick.mpi ${QUICK_MPI_MOD_DIR} ${XC_MPI_MOD_DIR})
+	config_module_dirs(quick.mpi quick/mpi libxc/mpi)
 
 	remove_link_libraries(test-api.mpi libquick)
 	target_link_libraries(test-api.mpi libquick_mpi)
-	config_module_dirs(test-api.mpi ${QUICK_MPI_MOD_DIR} ${XC_MPI_MOD_DIR})
+	config_module_dirs(test-api.mpi quick/mpi libxc/mpi)
+
+	install(TARGETS quick.mpi DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA)
@@ -155,11 +163,13 @@ if(CUDA)
 
 	remove_link_libraries(quick.cuda libquick)
 	target_link_libraries(quick.cuda libquick_cuda)
-	config_module_dirs(quick.cuda ${QUICK_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	config_module_dirs(quick.cuda quick/cuda libxc/gpu)
 
 	remove_link_libraries(test-api.cuda libquick)
 	target_link_libraries(test-api.cuda libquick_cuda)
-	config_module_dirs(test-api.cuda ${QUICK_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	config_module_dirs(test-api.cuda quick/cuda libxc/gpu)
+
+	install(TARGETS quick.cuda DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA AND MPI)
@@ -171,9 +181,11 @@ if(CUDA AND MPI)
 
 	remove_link_libraries(quick.mpi.cuda libquick_mpi)
 	target_link_libraries(quick.mpi.cuda libquick_mpi_cuda)
-	config_module_dirs(quick.mpi.cuda ${QUICK_MPI_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	config_module_dirs(quick.mpi.cuda quick/mpi_cuda libxc/gpu)
 
 	remove_link_libraries(test-api.mpi.cuda libquick_mpi)
 	target_link_libraries(test-api.mpi.cuda libquick_mpi_cuda)
-	config_module_dirs(test-api.mpi.cuda ${QUICK_MPI_GPU_MOD_DIR} ${XC_GPU_MOD_DIR})
+	config_module_dirs(test-api.mpi.cuda quick/mpi_cuda libxc/gpu)
+
+	install(TARGETS quick.mpi.cuda DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
