@@ -131,12 +131,12 @@ add_library(xc STATIC ${LIBXC_C_SOURCES} ${LIBXC_FORTRAN_SOURCES})
 make_pic_if_needed(xc)
 target_include_directories(xc PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(xc PUBLIC USE_CMAKE_MANGLING)
-config_module_dirs(xc ${XC_SERIAL_MOD_DIR})
+config_module_dirs(xc libxc/serial)
 
 if(MPI)
 	make_mpi_version(xc xc_mpi LANGUAGES C)
 	target_compile_definitions(xc_mpi PUBLIC MPIV)
-	config_module_dirs(xc_mpi ${XC_MPI_MOD_DIR})
+	config_module_dirs(xc_mpi libxc/mpi)
 endif()
 
 if(CUDA)
@@ -144,7 +144,7 @@ if(CUDA)
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
 	target_compile_definitions(xc_gpu PUBLIC CUDA)
-	config_module_dirs(xc_gpu ${XC_GPU_MOD_DIR})
+	config_module_dirs(xc_gpu libxc/gpu)
 endif()
 
 # build cuda code

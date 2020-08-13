@@ -27,23 +27,12 @@ if(NOT INSIDE_AMBER)
 	
 	#CPack setup
 	# --------------------------------------------------------------------
-	set(PACKAGE_NAME "quick")
-	set(PACKAGE_FILENAME "q")
+	set(PACKAGE_NAME "QUICK")
+	set(PACKAGE_FILENAME "QUICK")
 
 	set(BUNDLE_IDENTIFIER org.merzlab.quick)
 	set(BUNDLE_SIGNATURE QUIK)
 	include(Packaging)
-
-	# Fortran module dirs
-	# --------------------------------------------------------------------
-	set(XC_SERIAL_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/libxc/serial)
-	set(XC_MPI_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/libxc/mpi)
-	set(XC_GPU_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/libxc/gpu)
-
-	set(QUICK_SERIAL_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/quick/serial)
-	set(QUICK_MPI_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/quick/mpi)
-	set(QUICK_GPU_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/quick/gpu)
-	set(QUICK_MPI_GPU_MOD_DIR ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/quick/mpi_gpu)
 
 endif()
 
@@ -142,6 +131,14 @@ set(CUDA_DEVICE_CODE_FLAGS -Xptxas --disable-optimizer-constants)
 add_subdirectory(src)
 
 #--------------------------------------------------------------	
+# Exported targets
+install(EXPORT QUICK 
+	FILE QUICKTarget.cmake
+	NAMESPACE QUICK::
+	DESTINATION share/cmake/QUICK)
+
+#--------------------------------------------------------------	
+# build report
 if(NOT INSIDE_AMBER)
 	print_build_report()
 endif()
