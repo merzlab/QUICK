@@ -12,7 +12,7 @@ function(config_module_dirs TARGETNAME TARGET_MODULE_DIR) #3rd optional argument
 	set(INCLUDE_DIR_EXPRESSIONS "")
 	foreach(MOD_DIR ${TARGET_MODULE_DIR} ${ARGN})
 		# add both the build dir path and the installed path
-		list(APPEND INCLUDE_DIR_EXPRESSIONS $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/${MOD_DIR}> $<INSTALL_INTERFACE:${MODULE_DIR_NAME}/${MOD_DIR}>)
+		list(APPEND INCLUDE_DIR_EXPRESSIONS $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/${MOD_DIR}> $<INSTALL_INTERFACE:include/${MODULE_DIR_NAME}/${MOD_DIR}>)
 	endforeach()
 
 	#add all of the passed module directories

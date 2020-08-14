@@ -25,6 +25,9 @@ if(NOT INSIDE_AMBER)
 	
 	include(CompilerFlags)
 
+	# install Fortran modules
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules DESTINATION include)
+
 	
 	#CPack setup
 	# --------------------------------------------------------------------
@@ -133,15 +136,27 @@ add_subdirectory(src)
 
 #--------------------------------------------------------------	
 # Exported targets
-install(EXPORT QUICK 
-	FILE QUICKTarget.cmake
-	NAMESPACE QUICK::
-	DESTINATION share/cmake/QUICK)
 
+# directory relative to prefix where config files will be installed
+set(CMAKE_PACKAGE_CONFIG_DIR share/cmake/QUICK)
+
+# install targets file
+install(EXPORT QUICK 
+	FILE QUICKTargets.cmake
+	NAMESPACE QUICK::
+	DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+# install version file
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
 	VERSION ${${PROJECT_NAME}_VERSION}
 	COMPATIBILITY AnyNewerVersion)
+
+# install top-level file
+configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake
+	INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
 
 #--------------------------------------------------------------	
 # build report

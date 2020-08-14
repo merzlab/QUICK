@@ -65,7 +65,7 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 			$<BUILD_INTERFACE:${MPI_${LANG}_LINK_FLAGS}>
 
 			# in the install interface, just use the MPI target itself
-			$<INSTALL_INTERFACE:MPI_${LANG}>)
+			$<INSTALL_INTERFACE:MPI::MPI_${LANG}>)
 	endforeach()
 	
 	# Add MPI support to an object library

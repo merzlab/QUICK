@@ -1,5 +1,5 @@
 # set all policies added in 3.8.1 or earlier to NEW behavior
-cmake_policy(VERSION 3.8.1)
+cmake_policy(VERSION 3.9.0)
 
 if(POLICY CMP0073)
 	#NEW: don't generate xxx_LIB_DEPENDS cache entries (which screw up the build when switching between bundled and external libraries)
