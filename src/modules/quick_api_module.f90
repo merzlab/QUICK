@@ -257,6 +257,9 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
   ! startup cuda device
   call gpu_startup()
+
+  call gpu_set_device(-1)
+
   call gpu_init()
 
   ! write cuda information
