@@ -191,7 +191,7 @@ endif()
 ############################ OpenMP Library ##########################
 
 if(MKL_MULTI_THREADED)
-	find_package(OpenMPFixed)
+	find_package(OpenMP)
 	
 	# NOTE: we don't want to link against the imported targets, because that would apply OpenMP compile flags to anything linked to MKL
 	set(MKL_OMP_LIBRARY ${OpenMP_C_OPTIONS} ${OpenMP_C_LIBRARIES})

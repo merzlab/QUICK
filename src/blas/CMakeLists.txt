@@ -45,5 +45,6 @@ set(BLAS_SOURCES
     ztrmm.f ztrsm.f zhemm.f zherk.f 
     zher2k.f lsame.f xerbla.f)
 
-add_library(blas ${BLAS_SOURCES})
+add_library(blas STATIC ${BLAS_SOURCES})
+make_pic_if_needed(blas)
 target_compile_options(blas PRIVATE ${OPT_FFLAGS})

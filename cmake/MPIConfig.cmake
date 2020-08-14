@@ -1,5 +1,10 @@
 #CMake config file for MPI
 # MUST be included after OpenMPConfig, if OpenMPConfig is included at all
+
+# Creates these variables (in addition to what is produced by FindMPI):
+# MPI_<lang>_COMPILE_OPTIONS - List of MPI compile options for a language
+# MPI_<lang> - List that can be added to link libraries.  Links the MPI libraries for the specified language, and applies MPI compile flags for all languages present in the target to the correct source files.  
+
 option(MPI "Build ${PROJECT_NAME} with MPI inter-machine parallelization support." FALSE)
 
 include(ParallelizationConfig)
@@ -25,132 +30,50 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 		#create a non-cached variable with the contents of the cache variable plus extra flags
 		set(MPI_Fortran_COMPILE_FLAGS "${MPI_Fortran_COMPILE_FLAGS} -fno-range-check -Wno-conversion")
 	endif()
-	
-	foreach(LANG C CXX Fortran)
-		
-		#Trim leading spaces from the compile flags.  They cause problems with PROPERTY COMPILE_OPTIONS
-		
-		# this shadows the cache variable with a local variable	
-		string(STRIP "${MPI_${LANG}_COMPILE_FLAGS}" MPI_${LANG}_COMPILE_FLAGS)
-		string(STRIP "${MPI_${LANG}_LINK_FLAGS}" MPI_${LANG}_LINK_FLAGS)
-		
-		#convert space seperated flag variables into proper lists
-		separate_arguments(MPI_${LANG}_COMPILE_OPTIONS UNIX_COMMAND "${MPI_${LANG}_COMPILE_FLAGS}")
-		separate_arguments(MPI_${LANG}_LINK_OPTIONS UNIX_COMMAND "${MPI_${LANG}_LINK_FLAGS}")
-		
-		# --------------------------------------------------------------------
-		# sometimes MPI will include flags of the form "-Xlinker -rpath -Xlinker /usr/foo".  Unfortunately,
-		# This causes errors because it conflicts with CMake's automatic RPATH flags.
-		# get rid of RPATH flags; CMake will set those itself
-		string(REPLACE "-Xlinker;-rpath;" "" MPI_${LANG}_LINK_OPTIONS "${MPI_${LANG}_LINK_OPTIONS}")
-		
-		# for each two arguments, check if they are either "-Xlinker;<some directory>", "-Wl,-rpath,...", or "-Wl,<some directory>". If so, delete them.
-		list(LENGTH MPI_${LANG}_LINK_OPTIONS NUM_LINK_OPT)
-		
-		set(INDEX 1)
-		set(TEMP_REBUILT_LINK_OPTIONS "")
-		
-		while(INDEX LESS NUM_LINK_OPT)
-			math(EXPR FIRST_INDEX "${INDEX} - 1")
-		
-			list(GET MPI_${LANG}_LINK_OPTIONS ${FIRST_INDEX} FIRST_ELEMENT)
-			list(GET MPI_${LANG}_LINK_OPTIONS ${INDEX} SECOND_ELEMENT)
 			
-			set(IS_XLINKER_DIRECTORY FALSE)
-			set(IS_WL_DIRECTORY FALSE)
-			set(IS_WL_RPATH FALSE)
-			
-			# try and figure out if SECOND_ELEMENT looks like a folder path
-			if("${FIRST_ELEMENT}" STREQUAL "-Xlinker" AND "${SECOND_ELEMENT}" MATCHES "^/.*")
-				if(EXISTS "${SECOND_ELEMENT}")
-					if(IS_DIRECTORY "${SECOND_ELEMENT}")
-						set(IS_XLINKER_DIRECTORY TRUE)
-					endif()
-				else()
-					# sometimes, we are passed nonexistant directories.
-					# in this case, as long as they don't have an extension, remove them.
-					
-					get_filename_component(PATH_EXTENSION "${SECOND_ELEMENT}" EXT)
-					
-					if("${PATH_EXTENSION}" STREQUAL "")
-						set(IS_XLINKER_DIRECTORY TRUE)
-					endif()
-				endif()
-			elseif("${FIRST_ELEMENT}" MATCHES "-Wl,(/.*)")
-				if(EXISTS "${CMAKE_MATCH_1}")
-					if(IS_DIRECTORY "${CMAKE_MATCH_1}")
-						set(IS_WL_DIRECTORY TRUE)
-					endif()
-				else()
-					# sometimes, we are passed nonexistant directories.
-					# in this case, as long as they don't have an extension, remove them.
-					
-					get_filename_component(PATH_EXTENSION "${CMAKE_MATCH_1}" EXT)
-					
-					if("${PATH_EXTENSION}" STREQUAL "")
-						set(IS_WL_DIRECTORY TRUE)
-					endif()
-				endif()
-			elseif("${FIRST_ELEMENT}" MATCHES "-Wl,-rpath.*")
-				set(IS_WL_RPATH TRUE)
-			endif()
-			
-			if(IS_XLINKER_DIRECTORY)
-				math(EXPR INDEX "${INDEX} + 2")
-				message(STATUS "Found and removed RPATH control flags from MPI flags")
-			elseif(IS_WL_DIRECTORY)
-				math(EXPR INDEX "${INDEX} + 1")
-				message(STATUS "Found and removed RPATH control flags from MPI flags")
-			elseif(IS_WL_RPATH)
-				math(EXPR INDEX "${INDEX} + 1")
-				message(STATUS "Found and removed RPATH control flags from MPI flags")
-			else()
-				list(APPEND TEMP_REBUILT_LINK_OPTIONS ${FIRST_ELEMENT})
-				math(EXPR INDEX "${INDEX} + 1")
-			endif()
-		endwhile()
-		
-		set(MPI_${LANG}_LINK_OPTIONS ${TEMP_REBUILT_LINK_OPTIONS})
-					
-	endforeach()
-			
-	# create imported targets
+	# create imported targets and variables
 	# --------------------------------------------------------------------
+
+	# Amber MPI target that provides automatic MPI flags for all languages
+	# using generator expressions.
+	# This is is important when we have mixed language programs that use MPI --
+	# it allows the correct flags to get passed to the correct compiler
+	add_library(MPI_all_language_flags INTERFACE)
+
 	foreach(LANG ${ENABLED_LANGUAGES})
-		string(TOLOWER ${LANG} LANG_LOWERCASE)
-		
-		import_libraries(mpi_${LANG_LOWERCASE} LIBRARIES ${MPI_${LANG}_LINK_OPTIONS} ${MPI_${LANG}_LIBRARIES} INCLUDES ${MPI_${LANG}_INCLUDE_PATH})
-		set_property(TARGET mpi_${LANG_LOWERCASE} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MPI_${LANG}_INCLUDE_PATH})
-		
-		if(MCPAR_WORKAROUND_ENABLED)
-			# use generator expression
-			set_property(TARGET mpi_${LANG_LOWERCASE} PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:${LANG}>:${MPI_${LANG}_COMPILE_OPTIONS}>)
-		else()
-			set_property(TARGET mpi_${LANG_LOWERCASE} PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_${LANG}_COMPILE_OPTIONS})
-		endif()
-		
-		# C++ MPI doesn't like having "MPI" defined, but it's what Amber uses as the MPI switch in most programs (though not EMIL)
+		using_library_targets(MPI::MPI_${LANG})
+
+		# get list form of MPI compile flags from target
+		get_property(MPI_${LANG}_COMPILE_OPTIONS TARGET MPI::MPI_${LANG} PROPERTY INTERFACE_COMPILE_OPTIONS)
+
+		# add compile flags and include dirs for source files of this language
+		target_compile_options(MPI_all_language_flags INTERFACE $<$<COMPILE_LANGUAGE:${LANG}>:${MPI_${LANG}_COMPILE_OPTIONS}>)
+		target_include_directories(MPI_all_language_flags INTERFACE $<$<COMPILE_LANGUAGE:${LANG}>:${MPI_${LANG}_INCLUDE_PATH}>)
+
+		# C++ MPI doesn't like having -DMPI defined, but it's used as the MPI flag
+		# in most Amber C and Fortran code
 		if(NOT ${LANG} STREQUAL CXX)
-			set_property(TARGET mpi_${LANG_LOWERCASE} PROPERTY INTERFACE_COMPILE_DEFINITIONS MPI)	
+			target_compile_definitions(MPI_all_language_flags INTERFACE $<$<COMPILE_LANGUAGE:${LANG}>:MPI>)
 		endif()
-			
+
+		# generate library list for MPI of this language
+		set(MPI_${LANG}
+			# when building, use our custom flags target
+			$<BUILD_INTERFACE:MPI_all_language_flags>
+			# Now link MPI only as a link library
+			$<BUILD_INTERFACE:${MPI_${LANG}_LIBRARIES}>
+			$<BUILD_INTERFACE:${MPI_${LANG}_LINK_FLAGS}>
+
+			# in the install interface, just use the MPI target itself
+			$<INSTALL_INTERFACE:MPI_${LANG}>)
 	endforeach()
-	
 	
 	# Add MPI support to an object library
 	macro(mpi_object_library TARGET LANGUAGE)
-		if(MCPAR_WORKAROUND_ENABLED)
-			# use generator expression
-			set_property(TARGET ${TARGET} APPEND PROPERTY COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:${LANGUAGE}>:${MPI_${LANGUAGE}_COMPILE_OPTIONS}>)
-		else()
-			set_property(TARGET ${TARGET} APPEND PROPERTY COMPILE_OPTIONS ${MPI_${LANGUAGE}_COMPILE_OPTIONS})
-		endif()
-
-		target_include_directories(${TARGET} PUBLIC ${MPI_${LANGUAGE}_INCLUDE_PATH})
-		
-		if(NOT ${LANGUAGE} STREQUAL CXX)
-			target_compile_definitions(${TARGET} PRIVATE MPI)
-		endif()
+		# Note: In CMake 3.12, you can link a target to an object library directly
+		# to apply its interface properties.  However, we don't have that feature yet.
+		target_compile_options(${TARGET} PRIVATE ${MPI_${LANG}_COMPILE_OPTIONS})
+		target_include_directories(${TARGET} PUBLIC ${MPI_${LANG}_INCLUDE_PATH})
 	endmacro()
 
 	# make a MPI version of the thing passed 
@@ -193,7 +116,8 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 			copy_target(${TARGET} ${NEW_NAME} SWAP_SOURCES ${MAKE_MPI_SWAP_SOURCES} TO ${MAKE_MPI_TO})
 		endif()
 		
-		# this ensures that the MPI version builds after all of the target's dependencies have been satisfied.
+		# this ensures that the new version builds after all of the target's dependencies 
+		# that have been manually added with add_dependencies() have been satisfied.
 		# Yes it is a bit of an ugly hack, but since we can't copy dependencies, this is the next-best thing.
 		add_dependencies(${NEW_NAME} ${TARGET})
 		
@@ -208,8 +132,10 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 			if(IS_OBJECT_LIBRARY)
 				mpi_object_library(${NEW_NAME} ${LANG})
 			else()
-				string(TOLOWER ${LANG} LANG_LOWERCASE)
-				target_link_libraries(${NEW_NAME} mpi_${LANG_LOWERCASE})
+				# don't use target_link_libraries here to avoid "picking a side" with
+				# plain vs keyword form of target_link_libraries
+				set_property(TARGET ${NEW_NAME} APPEND PROPERTY LINK_LIBRARIES ${MPI_${LANG}})
+				set_property(TARGET ${NEW_NAME} APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_${LANG}})
 			endif()
 			
 		endforeach()
@@ -225,5 +151,7 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 		endif()
 		
 	endfunction(make_mpi_version)
+
+
 endif()
 
