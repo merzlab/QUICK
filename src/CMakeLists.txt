@@ -106,7 +106,7 @@ if(CUDA)
 
 	# change link libraries and mod dirs for CUDA
 	remove_link_libraries(libquick_cuda xc octree blas)
-	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda cublas cusolver)
+	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda PUBLIC ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
 	install_libraries(libquick_cuda EXPORT QUICK)
@@ -118,8 +118,10 @@ if(MPI AND CUDA)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
 
 	remove_link_libraries(libquick_mpi_cuda octree_mpi xc_mpi)
-	target_link_libraries(libquick_mpi_cuda xc_gpu xc_cuda octree_gpu quick_cuda_mpi cublas cusolver)
+	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_mpi PUBLIC ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
+
+	install_libraries(libquick_mpi_cuda EXPORT QUICK)
 endif()
 
 # create executables
