@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.8.1)
-project(quick LANGUAGES NONE)
+cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
+
+project(quick LANGUAGES NONE VERSION 20.03)
 
 
 if(NOT INSIDE_AMBER)
@@ -136,6 +137,11 @@ install(EXPORT QUICK
 	FILE QUICKTarget.cmake
 	NAMESPACE QUICK::
 	DESTINATION share/cmake/QUICK)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
+	VERSION ${${PROJECT_NAME}_VERSION}
+	COMPATIBILITY AnyNewerVersion)
 
 #--------------------------------------------------------------	
 # build report

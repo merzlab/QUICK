@@ -75,7 +75,7 @@ endforeach()
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
-add_library(libquick ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
+add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 target_link_libraries(libquick PRIVATE xc octree blas)
@@ -86,15 +86,17 @@ set_property(TARGET libquick PROPERTY OUTPUT_NAME quick)
 
 if(MPI)
 	make_mpi_version(libquick libquick_mpi LANGUAGES Fortran)
+
 	target_compile_definitions(libquick_mpi PRIVATE MPIV)
 	set_property(TARGET libquick_mpi PROPERTY OUTPUT_NAME quick_mpi)
 
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi xc octree)
-	target_link_libraries(libquick_mpi xc_mpi octree_mpi)
+	target_link_libraries(libquick_mpi PRIVATE xc_mpi octree_mpi)
 	config_module_dirs(libquick_mpi quick/mpi libxc/mpi)
 
-	install_libraries(libquick_mpi)
+
+	install_libraries(libquick_mpi EXPORT QUICK)
 endif()
 
 if(CUDA)
@@ -103,7 +105,7 @@ if(CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_cuda xc octree)
+	remove_link_libraries(libquick_cuda xc octree blas)
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda cublas cusolver)
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
