@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=GNU =DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+          cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
       - name: Build serial
         run: make -j2
       - name: Install serial
