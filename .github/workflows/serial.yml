@@ -29,10 +29,10 @@ jobs:
           cd build
           cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
       - name: Build serial
-        run: make -j2
-      - name: Install serial
-        run: make -j2 install
+        run: |
+          cd build
+          make -j2 install
       - name: Test serial
         run: |
-          cd ../install
+          cd install
           bin/quick_runtest --serial
