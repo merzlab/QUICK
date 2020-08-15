@@ -15,7 +15,7 @@ if(MPI)
 	cuda_add_library(quick_cuda_mpi STATIC ${QUICK_CUDA_FORTRAN_SOURCE} ${QUICK_CUDA_CUDA_SOURCE} 
 	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DCUDA_MPIV) 
 	target_compile_options(quick_cuda_mpi PRIVATE -DMPIV -DCUDA_MPIV)
-	target_link_libraries(quick_cuda_mpi xc_gpu xc_cuda mpi_cxx)
+	target_link_libraries(quick_cuda_mpi xc_gpu xc_cuda ${MPI_C})
 	make_pic_if_needed(quick_cuda_mpi)
 
 endif()
