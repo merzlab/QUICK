@@ -19,3 +19,22 @@ jobs:
         run: export DO_PARALLEL="mpirun -np 2"
       - name: Test mpi
         run: make test
+  cmake-build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: sudo apt-get -y install gfortran cmake
+      - name: Configure serial
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCOMPILER=GNU -DMPI=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+      - name: Build serial
+        run: |
+          cd build
+          make -j2 install
+      - name: Test serial
+        run: |
+          cd install
+          bin/quick_runtest --mpi --ncores 2
