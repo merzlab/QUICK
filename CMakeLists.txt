@@ -25,10 +25,6 @@ if(NOT INSIDE_AMBER)
 	
 	include(CompilerFlags)
 
-	# install Fortran modules
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules DESTINATION include)
-
-	
 	#CPack setup
 	# --------------------------------------------------------------------
 	set(PACKAGE_NAME "QUICK")
@@ -157,6 +153,23 @@ configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/Q
 	INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+#--------------------------------------------------------------	
+# Additional files
+
+# install modules
+if(NOT INSIDE_AMBER)
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules DESTINATION include)
+endif()
+
+# install data in basis dir
+install(DIRECTORY basis DESTINATION .)
+
+# install tests dir
+install(DIRECTORY test DESTINATION .)
+
+# install tests
+install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
 
 #--------------------------------------------------------------	
 # build report
