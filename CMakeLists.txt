@@ -62,45 +62,47 @@ endif()
 # CUDA compiler flags
 # --------------------------------------------------------------------
 
-# cancel Amber arch flags, because quick only supports SM6.0 and lower
-set(CUDA_NVCC_FLAGS "")
+if(CUDA)
+	# cancel Amber arch flags, because quick only supports SM6.0 and lower
+	set(CUDA_NVCC_FLAGS "")
 
-#SM7.5 = RTX20xx, RTX Titan, T4 and Quadro RTX
-set(SM75FLAGS -gencode arch=compute_75,code=sm_75)        
-#SM7.0 = V100 and Volta Geforce / GTX Ampere?
-set(SM70FLAGS -gencode arch=compute_70,code=sm_70)
-#SM6.0 = GP100 / P100 = DGX-1
-set(SM60FLAGS -gencode arch=compute_60,code=sm_60)
+	#SM7.5 = RTX20xx, RTX Titan, T4 and Quadro RTX
+	set(SM75FLAGS -gencode arch=compute_75,code=sm_75)        
+	#SM7.0 = V100 and Volta Geforce / GTX Ampere?
+	set(SM70FLAGS -gencode arch=compute_70,code=sm_70)
+	#SM6.0 = GP100 / P100 = DGX-1
+	set(SM60FLAGS -gencode arch=compute_60,code=sm_60)
 
-set(QUICK_USER_ARCH "" CACHE STRING "Specify QUICK gpu architecture. Applicable for cuda and cudampi versions only. If empty, QUICK will be compiled for several architectures based on the CUDA toolkit version.")
+	set(QUICK_USER_ARCH "" CACHE STRING "Specify QUICK gpu architecture. Applicable for cuda and cudampi versions only. If empty, QUICK will be compiled for several architectures based on the CUDA toolkit version.")
 
-if("${QUICK_USER_ARCH}" STREQUAL "")
-	# build for all supported CUDA versions
-	if(${CUDA_VERSION} VERSION_EQUAL 8.0)
-		message(STATUS "Configuring QUICK for SM6.0")
-		list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
-	  	
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 9.0) AND (${CUDA_VERSION} VERSION_LESS 10.0)) 
-		message(STATUS "Configuring QUICK for SM6.0 and SM7.0")
-		list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS})
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 10.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.0))
-		message(STATUS "Configuring QUICK for SM6.0, SM7.0, and SM7.5")
-	    list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS})
+	if("${QUICK_USER_ARCH}" STREQUAL "")
+		# build for all supported CUDA versions
+		if(${CUDA_VERSION} VERSION_EQUAL 8.0)
+			message(STATUS "Configuring QUICK for SM6.0")
+			list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
+		  	
+		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 9.0) AND (${CUDA_VERSION} VERSION_LESS 10.0)) 
+			message(STATUS "Configuring QUICK for SM6.0 and SM7.0")
+			list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS})
+		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 10.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.0))
+			message(STATUS "Configuring QUICK for SM6.0, SM7.0, and SM7.5")
+		    list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS})
+		else()
+			message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 11.0.  Please upgrade your CUDA installation or disable building with CUDA.")
+		endif()
 	else()
-		message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 11.0.  Please upgrade your CUDA installation or disable building with CUDA.")
-	endif()
-else()
-	if("${QUICK_USER_ARCH}" STREQUAL "pascal")
-		message(STATUS "Configuring QUICK for SM6.0")
-		list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
-	elseif("${QUICK_USER_ARCH}" STREQUAL "volta")
-		message(STATUS "Configuring QUICK for SM7.0")
-		list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS})
-	elseif("${QUICK_USER_ARCH}" STREQUAL "turing")
-		message(STATUS "Configuring QUICK for SM7.5")
-		list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS})
-	else()
-		message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH")
+		if("${QUICK_USER_ARCH}" STREQUAL "pascal")
+			message(STATUS "Configuring QUICK for SM6.0")
+			list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
+		elseif("${QUICK_USER_ARCH}" STREQUAL "volta")
+			message(STATUS "Configuring QUICK for SM7.0")
+			list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS})
+		elseif("${QUICK_USER_ARCH}" STREQUAL "turing")
+			message(STATUS "Configuring QUICK for SM7.5")
+			list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS})
+		else()
+			message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH")
+		endif()
 	endif()
 endif()
 
