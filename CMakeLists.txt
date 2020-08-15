@@ -119,7 +119,7 @@ list(APPEND CUDA_NVCC_FLAGS $<$<CONFIG:Debug>:-g> $<$<CONFIG:Debug>:-G> $<$<CONF
 # extra CUDA flags
 list(APPEND CUDA_NVCC_FLAGS -Xptxas=-v -use_fast_math)
 
-if(SHARED AND (TARGET_LINUX OR TARGET_OSX))
+if(TARGET_LINUX OR TARGET_OSX)
 	list(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC)
 endif()
 

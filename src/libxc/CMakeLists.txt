@@ -128,7 +128,7 @@ FortranCInterface_HEADER(${CMAKE_CURRENT_BINARY_DIR}/xc-fortran-mangling.h)
 # create libraries
 
 add_library(xc STATIC ${LIBXC_C_SOURCES} ${LIBXC_FORTRAN_SOURCES})
-make_pic_if_needed(xc)
+set_property(TARGET xc PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 target_include_directories(xc PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(xc PUBLIC USE_CMAKE_MANGLING)
 config_module_dirs(xc libxc/serial)

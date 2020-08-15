@@ -46,5 +46,5 @@ set(BLAS_SOURCES
     zher2k.f lsame.f xerbla.f)
 
 add_library(blas STATIC ${BLAS_SOURCES})
-make_pic_if_needed(blas)
+set_property(TARGET blas PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 target_compile_options(blas PRIVATE ${OPT_FFLAGS})

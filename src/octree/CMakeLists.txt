@@ -3,7 +3,7 @@ set(OCTREE_SOURCES
 	grid_packer.cpp)
 
 add_library(octree STATIC ${OCTREE_SOURCES})
-make_pic_if_needed(octree)
+set_property(TARGET octree PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 target_include_directories(octree PRIVATE .)
 target_compile_options(octree PRIVATE ${OPT_CXXFLAGS})
 
