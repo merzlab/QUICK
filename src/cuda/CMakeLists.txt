@@ -3,14 +3,12 @@ set(QUICK_CUDA_CUDA_SOURCE gpu.cu gpu_type.cu gpu_get2e.cu)
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
 cuda_add_library(quick_cuda_kernels STATIC ${QUICK_CUDA_CUDA_SOURCE} 
 	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DCUDA) 
-target_compile_options(quick_cuda_kernels PRIVATE -DCUDA)
 target_link_libraries(quick_cuda_kernels xc_gpu xc_cuda)
 make_pic_if_needed(quick_cuda_kernels)
 
 if(MPI)
 	cuda_add_library(quick_cuda_kernels_mpi STATIC ${QUICK_CUDA_CUDA_SOURCE} 
 	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DCUDA_MPIV) 
-	target_compile_options(quick_cuda_kernels_mpi PRIVATE -DMPIV -DCUDA_MPIV)
 	target_link_libraries(quick_cuda_kernels_mpi xc_gpu xc_cuda)
 
 	# the generator expressions in our MPI_C variable don't seem to work with CUDA files, so
