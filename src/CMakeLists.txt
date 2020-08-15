@@ -54,6 +54,8 @@ set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90 fmm.f90
     CPHF.f90 frequency.f90 MFCC.f90 basis.f90 
     fake_amber_interface.f90 scf_operator.f90)
 
+set(QUICK_CUDA_FORTRAN_SOURCE cuda/gpu_write_info.f90)
+
 set(TEST_API_SOURCES quick_api_test.f90)
 set(MAIN_SOURCES main.f90)
 
@@ -100,25 +102,25 @@ if(MPI)
 endif()
 
 if(CUDA)
-	copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj>)
+	copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
 	target_compile_definitions(libquick_cuda PRIVATE CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
 	remove_link_libraries(libquick_cuda xc octree blas)
-	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
+	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
 	install_libraries(libquick_cuda EXPORT QUICK)
 endif()
 
 if(MPI AND CUDA)
-	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj>)
+	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
 	target_compile_definitions(libquick_mpi_cuda PRIVATE CUDA_MPIV)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
 
 	remove_link_libraries(libquick_mpi_cuda octree_mpi xc_mpi)
-	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_mpi ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
+	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels_mpi ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 
 	install_libraries(libquick_mpi_cuda EXPORT QUICK)
