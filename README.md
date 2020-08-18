@@ -13,7 +13,7 @@ lab at Michigan State University.
 Features
 --------
 * Single point Hartree-Fock calculations (closed shell only) 
-* Density functional theory calculations (LGA, GGA and Hybrid-GGA functionals available, closed shell only).
+* Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available, closed shell only).
 * Gradient and geometry optimization calculations (LBFGS solver available)
 * Mulliken charge analysis
 
