@@ -1,102 +1,89 @@
-set(CMAKE_C_FLAGS "-c -I. -O0 -g -fPIC") # ${CCC}
+#set(CMAKE_C_FLAGS "-c -I. -O0 -g -fPIC") # ${CCC}
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/maple2c)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/maple2c_device)
+
+set(libxcsrc "special_functions.c;bessel.c;expint_e1.c;integrate.c;util.c;\
+mix_func.c;func_info.c;functionals.c;version.c;func_reference.c;\
+references.c;lda.c;\
+lda_x.c;lda_x_1d.c;lda_x_2d.c;lda_c_wigner.c;lda_c_gombas.c;\
+lda_c_rpa.c;lda_c_hl.c;lda_c_vwn.c;lda_c_vwn_1.c;lda_c_vwn_2.c;\
+lda_c_vwn_3.c;lda_c_vwn_4.c;lda_c_vwn_rpa.c;lda_c_pz.c;\
+lda_c_pw.c;lda_c_pk09.c;lda_c_lp96.c;\
+lda_c_ml1.c;lda_c_rc04.c;lda_xc_teter93.c;lda_c_1d_csc.c;\
+lda_c_1d_loos.c;lda_c_2d_amgb.c;lda_c_2d_prm.c;\
+lda_k_tf.c;lda_xc_zlp.c;lda_xc_ksdt.c;lda_c_chachiyo.c;\
+lda_xc_1d_ehwlrg.c;lda_x_rel.c;lda_x_erf.c;lda_k_zlp.c;\
+lda_c_gk72.c;\
+gga.c;\
+gga_x_lg93.c;gga_x_pbe.c;gga_x_rpbe.c;gga_x_pbea.c;\
+gga_x_mpbe.c;gga_x_herman.c;gga_x_b86.c;gga_x_b88.c;\
+gga_x_g96.c;gga_x_pw86.c;gga_x_pw91.c;gga_x_optx.c;\
+gga_x_airy.c;gga_x_c09x.c;gga_x_dk87.c;gga_x_ft97.c;\
+gga_x_wc.c;gga_x_am05.c;gga_x_bayesian.c;gga_x_kt.c;\
+gga_x_htbs.c;gga_c_pbe.c;gga_c_lyp.c;gga_c_p86.c;gga_c_pw91.c;\
+gga_c_am05.c;gga_c_lm.c;gga_c_wl.c;gga_c_wi.c;gga_x_lb.c;\
+gga_xc_b97.c;gga_xc_edf1.c;gga_xc_1w.c;gga_c_optc.c;\
+gga_c_tca.c;gga_x_bpccac.c;gga_x_sogga11.c;gga_c_sogga11.c;\
+gga_xc_th1.c;gga_x_wpbeh.c;gga_x_hjs.c;gga_x_ityh.c;\
+gga_x_sfat.c;gga_x_ev93.c;gga_x_ak13.c;gga_x_q2d.c;gga_c_q2d.c;\
+gga_x_ssb_sw.c;gga_c_ft97.c;gga_x_n12.c;gga_x_lv_rpw86.c;\
+gga_x_2d_b86.c;gga_x_2d_b86_mgc.c;\
+gga_x_2d_b88.c;gga_x_2d_pbe.c;gga_k_tflw.c;gga_k_pearson.c;\
+gga_k_ol1.c;gga_k_ol2.c;gga_k_dk.c;gga_k_meyer.c;gga_x_vmt.c;\
+gga_x_hcth_a.c;gga_x_cap.c;gga_x_beefvdw.c;gga_x_sg4.c;\
+gga_x_gg99.c;gga_x_pbepow.c;gga_x_lag.c;gga_k_thakkar.c;\
+gga_xc_oblyp_d.c;hyb_gga_xc_b3lyp.c;hyb_gga_xc_o3lyp.c;\
+gga_x_pbeint.c;gga_x_rge2.c;gga_x_vmt84.c;gga_x_hjs_b88_v2.c;\
+gga_c_revtca.c;gga_c_bcgp.c;gga_c_zpbeint.c;gga_c_pbeloc.c;\
+gga_c_sg4.c;gga_c_regtpss.c;gga_c_scan_e0.c;gga_xc_th2.c;\
+gga_xc_th3.c;gga_c_hcth_a.c;hyb_gga_xc_wb97.c;gga_c_bmk.c;\
+gga_c_gapc.c;gga_c_gaploc.c;gga_c_zvpbeint.c;gga_c_w94.c;\
+gga_c_cs1.c;gga_c_op_xalpha.c;gga_c_op_b88.c;gga_c_op_pbe.c;\
+gga_c_op_g96.c;gga_c_op_pw91.c;gga_x_pbetrans.c;\
+gga_x_chachiyo.c;gga_k_exp4.c;\
+hyb_gga_xc_pbeh.c;hyb_gga_xc_b1wc.c;\
+hyb_gga_xc_hse.c;hyb_gga_xc_cam_b3lyp.c;\
+hyb_gga_xc_camy_blyp.c;hyb_gga_xc_camy_b3lyp.c;\
+hyb_gga_xc_lcy_pbe.c;hyb_gga_xc_lcy_blyp.c;gga_xc_vv10.c;\
+hyb_gga_xc_edf2.c;\
+mgga.c;\
+mgga_x_lta.c;mgga_x_tpss.c;mgga_x_br89.c;mgga_x_gvt4.c;\
+mgga_x_m06l.c;mgga_x_tau_hcth.c;mgga_x_2d_prhg07.c;\
+mgga_x_pkzb.c;hyb_mgga_x_m05.c;mgga_x_m08.c;mgga_x_ms.c;\
+mgga_x_mn12.c;mgga_x_mk00.c;mgga_c_vsxc.c;mgga_c_pkzb.c;\
+mgga_c_bc95.c;mgga_c_m08.c;mgga_xc_cc06.c;mgga_c_cs.c;\
+mgga_xc_otpss_d.c;mgga_xc_zlp.c;hyb_mgga_xc_b88b95.c;\
+mgga_x_mbeef.c;mgga_xc_b97mv.c;mgga_x_scan.c;mgga_c_scan.c;\
+hyb_mgga_xc_tpssh.c;mgga_x_mvs.c;hyb_mgga_x_mvsh.c;\
+mgga_x_tm.c;mgga_x_vt84.c;mgga_x_sa_tpss.c;mgga_k_pc07.c;\
+mgga_x_mbeefvdw.c;mgga_x_m11.c;mgga_x_m11_l.c;\
+hyb_mgga_xc_wb97mv.c;mgga_c_m05.c;mgga_c_m06l.c;\
+hyb_mgga_x_dldf.c;mgga_c_tpss.c;mgga_c_revtpss.c;\
+mgga_c_tpssloc.c;mgga_xc_hle17.c;mgga_c_kcis.c;mgga_xc_lp90.c;\
+hyb_mgga_xc_kcis.c;mgga_c_b88.c;mgga_x_gx.c;mgga_x_pbe_gx.c;\
+mgga_c_revscan.c;mgga_x_br89_explicit.c;mgga_xc_b98.c;\
+xc_f.c;libxc.f90;libxc_funcs.f90")
 
 
-set(localobjlist "")
-set(libxcsrc "special_functions;bessel;expint_e1;integrate;util;\
-mix_func;func_info;functionals;version;func_reference;\
-references;lda;\
-lda_x;lda_x_1d;lda_x_2d;lda_c_wigner;lda_c_gombas;\
-lda_c_rpa;lda_c_hl;lda_c_vwn;lda_c_vwn_1;lda_c_vwn_2;\
-lda_c_vwn_3;lda_c_vwn_4;lda_c_vwn_rpa;lda_c_pz;\
-lda_c_pw;lda_c_pk09;lda_c_lp96;\
-lda_c_ml1;lda_c_rc04;lda_xc_teter93;lda_c_1d_csc;\
-lda_c_1d_loos;lda_c_2d_amgb;lda_c_2d_prm;\
-lda_k_tf;lda_xc_zlp;lda_xc_ksdt;lda_c_chachiyo;\
-lda_xc_1d_ehwlrg;lda_x_rel;lda_x_erf;lda_k_zlp;\
-lda_c_gk72;\
-gga;\
-gga_x_lg93;gga_x_pbe;gga_x_rpbe;gga_x_pbea;\
-gga_x_mpbe;gga_x_herman;gga_x_b86;gga_x_b88;\
-gga_x_g96;gga_x_pw86;gga_x_pw91;gga_x_optx;\
-gga_x_airy;gga_x_c09x;gga_x_dk87;gga_x_ft97;\
-gga_x_wc;gga_x_am05;gga_x_bayesian;gga_x_kt;\
-gga_x_htbs;gga_c_pbe;gga_c_lyp;gga_c_p86;gga_c_pw91;\
-gga_c_am05;gga_c_lm;gga_c_wl;gga_c_wi;gga_x_lb;\
-gga_xc_b97;gga_xc_edf1;gga_xc_1w;gga_c_optc;\
-gga_c_tca;gga_x_bpccac;gga_x_sogga11;gga_c_sogga11;\
-gga_xc_th1;gga_x_wpbeh;gga_x_hjs;gga_x_ityh;\
-gga_x_sfat;gga_x_ev93;gga_x_ak13;gga_x_q2d;gga_c_q2d;\
-gga_x_ssb_sw;gga_c_ft97;gga_x_n12;gga_x_lv_rpw86;\
-gga_x_2d_b86;gga_x_2d_b86_mgc;\
-gga_x_2d_b88;gga_x_2d_pbe;gga_k_tflw;gga_k_pearson;\
-gga_k_ol1;gga_k_ol2;gga_k_dk;gga_k_meyer;gga_x_vmt;\
-gga_x_hcth_a;gga_x_cap;gga_x_beefvdw;gga_x_sg4;\
-gga_x_gg99;gga_x_pbepow;gga_x_lag;gga_k_thakkar;\
-gga_xc_oblyp_d;hyb_gga_xc_b3lyp;hyb_gga_xc_o3lyp;\
-gga_x_pbeint;gga_x_rge2;gga_x_vmt84;gga_x_hjs_b88_v2;\
-gga_c_revtca;gga_c_bcgp;gga_c_zpbeint;gga_c_pbeloc;\
-gga_c_sg4;gga_c_regtpss;gga_c_scan_e0;gga_xc_th2;\
-gga_xc_th3;gga_c_hcth_a;hyb_gga_xc_wb97;gga_c_bmk;\
-gga_c_gapc;gga_c_gaploc;gga_c_zvpbeint;gga_c_w94;\
-gga_c_cs1;gga_c_op_xalpha;gga_c_op_b88;gga_c_op_pbe;\
-gga_c_op_g96;gga_c_op_pw91;gga_x_pbetrans;\
-gga_x_chachiyo;gga_k_exp4;\
-hyb_gga_xc_pbeh;hyb_gga_xc_b1wc;\
-hyb_gga_xc_hse;hyb_gga_xc_cam_b3lyp;\
-hyb_gga_xc_camy_blyp;hyb_gga_xc_camy_b3lyp;\
-hyb_gga_xc_lcy_pbe;hyb_gga_xc_lcy_blyp;gga_xc_vv10;\
-hyb_gga_xc_edf2;\
-mgga;\
-mgga_x_lta;mgga_x_tpss;mgga_x_br89;mgga_x_gvt4;\
-mgga_x_m06l;mgga_x_tau_hcth;mgga_x_2d_prhg07;\
-mgga_x_pkzb;hyb_mgga_x_m05;mgga_x_m08;mgga_x_ms;\
-mgga_x_mn12;mgga_x_mk00;mgga_c_vsxc;mgga_c_pkzb;\
-mgga_c_bc95;mgga_c_m08;mgga_xc_cc06;mgga_c_cs;\
-mgga_xc_otpss_d;mgga_xc_zlp;hyb_mgga_xc_b88b95;\
-mgga_x_mbeef;mgga_xc_b97mv;mgga_x_scan;mgga_c_scan;\
-hyb_mgga_xc_tpssh;mgga_x_mvs;hyb_mgga_x_mvsh;\
-mgga_x_tm;mgga_x_vt84;mgga_x_sa_tpss;mgga_k_pc07;\
-mgga_x_mbeefvdw;mgga_x_m11;mgga_x_m11_l;\
-hyb_mgga_xc_wb97mv;mgga_c_m05;mgga_c_m06l;\
-hyb_mgga_x_dldf;mgga_c_tpss;mgga_c_revtpss;\
-mgga_c_tpssloc;mgga_xc_hle17;mgga_c_kcis;mgga_xc_lp90;\
-hyb_mgga_xc_kcis;mgga_c_b88;mgga_x_gx;mgga_x_pbe_gx;\
-mgga_c_revscan;mgga_x_br89_explicit;mgga_xc_b98")
+add_library(xc STATIC ${libxcsrc})  #set default type to static
+set_target_properties(xc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+config_module_dirs(xc libxc/serial)
+install(TARGETS xc EXPORT QUICK ARCHIVE DESTINATION lib/serial)
 
-#file(GLOB libxcsrc "*.c")
-#foreach(src ${libxcsrc})
-#	get_filename_component(filename ${src} NAME_WE)
-#	add_library(${filename} OBJECT ${src})
-#	list(APPEND localobjlist "$<TARGET_OBJECTS:${filename}>")
-#endforeach()
-
-foreach(src ${libxcsrc})
-	add_library(${src} OBJECT ${src}.c)
-	list(APPEND localobjlist "$<TARGET_OBJECTS:${src}>")
-endforeach()
-
-
-add_library(libxcf90_la-xc_f OBJECT xc_f.c)	
-list(APPEND localobjlist "$<TARGET_OBJECTS:libxcf90_la-xc_f>")
-
-#add_library(libxcf90_la-libxc_funcs OBJECT libxc_funcs.f90)
-#list(APPEND localobjlist "$<TARGET_OBJECTS:libxcf90_la-libxc_funcs>")
-
-add_library(libxcf90_la-libxc OBJECT libxc.f90 libxc_funcs.f90)
-list(APPEND localobjlist "$<TARGET_OBJECTS:libxcf90_la-libxc>")
-
-if(NOT ${CUDA_ARCH} STREQUAL "")	#for cuda, add gpu.c, test.cu
-	add_library(gpu OBJECT gpu.c)
-	list(APPEND localobjlist "$<TARGET_OBJECTS:gpu>")
+if(MPI)
+    make_mpi_version(xc xc_mpi LANGUAGES C)
+    target_compile_definitions(xc_mpi PUBLIC MPIV)
+	set_target_properties(xc_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	config_module_dirs(xc_mpi libxc/mpi)
+	install(TARGETS xc_mpi EXPORT QUICK ARCHIVE DESTINATION lib/mpi)
 endif()
 
-add_library(xc SHARED ${localobjlist})
-
-set_target_properties(xc PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder})
-
+if(USE_CUDA)
+	copy_target(xc xc_gpu SWAP_SOURCES TO gpu.c)
+	target_compile_definitions(xc_gpu PUBLIC CUDA)
+	set_target_properties(xc_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	config_module_dirs(xc_gpu libxc/gpu)
+	install(TARGETS xc_gpu EXPORT QUICK ARCHIVE DESTINATION lib/cuda)
+endif()
 
 

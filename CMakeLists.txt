@@ -1,10 +1,14 @@
-cmake_minimum_required(VERSION 3.8.1)
+#cmake_minimum_required(VERSION 3.8.1)
+cmake_minimum_required(VERSION 3.10)
 project(QUICK NONE)
 
-message("before init")
 include(cmake/QuickBuildSystemInit.cmake NO_POLICY_SCOPE)
-message("before enable_language")
 enable_language(Fortran C CXX) #now ENABLED_LANGUAGES is a property but not a variable
+set(USE_CUDA FALSE CACHE BOOL "")
+
+message("CMAKE_C_COMPILER_ID is ${CMAKE_C_COMPILER_ID}")
+message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
+message("CMAKE_Fortran_COMPILER_ID is ${CMAKE_Fortran_COMPILER_ID}")
 
 get_property(ALL_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
 set(ENABLED_LANGUAGES "")
@@ -31,24 +35,19 @@ set(quick_modules "${srcfolder}/modules")
 set(quick_subs "${srcfolder}/subs")
 set(cudafolder "${srcfolder}/cuda")
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install/")
+set(BINDIR "${CMAKE_INSTALL_PREFIX}bin")
+set(LIBDIR "${CMAKE_INSTALL_PREFIX}lib")
+
 # makefolders here
 file(MAKE_DIRECTORY ${exefolder} ${libfolder})
 
-# store mod files
-set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/mods)
-include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
-file(MAKE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY})
-
-include_directories(${libxcfolder})
-
-#remove_definitions(-DCUDA -DMPI)
-# added here: if MPI/CUDA, replace the config file!
 include(MPIConfig)
 include(CUDAConfig)
 
 # libxc_cpu/libxc_gpu here
 add_subdirectory(${libxcfolder})
-if(NOT "${CUDA_ARCH}" STREQUAL "")
+if(USE_CUDA)
 	add_subdirectory(${maple2c_device})
 endif()
 
@@ -62,14 +61,21 @@ add_subdirectory(${quick_modules})
 add_subdirectory(${quick_subs})
 
 # blas here
-if(NOT "${CUDA_ARCH}" STREQUAL "")
+add_subdirectory(${blasfolder})
+if(USE_CUDA)
 	add_subdirectory(${cudafolder})
-else()
-	message("go to cudafolder")
-	add_subdirectory(${blasfolder})
 endif()
 
-# ${OBJ}, ${MAIN} and the two step compilation should all go to the ${srcfolder}
+
 add_subdirectory(${srcfolder})
+
+# install data in basis dir
+install(DIRECTORY basis DESTINATION .)
+
+# install tests dir
+install(DIRECTORY test DESTINATION .)
+
+# install tests:
+install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
 
 
