@@ -1,5 +1,3 @@
-
-#set(CMAKE_Fortran_FLAGS " -ffree-line-length-none -O0") #this is for GNU but not necessary for INTEL
 set(CMAKE_Fortran_FLAGS "-O3") #works for (GNU,INTEL)*(Serial, MPI)
 
 #set(blassrc dasum.f daxpy.f dcabs1.f dcopy.f ddot.f 
@@ -16,6 +14,10 @@ set(CMAKE_Fortran_FLAGS "-O3") #works for (GNU,INTEL)*(Serial, MPI)
 
 file(GLOB blassrc "*.f")
 
-add_library(blas SHARED ${blassrc})
-set_target_properties(blas PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder})
+add_library(blas STATIC ${blassrc}) #set default type to static
+set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+install(TARGETS blas EXPORT QUICK DESTINATION lib/serial)
 
+if(MPI)
+	install(TARGETS blas EXPORT QUICK DESTINATION lib/mpi)
+endif()

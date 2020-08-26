@@ -1,4 +1,4 @@
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -L${CUDA_TOOLKIT_ROOT_DIR}/lib64 -I${CUDA_INCLUDE_DIRS} -DCUDA -I$(libxcfolder)")
+#set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -L${CUDA_TOOLKIT_ROOT_DIR}/lib64 -I${CUDA_INCLUDE_DIRS} -DCUDA -I$(libxcfolder)")
 
 set(maple2c_devicesrc "gga_c_am05.cu;gga_c_bcgp.cu;gga_c_bmk.cu;gga_c_cs1.cu;\
 gga_c_ft97.cu;gga_c_gapc.cu;gga_c_gaploc.cu;gga_c_hcth_a.cu;\
@@ -33,14 +33,18 @@ lda_x_2d.cu;lda_xc_1d_ehwlrg.cu;lda_xc_ksdt.cu;lda_xc_teter93.cu;\
 lda_x.cu;lda_xc_zlp.cu;lda_x_rel.cu")
 
 
-#file(GLOB maple2c_devicesrc "*.cu")
-foreach(src ${maple2c_devicesrc})
-    get_filename_component(filename ${src} NAME_WE)
-    add_library(${filename}cu OBJECT ${src})
-	set_target_properties(${filename}cu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-	set(cudalibxcobj ${cudalibxcobj} "$<TARGET_OBJECTS:${filename}cu>" "" CACHE INTERNAL "" )
-endforeach()
+#foreach(src ${maple2c_devicesrc})
+#    get_filename_component(filename ${src} NAME_WE)
+#    add_library(${filename}cu OBJECT ${src})
+#	set_target_properties(${filename}cu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+#	set(cudalibxcobj ${cudalibxcobj} "$<TARGET_OBJECTS:${filename}cu>" "" CACHE INTERNAL "" )
+#endforeach()
 
+add_library(xc_cuda STATIC ${maple2c_devicesrc})
+target_compile_definitions(xc_cuda PUBLIC CUDA)
+target_link_directories(xc_cuda PUBLIC ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+target_include_directories(xc_cuda PUBLIC ${CUDA_INCLUDE_DIRS} ${libxcfolder})
+set_target_properties(xc_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 

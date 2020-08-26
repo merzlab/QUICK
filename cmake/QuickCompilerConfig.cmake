@@ -5,7 +5,6 @@ macro(set_compiler LANGUAGE COMP_NAME)
     if(NOT EXISTS "${${COMP_NAME}_LOCATION}") #we use EXISTS here to check that we have a full path
         # the next run should still be considered the "first" so that we can keep trying to find the compilers
         unset(FIRST_RUN CACHE)
-
         message(FATAL_ERROR "Could not find ${LANGUAGE} compiler executable ${COMP_NAME}.  Is it installed?")
     endif()
 
@@ -14,7 +13,6 @@ macro(set_compiler LANGUAGE COMP_NAME)
 endmacro(set_compiler)
 
 if(${COMPILER} STREQUAL GNU)
-	#set_compiler(CUDA nvcc)
 	if(${MPI})
 		message("set compilers for GNU/MPI")
 		set_compiler(C mpicc)

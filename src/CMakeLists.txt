@@ -1,55 +1,108 @@
-file(GLOB srcsrc "*.f90") # add all *.f90 files
-#list(REMOVE_ITEM ${srcsrc} "${CMAKE_CURRENT_SOURCE_DIR}/quick_api_test.f90" )
-
+file(GLOB srcsrc ${CMAKE_CURRENT_SOURCE_DIR}/*.f90 ${CMAKE_CURRENT_SOURCE_DIR}/subs/*.f90 ${CMAKE_CURRENT_SOURCE_DIR}/modules/*.f90)
 foreach(src ${srcsrc})
-	get_filename_component(filename ${src} NAME)
 	if(NOT ${src} MATCHES "quick_api_test.f90" AND NOT ${src} MATCHES "main.f90")
-	# Above gives:
-	# /opt/software/binutils/2.31.1-GCCcore-8.2.0/bin/ld: /opt/software/GCCcore/8.3.0/lib/gcc/x86_64-pc-linux-gnu/8.3.0/libgcc.a(_muldi3.o): unable to initialize decompress status for section .debug_info
-	# but passes tests
-	#if(NOT ${src} MATCHES "quick_api_test.f90")
-		set(filelist ${filelist} ${src} "" CACHE INTERNAL "")
+		set(filelist ${filelist} ${src} CACHE INTERNAL "")
 	endif()
 endforeach()
 
-# generate quicklib
-add_library(quicklib SHARED ${filelist})
-set_target_properties(quicklib PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder})
-
-
-# generate executable quick
-set(quickexe "quick")
-set(test-apiexe "test-api")
-
-if(${MPI})
-	set(quickexe "quick.MPI")
-	set(test-apiexe "test-api.MPI")
-endif()
-
-message("CUDA_ARCH is ${CUDA_ARCH}")
-if(NOT "${CUDA_ARCH}" STREQUAL "")
-    set(quickexe "quick.CUDA")
-	set(test-apiexe "test-api.CUDA")
-endif()
+add_library(quicklib STATIC ${filelist}) #set default type to static
+config_module_dirs(quicklib quick/serial libxc/serial)
+set_target_properties(quicklib PROPERTIES OUTPUT_NAME quick)
+set_target_properties(quicklib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+install(TARGETS quicklib EXPORT QUICK DESTINATION ${LIBDIR}/serial)
 
 # generate executable quick/quick.MPI/quick.CUDA
-add_executable(${quickexe} main.f90)
-link_directories(${libfolder})
-if("${CUDA_ARCH}" STREQUAL "")
-	message("Not CUDA")
-	target_link_libraries(${quickexe} quicklib blas xc)
-else()
-	target_link_libraries(${quickexe} quicklib gpu_all cublas cusolver xc -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
-endif()
-set_target_properties(${quickexe} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+add_executable(quick main.f90)
+config_module_dirs(quick quick/serial libxc/serial)
+set_property(TARGET quick PROPERTY LINKER_LANGUAGE Fortran)
+#this setting is specifically for MPI
+target_link_libraries(quick quicklib blas xc)
+set_target_properties(quick PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS quick EXPORT QUICK DESTINATION ${BINDIR})
 
 # generate executable test-api
-add_executable(${test-apiexe} quick_api_test.f90)
-link_directories(${libfolder})
-if("${CUDA_ARCH}" STREQUAL "")
-	target_link_libraries(${test-apiexe} quicklib blas xc)
-else()
-	target_link_libraries(${test-apiexe} quicklib gpu_all cublas cusolver xc -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
-endif()
-set_target_properties(${test-apiexe} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+add_executable(test-api quick_api_test.f90)
+config_module_dirs(test-api quick/serial libxc/serial)
+set_property(TARGET test-api PROPERTY LINKER_LANGUAGE Fortran)
+#this setting is specifically for MPI
+target_link_libraries(test-api quicklib blas xc)
+set_target_properties(test-api PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS test-api EXPORT QUICK DESTINATION ${BINDIR})
 
+if(MPI)
+	make_mpi_version(quicklib quicklib_mpi LANGUAGES Fortran)
+	config_module_dirs(quicklib_mpi quick/mpi libxc/mpi)
+	target_compile_definitions(quicklib_mpi PRIVATE MPIV)
+	set_target_properties(quicklib_mpi PROPERTIES OUTPUT_NAME quick_mpi)
+	set_target_properties(quicklib_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	install(TARGETS quicklib_mpi EXPORT QUICK DESTINATION ${LIBDIR}/mpi)
+
+	make_mpi_version(quick quick.mpi LANGUAGES Fortran)
+	config_module_dirs(quick.mpi quick/mpi libxc/mpi)
+	target_compile_definitions(quick.mpi PRIVATE MPIV)
+	remove_link_libraries(quick.mpi quicklib xc)
+	target_link_libraries(quick.mpi quicklib_mpi xc_mpi blas)
+	set_target_properties(quick.mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	install(TARGETS quick.mpi EXPORT QUICK DESTINATION ${BINDIR})
+
+	make_mpi_version(test-api test-api.mpi LANGUAGES Fortran)
+	config_module_dirs(test-api.mpi quick/mpi libxc/mpi)
+    target_compile_definitions(test-api.mpi PRIVATE MPIV)
+    remove_link_libraries(test-api.mpi quicklib xc)
+    target_link_libraries(test-api.mpi quicklib_mpi xc_mpi blas)
+    set_target_properties(test-api.mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	install(TARGETS test-api.mpi EXPORT QUICK DESTINATION ${BINDIR})
+endif()
+
+if(USE_CUDA)
+	copy_target(quicklib quicklib_cuda)
+	config_module_dirs(quicklib_cuda quick/cuda libxc/gpu)
+	target_compile_definitions(quicklib_cuda PRIVATE CUDA)
+	target_link_libraries(quicklib_cuda gpu_all cublas cusolver xc_gpu)
+	set_target_properties(quicklib_cuda PROPERTIES OUTPUT_NAME quick_cuda)
+	set_target_properties(quicklib_cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	install(TARGETS quicklib_cuda EXPORT QUICK DESTINATION ${LIBDIR}/cuda)
+
+	copy_target(quick quick.cuda)
+	config_module_dirs(quick.cuda quick/cuda libxc/gpu)
+	target_compile_definitions(quick.cuda PRIVATE CUDA)
+	remove_link_libraries(quick.cuda quicklib xc blas)
+	target_link_libraries(quick.cuda quicklib_cuda xc_gpu  -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
+	set_target_properties(quick.cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+	install(TARGETS quick.cuda EXPORT QUICK DESTINATION ${BINDIR})
+	
+	copy_target(test-api test-api.cuda)
+	config_module_dirs(test-api.cuda quick/cuda libxc/gpu)
+    target_compile_definitions(test-api.cuda PRIVATE CUDA)
+    remove_link_libraries(test-api.cuda quicklib xc blas)
+    target_link_libraries(test-api.cuda quicklib_cuda xc_gpu  -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
+    set_target_properties(test-api.cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+    install(TARGETS test-api.cuda EXPORT QUICK DESTINATION ${BINDIR})
+endif()
+
+if(MPI AND USE_CUDA)
+	copy_target(quicklib_mpi quicklib_mpi_cuda)
+    config_module_dirs(quicklib_mpi_cuda quick/mpi_cuda libxc/gpu)
+    target_compile_definitions(quicklib_mpi_cuda PRIVATE CUDA_MPIV)
+	target_link_libraries(quicklib_mpi_cuda gpu_all_mpi cublas cusolver xc_gpu)
+    set_target_properties(quicklib_mpi_cuda PROPERTIES OUTPUT_NAME quick_mpi_cuda)
+    set_target_properties(quicklib_mpi_cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+    install(TARGETS quicklib_mpi_cuda EXPORT QUICK DESTINATION ${LIBDIR}/mpi_cuda)
+
+	copy_target(quick.mpi quick.mpi.cuda)
+    config_module_dirs(quick.mpi.cuda quick/mpi_cuda libxc/gpu)
+    target_compile_definitions(quick.mpi.cuda PRIVATE CUDA_MPIV)
+    remove_link_libraries(quick.mpi.cuda quicklib_mpi xc blas)
+    target_link_libraries(quick.mpi.cuda quicklib_mpi_cuda xc_gpu  -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
+    set_target_properties(quick.mpi.cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+    install(TARGETS quick.mpi.cuda EXPORT QUICK DESTINATION ${BINDIR})
+
+	copy_target(test-api.mpi test-api.mpi.cuda)
+    config_module_dirs(test-api.mpi.cuda quick/mpi_cuda libxc/gpu)
+    target_compile_definitions(test-api.mpi.cuda PRIVATE CUDA_MPIV)
+    remove_link_libraries(test-api.mpi.cuda quicklib_mpi xc blas)
+    target_link_libraries(test-api.mpi.cuda quicklib_mpi_cuda xc_gpu  -lcublas -lcusolver -lcuda -lm -lcudart -lcudadevrt -lstdc++ ${CUDA_LIBRARIES})
+    set_target_properties(test-api.mpi.cuda PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+    install(TARGETS test-api.mpi.cuda EXPORT QUICK DESTINATION ${BINDIR})
+
+endif()

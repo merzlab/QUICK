@@ -1,28 +1,22 @@
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -L${CUDA_TOOLKIT_ROOT_DIR}/lib64 -I${CUDA_INCLUDE_DIRS} -DCUDA_SPDF -I$(libxcfolder)")
+#add_definitions(-DCUDA -DCUDA_SPDF) #this was in CUDAConfig.cmake
+include_directories(${CUDA_INCLUDE_DIRS} ${libxcfolder})
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src/libxc)
-include_directories(${CMAKE_SOURCE_DIR}/src/libxc/maple2c)
-include_directories(${CMAKE_SOURCE_DIR}/src/libxc/maple2c_device)
 
-set(cudaobj "")
-add_library(gpucu OBJECT gpu.cu)
-add_library(gpu_typecu OBJECT gpu_type.cu)
-add_library(gpu_get2ecu OBJECT gpu_get2e.cu)
-add_library(gpu_getxccu OBJECT gpu_getxc.cu)
-set_target_properties(gpu_getxccu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-#Above is essential for '-dc'. Otherwise 
-#[ 77%] Building CUDA object src/cuda/CMakeFiles/gpu_getxccu.dir/gpu_getxc.cu.o
-#ptxas fatal   : Cannot take address of function '_Z26xc_gga_k_dk_enhance_kernelPKvP15xc_gga_work_x_t' 
-add_library(gpu_write_info OBJECT gpu_write_info.f90)
+#set(cudaobj "")
+#add_library(gpucu OBJECT gpu.cu)
+#add_library(gpu_typecu OBJECT gpu_type.cu)
+#add_library(gpu_get2ecu OBJECT gpu_get2e.cu)
+#add_library(gpu_getxccu OBJECT gpu_getxc.cu)
+#set_target_properties(gpu_getxccu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+#add_library(gpu_write_info OBJECT gpu_write_info.f90)
 
-list(APPEND cudaobj "$<TARGET_OBJECTS:gpucu>")
-list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_typecu>")
-list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_get2ecu>")
-list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_getxccu>")
-list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_write_info>")
+#list(APPEND cudaobj "$<TARGET_OBJECTS:gpucu>")
+#list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_typecu>")
+#list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_get2ecu>")
+#list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_getxccu>")
+#list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_write_info>")
 
+set(cudasrc "gpu.cu;gpu_type.cu;gpu_get2e.cu;gpu_getxc.cu;gpu_write_info.f90")
 
 #set(libxcobjlist "gga_c_am05;gga_c_bcgp;gga_c_bmk;gga_c_cs1;\
 #gga_c_ft97;gga_c_gapc;gga_c_gaploc;gga_c_hcth_a;\
@@ -56,9 +50,21 @@ list(APPEND cudaobj "$<TARGET_OBJECTS:gpu_write_info>")
 #lda_x_2d;lda_xc_1d_ehwlrg;lda_xc_ksdt;lda_xc_teter93;\
 #lda_x;lda_xc_zlp;lda_x_rel")
 
-add_library(gpu_all STATIC  ${cudaobj}  ${cudalibxcobj})
-set_target_properties(gpu_all PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder})
+#add_library(gpu_all STATIC ${cudaobj})
+add_library(gpu_all STATIC ${cudasrc})
+target_compile_definitions(gpu_all PUBLIC CUDA CUDA_SPDF)
+set_target_properties(gpu_all PROPERTIES CUDA_SEPARABLE_COMPILATION ON) #for gpu_getxc -dc
+target_link_libraries(gpu_all xc_cuda)
 set_target_properties(gpu_all PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON) #for -dlink
+
+if(MPI)
+	add_library(gpu_all_mpi STATIC ${cudasrc})
+	target_compile_definitions(gpu_all_mpi PUBLIC MPIV CUDA_MPIV CUDA_SPDF)
+	set_target_properties(gpu_all_mpi PROPERTIES CUDA_SEPARABLE_COMPILATION ON) #for gpu_getxc -dc
+	target_link_libraries(gpu_all_mpi xc_cuda)
+	set_target_properties(gpu_all_mpi PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON) #for -dlink	
+endif()
+
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cublas)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cusolver)
