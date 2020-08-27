@@ -67,14 +67,16 @@ xc_f.c;libxc.f90;libxc_funcs.f90")
 
 add_library(xc STATIC ${libxcsrc})  #set default type to static
 set_target_properties(xc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
-config_module_dirs(xc libxc/serial)
+#config_module_dirs(xc libxc/serial)
+config_module_dirs(xc serial)
 install(TARGETS xc EXPORT QUICK ARCHIVE DESTINATION lib/serial)
 
 if(MPI)
     make_mpi_version(xc xc_mpi LANGUAGES C)
     target_compile_definitions(xc_mpi PUBLIC MPIV)
 	set_target_properties(xc_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
-	config_module_dirs(xc_mpi libxc/mpi)
+	#config_module_dirs(xc_mpi libxc/mpi)
+	config_module_dirs(xc_mpi mpi)
 	install(TARGETS xc_mpi EXPORT QUICK ARCHIVE DESTINATION lib/mpi)
 endif()
 
@@ -82,7 +84,8 @@ if(USE_CUDA)
 	copy_target(xc xc_gpu SWAP_SOURCES TO gpu.c)
 	target_compile_definitions(xc_gpu PUBLIC CUDA)
 	set_target_properties(xc_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
-	config_module_dirs(xc_gpu libxc/gpu)
+	#config_module_dirs(xc_gpu libxc/gpu)
+	config_module_dirs(xc_gpu cuda)
 	install(TARGETS xc_gpu EXPORT QUICK ARCHIVE DESTINATION lib/cuda)
 endif()
 

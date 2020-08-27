@@ -76,6 +76,9 @@ install(DIRECTORY basis DESTINATION .)
 install(DIRECTORY test DESTINATION .)
 
 # install tests:
-install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
+install(PROGRAMS tools/runtest DESTINATION ${CMAKE_SOURCE_DIR} RENAME quick_runtest)
+
+# install module dir
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/ DESTINATION ./include)
 
 
