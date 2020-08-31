@@ -2045,7 +2045,7 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    use quick_constants_module
    implicit double precision(a-h,o-z)
    dimension aux(0:20)
-   double precision g_table
+   double precision g_table(200)
 
    ! Variables needed later:
    !    pi=3.1415926535897932385
