@@ -1917,7 +1917,7 @@ subroutine attrashell(IIsh,JJsh)
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
-   double precision RA(3),RB(3),RP(3),inv_g,g_table
+   double precision RA(3),RB(3),RP(3),inv_g,g_table(200)
 
    ! Variables needed later:
    !    pi=3.1415926535897932385
