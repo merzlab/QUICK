@@ -2,16 +2,8 @@
 
 if(MPI)
 	find_package(MPI)
-	if(MPI_FOUND)
-        message("find MPI!!!")
-    endif()
-	
-	#add_definitions(-DMPIV)	
 
 	foreach(LANG ${ENABLED_LANGUAGES})
-		message("LANG is ${LANG}")
-		message("MPI_${LANG}_INCLUDE_PATH is ${MPI_${LANG}_INCLUDE_PATH}")
-		message("MPI_${LANG}_LIBRARIES is ${MPI_${LANG}_LIBRARIES}")
         if(NOT MPI_${LANG}_FOUND)
             message(FATAL_ERROR "You requested MPI, but the MPI ${LANG} library was not found.  \
 Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG}_LIBRARIES to point to your MPI.")
@@ -103,7 +95,5 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 		
 	endfunction(make_mpi_version)
 
-
 endif()
-
 

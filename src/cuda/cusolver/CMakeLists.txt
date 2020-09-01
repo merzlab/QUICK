@@ -1,5 +1,5 @@
 add_library(cusolver STATIC quick_cusolver.c)
-set_target_properties(cusolver PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder})
+set_target_properties(cusolver PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${libfolder}
+										  POSITION_INDEPENDENT_CODE TRUE)
 
-#install(TARGETS cusolver EXPORT QUICK ARCHIVE DESTINATION lib)
 
