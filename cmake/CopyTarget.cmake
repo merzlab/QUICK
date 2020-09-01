@@ -6,7 +6,6 @@ function(copy_property PROPERTY SOURCE DESTINATION)
 	
 	if(PROP_IS_DEFINED)
 		get_property(PROP_VALUE TARGET ${SOURCE} PROPERTY ${PROPERTY})
-		#message("Copying ${PROPERTY} with value ${PROP_VALUE}")
 		set_property(TARGET ${DESTINATION} PROPERTY ${PROPERTY} "${PROP_VALUE}")
 	endif()
 	

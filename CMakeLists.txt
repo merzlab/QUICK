@@ -1,30 +1,15 @@
-#cmake_minimum_required(VERSION 3.8.1)
 cmake_minimum_required(VERSION 3.10)
 project(QUICK NONE)
 
 include(cmake/QuickBuildSystemInit.cmake NO_POLICY_SCOPE)
-enable_language(Fortran C CXX) #now ENABLED_LANGUAGES is a property but not a variable
+enable_language(Fortran C CXX) 
 set(USE_CUDA FALSE CACHE BOOL "")
-
-message("CMAKE_C_COMPILER_ID is ${CMAKE_C_COMPILER_ID}")
-message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
-message("CMAKE_Fortran_COMPILER_ID is ${CMAKE_Fortran_COMPILER_ID}")
-
-get_property(ALL_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
-set(ENABLED_LANGUAGES "")
-foreach(LANG ${ALL_ENABLED_LANGUAGES})
-    if("${LANG}" STREQUAL "C" OR "${LANG}" STREQUAL "CXX" OR "${LANG}" STREQUAL "Fortran")
-        list(APPEND ENABLED_LANGUAGES ${LANG})
-    endif()
-endforeach()
 
 set(filelist "" CACHE INTERNAL "")
 set(cudalibxcobj "" CACHE INTERNAL "")
-
 set(srcfolder "${CMAKE_SOURCE_DIR}/src")
 set(exefolder "${CMAKE_SOURCE_DIR}/bin")
 set(libfolder "${CMAKE_SOURCE_DIR}/lib")
-
 set(configfolder "${srcfolder}/temp_config" )
 set(subfolder "${srcfolder}/subs")
 set(blasfolder "${srcfolder}/blas")
@@ -34,7 +19,6 @@ set(octree "${srcfolder}/octree")
 set(quick_modules "${srcfolder}/modules")
 set(quick_subs "${srcfolder}/subs")
 set(cudafolder "${srcfolder}/cuda")
-
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install/")
 set(BINDIR "${CMAKE_INSTALL_PREFIX}bin")
 set(LIBDIR "${CMAKE_INSTALL_PREFIX}lib")
@@ -65,7 +49,6 @@ add_subdirectory(${blasfolder})
 if(USE_CUDA)
 	add_subdirectory(${cudafolder})
 endif()
-
 
 add_subdirectory(${srcfolder})
 

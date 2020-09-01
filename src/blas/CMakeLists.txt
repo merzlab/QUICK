@@ -1,4 +1,4 @@
-set(CMAKE_Fortran_FLAGS "-O3") #works for (GNU,INTEL)*(Serial, MPI)
+set(CMAKE_Fortran_FLAGS ${OPT_FFLAGS})
 
 #set(blassrc dasum.f daxpy.f dcabs1.f dcopy.f ddot.f 
 #         dgbmv.f dgemm.f dgemv.f dger.f dnrm2.f drot.f 
@@ -14,8 +14,8 @@ set(CMAKE_Fortran_FLAGS "-O3") #works for (GNU,INTEL)*(Serial, MPI)
 
 file(GLOB blassrc "*.f")
 
-add_library(blas STATIC ${blassrc}) #set default type to static
-set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder})
+add_library(blas ${blassrc}) #set default type to static
+set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/serial LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
 install(TARGETS blas EXPORT QUICK DESTINATION lib/serial)
 
 if(MPI)
