@@ -88,9 +88,8 @@ endif()
 
 if(MPI AND USE_CUDA)
 	copy_target(quicklib_mpi quicklib_mpi_cuda)
-	add_dependencies(quicklib_mpi_cuda quicklib_mpi)
-	add_dependencies(quicklib_mpi_cuda quicklib_cuda)
     config_module_dirs(quicklib_mpi_cuda mpi_cuda)
+	target_compile_definitions(quicklib_mpi_cuda PRIVATE CUDA_MPIV)
 	target_link_libraries(quicklib_mpi_cuda gpu_all_but_xc_mpi cublas cusolver)	
 	set_target_properties(quicklib_mpi_cuda PROPERTIES OUTPUT_NAME quick_mpi_cuda
     												   ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda 
