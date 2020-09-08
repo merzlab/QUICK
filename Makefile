@@ -103,7 +103,7 @@ cudampiinstall:
 aminstall:
 	@if [ "$(AMINSTALL)" = 'true' ]; then cp -f $(exefolder)/quick* $(amfolder)/bin; \
 	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
-	else echo  "Error: You must set the path to AMBER home directory before running 'make install'."; fi
+	else echo  "Error: You must set the path to AMBER home directory before running 'make aminstall'."; fi
 
 
 #  !---------------------------------------------------------------------!
