@@ -59,7 +59,7 @@ checkfolders:
 #  ! Installation targets                                                !
 #  !---------------------------------------------------------------------!
 
-.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall
+.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall aminstall
 
 install: $(INSTALLTYPES)
 	@echo  "Installation sucessful."
@@ -99,6 +99,12 @@ cudampiinstall:
 	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
 	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
+
+aminstall:
+	@if [ "$(AMINSTALL)" = 'true' ]; then cp -f $(exefolder)/quick* $(amfolder)/bin; \
+	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
+	else echo  "Error: You must set the path to AMBER home directory before running 'make install'."; fi
+
 
 #  !---------------------------------------------------------------------!
 #  ! Installation targets                                                !
@@ -163,7 +169,7 @@ makeinclean:
 #  ! Uninstall targets                                                   !
 #  !---------------------------------------------------------------------!
 
-.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall 
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall 
 
 uninstall: $(UNINSTALLTYPES)
 	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
@@ -194,3 +200,9 @@ cudampiuninstall:
 	@-rm -rf $(installfolder)/include/cudampi
 	@-rm -rf $(installfolder)/lib/cudampi
 
+amuninstall:
+	@-rm -f $(amfolder)/bin/quick
+	@-rm -f $(amfolder)/bin/quick.mpi
+	@-rm -f $(amfolder)/bin/quick.cuda
+	@-rm -f $(amfolder)/bin/quick.cuda.mpi
+	@echo  "Successfully uninstalled QUICK executables in $(amfolder)/bin folder."
