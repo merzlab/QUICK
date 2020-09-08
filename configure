@@ -56,6 +56,8 @@ echo  "
       --nof          Disables the compilation of time consuming f functions 
                      in the ERI code of cuda version. Not recommended for 
                      production.
+      --amprefix <dir>
+                     Path to AMBER home directory
                                                                             
   Supported compilers are: gnu, intel                                       
                                                                             
@@ -429,6 +431,10 @@ ncores=''
 # track if f functions should not be compiled in cuda version
 nof='no'
 
+# amber related variables
+useamprefix='false'
+amprefix=''
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -446,6 +452,7 @@ while [ $# -gt 0 ]; do
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
+    --amprefix)    shift; amprefix=${1%/}; useamprefix='true';;
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     -h| -H| -help| --help) print_help;;
@@ -545,6 +552,23 @@ else
   uninstalltypes='nouninstall'
 
 fi
+
+# check amber prefix 
+if [ "$useamprefix" = "true" ]; then
+
+  # do this trick to get absolute path
+  cd "$amprefix"
+  amprefix=`pwd`
+  cd "$QUICK_HOME"
+
+  if [ ! -d "$amprefix/bin" ]; then
+    echo  "Error: $amprefix/bin not found."
+    exit 1
+  else
+    echo "QUICK executables will be installed in $amprefix/bin folder."
+  fi
+fi
+
 
 #  !---------------------------------------------------------------------!
 #  ! Create essential build directories                                  !
@@ -963,6 +987,7 @@ CLEANTYPES=$cleantypes
 
 INSTALLTYPES=$installtypes
 UNINSTALLTYPES=$uninstalltypes
+AMINSTALL=$useamprefix
 
 TESTTYPE=$testtype
 
@@ -975,6 +1000,7 @@ exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
+amfolder=$amprefix
 
 # source directories
 subfolder=$QUICK_HOME/src/subs
@@ -997,7 +1023,13 @@ echo ""
 
 echo  "Next steps:"
 echo  "          Run 'make' to build QUICK."
+
 if [ "$testtype" = 'installtest' ]; then 
-  echo  "          Run 'make install' to install executable/s, libraries and header files into $quick_prefix."
+  echo  "          Run 'make install' to install executable/s, libraries and header files in $quick_prefix."
 fi
+
 echo  "          Run 'make test' to verify the executables."
+
+if [ "$useamprefix" = "true" ]; then
+echo  "          Run 'make aminstall' to install QUICK executables in $amprefix."
+fi
