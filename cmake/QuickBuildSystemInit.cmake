@@ -11,9 +11,9 @@ endif()
 
 add_compile_options($<$<CONFIG:Debug>:-g> $<$<CONFIG:Debug>:-DDEBUG>)
 
-set(OPT_FFLAGS "-O3")
-set(OPT_CFLAGS "-O3")
-set(OPT_CXXFLAGS "-O3")
+set(OPT_FFLAGS "-O2")
+set(OPT_CFLAGS "-O2")
+set(OPT_CXXFLAGS "-O2")
 set(CMAKE_Fortran_FLAGS_DEBUG "-O0")
 set(CMAKE_C_FLAGS_DEBUG "-O0")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0")
