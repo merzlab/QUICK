@@ -1242,8 +1242,9 @@ subroutine attrashellenergy(IIsh,JJsh)
          Px = (a*Ax + b*Bx)/g
          Py = (a*Ay + b*By)/g
          Pz = (a*Az + b*Bz)/g
+         g_table = g**(-1.5)
 
-         constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) &
+         constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
 
                * 2.d0 * sqrt(g/Pi)
 
@@ -1969,8 +1970,9 @@ subroutine attrashellopt(IIsh,JJsh)
          Px = (a*Ax + b*Bx)/g
          Py = (a*Ay + b*By)/g
          Pz = (a*Az + b*Bz)/g
+         g_table = g**(-1.5)
 
-         constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) &
+         constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
                * 2.d0 * sqrt(g/Pi)
 
          do iatom=1,natom+quick_molspec%nextatom
