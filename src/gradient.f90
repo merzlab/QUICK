@@ -212,7 +212,12 @@ endif
 !---------------------------------------------------------------------
    call cpu_time(timer_begin%T1eGrad)
 
+   call cpu_time(timer_begin%T1eTGrad)
+
    call get_kinetic_grad
+
+   call cpu_time(timer_end%T1eTGrad)
+   timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
@@ -241,6 +246,8 @@ endif
 !     the density matrix element ij.
 !---------------------------------------------------------------------
 
+   call cpu_time(timer_begin%T1eVGrad)
+
 #ifdef MPIV
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
@@ -261,6 +268,9 @@ endif
          call attrashellopt(IIsh,JJsh)
       enddo
    enddo
+
+   call cpu_time(timer_end%T1eVGrad)
+   timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
 
 #ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -1058,13 +1068,36 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
    use allmod
    implicit double precision(a-h,o-z)
    logical :: ijcon   
+   double precision g_table(200)
+   integer i,j,k,ii,jj,kk,g_count
 
    dSM = 0.0d0
    dKEM = 0.0d0
 
+   Ax = xyz(1,quick_basis%ncenter(Jbas))
+   Bx = xyz(1,quick_basis%ncenter(Ibas))
+   Ay = xyz(2,quick_basis%ncenter(Jbas))
+   By = xyz(2,quick_basis%ncenter(Ibas))
+   Az = xyz(3,quick_basis%ncenter(Jbas))
+   Bz = xyz(3,quick_basis%ncenter(Ibas))
+   
    itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+
+   ii = itype(1,Ibas)
+   jj = itype(2,Ibas)
+   kk = itype(3,Ibas)
+   i = itype(1,Jbas)
+   j = itype(2,Jbas)
+   k = itype(3,Jbas)
+   g_count = i+ii+j+jj+k+kk+2
+
    do Icon=1,ncontract(Ibas)
+      b = aexp(Icon,Ibas)
       do Jcon=1,ncontract(Jbas)
+         a = aexp(Jcon,Jbas)
+         
+         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
          if(ijcon) then
             mcon = Icon
          else
@@ -1072,44 +1105,57 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
          endif
          dSM= dSM + 2.d0*aexp(mcon,mbas)* &
          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
          dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+         *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
       enddo
    enddo
 
    itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
    if (itype(Imomentum,mbas) /= 0) then
       itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+      ii = itype(1,Ibas)
+      jj = itype(2,Ibas)
+      kk = itype(3,Ibas)
+      i = itype(1,Jbas)
+      j = itype(2,Jbas)
+      k = itype(3,Jbas)
+      g_count = i+ii+j+jj+k+kk+2
+
       do Icon=1,ncontract(Ibas)
+         b = aexp(Icon,Ibas)
          do Jcon=1,ncontract(Jbas)
+            a = aexp(Jcon,Jbas)
+         
+            call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+
             dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+            *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
             dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+            *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
          enddo
       enddo
       itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
