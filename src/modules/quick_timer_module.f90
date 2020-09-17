@@ -8,13 +8,13 @@
 !
 module quick_timer_module
     implicit none
-    
+
     integer TIMER_SIZE,TIMER_CUMER_SIZE
-    
+
     ! MPI timer data type
     integer MPI_timer_cumer_type,MPI_timer_type
-    parameter(TIMER_SIZE=12,TIMER_CUMER_SIZE=10)
-    
+    parameter(TIMER_SIZE=18,TIMER_CUMER_SIZE=16)
+
     !timer type
     type quick_timer
         double precision:: TIniGuess=0.0
@@ -25,6 +25,12 @@ module quick_timer_module
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
         double precision:: T1e=0.0d0
+        double precision:: T1eS=0.0d0
+        double precision:: T1eSD=0.0d0
+        double precision:: T1eT=0.0d0
+        double precision:: T1eTGrad=0.0d0
+        double precision:: T1eV=0.0d0
+        double precision:: T1eVGrad=0.0d0
         double precision:: T2e=0.0d0
         double precision:: T2eAll=0.0d0
         double precision:: TDip=0.0d0
@@ -41,7 +47,7 @@ module quick_timer_module
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
     end type quick_timer
-    
+
     type quick_timer_cumer
         double precision:: TTotal=0.0d0
         double precision:: TDiag=0.0d0
@@ -50,6 +56,12 @@ module quick_timer_module
         double precision:: TSCF=0.0d0
         double precision:: TOp=0.0d0
         double precision:: T1e=0.0d0
+        double precision:: T1eS=0.0d0
+        double precision:: T1eSD=0.0d0
+        double precision:: T1eT=0.0d0
+        double precision:: T1eTGrad=0.0d0
+        double precision:: T1eV=0.0d0
+        double precision:: T1eVGrad=0.0d0
         double precision:: T2e=0.0d0
         double precision:: T2eAll=0.0d0
         double precision:: TE=0.0d0
@@ -64,16 +76,16 @@ module quick_timer_module
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
-        
+
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
     type (quick_timer),save:: timer_end
     type (quick_timer_cumer),save:: timer_cumer
     type (quick_timer_cumer),save:: MPI_timer_cumer
-    
+
     contains
-    
+
     !-----------------------
     ! Output time infos
     !-----------------------
@@ -102,7 +114,7 @@ module quick_timer_module
             else
                 t_tot_dftop=0.0d0
             endif
-            t_pure_init_guess = timer_end%TIniGuess-timer_begin%TIniGuess-t_tot_dftop 
+            t_pure_init_guess = timer_end%TIniGuess-timer_begin%TIniGuess-t_tot_dftop
             write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') t_pure_init_guess, &
                 t_pure_init_guess/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
@@ -111,7 +123,7 @@ module quick_timer_module
                 (t_tot_dftop)/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for grid formation
                 write (io,'(6x,"TOTAL GRID FORMATION TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdGen, &
-                timer_cumer%TDFTGrdGen/(timer_end%TTotal-timer_begin%TTotal)*100                
+                timer_cumer%TDFTGrdGen/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for computing grid weight
                 write (io,'(6x,"TOTAL GRID WEIGHT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdWt, &
                 timer_cumer%TDFTGrdWt/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -135,9 +147,21 @@ module quick_timer_module
             ! Time to evaluate operator
             write (io,'(6x,"TOTAL OP TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TOp, &
                 timer_cumer%TOp/(timer_end%TTotal-timer_begin%TTotal)*100
+            ! Time to evaluate overlap 1e integrals
+            write (io,'(12x,"OVERLAP 1e INTEGRALS TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eS, &
+                timer_cumer%T1eS/(timer_end%TTotal-timer_begin%TTotal)*100
+            ! Time to diagnalize overlap 1e matrix
+            write (io,'(12x,"OVERLAP 1e DIAGONALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eSD, &
+                timer_cumer%T1eSD/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate 1e integrals
             write (io,'(12x,"TOTAL 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1e, &
                 timer_cumer%T1e/(timer_end%TTotal-timer_begin%TTotal)*100
+            ! Time to evaluate kinetic 1e integrals
+            write (io,'(15x,"KINETIC 1e INTEGRALS TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eT, &
+                timer_cumer%T1eT/(timer_end%TTotal-timer_begin%TTotal)*100
+            ! Time to evaluate attraction 1e integrals
+            write (io,'(15x,"ATTRACTION 1e INTEGRALS TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eV, &
+                timer_cumer%T1eV/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate 2e integrals
             write (io,'(12x,"TOTAL 2e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2e, &
                 timer_cumer%T2e/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -147,7 +171,7 @@ module quick_timer_module
                     timer_cumer%TEx/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             write (io,'(12x,"TOTAL ENERGY TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TE, &
-                timer_cumer%TE/(timer_end%TTotal-timer_begin%TTotal)*100                              
+                timer_cumer%TE/(timer_end%TTotal-timer_begin%TTotal)*100
             ! DII Time
             write (io,'(6x,"TOTAL DII TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDII, &
                 timer_cumer%TDII/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -159,7 +183,7 @@ module quick_timer_module
                 write (io,'(12x,"TOTAL DIAG TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDiag, &
                     timer_cumer%TDiag/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
-            
+
             if (quick_method%dipole) then
             ! Dipole Timing
                 write (io,'(6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_end%TDip-timer_begin%TDip, &
@@ -173,14 +197,20 @@ module quick_timer_module
                 write (io,'(6x,"TOTAL NUCLEAR GRADIENT TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TNucGrad, &
                         timer_cumer%TNucGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &  
+                write (io,'(6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &
                         timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, & 
+                write (io,'(9x,"KINETIC 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eTGrad, &
+                        timer_cumer%T1eTGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(9x,"ATTRACTION 1e GRADIENT TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eVGrad, &
+                        timer_cumer%T1eVGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'(6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, &
                         timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
                 if(quick_method%DFT) then
-                   write (io,'(6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &     
+                   write (io,'(6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &
                            timer_cumer%TExGrad/(timer_end%TTotal-timer_begin%TTotal)*100
                 endif
             endif
@@ -231,7 +261,7 @@ module quick_timer_module
 !                    if (tmp_timer_cumer%TGrad.ge.max_timer_cumer%TGrad) max_timer_cumer%TGrad=tmp_timer_cumer%TGrad
 !                enddo
 !            endif
-! 
+!
 !            if (master) then
 !                write (io,'("----------- MPI TIMING -------------")')
 !                ! SCF Time
@@ -275,28 +305,28 @@ module quick_timer_module
             call PrtAct(io,"Finish Output Timing Information")
         endif
     end subroutine timer_output
-    
-    
-#ifdef MPIV    
+
+
+#ifdef MPIV
     !-----------------------
     ! mpi timer setup
     !-----------------------
     subroutine mpi_setup_timer
-    
+
         use quick_mpi_module
         implicit none
-        include "mpif.h"    
-        
+        include "mpif.h"
+
         ! declaim mpi timer
         if (bMPI) then
-            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision,MPI_timer_type,mpierror) 
+            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision,MPI_timer_type,mpierror)
             call MPI_TYPE_COMMIT(MPI_timer_type,mpierror)
-        
-            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision,MPI_timer_cumer_type,mpierror) 
+
+            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision,MPI_timer_cumer_type,mpierror)
             call MPI_TYPE_COMMIT(MPI_timer_cumer_type,mpierror)
         endif
-        
-    end subroutine mpi_setup_timer    
+
+    end subroutine mpi_setup_timer
 #endif
-    
+
 end module quick_timer_module

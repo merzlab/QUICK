@@ -4,6 +4,8 @@
     subroutine sedftoperator
     use allmod
     implicit double precision(a-h,o-z)
+    double precision g_table(200)
+    integer i,j,k,ii,jj,kk,g_count
 
 ! The purpose of this subroutine is to form the operator matrix
 ! for an sedft calculation.  Note this operator matrix is symmetric.
@@ -32,6 +34,21 @@
         ITyp = quick_molspec%iattype(Iatm)
         do Ibas=Iatmfirst,Iatmlast
             do Jbas=Ibas,Iatmlast
+               Ax = xyz(1,quick_basis%ncenter(Jbas))
+               Bx = xyz(1,quick_basis%ncenter(Ibas))
+               Ay = xyz(2,quick_basis%ncenter(Jbas))
+               By = xyz(2,quick_basis%ncenter(Ibas))
+               Az = xyz(3,quick_basis%ncenter(Jbas))
+               Bz = xyz(3,quick_basis%ncenter(Ibas))
+               
+               ii = itype(1,Ibas)
+               jj = itype(2,Ibas)
+               kk = itype(3,Ibas)
+               i = itype(1,Jbas)
+               j = itype(2,Jbas)
+               k = itype(3,Jbas)
+               g_count = i+ii+j+jj+k+kk+2
+
                 param=(EK1prm(itype(1,Jbas),itype(2,Jbas),itype(3,Jbas),ITyp)+ &
                 EK1prm(itype(1,Ibas),itype(2,Ibas),itype(3,Ibas),ITyp)) &
                 /2.d0
@@ -40,13 +57,17 @@
                 /2.d0
                 do Icon=1,ncontract(ibas)
                     do Jcon=1,ncontract(jbas)
+                       b = aexp(Icon,Ibas)
+                       a = aexp(Jcon,Jbas)
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)   
                         quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+dcoeff(Jcon,Jbas)* &
                         dcoeff(Icon,Ibas)* &
-                        (param* &
-                        ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-                        xIatm,yIatm,zIatm,xIatm,yIatm,zIatm) &
+                        (param &
+                      *ekinetic(a,b,i ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+!                        ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
+!                        itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!                        itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!                        xIatm,yIatm,zIatm,xIatm,yIatm,zIatm) &
                         +param2* &
                         attraction(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
                         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
