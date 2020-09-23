@@ -101,7 +101,17 @@ cudampiinstall:
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 aminstall:
-	@if [ "$(AMINSTALL)" = 'true' ]; then cp -f $(exefolder)/quick* $(amfolder)/bin; \
+	
+	@-if [ "$(AMINSTALL)" = 'true' ]; then \
+	if [ -e $(buildfolder)/lib/serial/libquick.* ]; then cp -f $(buildfolder)/lib/serial/libquick.* $(amfolder)/lib; \
+	cp -f $(buildfolder)/lib/serial/libxc.* $(amfolder)/lib; cp -f $(buildfolder)/lib/serial/libblas-quick.* $(amfolder)/lib; fi; \
+	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.* ]; then cp -f $(buildfolder)/lib/mpi/libquick-mpi.* $(amfolder)/lib; \
+	cp -f $(buildfolder)/lib/mpi/libxc.* $(amfolder)/lib; cp -f $(buildfolder)/lib/mpi/libblas-quick.* $(amfolder)/lib; fi; \
+	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.* ]; then cp -f $(buildfolder)/lib/cuda/libquick-cuda.* $(amfolder)/lib; \
+	cp -f $(buildfolder)/lib/cuda/libxc-cuda.* $(amfolder)/lib; fi; \
+	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.* ]; then cp -f $(buildfolder)/lib/cudampi/libquick-cudampi.* $(amfolder)/lib; \
+	cp -f $(buildfolder)/lib/cudampi/libxc-cuda.* $(amfolder)/lib; fi; \
+	cp -f $(exefolder)/quick* $(amfolder)/bin; \
 	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
 	else echo  "Error: You must set the path to AMBER home directory before running 'make aminstall'."; fi
 
@@ -205,4 +215,8 @@ amuninstall:
 	@-rm -f $(amfolder)/bin/quick.mpi
 	@-rm -f $(amfolder)/bin/quick.cuda
 	@-rm -f $(amfolder)/bin/quick.cuda.mpi
+	@-rm -f $(amfolder)/lib/libquick*
+	@-rm -f $(amfolder)/lib/libxc.*
+	@-rm -f $(amfolder)/lib/libxc-cuda.*
+	@-rm -f $(amfolder)/lib/libblas-quick.*
 	@echo  "Successfully uninstalled QUICK executables in $(amfolder)/bin folder."
