@@ -47,13 +47,13 @@ cuda: checkfolders
 cudampi: checkfolders
 	@echo  "Building cuda-mpi version.."
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make cudampi 
+	@cd $(buildfolder) && make cudampi
 
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
 	exit 1; fi
 	@if [ ! -d $(buildfolder) ]; then echo  "Error: $(buildfolder) not found. Please configure first."; \
-	exit 1; fi 	
+	exit 1; fi
 
 #  !---------------------------------------------------------------------!
 #  ! Installation targets                                                !
@@ -101,12 +101,12 @@ cudampiinstall:
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 aminstall:
-	
+
 	@-if [ "$(AMINSTALL)" = 'true' ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.* ]; then cp -f $(buildfolder)/lib/serial/libquick.* $(amfolder)/lib; \
-	cp -f $(buildfolder)/lib/serial/libxc.* $(amfolder)/lib; cp -f $(buildfolder)/lib/serial/libblas-quick.* $(amfolder)/lib; fi; \
+	cp -f $(buildfolder)/lib/serial/libxc.* $(amfolder)/lib; fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.* ]; then cp -f $(buildfolder)/lib/mpi/libquick-mpi.* $(amfolder)/lib; \
-	cp -f $(buildfolder)/lib/mpi/libxc.* $(amfolder)/lib; cp -f $(buildfolder)/lib/mpi/libblas-quick.* $(amfolder)/lib; fi; \
+	cp -f $(buildfolder)/lib/mpi/libxc.* $(amfolder)/lib; fi; \
 	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.* ]; then cp -f $(buildfolder)/lib/cuda/libquick-cuda.* $(amfolder)/lib; \
 	cp -f $(buildfolder)/lib/cuda/libxc-cuda.* $(amfolder)/lib; fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.* ]; then cp -f $(buildfolder)/lib/cudampi/libquick-cudampi.* $(amfolder)/lib; \
@@ -131,7 +131,7 @@ buildtest:
 installtest:
 	@if [ ! -x $(installfolder)/bin/quick* ]; then \
         echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
-        exit 1; fi	
+        exit 1; fi
 	@cp $(toolsfolder)/runtest $(installfolder)
 	@cd $(installfolder) && ./runtest
 
@@ -140,14 +140,14 @@ installtest:
 #  !---------------------------------------------------------------------!
 
 .PHONY:serialclean mpiclean cudaclean cudampiclean makeinclean
-	
+
 clean:$(CLEANTYPES)
-	@-rm -f $(homefolder)/runtest 
+	@-rm -f $(homefolder)/runtest
 	@echo  "Cleaned up successfully."
 
 serialclean:
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make --no-print-directory clean 
+	@cd $(buildfolder) && make --no-print-directory clean
 
 mpiclean:
 	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
@@ -162,24 +162,24 @@ cudampiclean:
 	@cd $(buildfolder) && make --no-print-directory clean
 
 distclean: makeinclean
-	@-rm -f $(homefolder)/runtest 
+	@-rm -f $(homefolder)/runtest
 	@-rm -rf $(buildfolder) $(exefolder)
 	@echo  "Removed build and bin directories."
 
 makeinclean:
 	@-rm -f $(libxcfolder)/make.in
-	@-rm -f $(libxcfolder)/maple2c_device/make.in 
+	@-rm -f $(libxcfolder)/maple2c_device/make.in
 	@-rm -f $(subfolder)/make.in
-	@-rm -f $(modfolder)/make.in  
-	@-rm -f $(octfolder)/make.in 
-	@-rm -f $(blasfolder)/make.in 
-	@-rm -f $(cudafolder)/make.in 
+	@-rm -f $(modfolder)/make.in
+	@-rm -f $(octfolder)/make.in
+	@-rm -f $(blasfolder)/make.in
+	@-rm -f $(cudafolder)/make.in
 
 #  !---------------------------------------------------------------------!
 #  ! Uninstall targets                                                   !
 #  !---------------------------------------------------------------------!
 
-.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall 
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall
 
 uninstall: $(UNINSTALLTYPES)
 	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
@@ -218,5 +218,4 @@ amuninstall:
 	@-rm -f $(amfolder)/lib/libquick*
 	@-rm -f $(amfolder)/lib/libxc.*
 	@-rm -f $(amfolder)/lib/libxc-cuda.*
-	@-rm -f $(amfolder)/lib/libblas-quick.*
 	@echo  "Successfully uninstalled QUICK executables in $(amfolder)/bin folder."
