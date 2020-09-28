@@ -203,13 +203,13 @@ cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MA
 
 mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.mpi $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
+	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
 
 cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda.mpi $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
