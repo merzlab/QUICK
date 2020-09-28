@@ -202,7 +202,7 @@ cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MA
 	$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
 
 mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
+	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
 	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
 	$(FC) -o $(exefolder)/test-api.mpi $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
 
