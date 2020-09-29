@@ -108,7 +108,7 @@ cudampiinstall:
 
 aminstall:
 	@if [ "$(AMINSTALL)" = 'true' ]; then \
-	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(amfolder)/lib/liquick.$(libsuffix); \
+	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(amfolder)/lib/libquick.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/serial/libxc.$(libsuffix) $(amfolder)/lib/libxc.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(amfolder)/lib/libquick-mpi.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(amfolder)/lib/libxc.$(libsuffix); fi; \
