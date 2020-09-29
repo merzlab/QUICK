@@ -80,7 +80,12 @@
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
     call gpu_startup()
+#ifdef __PGI
+    iarg = COMMAND_ARGUMENT_COUNT()
+#else
     iarg = iargc()
+#endif
+    
     call gpu_set_device(-1)
 
     ! Handles an old mechanism where the user can specify GPU id from CLI
