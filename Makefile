@@ -116,7 +116,7 @@ aminstall:
 	ln -s -f $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(amfolder)/lib/libquick-cudampi.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
-	if [ -x $(exefolder)/quick* ]; then mv $(exefolder)/quick* $(amfolder)/bin/.; fi; \
+	for i in quick quick.MPI quick.cuda quick.cuda.MPI; do if [ -x $(exefolder)/$$i ]; then mv $(exefolder)/$$i $(amfolder)/bin/; fi; done; \
 	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
 	else echo  "Error: You must set the path to AMBER home directory before running 'make aminstall'."; fi
 
