@@ -17,6 +17,12 @@
 MAKEIN=./make.in
 include $(MAKEIN)
 
+ifeq "$(SHARED)" 'yes'
+  libsuffix = "so"
+else
+  libsuffix = "a"
+endif
+
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
@@ -47,13 +53,13 @@ cuda: checkfolders
 cudampi: checkfolders
 	@echo  "Building cuda-mpi version.."
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make cudampi 
+	@cd $(buildfolder) && make cudampi
 
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
 	exit 1; fi
 	@if [ ! -d $(buildfolder) ]; then echo  "Error: $(buildfolder) not found. Please configure first."; \
-	exit 1; fi 	
+	exit 1; fi
 
 #  !---------------------------------------------------------------------!
 #  ! Installation targets                                                !
@@ -78,7 +84,7 @@ serialinstall:
 	@cp -f $(buildfolder)/lib/serial/* $(installfolder)/lib/serial
 
 mpiinstall:
-	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
+	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(buildfolder)/include/mpi/* $(installfolder)/include/mpi
@@ -93,15 +99,24 @@ cudainstall:
 	@cp -f $(buildfolder)/lib/cuda/* $(installfolder)/lib/cuda
 
 cudampiinstall:
-	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
+	@if [ -x $(exefolder)/quick.cuda.MPI ]; then cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
-	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
+	@cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin
 	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 aminstall:
-	@if [ "$(AMINSTALL)" = 'true' ]; then cp -f $(exefolder)/quick* $(amfolder)/bin; \
+	@if [ "$(AMINSTALL)" = 'true' ]; then \
+	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(amfolder)/lib/libquick.$(libsuffix); \
+	ln -s -f $(buildfolder)/lib/serial/libxc.$(libsuffix) $(amfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(amfolder)/lib/libquick-mpi.$(libsuffix); \
+	ln -s -f $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(amfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(amfolder)/lib/libquick-cuda.$(libsuffix); \
+	ln -s -f $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(amfolder)/lib/libquick-cudampi.$(libsuffix); \
+	ln -s -f $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
+	for i in quick quick.MPI quick.cuda quick.cuda.MPI; do if [ -x $(exefolder)/$$i ]; then mv $(exefolder)/$$i $(amfolder)/bin/; fi; done; \
 	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
 	else echo  "Error: You must set the path to AMBER home directory before running 'make aminstall'."; fi
 
@@ -121,7 +136,7 @@ buildtest:
 installtest:
 	@if [ ! -x $(installfolder)/bin/quick* ]; then \
         echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
-        exit 1; fi	
+        exit 1; fi
 	@cp $(toolsfolder)/runtest $(installfolder)
 	@cd $(installfolder) && ./runtest
 
@@ -130,14 +145,14 @@ installtest:
 #  !---------------------------------------------------------------------!
 
 .PHONY:serialclean mpiclean cudaclean cudampiclean makeinclean
-	
+
 clean:$(CLEANTYPES)
-	@-rm -f $(homefolder)/runtest 
+	@-rm -f $(homefolder)/runtest
 	@echo  "Cleaned up successfully."
 
 serialclean:
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make --no-print-directory clean 
+	@cd $(buildfolder) && make --no-print-directory clean
 
 mpiclean:
 	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
@@ -152,24 +167,24 @@ cudampiclean:
 	@cd $(buildfolder) && make --no-print-directory clean
 
 distclean: makeinclean
-	@-rm -f $(homefolder)/runtest 
+	@-rm -f $(homefolder)/runtest
 	@-rm -rf $(buildfolder) $(exefolder)
 	@echo  "Removed build and bin directories."
 
 makeinclean:
 	@-rm -f $(libxcfolder)/make.in
-	@-rm -f $(libxcfolder)/maple2c_device/make.in 
+	@-rm -f $(libxcfolder)/maple2c_device/make.in
 	@-rm -f $(subfolder)/make.in
-	@-rm -f $(modfolder)/make.in  
-	@-rm -f $(octfolder)/make.in 
-	@-rm -f $(blasfolder)/make.in 
-	@-rm -f $(cudafolder)/make.in 
+	@-rm -f $(modfolder)/make.in
+	@-rm -f $(octfolder)/make.in
+	@-rm -f $(blasfolder)/make.in
+	@-rm -f $(cudafolder)/make.in
 
 #  !---------------------------------------------------------------------!
 #  ! Uninstall targets                                                   !
 #  !---------------------------------------------------------------------!
 
-.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall 
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall
 
 uninstall: $(UNINSTALLTYPES)
 	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
@@ -186,7 +201,7 @@ serialuninstall:
 	@-rm -rf $(installfolder)/lib/serial
 
 mpiuninstall:
-	@-rm -f $(installfolder)/bin/quick.mpi
+	@-rm -f $(installfolder)/bin/quick.MPI
 	@-rm -rf $(installfolder)/include/mpi
 	@-rm -rf $(installfolder)/lib/mpi
 
@@ -196,13 +211,16 @@ cudauninstall:
 	@-rm -rf $(installfolder)/lib/cuda
 
 cudampiuninstall:
-	@-rm -f $(installfolder)/bin/quick.cuda.mpi
+	@-rm -f $(installfolder)/bin/quick.cuda.MPI
 	@-rm -rf $(installfolder)/include/cudampi
 	@-rm -rf $(installfolder)/lib/cudampi
 
 amuninstall:
 	@-rm -f $(amfolder)/bin/quick
-	@-rm -f $(amfolder)/bin/quick.mpi
+	@-rm -f $(amfolder)/bin/quick.MPI
 	@-rm -f $(amfolder)/bin/quick.cuda
-	@-rm -f $(amfolder)/bin/quick.cuda.mpi
+	@-rm -f $(amfolder)/bin/quick.cuda.MPI
+	@-rm -f $(amfolder)/lib/libquick*
+	@-rm -f $(amfolder)/lib/libxc.*
+	@-rm -f $(amfolder)/lib/libxc-cuda.*
 	@echo  "Successfully uninstalled QUICK executables in $(amfolder)/bin folder."

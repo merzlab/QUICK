@@ -150,8 +150,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
     exit 1
   fi
 
-  if [ "$mpi" = 'yes' ] && [ ! -x "$qbindir/quick.mpi" ]; then
-    echo  "Error: $qbindir/quick.mpi not found."
+  if [ "$mpi" = 'yes' ] && [ ! -x "$qbindir/quick.MPI" ]; then
+    echo  "Error: $qbindir/quick.MPI not found."
     exit 1
   fi
 
@@ -160,15 +160,15 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
     exit 1
   fi
 
-  if [ "$cudampi" = 'yes' ] && [ ! -x "$qbindir/quick.cuda.mpi" ]; then
-    echo  "Error: $qbindir/quick.cuda.mpi not found."
+  if [ "$cudampi" = 'yes' ] && [ ! -x "$qbindir/quick.cuda.MPI" ]; then
+    echo  "Error: $qbindir/quick.cuda.MPI not found."
     exit 1
   fi
 
 else
 
   # automatically check for executables
-  if [ -x "$qbindir/quick.cuda.mpi" ]; then
+  if [ -x "$qbindir/quick.cuda.MPI" ]; then
     cudampi='yes'
     buildtypes="$buildtypes cudampi"
   fi
@@ -178,7 +178,7 @@ else
     buildtypes="$buildtypes cuda"
   fi
 
-  if [ -x "$qbindir/quick.mpi" ]; then
+  if [ -x "$qbindir/quick.MPI" ]; then
     mpi='yes'
     buildtypes="$buildtypes mpi"
   fi
@@ -245,11 +245,11 @@ for buildtype in $buildtypes; do
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
   elif [ "$buildtype" = 'mpi' ]; then
-    qexe='quick.mpi'
+    qexe='quick.MPI'
   elif [ "$buildtype" = 'cuda' ]; then
     qexe='quick.cuda'
   elif [ "$buildtype" = 'cudampi' ]; then
-    qexe='quick.cuda.mpi'
+    qexe='quick.cuda.MPI'
   fi
 
 
