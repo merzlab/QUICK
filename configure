@@ -59,7 +59,7 @@ echo  "
       --amprefix <dir>
                      Path to AMBER home directory
                                                                             
-  Supported compilers are: gnu, intel                                       
+  Supported compilers are: gnu, intel, pgi                                       
                                                                             
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:                                                                  
@@ -198,6 +198,25 @@ case "$compiler" in
       cc_search='icc'
       cxx_search='icpc'
     ;;
+
+  pgi)
+    echo "Requested compiler: PGI."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='pgfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='pgcc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='pgc++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='pgfortran'
+      cc_search='pgcc'
+      cxx_search='pgc++'
+    ;;
+
   *)
     echo  "Error: $compiler compiler tool chain is not supported."
     exit 1;;
@@ -225,9 +244,6 @@ fort_version='not'
 fort_version_major=''
 fort_version_minor=''
 fort_version_patch=''
-
-
-
 
 fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
 
@@ -455,6 +471,7 @@ while [ $# -gt 0 ]; do
     --amprefix)    shift; amprefix=${1%/}; useamprefix='true';;
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
+    pgi)           compiler='pgi';;
     -h| -H| -help| --help) print_help;;
      *)  echo  "Error: $1 is an unknown flag."
          echo  "       Run this script as './configure [flags] compiler'."
@@ -748,7 +765,7 @@ if [ "$debug" = 'yes' ]; then
   blas_opt_flags='-O0'
 
   case "$compiler" in
-    gnu)
+    gnu | pgi)
       fort_debug_flags='-g -DDEBUG'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
@@ -791,6 +808,12 @@ for buildtype in $buildtypes; do
       ;;
     intel)
       fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+      fi
+      ;;
+    pgi)
+      fort_flags="$opt_flags $fort_debug_flags -m64 -cpp $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi
