@@ -84,7 +84,7 @@ serialinstall:
 	@cp -f $(buildfolder)/lib/serial/* $(installfolder)/lib/serial
 
 mpiinstall:
-	@if [ -x $(exefolder)/quick.mpi ]; then cp -f $(exefolder)/quick.mpi $(installfolder)/bin; \
+	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(buildfolder)/include/mpi/* $(installfolder)/include/mpi
@@ -99,10 +99,10 @@ cudainstall:
 	@cp -f $(buildfolder)/lib/cuda/* $(installfolder)/lib/cuda
 
 cudampiinstall:
-	@if [ -x $(exefolder)/quick.cuda.mpi ]; then cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin; \
+	@if [ -x $(exefolder)/quick.cuda.MPI ]; then cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
-	@cp -f $(exefolder)/quick.cuda.mpi $(installfolder)/bin
+	@cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin
 	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
@@ -201,7 +201,7 @@ serialuninstall:
 	@-rm -rf $(installfolder)/lib/serial
 
 mpiuninstall:
-	@-rm -f $(installfolder)/bin/quick.mpi
+	@-rm -f $(installfolder)/bin/quick.MPI
 	@-rm -rf $(installfolder)/include/mpi
 	@-rm -rf $(installfolder)/lib/mpi
 
@@ -211,15 +211,15 @@ cudauninstall:
 	@-rm -rf $(installfolder)/lib/cuda
 
 cudampiuninstall:
-	@-rm -f $(installfolder)/bin/quick.cuda.mpi
+	@-rm -f $(installfolder)/bin/quick.cuda.MPI
 	@-rm -rf $(installfolder)/include/cudampi
 	@-rm -rf $(installfolder)/lib/cudampi
 
 amuninstall:
 	@-rm -f $(amfolder)/bin/quick
-	@-rm -f $(amfolder)/bin/quick.mpi
+	@-rm -f $(amfolder)/bin/quick.MPI
 	@-rm -f $(amfolder)/bin/quick.cuda
-	@-rm -f $(amfolder)/bin/quick.cuda.mpi
+	@-rm -f $(amfolder)/bin/quick.cuda.MPI
 	@-rm -f $(amfolder)/lib/libquick*
 	@-rm -f $(amfolder)/lib/libxc.*
 	@-rm -f $(amfolder)/lib/libxc-cuda.*
