@@ -25,7 +25,7 @@ cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
 
 echo ""
-echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.." 
+echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.."
 
 #  !---------------------------------------------------------------------!
 #  ! function definitions                                                !
@@ -34,36 +34,36 @@ echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.."
 # this function prints help page
 print_help(){
 
-echo  "                                                                                                                                       
-  Use this script as ./configure [flags] compiler                           
-                                                                            
-  Available flags are:                                                      
-      --prefix <dir> User specified installation directory                  
-      --serial       Builds a serial version                                
-      --mpi          Compiles MPI parallel version                           
-      --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
-      --debug        Compiles debug version                                 
-      --shared       Build shared object libraries                          
-      --arch <pascal|volta|turing>                                           
-                     Specify gpu architecture. Applicable for cuda and      
-                     cudampi versions only. If unspecified, QUICK will be   
-                     compiled for several architectures based on the CUDA   
-                     toolkit version.                                       
-      --ncores <ncore>                                                       
-                     Specify the number of cores to be used in compilation. 
-                     If unspecified, QUICK will attempt to automatically    
-                     detect the number of cores in your system.             
-      --nof          Disables the compilation of time consuming f functions 
-                     in the ERI code of cuda version. Not recommended for 
+echo  "
+  Use this script as ./configure [flags] compiler
+
+  Available flags are:
+      --prefix <dir> User specified installation directory
+      --serial       Builds a serial version
+      --mpi          Compiles MPI parallel version
+      --cuda         Builds GPU version that utilizes a single NVIDIA GPU
+      --debug        Compiles debug version
+      --shared       Build shared object libraries
+      --arch <pascal|volta|turing>
+                     Specify gpu architecture. Applicable for cuda and
+                     cudampi versions only. If unspecified, QUICK will be
+                     compiled for several architectures based on the CUDA
+                     toolkit version.
+      --ncores <ncore>
+                     Specify the number of cores to be used in compilation.
+                     If unspecified, QUICK will attempt to automatically
+                     detect the number of cores in your system.
+      --nof          Disables the compilation of time consuming f functions
+                     in the ERI code of cuda version. Not recommended for
                      production.
       --amprefix <dir>
                      Path to AMBER home directory
-                                                                            
-  Supported compilers are: gnu, intel                                       
-                                                                            
+
+  Supported compilers are: gnu, intel
+
   For example, cuda version with intel compiler tool chain can be compiled as
-  follows:                                                                  
-         ./configure --cuda --arch volta --prefix /home/install intel                                  
+  follows:
+         ./configure --cuda --arch volta --prefix /home/install intel
   "
 
 exit 0;
@@ -138,14 +138,14 @@ check_os(){
     *)        osname="unknown";;
   esac
 
-  if [ -z `echo "$OSTYPE"` ]; then 
+  if [ -z `echo "$OSTYPE"` ]; then
     echo "Operating system: unknown"
   else
     echo "Operating system: $OSTYPE"
   fi
 }
 
-# this function print compiler mistmach 
+# this function print compiler mistmach
 print_compiler_mistmatch(){
   echo  "Error: Compiler version mistmatch."
   echo  "       Fortran compiler version: $fort_version."
@@ -234,7 +234,7 @@ fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0
 # some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
 if [ -z "$fort_version_info" ]; then
   fort_version_info=`$fort_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-fi 
+fi
 
 fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
 
@@ -324,13 +324,13 @@ fi
 if [ "$has_fort_version" = 'yes' ] && [ "$has_cc_version" = 'yes' ] && [ "$has_cxx_version" = 'yes' ]; then
   if [ ! "$fort_version_major" = "$cc_version_major" ] && [ ! "$fort_version_major" = "$cxx_version_major" ]; then
      print_compiler_mistmatch
-     exit 1 
+     exit 1
    elif [ ! "$fort_version_minor" = "$cc_version_minor" ] && [ ! "$fort_version_minor" = "$cxx_version_minor" ]; then
      print_compiler_mistmatch
      exit 1
    elif [ ! "$fort_version_patch" = "$cc_version_patch" ] && [ ! "$fort_version_patch" = "$cxx_version_patch" ]; then
     print_compiler_mistmatch
-    exit 1    
+    exit 1
   fi
 fi
 
@@ -399,7 +399,7 @@ cuda_dc_flags=''
 # cuda include flags
 cuda_incl_flags=''
 
-# flags to generate PIC in so library case 
+# flags to generate PIC in so library case
 lib_flags=''
 cuda_lib_flags=''
 
@@ -443,11 +443,11 @@ if [ $# -lt 1 ]; then print_help; fi
 while [ $# -gt 0 ]; do
   case "$1" in
     --serial)      serial='yes'; buildtypes="$buildtypes serial"; cleantypes="$cleantypes serialclean"; installers="$installers quick";;
-    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.mpi";;
+    --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.MPI";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
-    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.mpi";;
+    --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
     --debug)       debug='yes';;
-    --shared)      shared='yes';; 
+    --shared)      shared='yes';;
     --nof)         nof='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
@@ -476,14 +476,14 @@ fi
 # check the os first
 check_os
 
-if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then 
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then
   echo  "Warning: QUICK cuda and cuda-mpi versions have never been tested on $osname os."
 fi
 
 # check compiler
 check_compiler
 
-# check prefix and perform necessary operations 
+# check prefix and perform necessary operations
 if [ "$useprefix" = "true" ]; then
 
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
@@ -496,7 +496,7 @@ if [ "$useprefix" = "true" ]; then
   # do this trick to get absolute path
   cd "$quick_prefix"
   quick_prefix=`pwd`
-  cd "$QUICK_HOME" 
+  cd "$QUICK_HOME"
 
   echo "QUICK will be installed in $quick_prefix"
 
@@ -539,7 +539,7 @@ if [ "$useprefix" = "true" ]; then
   install_string='install'
   uninstall_string='uninstall'
 
-  for buildtype in $buildtypes; do    
+  for buildtype in $buildtypes; do
     installtypes="$installtypes $buildtype$install_string"
     uninstalltypes="$uninstalltypes $buildtype$uninstall_string"
   done
@@ -553,7 +553,7 @@ else
 
 fi
 
-# check amber prefix 
+# check amber prefix
 if [ "$useamprefix" = "true" ]; then
 
   # do this trick to get absolute path
@@ -600,14 +600,14 @@ for buildtype in $buildtypes; do
       mkdir -p "$QUICK_HOME/build/common/cpu/libxcobj"
     fi
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
-  
+
     if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
     fi
     blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
   fi
 
-  
+
 
   if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
@@ -618,7 +618,7 @@ for buildtype in $buildtypes; do
     if [ ! -d "$QUICK_HOME/build/common/gpu/libxcdevobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/gpu/libxcdevobj"
     fi
-    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"    
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
 
@@ -675,7 +675,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     exit 1
   fi
 
-  if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi  
+  if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi
 
     #SM8.0 = A100
     #sm80flags='-gencode arch=compute_80,code=sm_80'
@@ -787,7 +787,7 @@ for buildtype in $buildtypes; do
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
-      fi    
+      fi
       ;;
     intel)
       fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
@@ -816,7 +816,7 @@ for buildtype in $buildtypes; do
   fi
 
   # set directives based on the build type. These stuff were previously in config.h
-    
+
   if [ "$buildtype" = 'mpi' ]; then
 
     fort_flags="$fort_flags -DMPIV"
@@ -841,7 +841,7 @@ for buildtype in $buildtypes; do
   # set fortran linking flags
   ldflags="$fort_flags -lstdc++"
 
-  # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required. 
+  # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required.
   if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
     set_mpicxx
   fi
@@ -851,11 +851,11 @@ for buildtype in $buildtypes; do
   if [ "$buildtype" = 'serial' ]; then
     installer='quick'
   elif [ "$buildtype" = 'mpi' ]; then
-    installer='quick.mpi'
+    installer='quick.MPI'
   elif [ "$buildtype" = 'cuda' ]; then
     installer='quick.cuda'
   elif [ "$buildtype" = 'cudampi' ]; then
-    installer='quick.cuda.mpi'
+    installer='quick.cuda.MPI'
   fi
 
   # set the test type
@@ -866,7 +866,7 @@ for buildtype in $buildtypes; do
   # set libxcobj and blasobj folder
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
-    libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj" 
+    libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
     libxcdevobjfolder=""
   elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     blasobjfolder=""
@@ -928,7 +928,7 @@ installfolder=$quick_prefix
 
 FC=$fort
 CC=$cc
-CXX=$cxx  
+CXX=$cxx
 CUDAC=$nvcc
 
 #!---------------------------------------------------------------------!
@@ -984,6 +984,7 @@ cat > "$QUICK_HOME/make.in" << EOF
 
 BUILDTYPES=$buildtypes
 CLEANTYPES=$cleantypes
+SHARED=$shared
 
 INSTALLTYPES=$installtypes
 UNINSTALLTYPES=$uninstalltypes
@@ -1016,7 +1017,7 @@ EOF
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
-#make clean > /dev/null 
+#make clean > /dev/null
 
 echo  "Input file for GNU make was successfully created."
 echo ""
@@ -1024,7 +1025,7 @@ echo ""
 echo  "Next steps:"
 echo  "          Run 'make' to build QUICK."
 
-if [ "$testtype" = 'installtest' ]; then 
+if [ "$testtype" = 'installtest' ]; then
   echo  "          Run 'make install' to install executable/s, libraries and header files in $quick_prefix."
 fi
 
