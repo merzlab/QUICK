@@ -34,33 +34,33 @@ echo  "Configuring $QUICK_VERSION installation started on $cdate at $ctime.."
 # this function prints help page
 print_help(){
 
-echo  "
-  Use this script as ./configure [flags] compiler
-
-  Available flags are:
-      --prefix <dir> User specified installation directory
-      --serial       Builds a serial version
-      --mpi          Compiles MPI parallel version
-      --cuda         Builds GPU version that utilizes a single NVIDIA GPU
-      --debug        Compiles debug version
-      --shared       Build shared object libraries
-      --arch <pascal|volta|turing>
-                     Specify gpu architecture. Applicable for cuda and
-                     cudampi versions only. If unspecified, QUICK will be
-                     compiled for several architectures based on the CUDA
-                     toolkit version.
-      --ncores <ncore>
-                     Specify the number of cores to be used in compilation.
-                     If unspecified, QUICK will attempt to automatically
-                     detect the number of cores in your system.
-      --nof          Disables the compilation of time consuming f functions
-                     in the ERI code of cuda version. Not recommended for
+echo  "                                                                                                                                       
+  Use this script as ./configure [flags] compiler                           
+                                                                            
+  Available flags are:                                                      
+      --prefix <dir> User specified installation directory                  
+      --serial       Builds a serial version                                
+      --mpi          Compiles MPI parallel version                           
+      --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --debug        Compiles debug version                                 
+      --shared       Build shared object libraries                          
+      --arch <pascal|volta|turing|ampere>                                           
+                     Specify gpu architecture. Applicable for cuda and      
+                     cudampi versions only. If unspecified, QUICK will be   
+                     compiled for several architectures based on the CUDA   
+                     toolkit version.                                       
+      --ncores <ncore>                                                       
+                     Specify the number of cores to be used in compilation. 
+                     If unspecified, QUICK will attempt to automatically    
+                     detect the number of cores in your system.             
+      --nof          Disables the compilation of time consuming f functions 
+                     in the ERI code of cuda version. Not recommended for 
                      production.
       --amprefix <dir>
                      Path to AMBER home directory
-
-  Supported compilers are: gnu, intel
-
+                                                                            
+  Supported compilers are: gnu, intel, pgi                                       
+                                                                            
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:
          ./configure --cuda --arch volta --prefix /home/install intel
@@ -198,6 +198,25 @@ case "$compiler" in
       cc_search='icc'
       cxx_search='icpc'
     ;;
+
+  pgi)
+    echo "Requested compiler: PGI."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='pgfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='pgcc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='pgc++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='pgfortran'
+      cc_search='pgcc'
+      cxx_search='pgc++'
+    ;;
+
   *)
     echo  "Error: $compiler compiler tool chain is not supported."
     exit 1;;
@@ -219,30 +238,46 @@ if [ -z "`which $cxx 2> /dev/null`" ]; then
   exit 1
 fi
 
+# general vars for compiler search
+info_option='-v'
+patch_seperator='.'
+version_string="[0-9]{1,4}.[0-9]{1,4}$patch_seperator[0-9]{1,4}"
+
+# pgi compilers use a different versioning output
+if [ "$fort_search" = 'pgfortran' ]; then
+  patch_seperator='-'
+  version_string='[0-9]{1,4}.[0-9]{1,4}-[0-9]{1,4}'
+  info_option='--version'
+fi
+
 # check the fortran compiler version
 has_fort_version='no'
 fort_version='not'
 fort_version_major=''
 fort_version_minor=''
 fort_version_patch=''
+fort_search_string="$fort_search\s[vV]ersion\s$version_string"
 
+# pgi compilers use a different version output
+if [ "$fort_search" = 'pgfortran' ]; then
+  fort_search_string="$fort_search\s$version_string"
+fi
 
-
-
-fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search_string"`
 
 # some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
 if [ -z "$fort_version_info" ]; then
-  fort_version_info=`$fort_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+  fort_search_string="$cc_search\s[vV]ersion\s$version_string"
+  fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search_string"`
 fi
 
-fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fort_version=`echo $fort_version_info | grep -oE "$version_string"`
 
-if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+if [ `echo $fort_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_fort_version='yes'
   fort_version_major=`echo $fort_version | cut -d '.' -f1`
   fort_version_minor=`echo $fort_version | cut -d '.' -f2`
-  fort_version_patch=`echo $fort_version | cut -d '.' -f3`
+  fort_version_patch=`echo $fort_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_fort_version" = 'yes' ]; then
@@ -257,15 +292,21 @@ cc_version='not'
 cc_version_major=''
 cc_version_minor=''
 cc_version_patch=''
+cc_search_string="$cc_search\s[vV]ersion\s$version_string"
 
-cc_version_info=`$cc_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-cc_version=`echo $cc_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# pgi compilers use a different version output
+if [ "$cc_search" = 'pgcc' ]; then
+  cc_search_string="$cc_search\s$version_string"
+fi
 
-if [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+cc_version_info=`$cc_search $info_option 2>&1 | grep -oE "$cc_search_string"`
+cc_version=`echo $cc_version_info | grep -oE "$version_string"`
+
+if [ `echo $cc_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cc_version='yes'
   cc_version_major=`echo $cc_version | cut -d '.' -f1`
   cc_version_minor=`echo $cc_version | cut -d '.' -f2`
-  cc_version_patch=`echo $cc_version | cut -d '.' -f3`
+  cc_version_patch=`echo $cc_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_cc_version" = 'yes' ]; then
@@ -274,8 +315,8 @@ else
    echo  "Warning: Failed to detect $cc version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
-  cc_version=`$cc_search -v 2>&1 | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+  cc_version=`$cc_search -v 2>&1 | grep -oE "$version_string" | tail -1`
   if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
     echo  "Error: $cc compiler was requested but clang c compiler is loaded."
     echo  "       Please load the correct compiler."
@@ -289,20 +330,27 @@ cxx_version='not'
 cxx_version_major=''
 cxx_version_minor=''
 cxx_version_patch=''
+cxx_search_string="$cxx_search\s[vV]ersion\s$version_string"
 
-cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cxx_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
-if [ -z "$cxx_version_info" ]; then
-  cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# pgi compilers use a different version output
+if [ "$cxx_search" = 'pgc++' ]; then
+  cxx_search_string="pgc\+\+\s$version_string"
 fi
 
-cxx_version=`echo $cxx_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cxx_search_string"`
 
-if [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
+if [ -z "$cxx_version_info" ]; then
+  cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cc_search\s[vV]ersion\s$version_string"`
+fi
+
+cxx_version=`echo $cxx_version_info | grep -oE "$version_string"`
+
+if [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cxx_version='yes'
   cxx_version_major=`echo $cxx_version | cut -d '.' -f1`
   cxx_version_minor=`echo $cxx_version | cut -d '.' -f2`
-  cxx_version_patch=`echo $cxx_version | cut -d '.' -f3`
+  cxx_version_patch=`echo $cxx_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_cxx_version" = 'yes' ]; then
@@ -311,8 +359,8 @@ else
    echo  "Warning: Failed to detect $cxx version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
-  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "$version_string" | tail -1`
   if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
     echo  "Error: $cxx compiler was requested but clang c++ compiler is loaded."
     echo  "       Please load the correct compiler."
@@ -455,6 +503,7 @@ while [ $# -gt 0 ]; do
     --amprefix)    shift; amprefix=${1%/}; useamprefix='true';;
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
+    pgi)           compiler='pgi';;
     -h| -H| -help| --help) print_help;;
      *)  echo  "Error: $1 is an unknown flag."
          echo  "       Run this script as './configure [flags] compiler'."
@@ -659,6 +708,9 @@ set_uspec_arch(){
       turing)
         echo "Configuring for SM7.5"
         cuda_arch_flags="$cuda_arch_flags $sm75flags";;
+      ampere)
+        echo "Configuring for SM8.0"
+        cuda_arch_flags="$cuda_arch_flags $sm80flags";;
     esac
   done
 }
@@ -678,7 +730,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
   if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi
 
     #SM8.0 = A100
-    #sm80flags='-gencode arch=compute_80,code=sm_80'
+    sm80flags='-gencode arch=compute_80,code=sm_80'
     #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
     sm75flags='-gencode arch=compute_75,code=sm_75'
     #SM7.0 = V100, Titan V
@@ -696,8 +748,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        echo "Configuring for SM6.0, SM7.0, SM7.5"
-        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        echo "Configuring for SM6.0, SM7.0, SM7.5, SM8.0"
+        cuda_arch_flags="$sm60flags $sm70flags $sm75flags $sm80flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
@@ -748,7 +800,7 @@ if [ "$debug" = 'yes' ]; then
   blas_opt_flags='-O0'
 
   case "$compiler" in
-    gnu)
+    gnu | pgi)
       fort_debug_flags='-g -DDEBUG'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
@@ -791,6 +843,12 @@ for buildtype in $buildtypes; do
       ;;
     intel)
       fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+      fi
+      ;;
+    pgi)
+      fort_flags="$opt_flags $fort_debug_flags -m64 -cpp $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi

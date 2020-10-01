@@ -12,9 +12,11 @@
 ! routine to read number from string
 !--------------------------------------------------------
 subroutine getnum(string,ibeg,iend,value,ierror)
-  implicit double precision(a-h,o-z)
+  implicit none
 
   character string*(*),char*1,efield(4)*1
+  double precision value, asign, xleft, xright, esign, expart
+  integer ibeg, iend, ierror, idecml, i1, i2, i, ie
   data efield /'E','e','D','d'/
   save efield
 
