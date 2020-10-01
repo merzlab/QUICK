@@ -238,27 +238,47 @@ if [ -z "`which $cxx 2> /dev/null`" ]; then
   exit 1
 fi
 
+# general vars for compiler search
+info_option='-v'
+min_patch_sepertor='.'
+version_string="[0-9]{1,4}.[0-9]{1,4}$min_patch_sepertor[0-9]{1,4}"
+
+# pgi compilers use a different versioning output
+if [ "$fort_search" = 'pgfortran' ]; then
+  min_patch_sepertor='-'
+  version_string='[0-9]{1,4}.[0-9]{1,4}-[0-9]{1,4}'
+  info_option='--version'
+fi
+
 # check the fortran compiler version
 has_fort_version='no'
 fort_version='not'
 fort_version_major=''
 fort_version_minor=''
 fort_version_patch=''
+fort_search_string="$fort_search\s[vV]ersion\s$version_string"
 
-fort_version_info=`$fort_search -v 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# pgi compilers use a different version output
+if [ "$fort_search" = 'pgfortran' ]; then
+  fort_search_string="$fort_search\s$version_string"
+fi
+
+#fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}$min_patch_sepertor[0-9]{1,4}"`
+fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search_string"`
 
 # some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
 if [ -z "$fort_version_info" ]; then
-  fort_version_info=`$fort_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-fi 
+  fort_search_string="$cc_search\s[vV]ersion\s$version_string"
+  fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search_string"`
+fi
 
-fort_version=`echo $fort_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+fort_version=`echo $fort_version_info | grep -oE "$version_string"`
 
-if [ `echo $fort_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+if [ `echo $fort_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_fort_version='yes'
   fort_version_major=`echo $fort_version | cut -d '.' -f1`
   fort_version_minor=`echo $fort_version | cut -d '.' -f2`
-  fort_version_patch=`echo $fort_version | cut -d '.' -f3`
+  fort_version_patch=`echo $fort_version | cut -d "$min_patch_sepertor" -f3`
 fi
 
 if [ "$has_fort_version" = 'yes' ]; then
@@ -273,15 +293,21 @@ cc_version='not'
 cc_version_major=''
 cc_version_minor=''
 cc_version_patch=''
+cc_search_string="$cc_search\s[vV]ersion\s$version_string"
 
-cc_version_info=`$cc_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-cc_version=`echo $cc_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# pgi compilers use a different version output
+if [ "$cc_search" = 'pgcc' ]; then
+  cc_search_string="$cc_search\s$version_string"
+fi
 
-if [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+cc_version_info=`$cc_search $info_option 2>&1 | grep -oE "$cc_search_string"`
+cc_version=`echo $cc_version_info | grep -oE "$version_string"`
+
+if [ `echo $cc_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cc_version='yes'
   cc_version_major=`echo $cc_version | cut -d '.' -f1`
   cc_version_minor=`echo $cc_version | cut -d '.' -f2`
-  cc_version_patch=`echo $cc_version | cut -d '.' -f3`
+  cc_version_patch=`echo $cc_version | cut -d "$min_patch_sepertor" -f3`
 fi
 
 if [ "$has_cc_version" = 'yes' ]; then
@@ -290,8 +316,8 @@ else
    echo  "Warning: Failed to detect $cc version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
-  cc_version=`$cc_search -v 2>&1 | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+  cc_version=`$cc_search -v 2>&1 | grep -oE "$version_string" | tail -1`
   if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
     echo  "Error: $cc compiler was requested but clang c compiler is loaded."
     echo  "       Please load the correct compiler."
@@ -305,20 +331,27 @@ cxx_version='not'
 cxx_version_major=''
 cxx_version_minor=''
 cxx_version_patch=''
+cxx_search_string="$cxx_search\s[vV]ersion\s$version_string"
 
-cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cxx_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
-# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
-if [ -z "$cxx_version_info" ]; then
-  cxx_version_info=`$cxx_search -v 2>&1 | grep -oE "$cc_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+# pgi compilers use a different version output
+if [ "$cxx_search" = 'pgc++' ]; then
+  cxx_search_string="pgc\+\+\s$version_string"
 fi
 
-cxx_version=`echo $cxx_version_info | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}"`
+cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cxx_search_string"`
 
-if [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -gt 0 ]; then
+# some gnu installations gives off 'gcc version xx.xx.xx' instead of 'g++ version xx.xx.xx'
+if [ -z "$cxx_version_info" ]; then
+  cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cc_search\s[vV]ersion\s$version_string"`
+fi
+
+cxx_version=`echo $cxx_version_info | grep -oE "$version_string"`
+
+if [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cxx_version='yes'
   cxx_version_major=`echo $cxx_version | cut -d '.' -f1`
   cxx_version_minor=`echo $cxx_version | cut -d '.' -f2`
-  cxx_version_patch=`echo $cxx_version | cut -d '.' -f3`
+  cxx_version_patch=`echo $cxx_version | cut -d "$min_patch_sepertor" -f3`
 fi
 
 if [ "$has_cxx_version" = 'yes' ]; then
@@ -327,8 +360,8 @@ else
    echo  "Warning: Failed to detect $cxx version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | wc -l` -lt 1 ] ; then
-  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "[0-9]{1,4}.[0-9]{1,4}.[0-9]{1,4}" | tail -1`
+if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+  cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "$version_string" | tail -1`
   if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
     echo  "Error: $cxx compiler was requested but clang c++ compiler is loaded."
     echo  "       Please load the correct compiler."
