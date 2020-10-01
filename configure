@@ -240,12 +240,12 @@ fi
 
 # general vars for compiler search
 info_option='-v'
-min_patch_sepertor='.'
-version_string="[0-9]{1,4}.[0-9]{1,4}$min_patch_sepertor[0-9]{1,4}"
+patch_seperator='.'
+version_string="[0-9]{1,4}.[0-9]{1,4}$patch_seperator[0-9]{1,4}"
 
 # pgi compilers use a different versioning output
 if [ "$fort_search" = 'pgfortran' ]; then
-  min_patch_sepertor='-'
+  patch_seperator='-'
   version_string='[0-9]{1,4}.[0-9]{1,4}-[0-9]{1,4}'
   info_option='--version'
 fi
@@ -263,7 +263,6 @@ if [ "$fort_search" = 'pgfortran' ]; then
   fort_search_string="$fort_search\s$version_string"
 fi
 
-#fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search\s[vV]ersion\s[0-9]{1,4}.[0-9]{1,4}$min_patch_sepertor[0-9]{1,4}"`
 fort_version_info=`$fort_search $info_option 2>&1 | grep -oE "$fort_search_string"`
 
 # some gnu installations gives off 'gcc version xx.xx.xx' instead of 'gfortran version xx.xx.xx'
@@ -278,7 +277,7 @@ if [ `echo $fort_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_fort_version='yes'
   fort_version_major=`echo $fort_version | cut -d '.' -f1`
   fort_version_minor=`echo $fort_version | cut -d '.' -f2`
-  fort_version_patch=`echo $fort_version | cut -d "$min_patch_sepertor" -f3`
+  fort_version_patch=`echo $fort_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_fort_version" = 'yes' ]; then
@@ -307,7 +306,7 @@ if [ `echo $cc_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cc_version='yes'
   cc_version_major=`echo $cc_version | cut -d '.' -f1`
   cc_version_minor=`echo $cc_version | cut -d '.' -f2`
-  cc_version_patch=`echo $cc_version | cut -d "$min_patch_sepertor" -f3`
+  cc_version_patch=`echo $cc_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_cc_version" = 'yes' ]; then
@@ -351,7 +350,7 @@ if [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -gt 0 ]; then
   has_cxx_version='yes'
   cxx_version_major=`echo $cxx_version | cut -d '.' -f1`
   cxx_version_minor=`echo $cxx_version | cut -d '.' -f2`
-  cxx_version_patch=`echo $cxx_version | cut -d "$min_patch_sepertor" -f3`
+  cxx_version_patch=`echo $cxx_version | cut -d "$patch_seperator" -f3`
 fi
 
 if [ "$has_cxx_version" = 'yes' ]; then
