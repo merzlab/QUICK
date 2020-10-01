@@ -107,7 +107,7 @@ cudampiinstall:
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 aminstall:
-	@if [ "$(AMINSTALL)" = 'true' ]; then \
+	@if [ -d $(amfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(amfolder)/lib/libquick.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/serial/libxc.$(libsuffix) $(amfolder)/lib/libxc.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(amfolder)/lib/libquick-mpi.$(libsuffix); \
@@ -115,10 +115,12 @@ aminstall:
 	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(amfolder)/lib/libquick-cuda.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(amfolder)/lib/libquick-cudampi.$(libsuffix); \
-	ln -s -f $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; \
+	ln -s -f $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(amfolder)/lib/libxc-cuda.$(libsuffix); fi; echo "Successfully installed QUICK libraries in $(amfolder)/lib folder.";\
+        else echo "Error: $(amfolder)/lib folder not found."; exit 1; fi
+	@if [ -d $(amfolder)/bin ]; then \
 	for i in quick quick.MPI quick.cuda quick.cuda.MPI; do if [ -x $(exefolder)/$$i ]; then mv $(exefolder)/$$i $(amfolder)/bin/; fi; done; \
 	echo "Successfully installed QUICK executables in $(amfolder)/bin folder."; \
-	else echo  "Error: You must set the path to AMBER home directory before running 'make aminstall'."; fi
+	else echo  "Error: $(amfolder)/bin folder not found."; exit 1; fi
 
 
 #  !---------------------------------------------------------------------!
@@ -223,4 +225,4 @@ amuninstall:
 	@-rm -f $(amfolder)/lib/libquick*
 	@-rm -f $(amfolder)/lib/libxc.*
 	@-rm -f $(amfolder)/lib/libxc-cuda.*
-	@echo  "Successfully uninstalled QUICK executables in $(amfolder)/bin folder."
+	@echo  "Successfully removed QUICK executables and libraries from $(amfolder) folder."
