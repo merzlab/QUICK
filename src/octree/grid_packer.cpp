@@ -202,8 +202,9 @@ void write_vmd_grid(vector<node> octree, string filename){
 	ofstream txtOut;
 
         //Convert the string file name into char array
-        char fname[filename.length() + 1];
-        for(int i=0; i<sizeof(fname);i++){
+        unsigned int fnlength = filename.length() + 1;
+	char fname[fnlength];
+        for(int i=0; i<fnlength;i++){
                 fname[i] = filename[i];
         }
 
@@ -258,8 +259,9 @@ void write_xyz(vector<node> *octree, vector<point> *ptlst, bool isptlst, string 
 
 	ofstream txtOut;
 	//Convert the string file name into char array
-	char fname[filename.length() + 1];
-	for(int i=0; i<sizeof(fname);i++){
+	unsigned int fnlength = filename.length() + 1;
+	char fname[fnlength];
+	for(int i=0; i<fnlength;i++){
 		fname[i] = filename[i];
 	}
 

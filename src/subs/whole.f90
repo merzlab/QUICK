@@ -10,8 +10,11 @@
 !
 
 subroutine whole(string,ibeg,iend,value,ierror)
-  implicit double precision (a-h,o-z)
-  character string*(*)
+  implicit none 
+  character :: string*(*)
+  double precision :: value
+  integer :: i, ibeg, iend, ierror, ichar0, idigit
+
   ierror = 0
   value = 0.0d0
   ichar0 = ichar('0')
