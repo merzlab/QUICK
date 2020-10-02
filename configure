@@ -481,7 +481,6 @@ nof='no'
 
 # amber related variables
 aminstall='false'
-amprefix=''
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
@@ -547,16 +546,13 @@ if [ "$aminstall" = "true" ]; then
   else
     # do this trick to get absolute path
     cd "$quick_prefix"
-    amprefix=`pwd`
+    quick_prefix=`pwd`
     cd "$QUICK_HOME"
 
-    echo "QUICK will be installed into $amprefix."
+    echo "QUICK will be installed into AMBER home directory $quick_prefix."
 
     installtypes='aminstall'
     uninstalltypes='amuninstall'
-
-    # reset $quick_prefix to prevent copying test script into AMBER_HOME
-    quick_prefix="$QUICK_HOME"    
 
   fi
 
@@ -1070,7 +1066,6 @@ exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
-amfolder=$amprefix
 
 # source directories
 subfolder=$QUICK_HOME/src/subs
@@ -1101,5 +1096,5 @@ fi
 echo  "          Run 'make test' to verify the executables."
 
 if [ "$aminstall" = "true" ]; then
-echo  "          Run 'make install' to install QUICK executables and libraries into $amprefix."
+echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
 fi
