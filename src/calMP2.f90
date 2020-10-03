@@ -81,8 +81,15 @@ subroutine calmp2
      do II=1,jshell
         do JJ=II,jshell
            if(Ycutoff(II,JJ).gt.cutoffmp2/ttt)then
+            
+              !print *, "before initialization, orbmp2i331 is"
+              !print *, orbmp2i331
+              !print *, shape(orbmp2i331)
               call initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasistemp)
               call initialOrbmp2ij(orbmp2j331,nstep,nsteplength,ivir,nbasistemp,nbasistemp)
+              !print *, "after initialization, orbmp2i331 is"
+              !print *, orbmp2i331
+            
 
               do KK=1,jshell
                  do LL=KK,jshell
@@ -129,6 +136,8 @@ subroutine calmp2
                  enddo
               enddo
 
+              !print *, "after call shellmp2, orbmp2i331 is"
+              !print *, orbmp2i331
 
 
               NII1=quick_basis%Qstart(II)

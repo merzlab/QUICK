@@ -49,13 +49,23 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
 
 !  fetch 1e-integral from 1st time
-   call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
-
+   !print *, "in scf_operator, before all, quick_qm_struct%o is"
+   !print *, quick_qm_struct%o
+   !print *, ""
+   call copyDMat(oneElecO,quick_qm_struct%o,nbasis) !!quick_qm_struct%o as F got first term oneElecO
+   !print *, "in scf_operator, after copy oneElecO, quick_qm_struct%o is"
+   !print *, quick_qm_struct%o
+   !print *, "" 
 !  Now calculate kinetic and attraction energy first.
    if (quick_method%printEnergy) call get1eEnergy()
-
+   !print *, "in scf_operator, after get1eEnergy(), quick_qm_struct%o is"
+   !print *, quick_qm_struct%o
+   !print *, ""
 !  Sum the ECP integrals to the partial Fock matrix
    if (quick_method%ecp) call ecpoperator()
+   !print *, "in scf_operator, after ecpoperator(), quick_qm_struct%o is"
+   !print *, quick_qm_struct%o
+   !print *, "" 
 
 #ifdef MPIV
    endif
@@ -131,7 +141,7 @@ subroutine scf_operator(oneElecO, deltaO)
 !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then          
-         call gpu_get2e(quick_qm_struct%o)  
+         call gpu_get2e(quick_qm_struct%o)  !c function
       else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -151,9 +161,16 @@ subroutine scf_operator(oneElecO, deltaO)
       enddo
    endif        
 #else
+    !print *, "Here in scf_operator, jshell is", jshell
+    !print *, "Here in scf_operator, before adding 2e integrals, quick_qm_struct%o is"
+    !print *, quick_qm_struct%o
+    !print *, " "
       do II=1,jshell
-         call get2e(II)
+         call get2e(II) !!serial get2e and added to quick_qm_struct%o: get2e->shell->iclass
       enddo
+    !print *, "Here in scf_operator, after adding 2e integrals, quick_qm_struct%o is"
+    !print *, quick_qm_struct%o
+    !print *, " "
 #endif
 
 #if defined CUDA || defined CUDA_MPIV 

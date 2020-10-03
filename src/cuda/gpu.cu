@@ -2475,10 +2475,13 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
+	printf("in gpu_get2e_, before calling get2e(gpu)\n");
     get2e(gpu);
+	printf("in gpu_get2e_, after calling get2e(gpu)\n");
+
  
     PRINTDEBUG("COMPLETE KERNEL")
-    gpu -> gpu_calculated -> oULL -> Download();
+    gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
     
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
@@ -2504,7 +2507,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     cudaEventRecord(start, 0);
 #endif
     
-    gpu -> gpu_calculated -> o    -> Download(o);
+    gpu -> gpu_calculated -> o    -> Download(o); //c->backto fortran
 
 #ifdef CUDA_MPIV
     for (int i = 0; i< gpu->nbasis; i++) {
@@ -2533,6 +2536,77 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     delete gpu->gpu_cutoff->cutMatrix;
     
     PRINTDEBUG("COMPLETE RUNNING GET2E")
+}
+
+
+//-----------------------------------------------
+//  compute mp2
+//-----------------------------------------------
+
+extern "C" void gpu_calmp2_(QUICKDouble* o)
+{
+	PRINTDEBUG("BEGIN TO RUN gpu_calmp2");
+	
+	upload_sim_to_constant_MP2(gpu);
+
+	PRINTDEBUG("BEGIN TO RUN KERNEL")
+	
+	get2e_MP2(gpu);
+	
+	PRINTDEBUG("COMPLETE KERNEL")
+	printf("in gpu_calmp2, before gpu -> gpu_calculated -> oULL -> Download()\n");
+	gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
+	printf("in gpu_calmp2, after gpu -> gpu_calculated -> oULL -> Download()\n");
+
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+            }
+            else
+            {
+                valDB  = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+        }
+    }
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+	
+	//printf("in gpu_calmp2_, before gpu -> gpu_calculated -> o    -> Download(o);\n");
+	gpu -> gpu_calculated -> o    -> Download(o); //c->back to fortran
+
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("DOWNLOAD O",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("DELETE TEMP VARIABLES")
+	
+	printf("in gpu_calmp2_, before delete 4 pointers\n");
+
+    delete gpu->gpu_calculated->o;
+    delete gpu->gpu_calculated->dense;
+    delete gpu->gpu_calculated->oULL;
+
+    delete gpu->gpu_cutoff->cutMatrix;
+
+    PRINTDEBUG("COMPLETE RUNNING MP2")
+	
 }
 
 

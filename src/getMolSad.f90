@@ -104,6 +104,7 @@ subroutine getmolsad()
          ! is done in a subroutine.
          !-------------------------------------------
          nsenhai=1
+         !print *, "in getmolsad, readbasis is to be called"
          call readbasis(nsenhai,0,0,0,0)
          atombasis(iitemp)=nbasis
          write (ioutfile,'(" BASIS FUNCTIONS = ",I4)') nbasis

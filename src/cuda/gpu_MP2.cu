@@ -12,6 +12,13 @@
 #include "gpu.h"
 #include <cuda.h>
 
+#undef STOREDIM
+//#ifdef int_spd
+#define STOREDIM STOREDIM_S
+//#else
+//#define STOREDIM STOREDIM_L
+//#endif
+
 /*
  Constant Memory in GPU is fast but quite limited and hard to operate, usually not allocatable and 
  readonly. So we put the following variables into constant memory:
@@ -31,8 +38,9 @@ static __constant__ int Sumindex_MP2[10]={0,0,1,4,10,20,35,56,84,120};
  */
 void upload_sim_to_constant_MP2(_gpu_type gpu){
     cudaError_t status;
-    status = cudaMemcpyToSymbol("devSim_MP2", &gpu->gpu_sim, sizeof(gpu_simulation_type), 0, cudaMemcpyHostToDevice);
-    PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
+    //status = cudaMemcpyToSymbol("devSim_MP2", &gpu->gpu_sim, sizeof(gpu_simulation_type), 0, cudaMemcpyHostToDevice);
+    status = cudaMemcpyToSymbol(devSim_MP2, &gpu->gpu_sim, sizeof(gpu_simulation_type));
+	PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
 }
 
 
@@ -71,15 +79,31 @@ void get2e_MP2(_gpu_type gpu)
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
 {
+
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
+
+	if(offside==0)
+		printf("inside get2e_MP2_kernel\n");
+
     
     QUICKULL jshell   = (QUICKULL) devSim_MP2.sqrQshell;
     QUICKULL myInt    = (QUICKULL) jshell*jshell / totalThreads;
-    
+	
+	if(offside==0)
+	{
+		printf("myInt is %llu\n", myInt);
+		printf("jshell is %llu\n", jshell);
+		printf("totalThreads is %i\n", totalThreads);
+		printf("jshell*jshell - myInt*totalThreads, offside\n");
+	}   
+
     if ((jshell*jshell - myInt*totalThreads)> offside) myInt++;
     
-    for (QUICKULL i = 1; i<=myInt; i++) {
+	//if(offside==0)
+	//printf("myInt is %llu\n", myInt);
+    
+	for (QUICKULL i = 1; i<=myInt; i++) {
         
         QUICKULL currentInt = totalThreads * (i-1)+offside;        
         QUICKULL a = (QUICKULL) currentInt/jshell;
@@ -132,6 +156,17 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
         int kk = devSim_MP2.sorted_Q[KK];
         int ll = devSim_MP2.sorted_Q[LL];
         
+		
+			
+		//printf("offside is %d\n",offside);
+		//	if(ii<<=kk)
+		//		printf("ii<<=kk");
+		//	else
+		//		printf("ii>kk");
+		
+		
+		
+	
         if (ii<=kk){
             int nshell = devSim_MP2.nshell;
             QUICKDouble DNMax = MAX(MAX(4.0*LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell), 4.0*LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
@@ -146,11 +181,13 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
                 int kkk = devSim_MP2.sorted_Qnumber[KK];
                 int lll = devSim_MP2.sorted_Qnumber[LL];
                 
+				//printf("to call iclass_MP2\n");
                 iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
                 
             }
         }
     }
+	//printf("get2e_MP2_kernel completed\n");
 }
 
 /*
@@ -168,6 +205,9 @@ __device__ __forceinline__ QUICKDouble quick_dsqr_MP2(QUICKDouble a)
  */
 __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
+	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+	if(offside==0)
+		printf("in iclass_MP2\n");
     
     /* 
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
@@ -374,12 +414,20 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         ((JJJ == LLL) && (III  < JJJ)) ||
                         ((III == KKK) && (III  < JJJ)  && (JJJ < LLL))) {
                         
-                        
+						//printf("before III, JJJ, KKK, LLL are %d %d %d %d\n",III, JJJ, KKK, LLL);                        
+
                         QUICKDouble Y = (QUICKDouble) hrrwhole_MP2( I, J, K, L,\
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
-                        
+ 						printf("after III, JJJ, KKK, LLL, RAx, RAy, RAz,RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz are %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"\
+						,III, JJJ, KKK, LLL, RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz);
+						printf("Y is %lf\n", Y);
+						////get Y matrix here
+						//unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+						//if(offside==0)
+						//	printf("Y is %lf\n", Y);
+			
                         //   if(abs(Y)*1e-2>devSim_MP2.integralCutoff){
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
                         QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, JJJ-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
@@ -399,7 +447,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         //if (abs(val1d) > devSim_MP2.integralCutoff ) {
                         QUICKULL val1 = (QUICKULL) (fabs(val1d*OSCALE) + (QUICKDouble)0.5);
                         if ( val1d < (QUICKDouble)0.0) val1 = 0ull - val1;
-                        QUICKADD(LOC2(devSim_MP2.oULL, JJJ-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis), val1);
+                        QUICKADD(LOC2(devSim_MP2.oULL, JJJ-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis), val1); //sumation
                         // }
                         
                         // ATOMIC ADD VALUE 2
@@ -409,7 +457,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                                 _tmp = 1.0;
                             }
                             
-                            QUICKDouble val2d = _tmp*DENSEJI*Y;
+                            QUICKDouble val2d = _tmp*DENSEJI*Y; 
                             //   if (abs(val2d) > devSim_MP2.integralCutoff ) {
                             QUICKULL val2 = (QUICKULL) (fabs(val2d*OSCALE) + (QUICKDouble)0.5);
                             if ( val2d < (QUICKDouble)0.0) val2 = 0ull - val2;
@@ -5479,30 +5527,38 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
                                 QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                 QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
+	printf("at the beginning of hrrwhole_MP2\n");
     QUICKDouble Y;
 #ifdef CUDA_SP
+	printf("def CUDA_SP\n")
     int NAx = LOC2(devSim_MP2.KLMN,0,III-1,3,devSim_MP2.nbasis);
     int NAy = LOC2(devSim_MP2.KLMN,1,III-1,3,devSim_MP2.nbasis);
     int NAz = LOC2(devSim_MP2.KLMN,2,III-1,3,devSim_MP2.nbasis);
-    
+   	//printf("NAx, NAy, NAz are done\n");
+	
     int NBx = LOC2(devSim_MP2.KLMN,0,JJJ-1,3,devSim_MP2.nbasis);
     int NBy = LOC2(devSim_MP2.KLMN,1,JJJ-1,3,devSim_MP2.nbasis);
     int NBz = LOC2(devSim_MP2.KLMN,2,JJJ-1,3,devSim_MP2.nbasis);
-    
+	//printf("NBx, NBy, NBz are done\n");    
+
     int NCx = LOC2(devSim_MP2.KLMN,0,KKK-1,3,devSim_MP2.nbasis);
     int NCy = LOC2(devSim_MP2.KLMN,1,KKK-1,3,devSim_MP2.nbasis);
     int NCz = LOC2(devSim_MP2.KLMN,2,KKK-1,3,devSim_MP2.nbasis);
+	//printf("NCx, NCy, NCz are done\n");
     
     int NDx = LOC2(devSim_MP2.KLMN,0,LLL-1,3,devSim_MP2.nbasis);
     int NDy = LOC2(devSim_MP2.KLMN,1,LLL-1,3,devSim_MP2.nbasis);
     int NDz = LOC2(devSim_MP2.KLMN,2,LLL-1,3,devSim_MP2.nbasis);
-    
+	//printf("NDx, NDy, NDz are done\n");    
+
     
     int MA = LOC3(devTrans_MP2, NAx, NAy, NAz, TRANSDIM, TRANSDIM, TRANSDIM);
     int MB = LOC3(devTrans_MP2, NBx, NBy, NBz, TRANSDIM, TRANSDIM, TRANSDIM);
     int MC = LOC3(devTrans_MP2, NCx, NCy, NCz, TRANSDIM, TRANSDIM, TRANSDIM);
     int MD = LOC3(devTrans_MP2, NDx, NDy, NDz, TRANSDIM, TRANSDIM, TRANSDIM);
     
+	//printf("inside hrrwhole_MP2, IJKLTYPE is %d\n", IJKLTYPE);
+
     switch (IJKLTYPE) {
         case 0:
         case 10:
@@ -5728,11 +5784,13 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
             break;
     }
 #else
-    
+ 	//printf("NOTDEF CUDA_SP\n");  
     int angularL[8], angularR[8];
     QUICKDouble coefAngularL[8], coefAngularR[8];
-    Y = (QUICKDouble) 0.0;
-    
+	Y = (QUICKDouble) 0.0;
+		
+	//printf("before calling lefthrr_MP2,coefAngularR[0] is %lf \n",coefAngularR[0]);
+
     int numAngularL = lefthrr_MP2(RAx, RAy, RAz, RBx, RBy, RBz, 
                               LOC2(devSim_MP2.KLMN,0,III-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,III-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,III-1,3,devSim_MP2.nbasis),
                               LOC2(devSim_MP2.KLMN,0,JJJ-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,JJJ-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,JJJ-1,3,devSim_MP2.nbasis),
@@ -5742,13 +5800,25 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
                               LOC2(devSim_MP2.KLMN,0,LLL-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,LLL-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,LLL-1,3,devSim_MP2.nbasis),
                               L, coefAngularR, angularR);
     
+    //printf("after calling lefthrr_MP2,coefAngularR[0] is %lf \n",coefAngularR[0]);
+
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
-            Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
-        }
+			//printf("inside inner loop, i is %d, j is %d\n", i, j);
+			printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d \n",\
+i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM);			
+    		printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d, LOC2 is %lf \n",\
+i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM, LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM)); 
+			//printf("LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM) is %lf\n", LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM));        
+	
+			Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+        	printf("Y is updated as %lf\n",Y);
+		}
     }
+	printf("after two for loop statement, Y is %lf\n",Y);
     
     Y = Y * devSim_MP2.cons[III-1] * devSim_MP2.cons[JJJ-1] * devSim_MP2.cons[KKK-1] * devSim_MP2.cons[LLL-1];
+	printf("this is end of hrrwhole_MP2\n");
 #endif
     return Y;
 }  
