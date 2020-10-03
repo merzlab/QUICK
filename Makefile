@@ -73,24 +73,24 @@ install: $(INSTALLTYPES)
 	@echo  "Please add the following into your .bash_profile or .bashrc file."
 	@echo  "      export QUICK_BASIS=$(installfolder)/basis"
 
-noinstall:
+noinstall: all
 	@echo  "Please find QUICK executables in $(exefolder)."
 
-serialinstall:
+serialinstall: serial
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
 	exit 1; fi
 	@cp -f $(buildfolder)/include/serial/* $(installfolder)/include/serial
 	@cp -f $(buildfolder)/lib/serial/* $(installfolder)/lib/serial
 
-mpiinstall:
+mpiinstall: mpi
 	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(buildfolder)/include/mpi/* $(installfolder)/include/mpi
 	@cp -f $(buildfolder)/lib/mpi/* $(installfolder)/lib/mpi
 
-cudainstall:
+cudainstall: cuda
 	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
@@ -98,7 +98,7 @@ cudainstall:
 	@cp -f $(buildfolder)/include/cuda/* $(installfolder)/include/cuda
 	@cp -f $(buildfolder)/lib/cuda/* $(installfolder)/lib/cuda
 
-cudampiinstall:
+cudampiinstall: cudampi
 	@if [ -x $(exefolder)/quick.cuda.MPI ]; then cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
@@ -106,7 +106,7 @@ cudampiinstall:
 	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
-aminstall:
+aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
 	ln -s -f $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
