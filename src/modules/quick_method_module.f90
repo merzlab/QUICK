@@ -118,10 +118,10 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
-#if defined CUDA || defined CUDA_MPIV
+!#if defined CUDA || defined CUDA_MPIV 
         logical :: bCUDA                ! if CUDA is used here
-#endif
-
+!#endif        
+        
     end type quick_method_type
 
     type (quick_method_type),save :: quick_method
