@@ -55,7 +55,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
       ! parse the file and find the sizes of things to allocate them in memory
       do while (iofile  == 0 )
          read(ibasisfile,'(A80)',iostat=iofile) line
+         !print *, "line is ", line
            read(line,*,iostat=io) atom,ii
+         !print *, "io is ",io, "ii is ", ii
          if (io == 0 .and. ii == 0) then
             isatom = .true.
             call upcase(atom,2)
@@ -73,6 +75,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                read(ibasisfile,'(A80)',iostat=iofile) line
                read(line,*,iostat=iatom) shell,iprim,dnorm
                if (iatom == 0) then
+                  !print *, "iat is ", iat ! iat should be atom index
                   quick_basis%kshell(iat) = quick_basis%kshell(iat) +1
                   kcontract(iat) = kcontract(iat) + iprim
                   if (shell == 'S') then
@@ -169,6 +172,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
       !do i=1,83
       !  if (quick_basis%kshell(i) /= 0) print *, symbol(i),quick_basis%kshell(i),kcontract(i),kbasis(i)
       !enddo
+    
+      !print *, "natomxiao is ", natomxiao
+      !print *, "nbasis is", nbasis
 
       do i=1,natomxiao
 
@@ -239,6 +245,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
          ! MFCC
 
       enddo
+      !print *, "at end, nbasis is", nbasis
+      !print *, "nshell is", nshell
+      !print *, "nprim is", nprim
       ! =============MPI/MASTER=====================
    endif masterwork
    ! =============END MPI/MASTER=====================
@@ -356,6 +365,11 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    itype     = 0
    ncontract = 0
    
+   !print *, "for alloc quick_basis"
+   !print *, "natom is ", natom
+   !print *, "nshell is ", nshell
+   !print *, "nbasis is ", nbasis    
+
    call alloc(quick_basis,natom,nshell,nbasis)
    
    do ixiao=1,nshell

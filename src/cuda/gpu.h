@@ -155,6 +155,7 @@ __device__ void iclass_grad_spdf7(int I, int J, int K, int L, unsigned int II, u
 __device__ void iclass_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax);
 
 void upload_sim_to_constant(_gpu_type gpu);
+void upload_sim_to_constant_MP2(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);
 
 void upload_para_to_const();
@@ -512,4 +513,36 @@ __device__ QUICKDouble lyp_e(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QU
 
 __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
+
+//Chi Jin 09/23/2020
+//MP2
+__global__ void get2e_MP2_kernel();
+__device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax);
+__device__ void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp);
+__device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store,
+                         QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,  \
+                         QUICKDouble WPtempx,QUICKDouble WPtempy,QUICKDouble WPtempz, \
+                         QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,  \
+                         QUICKDouble WQtempx,QUICKDouble WQtempy,QUICKDouble WQtempz, \
+                         QUICKDouble ABCDtemp,QUICKDouble ABtemp, \
+                         QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom);
+__device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
+                                int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+                                QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
+                                QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
+                                QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+__device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+                       QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
+                       int KLMNAx, int KLMNAy, int KLMNAz,
+                       int KLMNBx, int KLMNBy, int KLMNBz,
+                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+/*
+#undef STOREDIM
+#ifdef int_spd
+#define STOREDIM STOREDIM_S
+#else
+#define STOREDIM STOREDIM_L
+#endif
+*/
 #endif

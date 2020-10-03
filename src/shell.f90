@@ -863,7 +863,9 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
             do KKK=max(III,KKK1),KKK2
                do LLL=max(KKK,LLL1),LLL2
                   if (III.lt.JJJ .and. III.lt. KKK .and. KKK.lt. LLL) then
-                     call hrrwhole
+                    !print *, "before hrrwhole, Y is", Y
+                     call hrrwhole  !get Y matrix
+                    !print *, "after hrrwhole, Y is", Y
                      if (abs(Y).gt.quick_method%maxIntegralCutoff) then
                         A = (III-1)*nbasis+JJJ-1
                         B = (KKK-1)*nbasis+LLL-1
@@ -890,7 +892,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
                         endif
                      endif
                   else if((III.LT.KKK).OR.(JJJ.LE.LLL))then
-                     call hrrwhole
+                     call hrrwhole  
                      if (abs(Y).gt.quick_method%maxintegralCutoff) then
 
                         A = (III-1)*nbasis+JJJ-1
@@ -1761,6 +1763,8 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
+   print *, ""
+   print *, "in subroutine classmp2"
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
       Nprij=quick_basis%kstart(JJ)+JJJ-1
@@ -1838,8 +1842,12 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
          do JJJ=JJJ1,JJJ2
             do KKK=KKK1,KKK2
                do LLL=LLL1,LLL2
-
+                  !print *, "before calling hrrwhole"
+                  !print *, "Y is ", Y
                   call hrrwhole
+                  print *, "FIRST CALL:after calling hrrwhole"
+                  print *, "III, JJJ, KKK, LLL are", III, JJJ, KKK, LLL
+                  print *, "Y is ", Y
                   if (dabs(Y).gt.quick_method%integralCutoff) then
                      do i3mp2=1,nsteplength
                         i3mp2new=nstepmp2s+i3mp2-1
@@ -1871,8 +1879,12 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                do KKK=KKK1,KKK2
                   if(max(KKK,LLL1).le.LLL2)then
                      do LLL=max(KKK,LLL1),LLL2
-
+                        !print *, "second call:before calling hrrwhole"
+                        !print *, "Y is ", Y
                         call hrrwhole
+                        print *, "second call:after calling hrrwhole"
+                        print *, "III, JJJ, KKK, LLL are", III, JJJ, KKK, LLL
+                        print *, "Y is ", Y
                         if (dabs(Y).gt.quick_method%integralCutoff) then
                            do i3mp2=1,nsteplength
                               i3mp2new=nstepmp2s+i3mp2-1
