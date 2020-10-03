@@ -147,7 +147,7 @@
 
 #if defined CUDA || defined CUDA_MPIV
     call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-                   quick_molspec%molchg, quick_molspec%iAtomType)
+                   quick_molspec%molchg, quick_molspec%iAtomType) !some inputs for mp2
     call gpu_upload_xyz(xyz)
     call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
 #endif
@@ -235,12 +235,25 @@
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
         if(.not. quick_method%DIVCON) then
+#ifdef CUDA
+        if(quick_method%bCUDA) then
+            print *, "use cuda for MP2, first upload inputs deleted in SCF"
+            call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+      quick_qm_struct%vec,quick_qm_struct%dense)
+            call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
+            call gpu_calmp2(quick_qm_struct%o)
+        endif    
+#endif
+
 #ifdef MPIV
            if (bMPI) then
              call mpi_calmp2    ! MPI-MP2
            else
 #endif
+           if(.not. quick_method%bCUDA) then
+             print *, "call cpu calmp2()"
              call calmp2()      ! none-MPI MP2
+           endif
 #ifdef MPIV
            endif
 #endif
