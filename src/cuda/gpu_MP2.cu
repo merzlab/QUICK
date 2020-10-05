@@ -83,15 +83,12 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
 
-	if(offside==0)
-		printf("inside get2e_MP2_kernel\n");
-
-    
     QUICKULL jshell   = (QUICKULL) devSim_MP2.sqrQshell;
     QUICKULL myInt    = (QUICKULL) jshell*jshell / totalThreads;
 	
 	if(offside==0)
 	{
+		printf("inside get2e_MP2_kernel\n");
 		printf("myInt is %llu\n", myInt);
 		printf("jshell is %llu\n", jshell);
 		printf("totalThreads is %i\n", totalThreads);
@@ -181,7 +178,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
                 int kkk = devSim_MP2.sorted_Qnumber[KK];
                 int lll = devSim_MP2.sorted_Qnumber[LL];
                 
-				//printf("to call iclass_MP2\n");
+				//printf("to call iclass_MP2 in kernel, iii, jjj, kkk, lll are %d, %d, %d, %d\n", iii, jjj, kkk, lll);
                 iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
                 
             }
@@ -206,8 +203,8 @@ __device__ __forceinline__ QUICKDouble quick_dsqr_MP2(QUICKDouble a)
 __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
 	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
-	if(offside==0)
-		printf("in iclass_MP2\n");
+	//if(offside==0)
+	//printf("in iclass_MP2, I, J, K, L are %d, %d, %d, %d\n", I,J,K,L);
     
     /* 
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
@@ -414,19 +411,28 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         ((JJJ == LLL) && (III  < JJJ)) ||
                         ((III == KKK) && (III  < JJJ)  && (JJJ < LLL))) {
                         
-						//printf("before III, JJJ, KKK, LLL are %d %d %d %d\n",III, JJJ, KKK, LLL);                        
+						
+						if(offside==0)
+						{
+							printf("to get Y, print store array\n");
+							for(int irow=0;irow<STOREDIM;irow++)
+							{
+								for(int jcol=0;jcol<STOREDIM;jcol++)
+								{
+									printf("%lf ",store[irow*STOREDIM+jcol]);
+								}
+								printf("\n");
+							}
+						}
+						                     
 
                         QUICKDouble Y = (QUICKDouble) hrrwhole_MP2( I, J, K, L,\
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
- 						printf("after III, JJJ, KKK, LLL, RAx, RAy, RAz,RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz are %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"\
-						,III, JJJ, KKK, LLL, RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz);
-						printf("Y is %lf\n", Y);
+ 						//printf("after III, JJJ, KKK, LLL, RAx, RAy, RAz,RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y are %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"\
+						,III, JJJ, KKK, LLL, RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y);
 						////get Y matrix here
-						//unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
-						//if(offside==0)
-						//	printf("Y is %lf\n", Y);
 			
                         //   if(abs(Y)*1e-2>devSim_MP2.integralCutoff){
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
@@ -545,8 +551,26 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
                          QUICKDouble ABCDtemp,QUICKDouble ABtemp, \
                          QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
 {
+	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+ 
+	// here is fine
+	printf("at the begining of vertical_MP2, I, J, K, L are %d, %d, %d, %d\n",I, J, K, L);   
+	/*
+	if(offside==0)
+	{	
+		printf("Ptempx is %lf, Ptempy is %lf, Ptempz is %lf, WPtempx is %lf, Qtempx is %lf, WQtempx is %lf, ABCDtemp is %lf, CDtemp is %lf, VY(0,0,0) is %lf\n",\
+				Ptempx, Ptempy, Ptempz, WPtempx, Qtempx, WQtempx, ABCDtemp, CDtemp, VY(0,0,0));
+	}
+	*/
     
     LOC2(store, 0, 0, STOREDIM, STOREDIM) += VY( 0, 0, 0);
+	
+	/*
+	if(offside==0)
+    {
+		printf("at the begining of vertical_MP2, store[0] is %lf, this is case %d\n", store[0], (I+J)*10+K+L);
+	}
+	*/
 	switch ((I+J)*10+K+L){
         case 1:
         {
@@ -1134,7 +1158,8 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
         default:
         {
 #ifndef CUDA_SP
-            if (K+L>=1){
+            //printf("fall into default case, I, J, K, L are %d, %d, %d, %d\n",I, J, K, L);
+			if (K+L>=1){
                 //SSPS(0, YVerticalTemp, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz);
                 QUICKDouble x_0_1_0 = Qtempx * VY( 0, 0, 0) + WQtempx * VY( 0, 0, 1);
                 QUICKDouble x_0_2_0 = Qtempy * VY( 0, 0, 0) + WQtempy * VY( 0, 0, 1);
@@ -5527,7 +5552,7 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
                                 QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                 QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-	printf("at the beginning of hrrwhole_MP2\n");
+	//printf("at the beginning of hrrwhole_MP2\n");
     QUICKDouble Y;
 #ifdef CUDA_SP
 	printf("def CUDA_SP\n")
@@ -5789,8 +5814,6 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
     QUICKDouble coefAngularL[8], coefAngularR[8];
 	Y = (QUICKDouble) 0.0;
 		
-	//printf("before calling lefthrr_MP2,coefAngularR[0] is %lf \n",coefAngularR[0]);
-
     int numAngularL = lefthrr_MP2(RAx, RAy, RAz, RBx, RBy, RBz, 
                               LOC2(devSim_MP2.KLMN,0,III-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,III-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,III-1,3,devSim_MP2.nbasis),
                               LOC2(devSim_MP2.KLMN,0,JJJ-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,JJJ-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,JJJ-1,3,devSim_MP2.nbasis),
@@ -5804,21 +5827,16 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
-			//printf("inside inner loop, i is %d, j is %d\n", i, j);
-			printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d \n",\
-i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM);			
-    		printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d, LOC2 is %lf \n",\
-i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM, LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM)); 
-			//printf("LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM) is %lf\n", LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM));        
-	
+    		printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d, LOC2 is %lf, LOC2_IND is %d \n",\
+i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM, LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM), (angularL[i]-1)+(angularR[j]-1)*STOREDIM); 
 			Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
-        	printf("Y is updated as %lf\n",Y);
+     	   	//printf("Y is updated as %lf\n",Y);
 		}
     }
 	printf("after two for loop statement, Y is %lf\n",Y);
     
     Y = Y * devSim_MP2.cons[III-1] * devSim_MP2.cons[JJJ-1] * devSim_MP2.cons[KKK-1] * devSim_MP2.cons[LLL-1];
-	printf("this is end of hrrwhole_MP2\n");
+	
 #endif
     return Y;
 }  
