@@ -2461,9 +2461,9 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-	printf("in gpu_get2e_, before calling get2e(gpu)\n");
+	//printf("in gpu_get2e_, before calling get2e(gpu)\n");
     get2e(gpu);
-	printf("in gpu_get2e_, after calling get2e(gpu)\n");
+	//printf("in gpu_get2e_, after calling get2e(gpu)\n");
 
  
     PRINTDEBUG("COMPLETE KERNEL")
