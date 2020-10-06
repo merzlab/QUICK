@@ -56,11 +56,11 @@ echo  "
       --nof          Disables the compilation of time consuming f functions 
                      in the ERI code of cuda version. Not recommended for 
                      production.
-      --amprefix <dir>
-                     Path to AMBER home directory
-                                                                            
-  Supported compilers are: gnu, intel, pgi                                       
-                                                                            
+      --amber        Install QUICK executables and libaries into AMBER. 
+                     Requires specifying AMBER home directory as prefix. 
+
+  Supported compilers are: gnu, intel, pgi
+
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:
          ./configure --cuda --arch volta --prefix /home/install intel
@@ -480,8 +480,7 @@ ncores=''
 nof='no'
 
 # amber related variables
-useamprefix='false'
-amprefix=''
+aminstall='false'
 
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
@@ -497,10 +496,10 @@ while [ $# -gt 0 ]; do
     --debug)       debug='yes';;
     --shared)      shared='yes';;
     --nof)         nof='yes';;
+    --amber)       aminstall='true';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
-    --amprefix)    shift; amprefix=${1%/}; useamprefix='true';;
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     pgi)           compiler='pgi';;
@@ -532,8 +531,35 @@ fi
 # check compiler
 check_compiler
 
-# check prefix and perform necessary operations
-if [ "$useprefix" = "true" ]; then
+# check is amber installtion is required
+if [ "$aminstall" = "true" ]; then
+
+  if [ "$useprefix" = "false" ]; then
+    echo "Error: AMBER compatible installation requires specifying the AMBER home directory as prefix."
+    exit 1
+  fi
+
+  # check for AMBER_HOME
+  if [ ! -d "$quick_prefix/AmberTools" ]; then
+    echo  "Error: Please provide the correct AMBER home directory."
+    exit 1
+  else
+    # do this trick to get absolute path
+    cd "$quick_prefix"
+    quick_prefix=`pwd`
+    cd "$QUICK_HOME"
+
+    echo "QUICK will be installed into AMBER home directory $quick_prefix."
+
+    installtypes='aminstall'
+    uninstalltypes='amuninstall'
+
+  fi
+
+fi
+
+# check prefix and perform necessary operations, we shall not create these for an amber installation
+if [ "$useprefix" = "true" ] && [ "$aminstall" = "false" ]; then
 
   if [ "$QUICK_HOME" = "$quick_prefix" ]; then
     echo  "Error: Specified --prefix and current folder is the same. Please choose a different location. "
@@ -592,30 +618,12 @@ if [ "$useprefix" = "true" ]; then
     installtypes="$installtypes $buildtype$install_string"
     uninstalltypes="$uninstalltypes $buildtype$uninstall_string"
   done
-
-else
-
-  echo "No prefix specified for the installation."
-
-  installtypes='noinstall'
-  uninstalltypes='nouninstall'
-
 fi
 
-# check amber prefix
-if [ "$useamprefix" = "true" ]; then
-
-  # do this trick to get absolute path
-  cd "$amprefix"
-  amprefix=`pwd`
-  cd "$QUICK_HOME"
-
-  if [ ! -d "$amprefix/bin" ]; then
-    echo  "Error: $amprefix/bin not found."
-    exit 1
-  else
-    echo "QUICK executables will be installed in $amprefix/bin folder."
-  fi
+if [ "$useprefix" = "false" ]; then
+  echo "No prefix specified for the installation."
+  installtypes='noinstall'
+  uninstalltypes='nouninstall'
 fi
 
 
@@ -917,7 +925,7 @@ for buildtype in $buildtypes; do
   fi
 
   # set the test type
-  if [ "$useprefix" = "true" ]; then
+  if [ "$useprefix" = "true" ] && [ "$aminstall" = "false" ]; then
     testtype='installtest'
   fi
 
@@ -1046,7 +1054,6 @@ SHARED=$shared
 
 INSTALLTYPES=$installtypes
 UNINSTALLTYPES=$uninstalltypes
-AMINSTALL=$useamprefix
 
 TESTTYPE=$testtype
 
@@ -1059,7 +1066,6 @@ exefolder=$QUICK_HOME/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
-amfolder=$amprefix
 
 # source directories
 subfolder=$QUICK_HOME/src/subs
@@ -1089,6 +1095,6 @@ fi
 
 echo  "          Run 'make test' to verify the executables."
 
-if [ "$useamprefix" = "true" ]; then
-echo  "          Run 'make aminstall' to install QUICK executables in $amprefix."
+if [ "$aminstall" = "true" ]; then
+echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
 fi
