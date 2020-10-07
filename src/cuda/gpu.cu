@@ -285,6 +285,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     
     upload_para_to_const();
 
+	//for MP2, added here!
+	upload_para_to_const_MP2();
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);

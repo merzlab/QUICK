@@ -411,7 +411,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         ((JJJ == LLL) && (III  < JJJ)) ||
                         ((III == KKK) && (III  < JJJ)  && (JJJ < LLL))) {
                         
-						
+						/*
 						if(offside==0)
 						{
 							printf("to get Y, print store array\n");
@@ -424,15 +424,19 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 								printf("\n");
 							}
 						}
-						                     
+						*/                    
 
                         QUICKDouble Y = (QUICKDouble) hrrwhole_MP2( I, J, K, L,\
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
- 						//printf("after III, JJJ, KKK, LLL, RAx, RAy, RAz,RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y are %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"\
+ 						
+//this printf works fine
+//printf("after III, JJJ, KKK, LLL, RAx, RAy, RAz,RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y are %d %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n"\
 						,III, JJJ, KKK, LLL, RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y);
 						////get Y matrix here
+						
+						printf("after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);
 			
                         //   if(abs(Y)*1e-2>devSim_MP2.integralCutoff){
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
@@ -554,7 +558,8 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
 	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
  
 	// here is fine
-	printf("at the begining of vertical_MP2, I, J, K, L are %d, %d, %d, %d\n",I, J, K, L);   
+	//printf("at the begining of vertical_MP2, I, J, K, L are %d, %d, %d, %d\n",I, J, K, L);   
+	
 	/*
 	if(offside==0)
 	{	
@@ -5823,17 +5828,16 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
                               LOC2(devSim_MP2.KLMN,0,LLL-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,1,LLL-1,3,devSim_MP2.nbasis), LOC2(devSim_MP2.KLMN,2,LLL-1,3,devSim_MP2.nbasis),
                               L, coefAngularR, angularR);
     
-    //printf("after calling lefthrr_MP2,coefAngularR[0] is %lf \n",coefAngularR[0]);
+    //printf(//"after calling lefthrr_MP2,coefAngularR[0] is %lf \n",coefAngularR[0]);
 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
-    		printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[i] is %d, angularR[j]is %d, STOREDIM is %d, LOC2 is %lf, LOC2_IND is %d \n",\
-i,coefAngularL[i],j,coefAngularR[j], angularL[i],angularR[j], STOREDIM, LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM), (angularL[i]-1)+(angularR[j]-1)*STOREDIM); 
+    		//printf("coefAngularL[%d] is %lf, coefAngularR[%d] is %lf, angularL[%d] is %d, angularR[%d]is %d, STOREDIM is %d, LOC2 is %lf, LOC2_IND is %d \n",\
+i,coefAngularL[i],j,coefAngularR[j], i, angularL[i], j, angularR[j], STOREDIM, LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM), (angularL[i]-1)+(angularR[j]-1)*STOREDIM); 
 			Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
-     	   	//printf("Y is updated as %lf\n",Y);
 		}
     }
-	printf("after two for loop statement, Y is %lf\n",Y);
+	//printf("after two for loop statement, Y is %lf\n",Y);
     
     Y = Y * devSim_MP2.cons[III-1] * devSim_MP2.cons[JJJ-1] * devSim_MP2.cons[KKK-1] * devSim_MP2.cons[LLL-1];
 	
@@ -5849,6 +5853,7 @@ __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
 {           
+
     int numAngularL;
     switch (IJTYPE) {
             
@@ -5857,7 +5862,8 @@ __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
             numAngularL = 1;
             coefAngularL[0] = 1.0;
             angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-            break;
+            //printf("in lefthrr_MP2 case 0, LOC3_ind is %d, angularL[0] is %d\n", KLMNAz+(KLMNAy+KLMNAx*TRANSDIM)*TRANSDIM, angularL[0]);
+			break;
         }
         case 1:
         {
@@ -5873,6 +5879,7 @@ __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
             }else if (KLMNBz != 0) {
                 coefAngularL[1] = RAz-RBz;
             }
+			//printf("in lefthrr_MP2 case 1, LOC3_ind is %d, angularL[0] is %d, LOC3_ind is %d,angularL[1] is %d\n",(KLMNAz + KLMNBz)+((KLMNAy + KLMNBy)+TRANSDIM*(KLMNAx + KLMNBx))*TRANSDIM, angularL[0],  KLMNAz+(KLMNAy+KLMNAx*TRANSDIM)*TRANSDIM, angularL[1]);
             break;
         }
         case 2:
