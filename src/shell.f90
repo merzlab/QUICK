@@ -1763,8 +1763,8 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
-   print *, ""
-   print *, "in subroutine classmp2"
+   !print *, ""
+   !print *, "in subroutine classmp2"
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
       Nprij=quick_basis%kstart(JJ)+JJJ-1
@@ -1845,10 +1845,10 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                   !print *, "before calling hrrwhole"
                   !print *, "Y is ", Y
                   call hrrwhole
-                  print *, "FIRST CALL:after calling hrrwhole"
-                  print *, "III, JJJ, KKK, LLL are", III, JJJ, KKK, LLL
-                  print *, "Y is ", Y
-                  if (dabs(Y).gt.quick_method%integralCutoff) then
+                  !print *, "FIRST CALL:after calling hrrwhole"
+                  !print *, "III,JJJ,KKK,LLL,Y are ", III, JJJ, KKK, LLL, Y
+                  print "('III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+                   if (dabs(Y).gt.quick_method%integralCutoff) then
                      do i3mp2=1,nsteplength
                         i3mp2new=nstepmp2s+i3mp2-1
                         atemp=quick_qm_struct%co(KKK,i3mp2new)*Y
@@ -1882,9 +1882,9 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                         !print *, "second call:before calling hrrwhole"
                         !print *, "Y is ", Y
                         call hrrwhole
-                        print *, "second call:after calling hrrwhole"
-                        print *, "III, JJJ, KKK, LLL are", III, JJJ, KKK, LLL
-                        print *, "Y is ", Y
+                        !print *, "second call:after calling hrrwhole"
+                        !print *, "III, JJJ, KKK, LLL, Y are", III, JJJ, KKK, LLL, Y
+                        print "('III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
                         if (dabs(Y).gt.quick_method%integralCutoff) then
                            do i3mp2=1,nsteplength
                               i3mp2new=nstepmp2s+i3mp2-1
