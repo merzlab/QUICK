@@ -469,7 +469,7 @@ __device__ int gridFormSG1(int iitype, QUICKDouble distance, \
 
 //Madu Manathunga 08/22/2019
 //__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, double* exc_dev_grad);
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* exc_dev_grad);
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* _tmpGrad);
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);
 
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
