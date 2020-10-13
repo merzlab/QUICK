@@ -529,6 +529,9 @@ __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 
 void upload_para_to_const_MP2();
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, \
+				QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix);
+
 
 /*
 #undef STOREDIM
