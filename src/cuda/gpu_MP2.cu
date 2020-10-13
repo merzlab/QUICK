@@ -43,7 +43,26 @@ void upload_sim_to_constant_MP2(_gpu_type gpu){
 	PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
 }
 
-
+__global__ void printY()
+{
+    printf("devSim_MP2.nbasis is %d\n", devSim_MP2.nbasis);
+        
+    for(int i=0;i<devSim_MP2.nbasis;i++)
+    {
+        for(int j=0;j<devSim_MP2.nbasis;j++)
+        {
+            for(int k=0;k<devSim_MP2.nbasis;k++)
+            {
+                for(int l=0;l<devSim_MP2.nbasis;l++)
+                {       
+                    printf("after get2e_MP2_kernel i,j,k,l, and Y are %d, %d, %d, %d, %lf\n",\
+ i+1,j+1,k+1,l+1,LOC4(devSim_MP2.Y, i,j,k,l, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis));
+                            
+                }
+            }
+        }
+    }
+}
 
 // totTime is the timer for GPU 2e time. Only on under debug mode
 #ifdef DEBUG
@@ -60,7 +79,8 @@ void get2e_MP2(_gpu_type gpu)
 #endif
     printf("BLOCK= %i, THREADSperBLOCK= %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);
     get2e_MP2_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>();
-    
+	
+	printY<<<1,1>>>();	
     
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -86,6 +106,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
     QUICKULL jshell   = (QUICKULL) devSim_MP2.sqrQshell;
     QUICKULL myInt    = (QUICKULL) jshell*jshell / totalThreads;
 	
+	/*
 	if(offside==0)
 	{
 		printf("inside get2e_MP2_kernel\n");
@@ -93,7 +114,8 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
 		printf("jshell is %llu\n", jshell);
 		printf("totalThreads is %i\n", totalThreads);
 		printf("jshell*jshell - myInt*totalThreads, offside\n");
-	}   
+	}
+	*/   
 
     if ((jshell*jshell - myInt*totalThreads)> offside) myInt++;
     
@@ -202,7 +224,7 @@ __device__ __forceinline__ QUICKDouble quick_dsqr_MP2(QUICKDouble a)
  */
 __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
-	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+	//unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
 	//if(offside==0)
 	//printf("in iclass_MP2, I, J, K, L are %d, %d, %d, %d\n", I,J,K,L);
     
@@ -436,8 +458,11 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 						,III, JJJ, KKK, LLL, RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz,RDx, RDy, RDz, Y);
 						////get Y matrix here
 						
-						printf("after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);
-			
+						printf("in gpu_MP2.cu/iclass_MP2, after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);
+						LOC4(devSim_MP2.Y, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;			
+						//printf("the Y matrix at %d %d %d %d got value %lf\n", III, JJJ, KKK, LLL,\
+						LOC4(devSim_MP2.Y, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis));
+
                         //   if(abs(Y)*1e-2>devSim_MP2.integralCutoff){
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, III-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
                         QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim_MP2.dense, KKK-1, JJJ-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
@@ -555,7 +580,7 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
                          QUICKDouble ABCDtemp,QUICKDouble ABtemp, \
                          QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
 {
-	unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+	//unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
  
 	// here is fine
 	//printf("at the begining of vertical_MP2, I, J, K, L are %d, %d, %d, %d\n",I, J, K, L);   

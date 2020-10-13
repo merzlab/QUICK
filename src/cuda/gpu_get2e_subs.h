@@ -109,7 +109,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 #endif
 {
 	//if(threadIdx.x == 0)
-	//	printf("inside get2e_kernel\n");
+	//printf("inside get2e_kernel\n");
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
 	//printf("offside is %d\n", offside);

@@ -1088,7 +1088,7 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    
+    gpu -> gpu_calculated -> Y    	  =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis*gpu->nbasis,gpu->nbasis*gpu->nbasis);
     
     /*
      oULL is the unsigned long long int type of O matrix. The reason to do so is because
@@ -1112,11 +1112,12 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     //    gpu -> gpu_calculated -> o        -> Upload();
     gpu -> gpu_calculated -> dense    -> Upload();
     gpu -> gpu_calculated -> oULL     -> Upload();
-    
+	gpu -> gpu_calculated -> Y        -> Upload(); 
+   
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
     gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
-    
+    gpu -> gpu_sim.Y				 = gpu -> gpu_calculated -> Y -> _devData;
     
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -2190,7 +2191,8 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
-    
+	delete gpu->gpu_calculated->Y;
+   
     //delete gpu->gpu_cutoff->cutMatrix;
     
 #ifdef DEBUG
@@ -2456,7 +2458,8 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
-    delete gpu->gpu_cutoff->cutMatrix;
+    delete gpu->gpu_calculated->Y;
+	delete gpu->gpu_cutoff->cutMatrix;
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
@@ -2484,6 +2487,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
  
     PRINTDEBUG("COMPLETE KERNEL")
     gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
+	// Download(): cudaMemcpy(gpu ->gpu_calculated->oULL->_hostData,gpu->gpu_calculated->oULL->_devData,_length*_length2*sizeof(T),cudaMemcpyDeviceToHost);
     
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
@@ -2534,7 +2538,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
-    
+ 	delete gpu->gpu_calculated->Y;   
     delete gpu->gpu_cutoff->cutMatrix;
     
     PRINTDEBUG("COMPLETE RUNNING GET2E")
@@ -2545,7 +2549,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 //  compute mp2
 //-----------------------------------------------
 
-extern "C" void gpu_calmp2_(QUICKDouble* o)
+extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 {
 	PRINTDEBUG("BEGIN TO RUN gpu_calmp2");
 	
@@ -2556,9 +2560,36 @@ extern "C" void gpu_calmp2_(QUICKDouble* o)
 	get2e_MP2(gpu);
 	
 	PRINTDEBUG("COMPLETE KERNEL")
-	printf("in gpu_calmp2, before gpu -> gpu_calculated -> oULL -> Download()\n");
+	//printf("in gpu_calmp2, before gpu -> gpu_calculated -> oULL -> Download()\n");
 	gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
-	printf("in gpu_calmp2, after gpu -> gpu_calculated -> oULL -> Download()\n");
+	//printf("in gpu_calmp2, after gpu -> gpu_calculated -> oULL -> Download()\n");
+
+	gpu->gpu_calculated->Y->Download();// Y downloaded to host
+	
+	//Can I simply do Y_Matrix = gpu->gpu_calculated->Y->_hostData? No it gives garbage values
+	//Y_Matrix = gpu->gpu_calculated->Y->_hostData;
+	
+	//Can I use the intrinsic download function? No it doens't give correct MP2 value
+	//gpu->gpu_calculated->Y->Download(Y_Matrix);
+    
+	for(int i=0;i<gpu->nbasis;i++)
+    {
+        for(int j=0;j<gpu->nbasis;j++)
+        {
+            for(int k=0;k<gpu->nbasis;k++)
+            {
+                for(int l=0;l<gpu->nbasis;l++)
+                {
+                    printf("in gpu.cu/gpu_calmp2, after Download(),i,j,k,l, and Y are %d, %d, %d, %d, %lf\n",\
+ i+1,j+1,k+1,l+1,LOC4(gpu->gpu_calculated->Y->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis));
+
+				 LOC4(Y_Matrix,i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis) = \
+				 LOC4(gpu->gpu_calculated->Y->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis);
+                }
+            }
+        }
+    }	
+
 
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
@@ -2587,6 +2618,9 @@ extern "C" void gpu_calmp2_(QUICKDouble* o)
 	//printf("in gpu_calmp2_, before gpu -> gpu_calculated -> o    -> Download(o);\n");
 	gpu -> gpu_calculated -> o    -> Download(o); //c->back to fortran
 
+	//print(o) ?
+
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -2604,7 +2638,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* o)
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
-
+	delete gpu->gpu_calculated->Y;
     delete gpu->gpu_cutoff->cutMatrix;
 
     PRINTDEBUG("COMPLETE RUNNING MP2")
@@ -2728,7 +2762,7 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
         delete gpu->gpu_calculated->o;
         delete gpu->gpu_calculated->dense;
         delete gpu->gpu_calculated->oULL;
-
+		delete gpu->gpu_calculated->Y;
 }
 
 char *trim(char *s) {

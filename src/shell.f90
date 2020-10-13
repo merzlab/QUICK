@@ -863,9 +863,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
             do KKK=max(III,KKK1),KKK2
                do LLL=max(KKK,LLL1),LLL2
                   if (III.lt.JJJ .and. III.lt. KKK .and. KKK.lt. LLL) then
-                    !print *, "before hrrwhole, Y is", Y
                      call hrrwhole  !get Y matrix
-                    !print *, "after hrrwhole, Y is", Y
                      if (abs(Y).gt.quick_method%maxIntegralCutoff) then
                         A = (III-1)*nbasis+JJJ-1
                         B = (KKK-1)*nbasis+LLL-1
@@ -1300,7 +1298,7 @@ end subroutine attrashellenergy
 
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
-subroutine shellmp2(nstepmp2s,nsteplength)
+subroutine shellmp2(nstepmp2s,nsteplength, Y_Matrix)
    use allmod
 
    Implicit double precision(a-h,o-z)
@@ -1310,12 +1308,18 @@ subroutine shellmp2(nstepmp2s,nsteplength)
    double precision RA(3),RB(3),RC(3),RD(3)
 
    double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+   ! add Y_Matrix here
+   !double precision, allocatable, dimension(:,:):: Y_Matrix   
+   double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis) 
+   !double precision, pointer, dimension(:,:) :: Y_Matrix    
+
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
    COMMON /COM1/RA,RB,RC,RD
+
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
@@ -1436,7 +1440,7 @@ subroutine shellmp2(nstepmp2s,nsteplength)
             NNC=Sumindex(k-1)+1
             do L=NLL1,NLL2
                NNCD=SumIndex(K+L)
-               call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
+               call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength,Y_Matrix)
                !                   call class
             enddo
          enddo
@@ -1741,7 +1745,7 @@ End subroutine classmp2divcon
 
 
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
-subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
+subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
    ! subroutine class
    use allmod
 
@@ -1753,6 +1757,9 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
    double precision X44(129600)
+   ! add Y_Matrix here, why here the dimension needs to be specified?
+   double precision, dimension(nbasis*nbasis,nbasis*nbasis):: Y_Matrix
+   !double precision, pointer, dimension(:,:) ::  Y_Matrix  
 
    COMMON /COM1/RA,RB,RC,RD
    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -1763,8 +1770,14 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
-   !print *, ""
-   !print *, "in subroutine classmp2"
+   
+
+#ifdef CUDA
+    ! fine now,get value
+    !print *, "in cuda classmp2, test Y_Matrix(1,1):", Y_Matrix(1,1)
+#endif
+
+
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
       Nprij=quick_basis%kstart(JJ)+JJJ-1
@@ -1842,12 +1855,30 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
          do JJJ=JJJ1,JJJ2
             do KKK=KKK1,KKK2
                do LLL=LLL1,LLL2
+#ifndef CUDA                
                   !print *, "before calling hrrwhole"
                   !print *, "Y is ", Y
                   call hrrwhole
-                  !print *, "FIRST CALL:after calling hrrwhole"
-                  !print *, "III,JJJ,KKK,LLL,Y are ", III, JJJ, KKK, LLL, Y
-                  print "('III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+                  !print *, "FIRST CALL after calling hrrwhole"
+                  print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+#endif
+#ifdef CUDA
+                  ! Here we retrieve the Y value calculated in gpu_MP2.cu/hrrwhole_MP2. Two points to note:
+                  ! 1. Cuda code only calculated Y_Matrix(i,j,k,l) where i<k. For
+                  ! the case i>k, use the sysmetry Y_Matrix(i,j,k,l) = Y_Matrix(k,l,i,j)
+                  ! 2. In Fortran arrays are stored by column in memory.
+                  if(quick_method%bCUDA) then
+                    if((III-1)*nbasis+JJJ > (KKK-1)*nbasis+LLL) then
+                        print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
+                        print *, ""
+                        Y = Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)  
+                    else
+                        print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
+                        print *, ""
+                        Y = Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
+                     endif
+                  endif
+#endif
                    if (dabs(Y).gt.quick_method%integralCutoff) then
                      do i3mp2=1,nsteplength
                         i3mp2new=nstepmp2s+i3mp2-1
@@ -1879,12 +1910,26 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                do KKK=KKK1,KKK2
                   if(max(KKK,LLL1).le.LLL2)then
                      do LLL=max(KKK,LLL1),LLL2
+#ifndef CUDA
                         !print *, "second call:before calling hrrwhole"
                         !print *, "Y is ", Y
                         call hrrwhole
                         !print *, "second call:after calling hrrwhole"
-                        !print *, "III, JJJ, KKK, LLL, Y are", III, JJJ, KKK, LLL, Y
-                        print "('III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+                        print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+#endif
+#ifdef CUDA
+                        if(quick_method%bCUDA) then
+                            if((III-1)*nbasis+JJJ > (KKK-1)*nbasis+LLL) then
+                                print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
+                                print *, ""                        
+                                Y=Y_Matrix((III-1)*nbasis+JJJ,(KKK-1)*nbasis+LLL)
+                            else
+                                print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
+                                print *, ""
+                                Y=Y_Matrix((KKK-1)*nbasis+LLL,(III-1)*nbasis+JJJ)
+                            endif
+                        endif
+#endif    
                         if (dabs(Y).gt.quick_method%integralCutoff) then
                            do i3mp2=1,nsteplength
                               i3mp2new=nstepmp2s+i3mp2-1
