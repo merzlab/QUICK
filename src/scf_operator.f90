@@ -140,8 +140,10 @@ subroutine scf_operator(oneElecO, deltaO)
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then          
+      if (quick_method%bCUDA) then  
+      !print *, "before gpu_get2e, quick_qm_struct%o is ", quick_qm_struct%o        
          call gpu_get2e(quick_qm_struct%o)  !c function
+      !print *, "after gpu_get2e, quick_qm_struct%o is ", quick_qm_struct%o
       else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
