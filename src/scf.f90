@@ -180,7 +180,9 @@ subroutine electdiis(jscf)
    deltaO = .false.
    idiis = 0
    ! Now Begin DIIS
+   !print *, "before diis, quick_qm_struct%o is ", quick_qm_struct%o
    do while (.not.diisdone)
+    !print *, "in this iteration, quick_qm_struct%o is ", quick_qm_struct%o
 
 
       call cpu_time(timer_begin%TSCF)
@@ -208,12 +210,18 @@ subroutine electdiis(jscf)
       if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
       if (quick_method%debug)  call debug_SCF(jscf)
+    
+      !print *, "in this iteration, before call scf_operator quick_qm_struct%o is ", quick_qm_struct%o
 
       if (quick_method%SEDFT) then
          call sedftoperator ! Semi-emperical DFT Operator
       else
          call scf_operator(oneElecO, deltaO)
       endif
+
+      !if (idiis.eq.1) then
+      !  print *, "in this iteration, after call scf_operator quick_qm_struct%o is", quick_qm_struct%o
+      !endif
 
       if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -485,6 +493,10 @@ subroutine electdiis(jscf)
          ! First you have to transpose this into an orthogonal basis, which
          ! is accomplished by calculating Transpose[X] . O . X.
          !-----------------------------------------------
+        if (idiis.eq.1) then        
+            print *, "before Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
+            print *, ""
+        endif
 #if defined(CUDA) || defined(CUDA_MPIV)
 
         call cpu_time(timer_begin%TDiag)
@@ -493,12 +505,28 @@ subroutine electdiis(jscf)
               quick_qm_struct%vec, quick_qm_struct%co, &
               V2, nbasis)
          call cpu_time(timer_end%TDiag)
+    
+         if (idiis.eq.1) then
+            print *, "in cuda after cuda_diag, quick_scratch%hold is",quick_scratch%hold
+            print *, ""
+          endif
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+        
+        if (idiis.eq.1) then
+            print *, "in cuda after DGEMM ,quick_qm_struct%o is",quick_qm_struct%o
+            print *, "" 
+        endif
+
 #else
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+
+         if (idiis.eq.1) then
+            print *, "in serial after first DGEMM ,quick_scratch%hold is",quick_scratch%hold
+            print *, "" 
+        endif
 
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
@@ -510,11 +538,15 @@ subroutine electdiis(jscf)
          call cpu_time(timer_end%TDiag)
 
 #endif
+        if (idiis.eq.1) then
+            print *, "after  Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
+            print *, ""
+        endif
 
          ! Calculate C = XC' and form a new density matrix.
          ! The C' is from the above diagonalization.  Also, save the previous
          ! Density matrix to check for convergence.
-         !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
+         !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'(step 9)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
 
@@ -611,7 +643,8 @@ subroutine electdiis(jscf)
             if (quick_method%prtgap) write (ioutfile,'("HOMO-LUMO GAP (EV) =",11x,F12.6)') &
                   (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
             diisdone=.true.
-
+            
+            !print *, "diis is done, quick_qm_struct%o is", quick_qm_struct%o 
 
          endif
          if(jscf >= quick_method%iscf-1) then

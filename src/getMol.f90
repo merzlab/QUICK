@@ -67,7 +67,7 @@ subroutine getMol()
    ! At this point we have the positions and identities of the atoms. We also
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
-   print *, "in getMol, readbasis is to be called"
+   !print *, "in getMol, readbasis is to be called"
    call readbasis(natom,0,0,0,0)
 
    quick_molspec%nbasis   => nbasis

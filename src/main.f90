@@ -234,26 +234,30 @@
 
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
+        !print *, "before MP2, quick_qm_struct%o is ", quick_qm_struct%o
         if(.not. quick_method%DIVCON) then
-#ifdef CUDA
-        if(quick_method%bCUDA) then
-            print *, "use cuda for MP2, first upload inputs deleted in SCF"
-            call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-      quick_qm_struct%vec,quick_qm_struct%dense)
-            call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
-            call gpu_calmp2(quick_qm_struct%o)
-        endif    
-#endif
+
+!The below part now moves to shell.f90
+!#ifdef CUDA
+!        if(quick_method%bCUDA) then
+!            print *, "use cuda for MP2, first upload inputs deleted in SCF"
+!            call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!      quick_qm_struct%vec,quick_qm_struct%dense)
+!            call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)
+!            call gpu_calmp2(quick_qm_struct%o)
+!        endif    
+!#endif
+
 
 #ifdef MPIV
            if (bMPI) then
              call mpi_calmp2    ! MPI-MP2
            else
 #endif
-           if(.not. quick_method%bCUDA) then
-             print *, "call cpu calmp2()"
+           !if(.not. quick_method%bCUDA) then
+           !  print *, "call cpu calmp2()"
              call calmp2()      ! none-MPI MP2
-           endif
+           !endif
 #ifdef MPIV
            endif
 #endif
@@ -261,6 +265,7 @@
             call calmp2divcon   ! DIV&CON MP2
         endif
     endif   !(quick_method%MP2)
+
 
     ! 6.c Freqency calculation and mode analysis
     ! note the analytical calculation is broken and needs to be fixed
