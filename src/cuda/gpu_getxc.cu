@@ -134,13 +134,16 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad");
 
-    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad, glinfo, nof_functionals)));
+    // calculate size for temporary gradient vector in shared memory 
+    QUICKDouble smemSize = gpu->natom* 3 * sizeof(QUICKDouble);
+
+    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(dev_grad, glinfo, nof_functionals)));
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(dev_grad)));
+    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(dev_grad)));
 
     gpu_delete_sswgrad_vars();
 
@@ -407,6 +410,14 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
+	extern __shared__ double _tmpGrad[];
+
+	for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
+		_tmpGrad[i] = 0.0;
+
+	__syncthreads();
+	
+
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
@@ -552,9 +563,12 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 	/*                                                atomicAdd(&devSim_dft.xc_grad[Istart], Gradx);
         	                                        atomicAdd(&devSim_dft.xc_grad[Istart+1], Grady);
                 	                                atomicAdd(&devSim_dft.xc_grad[Istart+2], Gradz);
-	*/						atomicAdd(&dev_grad[Istart], Gradx);
+	*/						/*atomicAdd(&dev_grad[Istart], Gradx);
 							atomicAdd(&dev_grad[Istart+1], Grady);
-							atomicAdd(&dev_grad[Istart+2], Gradz);
+							atomicAdd(&dev_grad[Istart+2], Gradz);*/
+							atomicAdd(&_tmpGrad[Istart], Gradx);
+							atomicAdd(&_tmpGrad[Istart+1], Grady);
+							atomicAdd(&_tmpGrad[Istart+2], Gradz);
 						}
 						//printf("Test xc_grad: %i %f %f %f \n", gid, devSim_dft.xc_grad[Istart], devSim_dft.xc_grad[Istart+1], devSim_dft.xc_grad[Istart+2]);
 					}
@@ -574,6 +588,14 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
             }
 #endif
 	}
+
+        __syncthreads();
+
+        for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
+		atomicAdd(&dev_grad[i], _tmpGrad[i]);
+
+        __syncthreads();
+
 }
 
 
@@ -728,6 +750,13 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
+        extern __shared__ double _tmpGrad[];
+
+        for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
+                _tmpGrad[i] = 0.0;
+
+        __syncthreads();
+
         for (QUICKULL gid = offset; gid < devSim_dft.npoints_ssd; gid += totalThreads) {
 
                 QUICKDouble gridx = devSim_dft.gridx_ssd[gid];
@@ -737,8 +766,15 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid, dev_grad);
+		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid, _tmpGrad);
 	}
+
+	__syncthreads();
+
+        for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
+                atomicAdd(&dev_grad[i], _tmpGrad[i]);
+
+        __syncthreads();
 
 }
 
@@ -931,7 +967,7 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
 }
 
 
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* exc_dev_grad){
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* _tmpGrad){
 
 /*
         This subroutine calculates the derivatives of weight found in
@@ -1085,9 +1121,9 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 
 //      We should now have the derivatives of the SS weights.  Now just add it.
 
-                atomicAdd(&(exc_dev_grad[jstart+0]), wtgradjx*Exc*quadwt);
-                atomicAdd(&(exc_dev_grad[jstart+1]), wtgradjy*Exc*quadwt);
-                atomicAdd(&(exc_dev_grad[jstart+2]), wtgradjz*Exc*quadwt);
+                atomicAdd(&_tmpGrad[jstart], wtgradjx*Exc*quadwt);
+                atomicAdd(&_tmpGrad[jstart+1], wtgradjy*Exc*quadwt);
+                atomicAdd(&_tmpGrad[jstart+2], wtgradjz*Exc*quadwt);
                 }
 
         }
@@ -1096,9 +1132,9 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
         //printf("istart: %i  gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n",istart, wtgradix, wtgradiy, wtgradiz, Exc, quadwt);
 #endif
 
-        atomicAdd(&(exc_dev_grad[istart+0]), wtgradix*Exc*quadwt);
-        atomicAdd(&(exc_dev_grad[istart+1]), wtgradiy*Exc*quadwt);
-        atomicAdd(&(exc_dev_grad[istart+2]), wtgradiz*Exc*quadwt);
+        atomicAdd(&_tmpGrad[istart], wtgradix*Exc*quadwt);
+        atomicAdd(&_tmpGrad[istart+1], wtgradiy*Exc*quadwt);
+        atomicAdd(&_tmpGrad[istart+2], wtgradiz*Exc*quadwt);
 
 
 }
