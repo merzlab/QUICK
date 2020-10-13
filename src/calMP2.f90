@@ -17,12 +17,14 @@ subroutine calmp2
 
 #ifdef CUDA
     if(quick_method%bCUDA) then
-    print *,"in calmp2, at the beginning"
+    print *,"in calmp2, at the beginning" 
+
+    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix)  
     !Y_Matrix(1,1) = 9.5
     !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
-    call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
-    call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)    
-    call gpu_calmp2(Y_Matrix, quick_qm_struct%o)
+    !call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
+    !call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)    
+    !call gpu_calmp2(Y_Matrix, quick_qm_struct%o)
    endif
 #endif
    

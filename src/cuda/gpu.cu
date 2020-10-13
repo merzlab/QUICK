@@ -2645,6 +2645,14 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	
 }
 
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, \
+QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix)
+{
+	gpu_upload_calculated_(o,co,vec,dense);
+	gpu_upload_cutoff_(cutmatrix,integralCutoff,primLimit,DMCutoff);
+	gpu_calmp2_(Y_Matrix, o);
+	cudaDeviceSynchronize();
+}
 
 extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
