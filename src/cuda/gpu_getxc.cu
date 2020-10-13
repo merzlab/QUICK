@@ -134,7 +134,7 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 
 //    nvtxRangePushA("XC grad");
 
-    // calculate size for temporary gradient vector in shared memory 
+    // calculate the size for temporary gradient vector in shared memory 
     QUICKDouble smemSize = gpu->natom* 3 * sizeof(QUICKDouble);
 
     QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(dev_grad, glinfo, nof_functionals)));
@@ -410,6 +410,7 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
+	// create the temporary gradient vector in shared memory and initilize all elements to zero. 
 	extern __shared__ double _tmpGrad[];
 
 	for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
@@ -559,13 +560,8 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
                                                                 + xdot * (dxdz * phi2 + dphidz * dphidx2)
                                                                 + ydot * (dydz * phi2 + dphidz * dphidy2)
                                                                 + zdot * (dzdz * phi2 + dphidz * dphidz2));							
-						//	printf("Test xc_grad: %i gradx: %f grady: %f gradz: %f \n", gid, Gradx, Grady, Gradz);
-	/*                                                atomicAdd(&devSim_dft.xc_grad[Istart], Gradx);
-        	                                        atomicAdd(&devSim_dft.xc_grad[Istart+1], Grady);
-                	                                atomicAdd(&devSim_dft.xc_grad[Istart+2], Gradz);
-	*/						/*atomicAdd(&dev_grad[Istart], Gradx);
-							atomicAdd(&dev_grad[Istart+1], Grady);
-							atomicAdd(&dev_grad[Istart+2], Gradz);*/
+
+							// update the temporary gradient vector
 							atomicAdd(&_tmpGrad[Istart], Gradx);
 							atomicAdd(&_tmpGrad[Istart+1], Grady);
 							atomicAdd(&_tmpGrad[Istart+2], Gradz);
@@ -591,6 +587,7 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 
         __syncthreads();
 
+	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
 		atomicAdd(&dev_grad[i], _tmpGrad[i]);
 
@@ -750,6 +747,7 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
+	// create the temporary gradient vector in shared memory and initilize all elements to zero. 
         extern __shared__ double _tmpGrad[];
 
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
@@ -771,6 +769,7 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 
 	__syncthreads();
 
+	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
                 atomicAdd(&dev_grad[i], _tmpGrad[i]);
 
@@ -1119,7 +1118,7 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
         //printf("gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n",wtgradjx, wtgradjy, wtgradjz, Exc, quadwt);
 #endif
 
-//      We should now have the derivatives of the SS weights.  Now just add it.
+//      We should now have the derivatives of the SS weights.  Now just add it to the temporary gradient vector in shared memory.
 
                 atomicAdd(&_tmpGrad[jstart], wtgradjx*Exc*quadwt);
                 atomicAdd(&_tmpGrad[jstart+1], wtgradjy*Exc*quadwt);
@@ -1132,6 +1131,7 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
         //printf("istart: %i  gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n",istart, wtgradix, wtgradiy, wtgradiz, Exc, quadwt);
 #endif
 
+	// update the temporary gradient vector
         atomicAdd(&_tmpGrad[istart], wtgradix*Exc*quadwt);
         atomicAdd(&_tmpGrad[istart+1], wtgradiy*Exc*quadwt);
         atomicAdd(&_tmpGrad[istart+2], wtgradiz*Exc*quadwt);
