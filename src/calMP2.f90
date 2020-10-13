@@ -8,10 +8,24 @@ subroutine calmp2
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff
+  ! add Y_Matrix here
+  double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
+  !double precision, pointer, dimension(:,:) :: Y_Matrix
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
-    
+ 
+#ifdef CUDA
+    if(quick_method%bCUDA) then
+    print *,"in calmp2, at the beginning"
+    !Y_Matrix(1,1) = 9.5
+    !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
+    call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
+    call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)    
+    call gpu_calmp2(Y_Matrix, quick_qm_struct%o)
+   endif
+#endif
+   
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
     
@@ -128,16 +142,13 @@ subroutine calmp2
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
                           ntemp=ntemp+1
-                          call shellmp2(nstepmp2s,nsteplength)
+                          call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
                        endif
 
                     endif
 
                  enddo
               enddo
-
-              !print *, "after call shellmp2, orbmp2i331 is"
-              !print *, orbmp2i331
 
 
               NII1=quick_basis%Qstart(II)
@@ -212,6 +223,9 @@ subroutine calmp2
         enddo
      enddo
 
+    !print *, "in calmp2, print quick_qm_struct%co"
+    !call print_matrix(quick_qm_struct%co(LLL,L3new), nbasis)
+
      do icycle=1,nsteplength
         i3=nstepmp2s+icycle-1
         do k3=i3,nelec/2
@@ -243,6 +257,16 @@ subroutine calmp2
            enddo
         enddo
      enddo
+
+    !print *, "orbmp2 is ",orbmp2
+    !print *, ""
+    !print *, "orbmp2k331 is ",orbmp2k331 
+    !print *, ""
+    !print *, "orbmp2j331 is ",orbmp2j331
+    !print *, ""
+    !print *, "orbmp2i331 is ",orbmp2i331
+    !print *, ""
+
         
      call cpu_time(timer_end%TMP2)
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
@@ -396,7 +420,7 @@ subroutine MPI_calmp2
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
                           ntemp=ntemp+1
-                          call shellmp2(nstepmp2s,nsteplength)
+                          call shellmp2(nstepmp2s,nsteplength,Y_Matrix)
                        endif
 
                     endif
@@ -974,5 +998,18 @@ subroutine initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasis
   enddo
 end subroutine initialOrbmp2ij
 
+subroutine print_matrix(matrix,n)
+    integer n, i, j
+    double precision, dimension(n,n),intent(in) :: matrix
+
+    do i=1, n
+        do j=1, n
+            write(*, '(f16.8)', advance='no'), matrix(i,j)
+            !write(*, '(f20.6)'), matrix(i,j)
+        end do
+        write(*,'(" ")')
+    end do
+
+end subroutine print_matrix
 
 
