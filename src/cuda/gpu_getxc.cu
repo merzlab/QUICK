@@ -172,11 +172,6 @@ __global__ void get_density_kernel()
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
 
-#ifdef CUDA_MPIV
-
-            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
-#endif
-
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight >0){
@@ -238,9 +233,6 @@ __global__ void get_density_kernel()
 //        printf("x=%f  y=%f  z=%f  density=%.10e  gax=%.10e gay=%.10e gaz=%.10e \n",gridx, gridy, gridz, density, gax, gay, gaz);
 #endif
 		}
-#ifdef CUDA_MPIV
-            }
-#endif
 	}
 }
 
@@ -253,9 +245,6 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
 
-#ifdef CUDA_MPIV
-            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
-#endif
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight>0){
@@ -398,9 +387,6 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 }
                         }
                 }
-#ifdef CUDA_MPIV
-            }
-#endif
         }
 }
 
@@ -423,9 +409,6 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
 
-#ifdef CUDA_MPIV
-            if(devSim_dft.mpi_bxccompute[bin_id] > 0) {
-#endif
 		int dweight = devSim_dft.dweight[gid];
 
 		if(dweight>0){
@@ -580,9 +563,6 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
                                 devSim_dft.dweight_ssd[gid] = 0;
                         }				
 		}
-#ifdef CUDA_MPIV      
-            }
-#endif
 	}
 
         __syncthreads();
