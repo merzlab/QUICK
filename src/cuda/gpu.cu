@@ -1657,6 +1657,8 @@ void prune_grid_sswgrad(){
         }
 
 	gpu_delete_dft_grid_();
+
+        printf("npoints_ssd: %i", count);
 	
         //Upload data using templates
         gpu -> gpu_xcq -> npoints_ssd = count;
@@ -1888,6 +1890,15 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
 
+#ifdef CUDA_MPIV
+//        mgpu_xc_naive_distribute();
+        mgpu_xc_greedy_distribute();
+        mgpu_xc_repack();
+
+        gpu ->gpu_sim.mpirank = gpu -> mpirank;
+        gpu ->gpu_sim.mpisize = gpu -> mpisize;
+#endif
+
 	gpu -> xc_threadsPerBlock = gpu -> gpu_xcq -> bin_size;
 	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
@@ -1957,13 +1968,6 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 
 #ifdef DEBUG
         print_uploaded_dft_info();
-#endif
-
-#ifdef CUDA_MPIV
-//        mgpu_xc_naive_distribute();
-        mgpu_xc_greedy_distribute();
-        gpu ->gpu_sim.mpirank = gpu -> mpirank;
-        gpu ->gpu_sim.mpisize = gpu -> mpisize;
 #endif
 
 	upload_sim_to_constant_dft(gpu);
