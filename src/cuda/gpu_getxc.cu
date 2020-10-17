@@ -7,10 +7,6 @@
 
 static __constant__ gpu_simulation_type devSim_dft;
 
-static __constant__ QUICKDouble hpartpara[4] = {0.2500e0,0.5000e0,1.0000e0,4.5000e0};
-static __constant__ QUICKDouble lpartpara[4] = {0.1667e0,0.5000e0,0.9000e0,3.5000e0};
-static __constant__ QUICKDouble npartpara[4] = {0.1000e0,0.4000e0,0.8000e0,2.5000e0};
-
 /*
  upload gpu simulation type to constant memory
  */
@@ -24,9 +20,9 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
 }
 
 
-#ifdef DEBUG
+//#ifdef DEBUG
 static float totTime;
-#endif
+//#endif
 
 
 void get_ssw(_gpu_type gpu){
@@ -115,7 +111,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 }
 
 
-void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
+void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -137,13 +133,13 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
     // calculate the size for temporary gradient vector in shared memory 
     QUICKDouble smemSize = gpu->natom* 3 * sizeof(QUICKDouble);
 
-    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(dev_grad, glinfo, nof_functionals)));
+    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(glinfo, nof_functionals)));
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(dev_grad)));
+    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>()));
 
     gpu_delete_sswgrad_vars();
 
@@ -161,6 +157,7 @@ void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, i
 //    nvtxRangePop();
 
 }
+
 
 __global__ void get_density_kernel()
 {
@@ -391,7 +388,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 }
 
 
-__global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals){
+__global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -548,6 +545,10 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 							atomicAdd(&_tmpGrad[Istart], Gradx);
 							atomicAdd(&_tmpGrad[Istart+1], Grady);
 							atomicAdd(&_tmpGrad[Istart+2], Gradz);
+							//devSim_dft.gxc_grad[gid] += Gradx; 
+							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart]     += Gradx;
+							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 1] += Grady;
+							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 2] += Gradz;
 						}
 						//printf("Test xc_grad: %i %f %f %f \n", gid, devSim_dft.xc_grad[Istart], devSim_dft.xc_grad[Istart+1], devSim_dft.xc_grad[Istart+2]);
 					}
@@ -569,7 +570,7 @@ __global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo
 
 	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
-		atomicAdd(&dev_grad[i], _tmpGrad[i]);
+		atomicAdd(&devSim_dft.xc_grad[i], _tmpGrad[i]);
 
         __syncthreads();
 
@@ -722,7 +723,7 @@ __global__ void get_ssw_kernel(){
 }
 
 
-__global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
+__global__ void get_sswgrad_kernel(){
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -751,73 +752,10 @@ __global__ void get_sswgrad_kernel(QUICKDouble* dev_grad){
 
 	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
-                atomicAdd(&dev_grad[i], _tmpGrad[i]);
+                atomicAdd(&devSim_dft.xc_grad[i], _tmpGrad[i]);
 
         __syncthreads();
 
-}
-
-
-
-__device__ int gridFormSG1(int iitype, QUICKDouble distance, \
-    QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng){
-    int iiang;
-    int N = 0;
-    
-    if (devSim_dft.iattype[iitype-1] >= 1 && devSim_dft.iattype[iitype-1] <=2) {
-        if (distance<hpartpara[0]) {
-            iiang = 6;
-        }else if (distance<hpartpara[1]) {
-            iiang = 38;
-        }else if (distance<hpartpara[2]) {
-            iiang = 86;
-        }else if (distance<hpartpara[3]) {
-            iiang = 194;
-        }else{
-            iiang = 86;
-        }
-    }else if (devSim_dft.iattype[iitype-1] >= 3 && devSim_dft.iattype[iitype-1] <=10) {
-        if (distance<lpartpara[0]) {
-            iiang = 6;
-        }else if (distance<lpartpara[1]) {
-            iiang = 38;
-        }else if (distance<lpartpara[2]) {
-            iiang = 86;
-        }else if (distance<lpartpara[3]) {
-            iiang = 194;
-        }else{
-            iiang = 86;
-        }
-    }else if (devSim_dft.iattype[iitype-1]>= 11 && devSim_dft.iattype[iitype-1]<=18) {
-        if (distance<npartpara[0]) {
-            iiang = 6;
-        }else if (distance<npartpara[1]) {
-            iiang = 38;
-        }else if (distance<npartpara[2]) {
-            iiang = 86;
-        }else if (distance<npartpara[3]) {
-            iiang = 194;
-        }else{
-            iiang = 86;
-        }
-    } else {
-        iiang = 194;
-    }
-    
-    if (iiang == 6) {
-        LD0006(XAng, YAng, ZAng, WAng, N);
-    }else if (iiang == 38)  {
-        LD0038(XAng, YAng, ZAng, WAng, N);
-    }else if (iiang == 86)  {
-        LD0086(XAng, YAng, ZAng, WAng, N);
-    }else if (iiang == 194) {
-        LD0194(XAng, YAng, ZAng, WAng, N);
-    }
-    
-    for (int i = 0; i<iiang; i++) {
-        WAng[i] = WAng[i] * 12.56637061435917295385;
-    }
-    return iiang;
 }
 
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm)
