@@ -1970,8 +1970,6 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
         print_uploaded_dft_info();
 #endif
 
-	upload_sim_to_constant_dft(gpu);
-
 	PRINTDEBUG("COMPLETE UPLOADING DFT GRID")
 
 /*	int nblocks = (int) ((*gridb_count/SM_2X_XC_THREADS_PER_BLOCK)+1);
@@ -2046,22 +2044,18 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         //libxc_cleanup(glinfo, nof_functionals);
 
-/*	gpu -> gpu_xcq -> xc_grad = new cuda_buffer_type<QUICKDouble>(grad, gpu->natom * 3);
-//	gpu -> gpu_xcq -> xc_grad -> Upload();
+	gpu -> gpu_xcq -> xc_grad = new cuda_buffer_type<QUICKDouble>(grad, gpu->natom * 3);
+        gpu -> gpu_xcq -> gxc_grad = new cuda_buffer_type<QUICKDouble>(gpu -> blocks * gpu -> xc_threadsPerBlock * gpu->natom * 3);
+
+	gpu -> gpu_xcq -> xc_grad -> Upload();
+        gpu -> gpu_xcq -> gxc_grad -> Upload();
+
 	gpu -> gpu_sim.xc_grad = gpu -> gpu_xcq -> xc_grad -> _devData;
-        gpu -> gpu_xcq -> xc_grad -> Upload();
+        gpu -> gpu_sim.gxc_grad = gpu -> gpu_xcq -> gxc_grad -> _devData;
 
-	getxc_grad_new_imp(gpu);
+        gpu -> gpu_xcq -> gxc_grad -> DeleteCPU(); 
 
-	gpu -> gpu_xcq -> xc_grad -> Download();
-
-	for (int i = 0; i < gpu->natom * 3; i ++) {
-        	printf("new_imp_grad: %i %f \n", i, gpu -> grad -> _hostData[i]);
-    	}	
-
-	SAFE_DELETE(gpu -> gpu_xcq -> xc_grad);
-*/
-        int xc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
+/*        int xc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
         QUICKDouble *d_xc_grad, *h_xc_grad;
 
         cudaMalloc((void**)&d_xc_grad, xc_grad_byte_size);
@@ -2070,19 +2064,25 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         h_xc_grad = (QUICKDouble*)malloc(xc_grad_byte_size);
 
         cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
+*/
+        upload_sim_to_constant_dft(gpu);
 
-	getxc_grad(gpu, d_xc_grad, glinfo, nof_aux_functionals);
+	getxc_grad(gpu, glinfo, nof_aux_functionals);
 
-        cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
+        gpu -> gpu_xcq -> xc_grad -> Download();
+
+//        cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
 
         for (int i = 0; i < gpu->natom * 3; i ++) {
-		grad[i] = h_xc_grad[i];
+		grad[i] = gpu -> gpu_xcq -> xc_grad -> _hostData[i];
 
         }	
 
-	cudaFree(d_xc_grad);
+/*	cudaFree(d_xc_grad);
 	free(h_xc_grad);
-
+*/
+	SAFE_DELETE(gpu -> gpu_xcq -> xc_grad);
+	gpu -> gpu_xcq -> gxc_grad -> DeleteGPU();
 }
 
 
