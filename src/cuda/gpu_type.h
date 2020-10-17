@@ -95,6 +95,7 @@ struct XC_quadrature_type{
 	cuda_buffer_type<QUICKDouble>* gbz;
 	cuda_buffer_type<QUICKDouble>* exc;
 	cuda_buffer_type<QUICKDouble>* xc_grad;
+	cuda_buffer_type<QUICKDouble>* gxc_grad;        // a global xc gradient vector of size number_of_blocks * number_of_threads_per_block
 
         //Variables for ssw derivative calculation
         int npoints_ssd; //Total number of input points for ssd
@@ -179,6 +180,7 @@ struct gpu_simulation_type {
     QUICKDouble* exc;         //Exchange correlation energy
     QUICKDouble* exc_ssd;     //Exchange correlation energy for sswder calculation
     QUICKDouble* xc_grad;     //Exchange correlation energy gradient
+    QUICKDouble* gxc_grad;
     QUICKDouble* wtang;
     QUICKDouble* rwt;
     QUICKDouble* rad3;
