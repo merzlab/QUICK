@@ -87,6 +87,7 @@ module quick_method_module
         integer :: ncyc =1000
         
         ! following are some cutoff criteria
+        double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
         double precision :: integralCutoff = 1.0d-7   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
