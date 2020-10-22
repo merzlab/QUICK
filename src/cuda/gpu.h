@@ -58,6 +58,8 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
 extern "C" void gpu_grad_(QUICKDouble* grad);
 
+extern "C" void get_oneen_grad_();
+
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
