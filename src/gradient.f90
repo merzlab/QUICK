@@ -208,102 +208,16 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !---------------------------------------------------------------------
-!  2) The derivative of the kinetic term
+!  2) One electron gradients
 !---------------------------------------------------------------------
-   call cpu_time(timer_begin%T1eGrad)
+! Note that we will call this subroutine asynchronously with ERI
+! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
 
-   call cpu_time(timer_begin%T1eTGrad)
-
-   call get_kinetic_grad
-
-   call cpu_time(timer_end%T1eTGrad)
-   timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPIV
-if(master) then
+#if !defined CUDA && !defined CUDA_MPIV
+   call get_oneen_grad
 #endif
-
-#ifdef DEBUG
-  if (quick_method%debug) then
-        write (iOutFile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
-        do Iatm=1,natom
-            do Imomentum=1,3
-                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
-                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
-            enddo
-        enddo
-  endif
-#endif
-
-#ifdef MPIV
-endif
-#endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
-
 !---------------------------------------------------------------------
-!  3) The derivative of the 1 electron nuclear attraction term ij times
-!     the density matrix element ij.
-!---------------------------------------------------------------------
-
-   call cpu_time(timer_begin%T1eVGrad)
-
-#ifdef MPIV
-   if (bMPI) then
-      nshell_mpi = mpi_jshelln(mpirank)
-   else
-      nshell_mpi = jshell
-   endif
-
-   do i=1,nshell_mpi
-      if (bMPI) then
-         IIsh = mpi_jshell(mpirank,i)
-      else
-         IIsh = i
-      endif
-#else
-   do IIsh=1,jshell
-#endif
-      do JJsh=IIsh,jshell
-         call attrashellopt(IIsh,JJsh)
-      enddo
-   enddo
-
-   call cpu_time(timer_end%T1eVGrad)
-   timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
-
-#ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-#endif
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPIV
-if(master) then
-#endif
-
-#ifdef DEBUG
-  if (quick_method%debug) then
-        write (iOutFile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
-        do Iatm=1,natom
-            do Imomentum=1,3
-                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
-                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
-            enddo
-        enddo
-  endif
-#endif
-
-#ifdef MPIV
-endif
-#endif
-
-   call cpu_time(timer_end%T1eGrad)
-   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
-
-!---------------------------------------------------------------------
-!  4) The derivative of the electron repulsion term
+!  3) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
    call cpu_time(timer_begin%T2eGrad)
 
@@ -312,7 +226,7 @@ endif
    call cpu_time(timer_end%T2eGrad)
    timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
 !---------------------------------------------------------------------
-!  5) If DFT, calculate the derivative of exchahnge correlation  term
+!  4) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
 
    if (quick_method%DFT) then
@@ -518,6 +432,111 @@ subroutine get_nuclear_repulsion_grad
 end subroutine get_nuclear_repulsion_grad
 
 
+subroutine get_oneen_grad
+
+  use allmod
+  implicit none
+  integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
+
+!---------------------------------------------------------------------
+!  1) The derivative of the kinetic term
+!---------------------------------------------------------------------
+   call cpu_time(timer_begin%T1eGrad)
+
+   call cpu_time(timer_begin%T1eTGrad)
+
+   call get_kinetic_grad
+
+   call cpu_time(timer_end%T1eTGrad)
+   timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
+
+#ifdef MPIV
+if(master) then
+#endif
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutfile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+  endif
+#endif
+
+#ifdef MPIV
+endif
+#endif
+
+!---------------------------------------------------------------------
+!  2) The derivative of the 1 electron nuclear attraction term ij times
+!     the density matrix element ij.
+!---------------------------------------------------------------------
+
+   call cpu_time(timer_begin%T1eVGrad)
+
+#ifdef MPIV
+   if (bMPI) then
+      nshell_mpi = mpi_jshelln(mpirank)
+   else
+      nshell_mpi = jshell
+   endif
+
+   do i=1,nshell_mpi
+      if (bMPI) then
+         IIsh = mpi_jshell(mpirank,i)
+      else
+         IIsh = i
+      endif
+#else
+   do IIsh=1,jshell
+#endif
+      do JJsh=IIsh,jshell
+         call attrashellopt(IIsh,JJsh)
+      enddo
+   enddo
+
+   call cpu_time(timer_end%T1eVGrad)
+   timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
+
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
+#ifdef MPIV
+if(master) then
+#endif
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutfile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+  endif
+#endif
+
+#ifdef MPIV
+endif
+#endif
+
+   call cpu_time(timer_end%T1eGrad)
+   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
+
+   return
+
+end subroutine get_oneen_grad
+
+
 subroutine get_kinetic_grad
 
    use allmod
@@ -641,6 +660,8 @@ subroutine get_electron_replusion_grad
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision :: tmpGrad(3*natom) 
+  
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -649,6 +670,8 @@ subroutine get_electron_replusion_grad
 !  terms with respect to X times the coefficient found in the energy.
 !  (i.e. the multiplicative constants from the density matrix that 
 !  arise as these are both the exchange and correlation integrals.
+
+   tmpGrad = 0.0d0
 
    do II=1,jshell
       do JJ=II,jshell
@@ -675,8 +698,16 @@ subroutine get_electron_replusion_grad
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
       quick_qm_struct%vec,quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-      call gpu_grad(quick_qm_struct%gradient)
+      call gpu_upload_grad(tmpGrad, quick_method%gradCutoff)
+
+      ! next function will compute the eri gradients store in tmpGrad and send
+      ! back
+      call gpu_grad(tmpGrad)
+
+      do i=1, 3*natom
+        quick_qm_struct%gradient(i) = quick_qm_struct%gradient(i) + tmpGrad(i)
+      enddo
+
    else
 #endif
 
