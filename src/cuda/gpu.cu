@@ -2044,45 +2044,50 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         //libxc_cleanup(glinfo, nof_functionals);
 
-	gpu -> gpu_xcq -> xc_grad = new cuda_buffer_type<QUICKDouble>(grad, gpu->natom * 3);
-        gpu -> gpu_xcq -> gxc_grad = new cuda_buffer_type<QUICKDouble>(gpu -> blocks * gpu -> xc_threadsPerBlock * gpu->natom * 3);
+        gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
+        gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
+        gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
+        gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
 
-	gpu -> gpu_xcq -> xc_grad -> Upload();
-        gpu -> gpu_xcq -> gxc_grad -> Upload();
+        for (int i = 0; i<gpu->natom * 3; i++) {
 
-	gpu -> gpu_sim.xc_grad = gpu -> gpu_xcq -> xc_grad -> _devData;
-        gpu -> gpu_sim.gxc_grad = gpu -> gpu_xcq -> gxc_grad -> _devData;
+          QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
 
-        gpu -> gpu_xcq -> gxc_grad -> DeleteCPU(); 
+          if ( gpu->grad->_hostData[i] <(QUICKDouble)0.0){
+            valUII = 0ull - valUII;
+          }
 
-/*        int xc_grad_byte_size = (gpu->natom)*sizeof(double)*3;
-        QUICKDouble *d_xc_grad, *h_xc_grad;
+          gpu->gradULL ->_hostData[i] = valUII;
+        }
 
-        cudaMalloc((void**)&d_xc_grad, xc_grad_byte_size);
-	h_xc_grad = (double*) malloc(xc_grad_byte_size);	
+        gpu -> gradULL -> Upload();
 
-        h_xc_grad = (QUICKDouble*)malloc(xc_grad_byte_size);
-
-        cudaMemcpy(d_xc_grad, grad, xc_grad_byte_size, cudaMemcpyHostToDevice);
-*/
         upload_sim_to_constant_dft(gpu);
 
 	getxc_grad(gpu, glinfo, nof_aux_functionals);
 
-        gpu -> gpu_xcq -> xc_grad -> Download();
+        gpu -> gradULL -> Download();
 
-//        cudaMemcpy(h_xc_grad, d_xc_grad, xc_grad_byte_size, cudaMemcpyDeviceToHost);
+        for (int i = 0; i< 3 * gpu->natom; i++) {
+          QUICKULL valULL = gpu->gradULL->_hostData[i];
+          QUICKDouble valDB;
 
-        for (int i = 0; i < gpu->natom * 3; i ++) {
-		grad[i] = gpu -> gpu_xcq -> xc_grad -> _hostData[i];
+          if (valULL >= 0x8000000000000000ull) {
+            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+          }
+          else
+          {
+            valDB  = (QUICKDouble) valULL;
+          }
 
-        }	
+          gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
+        }
 
-/*	cudaFree(d_xc_grad);
-	free(h_xc_grad);
-*/
-	SAFE_DELETE(gpu -> gpu_xcq -> xc_grad);
-	gpu -> gpu_xcq -> gxc_grad -> DeleteGPU();
+        gpu -> grad -> Download(grad);
+
+        delete gpu -> grad;
+        delete gpu -> gradULL;
+    
 }
 
 
