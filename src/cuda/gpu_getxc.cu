@@ -394,13 +394,13 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
         int totalThreads = blockDim.x*gridDim.x;
 
 	// create the temporary gradient vector in shared memory and initilize all elements to zero. 
-	extern __shared__ double _tmpGrad[];
+/*	extern __shared__ double _tmpGrad[];
 
 	for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
 		_tmpGrad[i] = 0.0;
 
 	__syncthreads();
-	
+*/	
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
@@ -542,13 +542,16 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                                                 + zdot * (dzdz * phi2 + dphidz * dphidz2));							
 
 							// update the temporary gradient vector
-							atomicAdd(&_tmpGrad[Istart], Gradx);
-							atomicAdd(&_tmpGrad[Istart+1], Grady);
-							atomicAdd(&_tmpGrad[Istart+2], Gradz);
+							/*atomicAdd(&devSim_dft.xc_grad[Istart], Gradx);
+							atomicAdd(&devSim_dft.xc_grad[Istart+1], Grady);
+							atomicAdd(&devSim_dft.xc_grad[Istart+2], Gradz);*/
 							//devSim_dft.gxc_grad[gid] += Gradx; 
-							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart]     += Gradx;
+							/*devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart]     += Gradx;
 							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 1] += Grady;
-							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 2] += Gradz;
+							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 2] += Gradz;*/
+        						GRADADD(devSim_dft.gradULL[Istart], Gradx);
+        						GRADADD(devSim_dft.gradULL[Istart+1], Grady);
+        						GRADADD(devSim_dft.gradULL[Istart+2], Gradz);
 						}
 						//printf("Test xc_grad: %i %f %f %f \n", gid, devSim_dft.xc_grad[Istart], devSim_dft.xc_grad[Istart+1], devSim_dft.xc_grad[Istart+2]);
 					}
@@ -566,14 +569,14 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 		}
 	}
 
-        __syncthreads();
+/*        __syncthreads();
 
 	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
 		atomicAdd(&devSim_dft.xc_grad[i], _tmpGrad[i]);
 
         __syncthreads();
-
+*/
 }
 
 
@@ -729,12 +732,12 @@ __global__ void get_sswgrad_kernel(){
         int totalThreads = blockDim.x*gridDim.x;
 
 	// create the temporary gradient vector in shared memory and initilize all elements to zero. 
-        extern __shared__ double _tmpGrad[];
+        /*extern __shared__ double _tmpGrad[];
 
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
                 _tmpGrad[i] = 0.0;
 
-        __syncthreads();
+        __syncthreads();*/
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints_ssd; gid += totalThreads) {
 
@@ -745,16 +748,16 @@ __global__ void get_sswgrad_kernel(){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid, _tmpGrad);
+		sswder(gridx, gridy, gridz, exc, quadwt, gatm, gid);
 	}
 
-	__syncthreads();
+	/*__syncthreads();
 
 	// update the gradient vector in global memory
         for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
                 atomicAdd(&devSim_dft.xc_grad[i], _tmpGrad[i]);
 
-        __syncthreads();
+        __syncthreads();*/
 
 }
 
@@ -884,7 +887,7 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
 }
 
 
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* _tmpGrad){
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid){
 
 /*
         This subroutine calculates the derivatives of weight found in
@@ -1038,9 +1041,12 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 
 //      We should now have the derivatives of the SS weights.  Now just add it to the temporary gradient vector in shared memory.
 
-                atomicAdd(&_tmpGrad[jstart], wtgradjx*Exc*quadwt);
-                atomicAdd(&_tmpGrad[jstart+1], wtgradjy*Exc*quadwt);
-                atomicAdd(&_tmpGrad[jstart+2], wtgradjz*Exc*quadwt);
+                /*atomicAdd(&devSim_dft.xc_grad[jstart], wtgradjx*Exc*quadwt);
+                atomicAdd(&devSim_dft.xc_grad[jstart+1], wtgradjy*Exc*quadwt);
+                atomicAdd(&devSim_dft.xc_grad[jstart+2], wtgradjz*Exc*quadwt);*/
+		GRADADD(devSim_dft.gradULL[jstart], wtgradjx*Exc*quadwt);
+		GRADADD(devSim_dft.gradULL[jstart+1], wtgradjy*Exc*quadwt);
+		GRADADD(devSim_dft.gradULL[jstart+2], wtgradjz*Exc*quadwt);
                 }
 
         }
@@ -1050,9 +1056,12 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 #endif
 
 	// update the temporary gradient vector
-        atomicAdd(&_tmpGrad[istart], wtgradix*Exc*quadwt);
-        atomicAdd(&_tmpGrad[istart+1], wtgradiy*Exc*quadwt);
-        atomicAdd(&_tmpGrad[istart+2], wtgradiz*Exc*quadwt);
+        /*atomicAdd(&devSim_dft.xc_grad[istart], wtgradix*Exc*quadwt);
+        atomicAdd(&devSim_dft.xc_grad[istart+1], wtgradiy*Exc*quadwt);
+        atomicAdd(&devSim_dft.xc_grad[istart+2], wtgradiz*Exc*quadwt);*/
+	GRADADD(devSim_dft.gradULL[istart], wtgradix*Exc*quadwt);
+	GRADADD(devSim_dft.gradULL[istart+1], wtgradiy*Exc*quadwt);
+	GRADADD(devSim_dft.gradULL[istart+2], wtgradiz*Exc*quadwt);
 
 
 }
