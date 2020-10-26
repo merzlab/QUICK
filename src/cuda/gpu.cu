@@ -1658,8 +1658,6 @@ void prune_grid_sswgrad(){
 
 	gpu_delete_dft_grid_();
 
-        printf("npoints_ssd: %i", count);
-	
         //Upload data using templates
         gpu -> gpu_xcq -> npoints_ssd = count;
         gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);

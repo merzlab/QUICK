@@ -20,9 +20,9 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
 }
 
 
-//#ifdef DEBUG
+#ifdef DEBUG
 static float totTime;
-//#endif
+#endif
 
 
 void get_ssw(_gpu_type gpu){
