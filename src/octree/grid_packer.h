@@ -46,7 +46,7 @@ void get_cpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw
 void get_ssw_pruned_grid();
 
 #if defined CUDA || defined CUDA_MPIV
-int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst);
+void gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst);
 #endif
 
 void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, double gridz, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, unsigned int bin_id, unsigned int gid);

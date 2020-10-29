@@ -396,7 +396,7 @@ void pack_grid_pts(){
 
 	vector<bflist> new_imp_bflst;
 
-	int new_imp_total_pts = gpu_get_pfbased_basis_function_lists_new_imp(&octree, &new_imp_signodes, &new_imp_bflst);
+	gpu_get_pfbased_basis_function_lists_new_imp(&octree, &new_imp_signodes, &new_imp_bflst);
 
 #else
 
@@ -472,7 +472,7 @@ void get_ssw_pruned_grid(){
 
 
 #if defined CUDA || defined CUDA_MPIV
-int gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst){
+void gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst){
 
         double *gridx, *gridy, *gridz, *sswt, *weight;	                 			//Keeps all grid points
         unsigned int *cfweight, *pfweight;   //Holds 1 or 0 depending on the significance of each candidate
