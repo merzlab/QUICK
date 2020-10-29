@@ -58,13 +58,15 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
 extern "C" void gpu_grad_(QUICKDouble* grad);
 
+extern "C" void get_oneen_grad_();
+
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
 void get_ssw(_gpu_type gpu);
 void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
 void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
-void getxc_grad(_gpu_type gpu, QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals);
+void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
 void gpu_delete_sswgrad_vars();
 void get2e_MP2(_gpu_type gpu);
@@ -112,8 +114,8 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 __global__ void get_density_kernel();
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals);
-__global__ void get_xcgrad_kernel(QUICKDouble* dev_grad, gpu_libxc_info** glinfo, int nof_functionals);
-__global__ void get_sswgrad_kernel(QUICKDouble* dev_grad);
+__global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals);
+__global__ void get_sswgrad_kernel();
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
 
@@ -454,20 +456,7 @@ __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
                         int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 
-
-
-//__device__ void gpu_grid_b3lyp(int irad, int iradtemp, int iatm);
-//Madu Manathunga 07/01/2019: added libxc variable
-///__device__ void gpu_grid_xc(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals);
-
-//__device__ void gpu_grid_xc_grad(int irad, int iradtemp, int iatm, QUICKDouble XAng, QUICKDouble YAng, QUICKDouble ZAng, QUICKDouble WAng, gpu_libxc_info** glinfo, int nof_functionals, double* exc_dev_grad);
-
-__device__ int gridFormSG1(int iitype, QUICKDouble distance, \
-                           QUICKDouble* XAng, QUICKDouble* YAng, QUICKDouble* ZAng, QUICKDouble* WAng);
-
-//Madu Manathunga 08/22/2019
-//__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, double* exc_dev_grad);
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid, double* exc_dev_grad);
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid);
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);
 
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
