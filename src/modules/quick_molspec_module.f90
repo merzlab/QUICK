@@ -435,8 +435,12 @@ contains
       if (io.ne.0) then
          write(io,'(/," =========== Molecule Input ==========")')
          write(io,'("| TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
-         write(io,'("| TOTOAL ATOM NUMBER      = ",i4,4x,"NUMBER OF ATOM TYPES        = ",i4)') self%natom,self%iAtomType
+         write(io,'("| TOTAL ATOM NUMBER       = ",i4,4x,"NUMBER OF ATOM TYPES        = ",i4)') self%natom,self%iAtomType
          write(io,'("| NUMBER OF HYDROGEN ATOM = ",i4,4x,"NUMBER OF NON-HYDROGEN ATOM = ",i4)') self%nhatom,self%nNonHAtom
+
+         if(self%nextatom.gt.0 )then
+           write(io,'("| NUMBER OF EXTERNAL POINT CHARGES = ",i4)') self%nextatom
+         endif
 
          if (self%nelecb.ne.0) then
             write (io,'("| NUMBER OF ALPHA ELECTRONS = ",I4)') self%nelec
