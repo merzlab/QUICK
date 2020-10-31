@@ -45,7 +45,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Oct 30 19:49:38 2020
+ TASK STARTS ON: Fri Oct 30 20:28:13 2020
  INPUT FILE :    grad_wat_b3lyp_ccpvdz.in
  OUTPUT FILE:    grad_wat_b3lyp_ccpvdz.out
  DATE FILE  :    grad_wat_b3lyp_ccpvdz.dat
@@ -101,28 +101,28 @@ KEYWORD=DFT B3LYP BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT EXTCHARGE
  @ Begin Energy Calculation
 
 
-SCF CYCLE      =        1      TIME      =     0.43
+SCF CYCLE      =        1      TIME      =     0.40
 RMS CHANGE     = 0.296870E+00  MAX CHANGE= 0.255143E+01
 
-SCF CYCLE      =        2      TIME      =     0.45
+SCF CYCLE      =        2      TIME      =     0.40
 RMS CHANGE     = 0.195298E+00  MAX CHANGE= 0.162836E+01
 
-SCF CYCLE      =        3      TIME      =     0.49
+SCF CYCLE      =        3      TIME      =     0.39
 RMS CHANGE     = 0.133006E-01  MAX CHANGE= 0.107446E+00
 
-SCF CYCLE      =        4      TIME      =   0.39
+SCF CYCLE      =        4      TIME      =   0.40
 DIIS CYCLE     =        1      MAX ERROR = 0.417196E-02
 RMS CHANGE     = 0.336070E-02  MAX CHANGE= 0.248946E-01
 
-SCF CYCLE      =        5      TIME      =   0.40
+SCF CYCLE      =        5      TIME      =   0.39
 DIIS CYCLE     =        2      MAX ERROR = 0.137477E-02
 RMS CHANGE     = 0.128039E-02  MAX CHANGE= 0.965241E-02
 
-SCF CYCLE      =        6      TIME      =   0.40
+SCF CYCLE      =        6      TIME      =   0.39
 DIIS CYCLE     =        3      MAX ERROR = 0.610672E-03
 RMS CHANGE     = 0.119887E-02  MAX CHANGE= 0.815223E-02
 
-SCF CYCLE      =        7      TIME      =   0.40
+SCF CYCLE      =        7      TIME      =   0.39
 DIIS CYCLE     =        4      MAX ERROR = 0.149701E-03
 RMS CHANGE     = 0.381018E-03  MAX CHANGE= 0.266119E-02
 
@@ -130,12 +130,12 @@ SCF CYCLE      =        8      TIME      =   0.39
 DIIS CYCLE     =        5      MAX ERROR = 0.777015E-05
 RMS CHANGE     = 0.509156E-05  MAX CHANGE= 0.566340E-04
 
-SCF CYCLE      =        9      TIME      =   0.40
+SCF CYCLE      =        9      TIME      =   0.41
 DIIS CYCLE     =        6      MAX ERROR = 0.279060E-06
 RMS CHANGE     = 0.297920E-06  MAX CHANGE= 0.279469E-05
 PREPARING FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =       10      TIME      =     0.39
+SCF CYCLE      =       10      TIME      =     0.44
 RMS CHANGE     = 0.532360E-07  MAX CHANGE= 0.471726E-06
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -213,33 +213,6 @@ TOTAL ENERGY         =     0.000000000
 | JSHELL =   12 JBASIS =   37
 
 
-RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS
-   1           8.490000
-   2           8.490000
-   3           8.490000
-   4           9.227000
-   5           9.227000
-   6           9.227000
-   7           9.227000
-   8           9.227000
-   9           9.227000
-  10           4.693000
-  11           4.693000
-  12           4.693000
-  13           4.693000
-  14           4.693000
-  15           4.693000
-  16          13.153000
-  17          13.153000
-  18           5.767000
-  19           5.767000
-  20           5.767000
-  21          13.153000
-  22          13.153000
-  23           5.767000
-  24           5.767000
-  25           5.767000
-
  @ End Reading Molecular Information 
 
 
@@ -249,11 +222,11 @@ RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1    -76.471415518      ------         0.790     1        0.76      0.03      0.41    0.1587E+01  0.1116E+00  0.9205E+00
-  2    -76.331104254  -.140311E+00       0.035     2        0.02      0.02      0.01    0.1842E+00  0.6404E-01  0.6117E+00
+  1    -76.471415518      ------         0.806     1        0.78      0.03      0.42    0.1587E+01  0.1116E+00  0.9205E+00
+  2    -76.331104254  -.140311E+00       0.031     2        0.01      0.02      0.01    0.1842E+00  0.6404E-01  0.6117E+00
   3    -76.306217402  -.248869E-01       0.031     3        0.01      0.02      0.01    0.2230E+00  0.3441E-01  0.3442E+00
   4    -76.407952079  0.101735E+00       0.030     4        0.01      0.02      0.01    0.6521E-02  0.1296E-02  0.1265E-01
-  5    -76.408021628  0.695490E-04       0.029     5        0.01      0.02      0.01    0.1434E-02  0.2300E-03  0.2246E-02
+  5    -76.408021628  0.695490E-04       0.031     5        0.01      0.02      0.01    0.1434E-02  0.2300E-03  0.2246E-02
   6    -76.408024818  0.319069E-05       0.031     6        0.01      0.02      0.01    0.1696E-03  0.3688E-04  0.3448E-03
   7    -76.408024874  0.553821E-07       0.031     7        0.01      0.02      0.01    0.4736E-04  0.7211E-05  0.7521E-04
     --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
@@ -305,36 +278,36 @@ TOTAL ENERGY         =   -76.408024766
  @ Output Timing Information
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME  =     6.684391000( 73.17%)
-DFT GRID OPERATIONS =     0.049573000(  0.54%)
-      TOTAL GRID FORMATION TIME   =     0.000915000(  0.01%)
-      TOTAL GRID WEIGHT TIME      =     0.001941000(  0.02%)
-      TOTAL OCTREE RUN TIME       =     0.030000000(  0.33%)
+INITIAL GUESS TIME  =     6.392172000( 72.58%)
+DFT GRID OPERATIONS =     0.033888000(  0.38%)
+      TOTAL GRID FORMATION TIME   =     0.000359000(  0.00%)
+      TOTAL GRID WEIGHT TIME      =     0.000977000(  0.01%)
+      TOTAL OCTREE RUN TIME       =     0.020000000(  0.23%)
       TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
-      TOTAL DATA PACKING TIME     =     0.016717000(  0.18%)
-TOTAL SCF TIME      =     1.010973000( 11.07%)
-      TOTAL OP TIME      =     0.170949000(  1.87%)
-            OVERLAP 1e INTEGRALS TIME      =     0.000910000(  0.01%)
-            OVERLAP 1e DIAGONALIZATION TIME =     0.000125000(  0.00%)
-            TOTAL 1e TIME      =     0.002534000(  0.03%)
+      TOTAL DATA PACKING TIME     =     0.012552000(  0.14%)
+TOTAL SCF TIME      =     1.024955000( 11.64%)
+      TOTAL OP TIME      =     0.171546000(  1.95%)
+            OVERLAP 1e INTEGRALS TIME      =     0.000890000(  0.01%)
+            OVERLAP 1e DIAGONALIZATION TIME =     0.000122000(  0.00%)
+            TOTAL 1e TIME      =     0.002549000(  0.03%)
                KINETIC 1e INTEGRALS TIME    =     0.001768000(  0.02%)
-               ATTRACTION 1e INTEGRALS TIME =     0.000763000(  0.01%)
-            TOTAL 2e TIME      =     0.141223000(  1.55%)
-            TOTAL EXC TIME     =     0.027033000(  0.30%)
-            TOTAL ENERGY TIME  =     0.000044000(  0.00%)
-      TOTAL DII TIME      =     0.839897000(  9.19%)
-            TOTAL DIAG TIME    =     0.477731000(  5.23%)
-TOTAL GRADIENT TIME      =     0.248974000(  2.73%)
-      TOTAL NUCLEAR GRADIENT TIME =     0.000021000(  0.00%)
-      TOTAL 1e GRADIENT TIME      =     0.013201000(  0.14%)
-         KINETIC 1e GRADIENT TIME      =     0.010271000(  0.11%)
-         ATTRACTION 1e GRADIENT TIME   =     0.002922000(  0.03%)
-      TOTAL 2e GRADIENT TIME      =     0.231581000(  2.54%)
-      TOTAL EXC GRADIENT TIME     =     0.017357000(  0.19%)
-TOTAL TIME          =     9.135092000
+               ATTRACTION 1e INTEGRALS TIME =     0.000777000(  0.01%)
+            TOTAL 2e TIME      =     0.141947000(  1.61%)
+            TOTAL EXC TIME     =     0.026893000(  0.31%)
+            TOTAL ENERGY TIME  =     0.000047000(  0.00%)
+      TOTAL DII TIME      =     0.853279000(  9.69%)
+            TOTAL DIAG TIME    =     0.485466000(  5.51%)
+TOTAL GRADIENT TIME      =     0.262878000(  2.98%)
+      TOTAL NUCLEAR GRADIENT TIME =     0.000022000(  0.00%)
+      TOTAL 1e GRADIENT TIME      =     0.014103000(  0.16%)
+         KINETIC 1e GRADIENT TIME      =     0.011626000(  0.13%)
+         ATTRACTION 1e GRADIENT TIME   =     0.002469000(  0.03%)
+      TOTAL 2e GRADIENT TIME      =     0.245471000(  2.79%)
+      TOTAL EXC GRADIENT TIME     =     0.017375000(  0.20%)
+TOTAL TIME          =     8.807488000
 ------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  9.1 seconds.
+ Job cpu time:  0 days  0 hours  0 minutes  8.8 seconds.
 
  @ Finish Output Timing Information
 
- Normal Termination. Task Finished on: Fri Oct 30 19:49:50 2020
+ Normal Termination. Task Finished on: Fri Oct 30 20:28:26 2020
