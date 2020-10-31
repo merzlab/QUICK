@@ -45,7 +45,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Oct 30 19:48:52 2020
+ TASK STARTS ON: Fri Oct 30 20:27:28 2020
  INPUT FILE :    ene_wat2_mp2_631g.in
  OUTPUT FILE:    ene_wat2_mp2_631g.out
  DATE FILE  :    ene_wat2_mp2_631g.dat
@@ -100,7 +100,7 @@ KEYWORD=MP2 BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY
 SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.150543E+00  MAX CHANGE= 0.709514E+00
 
-SCF CYCLE      =        2      TIME      =     0.04
+SCF CYCLE      =        2      TIME      =     0.05
 RMS CHANGE     = 0.813251E-01  MAX CHANGE= 0.295747E+00
 
 SCF CYCLE      =        3      TIME      =   0.04
@@ -223,9 +223,9 @@ TOTAL ENERGY         =     0.000000000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1   -152.037509283      ------         1.054     1        1.04      0.02      0.57    0.1729E+01  0.7381E-01  0.4314E+00
+  1   -152.037509283      ------         0.751     1        0.73      0.02      0.39    0.1729E+01  0.7381E-01  0.4314E+00
   2   -151.893390659  -.144119E+00       0.014     2        0.01      0.00      0.01    0.2600E+00  0.2172E-01  0.1871E+00
-  3   -151.961346468  0.679558E-01       0.015     3        0.01      0.00      0.01    0.1144E+00  0.7113E-02  0.6531E-01
+  3   -151.961346468  0.679558E-01       0.014     3        0.01      0.00      0.01    0.1144E+00  0.7113E-02  0.6531E-01
   4   -151.976096989  0.147505E-01       0.014     4        0.01      0.00      0.01    0.2531E-01  0.2816E-02  0.1962E-01
   5   -151.977393665  0.129668E-02       0.014     5        0.01      0.00      0.01    0.3325E-02  0.9850E-03  0.5599E-02
   6   -151.977486929  0.932640E-04       0.014     6        0.01      0.00      0.01    0.6347E-03  0.1642E-03  0.1129E-02
@@ -277,23 +277,23 @@ EMP2                =  -152.239416193
  @ Output Timing Information
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME  =     1.001807000( 30.51%)
-TOTAL SCF TIME      =     1.182756000( 36.02%)
-      TOTAL OP TIME      =     0.048075000(  1.46%)
-            OVERLAP 1e INTEGRALS TIME      =     0.000710000(  0.02%)
-            OVERLAP 1e DIAGONALIZATION TIME =     0.000119000(  0.00%)
-            TOTAL 1e TIME      =     0.002114000(  0.06%)
-               KINETIC 1e INTEGRALS TIME    =     0.001553000(  0.05%)
-               ATTRACTION 1e INTEGRALS TIME =     0.000557000(  0.02%)
-            TOTAL 2e TIME      =     0.045783000(  1.39%)
-            TOTAL ENERGY TIME  =     0.000064000(  0.00%)
-      TOTAL DII TIME      =     1.134524000( 34.55%)
-            TOTAL DIAG TIME    =     0.650557000( 19.81%)
-TOTAL MP2 TIME     =     0.074340000(  2.26%)
-TOTAL TIME          =     3.284044000
+INITIAL GUESS TIME  =     1.080292000( 37.01%)
+TOTAL SCF TIME      =     0.879069000( 30.12%)
+      TOTAL OP TIME      =     0.051574000(  1.77%)
+            OVERLAP 1e INTEGRALS TIME      =     0.000704000(  0.02%)
+            OVERLAP 1e DIAGONALIZATION TIME =     0.000113000(  0.00%)
+            TOTAL 1e TIME      =     0.002835000(  0.10%)
+               KINETIC 1e INTEGRALS TIME    =     0.001821000(  0.06%)
+               ATTRACTION 1e INTEGRALS TIME =     0.001010000(  0.03%)
+            TOTAL 2e TIME      =     0.048572000(  1.66%)
+            TOTAL ENERGY TIME  =     0.000057000(  0.00%)
+      TOTAL DII TIME      =     0.827328000( 28.34%)
+            TOTAL DIAG TIME    =     0.474653000( 16.26%)
+TOTAL MP2 TIME     =     0.075816000(  2.60%)
+TOTAL TIME          =     2.918799000
 ------------------------------------
- Job cpu time:  0 days  0 hours  0 minutes  3.3 seconds.
+ Job cpu time:  0 days  0 hours  0 minutes  2.9 seconds.
 
  @ Finish Output Timing Information
 
- Normal Termination. Task Finished on: Fri Oct 30 19:48:58 2020
+ Normal Termination. Task Finished on: Fri Oct 30 20:27:34 2020

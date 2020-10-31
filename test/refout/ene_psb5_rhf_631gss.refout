@@ -45,7 +45,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Oct 30 19:47:22 2020
+ TASK STARTS ON: Fri Oct 30 20:25:57 2020
  INPUT FILE :    ene_psb5_rhf_631gss.in
  OUTPUT FILE:    ene_psb5_rhf_631gss.out
  DATE FILE  :    ene_psb5_rhf_631gss.dat
@@ -103,23 +103,23 @@ RMS CHANGE     = 0.126285E+00  MAX CHANGE= 0.907565E+00
 SCF CYCLE      =        2      TIME      =     0.11
 RMS CHANGE     = 0.797651E-01  MAX CHANGE= 0.779885E+00
 
-SCF CYCLE      =        3      TIME      =   0.12
+SCF CYCLE      =        3      TIME      =   0.10
 DIIS CYCLE     =        1      MAX ERROR = 0.384983E-01
 RMS CHANGE     = 0.904676E-02  MAX CHANGE= 0.646921E-01
 
-SCF CYCLE      =        4      TIME      =   0.10
+SCF CYCLE      =        4      TIME      =   0.12
 DIIS CYCLE     =        2      MAX ERROR = 0.664255E-02
 RMS CHANGE     = 0.229240E-02  MAX CHANGE= 0.240657E-01
 
-SCF CYCLE      =        5      TIME      =   0.10
+SCF CYCLE      =        5      TIME      =   0.11
 DIIS CYCLE     =        3      MAX ERROR = 0.321956E-02
 RMS CHANGE     = 0.169321E-02  MAX CHANGE= 0.184419E-01
 
-SCF CYCLE      =        6      TIME      =   0.11
+SCF CYCLE      =        6      TIME      =   0.10
 DIIS CYCLE     =        4      MAX ERROR = 0.549096E-03
 RMS CHANGE     = 0.331950E-03  MAX CHANGE= 0.369624E-02
 
-SCF CYCLE      =        7      TIME      =   0.10
+SCF CYCLE      =        7      TIME      =   0.11
 DIIS CYCLE     =        5      MAX ERROR = 0.776886E-05
 RMS CHANGE     = 0.173867E-05  MAX CHANGE= 0.173633E-04
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
@@ -177,7 +177,7 @@ RMS CHANGE     = 0.118944E+00  MAX CHANGE= 0.903895E+00
 SCF CYCLE      =        2      TIME      =     0.10
 RMS CHANGE     = 0.699640E-01  MAX CHANGE= 0.411666E+00
 
-SCF CYCLE      =        3      TIME      =   0.11
+SCF CYCLE      =        3      TIME      =   0.10
 DIIS CYCLE     =        1      MAX ERROR = 0.264555E-01
 RMS CHANGE     = 0.501081E-02  MAX CHANGE= 0.292699E-01
 
@@ -189,7 +189,7 @@ SCF CYCLE      =        5      TIME      =   0.10
 DIIS CYCLE     =        3      MAX ERROR = 0.250686E-02
 RMS CHANGE     = 0.877848E-03  MAX CHANGE= 0.102467E-01
 
-SCF CYCLE      =        6      TIME      =   0.11
+SCF CYCLE      =        6      TIME      =   0.10
 DIIS CYCLE     =        4      MAX ERROR = 0.741188E-03
 RMS CHANGE     = 0.266381E-03  MAX CHANGE= 0.308558E-02
 
@@ -326,18 +326,18 @@ TOTAL ENERGY         =     0.000000000
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1   -406.077530814      ------         0.901     1        0.77      0.13      0.41    0.2655E+01  0.2153E-01  0.5111E+00
-  2   -401.718961419  -.435857E+01       0.162     2        0.03      0.13      0.02    0.1234E+00  0.7277E-02  0.1509E+00
-  3   -401.975929587  0.256968E+00       0.160     3        0.03      0.13      0.02    0.9962E-01  0.1937E-02  0.8344E-01
-  4   -402.006084083  0.301545E-01       0.164     4        0.03      0.13      0.02    0.3710E-01  0.9188E-03  0.3821E-01
-  5   -402.012915668  0.683159E-02       0.171     5        0.04      0.13      0.02    0.7898E-02  0.2789E-03  0.6516E-02
-  6   -402.013618502  0.702834E-03       0.168     6        0.03      0.13      0.02    0.3545E-02  0.1660E-03  0.4586E-02
-  7   -402.013827679  0.209177E-03       0.163     7        0.03      0.13      0.02    0.1766E-02  0.9542E-04  0.2206E-02
-  8   -402.013879482  0.518025E-04       0.167     8        0.04      0.13      0.02    0.7138E-03  0.4471E-04  0.8523E-03
-  9   -402.013888436  0.895474E-05       0.166     9        0.03      0.13      0.02    0.1612E-03  0.1631E-04  0.2989E-03
- 10   -402.013889654  0.121775E-05       0.168    10        0.04      0.13      0.02    0.9212E-04  0.7052E-05  0.1415E-03
- 11   -402.013889900  0.245695E-06       0.190     1        0.06      0.13      0.02    0.4305E-04  0.4186E-05  0.7139E-04
- 12   -402.013889949  0.487482E-07       0.201     2        0.07      0.13      0.02    0.7579E-05  0.6073E-06  0.1118E-04
+  1   -406.077530814      ------         0.883     1        0.75      0.13      0.41    0.2655E+01  0.2153E-01  0.5111E+00
+  2   -401.718961419  -.435857E+01       0.161     2        0.03      0.13      0.02    0.1234E+00  0.7277E-02  0.1509E+00
+  3   -401.975929587  0.256968E+00       0.163     3        0.03      0.13      0.02    0.9962E-01  0.1937E-02  0.8344E-01
+  4   -402.006084083  0.301545E-01       0.161     4        0.03      0.13      0.02    0.3710E-01  0.9188E-03  0.3821E-01
+  5   -402.012915668  0.683159E-02       0.162     5        0.03      0.13      0.02    0.7898E-02  0.2789E-03  0.6516E-02
+  6   -402.013618502  0.702834E-03       0.164     6        0.03      0.13      0.02    0.3545E-02  0.1660E-03  0.4586E-02
+  7   -402.013827679  0.209177E-03       0.164     7        0.03      0.13      0.02    0.1766E-02  0.9542E-04  0.2206E-02
+  8   -402.013879482  0.518025E-04       0.166     8        0.03      0.13      0.02    0.7138E-03  0.4471E-04  0.8523E-03
+  9   -402.013888436  0.895474E-05       0.170     9        0.04      0.13      0.02    0.1612E-03  0.1631E-04  0.2989E-03
+ 10   -402.013889654  0.121775E-05       0.169    10        0.04      0.13      0.02    0.9212E-04  0.7052E-05  0.1415E-03
+ 11   -402.013889900  0.245695E-06       0.186     1        0.05      0.13      0.02    0.4305E-04  0.4186E-05  0.7139E-04
+ 12   -402.013889949  0.487482E-07       0.189     2        0.05      0.13      0.02    0.7579E-05  0.6073E-06  0.1118E-04
 ------------------------------------------------------------------------------------------------------------------------
  REACH CONVERGENCE AFTER  12 CYLCES
  MAX ERROR = 0.757906E-05   RMS CHANGE = 0.607260E-06   MAX CHANGE = 0.111835E-04
@@ -387,22 +387,22 @@ TOTAL ENERGY         =  -402.013889949
  @ Output Timing Information
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME  =     5.318533000( 55.37%)
-TOTAL SCF TIME      =     2.855702000( 29.73%)
-      TOTAL OP TIME      =     1.651203000( 17.19%)
-            OVERLAP 1e INTEGRALS TIME      =     0.026484000(  0.28%)
-            OVERLAP 1e DIAGONALIZATION TIME =     0.022584000(  0.24%)
-            TOTAL 1e TIME      =     0.074644000(  0.78%)
-               KINETIC 1e INTEGRALS TIME    =     0.049736000(  0.52%)
-               ATTRACTION 1e INTEGRALS TIME =     0.024902000(  0.26%)
-            TOTAL 2e TIME      =     1.570616000( 16.35%)
-            TOTAL ENERGY TIME  =     0.003635000(  0.04%)
-      TOTAL DII TIME      =     1.199671000( 12.49%)
-            TOTAL DIAG TIME    =     0.634848000(  6.61%)
-TOTAL TIME          =     9.604662000
+INITIAL GUESS TIME  =     5.491417000( 57.12%)
+TOTAL SCF TIME      =     2.813123000( 29.26%)
+      TOTAL OP TIME      =     1.668045000( 17.35%)
+            OVERLAP 1e INTEGRALS TIME      =     0.026317000(  0.27%)
+            OVERLAP 1e DIAGONALIZATION TIME =     0.022348000(  0.23%)
+            TOTAL 1e TIME      =     0.074201000(  0.77%)
+               KINETIC 1e INTEGRALS TIME    =     0.049777000(  0.52%)
+               ATTRACTION 1e INTEGRALS TIME =     0.024419000(  0.25%)
+            TOTAL 2e TIME      =     1.587950000( 16.52%)
+            TOTAL ENERGY TIME  =     0.003092000(  0.03%)
+      TOTAL DII TIME      =     1.140483000( 11.86%)
+            TOTAL DIAG TIME    =     0.600261000(  6.24%)
+TOTAL TIME          =     9.614168000
 ------------------------------------
  Job cpu time:  0 days  0 hours  0 minutes  9.6 seconds.
 
  @ Finish Output Timing Information
 
- Normal Termination. Task Finished on: Fri Oct 30 19:47:37 2020
+ Normal Termination. Task Finished on: Fri Oct 30 20:26:12 2020

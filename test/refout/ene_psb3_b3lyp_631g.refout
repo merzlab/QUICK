@@ -45,7 +45,7 @@
  If you have any comments or queries, please send us an email for technical support:                      
  quick.merzlab@gmail.com                                                                                  
 
- TASK STARTS ON: Fri Oct 30 19:48:01 2020
+ TASK STARTS ON: Fri Oct 30 20:26:36 2020
  INPUT FILE :    ene_psb3_b3lyp_631g.in
  OUTPUT FILE:    ene_psb3_b3lyp_631g.out
  DATE FILE  :    ene_psb3_b3lyp_631g.dat
@@ -102,43 +102,43 @@ KEYWORD=B3LYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY CHARGE=+1
 SCF CYCLE      =        1      TIME      =     0.04
 RMS CHANGE     = 0.149950E+00  MAX CHANGE= 0.820201E+00
 
-SCF CYCLE      =        2      TIME      =     0.04
+SCF CYCLE      =        2      TIME      =     0.03
 RMS CHANGE     = 0.797517E-01  MAX CHANGE= 0.321960E+00
 
-SCF CYCLE      =        3      TIME      =   0.04
+SCF CYCLE      =        3      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.395730E-01
 RMS CHANGE     = 0.137215E-01  MAX CHANGE= 0.591042E-01
 
-SCF CYCLE      =        4      TIME      =   0.04
+SCF CYCLE      =        4      TIME      =   0.03
 DIIS CYCLE     =        2      MAX ERROR = 0.749065E-02
 RMS CHANGE     = 0.375529E-02  MAX CHANGE= 0.263871E-01
 
-SCF CYCLE      =        5      TIME      =   0.04
+SCF CYCLE      =        5      TIME      =   0.03
 DIIS CYCLE     =        3      MAX ERROR = 0.308852E-02
 RMS CHANGE     = 0.262949E-02  MAX CHANGE= 0.183148E-01
 
-SCF CYCLE      =        6      TIME      =   0.04
+SCF CYCLE      =        6      TIME      =   0.03
 DIIS CYCLE     =        4      MAX ERROR = 0.299207E-03
 RMS CHANGE     = 0.311349E-03  MAX CHANGE= 0.215704E-02
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        7      TIME      =     0.04
+SCF CYCLE      =        7      TIME      =     0.03
 RMS CHANGE     = 0.153492E-04  MAX CHANGE= 0.106143E-03
 
-SCF CYCLE      =        8      TIME      =   0.04
+SCF CYCLE      =        8      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.792556E-05
 RMS CHANGE     = 0.460369E-05  MAX CHANGE= 0.296430E-04
 
-SCF CYCLE      =        9      TIME      =   0.04
+SCF CYCLE      =        9      TIME      =   0.03
 DIIS CYCLE     =        2      MAX ERROR = 0.310484E-05
 RMS CHANGE     = 0.280492E-05  MAX CHANGE= 0.193991E-04
 
-SCF CYCLE      =       10      TIME      =   0.04
+SCF CYCLE      =       10      TIME      =   0.03
 DIIS CYCLE     =        3      MAX ERROR = 0.113729E-05
 RMS CHANGE     = 0.145468E-05  MAX CHANGE= 0.100644E-04
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =       11      TIME      =     0.04
+SCF CYCLE      =       11      TIME      =     0.03
 RMS CHANGE     = 0.122690E-06  MAX CHANGE= 0.848304E-06
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -154,38 +154,38 @@ TOTAL ENERGY         =     0.000000000
  @ Begin Energy Calculation
 
 
-SCF CYCLE      =        1      TIME      =     0.04
+SCF CYCLE      =        1      TIME      =     0.03
 RMS CHANGE     = 0.150709E+00  MAX CHANGE= 0.817290E+00
 
-SCF CYCLE      =        2      TIME      =     0.04
+SCF CYCLE      =        2      TIME      =     0.03
 RMS CHANGE     = 0.903364E-01  MAX CHANGE= 0.322206E+00
 
-SCF CYCLE      =        3      TIME      =   0.04
+SCF CYCLE      =        3      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.232146E-01
 RMS CHANGE     = 0.717180E-02  MAX CHANGE= 0.254087E-01
 
-SCF CYCLE      =        4      TIME      =   0.04
+SCF CYCLE      =        4      TIME      =   0.03
 DIIS CYCLE     =        2      MAX ERROR = 0.696785E-02
 RMS CHANGE     = 0.238394E-02  MAX CHANGE= 0.162489E-01
 
-SCF CYCLE      =        5      TIME      =   0.04
+SCF CYCLE      =        5      TIME      =   0.03
 DIIS CYCLE     =        3      MAX ERROR = 0.203040E-02
 RMS CHANGE     = 0.112749E-02  MAX CHANGE= 0.763564E-02
 
-SCF CYCLE      =        6      TIME      =   0.04
+SCF CYCLE      =        6      TIME      =   0.03
 DIIS CYCLE     =        4      MAX ERROR = 0.546784E-03
 RMS CHANGE     = 0.310240E-03  MAX CHANGE= 0.209245E-02
 DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
 
-SCF CYCLE      =        7      TIME      =     0.04
+SCF CYCLE      =        7      TIME      =     0.03
 RMS CHANGE     = 0.309612E-05  MAX CHANGE= 0.208866E-04
 
-SCF CYCLE      =        8      TIME      =   0.04
+SCF CYCLE      =        8      TIME      =   0.03
 DIIS CYCLE     =        1      MAX ERROR = 0.183134E-05
 RMS CHANGE     = 0.808806E-06  MAX CHANGE= 0.533093E-05
 PREPARING FOR FINAL NO INTERPOLATION ITERATION
 
-SCF CYCLE      =        9      TIME      =     0.04
+SCF CYCLE      =        9      TIME      =     0.03
 RMS CHANGE     = 0.462539E-06  MAX CHANGE= 0.311571E-05
 CONVERGED!!!!!
 ELECTRONIC ENERGY    =     0.000000000
@@ -292,78 +292,6 @@ TOTAL ENERGY         =     0.000000000
 | JSHELL =   34 JBASIS =   92
 
 
-RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS
-   1           2.728000
-   2           6.391000
-   3           6.635000
-   4           6.635000
-   5           6.635000
-   6          11.249000
-   7          11.692000
-   8          11.692000
-   9          11.692000
-  10           2.728000
-  11           6.391000
-  12           6.635000
-  13           6.635000
-  14           6.635000
-  15          11.249000
-  16          11.692000
-  17          11.692000
-  18          11.692000
-  19           2.728000
-  20           6.391000
-  21           6.635000
-  22           6.635000
-  23           6.635000
-  24          11.249000
-  25          11.692000
-  26          11.692000
-  27          11.692000
-  28           2.728000
-  29           6.391000
-  30           6.635000
-  31           6.635000
-  32           6.635000
-  33          11.249000
-  34          11.692000
-  35          11.692000
-  36          11.692000
-  37           2.728000
-  38           6.391000
-  39           6.635000
-  40           6.635000
-  41           6.635000
-  42          11.249000
-  43          11.692000
-  44          11.692000
-  45          11.692000
-  46           2.328000
-  47           5.397000
-  48           5.601000
-  49           5.601000
-  50           5.601000
-  51          10.075000
-  52          10.469000
-  53          10.469000
-  54          10.469000
-  55           5.909000
-  56          11.497000
-  57           5.909000
-  58          11.497000
-  59           5.909000
-  60          11.497000
-  61           5.909000
-  62          11.497000
-  63           5.909000
-  64          11.497000
-  65           5.909000
-  66          11.497000
-  67           5.909000
-  68          11.497000
-  69           5.909000
-  70          11.497000
-
  @ End Reading Molecular Information 
 
 
@@ -373,15 +301,15 @@ RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-  1   -250.939618378      ------         0.745     1        0.69      0.05      0.38    0.2214E+01  0.5457E-01  0.5449E+00
+  1   -250.939618378      ------         0.838     1        0.78      0.05      0.40    0.2214E+01  0.5457E-01  0.5449E+00
   2   -249.630805914  -.130881E+01       0.059     2        0.01      0.05      0.01    0.1467E+00  0.2573E-01  0.2531E+00
-  3   -249.484835822  -.145970E+00       0.059     3        0.01      0.05      0.01    0.1800E+00  0.1983E-01  0.2408E+00
-  4   -249.746758475  0.261923E+00       0.057     4        0.01      0.05      0.01    0.7637E-01  0.5009E-02  0.7963E-01
-  5   -249.764866894  0.181084E-01       0.057     5        0.01      0.05      0.01    0.2623E-01  0.1455E-02  0.2915E-01
-  6   -249.766518002  0.165111E-02       0.057     6        0.01      0.05      0.01    0.9703E-02  0.5198E-03  0.7908E-02
+  3   -249.484835822  -.145970E+00       0.058     3        0.01      0.05      0.01    0.1800E+00  0.1983E-01  0.2408E+00
+  4   -249.746758475  0.261923E+00       0.058     4        0.01      0.05      0.01    0.7637E-01  0.5009E-02  0.7963E-01
+  5   -249.764866894  0.181084E-01       0.058     5        0.01      0.05      0.01    0.2623E-01  0.1455E-02  0.2915E-01
+  6   -249.766518002  0.165111E-02       0.059     6        0.01      0.05      0.01    0.9703E-02  0.5198E-03  0.7908E-02
   7   -249.766895899  0.377897E-03       0.059     7        0.01      0.05      0.01    0.1177E-02  0.8999E-04  0.1247E-02
-  8   -249.766900832  0.493320E-05       0.058     8        0.01      0.05      0.01    0.4013E-03  0.3067E-04  0.4134E-03
-  9   -249.766901478  0.645436E-06       0.060     9        0.01      0.05      0.01    0.1774E-03  0.9706E-05  0.1279E-03
+  8   -249.766900832  0.493320E-05       0.059     8        0.01      0.05      0.01    0.4013E-03  0.3067E-04  0.4134E-03
+  9   -249.766901478  0.645436E-06       0.059     9        0.01      0.05      0.01    0.1774E-03  0.9706E-05  0.1279E-03
  10   -249.766901555  0.777183E-07       0.059    10        0.01      0.05      0.01    0.2969E-04  0.1790E-05  0.2840E-04
  11   -249.766901559  0.406351E-08       0.062     1        0.02      0.05      0.01    0.6574E-05  0.6955E-06  0.6027E-05
 ------------------------------------------------------------------------------------------------------------------------
@@ -427,29 +355,29 @@ TOTAL ENERGY         =  -249.766901559
  @ Output Timing Information
 
 ------------- TIMING ---------------
-INITIAL GUESS TIME  =     1.441284000( 35.69%)
-DFT GRID OPERATIONS =     0.115541000(  2.86%)
-      TOTAL GRID FORMATION TIME   =     0.001715000(  0.04%)
-      TOTAL GRID WEIGHT TIME      =     0.005768000(  0.14%)
-      TOTAL OCTREE RUN TIME       =     0.070000000(  1.73%)
-      TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
-      TOTAL DATA PACKING TIME     =     0.038058000(  0.94%)
-TOTAL SCF TIME      =     1.348951000( 33.40%)
-      TOTAL OP TIME      =     0.526507000( 13.04%)
-            OVERLAP 1e INTEGRALS TIME      =     0.004609000(  0.11%)
-            OVERLAP 1e DIAGONALIZATION TIME =     0.001087000(  0.03%)
-            TOTAL 1e TIME      =     0.016745000(  0.41%)
-               KINETIC 1e INTEGRALS TIME    =     0.011099000(  0.27%)
-               ATTRACTION 1e INTEGRALS TIME =     0.005641000(  0.14%)
-            TOTAL 2e TIME      =     0.150091000(  3.72%)
-            TOTAL EXC TIME     =     0.358902000(  8.89%)
-            TOTAL ENERGY TIME  =     0.000287000(  0.01%)
-      TOTAL DII TIME      =     0.821961000( 20.35%)
-            TOTAL DIAG TIME    =     0.488220000( 12.09%)
-TOTAL TIME          =     4.038421000
+INITIAL GUESS TIME  =     1.230379000( 30.72%)
+DFT GRID OPERATIONS =     0.098019000(  2.45%)
+      TOTAL GRID FORMATION TIME   =     0.001178000(  0.03%)
+      TOTAL GRID WEIGHT TIME      =     0.004422000(  0.11%)
+      TOTAL OCTREE RUN TIME       =     0.070000000(  1.75%)
+      TOTAL PRESCREENING TIME     =     0.010000000(  0.25%)
+      TOTAL DATA PACKING TIME     =     0.012419000(  0.31%)
+TOTAL SCF TIME      =     1.440664000( 35.97%)
+      TOTAL OP TIME      =     0.522649000( 13.05%)
+            OVERLAP 1e INTEGRALS TIME      =     0.003619000(  0.09%)
+            OVERLAP 1e DIAGONALIZATION TIME =     0.000843000(  0.02%)
+            TOTAL 1e TIME      =     0.012734000(  0.32%)
+               KINETIC 1e INTEGRALS TIME    =     0.008518000(  0.21%)
+               ATTRACTION 1e INTEGRALS TIME =     0.004214000(  0.11%)
+            TOTAL 2e TIME      =     0.150393000(  3.75%)
+            TOTAL EXC TIME     =     0.358685000(  8.95%)
+            TOTAL ENERGY TIME  =     0.000350000(  0.01%)
+      TOTAL DII TIME      =     0.917583000( 22.91%)
+            TOTAL DIAG TIME    =     0.507555000( 12.67%)
+TOTAL TIME          =     4.005605000
 ------------------------------------
  Job cpu time:  0 days  0 hours  0 minutes  4.0 seconds.
 
  @ Finish Output Timing Information
 
- Normal Termination. Task Finished on: Fri Oct 30 19:48:10 2020
+ Normal Termination. Task Finished on: Fri Oct 30 20:26:44 2020
