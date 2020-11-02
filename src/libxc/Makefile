@@ -141,15 +141,19 @@ endif
 #  !---------------------------------------------------------------------!
 
 $(LIBXCOBJ):$(libxcobjfolder)/%.o:%.c
-	$(CCC) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CCC) -c $< -o $@
 
 libxc_f90:
-	$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
-	$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
-	$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-xc_f.o"
+	$(VB)$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-libxc_funcs.o"
+	$(VB)$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-libxc.o"
+	$(VB)$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
 libxc_gpu:$(LIBXCOBJ) libxc_f90
-	$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
+	$(VB)$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
 	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-cuda.$(LIBEXT) $(libxcobjfolder)/*.o
 
 libxc_cpu:$(LIBXCOBJ) libxc_f90

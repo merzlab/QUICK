@@ -167,23 +167,28 @@ libxc_cuda:libxc_gpu
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #===================== target for general src files =====================
 
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for main src files ========================
 $(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for compiling api test ====================
 $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
 #  !---------------------------------------------------------------------!
 #  ! Parent build targets                                                !
