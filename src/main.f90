@@ -194,7 +194,7 @@
 #endif
 
     call cpu_time(timer_end%TIniGuess)
-    timer_cumer%TIniGuess=timer_end%TIniGuess-timer_begin%TIniGuess
+    timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         call getEnergy(failed)
