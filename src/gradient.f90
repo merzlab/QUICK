@@ -56,31 +56,6 @@ subroutine gradient(failed)
       enddo
    enddo
 
-#if defined CUDA || defined CUDA_MPIV
-!   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-!        quick_molspec%molchg, quick_molspec%iAtomType)
-!   call gpu_upload_xyz(xyz)
-!   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
-#endif
-
-!  calculate energy first
-!   call g2eshell
-!   call schwarzoff
-
-#if defined CUDA || defined CUDA_MPIV
-!   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-!        ncontract, itype, aexp, dcoeff, &
-!        quick_basis%first_basis_function, quick_basis%last_basis_function, &
-!        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
-!        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-!        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-!        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
-!        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
-
-!   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-   call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-
-#endif
 
    call getEnergy(failed)
 
@@ -812,9 +787,6 @@ subroutine get_xc_grad
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
-   
-   double precision, dimension(natom*50*194) :: init_grid_ptx, init_grid_pty, init_grid_ptz, arr_wtang, arr_rwt, arr_rad3
-   integer, dimension(natom*50*194) :: init_grid_atm
 
 #ifdef MPIV
    include "mpif.h"
