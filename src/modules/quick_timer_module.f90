@@ -71,6 +71,7 @@ module quick_timer_module
         double precision:: T1eGrad=0.0d0
         double precision:: T2eGrad=0.0d0
         double precision:: TExGrad=0.0d0
+        double precision:: TIniGuess=0.0d0  !Time for initial guess
         double precision:: TDFTGrdGen=0.0d0 !Time to generate dft grid
         double precision:: TDFTGrdWt=0.0d0  !Time to compute grid weights
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
@@ -108,8 +109,8 @@ module quick_timer_module
             call PrtAct(io,"Output Timing Information")
             write (io,'("------------- TIMING ---------------")')
             ! Initial Guess Timing
-            write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') (timer_end%TIniGuess-timer_begin%TIniGuess), &
-                (timer_end%TIniGuess-timer_begin%TIniGuess)/(timer_end%TTotal-timer_begin%TTotal)*100
+            write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
+                timer_cumer%TIniGuess/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
                 t_tot_dftop = timer_cumer%TDFTGrdGen + timer_cumer%TDFTGrdWt + timer_cumer%TDFTGrdOct + timer_cumer%TDFTPrscrn &
                             + timer_cumer%TDFTGrdPck
