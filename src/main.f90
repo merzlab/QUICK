@@ -162,11 +162,6 @@
     !    ignore this part and go to opt part. We will get variationally determined Energy.
     !-----------------------------------------------------------------
 
-    !Form the exchange-correlation quadrature if DFT is requested
-    !if (quick_method%DFT) then
-    !    call form_dft_grid(quick_dft_grid) 
-    !endif
-
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
     if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
@@ -197,11 +192,6 @@
    
     call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 #endif
-
-    !Form the exchange-correlation quadrature if DFT is requested
-    !if (quick_method%DFT) then
-    !    call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
-    !endif
 
     call cpu_time(timer_end%TIniGuess)
     timer_cumer%TIniGuess=timer_end%TIniGuess-timer_begin%TIniGuess
