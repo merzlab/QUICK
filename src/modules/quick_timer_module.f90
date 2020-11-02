@@ -94,7 +94,7 @@ module quick_timer_module
         use quick_method_module
         implicit none
         integer i,IERROR,io
-        double precision t_pure_init_guess,t_tot_dftop
+        double precision t_tot_dftop
 #ifdef MPIV
         include "mpif.h"
 #endif
@@ -108,16 +108,11 @@ module quick_timer_module
             call PrtAct(io,"Output Timing Information")
             write (io,'("------------- TIMING ---------------")')
             ! Initial Guess Timing
+            write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') (timer_end%TIniGuess-timer_begin%TIniGuess), &
+                (timer_end%TIniGuess-timer_begin%TIniGuess)/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
                 t_tot_dftop = timer_cumer%TDFTGrdGen + timer_cumer%TDFTGrdWt + timer_cumer%TDFTGrdOct + timer_cumer%TDFTPrscrn &
-                          +timer_cumer%TDFTGrdPck
-            else
-                t_tot_dftop=0.0d0
-            endif
-            t_pure_init_guess = timer_end%TIniGuess-timer_begin%TIniGuess-t_tot_dftop
-            write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') t_pure_init_guess, &
-                t_pure_init_guess/(timer_end%TTotal-timer_begin%TTotal)*100
-            if(quick_method%DFT) then
+                            + timer_cumer%TDFTGrdPck
                 ! Total time for dft grid formation, pruning and prescreening
                 write (io,'("DFT GRID OPERATIONS =",F16.9,"( ",F5.2,"%)")') t_tot_dftop, &
                 (t_tot_dftop)/(timer_end%TTotal-timer_begin%TTotal)*100
