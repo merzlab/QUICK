@@ -201,7 +201,10 @@
     write (ioutfile,'(/,4x,"DIPOLE (DEBYE)")')
     write (ioutfile,'(6x,"X",9x,"Y",9x,"Z",8x,"TOTAL")')
     write (ioutfile,'(4f10.4)') xdip*2.541765d0,ydip*2.541765d0,zdip*2.541765d0,totdip
+
     call cpu_time(timer_end%TDip)
+    timer_cumer%TDip=timer_cumer%TDip+(timer_end%TDip-timer_begin%TDip)
+
     call prtact(ioutfile,"End Charge and Dipole Calculation")
     
     return

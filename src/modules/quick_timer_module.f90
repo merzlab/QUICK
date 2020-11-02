@@ -77,6 +77,7 @@ module quick_timer_module
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
+        double precision:: TDip=0.0d0    !Time for calculating dipoles
 
     end type quick_timer_cumer
 
@@ -182,8 +183,8 @@ module quick_timer_module
 
             if (quick_method%dipole) then
             ! Dipole Timing
-                write (io,'(6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_end%TDip-timer_begin%TDip, &
-                    (timer_end%TDip-timer_begin%TDip)/(timer_end%TTotal-timer_begin%TTotal)*100
+                write (io,'(6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDip, &
+                    timer_cumer%TDip/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             ! Grad Timing
             if (quick_method%opt .or. quick_method%grad ) then
