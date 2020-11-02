@@ -1980,6 +1980,8 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 
 extern "C" void gpu_delete_dft_grid_(){
 
+        PRINTDEBUG("DEALLOCATING DFT GRID")
+
         SAFE_DELETE(gpu -> gpu_xcq -> gridx);
         SAFE_DELETE(gpu -> gpu_xcq -> gridy);
         SAFE_DELETE(gpu -> gpu_xcq -> gridz);
@@ -2005,9 +2007,12 @@ extern "C" void gpu_delete_dft_grid_(){
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
+        PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
 }
 
 void gpu_delete_sswgrad_vars(){
+
+        PRINTDEBUG("DEALLOCATING SSWGRAD VARIABLES")
 
         SAFE_DELETE(gpu -> gpu_xcq -> gridx_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> gridy_ssd);
@@ -2019,6 +2024,8 @@ void gpu_delete_sswgrad_vars(){
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
+
+        PRINTDEBUG("FINISHED DEALLOCATING SSWGRAD VARIABLES")
 
 }
 
