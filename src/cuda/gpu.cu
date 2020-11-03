@@ -1087,9 +1087,13 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(o,      gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+	gpu -> gpu_calculated -> coefficient    =   new cuda_buffer_type<QUICKDouble>(co,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu -> gpu_calculated -> Y    	  =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis*gpu->nbasis,gpu->nbasis*gpu->nbasis);
-    
+    gpu -> gpu_calculated -> Y_Matrix    	  =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis*gpu->nbasis,gpu->nbasis*gpu->nbasis);
+	gpu -> gpu_calculated -> orbmp2i331		=	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nbasis*10*10*2);   
+	gpu -> gpu_calculated -> orbmp2j331		= 	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*10*10*2);
+	gpu -> gpu_calculated -> orbmp2k331		= 	new	cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*gpu->nbasis);
+
     /*
      oULL is the unsigned long long int type of O matrix. The reason to do so is because
      Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
@@ -1111,14 +1115,23 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     
     //    gpu -> gpu_calculated -> o        -> Upload();
     gpu -> gpu_calculated -> dense    -> Upload();
-    gpu -> gpu_calculated -> oULL     -> Upload();
-	gpu -> gpu_calculated -> Y        -> Upload(); 
-   
+    gpu -> gpu_calculated -> coefficient -> Upload();
+	gpu -> gpu_calculated -> oULL     -> Upload();
+	gpu -> gpu_calculated -> Y_Matrix        -> Upload(); 
+    gpu -> gpu_calculated -> orbmp2i331		-> Upload();
+	gpu -> gpu_calculated -> orbmp2j331     -> Upload();
+	gpu -> gpu_calculated -> orbmp2k331     -> Upload();
+
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+	gpu -> gpu_sim.coefficient		 =  gpu -> gpu_calculated -> coefficient -> _devData;
     gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
-    gpu -> gpu_sim.Y				 = gpu -> gpu_calculated -> Y -> _devData;
-    
+    gpu -> gpu_sim.Y_Matrix				 = gpu -> gpu_calculated -> Y_Matrix -> _devData;
+	gpu	-> gpu_sim.orbmp2i331			= gpu -> gpu_calculated -> orbmp2i331 -> _devData;    
+	gpu -> gpu_sim.orbmp2j331           = gpu -> gpu_calculated -> orbmp2j331 -> _devData;
+	gpu -> gpu_sim.orbmp2k331           = gpu -> gpu_calculated -> orbmp2k331 -> _devData;
+
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -1140,6 +1153,15 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
     gpu -> gpu_calculated -> dense    -> Upload();
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
 }
+
+// Added by Chi Jin on 01/07/2020. Do we need this, since we did this in gpu_upload_calculated?
+extern "C" void gpu_upload_coefficient_matrix_(QUICKDouble* coefficient)
+{
+	gpu -> gpu_calculated -> coefficient = new cuda_buffer_type<QUICKDouble>(coefficient,  gpu->nbasis, gpu->nbasis);
+	gpu -> gpu_calculated -> coefficient -> Upload();
+	gpu -> gpu_sim.coefficient = gpu -> gpu_calculated -> coefficient -> _devData;
+}
+
 
 //-----------------------------------------------
 //  upload basis set information
@@ -2190,9 +2212,12 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
+ 	delete gpu->gpu_calculated->coefficient;
     delete gpu->gpu_calculated->oULL;
-	delete gpu->gpu_calculated->Y;
-   
+	delete gpu->gpu_calculated->Y_Matrix;
+ 	delete gpu->gpu_calculated->orbmp2i331;
+	delete gpu->gpu_calculated->orbmp2j331;
+	delete gpu->gpu_calculated->orbmp2k331;
     //delete gpu->gpu_cutoff->cutMatrix;
     
 #ifdef DEBUG
@@ -2457,8 +2482,12 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
+ 	delete gpu->gpu_calculated->coefficient;
     delete gpu->gpu_calculated->oULL;
-    delete gpu->gpu_calculated->Y;
+    delete gpu->gpu_calculated->Y_Matrix;
+	delete gpu->gpu_calculated->orbmp2i331;
+	delete gpu->gpu_calculated->orbmp2j331;
+	delete gpu->gpu_calculated->orbmp2k331;
 	delete gpu->gpu_cutoff->cutMatrix;
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
@@ -2537,9 +2566,13 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
-    delete gpu->gpu_calculated->oULL;
- 	delete gpu->gpu_calculated->Y;   
-    delete gpu->gpu_cutoff->cutMatrix;
+    delete gpu->gpu_calculated->coefficient;
+	delete gpu->gpu_calculated->oULL;
+ 	delete gpu->gpu_calculated->Y_Matrix;   
+    delete gpu->gpu_calculated->orbmp2i331;
+	delete gpu->gpu_calculated->orbmp2j331;
+	delete gpu->gpu_calculated->orbmp2k331;
+	delete gpu->gpu_cutoff->cutMatrix;
     
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
@@ -2564,8 +2597,10 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
 	//printf("in gpu_calmp2, after gpu -> gpu_calculated -> oULL -> Download()\n");
 
-	gpu->gpu_calculated->Y->Download();// Y downloaded to host
-	
+	gpu->gpu_calculated->Y_Matrix->Download();// Y downloaded to host
+	gpu->gpu_calculated->orbmp2i331->Download();
+	gpu->gpu_calculated->orbmp2j331->Download();
+	gpu->gpu_calculated->orbmp2k331->Download();
 	//Can I simply do Y_Matrix = gpu->gpu_calculated->Y->_hostData? No it gives garbage values
 	//Y_Matrix = gpu->gpu_calculated->Y->_hostData;
 	
@@ -2580,11 +2615,11 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
             {
                 for(int l=0;l<gpu->nbasis;l++)
                 {
-                    printf("in gpu.cu/gpu_calmp2, after Download(),i,j,k,l, and Y are %d, %d, %d, %d, %lf\n",\
- i+1,j+1,k+1,l+1,LOC4(gpu->gpu_calculated->Y->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis));
+                    //printf("in gpu.cu/gpu_calmp2, after Download(),i,j,k,l, and Y are %d, %d, %d, %d, %lf\n",\
+ i+1,j+1,k+1,l+1,LOC4(gpu->gpu_calculated->Y_Matrix->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis));
 
 				 LOC4(Y_Matrix,i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis) = \
-				 LOC4(gpu->gpu_calculated->Y->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis);
+				 LOC4(gpu->gpu_calculated->Y_Matrix->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis);
                 }
             }
         }
@@ -2633,13 +2668,17 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 
     PRINTDEBUG("DELETE TEMP VARIABLES")
 	
-	printf("in gpu_calmp2_, before delete 4 pointers\n");
+	//printf("in gpu_calmp2_, before delete 4 pointers\n");
 
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
-    delete gpu->gpu_calculated->oULL;
-	delete gpu->gpu_calculated->Y;
-    delete gpu->gpu_cutoff->cutMatrix;
+    delete gpu->gpu_calculated->coefficient;
+	delete gpu->gpu_calculated->oULL;
+	delete gpu->gpu_calculated->Y_Matrix;
+    delete gpu->gpu_calculated->orbmp2i331;
+	delete gpu->gpu_calculated->orbmp2j331;
+	delete gpu->gpu_calculated->orbmp2k331;
+	delete gpu->gpu_cutoff->cutMatrix;
 
     PRINTDEBUG("COMPLETE RUNNING MP2")
 	
@@ -2769,8 +2808,12 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 
         delete gpu->gpu_calculated->o;
         delete gpu->gpu_calculated->dense;
-        delete gpu->gpu_calculated->oULL;
-		delete gpu->gpu_calculated->Y;
+ 		delete gpu->gpu_calculated->coefficient;       
+		delete gpu->gpu_calculated->oULL;
+		delete gpu->gpu_calculated->Y_Matrix;
+		delete gpu->gpu_calculated->orbmp2i331;
+		delete gpu->gpu_calculated->orbmp2j331;
+		delete gpu->gpu_calculated->orbmp2k331;
 }
 
 char *trim(char *s) {

@@ -191,6 +191,8 @@
     quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
    
     call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+    !print *, "cutPrim is ", cutPrim
+
 #endif
 
     call cpu_time(timer_end%TIniGuess)
