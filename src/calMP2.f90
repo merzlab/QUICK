@@ -11,15 +11,16 @@ subroutine calmp2
   ! add Y_Matrix here
   double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
   !double precision, pointer, dimension(:,:) :: Y_Matrix
-  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
 
 #ifdef CUDA
     if(quick_method%bCUDA) then
-    print *,"in calmp2, at the beginning" 
+    !print *,"in calmp2, at the beginning" 
 
-    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix)  
+    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, &
+            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix)  
     !Y_Matrix(1,1) = 9.5
     !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
     !call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
@@ -31,6 +32,48 @@ subroutine calmp2
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
+ 
+    print *, "in calmp2, quick_qm_struct%co is"
+    do ind= 1, nbasis
+        do ind2= 1, nbasis
+            write(*, '(f8.4)', advance='no'), quick_qm_struct%co(ind,ind2)
+        end do
+        write(*, '(" ")')
+    end do
+
+
+    !print *, "in calmp2, xyz is ", xyz
+    print *, "in calmp2, quick_basis%Qstart is ", quick_basis%Qstart
+    print *, "in calmp2, quick_basis%Qfinal is ", quick_basis%Qfinal
+    print *, "in calmp2, quick_basis%kprim is ", quick_basis%kprim
+    print *, "in calmp2, quick_basis%kstart is ", quick_basis%kstart
+    print *, "in calmp2, quick_basis%ktype are", quick_basis%ktype
+    print *, "in calmp2, quick_method%primLimit is", quick_method%primLimit     
+    print *, "in calmp2, shape(quick_basis%Qsbasis) is", shape(quick_basis%Qsbasis)   
+    !print *, "in calmp2, quick_basis%Xcoeff is", quick_basis%Xcoeff
+    
+    !print *, "in calmp2, quick_basis%Qsbasis is"
+    !do ind= 1, jshell
+    !    do ind2 = 0, 3
+    !        write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
+    !    end do
+    !    write(*,'(" ")')
+    !end do
+
+    !print *, "in calmp2, quick_basis%Qfbasis is"
+    !do ind= 1, jshell
+    !    do ind2 = 0, 3
+    !        write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
+    !    end do
+    !    write(*,'(" ")')
+    !end do
+
+
+    print *, "in calmp2, quick_basis%ksumtype is"
+    print *, quick_basis%ksumtype
+    print *, "in calmp2, quick_basis%ksumtype(2) is", quick_basis%ksumtype(2)
+
+  
   call PrtAct(ioutfile,"Begin MP2 Calculation")
   cutoffmp2=1.0d-8  ! cutoff criteria
   quick_method%primLimit=1.0d-8
@@ -54,6 +97,9 @@ subroutine calmp2
      nbasistemp=10
   endif
 
+  print *, "in calmp2, nbasistemp is", nbasistemp
+  print *, "in calmp2, nstep is", nstep
+
   ! Allocate some variables
   allocate(mp2shell(nbasis))
   allocate(orbmp2(ivir,ivir))
@@ -61,7 +107,13 @@ subroutine calmp2
   allocate(orbmp2j331(nstep,ivir,nbasistemp,nbasistemp,2))
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
 
+<<<<<<< HEAD
   ! with nstep(acutally, it represetns step lenght), we can
+=======
+  print *, "in clasmp2, shape of orbmp2i331 is", shape(orbmp2i331)
+
+  ! with nstep(acutally, it represetns step lenght), we can 
+>>>>>>> finished first three transformations of ERI. Works for sto-3g water
   ! have no. of steps for mp2 calculation
   nstepmp2=nelec/2/nstep
   nstepmp2=nstepmp2+1
@@ -70,8 +122,12 @@ subroutine calmp2
   endif
   write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
+  print *, "in calmp2, nstepmp2 is", nstepmp2
+
   ! Pre-step for density cutoff
   call densityCutoff
+
+  !print *, "in calmp2, shape(quick_qm_struct%co) is", shape(quick_qm_struct%co)
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -82,6 +138,7 @@ subroutine calmp2
 
   ttt=MAXVAL(Ycutoff) ! Max Value of Ycutoff
 
+  print *, "in calmp2, jshell is", jshell
   do i3new=1,nstepmp2               ! Step counter
 
      call cpu_time(timer_begin%TMP2)
@@ -89,13 +146,24 @@ subroutine calmp2
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
      nstepmp2f=i3new*nstep          ! Step end n
 
+     print *, "nstepmp2s is", nstepmp2s
+     print *, "nstepmp2f is", nstepmp2f
+
      if(i3new.eq.nstepmp2)nstepmp2f=nelec/2
      nsteplength=nstepmp2f-nstepmp2s+1  ! Step Lengh, from nstepmp2s to nstepmp2f
+<<<<<<< HEAD
+=======
+     
+     print *, "nsteplength is", nsteplength
+
+>>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
      ! Initial orbmp2k331
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
      do II=1,jshell
         do JJ=II,jshell
+
+
            if(Ycutoff(II,JJ).gt.cutoffmp2/ttt)then
             
               !print *, "before initialization, orbmp2i331 is"
@@ -109,7 +177,8 @@ subroutine calmp2
 
               do KK=1,jshell
                  do LL=KK,jshell
-
+                    print *, " "
+                    print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL
                     ! Schwarts cutoff is implemented here
                     comax=0.d0
                     testCutoff = Ycutoff(II,JJ)*Ycutoff(KK,LL)
@@ -139,11 +208,17 @@ subroutine calmp2
                                 enddo
                             enddo
                        enddo
+<<<<<<< HEAD
+=======
+                       
+                       !print *, "in calmp2, comax is", comax
+>>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
                        testCutoff=testCutoff*comax
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
                           ntemp=ntemp+1
+                          !print *, "before shellmp2, II,JJ,KK,LL are", II, JJ, KK, LL
                           call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
                        endif
 
@@ -207,11 +282,35 @@ subroutine calmp2
               enddo
            endif
 
+!print orbmp2i331
+       ! NONZEROCOUNT = 0
+       ! print *, "in calmp2, II and JJ are", II, JJ
+       !    print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
+       !    do ind1= 1, jshell
+       !         do ind2= 1, nbasis
+       !             do ind3=1, nbasistemp
+       !                 do ind4=1, nbasistemp
+       !                     do ind5=1, 2
+       !                         if(orbmp2i331(ind1, ind2, ind3, ind4,ind5).gt.0) then
+       !                             NONZEROCOUNT = NONZEROCOUNT+1
+       !                         endif
+       !                         write(*, '(f10.6)', advance='no'),&
+       !                             orbmp2i331(ind1, ind2, ind3, ind4, ind5)
+       !                     end do
+       !                 end do
+       !                 write(*,'(" ")')  ! inner two layers on the same line
+       !             end do
+       !         end do
+       !    end do
+       ! print *, "NONZEROCOUNT is", NONZEROCOUNT
+!print done
+
         enddo
      enddo
 
      write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 
+<<<<<<< HEAD
      do icycle=1,nsteplength
         do k3=1,nelec/2
             do j3=1,nbasis-nelec/2
@@ -219,11 +318,36 @@ subroutine calmp2
             L3new=l3+nelec/2
                 do lll=1,nbasis
                  !write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+=======
+     print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
+     do ind1=1, nelec/2
+        do ind2=1, nelec/2
+            do ind3=1,ivir
+                do ind4=1, nbasis
+                    write(*, '(f10.6)', advance='no'),&
+                        orbmp2k331(ind1, ind2, ind3, ind4)
+>>>>>>> finished first three transformations of ERI. Works for sto-3g water
                 enddo
-            enddo
-            enddo
-        enddo
+                write(*,'(" ")')
+            enddo 
+        enddo     
      enddo
+    
+
+     !do icycle=1,nsteplength
+     !   do k3=1,nelec/2
+     !       do j3=1,nbasis-nelec/2
+     !       do l3=1,nbasis-nelec/2
+     !          L3new=l3+nelec/2
+     !           do lll=1,nbasis
+     !               write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+     !           enddo
+     !       enddo
+     !       enddo
+     !   enddo
+     !enddo
+
+
 
     !print *, "in calmp2, print quick_qm_struct%co"
     !call print_matrix(quick_qm_struct%co(LLL,L3new), nbasis)
@@ -261,6 +385,7 @@ subroutine calmp2
      enddo
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     !print *, "orbmp2 is ",orbmp2
     !print *, ""
@@ -270,10 +395,13 @@ subroutine calmp2
     !print *, ""
     !print *, "orbmp2i331 is ",orbmp2i331
     !print *, ""
+=======
+>>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
         
 >>>>>>> cuda MP2 works for water_ene_sto3g.in
      call cpu_time(timer_end%TMP2)
+     !print *, "timer_cumer%TMP2 is ",timer_cumer%TMP2
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
   enddo

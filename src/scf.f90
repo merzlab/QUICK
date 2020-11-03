@@ -484,10 +484,10 @@ subroutine electdiis(jscf)
          ! First you have to transpose this into an orthogonal basis, which
          ! is accomplished by calculating Transpose[X] . O . X.
          !-----------------------------------------------
-        if (idiis.eq.1) then        
-            print *, "before Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
-            print *, ""
-        endif
+        !if (idiis.eq.1) then        
+        !    print *, "before Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
+        !    print *, ""
+        !endif
 #if defined(CUDA) || defined(CUDA_MPIV)
 
         call cpu_time(timer_begin%TDiag)
@@ -497,30 +497,37 @@ subroutine electdiis(jscf)
               V2, nbasis)
          call cpu_time(timer_end%TDiag)
     
-         if (idiis.eq.1) then
-            print *, "in cuda after cuda_diag, quick_scratch%hold is",quick_scratch%hold
-            print *, ""
-          endif
+         !if (idiis.eq.1) then
+         !   print *, "in cuda after cuda_diag, quick_scratch%hold is",quick_scratch%hold
+         !   print *, ""
+         ! endif
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
         
-        if (idiis.eq.1) then
-            print *, "in cuda after DGEMM ,quick_qm_struct%o is",quick_qm_struct%o
-            print *, "" 
-        endif
+        !if (idiis.eq.1) then
+        !    print *, "in cuda after DGEMM ,quick_qm_struct%o is",quick_qm_struct%o
+        !    print *, "" 
+        !endif
 
 #else
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-         if (idiis.eq.1) then
-            print *, "in serial after first DGEMM ,quick_scratch%hold is",quick_scratch%hold
-            print *, "" 
-        endif
+         !if (idiis.eq.1) then
+         !   print *, "in serial after first DGEMM ,quick_scratch%hold is",quick_scratch%hold
+         !   print *, "" 
+        !endif
 
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+        
+        !if (idiis.eq.1) then
+         !   print *, "in serial after second DGEMM ,quick_scratch%hold
+         !   is",quick_scratch%hold
+         !   print *, "" 
+        !endif
+
 
          ! Now diagonalize the operator matrix.
          call cpu_time(timer_begin%TDiag)
@@ -529,10 +536,10 @@ subroutine electdiis(jscf)
          call cpu_time(timer_end%TDiag)
 
 #endif
-        if (idiis.eq.1) then
-            print *, "after  Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
-            print *, ""
-        endif
+        !if (idiis.eq.1) then
+        !    print *, "after  Diagonalize the operator matrix to form, quick_qm_struct%o is",quick_qm_struct%o
+        !    print *, ""
+        !endif
 
          ! Calculate C = XC' and form a new density matrix.
          ! The C' is from the above diagonalization.  Also, save the previous

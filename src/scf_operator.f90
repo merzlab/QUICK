@@ -150,6 +150,7 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
 #if defined MPIV && !defined CUDA_MPIV 
+   print *, "defined MPIV and not defined CUDA_MPIV"
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -166,7 +167,6 @@ subroutine scf_operator(oneElecO, deltaO)
     !print *, "Here in scf_operator, jshell is", jshell
     !print *, "Here in scf_operator, before adding 2e integrals, quick_qm_struct%o is"
     !print *, quick_qm_struct%o
-    !print *, " "
       do II=1,jshell
          call get2e(II) !!serial get2e and added to quick_qm_struct%o: get2e->shell->iclass
       enddo
