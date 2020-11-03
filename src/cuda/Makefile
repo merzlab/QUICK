@@ -99,7 +99,7 @@ endif
 allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
 
 xc: $(CUDAXCOBJ)
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
+	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

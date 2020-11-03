@@ -153,11 +153,12 @@ libxc_f90:
 	$(VB)$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
 libxc_gpu:$(LIBXCOBJ) libxc_f90
+	@echo "[QUICK]  CC $(libxcobjfolder)/gpu.o"
 	$(VB)$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-cuda.$(LIBEXT) $(libxcobjfolder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-cuda.$(LIBEXT) $(libxcobjfolder)/*.o
 
 libxc_cpu:$(LIBXCOBJ) libxc_f90
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
