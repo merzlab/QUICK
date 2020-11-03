@@ -52,6 +52,7 @@ fflush(stdout);\
 #define LOC2(A,i1,i2,d1,d2)  A[i1+(i2)*(d1)]
 #define LOC3(A,i1,i2,i3,d1,d2,d3) A[i3+((i2)+(i1)*(d2))*(d3)]
 #define LOC4(A,i1,i2,i3,i4,d1,d2,d3,d4) A[i4+(i3+((i2)+(i1)*(d2))*(d3))*(d4)]
+#define LOC5(A,i1,i2,i3,i4,i5,d1,d2,d3,d4,d5) A[i5+(i4+(i3+((i2)+(i1)*(d2))*(d3))*(d4))*(d5)]
 
 #define MAX(A,B)    (A>=B?A:B)
 #define MIN(A,B)    (A<B?A:B)

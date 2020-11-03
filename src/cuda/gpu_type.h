@@ -31,7 +31,11 @@ struct gpu_calculated_type {
     int                             nbasis; // number of basis sets
     cuda_buffer_type<QUICKDouble>*  o;      // O matrix
     cuda_buffer_type<QUICKDouble>*  dense;  // Density Matrix
-    cuda_buffer_type<QUICKDouble>*  Y;  // Y Matrix
+    cuda_buffer_type<QUICKDouble>*  coefficient; //Coefficient Matrix
+	cuda_buffer_type<QUICKDouble>*  Y_Matrix;  // Y Matrix
+	cuda_buffer_type<QUICKDouble>*  orbmp2i331; //first quarter of ERI transformation
+	cuda_buffer_type<QUICKDouble>*  orbmp2j331; //first quarter of ERI transformation
+	cuda_buffer_type<QUICKDouble>*  orbmp2k331; //first quarter of ERI transformation
 	cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
@@ -243,7 +247,11 @@ struct gpu_simulation_type {
     QUICKDouble*                    o;
     QUICKULL*                       oULL;
     QUICKDouble*                    dense;
-	QUICKDouble*					Y;
+	QUICKDouble*					coefficient;
+	QUICKDouble*					Y_Matrix;
+	QUICKDouble* 					orbmp2i331;
+	QUICKDouble*                    orbmp2j331;
+	QUICKDouble*                    orbmp2k331;
 
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;
