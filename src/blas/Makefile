@@ -69,7 +69,7 @@ $(BLOBJ):$(blasobjfolder)/%.o:%.f
 	 $(VB)$(FC) $(BLAS_FLAGS) -c $< -o $@
 
 all:$(BLOBJ)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
