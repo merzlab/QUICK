@@ -863,7 +863,7 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
             do KKK=max(III,KKK1),KKK2
                do LLL=max(KKK,LLL1),LLL2
                   if (III.lt.JJJ .and. III.lt. KKK .and. KKK.lt. LLL) then
-                     call hrrwhole  !get Y matrix
+                     call hrrwhole  !get Y for get2e
                      if (abs(Y).gt.quick_method%maxIntegralCutoff) then
                         A = (III-1)*nbasis+JJJ-1
                         B = (KKK-1)*nbasis+LLL-1
@@ -929,12 +929,13 @@ subroutine iclass(I,J,K,L,NNA,NNC,NNAB,NNCD)
    else
 
 
-      if(II.lt.JJ.and.II.lt.KK.and.KK.lt.LL)then
+      !print *, "quick_method%x_hybrid_coeff is ", quick_method%x_hybrid_coeff
+      if(II.lt.JJ.and.II.lt.KK.and.KK.lt.LL)then    !2e integral
          do III=III1,III2
             do JJJ=JJJ1,JJJ2
                do KKK=KKK1,KKK2
                   do LLL=LLL1,LLL2
-                     call hrrwhole
+                     call hrrwhole !get Y for get2e
                      !write(*,*) Y,III,JJJ,KKK,LLL
                      DENSEKI=quick_qm_struct%dense(KKK,III)
                      DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
@@ -1320,14 +1321,20 @@ subroutine shellmp2(nstepmp2s,nsteplength, Y_Matrix)
 
    COMMON /COM1/RA,RB,RC,RD
 
+   !print *, "in shellmp2, quick_basis%katom are", quick_basis%katom ! indice of central atoms
+    !print *, "in shell mp2, II, JJ, KK, LL are", II,JJ,KK,LLL
+    !print *, "in shellmp2, quick_basis%ktype are", quick_basis%ktype
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
       RB(M)=xyz(M,quick_basis%katom(JJ))
       RC(M)=xyz(M,quick_basis%katom(KK))
       RD(M)=xyz(M,quick_basis%katom(LL))
+      !print *, "in shellmp2, RA(M), RB(M), RC(M), RD(M), M are", RA(M),RB(M),RC(M),RD(M),M
    enddo
-
+    
+   !print *, "in shellmp2, II, JJ, KK, LL are", II, JJ, KK, LL
+   
    NII1=quick_basis%Qstart(II)
    NII2=quick_basis%Qfinal(II)
    NJJ1=quick_basis%Qstart(JJ)
@@ -1431,6 +1438,11 @@ subroutine shellmp2(nstepmp2s,nsteplength, Y_Matrix)
       enddo
    enddo
 
+   !print *, "NII1, NII2 is", NII1, NII2
+   !print *, "NJJ1, NJJ2 is", NJJ1, NJJ2
+   !print *, "NKK1, NKK2 is", NKK1, NKK2
+   !print *, "NLL1, NLL2 is", NLL1, NLL2
+   !print *, "Sumindex is", Sumindex
 
    do I=NII1,NII2
       NNA=Sumindex(I-1)+1
@@ -1440,6 +1452,8 @@ subroutine shellmp2(nstepmp2s,nsteplength, Y_Matrix)
             NNC=Sumindex(k-1)+1
             do L=NLL1,NLL2
                NNCD=SumIndex(K+L)
+               !print *, "in shellmp2 to call classmp2,"
+               !print *, "NNA, NNAB, NNC, NNCD are", NNA, NNAB, NNC, NNCD
                call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength,Y_Matrix)
                !                   call class
             enddo
@@ -1777,6 +1791,9 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
     !print *, "in cuda classmp2, test Y_Matrix(1,1):", Y_Matrix(1,1)
 #endif
 
+    ! II, JJ, KK, LL are from calmp2
+    !print *, "at the begining of classmp2,"
+    !print *, "II, JJ, KK, LL are", II, JJ, KK, LL
 
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
@@ -1846,8 +1863,29 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
    NBI1=quick_basis%Qsbasis(II,NII1)
    NBJ1=quick_basis%Qsbasis(JJ,NJJ1)
 
-   II111=quick_basis%ksumtype(II)+NBI1
-   JJ111=quick_basis%ksumtype(JJ)+NBJ1
+   !II111=quick_basis%ksumtype(II)+NBI1
+   !JJ111=quick_basis%ksumtype(JJ)+NBJ1
+    II111=quick_basis%ksumtype(II)
+    JJ111=quick_basis%ksumtype(JJ)
+   
+   !print *, "in classmp2, II111, JJ111 are", II111, JJ111
+   !print *, "in classmp2, NBI1 and NBJ1 should always be 0 while they are:", NBI1, NBJ1 
+   !if(NBI1.NE.0 .OR. NBJ1.NE.0) then
+   !     print *, "got nonezero NBI1 or NBJ1"
+   !endif
+
+   !print *, "before get Y, quick_method%integralCutoff is", quick_method%integralCutoff
+   !print *, "in classmp2, shape(orbmp2i331) is ", shape(orbmp2i331)
+   !print "('in classmp2, III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2 are', i2, i2, i2, i2, i2, i2, i2, i2)",&
+   !          III1, III2, JJJ1, JJJ2, KKK1,KKK2, LLL1,LLL2
+   !print *, ""
+
+   ! from here inspection
+   !print *, "in classmp2, before getting Y,"
+   !print *, "III1, III2 are", III1, III2
+   !print *, "JJJ1, JJJ2 are", JJJ1, JJJ2
+   !print *, "KKK1, KKK2 are", KKK1, KKK2
+   !print *, "LLL1, LLL2 are", LLL1, LLL2
 
    if(II.lt.JJ.and.KK.lt.LL)then
 
@@ -1857,10 +1895,10 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                do LLL=LLL1,LLL2
 #ifndef CUDA                
                   !print *, "before calling hrrwhole"
-                  !print *, "Y is ", Y
+                  !print *, "get Y is ", Y
                   call hrrwhole
                   !print *, "FIRST CALL after calling hrrwhole"
-                  print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+                  !print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
 #endif
 #ifdef CUDA
                   ! Here we retrieve the Y value calculated in gpu_MP2.cu/hrrwhole_MP2. Two points to note:
@@ -1869,32 +1907,52 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                   ! 2. In Fortran arrays are stored by column in memory.
                   if(quick_method%bCUDA) then
                     if((III-1)*nbasis+JJJ > (KKK-1)*nbasis+LLL) then
-                        print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
-                        print *, ""
+                        !print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
+                        !print *, ""
                         Y = Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)  
+                         !Y = 0
                     else
-                        print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
-                        print *, ""
+                        !print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
+                        !print *, ""
                         Y = Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
-                     endif
+                        !Y = 0 
+                    endif
                   endif
 #endif
-                   if (dabs(Y).gt.quick_method%integralCutoff) then
+                  !print *, ""
+                  !print "('in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3, ', II,JJ,KK,LL are', &
+                  !          i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)", III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
+                  !print "('for orbmp2i331 with i3mp2=5, LLL, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')", LLL, IIInew, JJJnew
+                  !print "('for orbmp2i331 with i3mp2=5, LLL, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')", LLL, JJJnew, IIInew                  
+                  !print "('for orbmp2i331 with i3mp2=5, KKK, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')", KKK, IIInew, JJJnew
+                  !print "('for orbmp2i331 with i3mp2=5, KKK, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')", KKK, JJJnew, IIInew 
+
+                    if (dabs(Y).gt.quick_method%integralCutoff) then
                      do i3mp2=1,nsteplength
                         i3mp2new=nstepmp2s+i3mp2-1
                         atemp=quick_qm_struct%co(KKK,i3mp2new)*Y
                         btemp=quick_qm_struct%co(LLL,i3mp2new)*Y
                         IIInew=III-II111+1
-                        JJJnew=JJJ-JJ111+1
+                        JJJnew=JJJ-JJ111+1 
 
-                        orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)= &
-                              orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)+atemp
-                        orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)= &
-                              orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)+atemp
-                        orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)= &
-                              orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)+btemp
-                        orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)= &
-                              orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)+btemp
+                        !print "('for orbmp2i331 with i3mp2=5, LLL, IIInew,JJJnew, 1 are', i3, i3, i3, ' 1')",&
+                        !     LLL, IIInew, JJJnew
+                        !print "('for orbmp2i331 with i3mp2=5, LLL, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')",& 
+                        !    LLL, JJJnew, IIInew
+                        !print "('for orbmp2i331 with i3mp2=5, KKK, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')",& 
+                        !    KKK, IIInew, JJJnew
+                        !print "('for orbmp2i331 with i3mp2=5, KKK, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')",&
+                        !     KKK, JJJnew, IIInew
+                       
+
+                        !print "('for orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1),i3mp2,LLL,IIInew,JJJnew are', i2,i2,i2,i2)",i3mp2,LLL,IIInew,JJJnew                    
+                        orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)= orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)+atemp
+                        !print "('for orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2),i3mp2,LLL,JJJnew,IIInew are', i2,i2,i2,i2)",i3mp2,LLL,JJJnew,IIInew
+                        orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)= orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)+atemp
+                        !print "('for orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1),i3mp2,KKK,IIInew,JJJnew are',i2,i2,i2,i2)",i3mp2,KKK,IIInew,JJJnew
+                        orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)= orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)+btemp
+                        !print "('for orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2),i3mp2,KKK,JJJnew,IIInew are',i2,i2,i2,i2)",i3mp2,KKK,JJJnew,IIInew
+                        orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)= orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)+btemp
                      enddo
                   endif
                enddo
@@ -1912,24 +1970,29 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                      do LLL=max(KKK,LLL1),LLL2
 #ifndef CUDA
                         !print *, "second call:before calling hrrwhole"
-                        !print *, "Y is ", Y
+                        !print *, "get Y is ", Y
                         call hrrwhole
                         !print *, "second call:after calling hrrwhole"
-                        print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
+                        !print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
 #endif
 #ifdef CUDA
                         if(quick_method%bCUDA) then
                             if((III-1)*nbasis+JJJ > (KKK-1)*nbasis+LLL) then
-                                print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
-                                print *, ""                        
+                                !print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
+                                !print *, ""                        
                                 Y=Y_Matrix((III-1)*nbasis+JJJ,(KKK-1)*nbasis+LLL)
+                                !Y=0
                             else
-                                print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
-                                print *, ""
+                                !print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
+                                !print *, ""
                                 Y=Y_Matrix((KKK-1)*nbasis+LLL,(III-1)*nbasis+JJJ)
+                                !Y =0
                             endif
                         endif
 #endif    
+                        !print *, ""
+                        !print "('else in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3,', II,JJ,KK,LL are', &
+                        !    i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)",III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
                         if (dabs(Y).gt.quick_method%integralCutoff) then
                            do i3mp2=1,nsteplength
                               i3mp2new=nstepmp2s+i3mp2-1
@@ -1939,18 +2002,22 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                               IIInew=III-II111+1
                               JJJnew=JJJ-JJ111+1
 
-                              orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)= &
-                                    orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)+atemp
+                              !print "('for orbmp2i331 with i3mp2=5, LLL, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')",&
+                              !   LLL, IIInew, JJJnew
+                              orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)= orbmp2i331(i3mp2,LLL,IIInew,JJJnew,1)+atemp
                               if(JJJ.ne.III)then
-                                 orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)= &
-                                       orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)+atemp
+                                !print "('for orbmp2i331 with i3mp2=5, LLL, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')",&
+                                 !LLL, JJJnew, IIInew 
+                                orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)= orbmp2i331(i3mp2,LLL,JJJnew,IIInew,2)+atemp
                               endif
                               if(KKK.ne.LLL)then
-                                 orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)= &
-                                       orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)+btemp
+                                 !print "('for orbmp2i331 with i3mp2=5, KKK, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')",&
+                                  !   KKK, IIInew, JJJnew
+                                 orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)= orbmp2i331(i3mp2,KKK,IIInew,JJJnew,1)+btemp
                                  if(III.ne.JJJ)then
-                                    orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)= &
-                                          orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)+btemp
+                                    !print "('for orbmp2i331 with i3mp2=5, KKK, JJJnew, IIInew, 1 are', i3, i3, i3, ' 2')",&
+                                     !    KKK, JJJnew, IIInew
+                                    orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)= orbmp2i331(i3mp2,KKK,JJJnew,IIInew,2)+btemp
                                  endif
                               endif
 
