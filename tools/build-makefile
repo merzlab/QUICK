@@ -139,51 +139,56 @@ cpmakein:
 
 #================= common subroutine library ============================
 quick_subs:
-	cd $(subfolder) && make -j$(ncores) all
+	@cd $(subfolder) && make --no-print-directory -j$(ncores) all
 
 #================= quick module library =================================
 quick_modules:
-	cd $(modfolder) && make all
+	@cd $(modfolder) && make --no-print-directory all
 #================= octree subroutines   =================================
 octree:
-	cd $(octfolder) && make all
+	@cd $(octfolder) && make --no-print-directory all
 #============= targets for cuda =========================================
 quick_cuda:
-	cd $(cudafolder) && make allbutxc
-	cd $(cudafolder) && make xc
+	@cd $(cudafolder) && make --no-print-directory allbutxc
+	@cd $(cudafolder) && make --no-print-directory xc
 
 #================= targets for BLAS =====================================
 blas:
-	cd $(blasfolder) && make -j$(ncores) all
+	@cd $(blasfolder) && make --no-print-directory -j$(ncores) all
 #==================== libxc cpu library =================================
 libxc_cpu:
-	cd $(libxcfolder) && make -j$(ncores) libxc_cpu
+	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_cpu
 #==================== libxc cuda library =================================
 libxc_gpu:
-	cd $(libxcfolder) && make -j$(ncores) libxc_gpu
+	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_gpu
 
 libxc_cuda:libxc_gpu
-	cd $(libxcfolder)/maple2c_device && make -j$(ncores) all
+	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) all
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #===================== target for general src files =====================
 
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for main src files ========================
 $(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for compiling api test ====================
 $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
 #  !---------------------------------------------------------------------!
 #  ! Parent build targets                                                !
@@ -192,24 +197,24 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 .PHONY: serial cuda mpi cudampi
 
 serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
 
 cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
 
 mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas -lxc $(LDFLAGS)
 
 cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

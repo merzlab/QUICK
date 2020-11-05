@@ -245,8 +245,9 @@ module quick_files_module
         enddo
         
         !write(io,'("| BASIS SET = ",a)') basisfilename(j+1:k2)
-        write(io,'("| BASIS SET = ",a)') basisSetName
+        write(io,'("| BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
         write(io,'("| BASIS FILE = ",a)') basisfilename(k1:k2)
+        
     end subroutine
     
     subroutine print_ecp_file(io)

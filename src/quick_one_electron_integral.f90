@@ -1832,8 +1832,8 @@ subroutine get1e(oneElecO)
          timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-         timer_cumer%TOp = timer_cumer%T1e
-         timer_cumer%TSCF = timer_cumer%T1e
+         timer_cumer%TOp = timer_cumer%TOp+timer_cumer%T1e
+         timer_cumer%TSCF = timer_cumer%TSCF+timer_cumer%T1e
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)

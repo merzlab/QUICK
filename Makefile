@@ -38,22 +38,22 @@ nobuildtypes:
 serial: checkfolders
 	@echo  "Building serial version.."
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make serial
+	@cd $(buildfolder) && make --no-print-directory serial
 
 mpi: checkfolders
 	@echo  "Building mpi version.."
 	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make mpi
+	@cd $(buildfolder) && make --no-print-directory mpi
 
 cuda: checkfolders
 	@echo  "Building cuda version.."
 	@cp -f $(buildfolder)/make.cuda.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make cuda
+	@cd $(buildfolder) && make --no-print-directory cuda
 
 cudampi: checkfolders
 	@echo  "Building cuda-mpi version.."
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
-	@cd $(buildfolder) && make cudampi
+	@cd $(buildfolder) && make --no-print-directory cudampi
 
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \

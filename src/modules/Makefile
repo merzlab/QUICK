@@ -39,7 +39,8 @@ modobj=$(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(o
 #  !---------------------------------------------------------------------!
 
 $(modobj):$(objfolder)/%.o:%.f90
-	$(FOR) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -c $< -o $@
 
 all:$(modobj)
 
