@@ -131,15 +131,14 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 //    nvtxRangePushA("XC grad");
 
     // calculate the size for temporary gradient vector in shared memory 
-    QUICKDouble smemSize = gpu->natom* 3 * sizeof(QUICKDouble);
 
-    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>(glinfo, nof_functionals)));
+    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, smemSize>>>()));
+    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     gpu_delete_sswgrad_vars();
 

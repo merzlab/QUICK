@@ -58,6 +58,7 @@ echo  "
                      production.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
+      --verbose      Enable full compilation output
 
   Supported compilers are: gnu, intel, pgi
 
@@ -441,7 +442,7 @@ cuda_arch=''
 cuda_arch_flags=''
 
 # extra cuda flags
-cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+cuda_ext_flags='-m64 -use_fast_math'
 cuda_dc_flags=''
 
 # cuda include flags
@@ -482,6 +483,9 @@ nof='no'
 # amber related variables
 aminstall='false'
 
+# control compiler output
+verbose='@'
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -494,6 +498,7 @@ while [ $# -gt 0 ]; do
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
     --debug)       debug='yes';;
+    --verbose)     verbose='';;
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
@@ -802,6 +807,10 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       exit 1
     fi
 
+    if [ -z $verbose ]; then
+      cuda_ext_flags="-Xptxas=-v $cuda_ext_flags" 
+    fi
+
 fi
 
 #  !---------------------------------------------------------------------!
@@ -965,6 +974,9 @@ installer=$installer
 
 # number of cores for the compilation
 ncores=$ncores
+
+# control build output
+VB=$verbose
 
 #!---------------------------------------------------------------------!
 #! Directories                                                         !
