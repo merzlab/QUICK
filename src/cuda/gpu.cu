@@ -1072,7 +1072,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 //-----------------------------------------------
 //  upload calculated information
 //-----------------------------------------------
-extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense)
+extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E)
 {
     
 #ifdef DEBUG
@@ -1090,10 +1090,12 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 	gpu -> gpu_calculated -> coefficient    =   new cuda_buffer_type<QUICKDouble>(co,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> Y_Matrix    	  =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis*gpu->nbasis,gpu->nbasis*gpu->nbasis);
-	gpu -> gpu_calculated -> orbmp2i331		=	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nbasis*10*10*2);   
-	gpu -> gpu_calculated -> orbmp2j331		= 	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*10*10*2);
+	gpu -> gpu_calculated -> orbmp2i331		=	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nbasis*6*6*2);   
+	gpu -> gpu_calculated -> orbmp2j331		= 	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*6*6*2);
 	gpu -> gpu_calculated -> orbmp2k331		= 	new	cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*gpu->nbasis);
-
+	gpu -> gpu_calculated -> orbmp2			= 	new cuda_buffer_type<QUICKDouble>((gpu->nbasis-gpu->nElec/2)*(gpu->nbasis-gpu->nElec/2));
+	gpu	-> gpu_calculated -> molorbe		= 	new cuda_buffer_type<QUICKDouble>(E, gpu->nbasis);
+	
     /*
      oULL is the unsigned long long int type of O matrix. The reason to do so is because
      Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
@@ -1121,6 +1123,8 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu -> gpu_calculated -> orbmp2i331		-> Upload();
 	gpu -> gpu_calculated -> orbmp2j331     -> Upload();
 	gpu -> gpu_calculated -> orbmp2k331     -> Upload();
+	gpu -> gpu_calculated -> orbmp2			-> Upload();
+	gpu -> gpu_calculated -> molorbe         -> Upload();
 
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
@@ -1130,6 +1134,8 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 	gpu	-> gpu_sim.orbmp2i331			= gpu -> gpu_calculated -> orbmp2i331 -> _devData;    
 	gpu -> gpu_sim.orbmp2j331           = gpu -> gpu_calculated -> orbmp2j331 -> _devData;
 	gpu -> gpu_sim.orbmp2k331           = gpu -> gpu_calculated -> orbmp2k331 -> _devData;
+	gpu -> gpu_sim.orbmp2				= gpu -> gpu_calculated -> orbmp2 -> _devData;
+	gpu -> gpu_sim.molorbe               = gpu -> gpu_calculated -> molorbe -> _devData;
 
 
 #ifdef DEBUG
@@ -2218,7 +2224,9 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
  	delete gpu->gpu_calculated->orbmp2i331;
 	delete gpu->gpu_calculated->orbmp2j331;
 	delete gpu->gpu_calculated->orbmp2k331;
-    //delete gpu->gpu_cutoff->cutMatrix;
+	delete gpu->gpu_calculated->orbmp2; 
+	delete gpu->gpu_calculated->molorbe; 
+  //delete gpu->gpu_cutoff->cutMatrix;
     
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -2488,6 +2496,8 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
 	delete gpu->gpu_calculated->orbmp2i331;
 	delete gpu->gpu_calculated->orbmp2j331;
 	delete gpu->gpu_calculated->orbmp2k331;
+	delete gpu->gpu_calculated->orbmp2;
+	delete gpu->gpu_calculated->molorbe;
 	delete gpu->gpu_cutoff->cutMatrix;
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
@@ -2572,6 +2582,8 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     delete gpu->gpu_calculated->orbmp2i331;
 	delete gpu->gpu_calculated->orbmp2j331;
 	delete gpu->gpu_calculated->orbmp2k331;
+	delete gpu->gpu_calculated->orbmp2;
+	delete gpu->gpu_calculated->molorbe;
 	delete gpu->gpu_cutoff->cutMatrix;
     
     PRINTDEBUG("COMPLETE RUNNING GET2E")
@@ -2601,6 +2613,8 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	gpu->gpu_calculated->orbmp2i331->Download();
 	gpu->gpu_calculated->orbmp2j331->Download();
 	gpu->gpu_calculated->orbmp2k331->Download();
+	gpu->gpu_calculated->orbmp2->Download();
+	gpu->gpu_calculated->molorbe->Download();
 	//Can I simply do Y_Matrix = gpu->gpu_calculated->Y->_hostData? No it gives garbage values
 	//Y_Matrix = gpu->gpu_calculated->Y->_hostData;
 	
@@ -2678,16 +2692,18 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
     delete gpu->gpu_calculated->orbmp2i331;
 	delete gpu->gpu_calculated->orbmp2j331;
 	delete gpu->gpu_calculated->orbmp2k331;
+	delete gpu->gpu_calculated->orbmp2;
+	delete gpu->gpu_calculated->molorbe;
 	delete gpu->gpu_cutoff->cutMatrix;
 
     PRINTDEBUG("COMPLETE RUNNING MP2")
 	
 }
 
-extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, \
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
 QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix)
 {
-	gpu_upload_calculated_(o,co,vec,dense);
+	gpu_upload_calculated_(o,co,vec,dense,E);
 	gpu_upload_cutoff_(cutmatrix,integralCutoff,primLimit,DMCutoff);
 	gpu_calmp2_(Y_Matrix, o);
 	cudaDeviceSynchronize();
@@ -2814,6 +2830,8 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 		delete gpu->gpu_calculated->orbmp2i331;
 		delete gpu->gpu_calculated->orbmp2j331;
 		delete gpu->gpu_calculated->orbmp2k331;
+		delete gpu->gpu_calculated->orbmp2;
+		delete gpu->gpu_calculated->molorbe;
 }
 
 char *trim(char *s) {
