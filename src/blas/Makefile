@@ -65,10 +65,11 @@ BLOBJ = $(blasobjfolder)/isamax.o \
 #  !---------------------------------------------------------------------!
 
 $(BLOBJ):$(blasobjfolder)/%.o:%.f
-	 $(FC) $(BLAS_FLAGS) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	 $(VB)$(FC) $(BLAS_FLAGS) -c $< -o $@
 
 all:$(BLOBJ)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libblas.$(LIBEXT) $(blasobjfolder)/*.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

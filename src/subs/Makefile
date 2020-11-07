@@ -47,7 +47,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 #  !---------------------------------------------------------------------!
 
 $(SUBS):$(objfolder)/%.o:%.f90
-	$(FOR) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -c $< -o $@
 
 all: $(SUBS)
 
