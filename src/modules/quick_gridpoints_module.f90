@@ -150,6 +150,8 @@ module quick_gridpoints_module
     implicit double precision(a-h,o-z) 
     type(quick_xc_grid_type) self
     type(quick_xcg_tmp_type) xcg_tmp
+    double precision :: t_octree, t_prscrn
+
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
 
@@ -202,7 +204,7 @@ module quick_gridpoints_module
 
     call cpu_time(timer_end%TDFTGrdGen)
 
-    timer_cumer%TDFTGrdGen = timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
+    timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
 
     !Measure time to compute grid weights
     call cpu_time(timer_begin%TDFTGrdWt)
@@ -257,7 +259,7 @@ module quick_gridpoints_module
 
     call cpu_time(timer_end%TDFTGrdWt)
 
-    timer_cumer%TDFTGrdWt = timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
+    timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
 
     !Measure time to pack grid points
     call cpu_time(timer_begin%TDFTGrdPck)
@@ -278,7 +280,10 @@ module quick_gridpoints_module
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%idx_grid, natom, &
     nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, & 
-    self%gridb_count, self%ntgpts, self%nbins, self%nbtotbf, self%nbtotpf, timer_cumer%TDFTGrdOct, timer_cumer%TDFTPrscrn) 
+    self%gridb_count, self%ntgpts, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn) 
+
+    timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
+    timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
 
 #ifdef CUDA_MPIV
     endif
@@ -383,7 +388,8 @@ module quick_gridpoints_module
 
     call cpu_time(timer_end%TDFTGrdPck)
 
-    timer_cumer%TDFTGrdPck = timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct - timer_cumer%TDFTPrscrn
+    timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct &
+                           - timer_cumer%TDFTPrscrn
 
 !    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
 !    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck

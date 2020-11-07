@@ -44,7 +44,7 @@ echo  "
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --debug        Compiles debug version                                 
       --shared       Build shared object libraries                          
-      --arch <pascal|volta|turing|ampere>                                           
+      --arch <kepler|pascal|volta|turing|ampere>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
@@ -58,6 +58,7 @@ echo  "
                      production.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
+      --verbose      Enable full compilation output
 
   Supported compilers are: gnu, intel, pgi
 
@@ -441,7 +442,7 @@ cuda_arch=''
 cuda_arch_flags=''
 
 # extra cuda flags
-cuda_ext_flags='-Xptxas=-v -m64 -use_fast_math'
+cuda_ext_flags='-m64 -use_fast_math'
 cuda_dc_flags=''
 
 # cuda include flags
@@ -482,6 +483,9 @@ nof='no'
 # amber related variables
 aminstall='false'
 
+# control compiler output
+verbose='@'
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -494,6 +498,7 @@ while [ $# -gt 0 ]; do
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
     --debug)       debug='yes';;
+    --verbose)     verbose='';;
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
@@ -706,6 +711,10 @@ done
 set_uspec_arch(){
   for carch in $cuda_arch; do
     case "$carch" in
+      kepler)
+	echo "Configuring for SM3.0"
+	cuda_arch_flags="$cuda_arch_flags $sm30flags"
+	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       pascal)
         echo "Configuring for SM6.0"
         cuda_arch_flags="$cuda_arch_flags $sm60flags"
@@ -745,6 +754,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     sm70flags='-gencode arch=compute_70,code=sm_70'
     #SM6.0 = GP100 / P100 = DGX-1
     sm60flags='-gencode arch=compute_60,code=sm_60'
+    #SM3.0 = K80, K40, K20
+    sm30flags='-gencode arch=compute_30,code=sm_30'
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
@@ -756,8 +767,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        echo "Configuring for SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm60flags $sm70flags $sm75flags $sm80flags"
+        echo "Configuring for SM3.0, SM6.0, SM7.0, SM7.5, SM8.0"
+        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags $sm80flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
@@ -766,8 +777,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm60flags $sm70flags $sm75flags"
+        echo "Configuring for SM3.0, SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
@@ -776,8 +787,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0 and SM7.0"
-        cuda_arch_flags="$sm60flags $sm70flags"
+        echo "Configuring for SM3.0, SM6.0 and SM7.0"
+        cuda_arch_flags="$sm30flags $sm60flags $sm70flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
@@ -786,14 +797,18 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM6.0"
-        cuda_arch_flags="$sm60flags"
+        echo "Configuring for SM3.0, SM6.0"
+        cuda_arch_flags="$sm30flags $sm60flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
       echo  "Error: Unsupported CUDA version $cudaversion detected. "
       echo  "       QUICK requires at least CUDA version 8.0 "
       exit 1
+    fi
+
+    if [ -z $verbose ]; then
+      cuda_ext_flags="-Xptxas=-v $cuda_ext_flags" 
     fi
 
 fi
@@ -959,6 +974,9 @@ installer=$installer
 
 # number of cores for the compilation
 ncores=$ncores
+
+# control build output
+VB=$verbose
 
 #!---------------------------------------------------------------------!
 #! Directories                                                         !

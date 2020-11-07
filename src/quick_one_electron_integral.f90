@@ -1710,6 +1710,7 @@ subroutine get1eO(IBAS)
    integer Ibas
    integer g_count
    double precision g_table(200)
+   double precision :: valopf
 
    ix = itype(1,Ibas)
    iy = itype(2,Ibas)
@@ -1719,6 +1720,7 @@ subroutine get1eO(IBAS)
    xyzzi = xyz(3,quick_basis%ncenter(Ibas))
 
    do Jbas=Ibas,nbasis
+
       jx = itype(1,Jbas)
       jy = itype(2,Jbas)
       jz = itype(3,Jbas)
@@ -1735,14 +1737,20 @@ subroutine get1eO(IBAS)
          do Jcon=1,ncontract(jbas)
             F = dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)
            aj = aexp(Jcon,Jbas)
-            ! The first part is the kinetic energy.
-           call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)
 
-            OJI = OJI + F*ekinetic(aj,   ai, &
+           valopf = opf(ai, aj, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), xyzxi, xyzyi, xyzzi, xyzxj, xyzyj, xyzzj)
+
+           if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+             ! The first part is the kinetic energy.
+             call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)
+
+              OJI = OJI + F*ekinetic(aj,   ai, &
                   jx,   jy,   jz,&
                   ix,   iy,   iz, &
                   xyzxj,xyzyj,xyzzj,&
                   xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_table)
+           endif
          enddo
       enddo
       quick_qm_struct%o(Jbas,Ibas) = OJI
@@ -1824,8 +1832,8 @@ subroutine get1e(oneElecO)
          timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-         timer_cumer%TOp = timer_cumer%T1e
-         timer_cumer%TSCF = timer_cumer%T1e
+         timer_cumer%TOp = timer_cumer%TOp+timer_cumer%T1e
+         timer_cumer%TSCF = timer_cumer%TSCF+timer_cumer%T1e
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
@@ -1917,11 +1925,7 @@ subroutine attrashell(IIsh,JJsh)
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
-   double precision RA(3),RB(3),RP(3),inv_g,g_table(200)
-
-   ! Variables needed later:
-   !    pi=3.1415926535897932385
-
+   double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
    Ax=xyz(1,quick_basis%katom(IIsh))
    Ay=xyz(2,quick_basis%katom(IIsh))
@@ -1930,10 +1934,6 @@ subroutine attrashell(IIsh,JJsh)
    Bx=xyz(1,quick_basis%katom(JJsh))
    By=xyz(2,quick_basis%katom(JJsh))
    Bz=xyz(3,quick_basis%katom(JJsh))
-
-   !   Cx=sumx
-   !   Cy=sumy
-   !   Cz=sumz
 
    ! The purpose of this subroutine is to calculate the nuclear attraction
    ! of an electron  distributed between gtfs with orbital exponents a
@@ -1953,39 +1953,43 @@ subroutine attrashell(IIsh,JJsh)
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
 
-
    do ips=1,quick_basis%kprim(IIsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
 
-         !Eqn 14 O&S
-         call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
-         g = a+b
-         !Eqn 15 O&S
-         inv_g = 1.0d0 / dble(g)
+         valopf = opf(a, b, quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)), &
+         quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)), Ax, Ay, Az, Bx, By, Bz)
 
-         !Calculate first two terms of O&S Eqn A20
-         constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
-         constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+         if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
 
-         !nextatom=number of external MM point charges. set to 0 if none used
-         do iatom=1,natom+quick_molspec%nextatom
-            if(iatom<=natom)then
+           !Eqn 14 O&S
+           call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
+           g = a+b
+           !Eqn 15 O&S
+           inv_g = 1.0d0 / dble(g)
+
+           !Calculate first two terms of O&S Eqn A20
+           constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
+           constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+
+           !nextatom=number of external MM point charges. set to 0 if none used
+           do iatom=1,natom+quick_molspec%nextatom
+             if(iatom<=natom)then
                Cx=xyz(1,iatom)
                Cy=xyz(2,iatom)
                Cz=xyz(3,iatom)
                Z=-1.0d0*quick_molspec%chg(iatom)
-            else
+             else
                Cx=quick_molspec%extxyz(1,iatom-natom)
                Cy=quick_molspec%extxyz(2,iatom-natom)
                Cz=quick_molspec%extxyz(3,iatom-natom)
                Z=-quick_molspec%extchg(iatom-natom)
-            endif
-            constant2=constanttemp*Z
+             endif
+             constant2=constanttemp*Z
 
-            !Calculate the last term of O&S Eqn A21
-            PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
+             !Calculate the last term of O&S Eqn A21
+             PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 !            if(quick_method%fMM .and. a*b*PCsquare/g.gt.33.0d0)then
 !               xdistance=1.0d0/dsqrt(PCsquare)
 !               call fmmone(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
@@ -2014,22 +2018,15 @@ subroutine attrashell(IIsh,JJsh)
                      !    Cx,Cy,Cz,Px,Py,Pz,g)
                NIJ1=10*NII2+NJJ2
 
-               !    write(*,'(I2,I2,I2,I2,I2,I2)')ips,jps,IIsh,JJsh,NIJ1,iatom
-
-!write(*,'(A8,2X,I3,2X,I3,2X,I3,2X,I3,2X,I3,F20.10,2X,F20.10,2X,F20.10)') "Ax,Ay,Az",&
-!ips,jps,IIsh,JJsh,NIJ1,Bx,By,Bz
-
                call nuclearattra(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz,iatom)
 
 !            endif
 
-         enddo
-
+           enddo
+         endif
       enddo
    enddo
-
-!stop
 
    ! Xiao HE remember to multiply Z   01/12/2008
    !    attraction = attraction*(-1.d0)* Z
@@ -2253,3 +2250,29 @@ double precision recursive function attrecurse(i,j,k,ii,jj,kk,m,aux,Ax,Ay, &
 
    return
 end
+
+!------------------------------------------------
+! opf
+!------------------------------------------------
+double precision function opf(ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+xyzxj,xyzyj,xyzzj)
+
+  !------------------------------------------------
+  ! This function computes the overlap prefactor 
+  ! required for one electron integral prescreening
+  !------------------------------------------------
+  use quick_constants_module
+  implicit none
+
+  double precision, intent(in) :: ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+xyzxj,xyzyj,xyzzj
+  double precision :: dist2, oog
+
+  dist2 = (xyzxi-xyzxj)**2 + (xyzyi-xyzyj)**2 + (xyzzi-xyzzj)**2
+  oog = 1.0d0/(ai+aj)
+
+  opf = exp(-ai*aj*dist2*oog)*sqrt(PI*oog)*PI*oog*ci*cj
+
+  return
+end function opf
+
