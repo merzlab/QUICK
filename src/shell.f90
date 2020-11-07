@@ -1920,8 +1920,8 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                   endif
 #endif
                   !print *, ""
-                  !print "('in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3, ', II,JJ,KK,LL are', &
-                  !          i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)", III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
+                  print "('in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3, ', II,JJ,KK,LL are', &
+                            i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)", III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
                   !print "('for orbmp2i331 with i3mp2=5, LLL, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')", LLL, IIInew, JJJnew
                   !print "('for orbmp2i331 with i3mp2=5, LLL, JJJnew, IIInew, 2 are', i3, i3, i3, ' 2')", LLL, JJJnew, IIInew                  
                   !print "('for orbmp2i331 with i3mp2=5, KKK, IIInew, JJJnew, 1 are', i3, i3, i3, ' 1')", KKK, IIInew, JJJnew
@@ -1991,8 +1991,8 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength, Y_Matrix)
                         endif
 #endif    
                         !print *, ""
-                        !print "('else in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3,', II,JJ,KK,LL are', &
-                        !    i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)",III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
+                        print "('else in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3,', II,JJ,KK,LL are', &
+                            i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)",III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
                         if (dabs(Y).gt.quick_method%integralCutoff) then
                            do i3mp2=1,nsteplength
                               i3mp2new=nstepmp2s+i3mp2-1
