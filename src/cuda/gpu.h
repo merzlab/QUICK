@@ -32,7 +32,7 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg);
 extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
 extern "C" void gpu_upload_energy_(QUICKDouble* E);
-extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense);
+extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E);
 extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jbasis, int* maxcontract, \
                                   int* ncontract, int* itype,     QUICKDouble* aexp,      QUICKDouble* dcoeff,\
                                   int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
@@ -530,7 +530,7 @@ __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 
 void upload_para_to_const_MP2();
-extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, \
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
 				QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix);
 
 

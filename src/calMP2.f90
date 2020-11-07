@@ -19,7 +19,7 @@ subroutine calmp2
     if(quick_method%bCUDA) then
     !print *,"in calmp2, at the beginning" 
 
-    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, &
+    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, quick_qm_struct%E,&
             cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix)  
     !Y_Matrix(1,1) = 9.5
     !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
@@ -52,21 +52,21 @@ subroutine calmp2
     print *, "in calmp2, shape(quick_basis%Qsbasis) is", shape(quick_basis%Qsbasis)   
     !print *, "in calmp2, quick_basis%Xcoeff is", quick_basis%Xcoeff
     
-    !print *, "in calmp2, quick_basis%Qsbasis is"
-    !do ind= 1, jshell
-    !    do ind2 = 0, 3
-    !        write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
-    !    end do
-    !    write(*,'(" ")')
-    !end do
+    print *, "in calmp2, quick_basis%Qsbasis is"
+    do ind= 1, jshell
+        do ind2 = 0, 3
+            write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
+        end do
+        write(*,'(" ")')
+    end do
 
-    !print *, "in calmp2, quick_basis%Qfbasis is"
-    !do ind= 1, jshell
-    !    do ind2 = 0, 3
-    !        write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
-    !    end do
-    !    write(*,'(" ")')
-    !end do
+    print *, "in calmp2, quick_basis%Qfbasis is"
+    do ind= 1, jshell
+        do ind2 = 0, 3
+            write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
+        end do
+        write(*,'(" ")')
+    end do
 
 
     print *, "in calmp2, quick_basis%ksumtype is"
