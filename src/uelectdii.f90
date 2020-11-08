@@ -372,7 +372,7 @@ subroutine uelectdiis(jscf,PRMS)
             enddo
          enddo
       else
-         write (ioutfile,'("DIIS FAILED !! RETURN TO ", &
+         write (ioutfile,'("| DIIS FAILED !! RETURN TO ", &
                & "NORMAL SCF. (NOT FATAL.)")')
          jscf=jscf-1
          diisdone=.true.
@@ -552,43 +552,43 @@ subroutine uelectdiis(jscf,PRMS)
 
       call cpu_time(t2)
 
-      write (ioutfile,'(/,"SCF CYCLE      = ",I8, &
+      write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
             & "      TIME      = ",F6.2)') &
             jscf,T2-T1
-      write (ioutfile,'("DIIS CYCLE     = ",I8, &
+      write (ioutfile,'("| DIIS CYCLE     = ",I8, &
             & "      MAX ERROR = ",E12.6)') &
             idiis,errormax
-      write (ioutfile,'("RMS CHANGE     = ",E12.6, &
+      write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
             & "  MAX CHANGE= ",E12.6)') &
             PRMS,PCHANGE
 
       if (quick_method%DFT .OR. quick_method%SEDFT) then
-         write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)') &
+         write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
                quick_qm_struct%aelec
-         write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)') &
+         write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
                quick_qm_struct%belec
       endif
 
       if (quick_method%prtgap) then
-         write (ioutfile,'("ALPHA HOMO-LUMO GAP (EV) =", &
+         write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
                & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-         write (ioutfile,'("BETA HOMO-LUMO GAP (EV)  =", &
+         write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
                & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
       endif
 
       if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
          write (ioutfile,' &
-               & ("PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
+               & ("| PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
          elseif(OLDPRMS <= PRMS) then
          write (ioutfile,' &
-               & ("DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
+               & ("| DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
          diisdone=.true.
       endif
       if(jscf >= quick_method%iscf-1) then
-         write (ioutfile,'("RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+         write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
          write (ioutfile,' &
-               & ("PERFORM FINAL NO INTERPOLATION ITERATION")')
+               & ("| PERFORM FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
       endif
       50 continue
