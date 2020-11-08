@@ -66,7 +66,7 @@ subroutine getmolsad()
       enddo
 
       do iitemp=1,quick_molspec%iatomtype
-         write(ioutfile,'(" For Atom Kind = ",i4)') iitemp
+         write(ioutfile,'("| For Atom Kind = ",i4)') iitemp
 
          ! if quick is called through api multiple times, this is necessary
          if(wrtStep .gt. 1) then
@@ -89,7 +89,7 @@ subroutine getmolsad()
 
                quick_molspec%chg(1)=i
                quick_molspec%iattype(1)=i
-               write(ioutfile,'(" ELEMENT = ",a)') symbol(i)
+               write(ioutfile,'("| ELEMENT = ",a)') symbol(i)
             endif
          enddo
          if (quick_molspec%imult /= 1) quick_method%UNRST= .TRUE.
@@ -106,7 +106,7 @@ subroutine getmolsad()
          nsenhai=1
          call readbasis(nsenhai,0,0,0,0)
          atombasis(iitemp)=nbasis
-         write (ioutfile,'(" BASIS FUNCTIONS = ",I4)') nbasis
+         write (ioutfile,'("| BASIS FUNCTIONS = ",I4)') nbasis
 
          if(nbasis < 1) then
                 call PrtErr(iOutFile,'Unable to find basis set information for this atom.')
