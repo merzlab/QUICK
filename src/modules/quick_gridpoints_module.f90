@@ -77,6 +77,9 @@ module quick_gridpoints_module
 
     !total number of primitive functions
     integer :: nbtotpf
+ 
+    !save the number of initial grid pts for printing purposes
+    integer :: init_ngpts
 
 #ifdef MPIV
     integer, dimension(:), allocatable :: igridptul
@@ -139,6 +142,10 @@ module quick_gridpoints_module
         module procedure dealloc_grid_variables
     end interface deform_dft_grid
 
+    interface print_grid_info
+        module procedure print_grid_information
+    end interface print_grid_info
+
     contains
 
     subroutine form_xc_quadrature(self, xcg_tmp)
@@ -200,7 +207,7 @@ module quick_gridpoints_module
         enddo
     enddo
 
-    xcg_tmp%idx_grid = idx_grid    
+    self%init_ngpts  = idx_grid
 
     call cpu_time(timer_end%TDFTGrdGen)
 
@@ -218,7 +225,7 @@ module quick_gridpoints_module
 
     call gpu_get_ssw(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%arr_wtang, xcg_tmp%arr_rwt, xcg_tmp%arr_rad3, &
-    xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%init_grid_atm, xcg_tmp%idx_grid)
+    xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%init_grid_atm, self%init_ngpts)
 
 #else
 
@@ -278,7 +285,7 @@ module quick_gridpoints_module
 
     ! run octree, pack grid points and get the array sizes for f90 memory allocation
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
-    xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%idx_grid, natom, &
+    xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, self%init_ngpts, natom, &
     nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, & 
     self%gridb_count, self%ntgpts, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn) 
 
@@ -533,5 +540,22 @@ module quick_gridpoints_module
         if (allocated(self%igridptll)) deallocate(self%igridptll)
    end subroutine
 #endif
+
+   subroutine print_grid_information(self)
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_basis_module
+     implicit none
+     type(quick_xc_grid_type) self
+
+     write (ioutfile,'("| OCTAGO: OCTree Algorithm for Grid Operations ")')
+     write (ioutfile,'("|   PRUNING CUTOFF       =",E10.3)') quick_method%DMCutoff 
+     write (ioutfile,'("|   INITIAL GRID POINTS  =",I12)') self%init_ngpts
+     write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%ntgpts
+     write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
+     write (ioutfile,'("|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =",I12)') self%nbtotpf
+
+   end subroutine print_grid_information
 
 end module quick_gridpoints_module
