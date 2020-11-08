@@ -41,9 +41,7 @@ subroutine read_job_and_atom
       endif
 
       call upcase(keyWD,200)
-      write(iOutFile,*) " -------------------------------------"
-      write(iOutFile,'("KEYWORD=",a)') keyWD
-      write(iOutFile,*) " -------------------------------------"
+      write(iOutFile,'("  KEYWORD=",a)') keyWD
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
       call read(quick_method,keyWD)     ! read method from Keyword
