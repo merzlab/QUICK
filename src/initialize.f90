@@ -98,14 +98,14 @@ subroutine outputCopyright(io,ierr)
    write(io,'(A107)') "| **                   restrictions set forth in the license agreement also apply to this                **"
    write(io,'(A107)') "| **                   software.                                                                         **"
    write(io,'(A107)') "| *********************************************************************************************************"
-   write(io,'(A107)') "|                                                                                                          "
+   write(io,'(A107)') "                                                                                                           "
    write(io,'(A107)') "| Cite this work as:                                                                                       "
    write(io,'(A107)') "| Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         "
    write(io,'(A107)') "| University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             "
-   write(io,'(A107)') "|                                                                                                          "
+   write(io,'(A107)') "                                                                                                           "
    write(io,'(A107)') "| If you have any comments or queries, please send us an email for technical support:                      "
    write(io,'(A107)') "| quick.merzlab@gmail.com                                                                                  "
-   write(io,'(A107)') "|                                                                                                          "
+   write(io,'(A107)') "                                                                                                           "
 
    ierr=0
 
