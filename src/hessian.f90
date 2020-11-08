@@ -72,7 +72,7 @@ subroutine fdhessian(failed)
   do Iatom = 1,natom
      do Idirection = 1,3
         xyz(Idirection,Iatom) = xyz(Idirection,Iatom) + stepsize
-        call getenergy(failed)
+        call getenergy(failed, .false.)
         if (failed) return
 
         ! BLOCKED by YIPU MIAO
@@ -91,7 +91,7 @@ subroutine fdhessian(failed)
         enddo
 
         xyz(Idirection,Iatom) = xyz(Idirection,Iatom)-2.d0*stepsize
-        call getenergy(failed)
+        call getenergy(failed, .false.)
         if (failed) return
         if (quick_method%unrst) then
            !                if (quick_method%HF) call uhfgrad

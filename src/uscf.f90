@@ -1,13 +1,14 @@
 ! Ed Brothers. December 20, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-    subroutine uscf(failed)
+    subroutine uscf(failed, isGuess)
     use allmod
     implicit double precision(a-h,o-z)
 
     logical :: done,failed
     integer :: nelec,nelecb
     double precision :: V2(3,nbasis)
+    logical, intent(in) :: isGuess
     done = .false.
     
     nelec = quick_molspec%nelec
@@ -46,34 +47,34 @@
 !
 ! ECP integrals DEBUG
 !
-      write(ioutfile,*) '  '
-      write(ioutfile,*) 'ECP INTEGRALS DEBUG'
+      if(.not. isGuess) write(ioutfile,*) '  '
+      if(.not. isGuess) write(ioutfile,*) 'ECP INTEGRALS DEBUG'
       do i=1,nbf12
-        write(ioutfile,*) i,'.  ',ecp_int(i)
+        if(.not. isGuess) write(ioutfile,*) i,'.  ',ecp_int(i)
       end do
     end if
 
     done=jscf.ge.quick_method%iscf
 
     do WHILE (.not.done)
-        if (quick_method%diisscf .and. PRMS < 1.D-1) call uelectdiis(jscf,PRMS)
+        if (quick_method%diisscf .and. PRMS < 1.D-1) call uelectdiis(jscf,PRMS,isGuess)
         call cpu_time(t1)
         jscf=jscf+1
 
         if (quick_method%debug) then
-            write(ioutfile,'(//,"ALPHA DENSITY MATRIX AT START OF", &
+            if(.not. isGuess) write(ioutfile,'(//,"ALPHA DENSITY MATRIX AT START OF", &
             & " CYCLE",I4)') jscf
             do I=1,nbasis
                 do J=1,nbasis
-                    write (ioutfile,'("DENSEA[",I4,",",I4,"]=",F18.10)') &
+                    if(.not. isGuess) write (ioutfile,'("DENSEA[",I4,",",I4,"]=",F18.10)') &
                     J,I,quick_qm_struct%dense(J,I)
                 enddo
             enddo
-            write(ioutfile,'(//,"BETA DENSITY MATRIX AT START OF", &
+            if(.not. isGuess) write(ioutfile,'(//,"BETA DENSITY MATRIX AT START OF", &
             & " CYCLE",I4)') jscf
             do I=1,nbasis
                 do J=1,nbasis
-                    write (ioutfile,'("DENSEB[",I4,",",I4,"]=",F18.10)') &
+                    if(.not. isGuess) write (ioutfile,'("DENSEB[",I4,",",I4,"]=",F18.10)') &
                     J,I,quick_qm_struct%denseb(J,I)
                 enddo
             enddo
@@ -89,11 +90,11 @@
        ! call shift(sval,.true.,jscf)
 
         if (quick_method%debug) then
-            write(ioutfile,'(//,"ALPHA OPERATOR MATRIX AT START OF", &
+            if(.not. isGuess) write(ioutfile,'(//,"ALPHA OPERATOR MATRIX AT START OF", &
             & " CYCLE",I4)') jscf
             do I=1,nbasis
                 do J=1,nbasis
-                    write (ioutfile,'("OPERATORA[",I4,",",I4,"]=",F18.10)') &
+                    if(.not. isGuess) write (ioutfile,'("OPERATORA[",I4,",",I4,"]=",F18.10)') &
                     J,I,quick_qm_struct%o(J,I)
                 enddo
             enddo
@@ -281,33 +282,33 @@
 
         call cpu_time(t2)
 
-        write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
+        if(.not. isGuess) write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
         & "      TIME      = ",F8.2)') &
         jscf,T2-T1
-        write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
+        if(.not. isGuess) write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
         & "  MAX CHANGE= ",E12.6)') &
         PRMS,PCHANGE
         if (quick_method%DFT .OR. quick_method%SEDFT) then
-            write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
+            if(.not. isGuess) write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
             quick_qm_struct%aelec
-            write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
+            if(.not. isGuess) write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
             quick_qm_struct%belec
         endif
 
-        if (quick_method%prtgap) write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
+        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
         & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-        if (quick_method%prtgap) write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
+        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
         & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
         if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
-            write (ioutfile,'("| CONVERGED!!!!!")')
+            if(.not. isGuess) write (ioutfile,'("| CONVERGED!!!!!")')
             done=.true.
         elseif(jscf >= quick_method%iscf) then
-            write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+            if(.not. isGuess) write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
             done=.true.
             failed=.true.
         elseif (prms >= oldprms) then
             if (mod(dble(jscf),2.d0) == 0.d0) then
-                write (ioutfile,'("| NOT IMPROVING.  ", &
+                if(.not. isGuess) write (ioutfile,'("| NOT IMPROVING.  ", &
                 & "TRY MODIFYING ALPHA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
@@ -316,7 +317,7 @@
                     enddo
                 enddo
             else
-                write (ioutfile,'("| NOT IMPROVING.  ", &
+                if(.not. isGuess) write (ioutfile,'("| NOT IMPROVING.  ", &
                 & "TRY MODIFYING BETA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis

@@ -197,7 +197,7 @@
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
-        call getEnergy(failed)
+        call getEnergy(failed, .false.)
     endif
 
     if (failed) call quick_exit(iOutFile,1)
