@@ -281,33 +281,33 @@
 
         call cpu_time(t2)
 
-        write (ioutfile,'(/,"SCF CYCLE      = ",I8, &
+        write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
         & "      TIME      = ",F8.2)') &
         jscf,T2-T1
-        write (ioutfile,'("RMS CHANGE     = ",E12.6, &
+        write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
         & "  MAX CHANGE= ",E12.6)') &
         PRMS,PCHANGE
         if (quick_method%DFT .OR. quick_method%SEDFT) then
-            write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)') &
+            write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
             quick_qm_struct%aelec
-            write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)') &
+            write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
             quick_qm_struct%belec
         endif
 
-        if (quick_method%prtgap) write (ioutfile,'("ALPHA HOMO-LUMO GAP (EV) =", &
+        if (quick_method%prtgap) write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
         & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-        if (quick_method%prtgap) write (ioutfile,'("BETA HOMO-LUMO GAP (EV)  =", &
+        if (quick_method%prtgap) write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
         & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
         if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
-            write (ioutfile,'("CONVERGED!!!!!")')
+            write (ioutfile,'("| CONVERGED!!!!!")')
             done=.true.
         elseif(jscf >= quick_method%iscf) then
-            write (ioutfile,'("RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+            write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
             done=.true.
             failed=.true.
         elseif (prms >= oldprms) then
             if (mod(dble(jscf),2.d0) == 0.d0) then
-                write (ioutfile,'("NOT IMPROVING.  ", &
+                write (ioutfile,'("| NOT IMPROVING.  ", &
                 & "TRY MODIFYING ALPHA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
@@ -316,7 +316,7 @@
                     enddo
                 enddo
             else
-                write (ioutfile,'("NOT IMPROVING.  ", &
+                write (ioutfile,'("| NOT IMPROVING.  ", &
                 & "TRY MODIFYING BETA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
