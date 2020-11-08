@@ -276,13 +276,13 @@ module quick_files_module
         ierr=1
         
         call EffChar(inFileName,1,30,k1,k2)
-        write (io,'(" INPUT FILE :    ",a)') inFileName(k1:k2)
+        write (io,'("| INPUT FILE :    ",a)') inFileName(k1:k2)
         call EffChar(outFileName,1,30,k1,k2)
-        write (io,'(" OUTPUT FILE:    ",a)') outFileName(k1:k2)
+        write (io,'("| OUTPUT FILE:    ",a)') outFileName(k1:k2)
         call EffChar(dataFileName,1,30,k1,k2)
-        write (io,'(" DATE FILE  :    ",a)') dataFileName(k1:k2)
+        write (io,'("| DATE FILE  :    ",a)') dataFileName(k1:k2)
         call EffChar(basisdir,1,80,k1,k2)
-        write (io,'(" BASIS SET PATH: ",a)') basisdir(k1:k2)
+        write (io,'("| BASIS SET PATH: ",a)') basisdir(k1:k2)
         
         ierr=0
         return
