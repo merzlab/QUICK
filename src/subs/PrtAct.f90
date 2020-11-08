@@ -20,7 +20,7 @@ subroutine PrtAct(io,line)
   leng=len(line)
   L=0
   write(io,'(a)')
-  write(io,'(" @ ",a)') line
+  write(io,'("| @ ",a)') line
   write(io,'(a)')
   call flush(io)
   return

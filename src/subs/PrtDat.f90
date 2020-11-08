@@ -19,7 +19,7 @@ subroutine PrtDate(io,note)
 
   i=len(note)
   call GDate(datim)
-  write (io,*) note(1:i)//' '//datim(1:24)
+  write (io,'(a)') '| '//note(1:i)//' '//datim(1:24)
   call flush(io)
 end subroutine PrtDate
 
