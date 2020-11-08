@@ -37,277 +37,211 @@
 | **                   restrictions set forth in the license agreement also apply to this                **
 | **                   software.                                                                         **
 | *********************************************************************************************************
-|
+                                                                                                           
 | Cite this work as:                                                                                       
 | Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03        
 | University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
-|
+                                                                                                           
 | If you have any comments or queries, please send us an email for technical support:                      
 | quick.merzlab@gmail.com                                                                                  
-|
-| TASK STARTS ON: Fri Oct 30 20:28:13 2020
+                                                                                                           
+| TASK STARTS ON: Sun Nov  8 13:57:50 2020
 | INPUT FILE :    grad_wat_b3lyp_ccpvdz.in
 | OUTPUT FILE:    grad_wat_b3lyp_ccpvdz.out
 | DATE FILE  :    grad_wat_b3lyp_ccpvdz.dat
 | BASIS SET PATH: /server-home1/madu/Work/Qk/dipolefix/basis
-|
-||------------ GPU INFORMATION ---------------
-|| CUDA ENABLED DEVICE         :        4
-|| CUDA DEVICE IN USE          :        0
-|| CUDA DEVICE NAME            : TITAN V
-|| CUDA DEVICE PM              :       80
-|| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-|| CUDA DEVICE MEMORY SIZE (MB):    12066
-|| SUPPORTING CUDA VERSION     :      7.0
-||--------------------------------------------
-|
+ 
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
+
 | @ Read Job And Atom
-|
-|  -------------------------------------
-KEYWORD=DFT B3LYP BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT EXTCHARGES                                                                                                                               
-|  -------------------------------------
-| ============== JOB CARD =============
-|| METHOD = DENSITY FUNCTIONAL THEORY
-|| DENSITY FUNCTIONAL = B3LYP
-|| DIRECT SCF 
-|| SAD INITAL GUESS 
-|| USE DIIS SCF
-|| PRINT ENERGY EVERY CYCLE
-|| EXTERNAL CHARGES
-|| STANDARD GRID = SG1
-|| GRADIENT CALCULATION
-|| MAX SCF CYCLES =    200
-|| MAX DIIS CYCLES =   10
-|| DELTA DENSITY START CYCLE = 1000
-|| COMPUATIONAL CUTOFF: 
-||      TWO-e INTEGRAL   =  0.100E-08
-||      BASIS SET PRIME  =  0.100E-19
-||      MATRIX ELEMENTS  =  0.100E-09
-||      BASIS FUNCTION   =  0.100E-09
-||      GRADIENT CUTOFF  =  0.100E-08
-|| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
-|| BASIS SET = CC-PVDZ                                                                         
-|| BASIS FILE = /server-home1/madu/Work/Qk/dipolefix/basis/CC-PVDZ.BAS
-|
+
+  KEYWORD=DFT B3LYP BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT EXTCHARGES                                                                                                                               
+ ============== JOB CARD =============
+| METHOD = DENSITY FUNCTIONAL THEORY
+| DENSITY FUNCTIONAL = B3LYP
+| DIRECT SCF 
+| SAD INITAL GUESS 
+| USE DIIS SCF
+| PRINT ENERGY EVERY CYCLE
+| EXTERNAL CHARGES
+| STANDARD GRID = SG1
+| GRADIENT CALCULATION
+| MAX SCF CYCLES =    200
+| MAX DIIS CYCLES =   10
+| DELTA DENSITY START CYCLE = 1000
+| COMPUATIONAL CUTOFF: 
+|      TWO-e INTEGRAL   =  0.100E-08
+|      BASIS SET PRIME  =  0.100E-19
+|      MATRIX ELEMENTS  =  0.100E-09
+|      BASIS FUNCTION   =  0.100E-09
+|      GRADIENT CUTOFF  =  0.100E-08
+| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+| BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
+| BASIS FILE = /server-home1/madu/Work/Qk/dipolefix/basis/CC-PVDZ.BAS
+
 | @ Finish reading job
-|
-|
+
+
 | @ Begin SAD initial guess
-|
+
 | For Atom Kind =    1
 | ELEMENT = O 
 | BASIS FUNCTIONS =   15
-|
-| @ Begin Energy Calculation
-|
-|
-|SCF CYCLE      =        1      TIME      =     0.40
-|RMS CHANGE     = 0.296870E+00  MAX CHANGE= 0.255143E+01
-|
-|SCF CYCLE      =        2      TIME      =     0.40
-|RMS CHANGE     = 0.195298E+00  MAX CHANGE= 0.162836E+01
-|
-|SCF CYCLE      =        3      TIME      =     0.39
-|RMS CHANGE     = 0.133006E-01  MAX CHANGE= 0.107446E+00
-|
-|SCF CYCLE      =        4      TIME      =   0.40
-|DIIS CYCLE     =        1      MAX ERROR = 0.417196E-02
-|RMS CHANGE     = 0.336070E-02  MAX CHANGE= 0.248946E-01
-|
-|SCF CYCLE      =        5      TIME      =   0.39
-|DIIS CYCLE     =        2      MAX ERROR = 0.137477E-02
-|RMS CHANGE     = 0.128039E-02  MAX CHANGE= 0.965241E-02
-|
-|SCF CYCLE      =        6      TIME      =   0.39
-|DIIS CYCLE     =        3      MAX ERROR = 0.610672E-03
-|RMS CHANGE     = 0.119887E-02  MAX CHANGE= 0.815223E-02
-|
-|SCF CYCLE      =        7      TIME      =   0.39
-|DIIS CYCLE     =        4      MAX ERROR = 0.149701E-03
-|RMS CHANGE     = 0.381018E-03  MAX CHANGE= 0.266119E-02
-|
-|SCF CYCLE      =        8      TIME      =   0.39
-|DIIS CYCLE     =        5      MAX ERROR = 0.777015E-05
-|RMS CHANGE     = 0.509156E-05  MAX CHANGE= 0.566340E-04
-|
-|SCF CYCLE      =        9      TIME      =   0.41
-|DIIS CYCLE     =        6      MAX ERROR = 0.279060E-06
-|RMS CHANGE     = 0.297920E-06  MAX CHANGE= 0.279469E-05
-|PREPARING FOR FINAL NO INTERPOLATION ITERATION
-|
-|SCF CYCLE      =       10      TIME      =     0.44
-|RMS CHANGE     = 0.532360E-07  MAX CHANGE= 0.471726E-06
-|CONVERGED!!!!!
-|ELECTRONIC ENERGY    =     0.000000000
-|CORE_CORE REPULSION  =     0.000000000
-|EXT CHARGE REPULSION =     0.000000000
-TOTAL ENERGY         =     0.000000000
-|
-| @ End Energy calculation
-|
 | For Atom Kind =    2
 | ELEMENT = H 
 | BASIS FUNCTIONS =    5
-|
-| @ Begin Energy Calculation
-|
-|
-|SCF CYCLE      =        1      TIME      =     0.00
-|RMS CHANGE     = 0.111671E+00  MAX CHANGE= 0.282730E+00
-|
-|SCF CYCLE      =        2      TIME      =     0.00
-|RMS CHANGE     = 0.733887E-01  MAX CHANGE= 0.311169E+00
-|
-|SCF CYCLE      =        3      TIME      =   0.00
-|DIIS CYCLE     =        1      MAX ERROR = 0.148643E-01
-|RMS CHANGE     = 0.316601E-01  MAX CHANGE= 0.128826E+00
-|
-|SCF CYCLE      =        4      TIME      =   0.00
-|DIIS CYCLE     =        2      MAX ERROR = 0.542278E-02
-|RMS CHANGE     = 0.194475E-01  MAX CHANGE= 0.772765E-01
-|DIIS FAILED !! RETURN TO NORMAL SCF. (NOT FATAL.)
-|
-|SCF CYCLE      =        5      TIME      =     0.00
-|RMS CHANGE     = 0.216140E-09  MAX CHANGE= 0.850999E-09
-|CONVERGED!!!!!
-|ELECTRONIC ENERGY    =     0.000000000
-|CORE_CORE REPULSION  =     0.000000000
-|EXT CHARGE REPULSION =     0.000000000
-TOTAL ENERGY         =     0.000000000
-|
-| @ End Energy calculation
-|
-|
+
 | @ Finish SAD initial guess
-|
-|
+
+
 | @ Begin Reading Molecular Information
-|
-|
-| =========== Molecule Input ==========
-|| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
-|| TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
-|| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
-|| NUMBER OF EXTERNAL POINT CHARGES =    3
-|| NUMBER OF ELECTRONS     =   10
-|
-| -- INPUT GEOMETRY -- :
-|    O          -0.7415       1.7521       2.8963
-|    H          -1.1112       0.9798       3.3523
-|    H          -0.9205       2.0364       1.9840
-|
-| -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- 
-|    -0.8340    1.6492     0.0000    -2.3560
-|     0.4170    0.5448     0.0000    -3.8000
-|     0.4170    0.5448     0.0000    -0.9121
-|
-| -- DISTANCE MATRIX -- :
-|              1           2           3
-|      1     0.00000
-|      2     1.83324     0.00000
-|      3     1.83707     3.28673     0.00000
-|
-|============== BASIS INFOS ==============
-|| BASIS FUNCTIONS =   25
-|| NSHELL =   12 NPRIM  =   37
-|| JSHELL =   12 JBASIS =   37
-|
-|
+
+
+ =========== Molecule Input ==========
+| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+| TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
+| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+| NUMBER OF EXTERNAL POINT CHARGES =    3
+| NUMBER OF ELECTRONS     =   10
+ 
+ -- INPUT GEOMETRY -- :
+    O          -0.7415       1.7521       2.8963
+    H          -1.1112       0.9798       3.3523
+    H          -0.9205       2.0364       1.9840
+ 
+ -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- 
+    -0.8340    1.6492     0.0000    -2.3560
+     0.4170    0.5448     0.0000    -3.8000
+     0.4170    0.5448     0.0000    -0.9121
+ 
+ -- DISTANCE MATRIX -- :
+              1           2           3
+      1     0.00000
+      2     1.83324     0.00000
+      3     1.83707     3.28673     0.00000
+ 
+============== BASIS INFOS ==============
+| BASIS FUNCTIONS =   25
+| NSHELL =   12 NPRIM  =   37
+| JSHELL =   12 JBASIS =   37
+ 
+
 | @ End Reading Molecular Information 
-|
-|
+
+
+| @ Begin XC Quadrature Formation
+
+| OCTAGO: OCTree Algorithm for Grid Operations 
+|   PRUNING CUTOFF       = 0.100E-09
+|   INITIAL GRID POINTS  =       11320
+|   FINAL GRID POINTS    =        7993
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        4206
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        6116
+
+| @ End XC Quadrature Formation
+
+
 | @ Begin Energy Calculation
-|
-|                                         SCF ENERGY
-|------------------------------------------------------------------------------------------------------------------------
-|NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-|------------------------------------------------------------------------------------------------------------------------
-|  1    -76.471415518      ------         0.806     1        0.78      0.03      0.42    0.1587E+01  0.1116E+00  0.9205E+00
-|  2    -76.331104254  -.140311E+00       0.031     2        0.01      0.02      0.01    0.1842E+00  0.6404E-01  0.6117E+00
-|  3    -76.306217402  -.248869E-01       0.031     3        0.01      0.02      0.01    0.2230E+00  0.3441E-01  0.3442E+00
-|  4    -76.407952079  0.101735E+00       0.030     4        0.01      0.02      0.01    0.6521E-02  0.1296E-02  0.1265E-01
-|  5    -76.408021628  0.695490E-04       0.031     5        0.01      0.02      0.01    0.1434E-02  0.2300E-03  0.2246E-02
-|  6    -76.408024818  0.319069E-05       0.031     6        0.01      0.02      0.01    0.1696E-03  0.3688E-04  0.3448E-03
-|  7    -76.408024874  0.553821E-07       0.031     7        0.01      0.02      0.01    0.4736E-04  0.7211E-05  0.7521E-04
-|    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  8    -76.408024766  -.107726E-06       0.032     8        0.01      0.02      0.01    0.3002E-05  0.9881E-06  0.9605E-05
-|------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER   8 CYLCES
-| MAX ERROR = 0.300238E-05   RMS CHANGE = 0.988119E-06   MAX CHANGE = 0.960509E-05
-| -----------------------------------------------
-|ALPHA ELECTRON DENSITY    =    5.0000014249
-|BETA ELECTRON DENSITY     =    5.0000014249
-|ELECTRONIC ENERGY    =   -85.518435236
-|CORE_CORE REPULSION  =     9.110410470
-|EXT CHARGE REPULSION =    -0.170609996
-TOTAL ENERGY         =   -76.408024766
-|
+
+                                         SCF ENERGY
+------------------------------------------------------------------------------------------------------------------------
+NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+------------------------------------------------------------------------------------------------------------------------
+|  1    -76.429747274      ------         0.583     1        0.56      0.03      0.30    0.1585E+01  0.1114E+00  0.8830E+00
+|  2    -76.336387614  -.933597E-01       0.028     2        0.01      0.02      0.01    0.1808E+00  0.6216E-01  0.5900E+00
+|  3    -76.311558212  -.248294E-01       0.029     3        0.01      0.02      0.01    0.2167E+00  0.3346E-01  0.3329E+00
+|  4    -76.407963850  0.964056E-01       0.028     4        0.01      0.02      0.01    0.6343E-02  0.1106E-02  0.9900E-02
+|  5    -76.408022277  0.584273E-04       0.032     5        0.01      0.02      0.01    0.1312E-02  0.1951E-03  0.1689E-02
+|  6    -76.408024830  0.255281E-05       0.029     6        0.01      0.02      0.01    0.1472E-03  0.3245E-04  0.2689E-03
+|  7    -76.408024874  0.441666E-07       0.029     7        0.01      0.02      0.01    0.3718E-04  0.7009E-05  0.7241E-04
+    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+|  8    -76.408024766  -.107937E-06       0.029     8        0.01      0.02      0.01    0.2998E-05  0.1067E-05  0.9208E-05
+|  9    -76.408024766  0.401013E-10       0.030     9        0.01      0.02      0.01    0.4610E-06  0.1268E-06  0.1289E-05
+------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER   9 CYLCES
+| MAX ERROR = 0.460971E-06   RMS CHANGE = 0.126817E-06   MAX CHANGE = 0.128880E-05
+ -----------------------------------------------
+| ALPHA ELECTRON DENSITY    =    5.0000014249
+| BETA ELECTRON DENSITY     =    5.0000014249
+  ELECTRONIC ENERGY    =   -85.518435237
+  CORE_CORE REPULSION  =     9.110410470
+  EXT CHARGE REPULSION =    -0.170609996
+  TOTAL ENERGY         =   -76.408024766
+
 | @ End Energy calculation
-|
-|
-| ANALYTICAL GRADIENT: 
-|----------------------------------------
-| COORDINATE    XYZ            GRADIENT
-|----------------------------------------
-    1X    -0.7415300566    -0.0252563122
-    1Y     1.7521301338    -0.0225986288
-    1Z     2.8962802212    -0.0181905371
-    2X    -1.1111510849     0.0102140240
-    2Y     0.9797690748    -0.0035232091
-    2Z     3.3522902560     0.0292524797
-    3X    -0.9205000703     0.0152461197
-    3Y     2.0364501555     0.0259263908
-    3Z     1.9840401515    -0.0111572235
-|----------------------------------------
-|
-| POINT CHARGE GRADIENT: 
-|----------------------------------------
-| COORDINATE    XYZ            GRADIENT
-|----------------------------------------
-    1X     1.6492001259     0.0004021706
-    1Y     0.0000000000    -0.0000672814
-    1Z    -2.3560001799    -0.0000224239
+
+
+ ANALYTICAL GRADIENT: 
+----------------------------------------
+ COORDINATE    XYZ            GRADIENT
+----------------------------------------
+    1X    -0.7415300566    -0.0252561578
+    1Y     1.7521301338    -0.0225985090
+    1Z     2.8962802212    -0.0181903819
+    2X    -1.1111510849     0.0102139296
+    2Y     0.9797690748    -0.0035234282
+    2Z     3.3522902560     0.0292526203
+    3X    -0.9205000703     0.0152460598
+    3Y     2.0364501555     0.0259264897
+    3Z     1.9840401515    -0.0111575195
+----------------------------------------
+
+ POINT CHARGE GRADIENT: 
+----------------------------------------
+ COORDINATE    XYZ            GRADIENT
+----------------------------------------
+    1X     1.6492001259     0.0004021708
+    1Y     0.0000000000    -0.0000672817
+    1Z    -2.3560001799    -0.0000224242
     2X     0.5448000416    -0.0001121167
-    2Y     0.0000000000     0.0000330093
-    2Z    -3.8000002902     0.0000942206
-    3X     0.5448000416    -0.0005052398
-    3Y     0.0000000000     0.0002206270
-    3Z    -0.9121000697     0.0000410719
-|----------------------------------------
-|
+    2Y     0.0000000000     0.0000330094
+    2Z    -3.8000002902     0.0000942207
+    3X     0.5448000416    -0.0005052400
+    3Y     0.0000000000     0.0002206274
+    3Z    -0.9121000697     0.0000410722
+----------------------------------------
+
 | @ Output Timing Information
-|
-|------------- TIMING ---------------
-|INITIAL GUESS TIME  =     6.392172000( 72.58%)
-|DFT GRID OPERATIONS =     0.033888000(  0.38%)
-|      TOTAL GRID FORMATION TIME   =     0.000359000(  0.00%)
-|      TOTAL GRID WEIGHT TIME      =     0.000977000(  0.01%)
-|      TOTAL OCTREE RUN TIME       =     0.020000000(  0.23%)
-|      TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
-|      TOTAL DATA PACKING TIME     =     0.012552000(  0.14%)
-|TOTAL SCF TIME      =     1.024955000( 11.64%)
-|      TOTAL OP TIME      =     0.171546000(  1.95%)
-|            OVERLAP 1e INTEGRALS TIME      =     0.000890000(  0.01%)
-|            OVERLAP 1e DIAGONALIZATION TIME =     0.000122000(  0.00%)
-|            TOTAL 1e TIME      =     0.002549000(  0.03%)
-|               KINETIC 1e INTEGRALS TIME    =     0.001768000(  0.02%)
-|               ATTRACTION 1e INTEGRALS TIME =     0.000777000(  0.01%)
-|            TOTAL 2e TIME      =     0.141947000(  1.61%)
-|            TOTAL EXC TIME     =     0.026893000(  0.31%)
-|            TOTAL ENERGY TIME  =     0.000047000(  0.00%)
-|      TOTAL DII TIME      =     0.853279000(  9.69%)
-|            TOTAL DIAG TIME    =     0.485466000(  5.51%)
-|TOTAL GRADIENT TIME      =     0.262878000(  2.98%)
-|      TOTAL NUCLEAR GRADIENT TIME =     0.000022000(  0.00%)
-|      TOTAL 1e GRADIENT TIME      =     0.014103000(  0.16%)
-|         KINETIC 1e GRADIENT TIME      =     0.011626000(  0.13%)
-|         ATTRACTION 1e GRADIENT TIME   =     0.002469000(  0.03%)
-|      TOTAL 2e GRADIENT TIME      =     0.245471000(  2.79%)
-|      TOTAL EXC GRADIENT TIME     =     0.017375000(  0.20%)
-|TOTAL TIME          =     8.807488000
-|------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  8.8 seconds.
-|
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     2.038083000( 48.59%)
+| DFT GRID OPERATIONS =     0.025351000(  0.60%)
+|       TOTAL GRID FORMATION TIME   =     0.000259000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.000824000(  0.02%)
+|       TOTAL OCTREE RUN TIME       =     0.010000000(  0.24%)
+|       TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
+|       TOTAL DATA PACKING TIME     =     0.014268000(  0.34%)
+| TOTAL SCF TIME      =     0.817634000( 19.49%)
+|       TOTAL OP TIME      =     0.172334000(  4.11%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.000387000(  0.01%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000145000(  0.00%)
+|             TOTAL 1e TIME      =     0.001605000(  0.04%)
+|                KINETIC 1e INTEGRALS TIME    =     0.001125000(  0.03%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.000476000(  0.01%)
+|             TOTAL 2e TIME      =     0.143105000(  3.41%)
+|             TOTAL EXC TIME     =     0.027359000(  0.65%)
+|             TOTAL ENERGY TIME  =     0.000092000(  0.00%)
+|       TOTAL DII TIME      =     0.645130000( 15.38%)
+|             TOTAL DIAG TIME    =     0.377083000(  8.99%)
+| TOTAL GRADIENT TIME      =     0.244710000(  5.83%)
+|       TOTAL NUCLEAR GRADIENT TIME =     0.000007000(  0.00%)
+|       TOTAL 1e GRADIENT TIME      =     0.017703000(  0.42%)
+|          KINETIC 1e GRADIENT TIME      =     0.014257000(  0.34%)
+|          ATTRACTION 1e GRADIENT TIME   =     0.003434000(  0.08%)
+|       TOTAL 2e GRADIENT TIME      =     0.222127000(  5.30%)
+|       TOTAL EXC GRADIENT TIME     =     0.022550000(  0.54%)
+| TOTAL TIME          =     4.194765000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes  4.2 seconds.
+
 | @ Finish Output Timing Information
-|
-| Normal Termination. Task Finished on: Fri Oct 30 20:28:26 2020
+
+| Normal Termination. Task Finished on: Sun Nov  8 13:57:59 2020
