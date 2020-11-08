@@ -573,7 +573,7 @@ subroutine electdiis(jscf)
          current_diis=mod(idiis-1,quick_method%maxdiisscf)
          current_diis=current_diis+1
 
-         write (ioutfile,'(I3,1x)',advance="no") jscf
+         write (ioutfile,'("|",I3,1x)',advance="no") jscf
          if(quick_method%printEnergy)then
             write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
             if (jscf.ne.1) then
@@ -590,7 +590,7 @@ subroutine electdiis(jscf)
          write (ioutfile,'(E10.4,2x)',advance="no") errormax
          write (ioutfile,'(E10.4,2x,E10.4)')  PRMS,PCHANGE
 
-         if (lsolerr /= 0) write (ioutfile,'("DIIS FAILED !!", &
+         if (lsolerr /= 0) write (ioutfile,'("| DIIS FAILED !!", &
                & " PERFORM NORMAL SCF. (NOT FATAL.)")')
 
          if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF)then
@@ -599,24 +599,24 @@ subroutine electdiis(jscf)
             else
                write(ioutfile,'(90("-"))')
             endif
-            write (ioutfile,'(" REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
-            write (ioutfile,'(" MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
+            write (ioutfile,'("| REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
+            write (ioutfile,'("| MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
                   errormax,prms,pchange
             write (ioutfile,*) '-----------------------------------------------'
             if (quick_method%DFT .or. quick_method%SEDFT) then
-               write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
-               write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
+               write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
+               write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
             endif
 
-            if (quick_method%prtgap) write (ioutfile,'("HOMO-LUMO GAP (EV) =",11x,F12.6)') &
+            if (quick_method%prtgap) write (ioutfile,'("| HOMO-LUMO GAP (EV) =",11x,F12.6)') &
                   (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
             diisdone=.true.
 
 
          endif
          if(jscf >= quick_method%iscf-1) then
-            write (ioutfile,'("RAN OUT OF CYCLES.  NO CONVERGENCE.")')
-            write (ioutfile,'("PERFORM FINAL NO INTERPOLATION ITERATION")')
+            write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+            write (ioutfile,'("| PERFORM FINAL NO INTERPOLATION ITERATION")')
             diisdone=.true.
          endif
          diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
