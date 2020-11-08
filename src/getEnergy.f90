@@ -117,12 +117,12 @@ subroutine getEnergy(failed)
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
       if (ioutfile.ne.0) then
-         write (ioutfile,'("ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
-         write (ioutfile,'("CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
+         write (ioutfile,'(" ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
+         write (ioutfile,'(" CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then
-            write (ioutfile,'("EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
+            write (ioutfile,'(" EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
          endif
-         write (ioutfile,'("TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
+         write (ioutfile,'(" TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
          call prtact(ioutfile,"End Energy calculation")
          call flush(ioutfile)
       endif
