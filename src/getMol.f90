@@ -140,7 +140,6 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
 
    ! Check for errors.
    if (natom == 1 .and. quick_method_arg%opt) then
-      call PrtWrn(io," ONLY ONE ATOM, TURN OFF OPTIMIZATION.")
       quick_method_arg%opt=.false.
    endif
 
