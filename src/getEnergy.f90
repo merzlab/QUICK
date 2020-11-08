@@ -24,8 +24,14 @@ subroutine getEnergy(failed, isGuess)
    logical :: failed
 
     !Form the exchange-correlation quadrature if DFT is requested
-    if (quick_method%DFT) then
+    if (quick_method%DFT .and. .not. isGuess) then
+        if (master) call PrtAct(ioutfile,"Begin XC Quadrature Formation")
+
         call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
+
+        if (master) call print_grid_info(quick_dft_grid)
+
+        if (master) call PrtAct(ioutfile,"End XC Quadrature Formation")
     endif
 
    if (master) then
