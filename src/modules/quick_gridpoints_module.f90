@@ -118,8 +118,6 @@ module quick_gridpoints_module
    
     integer :: ang_gps = 194
 
-    integer :: idx_grid = 0
-
     end type quick_xcg_tmp_type
 
 
