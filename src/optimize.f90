@@ -146,7 +146,7 @@ subroutine optimize(failed)
 
 #endif
 
-      call getEnergy(failed)
+      call getEnergy(failed, .false.)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.

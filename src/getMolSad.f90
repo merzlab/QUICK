@@ -144,7 +144,7 @@ subroutine getmolsad()
          endif
          ! From SCF calculation to get initial density guess
          if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
-            call getenergy(failed)
+            call getenergy(failed, .true.)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
