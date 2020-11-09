@@ -528,6 +528,10 @@ subroutine electdiis(jscf)
 
          call CopyDMat(quick_qm_struct%dense,quick_scratch%hold,nbasis) ! Save DENSE to HOLD
 
+#if defined(CUDA) || defined(CUDA_MPIV)
+         call gpu_get_dmx(quick_qm_struct%co, quick_qm_struct%dense)
+#else
+
          ! PIJ=SIGMA[i=1,nelec/2]2CJK*CIK
          do I=1,nbasis
             do J=1,nbasis
@@ -538,6 +542,7 @@ subroutine electdiis(jscf)
                quick_qm_struct%dense(J,I) = DENSEJI*2.d0
             enddo
          enddo
+#endif
 
          call cpu_time(timer_end%TDII)
 
