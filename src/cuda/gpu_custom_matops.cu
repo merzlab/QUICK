@@ -33,6 +33,7 @@ void upload_sim_to_constant_matop(_gpu_type gpu){
 static float totTime;
 #endif
 
+// launch kernel to compute new density matrix
 void get_dmx(_gpu_type gpu){
 
 #ifdef DEBUG
@@ -57,4 +58,24 @@ void get_dmx(_gpu_type gpu){
 
 }
 
+// compute new density matrix
+__global__ void get_dmx_kernel(){
 
+  unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+  int totalThreads = blockDim.x*gridDim.x;
+
+  for (QUICKULL gid = offset; gid < devSim_matop.nbasis * devSim_matop.nbasis; gid += totalThreads) {
+
+    QUICKULL i = (QUICKULL) (gid/devSim_matop.nbasis);
+    QUICKULL j = (QUICKULL) (gid - i*devSim_matop.nbasis);
+
+    QUICKDouble denseji=0.0;
+
+    for(int k=0; k<devSim_matop.nElec/2; k++){
+      denseji = denseji + LOC2(devSim_matop.co, j, k, devSim_matop.nbasis, devSim_matop.nbasis) * 
+                          LOC2(devSim_matop.co, i, k, devSim_matop.nbasis, devSim_matop.nbasis);
+    } 
+
+    LOC2(devSim_matop.dense, j, i, devSim_matop.nbasis, devSim_matop.nbasis) = denseji * 2.0;
+  }
+}
