@@ -2923,4 +2923,37 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     
 }
 
+//-----------------------------------------------
+//  calculate new density matrix
+//-----------------------------------------------
+extern "C" void gpu_get_dmx_(QUICKDouble* co, QUICKDouble* dense){
+
+  PRINTDEBUG("BEGINNING TO COMPUTE DMX")
+
+  // upload mo coefficients and density matrix to gpu
+  gpu -> gpu_calculated -> co    =   new cuda_buffer_type<QUICKDouble>(co,  gpu->nbasis, gpu->nbasis);
+  gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+  
+  gpu -> gpu_calculated -> co    -> Upload();
+  gpu -> gpu_calculated -> dense    -> Upload();
+
+  gpu -> gpu_sim.co             =  gpu -> gpu_calculated -> co -> _devData;
+  gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+
+  upload_sim_to_constant_matop(gpu);
+
+  // calculate the new density matrix
+  get_dmx(gpu);
+
+  // download the new density matrix and transfer into f90 
+  gpu -> gpu_calculated -> dense -> Download();
+  gpu -> gpu_calculated -> dense    -> Download(dense);
+ 
+  // relinquish memory
+  SAFE_DELETE(gpu -> gpu_calculated -> co)
+  SAFE_DELETE(gpu -> gpu_calculated -> dense) 
+
+  PRINTDEBUG("DONE COMPUTING DMX")
+
+}
 
