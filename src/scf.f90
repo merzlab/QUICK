@@ -528,20 +528,13 @@ subroutine electdiis(jscf)
 
          call CopyDMat(quick_qm_struct%dense,quick_scratch%hold,nbasis) ! Save DENSE to HOLD
 
+         ! Form new density matrix using MO coefficients
 #if defined(CUDA) || defined(CUDA_MPIV)
-         call gpu_get_dmx(quick_qm_struct%co, quick_qm_struct%dense)
+         call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+               nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #else
-
-         ! PIJ=SIGMA[i=1,nelec/2]2CJK*CIK
-         do I=1,nbasis
-            do J=1,nbasis
-               DENSEJI = 0.d0
-               do K=1,quick_molspec%nelec/2
-                  DENSEJI = DENSEJI + (quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
-               enddo
-               quick_qm_struct%dense(J,I) = DENSEJI*2.d0
-            enddo
-         enddo
+         call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+               nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #endif
 
          call cpu_time(timer_end%TDII)
