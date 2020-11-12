@@ -208,14 +208,14 @@ static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
 
 
 // Energy Scale
-static const QUICKDouble OSCALE                  = (QUICKDouble) 1E16;
+static const QUICKDouble OSCALE                  = (QUICKDouble) 1E12;
 static const QUICKDouble ONEOVEROSCALE           = (QUICKDouble)1.0 / OSCALE;
 static const QUICKDouble ONEOVEROSCALESQUARED    = (QUICKDouble)1.0 / (OSCALE * OSCALE);
 
 
 static const QUICKDouble GRADSCALE                  = (QUICKDouble)1E16;
-static const QUICKDouble ONEOVERGRADSCALE           = (QUICKDouble)1.0 / OSCALE;
-static const QUICKDouble ONEOVERGRADSCALESQUARED    = (QUICKDouble)1.0 / (OSCALE * OSCALE);
+static const QUICKDouble ONEOVERGRADSCALE           = (QUICKDouble)1.0 / GRADSCALE;
+static const QUICKDouble ONEOVERGRADSCALESQUARED    = (QUICKDouble)1.0 / (GRADSCALE * GRADSCALE);
 
 // SM Version enum
 enum SM_VERSION
