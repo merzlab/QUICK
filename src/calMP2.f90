@@ -155,6 +155,7 @@ subroutine calmp2
      do II=1,jshell
         do JJ=II,jshell
 
+        !print *, "II, JJ, Ycutoff(II,JJ), cutoffmp2/ttt are", II, JJ, Ycutoff(II,JJ), cutoffmp2/ttt
 
            if(Ycutoff(II,JJ).gt.cutoffmp2/ttt)then
             
@@ -169,8 +170,13 @@ subroutine calmp2
 
               do KK=1,jshell
                  do LL=KK,jshell
+
+                    !print *, "initilize orbmp2i331, orbmp2j331 for each ii,jj,kk,ll"
+                    !call initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasistemp)
+                    !call initialOrbmp2ij(orbmp2j331,nstep,nsteplength,ivir,nbasistemp,nbasistemp)
+
                     print *, " "
-                    print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL
+                    !print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL
                     ! Schwarts cutoff is implemented here
                     comax=0.d0
                     testCutoff = Ycutoff(II,JJ)*Ycutoff(KK,LL)
@@ -210,6 +216,28 @@ subroutine calmp2
                           !print *, "before shellmp2, II,JJ,KK,LL are", II, JJ, KK, LL
                           call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
                        endif
+                                                
+                       print *, "in calmp2, ii,jj,kk,ll are",ii-1,jj-1,kk-1,ll-1
+
+
+           print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
+           do ind1= 1, 1       !to jshell
+                do ind2= 1, 1      !to nbasis
+                    do ind3=1, nbasistemp
+                        do ind4=1, nbasistemp
+                            do ind5=1, 2
+                                write(*, '(f10.6)', advance='no'),&
+                                    orbmp2i331(ind1, ind2, ind3, ind4, ind5)
+                            end do
+                        end do
+                        write(*,'(" ")')  ! inner two layers on the same line
+                    end do
+                end do
+           end do
+
+
+
+
 
                     endif
 
