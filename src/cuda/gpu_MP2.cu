@@ -45,8 +45,6 @@ void upload_sim_to_constant_MP2(_gpu_type gpu){
 
 __global__ void printY()
 {
-    //printf("devSim_MP2.nbasis is %d\n", devSim_MP2.nbasis);
-        
     for(int i=0;i<devSim_MP2.nbasis;i++)
     {
         for(int j=0;j<devSim_MP2.nbasis;j++)
@@ -128,6 +126,21 @@ __global__ void printQsQfbasis()
 	
 }
 
+__global__ void printQstartQfinal()
+{
+	printf("in gpu, print Qstart\n");
+	for(int i=0;i<devSim_MP2.nshell;i++)
+		printf("%d ", devSim_MP2.Qstart[i]);
+	printf("\n");
+
+	printf("in gpu, print Qfinal\n");
+	for(int i=0;i<devSim_MP2.nshell;i++)
+        printf("%d ", devSim_MP2.Qfinal[i]);
+    printf("\n");
+
+}
+
+
 __global__ void forthQuarterTrans()
 {
 	printf("Start 4th Quarter Transformation and finally summation\n");
@@ -180,6 +193,397 @@ __global__ void forthQuarterTrans()
 
 }
 
+__global__ void firstThreeQuartersTransV2()
+{
+	int jshell = devSim_MP2.jshell;
+	for(int II=0; II<jshell; II++)
+	{
+		for(int JJ=II; JJ<jshell; JJ++)
+		{
+			printf("reinitialize devSim_MP2.orbmp2i331 and devSim_MP2.orbmp2j331\n");
+        	for(int ind=0;ind<devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2;ind++)
+            	devSim_MP2.orbmp2i331[ind]=0;
+        	for(int ind=0;ind<devSim_MP2.nElec/2*(devSim_MP2.nbasis-devSim_MP2.nElec/2)*10*10*2;ind++)
+            	devSim_MP2.orbmp2j331[ind]=0;	
+
+			for(int KK=0; KK<jshell; KK++)
+			{
+				for(int LL=KK; LL<jshell; LL++)
+				{	
+					// int K = devSim_MP2.sorted_Qnumber[KK]; OR int K = quick_basis%Qstart(KK)
+					//int KK111 = LOC2(devSim_MP2.Qsbasis, KK, K, devSim_MP2.nshell, 4);
+					
+					//Here call shellmp2:
+					
+					int NII1=devSim_MP2.Qstart[II];
+   					int NII2=devSim_MP2.Qfinal[II];
+   					int NJJ1=devSim_MP2.Qstart[JJ];
+   					int NJJ2=devSim_MP2.Qfinal[JJ];
+   					int NKK1=devSim_MP2.Qstart[KK];
+   					int NKK2=devSim_MP2.Qfinal[KK];
+   					int NLL1=devSim_MP2.Qstart[LL];
+   					int NLL2=devSim_MP2.Qfinal[LL];
+
+					for(int I=NII1; I<=NII2; I++)
+					{
+						for(int J=NJJ1; J<=NJJ2; J++)
+						{
+							for(int K=NKK1; K<=NKK2; K++)
+							{
+								for(int L=NLL1; L<=NLL2; L++)
+								{
+									QUICKDouble DNMax = 0;
+									firstQuarterTrans(I, J, K, L, II, JJ, KK, LL, DNMax);
+								}
+							}
+						}
+					}
+			
+					
+				}
+			}
+			//Here do 2nd and 3rd transformations
+			//second and third quarter transfermation here:
+			
+			/*
+			int ii = devSim_MP2.sorted_Q[II];
+        	int jj = devSim_MP2.sorted_Q[JJ];
+        	int kk = devSim_MP2.sorted_Q[KK];
+        	int ll = devSim_MP2.sorted_Q[LL];
+
+			int iii = devSim_MP2.sorted_Qnumber[II];
+            int jjj = devSim_MP2.sorted_Qnumber[JJ];
+            int kkk = devSim_MP2.sorted_Qnumber[KK];
+            int lll = devSim_MP2.sorted_Qnumber[LL];
+
+            int II111 = LOC2(devSim_MP2.Qsbasis, ii, iii, devSim_MP2.nshell, 4);
+            int II112 = LOC2(devSim_MP2.Qfbasis, ii, iii, devSim_MP2.nshell, 4);
+            int JJ111 = LOC2(devSim_MP2.Qsbasis, jj, jjj, devSim_MP2.nshell, 4);
+            int JJ112 = LOC2(devSim_MP2.Qfbasis, jj, jjj, devSim_MP2.nshell, 4);
+			*/
+
+			int NII1=devSim_MP2.Qstart[II];
+            int NII2=devSim_MP2.Qfinal[II];
+            int NJJ1=devSim_MP2.Qstart[JJ];
+            int NJJ2=devSim_MP2.Qfinal[JJ];
+
+			int NBI1= LOC2(devSim_MP2.Qsbasis, II, NII1, devSim_MP2.nshell, 4);			
+			int NBI2= LOC2(devSim_MP2.Qfbasis, II, NII2, devSim_MP2.nshell, 4);
+			int NBJ1= LOC2(devSim_MP2.Qsbasis, JJ, NJJ1, devSim_MP2.nshell, 4);
+			int NBJ2= LOC2(devSim_MP2.Qfbasis, JJ, NJJ2, devSim_MP2.nshell, 4);
+
+            int II111=NBI1;
+            int II112=NBI2;
+            int JJ111=NBJ1;
+            int JJ112=NBJ2;
+
+
+
+			for(int III=II111; III<=II112; III++)
+                {
+                    for(int JJJ=max(III,JJ111); JJJ<=JJ112; JJJ++)
+                    {
+                        int IIInew = III - II111 +1;
+                        int JJJnew = JJJ - JJ111 +1;
+
+                        // second quarter transformation
+                        for(int LLL=1; LLL<=devSim_MP2.nbasis; LLL++)
+                        {
+                            for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
+                            {
+                                int j33new = j33 + devSim_MP2.nElec/2;
+                                QUICKDouble atemp = LOC2(devSim_MP2.coefficient, LLL-1, j33new-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                int nsteplength = devSim_MP2.nElec/2;
+                                for(int icycle=1; icycle<=nsteplength; icycle++)
+                                {
+                                    QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, \
+                                        devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2),\
+                                            LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,devSim_MP2.nbasis,10,10,2)*atemp);
+
+                                    if(III!=JJJ){
+                                        QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
+                                            devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2), \
+                                                LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,JJJnew-1,IIInew-1,1,devSim_MP2.nElec/2,devSim_MP2.nbasis,10,10,2)*atemp);
+                                    }
+                                }
+                            }
+                        }
+
+						 // third quarter transformation, use devSim_MP2.orbmp2k331 and QUICKADD
+                        for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
+                        {
+                            for(int k33=1; k33<=devSim_MP2.nElec/2; k33++)
+                            {
+                                QUICKDouble atemp = LOC2(devSim_MP2.coefficient, III-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                QUICKDouble atemp2 = LOC2(devSim_MP2.coefficient, JJJ-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                int nsteplength = devSim_MP2.nElec/2;
+                                for(int icycle=1; icycle<=nsteplength; icycle++)
+                                {
+                                    QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,JJJ-1, \
+                                        devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
+                                        LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, \
+                                        (devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2)*atemp);
+                                    if(III!=JJJ){
+                                        QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,III-1, \
+                                            devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
+                                            LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
+                                            devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2)*atemp2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+				}
+		}
+	}
+}
+
+
+
+
+// This kernel used Y_Matrix to finish the first three quarters of transformation on one thread
+//however in kernel, not all (ii,jj,kk,ll) pairs are called only once!! So don't use this one!
+__global__ void firstThreeQuartersTrans()
+{
+	int jshell = devSim_MP2.jshell;
+	printf("in firstThreeQuartersTrans, jshell is %d\n", jshell);
+	
+	int old_ii, old_jj, old_kk, old_ll = -1;
+
+	for(int offside =0; offside<jshell*jshell*jshell*jshell; offside++)
+	{
+		QUICKULL currentInt = offside;
+		QUICKULL a = (QUICKULL) currentInt/(jshell*jshell);
+        QUICKULL b = (QUICKULL) (currentInt - a*jshell*jshell);
+		
+		int II = devSim_MP2.sorted_YCutoffIJ[a].x;
+        int JJ = devSim_MP2.sorted_YCutoffIJ[a].y;
+        int KK = devSim_MP2.sorted_YCutoffIJ[b].x;
+        int LL = devSim_MP2.sorted_YCutoffIJ[b].y;
+
+        int ii = devSim_MP2.sorted_Q[II];
+        int jj = devSim_MP2.sorted_Q[JJ];
+        int kk = devSim_MP2.sorted_Q[KK];
+        int ll = devSim_MP2.sorted_Q[LL];
+	
+		//initialize devSim_MP2.orbmp2i331 and devSim_MP2.orbmp2j331 to 0:
+		//printf("in firstThreeQuartersTrans, ii, jj, kk, ll are %d, %d, %d, %d\n", ii, jj, kk, ll);
+	
+		//if( old_jj!=jj)
+		//{
+		printf("reinitialize devSim_MP2.orbmp2i331 and devSim_MP2.orbmp2j331\n");
+		for(int ind=0;ind<devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2;ind++)
+			devSim_MP2.orbmp2i331[ind]=0;
+        for(int ind=0;ind<devSim_MP2.nElec/2*(devSim_MP2.nbasis-devSim_MP2.nElec/2)*10*10*2;ind++)
+            devSim_MP2.orbmp2j331[ind]=0;	
+	
+		old_ii=ii;
+		old_jj=jj;
+		old_kk=kk;
+		old_ll=ll;
+		//}
+
+
+
+		int nshell = devSim_MP2.nshell;
+            QUICKDouble DNMax = MAX(MAX(4.0*LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell), 4.0*LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
+                                    MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell),     LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
+                                        MAX(LOC2(devSim_MP2.cutMatrix, jj, kk, nshell, nshell),     LOC2(devSim_MP2.cutMatrix, jj, ll, nshell, nshell))));
+
+            if ((LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell))> devSim_MP2.integralCutoff && \
+                (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax) > devSim_MP2.integralCutoff) {
+
+                //Here initialize orbmp2i331 and orbmp2j331 to zero matrices
+
+                int iii = devSim_MP2.sorted_Qnumber[II];
+                int jjj = devSim_MP2.sorted_Qnumber[JJ];
+                int kkk = devSim_MP2.sorted_Qnumber[KK];
+                int lll = devSim_MP2.sorted_Qnumber[LL];
+		
+				//first quarter transfermation here. should be close to iclass_MP2;
+				//firstQuarterTrans(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+				//printf("for ii,jj,kk,ll = %d, %d, %d, %d, after firstQuarterTrans, devSim_MP2.orbmp2i331 is:\n", ii,jj,kk,ll);
+				//for(int ind=0;ind<devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2;ind++)
+            	for(int ind=0;ind<200;ind++)
+					printf("%lf ",devSim_MP2.orbmp2i331[ind]);
+				printf("\n");
+			
+				//second and third quarter transfermation here:
+				int II111 = LOC2(devSim_MP2.Qsbasis, ii, iii, devSim_MP2.nshell, 4);
+                int II112 = LOC2(devSim_MP2.Qfbasis, ii, iii, devSim_MP2.nshell, 4);
+                int JJ111 = LOC2(devSim_MP2.Qsbasis, jj, jjj, devSim_MP2.nshell, 4);
+                int JJ112 = LOC2(devSim_MP2.Qfbasis, jj, jjj, devSim_MP2.nshell, 4);
+
+				for(int III=II111; III<=II112; III++)
+                {
+                    for(int JJJ=max(III,JJ111); JJJ<=JJ112; JJJ++)
+                    {
+                        int IIInew = III - devSim_MP2.Ksumtype[ii]+1;
+                        int JJJnew = JJJ - devSim_MP2.Ksumtype[jj]+1;
+
+                        // second quarter transformation
+                        for(int LLL=1; LLL<=devSim_MP2.nbasis; LLL++)
+                        {
+                            for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
+                            {
+                                int j33new = j33 + devSim_MP2.nElec/2;
+                                QUICKDouble atemp = LOC2(devSim_MP2.coefficient, LLL-1, j33new-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                int nsteplength = devSim_MP2.nElec/2;
+                                for(int icycle=1; icycle<=nsteplength; icycle++)
+                                {
+                                    QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, \
+                                        devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2),\
+                                            LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,devSim_MP2.nbasis,10,10,2)*atemp);
+
+                                    if(III!=JJJ){
+                                        QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
+                                            devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2), \
+                                                LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,JJJnew-1,IIInew-1,1,devSim_MP2.nElec/2,devSim_MP2.nbasis,10,10,2)*atemp);
+                                    }
+                                }
+                            }
+                        }
+
+						// third quarter transformation, use devSim_MP2.orbmp2k331 and QUICKADD
+                        for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
+                        {
+                            for(int k33=1; k33<=devSim_MP2.nElec/2; k33++)
+                            {
+                                QUICKDouble atemp = LOC2(devSim_MP2.coefficient, III-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                QUICKDouble atemp2 = LOC2(devSim_MP2.coefficient, JJJ-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                int nsteplength = devSim_MP2.nElec/2;
+                                for(int icycle=1; icycle<=nsteplength; icycle++)
+                                {
+                                    QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,JJJ-1, \
+                                        devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
+                                        LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, \
+                                        (devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2)*atemp);                                   
+                                    if(III!=JJJ){
+                                        QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,III-1, \
+                                            devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
+                                            LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
+                                            devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),10,10,2)*atemp2);
+                                    }
+                                }
+                            }
+                        }
+					}
+                }
+			}
+	}
+}
+
+__device__ void firstQuarterTrans(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
+{
+
+	int III1 = LOC2(devSim_MP2.Qsbasis, II, I, devSim_MP2.nshell, 4);
+    int III2 = LOC2(devSim_MP2.Qfbasis, II, I, devSim_MP2.nshell, 4);
+    int JJJ1 = LOC2(devSim_MP2.Qsbasis, JJ, J, devSim_MP2.nshell, 4);
+    int JJJ2 = LOC2(devSim_MP2.Qfbasis, JJ, J, devSim_MP2.nshell, 4);
+    int KKK1 = LOC2(devSim_MP2.Qsbasis, KK, K, devSim_MP2.nshell, 4);
+    int KKK2 = LOC2(devSim_MP2.Qfbasis, KK, K, devSim_MP2.nshell, 4);
+    int LLL1 = LOC2(devSim_MP2.Qsbasis, LL, L, devSim_MP2.nshell, 4);
+    int LLL2 = LOC2(devSim_MP2.Qfbasis, LL, L, devSim_MP2.nshell, 4);
+
+	if(II<JJ && KK<LL){
+    for (int III = III1; III <= III2; III++) {
+        //for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
+        for (int JJJ = JJJ1; JJJ <= JJJ2; JJJ++) {
+            //for (int KKK = MAX(III,KKK1); KKK <= KKK2; KKK++) {
+            for (int KKK = KKK1; KKK <= KKK2; KKK++) {
+                //for (int LLL = MAX(KKK,LLL1); LLL <= LLL2; LLL++) {
+                for (int LLL = LLL1; LLL <= LLL2; LLL++) {
+						
+						QUICKDouble Y = LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        //first quarter transformation of ERI!
+						if(fabs(Y)>devSim_MP2.integralCutoff)
+                        {
+                            for(int i3mp2=1; i3mp2<=devSim_MP2.nElec/2; i3mp2++)
+                            {
+                                int i3mp2new = i3mp2; // i3mp2new=nstepmp2s+i3mp2-1 where nstepmp2s should be 1
+                                QUICKDouble atemp = LOC2(devSim_MP2.coefficient, KKK-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
+                                QUICKDouble btemp = LOC2(devSim_MP2.coefficient, LLL-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
+                                int IIInew = III- devSim_MP2.Ksumtype[II]+1;
+                                int JJJnew = JJJ- devSim_MP2.Ksumtype[JJ]+1;
+                                //printf("in gpu_MP2.cu/iclass_MP2, III, JJJ, KKK, LLL and II, JJ are %d %d %d %d and %d %d %d %d\n",\
+                                        III, JJJ, KKK, LLL, II, JJ, KK, LL);
+                                QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2), atemp);
+                                QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,LLL-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2), atemp);
+                                QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,KKK-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2), btemp);
+                                QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,KKK-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2), btemp);
+                                //LOC5(orbmp2i331,i3mp2-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
+                                //LOC5(orbmp2i331,i3mp2-1,LLL-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
+                                //LOC5(orbmp2i331,i3mp2-1,KKK-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
+                                //LOC5(orbmp2i331,i3mp2-1,KKK-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
+                            }
+                        }
+					}
+				}
+			}
+		}   
+	}
+	else
+    {   
+        for(int III=III1; III<=III2; III++)
+        {   
+            if(MAX(III,JJJ1)<=JJJ2)
+            {   
+                for(int JJJ=MAX(III,JJJ1);JJJ<=JJJ2;JJJ++)
+                {   
+                    for(int KKK=KKK1; KKK<=KKK2; KKK++)
+                    {   
+                        if(MAX(KKK,LLL1)<=LLL2)
+                        {   
+                            for(int LLL=MAX(KKK,LLL1);LLL<=LLL2;LLL++)
+                            {   
+                                //printf("in gpu_MP2.cu/iclass_MP2, after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);   
+                                QUICKDouble Y = LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                                //printf("else in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL, and II,JJ,KK,LL, and I,J,K,L are %d %d %d %d,  %d %d %d %d,  %d %d %d %d\n", \
+                                III,JJJ,KKK,LLL, II,JJ,KK,LL, I,J,K,L);
+                                            
+                                if(fabs(Y)>devSim_MP2.integralCutoff)
+                                {   
+                                    for(int i3mp2=1; i3mp2<=devSim_MP2.nElec/2; i3mp2++)
+                                    {   
+                                        int i3mp2new = i3mp2;
+                                        QUICKDouble atemp = LOC2(devSim_MP2.coefficient, KKK-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
+                                        QUICKDouble btemp = LOC2(devSim_MP2.coefficient, LLL-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
+                                        int IIInew = III - devSim_MP2.Ksumtype[II]+1; 
+                                        int JJJnew = JJJ - devSim_MP2.Ksumtype[JJ]+1; 
+                                        QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, LLL-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2),atemp);
+                                        //LOC5(orbmp2i331, i3mp2-1, LLL-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
+                                        
+                                        if(JJJ != III)
+                                        {   
+                                            QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, LLL-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2),atemp);
+                                            //LOC5(orbmp2i331, i3mp2-1, LLL-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
+                                        }
+                                        if(KKK != LLL)
+                                        {   
+                                            QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, KKK-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2),btemp);
+                                            //LOC5(orbmp2i331, i3mp2-1, KKK-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
+                                            if(III != JJJ)
+                                            {   
+                                                QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, KKK-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 10, 10, 2),btemp);
+                                                //LOC5(orbmp2i331, i3mp2-1, KKK-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
+                                            }
+                                        }
+                                    }
+                                
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
+
+
 // totTime is the timer for GPU 2e time. Only on under debug mode
 
 #ifdef DEBUG
@@ -195,18 +599,19 @@ void get2e_MP2(_gpu_type gpu)
     cudaEventRecord(start, 0);
 #endif
     printf("BLOCK= %i, THREADSperBLOCK= %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);
-	printf("before get2e_MP2_kernel, devSim_MP2.orbmp2k331 is\n");
-	printorbmp2k331<<<1,1>>>();
+	//printf("before get2e_MP2_kernel, devSim_MP2.orbmp2k331 is\n");
+	//printorbmp2k331<<<1,1>>>();
 
-	//get2e_MP2_kernel<<<1, gpu->blocks*gpu->twoEThreadsPerBlock>>>(); // use 1 block to use thread sync
     get2e_MP2_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>();
-	
+	printQstartQfinal<<<1,1>>>();	
+
 	//printY<<<1,1>>>();	
     //printCoeff<<<1,1>>>();
-	printKsumtype<<<1,1>>>();
+	//printKsumtype<<<1,1>>>();
+	firstThreeQuartersTransV2<<<1,1>>>();
 	printorbmp2k331<<<1,1>>>();
-	printQsQfbasis<<<1,1>>>();
-	// use a <<<1,1>>> to finish 4th transformation and final summation
+	//printQsQfbasis<<<1,1>>>();
+	// use a <<<1,1>>> to finish 4th transformation and final summation	
 	forthQuarterTrans<<<1,1>>>();
 
 #ifdef DEBUG
@@ -234,23 +639,12 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
     QUICKULL jshell   = (QUICKULL) devSim_MP2.sqrQshell;
     QUICKULL myInt    = (QUICKULL) jshell*jshell / totalThreads;
 	
-	/*
-	if(offside==0)
-	{
-		printf("jshell is %llu\n", jshell);
-		printf("devSim_MP2.nshell is %d\n", devSim_MP2.nshell);
-		printf("devSim_MP2.integralCutoff is %lf\n", devSim_MP2.integralCutoff);
-	}
-	*/  
 
     if ((jshell*jshell - myInt*totalThreads)> offside) myInt++;	//256>offside?
-	//printf("in get2e_MP2_kernel, myInt is %d\n", myInt);    
-
     
 	for (QUICKULL i = 1; i<=myInt; i++) {
 
-		//printf("in get2e_MP2_kernel, using thread: blockIdx.x is %d, threadIdx.x is %d, offside is %d\n", blockIdx.x, threadIdx.x, offside);      
-		printf("in get2e_MP2_kernel, offside is %d\n", offside);
+		//printf("in get2e_MP2_kernel, offside is %d\n", offside);
   
         QUICKULL currentInt = totalThreads * (i-1)+offside;     //currentInt=offside   
         QUICKULL a = (QUICKULL) currentInt/jshell;
@@ -303,26 +697,10 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
         int kk = devSim_MP2.sorted_Q[KK];
         int ll = devSim_MP2.sorted_Q[LL];
 
-		// cannot allocate this amount of mem?
-		printf("for ii,jj,kk,ll = %d, %d, %d, %d, allocate local memory orbmp2i331\n", ii, jj,kk,ll);
-		//QUICKDouble* orbmp2i331 = new QUICKDouble[10];
-		//QUICKDouble orbmp2i331[devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2];
-		QUICKDouble* orbmp2i331 = new QUICKDouble[devSim_MP2.nElec/2*devSim_MP2.nbasis*6*6*2];
-		//QUICKDouble* orbmp2i331 = (QUICKDouble*) malloc(sizeof(QUICKDouble)*devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2);
-		//for(int i=0;i<devSim_MP2.nElec/2*devSim_MP2.nbasis*6*6*2;i++)
-		//	orbmp2i331[i]=0;
+		//printf("for ii,jj,kk,ll = %d, %d, %d, %d, allocate local memory orbmp2i331\n", ii, jj,kk,ll);
+		////QUICKDouble* orbmp2i331 = new QUICKDouble[devSim_MP2.nElec/2*devSim_MP2.nbasis*6*6*2];
+		QUICKDouble* orbmp2i331 = new QUICKDouble[1];
 
-		QUICKDouble* orbmp2j331 = new QUICKDouble[devSim_MP2.nElec/2*(devSim_MP2.nbasis-devSim_MP2.nElec/2)*6*6*2];
-		//for(int i=0;i<devSim_MP2.nElec/2*(devSim_MP2.nbasis-devSim_MP2.nElec/2)*6*6*2;i++)
-        //    orbmp2j331[i]=0;
-	
-		
-        
-		//cudaMemset cannot be in device code
-		//cudaMemset(devSim_MP2.orbmp2i331,0,devSim_MP2.nElec/2*devSim_MP2.nbasis*10*10*2);
-		//cudaMemset(devSim_MP2.orbmp2j331,0,devSim_MP2.nElec/2*(devSim_MP2.nbasis-devSim_MP2.nElec/2)*10*10*2);			
-
-        
             int nshell = devSim_MP2.nshell;
             QUICKDouble DNMax = MAX(MAX(4.0*LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell), 4.0*LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
                                     MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell),     LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
@@ -331,140 +709,16 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
             if ((LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell))> devSim_MP2.integralCutoff && \
                 (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax) > devSim_MP2.integralCutoff) {
                 
-				//Here initialize orbmp2i331 and orbmp2j331 to zero matrices
-
                 int iii = devSim_MP2.sorted_Qnumber[II];
                 int jjj = devSim_MP2.sorted_Qnumber[JJ];
                 int kkk = devSim_MP2.sorted_Qnumber[KK];
                 int lll = devSim_MP2.sorted_Qnumber[LL];
                 
 				//printf("to call iclass_MP2 in kernel, iii, jjj, kkk, lll are %d, %d, %d, %d\n", iii, jjj, kkk, lll);
-                iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, orbmp2i331); // Y should be added to orbmp2i331;               
-            
-				// add orbmp2i331 to orbmp2j331
-				//not sure if correct
-				int II111 = LOC2(devSim_MP2.Qsbasis, ii, iii, devSim_MP2.nshell, 4);
-    			int II112 = LOC2(devSim_MP2.Qfbasis, ii, iii, devSim_MP2.nshell, 4);
-    			int JJ111 = LOC2(devSim_MP2.Qsbasis, jj, jjj, devSim_MP2.nshell, 4);
-    			int JJ112 = LOC2(devSim_MP2.Qfbasis, jj, jjj, devSim_MP2.nshell, 4);
-			
-				for(int III=II111; III<=II112; III++)
-				{
-					for(int JJJ=max(III,JJ111); JJJ<=JJ112; JJJ++)
-					{
-						int IIInew = III - devSim_MP2.Ksumtype[ii]+1;
-						int JJJnew = JJJ - devSim_MP2.Ksumtype[jj]+1;
-						
-						// second quarter transformation
-						for(int LLL=1; LLL<=devSim_MP2.nbasis; LLL++)
-						{
-							for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
-							{
-								int j33new = j33 + devSim_MP2.nElec/2;
-								QUICKDouble atemp = LOC2(devSim_MP2.coefficient, LLL-1, j33new-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-								int nsteplength = devSim_MP2.nElec/2;
-								for(int icycle=1; icycle<=nsteplength; icycle++)
-								{
-									LOC5(orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)+=\
-										LOC5(orbmp2i331,icycle-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2)*atemp;
-									
-									//QUICKADD devSim_MP2.orbmp2i331 to devSim_MP2.orbmp2j331
-									QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, \
-										devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2),\
-											LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2)*atemp);		
-	
-									if(III!=JJJ){
-										LOC5(orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)+=\
-											LOC5(orbmp2i331,icycle-1,LLL-1,JJJnew-1,IIInew-1,1,devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2)*atemp;
-										//QUICKADD devSim_MP2.orbmp2i331 to devSim_MP2.orbmp2j331
-										QUICKADD(LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
-											devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2), \
-												LOC5(devSim_MP2.orbmp2i331,icycle-1,LLL-1,JJJnew-1,IIInew-1,1,devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2)*atemp);
-									}
-								}
-							}
-						}
+                iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, orbmp2i331); // Y should be added to orbmp2i331;                           				
+			}
 
-						// third quarter transformation, use devSim_MP2.orbmp2k331 and QUICKADD
-						for(int j33=1; j33<=devSim_MP2.nbasis-devSim_MP2.nElec/2;j33++)
-						{
-							for(int k33=1; k33<=devSim_MP2.nElec/2; k33++)
-							{
-								QUICKDouble atemp = LOC2(devSim_MP2.coefficient, III-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-								QUICKDouble atemp2 = LOC2(devSim_MP2.coefficient, JJJ-1, k33-1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-								int nsteplength = devSim_MP2.nElec/2;
-								for(int icycle=1; icycle<=nsteplength; icycle++)
-								{
-									QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,JJJ-1, \
-											devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
-										LOC5(orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)*atemp);
-									//QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,JJJ-1, \
-										devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
-                                        LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, \
-										(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)*atemp);									
-									if(III!=JJJ){
-										QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,III-1, \
-											devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
-										LOC5(orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)*atemp2);	
-										//QUICKADD(LOC4(devSim_MP2.orbmp2k331,icycle-1,k33-1,j33-1,III-1, \
-                                            devSim_MP2.nElec/2,devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),devSim_MP2.nbasis),\
-                                        	LOC5(devSim_MP2.orbmp2j331,icycle-1,j33-1,JJJnew-1,IIInew-1,1, \
-											devSim_MP2.nElec/2,(devSim_MP2.nbasis-devSim_MP2.nElec/2),6,6,2)*atemp2);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		__syncthreads();
-		if(offside==0)
-		{
-			printf("Let's print orbmp2i and devSim_MP2.orbmp2i.The nonzero elements in orbmp2i should be identical to those in devSim_MP2.orbmp2i\n");
-			printf("Let's print orbmp2i\n"); 
-			for(int i=0;i<devSim_MP2.nElec/2;i++)
-			{
-				for(int j=0;j<devSim_MP2.nbasis;j++)		
-				{
-					for(int k=0;k<6;k++)
-					{
-						for(int l=0;l<6;l++)
-						{
-							for(int m=0;m<2;m++)
-							{
-								printf("%lf ",LOC5(orbmp2i331,i,j,k,l,m, devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2));
-							}
-						}
-						printf("\n");
-					}
-				}		
-			}
-			
-		printf("Then print devSim_MP2.orbmp2i.\n");
-		 for(int i=0;i<devSim_MP2.nElec/2;i++)
-            {   
-                for(int j=0;j<devSim_MP2.nbasis;j++)
-                {   
-                    for(int k=0;k<6;k++)
-                    {   
-                        for(int l=0;l<6;l++)
-                        {   
-                            for(int m=0;m<2;m++)
-                            {   
-                                printf("%lf ",LOC5(devSim_MP2.orbmp2i331,i,j,k,l,m, devSim_MP2.nElec/2,devSim_MP2.nbasis,6,6,2));
-                            }
-                        }
-                        printf("\n");
-                    }
-                }
-            }
-		__syncthreads();
-        }
-	
-		 
-		 //printf("ii, jj are %d, %d, orbmp2i331[0][0][0][0][0:1] are %lf, %lf\n", ii, jj, orbmp2i331[0], orbmp2i331[1]);
-       	delete[] orbmp2i331;
-		delete[] orbmp2j331;
+		delete[] orbmp2i331;
     }
 	//printf("get2e_MP2_kernel completed\n");
 }
@@ -671,17 +925,6 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 
 	//printf("in gpu_MP2.cu/iclass_MP2, III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2 are %d %d %d %d %d %d %d %d\n", III1,III2,JJJ1,JJJ2,KKK1,KKK2,LLL1,LLL2);
     
-	// 10/30/2020 Chi added here
-	/*
-	III1 += devSim_MP2.Ksumtype[II];
-	III2 += devSim_MP2.Ksumtype[II];
-	JJJ1 += devSim_MP2.Ksumtype[JJ];   
-	JJJ2 += devSim_MP2.Ksumtype[JJ];
-	KKK1 += devSim_MP2.Ksumtype[KK];
-	KKK2 += devSim_MP2.Ksumtype[KK];
-	LLL1 += devSim_MP2.Ksumtype[LL];
-	LLL2 += devSim_MP2.Ksumtype[LL];
-	*/
 
     // maxIJKL is the max of I,J,K,L
     int maxIJKL = (int)MAX(MAX(I,J),MAX(K,L));
@@ -721,34 +964,10 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
  						
 						////get Y matrix here
-						//printf("in gpu_MP2.cu/iclass_MP2, after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);
-					    printf("in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL, and II,JJ,KK,LL, and I,J,K,L are %d %d %d %d,  %d %d %d %d,  %d %d %d %d\n", \
+					    //printf("in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL, and II,JJ,KK,LL, and I,J,K,L are %d %d %d %d,  %d %d %d %d,  %d %d %d %d\n", \
 								III,JJJ,KKK,LLL, II,JJ,KK,LL, I,J,K,L);
 						LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;			
 
-						//first quarter transformation of ERI!
-						
-						if(fabs(Y)>devSim_MP2.integralCutoff)
-						{
-							for(int i3mp2=1; i3mp2<=devSim_MP2.nElec/2; i3mp2++)
-							{	
-								int i3mp2new = i3mp2; // i3mp2new=nstepmp2s+i3mp2-1 where nstepmp2s should be 1
-								QUICKDouble atemp = LOC2(devSim_MP2.coefficient, KKK-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
-								QUICKDouble btemp = LOC2(devSim_MP2.coefficient, LLL-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
-								int IIInew = III- devSim_MP2.Ksumtype[II]+1;
-								int JJJnew = JJJ- devSim_MP2.Ksumtype[JJ]+1;
-								//printf("in gpu_MP2.cu/iclass_MP2, III, JJJ, KKK, LLL and II, JJ are %d %d %d %d and %d %d %d %d\n",\
-										III, JJJ, KKK, LLL, II, JJ, KK, LL);
-								QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2), atemp);
-								QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,LLL-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2), atemp);
-								QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,KKK-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2), btemp);
-								QUICKADD(LOC5(devSim_MP2.orbmp2i331,i3mp2-1,KKK-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2), btemp);
-								LOC5(orbmp2i331,i3mp2-1,LLL-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
-								LOC5(orbmp2i331,i3mp2-1,LLL-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
-								LOC5(orbmp2i331,i3mp2-1,KKK-1,IIInew-1,JJJnew-1,0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
-								LOC5(orbmp2i331,i3mp2-1,KKK-1,JJJnew-1,IIInew-1,1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
-							}
-						}
 						
 						/*
                         //   if(abs(Y)*1e-2>devSim_MP2.integralCutoff){
@@ -857,66 +1076,34 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
     }
 	} //This corresponds to if(II<JJ && KK<LLL)
 	else
-	{
-		for(int III=III1; III<=III2; III++)
-		{
-			if(MAX(III,JJJ1)<=JJJ2)
-			{
-				for(int JJJ=MAX(III,JJJ1);JJJ<=JJJ2;JJJ++)
-				{
-					for(int KKK=KKK1; KKK<=KKK2; KKK++)
-					{
-						if(MAX(KKK,LLL1)<=LLL2)
-						{
-							for(int LLL=MAX(KKK,LLL1);LLL<=LLL2;LLL++)
-							{	
-								QUICKDouble Y = (QUICKDouble) hrrwhole_MP2( I, J, K, L,\
+    {
+        for(int III=III1; III<=III2; III++)
+        {
+            if(MAX(III,JJJ1)<=JJJ2)
+            {
+                for(int JJJ=MAX(III,JJJ1);JJJ<=JJJ2;JJJ++)
+                {
+                    for(int KKK=KKK1; KKK<=KKK2; KKK++)
+                    {
+                        if(MAX(KKK,LLL1)<=LLL2)
+                        {
+                            for(int LLL=MAX(KKK,LLL1);LLL<=LLL2;LLL++)
+                            {
+                                QUICKDouble Y = (QUICKDouble) hrrwhole_MP2( I, J, K, L,\
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
-								//printf("in gpu_MP2.cu/iclass_MP2, after hrrwhole_MP2, III, JJJ, KKK, LLL, and Y are %d %d %d %d %lf\n", III, JJJ, KKK, LLL, Y);	
-								LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;
-								
-								printf("else in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL, and II,JJ,KK,LL, and I,J,K,L are %d %d %d %d,  %d %d %d %d,  %d %d %d %d\n", \
-                                III,JJJ,KKK,LLL, II,JJ,KK,LL, I,J,K,L);
-											
-								if(fabs(Y)>devSim_MP2.integralCutoff)
-                        		{
-									for(int i3mp2=1; i3mp2<=devSim_MP2.nElec/2; i3mp2++)
-                            		{
-                            		    int i3mp2new = i3mp2;
-										QUICKDouble atemp = LOC2(devSim_MP2.coefficient, KKK-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
-										QUICKDouble btemp = LOC2(devSim_MP2.coefficient, LLL-1, i3mp2new-1, devSim_MP2.nbasis, devSim_MP2.nbasis)*Y;
-										int IIInew = III - devSim_MP2.Ksumtype[II]+1;
-										int JJJnew = JJJ - devSim_MP2.Ksumtype[JJ]+1;
-										QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, LLL-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2),atemp);
-										LOC5(orbmp2i331, i3mp2-1, LLL-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;
+                                LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;
 
-										if(JJJ != III)
-										{
-											QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, LLL-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2),atemp);
-											LOC5(orbmp2i331, i3mp2-1, LLL-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += atemp;						
-										}
-										if(KKK != LLL)
-										{
-											QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, KKK-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2),btemp);
-											LOC5(orbmp2i331, i3mp2-1, KKK-1, IIInew-1, JJJnew-1, 0, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
-											if(III != JJJ)
-											{
-												QUICKADD(LOC5(devSim_MP2.orbmp2i331, i3mp2-1, KKK-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2),btemp);
-												LOC5(orbmp2i331, i3mp2-1, KKK-1, JJJnew-1, IIInew-1, 1, devSim_MP2.nElec/2, devSim_MP2.nbasis, 6, 6, 2) += btemp;
-											}
-										}
-									}
-						
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+                                //printf("else in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL, and II,JJ,KK,LL, and I,J,K,L are %d %d %d %d,  %d %d %d %d,  %d %d %d %d\n", \
+                                III,JJJ,KKK,LLL, II,JJ,KK,LL, I,J,K,L);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return;
 }
