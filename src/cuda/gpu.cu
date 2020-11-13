@@ -1090,8 +1090,8 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 	gpu -> gpu_calculated -> coefficient    =   new cuda_buffer_type<QUICKDouble>(co,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> Y_Matrix    	  =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis*gpu->nbasis,gpu->nbasis*gpu->nbasis);
-	gpu -> gpu_calculated -> orbmp2i331		=	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nbasis*6*6*2);   
-	gpu -> gpu_calculated -> orbmp2j331		= 	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*6*6*2);
+	gpu -> gpu_calculated -> orbmp2i331		=	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nbasis*10*10*2);   
+	gpu -> gpu_calculated -> orbmp2j331		= 	new cuda_buffer_type<QUICKDouble>(gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*10*10*2);
 	gpu -> gpu_calculated -> orbmp2k331		= 	new	cuda_buffer_type<QUICKDouble>(gpu->nElec/2*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*gpu->nbasis);
 	gpu -> gpu_calculated -> orbmp2			= 	new cuda_buffer_type<QUICKDouble>((gpu->nbasis-gpu->nElec/2)*(gpu->nbasis-gpu->nElec/2));
 	gpu	-> gpu_calculated -> molorbe		= 	new cuda_buffer_type<QUICKDouble>(E, gpu->nbasis);
