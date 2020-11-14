@@ -274,7 +274,7 @@ subroutine electdiis(jscf)
 
          do i = 1, nbasis
             do j = 1, nbasis
-               allerror(iidiis, i, j) = quick_scratch%hold2( i, j)
+               allerror(i, j, iidiis) = quick_scratch%hold2( i, j)
             enddo
          enddo
 
@@ -303,8 +303,8 @@ subroutine electdiis(jscf)
          errormax = 0.d0
          do I=1,nbasis
             do J=1,nbasis
-               allerror(iidiis,I,J) = allerror(iidiis,I,J) - quick_scratch%hold2(i,j) !e=ODS=SDO
-               errormax = max(allerror(iidiis,I,J),errormax)
+               allerror(I,J,iidiis) = allerror(I,J,iidiis) - quick_scratch%hold2(i,j) !e=ODS=SDO
+               errormax = max(allerror(I,J,iidiis),errormax)
             enddo
          enddo
          call cpu_time(te(tstp))
@@ -322,7 +322,7 @@ subroutine electdiis(jscf)
          call cpu_time(ts(tstp))
          do i = 1, nbasis
             do j = 1, nbasis
-               quick_scratch%hold2( i, j) = allerror(iidiis, i, j)
+               quick_scratch%hold2( i, j) = allerror(i,j,iidiis)
             enddo
          enddo
 
@@ -343,7 +343,7 @@ subroutine electdiis(jscf)
 #endif
          do i = 1, nbasis
             do j = 1, nbasis
-               allerror(iidiis, i, j) = quick_scratch%hold2( i, j)
+               allerror(i,j,iidiis) = quick_scratch%hold2( i, j)
             enddo
          enddo
          call cpu_time(te(tstp))
@@ -416,11 +416,11 @@ subroutine electdiis(jscf)
          ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
          tstp=7
          call cpu_time(ts(tstp))
-         call CopyDMat(allerror(iidiis,1:nbasis,1:nbasis),quick_scratch%hold2,nbasis)
+         call CopyDMat(allerror(1:nbasis,1:nbasis,iidiis),quick_scratch%hold2,nbasis)
 
          do I=1,IDIISfinal
             ! Copy the transpose of error matrix I into HOLD.
-            call CopyDMat(allerror(I,1:nbasis,1:nbasis),quick_scratch%hold,nbasis)
+            call CopyDMat(allerror(1:nbasis,1:nbasis,I),quick_scratch%hold,nbasis)
 
             call cpu_time(ts(8))
             ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
@@ -452,11 +452,11 @@ subroutine electdiis(jscf)
          call cpu_time(ts(tstp))
 
          if(idiis.gt.quick_method%maxdiisscf)then
-            call CopyDMat(allerror(1,1:nbasis,1:nbasis),quick_scratch%hold,nbasis)
+            call CopyDMat(allerror(1:nbasis,1:nbasis,1),quick_scratch%hold,nbasis)
             do J=1,quick_method%maxdiisscf-1
-               call CopyDMat(allerror(J+1,1:nbasis,1:nbasis),allerror(J,1:nbasis,1:nbasis),nbasis)
+               call CopyDMat(allerror(1:nbasis,1:nbasis,J+1),allerror(1:nbasis,1:nbasis,J),nbasis)
             enddo
-            call CopyDMat(quick_scratch%hold,allerror(quick_method%maxdiisscf,1:nbasis,1:nbasis),nbasis)
+            call CopyDMat(quick_scratch%hold,allerror(1:nbasis,1:nbasis,quick_method%maxdiisscf),nbasis)
          endif
 
          call cpu_time(te(tstp))
