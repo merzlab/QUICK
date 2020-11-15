@@ -24,7 +24,7 @@ include $(MAKEIN)
 
 LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 
-CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_custom_matops.o 
+CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o 
 
 CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 
