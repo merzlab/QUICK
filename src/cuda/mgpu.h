@@ -481,7 +481,7 @@ void mgpu_xc_greedy_distribute(){
 #endif
 
     // array to keep track of how many true grid points per bin
-    int tpoints[nbins];
+    int2 tpoints[nbins];
 
     // save a set of flags to indicate if a given node should work on a particular bin
     char mpi_xcflags[gpu->mpisize][nbins];
@@ -493,7 +493,7 @@ void mgpu_xc_greedy_distribute(){
     int tpts_pcore[gpu->mpisize];
 
     // initialize all arrays to zero
-    memset(tpoints,0, sizeof(int)*nbins);
+    //memset(tpoints,0, sizeof(int)*nbins);
     memset(mpi_xcflags,0, sizeof(char)*nbins*gpu->mpisize);
     memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
     memset(tpts_pcore,0, sizeof(int)*gpu->mpisize);
@@ -501,9 +501,11 @@ void mgpu_xc_greedy_distribute(){
     // count how many true grid point in each bin and store in tpoints
     int tot_tpts=0;
     for(int i=0; i<nbins; i++){
+        tpoints[i].x=i;
+        tpoints[i].y=0;
         for(int j=0; j<bin_size; j++){
             if(gpu -> gpu_xcq -> dweight -> _hostData[i*bin_size + j] > 0 ){
-                tpoints[i]++;
+                tpoints[i].y++;
                 tot_tpts++;
             }
         }
@@ -511,7 +513,7 @@ void mgpu_xc_greedy_distribute(){
 
 #ifdef DEBUG
     for(int i=0; i<nbins; i++){
-        fprintf(gpu->debugFile,"GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i]);
+        fprintf(gpu->debugFile,"GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i].y);
     }
 #endif
 
@@ -533,7 +535,7 @@ void mgpu_xc_greedy_distribute(){
         }
 
         // increase the point counter by the amount in current bin
-        tpts_pcore[mincore] += tpoints[i];
+        tpts_pcore[mincore] += tpoints[i].y;
 
         // assign the bin to corresponding core        
         mpi_xcflags[mincore][i] = 1;
