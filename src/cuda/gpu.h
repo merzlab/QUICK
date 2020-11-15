@@ -502,10 +502,4 @@ __device__ QUICKDouble lyp_e(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QU
 __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
 
-// c interface [gpu_custom_matop]
-void upload_sim_to_constant_matop(_gpu_type gpu);
-void get_dmx(_gpu_type gpu);
-
-// global [gpu_custom_matop]
-__global__ void get_dmx_kernel();
 #endif
