@@ -231,9 +231,12 @@ subroutine electdiis(jscf)
          tstp=1
          call cpu_time(ts(tstp))
 
-         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
-         call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
+         !call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
+         !call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
 
+         quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
+         quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
+        
          call cpu_time(te(tstp))
          tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
 
@@ -272,11 +275,12 @@ subroutine electdiis(jscf)
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
 
-         do i = 1, nbasis
-            do j = 1, nbasis
-               allerror(i, j, iidiis) = quick_scratch%hold2( i, j)
-            enddo
-         enddo
+         !do i = 1, nbasis
+         !   do j = 1, nbasis
+         !      allerror(i, j, iidiis) = quick_scratch%hold2( i, j)
+         !   enddo
+         !enddo
+         allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
 
          call cpu_time(te(tstp))
          tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
@@ -320,11 +324,12 @@ subroutine electdiis(jscf)
          !-----------------------------------------------
          tstp=4
          call cpu_time(ts(tstp))
-         do i = 1, nbasis
-            do j = 1, nbasis
-               quick_scratch%hold2( i, j) = allerror(i,j,iidiis)
-            enddo
-         enddo
+         !do i = 1, nbasis
+         !   do j = 1, nbasis
+         !      quick_scratch%hold2( i, j) = allerror(i,j,iidiis)
+         !   enddo
+         !enddo
+         quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
 
@@ -341,11 +346,12 @@ subroutine electdiis(jscf)
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
-         do i = 1, nbasis
-            do j = 1, nbasis
-               allerror(i,j,iidiis) = quick_scratch%hold2( i, j)
-            enddo
-         enddo
+         !do i = 1, nbasis
+         !   do j = 1, nbasis
+         !      allerror(i,j,iidiis) = quick_scratch%hold2( i, j)
+         !   enddo
+         !enddo
+         allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
          call cpu_time(te(tstp))
          tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
 
@@ -359,12 +365,17 @@ subroutine electdiis(jscf)
          call cpu_time(ts(tstp))
 
          if(idiis.le.quick_method%maxdiisscf)then
-            call CopyDMat(quick_qm_struct%o,alloperator(1:nbasis,1:nbasis,iidiis),nbasis)
+            !call CopyDMat(quick_qm_struct%o,alloperator(1:nbasis,1:nbasis,iidiis),nbasis)
+            alloperator(:,:,iidiis) = quick_qm_struct%o(:,:)
+            
          else
             do K=1,quick_method%maxdiisscf-1
-               call CopyDMat(alloperator(1:nbasis,1:nbasis,K+1),alloperator(1:nbasis,1:nbasis,K),nbasis)
+               !call CopyDMat(alloperator(1:nbasis,1:nbasis,K+1),alloperator(1:nbasis,1:nbasis,K),nbasis)
+               alloperator(:,:,K) = alloperator(:,:,K+1)
+
             enddo
-            call CopyDMat(quick_qm_struct%o,alloperator(1:nbasis,1:nbasis,quick_method%maxdiisscf),nbasis)
+            !call CopyDMat(quick_qm_struct%o,alloperator(1:nbasis,1:nbasis,quick_method%maxdiisscf),nbasis)
+            alloperator(:,:,quick_method%maxdiisscf) = quick_qm_struct%o(:,:)
          endif
          call cpu_time(te(tstp))
          tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
@@ -416,11 +427,13 @@ subroutine electdiis(jscf)
          ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
          tstp=7
          call cpu_time(ts(tstp))
-         call CopyDMat(allerror(1:nbasis,1:nbasis,iidiis),quick_scratch%hold2,nbasis)
+         !call CopyDMat(allerror(1:nbasis,1:nbasis,iidiis),quick_scratch%hold2,nbasis)
+         quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
          do I=1,IDIISfinal
             ! Copy the transpose of error matrix I into HOLD.
-            call CopyDMat(allerror(1:nbasis,1:nbasis,I),quick_scratch%hold,nbasis)
+            !call CopyDMat(allerror(1:nbasis,1:nbasis,I),quick_scratch%hold,nbasis)
+            quick_scratch%hold(:,:) = allerror(:,:,I) 
 
             call cpu_time(ts(8))
             ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
@@ -452,11 +465,14 @@ subroutine electdiis(jscf)
          call cpu_time(ts(tstp))
 
          if(idiis.gt.quick_method%maxdiisscf)then
-            call CopyDMat(allerror(1:nbasis,1:nbasis,1),quick_scratch%hold,nbasis)
+            !call CopyDMat(allerror(1:nbasis,1:nbasis,1),quick_scratch%hold,nbasis)
+            quick_scratch%hold(:,:) = allerror(:,:,1)
             do J=1,quick_method%maxdiisscf-1
-               call CopyDMat(allerror(1:nbasis,1:nbasis,J+1),allerror(1:nbasis,1:nbasis,J),nbasis)
+               !call CopyDMat(allerror(1:nbasis,1:nbasis,J+1),allerror(1:nbasis,1:nbasis,J),nbasis)
+               allerror(:,:,J) = allerror(:,:,J+1)
             enddo
-            call CopyDMat(quick_scratch%hold,allerror(1:nbasis,1:nbasis,quick_method%maxdiisscf),nbasis)
+            !call CopyDMat(quick_scratch%hold,allerror(1:nbasis,1:nbasis,quick_method%maxdiisscf),nbasis)
+            allerror(:,:,quick_method%maxdiisscf) = quick_scratch%hold(:,:)
          endif
 
          call cpu_time(te(tstp))
@@ -509,7 +525,8 @@ subroutine electdiis(jscf)
          tstp=11
          call cpu_time(ts(tstp))
 
-         call CopyDMat(B,BSAVE,IDIISfinal+1)
+         !call CopyDMat(B,BSAVE,IDIISfinal+1)
+         BSAVE(:,:) = B(:,:)
          call LSOLVE(IDIISfinal+1,quick_method%maxdiisscf+1,B,RHS,W,quick_method%DMCutoff,COEFF,LSOLERR)
 
          IDIIS_Error_Start = 1
@@ -616,7 +633,8 @@ subroutine electdiis(jscf)
 
          tstp=14
          call cpu_time(ts(tstp))
-         call CopyDMat(quick_qm_struct%dense,quick_scratch%hold,nbasis) ! Save DENSE to HOLD
+         !call CopyDMat(quick_qm_struct%dense,quick_scratch%hold,nbasis) ! Save DENSE to HOLD
+         quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
 
          ! Form new density matrix using MO coefficients
 #if defined(CUDA) || defined(CUDA_MPIV)
