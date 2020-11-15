@@ -78,8 +78,6 @@ subroutine electdiis(jscf)
 
    double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
    double precision :: PRMS,PCHANGE, tmp
-   double precision :: ts(14)=0.0d0, te(14)=0.0d0, tt(14)=0.0d0
-   integer :: tstp=1
 
    !---------------------------------------------------------------------------
    ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -228,16 +226,8 @@ subroutine electdiis(jscf)
          !-----------------------------------------------
          call cpu_time(timer_begin%TDII)
 
-         tstp=1
-         call cpu_time(ts(tstp))
-
          quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
          quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
-        
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
 
          !if (quick_method%debug)  write(ioutfile,*) "hehe hf"
          !if (quick_method%debug)  call debug_SCF(jscf)
@@ -255,8 +245,6 @@ subroutine electdiis(jscf)
 
          ! The first part is ODS
 
-         tstp=2
-         call cpu_time(ts(tstp))
 #if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
@@ -274,16 +262,9 @@ subroutine electdiis(jscf)
 
          allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
 
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
-
          ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
          ! This means we now have the e(i) matrix.
          ! allerror=ODS-SDO
-         tstp=3
-         call cpu_time(ts(tstp))
 #if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
@@ -303,10 +284,6 @@ subroutine electdiis(jscf)
                errormax = max(allerror(I,J,iidiis),errormax)
             enddo
          enddo
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
 
          !-----------------------------------------------
          ! 3)  Move e to an orthogonal basis.  e'(i) = Transpose[X] .e(i). X
@@ -314,8 +291,6 @@ subroutine electdiis(jscf)
          ! The easiest way to do this is to calculate e(i) . X , store
          ! this in HOLD, and then calculate Transpose[X] (.e(i) . X)
          !-----------------------------------------------
-         tstp=4
-         call cpu_time(ts(tstp))
          quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
@@ -334,17 +309,11 @@ subroutine electdiis(jscf)
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
          allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
          !-----------------------------------------------
          ! 4)  Store the e'(I) and O(i).
          ! e'(i) is already stored.  Simply store the operator matrix in
          ! all operator.
          !-----------------------------------------------
-         tstp=5
-         call cpu_time(ts(tstp))
 
          if(idiis.le.quick_method%maxdiisscf)then
             alloperator(:,:,iidiis) = quick_qm_struct%o(:,:)
@@ -354,10 +323,6 @@ subroutine electdiis(jscf)
             enddo
             alloperator(:,:,quick_method%maxdiisscf) = quick_qm_struct%o(:,:)
          endif
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
 
          !-----------------------------------------------
          ! 5)  Form matrix B, which is:
@@ -379,8 +344,6 @@ subroutine electdiis(jscf)
          ! reader.  Thus the first step is copying BCOPY to B.  In this way we
          ! only have to recalculate the new elements.
          !-----------------------------------------------
-         tstp=6
-         call cpu_time(ts(tstp))
          do I=1,IDIISfinal
             do J=1,IDIISfinal
                B(J,I) = BCOPY(J,I)
@@ -395,28 +358,17 @@ subroutine electdiis(jscf)
             enddo
          endif
 
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
-
          ! Now copy the current matrix into HOLD2 transposed.  This will be the
          ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
-         tstp=7
-         call cpu_time(ts(tstp))
          quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
          do I=1,IDIISfinal
             ! Copy the transpose of error matrix I into HOLD.
             quick_scratch%hold(:,:) = allerror(:,:,I) 
 
-            call cpu_time(ts(8))
             ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
             BIJ=Sum2Mat(quick_scratch%hold2,quick_scratch%hold,nbasis)
             
-                     call cpu_time(te(8))
-         tt(8)=tt(8)+te(8)-ts(8)
-
             ! Now place this in the B matrix.
             if(idiis.le.quick_method%maxdiisscf)then
                B(iidiis,I) = BIJ
@@ -430,14 +382,6 @@ subroutine electdiis(jscf)
                endif
             endif
          enddo
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
-         write(*,*) "Timer: ", "8", tt(8)
-
-         tstp=9
-         call cpu_time(ts(tstp))
 
          if(idiis.gt.quick_method%maxdiisscf)then
             quick_scratch%hold(:,:) = allerror(:,:,1)
@@ -447,15 +391,8 @@ subroutine electdiis(jscf)
             allerror(:,:,quick_method%maxdiisscf) = quick_scratch%hold(:,:)
          endif
 
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
-
          ! Now that all the BIJ elements are in place, fill in all the column
          ! and row ending -1, and fill up the rhs matrix.
-         tstp=10
-         call cpu_time(ts(tstp))
 
          do I=1,IDIISfinal
             B(I,IDIISfinal+1) = -1.d0
@@ -475,10 +412,6 @@ subroutine electdiis(jscf)
             enddo
          enddo
 
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
          !-----------------------------------------------
          ! 6)  Solve B*COEFF = RHS which is:
          ! _                                             _  _  _     _  _
@@ -493,9 +426,6 @@ subroutine electdiis(jscf)
          ! |_                                             _||_  _|   |_  _|
          !
          !-----------------------------------------------
-
-         tstp=11
-         call cpu_time(ts(tstp))
 
          BSAVE(:,:) = B(:,:)
          call LSOLVE(IDIISfinal+1,quick_method%maxdiisscf+1,B,RHS,W,quick_method%DMCutoff,COEFF,LSOLERR)
@@ -522,18 +452,13 @@ subroutine electdiis(jscf)
 
             goto 111
          endif
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
 
-         write(*,*) "Timer: ", tstp, tt(tstp)
          !-----------------------------------------------
          ! 7) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
          ! If the solution to step eight failed, skip this step and revert
          ! to a standard scf cycle.
          !-----------------------------------------------
          ! Xiao HE 07/20/2007,if the B matrix is ill-conditioned, remove the first,second... error vector
-         tstp=12
-         call cpu_time(ts(tstp))         
          if (LSOLERR == 0) then
             do J=1,nbasis
                do K=1,nbasis
@@ -546,10 +471,6 @@ subroutine electdiis(jscf)
             enddo
             
          endif
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
          !-----------------------------------------------
          ! 8) Diagonalize the operator matrix to form a new density matrix.
          ! First you have to transpose this into an orthogonal basis, which
@@ -585,8 +506,6 @@ subroutine electdiis(jscf)
          ! The C' is from the above diagonalization.  Also, save the previous
          ! Density matrix to check for convergence.
          !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-         tstp=13
-         call cpu_time(ts(tstp))
 
 #if defined(CUDA) || defined(CUDA_MPIV)
 
@@ -597,13 +516,6 @@ subroutine electdiis(jscf)
                nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 #endif
 
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
-
-         tstp=14
-         call cpu_time(ts(tstp))
          quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
 
          ! Form new density matrix using MO coefficients
@@ -614,10 +526,6 @@ subroutine electdiis(jscf)
          call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #endif
-         call cpu_time(te(tstp))
-         tt(tstp)=tt(tstp)+te(tstp)-ts(tstp)
-
-         write(*,*) "Timer: ", tstp, tt(tstp)
 
          call cpu_time(timer_end%TDII)
 
