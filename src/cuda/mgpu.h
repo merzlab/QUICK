@@ -517,6 +517,25 @@ void mgpu_xc_greedy_distribute(){
     }
 #endif
 
+    // sort tpoints array based on the number of true points
+    bool swapped;
+    int sort_end=nbins-1;
+    int2 aux;
+    do{
+      swapped=false;
+      for(int i=0;i<sort_end;++i){
+        if(tpoints[i].y < tpoints[i+1].y){
+          aux=tpoints[i+1];
+          tpoints[i+1]=tpoints[i];
+          tpoints[i]=aux;
+          swapped=true;
+        }
+      }
+      --sort_end;
+    }while(swapped);
+
+
+
     // now distribute the bins considering the total number of true grid points each core would receive 
 
     int mincore, min_tpts;
@@ -538,7 +557,7 @@ void mgpu_xc_greedy_distribute(){
         tpts_pcore[mincore] += tpoints[i].y;
 
         // assign the bin to corresponding core        
-        mpi_xcflags[mincore][i] = 1;
+        mpi_xcflags[mincore][tpoints[i].x] = 1;
 
     }
 
