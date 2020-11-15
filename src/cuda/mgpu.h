@@ -540,6 +540,8 @@ void mgpu_xc_greedy_distribute(){
 
     }
 
+    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
+
 #ifdef DEBUG
 
     // print information for debugging
@@ -648,9 +650,9 @@ mgpu_xcq -> ntotbf = nbfidx_ul;
 mgpu_xcq -> ntotpf = npfidx_ul;
 
 #ifdef DEBUG
-fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> nbins, gpu -> gpu_xcq -> npoints);
+/*fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> nbins, gpu -> gpu_xcq -> npoints);
 fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> ntotbf, gpu -> gpu_xcq -> ntotpf);
-
+*/
 for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
   fprintf(gpu->debugFile, " Repack XC data: original: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight= %i, dweight_ssd= %i \n", i, gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i], gpu -> gpu_xcq -> sswt  -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm   -> _hostData[i], gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
 }
@@ -719,6 +721,9 @@ memcpy(gpu -> gpu_xcq -> basf_locator -> _hostData, mgpu_xcq -> basf_locator -> 
 memcpy(gpu -> gpu_xcq -> primf_locator -> _hostData, mgpu_xcq -> primf_locator -> _hostData, sizeof(int) * (gpu -> gpu_xcq -> ntotbf + 1));
 memcpy(gpu -> gpu_xcq -> basf -> _hostData, mgpu_xcq -> basf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotbf);
 memcpy(gpu -> gpu_xcq -> primf -> _hostData, mgpu_xcq -> primf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotpf);
+
+printf(" Repack XC data for GPU: new: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, mgpu_xcq -> nbins, mgpu_xcq -> npoints);
+printf(" Repack XC data for GPU: new: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, mgpu_xcq -> ntotbf, mgpu_xcq -> ntotpf);
 
 #ifdef DEBUG
 // print information for debugging
