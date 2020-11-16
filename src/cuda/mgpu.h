@@ -586,6 +586,165 @@ void mgpu_xc_greedy_distribute(){
 }
 
 //--------------------------------------------------------
+// Function to distribute XC quadrature points among nodes.  
+// Note that here we consider number of true grid points 
+// primitive funtcion product for each bin during the distribution.
+//--------------------------------------------------------
+void mgpu_xc_pbased_greedy_distribute(){
+
+    PRINTDEBUG("BEGIN TO DISTRIBUTE XC GRID POINTS")
+
+    // due to grid point packing, npoints is always a multiple of bin_size
+    int nbins    = gpu -> gpu_xcq -> nbins;
+    int bin_size = gpu -> gpu_xcq -> bin_size;
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile,"GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+#endif
+
+    // array to keep track of how many true grid points per bin
+    int tpoints[nbins];
+
+    // array to keep track of how many primitive functions per bin
+    int primfpb[nbins];
+
+    // array to keep track of true grid point primitive function product per bin
+    int2 ptpf_pb[nbins];
+
+    // save a set of flags to indicate if a given node should work on a particular bin
+    char mpi_xcflags[gpu->mpisize][nbins];
+
+    // array to keep track of how many bins per gpu
+    int bins_pcore[gpu->mpisize];
+
+    // array to keep track of how many true grid points per gpu
+    int tpts_pcore[gpu->mpisize];
+
+    // array to keep track of how many primitive functions per gpu
+    int primf_pcore[gpu->mpisize];
+
+    // array to keep track of the true grid point primf product per gpu
+    int ptpf_pcore[gpu->mpisize];
+
+   // initialize all arrays to zero
+    memset(tpoints,0, sizeof(int)*nbins);
+    memset(primfpb,0, sizeof(int)*nbins);
+    memset(mpi_xcflags,0, sizeof(char)*nbins*gpu->mpisize);
+    memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
+    memset(tpts_pcore,0, sizeof(int)*gpu->mpisize);
+    memset(primf_pcore,0, sizeof(int)*gpu->mpisize);
+    memset(ptpf_pcore,0, sizeof(int)*gpu->mpisize);
+
+    // count how many true grid point in each bin and store in tpoints
+    int tot_tpts=0;
+    for(int i=0; i<nbins; i++){
+        for(int j=0; j<bin_size; j++){
+            if(gpu -> gpu_xcq -> dweight -> _hostData[i*bin_size + j] > 0 ){
+                tpoints[i]++;
+                tot_tpts++;
+            }
+        }
+    }
+
+    // count how many primitive functions per each bin
+    for(int i=0; i<nbins; i++){
+
+        int tot_primfpb=0;
+
+        for(int j=gpu -> gpu_xcq -> basf_locator -> _hostData[i]; j<gpu -> gpu_xcq -> basf_locator -> _hostData[i+1] ; j++){
+            for(int k=gpu -> gpu_xcq -> primf_locator -> _hostData[j]; k< gpu -> gpu_xcq -> primf_locator -> _hostData[j+1]; k++){
+                tot_primfpb++;
+            }
+        }
+
+        primfpb[i] = tot_primfpb;
+        //printf("bin_id:= %i npoints= %i primf= %i \n", i, tpoints[i], primfpb[i]);
+    }
+
+    // compute the number of true grid point - primitive function product per bin
+    for(int i=0; i<nbins; i++){
+        ptpf_pb[i].x = i;
+        ptpf_pb[i].y = tpoints[i] * primfpb[i];
+    }
+
+    // sort tpoints array based on the number of true points
+    bool swapped;
+    int sort_end=nbins-1;
+    int2 aux;
+    do{
+      swapped=false;
+      for(int i=0;i<sort_end;++i){
+        if(ptpf_pb[i].y < ptpf_pb[i+1].y){
+          aux=ptpf_pb[i+1];
+          ptpf_pb[i+1]=ptpf_pb[i];
+          ptpf_pb[i]=aux;
+          swapped=true;
+        }
+      }
+      --sort_end;
+    }while(swapped);
+
+#ifdef DEBUG
+    for(int i=0; i<nbins; i++){
+        fprintf(gpu->debugFile,"GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i]);
+    }
+#endif
+
+    // now distribute the bins considering the total number of true grid points each core would receive 
+
+    int mincore, min_tpts, min_primf, min_ptpf;
+
+    // distribute bins based on true grid point-primitive function product per bin criteria
+    for(int i=0; i<nbins; i++){
+        mincore   = 0;
+        min_ptpf = ptpf_pcore[0];
+
+        for(int impi=0; impi< gpu->mpisize; impi++){
+            if(min_ptpf > ptpf_pcore[impi]){
+                mincore  = impi;
+                min_ptpf = ptpf_pcore[impi];
+            }
+        }
+
+        // increase the point-primf counter by the amount in current bin
+        ptpf_pcore[mincore] += ptpf_pb[i].y;
+
+        // increase the point counter by the amount in current bin
+        tpts_pcore[mincore] += tpoints[ptpf_pb[i].x];
+
+        // assign the bin to corresponding core
+        mpi_xcflags[mincore][ptpf_pb[i].x] = 1;
+    }
+
+
+    printf(" XC Greedy Distribute GPU: %i number of points = %i point-primitive product= %i \n", gpu -> mpirank, tpts_pcore[gpu -> mpirank], ptpf_pcore[gpu -> mpirank]);
+
+//#ifdef DEBUG
+
+    // print information for debugging
+    //for(int i=0; i<gpu->mpisize; i++){
+        //fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, i, tpts_pcore[i]);
+        //printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, i, tpts_pcore[i]);
+        //printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i number of primf= %i \n", gpu -> mpirank, i, tpts_pcore[i], primf_pcore[i]);    
+    //    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i number of primf= %i \n", gpu -> mpirank, i, tpts_pcore[i], primf_pcore[i]);
+    //}
+
+//#endif
+
+    // upload flags to gpu
+    gpu -> gpu_xcq -> mpi_bxccompute = new cuda_buffer_type<char>(nbins);
+
+    memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
+
+    gpu -> gpu_xcq -> mpi_bxccompute -> Upload();
+
+    gpu -> gpu_sim.mpi_bxccompute  = gpu -> gpu_xcq -> mpi_bxccompute  -> _devData;
+
+    PRINTDEBUG("END DISTRIBUTING XC GRID POINTS")
+
+}
+
+//--------------------------------------------------------
 // Function to re-pack XC grid information based on flags
 // generated by mgpu_xc_greedy_distribute function. 
 //-------------------------------------------------------- 
