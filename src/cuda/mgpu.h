@@ -367,7 +367,7 @@ void mgpu_eri_greedy_distribute(){
 
 //--------------------------------------------------------
 // Function to distribute XC quadrature bins among nodes. 
-// Note that here we naively distribute packed bins. 
+// Method 1: Naively distribute packed bins. 
 //--------------------------------------------------------
 void mgpu_xc_naive_distribute(){
 
@@ -465,7 +465,7 @@ void mgpu_xc_naive_distribute(){
 
 //--------------------------------------------------------
 // Function to distribute XC quadrature points among nodes.  
-// Note that here we consider number of true grid points in 
+// Method 2: Consider number of true grid points in 
 // each bin during the distribution.
 //--------------------------------------------------------
 void mgpu_xc_greedy_distribute(){
@@ -587,8 +587,8 @@ void mgpu_xc_greedy_distribute(){
 
 //--------------------------------------------------------
 // Function to distribute XC quadrature points among nodes.  
-// Note that here we consider number of true grid points 
-// primitive funtcion product for each bin during the distribution.
+// Method 3: Consider the number of true grid point-primitive 
+// funtcion product for each bin during the distribution.
 //--------------------------------------------------------
 void mgpu_xc_pbased_greedy_distribute(){
 
