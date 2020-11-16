@@ -33,14 +33,14 @@ extern "C" void gpu_set_device_(int* gpu_dev_id)
 extern "C" void gpu_startup_(void)
 {
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
         debugFile = fopen("debug.cuda", "w+");
 #endif
 	PRINTDEBUGNS("BEGIN TO WARM UP")
 
         gpu = new gpu_type;
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
         gpu->debugFile = debugFile;
 #endif
 	PRINTDEBUG("CREATE NEW GPU")
@@ -236,7 +236,7 @@ extern "C" void gpu_shutdown_(void)
 
     PRINTDEBUGNS("SHUTDOWN NORMALLY")
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
     fclose(debugFile);
 #endif
 
