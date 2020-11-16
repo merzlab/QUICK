@@ -1890,8 +1890,8 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 
 #ifdef CUDA_MPIV
 //        mgpu_xc_naive_distribute();
-//        mgpu_xc_greedy_distribute();
-        mgpu_xc_pbased_greedy_distribute();
+        mgpu_xc_tpbased_greedy_distribute();
+//        mgpu_xc_pbased_greedy_distribute();
         mgpu_xc_repack();
 
         gpu ->gpu_sim.mpirank = gpu -> mpirank;
