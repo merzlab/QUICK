@@ -280,8 +280,8 @@ subroutine electdiis(jscf)
          errormax = 0.d0
          do I=1,nbasis
             do J=1,nbasis
-               allerror(I,J,iidiis) = allerror(I,J,iidiis) - quick_scratch%hold2(i,j) !e=ODS=SDO
-               errormax = max(allerror(I,J,iidiis),errormax)
+               allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
+               errormax = max(allerror(J,I,iidiis),errormax)
             enddo
          enddo
 
