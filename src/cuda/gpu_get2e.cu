@@ -261,7 +261,7 @@ void upload_sim_to_constant(_gpu_type gpu){
 
 
 // totTime is the timer for GPU 2e time. Only on under debug mode
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 static float totTime;
 #endif
 
