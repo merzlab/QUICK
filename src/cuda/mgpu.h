@@ -468,7 +468,7 @@ void mgpu_xc_naive_distribute(){
 // Method 2: Consider number of true grid points in 
 // each bin during the distribution.
 //--------------------------------------------------------
-void mgpu_xc_greedy_distribute(){
+void mgpu_xc_tpbased_greedy_distribute(){
 
     PRINTDEBUG("BEGIN TO DISTRIBUTE XC GRID POINTS")
 
