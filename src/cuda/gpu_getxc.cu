@@ -20,7 +20,7 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
 }
 
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 static float totTime;
 #endif
 

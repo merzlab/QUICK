@@ -361,7 +361,7 @@ struct gpu_basis_type {
 // a type to define a graphic card
 struct gpu_type {
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
     FILE                            *debugFile;
 #endif
 
