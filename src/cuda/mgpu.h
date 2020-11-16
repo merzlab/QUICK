@@ -121,7 +121,7 @@ extern "C" void mgpu_get_devices_(int *gpu_dev_ids)
 void mgpu_startup(int mpirank)
 {
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
     char fname[16];
     sprintf(fname, "debug.cuda.%i", mpirank);    
 
@@ -132,7 +132,7 @@ void mgpu_startup(int mpirank)
 
     gpu = new gpu_type;
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
     gpu->debugFile = debugFile;
 #endif
 
@@ -152,7 +152,7 @@ extern "C" void mgpu_shutdown_(void)
 
     PRINTDEBUGNS("END DEVICE SHUTDOWN")    
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
     fclose(debugFile);
 #endif
 
