@@ -45,21 +45,11 @@
 | If you have any comments or queries, please send us an email for technical support:                      
 | quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Nov  8 13:55:47 2020
+| TASK STARTS ON: Tue Nov 17 14:57:28 2020
 | INPUT FILE :    ene_psb5_rhf_631gss.in
 | OUTPUT FILE:    ene_psb5_rhf_631gss.out
 | DATE FILE  :    ene_psb5_rhf_631gss.dat
-| BASIS SET PATH: /server-home1/madu/Work/Qk/dipolefix/basis
- 
-|------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
-| CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
-| SUPPORTING CUDA VERSION     :      7.0
-|--------------------------------------------
+| BASIS SET PATH: ../basis
 
 | @ Read Job And Atom
 
@@ -81,7 +71,7 @@
 |      BASIS FUNCTION   =  0.100E-09
 | DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
 | BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/dipolefix/basis/6-31GSS.BAS
+| BASIS FILE = ../basis/6-31GSS.BAS
 
 | @ Finish reading job
 
@@ -109,7 +99,7 @@
 | TOTAL ATOM NUMBER       =   22    NUMBER OF ATOM TYPES        =    3
 | NUMBER OF HYDROGEN ATOM =   12    NUMBER OF NON-HYDROGEN ATOM =   10
 | NUMBER OF ELECTRONS     =   72
- 
+
  -- INPUT GEOMETRY -- :
     C          -1.2017       0.4258       4.7428
     C          -1.3660       1.5848       3.9624
@@ -133,7 +123,7 @@
     H          -0.8055      -0.4668       4.2930
     H          -1.8710       1.1073       6.5153
     H          -1.3586      -0.5173       6.5104
- 
+
  -- DISTANCE MATRIX -- :
               1           2           3           4           5
       1     0.00000
@@ -200,12 +190,12 @@
              21          22
      21     0.00000
      22     3.21904     0.00000
- 
+
 ============== BASIS INFOS ==============
 | BASIS FUNCTIONS =  210
 | NSHELL =   76 NPRIM  =  170
 | JSHELL =   76 JBASIS =  170
- 
+
 
 | @ End Reading Molecular Information 
 
@@ -216,24 +206,25 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -408.048873602      ------         0.777     1        0.66      0.12      0.39    0.2575E+01  0.2138E-01  0.5037E+00
-|  2   -401.786085945  -.626279E+01       0.161     2        0.03      0.13      0.02    0.8129E-01  0.4734E-02  0.9241E-01
-|  3   -401.980392400  0.194306E+00       0.159     3        0.03      0.13      0.02    0.2890E-01  0.2050E-02  0.4243E-01
-|  4   -402.007879699  0.274873E-01       0.159     4        0.03      0.13      0.02    0.1814E-01  0.7570E-03  0.1914E-01
-|  5   -402.012860856  0.498116E-02       0.159     5        0.03      0.13      0.02    0.5954E-02  0.4203E-03  0.6596E-02
-|  6   -402.013805001  0.944146E-03       0.159     6        0.03      0.13      0.02    0.1815E-02  0.1134E-03  0.2102E-02
-|  7   -402.013880832  0.758310E-04       0.161     7        0.03      0.13      0.02    0.5764E-03  0.3936E-04  0.9510E-03
-|  8   -402.013888919  0.808701E-05       0.162     8        0.03      0.13      0.02    0.1615E-03  0.1091E-04  0.2309E-03
-|  9   -402.013889748  0.828438E-06       0.168     9        0.03      0.13      0.02    0.7801E-04  0.5051E-05  0.1221E-03
-| 10   -402.013889915  0.167503E-06       0.160    10        0.03      0.13      0.02    0.3304E-04  0.2271E-05  0.3841E-04
-| 11   -402.013889944  0.283653E-07       0.174     1        0.04      0.13      0.02    0.1345E-04  0.9397E-06  0.1703E-04
+|  1   -406.077530814      ------         4.437     1        0.05      4.39      0.01    0.2655E+01  0.2153E-01  0.5111E+00
+|  2   -401.718961419  -.435857E+01       9.914     2        0.05      9.86      0.01    0.1234E+00  0.7277E-02  0.1509E+00
+|  3   -401.975929587  0.256968E+00       9.872     3        0.05      9.82      0.01    0.9962E-01  0.1937E-02  0.8344E-01
+|  4   -402.006084083  0.301545E-01       9.927     4        0.05      9.88      0.01    0.3710E-01  0.9188E-03  0.3821E-01
+|  5   -402.012915668  0.683159E-02       9.866     5        0.05      9.81      0.01    0.7898E-02  0.2789E-03  0.6516E-02
+|  6   -402.013618502  0.702834E-03       9.864     6        0.05      9.81      0.01    0.3545E-02  0.1660E-03  0.4586E-02
+|  7   -402.013827679  0.209177E-03       9.858     7        0.05      9.81      0.01    0.1766E-02  0.9542E-04  0.2206E-02
+|  8   -402.013879482  0.518025E-04       9.862     8        0.05      9.81      0.01    0.7138E-03  0.4471E-04  0.8523E-03
+|  9   -402.013888436  0.895474E-05       9.864     9        0.05      9.81      0.01    0.1612E-03  0.1631E-04  0.2989E-03
+| 10   -402.013889654  0.121775E-05       9.994    10        0.05      9.94      0.01    0.9212E-04  0.7052E-05  0.1415E-03
+| 11   -402.013889900  0.245697E-06       9.883     1        0.07      9.81      0.01    0.4305E-04  0.4186E-05  0.7139E-04
+| 12   -402.013889949  0.487498E-07      10.009     2        0.07      9.94      0.01    0.7579E-05  0.6073E-06  0.1118E-04
 ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  11 CYLCES
-| MAX ERROR = 0.134546E-04   RMS CHANGE = 0.939694E-06   MAX CHANGE = 0.170278E-04
+| REACH CONVERGENCE AFTER  12 CYLCES
+| MAX ERROR = 0.757906E-05   RMS CHANGE = 0.607260E-06   MAX CHANGE = 0.111835E-04
  -----------------------------------------------
-  ELECTRONIC ENERGY    =  -826.453702027
+  ELECTRONIC ENERGY    =  -826.453702032
   CORE_CORE REPULSION  =   424.439812083
-  TOTAL ENERGY         =  -402.013889944
+  TOTAL ENERGY         =  -402.013889949
 
 | @ End Energy calculation
 
@@ -276,22 +267,22 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 | @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.862677000( 34.97%)
-| TOTAL SCF TIME      =     2.450963000( 46.01%)
-|       TOTAL OP TIME      =     1.498743000( 28.14%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.008822000(  0.17%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.009223000(  0.17%)
-|             TOTAL 1e TIME      =     0.052106000(  0.98%)
-|                KINETIC 1e INTEGRALS TIME    =     0.035013000(  0.66%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.017089000(  0.32%)
-|             TOTAL 2e TIME      =     1.441277000( 27.06%)
-|             TOTAL ENERGY TIME  =     0.002652000(  0.05%)
-|       TOTAL DII TIME      =     0.950333000( 17.84%)
-|             TOTAL DIAG TIME    =     0.566128000( 10.63%)
-| TOTAL TIME          =     5.326525000
+| INITIAL GUESS TIME  =     2.800247000(  2.40%)
+| TOTAL SCF TIME      =   113.405604000( 97.37%)
+|       TOTAL OP TIME      =   112.760315000( 96.82%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.019661000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.015147000(  0.01%)
+|             TOTAL 1e TIME      =     0.054256000(  0.05%)
+|                KINETIC 1e INTEGRALS TIME    =     0.035089000(  0.03%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.019163000(  0.02%)
+|             TOTAL 2e TIME      =   112.698528000( 96.77%)
+|             TOTAL ENERGY TIME  =     0.003083000(  0.00%)
+|       TOTAL DII TIME      =     0.642666000(  0.55%)
+|             TOTAL DIAG TIME    =     0.178170000(  0.15%)
+| TOTAL TIME          =   116.463126000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  5.3 seconds.
+| Job cpu time:  0 days  0 hours  1 minutes 56.5 seconds.
 
 | @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Nov  8 13:55:58 2020
+| Normal Termination. Task Finished on: Tue Nov 17 14:59:30 2020
