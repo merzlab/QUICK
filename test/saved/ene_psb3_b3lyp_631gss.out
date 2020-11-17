@@ -45,21 +45,11 @@
 | If you have any comments or queries, please send us an email for technical support:                      
 | quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Nov  8 13:56:29 2020
+| TASK STARTS ON: Tue Nov 17 14:53:40 2020
 | INPUT FILE :    ene_psb3_b3lyp_631gss.in
 | OUTPUT FILE:    ene_psb3_b3lyp_631gss.out
 | DATE FILE  :    ene_psb3_b3lyp_631gss.dat
-| BASIS SET PATH: /server-home1/madu/Work/Qk/dipolefix/basis
- 
-|------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
-| CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
-| SUPPORTING CUDA VERSION     :      7.0
-|--------------------------------------------
+| BASIS SET PATH: ../basis
 
 | @ Read Job And Atom
 
@@ -83,7 +73,7 @@
 |      BASIS FUNCTION   =  0.100E-09
 | DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
 | BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/dipolefix/basis/6-31GSS.BAS
+| BASIS FILE = ../basis/6-31GSS.BAS
 
 | @ Finish reading job
 
@@ -111,7 +101,7 @@
 | TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
 | NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
 | NUMBER OF ELECTRONS     =   44
- 
+
  -- INPUT GEOMETRY -- :
     C          -2.7472      -0.8366       0.8589
     C          -1.4569      -0.4717       0.9992
@@ -127,7 +117,7 @@
     H           3.2084       0.8645       0.0338
     H          -3.3689      -1.0241       1.7130
     H          -3.2011      -0.9533      -0.1081
- 
+
  -- DISTANCE MATRIX -- :
               1           2           3           4           5
       1     0.00000
@@ -159,12 +149,12 @@
      12     3.22015     0.00000
      13    13.03851    13.31509     0.00000
      14    13.16700    12.59278     3.45864     0.00000
- 
+
 ============== BASIS INFOS ==============
 | BASIS FUNCTIONS =  130
 | NSHELL =   48 NPRIM  =  106
 | JSHELL =   48 JBASIS =  106
- 
+
 
 | @ End Reading Molecular Information 
 
@@ -174,9 +164,9 @@
 | OCTAGO: OCTree Algorithm for Grid Operations 
 |   PRUNING CUTOFF       = 0.100E-09
 |   INITIAL GRID POINTS  =       52912
-|   FINAL GRID POINTS    =       34915
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       40365
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       45994
+|   FINAL GRID POINTS    =       34972
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       41137
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       47385
 
 | @ End XC Quadrature Formation
 
@@ -187,26 +177,26 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.670931631      ------         0.687     1        0.55      0.14      0.30    0.2066E+01  0.2936E-01  0.5459E+00
-|  2   -249.663138652  -.100779E+01       0.148     2        0.02      0.13      0.01    0.1586E+00  0.1322E-01  0.2311E+00
-|  3   -249.559060419  -.104078E+00       0.147     3        0.01      0.13      0.01    0.2009E+00  0.9955E-02  0.2150E+00
-|  4   -249.810555810  0.251495E+00       0.147     4        0.01      0.13      0.01    0.6673E-01  0.2883E-02  0.6476E-01
-|  5   -249.836105751  0.255499E-01       0.149     5        0.02      0.13      0.01    0.2095E-01  0.7524E-03  0.2313E-01
-|  6   -249.837595710  0.148996E-02       0.148     6        0.02      0.13      0.01    0.9165E-02  0.2807E-03  0.7381E-02
-|  7   -249.837988241  0.392531E-03       0.148     7        0.02      0.13      0.01    0.1519E-02  0.5476E-04  0.1531E-02
-|  8   -249.837996992  0.875032E-05       0.148     8        0.02      0.13      0.01    0.8137E-03  0.1951E-04  0.5374E-03
-|  9   -249.837998881  0.188959E-05       0.149     9        0.02      0.13      0.01    0.1306E-03  0.5072E-05  0.1527E-03
-| 10   -249.837998902  0.202159E-07       0.148    10        0.02      0.13      0.01    0.1079E-03  0.2613E-05  0.7472E-04
-| 11   -249.837998930  0.284532E-07       0.154     1        0.02      0.13      0.01    0.1405E-04  0.6722E-06  0.1456E-04
+|  1   -252.255343403      ------         2.789     1        0.01      2.78      0.00    0.2533E+01  0.2878E-01  0.5125E+00
+|  2   -249.792158831  -.246318E+01       4.236     2        0.01      4.22      0.00    0.9667E-01  0.7613E-02  0.1992E+00
+|  3   -249.745933647  -.462252E-01       4.241     3        0.01      4.23      0.00    0.1572E+00  0.5276E-02  0.1515E+00
+|  4   -249.831386148  0.854525E-01       4.232     4        0.01      4.22      0.00    0.3186E-01  0.1400E-02  0.3768E-01
+|  5   -249.837506932  0.612078E-02       4.369     5        0.01      4.36      0.00    0.9753E-02  0.3798E-03  0.1188E-01
+|  6   -249.837913394  0.406462E-03       4.232     6        0.01      4.22      0.00    0.3865E-02  0.1523E-03  0.4459E-02
+|  7   -249.837992312  0.789174E-04       4.368     7        0.01      4.35      0.00    0.1086E-02  0.5047E-04  0.1474E-02
+|  8   -249.837997735  0.542347E-05       4.364     8        0.01      4.35      0.00    0.4717E-03  0.1542E-04  0.3263E-03
+|  9   -249.837998966  0.123038E-05       4.363     9        0.01      4.35      0.00    0.5498E-04  0.2971E-05  0.5597E-04
+| 10   -249.837998974  0.836127E-08       4.368    10        0.01      4.35      0.00    0.4525E-04  0.1211E-05  0.3501E-04
+| 11   -249.837998982  0.823570E-08       4.366     1        0.02      4.35      0.00    0.6155E-05  0.2518E-06  0.4824E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  11 CYLCES
-| MAX ERROR = 0.140463E-04   RMS CHANGE = 0.672174E-06   MAX CHANGE = 0.145591E-04
+| MAX ERROR = 0.615467E-05   RMS CHANGE = 0.251791E-06   MAX CHANGE = 0.482404E-05
  -----------------------------------------------
-| ALPHA ELECTRON DENSITY    =   22.0000118099
-| BETA ELECTRON DENSITY     =   22.0000118099
-  ELECTRONIC ENERGY    =  -457.023177298
+| ALPHA ELECTRON DENSITY    =   22.0000122440
+| BETA ELECTRON DENSITY     =   22.0000122440
+  ELECTRONIC ENERGY    =  -457.023177351
   CORE_CORE REPULSION  =   207.185178368
-  TOTAL ENERGY         =  -249.837998930
+  TOTAL ENERGY         =  -249.837998982
 
 | @ End Energy calculation
 
@@ -241,29 +231,29 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 | @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.819534000( 35.40%)
-| DFT GRID OPERATIONS =     0.097481000(  1.90%)
-|       TOTAL GRID FORMATION TIME   =     0.001589000(  0.03%)
-|       TOTAL GRID WEIGHT TIME      =     0.005374000(  0.10%)
-|       TOTAL OCTREE RUN TIME       =     0.060000000(  1.17%)
-|       TOTAL PRESCREENING TIME     =     0.010000000(  0.19%)
-|       TOTAL DATA PACKING TIME     =     0.020518000(  0.40%)
-| TOTAL SCF TIME      =     2.196585000( 42.73%)
-|       TOTAL OP TIME      =     1.483914000( 28.87%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.003476000(  0.07%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.002599000(  0.05%)
-|             TOTAL 1e TIME      =     0.023838000(  0.46%)
-|                KINETIC 1e INTEGRALS TIME    =     0.017791000(  0.35%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.006041000(  0.12%)
-|             TOTAL 2e TIME      =     0.499749000(  9.72%)
-|             TOTAL EXC TIME     =     0.958358000( 18.64%)
-|             TOTAL ENERGY TIME  =     0.000859000(  0.02%)
-|       TOTAL DII TIME      =     0.711921000( 13.85%)
-|             TOTAL DIAG TIME    =     0.416276000(  8.10%)
-| TOTAL TIME          =     5.140626000
+| INITIAL GUESS TIME  =     2.770660000(  5.64%)
+| DFT GRID OPERATIONS =     0.278808000(  0.57%)
+|       TOTAL GRID FORMATION TIME   =     0.001896000(  0.00%)
+|       TOTAL GRID WEIGHT TIME      =     0.047156000(  0.10%)
+|       TOTAL OCTREE RUN TIME       =     0.040000000(  0.08%)
+|       TOTAL PRESCREENING TIME     =     0.170000000(  0.35%)
+|       TOTAL DATA PACKING TIME     =     0.019756000(  0.04%)
+| TOTAL SCF TIME      =    45.953017000( 93.56%)
+|       TOTAL OP TIME      =    45.799806000( 93.25%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.007644000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.003891000(  0.01%)
+|             TOTAL 1e TIME      =     0.025004000(  0.05%)
+|                KINETIC 1e INTEGRALS TIME    =     0.017974000(  0.04%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.007028000(  0.01%)
+|             TOTAL 2e TIME      =    33.376090000( 67.95%)
+|             TOTAL EXC TIME     =    12.396163000( 25.24%)
+|             TOTAL ENERGY TIME  =     0.000968000(  0.00%)
+|       TOTAL DII TIME      =     0.152303000(  0.31%)
+|             TOTAL DIAG TIME    =     0.041395000(  0.08%)
+| TOTAL TIME          =    49.116113000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  5.1 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 49.1 seconds.
 
 | @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Nov  8 13:56:41 2020
+| Normal Termination. Task Finished on: Tue Nov 17 14:54:36 2020

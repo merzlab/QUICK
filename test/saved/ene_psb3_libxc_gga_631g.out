@@ -45,47 +45,37 @@
 | If you have any comments or queries, please send us an email for technical support:                      
 | quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Nov  8 13:57:50 2020
-| INPUT FILE :    grad_wat_b3lyp_ccpvdz.in
-| OUTPUT FILE:    grad_wat_b3lyp_ccpvdz.out
-| DATE FILE  :    grad_wat_b3lyp_ccpvdz.dat
-| BASIS SET PATH: /server-home1/madu/Work/Qk/dipolefix/basis
- 
-|------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
-| CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
-| SUPPORTING CUDA VERSION     :      7.0
-|--------------------------------------------
+| TASK STARTS ON: Tue Nov 17 14:55:53 2020
+| INPUT FILE :    ene_psb3_libxc_gga_631g.in
+| OUTPUT FILE:    ene_psb3_libxc_gga_631g.out
+| DATE FILE  :    ene_psb3_libxc_gga_631g.dat
+| BASIS SET PATH: ../basis
 
 | @ Read Job And Atom
 
-  KEYWORD=DFT B3LYP BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT EXTCHARGES                                                                                                                               
+  KEYWORD= DFT LIBXC=GGA_X_B88,GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 CHARGE=+1                                                                                                                     
  ============== JOB CARD =============
 | METHOD = DENSITY FUNCTIONAL THEORY
-| DENSITY FUNCTIONAL = B3LYP
+| USING LIBXC VERSION: 4.3.4
+| FUNCTIONAL INFORMATION:
+| NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
+| NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
 | DIRECT SCF 
 | SAD INITAL GUESS 
 | USE DIIS SCF
 | PRINT ENERGY EVERY CYCLE
-| EXTERNAL CHARGES
 | STANDARD GRID = SG1
-| GRADIENT CALCULATION
 | MAX SCF CYCLES =    200
 | MAX DIIS CYCLES =   10
 | DELTA DENSITY START CYCLE = 1000
 | COMPUATIONAL CUTOFF: 
-|      TWO-e INTEGRAL   =  0.100E-08
+|      TWO-e INTEGRAL   =  0.100E-09
 |      BASIS SET PRIME  =  0.100E-19
 |      MATRIX ELEMENTS  =  0.100E-09
 |      BASIS FUNCTION   =  0.100E-09
-|      GRADIENT CUTOFF  =  0.100E-08
 | DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
-| BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/dipolefix/basis/CC-PVDZ.BAS
+| BASIS SET = 6-31G,  TYPE = CARTESIAN
+| BASIS FILE = ../basis/6-31G.BAS
 
 | @ Finish reading job
 
@@ -93,11 +83,14 @@
 | @ Begin SAD initial guess
 
 | For Atom Kind =    1
-| ELEMENT = O 
-| BASIS FUNCTIONS =   15
+| ELEMENT = C 
+| BASIS FUNCTIONS =    9
 | For Atom Kind =    2
+| ELEMENT = N 
+| BASIS FUNCTIONS =    9
+| For Atom Kind =    3
 | ELEMENT = H 
-| BASIS FUNCTIONS =    5
+| BASIS FUNCTIONS =    2
 
 | @ Finish SAD initial guess
 
@@ -106,33 +99,64 @@
 
 
  =========== Molecule Input ==========
-| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
-| TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
-| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
-| NUMBER OF EXTERNAL POINT CHARGES =    3
-| NUMBER OF ELECTRONS     =   10
- 
+| TOTAL MOLECULAR CHARGE  =    1    MULTIPLICITY                =    1
+| TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
+| NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
+| NUMBER OF ELECTRONS     =   44
+
  -- INPUT GEOMETRY -- :
-    O          -0.7415       1.7521       2.8963
-    H          -1.1112       0.9798       3.3523
-    H          -0.9205       2.0364       1.9840
- 
- -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- 
-    -0.8340    1.6492     0.0000    -2.3560
-     0.4170    0.5448     0.0000    -3.8000
-     0.4170    0.5448     0.0000    -0.9121
- 
+    C          -2.7472      -0.8366       0.8589
+    C          -1.4569      -0.4717       0.9992
+    C          -0.6277      -0.2215      -0.1532
+    C           0.6894       0.1526      -0.2017
+    C           1.4882       0.3645       0.9508
+    N           2.7314       0.7179       0.9037
+    H           1.1530       0.2966      -1.1612
+    H          -1.1103      -0.3463      -1.1067
+    H           1.0827       0.2367       1.9358
+    H          -1.0483      -0.3680       1.9877
+    H           3.2687       0.8596       1.7368
+    H           3.2084       0.8645       0.0338
+    H          -3.3689      -1.0241       1.7130
+    H          -3.2011      -0.9533      -0.1081
+
  -- DISTANCE MATRIX -- :
-              1           2           3
+              1           2           3           4           5
       1     0.00000
-      2     1.83324     0.00000
-      3     1.83707     3.28673     0.00000
- 
+      2     2.54783     0.00000
+      3     4.58824     2.72422     0.00000
+      4     7.04901     4.79509     2.58914     0.00000
+      5     8.32128     5.78618     4.64407     2.67996     0.00000
+      6    10.76215     8.22979     6.88736     4.51608     2.44398
+      7     8.57213     6.56504     3.98880     2.03203     4.04312
+      8     4.92184     4.03998     2.03309     3.92175     6.40577
+      9     7.78692     5.28737     5.17510     4.11025     2.02752
+     10     3.95505     2.03091     4.13247     5.37308     5.36018
+     11    11.92755     9.38174     8.43475     6.24179     3.79493
+     12    11.80796     9.35025     7.54235     4.96652     3.80289
+     13     2.02747     3.99549     6.44755     8.76653     9.65437
+     14     2.03075     4.00891     5.05659     7.64543     9.41987
+              6           7           8           9          10
+      6     0.00000
+      7     4.97571     0.00000
+      8     8.43691     4.44738     0.00000
+      9     3.78663     5.85521     7.17246     0.00000
+     10     7.70867     7.36830     5.84893     4.18703     0.00000
+     11     1.89227     6.86346    10.12627     4.31181     8.49450
+     12     1.89512     4.61928     8.74549     5.51933     9.15220
+     13    12.08582    10.42828     6.94621     8.75320     4.58667
+     14    11.80313     8.78871     4.52637     9.24709     5.78457
+             11          12          13          14
+     11     0.00000
+     12     3.22015     0.00000
+     13    13.03851    13.31509     0.00000
+     14    13.16700    12.59278     3.45864     0.00000
+
 ============== BASIS INFOS ==============
-| BASIS FUNCTIONS =   25
-| NSHELL =   12 NPRIM  =   37
-| JSHELL =   12 JBASIS =   37
- 
+| BASIS FUNCTIONS =   70
+| NSHELL =   34 NPRIM  =   92
+| JSHELL =   34 JBASIS =   92
+
 
 | @ End Reading Molecular Information 
 
@@ -141,10 +165,10 @@
 
 | OCTAGO: OCTree Algorithm for Grid Operations 
 |   PRUNING CUTOFF       = 0.100E-09
-|   INITIAL GRID POINTS  =       11320
-|   FINAL GRID POINTS    =        7993
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        4206
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        6116
+|   INITIAL GRID POINTS  =       52912
+|   FINAL GRID POINTS    =       34972
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       26224
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       32501
 
 | @ End XC Quadrature Formation
 
@@ -155,93 +179,57 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.429747274      ------         0.583     1        0.56      0.03      0.30    0.1585E+01  0.1114E+00  0.8830E+00
-|  2    -76.336387614  -.933597E-01       0.028     2        0.01      0.02      0.01    0.1808E+00  0.6216E-01  0.5900E+00
-|  3    -76.311558212  -.248294E-01       0.029     3        0.01      0.02      0.01    0.2167E+00  0.3346E-01  0.3329E+00
-|  4    -76.407963850  0.964056E-01       0.028     4        0.01      0.02      0.01    0.6343E-02  0.1106E-02  0.9900E-02
-|  5    -76.408022277  0.584273E-04       0.032     5        0.01      0.02      0.01    0.1312E-02  0.1951E-03  0.1689E-02
-|  6    -76.408024830  0.255281E-05       0.029     6        0.01      0.02      0.01    0.1472E-03  0.3245E-04  0.2689E-03
-|  7    -76.408024874  0.441666E-07       0.029     7        0.01      0.02      0.01    0.3718E-04  0.7009E-05  0.7241E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  8    -76.408024766  -.107937E-06       0.029     8        0.01      0.02      0.01    0.2998E-05  0.1067E-05  0.9208E-05
-|  9    -76.408024766  0.401013E-10       0.030     9        0.01      0.02      0.01    0.4610E-06  0.1268E-06  0.1289E-05
+|  1   -250.525867046      ------         0.916     1        0.00      0.91      0.00    0.2182E+01  0.5672E-01  0.5611E+00
+|  2   -249.455703700  -.107016E+01       1.196     2        0.00      1.19      0.00    0.1743E+00  0.3802E-01  0.4618E+00
+|  3   -248.841977588  -.613726E+00       1.326     3        0.00      1.32      0.00    0.3258E+00  0.3434E-01  0.4459E+00
+|  4   -249.533669570  0.691692E+00       1.185     4        0.00      1.18      0.00    0.1839E+00  0.1264E-01  0.2004E+00
+|  5   -249.640662076  0.106993E+00       1.195     5        0.00      1.19      0.00    0.5008E-01  0.4336E-02  0.6860E-01
+|  6   -249.652574151  0.119121E-01       1.330     6        0.00      1.33      0.00    0.2673E-01  0.1615E-02  0.2406E-01
+|  7   -249.656131268  0.355712E-02       1.197     7        0.00      1.19      0.00    0.4977E-02  0.4115E-03  0.7038E-02
+|  8   -249.656229437  0.981682E-04       1.191     8        0.00      1.19      0.00    0.3063E-02  0.1793E-03  0.2690E-02
+|  9   -249.656252118  0.226812E-04       1.197     9        0.00      1.19      0.00    0.7905E-03  0.6756E-04  0.9631E-03
+| 10   -249.656255177  0.305927E-05       1.191    10        0.00      1.19      0.00    0.3020E-03  0.2517E-04  0.3422E-03
+| 11   -249.656255772  0.594793E-06       1.198     1        0.00      1.19      0.00    0.2583E-04  0.4014E-05  0.4223E-04
+| 12   -249.656255780  0.820415E-08       1.198     2        0.00      1.19      0.00    0.6938E-05  0.5215E-06  0.9743E-05
 ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER   9 CYLCES
-| MAX ERROR = 0.460971E-06   RMS CHANGE = 0.126817E-06   MAX CHANGE = 0.128880E-05
+| REACH CONVERGENCE AFTER  12 CYLCES
+| MAX ERROR = 0.693793E-05   RMS CHANGE = 0.521491E-06   MAX CHANGE = 0.974264E-05
  -----------------------------------------------
-| ALPHA ELECTRON DENSITY    =    5.0000014249
-| BETA ELECTRON DENSITY     =    5.0000014249
-  ELECTRONIC ENERGY    =   -85.518435237
-  CORE_CORE REPULSION  =     9.110410470
-  EXT CHARGE REPULSION =    -0.170609996
-  TOTAL ENERGY         =   -76.408024766
+| ALPHA ELECTRON DENSITY    =   22.0000152510
+| BETA ELECTRON DENSITY     =   22.0000152510
+  ELECTRONIC ENERGY    =  -456.841434149
+  CORE_CORE REPULSION  =   207.185178368
+  TOTAL ENERGY         =  -249.656255780
 
 | @ End Energy calculation
 
 
- ANALYTICAL GRADIENT: 
-----------------------------------------
- COORDINATE    XYZ            GRADIENT
-----------------------------------------
-    1X    -0.7415300566    -0.0252561578
-    1Y     1.7521301338    -0.0225985090
-    1Z     2.8962802212    -0.0181903819
-    2X    -1.1111510849     0.0102139296
-    2Y     0.9797690748    -0.0035234282
-    2Z     3.3522902560     0.0292526203
-    3X    -0.9205000703     0.0152460598
-    3Y     2.0364501555     0.0259264897
-    3Z     1.9840401515    -0.0111575195
-----------------------------------------
-
- POINT CHARGE GRADIENT: 
-----------------------------------------
- COORDINATE    XYZ            GRADIENT
-----------------------------------------
-    1X     1.6492001259     0.0004021708
-    1Y     0.0000000000    -0.0000672817
-    1Z    -2.3560001799    -0.0000224242
-    2X     0.5448000416    -0.0001121167
-    2Y     0.0000000000     0.0000330094
-    2Z    -3.8000002902     0.0000942207
-    3X     0.5448000416    -0.0005052400
-    3Y     0.0000000000     0.0002206274
-    3Z    -0.9121000697     0.0000410722
-----------------------------------------
-
 | @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     2.038083000( 48.59%)
-| DFT GRID OPERATIONS =     0.025351000(  0.60%)
-|       TOTAL GRID FORMATION TIME   =     0.000259000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.000824000(  0.02%)
-|       TOTAL OCTREE RUN TIME       =     0.010000000(  0.24%)
-|       TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
-|       TOTAL DATA PACKING TIME     =     0.014268000(  0.34%)
-| TOTAL SCF TIME      =     0.817634000( 19.49%)
-|       TOTAL OP TIME      =     0.172334000(  4.11%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.000387000(  0.01%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000145000(  0.00%)
-|             TOTAL 1e TIME      =     0.001605000(  0.04%)
-|                KINETIC 1e INTEGRALS TIME    =     0.001125000(  0.03%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.000476000(  0.01%)
-|             TOTAL 2e TIME      =     0.143105000(  3.41%)
-|             TOTAL EXC TIME     =     0.027359000(  0.65%)
-|             TOTAL ENERGY TIME  =     0.000092000(  0.00%)
-|       TOTAL DII TIME      =     0.645130000( 15.38%)
-|             TOTAL DIAG TIME    =     0.377083000(  8.99%)
-| TOTAL GRADIENT TIME      =     0.244710000(  5.83%)
-|       TOTAL NUCLEAR GRADIENT TIME =     0.000007000(  0.00%)
-|       TOTAL 1e GRADIENT TIME      =     0.017703000(  0.42%)
-|          KINETIC 1e GRADIENT TIME      =     0.014257000(  0.34%)
-|          ATTRACTION 1e GRADIENT TIME   =     0.003434000(  0.08%)
-|       TOTAL 2e GRADIENT TIME      =     0.222127000(  5.30%)
-|       TOTAL EXC GRADIENT TIME     =     0.022550000(  0.54%)
-| TOTAL TIME          =     4.194765000
+| INITIAL GUESS TIME  =     1.116225000(  7.10%)
+| DFT GRID OPERATIONS =     0.215727000(  1.37%)
+|       TOTAL GRID FORMATION TIME   =     0.001876000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.047182000(  0.30%)
+|       TOTAL OCTREE RUN TIME       =     0.040000000(  0.25%)
+|       TOTAL PRESCREENING TIME     =     0.110000000(  0.70%)
+|       TOTAL DATA PACKING TIME     =     0.016669000(  0.11%)
+| TOTAL SCF TIME      =    14.331904000( 91.10%)
+|       TOTAL OP TIME      =    14.298440000( 90.89%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.003596000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000818000(  0.01%)
+|             TOTAL 1e TIME      =     0.012174000(  0.08%)
+|                KINETIC 1e INTEGRALS TIME    =     0.007912000(  0.05%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.004260000(  0.03%)
+|             TOTAL 2e TIME      =     8.139667000( 51.74%)
+|             TOTAL EXC TIME     =     6.145704000( 39.07%)
+|             TOTAL ENERGY TIME  =     0.000295000(  0.00%)
+|       TOTAL DII TIME      =     0.033130000(  0.21%)
+|             TOTAL DIAG TIME    =     0.008626000(  0.05%)
+| TOTAL TIME          =    15.731685000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  4.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 15.7 seconds.
 
 | @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Nov  8 13:57:59 2020
+| Normal Termination. Task Finished on: Tue Nov 17 14:56:15 2020
