@@ -76,11 +76,12 @@ struct XC_quadrature_type{
 	cuda_buffer_type<QUICKDouble>* gridz;		//Z coordinate of a grid point
 	cuda_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
 	cuda_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
-	cuda_buffer_type<int>*	gatm;				//To which atom does a given grid point belongs to?
-	cuda_buffer_type<int>*	dweight;			//Dummy weight of grid points
-	cuda_buffer_type<int>*  dweight_ssd;                    //Dummy weight of grid points for sswder 
-	cuda_buffer_type<int>*	basf;				//Basis function indices of all grid points
-	cuda_buffer_type<int>*	primf;				//Primitive function inidices of all grid points
+	cuda_buffer_type<int>*	gatm;			//To which atom does a given grid point belongs to?
+	cuda_buffer_type<int>*	dweight;		//Dummy weight of grid points
+	cuda_buffer_type<int>*  dweight_ssd;            //Dummy weight of grid points for sswder 
+	cuda_buffer_type<int>*	basf;			//Basis function indices of all grid points
+	cuda_buffer_type<int>*	primf;			//Primitive function inidices of all grid points
+        cuda_buffer_type<int>*  nprimf;                 //Number of primitive functions per bin
 	cuda_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
 	cuda_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
 
@@ -191,6 +192,7 @@ struct gpu_simulation_type {
     int*  dweight_ssd;        //Dummy weight of grid points for sswder 
     int*  basf;               //Basis function indices of all grid points
     int*  primf;              //Primitive function inidices of all grid points
+    int*  nprimf;             //Number of primitive functions per bin
     int*  basf_locator;       //Helps accessing b.f. indices of a grid point
     int*  primf_locator;      //Helps accessing p.f. indices of a b.f.   
     unsigned char*gpweight;   //keeps track of significant grid points for octree pruning
