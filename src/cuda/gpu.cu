@@ -1500,15 +1500,18 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     //kprim can not be deleted since it will be used later
     //gpu -> gpu_basis -> kprim -> DeleteCPU();
     
-    gpu -> gpu_basis -> Ksumtype -> DeleteCPU();
+	// for MP2, let them be here for a while
+    //gpu -> gpu_basis -> Ksumtype -> DeleteCPU();
     gpu -> gpu_basis -> prim_start -> DeleteCPU();
     
     gpu -> gpu_basis -> Qnumber -> DeleteCPU();
-    gpu -> gpu_basis -> Qstart -> DeleteCPU();
-    gpu -> gpu_basis -> Qfinal -> DeleteCPU();
     
-    gpu -> gpu_basis -> Qsbasis -> DeleteCPU();
-    gpu -> gpu_basis -> Qfbasis -> DeleteCPU();
+	// for MP2, let them be here for a while
+	//gpu -> gpu_basis -> Qstart -> DeleteCPU();
+    //gpu -> gpu_basis -> Qfinal -> DeleteCPU();
+    
+    //gpu -> gpu_basis -> Qsbasis -> DeleteCPU();
+    //gpu -> gpu_basis -> Qfbasis -> DeleteCPU();
     gpu -> gpu_basis -> gccoeff -> DeleteCPU();
     gpu -> gpu_basis -> cons -> DeleteCPU();
     gpu -> gpu_basis -> gcexpo -> DeleteCPU();
@@ -2605,22 +2608,22 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	get2e_MP2(gpu);
 	
 	PRINTDEBUG("COMPLETE KERNEL")
-	//printf("in gpu_calmp2, before gpu -> gpu_calculated -> oULL -> Download()\n");
-	gpu -> gpu_calculated -> oULL -> Download(); //double to unsigned long long back to double
-	//printf("in gpu_calmp2, after gpu -> gpu_calculated -> oULL -> Download()\n");
+	
+	float time = 0;
+	cudaEvent_t before_download, downloaded, copied;
+    cudaEventCreate(&before_download);
+    cudaEventCreate(&downloaded);
+	cudaEventCreate(&copied);
+    cudaEventRecord(before_download, 0);
 
 	gpu->gpu_calculated->Y_Matrix->Download();// Y downloaded to host
-	gpu->gpu_calculated->orbmp2i331->Download();
-	gpu->gpu_calculated->orbmp2j331->Download();
-	gpu->gpu_calculated->orbmp2k331->Download();
-	gpu->gpu_calculated->orbmp2->Download();
-	gpu->gpu_calculated->molorbe->Download();
-	//Can I simply do Y_Matrix = gpu->gpu_calculated->Y->_hostData? No it gives garbage values
-	//Y_Matrix = gpu->gpu_calculated->Y->_hostData;
-	
-	//Can I use the intrinsic download function? No it doens't give correct MP2 value
-	//gpu->gpu_calculated->Y->Download(Y_Matrix);
-    
+
+	cudaEventRecord(downloaded, 0);
+	cudaEventSynchronize(downloaded);
+	cudaEventElapsedTime(&time, before_download, downloaded);
+	printf("in gpu_calmp2, total Y_Matrix download time is %6.3f ms\n", time);
+
+	/*
 	for(int i=0;i<gpu->nbasis;i++)
     {
         for(int j=0;j<gpu->nbasis;j++)
@@ -2629,33 +2632,21 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
             {
                 for(int l=0;l<gpu->nbasis;l++)
                 {
-                    //printf("in gpu.cu/gpu_calmp2, after Download(),i,j,k,l, and Y are %d, %d, %d, %d, %lf\n",\
- i+1,j+1,k+1,l+1,LOC4(gpu->gpu_calculated->Y_Matrix->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis));
-
 				 LOC4(Y_Matrix,i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis) = \
 				 LOC4(gpu->gpu_calculated->Y_Matrix->_hostData, i,j,k,l, gpu->nbasis, gpu->nbasis, gpu->nbasis, gpu->nbasis);
                 }
             }
         }
-    }	
-
-
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            }
-            else
-            {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-        }
     }
+	*/
+	int nbasis = gpu->nbasis;
+	memcpy(Y_Matrix, gpu->gpu_calculated->Y_Matrix->_hostData, sizeof(QUICKDouble)*nbasis*nbasis*nbasis*nbasis);
+	
+	cudaEventRecord(copied, 0);
+	cudaEventSynchronize(copied);
+    cudaEventElapsedTime(&time, downloaded, copied);
+    printf("in gpu_calmp2, total Y_Matrix copy time is %6.3f ms\n", time);
+	
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -2664,11 +2655,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
     cudaEventRecord(start, 0);
 #endif
 	
-	//printf("in gpu_calmp2_, before gpu -> gpu_calculated -> o    -> Download(o);\n");
-	gpu -> gpu_calculated -> o    -> Download(o); //c->back to fortran
-
-	//print(o) ?
-
+	//gpu -> gpu_calculated -> o    -> Download(o); //c->back to fortran
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -2682,8 +2669,6 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 
     PRINTDEBUG("DELETE TEMP VARIABLES")
 	
-	//printf("in gpu_calmp2_, before delete 4 pointers\n");
-
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->coefficient;
@@ -2697,15 +2682,33 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	delete gpu->gpu_cutoff->cutMatrix;
 
     PRINTDEBUG("COMPLETE RUNNING MP2")
-	
 }
 
 extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
 QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix)
 {
+	float time = 0;
+	cudaEvent_t before_upload, uploaded, mp2_done;
+	cudaEventCreate(&before_upload);
+	cudaEventCreate(&uploaded);
+	cudaEventCreate(&mp2_done);
+	cudaEventRecord(before_upload, 0);
+
 	gpu_upload_calculated_(o,co,vec,dense,E);
 	gpu_upload_cutoff_(cutmatrix,integralCutoff,primLimit,DMCutoff);
+	
+	cudaEventRecord(uploaded, 0);
+	cudaEventSynchronize(uploaded);
+	cudaEventElapsedTime(&time, before_upload, uploaded);
+	printf("in gpu_mp2_wrapper, total upload time is %6.3f ms\n", time);
+
 	gpu_calmp2_(Y_Matrix, o);
+
+	cudaEventRecord(mp2_done, 0);
+    cudaEventSynchronize(mp2_done);
+    cudaEventElapsedTime(&time, uploaded, mp2_done);
+    printf("in gpu_mp2_wrapper, total calmp2 time is %6.3f ms\n", time);
+	
 	cudaDeviceSynchronize();
 }
 
