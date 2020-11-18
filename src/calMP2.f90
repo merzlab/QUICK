@@ -7,7 +7,7 @@ subroutine calmp2
   use quick_gaussian_class_module
   implicit double precision(a-h,o-z)
 
-  double precision cutoffTest,testtmp,testCutoff
+  double precision cutoffTest,testtmp,testCutoff,gpuMP2WrapperTimeStart, gpuMP2WrapperTimeEnd
   ! add Y_Matrix here
   double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
   !double precision, pointer, dimension(:,:) :: Y_Matrix
@@ -18,9 +18,13 @@ subroutine calmp2
 #ifdef CUDA
     if(quick_method%bCUDA) then
     !print *,"in calmp2, at the beginning" 
-
+    
+    call cpu_time(gpuMP2WrapperTimeStart)
     call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, quick_qm_struct%E,&
-            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix)  
+            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix) 
+    call cpu_time(gpuMP2WrapperTimeEnd)
+    print '("Total GPU MP2 Wrapper Time = ",f6.3," seconds.")',gpuMP2WrapperTimeEnd-gpuMP2WrapperTimeStart
+ 
     !Y_Matrix(1,1) = 9.5
     !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
     !call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
@@ -32,45 +36,45 @@ subroutine calmp2
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
  
-    print *, "in calmp2, quick_qm_struct%co is"
-    do ind= 1, nbasis
-        do ind2= 1, nbasis
-            write(*, '(f8.4)', advance='no'), quick_qm_struct%co(ind,ind2)
-        end do
-        write(*, '(" ")')
-    end do
+    !print *, "in calmp2, quick_qm_struct%co is"
+    !do ind= 1, nbasis
+    !    do ind2= 1, nbasis
+    !        write(*, '(f8.4)', advance='no'), quick_qm_struct%co(ind,ind2)
+    !    end do
+    !    write(*, '(" ")')
+    !end do
 
 
     !print *, "in calmp2, xyz is ", xyz
-    print *, "in calmp2, quick_basis%Qstart is ", quick_basis%Qstart
-    print *, "in calmp2, quick_basis%Qfinal is ", quick_basis%Qfinal
-    print *, "in calmp2, quick_basis%kprim is ", quick_basis%kprim
-    print *, "in calmp2, quick_basis%kstart is ", quick_basis%kstart
-    print *, "in calmp2, quick_basis%ktype are", quick_basis%ktype
-    print *, "in calmp2, quick_method%primLimit is", quick_method%primLimit     
-    print *, "in calmp2, shape(quick_basis%Qsbasis) is", shape(quick_basis%Qsbasis)   
+    !print *, "in calmp2, quick_basis%Qstart is ", quick_basis%Qstart
+    !print *, "in calmp2, quick_basis%Qfinal is ", quick_basis%Qfinal
+    !print *, "in calmp2, quick_basis%kprim is ", quick_basis%kprim
+    !print *, "in calmp2, quick_basis%kstart is ", quick_basis%kstart
+    !print *, "in calmp2, quick_basis%ktype are", quick_basis%ktype
+    !print *, "in calmp2, quick_method%primLimit is", quick_method%primLimit     
+    !print *, "in calmp2, shape(quick_basis%Qsbasis) is", shape(quick_basis%Qsbasis)   
     !print *, "in calmp2, quick_basis%Xcoeff is", quick_basis%Xcoeff
     
-    print *, "in calmp2, quick_basis%Qsbasis is"
-    do ind= 1, jshell
-        do ind2 = 0, 3
-            write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
-        end do
-        write(*,'(" ")')
-    end do
+    !print *, "in calmp2, quick_basis%Qsbasis is"
+    !do ind= 1, jshell
+    !    do ind2 = 0, 3
+    !        write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
+    !    end do
+    !    write(*,'(" ")')
+    !end do
 
-    print *, "in calmp2, quick_basis%Qfbasis is"
-    do ind= 1, jshell
-        do ind2 = 0, 3
-            write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
-        end do
-        write(*,'(" ")')
-    end do
+    !print *, "in calmp2, quick_basis%Qfbasis is"
+    !do ind= 1, jshell
+    !    do ind2 = 0, 3
+    !        write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
+    !    end do
+    !    write(*,'(" ")')
+    !end do
 
 
-    print *, "in calmp2, quick_basis%ksumtype is"
-    print *, quick_basis%ksumtype
-    print *, "in calmp2, quick_basis%ksumtype(2) is", quick_basis%ksumtype(2)
+    !print *, "in calmp2, quick_basis%ksumtype is"
+    !print *, quick_basis%ksumtype
+    !print *, "in calmp2, quick_basis%ksumtype(2) is", quick_basis%ksumtype(2)
 
   
   call PrtAct(ioutfile,"Begin MP2 Calculation")
@@ -96,8 +100,8 @@ subroutine calmp2
      nbasistemp=10
   endif
 
-  print *, "in calmp2, nbasistemp is", nbasistemp
-  print *, "in calmp2, nstep is", nstep
+  !print *, "in calmp2, nbasistemp is", nbasistemp
+  !print *, "in calmp2, nstep is", nstep
 
   ! Allocate some variables
   allocate(mp2shell(nbasis))
@@ -106,7 +110,7 @@ subroutine calmp2
   allocate(orbmp2j331(nstep,ivir,nbasistemp,nbasistemp,2))
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
 
-  print *, "in clasmp2, shape of orbmp2i331 is", shape(orbmp2i331)
+  !print *, "in clasmp2, shape of orbmp2i331 is", shape(orbmp2i331)
 
   ! with nstep(acutally, it represetns step lenght), we can 
   ! have no. of steps for mp2 calculation
@@ -117,7 +121,7 @@ subroutine calmp2
   endif
   write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
-  print *, "in calmp2, nstepmp2 is", nstepmp2
+  !print *, "in calmp2, nstepmp2 is", nstepmp2
 
   ! Pre-step for density cutoff
   call densityCutoff    
@@ -133,7 +137,7 @@ subroutine calmp2
 
   ttt=MAXVAL(Ycutoff) ! Max Value of Ycutoff
 
-  print *, "in calmp2, jshell is", jshell
+  !print *, "in calmp2, jshell is", jshell
   do i3new=1,nstepmp2               ! Step counter
 
      call cpu_time(timer_begin%TMP2)
@@ -141,13 +145,13 @@ subroutine calmp2
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
      nstepmp2f=i3new*nstep          ! Step end n
 
-     print *, "nstepmp2s is", nstepmp2s
-     print *, "nstepmp2f is", nstepmp2f
+     !print *, "nstepmp2s is", nstepmp2s
+     !print *, "nstepmp2f is", nstepmp2f
 
      if(i3new.eq.nstepmp2)nstepmp2f=nelec/2
      nsteplength=nstepmp2f-nstepmp2s+1  ! Step Lengh, from nstepmp2s to nstepmp2f
      
-     print *, "nsteplength is", nsteplength
+     !print *, "nsteplength is", nsteplength
 
 
      ! Initial orbmp2k331
@@ -175,7 +179,7 @@ subroutine calmp2
                     !call initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasistemp)
                     !call initialOrbmp2ij(orbmp2j331,nstep,nsteplength,ivir,nbasistemp,nbasistemp)
 
-                    print *, " "
+                    !print *, " "
                     !print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL
                     ! Schwarts cutoff is implemented here
                     comax=0.d0
@@ -217,23 +221,23 @@ subroutine calmp2
                           call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
                        endif
                                                 
-                       print *, "in calmp2, ii,jj,kk,ll are",ii-1,jj-1,kk-1,ll-1
+                       !print *, "in calmp2, ii,jj,kk,ll are",ii-1,jj-1,kk-1,ll-1
 
 
-           print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
-           do ind1= 1, 1       !to jshell
-                do ind2= 1, 1      !to nbasis
-                    do ind3=1, nbasistemp
-                        do ind4=1, nbasistemp
-                            do ind5=1, 2
-                                write(*, '(f10.6)', advance='no'),&
-                                    orbmp2i331(ind1, ind2, ind3, ind4, ind5)
-                            end do
-                        end do
-                        write(*,'(" ")')  ! inner two layers on the same line
-                    end do
-                end do
-           end do
+           !print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
+           !do ind1= 1, 1       !to jshell
+           !     do ind2= 1, 1      !to nbasis
+           !         do ind3=1, nbasistemp
+           !             do ind4=1, nbasistemp
+           !                 do ind5=1, 2
+           !                     write(*, '(f10.6)', advance='no'),&
+           !                         orbmp2i331(ind1, ind2, ind3, ind4, ind5)
+           !                 end do
+           !             end do
+           !             write(*,'(" ")')  ! inner two layers on the same line
+           !         end do
+           !     end do
+           !end do
 
 
 
@@ -327,18 +331,18 @@ subroutine calmp2
 
      write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 
-     print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
-     do ind1=1, nelec/2
-        do ind2=1, nelec/2
-            do ind3=1,ivir
-                do ind4=1, nbasis
-                    write(*, '(f10.6)', advance='no'),&
-                        orbmp2k331(ind1, ind2, ind3, ind4)
-                enddo
-                write(*,'(" ")')
-            enddo 
-        enddo     
-     enddo
+     !print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
+     !do ind1=1, nelec/2
+     !   do ind2=1, nelec/2
+     !       do ind3=1,ivir
+     !           do ind4=1, nbasis
+     !               write(*, '(f10.6)', advance='no'),&
+     !                   orbmp2k331(ind1, ind2, ind3, ind4)
+     !           enddo
+     !           write(*,'(" ")')
+     !       enddo 
+     !   enddo     
+     !enddo
     
 
      !do icycle=1,nsteplength
