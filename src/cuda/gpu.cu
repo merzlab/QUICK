@@ -2924,4 +2924,28 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     
 }
 
+//-----------------------------------------------
+// calculate the size of shared memory for XC code
+//-----------------------------------------------
+void upload_xc_smem(){
 
+  // First, determine the sizes of prmitive function arrays that will go into smem
+  gpu -> gpu_xcq -> nprimf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins);
+
+  // count how many primitive functions per each bin
+  for(int i=0; i<gpu -> gpu_xcq -> nbins; i++){
+
+    int tot_primfpb=0;
+
+    for(int j=gpu -> gpu_xcq -> basf_locator -> _hostData[i]; j<gpu -> gpu_xcq -> basf_locator -> _hostData[i+1] ; j++){
+      for(int k=gpu -> gpu_xcq -> primf_locator -> _hostData[j]; k< gpu -> gpu_xcq -> primf_locator -> _hostData[j+1]; k++){
+        tot_primfpb++;
+      }
+    }
+    gpu -> gpu_xcq -> nprimf -> _hostData[i] = tot_primfpb;
+  }
+
+  gpu -> gpu_xcq -> nprimf -> Upload();
+  gpu ->gpu_sim.nprimf     = gpu -> gpu_xcq -> nprimf -> _devData;
+
+}
