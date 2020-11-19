@@ -2975,7 +2975,8 @@ void upload_xc_smem(){
     if(gpu -> gpu_xcq -> primfpbin -> _hostData[i] >= maxpfpbin) printf("bin_id= %i nprimf= %i \n", i, gpu -> gpu_xcq -> primfpbin -> _hostData[i]);
 
   // We will store basis and primitive function indices and primitive function locations of each bin in shared memory. 
-  gpu -> gpu_xcq -> smem_size = sizeof(char)*max_primf + sizeof(short)*max_basf + sizeof(int)*(max_basf+1)
- 
+  gpu -> gpu_xcq -> smem_size = sizeof(char)*max_primf + sizeof(short)*max_basf + sizeof(int)*(max_basf+1);
+
+  printf("Max number of basis functions: %i primitive functions: %i smem size: %i \n", max_basf, max_primf, gpu -> gpu_xcq -> smem_size); 
 
 }
