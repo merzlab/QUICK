@@ -550,9 +550,9 @@ module quick_gridpoints_module
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
      write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%DMCutoff
      write (ioutfile,'("   INITIAL GRID POINTS  =",I12)') self%init_ngpts
-     write (ioutfile,'("   FINAL GRID POINTS    =",I12)') self%ntgpts
-     write (ioutfile,'("   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
-     write (ioutfile,'("   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =",I12)') self%nbtotpf
+     write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%ntgpts
+     write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
+     write (ioutfile,'("|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =",I12)') self%nbtotpf
 
    end subroutine print_grid_information
 
