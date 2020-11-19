@@ -406,7 +406,7 @@ endif
             write (io,'(" DELTA DENSITY START CYCLE = ",I4)') self%ncyc
 
             ! cutoff size
-            write (io,'(" COMPUATIONAL CUTOFF: ")')
+            write (io,'(" COMPUTATIONAL CUTOFF: ")')
             write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%acutoff
             write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
             write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
