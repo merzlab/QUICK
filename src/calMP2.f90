@@ -263,6 +263,10 @@ subroutine MPI_calmp2
   double precision, allocatable:: temp4d(:,:,:,:)
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    integer :: nelec,nelecb
+
+    nelec = quick_molspec%nelec
+    nelecb = quick_molspec%nelecb
 
   if (bMPI) then
 !     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -278,6 +282,7 @@ subroutine MPI_calmp2
   ! occupied and virtual orbitals number
   iocc=Nelec/2
   ivir=Nbasis-Nelec/2
+
 
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
