@@ -160,6 +160,11 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 __global__ void get_density_kernel()
 {
+        //declare shared memory arrays
+        extern __shared__ char smem_buffer[];
+        unsigned char* primf=(unsigned char*)smem_buffer;
+        unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
+        unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -233,6 +238,12 @@ __global__ void get_density_kernel()
 }
 
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
+
+        //declare shared memory arrays
+        extern __shared__ char smem_buffer[];
+        unsigned char* primf=(unsigned char*)smem_buffer;
+        unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
+        unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -388,6 +399,12 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
 
 __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
+
+        //declare shared memory arrays
+        extern __shared__ char smem_buffer[];
+        unsigned char* primf=(unsigned char*)smem_buffer;
+        unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
+        unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
