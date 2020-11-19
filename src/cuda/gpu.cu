@@ -2006,6 +2006,7 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> gbz);
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
 	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
+        SAFE_DELETE(gpu -> gpu_xcq -> nprimf);
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
@@ -2963,6 +2964,7 @@ void upload_xc_smem(){
 
   gpu ->gpu_sim.maxbfpbin = maxbfpbin;
   gpu ->gpu_sim.maxpfpbin = maxpfpbin;
+
 
   printf("Max number of basis functions: %i primitive functions: %i smem size: %i \n", maxbfpbin, maxpfpbin, gpu -> gpu_xcq -> smem_size); 
 
