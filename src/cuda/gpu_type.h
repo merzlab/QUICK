@@ -123,7 +123,9 @@ struct XC_quadrature_type{
         cuda_buffer_type<char>*          mpi_bxccompute;
 
         // shared memory size
-        int smem_size;
+        int smem_size;                                 //size of shared memory buffer in xc kernels 
+        int primf_size;                                //size of primitive function index array in smem
+        int basf_size;                                 //size of basis function index array in smem
 };
 
 
@@ -202,6 +204,8 @@ struct gpu_simulation_type {
     unsigned int* cfweight;   //keeps track of significant b.f. for octree pruning
     unsigned int* pfweight;   //keeps track of significant p.f. for octree pruning
 
+    int primf_size;           //size of primitive function index array in smem for xc kernels
+    int basf_size;            //size of basis function index array in smem for xc kernels
 
     // Gaussian Type function
     
