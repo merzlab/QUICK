@@ -2006,7 +2006,7 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> gbz);
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
 	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
-        SAFE_DELETE(gpu -> gpu_xcq -> nprimf);
+        SAFE_DELETE(gpu -> gpu_xcq -> primfpbin);
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
@@ -2933,7 +2933,7 @@ void upload_xc_smem(){
 
   // First, determine the sizes of prmitive function arrays that will go into smem. This is helpful
   // to copy data from gmem to smem. 
-  gpu -> gpu_xcq -> nprimf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins);
+  gpu -> gpu_xcq -> primfpbin          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins);
 
   // Count how many primitive functions per each bin, also keep track of maximum number of basis and
   // primitive functions
@@ -2951,13 +2951,13 @@ void upload_xc_smem(){
         tot_primfpb++;
       }
     }
-    gpu -> gpu_xcq -> nprimf -> _hostData[i] = tot_primfpb;
+    gpu -> gpu_xcq -> primfpbin -> _hostData[i] = tot_primfpb;
     maxpfpbin = maxpfpbin < tot_primfpb ? tot_primfpb : maxpfpbin;  
 
   }
 
-  gpu -> gpu_xcq -> nprimf -> Upload();
-  gpu ->gpu_sim.nprimf     = gpu -> gpu_xcq -> nprimf -> _devData;
+  gpu -> gpu_xcq -> primfpbin -> Upload();
+  gpu ->gpu_sim.primfpbin     = gpu -> gpu_xcq -> primfpbin -> _devData;
 
   // We will store basis and primitive function indices and primitive function locations of each bin in shared memory. 
   gpu -> gpu_xcq -> smem_size = sizeof(char)*maxpfpbin + sizeof(short)*maxbfpbin + sizeof(int)*(maxbfpbin+1);
