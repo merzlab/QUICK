@@ -121,6 +121,9 @@ struct XC_quadrature_type{
 
         // mpi variables
         cuda_buffer_type<char>*          mpi_bxccompute;
+
+        // shared memory size
+        int smem_size;
 };
 
 
