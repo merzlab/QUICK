@@ -22,7 +22,7 @@ for i in {ene,opt}*.in
 do
   $DO_PARALLEL $TESTsander $i < /dev/null || error
   ../../../../test/dacdif -a 1e-5 saved/${i%.in}.out ${i%.in}.out
-  /bin/rm -f ${i%.in}.out
+  /bin/rm -f ${i%.in}.dat
 done
 
 exit 0
