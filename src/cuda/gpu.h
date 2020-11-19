@@ -42,9 +42,10 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
 extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
-//Following methods were added by Madu Manathunga
+//Following methods weddre added by Madu Manathunga
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense);
 extern "C" void gpu_delete_dft_grid_();
+void upload_xc_smem();
 
 // call subroutine
 // Fortran subroutine   --->  c interface    ->   kernel interface   ->    global       ->    kernel
