@@ -10,7 +10,7 @@
     double precision :: V2(3,nbasis)
     logical, intent(in) :: isGuess
     done = .false.
-    
+
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
@@ -101,10 +101,10 @@
         endif
 
     ! 2)  Calculate O' = Transpose[X] O X.
-    
+
     ! X and O are both symmetric, so O' = XOX. As X is symmetric,
     ! calculate OX first, store in HOLD, and calculate X (OX).
-    
+
     ! The matrix multiplier comes from Steve Dixon. It calculates
     ! C = Transpose(A) B.  For symmetric matrices this is fine, but
     ! for some calculations you first have to transpose the A matrix.
@@ -129,16 +129,16 @@
                 quick_qm_struct%o(I,J) = OIJ
             enddo
         enddo
-    
+
     ! 3)  Diagonalize O' to obtain C' and alpha eigenvalues.
     ! In this case VEC is now C'.
     ! There is a problem if HOLD is used for evec1.
-       
-       
+
+
         CALL DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E, &
             quick_qm_struct%idegen,quick_qm_struct%vec, &
         IERROR)
-        
+
 
     ! 4)  Calculate C = XC'
     ! Note here too that we are actuall calculating C = Transpose[X] C',
@@ -153,7 +153,7 @@
                 quick_qm_struct%co(I,J) = CIJ
             enddo
         enddo
-        
+
 
     ! 5)  Form new alpha density matrix.
     ! Save the old density matrix in HOLD for convergence comparison.
@@ -196,10 +196,10 @@
        ! call shift(sval,.false.,jscf)
 
     ! 2)  Calculate O' = Transpose[X] O X.
-    
+
     ! X and O are both symmetric, so O' = XOX. As X is symmetric,
     ! calculate OX first, store in HOLD, and calculate X (OX).
-    
+
     ! The matrix multiplier comes from Steve Dixon. It calculates
     ! C = Transpose(A) B.  For symmetric matrices this is fine, but
     ! for some calculations you first have to transpose the A matrix.
@@ -225,7 +225,7 @@
             enddo
         enddo
 
-    
+
     ! 3)  Diagonalize O' to obtain C' and BETA eigenvalues.
     ! In this case VEC is now C'.
     ! There is a problem if HOLD is used for evec1.
@@ -233,7 +233,7 @@
         CALL DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,&
         quick_qm_struct%EB,quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
 
-    
+
     ! 4)  Calculate C = XC'
     ! Note here too that we are actuall calculating C = Transpose[X] C',
     ! which is the same as C=XC' as X is symmetric.
@@ -289,26 +289,26 @@
         & "  MAX CHANGE= ",E12.6)') &
         PRMS,PCHANGE
         if (quick_method%DFT .OR. quick_method%SEDFT) then
-            if(.not. isGuess) write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
+            if(.not. isGuess) write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') &
             quick_qm_struct%aelec
-            if(.not. isGuess) write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
+            if(.not. isGuess) write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') &
             quick_qm_struct%belec
         endif
 
-        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
+        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'(" ALPHA HOMO-LUMO GAP (EV) =", &
         & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
+        if (quick_method%prtgap .and. .not.isGuess) write (ioutfile,'(" BETA HOMO-LUMO GAP (EV)  =", &
         & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
         if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
-            if(.not. isGuess) write (ioutfile,'("| CONVERGED!!!!!")')
+            if(.not. isGuess) write (ioutfile,'(" CONVERGED!!!!!")')
             done=.true.
         elseif(jscf >= quick_method%iscf) then
-            if(.not. isGuess) write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+            if(.not. isGuess) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
             done=.true.
             failed=.true.
         elseif (prms >= oldprms) then
             if (mod(dble(jscf),2.d0) == 0.d0) then
-                if(.not. isGuess) write (ioutfile,'("| NOT IMPROVING.  ", &
+                if(.not. isGuess) write (ioutfile,'(" NOT IMPROVING.  ", &
                 & "TRY MODIFYING ALPHA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
@@ -317,7 +317,7 @@
                     enddo
                 enddo
             else
-                if(.not. isGuess) write (ioutfile,'("| NOT IMPROVING.  ", &
+                if(.not. isGuess) write (ioutfile,'(" NOT IMPROVING.  ", &
                 & "TRY MODIFYING BETA DENSITY MATRIX.")')
                 do Ibas=1,nbasis
                     do Jbas=1,nbasis
