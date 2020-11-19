@@ -45,7 +45,7 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Wed Nov 18 17:37:29 2020
+| TASK STARTS ON: Thu Nov 19 10:28:29 2020
 | INPUT FILE :    ene_psb3_libxc_hgga_631g.in
 | OUTPUT FILE:    ene_psb3_libxc_hgga_631g.out
 | DATE FILE  :    ene_psb3_libxc_hgga_631g.dat
@@ -179,16 +179,16 @@
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
 |  1   -250.939618379      ------         0.937     1        0.00      0.93      0.00    0.2214E+01  0.5457E-01  0.5449E+00
-|  2   -249.630805955  -.130881E+01       1.211     2        0.00      1.21      0.00    0.1467E+00  0.2573E-01  0.2531E+00
-|  3   -249.484835810  -.145970E+00       1.209     3        0.00      1.21      0.00    0.1800E+00  0.1983E-01  0.2408E+00
-|  4   -249.746758522  0.261923E+00       1.208     4        0.00      1.21      0.00    0.7637E-01  0.5009E-02  0.7963E-01
-|  5   -249.764866941  0.181084E-01       1.209     5        0.00      1.21      0.00    0.2623E-01  0.1455E-02  0.2915E-01
-|  6   -249.766518049  0.165111E-02       1.214     6        0.00      1.21      0.00    0.9703E-02  0.5198E-03  0.7908E-02
+|  2   -249.630805955  -.130881E+01       1.216     2        0.00      1.21      0.00    0.1467E+00  0.2573E-01  0.2531E+00
+|  3   -249.484835810  -.145970E+00       1.210     3        0.00      1.21      0.00    0.1800E+00  0.1983E-01  0.2408E+00
+|  4   -249.746758522  0.261923E+00       1.215     4        0.00      1.21      0.00    0.7637E-01  0.5009E-02  0.7963E-01
+|  5   -249.764866941  0.181084E-01       1.216     5        0.00      1.21      0.00    0.2623E-01  0.1455E-02  0.2915E-01
+|  6   -249.766518049  0.165111E-02       1.208     6        0.00      1.21      0.00    0.9703E-02  0.5198E-03  0.7908E-02
 |  7   -249.766895946  0.377897E-03       1.208     7        0.00      1.21      0.00    0.1177E-02  0.8999E-04  0.1247E-02
-|  8   -249.766900879  0.493320E-05       1.211     8        0.00      1.21      0.00    0.4013E-03  0.3067E-04  0.4134E-03
-|  9   -249.766901524  0.645435E-06       1.212     9        0.00      1.21      0.00    0.1774E-03  0.9706E-05  0.1279E-03
-| 10   -249.766901602  0.777176E-07       1.215    10        0.00      1.21      0.00    0.2969E-04  0.1790E-05  0.2840E-04
-| 11   -249.766901606  0.406351E-08       1.214     1        0.00      1.21      0.00    0.6574E-05  0.6955E-06  0.6027E-05
+|  8   -249.766900879  0.493320E-05       1.214     8        0.00      1.21      0.00    0.4013E-03  0.3067E-04  0.4134E-03
+|  9   -249.766901524  0.645435E-06       1.208     9        0.00      1.21      0.00    0.1774E-03  0.9706E-05  0.1279E-03
+| 10   -249.766901602  0.777176E-07       1.209    10        0.00      1.21      0.00    0.2969E-04  0.1790E-05  0.2840E-04
+| 11   -249.766901606  0.406351E-08       1.216     1        0.00      1.21      0.00    0.6574E-05  0.6955E-06  0.6027E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  11 CYLCES
 | MAX ERROR = 0.657425E-05   RMS CHANGE = 0.695532E-06   MAX CHANGE = 0.602702E-05
@@ -205,29 +205,29 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.003738000(  7.00%)
-| DFT GRID OPERATIONS =     0.219229000(  1.53%)
-|       TOTAL GRID FORMATION TIME   =     0.001905000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.047009000(  0.33%)
-|       TOTAL OCTREE RUN TIME       =     0.030000000(  0.21%)
-|       TOTAL PRESCREENING TIME     =     0.120000000(  0.84%)
-|       TOTAL DATA PACKING TIME     =     0.020315000(  0.14%)
-| TOTAL SCF TIME      =    13.060827000( 91.08%)
-|       TOTAL OP TIME      =    13.031907000( 90.88%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.003605000(  0.03%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000779000(  0.01%)
-|             TOTAL 1e TIME      =     0.012365000(  0.09%)
-|                KINETIC 1e INTEGRALS TIME    =     0.007923000(  0.06%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.004438000(  0.03%)
-|             TOTAL 2e TIME      =     7.169668000( 50.00%)
-|             TOTAL EXC TIME     =     5.848988000( 40.79%)
-|             TOTAL ENERGY TIME  =     0.000288000(  0.00%)
-|       TOTAL DII TIME      =     0.028611000(  0.20%)
-|             TOTAL DIAG TIME    =     0.007790000(  0.05%)
-| TOTAL TIME          =    14.339733000
+| INITIAL GUESS TIME  =     1.301664000(  8.88%)
+| DFT GRID OPERATIONS =     0.229623000(  1.57%)
+|       TOTAL GRID FORMATION TIME   =     0.001790000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.046960000(  0.32%)
+|       TOTAL OCTREE RUN TIME       =     0.030000000(  0.20%)
+|       TOTAL PRESCREENING TIME     =     0.120000000(  0.82%)
+|       TOTAL DATA PACKING TIME     =     0.030873000(  0.21%)
+| TOTAL SCF TIME      =    13.068250000( 89.16%)
+|       TOTAL OP TIME      =    13.038883000( 88.96%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.003539000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000773000(  0.01%)
+|             TOTAL 1e TIME      =     0.012162000(  0.08%)
+|                KINETIC 1e INTEGRALS TIME    =     0.007915000(  0.05%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.004245000(  0.03%)
+|             TOTAL 2e TIME      =     7.125416000( 48.61%)
+|             TOTAL EXC TIME     =     5.900422000( 40.25%)
+|             TOTAL ENERGY TIME  =     0.000268000(  0.00%)
+|       TOTAL DII TIME      =     0.029030000(  0.20%)
+|             TOTAL DIAG TIME    =     0.007774000(  0.05%)
+| TOTAL TIME          =    14.657680000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 14.3 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 14.7 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Wed Nov 18 17:37:48 2020
+| Normal Termination. Task Finished on: Thu Nov 19 10:28:50 2020
