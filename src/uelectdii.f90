@@ -23,7 +23,7 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
 
    double precision :: allerror(quick_method%maxdiisscf,nbasis,nbasis)
    double precision :: alloperator(quick_method%maxdiisscf,nbasis,nbasis)
-   
+
    nelec = quick_molspec%nelec
    nelecb = quick_molspec%nelecb
 
@@ -373,7 +373,7 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
             enddo
          enddo
       else
-         if(.not. isGuess) write (ioutfile,'("| DIIS FAILED !! RETURN TO ", &
+         if(.not. isGuess) write (ioutfile,'(" DIIS FAILED !! RETURN TO ", &
                & "NORMAL SCF. (NOT FATAL.)")')
          jscf=jscf-1
          diisdone=.true.
@@ -564,32 +564,32 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
             PRMS,PCHANGE
 
       if (quick_method%DFT .OR. quick_method%SEDFT) then
-         if(.not. isGuess) write (ioutfile,'("| ALPHA ELECTRON DENSITY    =",F16.10)') &
+         if(.not. isGuess) write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') &
                quick_qm_struct%aelec
-         if(.not. isGuess) write (ioutfile,'("| BETA ELECTRON DENSITY     =",F16.10)') &
+         if(.not. isGuess) write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') &
                quick_qm_struct%belec
       endif
 
       if (quick_method%prtgap) then
-         if(.not. isGuess) write (ioutfile,'("| ALPHA HOMO-LUMO GAP (EV) =", &
+         if(.not. isGuess) write (ioutfile,'(" ALPHA HOMO-LUMO GAP (EV) =", &
                & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-         if(.not. isGuess) write (ioutfile,'("| BETA HOMO-LUMO GAP (EV)  =", &
+         if(.not. isGuess) write (ioutfile,'(" BETA HOMO-LUMO GAP (EV)  =", &
                & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
       endif
 
       if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
          if(.not. isGuess) write (ioutfile,' &
-               & ("| PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
+               & (" PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
          elseif(OLDPRMS <= PRMS) then
          if(.not. isGuess) write (ioutfile,' &
-               & ("| DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
+               & (" DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
          diisdone=.true.
       endif
       if(jscf >= quick_method%iscf-1) then
-         if(.not. isGuess) write (ioutfile,'("| RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+         if(.not. isGuess) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
          if(.not. isGuess) write (ioutfile,' &
-               & ("| PERFORM FINAL NO INTERPOLATION ITERATION")')
+               & (" PERFORM FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
       endif
       50 continue
@@ -597,4 +597,3 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
    enddo
 
 end subroutine uelectdiis
-
