@@ -261,7 +261,7 @@ subroutine MPI_calmp2
 
   double precision cutoffTest,testtmp,testCutoff
   double precision, allocatable:: temp4d(:,:,:,:)
-  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,total_ntemp
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
 
@@ -332,6 +332,7 @@ subroutine MPI_calmp2
   do i3new=1,nstepmp2               ! Step counter
      call cpu_time(timer_begin%TMP2)
      ntemp=0    ! integer counter
+     total_ntemp=0
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
      nstepmp2f=i3new*nstep          ! Step end n
 
@@ -503,8 +504,10 @@ subroutine MPI_calmp2
      !---------------- END MPI/ ALL NODES ------------------------
 
      !---------------- MPI/ MASTER -------------------------------
+    
+     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
      if (master) then
-
+        write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
         do icycle=1,nsteplength
            i3=nstepmp2s+icycle-1
