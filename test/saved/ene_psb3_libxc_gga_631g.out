@@ -1,108 +1,108 @@
-| *********************************************************************************************************
-| **                                                                                                     **
-| **           888888888888                                                                              **
-| **         8888888888888888                                                                            **
-| **      888888888888888888                                                                             **
-| **     888888888888888888                                                                              **
-| **    888888888888888                                                                                  **
-| **   88888888888888888888                               88888                       8888:              **
-| **   8888888888888888888888Z                            88888                       8888:              **
-| **   888888888888888888888888?                          88888                       8888:              **
-| **   8888888888888      8888888                                        888888       8888:              **
-| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
-| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
-| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
-| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
-| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
-| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
-| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
-| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
-| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
-| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
-| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
-| **                                                                                                     **
-| **                                                                                                     **
-| **                                         Copyright (c) 2020                                          **
-| **                          Regents of the University of California San Diego                          **
-| **                                    & Michigan State University                                      **
-| **                                        All Rights Reserved.                                         **
-| **                                                                                                     **
-| **                   This software provided pursuant to a license agreement containing                 **
-| **                   restrictions on its disclosure, duplication, and use. This software               **
-| **                   contains confidential and proprietary information, and may not be                 **
-| **                   extracted or distributed, in whole or in part, for any purpose                    **
-| **                   whatsoever, without the express written permission of the authors.                **
-| **                   This notice, and the associated author list, must be attached to                  **
-| **                   all copies, or extracts, of this software. Any additional                         **
-| **                   restrictions set forth in the license agreement also apply to this                **
-| **                   software.                                                                         **
-| *********************************************************************************************************
+  *********************************************************************************************************
+  **                                                                                                     **
+  **           888888888888                                                                              **
+  **         8888888888888888                                                                            **
+  **      888888888888888888                                                                             **
+  **     888888888888888888                                                                              **
+  **    888888888888888                                                                                  **
+  **   88888888888888888888                               88888                       8888:              **
+  **   8888888888888888888888Z                            88888                       8888:              **
+  **   888888888888888888888888?                          88888                       8888:              **
+  **   8888888888888      8888888                                        888888       8888:              **
+  **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+  **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+  **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+  **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+  **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+  **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+  **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+  **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+  **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+  **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+  **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+  **                                                                                                     **
+  **                                                                                                     **
+  **                                         Copyright (c) 2020                                          **
+  **                          Regents of the University of California San Diego                          **
+  **                                    & Michigan State University                                      **
+  **                                        All Rights Reserved.                                         **
+  **                                                                                                     **
+  **                   This software provided pursuant to a license agreement containing                 **
+  **                   restrictions on its disclosure, duplication, and use. This software               **
+  **                   contains confidential and proprietary information, and may not be                 **
+  **                   extracted or distributed, in whole or in part, for any purpose                    **
+  **                   whatsoever, without the express written permission of the authors.                **
+  **                   This notice, and the associated author list, must be attached to                  **
+  **                   all copies, or extracts, of this software. Any additional                         **
+  **                   restrictions set forth in the license agreement also apply to this                **
+  **                   software.                                                                         **
+  *********************************************************************************************************
                                                                                                            
-| Cite this work as:                                                                                       
-| Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03        
-| University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
+  Cite this work as:                                                                                       
+ Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
                                                                                                            
-| If you have any comments or queries, please send us an email for technical support:                      
-| quick.merzlab@gmail.com                                                                                  
+  If you have any comments or queries, please send us an email for technical support:                      
+  quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Nov 17 14:55:53 2020
+| TASK STARTS ON: Wed Nov 18 17:37:08 2020
 | INPUT FILE :    ene_psb3_libxc_gga_631g.in
 | OUTPUT FILE:    ene_psb3_libxc_gga_631g.out
 | DATE FILE  :    ene_psb3_libxc_gga_631g.dat
 | BASIS SET PATH: ../basis
 
-| @ Read Job And Atom
+ @ Read Job And Atom
 
   KEYWORD= DFT LIBXC=GGA_X_B88,GGA_C_LYP BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 CHARGE=+1                                                                                                                     
  ============== JOB CARD =============
-| METHOD = DENSITY FUNCTIONAL THEORY
-| USING LIBXC VERSION: 4.3.4
-| FUNCTIONAL INFORMATION:
-| NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
-| NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
-| DIRECT SCF 
-| SAD INITAL GUESS 
-| USE DIIS SCF
-| PRINT ENERGY EVERY CYCLE
-| STANDARD GRID = SG1
-| MAX SCF CYCLES =    200
-| MAX DIIS CYCLES =   10
-| DELTA DENSITY START CYCLE = 1000
-| COMPUATIONAL CUTOFF: 
-|      TWO-e INTEGRAL   =  0.100E-09
-|      BASIS SET PRIME  =  0.100E-19
-|      MATRIX ELEMENTS  =  0.100E-09
-|      BASIS FUNCTION   =  0.100E-09
-| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
-| BASIS SET = 6-31G,  TYPE = CARTESIAN
+ METHOD = DENSITY FUNCTIONAL THEORY
+ USING LIBXC VERSION: 4.3.4
+ FUNCTIONAL INFORMATION:
+ NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
+ NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ STANDARD GRID = SG1
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE = 1000
+ COMPUATIONAL CUTOFF: 
+      TWO-e INTEGRAL   =  0.100E-09
+      BASIS SET PRIME  =  0.100E-19
+      MATRIX ELEMENTS  =  0.100E-09
+      BASIS FUNCTION   =  0.100E-09
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = 6-31G,  TYPE = CARTESIAN
 | BASIS FILE = ../basis/6-31G.BAS
 
-| @ Finish reading job
+ @ Finish reading job
 
 
-| @ Begin SAD initial guess
+ @ Begin SAD initial guess
 
-| For Atom Kind =    1
-| ELEMENT = C 
-| BASIS FUNCTIONS =    9
-| For Atom Kind =    2
-| ELEMENT = N 
-| BASIS FUNCTIONS =    9
-| For Atom Kind =    3
-| ELEMENT = H 
-| BASIS FUNCTIONS =    2
+ For Atom Kind =    1
+ ELEMENT = C 
+ BASIS FUNCTIONS =    9
+ For Atom Kind =    2
+ ELEMENT = N 
+ BASIS FUNCTIONS =    9
+ For Atom Kind =    3
+ ELEMENT = H 
+ BASIS FUNCTIONS =    2
 
-| @ Finish SAD initial guess
+ @ Finish SAD initial guess
 
 
-| @ Begin Reading Molecular Information
+ @ Begin Reading Molecular Information
 
 
  =========== Molecule Input ==========
-| TOTAL MOLECULAR CHARGE  =    1    MULTIPLICITY                =    1
-| TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
-| NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
-| NUMBER OF ELECTRONS     =   44
+ TOTAL MOLECULAR CHARGE  =    1    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
+ NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
+ NUMBER OF ELECTRONS     =   44
 
  -- INPUT GEOMETRY -- :
     C          -2.7472      -0.8366       0.8589
@@ -153,83 +153,83 @@
      14    13.16700    12.59278     3.45864     0.00000
 
 ============== BASIS INFOS ==============
-| BASIS FUNCTIONS =   70
-| NSHELL =   34 NPRIM  =   92
-| JSHELL =   34 JBASIS =   92
+ BASIS FUNCTIONS =   70
+ NSHELL =   34 NPRIM  =   92
+ JSHELL =   34 JBASIS =   92
 
 
-| @ End Reading Molecular Information 
+ @ End Reading Molecular Information 
 
 
-| @ Begin XC Quadrature Formation
+ @ Begin XC Quadrature Formation
 
-| OCTAGO: OCTree Algorithm for Grid Operations 
-|   PRUNING CUTOFF       = 0.100E-09
-|   INITIAL GRID POINTS  =       52912
+ OCTAGO: OCTree Algorithm for Grid Operations 
+   PRUNING CUTOFF       = 0.100E-09
+   INITIAL GRID POINTS  =       52912
 |   FINAL GRID POINTS    =       34972
 |   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       26224
 |   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       32501
 
-| @ End XC Quadrature Formation
+ @ End XC Quadrature Formation
 
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.525867046      ------         0.916     1        0.00      0.91      0.00    0.2182E+01  0.5672E-01  0.5611E+00
-|  2   -249.455703700  -.107016E+01       1.196     2        0.00      1.19      0.00    0.1743E+00  0.3802E-01  0.4618E+00
-|  3   -248.841977588  -.613726E+00       1.326     3        0.00      1.32      0.00    0.3258E+00  0.3434E-01  0.4459E+00
-|  4   -249.533669570  0.691692E+00       1.185     4        0.00      1.18      0.00    0.1839E+00  0.1264E-01  0.2004E+00
-|  5   -249.640662076  0.106993E+00       1.195     5        0.00      1.19      0.00    0.5008E-01  0.4336E-02  0.6860E-01
-|  6   -249.652574151  0.119121E-01       1.330     6        0.00      1.33      0.00    0.2673E-01  0.1615E-02  0.2406E-01
-|  7   -249.656131268  0.355712E-02       1.197     7        0.00      1.19      0.00    0.4977E-02  0.4115E-03  0.7038E-02
-|  8   -249.656229437  0.981682E-04       1.191     8        0.00      1.19      0.00    0.3063E-02  0.1793E-03  0.2690E-02
-|  9   -249.656252118  0.226812E-04       1.197     9        0.00      1.19      0.00    0.7905E-03  0.6756E-04  0.9631E-03
-| 10   -249.656255177  0.305927E-05       1.191    10        0.00      1.19      0.00    0.3020E-03  0.2517E-04  0.3422E-03
-| 11   -249.656255772  0.594793E-06       1.198     1        0.00      1.19      0.00    0.2583E-04  0.4014E-05  0.4223E-04
-| 12   -249.656255780  0.820415E-08       1.198     2        0.00      1.19      0.00    0.6938E-05  0.5215E-06  0.9743E-05
+|  1   -250.525867046      ------         0.922     1        0.00      0.92      0.00    0.2182E+01  0.5672E-01  0.5611E+00
+|  2   -249.455703700  -.107016E+01       1.202     2        0.00      1.20      0.00    0.1743E+00  0.3802E-01  0.4618E+00
+|  3   -248.841977588  -.613726E+00       1.199     3        0.00      1.20      0.00    0.3258E+00  0.3434E-01  0.4459E+00
+|  4   -249.533669570  0.691692E+00       1.207     4        0.00      1.20      0.00    0.1839E+00  0.1264E-01  0.2004E+00
+|  5   -249.640662076  0.106993E+00       1.198     5        0.00      1.20      0.00    0.5008E-01  0.4336E-02  0.6860E-01
+|  6   -249.652574151  0.119121E-01       1.203     6        0.00      1.20      0.00    0.2673E-01  0.1615E-02  0.2406E-01
+|  7   -249.656131268  0.355712E-02       1.203     7        0.00      1.20      0.00    0.4977E-02  0.4115E-03  0.7038E-02
+|  8   -249.656229437  0.981682E-04       1.205     8        0.00      1.20      0.00    0.3063E-02  0.1793E-03  0.2690E-02
+|  9   -249.656252118  0.226812E-04       1.201     9        0.00      1.20      0.00    0.7905E-03  0.6756E-04  0.9631E-03
+| 10   -249.656255177  0.305927E-05       1.207    10        0.00      1.20      0.00    0.3020E-03  0.2517E-04  0.3422E-03
+| 11   -249.656255772  0.594793E-06       1.207     1        0.00      1.20      0.00    0.2583E-04  0.4014E-05  0.4223E-04
+| 12   -249.656255780  0.820415E-08       1.206     2        0.00      1.20      0.00    0.6938E-05  0.5215E-06  0.9743E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  12 CYLCES
 | MAX ERROR = 0.693793E-05   RMS CHANGE = 0.521491E-06   MAX CHANGE = 0.974264E-05
  -----------------------------------------------
-| ALPHA ELECTRON DENSITY    =   22.0000152510
-| BETA ELECTRON DENSITY     =   22.0000152510
+ ALPHA ELECTRON DENSITY    =   22.0000152510
+ BETA ELECTRON DENSITY     =   22.0000152510
   ELECTRONIC ENERGY    =  -456.841434149
   CORE_CORE REPULSION  =   207.185178368
   TOTAL ENERGY         =  -249.656255780
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
-| @ Output Timing Information
+ @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.116225000(  7.10%)
-| DFT GRID OPERATIONS =     0.215727000(  1.37%)
-|       TOTAL GRID FORMATION TIME   =     0.001876000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.047182000(  0.30%)
-|       TOTAL OCTREE RUN TIME       =     0.040000000(  0.25%)
-|       TOTAL PRESCREENING TIME     =     0.110000000(  0.70%)
-|       TOTAL DATA PACKING TIME     =     0.016669000(  0.11%)
-| TOTAL SCF TIME      =    14.331904000( 91.10%)
-|       TOTAL OP TIME      =    14.298440000( 90.89%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.003596000(  0.02%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000818000(  0.01%)
-|             TOTAL 1e TIME      =     0.012174000(  0.08%)
-|                KINETIC 1e INTEGRALS TIME    =     0.007912000(  0.05%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.004260000(  0.03%)
-|             TOTAL 2e TIME      =     8.139667000( 51.74%)
-|             TOTAL EXC TIME     =     6.145704000( 39.07%)
-|             TOTAL ENERGY TIME  =     0.000295000(  0.00%)
-|       TOTAL DII TIME      =     0.033130000(  0.21%)
-|             TOTAL DIAG TIME    =     0.008626000(  0.05%)
-| TOTAL TIME          =    15.731685000
+| INITIAL GUESS TIME  =     1.004353000(  6.50%)
+| DFT GRID OPERATIONS =     0.218843000(  1.42%)
+|       TOTAL GRID FORMATION TIME   =     0.001896000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.047487000(  0.31%)
+|       TOTAL OCTREE RUN TIME       =     0.040000000(  0.26%)
+|       TOTAL PRESCREENING TIME     =     0.120000000(  0.78%)
+|       TOTAL DATA PACKING TIME     =     0.009460000(  0.06%)
+| TOTAL SCF TIME      =    14.173502000( 91.68%)
+|       TOTAL OP TIME      =    14.139887000( 91.46%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.003438000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000764000(  0.00%)
+|             TOTAL 1e TIME      =     0.012310000(  0.08%)
+|                KINETIC 1e INTEGRALS TIME    =     0.007942000(  0.05%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.004365000(  0.03%)
+|             TOTAL 2e TIME      =     7.970340000( 51.56%)
+|             TOTAL EXC TIME     =     6.156277000( 39.82%)
+|             TOTAL ENERGY TIME  =     0.000298000(  0.00%)
+|       TOTAL DII TIME      =     0.033249000(  0.22%)
+|             TOTAL DIAG TIME    =     0.008561000(  0.06%)
+| TOTAL TIME          =    15.459792000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 15.7 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 15.5 seconds.
 
-| @ Finish Output Timing Information
+ @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Nov 17 14:56:15 2020
+| Normal Termination. Task Finished on: Wed Nov 18 17:37:29 2020

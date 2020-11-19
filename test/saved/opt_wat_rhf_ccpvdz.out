@@ -1,110 +1,110 @@
-| *********************************************************************************************************
-| **                                                                                                     **
-| **           888888888888                                                                              **
-| **         8888888888888888                                                                            **
-| **      888888888888888888                                                                             **
-| **     888888888888888888                                                                              **
-| **    888888888888888                                                                                  **
-| **   88888888888888888888                               88888                       8888:              **
-| **   8888888888888888888888Z                            88888                       8888:              **
-| **   888888888888888888888888?                          88888                       8888:              **
-| **   8888888888888      8888888                                        888888       8888:              **
-| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
-| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
-| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
-| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
-| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
-| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
-| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
-| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
-| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
-| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
-| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
-| **                                                                                                     **
-| **                                                                                                     **
-| **                                         Copyright (c) 2020                                          **
-| **                          Regents of the University of California San Diego                          **
-| **                                    & Michigan State University                                      **
-| **                                        All Rights Reserved.                                         **
-| **                                                                                                     **
-| **                   This software provided pursuant to a license agreement containing                 **
-| **                   restrictions on its disclosure, duplication, and use. This software               **
-| **                   contains confidential and proprietary information, and may not be                 **
-| **                   extracted or distributed, in whole or in part, for any purpose                    **
-| **                   whatsoever, without the express written permission of the authors.                **
-| **                   This notice, and the associated author list, must be attached to                  **
-| **                   all copies, or extracts, of this software. Any additional                         **
-| **                   restrictions set forth in the license agreement also apply to this                **
-| **                   software.                                                                         **
-| *********************************************************************************************************
+  *********************************************************************************************************
+  **                                                                                                     **
+  **           888888888888                                                                              **
+  **         8888888888888888                                                                            **
+  **      888888888888888888                                                                             **
+  **     888888888888888888                                                                              **
+  **    888888888888888                                                                                  **
+  **   88888888888888888888                               88888                       8888:              **
+  **   8888888888888888888888Z                            88888                       8888:              **
+  **   888888888888888888888888?                          88888                       8888:              **
+  **   8888888888888      8888888                                        888888       8888:              **
+  **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+  **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+  **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+  **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+  **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+  **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+  **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+  **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+  **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+  **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+  **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+  **                                                                                                     **
+  **                                                                                                     **
+  **                                         Copyright (c) 2020                                          **
+  **                          Regents of the University of California San Diego                          **
+  **                                    & Michigan State University                                      **
+  **                                        All Rights Reserved.                                         **
+  **                                                                                                     **
+  **                   This software provided pursuant to a license agreement containing                 **
+  **                   restrictions on its disclosure, duplication, and use. This software               **
+  **                   contains confidential and proprietary information, and may not be                 **
+  **                   extracted or distributed, in whole or in part, for any purpose                    **
+  **                   whatsoever, without the express written permission of the authors.                **
+  **                   This notice, and the associated author list, must be attached to                  **
+  **                   all copies, or extracts, of this software. Any additional                         **
+  **                   restrictions set forth in the license agreement also apply to this                **
+  **                   software.                                                                         **
+  *********************************************************************************************************
                                                                                                            
-| Cite this work as:                                                                                       
-| Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03        
-| University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
+  Cite this work as:                                                                                       
+ Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
                                                                                                            
-| If you have any comments or queries, please send us an email for technical support:                      
-| quick.merzlab@gmail.com                                                                                  
+  If you have any comments or queries, please send us an email for technical support:                      
+  quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Nov 17 15:00:08 2020
+| TASK STARTS ON: Wed Nov 18 17:41:15 2020
 | INPUT FILE :    opt_wat_rhf_ccpvdz.in
 | OUTPUT FILE:    opt_wat_rhf_ccpvdz.out
 | DATE FILE  :    opt_wat_rhf_ccpvdz.dat
 | BASIS SET PATH: ../basis
 
-| @ Read Job And Atom
+ @ Read Job And Atom
 
   KEYWORD=HF BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE OPT                                                                                                                                               
  ============== JOB CARD =============
-| METHOD = HATREE FOCK
-| DIRECT SCF 
-| SAD INITAL GUESS 
-| USE DIIS SCF
-| PRINT ENERGY EVERY CYCLE
-| Z-MATRIX CONSTRUCTION
-| GEOMETRY OPTIMIZATION| NUMERICAL GRADIENT
-| REQUEST CRITERIA FOR GEOMETRY CONVERGENCE: 
-|      MAX ALLOWED GEO CHANGE  =  0.189E+00
-|      MAX GEOMETRY CHANGE     =  0.180E-02
-|      GEOMETRY CHANGE RMS     =  0.120E-02
-|      MAX GRADIENT CHANGE     =  0.100E-02
-|      GRADIENT NORMALIZATION  =  0.300E-03
-| GRADIENT CALCULATION
-| MAX SCF CYCLES =    200
-| MAX DIIS CYCLES =   10
-| DELTA DENSITY START CYCLE = 1000
-| COMPUATIONAL CUTOFF: 
-|      TWO-e INTEGRAL   =  0.100E-08
-|      BASIS SET PRIME  =  0.100E-19
-|      MATRIX ELEMENTS  =  0.100E-09
-|      BASIS FUNCTION   =  0.100E-09
-|      GRADIENT CUTOFF  =  0.100E-08
-| DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
-| BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
+ METHOD = HATREE FOCK
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ Z-MATRIX CONSTRUCTION
+ GEOMETRY OPTIMIZATION NUMERICAL GRADIENT
+ REQUEST CRITERIA FOR GEOMETRY CONVERGENCE: 
+      MAX ALLOWED GEO CHANGE  =  0.189E+00
+      MAX GEOMETRY CHANGE     =  0.180E-02
+      GEOMETRY CHANGE RMS     =  0.120E-02
+      MAX GRADIENT CHANGE     =  0.100E-02
+      GRADIENT NORMALIZATION  =  0.300E-03
+ GRADIENT CALCULATION
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE = 1000
+ COMPUATIONAL CUTOFF: 
+      TWO-e INTEGRAL   =  0.100E-08
+      BASIS SET PRIME  =  0.100E-19
+      MATRIX ELEMENTS  =  0.100E-09
+      BASIS FUNCTION   =  0.100E-09
+      GRADIENT CUTOFF  =  0.100E-08
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
 | BASIS FILE = ../basis/CC-PVDZ.BAS
 
-| @ Finish reading job
+ @ Finish reading job
 
 
-| @ Begin SAD initial guess
+ @ Begin SAD initial guess
 
-| For Atom Kind =    1
-| ELEMENT = O 
-| BASIS FUNCTIONS =   15
-| For Atom Kind =    2
-| ELEMENT = H 
-| BASIS FUNCTIONS =    5
+ For Atom Kind =    1
+ ELEMENT = O 
+ BASIS FUNCTIONS =   15
+ For Atom Kind =    2
+ ELEMENT = H 
+ BASIS FUNCTIONS =    5
 
-| @ Finish SAD initial guess
+ @ Finish SAD initial guess
 
 
-| @ Begin Reading Molecular Information
+ @ Begin Reading Molecular Information
 
 
  =========== Molecule Input ==========
-| TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
-| TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
-| NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
-| NUMBER OF ELECTRONS     =   10
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+ NUMBER OF ELECTRONS     =   10
 
  -- INPUT GEOMETRY -- :
     O          -0.7415       1.7521       2.8963
@@ -118,18 +118,18 @@
       3     1.83707     3.28673     0.00000
 
 ============== BASIS INFOS ==============
-| BASIS FUNCTIONS =   25
-| NSHELL =   12 NPRIM  =   37
-| JSHELL =   12 JBASIS =   37
+ BASIS FUNCTIONS =   25
+ NSHELL =   12 NPRIM  =   37
+ JSHELL =   12 JBASIS =   37
 
 
-| @ End Reading Molecular Information 
+ @ End Reading Molecular Information 
 
 
-| @ Begin Optimization Job
+ @ Begin Optimization Job
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   1 OUT OF   27  ============
@@ -140,7 +140,7 @@ ELEMENT      X              Y              Z
   H          -1.111151       0.979769       3.352290
   H          -0.920500       2.036450       1.984040
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -148,15 +148,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.073131785      ------         0.032     1        0.00      0.03      0.00    0.1656E+01  0.9533E-01  0.8122E+00
 |  2    -75.965463962  -.107668E+00       0.075     2        0.00      0.07      0.00    0.1286E+00  0.3678E-01  0.4200E+00
-|  3    -76.003809436  0.383455E-01       0.072     3        0.00      0.07      0.00    0.6934E-01  0.1203E-01  0.1341E+00
-|  4    -76.012549796  0.874036E-02       0.074     4        0.00      0.07      0.00    0.1459E-01  0.3536E-02  0.3992E-01
-|  5    -76.013230263  0.680467E-03       0.074     5        0.00      0.07      0.00    0.2760E-02  0.1115E-02  0.8377E-02
+|  3    -76.003809436  0.383455E-01       0.075     3        0.00      0.07      0.00    0.6934E-01  0.1203E-01  0.1341E+00
+|  4    -76.012549796  0.874036E-02       0.075     4        0.00      0.07      0.00    0.1459E-01  0.3536E-02  0.3992E-01
+|  5    -76.013230263  0.680467E-03       0.075     5        0.00      0.07      0.00    0.2760E-02  0.1115E-02  0.8377E-02
 |  6    -76.013289799  0.595355E-04       0.075     6        0.00      0.07      0.00    0.4768E-03  0.2497E-03  0.1535E-02
-|  7    -76.013292264  0.246568E-05       0.075     7        0.00      0.07      0.00    0.9698E-04  0.5113E-04  0.3835E-03
+|  7    -76.013292264  0.246568E-05       0.075     7        0.00      0.08      0.00    0.9698E-04  0.5113E-04  0.3835E-03
 |  8    -76.013292375  0.110240E-06       0.075     8        0.00      0.07      0.00    0.1671E-04  0.8588E-05  0.6775E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
 |  9    -76.013294766  0.239142E-05       0.083     9        0.00      0.08      0.00    0.3323E-05  0.1672E-05  0.1047E-04
-| 10    -76.013294766  0.898002E-10       0.083    10        0.00      0.08      0.00    0.8443E-06  0.2942E-06  0.2168E-05
+| 10    -76.013294766  0.898002E-10       0.079    10        0.00      0.08      0.00    0.8443E-06  0.2942E-06  0.2168E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
 | MAX ERROR = 0.844337E-06   RMS CHANGE = 0.294152E-06   MAX CHANGE = 0.216823E-05
@@ -165,7 +165,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.022878773
   TOTAL ENERGY         =   -76.013294766
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -183,12 +183,12 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     1.9840401515     0.0000000000    -0.0303551544     2.0840401515
 ----------------------------------------------------------------------------
  OPTIMZATION STATISTICS:
- MAXIMUM GRADIENT ELEMENT=    0.4128001128E-01(REQUEST=    0.1000000000E-02)
+ MAXIMUM GRADIENT ELEMENT=     0.4128001128E-01 (REQUEST=     0.1000000000E-02 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   2 OUT OF   27  ============
@@ -199,7 +199,7 @@ ELEMENT      X              Y              Z
   H          -1.132986       1.079769       3.252290
   H          -1.012650       1.936450       2.084040
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -207,15 +207,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.070083100      ------         0.046     1        0.00      0.05      0.00    0.1828E+01  0.9724E-01  0.8462E+00
 |  2    -75.974614795  -.954683E-01       0.072     2        0.00      0.07      0.00    0.1325E+00  0.3798E-01  0.4841E+00
-|  3    -76.015550456  0.409357E-01       0.072     3        0.00      0.07      0.00    0.6939E-01  0.1201E-01  0.1394E+00
-|  4    -76.024725662  0.917521E-02       0.075     4        0.00      0.07      0.00    0.1440E-01  0.3412E-02  0.4138E-01
-|  5    -76.025513138  0.787476E-03       0.075     5        0.00      0.07      0.00    0.3351E-02  0.1329E-02  0.1129E-01
-|  6    -76.025596662  0.835239E-04       0.074     6        0.00      0.07      0.00    0.5393E-03  0.2629E-03  0.1824E-02
-|  7    -76.025599351  0.268958E-05       0.069     7        0.00      0.07      0.00    0.1075E-03  0.4690E-04  0.2882E-03
-|  8    -76.025599447  0.956530E-07       0.071     8        0.00      0.07      0.00    0.1615E-04  0.7510E-05  0.6134E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  9    -76.025601896  0.244929E-05       0.083     9        0.00      0.08      0.00    0.3558E-05  0.1724E-05  0.1143E-04
-| 10    -76.025601896  0.857607E-10       0.079    10        0.00      0.08      0.00    0.1149E-05  0.3453E-06  0.3029E-05
+|  3    -76.015550456  0.409357E-01       0.071     3        0.00      0.07      0.00    0.6939E-01  0.1201E-01  0.1394E+00
+|  4    -76.024725662  0.917521E-02       0.072     4        0.00      0.07      0.00    0.1440E-01  0.3412E-02  0.4138E-01
+|  5    -76.025513138  0.787476E-03       0.072     5        0.00      0.07      0.00    0.3351E-02  0.1329E-02  0.1129E-01
+|  6    -76.025596662  0.835239E-04       0.075     6        0.00      0.08      0.00    0.5393E-03  0.2629E-03  0.1824E-02
+|  7    -76.025599351  0.268958E-05       0.073     7        0.00      0.07      0.00    0.1075E-03  0.4690E-04  0.2882E-03
+|  8    -76.025599447  0.956530E-07       0.069     8        0.00      0.07      0.00    0.1615E-04  0.7510E-05  0.6134E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  9    -76.025601896  0.244929E-05       0.077     9        0.00      0.08      0.00    0.3558E-05  0.1724E-05  0.1143E-04
+| 10    -76.025601896  0.857607E-10       0.080    10        0.00      0.08      0.00    0.1149E-05  0.3453E-06  0.3029E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
 | MAX ERROR = 0.114899E-05   RMS CHANGE = 0.345329E-06   MAX CHANGE = 0.302866E-05
@@ -224,7 +224,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.149084526
   TOTAL ENERGY         =   -76.025601896
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -242,15 +242,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0840401515    -0.0303551544    -0.0204206047     2.1840401515
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.1230713019E-01 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.1000000000E+00 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.6092021958E-01 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.1622331366E-01 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.1230713019E-01 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.1000000000E+00 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.6092021958E-01 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.1622331366E-01 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   3 OUT OF   27  ============
@@ -261,7 +261,7 @@ ELEMENT      X              Y              Z
   H          -1.101898       1.126008       3.236538
   H          -0.963797       1.923397       2.184040
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -269,14 +269,14 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.365734662      ------         0.047     1        0.00      0.05      0.00    0.2594E+01  0.1219E+00  0.1044E+01
 |  2    -75.895549167  -.470185E+00       0.076     2        0.00      0.08      0.00    0.1254E+00  0.4227E-01  0.5156E+00
-|  3    -75.936051940  0.405028E-01       0.076     3        0.00      0.08      0.00    0.6079E-01  0.1167E-01  0.1259E+00
+|  3    -75.936051940  0.405028E-01       0.073     3        0.00      0.07      0.00    0.6079E-01  0.1167E-01  0.1259E+00
 |  4    -75.943546893  0.749495E-02       0.076     4        0.00      0.08      0.00    0.1105E-01  0.3408E-02  0.4069E-01
 |  5    -75.943988233  0.441340E-03       0.076     5        0.00      0.08      0.00    0.1805E-02  0.7886E-03  0.6539E-02
 |  6    -75.944014359  0.261264E-04       0.076     6        0.00      0.08      0.00    0.3752E-03  0.1884E-03  0.1212E-02
 |  7    -75.944015514  0.115477E-05       0.076     7        0.00      0.08      0.00    0.5664E-04  0.3167E-04  0.2298E-03
-|  8    -75.944015542  0.280098E-07       0.076     8        0.00      0.08      0.00    0.9496E-05  0.3096E-05  0.1885E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  9    -75.944017932  0.238973E-05       0.083     9        0.00      0.08      0.00    0.2845E-05  0.9320E-06  0.1270E-04
+|  8    -75.944015542  0.280098E-07       0.073     8        0.00      0.07      0.00    0.9496E-05  0.3096E-05  0.1885E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  9    -75.944017932  0.238973E-05       0.084     9        0.00      0.08      0.00    0.2845E-05  0.9320E-06  0.1270E-04
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYLCES
 | MAX ERROR = 0.284463E-05   RMS CHANGE = 0.932014E-06   MAX CHANGE = 0.126975E-04
@@ -285,7 +285,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =    10.974518231
   TOTAL ENERGY         =   -75.944017932
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -303,15 +303,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.1840401515    -0.0204206047     0.4693865487     2.0998568943
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =    0.8158396424E-01 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.8627335206E-01 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.5229291360E-01 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.2337576721E+00 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =     0.8158396424E-01 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.8627335206E-01 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.5229291360E-01 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.2337576721E+00 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   4 OUT OF   27  ============
@@ -322,7 +322,7 @@ ELEMENT      X              Y              Z
   H          -1.128861       1.085904       3.250200
   H          -1.006168       1.934718       2.099857
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -330,13 +330,13 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.116142163      ------         0.046     1        0.00      0.05      0.00    0.1907E+01  0.9997E-01  0.8709E+00
 |  2    -75.976383324  -.139759E+00       0.075     2        0.00      0.07      0.00    0.1307E+00  0.3836E-01  0.4881E+00
-|  3    -76.016954881  0.405716E-01       0.071     3        0.00      0.07      0.00    0.6761E-01  0.1184E-01  0.1366E+00
+|  3    -76.016954881  0.405716E-01       0.072     3        0.00      0.07      0.00    0.6761E-01  0.1184E-01  0.1366E+00
 |  4    -76.025706399  0.875152E-02       0.075     4        0.00      0.07      0.00    0.1398E-01  0.3382E-02  0.4142E-01
-|  5    -76.026431675  0.725276E-03       0.075     5        0.00      0.07      0.00    0.2996E-02  0.1233E-02  0.1061E-01
+|  5    -76.026431675  0.725276E-03       0.072     5        0.00      0.07      0.00    0.2996E-02  0.1233E-02  0.1061E-01
 |  6    -76.026502413  0.707376E-04       0.075     6        0.00      0.07      0.00    0.4665E-03  0.2448E-03  0.1620E-02
 |  7    -76.026504637  0.222477E-05       0.075     7        0.00      0.07      0.00    0.9130E-04  0.4124E-04  0.2303E-03
 |  8    -76.026504705  0.676097E-07       0.075     8        0.00      0.07      0.00    0.1368E-04  0.5859E-05  0.4262E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
 |  9    -76.026506981  0.227560E-05       0.082     9        0.00      0.08      0.00    0.3229E-05  0.1545E-05  0.1006E-04
 | 10    -76.026506981  0.736140E-10       0.082    10        0.00      0.08      0.00    0.1081E-05  0.3432E-06  0.2944E-05
 ------------------------------------------------------------------------------------------------------------------------
@@ -347,7 +347,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.368244296
   TOTAL ENERGY         =   -76.026506981
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -365,15 +365,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0998568943     0.4693865487     0.0126758212     2.0552373016
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.8248904863E-01 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.6739478742E-01 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.3831545271E-01 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.6782491411E-02 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.8248904863E-01 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.6739478742E-01 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.3831545271E-01 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.6782491411E-02 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   5 OUT OF   27  ============
@@ -384,7 +384,7 @@ ELEMENT      X              Y              Z
   H          -1.122004       1.055646       3.317595
   H          -0.983667       1.990911       2.055237
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -392,13 +392,13 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.088319024      ------         0.046     1        0.00      0.05      0.00    0.1783E+01  0.9745E-01  0.8452E+00
 |  2    -75.976576257  -.111743E+00       0.075     2        0.00      0.07      0.00    0.1309E+00  0.3732E-01  0.4581E+00
-|  3    -76.016423744  0.398475E-01       0.074     3        0.00      0.07      0.00    0.6782E-01  0.1192E-01  0.1358E+00
-|  4    -76.025085552  0.866181E-02       0.074     4        0.00      0.07      0.00    0.1470E-01  0.3485E-02  0.4141E-01
-|  5    -76.025800833  0.715281E-03       0.071     5        0.00      0.07      0.00    0.2753E-02  0.1187E-02  0.9734E-02
+|  3    -76.016423744  0.398475E-01       0.071     3        0.00      0.07      0.00    0.6782E-01  0.1192E-01  0.1358E+00
+|  4    -76.025085552  0.866181E-02       0.072     4        0.00      0.07      0.00    0.1470E-01  0.3485E-02  0.4141E-01
+|  5    -76.025800833  0.715281E-03       0.075     5        0.00      0.07      0.00    0.2753E-02  0.1187E-02  0.9734E-02
 |  6    -76.025866278  0.654448E-04       0.075     6        0.00      0.07      0.00    0.4379E-03  0.2441E-03  0.1550E-02
-|  7    -76.025868494  0.221652E-05       0.071     7        0.00      0.07      0.00    0.9330E-04  0.4380E-04  0.2611E-03
+|  7    -76.025868494  0.221652E-05       0.075     7        0.00      0.07      0.00    0.9330E-04  0.4380E-04  0.2611E-03
 |  8    -76.025868570  0.761224E-07       0.075     8        0.00      0.07      0.00    0.1527E-04  0.6608E-05  0.4431E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
 |  9    -76.025870892  0.232212E-05       0.083     9        0.00      0.08      0.00    0.2793E-05  0.1677E-05  0.9044E-05
 | 10    -76.025870892  0.954632E-10       0.083    10        0.00      0.08      0.00    0.9965E-06  0.3361E-06  0.2376E-05
 ------------------------------------------------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.190674752
   TOTAL ENERGY         =   -76.025870892
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -427,15 +427,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0552373016     0.0126758212    -0.0095882198     2.0806488190
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =    0.6360881941E-03 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.3838232744E-01 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.2182121657E-01 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.9170850008E-02 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =     0.6360881941E-03 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.3838232744E-01 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.2182121657E-01 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.9170850008E-02 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   6 OUT OF   27  ============
@@ -446,7 +446,7 @@ ELEMENT      X              Y              Z
   H          -1.125909       1.072879       3.279213
   H          -0.996481       1.958908       2.080649
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -454,14 +454,14 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.106287105      ------         0.046     1        0.00      0.05      0.00    0.1857E+01  0.9901E-01  0.8613E+00
 |  2    -75.977696429  -.128591E+00       0.075     2        0.00      0.07      0.00    0.1308E+00  0.3788E-01  0.4756E+00
-|  3    -76.017921513  0.402251E-01       0.074     3        0.00      0.07      0.00    0.6750E-01  0.1186E-01  0.1361E+00
-|  4    -76.026581759  0.866025E-02       0.072     4        0.00      0.07      0.00    0.1428E-01  0.3422E-02  0.4147E-01
-|  5    -76.027297760  0.716001E-03       0.072     5        0.00      0.07      0.00    0.2740E-02  0.1205E-02  0.1019E-01
-|  6    -76.027365105  0.673457E-04       0.071     6        0.00      0.07      0.00    0.4466E-03  0.2422E-03  0.1557E-02
+|  3    -76.017921513  0.402251E-01       0.075     3        0.00      0.07      0.00    0.6750E-01  0.1186E-01  0.1361E+00
+|  4    -76.026581759  0.866025E-02       0.075     4        0.00      0.07      0.00    0.1428E-01  0.3422E-02  0.4147E-01
+|  5    -76.027297760  0.716001E-03       0.075     5        0.00      0.07      0.00    0.2740E-02  0.1205E-02  0.1019E-01
+|  6    -76.027365105  0.673457E-04       0.075     6        0.00      0.07      0.00    0.4466E-03  0.2422E-03  0.1557E-02
 |  7    -76.027367279  0.217339E-05       0.072     7        0.00      0.07      0.00    0.9021E-04  0.4179E-04  0.2297E-03
-|  8    -76.027367348  0.691350E-07       0.068     8        0.00      0.07      0.00    0.1447E-04  0.6006E-05  0.3954E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  9    -76.027369629  0.228135E-05       0.082     9        0.00      0.08      0.00    0.3133E-05  0.1581E-05  0.1000E-04
+|  8    -76.027367348  0.691350E-07       0.075     8        0.00      0.07      0.00    0.1447E-04  0.6006E-05  0.3954E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  9    -76.027369629  0.228135E-05       0.079     9        0.00      0.08      0.00    0.3133E-05  0.1581E-05  0.1000E-04
 | 10    -76.027369629  0.830056E-10       0.083    10        0.00      0.08      0.00    0.1055E-05  0.3384E-06  0.2757E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
@@ -471,7 +471,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.302001819
   TOTAL ENERGY         =   -76.027369629
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -489,15 +489,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0806488190    -0.0095882198     0.0035236104     2.0753039812
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.1498737022E-02 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.9274207105E-02 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.5266812730E-02 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.2471777070E-02 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.1498737022E-02 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.9274207105E-02 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.5266812730E-02 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.2471777070E-02 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   7 OUT OF   27  ============
@@ -508,21 +508,21 @@ ELEMENT      X              Y              Z
   H          -1.120990       1.079570       3.278280
   H          -0.997062       1.961492       2.075304
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.120085630      ------         0.046     1        0.00      0.05      0.00    0.1885E+01  0.9934E-01  0.8509E+00
-|  2    -75.978781304  -.141304E+00       0.075     2        0.00      0.07      0.00    0.1254E+00  0.3792E-01  0.4777E+00
+|  2    -75.978781304  -.141304E+00       0.075     2        0.00      0.08      0.00    0.1254E+00  0.3792E-01  0.4777E+00
 |  3    -76.017877537  0.390962E-01       0.075     3        0.00      0.07      0.00    0.6654E-01  0.1171E-01  0.1341E+00
 |  4    -76.026239970  0.836243E-02       0.075     4        0.00      0.07      0.00    0.1336E-01  0.3332E-02  0.4087E-01
-|  5    -76.026906218  0.666248E-03       0.075     5        0.00      0.07      0.00    0.2713E-02  0.1154E-02  0.1001E-01
-|  6    -76.026968336  0.621176E-04       0.075     6        0.00      0.07      0.00    0.4615E-03  0.2360E-03  0.1544E-02
-|  7    -76.026970473  0.213760E-05       0.071     7        0.00      0.07      0.00    0.9124E-04  0.4254E-04  0.2354E-03
-|  8    -76.026970547  0.736386E-07       0.075     8        0.00      0.07      0.00    0.1428E-04  0.6269E-05  0.4252E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+|  5    -76.026906218  0.666248E-03       0.072     5        0.00      0.07      0.00    0.2713E-02  0.1154E-02  0.1001E-01
+|  6    -76.026968336  0.621176E-04       0.075     6        0.00      0.08      0.00    0.4615E-03  0.2360E-03  0.1544E-02
+|  7    -76.026970473  0.213760E-05       0.076     7        0.00      0.08      0.00    0.9124E-04  0.4254E-04  0.2354E-03
+|  8    -76.026970547  0.736386E-07       0.072     8        0.00      0.07      0.00    0.1428E-04  0.6269E-05  0.4252E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
 |  9    -76.026972772  0.222466E-05       0.083     9        0.00      0.08      0.00    0.2924E-05  0.1548E-05  0.9724E-05
 | 10    -76.026972772  0.776765E-10       0.083    10        0.00      0.08      0.00    0.9536E-06  0.3362E-06  0.2740E-05
 ------------------------------------------------------------------------------------------------------------------------
@@ -533,7 +533,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.344793001
   TOTAL ENERGY         =   -76.026972772
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -551,15 +551,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0753039812     0.0035236104    -0.0090003458     2.0797473154
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =    0.3968577559E-03 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.7709944314E-02 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.4378469491E-02 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.1153444661E-01 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =     0.3968577559E-03 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.7709944314E-02 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.4378469491E-02 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.1153444661E-01 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   8 OUT OF   27  ============
@@ -570,7 +570,7 @@ ELEMENT      X              Y              Z
   H          -1.125079       1.074007       3.279055
   H          -0.996579       1.959344       2.079747
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -580,12 +580,12 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 |  2    -75.977976871  -.130648E+00       0.075     2        0.00      0.07      0.00    0.1299E+00  0.3788E-01  0.4760E+00
 |  3    -76.018002175  0.400253E-01       0.075     3        0.00      0.07      0.00    0.6733E-01  0.1183E-01  0.1357E+00
 |  4    -76.026608466  0.860629E-02       0.075     4        0.00      0.07      0.00    0.1412E-01  0.3406E-02  0.4137E-01
-|  5    -76.027315677  0.707211E-03       0.075     5        0.00      0.07      0.00    0.2735E-02  0.1196E-02  0.1016E-01
+|  5    -76.027315677  0.707211E-03       0.072     5        0.00      0.07      0.00    0.2735E-02  0.1196E-02  0.1016E-01
 |  6    -76.027382095  0.664176E-04       0.075     6        0.00      0.07      0.00    0.4490E-03  0.2411E-03  0.1540E-02
-|  7    -76.027384261  0.216672E-05       0.071     7        0.00      0.07      0.00    0.9042E-04  0.4191E-04  0.2284E-03
-|  8    -76.027384331  0.699660E-07       0.072     8        0.00      0.07      0.00    0.1445E-04  0.6051E-05  0.4009E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  9    -76.027386593  0.226198E-05       0.079     9        0.00      0.08      0.00    0.3100E-05  0.1570E-05  0.1002E-04
+|  7    -76.027384261  0.216672E-05       0.076     7        0.00      0.08      0.00    0.9042E-04  0.4191E-04  0.2284E-03
+|  8    -76.027384331  0.699660E-07       0.075     8        0.00      0.07      0.00    0.1445E-04  0.6051E-05  0.4009E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  9    -76.027386593  0.226198E-05       0.083     9        0.00      0.08      0.00    0.3100E-05  0.1570E-05  0.1002E-04
 | 10    -76.027386593  0.818190E-10       0.083    10        0.00      0.08      0.00    0.1026E-05  0.3320E-06  0.2725E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
@@ -595,7 +595,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.308914151
   TOTAL ENERGY         =   -76.027386593
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -613,15 +613,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0797473154    -0.0090003458     0.0013632927     2.0792318225
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.4138216336E-03 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.6231104888E-03 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.3966502639E-03 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.7854668247E-03 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.4138216336E-03 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.6231104888E-03 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.3966502639E-03 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.7854668247E-03 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP   9 OUT OF   27  ============
@@ -632,7 +632,7 @@ ELEMENT      X              Y              Z
   H          -1.125336       1.073759       3.278948
   H          -0.996924       1.959233       2.079232
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
@@ -640,14 +640,14 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.106571038      ------         0.046     1        0.00      0.05      0.00    0.1856E+01  0.9894E-01  0.8586E+00
 |  2    -75.977925294  -.128646E+00       0.075     2        0.00      0.07      0.00    0.1300E+00  0.3787E-01  0.4759E+00
-|  3    -76.017981050  0.400558E-01       0.075     3        0.00      0.07      0.00    0.6741E-01  0.1184E-01  0.1359E+00
+|  3    -76.017981050  0.400558E-01       0.076     3        0.00      0.08      0.00    0.6741E-01  0.1184E-01  0.1359E+00
 |  4    -76.026607325  0.862627E-02       0.075     4        0.00      0.07      0.00    0.1415E-01  0.3407E-02  0.4138E-01
-|  5    -76.027317601  0.710277E-03       0.071     5        0.00      0.07      0.00    0.2749E-02  0.1200E-02  0.1020E-01
+|  5    -76.027317601  0.710277E-03       0.075     5        0.00      0.07      0.00    0.2749E-02  0.1200E-02  0.1020E-01
 |  6    -76.027384606  0.670049E-04       0.075     6        0.00      0.07      0.00    0.4513E-03  0.2418E-03  0.1543E-02
-|  7    -76.027386789  0.218279E-05       0.075     7        0.00      0.07      0.00    0.9084E-04  0.4210E-04  0.2285E-03
-|  8    -76.027386860  0.709357E-07       0.072     8        0.00      0.07      0.00    0.1452E-04  0.6108E-05  0.4064E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
-|  9    -76.027389122  0.226180E-05       0.082     9        0.00      0.08      0.00    0.3135E-05  0.1574E-05  0.1014E-04
+|  7    -76.027386789  0.218279E-05       0.075     7        0.00      0.08      0.00    0.9084E-04  0.4210E-04  0.2285E-03
+|  8    -76.027386860  0.709357E-07       0.075     8        0.00      0.08      0.00    0.1452E-04  0.6108E-05  0.4064E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  9    -76.027389122  0.226180E-05       0.083     9        0.00      0.08      0.00    0.3135E-05  0.1574E-05  0.1014E-04
 | 10    -76.027389122  0.825935E-10       0.079    10        0.00      0.08      0.00    0.1034E-05  0.3326E-06  0.2739E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
@@ -657,7 +657,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.299434491
   TOTAL ENERGY         =   -76.027389122
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -675,15 +675,15 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0792318225     0.0013632927    -0.0000120438     2.0792516801
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.2528573830E-05 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.2890507354E-04 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.1584482681E-04 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.1297540111E-04 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.2528573830E-05 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.2890507354E-04 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.1584482681E-04 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.1297540111E-04 (REQUEST=  0.30000E-03 )
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 
-| @ Optimize for New Step
+ @ Optimize for New Step
 
 
 ============  GEOMETRY FOR OPTIMIZATION STEP  10 OUT OF   27  ============
@@ -694,21 +694,21 @@ ELEMENT      X              Y              Z
   H          -1.125334       1.073778       3.278919
   H          -0.996932       1.959211       2.079252
 
-| @ Begin Energy Calculation
+ @ Begin Energy Calculation
 
                                          SCF ENERGY
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.106605469      ------         0.046     1        0.00      0.05      0.00    0.1856E+01  0.9894E-01  0.8587E+00
-|  2    -75.977926210  -.128679E+00       0.075     2        0.00      0.07      0.00    0.1300E+00  0.3787E-01  0.4759E+00
-|  3    -76.017981381  0.400552E-01       0.074     3        0.00      0.07      0.00    0.6741E-01  0.1184E-01  0.1359E+00
-|  4    -76.026607378  0.862600E-02       0.074     4        0.00      0.07      0.00    0.1415E-01  0.3407E-02  0.4138E-01
-|  5    -76.027317607  0.710230E-03       0.075     5        0.00      0.08      0.00    0.2749E-02  0.1200E-02  0.1020E-01
+|  2    -75.977926210  -.128679E+00       0.075     2        0.00      0.08      0.00    0.1300E+00  0.3787E-01  0.4759E+00
+|  3    -76.017981381  0.400552E-01       0.075     3        0.00      0.07      0.00    0.6741E-01  0.1184E-01  0.1359E+00
+|  4    -76.026607378  0.862600E-02       0.075     4        0.00      0.07      0.00    0.1415E-01  0.3407E-02  0.4138E-01
+|  5    -76.027317607  0.710230E-03       0.073     5        0.00      0.07      0.00    0.2749E-02  0.1200E-02  0.1020E-01
 |  6    -76.027384608  0.670004E-04       0.075     6        0.00      0.07      0.00    0.4514E-03  0.2418E-03  0.1543E-02
-|  7    -76.027386790  0.218262E-05       0.074     7        0.00      0.07      0.00    0.9084E-04  0.4210E-04  0.2285E-03
+|  7    -76.027386790  0.218262E-05       0.075     7        0.00      0.08      0.00    0.9084E-04  0.4210E-04  0.2285E-03
 |  8    -76.027386861  0.709619E-07       0.075     8        0.00      0.07      0.00    0.1452E-04  0.6107E-05  0.4064E-04
-    --------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 -------------
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
 |  9    -76.027389123  0.226190E-05       0.083     9        0.00      0.08      0.00    0.3135E-05  0.1573E-05  0.1014E-04
 | 10    -76.027389123  0.825651E-10       0.083    10        0.00      0.08      0.00    0.1035E-05  0.3329E-06  0.2742E-05
 ------------------------------------------------------------------------------------------------------------------------
@@ -719,7 +719,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
   CORE_CORE REPULSION  =     9.299601672
   TOTAL ENERGY         =   -76.027389123
 
-| @ End Energy calculation
+ @ End Energy calculation
 
 
  ANALYTICAL GRADIENT: 
@@ -737,14 +737,14 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     3Z     2.0792516801    -0.0000120438    -0.0000001154     2.0792517703
 ----------------------------------------------------------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =   -0.1217898671E-08 (REQUEST= 0.10000E-05)
- MAXIMUM GEOMETRY CHANGE =    0.9017745003E-07 (REQUEST= 0.18000E-02)
- GEOMETRY CHANGE RMS     =    0.6422659682E-07 (REQUEST= 0.12000E-02)
- GRADIENT NORM           =    0.7061723279E-07 (REQUEST= 0.30000E-03)
+ ENERGY CHANGE           =    -0.1217898671E-08 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.9017745003E-07 (REQUEST=  0.18000E-02 )
+ GEOMETRY CHANGE RMS     =     0.6422659682E-07 (REQUEST=  0.12000E-02 )
+ GRADIENT NORM           =     0.7061723279E-07 (REQUEST=  0.30000E-03 )
 
  GEOMETRY OPTIMIZED AFTER   10 CYCLES
 
-| @ Finish Optimization for This Step
+ @ Finish Optimization for This Step
 
 ================ OPTIMIZED GEOMETRY INFORMATION ==============
 
@@ -763,10 +763,10 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  MINIMIZED ENERGY= -76.0273891231
 ===============================================================
 
-| @ Finish Optimization Job
+ @ Finish Optimization Job
 
 
-| @ Begin Zmake conversion
+ @ Begin Zmake conversion
 
   
  Z-MATRIX:
@@ -779,34 +779,34 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
      2      H        0.94644  1     0.00000  0      0.00000  0      1    0    0
      3      H        0.94644  1   104.48809  1      0.00000  0      1    2    0
 
-| @ End Zmake conversion
+ @ End Zmake conversion
 
 
-| @ Output Timing Information
+ @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     4.138927000( 28.96%)
-| TOTAL SCF TIME      =     7.306402000( 51.12%)
-|       TOTAL OP TIME      =     7.274847000( 50.90%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.005913000(  0.04%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000875000(  0.01%)
-|             TOTAL 1e TIME      =     0.022515000(  0.16%)
-|                KINETIC 1e INTEGRALS TIME    =     0.017261000(  0.12%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.005222000(  0.04%)
-|             TOTAL 2e TIME      =     7.152259000( 50.04%)
-|             TOTAL ENERGY TIME  =     0.000578000(  0.00%)
-|       TOTAL DII TIME      =     0.030572000(  0.21%)
-|             TOTAL DIAG TIME    =     0.009183000(  0.06%)
-| TOTAL GRADIENT TIME      =     2.677831000( 18.74%)
-|       TOTAL NUCLEAR GRADIENT TIME =     0.000070000(  0.00%)
-|       TOTAL 1e GRADIENT TIME      =     0.162800000(  1.14%)
-|          KINETIC 1e GRADIENT TIME      =     0.141168000(  0.99%)
-|          ATTRACTION 1e GRADIENT TIME   =     0.021590000(  0.15%)
-|       TOTAL 2e GRADIENT TIME      =     2.514881000( 17.60%)
-| TOTAL TIME          =    14.291700000
+| INITIAL GUESS TIME  =     4.160634000( 28.96%)
+| TOTAL SCF TIME      =     7.330731000( 51.03%)
+|       TOTAL OP TIME      =     7.299110000( 50.81%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.005944000(  0.04%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000864000(  0.01%)
+|             TOTAL 1e TIME      =     0.022516000(  0.16%)
+|                KINETIC 1e INTEGRALS TIME    =     0.017286000(  0.12%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.005200000(  0.04%)
+|             TOTAL 2e TIME      =     7.176396000( 49.96%)
+|             TOTAL ENERGY TIME  =     0.000582000(  0.00%)
+|       TOTAL DII TIME      =     0.030617000(  0.21%)
+|             TOTAL DIAG TIME    =     0.009146000(  0.06%)
+| TOTAL GRADIENT TIME      =     2.677276000( 18.64%)
+|       TOTAL NUCLEAR GRADIENT TIME =     0.000050000(  0.00%)
+|       TOTAL 1e GRADIENT TIME      =     0.161482000(  1.12%)
+|          KINETIC 1e GRADIENT TIME      =     0.139870000(  0.97%)
+|          ATTRACTION 1e GRADIENT TIME   =     0.021563000(  0.15%)
+|       TOTAL 2e GRADIENT TIME      =     2.515663000( 17.51%)
+| TOTAL TIME          =    14.365490000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 14.3 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 14.4 seconds.
 
-| @ Finish Output Timing Information
+ @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Nov 17 15:01:00 2020
+| Normal Termination. Task Finished on: Wed Nov 18 17:42:01 2020
