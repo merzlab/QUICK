@@ -205,8 +205,8 @@ __global__ void get_density_kernel()
                         QUICKDouble gridy = devSim_dft.gridy[gid];
                         QUICKDouble gridz = devSim_dft.gridz[gid];
 
-	                for(int i=devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1] ; i++){
-        	                int ibas = devSim_dft.basf[i];
+                        for(int i=0; i< bful-bfll; i++){
+        	                int ibas = (int) basf[i];
                 	        QUICKDouble phi, dphidx, dphidy, dphidz;
 			
 				pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
@@ -223,8 +223,8 @@ __global__ void get_density_kernel()
 					gay = gay + denseii * dphidy;
 					gaz = gaz + denseii * dphidz;
 
-					for(int j=i+1; j< devSim_dft.basf_locator[bin_id+1]; j++){
-						int jbas = devSim_dft.basf[j];
+                                        for(int j=i+1; j< bful-bfll; j++){
+						int jbas = (int) basf[j];
 						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 						pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
 						QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
