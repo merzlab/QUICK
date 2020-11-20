@@ -173,6 +173,25 @@ __global__ void get_density_kernel()
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
 
+            // initialize shared memory arrays
+            int bfll=devSim_dft.basf_locator[bin_id];
+            int bful=devSim_dft.basf_locator[bin_id+1];
+
+            if(threadIdx.x == 0) primf_loc[0] = 0;
+
+
+            for(int i = threadIdx.x; i< bful-bfll; i+=blockDim.x){
+              basf[i] = (unsigned short)devSim_dft.basf[bfll+i];
+              primf_loc[i+1]=(unsigned int) (devSim_dft.primf_locator[bfll+i+1]-devSim_dft.primf_locator[bfll]);
+            }            
+
+            __syncthreads();
+
+            for(int i = threadIdx.x; i< (devSim_dft.primfpbin[bin_id]); i+=blockDim.x)
+              primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
+
+            __syncthreads(); 
+	    
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight >0){
@@ -234,6 +253,7 @@ __global__ void get_density_kernel()
 //        printf("x=%f  y=%f  z=%f  density=%.10e  gax=%.10e gay=%.10e gaz=%.10e \n",gridx, gridy, gridz, density, gax, gay, gaz);
 #endif
 		}
+          __syncthreads();
 	}
 }
 
@@ -251,6 +271,24 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
+            // initialize shared memory arrays
+            int bfll=devSim_dft.basf_locator[bin_id];
+            int bful=devSim_dft.basf_locator[bin_id+1];
+
+            if(threadIdx.x == 0) primf_loc[0] = 0;
+
+
+            for(int i = threadIdx.x; i< bful-bfll; i+=blockDim.x){
+              basf[i] = (unsigned short)devSim_dft.basf[bfll+i];
+              primf_loc[i+1]=(unsigned int) (devSim_dft.primf_locator[bfll+i+1]-devSim_dft.primf_locator[bfll]);
+            }
+
+            __syncthreads();
+
+            for(int i = threadIdx.x; i< (devSim_dft.primfpbin[bin_id]); i+=blockDim.x)
+              primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
+
+            __syncthreads();
 
                 int dweight = devSim_dft.dweight[gid];
 
@@ -394,6 +432,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 }
                         }
                 }
+                __syncthreads();
         }
 }
 
@@ -421,6 +460,24 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
             int bin_id = (int) (gid/devSim_dft.bin_size);
+            // initialize shared memory arrays
+            int bfll=devSim_dft.basf_locator[bin_id];
+            int bful=devSim_dft.basf_locator[bin_id+1];
+
+            if(threadIdx.x == 0) primf_loc[0] = 0;
+
+
+            for(int i = threadIdx.x; i< bful-bfll; i+=blockDim.x){
+              basf[i] = (unsigned short)devSim_dft.basf[bfll+i];
+              primf_loc[i+1]=(unsigned int) (devSim_dft.primf_locator[bfll+i+1]-devSim_dft.primf_locator[bfll]);
+            }
+
+            __syncthreads();
+
+            for(int i = threadIdx.x; i< (devSim_dft.primfpbin[bin_id]); i+=blockDim.x)
+              primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
+
+            __syncthreads();
 
 		int dweight = devSim_dft.dweight[gid];
 
@@ -583,6 +640,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 devSim_dft.dweight_ssd[gid] = 0;
                         }				
 		}
+                __syncthreads();
 	}
 
 /*        __syncthreads();
