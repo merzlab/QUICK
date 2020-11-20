@@ -682,9 +682,9 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
                         	QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
                         	QUICKDouble z1 = gridz - LOC2(devSim_dft.xyz, 2, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
 
-                        	QUICKDouble x1i, y1i, z1i;
-                        	QUICKDouble x1imin1, y1imin1, z1imin1;
-                        	QUICKDouble x1iplus1, y1iplus1, z1iplus1;
+                        	QUICKDouble x1i=1.0, y1i=1.0, z1i=1.0;
+                        	QUICKDouble x1imin1=0.0, y1imin1=0.0, z1imin1=0.0;
+                        	QUICKDouble x1iplus1=x1, y1iplus1=y1, z1iplus1=z1;
 
                         	QUICKDouble phi = 0.0;
                         	QUICKDouble dphidx = 0.0;
@@ -699,31 +699,19 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
                         	if ( dist <= devSim_dft.sigrad2[ibas]){
 
-                                	if ( itypex == 0) {
-                                        	x1imin1 = 0.0;
-                                        	x1i = 1.0;
-                                        	x1iplus1 = x1;
-                                	}else {
+                                	if ( itypex != 0) {
                                         	x1imin1 = pow(x1, itypex-1);
                                         	x1i = x1imin1 * x1;
                                         	x1iplus1 = x1i * x1;
                                 	}
 
-                                	if ( itypey == 0) {
-                                        	y1imin1 = 0.0;
-                                        	y1i = 1.0;
-                                        	y1iplus1 = y1;
-                                	}else {
+                                	if ( itypey != 0) {
                                         	y1imin1 = pow(y1, itypey-1);
                                         	y1i = y1imin1 * y1;
                                         	y1iplus1 = y1i * y1;
                                 	}
 
-                                	if ( itypez == 0) {
-                                        	z1imin1 = 0.0;
-                                        	z1i = 1.0;
-                                        	z1iplus1 = z1;
-                                	}else {
+                                	if ( itypez != 0) {
                                         	z1imin1 = pow(z1, itypez-1);
                                         	z1i = z1imin1 * z1;
                                         	z1iplus1 = z1i * z1;
@@ -1337,9 +1325,9 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
     QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
     QUICKDouble z1 = gridz - LOC2(devSim_dft.xyz, 2, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
 
-    QUICKDouble x1i, y1i, z1i;
-    QUICKDouble x1imin1, y1imin1, z1imin1;
-    QUICKDouble x1iplus1, y1iplus1, z1iplus1;
+    QUICKDouble x1i=1.0, y1i=1.0, z1i=1.0;
+    QUICKDouble x1imin1=0.0, y1imin1=0.0, z1imin1=0.0;
+    QUICKDouble x1iplus1=x1, y1iplus1=y1, z1iplus1=z1;
 
     *phi = 0.0;
     *dphidx = 0.0;
@@ -1353,31 +1341,19 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
     QUICKDouble dist = x1*x1+y1*y1+z1*z1;
 
     if ( dist <= devSim_dft.sigrad2[ibas]){
-        if ( itypex == 0) {
-            x1imin1 = 0.0;
-            x1i = 1.0;
-            x1iplus1 = x1;
-        }else {
+        if ( itypex != 0) {
             x1imin1 = pow(x1, itypex-1);
             x1i = x1imin1 * x1;
             x1iplus1 = x1i * x1;
         }
 
-        if ( itypey == 0) { 
-            y1imin1 = 0.0; 
-            y1i = 1.0; 
-            y1iplus1 = y1;
-        }else {
+        if ( itypey != 0) { 
             y1imin1 = pow(y1, itypey-1);
             y1i = y1imin1 * y1;
             y1iplus1 = y1i * y1;
         }    
      
-        if ( itypez == 0) { 
-            z1imin1 = 0.0; 
-            z1i = 1.0; 
-            z1iplus1 = z1;
-        }else {
+        if ( itypez != 0) { 
             z1imin1 = pow(z1, itypez-1);
             z1i = z1imin1 * z1;
             z1iplus1 = z1i * z1;
