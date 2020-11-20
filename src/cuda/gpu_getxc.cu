@@ -584,7 +584,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
 						QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
 
-						pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+						pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, primf, primf_loc, ibas, i);
 				
 						int Istart = (devSim_dft.ncenter[ibas]-1) * 3;
 					
