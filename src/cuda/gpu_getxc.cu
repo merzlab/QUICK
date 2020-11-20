@@ -404,16 +404,15 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                     val1 = 0ull - val1;
                                 QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
 
-                                for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
-                                        int ibas = devSim_dft.basf[i];
+                                for (int i = 0; i<bful-bfll; i++) {
+                                        int ibas = (int) basf[i];
                                         QUICKDouble phi, dphidx, dphidy, dphidz;
                                         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
 
                                         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
-                                                for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
-
-                                                        int jbas = devSim_dft.basf[j];
+                                                 for (int j = 0; j <bful-bfll; j++) {
+                                                        int jbas = (int) basf[j];
 
                                                         QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
@@ -576,8 +575,8 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 				}
 				devSim_dft.exc[gid] = _tmp;
 			
-				for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
-					int ibas = devSim_dft.basf[i];
+                                for (int i = 0; i<bful-bfll; i++) {
+					int ibas = (int) basf[i];
 					QUICKDouble phi, dphidx, dphidy, dphidz;
 					pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
 
@@ -589,9 +588,9 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 				
 						int Istart = (devSim_dft.ncenter[ibas]-1) * 3;
 					
-						for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
+                                                for (int j = 0; j <bful-bfll; j++) {
 
-							int jbas = devSim_dft.basf[j];
+							int jbas = (int) basf[j];
 
 							QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
