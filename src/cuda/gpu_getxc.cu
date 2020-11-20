@@ -209,7 +209,7 @@ __global__ void get_density_kernel()
         	                int ibas = devSim_dft.basf[i];
                 	        QUICKDouble phi, dphidx, dphidy, dphidz;
 			
-				pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+				pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
 
 #ifdef DEBUG
 //        printf("i=%i ibas=%i x=%f  y=%f  z=%f  phi=%.10e dx=%.10e dy=%.10e dz=%.10e\n", i, ibas, gridx, gridy, gridz, phi, dphidx, dphidz, dphidz);
@@ -226,7 +226,7 @@ __global__ void get_density_kernel()
 					for(int j=i+1; j< devSim_dft.basf_locator[bin_id+1]; j++){
 						int jbas = devSim_dft.basf[j];
 						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
-						pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+						pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
 						QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 						density = density + denseij * phi * phi2;
 						gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
@@ -407,7 +407,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
                                         int ibas = devSim_dft.basf[i];
                                         QUICKDouble phi, dphidx, dphidy, dphidz;
-                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
 
                                         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
@@ -417,7 +417,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
                                                         QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
 
 														QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
 															+ ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
@@ -579,7 +579,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 				for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
 					int ibas = devSim_dft.basf[i];
 					QUICKDouble phi, dphidx, dphidy, dphidz;
-					pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+					pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
 
 					if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
@@ -595,7 +595,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
 							QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-							pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+							pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
 							
 							QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 
