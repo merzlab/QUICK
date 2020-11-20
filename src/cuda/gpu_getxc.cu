@@ -1321,7 +1321,7 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz,
             QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz,
-            int *primf, int *primf_counter, int ibas, int ibasp)
+            unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp)
 {
 
     /*
@@ -1383,7 +1383,7 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
      
 //        for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
 	for(int i=primf_counter[ibasp]; i< primf_counter[ibasp+1]; i++){
-	    int kprim = primf[i]; 
+	    int kprim = (int) primf[i]; 
             QUICKDouble tmp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * 
                               exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
 
