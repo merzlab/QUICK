@@ -733,12 +733,15 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
                                 	for(int kprim=0; kprim< devSim_dft.ncontract[ibas]; kprim++){
 
                                         	unsigned long pfwid = binIdx * devSim_dft.nbasis * devSim_dft.maxcontract + ibas * devSim_dft.maxcontract + kprim;
+                                                QUICKDouble aexp = LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
 
                                         	QUICKDouble tmp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) *
-                                                	exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
-                                        	QUICKDouble tmpdx = tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* x1iplus1 + (QUICKDouble)itypex * x1imin1);
-                                        	QUICKDouble tmpdy = tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* y1iplus1 + (QUICKDouble)itypey * y1imin1);
-                                        	QUICKDouble tmpdz = tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* z1iplus1 + (QUICKDouble)itypez * z1imin1);
+                                                	exp( -aexp * dist);
+
+                                                aexp *= -2.0;
+                                        	QUICKDouble tmpdx = tmp * ( aexp * x1iplus1 + (QUICKDouble)itypex * x1imin1);
+                                        	QUICKDouble tmpdy = tmp * ( aexp * y1iplus1 + (QUICKDouble)itypey * y1imin1);
+                                        	QUICKDouble tmpdz = tmp * ( aexp * z1iplus1 + (QUICKDouble)itypez * z1imin1);
 
                                         	phi = phi + tmp;
                                         	dphidx = dphidx + tmpdx;
@@ -1273,10 +1276,10 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 //                for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
 		for(int i=primf_counter[ibasp]; i< primf_counter[ibasp+1]; i++){
 			int kprim = (int) primf[i];
-
+                        QUICKDouble aexp = LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
                         QUICKDouble temp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) *
-                                                        exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
-                        QUICKDouble twoA = 2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
+                                                        exp( -aexp * dist);
+                        QUICKDouble twoA = 2.0 * aexp;
                         QUICKDouble fourAsqr = twoA * twoA;
 
                         *dxdx = *dxdx + temp * ((QUICKDouble)itypex * ((QUICKDouble)itypex -1.0) * x1imin2
@@ -1383,13 +1386,14 @@ __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 //        for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
 	for(int i=primf_counter[ibasp]; i< primf_counter[ibasp+1]; i++){
 	    int kprim = (int) primf[i]; 
+            QUICKDouble aexp = LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
             QUICKDouble tmp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * 
-                              exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
-
+                              exp( -aexp * dist);
+            aexp *= -2.0;
             *phi = *phi + tmp; 
-            *dphidx = *dphidx + tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* x1iplus1 + (QUICKDouble)itypex * x1imin1);
-            *dphidy = *dphidy + tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* y1iplus1 + (QUICKDouble)itypey * y1imin1);
-            *dphidz = *dphidz + tmp * ( -2.0 * LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)* z1iplus1 + (QUICKDouble)itypez * z1imin1);
+            *dphidx = *dphidx + tmp * ( aexp * x1iplus1 + (QUICKDouble)itypex * x1imin1);
+            *dphidy = *dphidy + tmp * ( aexp * y1iplus1 + (QUICKDouble)itypey * y1imin1);
+            *dphidz = *dphidz + tmp * ( aexp * z1iplus1 + (QUICKDouble)itypez * z1imin1);
         }    
      
         *phi = *phi * x1i * y1i * z1i; 
