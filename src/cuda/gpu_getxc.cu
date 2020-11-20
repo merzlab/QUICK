@@ -1182,7 +1182,7 @@ __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gr
 }
 
 __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
-                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int *primf, int *primf_counter,
+                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, unsigned char *primf, unsigned int *primf_counter,
 		 int ibas, int ibasp){
 
         /*Given a point in space, this function calculates the value of basis
@@ -1272,7 +1272,7 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 
 //                for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
 		for(int i=primf_counter[ibasp]; i< primf_counter[ibasp+1]; i++){
-			int kprim = primf[i];
+			int kprim = (int) primf[i];
 
                         QUICKDouble temp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) *
                                                         exp( - LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis) * dist);
