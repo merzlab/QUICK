@@ -1185,9 +1185,9 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
         QUICKDouble y1 = gridy - LOC2(devSim_dft.xyz, 1, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
         QUICKDouble z1 = gridz - LOC2(devSim_dft.xyz, 2, devSim_dft.ncenter[ibas]-1, 3, devSim_dft.natom);
 
-        QUICKDouble x1i, y1i, z1i;
-        QUICKDouble x1imin1, y1imin1, z1imin1, x1imin2, y1imin2, z1imin2;
-        QUICKDouble x1iplus1, y1iplus1, z1iplus1, x1iplus2, y1iplus2, z1iplus2;
+        QUICKDouble x1i=1.0, y1i=1.0, z1i=1.0;
+        QUICKDouble x1imin1=0.0, y1imin1=0.0, z1imin1=0.0, x1imin2=0.0, y1imin2=0.0, z1imin2=0.0;
+        QUICKDouble x1iplus1=x1, y1iplus1=y1, z1iplus1=z1, x1iplus2=x1*x1, y1iplus2=y1*y1, z1iplus2=z1*z1;
 
         *dxdx = 0.0;
         *dxdy = 0.0;
@@ -1202,19 +1202,12 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 
         QUICKDouble dist = x1*x1+y1*y1+z1*z1;
         //if ( dist <= devSim_dft.sigrad2[ibas]){
-                if ( itypex == 0) {
-                        x1imin2 = 0.0;
-                        x1imin1 = 0.0;
-                        x1i = 1.0;
-                        x1iplus1 = x1;
-                        x1iplus2 = x1*x1;
-                }else if(itypex == 1){
-                        x1imin2 = 0.0;
+                if(itypex == 1){
                         x1imin1 = 1.0;
                         x1i = x1;
-                        x1iplus1 = x1*x1;
-                        x1iplus2 = x1*x1*x1;
-                }else{
+                        x1iplus1 *= x1;
+                        x1iplus2 *= x1;
+                }else if(itypex > 1) {
                         x1imin2 = pow(x1, itypex-2);
                         x1imin1 = x1imin2*x1;
                         x1i = x1imin1 * x1;
@@ -1222,38 +1215,25 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
                         x1iplus2 = x1iplus1 * x1;
                 }
 
-                if ( itypey == 0) {
-                        y1imin2 = 0.0;
-                        y1imin1 = 0.0;
-                        y1i = 1.0;
-                        y1iplus1 = y1;
-                        y1iplus2 = y1*y1;
-                }else if(itypey == 1){
-                        y1imin2 = 0.0;
+                if(itypey == 1){
                         y1imin1 = 1.0;
                         y1i = y1;
-                        y1iplus1 = y1*y1;
-                        y1iplus2 = y1iplus1*y1;
-                }else{
+                        y1iplus1 *= y1;
+                        y1iplus2 *= y1;
+                }else if(itypey > 1) {
                         y1imin2 = pow(y1, itypey-2);
                         y1imin1 = y1imin2*y1;
                         y1i = y1imin1 * y1;
                         y1iplus1 = y1i * y1;
                         y1iplus2 = y1iplus1 * y1;
                 }
-                if ( itypez == 0) {
-                        z1imin2 = 0.0;
-                        z1imin1 = 0.0;
-                        z1i = 1.0;
-                        z1iplus1 = z1;
-                        z1iplus2 = z1*z1;
-                }else if(itypez == 1){
-                        z1imin2 = 0.0;
+
+                if(itypez == 1){
                         z1imin1 = 1.0;
                         z1i = z1;
-                        z1iplus1 = z1*z1;
-                        z1iplus2 = z1iplus1*z1;
-                }else {
+                        z1iplus1 *= z1;
+                        z1iplus2 *= z1;
+                }else if(itypez > 1) {
                         z1imin2 = pow(z1, itypez-2);
                         z1imin1 = z1imin2*z1;
                         z1i = z1imin1 * z1;
