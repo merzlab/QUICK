@@ -491,7 +491,7 @@ subroutine electdiis(jscf,PRMS)
            else
               write(ioutfile,'(90("-"))')
            endif
-           write (ioutfile,'(" REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
+           write (ioutfile,'(" REACH CONVERGENCE AFTER ",i3," CYCLES")') jscf
            write (ioutfile,'(" MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') errormax,prms,pchange
            write (ioutfile,*) '-----------------------------------------------'
            if (quick_method%DFT .or. quick_method%SEDFT) then
