@@ -45,15 +45,15 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Nov 19 10:26:53 2020
+| TASK STARTS ON: Tue Nov 24 08:16:07 2020
 | INPUT FILE :    ene_psb3_blyp_631g.in
 | OUTPUT FILE:    ene_psb3_blyp_631g.out
 | DATE FILE  :    ene_psb3_blyp_631g.dat
-| BASIS SET PATH: ../basis
+| BASIS SET PATH: /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis
 
  @ Read Job And Atom
 
-  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY CHARGE=+1                                                                                                                                  
+  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1                                                                                                                           
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  DENSITY FUNCTIONAL = BLYP
@@ -62,6 +62,7 @@
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  Z-MATRIX CONSTRUCTION
+ DIPOLE
  STANDARD GRID = SG1
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
@@ -73,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = ../basis/6-31G.BAS
+| BASIS FILE = /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -177,18 +178,18 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.525867046      ------         0.932     1        0.00      0.93      0.00    0.2182E+01  0.5672E-01  0.5611E+00
-|  2   -249.455703699  -.107016E+01       1.193     2        0.00      1.19      0.00    0.1743E+00  0.3802E-01  0.4618E+00
-|  3   -248.841977584  -.613726E+00       1.201     3        0.00      1.20      0.00    0.3258E+00  0.3434E-01  0.4459E+00
-|  4   -249.533669569  0.691692E+00       1.201     4        0.00      1.20      0.00    0.1839E+00  0.1264E-01  0.2004E+00
-|  5   -249.640662074  0.106993E+00       1.198     5        0.00      1.20      0.00    0.5008E-01  0.4336E-02  0.6860E-01
-|  6   -249.652574149  0.119121E-01       1.198     6        0.00      1.20      0.00    0.2673E-01  0.1615E-02  0.2406E-01
-|  7   -249.656131267  0.355712E-02       1.190     7        0.00      1.19      0.00    0.4977E-02  0.4115E-03  0.7038E-02
-|  8   -249.656229435  0.981683E-04       1.199     8        0.00      1.20      0.00    0.3063E-02  0.1793E-03  0.2690E-02
-|  9   -249.656252116  0.226812E-04       1.197     9        0.00      1.19      0.00    0.7905E-03  0.6756E-04  0.9631E-03
-| 10   -249.656255176  0.305926E-05       1.199    10        0.00      1.20      0.00    0.3020E-03  0.2517E-04  0.3422E-03
-| 11   -249.656255770  0.594795E-06       1.196     1        0.00      1.19      0.00    0.2583E-04  0.4014E-05  0.4223E-04
-| 12   -249.656255779  0.820120E-08       1.201     2        0.00      1.20      0.00    0.6938E-05  0.5215E-06  0.9743E-05
+|  1   -250.525867046      ------         0.936     1        0.00      0.93      0.00    0.2182E+01  0.5672E-01  0.5611E+00
+|  2   -249.455703699  -.107016E+01       1.196     2        0.00      1.19      0.00    0.1743E+00  0.3802E-01  0.4618E+00
+|  3   -248.841977584  -.613726E+00       1.204     3        0.00      1.20      0.00    0.3258E+00  0.3434E-01  0.4459E+00
+|  4   -249.533669569  0.691692E+00       1.202     4        0.00      1.20      0.00    0.1839E+00  0.1264E-01  0.2004E+00
+|  5   -249.640662074  0.106993E+00       1.203     5        0.00      1.20      0.00    0.5008E-01  0.4336E-02  0.6860E-01
+|  6   -249.652574149  0.119121E-01       1.203     6        0.00      1.20      0.00    0.2673E-01  0.1615E-02  0.2406E-01
+|  7   -249.656131267  0.355712E-02       1.196     7        0.00      1.19      0.00    0.4977E-02  0.4115E-03  0.7038E-02
+|  8   -249.656229435  0.981683E-04       1.197     8        0.00      1.19      0.00    0.3063E-02  0.1793E-03  0.2690E-02
+|  9   -249.656252116  0.226812E-04       1.201     9        0.00      1.20      0.00    0.7905E-03  0.6756E-04  0.9631E-03
+| 10   -249.656255176  0.305926E-05       1.203    10        0.00      1.20      0.00    0.3020E-03  0.2517E-04  0.3422E-03
+| 11   -249.656255770  0.594795E-06       1.204     1        0.00      1.20      0.00    0.2583E-04  0.4014E-05  0.4223E-04
+| 12   -249.656255779  0.820120E-08       1.199     2        0.00      1.19      0.00    0.6938E-05  0.5215E-06  0.9743E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  12 CYLCES
 | MAX ERROR = 0.693842E-05   RMS CHANGE = 0.521496E-06   MAX CHANGE = 0.974273E-05
@@ -229,32 +230,60 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ End Zmake conversion
 
 
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   C             -0.2146            -0.0886
+   C             -0.0195            -0.1077
+   C             -0.0682             0.0184
+   C             -0.1052            -0.1437
+   C              0.1953             0.0891
+   N             -0.5738            -0.1710
+   H              0.1637             0.1444
+   H              0.1700             0.1494
+   H              0.2030             0.1522
+   H              0.1422             0.1266
+   H              0.3756             0.2729
+   H              0.3715             0.2671
+   H              0.1825             0.1492
+   H              0.1774             0.1417
+   TOTAL         1.0000             1.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+    3.5278    0.9914    0.7270    3.7359
+
+ @ End Charge and Dipole Calculation
+
+
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.999165000(  6.49%)
-| DFT GRID OPERATIONS =     0.219103000(  1.42%)
-|       TOTAL GRID FORMATION TIME   =     0.001793000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.047428000(  0.31%)
-|       TOTAL OCTREE RUN TIME       =     0.040000000(  0.26%)
-|       TOTAL PRESCREENING TIME     =     0.120000000(  0.78%)
-|       TOTAL DATA PACKING TIME     =     0.009882000(  0.06%)
-| TOTAL SCF TIME      =    14.115642000( 91.71%)
-|       TOTAL OP TIME      =    14.082268000( 91.49%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.003440000(  0.02%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000753000(  0.00%)
-|             TOTAL 1e TIME      =     0.012267000(  0.08%)
-|                KINETIC 1e INTEGRALS TIME    =     0.008005000(  0.05%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.004260000(  0.03%)
-|             TOTAL 2e TIME      =     7.576974000( 49.23%)
-|             TOTAL EXC TIME     =     6.492101000( 42.18%)
-|             TOTAL ENERGY TIME  =     0.000297000(  0.00%)
-|       TOTAL DII TIME      =     0.033009000(  0.21%)
-|             TOTAL DIAG TIME    =     0.008506000(  0.06%)
-| TOTAL TIME          =    15.392408000
+| INITIAL GUESS TIME  =     1.167103000(  7.47%)
+| DFT GRID OPERATIONS =     0.219148000(  1.40%)
+|       TOTAL GRID FORMATION TIME   =     0.001908000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.047115000(  0.30%)
+|       TOTAL OCTREE RUN TIME       =     0.030000000(  0.19%)
+|       TOTAL PRESCREENING TIME     =     0.120000000(  0.77%)
+|       TOTAL DATA PACKING TIME     =     0.020125000(  0.13%)
+| TOTAL SCF TIME      =    14.156982000( 90.55%)
+|       TOTAL OP TIME      =    14.123485000( 90.34%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.003574000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000782000(  0.01%)
+|             TOTAL 1e TIME      =     0.012201000(  0.08%)
+|                KINETIC 1e INTEGRALS TIME    =     0.007917000(  0.05%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.004283000(  0.03%)
+|             TOTAL 2e TIME      =     7.632894000( 48.82%)
+|             TOTAL EXC TIME     =     6.477444000( 41.43%)
+|             TOTAL ENERGY TIME  =     0.000314000(  0.00%)
+|       TOTAL DII TIME      =     0.033164000(  0.21%)
+|             TOTAL DIAG TIME    =     0.008534000(  0.05%)
+|       DIPOLE TIME        =     0.031110000(  0.20%)
+| TOTAL TIME          =    15.633809000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 15.4 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 15.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Nov 19 10:27:14 2020
+| Normal Termination. Task Finished on: Tue Nov 24 08:16:29 2020
