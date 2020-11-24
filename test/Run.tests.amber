@@ -4,7 +4,12 @@
 #TEST-PURPOSE regression, basic
 #TEST-STATE   undocumented
 
-. ../../../../test/program_error.sh
+if [ -z "$AMBERHOME" ]; then
+   echo "Error: AMBERHOME is not set!"
+   exit 1
+fi
+
+. ${AMBERHOME}/test/program_error.sh
 
 if [ -z "$TESTsander" ]; then
    TESTsander="${AMBERHOME}/bin/quick"
@@ -15,13 +20,13 @@ if [ -z "$DO_PARALLEL" ]; then
 fi
 
 if [ -z "$QUICK_BASIS" ]; then
-  export QUICK_BASIS="../basis"
+  export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
 fi
 
 for i in {ene,opt}*.in
 do
   $DO_PARALLEL $TESTsander $i < /dev/null || error
-  ../../../../test/dacdif -a 1e-5 saved/${i%.in}.out ${i%.in}.out
+  ${AMBERHOME}/test/dacdif -a 1e-5 saved/${i%.in}.out ${i%.in}.out
   /bin/rm -f ${i%.in}.dat
 done
 
