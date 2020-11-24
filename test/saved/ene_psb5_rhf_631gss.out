@@ -45,15 +45,15 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Nov 19 10:29:40 2020
+| TASK STARTS ON: Tue Nov 24 08:18:56 2020
 | INPUT FILE :    ene_psb5_rhf_631gss.in
 | OUTPUT FILE:    ene_psb5_rhf_631gss.out
 | DATE FILE  :    ene_psb5_rhf_631gss.dat
-| BASIS SET PATH: ../basis
+| BASIS SET PATH: /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis
 
  @ Read Job And Atom
 
-  KEYWORD=HF BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY CHARGE=+1                                                                                                                                  
+  KEYWORD=HF BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1                                                                                                                           
  ============== JOB CARD =============
  METHOD = HATREE FOCK
  DIRECT SCF 
@@ -61,6 +61,7 @@
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  Z-MATRIX CONSTRUCTION
+ DIPOLE
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE = 1000
@@ -71,7 +72,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = ../basis/6-31GSS.BAS
+| BASIS FILE = /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis/6-31GSS.BAS
 
  @ Finish reading job
 
@@ -206,18 +207,18 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -406.077530814      ------         4.452     1        0.05      4.40      0.01    0.2655E+01  0.2153E-01  0.5111E+00
-|  2   -401.718961419  -.435857E+01       9.942     2        0.05      9.89      0.01    0.1234E+00  0.7277E-02  0.1509E+00
-|  3   -401.975929587  0.256968E+00       9.871     3        0.05      9.82      0.01    0.9962E-01  0.1937E-02  0.8344E-01
-|  4   -402.006084083  0.301545E-01       9.860     4        0.05      9.81      0.01    0.3710E-01  0.9188E-03  0.3821E-01
-|  5   -402.012915668  0.683159E-02       9.838     5        0.05      9.79      0.01    0.7898E-02  0.2789E-03  0.6516E-02
-|  6   -402.013618502  0.702834E-03       9.896     6        0.05      9.85      0.01    0.3545E-02  0.1660E-03  0.4586E-02
-|  7   -402.013827679  0.209177E-03       9.852     7        0.05      9.80      0.01    0.1766E-02  0.9542E-04  0.2206E-02
-|  8   -402.013879482  0.518025E-04       9.857     8        0.05      9.81      0.01    0.7138E-03  0.4471E-04  0.8523E-03
-|  9   -402.013888436  0.895474E-05       9.855     9        0.05      9.80      0.01    0.1612E-03  0.1631E-04  0.2989E-03
-| 10   -402.013889654  0.121775E-05       9.858    10        0.05      9.81      0.01    0.9212E-04  0.7052E-05  0.1415E-03
-| 11   -402.013889900  0.245697E-06       9.869     1        0.07      9.80      0.01    0.4305E-04  0.4186E-05  0.7139E-04
-| 12   -402.013889949  0.487498E-07       9.857     2        0.07      9.79      0.01    0.7579E-05  0.6073E-06  0.1118E-04
+|  1   -406.077530814      ------         4.441     1        0.05      4.39      0.01    0.2655E+01  0.2153E-01  0.5111E+00
+|  2   -401.718961419  -.435857E+01       9.929     2        0.05      9.88      0.01    0.1234E+00  0.7277E-02  0.1509E+00
+|  3   -401.975929587  0.256968E+00       9.899     3        0.05      9.85      0.01    0.9962E-01  0.1937E-02  0.8344E-01
+|  4   -402.006084083  0.301545E-01       9.881     4        0.05      9.83      0.01    0.3710E-01  0.9188E-03  0.3821E-01
+|  5   -402.012915668  0.683159E-02       9.877     5        0.05      9.83      0.01    0.7898E-02  0.2789E-03  0.6516E-02
+|  6   -402.013618502  0.702834E-03       9.876     6        0.05      9.83      0.01    0.3545E-02  0.1660E-03  0.4586E-02
+|  7   -402.013827679  0.209177E-03       9.889     7        0.05      9.84      0.01    0.1766E-02  0.9542E-04  0.2206E-02
+|  8   -402.013879482  0.518025E-04       9.873     8        0.05      9.82      0.01    0.7138E-03  0.4471E-04  0.8523E-03
+|  9   -402.013888436  0.895474E-05       9.880     9        0.05      9.83      0.01    0.1612E-03  0.1631E-04  0.2989E-03
+| 10   -402.013889654  0.121775E-05       9.881    10        0.05      9.83      0.01    0.9212E-04  0.7052E-05  0.1415E-03
+| 11   -402.013889900  0.245697E-06       9.908     1        0.07      9.84      0.01    0.4305E-04  0.4186E-05  0.7139E-04
+| 12   -402.013889949  0.487498E-07       9.897     2        0.07      9.83      0.01    0.7579E-05  0.6073E-06  0.1118E-04
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  12 CYLCES
 | MAX ERROR = 0.757906E-05   RMS CHANGE = 0.607260E-06   MAX CHANGE = 0.111835E-04
@@ -264,25 +265,61 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ End Zmake conversion
 
 
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   C              0.2728             0.1508
+   C             -0.2582            -0.2302
+   C             -0.0086             0.0683
+   H              0.1851             0.1333
+   C             -0.2129            -0.1893
+   H              0.1849             0.1319
+   C             -0.0295             0.0421
+   H              0.1764             0.1287
+   C             -0.1913            -0.1653
+   H              0.1780             0.1282
+   C             -0.0559             0.0079
+   H              0.1718             0.1263
+   C             -0.1422            -0.1278
+   H              0.1724             0.1257
+   C             -0.2393            -0.1463
+   H              0.1693             0.1257
+   H              0.1596             0.1253
+   H              0.1790             0.1380
+   N             -0.6669            -0.1923
+   H              0.2234             0.1490
+   H              0.3652             0.2338
+   H              0.3668             0.2361
+   TOTAL         1.0000             1.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+   -0.3216   -4.9297    7.2798    8.7978
+
+ @ End Charge and Dipole Calculation
+
+
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     2.764430000(  2.38%)
-| TOTAL SCF TIME      =   113.061655000( 97.39%)
-|       TOTAL OP TIME      =   112.420614000( 96.84%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.019751000(  0.02%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.014838000(  0.01%)
-|             TOTAL 1e TIME      =     0.054746000(  0.05%)
-|                KINETIC 1e INTEGRALS TIME    =     0.035509000(  0.03%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.019234000(  0.02%)
-|             TOTAL 2e TIME      =   112.357946000( 96.78%)
-|             TOTAL ENERGY TIME  =     0.003343000(  0.00%)
-|       TOTAL DII TIME      =     0.638434000(  0.55%)
-|             TOTAL DIAG TIME    =     0.176229000(  0.15%)
-| TOTAL TIME          =   116.090926000
+| INITIAL GUESS TIME  =     2.879890000(  2.47%)
+| TOTAL SCF TIME      =   113.286190000( 97.16%)
+|       TOTAL OP TIME      =   112.639566000( 96.60%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.019799000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.014988000(  0.01%)
+|             TOTAL 1e TIME      =     0.054214000(  0.05%)
+|                KINETIC 1e INTEGRALS TIME    =     0.035096000(  0.03%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.019114000(  0.02%)
+|             TOTAL 2e TIME      =   112.577132000( 96.55%)
+|             TOTAL ENERGY TIME  =     0.003316000(  0.00%)
+|       TOTAL DII TIME      =     0.643947000(  0.55%)
+|             TOTAL DIAG TIME    =     0.177871000(  0.15%)
+|       DIPOLE TIME        =     0.169160000(  0.15%)
+| TOTAL TIME          =   116.602081000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  1 minutes 56.1 seconds.
+| Job cpu time:  0 days  0 hours  1 minutes 56.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Nov 19 10:31:42 2020
+| Normal Termination. Task Finished on: Tue Nov 24 08:20:58 2020
