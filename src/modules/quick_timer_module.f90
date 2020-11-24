@@ -183,7 +183,7 @@ module quick_timer_module
 
             if (quick_method%dipole) then
             ! Dipole Timing
-                write (io,'(6x,"| DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDip, &
+                write (io,'("| ",6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDip, &
                     timer_cumer%TDip/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             ! Grad Timing
