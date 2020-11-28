@@ -43,6 +43,8 @@ echo  "
       --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --debug        Compiles debug version                                 
+      --debug-time   Compiles a cuda/cudampi debug version that reports 
+                     kernel times
       --shared       Build shared object libraries                          
       --arch <kepler|pascal|volta|turing|ampere>                                           
                      Specify gpu architecture. Applicable for cuda and      
@@ -396,6 +398,7 @@ mpi='no'
 cuda='no'
 cudampi='no'
 debug='no'
+debugtime='no'
 buildtypes=''
 installers=''
 
@@ -497,6 +500,7 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.MPI";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
+    --debug-time)  debugtime='yes';;
     --debug)       debug='yes';;
     --verbose)     verbose='';;
     --shared)      shared='yes';;
@@ -837,6 +841,10 @@ if [ "$debug" = 'yes' ]; then
 
   if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
     cuda_debug_flags='-g -G -DDEBUG'
+  fi
+elif [ "$debugtime" = 'yes' ]; then
+  if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
+    cuda_debug_flags='-DDEBUGTIME'
   fi
 fi
 
