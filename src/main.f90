@@ -111,7 +111,7 @@
 
 #ifdef CUDA_MPIV
 
-    if(master) call mgpu_query(mpisize, mgpu_count)
+    call mgpu_query(mpirank)
 
     call mgpu_setup()
 
