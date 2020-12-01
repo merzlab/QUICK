@@ -51,50 +51,6 @@ extern "C" void mgpu_query_(int *mpisize, int *devcount)
         gpuCount = *mpisize; 
     }
 
-    int tmp_gpu_dev_id[gpuCount];        // Temporarily holds device IDs 
-    unsigned int idx_tmp_gpu_dev_id = 0; // Array index counter for tmp_gpu_dev_id
-    int devID = 0 ;
-
-    for(int i=0;i<gpuCount;i++){
-
-        cudaDeviceProp devProp;
-
-        if(isZeroID == true){
-            cudaGetDeviceProperties(&devProp, 0);
-            devID = 0;
-        }else{
-            cudaGetDeviceProperties(&devProp, i);
-            devID = i;
-        }
-        // Should be fixed to select based on sm value used during the compilation
-        // For now, we select Volta and Turing devices only
-
-        if((devProp.major == 7) && (devProp.minor >= 0) && (devProp.totalGlobalMem > minMem)){
-            validDevCount++;
-            tmp_gpu_dev_id[idx_tmp_gpu_dev_id] = devID;
-            idx_tmp_gpu_dev_id++;
-        }
-
-    }
-
-    if (validDevCount != gpuCount && validDevCount < *mpisize) {
-        printf("MPISIZE AND NUMBER OF AVAILABLE GPUS MUST BE THE SAME.\n");
-        gpu_shutdown_();
-        exit(-1);
-    }else{
-
-        if(validDevCount > *mpisize){validDevCount = *mpisize;}
-
-        // Store usable device IDs to broadcast to slaves
-
-        gpu_dev_id = (int*) malloc(validDevCount*sizeof(int));
-
-        for(int i=0; i<validDevCount; i++){
-            gpu_dev_id[i] = tmp_gpu_dev_id[i];
-        }
-
-    }
- 
     // send the device count back to f90 side
     *devcount = validDevCount;   
 
