@@ -1,14 +1,15 @@
 ! Ed Brothers. May 14, 2002
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine uelectdiis(jscf,PRMS)
+subroutine uelectdiis(jscf,PRMS,isGuess)
    use allmod
    implicit none
 
    integer :: nelec,nelecb
    logical :: diisdone
    double precision :: PRMS
-   integer jscf
+   integer :: jscf
+   logical, intent(in) :: isGuess
 
    double precision :: BIJ,CIJ,DENSEIJ,errormax,HOLDIJ,LSOLERR,OIJ,OJK,OLDPRMS,PCHANGE,PRMS2
    double precision :: t1,t2, tempij,DENSEJI
@@ -22,7 +23,7 @@ subroutine uelectdiis(jscf,PRMS)
 
    double precision :: allerror(quick_method%maxdiisscf,nbasis,nbasis)
    double precision :: alloperator(quick_method%maxdiisscf,nbasis,nbasis)
-   
+
    nelec = quick_molspec%nelec
    nelecb = quick_molspec%nelecb
 
@@ -372,7 +373,7 @@ subroutine uelectdiis(jscf,PRMS)
             enddo
          enddo
       else
-         write (ioutfile,'("DIIS FAILED !! RETURN TO ", &
+         if(.not. isGuess) write (ioutfile,'(" DIIS FAILED !! RETURN TO ", &
                & "NORMAL SCF. (NOT FATAL.)")')
          jscf=jscf-1
          diisdone=.true.
@@ -552,43 +553,43 @@ subroutine uelectdiis(jscf,PRMS)
 
       call cpu_time(t2)
 
-      write (ioutfile,'(/,"SCF CYCLE      = ",I8, &
+      if(.not. isGuess) write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
             & "      TIME      = ",F6.2)') &
             jscf,T2-T1
-      write (ioutfile,'("DIIS CYCLE     = ",I8, &
+      if(.not. isGuess) write (ioutfile,'("| DIIS CYCLE     = ",I8, &
             & "      MAX ERROR = ",E12.6)') &
             idiis,errormax
-      write (ioutfile,'("RMS CHANGE     = ",E12.6, &
+      if(.not. isGuess) write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
             & "  MAX CHANGE= ",E12.6)') &
             PRMS,PCHANGE
 
       if (quick_method%DFT .OR. quick_method%SEDFT) then
-         write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)') &
+         if(.not. isGuess) write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') &
                quick_qm_struct%aelec
-         write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)') &
+         if(.not. isGuess) write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') &
                quick_qm_struct%belec
       endif
 
       if (quick_method%prtgap) then
-         write (ioutfile,'("ALPHA HOMO-LUMO GAP (EV) =", &
+         if(.not. isGuess) write (ioutfile,'(" ALPHA HOMO-LUMO GAP (EV) =", &
                & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-         write (ioutfile,'("BETA HOMO-LUMO GAP (EV)  =", &
+         if(.not. isGuess) write (ioutfile,'(" BETA HOMO-LUMO GAP (EV)  =", &
                & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
       endif
 
       if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
-         write (ioutfile,' &
-               & ("PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
+         if(.not. isGuess) write (ioutfile,' &
+               & (" PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
          elseif(OLDPRMS <= PRMS) then
-         write (ioutfile,' &
-               & ("DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
+         if(.not. isGuess) write (ioutfile,' &
+               & (" DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
          diisdone=.true.
       endif
       if(jscf >= quick_method%iscf-1) then
-         write (ioutfile,'("RAN OUT OF CYCLES.  NO CONVERGENCE.")')
-         write (ioutfile,' &
-               & ("PERFORM FINAL NO INTERPOLATION ITERATION")')
+         if(.not. isGuess) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+         if(.not. isGuess) write (ioutfile,' &
+               & (" PERFORM FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
       endif
       50 continue
@@ -596,4 +597,3 @@ subroutine uelectdiis(jscf,PRMS)
    enddo
 
 end subroutine uelectdiis
-

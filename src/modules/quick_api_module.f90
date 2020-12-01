@@ -444,7 +444,7 @@ subroutine run_quick(self)
 
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
-    call getEnergy(failed)
+    call getEnergy(failed, .false.)
   endif
   
   ! compute gradients

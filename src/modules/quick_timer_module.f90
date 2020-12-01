@@ -110,116 +110,116 @@ module quick_timer_module
             call PrtAct(io,"Output Timing Information")
             write (io,'("------------- TIMING ---------------")')
             ! Initial Guess Timing
-            write (io,'("INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
+            write (io,'("| INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
                 timer_cumer%TIniGuess/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
                 t_tot_dftop = timer_cumer%TDFTGrdGen + timer_cumer%TDFTGrdWt + timer_cumer%TDFTGrdOct + timer_cumer%TDFTPrscrn &
                             + timer_cumer%TDFTGrdPck
                 ! Total time for dft grid formation, pruning and prescreening
-                write (io,'("DFT GRID OPERATIONS =",F16.9,"( ",F5.2,"%)")') t_tot_dftop, &
+                write (io,'("| DFT GRID OPERATIONS =",F16.9,"( ",F5.2,"%)")') t_tot_dftop, &
                 (t_tot_dftop)/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for grid formation
-                write (io,'(6x,"TOTAL GRID FORMATION TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdGen, &
+                write (io,'("| ",6x,"TOTAL GRID FORMATION TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdGen, &
                 timer_cumer%TDFTGrdGen/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for computing grid weight
-                write (io,'(6x,"TOTAL GRID WEIGHT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdWt, &
+                write (io,'("| ",6x,"TOTAL GRID WEIGHT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdWt, &
                 timer_cumer%TDFTGrdWt/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for running octree algorithm
-                write (io,'(6x,"TOTAL OCTREE RUN TIME       =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdOct, &
+                write (io,'("| ",6x,"TOTAL OCTREE RUN TIME       =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDFTGrdOct, &
                 timer_cumer%TDFTGrdOct/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for prescreening basis and primitive functions
-                write (io,'(6x,"TOTAL PRESCREENING TIME     =",F16.9,"( ",F5.2,"%)")')timer_cumer%TDFTPrscrn, &
+                write (io,'("| ",6x,"TOTAL PRESCREENING TIME     =",F16.9,"( ",F5.2,"%)")')timer_cumer%TDFTPrscrn, &
                 timer_cumer%TDFTPrscrn/(timer_end%TTotal-timer_begin%TTotal)*100
                 ! Time for packing points
-                write (io,'(6x,"TOTAL DATA PACKING TIME     =",F16.9,"( ",F5.2,"%)")')timer_cumer%TDFTGrdPck, &
+                write (io,'("| ",6x,"TOTAL DATA PACKING TIME     =",F16.9,"( ",F5.2,"%)")')timer_cumer%TDFTGrdPck, &
                 timer_cumer%TDFTGrdPck/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             if (quick_method%nodirect) &
-            write (io,'("2E EVALUATION TIME =",F16.9,"( ",F5.2,"%)")') timer_end%T2eAll-timer_begin%T2eAll, &
+            write (io,'("| 2E EVALUATION TIME =",F16.9,"( ",F5.2,"%)")') timer_end%T2eAll-timer_begin%T2eAll, &
                 (timer_end%T2eAll-timer_begin%T2eAll)/(timer_end%TTotal-timer_begin%TTotal)*100
 
             ! SCF Timing
-            write (io,'("TOTAL SCF TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TSCF, &
+            write (io,'("| TOTAL SCF TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TSCF, &
                 timer_cumer%TSCF/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate operator
-            write (io,'(6x,"TOTAL OP TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TOp, &
+            write (io,'("| ",6x,"TOTAL OP TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TOp, &
                 timer_cumer%TOp/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate overlap 1e integrals
-            write (io,'(12x,"OVERLAP 1e INTEGRALS TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eS, &
+            write (io,'("| ",12x,"OVERLAP 1e INTEGRALS TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eS, &
                 timer_cumer%T1eS/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to diagnalize overlap 1e matrix
-            write (io,'(12x,"OVERLAP 1e DIAGONALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eSD, &
+            write (io,'("| ",12x,"OVERLAP 1e DIAGONALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eSD, &
                 timer_cumer%T1eSD/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate 1e integrals
-            write (io,'(12x,"TOTAL 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1e, &
+            write (io,'("| ",12x,"TOTAL 1e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1e, &
                 timer_cumer%T1e/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate kinetic 1e integrals
-            write (io,'(15x,"KINETIC 1e INTEGRALS TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eT, &
+            write (io,'("| ",15x,"KINETIC 1e INTEGRALS TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eT, &
                 timer_cumer%T1eT/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate attraction 1e integrals
-            write (io,'(15x,"ATTRACTION 1e INTEGRALS TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eV, &
+            write (io,'("| ",15x,"ATTRACTION 1e INTEGRALS TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eV, &
                 timer_cumer%T1eV/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to evaluate 2e integrals
-            write (io,'(12x,"TOTAL 2e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2e, &
+            write (io,'("| ",12x,"TOTAL 2e TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2e, &
                 timer_cumer%T2e/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
                 ! Time to evaluate exchange energy
-                write (io,'(12x,"TOTAL EXC TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEx, &
+                write (io,'("| ",12x,"TOTAL EXC TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEx, &
                     timer_cumer%TEx/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
-            write (io,'(12x,"TOTAL ENERGY TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TE, &
+            write (io,'("| ",12x,"TOTAL ENERGY TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TE, &
                 timer_cumer%TE/(timer_end%TTotal-timer_begin%TTotal)*100
             ! DII Time
-            write (io,'(6x,"TOTAL DII TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDII, &
+            write (io,'("| ",6x,"TOTAL DII TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDII, &
                 timer_cumer%TDII/(timer_end%TTotal-timer_begin%TTotal)*100
             ! Time to diag
             if(quick_method%DIVCON) then
-                write (io,'(12x,"TOTAL DC DIAG TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDiag, &
+                write (io,'("| ",12x,"TOTAL DC DIAG TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDiag, &
                     timer_cumer%TDiag/(timer_end%TTotal-timer_begin%TTotal)*100
             else
-                write (io,'(12x,"TOTAL DIAG TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDiag, &
+                write (io,'("| ",12x,"TOTAL DIAG TIME    =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDiag, &
                     timer_cumer%TDiag/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
             if (quick_method%dipole) then
             ! Dipole Timing
-                write (io,'(6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDip, &
+                write (io,'("| ",6x,"DIPOLE TIME        =",F16.9,"( ",F5.2,"%)")') timer_cumer%TDip, &
                     timer_cumer%TDip/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
             ! Grad Timing
             if (quick_method%opt .or. quick_method%grad ) then
-                write (io,'("TOTAL GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TGrad, &
+                write (io,'("| TOTAL GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TGrad, &
                     timer_cumer%TGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(6x,"TOTAL NUCLEAR GRADIENT TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TNucGrad, &
+                write (io,'("| ",6x,"TOTAL NUCLEAR GRADIENT TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TNucGrad, &
                         timer_cumer%TNucGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &
+                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &
                         timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(9x,"KINETIC 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eTGrad, &
+                write (io,'("| ",9x,"KINETIC 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eTGrad, &
                         timer_cumer%T1eTGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(9x,"ATTRACTION 1e GRADIENT TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eVGrad, &
+                write (io,'("| ",9x,"ATTRACTION 1e GRADIENT TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eVGrad, &
                         timer_cumer%T1eVGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
-                write (io,'(6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, &
+                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, &
                         timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
                 if(quick_method%DFT) then
-                   write (io,'(6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &
+                   write (io,'("| ",6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &
                            timer_cumer%TExGrad/(timer_end%TTotal-timer_begin%TTotal)*100
                 endif
             endif
 
             ! MP2 Time
             if(quick_method%MP2)then
-                write (io,'("TOTAL MP2 TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TMP2, &
+                write (io,'("| TOTAL MP2 TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TMP2, &
                     timer_cumer%TMP2/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
             ! Most Important, total time
-            write (io,'("TOTAL TIME          =",F16.9)') timer_end%TTotal-timer_begin%TTotal
+            write (io,'("| TOTAL TIME          =",F16.9)') timer_end%TTotal-timer_begin%TTotal
         endif
 
         timer_cumer%TTotal=timer_end%TTotal-timer_begin%TTotal

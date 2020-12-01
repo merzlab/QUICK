@@ -20,7 +20,7 @@ subroutine PrtErr(io,line)
   leng=len(line)
   L=0
   write(io,'(a)')
-  write(io,'(" ERROR: ",a)') line
+  write(io,'("| ERROR: ",a)') line
   write(io,'(a)')
   call flush(io)
   return

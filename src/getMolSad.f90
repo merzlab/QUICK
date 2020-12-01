@@ -3,7 +3,7 @@
 !                                                                     !
 ! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
 !                         Ken Ayers & Ed Brothers                     !
-!                                                                     ! 
+!                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
 ! Copyright (C) 2020-2021 Götz lab                                    !
 !                                                                     !
@@ -36,7 +36,7 @@ subroutine getmolsad()
    natomsaved=natom
    xyzsaved=xyz
    MPIsaved=bMPI
-   
+
    istart = 1
    ifinal = 80
    ibasisstart = 1
@@ -111,7 +111,7 @@ subroutine getmolsad()
          if(nbasis < 1) then
                 call PrtErr(iOutFile,'Unable to find basis set information for this atom.')
                 call PrtMsg(iOutFile,'Update the corresponding basis set file or use a different basis set.')
-                call quick_exit(iOutFile,1)                
+                call quick_exit(iOutFile,1)
          endif
 
          ! if quick is called through api multiple times, this is necessary
@@ -132,7 +132,7 @@ subroutine getmolsad()
          present = .false.
          if (quick_method%readdmx) inquire (file=dmxfilename,exist=present)
          if (present) then
-            return  
+            return
          else
             ! Initial Guess
             diagelement=dble(quick_molspec%nelec)/dble(nbasis)
@@ -144,7 +144,7 @@ subroutine getmolsad()
          endif
          ! From SCF calculation to get initial density guess
          if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
-            call getenergy(failed)
+            call getenergy(failed, .true.)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
