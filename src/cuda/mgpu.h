@@ -27,18 +27,15 @@ int validDevCount = 0;      // Number of devices that can be used
 int* gpu_dev_id;            // Holds device IDs 
 
 //-----------------------------------------------
-// Get information about available GPUs and prepare
-// a list of usable GPUs. Only master cpu runs this.
+// Query the availability of devices.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int *mpisize, int *devcount)
+extern "C" void mgpu_query_(int *mpisize, int *mpirank)
 {
 
-//    PRINTDEBUG("BEGIN QUERYING DEVICES")
     int gpuCount = 0;           // Total number of cuda devices available
     size_t minMem = 8000000000; // Threshold  memory (in bytes) for device selection criteria
     cudaError_t status;
-    bool isZeroID = false;
 
     status = cudaGetDeviceCount(&gpuCount);
 
@@ -46,13 +43,17 @@ extern "C" void mgpu_query_(int *mpisize, int *devcount)
         PRINTERROR(status,"cudaGetDeviceCount gpu_init failed!");
         cudaDeviceReset();
         exit(-1);
-    }else if(gpuCount == 1){
-        isZeroID = true;
-        gpuCount = *mpisize; 
     }
 
-    // send the device count back to f90 side
-    *devcount = validDevCount;   
+    int devID = *mpirank % gpuCount;
+    cudaDeviceProp devProp;
+    cudaGetDeviceProperties(&devProp, devID); 
+
+    if((devProp.major < 3) || (devProp.totalGlobalMem < minMem)){
+      PRINTERROR(status,"A suitable device not found!");
+      cudaDeviceReset();
+      exit(-1);
+    }
 
     return;
 }
