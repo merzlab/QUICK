@@ -305,7 +305,7 @@ subroutine get_xc
 
 #ifdef MPIV
    integer :: i, ii, irad_end, irad_init, jj
-   double precision :: Eelxcslave
+   double precision :: Eelxcslave, aelec_slave, belec_slave
    double precision, allocatable:: temp2d(:,:)
 
    allocate(temp2d(nbasis,nbasis))
@@ -542,7 +542,11 @@ subroutine get_xc
    if(.not. master) then
 !  Send the Exc energy value
       Eelxcslave=Eelxc
+      aelec_slave=quick_qm_struct%aelec
+      belec_slave=quick_qm_struct%belec
       call MPI_SEND(Eelxcslave,1,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(aelec_slave,1,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(belec_slave,1,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
       call copyDMat(quick_qm_struct%o,temp2d,nbasis)
       call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
    else
@@ -552,6 +556,12 @@ subroutine get_xc
 !  Receive exchange correlation energy from slaves
          call MPI_RECV(Eelxcslave,1,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
          Eelxc=Eelxc+Eelxcslave
+!  Receive nelec contributions from slaves
+         call MPI_RECV(aelec_slave,1,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         quick_qm_struct%aelec=quick_qm_struct%aelec+aelec_slave
+
+         call MPI_RECV(belec_slave,1,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         quick_qm_struct%belec=quick_qm_struct%belec+aelec_slave
 !  Receive opertors from slave nodes
          call  MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
 !  Sum them into operator

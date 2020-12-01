@@ -57,7 +57,7 @@ subroutine gradient(failed)
    enddo
 
 
-   call getEnergy(failed)
+   call getEnergy(failed,.false.)
 
    do Ibas=1,nbasis
       do Jbas=1,nbasis

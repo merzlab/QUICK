@@ -11,10 +11,10 @@ subroutine calmp2
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
-    
+
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
-    
+
   call PrtAct(ioutfile,"Begin MP2 Calculation")
   cutoffmp2=1.0d-8  ! cutoff criteria
   quick_method%primLimit=1.0d-8
@@ -26,7 +26,7 @@ subroutine calmp2
 
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
-  write(ioutfile,'("CURRENT MEMORY USAGE=",E12.6,"M")') ememorysum
+  write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
 
   ! actually nstep is step length
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
@@ -45,7 +45,7 @@ subroutine calmp2
   allocate(orbmp2j331(nstep,ivir,nbasistemp,nbasistemp,2))
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
 
-  ! with nstep(acutally, it represetns step lenght), we can 
+  ! with nstep(acutally, it represetns step lenght), we can
   ! have no. of steps for mp2 calculation
   nstepmp2=nelec/2/nstep
   nstepmp2=nstepmp2+1
@@ -55,7 +55,7 @@ subroutine calmp2
   write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
   ! Pre-step for density cutoff
-  call densityCutoff    
+  call densityCutoff
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -75,7 +75,7 @@ subroutine calmp2
 
      if(i3new.eq.nstepmp2)nstepmp2f=nelec/2
      nsteplength=nstepmp2f-nstepmp2s+1  ! Step Lengh, from nstepmp2s to nstepmp2f
-     
+
      ! Initial orbmp2k331
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
      do II=1,jshell
@@ -112,11 +112,11 @@ subroutine calmp2
                             do KKK=KK111,KK112
                                 do LLL=max(KKK,LL111),LL112
                                     comax=max(comax,dabs(quick_qm_struct%co(kkk,i3)))
-                                    comax=max(comax,dabs(quick_qm_struct%co(lll,i3)))    
+                                    comax=max(comax,dabs(quick_qm_struct%co(lll,i3)))
                                 enddo
-                            enddo        
+                            enddo
                        enddo
-                       
+
                        testCutoff=testCutoff*comax
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
@@ -189,7 +189,7 @@ subroutine calmp2
      enddo
 
      write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
-     
+
      do icycle=1,nsteplength
         do k3=1,nelec/2
             do j3=1,nbasis-nelec/2
@@ -216,7 +216,7 @@ subroutine calmp2
                  enddo
               enddo
            enddo
-       
+
            do J3=1,nbasis-nelec/2
               do L3=1,nbasis-nelec/2
                  if(k3.gt.i3)then
@@ -234,7 +234,7 @@ subroutine calmp2
            enddo
         enddo
      enddo
-        
+
      call cpu_time(timer_end%TMP2)
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
@@ -261,8 +261,12 @@ subroutine MPI_calmp2
 
   double precision cutoffTest,testtmp,testCutoff
   double precision, allocatable:: temp4d(:,:,:,:)
-  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,total_ntemp
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    integer :: nelec,nelecb
+
+    nelec = quick_molspec%nelec
+    nelecb = quick_molspec%nelecb
 
   if (bMPI) then
 !     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -279,11 +283,12 @@ subroutine MPI_calmp2
   iocc=Nelec/2
   ivir=Nbasis-Nelec/2
 
+
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
   if (master) then
      call PrtAct(ioutfile,"Begin MP2 Calculation")
-     write(ioutfile,'("Current memory usage=",E12.6,"M")') ememorysum
+     write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
   endif
 
   ! actually nstep is step length
@@ -304,7 +309,7 @@ subroutine MPI_calmp2
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
   allocate(temp4d(nstep,iocc,ivir,nbasis))
 
-  ! with nstep(acutally, it represetns step lenght), we can 
+  ! with nstep(acutally, it represetns step lenght), we can
   ! have no. of steps for mp2 calculation
   nstepmp2=nelec/2/nstep
   nstepmp2=nstepmp2+1
@@ -313,7 +318,7 @@ subroutine MPI_calmp2
   endif
   write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
   ! Pre-step for density cutoff
-  call densityCutoff    
+  call densityCutoff
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -327,6 +332,7 @@ subroutine MPI_calmp2
   do i3new=1,nstepmp2               ! Step counter
      call cpu_time(timer_begin%TMP2)
      ntemp=0    ! integer counter
+     total_ntemp=0
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
      nstepmp2f=i3new*nstep          ! Step end n
 
@@ -376,12 +382,12 @@ subroutine MPI_calmp2
                             do KKK=KK111,KK112
                                 do LLL=max(KKK,LL111),LL112
                                     comax=max(comax,dabs(quick_qm_struct%co(kkk,i3)))
-                                    comax=max(comax,dabs(quick_qm_struct%co(lll,i3)))    
+                                    comax=max(comax,dabs(quick_qm_struct%co(lll,i3)))
                                 enddo
-                            enddo        
+                            enddo
                        enddo
-                       
-                       
+
+
 
                        testCutoff=testCutoff*comax
                        if(testCutoff.gt.cutoffmp2)then
@@ -396,7 +402,7 @@ subroutine MPI_calmp2
               enddo
 
 
-              ! Next step is to folding integers. Without folding, the scaling will 
+              ! Next step is to folding integers. Without folding, the scaling will
               ! be n^8, and after folding, scaling is reduced to 4n^5
 
               NII1=quick_basis%Qstart(II)
@@ -470,7 +476,7 @@ subroutine MPI_calmp2
            do k1=1,ivir
               do i1=1,iocc
                  do icycle=1,nsteplength
-                    temp4d(icycle,i1,k1,j1)= orbmp2k331(icycle,i1,k1,j1)  
+                    temp4d(icycle,i1,k1,j1)= orbmp2k331(icycle,i1,k1,j1)
                  enddo
               enddo
            enddo
@@ -498,8 +504,10 @@ subroutine MPI_calmp2
      !---------------- END MPI/ ALL NODES ------------------------
 
      !---------------- MPI/ MASTER -------------------------------
+    
+     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
      if (master) then
-
+        write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
         do icycle=1,nsteplength
            i3=nstepmp2s+icycle-1
@@ -541,8 +549,8 @@ subroutine MPI_calmp2
   enddo
 
   if (master) then
-     write (iOutFile,'("Second order energy=",F16.9)') quick_qm_struct%EMP2
-     write (iOutFile,'("quick_qm_struct%EMP2               =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
+     write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2
+     write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
      call PrtAct(ioutfile,"End MP2 Calculation")
   endif
   return
@@ -581,7 +589,7 @@ subroutine calmp2divcon
   quick_qm_struct%EMP2=0.0d0
   emp2temp=0.0d0
   nstep=1
-  
+
 
   do itt=1,np
 
@@ -608,7 +616,7 @@ subroutine calmp2divcon
             enddo
             enddo
         enddo
-        
+
      ttt=0.0d0
 
      do iiat=1,dcsubn(itt)
@@ -645,7 +653,7 @@ subroutine calmp2divcon
      else
         nbasistemp=10
      endif
-     
+
      ! allocate varibles
      allocate(orbmp2(100,100))
      allocate(orbmp2dcsub(iocc,ivir,ivir))
@@ -686,10 +694,10 @@ subroutine calmp2divcon
 
         do iiat=1,dcsubn(itt)
            iiatom=dcsub(itt,iiat)
-           
+
            do jjat=iiat,dcsubn(itt)
               jjatom=dcsub(itt,jjat)
-              
+
               ! iiatom and jjatom is the atom of the subsystem
               ! first, we need to figure out which shell should we calclulate
               ! which is IIstart1 and IIstart2 for I and JJ is from JJstart1 to JJstart2
@@ -705,7 +713,7 @@ subroutine calmp2divcon
                  IIstart1=quick_basis%first_shell_basis_function(jjatom)
                  IIstart2=quick_basis%last_shell_basis_function(jjatom)
               endif
-              
+
               do II=IIstart1,IIstart2
                  do JJ=max(JJstart1,II),JJstart2
 
@@ -714,7 +722,7 @@ subroutine calmp2divcon
 
                         call initialOrbmp2ij(orbmp2i331,nstep,nstep,nbasisdc(itt),nbasistemp,nbasistemp)
                         call initialOrbmp2ij(orbmp2j331,nstep,nstep,ivir,nbasistemp,nbasistemp)
-                        
+
                        ! Now we will determine K shell and L shell, the last two indices
                        do kkat=1,dcsubn(itt)
                           kkatom=dcsub(itt,kkat)
@@ -757,7 +765,7 @@ subroutine calmp2divcon
                                          do LLL=max(KKK,LL111),LL112
 
                                             comax=max(comax,dabs(quick_qm_struct%co(wtospoint(itt,kkk),i3)))
-                                            comax=max(comax,dabs(quick_qm_struct%co(wtospoint(itt,lll),i3)))    
+                                            comax=max(comax,dabs(quick_qm_struct%co(wtospoint(itt,lll),i3)))
 
                                          enddo
                                       enddo
@@ -863,7 +871,7 @@ subroutine calmp2divcon
            enddo
         enddo
         write (ioutfile,*)"ntemp=",ntemp
-        
+
         do k3=1,2
             do j3=1,ivir
             do l3=1,ivir
@@ -874,7 +882,7 @@ subroutine calmp2divcon
             enddo
             enddo
         enddo
-        
+
         do LLL=1,nbasisdc(itt)
            do J3=1,ivir
               do L3=1,ivir
@@ -939,7 +947,7 @@ subroutine  initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
      do k1=1,ivir
         do i1=1,iocc
            do icycle=1,nsteplength
-              orbmp2k331(icycle,i1,k1,j1)=0.0d0  
+              orbmp2k331(icycle,i1,k1,j1)=0.0d0
            enddo
         enddo
      enddo
@@ -964,6 +972,3 @@ subroutine initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasis
      enddo
   enddo
 end subroutine initialOrbmp2ij
-
-
-
