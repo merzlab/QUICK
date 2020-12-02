@@ -857,6 +857,7 @@ gpu -> gpu_xcq -> weight        = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_x
 gpu -> gpu_xcq -> gatm          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> dweight       = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> dweight_ssd   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> bin_locator   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> basf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
 gpu -> gpu_xcq -> primf         = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
 gpu -> gpu_xcq -> basf_locator  = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins +1);
@@ -871,6 +872,7 @@ memcpy(gpu -> gpu_xcq -> weight -> _hostData, mgpu_xcq -> weight -> _hostData, s
 memcpy(gpu -> gpu_xcq -> gatm   -> _hostData, mgpu_xcq -> gatm   -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> dweight -> _hostData, mgpu_xcq -> dweight -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> dweight_ssd -> _hostData, mgpu_xcq -> dweight_ssd -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
+memcpy(gpu -> gpu_xcq -> bin_locator -> _hostData, mgpu_xcq -> bin_locator -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> basf_locator -> _hostData, mgpu_xcq -> basf_locator -> _hostData, sizeof(int) * (gpu -> gpu_xcq -> nbins + 1));
 memcpy(gpu -> gpu_xcq -> primf_locator -> _hostData, mgpu_xcq -> primf_locator -> _hostData, sizeof(int) * (gpu -> gpu_xcq -> ntotbf + 1));
 memcpy(gpu -> gpu_xcq -> basf -> _hostData, mgpu_xcq -> basf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotbf);
@@ -934,6 +936,7 @@ SAFE_DELETE(mgpu_xcq -> basf);
 SAFE_DELETE(mgpu_xcq -> primf);
 SAFE_DELETE(mgpu_xcq -> basf_locator);
 SAFE_DELETE(mgpu_xcq -> primf_locator);
+SAFE_DELETE(mgpu_xcq -> bin_locator);
 
 }
 
