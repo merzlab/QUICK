@@ -1966,7 +1966,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu ->gpu_sim.isg = *isg;
         gpu ->gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
 
-        upload_xc_smem();
+//        upload_xc_smem();
 
 #ifdef DEBUG
         print_uploaded_dft_info();
