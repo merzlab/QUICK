@@ -453,11 +453,11 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         //declare shared memory arrays
-        extern __shared__ char smem_buffer[];
+/*        extern __shared__ char smem_buffer[];
         unsigned char* primf=(unsigned char*)smem_buffer;
         unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
         unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
-
+*/
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
@@ -472,9 +472,9 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
-            int bin_id = (int) (gid/devSim_dft.bin_size);
+            int bin_id = devSim_dft.bin_locator[gid];
             // initialize shared memory arrays
-            int bfll=devSim_dft.basf_locator[bin_id];
+/*            int bfll=devSim_dft.basf_locator[bin_id];
             int bful=devSim_dft.basf_locator[bin_id+1];
 
             if(threadIdx.x == 0) primf_loc[0] = 0;
@@ -491,7 +491,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
               primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
 
             __syncthreads();
-
+*/
 		int dweight = devSim_dft.dweight[gid];
 
 		if(dweight>0){
@@ -589,26 +589,31 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 				}
 				devSim_dft.exc[gid] = _tmp;
 			
-                                for (int i = 0; i<bful-bfll; i++) {
-					int ibas = (int) basf[i];
+                                //for (int i = 0; i<bful-bfll; i++) {
+                                for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
+					//int ibas = (int) basf[i];
+                                        int ibas = devSim_dft.basf[i];
 					QUICKDouble phi, dphidx, dphidy, dphidz;
-					pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+					//pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
 					if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
 						QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
 
-						pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, primf, primf_loc, ibas, i);
-				
+						//pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, primf, primf_loc, ibas, i);
+				                pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 						int Istart = (devSim_dft.ncenter[ibas]-1) * 3;
 					
-                                                for (int j = 0; j <bful-bfll; j++) {
+                                                //for (int j = 0; j <bful-bfll; j++) {
+                                                for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
 
-							int jbas = (int) basf[j];
-
+							//int jbas = (int) basf[j];
+                                                        int jbas = (int) devSim_dft.basf[j];
 							QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-							pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+							//pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
 							
 							QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 
@@ -653,7 +658,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 devSim_dft.dweight_ssd[gid] = 0;
                         }				
 		}
-                __syncthreads();
+               // __syncthreads();
 	}
 
 /*        __syncthreads();
