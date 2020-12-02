@@ -164,20 +164,20 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 __global__ void get_density_kernel()
 {
         //declare shared memory arrays
-        extern __shared__ char smem_buffer[];
+/*        extern __shared__ char smem_buffer[];
         unsigned char* primf=(unsigned char*)smem_buffer;
         unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
         unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
-
+*/
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
-            int bin_id = (int) (gid/devSim_dft.bin_size);
+            int bin_id = devSim_dft.bin_locator[gid];
 
             // initialize shared memory arrays
-            int bfll=devSim_dft.basf_locator[bin_id];
+/*            int bfll=devSim_dft.basf_locator[bin_id];
             int bful=devSim_dft.basf_locator[bin_id+1];
 
             if(threadIdx.x == 0) primf_loc[0] = 0;
@@ -194,7 +194,7 @@ __global__ void get_density_kernel()
               primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
 
             __syncthreads(); 
-	    
+*/	    
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight >0){
@@ -208,11 +208,14 @@ __global__ void get_density_kernel()
                         QUICKDouble gridy = devSim_dft.gridy[gid];
                         QUICKDouble gridz = devSim_dft.gridz[gid];
 
-                        for(int i=0; i< bful-bfll; i++){
-        	                int ibas = (int) basf[i];
+                        //for(int i=0; i< bful-bfll; i++){
+                        for(int i=devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1] ; i++){
+        	                //int ibas = (int) basf[i];
+                                int ibas = (int) devSim_dft.basf[i];
                 	        QUICKDouble phi, dphidx, dphidy, dphidz;
 			
-				pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+				//pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+                                pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
 #ifdef DEBUG
 //        printf("i=%i ibas=%i x=%f  y=%f  z=%f  phi=%.10e dx=%.10e dy=%.10e dz=%.10e\n", i, ibas, gridx, gridy, gridz, phi, dphidx, dphidz, dphidz);
@@ -226,10 +229,13 @@ __global__ void get_density_kernel()
 					gay = gay + denseii * dphidy;
 					gaz = gaz + denseii * dphidz;
 
-                                        for(int j=i+1; j< bful-bfll; j++){
-						int jbas = (int) basf[j];
+                                        //for(int j=i+1; j< bful-bfll; j++){
+                                        for(int j=i+1; j< devSim_dft.basf_locator[bin_id+1]; j++){
+						//int jbas = (int) basf[j];
+                                                int jbas = devSim_dft.basf[j];
 						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
-						pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+						//pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+                                                pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
 						QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 						density = density + denseij * phi * phi2;
 						gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
@@ -256,7 +262,7 @@ __global__ void get_density_kernel()
 //        printf("x=%f  y=%f  z=%f  density=%.10e  gax=%.10e gay=%.10e gaz=%.10e \n",gridx, gridy, gridz, density, gax, gay, gaz);
 #endif
 		}
-          __syncthreads();
+          //__syncthreads();
 	}
 }
 
