@@ -269,19 +269,19 @@ __global__ void get_density_kernel()
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
 
         //declare shared memory arrays
-        extern __shared__ char smem_buffer[];
+/*        extern __shared__ char smem_buffer[];
         unsigned char* primf=(unsigned char*)smem_buffer;
         unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
         unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
-
+*/
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
-            int bin_id = (int) (gid/devSim_dft.bin_size);
+            int bin_id = devSim_dft.bin_locator[gid];
             // initialize shared memory arrays
-            int bfll=devSim_dft.basf_locator[bin_id];
+/*            int bfll=devSim_dft.basf_locator[bin_id];
             int bful=devSim_dft.basf_locator[bin_id+1];
 
             if(threadIdx.x == 0) primf_loc[0] = 0;
@@ -298,7 +298,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
               primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
 
             __syncthreads();
-
+*/
                 int dweight = devSim_dft.dweight[gid];
 
                 if(dweight>0){
@@ -413,19 +413,24 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                     val1 = 0ull - val1;
                                 QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
 
-                                for (int i = 0; i<bful-bfll; i++) {
-                                        int ibas = (int) basf[i];
+                                //for (int i = 0; i<bful-bfll; i++) {
+                                for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
+                                        //int ibas = (int) basf[i];
+                                        int ibas = devSim_dft.basf[i];
                                         QUICKDouble phi, dphidx, dphidy, dphidz;
-                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+                                        //pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
+                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
                                         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
-                                                 for (int j = 0; j <bful-bfll; j++) {
-                                                        int jbas = (int) basf[j];
-
+                                                 //for (int j = 0; j <bful-bfll; j++) {
+                                                 for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
+                                                        //int jbas = (int) basf[j];
+                                                        int jbas = devSim_dft.basf[j];
                                                         QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+                                                        //pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
+                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
 
 														QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
 															+ ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
@@ -440,7 +445,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                 }
                         }
                 }
-                __syncthreads();
+                //__syncthreads();
         }
 }
 
