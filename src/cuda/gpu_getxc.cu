@@ -1191,9 +1191,12 @@ __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gr
 
 }
 
-__device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
+/*__device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
                 QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, unsigned char *primf, unsigned int *primf_counter,
-		 int ibas, int ibasp){
+		 int ibas, int ibasp){*/
+__device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
+                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int *primf, int *primf_counter,
+                 int ibas, int ibasp){
 
         /*Given a point in space, this function calculates the value of basis
         function I and the value of its cartesian derivatives in all three derivatives.
@@ -1308,9 +1311,12 @@ __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gri
 
 }
 
+/*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz,
+            QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz,
+            unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp)*/
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz,
             QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz,
-            unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp)
+            int *primf, int *primf_counter, int ibas, int ibasp)
 {
 
     /*
