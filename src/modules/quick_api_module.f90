@@ -269,7 +269,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
 #ifdef CUDA_MPIV
 
-  call mgpu_query(mpirank, mgpu_id)
+  call mgpu_query(mpisize, mpirank, mgpu_id)
 
   call mgpu_setup()
 
