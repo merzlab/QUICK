@@ -360,9 +360,6 @@
 
       include 'mpif.h'
 
-      ! broadcast device count to slaves
-      call MPI_BCAST(mgpu_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
       ! allocate memory for device ids
       call allocate_mgpu
 

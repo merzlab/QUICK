@@ -30,7 +30,6 @@ module quick_mpi_module
     logical :: libMPIMode = .false. ! if mpi is initialized somewhere other than quick
     integer, allocatable :: MPI_STATUS(:)
     integer, parameter :: MIN_1E_MPI_BASIS=6
-    integer :: mgpu_count             ! number of valid devices for cudampi version
     integer, allocatable :: mgpu_ids(:)    
     integer :: mgpu_id
 
@@ -77,7 +76,7 @@ module quick_mpi_module
 
       implicit none
 
-      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mgpu_count))
+      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mpisize))
 
     end subroutine allocate_mgpu
 
