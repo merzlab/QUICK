@@ -36,7 +36,7 @@ extern "C" void mgpu_query_(int *mpirank, int *mgpu_id)
     status = cudaGetDeviceCount(&gpuCount);
 
     if(gpuCount == 0){
-        PRINTERROR(status,"cudaGetDeviceCount gpu_init failed!");
+        PRINTERROR(status,"One more processes couldnt find a GPU. Make sure the number of launched processes is equal to the number of plugged in GPUs.");
         cudaDeviceReset();
         exit(-1);
     }
