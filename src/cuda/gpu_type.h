@@ -102,6 +102,7 @@ struct XC_quadrature_type{
         cuda_buffer_type<QUICKDouble>* dphidx;          // x gradient of a basis function at a grid point 
         cuda_buffer_type<QUICKDouble>* dphidy;          // y gradient of a basis function at a grid point
         cuda_buffer_type<QUICKDouble>* dphidz;          // z gradient of a basis function at a grid point  
+        cuda_buffer_type<unsigned int>*  phi_loc;       // stores locations of phi array for each grid point
 
         //Variables for ssw derivative calculation
         int npoints_ssd; //Total number of input points for ssd
@@ -198,6 +199,7 @@ struct gpu_simulation_type {
     QUICKDouble* dphidx;          // x gradient of a basis function at a grid point 
     QUICKDouble* dphidy;          // y gradient of a basis function at a grid point
     QUICKDouble* dphidz;          // z gradient of a basis function at a grid point
+    unsigned int* phi_loc;        // stores locations of phi array for each grid point      
 
     int*  gatm;               //To which atom does a given grid point belongs to?
     int*  gatm_ssd;           //Parent atom index for sswder calculation
