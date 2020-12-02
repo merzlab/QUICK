@@ -738,6 +738,7 @@ mgpu_xcq -> gatm        = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 mgpu_xcq -> dweight     = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 mgpu_xcq -> dweight_ssd = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 
+mgpu_xcq -> bin_locator  = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 mgpu_xcq -> basf_locator  = new cuda_buffer_type<int>(mgpu_xcq -> nbins +1);
 
 // at this point we are still unsure about number of basis and primitive functions.
