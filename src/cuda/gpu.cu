@@ -1967,6 +1967,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
         gpu ->gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
 
 //        upload_xc_smem();
+        upload_pteval();
 
 #ifdef DEBUG
         print_uploaded_dft_info();
@@ -2978,3 +2979,33 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     if(gpu -> gpu_xcq -> primfpbin -> _hostData[i] >= maxpfpbin) printf("bin_id= %i nprimf= %i \n", i, gpu -> gpu_xcq -> primfpbin -> _hostData[i]);
 
 }*/
+
+//-----------------------------------------------
+// checks available gmem and upload temporary large arrays 
+// to store values and gradients of basis functions
+//-----------------------------------------------
+void upload_pteval(){
+
+  // compute available amount of global memory
+  size_t free, total;
+
+  cudaMemGetInfo( &free, &total );
+  printf("Total GMEM= %lli Free= %lli \n", total,free);  
+
+  // calculate the size of an array
+  int count=0;
+  int oidx=0;
+  int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[1] - gpu -> gpu_xcq -> basf_locator -> _hostData[0];
+
+  for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
+    int nidx=gpu -> gpu_xcq -> bin_locator -> _hostData[i];
+    if(nidx != oidx) bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[nidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[nidx];
+    count += bffb;     
+  }
+
+  // amount of memory in bytes for 4 such arrays
+  size_t reqMem = count * 32;
+
+  printf("Size of each pteval array= %lli Required memory for pteval= %lli \n", count, reqMem); 
+
+}
