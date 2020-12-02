@@ -22,10 +22,6 @@
 
 #include "string.h"
 
-// device information
-int validDevCount = 0;      // Number of devices that can be used
-int* gpu_dev_id;            // Holds device IDs 
-
 //-----------------------------------------------
 // Query the availability of devices.
 //-----------------------------------------------
@@ -912,10 +908,6 @@ SAFE_DELETE(mgpu_xcq -> primf_locator);
 //--------------------------------------------------------
 // Methods passing gpu information to f90 side for printing
 //--------------------------------------------------------
-
-extern "C" void mgpu_get_dev_count_(int *gpu_dev_count){
-    *gpu_dev_count = validDevCount;
-}
 
 extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
                                      int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
