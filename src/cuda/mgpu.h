@@ -758,14 +758,7 @@ mgpu_xcq -> primf_locator -> _hostData[0] = 0;
 
 for(int obidx = 0; obidx < gpu -> gpu_xcq -> nbins; obidx++){
   if(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[obidx] > 0){
-    memcpy(&mgpu_xcq -> gridx -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> gridx -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(QUICKDouble) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> gridy -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> gridy -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(QUICKDouble) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> gridz -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> gridz -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(QUICKDouble) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> sswt  -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> sswt  -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(QUICKDouble) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> weight -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> weight -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(QUICKDouble) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> gatm   -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> gatm   -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(int) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> dweight -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> dweight -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(int) * mgpu_xcq -> bin_size);
-    memcpy(&mgpu_xcq -> dweight_ssd -> _hostData[nbidx * mgpu_xcq -> bin_size], &gpu -> gpu_xcq -> dweight_ssd -> _hostData[obidx * mgpu_xcq -> bin_size], sizeof(int) * mgpu_xcq -> bin_size);
+
 
     // transfer basis function info, where bffb is the number of basis functions for bin. 
     int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[obidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[obidx];
