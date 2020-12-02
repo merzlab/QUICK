@@ -357,6 +357,7 @@
 
       use quick_mpi_module
       implicit none
+      integer :: i, IERROR
       include 'mpif.h'
 
       ! allocate memory for device ids
