@@ -98,6 +98,10 @@ struct XC_quadrature_type{
 	cuda_buffer_type<QUICKDouble>* exc;
 	cuda_buffer_type<QUICKDouble>* xc_grad;
 	cuda_buffer_type<QUICKDouble>* gxc_grad;        // a global xc gradient vector of size number_of_blocks * number_of_threads_per_block
+        cuda_buffer_type<QUICKDouble>* phi;             // value of a basis function at a grid point 
+        cuda_buffer_type<QUICKDouble>* dphidx;          // x gradient of a basis function at a grid point 
+        cuda_buffer_type<QUICKDouble>* dphidy;          // y gradient of a basis function at a grid point
+        cuda_buffer_type<QUICKDouble>* dphidz;          // z gradient of a basis function at a grid point  
 
         //Variables for ssw derivative calculation
         int npoints_ssd; //Total number of input points for ssd
@@ -138,6 +142,7 @@ struct gpu_simulation_type {
  
     // used for DFT
     int                             isg;        // isg algrothm
+    bool                            prePtevl;   // precompute and store values and gradients of basis functions at grid points
     QUICKDouble*                    sigrad2;    // basis set range
     
     int                             natom;
@@ -189,6 +194,10 @@ struct gpu_simulation_type {
     QUICKDouble* wtang;
     QUICKDouble* rwt;
     QUICKDouble* rad3;
+    QUICKDouble* phi;             // value of a basis function at a grid point 
+    QUICKDouble* dphidx;          // x gradient of a basis function at a grid point 
+    QUICKDouble* dphidy;          // y gradient of a basis function at a grid point
+    QUICKDouble* dphidz;          // z gradient of a basis function at a grid point
 
     int*  gatm;               //To which atom does a given grid point belongs to?
     int*  gatm_ssd;           //Parent atom index for sswder calculation
