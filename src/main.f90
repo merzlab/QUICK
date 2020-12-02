@@ -115,7 +115,7 @@
 
     call mgpu_setup()
 
-    if(master) call mgpu_write_info(iOutFile)
+    if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids)
     
     call mgpu_init(mpirank, mpisize, mgpu_id)
 
