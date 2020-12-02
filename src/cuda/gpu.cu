@@ -1920,6 +1920,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
         gpu -> gpu_xcq -> dweight_ssd -> Upload();
 	gpu -> gpu_xcq -> basf -> Upload();
 	gpu -> gpu_xcq -> primf -> Upload();
+        gpu -> gpu_xcq -> bin_locator -> Upload();
 	gpu -> gpu_xcq -> basf_locator -> Upload();
 	gpu -> gpu_xcq -> primf_locator -> Upload();
 	gpu -> gpu_basis -> sigrad2 -> Upload();
@@ -1949,6 +1950,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
         gpu ->gpu_sim.dweight_ssd   = gpu -> gpu_xcq -> dweight_ssd -> _devData;
 	gpu ->gpu_sim.basf 	= gpu -> gpu_xcq -> basf -> _devData;
 	gpu ->gpu_sim.primf 	= gpu -> gpu_xcq -> primf -> _devData;
+        gpu ->gpu_sim.bin_locator      = gpu -> gpu_xcq -> bin_locator -> _devData;
 	gpu ->gpu_sim.basf_locator 	= gpu -> gpu_xcq -> basf_locator -> _devData;
 	gpu ->gpu_sim.primf_locator 	= gpu -> gpu_xcq -> primf_locator -> _devData;
 	gpu ->gpu_sim.densa     = gpu -> gpu_xcq -> densa -> _devData;
@@ -1994,6 +1996,7 @@ extern "C" void gpu_delete_dft_grid_(){
         SAFE_DELETE(gpu -> gpu_xcq -> dweight_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> basf);
         SAFE_DELETE(gpu -> gpu_xcq -> primf);
+        SAFE_DELETE(gpu -> gpu_xcq -> bin_locator);
         SAFE_DELETE(gpu -> gpu_xcq -> basf_locator);
         SAFE_DELETE(gpu -> gpu_xcq -> primf_locator);
 	SAFE_DELETE(gpu -> gpu_xcq -> densa);
