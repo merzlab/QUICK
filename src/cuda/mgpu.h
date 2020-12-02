@@ -30,7 +30,7 @@ int* gpu_dev_id;            // Holds device IDs
 // Query the availability of devices.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int *mpirank)
+extern "C" void mgpu_query_(int *mpirank, int *mgpu_id)
 {
 
     int gpuCount = 0;           // Total number of cuda devices available
@@ -54,6 +54,8 @@ extern "C" void mgpu_query_(int *mpirank)
       cudaDeviceReset();
       exit(-1);
     }
+
+    *mgpu_id = devID;
 
     return;
 }
