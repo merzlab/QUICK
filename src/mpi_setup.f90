@@ -357,22 +357,22 @@
 
       use quick_mpi_module
       implicit none
-
       include 'mpif.h'
 
       ! allocate memory for device ids
-      call allocate_mgpu
+      if(master) call allocate_mgpu
 
-      ! get device ids
-      if (master) then
-        call mgpu_get_devices(mgpu_ids)
+      ! get slave device ids and save them for printing device info
+      if(.not. master) then
+        call MPI_SEND(mgpu_id,1,mpi_integer,0,mpirank,MPI_COMM_WORLD,IERROR)
+      else
+        mgpu_ids(1)=mgpu_id
+
+        do i=1,mpisize-1
+          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+        enddo
+        
       endif
-
-      ! broadcast device ids
-      call MPI_BCAST(mgpu_ids,mgpu_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
-      ! assign a gpu id for each worker
-      mgpu_id = mgpu_ids(mpirank+1)
 
     end subroutine mgpu_setup
 
