@@ -2986,7 +2986,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 //-----------------------------------------------
 void upload_pteval(){
 
-  gpu -> gpu_xcq -> phi_loc          = new cuda_buffer_type<unsigned int>(gpu -> gpu_xcq -> npoints);
+  gpu ->gpu_sim.prePtevl = false;
 
   // compute available amount of global memory
   size_t free, total;
@@ -2996,11 +2996,12 @@ void upload_pteval(){
 
   // calculate the size of an array
   int count=0;
+  unsigned int phi_loc[gpu -> gpu_xcq -> npoints];
   int oidx=0;
   int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[1] - gpu -> gpu_xcq -> basf_locator -> _hostData[0];
 
   for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
-    gpu -> gpu_xcq -> phi_loc -> _hostData[i]=count;
+    phi_loc[i]=count;
     int nidx=gpu -> gpu_xcq -> bin_locator -> _hostData[i];
     if(nidx != oidx) bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[nidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[nidx];
     count += bffb;     
@@ -3016,8 +3017,42 @@ void upload_pteval(){
 
   if( reqMem < (free-estMem) ){
     gpu ->gpu_sim.prePtevl = true; 
+    gpu -> gpu_xcq -> phi_loc          = new cuda_buffer_type<unsigned int>(gpu -> gpu_xcq -> npoints);
+    gpu -> gpu_xcq -> phi          = new cuda_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidx       = new cuda_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidy       = new cuda_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidz       = new cuda_buffer_type<QUICKDouble>(count);
+
+    memcpy(gpu -> gpu_xcq -> phi_loc -> _hostData, &phi_loc, sizeof(unsigned int)*gpu -> gpu_xcq -> npoints);
+
+    gpu -> gpu_xcq -> phi_loc -> Upload();
+    gpu -> gpu_xcq -> phi -> Upload();
+    gpu -> gpu_xcq -> dphidx -> Upload();
+    gpu -> gpu_xcq -> dphidy -> Upload();
+    gpu -> gpu_xcq -> dphidz -> Upload();
+
+    gpu -> gpu_sim.phi_loc = gpu -> gpu_xcq -> phi_loc -> _devData;
+    gpu -> gpu_sim.phi = gpu -> gpu_xcq -> phi -> _devData;   
+    gpu -> gpu_sim.dphidx = gpu -> gpu_xcq -> dphidx -> _devData;   
+    gpu -> gpu_sim.dphidy = gpu -> gpu_xcq -> dphidy -> _devData;
+    gpu -> gpu_sim.dphidz = gpu -> gpu_xcq -> dphidz -> _devData;
 
   }
 
 
 }
+
+void delete_pteval(){
+
+    if(gpu ->gpu_sim.prePtevl == true){
+
+      SAFE_DELETE(gpu -> gpu_xcq -> phi_loc);
+      SAFE_DELETE(gpu -> gpu_xcq -> phi);
+      SAFE_DELETE(gpu -> gpu_xcq -> dphidx);
+      SAFE_DELETE(gpu -> gpu_xcq -> dphidy);
+      SAFE_DELETE(gpu -> gpu_xcq -> dphidz);
+
+    }
+
+}
+
