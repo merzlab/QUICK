@@ -727,7 +727,7 @@ XC_quadrature_type* mgpu_xcq = new XC_quadrature_type;
 // set properties
 mgpu_xcq -> nbins    = nbtr;  
 mgpu_xcq -> bin_size = MAX_POINTS_PER_CLUSTER;
-mgpu_xcq -> npoints  = mgpu_xcq -> nbins * mgpu_xcq -> bin_size;
+mgpu_xcq -> npoints  = ntot_tpts;
 
 mgpu_xcq -> gridx       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
 mgpu_xcq -> gridy       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
