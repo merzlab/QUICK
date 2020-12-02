@@ -759,6 +759,21 @@ mgpu_xcq -> primf_locator -> _hostData[0] = 0;
 for(int obidx = 0; obidx < gpu -> gpu_xcq -> nbins; obidx++){
   if(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[obidx] > 0){
 
+    for(int i=0; i<mgpu_xcq -> bin_size; i++){
+      int oidx = obidx * mgpu_xcq -> bin_size + i;
+      if(gpu -> gpu_xcq -> dweight -> _hostData[oidx] > 0 ){
+        mgpu_xcq -> gridx -> _hostData[nidx] = gpu -> gpu_xcq -> gridx -> _hostData [oidx];
+        mgpu_xcq -> gridy -> _hostData[nidx] = gpu -> gpu_xcq -> gridy -> _hostData [oidx];
+        mgpu_xcq -> gridz -> _hostData[nidx] = gpu -> gpu_xcq -> gridz -> _hostData [oidx];
+        mgpu_xcq -> sswt -> _hostData[nidx] = gpu -> gpu_xcq -> sswt -> _hostData [oidx];
+        mgpu_xcq -> weight -> _hostData[nidx] = gpu -> gpu_xcq -> weight -> _hostData [oidx];
+        mgpu_xcq -> gatm -> _hostData[nidx] = gpu -> gpu_xcq -> gatm -> _hostData [oidx];
+        mgpu_xcq -> dweight -> _hostData[nidx] = gpu -> gpu_xcq -> dweight -> _hostData [oidx];
+        mgpu_xcq -> dweight_ssd -> _hostData[nidx] = gpu -> gpu_xcq -> dweight_ssd -> _hostData [oidx];
+        mgpu_xcq -> bin_locator -> _hostData[nidx] = nbidx;
+        ++nidx;
+      }
+    }
 
     // transfer basis function info, where bffb is the number of basis functions for bin. 
     int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[obidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[obidx];
