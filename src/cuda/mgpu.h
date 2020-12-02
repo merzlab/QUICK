@@ -26,7 +26,7 @@
 // Query the availability of devices.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int *mpirank, int *mgpu_id)
+extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
 {
 
     int gpuCount = 0;           // Total number of cuda devices available
@@ -37,6 +37,10 @@ extern "C" void mgpu_query_(int *mpirank, int *mgpu_id)
 
     if(gpuCount == 0){
         PRINTERROR(status,"One more processes couldnt find a GPU. Make sure the number of launched processes is equal to the number of plugged in GPUs.");
+        cudaDeviceReset();
+        exit(-1);
+    }else if(gpuCount > *mpisize){
+        PRINTERROR(status,"Number of launched processes is greater than the available GPU count.");
         cudaDeviceReset();
         exit(-1);
     }
