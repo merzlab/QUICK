@@ -701,6 +701,26 @@ for(int i = 0; i < gpu -> gpu_xcq -> nbins; i++){
   nbtr += gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[i];
 }
 
+// array to keep track of how many true grid points per bin
+int tpoints[gpu -> gpu_xcq -> nbins];
+
+// count how many true grid point in each bin and store in tpoints
+int ntot_tpts=0;
+memset(tpoints,0, sizeof(int)*gpu -> gpu_xcq -> nbins);
+
+for(int i=0; i< gpu -> gpu_xcq -> nbins; i++){
+
+    int tpts = 0;
+    for(int j=0; j< gpu -> gpu_xcq -> bin_size; j++){
+        if(gpu -> gpu_xcq -> dweight -> _hostData[i*gpu -> gpu_xcq -> bin_size + j] > 0 ){
+            tpoints[i]++;
+            tpts++;
+        }
+    }
+
+    if(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[i] > 0 ) ntot_tpts += tpts;
+}
+
 // create a temporary XC_quadrature_type object and store packed data
 XC_quadrature_type* mgpu_xcq = new XC_quadrature_type;
 
