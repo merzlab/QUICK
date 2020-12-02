@@ -46,7 +46,6 @@ module quick_mpi_module
         
         if (bMPI .and. mpisize.eq.1) then
             bMPI=.false.
-            call PrtWrn(io,"| NODE=1, TURN OFF MPI")
         endif
         
         ierr=0
