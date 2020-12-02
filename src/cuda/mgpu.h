@@ -61,20 +61,6 @@ extern "C" void mgpu_query_(int *mpirank, int *mgpu_id)
 }
 
 //-----------------------------------------------
-// send gpu ids to f90 side for broadcasting
-//-----------------------------------------------
-
-extern "C" void mgpu_get_devices_(int *gpu_dev_ids)
-{
-
-    for(int i=0; i<validDevCount; i++){
-	    gpu_dev_ids[i] = gpu_dev_id[i];
-    }    
-
-	return;
-}
-
-//-----------------------------------------------
 // create gpu class
 //-----------------------------------------------
 void mgpu_startup(int mpirank)
