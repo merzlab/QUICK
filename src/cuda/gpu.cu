@@ -2986,6 +2986,8 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 //-----------------------------------------------
 void upload_pteval(){
 
+  gpu -> gpu_xcq -> phi_loc          = new cuda_buffer_type<unsigned int>(gpu -> gpu_xcq -> npoints);
+
   // compute available amount of global memory
   size_t free, total;
 
@@ -2998,6 +3000,7 @@ void upload_pteval(){
   int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[1] - gpu -> gpu_xcq -> basf_locator -> _hostData[0];
 
   for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
+    gpu -> gpu_xcq -> phi_loc -> _hostData[i]=count;
     int nidx=gpu -> gpu_xcq -> bin_locator -> _hostData[i];
     if(nidx != oidx) bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[nidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[nidx];
     count += bffb;     
@@ -3013,7 +3016,6 @@ void upload_pteval(){
 
   if( reqMem < (free-estMem) ){
     gpu ->gpu_sim.prePtevl = true; 
-
 
   }
 
