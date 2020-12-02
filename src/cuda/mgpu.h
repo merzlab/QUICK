@@ -917,13 +917,11 @@ extern "C" void mgpu_get_dev_count_(int *gpu_dev_count){
     *gpu_dev_count = validDevCount;
 }
 
-extern "C" void mgpu_get_device_info_(int *rank, int* dev_id,int* gpu_dev_mem,
+extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
                                      int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
 {
     cudaDeviceProp prop;
     size_t device_mem;
-
-    *dev_id = gpu_dev_id[*rank];
 
     cudaGetDeviceProperties(&prop,*dev_id);
     device_mem = (prop.totalGlobalMem/(1024*1024));
