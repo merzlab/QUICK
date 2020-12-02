@@ -120,8 +120,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
     fprintf(gpu->debugFile,"mpirank %i mpisize %i dev_id %i \n", *mpirank, *mpisize, *device);
 #endif
 
-    gpu -> gpu_dev_id = *device;
-
     status = cudaSetDevice(gpu -> gpu_dev_id);
     cudaGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     PRINTERROR(status, "cudaSetDevice gpu_init failed!");
