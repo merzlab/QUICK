@@ -84,6 +84,7 @@ struct XC_quadrature_type{
         cuda_buffer_type<int>*  primfpbin;                 //Number of primitive functions per bin
 	cuda_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
 	cuda_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
+        cuda_buffer_type<int>*  bin_locator;            //Helps accessing bin of a grid point
 
 	//Temporary variables
 	cuda_buffer_type<QUICKDouble>* densa;
@@ -198,6 +199,7 @@ struct gpu_simulation_type {
     int*  primfpbin;             //Number of primitive functions per bin
     int*  basf_locator;       //Helps accessing b.f. indices of a grid point
     int*  primf_locator;      //Helps accessing p.f. indices of a b.f.   
+    int*  bin_locator;        //Helps accessing bin of a grid point
     unsigned char*gpweight;   //keeps track of significant grid points for octree pruning
     unsigned int* cfweight;   //keeps track of significant b.f. for octree pruning
     unsigned int* pfweight;   //keeps track of significant p.f. for octree pruning
