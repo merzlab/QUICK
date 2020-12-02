@@ -750,7 +750,7 @@ mgpu_xcq -> primf         = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
 // load data, where obidx and nbidx are old and new bin indices, npidx is the new primitive index.
 // nbfidx_ul and npfidx_ul variables keep track of upper bounds of basis & primitive function
 // locator arrays.
-int nbidx = 0, npidx = 0, nbfidx_ul = 0, npfidx_ul = 0;
+int nbidx = 0, nidx=0, npidx = 0, nbfidx_ul = 0, npfidx_ul = 0;
 
 // set the first element of the locator arrays to zero
 mgpu_xcq -> basf_locator -> _hostData[0] = 0;
