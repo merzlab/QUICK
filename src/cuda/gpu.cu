@@ -3006,6 +3006,16 @@ void upload_pteval(){
   // amount of memory in bytes for 4 such arrays
   size_t reqMem = count * 32;
 
-  printf("Size of each pteval array= %lli Required memory for pteval= %lli \n", count, reqMem); 
+  // estimate memory for future needs, 6 nbasis * nbasis 2D arrays of double type
+  size_t estMem = gpu->nbasis * gpu->nbasis * 48;
+
+  printf("Size of each pteval array= %lli Required memory for pteval= %lli Total avail= %lli\n", count, reqMem,free-estMem);
+
+  if( reqMem < (free-estMem) ){
+    gpu ->gpu_sim.prePtevl = true; 
+
+
+  }
+
 
 }
