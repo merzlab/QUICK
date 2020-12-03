@@ -40,17 +40,17 @@ __global__ void get_density_kernel()
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
 
 #ifdef HMEM
-    int phii = devSim_dft.phi_loc[gid];
+      int phii = devSim_dft.phi_loc[gid];
+#else
+      QUICKDouble gridx = devSim_dft.gridx[gid];
+      QUICKDouble gridy = devSim_dft.gridy[gid];
+      QUICKDouble gridz = devSim_dft.gridz[gid];
 #endif
 
       QUICKDouble density = 0.0;
       QUICKDouble gax = 0.0;
       QUICKDouble gay = 0.0;
       QUICKDouble gaz = 0.0;
-
-      QUICKDouble gridx = devSim_dft.gridx[gid];
-      QUICKDouble gridy = devSim_dft.gridy[gid];
-      QUICKDouble gridz = devSim_dft.gridz[gid];
 
       for(int i=bfloc_st; i < bfloc_end; i++){
 
