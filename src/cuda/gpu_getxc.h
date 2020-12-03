@@ -111,3 +111,189 @@ __global__ void get_density_kernel()
       devSim_dft.gbz[gid] = gaz;
   }
 }
+
+
+//-----------------------------------------------
+// Calculate the density and gradients of density at
+// each grid point. Huge memory (hmem) version will 
+// use precomputed basis function values and gradients
+// while the other will compute them. 
+//-----------------------------------------------
+#ifdef HMEM
+__global__ void getxc_hmem_kernel()
+#else
+__global__ void getxc_kernel()
+#endif
+{
+  unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+  int totalThreads = blockDim.x*gridDim.x;
+
+  for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
+
+    int bin_id    = devSim_dft.bin_locator[gid];
+    int bfloc_st  = devSim_dft.basf_locator[bin_id];
+    int bfloc_end = devSim_dft.basf_locator[bin_id+1];
+
+#ifdef HMEM
+    int phii = devSim_dft.phi_loc[gid];
+#else
+    QUICKDouble gridx = devSim_dft.gridx[gid];
+    QUICKDouble gridy = devSim_dft.gridy[gid];
+    QUICKDouble gridz = devSim_dft.gridz[gid];
+#endif
+    QUICKDouble weight = devSim_dft.weight[gid];
+    QUICKDouble density = devSim_dft.densa[gid];
+    QUICKDouble densityb = devSim_dft.densb[gid];
+    QUICKDouble gax = devSim_dft.gax[gid];
+    QUICKDouble gay = devSim_dft.gay[gid];
+    QUICKDouble gaz = devSim_dft.gaz[gid];
+    QUICKDouble gbx = devSim_dft.gbx[gid];
+    QUICKDouble gby = devSim_dft.gby[gid];
+    QUICKDouble gbz = devSim_dft.gbz[gid];
+
+    if(density >devSim_dft.DMCutoff){
+      QUICKDouble sigma = 4.0 * (gax * gax + gay * gay + gaz * gaz);
+      QUICKDouble _tmp ;
+
+      if (devSim_dft.method == B3LYP) {
+        _tmp = b3lyp_e(2.0*density, sigma) * weight;
+      }else if(devSim_dft.method == DFT){
+         _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
+         + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
+      }
+
+      QUICKDouble dfdr;
+      QUICKDouble dot, xdot, ydot, zdot;
+
+      if (devSim_dft.method == B3LYP) {
+         dot = b3lypf(2.0*density, sigma, &dfdr);
+         xdot = dot * gax;
+         ydot = dot * gay;
+         zdot = dot * gaz;
+      }else if(devSim_dft.method == DFT){
+         QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
+         QUICKDouble dfdr2;
+
+         becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
+         lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
+         dfdr += dfdr2;
+         dfdgaa += dfdgaa2;
+         dfdgab += dfdgab2;
+         //Calculate the first term in the dot product shown above,i.e.:
+         //(2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
+         xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
+         ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
+         zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;
+     }else if(devSim_dft.method == LIBXC){
+         //Prepare in/out for libxc call
+         double d_rhoa = (double) density;
+         double d_rhob = (double) densityb;
+         double d_sigma = (double)sigma;
+         double d_zk, d_vrho, d_vsigma;
+         d_zk = d_vrho = d_vsigma = 0.0;
+
+         for(int i=0; i<nof_functionals; i++){
+           double tmp_d_zk, tmp_d_vrho, tmp_d_vsigma;
+           tmp_d_zk=tmp_d_vrho=tmp_d_vsigma=0.0;
+
+           gpu_libxc_info* tmp_glinfo = glinfo[i];
+
+           switch(tmp_glinfo->gpu_worker){
+             case GPU_WORK_LDA:
+                     gpu_work_lda_c(tmp_glinfo, d_rhoa, d_rhob, &tmp_d_zk, &tmp_d_vrho, 1);
+                     break;
+
+             case GPU_WORK_GGA_X:
+                     gpu_work_gga_x(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma);
+                     break;
+
+             case GPU_WORK_GGA_C:
+                     gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma, 1);
+                     break;
+           }
+           d_zk += (tmp_d_zk*tmp_glinfo->mix_coeff);
+           d_vrho += (tmp_d_vrho*tmp_glinfo->mix_coeff);
+           d_vsigma += (tmp_d_vsigma*tmp_glinfo->mix_coeff);
+         }
+
+         _tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob)) * weight);
+
+         QUICKDouble dfdgaa;
+         //QUICKDouble dfdgab, dfdgaa2, dfdgab2;
+         //QUICKDouble dfdr2;
+         dfdr = (QUICKDouble)d_vrho;
+         dfdgaa = (QUICKDouble)d_vsigma*4.0;
+
+         xdot = dfdgaa * gax;
+         ydot = dfdgaa * gay;
+         zdot = dfdgaa * gaz;
+      }
+      QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+      if ( _tmp * weight < (QUICKDouble)0.0)
+          val1 = 0ull - val1;
+      QUICKADD(devSim_dft.DFT_calculated[0].Eelxc, val1);
+
+      _tmp = weight*density;
+      val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+      if ( _tmp * weight < (QUICKDouble)0.0)
+          val1 = 0ull - val1;
+      QUICKADD(devSim_dft.DFT_calculated[0].aelec, val1);
+
+
+      _tmp = weight*densityb;
+      val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+      if ( _tmp * weight < (QUICKDouble)0.0)
+          val1 = 0ull - val1;
+      QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
+
+#ifdef HMEM
+      int phii = phi_st;
+#endif
+      for (int i = bfloc_st; i< bfloc_end; ++i) {
+
+        int ibas = devSim_dft.basf[i];
+        QUICKDouble phi, dphidx, dphidy, dphidz;
+
+#ifdef HMEM
+        int phij = phi_st;
+        phi    = devSim_dft.phi[phii];
+        dphidx = devSim_dft.dphidx[phii];
+        dphidy = devSim_dft.dphidy[phii];
+        dphidz = devSim_dft.dphidz[phii];
+#else
+        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+#endif
+        if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+          for (int j = bfloc_st; j < bfloc_end; j++) {
+
+            int jbas = devSim_dft.basf[j];
+            QUICKDouble phi2, dphidx2, dphidy2, dphidz2;           
+
+#ifdef HMEM
+            phi2    = devSim_dft.phi[phij];
+            dphidx2 = devSim_dft.dphidx[phij];
+            dphidy2 = devSim_dft.dphidy[phij];
+            dphidz2 = devSim_dft.dphidz[phij];
+#else
+            pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+#endif
+            QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
+            + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
+
+            QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+            if ( _tmp * weight < (QUICKDouble)0.0)
+                   val1 = 0ull - val1;
+            QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
+#ifdef HMEM
+            ++phij;
+#endif
+          }
+        }
+#ifdef HMEM 
+        ++phii;
+#endif
+      }
+  }
+    
+}
+
