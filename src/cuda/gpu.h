@@ -518,13 +518,18 @@ __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKD
 //Chi Jin 09/23/2020
 //MP2
 __global__ void get2e_MP2_kernel();
-__device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* orbmp2i331);
-//__device__ void firstQuarterTransDevice(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax);
-//void firstQuarterTransHost(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble* orbmp2i331, _gpu_type gpu);
+__global__ void firstQuarterTransKernel(int II, int JJ, int nstepmp2s, int nsteplength, int nstep, int nbasistemp, QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331);
+__global__ void secondQuarterTransKernel(int III, int JJJ, int IIInew,int JJJnew,int nsteplength, int nstep, int nbasistemp, QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331);
+__global__ void thirdQuarterTransKernel(int III, int JJJ, int IIInew,int JJJnew, int nsteplength, int nstep, int nbasistemp, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331);
+__global__ void forthQuarterTransInnerLoopsKernel(int icycle, int i3, int k3, int nstep, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2);
+__global__ void finalMP2AccumulationInnerLoopsKernel(int i3, int k3, QUICKDouble* orbmp2, QUICKDouble* MP2cor);
+__device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, \
+	int nstepmp2s, int nsteplength, int nstep, int nbasistemp, QUICKDouble DNMax, QUICKDouble* orbmp2i331);
 void firstQuarterTransHost(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble* orbmp2i331, \
     int* Qsbasis, int* Qfbasis, QUICKDouble* Y_Matrix, QUICKDouble integralCutoff, QUICKDouble* coefficient, int* Ksumtype, int nshell, int nbasis, int nElec);
 void firstThreeQuartersTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331,_gpu_type gpu);
 void forthQuarterTransHost(QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu);
+void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu);
 
 __device__ void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp);
 __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store,
