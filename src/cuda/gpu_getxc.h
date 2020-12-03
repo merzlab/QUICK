@@ -19,7 +19,9 @@
 
 //-----------------------------------------------
 // Calculate the density and gradients of density at
-// each grid point.
+// each grid point. Huge memory (hmem) version will 
+// use precomputed basis function values and gradients
+// while the other will compute them. 
 //-----------------------------------------------
 #ifdef HMEM
 __global__ void get_density_hmem_kernel()
