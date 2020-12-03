@@ -21,8 +21,11 @@
 // Calculate the density and gradients of density at
 // each grid point.
 //-----------------------------------------------
-
+#ifdef HMEM
+__global__ void get_density_hmem_kernel()
+#else
 __global__ void get_density_kernel()
+#endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -32,7 +35,10 @@ __global__ void get_density_kernel()
     int bin_id    = devSim_dft.bin_locator[gid];
     int bfloc_st  = devSim_dft.basf_locator[bin_id];
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
+
+#ifdef HMEM
     int phii = devSim_dft.phi_loc[gid];
+#endif
 
       QUICKDouble density = 0.0;
       QUICKDouble gax = 0.0;
@@ -44,12 +50,19 @@ __global__ void get_density_kernel()
       QUICKDouble gridz = devSim_dft.gridz[gid];
 
       for(int i=bfloc_st; i < bfloc_end; i++){
-        int ibas = (int) devSim_dft.basf[i];
 
-        QUICKDouble phi    = devSim_dft.phi[phii];
-        QUICKDouble dphidx = devSim_dft.dphidx[phii];
-        QUICKDouble dphidy = devSim_dft.dphidy[phii];
-        QUICKDouble dphidz = devSim_dft.dphidz[phii];
+        int ibas = (int) devSim_dft.basf[i];
+        QUICKDouble phi, dphidx, dphidy, dphidz;
+
+#ifdef HMEM
+        phi    = devSim_dft.phi[phii];
+        dphidx = devSim_dft.dphidx[phii];
+        dphidy = devSim_dft.dphidy[phii];
+        dphidz = devSim_dft.dphidz[phii];
+#else
+        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+#endif
+
         if (abs(phi+dphidx+dphidy+dphidz) >= devSim_dft.DMCutoff ) {
 
           QUICKDouble denseii = LOC2(devSim_dft.dense, ibas, ibas, devSim_dft.nbasis, devSim_dft.nbasis) * phi;
@@ -58,13 +71,23 @@ __global__ void get_density_kernel()
           gay = gay + denseii * dphidy;
           gaz = gaz + denseii * dphidz;
 
+#ifdef HMEM
           int phij = phii+1;
+#endif
           for(int j=i+1; j< bfloc_end; j++){
+
             int jbas = devSim_dft.basf[j];
-            QUICKDouble phi2    = devSim_dft.phi[phij];
-            QUICKDouble dphidx2 = devSim_dft.dphidx[phij];
-            QUICKDouble dphidy2 = devSim_dft.dphidy[phij];
-            QUICKDouble dphidz2 = devSim_dft.dphidz[phij];
+            QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
+
+#ifdef HMEM
+            phi2    = devSim_dft.phi[phij];
+            dphidx2 = devSim_dft.dphidx[phij];
+            dphidy2 = devSim_dft.dphidy[phij];
+            dphidz2 = devSim_dft.dphidz[phij];
+#else
+            pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+#endif
+
             QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
             density = density + denseij * phi * phi2;
             gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
