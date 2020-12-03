@@ -1983,6 +1983,44 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 */	
 }
 
+//-----------------------------------------------
+// Delete dft device data
+//-----------------------------------------------
+extern "C" void gpu_delete_dft_dev_grid_(){
+
+        PRINTDEBUG("DEALLOCATING DFT GRID")
+
+        gpu -> gpu_xcq -> gridx -> DeleteGPU();
+        gpu -> gpu_xcq -> gridy -> DeleteGPU();
+        gpu -> gpu_xcq -> gridz -> DeleteGPU();
+        gpu -> gpu_xcq -> sswt -> DeleteGPU();
+        gpu -> gpu_xcq -> weight -> DeleteGPU();
+        gpu -> gpu_xcq -> gatm -> DeleteGPU();
+        gpu -> gpu_xcq -> dweight -> DeleteGPU();
+        gpu -> gpu_xcq -> dweight_ssd -> DeleteGPU();
+        gpu -> gpu_xcq -> basf -> DeleteGPU();
+        gpu -> gpu_xcq -> primf -> DeleteGPU();
+        gpu -> gpu_xcq -> bin_locator -> DeleteGPU();
+        gpu -> gpu_xcq -> basf_locator -> DeleteGPU();
+        gpu -> gpu_xcq -> primf_locator -> DeleteGPU();
+        gpu -> gpu_xcq -> densa -> DeleteGPU();
+        gpu -> gpu_xcq -> densb -> DeleteGPU();
+        gpu -> gpu_xcq -> gax -> DeleteGPU();
+        gpu -> gpu_xcq -> gbx -> DeleteGPU();
+        gpu -> gpu_xcq -> gay -> DeleteGPU();
+        gpu -> gpu_xcq -> gby -> DeleteGPU();
+        gpu -> gpu_xcq -> gaz -> DeleteGPU();
+        gpu -> gpu_xcq -> gbz -> DeleteGPU();
+        gpu -> gpu_xcq -> exc -> DeleteGPU();
+        gpu -> gpu_basis -> sigrad2 -> DeleteGPU();
+
+        delete_pteval(true);
+
+        PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
+
+}
+
+
 extern "C" void gpu_delete_dft_grid_(){
 
         PRINTDEBUG("DEALLOCATING DFT GRID")
@@ -2014,7 +2052,7 @@ extern "C" void gpu_delete_dft_grid_(){
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
-        delete_pteval();
+        delete_pteval(false);
         PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
 }
 
@@ -3046,17 +3084,51 @@ void upload_pteval(){
 
 }
 
-void delete_pteval(){
+//-----------------------------------------------
+// Downloads pteval data
+//----------------------------------------------
+void download_pteval(){
 
     if(gpu ->gpu_sim.prePtevl == true){
 
-      SAFE_DELETE(gpu -> gpu_xcq -> phi_loc);
-      SAFE_DELETE(gpu -> gpu_xcq -> phi);
-      SAFE_DELETE(gpu -> gpu_xcq -> dphidx);
-      SAFE_DELETE(gpu -> gpu_xcq -> dphidy);
-      SAFE_DELETE(gpu -> gpu_xcq -> dphidz);
+      gpu -> gpu_xcq -> phi_loc -> Download();
+      gpu -> gpu_xcq -> phi -> Download();
+      gpu -> gpu_xcq -> dphidx -> Download();
+      gpu -> gpu_xcq -> dphidy -> Download();
+      gpu -> gpu_xcq -> dphidz -> Download();
 
     }
 
 }
+
+//-----------------------------------------------
+// Delete both device and host pteval data
+//-----------------------------------------------
+void delete_pteval(bool devOnly){
+
+    if(gpu ->gpu_sim.prePtevl == true){
+
+      if(devOnly){
+
+        download_pteval();
+
+        gpu -> gpu_xcq -> phi_loc -> DeleteGPU();
+        gpu -> gpu_xcq -> phi -> DeleteGPU();
+        gpu -> gpu_xcq -> dphidx -> DeleteGPU();
+        gpu -> gpu_xcq -> dphidy -> DeleteGPU();
+        gpu -> gpu_xcq -> dphidz -> DeleteGPU();
+
+      }else{
+
+        SAFE_DELETE(gpu -> gpu_xcq -> phi_loc);
+        SAFE_DELETE(gpu -> gpu_xcq -> phi);
+        SAFE_DELETE(gpu -> gpu_xcq -> dphidx);
+        SAFE_DELETE(gpu -> gpu_xcq -> dphidy);
+        SAFE_DELETE(gpu -> gpu_xcq -> dphidz);
+
+      }
+    }
+
+}
+
 
