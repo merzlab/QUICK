@@ -94,12 +94,23 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
     cudaEventRecord(start, 0);
 #endif
 
+    if(gpu->gpu_sim.prePtevl == true){
 
-        QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     
 	cudaDeviceSynchronize();
 
+        QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+
+    }else{
+
+        QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+
+        cudaDeviceSynchronize();
+
         QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+
+    }
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
