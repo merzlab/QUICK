@@ -1984,6 +1984,93 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 }
 
 //-----------------------------------------------
+// Reupload dft data
+//-----------------------------------------------
+extern "C" void gpu_reupload_dft_grid_(){
+
+        PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
+
+        gpu -> gpu_xcq -> gridx -> ReallocateGPU();
+        gpu -> gpu_xcq -> gridy -> ReallocateGPU();
+        gpu -> gpu_xcq -> gridz -> ReallocateGPU();
+        gpu -> gpu_xcq -> sswt -> ReallocateGPU();
+        gpu -> gpu_xcq -> weight -> ReallocateGPU();
+        gpu -> gpu_xcq -> gatm -> ReallocateGPU();
+        gpu -> gpu_xcq -> dweight -> ReallocateGPU();
+        gpu -> gpu_xcq -> dweight_ssd -> ReallocateGPU();
+        gpu -> gpu_xcq -> basf -> ReallocateGPU();
+        gpu -> gpu_xcq -> primf -> ReallocateGPU();
+        gpu -> gpu_xcq -> bin_locator -> ReallocateGPU();
+        gpu -> gpu_xcq -> basf_locator -> ReallocateGPU();
+        gpu -> gpu_xcq -> primf_locator -> 
+        gpu -> gpu_xcq -> densa -> ReallocateGPU();
+        gpu -> gpu_xcq -> densb -> ReallocateGPU();
+        gpu -> gpu_xcq -> gax -> ReallocateGPU();
+        gpu -> gpu_xcq -> gbx -> ReallocateGPU();
+        gpu -> gpu_xcq -> gay -> ReallocateGPU();
+        gpu -> gpu_xcq -> gby -> ReallocateGPU();
+        gpu -> gpu_xcq -> gaz -> ReallocateGPU();
+        gpu -> gpu_xcq -> gbz -> ReallocateGPU();
+        gpu -> gpu_xcq -> exc -> ReallocateGPU();
+        gpu -> gpu_basis -> sigrad2 -> ReallocateGPU();
+
+        gpu -> gpu_xcq -> gridx -> Upload();
+        gpu -> gpu_xcq -> gridy -> Upload();
+        gpu -> gpu_xcq -> gridz -> Upload();
+        gpu -> gpu_xcq -> sswt -> Upload();
+        gpu -> gpu_xcq -> weight -> Upload();
+        gpu -> gpu_xcq -> gatm -> Upload();
+        gpu -> gpu_xcq -> dweight -> Upload();
+        gpu -> gpu_xcq -> dweight_ssd -> Upload();
+        gpu -> gpu_xcq -> basf -> Upload();
+        gpu -> gpu_xcq -> primf -> Upload();
+        gpu -> gpu_xcq -> bin_locator -> Upload();
+        gpu -> gpu_xcq -> basf_locator -> Upload();
+        gpu -> gpu_xcq -> primf_locator -> Upload();
+        gpu -> gpu_basis -> sigrad2 -> Upload();
+        gpu -> gpu_xcq -> densa -> Upload();
+        gpu -> gpu_xcq -> densb -> Upload();
+        gpu -> gpu_xcq -> gax -> Upload();
+        gpu -> gpu_xcq -> gbx -> Upload();
+        gpu -> gpu_xcq -> gay -> Upload();
+        gpu -> gpu_xcq -> gby -> Upload();
+        gpu -> gpu_xcq -> gaz -> Upload();
+        gpu -> gpu_xcq -> gbz -> Upload();
+        gpu -> gpu_xcq -> exc -> Upload();
+        gpu -> gpu_basis -> sigrad2 -> ReallocateGPU();
+
+        gpu ->gpu_sim.gridx     = gpu -> gpu_xcq -> gridx -> _devData;
+        gpu ->gpu_sim.gridy     = gpu -> gpu_xcq -> gridy -> _devData;
+        gpu ->gpu_sim.gridz     = gpu -> gpu_xcq -> gridz -> _devData;
+        gpu ->gpu_sim.sswt      = gpu -> gpu_xcq -> sswt -> _devData;
+        gpu ->gpu_sim.weight    = gpu -> gpu_xcq -> weight -> _devData;
+        gpu ->gpu_sim.gatm      = gpu -> gpu_xcq -> gatm -> _devData;
+        gpu ->gpu_sim.dweight   = gpu -> gpu_xcq -> dweight -> _devData;
+        gpu ->gpu_sim.dweight_ssd   = gpu -> gpu_xcq -> dweight_ssd -> _devData;
+        gpu ->gpu_sim.basf      = gpu -> gpu_xcq -> basf -> _devData;
+        gpu ->gpu_sim.primf     = gpu -> gpu_xcq -> primf -> _devData;
+        gpu ->gpu_sim.bin_locator      = gpu -> gpu_xcq -> bin_locator -> _devData;
+        gpu ->gpu_sim.basf_locator      = gpu -> gpu_xcq -> basf_locator -> _devData;
+        gpu ->gpu_sim.primf_locator     = gpu -> gpu_xcq -> primf_locator -> _devData;
+        gpu ->gpu_sim.densa     = gpu -> gpu_xcq -> densa -> _devData;
+        gpu ->gpu_sim.densb     = gpu -> gpu_xcq -> densb -> _devData;
+        gpu ->gpu_sim.gax     = gpu -> gpu_xcq -> gax -> _devData;
+        gpu ->gpu_sim.gbx     = gpu -> gpu_xcq -> gbx -> _devData;
+        gpu ->gpu_sim.gay     = gpu -> gpu_xcq -> gay -> _devData;
+        gpu ->gpu_sim.gby     = gpu -> gpu_xcq -> gby -> _devData;
+        gpu ->gpu_sim.gaz     = gpu -> gpu_xcq -> gaz -> _devData;
+        gpu ->gpu_sim.gbz     = gpu -> gpu_xcq -> gbz -> _devData;
+        gpu ->gpu_sim.exc     = gpu -> gpu_xcq -> exc -> _devData;
+        gpu ->gpu_sim.sigrad2 = gpu->gpu_basis->sigrad2->_devData;
+
+        reupload_pteval();
+
+        PRINTDEBUG("COMPLETE UPLOADING DFT GRID")
+
+}
+
+
+//-----------------------------------------------
 // Delete dft device data
 //-----------------------------------------------
 extern "C" void gpu_delete_dft_dev_grid_(){
@@ -3050,7 +3137,7 @@ void upload_pteval(){
   size_t reqMem = count * 32;
 
   // estimate memory for future needs, 6 nbasis * nbasis 2D arrays of double type
-  size_t estMem = gpu->nbasis * gpu->nbasis * 48;
+  size_t estMem = gpu->nbasis * gpu->nbasis * 48 + gpu -> gpu_xcq -> npoints * 4;
 
   printf("Size of each pteval array= %lli Required memory for pteval= %lli Total avail= %lli\n", count, reqMem,free-estMem);
 
@@ -3087,6 +3174,51 @@ void upload_pteval(){
 
   }
 
+
+}
+
+//-----------------------------------------------
+// Check memory and reupload for xc grad calculation
+// if there is enough space
+//-----------------------------------------------
+void reupload_pteval(){
+
+  gpu ->gpu_sim.prePtevl = false;
+
+  // compute available amount of global memory
+  size_t free, total;
+
+  cudaMemGetInfo( &free, &total );
+  printf("Total GMEM= %lli Free= %lli \n", total,free);
+
+  // amount of memory in bytes for 4 such arrays
+  size_t reqMem = gpu -> gpu_xcq -> phi -> _length * 32 + gpu -> gpu_xcq -> npoints * 4;
+
+  // estimate memory for future needs, 2 nbasis * nbasis 2D arrays of double type
+  // and 2 grad arrays of double type
+  size_t estMem = gpu->nbasis * gpu->nbasis * 16 + gpu->natom * 48;
+
+  if( reqMem < (free-estMem) ){
+    gpu ->gpu_sim.prePtevl = true;
+
+    gpu -> gpu_xcq -> phi_loc -> ReallocateGPU();
+    gpu -> gpu_xcq -> phi -> ReallocateGPU();
+    gpu -> gpu_xcq -> dphidx -> ReallocateGPU();
+    gpu -> gpu_xcq -> dphidy -> ReallocateGPU();   
+    gpu -> gpu_xcq -> dphidz -> ReallocateGPU();
+
+    gpu -> gpu_xcq -> phi_loc -> Upload();
+    gpu -> gpu_xcq -> phi -> Upload();
+    gpu -> gpu_xcq -> dphidx -> Upload();
+    gpu -> gpu_xcq -> dphidy -> Upload();
+    gpu -> gpu_xcq -> dphidz -> Upload();
+
+    gpu -> gpu_sim.phi_loc = gpu -> gpu_xcq -> phi_loc -> _devData;
+    gpu -> gpu_sim.phi = gpu -> gpu_xcq -> phi -> _devData;
+    gpu -> gpu_sim.dphidx = gpu -> gpu_xcq -> dphidx -> _devData;
+    gpu -> gpu_sim.dphidy = gpu -> gpu_xcq -> dphidy -> _devData;
+    gpu -> gpu_sim.dphidz = gpu -> gpu_xcq -> dphidz -> _devData;
+  }
 
 }
 
