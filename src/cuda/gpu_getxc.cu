@@ -94,18 +94,11 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
     cudaEventRecord(start, 0);
 #endif
 
-//        nvtxRangePushA("SCF XC: density");
 
-//	QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     
 	cudaDeviceSynchronize();
 
-//	nvtxRangePop();
-
-//	nvtxRangePushA("SCF XC");
-
-//	QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>(glinfo, nof_functionals)));
         QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
 #ifdef DEBUG
