@@ -477,6 +477,9 @@ struct cuda_buffer_type {
     // allocate and deallocate data
     void Allocate();
     void Deallocate();
+
+    // reallocate device memory for an existing template
+    void ReallocateGPU();
     
     // use pinned data communication method. Upload and Download from host to device
     void Upload();      
@@ -630,6 +633,41 @@ void cuda_buffer_type<T> :: Allocate()
     PRINTMEM("CPU++",gpu->totalCPUMemory);
     PRINTDEBUG("<<FINISH ALLOCATION TEMPLATE")
 }
+
+
+template <typename T>
+void cuda_buffer_type<T> :: ReallocateGPU()
+{
+  PRINTDEBUG(">>BEGIN TO REALLOCATE GPU")
+
+   cudaError_t status;
+
+   if (_devData == NULL) // if not constructed from f90 array
+    {
+        if (!_bPinned) {
+            //Allocate GPU memeory
+            status = cudaMalloc((void**)&_devData,_length*_length2*sizeof(T));
+            PRINTERROR(status, " cudaMalloc cuda_buffer_type :: Allocate failed!");
+            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
+
+        }else{
+            //Allocate GPU memeory
+            status = cudaHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),cudaHostAllocMapped);
+            PRINTERROR(status, " cudaMalloc cuda_buffer_type :: Allocate failed!");
+            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
+
+        }
+    }else{
+        status=cudaErrorNotMappedAsPointer;
+        PRINTERROR(status, " cudaMalloc cuda_buffer_type :: Reallocation failed!");
+    }
+
+    PRINTMEM("ALLOCATE GPU MEMORY",(unsigned long long int)_length*_length2*sizeof(T))
+    PRINTMEM("GPU++",gpu->totalGPUMemory);
+    PRINTMEM("CPU  ",gpu->totalCPUMemory);
+    PRINTDEBUG("<<FINISHED ALLOCATING GPU")
+}
+
 
 template <typename T>
 void cuda_buffer_type<T> :: Deallocate()
