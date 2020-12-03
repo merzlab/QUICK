@@ -47,6 +47,7 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense);
 extern "C" void gpu_delete_dft_grid_();
 //void upload_xc_smem();
 void upload_pteval();
+void delete_pteval();
 // call subroutine
 // Fortran subroutine   --->  c interface    ->   kernel interface   ->    global       ->    kernel
 //                            [gpu_get2e]    ->      [get2e]         -> [get2e_kernel]  ->   [iclass]
@@ -66,6 +67,7 @@ void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
 void get_ssw(_gpu_type gpu);
 void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
+void getpteval(_gpu_type gpu);
 void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
