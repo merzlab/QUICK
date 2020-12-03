@@ -16,7 +16,8 @@
   !---------------------------------------------------------------------!
 */
 
-
+#ifndef QUICK_GPU_GETXC_H
+#define QUICK_GPU_GETXC_H
 //-----------------------------------------------
 // Calculate the density and gradients of density at
 // each grid point. Huge memory (hmem) version will 
@@ -297,3 +298,4 @@ __global__ void getxc_kernel()
     
 }
 
+#endif
