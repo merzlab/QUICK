@@ -16,8 +16,6 @@
   !---------------------------------------------------------------------!
 */
 
-#ifndef QUICK_GPU_GETXC_H
-#define QUICK_GPU_GETXC_H
 //-----------------------------------------------
 // Calculate the density and gradients of density at
 // each grid point. Huge memory (hmem) version will 
@@ -96,10 +94,14 @@ __global__ void get_density_kernel()
             gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
             gay = gay + denseij * ( phi * dphidy2 + phi2 * dphidy );
             gaz = gaz + denseij * ( phi * dphidz2 + phi2 * dphidz );
+#ifdef HMEM
             ++phij;
+#endif
           }
         }
+#ifdef HMEM
         ++phii;
+#endif
       }
 
       devSim_dft.densa[gid] = density;
@@ -136,7 +138,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
 
 #ifdef HMEM
-    int phii = devSim_dft.phi_loc[gid];
+    int phi_st = devSim_dft.phi_loc[gid];
 #else
     QUICKDouble gridx = devSim_dft.gridx[gid];
     QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -299,4 +301,3 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
     
 }
 
-#endif
