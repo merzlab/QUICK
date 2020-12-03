@@ -644,7 +644,11 @@ subroutine electdiis(jscf)
 #if defined CUDA || defined CUDA_MPIV
    if(quick_method%bCUDA) then
       if (quick_method%DFT) then
-         call gpu_delete_dft_grid()
+         if(quick_method%grad) then
+           call gpu_delete_dft_dev_grid()
+         else
+           call gpu_delete_dft_grid()
+         endif
       endif
    endif
 #endif
