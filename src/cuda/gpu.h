@@ -47,6 +47,7 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense);
 extern "C" void gpu_delete_dft_grid_();
 //void upload_xc_smem();
 void upload_pteval();
+void reupload_pteval();
 void delete_pteval(bool devOnly);
 // call subroutine
 // Fortran subroutine   --->  c interface    ->   kernel interface   ->    global       ->    kernel
