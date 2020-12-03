@@ -47,7 +47,7 @@ module quick_mpi_module
         
         if (bMPI .and. mpisize.eq.1) then
             bMPI=.false.
-            call PrtWrn(io,"NODE=1, TURN OFF MPI")
+            call PrtWrn(io,"| NODE=1, TURN OFF MPI")
         endif
         
         ierr=0
@@ -65,9 +65,9 @@ module quick_mpi_module
         ierr=1
         
         write (io,*)
-        write (io,'(" - MPI Enabled -")')
-        write (io,'(" TOTAL PROCESSOR = ",i5)') mpisize
-        write (io,'(" MASTER NAME     = ",A30)') pname
+        write (io,'("| - MPI Enabled -")')
+        write (io,'("| TOTAL PROCESSOR = ",i5)') mpisize
+        write (io,'("| MASTER NAME     = ",A30)') pname
         
         ierr=0
     end subroutine print_quick_mpi

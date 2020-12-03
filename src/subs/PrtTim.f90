@@ -15,7 +15,7 @@
 subroutine PrtTim(IOut,sec)
   Implicit double precision(A-H,O-Z)
 
-1000 Format(' Job cpu time:',I3,' days ',I2,' hours ',I2,' minutes ',F4.1,' seconds.')
+1000 Format('| Job cpu time:',I3,' days ',I2,' hours ',I2,' minutes ',F4.1,' seconds.')
 
   Time = sec
   NDays = (Time / (3600.0d0*24.0d0))
