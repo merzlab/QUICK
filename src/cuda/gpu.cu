@@ -1051,7 +1051,8 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
    mgpu_eri_greedy_distribute();
 #endif   
  
-    gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
+	printf("Don't do gpu -> gpu_cutoff -> YCutoff -> DeleteCPU()\n");
+    //gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
     gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
     gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
  
@@ -1160,7 +1161,8 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
 }
 
-// Added by Chi Jin on 01/07/2020. Do we need this, since we did this in gpu_upload_calculated?
+// Added by Chi Jin on 11/07/2020. Do we need this, since we did this in gpu_upload_calculated?
+// Probably not. This function is not called anywhere
 extern "C" void gpu_upload_coefficient_matrix_(QUICKDouble* coefficient)
 {
 	gpu -> gpu_calculated -> coefficient = new cuda_buffer_type<QUICKDouble>(coefficient,  gpu->nbasis, gpu->nbasis);
@@ -2503,7 +2505,9 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
 	delete gpu->gpu_calculated->molorbe;
 	delete gpu->gpu_cutoff->cutMatrix;
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
-    delete gpu->gpu_cutoff->YCutoff;
+    //Save YCutoff:
+	printf("delete gpu->gpu_cutoff->YCutoff here\n");
+	delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
     
     
@@ -2606,6 +2610,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	PRINTDEBUG("BEGIN TO RUN KERNEL")
 	
 	get2e_MP2(gpu);
+	printf("in gpu_calmp2_, get2e_MP2 is done\n");
 	
 	PRINTDEBUG("COMPLETE KERNEL")
 	
@@ -2616,7 +2621,9 @@ extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
 	cudaEventCreate(&copied);
     cudaEventRecord(before_download, 0);
 
+	printf("here to download gpu->gpu_calculated->Y_Matrix\n");
 	gpu->gpu_calculated->Y_Matrix->Download();// Y downloaded to host
+	printf("gpu->gpu_calculated->Y_Matrix downloaded\n");
 
 	cudaEventRecord(downloaded, 0);
 	cudaEventSynchronize(downloaded);
