@@ -121,9 +121,9 @@ __global__ void get_density_kernel()
 // while the other will compute them. 
 //-----------------------------------------------
 #ifdef HMEM
-__global__ void getxc_hmem_kernel()
+__global__ void getxc_hmem_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 #else
-__global__ void getxc_kernel()
+__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -294,6 +294,7 @@ __global__ void getxc_kernel()
         ++phii;
 #endif
       }
+    }
   }
     
 }
