@@ -3077,8 +3077,10 @@ void upload_pteval(){
     gpu -> gpu_sim.dphidz = gpu -> gpu_xcq -> dphidz -> _devData;
 
     upload_sim_to_constant_dft(gpu);
+
     getpteval(gpu);
 
+    download_pteval();
   }
 
 
@@ -3109,8 +3111,6 @@ void delete_pteval(bool devOnly){
     if(gpu ->gpu_sim.prePtevl == true){
 
       if(devOnly){
-
-        download_pteval();
 
         gpu -> gpu_xcq -> phi_loc -> DeleteGPU();
         gpu -> gpu_xcq -> phi -> DeleteGPU();
