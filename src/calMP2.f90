@@ -90,6 +90,8 @@ subroutine calmp2
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
   write(ioutfile,'("CURRENT MEMORY USAGE=",E12.6,"M")') ememorysum
 
+  print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
+
   ! actually nstep is step length
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
