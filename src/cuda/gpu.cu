@@ -3080,26 +3080,13 @@ void upload_pteval(){
 
     getpteval(gpu);
 
-    download_pteval();
+    gpu -> gpu_xcq -> phi -> Download();
+    gpu -> gpu_xcq -> dphidx -> Download();
+    gpu -> gpu_xcq -> dphidy -> Download();
+    gpu -> gpu_xcq -> dphidz -> Download();
+
   }
 
-
-}
-
-//-----------------------------------------------
-// Downloads pteval data
-//----------------------------------------------
-void download_pteval(){
-
-    if(gpu ->gpu_sim.prePtevl == true){
-
-      gpu -> gpu_xcq -> phi_loc -> Download();
-      gpu -> gpu_xcq -> phi -> Download();
-      gpu -> gpu_xcq -> dphidx -> Download();
-      gpu -> gpu_xcq -> dphidy -> Download();
-      gpu -> gpu_xcq -> dphidz -> Download();
-
-    }
 
 }
 
