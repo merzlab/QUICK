@@ -1812,7 +1812,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 						////get Y matrix here
 					    //printf("in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL and Y are %d %d %d %d %lf\n", \
 								III,JJJ,KKK,LLL,Y);
-						LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;			
+						//LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;			
 						
 						//first quarter transformation:
 						if(fabs(Y)>devSim_MP2.integralCutoff)
@@ -1858,7 +1858,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
-                                LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;
+                                //LOC4(devSim_MP2.Y_Matrix, III-1, JJJ-1, KKK-1, LLL-1, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis, devSim_MP2.nbasis) = Y;
 								//printf("in gpu_MP2.cu/iclass_MP2, III,JJJ,KKK,LLL and Y are %d %d %d %d %lf\n", \
                                 III,JJJ,KKK,LLL,Y);
 								if(fabs(Y)>devSim_MP2.integralCutoff)
