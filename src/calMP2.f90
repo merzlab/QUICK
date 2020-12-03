@@ -9,8 +9,8 @@ subroutine calmp2
 
   double precision cutoffTest,testtmp,testCutoff,gpuMP2WrapperTimeStart, gpuMP2WrapperTimeEnd
   ! add Y_Matrix here
-  double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
-  !double precision, pointer, dimension(:,:) :: Y_Matrix
+  !double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
+  double precision :: mp2cor(1)
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
@@ -20,16 +20,14 @@ subroutine calmp2
     !print *,"in calmp2, at the beginning" 
     
     call cpu_time(gpuMP2WrapperTimeStart)
-    call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, quick_qm_struct%E,&
-            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix) 
+    !call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, quick_qm_struct%E,&
+    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix) 
+    !call    gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
+    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, mp2cor)
+    call gpu_mp2_wrapper(quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
+            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,mp2cor)
     call cpu_time(gpuMP2WrapperTimeEnd)
     print '("Total GPU MP2 Wrapper Time = ",f6.3," seconds.")',gpuMP2WrapperTimeEnd-gpuMP2WrapperTimeStart
- 
-    !Y_Matrix(1,1) = 9.5
-    !print *, "in calmp2, Y_Matrix(1,1) is initialized as ",Y_Matrix(1,1)
-    !call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense) 
-    !call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit)    
-    !call gpu_calmp2(Y_Matrix, quick_qm_struct%o)
    endif
 #endif
    
@@ -220,8 +218,9 @@ subroutine calmp2
                           dnmax=comax
                           ntemp=ntemp+1
                           !print *, "before shellmp2, II,JJ,KK,LL are", II, JJ, KK, LL
-                          call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
-                       endif
+                          !call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
+                           call shellmp2(nstepmp2s,nsteplength)
+                        endif
                                                 
                        !print *, "in calmp2, ii,jj,kk,ll are",ii-1,jj-1,kk-1,ll-1
 
@@ -552,7 +551,8 @@ subroutine MPI_calmp2
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
                           ntemp=ntemp+1
-                          call shellmp2(nstepmp2s,nsteplength,Y_Matrix)
+                          !call shellmp2(nstepmp2s,nsteplength,Y_Matrix)
+                           call shellmp2(nstepmp2s,nsteplength)
                        endif
 
                     endif
