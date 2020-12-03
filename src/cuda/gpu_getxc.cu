@@ -210,8 +210,11 @@ __global__ void get_density_kernel()
 
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
-            int bin_id = devSim_dft.bin_locator[gid];
-
+            int bin_id    = devSim_dft.bin_locator[gid];
+            int bfloc_st  = devSim_dft.basf_locator[bin_id];
+            int bfloc_end = devSim_dft.basf_locator[bin_id+1];
+            int phii = devSim_dft.phi_loc[gid];
+            
             // initialize shared memory arrays
 /*            int bfll=devSim_dft.basf_locator[bin_id];
             int bful=devSim_dft.basf_locator[bin_id+1];
@@ -245,13 +248,17 @@ __global__ void get_density_kernel()
                         QUICKDouble gridz = devSim_dft.gridz[gid];
 
                         //for(int i=0; i< bful-bfll; i++){
-                        for(int i=devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1] ; i++){
+                        for(int i=bfloc_st; i < bfloc_end; i++){
         	                //int ibas = (int) basf[i];
                                 int ibas = (int) devSim_dft.basf[i];
-                	        QUICKDouble phi, dphidx, dphidy, dphidz;
+                                
+                	        QUICKDouble phi    = devSim_dft.phi[phii]; 
+                                QUICKDouble dphidx = devSim_dft.dphidx[phii];
+                                QUICKDouble dphidy = devSim_dft.dphidy[phii];
+                                QUICKDouble dphidz = devSim_dft.dphidz[phii];
 			
 				//pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
-                                pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+                                //pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
 #ifdef DEBUG
 //        printf("i=%i ibas=%i x=%f  y=%f  z=%f  phi=%.10e dx=%.10e dy=%.10e dz=%.10e\n", i, ibas, gridx, gridy, gridz, phi, dphidx, dphidz, dphidz);
@@ -265,20 +272,27 @@ __global__ void get_density_kernel()
 					gay = gay + denseii * dphidy;
 					gaz = gaz + denseii * dphidz;
 
+                                        int phij = phii+1;
                                         //for(int j=i+1; j< bful-bfll; j++){
-                                        for(int j=i+1; j< devSim_dft.basf_locator[bin_id+1]; j++){
+                                        for(int j=i+1; j< bfloc_end; j++){
 						//int jbas = (int) basf[j];
                                                 int jbas = devSim_dft.basf[j];
-						QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
+						
+                                                QUICKDouble phi2    = devSim_dft.phi[phij];
+                                                QUICKDouble dphidx2 = devSim_dft.dphidx[phij];
+                                                QUICKDouble dphidy2 = devSim_dft.dphidy[phij];
+                                                QUICKDouble dphidz2 = devSim_dft.dphidz[phij];
 						//pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
-                                                pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+                                                //pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
 						QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 						density = density + denseij * phi * phi2;
 						gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
 						gay = gay + denseij * ( phi * dphidy2 + phi2 * dphidy );
 						gaz = gaz + denseij * ( phi * dphidz2 + phi2 * dphidz );
+                                                ++phij;
 					}
 				}
+                                ++phii;
 			}
 
 			devSim_dft.densa[gid] = density;
@@ -316,6 +330,10 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
         for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
 
             int bin_id = devSim_dft.bin_locator[gid];
+            int bfloc_st  = devSim_dft.basf_locator[bin_id]; 
+            int bfloc_end = devSim_dft.basf_locator[bin_id+1];
+            int phi_st = devSim_dft.phi_loc[gid];
+            
             // initialize shared memory arrays
 /*            int bfll=devSim_dft.basf_locator[bin_id];
             int bful=devSim_dft.basf_locator[bin_id+1];
@@ -449,35 +467,43 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals){
                                     val1 = 0ull - val1;
                                 QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
 
+                                int phii = phi_st;
                                 //for (int i = 0; i<bful-bfll; i++) {
-                                for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
+                                for (int i = bfloc_st; i< bfloc_end; ++i) {
                                         //int ibas = (int) basf[i];
                                         int ibas = devSim_dft.basf[i];
-                                        QUICKDouble phi, dphidx, dphidy, dphidz;
+                                        QUICKDouble phi    = devSim_dft.phi[phii];
+                                        QUICKDouble dphidx = devSim_dft.dphidx[phii];
+                                        QUICKDouble dphidy = devSim_dft.dphidy[phii];
+                                        QUICKDouble dphidz = devSim_dft.dphidz[phii];
                                         //pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
-                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+                                        //pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
                                         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
-
+                                                 int phij = phi_st;
                                                  //for (int j = 0; j <bful-bfll; j++) {
-                                                 for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
+                                                 for (int j = bfloc_st; j < bfloc_end; j++) {
                                                         //int jbas = (int) basf[j];
                                                         int jbas = devSim_dft.basf[j];
-                                                        QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
+                                                        QUICKDouble phi2    = devSim_dft.phi[phij];
+                                                        QUICKDouble dphidx2 = devSim_dft.dphidx[phij];
+                                                        QUICKDouble dphidy2 = devSim_dft.dphidy[phij];
+                                                        QUICKDouble dphidz2 = devSim_dft.dphidz[phij];
 
                                                         //pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
-                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+                                                        //pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
 
-														QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
-															+ ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
+                                                        QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
+                                                        + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
 
-														QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
-														if ( _tmp * weight < (QUICKDouble)0.0)
-															val1 = 0ull - val1;
-														QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
-
+                                                        QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
+                                                        if ( _tmp * weight < (QUICKDouble)0.0)
+                                                               val1 = 0ull - val1;
+                                                        QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
+                                                        ++phij;
                                                 }
                                         }
+                                        ++phii;
                                 }
                         }
                 }
