@@ -7,6 +7,11 @@
 
 static __constant__ gpu_simulation_type devSim_dft;
 
+#define HMEM
+#include "gpu_getxc.h"
+#undef HMEM
+#include "gpu_getxc.h"
+
 /*
  upload gpu simulation type to constant memory
  */
