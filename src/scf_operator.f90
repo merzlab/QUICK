@@ -47,7 +47,7 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    if(master) then
 #endif
-
+   print *, "in scf_operator"
 !  fetch 1e-integral from 1st time
    !print *, "in scf_operator, before all, quick_qm_struct%o is"
    !print *, quick_qm_struct%o
@@ -125,6 +125,8 @@ subroutine scf_operator(oneElecO, deltaO)
 
    if (quick_method%nodirect) then
 #ifdef CUDA
+      print *, "call gpu_addint"
+      print *, ""
       call gpu_addint(quick_qm_struct%o, intindex, intFileName)
 #else
 #ifndef MPI
