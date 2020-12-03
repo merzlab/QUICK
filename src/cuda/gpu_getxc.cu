@@ -74,6 +74,12 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
 
 }
 
+void getpteval(_gpu_type gpu){
+
+    QUICK_SAFE_CALL((get_pteval_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
+    cudaDeviceSynchronize();
+}
+
 void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 #ifdef DEBUG
@@ -160,6 +166,36 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
 }
 
+
+__global__ void get_pteval_kernel(){
+
+  unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
+  int totalThreads = blockDim.x*gridDim.x;
+
+  for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
+    int bin_id = devSim_dft.bin_locator[gid];
+    unsigned int idx=devSim_dft.phi_loc[gid];
+
+    QUICKDouble gridx = devSim_dft.gridx[gid];
+    QUICKDouble gridy = devSim_dft.gridy[gid];
+    QUICKDouble gridz = devSim_dft.gridz[gid];
+
+    for(int i=devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1] ; i++){
+      int ibas = (int) devSim_dft.basf[i];
+      QUICKDouble phi=0.0, dphidx=0.0, dphidy=0.0, dphidz=0.0;
+
+      pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
+
+      devSim_dft.phi[idx]=phi;
+      devSim_dft.dphidx[idx]=dphidx;
+      devSim_dft.dphidy[idx]=dphidy;
+      devSim_dft.dphidz[idx]=dphidz;
+      ++idx;
+    }
+  }
+
+
+}
 
 __global__ void get_density_kernel()
 {
