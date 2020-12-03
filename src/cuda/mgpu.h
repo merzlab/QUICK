@@ -522,9 +522,7 @@ void mgpu_xc_tpbased_greedy_distribute(){
 
     memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
 
-    gpu -> gpu_xcq -> mpi_bxccompute -> Upload();
-
-    gpu -> gpu_sim.mpi_bxccompute  = gpu -> gpu_xcq -> mpi_bxccompute  -> _devData;
+    gpu -> gpu_xcq -> mpi_bxccompute -> DeleteGPU();
 
     PRINTDEBUG("END DISTRIBUTING XC GRID POINTS")
 
@@ -681,9 +679,7 @@ void mgpu_xc_pbased_greedy_distribute(){
 
     memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
 
-    gpu -> gpu_xcq -> mpi_bxccompute -> Upload();
-
-    gpu -> gpu_sim.mpi_bxccompute  = gpu -> gpu_xcq -> mpi_bxccompute  -> _devData;
+    gpu -> gpu_xcq -> mpi_bxccompute -> DeleteGPU();
 
     PRINTDEBUG("END DISTRIBUTING XC GRID POINTS")
 
