@@ -2002,7 +2002,7 @@ extern "C" void gpu_reupload_dft_grid_(){
         gpu -> gpu_xcq -> primf -> ReallocateGPU();
         gpu -> gpu_xcq -> bin_locator -> ReallocateGPU();
         gpu -> gpu_xcq -> basf_locator -> ReallocateGPU();
-        gpu -> gpu_xcq -> primf_locator -> 
+        gpu -> gpu_xcq -> primf_locator -> ReallocateGPU(); 
         gpu -> gpu_xcq -> densa -> ReallocateGPU();
         gpu -> gpu_xcq -> densb -> ReallocateGPU();
         gpu -> gpu_xcq -> gax -> ReallocateGPU();
@@ -2037,7 +2037,7 @@ extern "C" void gpu_reupload_dft_grid_(){
         gpu -> gpu_xcq -> gaz -> Upload();
         gpu -> gpu_xcq -> gbz -> Upload();
         gpu -> gpu_xcq -> exc -> Upload();
-        gpu -> gpu_basis -> sigrad2 -> ReallocateGPU();
+        gpu -> gpu_basis -> sigrad2 -> Upload();
 
         gpu ->gpu_sim.gridx     = gpu -> gpu_xcq -> gridx -> _devData;
         gpu ->gpu_sim.gridy     = gpu -> gpu_xcq -> gridy -> _devData;
@@ -3197,6 +3197,8 @@ void reupload_pteval(){
   // estimate memory for future needs, 2 nbasis * nbasis 2D arrays of double type
   // and 2 grad arrays of double type
   size_t estMem = gpu->nbasis * gpu->nbasis * 16 + gpu->natom * 48;
+
+  printf("Required memory for pteval= %lli Total avail= %lli\n", reqMem,free-estMem);
 
   if( reqMem < (free-estMem) ){
     gpu ->gpu_sim.prePtevl = true;
