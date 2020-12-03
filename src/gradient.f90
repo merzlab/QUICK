@@ -798,10 +798,7 @@ subroutine get_xc_grad
 
       call gpu_upload_density_matrix(quick_qm_struct%dense)
 
-      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+      call gpu_reupload_dft_grid()
 
       call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)
