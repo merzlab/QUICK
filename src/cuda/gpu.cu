@@ -2014,6 +2014,7 @@ extern "C" void gpu_delete_dft_grid_(){
 #ifdef CUDA_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
+        delete_pteval();
         PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
 }
 
@@ -3036,6 +3037,9 @@ void upload_pteval(){
     gpu -> gpu_sim.dphidx = gpu -> gpu_xcq -> dphidx -> _devData;   
     gpu -> gpu_sim.dphidy = gpu -> gpu_xcq -> dphidy -> _devData;
     gpu -> gpu_sim.dphidz = gpu -> gpu_xcq -> dphidz -> _devData;
+
+    upload_sim_to_constant_dft(gpu);
+    getpteval(gpu);
 
   }
 
