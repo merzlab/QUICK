@@ -157,12 +157,8 @@ subroutine calmp2
 
      if(i3new.eq.nstepmp2)nstepmp2f=nelec/2
      nsteplength=nstepmp2f-nstepmp2s+1  ! Step Lengh, from nstepmp2s to nstepmp2f
-<<<<<<< HEAD
-=======
      
      !print *, "nsteplength is", nsteplength
-
->>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
      ! Initial orbmp2k331
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
@@ -220,11 +216,8 @@ subroutine calmp2
                                 enddo
                             enddo
                        enddo
-<<<<<<< HEAD
-=======
                        
                        !print *, "in calmp2, comax is", comax
->>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
                        testCutoff=testCutoff*comax
                        if(testCutoff.gt.cutoffmp2)then
@@ -345,30 +338,6 @@ subroutine calmp2
 
      write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-     do icycle=1,nsteplength
-        do k3=1,nelec/2
-            do j3=1,nbasis-nelec/2
-            do l3=1,nbasis-nelec/2
-            L3new=l3+nelec/2
-                do lll=1,nbasis
-                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
-=======
-     print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
-     do ind1=1, nelec/2
-        do ind2=1, nelec/2
-            do ind3=1,ivir
-                do ind4=1, nbasis
-                    write(*, '(f10.6)', advance='no'),&
-                        orbmp2k331(ind1, ind2, ind3, ind4)
->>>>>>> finished first three transformations of ERI. Works for sto-3g water
-                enddo
-                write(*,'(" ")')
-            enddo 
-        enddo     
-     enddo
-=======
      !print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
      !do ind1=1, nelec/2
      !   do ind2=1, nelec/2
@@ -381,7 +350,6 @@ subroutine calmp2
      !       enddo 
      !   enddo     
      !enddo
->>>>>>> migrate entire MP2 to cuda
     
 
      !do icycle=1,nsteplength
@@ -434,22 +402,8 @@ subroutine calmp2
         enddo
      enddo
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    !print *, "orbmp2 is ",orbmp2
-    !print *, ""
-    !print *, "orbmp2k331 is ",orbmp2k331 
-    !print *, ""
-    !print *, "orbmp2j331 is ",orbmp2j331
-    !print *, ""
-    !print *, "orbmp2i331 is ",orbmp2i331
-    !print *, ""
-=======
->>>>>>> finished first three transformations of ERI. Works for sto-3g water
 
         
->>>>>>> cuda MP2 works for water_ene_sto3g.in
      call cpu_time(timer_end%TMP2)
      !print *, "timer_cumer%TMP2 is ",timer_cumer%TMP2
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
@@ -1190,8 +1144,6 @@ subroutine initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasis
      enddo
   enddo
 end subroutine initialOrbmp2ij
-<<<<<<< HEAD
-=======
 
 subroutine print_matrix(matrix,n)
     integer n, i, j
@@ -1208,4 +1160,4 @@ subroutine print_matrix(matrix,n)
 end subroutine print_matrix
 
 
->>>>>>> cuda MP2 works for water_ene_sto3g.in
+
