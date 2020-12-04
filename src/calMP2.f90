@@ -10,27 +10,35 @@ subroutine calmp2
   double precision cutoffTest,testtmp,testCutoff,gpuMP2WrapperTimeStart, gpuMP2WrapperTimeEnd
   ! add Y_Matrix here
   !double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
-  double precision :: mp2cor(1)
-  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT
+  double precision :: gpuMp2cor(1),gpuEmemorysum(1)
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT,gpuNstepmp2(1),gpuNtemp(1)
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
     integer :: nelec,nelecb
 
 #ifdef CUDA
     if(quick_method%bCUDA) then
-    !print *,"in calmp2, at the beginning" 
     
+    call PrtAct(ioutfile,"Begin MP2 Calculation")
+
     call cpu_time(gpuMP2WrapperTimeStart)
-    !call gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense, quick_qm_struct%E,&
-    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, Y_Matrix) 
-    !call    gpu_mp2_wrapper(quick_qm_struct%o,quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
-    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, mp2cor)
+    !call gpu_mp2_wrapper(quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
+    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,mp2cor)
     call gpu_mp2_wrapper(quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
-            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,mp2cor)
+            cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,gpuMp2cor,&
+            gpuEmemorysum, gpuNstepmp2, gpuNtemp)    
     call cpu_time(gpuMP2WrapperTimeEnd)
-    print '("Total GPU MP2 Wrapper Time = ",f6.3," seconds.")',gpuMP2WrapperTimeEnd-gpuMP2WrapperTimeStart
-   endif
-#endif
-   
+
+    write(ioutfile,'("CURRENT MEMORY USAGE=",E12.6,"M")') gpuEmemorysum(1)
+    write(ioutfile,'("TOTAL STEP          =",I6)') gpuNstepmp2(1)
+    write(ioutfile,'("EFFECT INTEGRALS    =",i8)') gpuNtemp(1)
+
+    quick_qm_struct%EMP2 = gpuMp2cor(1)
+    print *, 'cuda calculated mp2cor is', quick_qm_struct%EMP2
+    timer_cumer%TMP2 = gpuMP2WrapperTimeEnd-gpuMP2WrapperTimeStart 
+    print '("Total GPU MP2 Wrapper Time = ",f6.3," seconds.")', timer_cumer%TMP2
+
+    endif
+#else   
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
@@ -447,6 +455,7 @@ subroutine calmp2
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
   enddo
+#endif
 
   write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2
   write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2

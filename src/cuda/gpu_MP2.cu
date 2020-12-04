@@ -324,7 +324,8 @@ __global__ void firstThreeQuartersTransDevice()
 
 //this kernel is to parallelize the two inner loops of the first transformation in firstThreeQuartersTransHost
 __global__ void 
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) firstQuarterTransKernel(int II,int JJ,int nstepmp2s, int nsteplength, int nstep, int nbasistemp, QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331)
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) firstQuarterTransKernel(int II,int JJ,int nstepmp2s, int nsteplength, int nstep, int nbasistemp, int* ntempptr_d,\
+QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331)
 {
 	int offside = blockIdx.x*blockDim.x+threadIdx.x;
 	int totalThreads = blockDim.x*gridDim.x;	
@@ -388,6 +389,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) firstQuarterTransKernel(int II,
 				{
 					// Set ntemp if needed
 					// from shellmp2:
+					QUICKADD(ntempptr_d[0], 1);
 					for(int I=NII1; I<=NII2; I++)
         			{
         				for(int J=NJJ1; J<=NJJ2; J++)
@@ -532,7 +534,8 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) thirdQuarterTransKernel(int III
 }
 
 
-void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu)
+void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu,\
+						  QUICKDouble* ememorysumptr, int* nstepmp2ptr, int* ntempptr)
 {
 	int jshell = gpu->jshell;
 	//printf("in firstThreeQuartersTransHost, jshell is %d\n", jshell);
@@ -566,6 +569,7 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 	
 	QUICKDouble ememorysum = iocc*ivir*nbasis*8.0/1024.0/1024.0/1024.0;
 	printf("On CUDA side, ememorysum is %lf, 1.5/ememorysum is %lf\n", ememorysum, 1.5/ememorysum);
+	*ememorysumptr = ememorysum;
 	
 	int nstep = MIN(int(1.50/ememorysum),nElec/2);
 	// Alwasy use f orbitals:
@@ -592,10 +596,11 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 	cudaMalloc((void **)&orbmp2_d,sizeof(QUICKDouble)*ivir*ivir);
 	cudaMemset(orbmp2_d,0,sizeof(QUICKDouble)*ivir*ivir);
 
+	
 	QUICKDouble* MP2cor_d;
 	cudaMalloc((void **)&MP2cor_d,sizeof(QUICKDouble));
     cudaMemset(MP2cor_d, 0, sizeof(QUICKDouble));
-
+	
     QUICKDouble* MP2cor = new QUICKDouble[1];
     MP2cor[0]= 0;
 	
@@ -605,8 +610,12 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 	if(nstep*nstepmp2<nElec/2)
 		nstepmp2++;
 	printf("TOTAL STEP is %d\n", nstepmp2);
+	*nstepmp2ptr = nstepmp2;
 	
-	
+	int* ntempptr_d;
+	cudaMalloc((void **)&ntempptr_d,sizeof(int));
+	cudaMemset(ntempptr_d, 0, sizeof(int));
+
 	for(int i3new=1;i3new<=nstepmp2;i3new++)
 	{
 		//int ntemp = 0;
@@ -636,7 +645,7 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 				cudaMemset(orbmp2j331_d,0,sizeof(QUICKDouble)*nstep*ivir*nbasistemp*nbasistemp*2);
 	
 				// The following kernal should complete AO integral generation and first transfermation
-            	firstQuarterTransKernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(II,JJ,nstepmp2s,nsteplength,nstep, nbasistemp, cutoffmp2, orbmp2i331_d);
+            	firstQuarterTransKernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(II,JJ,nstepmp2s,nsteplength,nstep,nbasistemp, ntempptr_d, cutoffmp2, orbmp2i331_d);
 				cudaDeviceSynchronize(); 
 				//cudaMemcpy(orbmp2i331, orbmp2i331_d, sizeof(QUICKDouble)*nElec/2*nbasis*10*10*2, cudaMemcpyDeviceToHost);
 
@@ -760,6 +769,9 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 			}
 		}
 	
+		cudaMemcpy(ntempptr, ntempptr_d, sizeof(int),cudaMemcpyDeviceToHost);	
+		printf("in fourQuarterTransHost, effect integrals is %d\n\n", *ntempptr);
+	
 		// first three quarters of the transformation end here
 		// start the forth quarter and the final accumulation	
 		// this is no longer needed:
@@ -773,19 +785,26 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
             	forthQuarterTransInnerLoopsKernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(icycle, i3, k3,nstep, orbmp2k331_d, orbmp2_d);
             	cudaDeviceSynchronize();
             	finalMP2AccumulationInnerLoopsKernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(i3, k3, orbmp2_d, MP2cor_d);
-            	cudaDeviceSynchronize();
+            	//finalMP2AccumulationInnerLoopsKernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(i3, k3, orbmp2_d);
+				cudaDeviceSynchronize();
 			}
 		}
 	
 	}//this corresponds to i3new
 	cudaMemcpy(MP2cor, MP2cor_d, sizeof(QUICKDouble),cudaMemcpyDeviceToHost);
-    printf("On the CUDA side, final MP2 correction is %lf\n", *MP2cor);
+    //why devSim_MP2.mp2cor doesn't download? Maybe because static __constant__ gpu_simulation_type devSim_MP2;?
+	//cudaMemcpy(devSim_MP2.mp2cor, MP2cor_d, sizeof(QUICKDouble),cudaMemcpyDeviceToDevice);
+	cudaMemcpy(gpu->gpu_calculated->mp2cor->_devData, MP2cor_d, sizeof(QUICKDouble),cudaMemcpyDeviceToDevice);
+	//This is also fine as an alternative:
+	//cudaMemcpy(gpu->gpu_sim.mp2cor, MP2cor_d, sizeof(QUICKDouble),cudaMemcpyDeviceToDevice);
+	printf("On the CUDA side, final MP2 correction is %lf\n", *MP2cor);
 
 	cudaFree(orbmp2i331_d);
 	cudaFree(orbmp2j331_d);
 	cudaFree(orbmp2k331_d);
 	cudaFree(orbmp2_d);	
 	cudaFree(MP2cor_d);	
+	cudaFree(ntempptr_d);
 	delete[] MP2cor;
 
 }
@@ -1391,7 +1410,7 @@ __device__ void firstQuarterTransDevice(int I, int J, int K, int L, unsigned int
 static float totTime;
 #endif
 
-void get2e_MP2(_gpu_type gpu)
+void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
 {
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -1423,7 +1442,7 @@ void get2e_MP2(_gpu_type gpu)
     printf("in get2e_MP2, total gpu mp2 tensor allocation time is %6.3f ms\n", mp2_time);
 
 	//all four quarter transformation
-	fourQuarterTransHost(orbmp2i331, orbmp2j331, orbmp2k331, orbmp2, gpu);
+	fourQuarterTransHost(orbmp2i331, orbmp2j331, orbmp2k331, orbmp2, gpu, ememorysum, nstepmp2, ntemp);
 	cudaEventRecord(mp2_trans,0);
     cudaEventSynchronize(mp2_trans);
     cudaEventElapsedTime(&mp2_time,mp2_allocate,mp2_trans);
