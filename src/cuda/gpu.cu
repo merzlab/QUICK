@@ -2609,9 +2609,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 //  compute mp2
 //-----------------------------------------------
 
-//extern "C" void gpu_calmp2_(QUICKDouble* Y_Matrix, QUICKDouble* o)
-//extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* o)
-extern "C" void gpu_calmp2_(QUICKDouble* mp2cor)
+extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
 {
 	PRINTDEBUG("BEGIN TO RUN gpu_calmp2");
 	
@@ -2619,7 +2617,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* mp2cor)
 
 	PRINTDEBUG("BEGIN TO RUN KERNEL")
 	
-	get2e_MP2(gpu);
+	get2e_MP2(gpu, ememorysum, nstepmp2, ntemp);
 	printf("in gpu_calmp2_, get2e_MP2 is done\n");
 	
 	PRINTDEBUG("COMPLETE KERNEL")
@@ -2639,6 +2637,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* mp2cor)
 	printf("here to download gpu->gpu_calculated->mp2cor\n");
     gpu->gpu_calculated->mp2cor->Download();
     printf("gpu->gpu_calculated->mp2cor downloaded\n");
+	printf("gpu->gpu_calculated->mp2cor->_hostData is %lf\n", *gpu->gpu_calculated->mp2cor->_hostData);
 
 	cudaEventRecord(downloaded, 0);
 	cudaEventSynchronize(downloaded);
@@ -2698,12 +2697,9 @@ extern "C" void gpu_calmp2_(QUICKDouble* mp2cor)
     PRINTDEBUG("COMPLETE RUNNING MP2")
 }
 
-//extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
-QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* Y_Matrix)
-//extern "C" void gpu_mp2_wrapper_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
-QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor)
 extern "C" void gpu_mp2_wrapper_(QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
-QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor)
+QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor,\
+QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
 {
 	float time = 0;
 	cudaEvent_t before_upload, uploaded, mp2_done;
@@ -2713,11 +2709,9 @@ QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICK
 	cudaEventRecord(before_upload, 0);
 
 	//not changed the signature of this functure for the moment:
-	//QUICKDouble* o = (QUICKDouble*)calloc(1,sizeof(QUICKDouble));
 	QUICKDouble* o = new QUICKDouble(0);
 	gpu_upload_calculated_(o,co,vec,dense,E);
 	free(o);
-	//gpu_upload_calculated_(co,vec,dense,E);
 	gpu_upload_cutoff_(cutmatrix,integralCutoff,primLimit,DMCutoff);
 	
 	cudaEventRecord(uploaded, 0);
@@ -2725,15 +2719,14 @@ QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICK
 	cudaEventElapsedTime(&time, before_upload, uploaded);
 	printf("in gpu_mp2_wrapper, total upload time is %6.3f ms\n", time);
 
-	//gpu_calmp2_(Y_Matrix, o);
-	//gpu_calmp2_(mp2cor, o);
-	gpu_calmp2_(mp2cor);
+	gpu_calmp2_(mp2cor, ememorysum, nstepmp2, ntemp);
 
 	cudaEventRecord(mp2_done, 0);
     cudaEventSynchronize(mp2_done);
     cudaEventElapsedTime(&time, uploaded, mp2_done);
     printf("in gpu_mp2_wrapper, total calmp2 time is %6.3f ms\n", time);
-	
+	printf("in gpu_mp2_wrapper, finally mp2cor is %lf\n", *mp2cor);	
+
 	cudaDeviceSynchronize();
 }
 

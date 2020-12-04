@@ -1892,15 +1892,15 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
          do JJJ=JJJ1,JJJ2
             do KKK=KKK1,KKK2
                do LLL=LLL1,LLL2
-#ifndef CUDA                
+!#ifndef CUDA                
                   !print *, "before calling hrrwhole"
                   !print *, "get Y is ", Y
                   call hrrwhole
                   !print *, "FIRST CALL after calling hrrwhole"
                   !print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
-#endif
-#ifdef CUDA
-                  Y = 0.0
+!#endif
+!#ifdef CUDA
+!                  Y = 0.0
                   ! Here we retrieve the Y value calculated in gpu_MP2.cu/hrrwhole_MP2. Two points to note:
                   ! 1. Cuda code only calculated Y_Matrix(i,j,k,l) where i<k. For
                   ! the case i>k, use the sysmetry Y_Matrix(i,j,k,l) = Y_Matrix(k,l,i,j)
@@ -1916,7 +1916,7 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                   !      Y = Y_Matrix((KKK-1)*nbasis+LLL, (III-1)*nbasis+JJJ)
                   !  endif
                   !endif
-#endif
+!#endif
                   !print *, ""
                   !print "('in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3, ', II,JJ,KK,LL are', &
                   !          i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)", III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
@@ -1966,15 +1966,15 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                do KKK=KKK1,KKK2
                   if(max(KKK,LLL1).le.LLL2)then
                      do LLL=max(KKK,LLL1),LLL2
-#ifndef CUDA
+!#ifndef CUDA
                         !print *, "second call:before calling hrrwhole"
                         !print *, "get Y is ", Y
                         call hrrwhole
                         !print *, "second call:after calling hrrwhole"
                         !print "('in serial III,JJJ,KKK,LLL,Y are', i2, i2, i2, i2, f10.6)", III, JJJ, KKK, LLL, Y
-#endif
-#ifdef CUDA
-                        Y = 0.0
+!#endif
+!#ifdef CUDA
+!                        Y = 0.0
                         !if(quick_method%bCUDA) then
                         !    if((III-1)*nbasis+JJJ > (KKK-1)*nbasis+LLL) then
                                 !print *, "from cuda code corresponding Y_Matrix value is",Y_Matrix((III-1)*nbasis+JJJ, (KKK-1)*nbasis+LLL)
@@ -1986,7 +1986,7 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
                         !        Y=Y_Matrix((KKK-1)*nbasis+LLL,(III-1)*nbasis+JJJ)
                         !    endif
                         !endif
-#endif    
+!#endif    
                         !print *, ""
                         !print "('else in classmp2, III,JJJ,KKK,LLL are', i3, i3, i3, i3,', II,JJ,KK,LL are', &
                         !    i3, i3, i3, i3, ', I,J,K,L are', i3, i3, i3, i3)",III,JJJ,KKK,LLL,II,JJ,KK,LL,I,J,K,L
