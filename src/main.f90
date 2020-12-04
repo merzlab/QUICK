@@ -195,6 +195,8 @@
 
 #endif
 
+#endif
+
     call cpu_time(timer_end%TIniGuess)
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess
 
