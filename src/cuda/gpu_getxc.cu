@@ -95,7 +95,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 #endif
 
     if(gpu->gpu_sim.prePtevl == true){
-
+        printf("Calling hmem xc kernels \n");
         QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     
 	cudaDeviceSynchronize();
@@ -103,7 +103,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
         QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
     }else{
-
+        printf("Calling old xc kernels \n");
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
@@ -137,21 +137,25 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
     cudaEventRecord(start, 0);
 #endif
 
-//    nvtxRangePushA("XC grad: density");	
+    if(gpu->gpu_sim.prePtevl == true){
+        printf("Calling hmem xcgrad kernels \n");
 
-//    QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-    QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
-    cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
+
+        QUICK_SAFE_CALL((get_xcgrad_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+
+    }else{
+        printf("Calling old xcgrad kernels \n");
+        QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+
+        cudaDeviceSynchronize();
  
-//    nvtxRangePop();
+        QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
-//    nvtxRangePushA("XC grad");
+    }
 
-    // calculate the size for temporary gradient vector in shared memory 
-
-//    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>(glinfo, nof_functionals)));
-    QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
     cudaDeviceSynchronize();
 
     prune_grid_sswgrad();
@@ -204,228 +208,6 @@ __global__ void get_pteval_kernel(){
   }
 
 
-}
-
-
-__global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals){
-
-        //declare shared memory arrays
-/*        extern __shared__ char smem_buffer[];
-        unsigned char* primf=(unsigned char*)smem_buffer;
-        unsigned short* basf=(unsigned short*)&primf[devSim_dft.maxpfpbin];
-        unsigned int* primf_loc=(unsigned int*)&basf[devSim_dft.maxbfpbin];
-*/
-        unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
-        int totalThreads = blockDim.x*gridDim.x;
-
-	// create the temporary gradient vector in shared memory and initilize all elements to zero. 
-/*	extern __shared__ double _tmpGrad[];
-
-	for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
-		_tmpGrad[i] = 0.0;
-
-	__syncthreads();
-*/	
-
-        for (QUICKULL gid = offset; gid < devSim_dft.npoints; gid += totalThreads) {
-
-            int bin_id = devSim_dft.bin_locator[gid];
-            // initialize shared memory arrays
-/*            int bfll=devSim_dft.basf_locator[bin_id];
-            int bful=devSim_dft.basf_locator[bin_id+1];
-
-            if(threadIdx.x == 0) primf_loc[0] = 0;
-
-
-            for(int i = threadIdx.x; i< bful-bfll; i+=blockDim.x){
-              basf[i] = (unsigned short)devSim_dft.basf[bfll+i];
-              primf_loc[i+1]=(unsigned int) (devSim_dft.primf_locator[bfll+i+1]-devSim_dft.primf_locator[bfll]);
-            }
-
-            __syncthreads();
-
-            for(int i = threadIdx.x; i< (devSim_dft.primfpbin[bin_id]); i+=blockDim.x)
-              primf[i] = (unsigned char)devSim_dft.primf[devSim_dft.primf_locator[bfll]+i];
-
-            __syncthreads();
-*/
-		int dweight = devSim_dft.dweight[gid];
-
-		if(dweight>0){
-
-                        QUICKDouble gridx = devSim_dft.gridx[gid];
-                        QUICKDouble gridy = devSim_dft.gridy[gid];
-                        QUICKDouble gridz = devSim_dft.gridz[gid];
-			QUICKDouble weight = devSim_dft.weight[gid];
-                        QUICKDouble density = devSim_dft.densa[gid];
-                        QUICKDouble densityb = devSim_dft.densb[gid];
-                        QUICKDouble gax = devSim_dft.gax[gid];
-                        QUICKDouble gay = devSim_dft.gay[gid];
-                        QUICKDouble gaz = devSim_dft.gaz[gid];
-                        QUICKDouble gbx = devSim_dft.gbx[gid];
-                        QUICKDouble gby = devSim_dft.gby[gid];
-                        QUICKDouble gbz = devSim_dft.gbz[gid];			
-		
-			if(density >devSim_dft.DMCutoff){	
-				QUICKDouble sigma = 4.0 * (gax * gax + gay * gay + gaz * gaz);
-				QUICKDouble _tmp ;
-				
-				if (devSim_dft.method == B3LYP) {
-					_tmp = b3lyp_e(2.0*density, sigma);
-				}else if(devSim_dft.method == DFT){
-					_tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
-					+ lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz));
-				}
-
-				QUICKDouble dfdr;
-				QUICKDouble dot, xdot, ydot, zdot;
-
-				if (devSim_dft.method == B3LYP) {
-					dot = b3lypf(2.0*density, sigma, &dfdr);
-					xdot = dot * gax;
-					ydot = dot * gay;
-					zdot = dot * gaz;
-				}else if(devSim_dft.method == DFT){
-					QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
-					QUICKDouble dfdr2;
-					
-					lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
-                                	dfdr = dfdr2;
-                                	dfdgaa = dfdgaa2;
-                                	dfdgab = dfdgab2;	
-					
-	                                //Calculate the first term in the dot product shown above,i.e.:
-	                                //(2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
-	                                xdot = 2.0 * dfdgaa * gax + dfdgab * gbx;
-	                                ydot = 2.0 * dfdgaa * gay + dfdgab * gby;
-	                                zdot = 2.0 * dfdgaa * gaz + dfdgab * gbz;					
-				
-				}else if(devSim_dft.method == LIBXC){
-	                                //Prepare in/out for libxc call
-        	                        double d_rhoa = (double) density;
-	                                double d_rhob = (double) densityb;
-     		                        double d_sigma = (double)sigma;
-                	                double d_zk, d_vrho, d_vsigma;
-                        	        d_zk = d_vrho = d_vsigma = 0.0;
-	
-        	                        for(int i=0; i<nof_functionals; i++){
-                	                        double tmp_d_zk, tmp_d_vrho, tmp_d_vsigma;
-                        	                tmp_d_zk=tmp_d_vrho=tmp_d_vsigma=0.0;
-
-                                	        gpu_libxc_info* tmp_glinfo = glinfo[i];
-
-                                        	switch(tmp_glinfo->gpu_worker){
-	                                                case GPU_WORK_LDA:
-        	                                                gpu_work_lda_c(tmp_glinfo, d_rhoa, d_rhob, &tmp_d_zk, &tmp_d_vrho, 1);
-                	                                        break;
-                                        
-                        	                        case GPU_WORK_GGA_X:
-                                	                        gpu_work_gga_x(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma);
-                                        	                break;
-	
-        	                                        case GPU_WORK_GGA_C:
-                	                                        gpu_work_gga_c(tmp_glinfo, d_rhoa, d_rhob, d_sigma, &tmp_d_zk, &tmp_d_vrho, &tmp_d_vsigma, 1);
-                        	                                break;
-                                	        }
-	                                        d_zk += (tmp_d_zk*tmp_glinfo->mix_coeff);
-	                                        d_vrho += (tmp_d_vrho*tmp_glinfo->mix_coeff);
-	                                        d_vsigma += (tmp_d_vsigma*tmp_glinfo->mix_coeff);
-	                                }
-                        
-	                                _tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob)));                              
-
-	                                QUICKDouble dfdgaa;
-					//QUICKDouble dfdgab, dfdgaa2, dfdgab2;
-	                                //QUICKDouble dfdr2;
-	                                dfdr = (QUICKDouble)d_vrho;
-	                                dfdgaa = (QUICKDouble)d_vsigma*4.0;
-
-	                                xdot = dfdgaa * gax;
-	                                ydot = dfdgaa * gay;
-	                                zdot = dfdgaa * gaz;
-				}
-				devSim_dft.exc[gid] = _tmp;
-			
-                                //for (int i = 0; i<bful-bfll; i++) {
-                                for (int i = devSim_dft.basf_locator[bin_id]; i<devSim_dft.basf_locator[bin_id+1]; i++) {
-					//int ibas = (int) basf[i];
-                                        int ibas = devSim_dft.basf[i];
-					QUICKDouble phi, dphidx, dphidy, dphidz;
-					//pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, primf, primf_loc, ibas, i);
-                                        pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-
-					if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
-
-						QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
-
-						//pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, primf, primf_loc, ibas, i);
-				                pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-						int Istart = (devSim_dft.ncenter[ibas]-1) * 3;
-					
-                                                //for (int j = 0; j <bful-bfll; j++) {
-                                                for (int j = devSim_dft.basf_locator[bin_id]; j <devSim_dft.basf_locator[bin_id+1]; j++) {
-
-							//int jbas = (int) basf[j];
-                                                        int jbas = (int) devSim_dft.basf[j];
-							QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
-
-							//pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, primf, primf_loc, jbas, j);
-                                                        pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
-							
-							QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
-
-	                                                QUICKDouble Gradx = - 2.0 * denseij * weight * (dfdr * dphidx * phi2
-                                                                + xdot * (dxdx * phi2 + dphidx * dphidx2)
-                                                                + ydot * (dxdy * phi2 + dphidx * dphidy2)
-                                                                + zdot * (dxdz * phi2 + dphidx * dphidz2));
-
-        	                                        QUICKDouble Grady = - 2.0 * denseij * weight * (dfdr * dphidy * phi2
-                                                                + xdot * (dxdy * phi2 + dphidy * dphidx2)
-                                                                + ydot * (dydy * phi2 + dphidy * dphidy2)
-                                                                + zdot * (dydz * phi2 + dphidy * dphidz2));
-
-                	                                QUICKDouble Gradz = - 2.0 * denseij * weight * (dfdr * dphidz * phi2
-                                                                + xdot * (dxdz * phi2 + dphidz * dphidx2)
-                                                                + ydot * (dydz * phi2 + dphidz * dphidy2)
-                                                                + zdot * (dzdz * phi2 + dphidz * dphidz2));							
-
-							// update the temporary gradient vector
-							/*atomicAdd(&devSim_dft.xc_grad[Istart], Gradx);
-							atomicAdd(&devSim_dft.xc_grad[Istart+1], Grady);
-							atomicAdd(&devSim_dft.xc_grad[Istart+2], Gradz);*/
-							//devSim_dft.gxc_grad[gid] += Gradx; 
-							/*devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart]     += Gradx;
-							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 1] += Grady;
-							devSim_dft.gxc_grad[(offset * devSim_dft.natom * 3) + Istart + 2] += Gradz;*/
-        						GRADADD(devSim_dft.gradULL[Istart], Gradx);
-        						GRADADD(devSim_dft.gradULL[Istart+1], Grady);
-        						GRADADD(devSim_dft.gradULL[Istart+2], Gradz);
-						}
-						//printf("Test xc_grad: %i %f %f %f \n", gid, devSim_dft.xc_grad[Istart], devSim_dft.xc_grad[Istart+1], devSim_dft.xc_grad[Istart+2]);
-					}
-				}
-			}
-
-                        //Set weights for sswder calculation
-                        if(density < devSim_dft.DMCutoff){
-                                devSim_dft.dweight_ssd[gid] = 0;
-                        }
-
-                        if(devSim_dft.sswt[gid] == 1){
-                                devSim_dft.dweight_ssd[gid] = 0;
-                        }				
-		}
-               // __syncthreads();
-	}
-
-/*        __syncthreads();
-
-	// update the gradient vector in global memory
-        for(int i = threadIdx.x; i < devSim_dft.natom*3; i += blockDim.x)
-		atomicAdd(&devSim_dft.xc_grad[i], _tmpGrad[i]);
-
-        __syncthreads();
-*/
 }
 
 
