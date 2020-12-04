@@ -99,8 +99,6 @@ subroutine calmp2
 
   print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
 
-  print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
-
   ! actually nstep is step length
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
