@@ -41,10 +41,7 @@ subroutine calmp2
 #else   
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
-<<<<<<< HEAD
 
-=======
->>>>>>> f55e5cd1ac41c19be569cd6a6037ba237106d83d
  
     !print *, "in calmp2, quick_qm_struct%co is"
     !do ind= 1, nbasis
@@ -124,13 +121,9 @@ subroutine calmp2
   allocate(orbmp2j331(nstep,ivir,nbasistemp,nbasistemp,2))
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
 
-<<<<<<< HEAD
-  ! with nstep(acutally, it represetns step lenght), we can
-=======
   !print *, "in clasmp2, shape of orbmp2i331 is", shape(orbmp2i331)
 
   ! with nstep(acutally, it represetns step lenght), we can 
->>>>>>> f55e5cd1ac41c19be569cd6a6037ba237106d83d
   ! have no. of steps for mp2 calculation
   nstepmp2=nelec/2/nstep
   nstepmp2=nstepmp2+1
@@ -173,10 +166,7 @@ subroutine calmp2
      
      !print *, "nsteplength is", nsteplength
 
-<<<<<<< HEAD
-=======
 
->>>>>>> f55e5cd1ac41c19be569cd6a6037ba237106d83d
      ! Initial orbmp2k331
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
      do II=1,jshell
@@ -1175,9 +1165,6 @@ subroutine print_matrix(matrix,n)
     end do
 
 end subroutine print_matrix
-<<<<<<< HEAD
 
-=======
->>>>>>> f55e5cd1ac41c19be569cd6a6037ba237106d83d
 
 
