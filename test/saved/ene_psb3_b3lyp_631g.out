@@ -45,7 +45,7 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Nov 24 08:14:54 2020
+| TASK STARTS ON: Thu Dec  3 20:23:04 2020
 | INPUT FILE :    ene_psb3_b3lyp_631g.in
 | OUTPUT FILE:    ene_psb3_b3lyp_631g.out
 | DATE FILE  :    ene_psb3_b3lyp_631g.dat
@@ -178,26 +178,26 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.939618379      ------         0.918     1        0.00      0.92      0.00    0.2214E+01  0.5457E-01  0.5449E+00
-|  2   -249.630805954  -.130881E+01       1.182     2        0.00      1.18      0.00    0.1467E+00  0.2573E-01  0.2531E+00
-|  3   -249.484835808  -.145970E+00       1.181     3        0.00      1.18      0.00    0.1800E+00  0.1983E-01  0.2408E+00
-|  4   -249.746758520  0.261923E+00       1.180     4        0.00      1.18      0.00    0.7637E-01  0.5009E-02  0.7963E-01
-|  5   -249.764866940  0.181084E-01       1.175     5        0.00      1.17      0.00    0.2623E-01  0.1455E-02  0.2915E-01
-|  6   -249.766518047  0.165111E-02       1.181     6        0.00      1.18      0.00    0.9703E-02  0.5198E-03  0.7908E-02
-|  7   -249.766895944  0.377897E-03       1.175     7        0.00      1.17      0.00    0.1177E-02  0.8999E-04  0.1247E-02
-|  8   -249.766900877  0.493320E-05       1.181     8        0.00      1.18      0.00    0.4013E-03  0.3067E-04  0.4134E-03
-|  9   -249.766901523  0.645437E-06       1.176     9        0.00      1.17      0.00    0.1774E-03  0.9706E-05  0.1279E-03
-| 10   -249.766901601  0.777184E-07       1.176    10        0.00      1.17      0.00    0.2969E-04  0.1790E-05  0.2840E-04
-| 11   -249.766901605  0.406447E-08       1.181     1        0.00      1.18      0.00    0.6574E-05  0.6955E-06  0.6027E-05
+|  1   -250.939618379      ------         0.542     1        0.00      0.54      0.00    0.2214E+01  0.5457E-01  0.5449E+00
+|  2   -249.630805954  -.130881E+01       0.674     2        0.00      0.67      0.00    0.1467E+00  0.2573E-01  0.2531E+00
+|  3   -249.484835808  -.145970E+00       0.675     3        0.00      0.67      0.00    0.1800E+00  0.1983E-01  0.2408E+00
+|  4   -249.746758520  0.261923E+00       0.656     4        0.00      0.65      0.00    0.7637E-01  0.5009E-02  0.7963E-01
+|  5   -249.764866940  0.181084E-01       0.664     5        0.00      0.66      0.00    0.2623E-01  0.1455E-02  0.2915E-01
+|  6   -249.766518047  0.165111E-02       0.674     6        0.00      0.67      0.00    0.9703E-02  0.5198E-03  0.7908E-02
+|  7   -249.766895944  0.377897E-03       0.673     7        0.00      0.67      0.00    0.1177E-02  0.8999E-04  0.1247E-02
+|  8   -249.766900877  0.493320E-05       0.650     8        0.00      0.65      0.00    0.4013E-03  0.3067E-04  0.4134E-03
+|  9   -249.766901523  0.645438E-06       0.644     9        0.00      0.64      0.00    0.1774E-03  0.9706E-05  0.1279E-03
+| 10   -249.766901601  0.777195E-07       0.674    10        0.00      0.67      0.00    0.2969E-04  0.1790E-05  0.2840E-04
+| 11   -249.766901605  0.406465E-08       0.673     1        0.00      0.67      0.00    0.6574E-05  0.6955E-06  0.6027E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  11 CYLCES
-| MAX ERROR = 0.657352E-05   RMS CHANGE = 0.695526E-06   MAX CHANGE = 0.602719E-05
+| MAX ERROR = 0.657389E-05   RMS CHANGE = 0.695532E-06   MAX CHANGE = 0.602706E-05
  -----------------------------------------------
  ALPHA ELECTRON DENSITY    =   22.0000152902
  BETA ELECTRON DENSITY     =   22.0000152902
-  ELECTRONIC ENERGY    =  -456.952079973
-  CORE_CORE REPULSION  =   207.185178368
-  TOTAL ENERGY         =  -249.766901605
+ ELECTRONIC ENERGY    =  -456.952079973
+ CORE_CORE REPULSION  =   207.185178368
+ TOTAL ENERGY         =  -249.766901605
 
  @ End Energy calculation
 
@@ -259,30 +259,30 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.143347000(  8.07%)
-| DFT GRID OPERATIONS =     0.228511000(  1.61%)
-|       TOTAL GRID FORMATION TIME   =     0.001900000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.047506000(  0.34%)
-|       TOTAL OCTREE RUN TIME       =     0.030000000(  0.21%)
-|       TOTAL PRESCREENING TIME     =     0.130000000(  0.92%)
-|       TOTAL DATA PACKING TIME     =     0.019105000(  0.13%)
-| TOTAL SCF TIME      =    12.717075000( 89.72%)
-|       TOTAL OP TIME      =    12.687968000( 89.51%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.003519000(  0.02%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000776000(  0.01%)
-|             TOTAL 1e TIME      =     0.012313000(  0.09%)
-|                KINETIC 1e INTEGRALS TIME    =     0.007987000(  0.06%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.004323000(  0.03%)
-|             TOTAL 2e TIME      =     6.907197000( 48.73%)
-|             TOTAL EXC TIME     =     5.767594000( 40.69%)
-|             TOTAL ENERGY TIME  =     0.000274000(  0.00%)
-|       TOTAL DII TIME      =     0.028805000(  0.20%)
-|             TOTAL DIAG TIME    =     0.007828000(  0.06%)
-|       DIPOLE TIME        =     0.031331000(  0.22%)
-| TOTAL TIME          =    14.174516000
+| INITIAL GUESS TIME  =     0.606044000(  7.61%)
+| DFT GRID OPERATIONS =     0.127432000(  1.60%)
+|       TOTAL GRID FORMATION TIME   =     0.000663000(  0.01%)
+|       TOTAL GRID WEIGHT TIME      =     0.033878000(  0.43%)
+|       TOTAL OCTREE RUN TIME       =     0.016910000(  0.21%)
+|       TOTAL PRESCREENING TIME     =     0.069102000(  0.87%)
+|       TOTAL DATA PACKING TIME     =     0.006879000(  0.09%)
+| TOTAL SCF TIME      =     7.204149000( 90.45%)
+|       TOTAL OP TIME      =     7.191332000( 90.29%)
+|             OVERLAP 1e INTEGRALS TIME      =     0.001887000(  0.02%)
+|             OVERLAP 1e DIAGONALIZATION TIME =     0.000514000(  0.01%)
+|             TOTAL 1e TIME      =     0.007530000(  0.09%)
+|                KINETIC 1e INTEGRALS TIME    =     0.004582000(  0.06%)
+|                ATTRACTION 1e INTEGRALS TIME =     0.002946000(  0.04%)
+|             TOTAL 2e TIME      =     3.995639000( 50.17%)
+|             TOTAL EXC TIME     =     3.187892000( 40.02%)
+|             TOTAL ENERGY TIME  =     0.000103000(  0.00%)
+|       TOTAL DII TIME      =     0.012605000(  0.16%)
+|             TOTAL DIAG TIME    =     0.005326000(  0.07%)
+|       DIPOLE TIME        =     0.008567000(  0.11%)
+| TOTAL TIME          =     7.964772000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 14.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  8.0 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Nov 24 08:15:12 2020
+| Normal Termination. Task Finished on: Thu Dec  3 20:23:17 2020
