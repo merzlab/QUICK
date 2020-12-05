@@ -1659,21 +1659,39 @@ void prune_grid_sswgrad(){
 	gpu_delete_dft_grid_();
 
 #ifdef CUDA_MPIV
-        count += getAdjustment(gpu->mpisize, gpu->mpirank, count);
+        int netgain = getAdjustment(gpu->mpisize, gpu->mpirank, count);
+        count += netgain;
 #endif
 
+         gpu -> gpu_xcq -> npoints_ssd = count;
+
         //Upload data using templates
-        gpu -> gpu_xcq -> npoints_ssd = count;
+#ifdef CUDA_MPIV
+
+        gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridz_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> exc_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
+
+        sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
+        tmp_gridx, tmp_gridy, tmp_gridz, tmp_exc, tmp_quadwt, tmp_gatm, gpu -> gpu_xcq -> gridx_ssd -> _hostData,
+        gpu -> gpu_xcq -> gridy_ssd -> _hostData, gpu -> gpu_xcq -> gridz_ssd -> _hostData,
+        gpu -> gpu_xcq -> exc_ssd -> _hostData, gpu -> gpu_xcq -> quadwt -> _hostData,
+        gpu -> gpu_xcq -> gatm_ssd -> _hostData);
+
+#else
+
         gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridy, gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gridz_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridz, gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> exc_ssd = new cuda_buffer_type<QUICKDouble>(tmp_exc, gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(tmp_quadwt, gpu -> gpu_xcq -> npoints_ssd);
-	gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd * gpu->natom);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
         
-
-
+#endif
+        gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd * gpu->natom);
 
         gpu -> gpu_xcq -> gridx_ssd -> Upload();
         gpu -> gpu_xcq -> gridy_ssd -> Upload();
