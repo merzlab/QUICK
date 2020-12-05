@@ -14,7 +14,7 @@
 //Madu Manathunga 07/01/2019: Libxc header files
 #include "util.h"
 #include "gpu_work.cuh"
-//#include "cuda.h"
+#include "xc_redistribute.h"
 
 // device initial and shutdown operation
 extern "C" void gpu_set_device_(int* gpu_dev_id);
