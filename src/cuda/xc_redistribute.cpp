@@ -30,7 +30,7 @@ int** distMatrix=NULL;
 // prior to sswder calculation. Sends back the adjustment to 
 // size of the arrays. 
 //--------------------------------------------------------
-void getAdjustment(int mpisize, int mpirank, int count){
+int getAdjustment(int mpisize, int mpirank, int count){
 
   bool master=false;
   if(mpirank == 0) master = true;
@@ -47,7 +47,6 @@ void getAdjustment(int mpisize, int mpirank, int count){
   MPI_Barrier(MPI_COMM_WORLD);
   // broadcast ptcount array
   for(int i=0; i<mpisize; ++i) MPI_Bcast(&ptcount[i], 1, MPI_INT, i, MPI_COMM_WORLD);
-  MPI_Barrier(MPI_COMM_WORLD);  
  
   if(master) cout << "mpirank= "<<mpirank << " init array:" << endl;
 
@@ -193,6 +192,10 @@ void getAdjustment(int mpisize, int mpirank, int count){
   for(int i=0; i<mpisize; ++i) delete [] distMatrix[i]; 
   delete [] distMatrix;
 
+  return gain-loss;
+
 }
+
+
 
 #endif
