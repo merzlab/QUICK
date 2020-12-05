@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-void getAdjustment(int mpisize, int mpirank, int count);
+int getAdjustment(int mpisize, int mpirank, int count);
 
 
 #ifdef __cplusplus
