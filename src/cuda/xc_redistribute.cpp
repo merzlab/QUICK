@@ -18,12 +18,14 @@
 #ifdef CUDA_MPIV
 #include <iostream>
 #include <cmath>
+#include <cstring>
 #include <mpi.h>
 #include "xc_redistribute.h"
 using namespace std;
 
 // Distribution matrix for load balancing prior to sswder calculation.
 int** distMatrix=NULL;
+int* ptcount=NULL;
 
 //--------------------------------------------------------
 // Function to redistribute XC quadrature points among GPUs
@@ -36,8 +38,8 @@ int getAdjustment(int mpisize, int mpirank, int count){
   if(mpirank == 0) master = true;
 
   // define arrays
-  int *ptcount    = new int[mpisize]{0};
   int *residuals  = new int[mpisize]{0};
+  ptcount    = new int[mpisize]{0};
 
   distMatrix=new int*[mpisize];
   for(int i=0; i<mpisize; ++i) distMatrix[i] = new int[mpisize]{0};
@@ -187,15 +189,102 @@ int getAdjustment(int mpisize, int mpirank, int count){
   if(master) cout << "mpirank= " << mpirank<< " net gain= "<< gain-loss << " adjusted size= "<< count-gain-loss << endl;
 
   // deallocate memory
-  delete [] ptcount;
   delete [] residuals;
-  for(int i=0; i<mpisize; ++i) delete [] distMatrix[i]; 
-  delete [] distMatrix;
 
   return gain-loss;
 
 }
 
+//--------------------------------------------------------
+// Function to redistribute XC quadrature points among GPUs
+// prior to sswder calculation. 
+//--------------------------------------------------------
+void sswderRedistribute(int mpisize, int mpirank, int count, int ncount, 
+  double *gridx, double *gridy, double *gridz, double *exc, double *quadwt, int *gatm,
+  double *ngridx, double *ngridy, double *ngridz, double *nexc, double *nquadwt, int *ngatm ){
+
+  MPI_Status status;
+  bool master=false;
+  if(mpirank == 0) master = true;
+
+
+/*  if(master){
+    cout << "Printing initial arrays:" << endl;
+    for(int i=0;i<count;++i)
+      cout << "mpirank= " << mpirank << " i= " << i << " x= " << gridx[i] << " y= " << gridy[i] << " z= " << gridz[i]
+      << " exc= " << exc[i] << " quadwt= " << quadwt[i] << " gatm= " << gatm[i] << endl;
+  }
+*/
+
+  int arrsize = ncount > count ? count : ncount;
+  size_t bytesize = arrsize * sizeof(double);  
+
+  // copy existing data
+  memcpy(ngridx, gridx, bytesize);
+  memcpy(ngridy, gridy, bytesize);
+  memcpy(ngridz, gridz, bytesize);
+  memcpy(nexc, exc, bytesize);
+  memcpy(nquadwt, quadwt, bytesize);
+  memcpy(ngatm, gatm, arrsize * sizeof(int));
+
+  // record senders and receivers point counts during the transfer
+  int *sptcount  = new int[mpisize];
+  int *rptcount  = new int[mpisize];
+  memcpy(sptcount, ptcount, mpisize * sizeof(int));
+  memcpy(rptcount, ptcount, mpisize * sizeof(int));
+
+  // go through the distribution matrix and transfer data
+  for(int i=0;i<mpisize;++i){
+    int send_total=0;
+    for(int j=0;j<mpisize;++j) send_total += distMatrix[i][j];
+
+    if(send_total>0){
+      sptcount[i] -= send_total;
+ 
+      for(int j=0;j<mpisize;++j){
+        int send_amount=distMatrix[i][j];
+        if(send_amount > 0){
+
+          if(mpirank == i){
+            MPI_Send(&gridx[sptcount[i]], send_amount, MPI_DOUBLE, j, i+1, MPI_COMM_WORLD);
+            MPI_Send(&gridy[sptcount[i]], send_amount, MPI_DOUBLE, j, i+2, MPI_COMM_WORLD);          
+            MPI_Send(&gridz[sptcount[i]], send_amount, MPI_DOUBLE, j, i+3, MPI_COMM_WORLD);
+            MPI_Send(&exc[sptcount[i]], send_amount, MPI_DOUBLE, j, i+4, MPI_COMM_WORLD);
+            MPI_Send(&quadwt[sptcount[i]], send_amount, MPI_DOUBLE, j, i+5, MPI_COMM_WORLD);
+            MPI_Send(&gatm[sptcount[i]], send_amount, MPI_INT, j, i+6, MPI_COMM_WORLD);
+          }
+
+          if(mpirank == j){
+            MPI_Recv(&ngridx[rptcount[j]], send_amount, MPI_DOUBLE, i, i+1, MPI_COMM_WORLD, &status);                 
+            MPI_Recv(&ngridy[rptcount[j]], send_amount, MPI_DOUBLE, i, i+2, MPI_COMM_WORLD, &status);
+            MPI_Recv(&ngridz[rptcount[j]], send_amount, MPI_DOUBLE, i, i+3, MPI_COMM_WORLD, &status);
+            MPI_Recv(&nexc[rptcount[j]], send_amount, MPI_DOUBLE, i, i+4, MPI_COMM_WORLD, &status);
+            MPI_Recv(&nquadwt[rptcount[j]], send_amount, MPI_DOUBLE, i, i+5, MPI_COMM_WORLD, &status);
+            MPI_Recv(&ngatm[rptcount[j]], send_amount, MPI_INT, i, i+6, MPI_COMM_WORLD, &status);
+          }
+
+          sptcount[i] += send_amount;
+          rptcount[j] += send_amount;
+        }
+      }
+    } 
+  } 
+
+  
+/*  if(mpirank == 1){ 
+    cout << "Printing final arrays:" << endl;
+    for(int i=0;i<ncount;++i) 
+      cout << "mpirank= " << mpirank << " i= " << i << " x= " << ngridx[i] << " y= " << ngridy[i] << " z= " << ngridz[i]
+      << " exc= " << nexc[i] << " nquadwt= " << nquadwt[i] << " ngatm= " << ngatm[i] << endl;
+  }
+*/ 
+  delete [] sptcount;
+  delete [] rptcount;
+  delete [] ptcount;
+  for(int i=0; i<mpisize; ++i) delete [] distMatrix[i];
+  delete [] distMatrix;  
+
+}
 
 
 #endif
