@@ -1628,6 +1628,10 @@ void prune_grid_sswgrad(){
                 count += gpu -> gpu_xcq -> dweight_ssd -> _hostData[i];
         }
 
+#ifdef CUDA_MPIV
+        getAdjustment(gpu->mpisize, gpu->mpirank, count);
+#endif
+
         //Load data into temporary arrays
         QUICKDouble *tmp_gridx, *tmp_gridy, *tmp_gridz, *tmp_exc, *tmp_quadwt;
         int* tmp_gatm;
