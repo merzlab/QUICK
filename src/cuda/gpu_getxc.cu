@@ -95,7 +95,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 #endif
 
     if(gpu->gpu_sim.prePtevl == true){
-        printf("Calling hmem xc kernels \n");
+
         QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     
 	cudaDeviceSynchronize();
@@ -103,7 +103,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
         QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
     }else{
-        printf("Calling old xc kernels \n");
+
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
@@ -138,7 +138,6 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 #endif
 
     if(gpu->gpu_sim.prePtevl == true){
-        printf("Calling hmem xcgrad kernels \n");
 
         QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
@@ -147,7 +146,7 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
         QUICK_SAFE_CALL((get_xcgrad_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
 
     }else{
-        printf("Calling old xcgrad kernels \n");
+
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
