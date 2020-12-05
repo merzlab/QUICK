@@ -1628,10 +1628,6 @@ void prune_grid_sswgrad(){
                 count += gpu -> gpu_xcq -> dweight_ssd -> _hostData[i];
         }
 
-#ifdef CUDA_MPIV
-        getAdjustment(gpu->mpisize, gpu->mpirank, count);
-#endif
-
         //Load data into temporary arrays
         QUICKDouble *tmp_gridx, *tmp_gridy, *tmp_gridz, *tmp_exc, *tmp_quadwt;
         int* tmp_gatm;
@@ -1662,6 +1658,10 @@ void prune_grid_sswgrad(){
 
 	gpu_delete_dft_grid_();
 
+#ifdef CUDA_MPIV
+        count += getAdjustment(gpu->mpisize, gpu->mpirank, count);
+#endif
+
         //Upload data using templates
         gpu -> gpu_xcq -> npoints_ssd = count;
         gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);
@@ -1671,6 +1671,9 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(tmp_quadwt, gpu -> gpu_xcq -> npoints_ssd);
 	gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd * gpu->natom);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
+        
+
+
 
         gpu -> gpu_xcq -> gridx_ssd -> Upload();
         gpu -> gpu_xcq -> gridy_ssd -> Upload();
