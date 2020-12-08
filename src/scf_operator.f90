@@ -48,6 +48,7 @@ subroutine scf_operator(oneElecO, deltaO)
    if(master) then
 #endif
    print *, "in scf_operator"
+   call flush(6) ! flush stdout
 !  fetch 1e-integral from 1st time
    !print *, "in scf_operator, before all, quick_qm_struct%o is"
    !print *, quick_qm_struct%o

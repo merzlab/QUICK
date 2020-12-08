@@ -2609,7 +2609,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 //  compute mp2
 //-----------------------------------------------
 
-extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
+extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp)
 {
 	PRINTDEBUG("BEGIN TO RUN gpu_calmp2");
 	
@@ -2699,7 +2699,7 @@ extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* ememorysum, int* n
 
 extern "C" void gpu_mp2_wrapper_(QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
 QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor,\
-QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
+QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp)
 {
 	float time = 0;
 	cudaEvent_t before_upload, uploaded, mp2_done;

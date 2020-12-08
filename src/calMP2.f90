@@ -11,9 +11,11 @@ subroutine calmp2
   ! add Y_Matrix here
   !double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
   double precision :: gpuMp2cor(1),gpuEmemorysum(1)
-  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT,gpuNstepmp2(1),gpuNtemp(1)
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT,gpuNstepmp2(1)
+  !integer(kind=16):: gpuNtemp(1)
+  integer:: gpuNtemp(1)
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-    integer :: nelec,nelecb
+  integer :: nelec,nelecb
 
 #ifdef CUDA
     if(quick_method%bCUDA) then
@@ -101,7 +103,10 @@ subroutine calmp2
 
   ! actually nstep is step length
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
-
+  if(nstep<1)then
+    nstep=1
+  endif
+   
   ! if with f orbital
   if(quick_method%ffunxiao)then
      nbasistemp=6
@@ -150,6 +155,8 @@ subroutine calmp2
 
   !print *, "in calmp2, jshell is", jshell
   do i3new=1,nstepmp2               ! Step counter
+    print *, "i3new is ", i3new
+    call flush(6)
 
      call cpu_time(timer_begin%TMP2)
      ntemp=0    ! integer counter
@@ -341,7 +348,7 @@ subroutine calmp2
         enddo
      enddo
 
-     write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
+       !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 
      !print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
      !do ind1=1, nelec/2
@@ -414,6 +421,7 @@ subroutine calmp2
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
   enddo
+  write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 #endif
 
   write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2

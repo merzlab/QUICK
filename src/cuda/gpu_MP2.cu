@@ -324,7 +324,7 @@ __global__ void firstThreeQuartersTransDevice()
 
 //this kernel is to parallelize the two inner loops of the first transformation in firstThreeQuartersTransHost
 __global__ void 
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) firstQuarterTransKernel(int II,int JJ,int nstepmp2s, int nsteplength, int nstep, int nbasistemp, int* ntempptr_d,\
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) firstQuarterTransKernel(int II,int JJ,int nstepmp2s, int nsteplength, int nstep, int nbasistemp, unsigned long long int* ntempptr_d,\
 QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331)
 {
 	int offside = blockIdx.x*blockDim.x+threadIdx.x;
@@ -389,7 +389,7 @@ QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331)
 				{
 					// Set ntemp if needed
 					// from shellmp2:
-					QUICKADD(ntempptr_d[0], 1);
+					QUICKADD(ntempptr_d[0], (unsigned long long int)1);
 					for(int I=NII1; I<=NII2; I++)
         			{
         				for(int J=NJJ1; J<=NJJ2; J++)
@@ -534,8 +534,9 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) thirdQuarterTransKernel(int III
 }
 
 
-void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu,\
+//void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2, _gpu_type gpu,\
 						  QUICKDouble* ememorysumptr, int* nstepmp2ptr, int* ntempptr)
+void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepmp2ptr, unsigned long long int* ntempptr)
 {
 	int jshell = gpu->jshell;
 	//printf("in firstThreeQuartersTransHost, jshell is %d\n", jshell);
@@ -567,34 +568,56 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 
 	QUICKDouble* coefficient = gpu->gpu_calculated->coefficient->_hostData;
 	
-	QUICKDouble ememorysum = iocc*ivir*nbasis*8.0/1024.0/1024.0/1024.0;
-	printf("On CUDA side, ememorysum is %lf, 1.5/ememorysum is %lf\n", ememorysum, 1.5/ememorysum);
-	*ememorysumptr = ememorysum;
 	
+	QUICKDouble ememorysum = iocc*ivir*nbasis*8.0/1024.0/1024.0/1024.0;
 	int nstep = MIN(int(1.50/ememorysum),nElec/2);
+	printf("On CUDA side, ememorysum is %lf, 1.5/ememorysum is %lf, nElec/2 is %d\n", ememorysum, 1.5/ememorysum, nElec/2);
+	
+	if(nstep<1)
+	{
+		nstep = 1;
+		//ememorysum = 1.50/nstep;
+	}
+	*ememorysumptr = ememorysum;
+	printf("Finally, nstep is %d\n", nstep);
+
+
 	// Alwasy use f orbitals:
 	int nbasistemp = 10;
 
+	printf("\n");
+	printf("sizeof(QUICKDouble) is %d\n", sizeof(QUICKDouble));
+	float sizedouble = sizeof(QUICKDouble)+0.0;
+	printf("sizedouble is %f\n", sizedouble);
+	printf("nstep is %d\n", nstep);
+	printf("nbasis is %d\n", nbasis);
+	printf("nbasistemp is %d\n", nbasistemp);
+	printf("for orbmp2i331_d, sizeof(QUICKDouble)*nstep*nbasis*nbasistemp*nbasistemp*2/1024/1024 is %lf\n", sizedouble*nstep*nbasis*nbasistemp*nbasistemp*2/1024/1024);
+	printf("ivir is %d\n", ivir);
+	printf("for orbmp2j331_d, sizeof(QUICKDouble)*nstep*ivir*nbasistemp*nbasistemp*2/1024/1024 is %lf\n", sizedouble*nstep*ivir*nbasistemp*nbasistemp*2/1024/1024);
+	printf("iocc is %d\n",iocc);
+	printf("for orbmp2k331_d, sizeof(QUICKDouble)*nstep*iocc*ivir*nbasis/1024/1024 is %lf\n", sizedouble*nstep*iocc*ivir*nbasis/1024/1024);
+	printf("for orbmp2_d, sizeof(QUICKDouble)*ivir*ivir is %lf\n", sizedouble*ivir*ivir/1024/1024);
+	printf("\n");
+	
 
 	QUICKDouble* orbmp2i331_d;
-	//cudaMalloc((void **)&orbmp2i331_d, sizeof(QUICKDouble)*nElec/2*nbasis*10*10*2);
 	cudaMalloc((void **)&orbmp2i331_d, sizeof(QUICKDouble)*nstep*nbasis*nbasistemp*nbasistemp*2);	
+	printf("orbmp2i331_d is allocated %lf MB\n", sizedouble*nstep*nbasis*nbasistemp*nbasistemp*2/1024/1024);
 
 	QUICKDouble* orbmp2j331_d;
-    //cudaMalloc((void **)&orbmp2j331_d, sizeof(QUICKDouble)*nElec/2*(nbasis-nElec/2)*10*10*2);	
 	cudaMalloc((void **)&orbmp2j331_d, sizeof(QUICKDouble)*nstep*ivir*nbasistemp*nbasistemp*2);
+	printf("orbmp2j331_d is allocated %lf MB\n", sizedouble*nstep*ivir*nbasistemp*nbasistemp*2/1024/1024);
 
 	QUICKDouble* orbmp2k331_d;
-	//cudaMalloc((void **)&orbmp2k331_d,sizeof(QUICKDouble)*nElec/2*nElec/2*(nbasis-nElec/2)*nbasis);
-	//cudaMemset(orbmp2k331_d, 0, sizeof(QUICKDouble)*nElec/2*nElec/2*(nbasis-nElec/2)*nbasis);	
 	cudaMalloc((void **)&orbmp2k331_d,sizeof(QUICKDouble)*nstep*iocc*ivir*nbasis);
 	cudaMemset(orbmp2k331_d, 0, sizeof(QUICKDouble)*nstep*iocc*ivir*nbasis);	
+	printf("orbmp2k331_d is allocated %lf MB\n", sizedouble*nstep*iocc*ivir*nbasis/1024/1024);
 
 	QUICKDouble* orbmp2_d;
-	//cudaMalloc((void **)&orbmp2_d,sizeof(QUICKDouble)*(nbasis-nElec/2)*(nbasis-nElec/2));
-    //cudaMemset(orbmp2_d,0,sizeof(QUICKDouble)*(nbasis-nElec/2)*(nbasis-nElec/2));
 	cudaMalloc((void **)&orbmp2_d,sizeof(QUICKDouble)*ivir*ivir);
 	cudaMemset(orbmp2_d,0,sizeof(QUICKDouble)*ivir*ivir);
+	printf("orbmp2_d is allocated %lf MB\n", sizedouble*ivir*ivir/1024/1024);
 
 	
 	QUICKDouble* MP2cor_d;
@@ -612,13 +635,12 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 	printf("TOTAL STEP is %d\n", nstepmp2);
 	*nstepmp2ptr = nstepmp2;
 	
-	int* ntempptr_d;
-	cudaMalloc((void **)&ntempptr_d,sizeof(int));
-	cudaMemset(ntempptr_d, 0, sizeof(int));
+	unsigned long long int* ntempptr_d;
+	cudaMalloc((void **)&ntempptr_d,sizeof(unsigned long long int));
+	cudaMemset(ntempptr_d, 0, sizeof(unsigned long long int));
 
 	for(int i3new=1;i3new<=nstepmp2;i3new++)
 	{
-		//int ntemp = 0;
 		int nstepmp2s = (i3new-1)*nstep+1;
 		int nstepmp2f = i3new*nstep;
 		
@@ -629,7 +651,7 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 	
 		printf("i3new is %d\n", i3new);
 		printf("nsteplength is %d\n", nsteplength);
-
+		fflush(stdout); 
 
 		cudaMemset(orbmp2k331_d, 0, sizeof(QUICKDouble)*nstep*iocc*ivir*nbasis);
 		for(int II=0; II<jshell; II++)
@@ -769,8 +791,8 @@ void fourQuarterTransHost(QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331, QUIC
 			}
 		}
 	
-		cudaMemcpy(ntempptr, ntempptr_d, sizeof(int),cudaMemcpyDeviceToHost);	
-		printf("in fourQuarterTransHost, effect integrals is %d\n\n", *ntempptr);
+		cudaMemcpy(ntempptr, ntempptr_d, sizeof(unsigned long long int),cudaMemcpyDeviceToHost);	
+		printf("in fourQuarterTransHost, effect integrals is %llu\n\n", *ntempptr);
 	
 		// first three quarters of the transformation end here
 		// start the forth quarter and the final accumulation	
@@ -1410,7 +1432,7 @@ __device__ void firstQuarterTransDevice(int I, int J, int K, int L, unsigned int
 static float totTime;
 #endif
 
-void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp)
+void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int * ntemp)
 {
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -1426,26 +1448,36 @@ void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp
 	cudaEventRecord(mp2_start,0);
     
 	cudaDeviceSynchronize();
-
+	
+	//all these should be removed!!
+	/*
 	QUICKDouble* orbmp2i331 = new QUICKDouble[gpu->nElec/2*gpu->nbasis*10*10*2];	
 	memset(orbmp2i331, 0, sizeof(QUICKDouble)*gpu->nElec/2*gpu->nbasis*10*10*2);
+	printf("orbmp2i331 is allocated\n");
 	QUICKDouble* orbmp2j331 = new QUICKDouble[gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*10*10*2]; 
 	memset(orbmp2j331, 0, sizeof(QUICKDouble)*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*10*10*2);
+	printf("orbmp2j331 is allocated\n");
 	QUICKDouble* orbmp2k331 = new QUICKDouble[gpu->nElec/2*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*gpu->nbasis];
 	memset(orbmp2k331, 0, sizeof(QUICKDouble)*gpu->nElec/2*gpu->nElec/2*(gpu->nbasis-gpu->nElec/2)*gpu->nbasis);
+	printf("orbmp2k331 is allocated\n");
 	QUICKDouble* orbmp2 = new QUICKDouble[(gpu->nbasis-gpu->nElec/2)*(gpu->nbasis-gpu->nElec/2)]; 
 	memset(orbmp2, 0, sizeof(QUICKDouble)*(gpu->nbasis-gpu->nElec/2)*(gpu->nbasis-gpu->nElec/2));
-
+	printf("orbmp2 is allocated\n");
+	*/
+	
+	/*
 	cudaEventRecord(mp2_allocate,0);
     cudaEventSynchronize(mp2_allocate);
     cudaEventElapsedTime(&mp2_time,mp2_start,mp2_allocate);
     printf("in get2e_MP2, total gpu mp2 tensor allocation time is %6.3f ms\n", mp2_time);
+	*/
 
 	//all four quarter transformation
-	fourQuarterTransHost(orbmp2i331, orbmp2j331, orbmp2k331, orbmp2, gpu, ememorysum, nstepmp2, ntemp);
+	//fourQuarterTransHost(orbmp2i331, orbmp2j331, orbmp2k331, orbmp2, gpu, ememorysum, nstepmp2, ntemp);
+	fourQuarterTransHost(gpu, ememorysum, nstepmp2, ntemp);
 	cudaEventRecord(mp2_trans,0);
     cudaEventSynchronize(mp2_trans);
-    cudaEventElapsedTime(&mp2_time,mp2_allocate,mp2_trans);
+    cudaEventElapsedTime(&mp2_time,mp2_start,mp2_trans);
     printf("in get2e_MP2, total gpu mp2 four quarter transformation time is %6.3f ms\n", mp2_time);
 
 	/*
@@ -1465,17 +1497,16 @@ void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, int* ntemp
     printf("in get2e_MP2, gpu forth transformation time is %6.3f ms\n", mp2_time);
 	*/	
 
+	/*
 	delete[] orbmp2i331;
 	delete[] orbmp2j331;
 	delete[] orbmp2k331;
 	delete[] orbmp2;
+	*/
 
 	cudaEventDestroy(mp2_start);
-	cudaEventDestroy(mp2_start);
-	cudaEventDestroy(mp2_allocate);
+	//cudaEventDestroy(mp2_allocate);
 	cudaEventDestroy(mp2_trans);
-	//cudaEventDestroy(mp2_first3);
-	//cudaEventDestroy(mp2_forth);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
