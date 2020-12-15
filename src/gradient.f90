@@ -236,47 +236,21 @@ endif
    timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
 #ifdef MPIV
-!  slave node will send infos
-   if(.not.master) then
-      do i=1,natom*3
-         tmp_grad(i)=quick_qm_struct%gradient(i)
-      enddo
 
-   call MPI_SEND(tmp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-
-   if(quick_molspec%nextatom.gt.0) then
-      do i=1,quick_molspec%nextatom*3
-         tmp_ptchg_grad(i) = quick_qm_struct%ptchg_gradient(i)
-      enddo
-      call MPI_SEND(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+! sum up all gradient contributions
+   call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   if(quick_molspec%nextatom.gt.0) call MPI_REDUCE(quick_qm_struct%ptchg_gradient, tmp_ptchg_grad, 3*quick_molspec%nextatom,& 
+                                   mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   if(master) then
+     quick_qm_struct%gradient(:) = tmp_grad(:)
+     if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
    endif
 
-   else
-!  master node will receive infos from every nodes
-      do i=1,mpisize-1
-!  receive opertors from slave nodes
-         call MPI_RECV(tmp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-!  and sum them into operator
-         do ii=1,natom*3
-            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+tmp_grad(ii)
-         enddo
-
-         if(quick_molspec%nextatom.gt.0) then
-
-            call MPI_RECV(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-
-            do ii=1,quick_molspec%nextatom*3
-               quick_qm_struct%ptchg_gradient(ii) = quick_qm_struct%ptchg_gradient(ii) + tmp_ptchg_grad(ii)
-            enddo
-
-         endif
-      enddo
-  endif
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
 
