@@ -313,6 +313,17 @@ __global__ void get_xcgrad_hmem_kernel(gpu_libxc_info** glinfo, int nof_function
 __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 #endif
 {
+
+  //declare smem grad vector
+  extern __shared__ QUICKULL smem_buffer[];
+  QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+
+  // initialize smem grad
+  for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+    smemGrad[i]=0ull;
+
+  __syncthreads();
+
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
 
@@ -474,9 +485,9 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
                     + ydot * (dydz * phi2 + dphidz * dphidy2)
                     + zdot * (dzdz * phi2 + dphidz * dphidz2));
 
-            GRADADD(devSim_dft.gradULL[Istart], Gradx);
-            GRADADD(devSim_dft.gradULL[Istart+1], Grady);
-            GRADADD(devSim_dft.gradULL[Istart+2], Gradz);
+            GRADADD(smemGrad[Istart], Gradx);
+            GRADADD(smemGrad[Istart+1], Grady);
+            GRADADD(smemGrad[Istart+2], Gradz);
 #ifdef HMEM
             ++phij;
 #endif
@@ -497,5 +508,13 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
     }
     
   }
+
+  __syncthreads();
+
+  // update gmem grad vector
+  for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+    atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+
+  __syncthreads();
 
 }
