@@ -2225,6 +2225,9 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         gpu -> gradULL -> Upload();
 
+        // calculate smem size
+        gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
+
         upload_sim_to_constant_dft(gpu);
 
 	getxc_grad(gpu, glinfo, nof_aux_functionals);
@@ -3139,7 +3142,7 @@ void upload_pteval(){
 
   gpu ->gpu_sim.prePtevl = false;
 
-  // compute available amount of global memory
+/*  // compute available amount of global memory
   size_t free, total;
 
   cudaMemGetInfo( &free, &total );
@@ -3198,7 +3201,7 @@ void upload_pteval(){
     gpu -> gpu_xcq -> dphidz -> Download();
 
   }
-
+*/
 
 }
 
@@ -3210,7 +3213,7 @@ void reupload_pteval(){
 
   gpu ->gpu_sim.prePtevl = false;
 
-  // compute available amount of global memory
+/*  // compute available amount of global memory
   size_t free, total;
 
   cudaMemGetInfo( &free, &total );
@@ -3246,7 +3249,7 @@ void reupload_pteval(){
     gpu -> gpu_sim.dphidy = gpu -> gpu_xcq -> dphidy -> _devData;
     gpu -> gpu_sim.dphidz = gpu -> gpu_xcq -> dphidz -> _devData;
   }
-
+*/
 }
 
 //-----------------------------------------------
@@ -3254,7 +3257,7 @@ void reupload_pteval(){
 //-----------------------------------------------
 void delete_pteval(bool devOnly){
 
-    if(gpu ->gpu_sim.prePtevl == true){
+/*    if(gpu ->gpu_sim.prePtevl == true){
 
       if(devOnly){
 
@@ -3274,7 +3277,7 @@ void delete_pteval(bool devOnly){
 
       }
     }
-
+*/
 }
 
 
