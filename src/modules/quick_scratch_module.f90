@@ -24,6 +24,10 @@ module quick_scratch_module
     
     type quick_scratch_type
         double precision, dimension(:,:), allocatable :: hold,hold2
+#ifdef MPIV
+        ! to store the result of operator reduction
+        double precision, dimension(:,:), allocatable :: osum
+#endif
     end type quick_scratch_type
     
     type (quick_scratch_type) quick_scratch
@@ -46,7 +50,9 @@ module quick_scratch_module
             
             if(.not. allocated(self%hold)) allocate(self%hold(nbasis,nbasis))
             if(.not. allocated(self%hold2)) allocate(self%hold2(nbasis,nbasis))
-
+#ifdef MPIV
+            if(.not. allocated(self%osum)) allocate(self%osum(nbasis,nbasis))
+#endif
             return
             
         end subroutine allocate_quick_scratch
@@ -58,6 +64,9 @@ module quick_scratch_module
             
             if (allocated(self%hold)) deallocate(self%hold)
             if (allocated(self%hold2)) deallocate(self%hold2)
+#ifdef MPIV
+            if(allocated(self%osum)) deallocate(self%osum)
+#endif
             return
             
         end subroutine deallocate_quick_scratch
