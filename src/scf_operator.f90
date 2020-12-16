@@ -286,11 +286,6 @@ subroutine get_xc
 #ifdef MPIV
    integer :: i, ii, irad_end, irad_init, jj
    double precision :: Eelxcsum, aelec, belec
-
-!  Braodcast libxc information to slaves
-   call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)        
-   call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-   call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
 
    quick_qm_struct%aelec=0.d0
