@@ -34,10 +34,12 @@ subroutine scf_operator(oneElecO, deltaO)
    logical :: deltaO
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision tst, te, tred
 #ifdef MPIV
    integer ierror
 
    quick_scratch%osum=0.0d0
+   if (.not.master) quick_qm_struct%o = 0.0d0
 #endif
 !-----------------------------------------------------------------
 !  Step 1. evaluate 1e integrals
@@ -48,7 +50,7 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
 
 !  fetch 1e-integral from 1st time
-   call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
+   quick_qm_struct%o(:,:) = oneElecO(:,:)
 
 !  Now calculate kinetic and attraction energy first.
    if (quick_method%printEnergy) call get1eEnergy()
@@ -63,8 +65,8 @@ subroutine scf_operator(oneElecO, deltaO)
 !  if only calculate operation difference
    if (deltaO) then
 !     save density matrix
-      call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseSave,nbasis)
-      call CopyDMat(quick_qm_struct%oSave,quick_qm_struct%o,nbasis)
+      quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
+      quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
 
       do I=1,nbasis; do J=1,nbasis
          quick_qm_struct%dense(J,I)=quick_qm_struct%dense(J,I)-quick_qm_struct%denseOld(J,I)
@@ -82,14 +84,6 @@ subroutine scf_operator(oneElecO, deltaO)
    call cpu_time(timer_begin%T2e)
 #ifdef MPIV
    endif
-#endif
-
-#ifdef MPIV
-!  Reset the operator value for slave nodes.
-   if (.not.master) quick_qm_struct%o = 0.0d0
-
-!  sync every nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV
@@ -170,7 +164,7 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
 
 !  recover density if calculate difference
-   if (deltaO) call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
+   if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
 #ifdef MPIV
    if (master) then
@@ -209,12 +203,12 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Calculate exchange correlation contribution & add to operator    
       call get_xc
 
-!  Remember the operator is symmetric
-      call copySym(quick_qm_struct%o,nbasis)
-
 #ifdef MPIV
    if(master) then
 #endif
+
+!  Remember the operator is symmetric
+      call copySym(quick_qm_struct%o,nbasis)
 
 !  Stop the exchange correlation timer
       call cpu_time(timer_end%TEx)
@@ -302,9 +296,10 @@ subroutine get_xc
 #if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
+
       call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
             quick_qm_struct%vec,quick_qm_struct%dense)
-
+      
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
 #endif
