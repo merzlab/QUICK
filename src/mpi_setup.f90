@@ -110,6 +110,9 @@
 ! DFT Parameter
     if (quick_method%DFT.or.quick_method%SEDFT) then  
       call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
 
 ! SEDFT Parameters  
