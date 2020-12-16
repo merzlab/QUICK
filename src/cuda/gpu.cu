@@ -2203,7 +2203,9 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         fprintf(gpu->debugFile,"Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
         //Madu: Initialize gpu libxc and upload information to GPU
-        gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+        gpu_libxc_info** glinfo = NULL;
+
+        if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
 
         //libxc_cleanup(glinfo, nof_functionals);
 
@@ -2710,7 +2712,8 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
         //Madu: Initialize gpu libxc and upload information to GPU
-        gpu_libxc_info** glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+        gpu_libxc_info** glinfo = NULL;
+        if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
 
         //libxc_cleanup(glinfo, nof_functionals);
 
