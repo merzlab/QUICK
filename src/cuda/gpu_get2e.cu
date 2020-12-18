@@ -347,9 +347,6 @@ void getGrad(_gpu_type gpu)
 
     QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
-    // compute one electron gradients in the meantime
-    get_oneen_grad_();
-
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
@@ -360,8 +357,10 @@ void getGrad(_gpu_type gpu)
         //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
     }
+
+    // compute one electron gradients in the meantime
+    get_oneen_grad_();
    
-    cudaDeviceSynchronize();
 //    nvtxRangePop();
 
 }
