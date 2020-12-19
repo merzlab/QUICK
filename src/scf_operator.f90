@@ -37,9 +37,18 @@ subroutine scf_operator(oneElecO, deltaO)
    double precision tst, te, tred
 #ifdef MPIV
    integer ierror
+   double precision :: Eelsum, Excsum, aelec, belec
 
    quick_scratch%osum=0.0d0
-   if (.not.master) quick_qm_struct%o = 0.0d0
+   Eelsum=0.0d0
+   Excsum=0.0d0
+   aelec=0.0d0
+   belec=0.0d0
+
+   if (.not.master) then
+     quick_qm_struct%o = 0.0d0
+     quick_qm_struct%Eel=0.0d0
+   endif
 #endif
 !-----------------------------------------------------------------
 !  Step 1. evaluate 1e integrals
@@ -154,14 +163,11 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
    endif
 
-#ifdef MPIV
+!  Remember the operator is symmetric
+   call copySym(quick_qm_struct%o,nbasis)
 
-!  sum up all operator contributions
-   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-
-   if(master) quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
-
-#endif
+!  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
+   if(quick_method%printEnergy) call get2eEnergy()
 
 !  recover density if calculate difference
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
@@ -169,11 +175,6 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    if (master) then
 #endif
-!  Remember the operator is symmetric
-   call copySym(quick_qm_struct%o,nbasis)
-
-!  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-   if(quick_method%printEnergy) call get2eEnergy()
 
 !  Terminate the timer for 2e-integrals
    call cpu_time(timer_end%T2e)
@@ -203,12 +204,12 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Calculate exchange correlation contribution & add to operator    
       call get_xc
 
+!  Remember the operator is symmetric
+      call copySym(quick_qm_struct%o,nbasis)
+
 #ifdef MPIV
    if(master) then
 #endif
-
-!  Remember the operator is symmetric
-      call copySym(quick_qm_struct%o,nbasis)
 
 !  Stop the exchange correlation timer
       call cpu_time(timer_end%TEx)
@@ -222,6 +223,32 @@ subroutine scf_operator(oneElecO, deltaO)
 
 #ifdef MPIV
    endif
+#endif
+
+#ifdef MPIV
+!  MPI gather operations
+
+   if (quick_method%DFT) then
+   call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   
+
+   if(master) then
+     quick_qm_struct%Exc = Excsum
+     quick_qm_struct%aelec  = aelec
+     quick_qm_struct%belec  = belec
+   endif
+   endif
+
+   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+
+   if(master) then
+     quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
+     quick_qm_struct%Eel    = Eelsum
+   endif
+
 #endif
 
 return
@@ -279,32 +306,25 @@ subroutine get_xc
 
 #ifdef MPIV
    integer :: i, ii, irad_end, irad_init, jj
-   double precision :: Eelxcsum, aelec, belec
 #endif
 
+   quick_qm_struct%Exc=0.0d0
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
-   Eelxc=0.0d0
-
-#ifdef MPIV
-!  Set the values of slave operators to zero
-   if (.not.master) quick_qm_struct%o = 0.0d0
-   quick_scratch%osum = 0.0d0
-#endif
 
 #if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
 
-      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-            quick_qm_struct%vec,quick_qm_struct%dense)
+!      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+!            quick_qm_struct%vec,quick_qm_struct%dense)
       
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
 #endif
 
-      call gpu_getxc(Eelxc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+      call gpu_getxc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o,&
       quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
 
    endif
@@ -450,7 +470,7 @@ subroutine get_xc
 
                   endif
 
-                  Eelxc = Eelxc + zkec*weight
+                  quick_qm_struct%Exc = quick_qm_struct%Exc + zkec*weight
 
                   quick_qm_struct%aelec = weight*density+quick_qm_struct%aelec
                   quick_qm_struct%belec = weight*densityb+quick_qm_struct%belec
@@ -505,38 +525,9 @@ subroutine get_xc
    endif
 #endif
 
-#ifdef MPIV
-
-   call MPI_REDUCE(Eelxc, Eelxcsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-
-#endif
-
-#ifdef MPIV
-   if(master) then
-
-   Eelxc = Eelxcsum
-   quick_qm_struct%aelec  = aelec
-   quick_qm_struct%belec  = belec
-   quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)   
-#endif
 !  Add the exchange correlation energy to total electronic energy
-   quick_qm_struct%Eel    = quick_qm_struct%Eel+Eelxc
+   quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
 
-!   if(quick_method%debug) then
-#ifdef DEBUG
-   if (quick_method%debug) then
-     write(iOutFile,*) "Eelex=",Eelxc
-     write(iOutFile,*) "E1+E2+Eelxc=",quick_qm_struct%Eel
-   endif
-#endif
-!   endif
-#ifdef MPIV
-   endif
-#endif
-  
    return
 
 end subroutine get_xc
