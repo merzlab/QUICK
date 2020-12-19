@@ -99,6 +99,9 @@ module quick_calculated_module
       ! electron energy
       double precision :: EEl
 
+      ! exchange correlation energy
+      double precision :: Exc
+
       ! core energy
       double precision :: ECore
 
@@ -406,6 +409,7 @@ contains
       call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
       call MPI_BCAST(self%EEl,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
