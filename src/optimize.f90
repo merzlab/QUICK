@@ -141,8 +141,6 @@ subroutine optimize(failed)
             quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-
 
 #endif
 
