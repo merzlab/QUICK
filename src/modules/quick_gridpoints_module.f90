@@ -393,8 +393,8 @@ module quick_gridpoints_module
 
     call cpu_time(timer_end%TDFTGrdPck)
 
-    timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct &
-                           - timer_cumer%TDFTPrscrn
+    timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - t_octree &
+                           - t_prscrn
 
 !    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
 !    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
