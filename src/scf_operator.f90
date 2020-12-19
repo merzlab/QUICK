@@ -317,9 +317,6 @@ subroutine get_xc
 
    if(quick_method%bCUDA) then
 
-!      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-!            quick_qm_struct%vec,quick_qm_struct%dense)
-      
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
 #endif

@@ -59,14 +59,6 @@ subroutine gradient(failed)
 
    call getEnergy(failed,.false.)
 
-   do Ibas=1,nbasis
-      do Jbas=1,nbasis
-!          write(*,*) "Density
-!          matrix:",Ibas,Jbas,quick_qm_struct%dense(Jbas,Ibas)
-!           write(*,*) "Coefficient matrix:",Ibas,Jbas,quick_qm_struct%co(Jbas,Ibas)
-      enddo
-   enddo
-
    if (quick_method%analgrad) then
       call scf_gradient
    endif
