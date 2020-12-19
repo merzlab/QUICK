@@ -2255,6 +2255,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         delete gpu -> grad;
         delete gpu -> gradULL;
+        delete gpu->gpu_calculated->dense; 
     
 }
 
@@ -2303,11 +2304,6 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-/*    for (int i = 0; i < gpu->natom * 3; i ++) {
-        printf("before %i %f\n", i, gpu -> grad -> _hostData[i]);
-    }
-*/    
-    
     getGrad(gpu);
     
     PRINTDEBUG("COMPLETE KERNEL")
@@ -2340,19 +2336,10 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     gpu -> grad -> Download(grad);
     
-    for (int i = 0; i < gpu->natom * 3; i ++) {
-//        printf("%i %f\n", i, gpu -> grad -> _hostData[i]);
-    }
-    
     delete gpu -> grad;
     delete gpu -> gradULL;
     
-    
-    delete gpu->gpu_calculated->o;
-    delete gpu->gpu_calculated->dense;
-    delete gpu->gpu_calculated->oULL;
-    
-    //delete gpu->gpu_cutoff->cutMatrix;
+    if(gpu -> gpu_sim.method == HF) delete gpu->gpu_calculated->dense;
     
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -2668,14 +2655,6 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 #endif
     
     gpu -> gpu_calculated -> o    -> Download(o);
-
-#ifdef CUDA_MPIV
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-//           printf("Fock O: %i %i %i %f \n", gpu->mpirank,i,j,o[i,j]);
-        }    
-    }
-#endif
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
