@@ -46,6 +46,11 @@ module quick_timer_module
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
+        double precision:: TDFTbl=0.0d0     !Time for xc load balancing in mgpu version
+        double precision:: TDFTrbl=0.0d0    !Time for xc load re-balancing in mgpu version
+        double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
+        double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
+        double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
     end type quick_timer
 
     type quick_timer_cumer
@@ -78,6 +83,11 @@ module quick_timer_module
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
         double precision:: TDip=0.0d0    !Time for calculating dipoles
+        double precision:: TDFTbl=0.0d0     !Time for xc load balancing in mgpu version
+        double precision:: TDFTrbl=0.0d0    !Time for xc load re-balancing in mgpu version
+        double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
+        double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
+        double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
 
     end type quick_timer_cumer
 
