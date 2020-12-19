@@ -644,8 +644,7 @@ subroutine get_electron_replusion_grad
          call gpu_upload_method(1, 0.2d0)
       endif
 
-      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-      quick_qm_struct%vec,quick_qm_struct%dense)
+      call gpu_upload_density_matrix(quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
       call gpu_upload_grad(tmpGrad, quick_method%gradCutoff)
 
@@ -769,8 +768,6 @@ subroutine get_xc_grad
 #if defined CUDA || defined CUDA_MPIV
 
    if(quick_method%bCUDA) then
-
-      call gpu_upload_density_matrix(quick_qm_struct%dense)
 
       call gpu_reupload_dft_grid()
 
