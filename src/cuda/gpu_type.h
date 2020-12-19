@@ -37,9 +37,9 @@ struct gpu_calculated_type {
 
 struct gpu_timer_type{
 
-   QUICKDouble                      t_2elb; // time for eri load balancing in mgpu version
-   QUICKDouble                      t_xclb; // time for xc load balancing in mgpu version
-   QUICKDouble                      t_xcrbl; // time for xc load re-balancing in mgpu version
+   double                           t_2elb; // time for eri load balancing in mgpu version
+   double                           t_xclb; // time for xc load balancing in mgpu version
+   double                           t_xcrb; // time for xc load re-balancing in mgpu version
 
 };
 
