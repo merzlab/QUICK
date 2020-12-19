@@ -78,7 +78,7 @@ subroutine optimize(failed)
    !------------- END MPI/MASTER ----------------------------
 
 
-   do WHILE (I.le.quick_method%iopt.and..not.done)
+   do WHILE (I.lt.quick_method%iopt.and..not.done)
       I=I+1
 
       if (master) then
