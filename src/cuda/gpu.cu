@@ -1046,7 +1046,16 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
 
 #ifdef CUDA_MPIV
+   clock_t start, end;
+
+   start = clock();
+
    mgpu_eri_greedy_distribute();
+
+   end = clock();
+
+   gpu -> timer.t_2elb += ((double) (end - start)) / CLOCKS_PER_SEC;
+
 #endif   
  
     gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
@@ -1659,8 +1668,17 @@ void prune_grid_sswgrad(){
 	gpu_delete_dft_grid_();
 
 #ifdef CUDA_MPIV
+        clock_t start, end;
+
+        start = clock();
+
         int netgain = getAdjustment(gpu->mpisize, gpu->mpirank, count);
         count += netgain;
+
+        end = clock();
+
+        gpu -> timer.t_xcrb += ((double) (end - start)) / CLOCKS_PER_SEC;
+
 #endif
 
          gpu -> gpu_xcq -> npoints_ssd = count;
@@ -1675,11 +1693,17 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
 
+        start = clock();
+         
         sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
         tmp_gridx, tmp_gridy, tmp_gridz, tmp_exc, tmp_quadwt, tmp_gatm, gpu -> gpu_xcq -> gridx_ssd -> _hostData,
         gpu -> gpu_xcq -> gridy_ssd -> _hostData, gpu -> gpu_xcq -> gridz_ssd -> _hostData,
         gpu -> gpu_xcq -> exc_ssd -> _hostData, gpu -> gpu_xcq -> quadwt -> _hostData,
         gpu -> gpu_xcq -> gatm_ssd -> _hostData);
+
+        end = clock();
+
+        gpu -> timer.t_xcrb += ((double) (end - start)) / CLOCKS_PER_SEC;
 
 #else
 
@@ -1914,10 +1938,19 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
 
 #ifdef CUDA_MPIV
+
+        clock_t start, end;
+
+        start = clock();
+
 //        mgpu_xc_naive_distribute();
         mgpu_xc_tpbased_greedy_distribute();
 //        mgpu_xc_pbased_greedy_distribute();
         mgpu_xc_repack();
+
+        end = clock();
+
+        gpu -> timer.t_xclb += ((double) (end - start)) / CLOCKS_PER_SEC;
 
         gpu ->gpu_sim.mpirank = gpu -> mpirank;
         gpu ->gpu_sim.mpisize = gpu -> mpisize;
