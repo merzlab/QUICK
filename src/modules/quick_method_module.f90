@@ -700,7 +700,7 @@ endif
 
             ! OPT not available for MP2
             if (self%MP2 .and. self%OPT) then
-                call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLE")
+                call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLY")
                 self%OPT = .false.
             endif
 
