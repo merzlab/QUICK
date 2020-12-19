@@ -35,6 +35,14 @@ struct gpu_calculated_type {
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
+struct gpu_timer_type{
+
+   QUICKDouble                      t_2elb; // time for eri load balancing in mgpu version
+   QUICKDouble                      t_xclb; // time for xc load balancing in mgpu version
+   QUICKDouble                      t_xcrbl; // time for xc load re-balancing in mgpu version
+
+};
+
 struct gpu_cutoff_type {
     int                             natom;
     int                             nbasis;
@@ -404,6 +412,9 @@ struct gpu_type {
     // mpi variable definitions
     int                             mpirank;
     int                             mpisize;    
+
+    // timer 
+    gpu_timer_type*                 timer;
 
     // Molecule specification part
     int                             natom;
