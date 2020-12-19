@@ -2688,11 +2688,13 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
 #endif
     
     PRINTDEBUG("DELETE TEMP VARIABLES")
-    
-    delete gpu->gpu_calculated->o;
-    delete gpu->gpu_calculated->dense;
-    delete gpu->gpu_calculated->oULL;
-    
+   
+    if(gpu -> gpu_sim.method == HF){ 
+      delete gpu->gpu_calculated->o;
+      delete gpu->gpu_calculated->dense;
+      delete gpu->gpu_calculated->oULL;
+    }    
+
     delete gpu->gpu_cutoff->cutMatrix;
     
     PRINTDEBUG("COMPLETE RUNNING GET2E")
@@ -2703,19 +2705,19 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
-        /*The following variable will hold the number of auxilary functionals in case of
-        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-        //from input. */
-        int nof_aux_functionals = *nof_functionals;
+    /*The following variable will hold the number of auxilary functionals in case of
+    //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
+    //from input. */
+    int nof_aux_functionals = *nof_functionals;
 
 #ifdef DEBUG
 	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
-        //Madu: Initialize gpu libxc and upload information to GPU
-        gpu_libxc_info** glinfo = NULL;
-        if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+    //Madu: Initialize gpu libxc and upload information to GPU
+    gpu_libxc_info** glinfo = NULL;
+    if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
 
-        //libxc_cleanup(glinfo, nof_functionals);
+    //libxc_cleanup(glinfo, nof_functionals);
 
     gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
 
@@ -2813,9 +2815,9 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 
     PRINTDEBUG("DELETE TEMP VARIABLES")
 
-        delete gpu->gpu_calculated->o;
-        delete gpu->gpu_calculated->dense;
-        delete gpu->gpu_calculated->oULL;
+    delete gpu->gpu_calculated->o;
+    delete gpu->gpu_calculated->dense;
+    delete gpu->gpu_calculated->oULL;
 
 }
 
