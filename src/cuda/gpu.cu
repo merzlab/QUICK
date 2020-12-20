@@ -1046,15 +1046,23 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
 
 #ifdef CUDA_MPIV
-   clock_t start, end;
 
-   start = clock();
+   cudaEvent_t t_start, t_end;
+   float t_time;
+   cudaEventCreate(&t_start);
+   cudaEventCreate(&t_end);
+   cudaEventRecord(t_start, 0);
 
    mgpu_eri_greedy_distribute();
 
-   end = clock();
+   cudaEventRecord(t_end, 0);
+   cudaEventSynchronize(t_end);
+   cudaEventElapsedTime(&t_time, t_start, t_end);   
 
-   gpu -> timer.t_2elb += ((double) (end - start)) / CLOCKS_PER_SEC;
+   gpu -> timer -> t_2elb += (double) t_time/1000;
+
+   cudaEventDestroy(t_start);
+   cudaEventDestroy(t_end);
 
 #endif   
  
@@ -1668,16 +1676,21 @@ void prune_grid_sswgrad(){
 	gpu_delete_dft_grid_();
 
 #ifdef CUDA_MPIV
-        clock_t start, end;
+        cudaEvent_t t_start, t_end;
+        float t_time;
+        cudaEventCreate(&t_start);
+        cudaEventCreate(&t_end);
+        cudaEventRecord(t_start, 0);
 
-        start = clock();
 
         int netgain = getAdjustment(gpu->mpisize, gpu->mpirank, count);
         count += netgain;
 
-        end = clock();
+        cudaEventRecord(t_end, 0);
+        cudaEventSynchronize(t_end);
+        cudaEventElapsedTime(&t_time, t_start, t_end);        
 
-        gpu -> timer.t_xcrb += ((double) (end - start)) / CLOCKS_PER_SEC;
+        gpu -> timer -> t_xcrb += (double) t_time/1000;
 
 #endif
 
@@ -1693,7 +1706,7 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
 
-        start = clock();
+        cudaEventRecord(t_start, 0);
          
         sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
         tmp_gridx, tmp_gridy, tmp_gridz, tmp_exc, tmp_quadwt, tmp_gatm, gpu -> gpu_xcq -> gridx_ssd -> _hostData,
@@ -1701,9 +1714,13 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> exc_ssd -> _hostData, gpu -> gpu_xcq -> quadwt -> _hostData,
         gpu -> gpu_xcq -> gatm_ssd -> _hostData);
 
-        end = clock();
+        cudaEventRecord(t_end, 0);
+        cudaEventSynchronize(t_end);
+        cudaEventElapsedTime(&t_time, t_start, t_end);
 
-        gpu -> timer.t_xcrb += ((double) (end - start)) / CLOCKS_PER_SEC;
+        gpu -> timer -> t_xcrb += (double) t_time/1000;
+        cudaEventDestroy(t_start);
+        cudaEventDestroy(t_end);
 
 #else
 
@@ -1939,18 +1956,25 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 
 #ifdef CUDA_MPIV
 
-        clock_t start, end;
-
-        start = clock();
+        cudaEvent_t t_start, t_end;
+        float t_time;
+        cudaEventCreate(&t_start);
+        cudaEventCreate(&t_end);
+        cudaEventRecord(t_start, 0);
 
 //        mgpu_xc_naive_distribute();
         mgpu_xc_tpbased_greedy_distribute();
 //        mgpu_xc_pbased_greedy_distribute();
         mgpu_xc_repack();
 
-        end = clock();
+        cudaEventRecord(t_end, 0);
+        cudaEventSynchronize(t_end);
+        cudaEventElapsedTime(&t_time, t_start, t_end);
 
-        gpu -> timer.t_xclb += ((double) (end - start)) / CLOCKS_PER_SEC;
+        gpu -> timer -> t_xclb += (double) t_time / 1000;
+
+        cudaEventDestroy(t_start);
+        cudaEventDestroy(t_end);
 
         gpu ->gpu_sim.mpirank = gpu -> mpirank;
         gpu ->gpu_sim.mpisize = gpu -> mpisize;
