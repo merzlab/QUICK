@@ -84,7 +84,8 @@ struct gpack_type{
    gpack_buffer_type<int>* primf;   // array of primitive functions beloning to binned basis functions
    gpack_buffer_type<int>* basf_counter;  // a counter to keep track of which basis functions belong to which bin
    gpack_buffer_type<int>* primf_counter; // a counter to keep track of which primitive functions belong to which basis function
-   gpack_buffer_type<int>* bin_counter;   // a counter to keep track of bins with different number of points in cpu implementation
+   gpack_buffer_type<int>* bin_counter;   // a counter to keep track of bins with different number of points
+   gpack_buffer_type<int>* bin_locator;   // a locator to keep track of which point belongs to which bin in the gpu implementation
    int gridb_count; // length of binned grid arrays
    int nbins;       // number of bins
    int nbtotbf;     // total number of basis functions
