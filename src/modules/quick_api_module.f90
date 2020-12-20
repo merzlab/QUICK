@@ -442,6 +442,15 @@ subroutine run_quick(self)
   ! stop the timer for initial guess
   call cpu_time(timer_end%TIniGuess)
 
+#ifdef CUDA_MPIV
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
+
+  timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
+                           - (timer_end%T2elb-timer_begin%T2elb)
+
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
     call getEnergy(failed, .false.)
