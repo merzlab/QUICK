@@ -46,8 +46,6 @@ module quick_timer_module
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
-        double precision:: TDFTbl=0.0d0     !Time for xc load balancing in mgpu version
-        double precision:: TDFTrbl=0.0d0    !Time for xc load re-balancing in mgpu version
         double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
         double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
         double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
@@ -83,8 +81,8 @@ module quick_timer_module
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
         double precision:: TDip=0.0d0    !Time for calculating dipoles
-        double precision:: TDFTbl=0.0d0     !Time for xc load balancing in mgpu version
-        double precision:: TDFTrbl=0.0d0    !Time for xc load re-balancing in mgpu version
+        double precision:: TDFTlb=0.0d0     !Time for xc load balancing in mgpu version
+        double precision:: TDFTrb=0.0d0    !Time for xc load re-balancing in mgpu version
         double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
         double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
         double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
@@ -106,7 +104,7 @@ module quick_timer_module
         use quick_method_module
         implicit none
         integer i,IERROR,io
-        double precision t_tot_dftop
+        double precision :: t_tot_dftop, t_tot_lb
 #ifdef MPIV
         include "mpif.h"
 #endif
@@ -144,10 +142,24 @@ module quick_timer_module
                 write (io,'("| ",6x,"TOTAL DATA PACKING TIME     =",F16.9,"( ",F5.2,"%)")')timer_cumer%TDFTGrdPck, &
                 timer_cumer%TDFTGrdPck/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
+#ifdef CUDA_MPIV
+            t_tot_lb=timer_cumer%t2elb+timer_cumer%tdftlb+timer_cumer%tdftrb
+            write (io,'("| TOTAL LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') t_tot_lb, &
+            t_tot_lb/(timer_end%TTotal-timer_begin%TTotal)*100
+            write (io,'("| ",6x,"2E LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%t2elb, &
+            timer_cumer%t2elb/(timer_end%TTotal-timer_begin%TTotal)*100
+            if(quick_method%DFT) then
+                write (io,'("| ",6x,"DFT LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftlb, &
+                timer_cumer%tdftlb/(timer_end%TTotal-timer_begin%TTotal)*100
+                if (quick_method%opt .or. quick_method%grad ) then
+                   write (io,'("| ",6x,"DFT LOAD REBALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftrb, &
+                   timer_cumer%tdftrb/(timer_end%TTotal-timer_begin%TTotal)*100
+                endif
+            endif
+#endif
             if (quick_method%nodirect) &
             write (io,'("| 2E EVALUATION TIME =",F16.9,"( ",F5.2,"%)")') timer_end%T2eAll-timer_begin%T2eAll, &
                 (timer_end%T2eAll-timer_begin%T2eAll)/(timer_end%TTotal-timer_begin%TTotal)*100
-
             ! SCF Timing
             write (io,'("| TOTAL SCF TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%TSCF, &
                 timer_cumer%TSCF/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -177,6 +189,11 @@ module quick_timer_module
                 write (io,'("| ",12x,"TOTAL EXC TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEx, &
                     timer_cumer%TEx/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
+#ifdef MPIV
+            ! time to reduce operator
+            write (io,'("| ",12x,"TOTAL OPERATOR REDUCTION TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEred, &
+                    timer_cumer%TEred/(timer_end%TTotal-timer_begin%TTotal)*100
+#endif
             write (io,'("| ",12x,"TOTAL ENERGY TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TE, &
                 timer_cumer%TE/(timer_end%TTotal-timer_begin%TTotal)*100
             ! DII Time
@@ -220,6 +237,10 @@ module quick_timer_module
                    write (io,'("| ",6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &
                            timer_cumer%TExGrad/(timer_end%TTotal-timer_begin%TTotal)*100
                 endif
+#ifdef MPIV
+                write (io,'("| ",6x,"TOTAL GRAD REDUCTION TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%TGradred, &
+                        timer_cumer%TGradred/(timer_end%TTotal-timer_begin%TTotal)*100
+#endif
             endif
 
             ! MP2 Time
@@ -334,6 +355,27 @@ module quick_timer_module
         endif
 
     end subroutine mpi_setup_timer
+#endif
+
+#ifdef CUDA_MPIV
+    subroutine get_mgpu_time
+        use quick_mpi_module
+        implicit none
+        integer :: IERROR
+        double precision :: tsum_2elb, tsum_xclb, tsum_xcrb
+        include "mpif.h"
+
+        call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+
+        if(master) then
+          timer_cumer%T2elb=tsum_2elb
+          timer_cumer%TDFTlb=tsum_xclb
+          timer_cumer%TDFTrb=tsum_xcrb
+        endif
+    end subroutine get_mgpu_time
+
 #endif
 
 end module quick_timer_module
