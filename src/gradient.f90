@@ -200,34 +200,32 @@ endif
 #ifdef MPIV
    if(master) then
 #endif
-   ! implement exc grad timer here
+      call cpu_time(timer_begin%TExGrad)
 #ifdef MPIV
    endif
 #endif
 
-
-      call cpu_time(timer_begin%TExGrad)
-
       call get_xc_grad
 
-      call cpu_time(timer_end%TExGrad)
-      timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
+#ifdef CUDA_MPIV
+      call mgpu_get_xcrb_time(timer_cumer%TDFTrb)
+#endif
 
 #ifdef MPIV
    if(master) then
 #endif
-   ! implement exc grad timer here
+      call cpu_time(timer_end%TExGrad)
+      timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
 #ifdef MPIV
    endif
 #endif
 
    endif
 
-!  Stop the timer and add up the total gradient times
-   call cpu_time(timer_end%TGrad)
-   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
 #ifdef MPIV
+
+   if(master) call cpu_time(timer_begin%TGradred) 
 
 ! sum up all gradient contributions
    call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
@@ -236,8 +234,12 @@ endif
    if(master) then
      quick_qm_struct%gradient(:) = tmp_grad(:)
      if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
-   endif
 
+
+     call cpu_time(timer_end%TGradred)
+
+     timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
+   endif
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -283,10 +285,12 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !stop
-
 #ifdef MPIV
    call deallocate_quick_gradient()
 #endif
+!  Stop the timer and add up the total gradient times
+   call cpu_time(timer_end%TGrad)
+   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
    return
 
