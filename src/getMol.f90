@@ -235,9 +235,10 @@ subroutine initialGuess
 
    present = .false.
 
+#ifdef USEDAT
    ! if read matrix is requested, begin to read dmx file
    if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
-
+#endif
    if (present) then
       call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.)
 

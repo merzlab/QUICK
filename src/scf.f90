@@ -556,12 +556,14 @@ subroutine electdiis(jscf)
       !--------------- END MPI/ALL NODES -------------------------------------
 
       if (master) then
+
+#ifdef USEDAT
          ! open data file then write calculated info to dat file
          call quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.)
          rewind(iDataFile)
          call dat(quick_qm_struct, iDataFile)
          close(iDataFile)
-
+#endif
          current_diis=mod(idiis-1,quick_method%maxdiisscf)
          current_diis=current_diis+1
 
