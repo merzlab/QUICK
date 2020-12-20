@@ -320,7 +320,7 @@ void mgpu_eri_greedy_distribute(){
 // Function to distribute XC quadrature bins among nodes. 
 // Method 1: Naively distribute packed bins. 
 //--------------------------------------------------------
-void mgpu_xc_naive_distribute(){
+/*void mgpu_xc_naive_distribute(){
 
     // due to grid point packing, npoints is always a multiple of bin_size
     int nbins    = gpu -> gpu_xcq -> nbins;
@@ -412,7 +412,7 @@ void mgpu_xc_naive_distribute(){
 #endif
 
 }
-
+*/
 
 //--------------------------------------------------------
 // Function to distribute XC quadrature points among nodes.  
