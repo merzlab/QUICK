@@ -66,11 +66,14 @@ subroutine finalize(io,status)
     
     ! Deallocate all variables
     call deallocateall
-    
+
+#ifdef CUDA_MPIV
+    call get_mgpu_time()
+#endif
     ! stop timer and output them
     call cpu_time(timer_end%TTotal)
 !    call timer_output(io)
-    
+
     !-------------------MPI/MASTER---------------------------------------
     master_finalize:if (master) then
         if (status /=0) then
