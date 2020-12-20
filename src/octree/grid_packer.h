@@ -30,11 +30,11 @@ void gpack_finalize_();
 void pack_grid_pts();
 
 /*Fortran interface to prune & pack grid points*/
-void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *ntgpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn);
+void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn);
 
 /*interface to save packed info in fortran data structures*/
 #if defined CUDA || defined CUDA_MPIV
-void get_gpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw, double *weight, int *atm, int *dweight, int *basf, int *primf, int *basf_counter, int *primf_counter);
+void get_gpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw, double *weight, int *atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter, int *bin_counter);
 
 #else
 void get_cpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw, double *weight, int *atm, int *basf, int *primf, int *basf_counter, int *primf_counter, int *bin_counter);
