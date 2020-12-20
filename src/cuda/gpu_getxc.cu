@@ -221,7 +221,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
 		if(gpweight[gid]>0){
 
-			unsigned int binIdx = (unsigned int) (gid/blockDim.x);
+                        int binIdx = devSim_dft.bin_locator[gid]; 
 
         	        QUICKDouble gridx = devSim_dft.gridx[gid];
 	                QUICKDouble gridy = devSim_dft.gridy[gid];
