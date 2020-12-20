@@ -226,7 +226,9 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
 
 #ifdef MPIV
-!  MPI gather operations
+!  MPI reduction operations
+
+   if(master) call cpu_time(timer_begin%TEred)
 
    if (quick_method%DFT) then
    call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
@@ -247,6 +249,10 @@ subroutine scf_operator(oneElecO, deltaO)
    if(master) then
      quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
      quick_qm_struct%Eel    = Eelsum
+
+   call cpu_time(timer_end%TEred)
+   timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
+
    endif
 
 #endif
