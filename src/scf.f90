@@ -172,6 +172,10 @@ subroutine electdiis(jscf)
       quick_dft_grid%basf_counter, quick_dft_grid%primf_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
       quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
+#ifdef CUDA_MPIV
+      call mgpu_get_xclb_time(timer_cumer%TDFTlb)
+#endif
+
       endif
    endif
 #endif
