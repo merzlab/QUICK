@@ -1764,11 +1764,9 @@ void prune_grid_sswgrad(){
 }	
 
 
-void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, double DMCutoff,int count){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, double DMCutoff, int nbins){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
-
-	unsigned int nbins = (unsigned int) (count/SM_2X_XCGRAD_THREADS_PER_BLOCK);
 
         gpu -> gpu_xcq -> npoints       = count;
         gpu -> xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
@@ -1777,17 +1775,20 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
         gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
         gpu -> gpu_xcq -> gridz = new cuda_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+        gpu -> gpu_xcq -> bin_locator = new cuda_buffer_type<int>(bin_locator,gpu -> gpu_xcq -> npoints);
 
         gpu -> gpu_xcq -> gridx -> Upload();
         gpu -> gpu_xcq -> gridy -> Upload();
         gpu -> gpu_xcq -> gridz -> Upload();
 	gpu -> gpu_basis -> sigrad2 -> Upload();
+        gpu -> gpu_xcq -> bin_locator -> Upload();
 
         gpu -> gpu_sim.npoints  = gpu -> gpu_xcq -> npoints;
         gpu -> gpu_sim.gridx    = gpu -> gpu_xcq -> gridx -> _devData;
         gpu -> gpu_sim.gridy    = gpu -> gpu_xcq -> gridy -> _devData;
         gpu -> gpu_sim.gridz    = gpu -> gpu_xcq -> gridz -> _devData;
 	gpu -> gpu_sim.sigrad2  = gpu->gpu_basis->sigrad2->_devData;
+        gpu ->gpu_sim.bin_locator      = gpu -> gpu_xcq -> bin_locator -> _devData;
 
 	gpu -> gpu_cutoff -> DMCutoff   = DMCutoff;
         gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
@@ -1866,6 +1867,7 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
         SAFE_DELETE(gpu -> gpu_xcq -> gridy);
         SAFE_DELETE(gpu -> gpu_xcq -> gridz);
 	SAFE_DELETE(gpu->gpu_basis->sigrad2);
+        SAFE_DELETE(gpu -> gpu_xcq -> bin_locator);
 	cudaFree(d_gpweight);
 	cudaFree(d_cfweight);
 	cudaFree(d_pfweight);
