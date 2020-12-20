@@ -79,6 +79,11 @@ void mgpu_startup(int mpirank)
 
     gpu = new gpu_type;
 
+    gpu -> timer = new gpu_timer_type;
+    gpu -> timer -> t_2elb = 0.0;
+    gpu -> timer -> t_xclb = 0.0;
+    gpu -> timer -> t_xcrb = 0.0;
+
 #if defined DEBUG || defined DEBUGTIME
     gpu->debugFile = debugFile;
 #endif
@@ -94,6 +99,7 @@ extern "C" void mgpu_shutdown_(void)
 
     PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
 
+    delete gpu -> timer;
     delete gpu;
     cudaDeviceReset();
 
@@ -958,4 +964,27 @@ extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
     *minorv = prop.minor;
 
 }
+
+//--------------------------------------------------------
+// Send times for printing
+//--------------------------------------------------------
+extern "C" void mgpu_get_2elb_time_(double* t_2elb){
+
+  *t_2elb = gpu -> timer -> t_2elb;
+
+}
+
+extern "C" void mgpu_get_xclb_time_(double *t_xclb){
+
+  *t_xclb = gpu -> timer -> t_xclb;
+
+}
+
+extern "C" void mgpu_get_xcrb_time_(double* t_xcrb){
+
+  *t_xcrb = gpu -> timer -> t_xcrb;
+
+}
+
+
 #endif
