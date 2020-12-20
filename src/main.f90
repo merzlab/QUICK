@@ -195,7 +195,7 @@
 
 #ifdef CUDA_MPIV
     timer_begin%T2elb = timer_end%T2elb
-    call mgpu_get_2elb_time(timer_cumer%T2elb)
+    call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
 #endif
 
