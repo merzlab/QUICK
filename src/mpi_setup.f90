@@ -474,13 +474,12 @@
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
 #ifdef CUDA_MPIV
-      call MPI_BCAST(quick_dft_grid%dweight,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%bin_locator,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #endif
-
+      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)
