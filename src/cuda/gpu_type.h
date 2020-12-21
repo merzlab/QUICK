@@ -85,7 +85,7 @@ struct XC_quadrature_type{
 	cuda_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
 	cuda_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
 	cuda_buffer_type<int>*	gatm;			//To which atom does a given grid point belongs to?
-	cuda_buffer_type<int>*	dweight;		//Dummy weight of grid points
+        cuda_buffer_type<int>*  bin_counter;            //Keeps track of bin borders 
 	cuda_buffer_type<int>*  dweight_ssd;            //Dummy weight of grid points for sswder 
 	cuda_buffer_type<int>*	basf;			//Basis function indices of all grid points
 	cuda_buffer_type<int>*	primf;			//Primitive function inidices of all grid points
