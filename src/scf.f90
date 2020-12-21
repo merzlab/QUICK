@@ -168,9 +168,9 @@ subroutine electdiis(jscf)
       if (quick_method%DFT) then
 
       call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%bin_locator, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, &
+      quick_dft_grid%nbins, quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
 
 #ifdef CUDA_MPIV
       call mgpu_get_xclb_time(timer_cumer%TDFTlb)
