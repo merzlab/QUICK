@@ -425,10 +425,9 @@ void mgpu_xc_tpbased_greedy_distribute(){
 
     // due to grid point packing, npoints is always a multiple of bin_size
     int nbins    = gpu -> gpu_xcq -> nbins;
-    int bin_size = gpu -> gpu_xcq -> bin_size;
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+    fprintf(gpu->debugFile,"GPU: %i nbins= %i \n", gpu->mpirank, nbins);
 #endif
 
     // array to keep track of how many true grid points per bin
@@ -450,16 +449,9 @@ void mgpu_xc_tpbased_greedy_distribute(){
     memset(tpts_pcore,0, sizeof(int)*gpu->mpisize);
 
     // count how many true grid point in each bin and store in tpoints
-    int tot_tpts=0;
-    for(int i=0; i<nbins; i++){
+    for(int i=0; i<nbins; ++i){
         tpoints[i].x=i;
-        tpoints[i].y=0;
-        for(int j=0; j<bin_size; j++){
-            if(gpu -> gpu_xcq -> dweight -> _hostData[i*bin_size + j] > 0 ){
-                tpoints[i].y++;
-                tot_tpts++;
-            }
-        }
+        tpoints[i].y= gpu -> gpu_xcq -> bin_counter -> _hostData[i+1] - gpu -> gpu_xcq -> bin_counter -> _hostData[i];
     }
 
 #ifdef DEBUG
@@ -545,10 +537,9 @@ void mgpu_xc_pbased_greedy_distribute(){
 
     // due to grid point packing, npoints is always a multiple of bin_size
     int nbins    = gpu -> gpu_xcq -> nbins;
-    int bin_size = gpu -> gpu_xcq -> bin_size;
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+    fprintf(gpu->debugFile,"GPU: %i nbins= %i \n", gpu->mpirank, nbins);
 #endif
 
     // array to keep track of how many true grid points per bin
@@ -584,22 +575,11 @@ void mgpu_xc_pbased_greedy_distribute(){
     memset(primf_pcore,0, sizeof(int)*gpu->mpisize);
     memset(ptpf_pcore,0, sizeof(int)*gpu->mpisize);
 
-    // count how many true grid point in each bin and store in tpoints
-    int tot_tpts=0;
-    for(int i=0; i<nbins; i++){
-        for(int j=0; j<bin_size; j++){
-            if(gpu -> gpu_xcq -> dweight -> _hostData[i*bin_size + j] > 0 ){
-                tpoints[i]++;
-                tot_tpts++;
-            }
-        }
-    }
-
     // count how many primitive functions per each bin
     for(int i=0; i<nbins; i++){
+        tpoints[i]= gpu -> gpu_xcq -> bin_counter -> _hostData[i+1] - gpu -> gpu_xcq -> bin_counter -> _hostData[i];
 
         int tot_primfpb=0;
-
         for(int j=gpu -> gpu_xcq -> basf_locator -> _hostData[i]; j<gpu -> gpu_xcq -> basf_locator -> _hostData[i+1] ; j++){
             for(int k=gpu -> gpu_xcq -> primf_locator -> _hostData[j]; k< gpu -> gpu_xcq -> primf_locator -> _hostData[j+1]; k++){
                 tot_primfpb++;
@@ -711,14 +691,8 @@ int ntot_tpts=0;
 memset(tpoints,0, sizeof(int)*gpu -> gpu_xcq -> nbins);
 
 for(int i=0; i< gpu -> gpu_xcq -> nbins; i++){
-
-    int tpts = 0;
-    for(int j=0; j< gpu -> gpu_xcq -> bin_size; j++){
-        if(gpu -> gpu_xcq -> dweight -> _hostData[i*gpu -> gpu_xcq -> bin_size + j] > 0 ){
-            tpoints[i]++;
-            tpts++;
-        }
-    }
+    int tpts=gpu -> gpu_xcq -> bin_counter -> _hostData[i+1] - gpu -> gpu_xcq -> bin_counter -> _hostData[i];
+    tpoints[i]= tpts;
 
     if(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[i] > 0 ) ntot_tpts += tpts;
 }
@@ -728,7 +702,6 @@ XC_quadrature_type* mgpu_xcq = new XC_quadrature_type;
 
 // set properties
 mgpu_xcq -> nbins    = nbtr;  
-mgpu_xcq -> bin_size = MAX_POINTS_PER_CLUSTER;
 mgpu_xcq -> npoints  = ntot_tpts;
 
 mgpu_xcq -> gridx       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
@@ -737,7 +710,6 @@ mgpu_xcq -> gridz       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints)
 mgpu_xcq -> sswt        = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
 mgpu_xcq -> weight      = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
 mgpu_xcq -> gatm        = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
-mgpu_xcq -> dweight     = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 mgpu_xcq -> dweight_ssd = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
 
 mgpu_xcq -> bin_locator  = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
@@ -761,20 +733,16 @@ mgpu_xcq -> primf_locator -> _hostData[0] = 0;
 for(int obidx = 0; obidx < gpu -> gpu_xcq -> nbins; obidx++){
   if(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[obidx] > 0){
 
-    for(int i=0; i<mgpu_xcq -> bin_size; i++){
-      int oidx = obidx * mgpu_xcq -> bin_size + i;
-      if(gpu -> gpu_xcq -> dweight -> _hostData[oidx] > 0 ){
+    for(int oidx=gpu -> gpu_xcq -> bin_counter -> _hostData[obidx]; oidx < gpu -> gpu_xcq -> bin_counter -> _hostData[obidx+1]; ++oidx){
         mgpu_xcq -> gridx -> _hostData[nidx] = gpu -> gpu_xcq -> gridx -> _hostData [oidx];
         mgpu_xcq -> gridy -> _hostData[nidx] = gpu -> gpu_xcq -> gridy -> _hostData [oidx];
         mgpu_xcq -> gridz -> _hostData[nidx] = gpu -> gpu_xcq -> gridz -> _hostData [oidx];
         mgpu_xcq -> sswt -> _hostData[nidx] = gpu -> gpu_xcq -> sswt -> _hostData [oidx];
         mgpu_xcq -> weight -> _hostData[nidx] = gpu -> gpu_xcq -> weight -> _hostData [oidx];
         mgpu_xcq -> gatm -> _hostData[nidx] = gpu -> gpu_xcq -> gatm -> _hostData [oidx];
-        mgpu_xcq -> dweight -> _hostData[nidx] = gpu -> gpu_xcq -> dweight -> _hostData [oidx];
         mgpu_xcq -> dweight_ssd -> _hostData[nidx] = gpu -> gpu_xcq -> dweight_ssd -> _hostData [oidx];
         mgpu_xcq -> bin_locator -> _hostData[nidx] = nbidx;
         ++nidx;
-      }
     }
 
     // transfer basis function info, where bffb is the number of basis functions for bin. 
@@ -810,7 +778,7 @@ mgpu_xcq -> ntotpf = npfidx_ul;
 fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> ntotbf, gpu -> gpu_xcq -> ntotpf);
 */
 for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
-  fprintf(gpu->debugFile, " Repack XC data: original: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight= %i, dweight_ssd= %i \n", i, gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i], gpu -> gpu_xcq -> sswt  -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm   -> _hostData[i], gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
+  fprintf(gpu->debugFile, " Repack XC data: original: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight_ssd= %i \n", i, gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i], gpu -> gpu_xcq -> sswt  -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm   -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
 }
 
 for(int i=0; i <= gpu -> gpu_xcq -> nbins; i++){
@@ -837,7 +805,6 @@ SAFE_DELETE(gpu -> gpu_xcq -> gridz);
 SAFE_DELETE(gpu -> gpu_xcq -> sswt);
 SAFE_DELETE(gpu -> gpu_xcq -> weight);
 SAFE_DELETE(gpu -> gpu_xcq -> gatm);
-SAFE_DELETE(gpu -> gpu_xcq -> dweight);
 SAFE_DELETE(gpu -> gpu_xcq -> dweight_ssd);
 SAFE_DELETE(gpu -> gpu_xcq -> basf);
 SAFE_DELETE(gpu -> gpu_xcq -> primf);
@@ -849,7 +816,6 @@ gpu -> gpu_xcq -> npoints  = mgpu_xcq -> npoints;
 gpu -> gpu_xcq -> nbins    = mgpu_xcq -> nbins;
 gpu -> gpu_xcq -> ntotbf   = mgpu_xcq -> ntotbf;
 gpu -> gpu_xcq -> ntotpf   = mgpu_xcq -> ntotpf;
-gpu -> gpu_xcq -> bin_size = mgpu_xcq -> bin_size;
 
 gpu -> gpu_xcq -> gridx         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> gridy         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
@@ -857,7 +823,6 @@ gpu -> gpu_xcq -> gridz         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_x
 gpu -> gpu_xcq -> sswt          = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> weight        = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> gatm          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> dweight       = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> dweight_ssd   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> bin_locator   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
 gpu -> gpu_xcq -> basf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
@@ -872,7 +837,6 @@ memcpy(gpu -> gpu_xcq -> gridz -> _hostData, mgpu_xcq -> gridz -> _hostData, siz
 memcpy(gpu -> gpu_xcq -> sswt  -> _hostData, mgpu_xcq -> sswt  -> _hostData, sizeof(QUICKDouble) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> weight -> _hostData, mgpu_xcq -> weight -> _hostData, sizeof(QUICKDouble) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> gatm   -> _hostData, mgpu_xcq -> gatm   -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
-memcpy(gpu -> gpu_xcq -> dweight -> _hostData, mgpu_xcq -> dweight -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> dweight_ssd -> _hostData, mgpu_xcq -> dweight_ssd -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> bin_locator -> _hostData, mgpu_xcq -> bin_locator -> _hostData, sizeof(int) * gpu -> gpu_xcq -> npoints);
 memcpy(gpu -> gpu_xcq -> basf_locator -> _hostData, mgpu_xcq -> basf_locator -> _hostData, sizeof(int) * (gpu -> gpu_xcq -> nbins + 1));
@@ -890,7 +854,7 @@ fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of bins= %i, n
 fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, mgpu_xcq -> ntotbf, mgpu_xcq -> ntotpf);
 
 for(int i=0; i < mgpu_xcq -> npoints; i++){
-  fprintf(gpu->debugFile, " Repack XC data: new: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight= %i, dweight_ssd= %i \n", i, mgpu_xcq -> gridx -> _hostData[i], mgpu_xcq -> gridy -> _hostData[i], mgpu_xcq -> gridz -> _hostData[i], mgpu_xcq -> sswt  -> _hostData[i], mgpu_xcq -> weight -> _hostData[i], mgpu_xcq -> gatm   -> _hostData[i], mgpu_xcq -> dweight -> _hostData[i], mgpu_xcq -> dweight_ssd -> _hostData[i]);
+  fprintf(gpu->debugFile, " Repack XC data: new: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight_ssd= %i \n", i, mgpu_xcq -> gridx -> _hostData[i], mgpu_xcq -> gridy -> _hostData[i], mgpu_xcq -> gridz -> _hostData[i], mgpu_xcq -> sswt  -> _hostData[i], mgpu_xcq -> weight -> _hostData[i], mgpu_xcq -> gatm   -> _hostData[i], mgpu_xcq -> dweight_ssd -> _hostData[i]);
 }
 
 for(int i=0; i <= mgpu_xcq -> nbins; i++){
@@ -932,7 +896,6 @@ SAFE_DELETE(mgpu_xcq -> gridz);
 SAFE_DELETE(mgpu_xcq -> sswt);
 SAFE_DELETE(mgpu_xcq -> weight);
 SAFE_DELETE(mgpu_xcq -> gatm);
-SAFE_DELETE(mgpu_xcq -> dweight);
 SAFE_DELETE(mgpu_xcq -> dweight_ssd);
 SAFE_DELETE(mgpu_xcq -> basf);
 SAFE_DELETE(mgpu_xcq -> primf);
