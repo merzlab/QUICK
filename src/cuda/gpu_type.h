@@ -496,6 +496,7 @@ struct cuda_buffer_type {
     void Upload();      
     void Download();
     void Download(T* f90Data);
+    void DownloadSum(T* f90Data);
     
     void DeleteCPU();
     void DeleteGPU();
@@ -754,6 +755,21 @@ void cuda_buffer_type<T> :: Download(T* f90Data)
         for (size_t j = 0; j <_length2; j++) {
             index_f = j*_length+i;
             f90Data[index_f] = _hostData[index_c++];
+        }
+    }
+    PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE TO FORTRAN ARRAY")
+}
+
+template <typename T>
+void cuda_buffer_type<T> :: DownloadSum(T* f90Data)
+{
+    PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE TO FORTRAN ARRAY")
+    size_t index_c = 0;
+    size_t index_f;
+    for (size_t i = 0; i < _length; i++) {
+        for (size_t j = 0; j <_length2; j++) {
+            index_f = j*_length+i;
+            f90Data[index_f] += _hostData[index_c++];
         }
     }
     PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE TO FORTRAN ARRAY")
