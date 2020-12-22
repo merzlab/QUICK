@@ -1516,7 +1516,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
 }
 
 
-extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
+extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
 {
     
 #ifdef DEBUG
@@ -1529,24 +1529,13 @@ extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff)
     
     PRINTDEBUG("BEGIN TO UPLOAD GRAD")
     
-    gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
+    gpu -> grad = new cuda_buffer_type<QUICKDouble>(3 * gpu->natom);
     gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
-    gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
+
+    gpu -> grad -> DeleteGPU();
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
    
-    for (int i = 0; i<gpu->natom * 3; i++) {
-        
-        QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
-        
-        if ( gpu->grad->_hostData[i] <(QUICKDouble)0.0){
-            valUII = 0ull - valUII;
-        }
-        
-        gpu->gradULL ->_hostData[i] = valUII;
-    }
-    
     gpu -> gradULL -> Upload();
-    //gpu -> grad -> Upload();
     
     gpu -> gpu_cutoff -> gradCutoff = *gradCutoff;
     gpu -> gpu_sim.gradCutoff         = gpu -> gpu_cutoff -> gradCutoff;
@@ -2265,7 +2254,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         //libxc_cleanup(glinfo, nof_functionals);
 
-        gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
+        /*gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
         gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
         gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
         gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
@@ -2282,6 +2271,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         }
 
         gpu -> gradULL -> Upload();
+        */
 
         // calculate smem size
         gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
@@ -2307,7 +2297,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
           gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
         }
 
-        gpu -> grad -> Download(grad);
+        gpu -> grad -> DownloadSum(grad);
 
         delete gpu -> grad;
         delete gpu -> gradULL;
@@ -2364,10 +2354,11 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     PRINTDEBUG("COMPLETE KERNEL")
     
+    if(gpu -> gpu_sim.method == HF){
     
-    gpu -> gradULL -> Download();
+      gpu -> gradULL -> Download();
     
-    for (int i = 0; i< 3 * gpu->natom; i++) {
+      for (int i = 0; i< 3 * gpu->natom; i++) {
         QUICKULL valULL = gpu->gradULL->_hostData[i];
         QUICKDouble valDB;
         
@@ -2380,8 +2371,8 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
         }
         
         gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
+      }
     }
-    
     
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -2390,13 +2381,15 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     cudaEventRecord(start, 0);
 #endif
     
-    gpu -> grad -> Download(grad);
+    if(gpu -> gpu_sim.method == HF){
+
+      gpu -> grad -> DownloadSum(grad);
     
-    delete gpu -> grad;
-    delete gpu -> gradULL;
-    
-    if(gpu -> gpu_sim.method == HF) delete gpu->gpu_calculated->dense;
-    
+      delete gpu -> grad;
+      delete gpu -> gradULL;
+      delete gpu->gpu_calculated->dense;
+    }
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
