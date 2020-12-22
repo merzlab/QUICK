@@ -115,7 +115,6 @@ subroutine scf_gradient
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
-!   double precision:: tmp_grad(3*natom)
    include "mpif.h"
 #endif
 
@@ -284,10 +283,10 @@ endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
-!stop
 #ifdef MPIV
    call deallocate_quick_gradient()
 #endif
+
 !  Stop the timer and add up the total gradient times
    call cpu_time(timer_end%TGrad)
    timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
@@ -599,11 +598,11 @@ end subroutine get_kinetic_grad
 subroutine get_electron_replusion_grad
 
    use allmod
+   use quick_gradient_module
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   double precision :: tmpGrad(3*natom) 
   
 #ifdef MPIV
    include "mpif.h"
@@ -614,7 +613,6 @@ subroutine get_electron_replusion_grad
 !  (i.e. the multiplicative constants from the density matrix that 
 !  arise as these are both the exchange and correlation integrals.
 
-   tmpGrad = 0.0d0
 
    do II=1,jshell
       do JJ=II,jshell
@@ -640,15 +638,10 @@ subroutine get_electron_replusion_grad
 
       call gpu_upload_density_matrix(quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
-      call gpu_upload_grad(tmpGrad, quick_method%gradCutoff)
+      call gpu_upload_grad(quick_method%gradCutoff)
 
-      ! next function will compute the eri gradients store in tmpGrad and send
-      ! back
-      call gpu_grad(tmpGrad)
-
-      do i=1, 3*natom
-        quick_qm_struct%gradient(i) = quick_qm_struct%gradient(i) + tmpGrad(i)
-      enddo
+      ! next function will compute the eri gradients and add to gradient vector
+      call gpu_grad(quick_qm_struct%gradient)
 
    else
 #endif
