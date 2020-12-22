@@ -39,7 +39,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
                                   QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN);
-extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff);
+extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
 //Following methods weddre added by Madu Manathunga
