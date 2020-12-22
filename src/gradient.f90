@@ -390,8 +390,6 @@ subroutine get_oneen_grad
 !---------------------------------------------------------------------
 !  1) The derivative of the kinetic term
 !---------------------------------------------------------------------
-   call cpu_time(timer_begin%T1eGrad)
-
    call cpu_time(timer_begin%T1eTGrad)
 
    call get_kinetic_grad
