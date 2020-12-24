@@ -13,7 +13,7 @@ module quick_timer_module
 
     ! MPI timer data type
     integer MPI_timer_cumer_type,MPI_timer_type
-    parameter(TIMER_SIZE=18,TIMER_CUMER_SIZE=16)
+    parameter(TIMER_SIZE=32,TIMER_CUMER_SIZE=34)
 
     !timer type
     type quick_timer
@@ -105,7 +105,11 @@ module quick_timer_module
         implicit none
         integer i,IERROR,io
         double precision :: t_tot_dftop, t_tot_lb
+        
 #ifdef MPIV
+        double precision :: tst2e(mpisize), tstxc(mpisize), tst2egrad(mpisize), tstxcgrad(mpisize)
+        double precision :: tend2e(mpisize), tendxc(mpisize), tend2egrad(mpisize), tendxcgrad(mpisize)
+        double precision :: t2e(mpisize), txc(mpisize), t2egrad(mpisize), txcgrad(mpisize)
         include "mpif.h"
 #endif
         type (quick_timer) tmp_timer
@@ -114,6 +118,11 @@ module quick_timer_module
         !----------------------------------------------------
         ! For Master nodes or single process timing infomations
         !----------------------------------------------------
+
+#ifdef CUDA_MPIV
+    call get_mgpu_time()
+#endif
+
         if (master) then
             call PrtAct(io,"Output Timing Information")
             write (io,'("------------- TIMING ---------------")')
@@ -254,6 +263,46 @@ module quick_timer_module
         endif
 
         timer_cumer%TTotal=timer_end%TTotal-timer_begin%TTotal
+
+#ifdef MPIV
+
+  call MPI_GATHER(timer_begin%T2e,1,mpi_double_precision,tst2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_begin%TEx,1,mpi_double_precision,tstxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_begin%T2eGrad,1,mpi_double_precision,tst2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_begin%TExGrad,1,mpi_double_precision,tstxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+  call MPI_GATHER(timer_end%T2e,1,mpi_double_precision,tend2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_end%TEx,1,mpi_double_precision,tendxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_end%T2eGrad,1,mpi_double_precision,tend2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_end%TExGrad,1,mpi_double_precision,tendxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+  call MPI_GATHER(timer_cumer%T2e,1,mpi_double_precision,t2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_cumer%TEx,1,mpi_double_precision,txc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_cumer%T2eGrad,1,mpi_double_precision,t2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)  
+  call MPI_GATHER(timer_cumer%TExGrad,1,mpi_double_precision,txcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+  if(master) then
+    write (io,'(" ")')
+    write (io,'("----------- MPI TIMING -------------")')
+
+    do i=1, mpisize
+     write (io,'("| Rank =", I4,2x,"2e START =",F16.9,2x,"XC START =",F16.9,2x,"2e GRAD START =",F16.9,2x, &
+     "XC GRAD START =",F16.9)') i, tst2e(i), tstxc(i), tst2egrad(i), tstxcgrad(i)
+    enddo
+
+    do i=1, mpisize
+     write (io,'("| Rank =", I4,2x,"2e END   =",F16.9,2x,"XC END   =",F16.9,2x,"2e GRAD END   =",F16.9,2x, &
+     "XC GRAD END   =",F16.9)') i, tend2e(i), tendxc(i), tend2egrad(i), tendxcgrad(i)
+    enddo
+
+    do i=1, mpisize
+     write (io,'("| Rank =", I4,2x,"2e TIME  =",F16.9,2x,"XC TIME  =",F16.9,2x,"2e GRAD TIME  =",F16.9,2x, &
+     "XC GRAD TIME  =",F16.9)') i, t2e(i), txc(i), t2egrad(i), txcgrad(i) 
+    enddo
+  endif
+
+#endif
+
 
 ! Madu Manathunga blocked following block on 03/10/2020
 #ifdef MPIV
