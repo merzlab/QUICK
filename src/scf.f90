@@ -145,13 +145,9 @@ subroutine electdiis(jscf)
    !-------------- END MPI / ALL NODE -----------
 #endif
 
-   ! First, let's get 1e opertor which only need 1-time calculation
-   ! and store them in oneElecO and fetch it every scf time.
-   call get1e(oneElecO)
-
 #ifdef MPIV
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -180,6 +176,7 @@ subroutine electdiis(jscf)
    endif
 #endif
 
+   bCalc1e = .true.
    diisdone = .false.
    deltaO = .false.
    idiis = 0
@@ -216,7 +213,7 @@ subroutine electdiis(jscf)
       if (quick_method%SEDFT) then
          call sedftoperator ! Semi-emperical DFT Operator
       else
-         call scf_operator(oneElecO, deltaO)
+         call scf_operator(deltaO)
       endif
 
       if (quick_method%debug)  call debug_SCF(jscf)
