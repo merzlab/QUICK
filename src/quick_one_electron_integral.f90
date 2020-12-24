@@ -1782,10 +1782,11 @@ end subroutine get1eEnergy
 !------------------------------------------------
 ! get1e
 !------------------------------------------------
-subroutine get1e(oneElecO)
+subroutine get1e()
    use allmod
+   use quick_scf_module
+
    implicit double precision(a-h,o-z)
-   double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
 !#ifdef MPIV
 !   include "mpif.h"
@@ -1803,7 +1804,7 @@ subroutine get1e(oneElecO)
 !#endif
 
      if (master) then
-
+       if(bCalc1e) then
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
@@ -1841,7 +1842,13 @@ subroutine get1e(oneElecO)
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
-      endif
+         bCalc1e=.false.
+       else
+         quick_qm_struct%o(:,:)=oneElecO(:,:)
+       endif
+
+       if (quick_method%printEnergy) call get1eEnergy()
+     endif
 !#ifdef MPIV
 !   else
 !
