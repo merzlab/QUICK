@@ -196,13 +196,7 @@ endif
 !---------------------------------------------------------------------
 
    if (quick_method%DFT) then
-#ifdef MPIV
-   if(master) then
-#endif
       call cpu_time(timer_begin%TExGrad)
-#ifdef MPIV
-   endif
-#endif
 
       call get_xc_grad
 
@@ -210,21 +204,15 @@ endif
       call mgpu_get_xcrb_time(timer_cumer%TDFTrb)
 #endif
 
-#ifdef MPIV
-   if(master) then
-#endif
       call cpu_time(timer_end%TExGrad)
       timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
-#ifdef MPIV
-   endif
-#endif
 
    endif
 
 
 #ifdef MPIV
 
-   if(master) call cpu_time(timer_begin%TGradred) 
+   call cpu_time(timer_begin%TGradred) 
 
 ! sum up all gradient contributions
    call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
@@ -233,12 +221,12 @@ endif
    if(master) then
      quick_qm_struct%gradient(:) = tmp_grad(:)
      if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
-
-
-     call cpu_time(timer_end%TGradred)
-
-     timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
    endif
+
+   call cpu_time(timer_end%TGradred)
+
+   timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
+
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -389,6 +377,9 @@ subroutine get_oneen_grad
 !---------------------------------------------------------------------
 !  1) The derivative of the kinetic term
 !---------------------------------------------------------------------
+
+   call cpu_time(timer_begin%T1eGrad)
+
    call cpu_time(timer_begin%T1eTGrad)
 
    call get_kinetic_grad
