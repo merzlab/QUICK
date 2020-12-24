@@ -360,7 +360,9 @@ void getGrad(_gpu_type gpu)
         //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
     }
-   
+
+    cudaDeviceSynchronize();   
+
 //    nvtxRangePop();
 
 }
