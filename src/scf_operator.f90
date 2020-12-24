@@ -14,7 +14,7 @@
 !  11/27/2001 Ed Brothers: wrote the original code
 !-------------------------------------------------------
 
-subroutine scf_operator(oneElecO, deltaO)
+subroutine scf_operator(deltaO)
 !-------------------------------------------------------
 !  The purpose of this subroutine is to form the operator matrix
 !  for a full Hartree-Fock/DFT calculation, i.e. the Fock matrix.  The
@@ -25,12 +25,14 @@ subroutine scf_operator(oneElecO, deltaO)
 !  This code now also does all the HF energy calculation. Ed.
 !-------------------------------------------------------
    use allmod
+   use quick_scf_module
+
    implicit none
 
 #ifdef MPIV
    include "mpif.h"
 #endif
-   double precision oneElecO(nbasis,nbasis)
+!   double precision oneElecO(nbasis,nbasis)
    logical :: deltaO
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -54,21 +56,8 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Step 1. evaluate 1e integrals
 !-----------------------------------------------------------------
 
-#ifdef MPIV
-   if(master) then
-#endif
-
-!  fetch 1e-integral from 1st time
-   quick_qm_struct%o(:,:) = oneElecO(:,:)
-
-!  Now calculate kinetic and attraction energy first.
-   if (quick_method%printEnergy) call get1eEnergy()
-
-!  Sum the ECP integrals to the partial Fock matrix
-   if (quick_method%ecp) call ecpoperator()
-
-#ifdef MPIV
-   endif
+#if !defined CUDA && !defined CUDA_MPIV
+   call get1e()
 #endif
 
 !  if only calculate operation difference
