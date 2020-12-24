@@ -55,6 +55,7 @@ void delete_pteval(bool devOnly);
 
 // c interface [gpu_get2e]
 extern "C" void gpu_get2e_(QUICKDouble* o);
+extern "C" void get1e_();
 //extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
 extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
 
