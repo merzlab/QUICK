@@ -1099,7 +1099,7 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     
     PRINTDEBUG("BEGIN TO UPLOAD O MATRIX")
     
-    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(o,      gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
@@ -1111,6 +1111,7 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
      an comprimise way is to multiple a very large number (OSCALE), first and divided it
      after atomic operator.
      */
+    /*
     for (int i = 0; i<gpu->nbasis; i++) {
         for (int j = 0; j<gpu->nbasis; j++) {
             QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
@@ -1123,6 +1124,7 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
             LOC2( gpu->gpu_calculated->oULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
         }
     }
+    */
     
     //    gpu -> gpu_calculated -> o        -> Upload();
     gpu -> gpu_calculated -> dense    -> Upload();
@@ -2678,7 +2680,10 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
  
     PRINTDEBUG("COMPLETE KERNEL")
     gpu -> gpu_calculated -> oULL -> Download();
+
     
+    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);    
+
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
             QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
@@ -2703,7 +2708,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     cudaEventRecord(start, 0);
 #endif
     
-    gpu -> gpu_calculated -> o    -> Download(o);
+    gpu -> gpu_calculated -> o    -> DownloadSum(o);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -2721,7 +2726,8 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
       delete gpu->gpu_calculated->o;
       delete gpu->gpu_calculated->dense;
       delete gpu->gpu_calculated->oULL;
-    }    
+    }
+        
 
     delete gpu->gpu_cutoff->cutMatrix;
     
@@ -2806,7 +2812,7 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
             LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
         }
     }
-    gpu -> gpu_calculated -> o    -> Download(o);
+    gpu -> gpu_calculated -> o    -> DownloadSum(o);
     QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
     QUICKDouble valDB;
 
