@@ -86,14 +86,8 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Delta density matrix cutoff
    call densityCutoff()
 
-#ifdef MPIV
-   if(master) then
-#endif
 !  Start the timer for 2e-integrals
    call cpu_time(timer_begin%T2e)
-#ifdef MPIV
-   endif
-#endif
 
 #if defined CUDA || defined CUDA_MPIV
    if (quick_method%bCUDA) then
@@ -172,18 +166,11 @@ subroutine scf_operator(oneElecO, deltaO)
 !  recover density if calculate difference
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
-#ifdef MPIV
-   if (master) then
-#endif
-
 !  Terminate the timer for 2e-integrals
    call cpu_time(timer_end%T2e)
 
 !  add the time to cumer
    timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e
-#ifdef MPIV
-   endif
-#endif
 
 !-----------------------------------------------------------------
 !  Step 3. If DFT, evaluate the exchange/correlation contribution 
@@ -192,14 +179,8 @@ subroutine scf_operator(oneElecO, deltaO)
 
    if (quick_method%DFT) then
 
-#ifdef MPIV
-   if(master) then
-#endif
 !  Start the timer for exchange correlation calculation
       call cpu_time(timer_begin%TEx)
-#ifdef MPIV
-   endif
-#endif
 
 !  Calculate exchange correlation contribution & add to operator    
       call get_xc
@@ -207,34 +188,23 @@ subroutine scf_operator(oneElecO, deltaO)
 !  Remember the operator is symmetric
       call copySym(quick_qm_struct%o,nbasis)
 
-#ifdef MPIV
-   if(master) then
-#endif
 
 !  Stop the exchange correlation timer
       call cpu_time(timer_end%TEx)
 
 !  Add time total time
       timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
-#ifdef DEBUG
-      if (quick_method%debug) write(iOutFile,*) "XC time for this step (s):", timer_end%TEx-timer_begin%TEx
-#endif
    endif
-
-#ifdef MPIV
-   endif
-#endif
 
 #ifdef MPIV
 !  MPI reduction operations
 
-   if(master) call cpu_time(timer_begin%TEred)
+   call cpu_time(timer_begin%TEred)
 
    if (quick_method%DFT) then
    call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
    call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
    call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   
 
    if(master) then
      quick_qm_struct%Exc = Excsum
@@ -249,11 +219,10 @@ subroutine scf_operator(oneElecO, deltaO)
    if(master) then
      quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
      quick_qm_struct%Eel    = Eelsum
+   endif
 
    call cpu_time(timer_end%TEred)
    timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
-
-   endif
 
 #endif
 
