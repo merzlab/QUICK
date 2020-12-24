@@ -73,14 +73,19 @@ subroutine finalize(io,status,option)
 !    call timer_output(io)
 
     !-------------------MPI/MASTER---------------------------------------
-    master_finalize:if (master) then
+    if (master) then
         if (status /=0) then
             call PrtDate(io,'Error Termination. Task Failed on:')
-        else
-            call timer_output(io)
+        endif
+    endif
+
+    call timer_output(io)
+       
+    if (master) then
+        if (status ==0) then
             call PrtDate(io,'Normal Termination. Task Finished on:')
         endif
-    endif master_finalize
+    endif 
     !-------------------- End MPI/MASTER ---------------------------------
 
 #ifdef MPIV
