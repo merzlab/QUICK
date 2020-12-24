@@ -44,6 +44,8 @@ module quick_scf_module
 
     double precision, allocatable, dimension(:,:,:) :: alloperator
 
+    logical :: bCalc1e = .false.
+
 !  end type quick_scf_type
 
 !  type (quick_scf_type), save :: quick_scf
