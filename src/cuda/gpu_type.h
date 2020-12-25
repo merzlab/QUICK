@@ -494,6 +494,7 @@ struct cuda_buffer_type {
     
     // use pinned data communication method. Upload and Download from host to device
     void Upload();      
+    void UploadAsync();
     void Download();
     void Download(T* f90Data);
     void DownloadSum(T* f90Data);
@@ -729,6 +730,19 @@ void cuda_buffer_type<T> :: Upload()
 
     cudaError_t status;
     status = cudaMemcpy(_devData,_hostData,_length*_length2*sizeof(T),cudaMemcpyHostToDevice);
+    PRINTERROR(status, " cudaMemcpy cuda_buffer_type :: Upload failed!");
+    PRINTDEBUG("<<FINISH UPLOADING TEMPLATE")
+
+}
+
+template <typename T>
+void cuda_buffer_type<T> :: UploadAsync()
+{
+
+    PRINTDEBUG(">>BEGIN TO UPLOAD TEMPLATE")
+
+    cudaError_t status;
+    status = cudaMemcpyAsync(_devData,_hostData,_length*_length2*sizeof(T),cudaMemcpyHostToDevice);
     PRINTERROR(status, " cudaMemcpy cuda_buffer_type :: Upload failed!");
     PRINTDEBUG("<<FINISH UPLOADING TEMPLATE")
 
