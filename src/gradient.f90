@@ -185,6 +185,10 @@ endif
 !---------------------------------------------------------------------
 !  3) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
    call cpu_time(timer_begin%T2eGrad)
 
    call get_electron_replusion_grad
@@ -194,6 +198,9 @@ endif
 !---------------------------------------------------------------------
 !  4) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
    if (quick_method%DFT) then
       call cpu_time(timer_begin%TExGrad)
@@ -211,6 +218,8 @@ endif
 
 
 #ifdef MPIV
+
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    call cpu_time(timer_begin%TGradred) 
 
