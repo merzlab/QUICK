@@ -75,6 +75,10 @@ subroutine scf_operator(deltaO)
 !  Delta density matrix cutoff
    call densityCutoff()
 
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
 !  Start the timer for 2e-integrals
    call cpu_time(timer_begin%T2e)
 
@@ -166,6 +170,10 @@ subroutine scf_operator(deltaO)
 !          to the operator
 !-----------------------------------------------------------------
 
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
    if (quick_method%DFT) then
 
 !  Start the timer for exchange correlation calculation
@@ -187,6 +195,8 @@ subroutine scf_operator(deltaO)
 
 #ifdef MPIV
 !  MPI reduction operations
+
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    call cpu_time(timer_begin%TEred)
 
