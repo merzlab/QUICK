@@ -208,7 +208,8 @@ endif
       call get_xc_grad
 
 #ifdef CUDA_MPIV
-      call mgpu_get_xcrb_time(timer_cumer%TDFTrb)
+      call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
+      write(*,*) "tdftgp", timer_cumer%TDFTpg
 #endif
 
       call cpu_time(timer_end%TExGrad)
