@@ -40,6 +40,7 @@ struct gpu_timer_type{
    double                           t_2elb; // time for eri load balancing in mgpu version
    double                           t_xclb; // time for xc load balancing in mgpu version
    double                           t_xcrb; // time for xc load re-balancing in mgpu version
+   double                           t_xcpg; // grid pruning time
 
 };
 
