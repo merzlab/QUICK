@@ -13,10 +13,11 @@ module quick_timer_module
 
     ! MPI timer data type
     integer MPI_timer_cumer_type,MPI_timer_type
-    parameter(TIMER_SIZE=32,TIMER_CUMER_SIZE=34)
+    parameter(TIMER_SIZE=33,TIMER_CUMER_SIZE=36)
 
     !timer type
     type quick_timer
+        double precision:: TInitialize=0.0d0
         double precision:: TIniGuess=0.0
         double precision:: TTotal=0.0d0
         double precision:: TDiag=0.0d0
@@ -52,6 +53,7 @@ module quick_timer_module
     end type quick_timer
 
     type quick_timer_cumer
+        double precision:: TInitialize=0.0d0
         double precision:: TTotal=0.0d0
         double precision:: TDiag=0.0d0
         double precision:: TMP2=0.0d0
@@ -83,6 +85,7 @@ module quick_timer_module
         double precision:: TDip=0.0d0    !Time for calculating dipoles
         double precision:: TDFTlb=0.0d0     !Time for xc load balancing in mgpu version
         double precision:: TDFTrb=0.0d0    !Time for xc load re-balancing in mgpu version
+        double precision:: TDFTpg=0.0d0    !Time for XC grid pruning
         double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
         double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
         double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
@@ -127,6 +130,8 @@ module quick_timer_module
             call PrtAct(io,"Output Timing Information")
             write (io,'("------------- TIMING ---------------")')
             ! Initial Guess Timing
+            write (io,'("| INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TInitialize, &
+                timer_cumer%TInitialize/(timer_end%TTotal-timer_begin%TTotal)*100
             write (io,'("| INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
                 timer_cumer%TIniGuess/(timer_end%TTotal-timer_begin%TTotal)*100
             if(quick_method%DFT) then
@@ -161,7 +166,9 @@ module quick_timer_module
                 write (io,'("| ",6x,"DFT LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftlb, &
                 timer_cumer%tdftlb/(timer_end%TTotal-timer_begin%TTotal)*100
                 if (quick_method%opt .or. quick_method%grad ) then
-                   write (io,'("| ",6x,"DFT LOAD REBALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftrb, &
+                   write (io,'("| ",6x,"DFT GRID REPRUNING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftpg, &
+                   timer_cumer%tdftpg/(timer_end%TTotal-timer_begin%TTotal)*100
+                   write (io,'("| ",12x,"DFT LOAD REBALANCING TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%tdftrb, &
                    timer_cumer%tdftrb/(timer_end%TTotal-timer_begin%TTotal)*100
                 endif
             endif
@@ -411,17 +418,19 @@ module quick_timer_module
         use quick_mpi_module
         implicit none
         integer :: IERROR
-        double precision :: tsum_2elb, tsum_xclb, tsum_xcrb
+        double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
         include "mpif.h"
 
         call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
         call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
         call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTpg, tsum_xcpg, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
 
         if(master) then
           timer_cumer%T2elb=tsum_2elb
           timer_cumer%TDFTlb=tsum_xclb
           timer_cumer%TDFTrb=tsum_xcrb
+          timer_cumer%TDFTpg=tsum_xcpg
         endif
     end subroutine get_mgpu_time
 
