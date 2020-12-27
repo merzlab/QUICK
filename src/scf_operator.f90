@@ -56,9 +56,9 @@ subroutine scf_operator(deltaO)
 !  Step 1. evaluate 1e integrals
 !-----------------------------------------------------------------
 
-#if !defined CUDA && !defined CUDA_MPIV
+!#if !defined CUDA && !defined CUDA_MPIV
    call get1e()
-#endif
+!#endif
 
 !  if only calculate operation difference
    if (deltaO) then
@@ -159,6 +159,10 @@ subroutine scf_operator(deltaO)
 !  recover density if calculate difference
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
 !  Terminate the timer for 2e-integrals
    call cpu_time(timer_end%T2e)
 
@@ -185,6 +189,10 @@ subroutine scf_operator(deltaO)
 !  Remember the operator is symmetric
       call copySym(quick_qm_struct%o,nbasis)
 
+
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
 !  Stop the exchange correlation timer
       call cpu_time(timer_end%TEx)
