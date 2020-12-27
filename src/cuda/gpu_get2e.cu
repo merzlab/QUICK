@@ -327,7 +327,7 @@ void get2e(_gpu_type gpu)
     }
 #endif 
 
-    get1e_();
+//    get1e_();
 
     cudaDeviceSynchronize();
 //    nvtxRangePop();
