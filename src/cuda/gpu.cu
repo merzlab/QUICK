@@ -1627,6 +1627,13 @@ void prune_grid_sswgrad(){
 
         PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
 
+        cudaEvent_t t_startp, t_endp;
+        float t_timep;
+        cudaEventCreate(&t_startp);
+        cudaEventCreate(&t_endp);
+        cudaEventRecord(t_startp, 0);
+
+
         gpu -> gpu_xcq -> dweight_ssd -> Download();
         gpu -> gpu_xcq -> exc -> Download();
 
@@ -1752,6 +1759,15 @@ void prune_grid_sswgrad(){
         free(tmp_exc);
         free(tmp_quadwt);
         free(tmp_gatm);
+
+        cudaEventRecord(t_endp, 0);
+        cudaEventSynchronize(t_endp);
+        cudaEventElapsedTime(&t_timep, t_startp, t_endp);
+
+        gpu -> timer -> t_xcpg += (double) t_timep/1000;
+        cudaEventDestroy(t_startp);
+        cudaEventDestroy(t_endp);
+
 }	
 
 
@@ -1988,28 +2004,28 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> exc = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 
 
-	gpu -> gpu_xcq -> gridx -> Upload();
-	gpu -> gpu_xcq -> gridy -> Upload();
-	gpu -> gpu_xcq -> gridz -> Upload();
-	gpu -> gpu_xcq -> sswt -> Upload();
-	gpu -> gpu_xcq -> weight -> Upload();
-	gpu -> gpu_xcq -> gatm -> Upload();
-        gpu -> gpu_xcq -> dweight_ssd -> Upload();
-	gpu -> gpu_xcq -> basf -> Upload();
-	gpu -> gpu_xcq -> primf -> Upload();
-        gpu -> gpu_xcq -> bin_locator -> Upload();
-	gpu -> gpu_xcq -> basf_locator -> Upload();
-	gpu -> gpu_xcq -> primf_locator -> Upload();
-	gpu -> gpu_basis -> sigrad2 -> Upload();
-	gpu -> gpu_xcq -> densa -> Upload(); 
-	gpu -> gpu_xcq -> densb -> Upload();
-	gpu -> gpu_xcq -> gax -> Upload();
-	gpu -> gpu_xcq -> gbx -> Upload();
-	gpu -> gpu_xcq -> gay -> Upload();
-	gpu -> gpu_xcq -> gby -> Upload();
-	gpu -> gpu_xcq -> gaz -> Upload();
-	gpu -> gpu_xcq -> gbz -> Upload();
-	gpu -> gpu_xcq -> exc -> Upload();
+	gpu -> gpu_xcq -> gridx -> UploadAsync();
+	gpu -> gpu_xcq -> gridy -> UploadAsync();
+	gpu -> gpu_xcq -> gridz -> UploadAsync();
+	gpu -> gpu_xcq -> sswt -> UploadAsync();
+	gpu -> gpu_xcq -> weight -> UploadAsync();
+	gpu -> gpu_xcq -> gatm -> UploadAsync();
+        gpu -> gpu_xcq -> dweight_ssd -> UploadAsync();
+	gpu -> gpu_xcq -> basf -> UploadAsync();
+	gpu -> gpu_xcq -> primf -> UploadAsync();
+        gpu -> gpu_xcq -> bin_locator -> UploadAsync();
+	gpu -> gpu_xcq -> basf_locator -> UploadAsync();
+	gpu -> gpu_xcq -> primf_locator -> UploadAsync();
+	gpu -> gpu_basis -> sigrad2 -> UploadAsync();
+	gpu -> gpu_xcq -> densa -> UploadAsync(); 
+	gpu -> gpu_xcq -> densb -> UploadAsync();
+	gpu -> gpu_xcq -> gax -> UploadAsync();
+	gpu -> gpu_xcq -> gbx -> UploadAsync();
+	gpu -> gpu_xcq -> gay -> UploadAsync();
+	gpu -> gpu_xcq -> gby -> UploadAsync();
+	gpu -> gpu_xcq -> gaz -> UploadAsync();
+	gpu -> gpu_xcq -> gbz -> UploadAsync();
+	gpu -> gpu_xcq -> exc -> UploadAsync();
 
 
         gpu -> gpu_sim.npoints	= gpu -> gpu_xcq -> npoints;
