@@ -132,7 +132,10 @@
     !allocate essential variables
     call alloc(quick_molspec)
     if (quick_method%MFCC) call allocate_MFCC()
-    
+   
+    call cpu_time(timer_end%TInitialize)
+    timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
+  
     ! Then do inital guess
     call cpu_time(timer_begin%TIniGuess)
     
