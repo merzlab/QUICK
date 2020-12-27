@@ -44,6 +44,8 @@ subroutine initialize1(ierr)
    ierr=0
    call cpu_time(timer_begin%TTotal) !Trigger time counter
 
+   call cpu_time(timer_begin%Tinitialize) !Trigger time counter
+
    return
 
 end subroutine initialize1
