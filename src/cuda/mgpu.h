@@ -943,9 +943,10 @@ extern "C" void mgpu_get_xclb_time_(double *t_xclb){
 
 }
 
-extern "C" void mgpu_get_xcrb_time_(double* t_xcrb){
+extern "C" void mgpu_get_xcrb_time_(double* t_xcrb, double* t_xcpg){
 
   *t_xcrb = gpu -> timer -> t_xcrb;
+  *t_xcpg = gpu -> timer -> t_xcpg;
 
 }
 
