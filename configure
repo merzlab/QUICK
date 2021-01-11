@@ -265,7 +265,7 @@ patch_seperator='.'
 version_string="[0-9]{1,4}.[0-9]{1,4}$patch_seperator[0-9]{1,4}"
 
 # pgi compilers use a different versioning output
-if [ "$fort_search" = 'pgfortran' ]; then
+if [ "$fort_search" = 'pgfortran' ] || [ "$fort_search" = 'nvfortran' ]; then
   patch_seperator='-'
   version_string='[0-9]{1,4}.[0-9]{1,4}-[0-9]{1,4}'
   info_option='--version'
@@ -279,8 +279,8 @@ fort_version_minor=''
 fort_version_patch=''
 fort_search_string="$fort_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
-if [ "$fort_search" = 'pgfortran' ]; then
+# pgi & nvidia compilers use a different version output
+if [ "$fort_search" = 'pgfortran' ] || [ "$fort_search" = 'nvfortran' ]; then
   fort_search_string="$fort_search\s$version_string"
 fi
 
@@ -315,8 +315,8 @@ cc_version_minor=''
 cc_version_patch=''
 cc_search_string="$cc_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
-if [ "$cc_search" = 'pgcc' ]; then
+# pgi & nvidia compilers use a different version output
+if [ "$cc_search" = 'pgcc' ] || [ "$cc_search" = 'nvc' ]; then
   cc_search_string="$cc_search\s$version_string"
 fi
 
@@ -353,10 +353,15 @@ cxx_version_minor=''
 cxx_version_patch=''
 cxx_search_string="$cxx_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
+# pgi & nvidia compilers use a different version output
 if [ "$cxx_search" = 'pgc++' ]; then
   cxx_search_string="pgc\+\+\s$version_string"
 fi
+
+if [ "$cxx_search" = 'nvc++' ]; then
+  cxx_search_string="nvc\+\+\s$version_string"
+fi
+
 
 cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cxx_search_string"`
 
