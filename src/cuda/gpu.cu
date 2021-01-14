@@ -1698,7 +1698,7 @@ void prune_grid_sswgrad(){
 }	
 
 
-void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int count){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, double DMCutoff,int count){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
 
@@ -1723,7 +1723,7 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
         gpu -> gpu_sim.gridz    = gpu -> gpu_xcq -> gridz -> _devData;
 	gpu -> gpu_sim.sigrad2  = gpu->gpu_basis->sigrad2->_devData;
 
-	gpu -> gpu_cutoff -> DMCutoff   = 1E-9; //*DMCutoff;
+	gpu -> gpu_cutoff -> DMCutoff   = DMCutoff;
         gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
 
 	//Define cfweight and pfweight arrays seperately and uplaod to gpu until we solve the problem with atomicAdd
