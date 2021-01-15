@@ -49,8 +49,10 @@ int getAdjustment(int mpisize, int mpirank, int count){
   MPI_Barrier(MPI_COMM_WORLD);
   // broadcast ptcount array
   for(int i=0; i<mpisize; ++i) MPI_Bcast(&ptcount[i], 1, MPI_INT, i, MPI_COMM_WORLD);
- 
+
+#ifdef DEBUG 
   if(master) cout << "mpirank= "<<mpirank << " init array:" << endl;
+#endif
 
   for(int i=0; i<mpisize; ++i)
     cout << ptcount[i] << " ";
@@ -65,19 +67,22 @@ int getAdjustment(int mpisize, int mpirank, int count){
 
   int average = (int) sum/mpisize;   
 
+#ifdef DEBUG
   if(master) cout << "mpirank= "<< mpirank << " sum= " << sum << " average= " << average << endl;  
 
   if(master) cout << "mpirank= "<< mpirank << " discrepencies:" << endl;
-  
+#endif  
+
   for(int i=0; i<mpisize; ++i)
     residuals[i]=ptcount[i]-average;
-
+#ifdef DEBUG
   if(master){
     for(int i=0; i<mpisize; ++i) cout << residuals[i] << " ";
     cout << endl; 
 
     cout << "mpirank= "<< mpirank << " distributing evenly:" << endl;
   }
+#endif
 
   bool done=false;
 
@@ -106,6 +111,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
     }
   }
 
+#ifdef DEBUG
   if(master){
     for(int i=0; i<mpisize; ++i) cout << residuals[i] << " ";
     cout << endl;
@@ -118,6 +124,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
 
    cout << "mpirank= "<< mpirank << " distributing the remainder" << endl;
  }
+#endif
 
 // add the remainder to positive ones
 
@@ -136,6 +143,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
     }
   }
  
+#ifdef DEBUG
   if(master){
     for(int i=0; i<mpisize; ++i) cout << residuals[i] << " ";
     cout << endl;
@@ -148,6 +156,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
 
    cout << "mpirank= "<< mpirank << " Reevaulating the strategy:" << endl;
  }
+#endif
 // Reevaluate the distribution strategy
   for(int i=0; i<mpisize; ++i){
     for(int j=0; j<mpisize; ++j){
@@ -186,7 +195,9 @@ int getAdjustment(int mpisize, int mpirank, int count){
   for(int i=0;i<mpisize;++i) loss += distMatrix[mpirank][i];
   for(int i=0;i<mpisize;++i) gain += distMatrix[i][mpirank];
 
+#ifdef DEBUG
   if(master) cout << "mpirank= " << mpirank<< " net gain= "<< gain-loss << " adjusted size= "<< count-gain-loss << endl;
+#endif
 
   // deallocate memory
   delete [] residuals;
