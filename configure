@@ -1101,7 +1101,7 @@ EOF
 cat > "$quick_prefix/quick.rc" << EOF
 export QUICK_INSTALL=$quick_prefix
 export QUICK_BASIS=$quick_prefix/basis
-export PATH=$quick_prefix/bin:$PATH
+export PATH=$quick_prefix/bin:\$PATH
 EOF
 
 if [ "$shared" = 'yes' ]; then
@@ -1119,7 +1119,7 @@ for buildtype in $buildtypes; do
 done
 
 cat >> "$quick_prefix/quick.rc" << EOF
-export LD_LIBRARY_PATH=$libpaths$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
 EOF
 fi
 
