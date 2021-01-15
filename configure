@@ -1135,12 +1135,13 @@ echo ""
 echo  "Next steps:"
 echo  "          Run 'make' to build QUICK."
 
-if [ "$testtype" = 'installtest' ]; then
+if [ "$aminstall" = "true" ]; then
+  echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+elif [ "$testtype" = 'installtest' ]; then
   echo  "          Run 'make install' to install executable/s, libraries and header files in $quick_prefix."
 fi
 
-echo  "          Run 'make test' to verify the executables."
-
-if [ "$aminstall" = "true" ]; then
-echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+if [ "$aminstall" = "false" ]; then
+  echo  "          Run 'make test' to verify the executables."
 fi
+
