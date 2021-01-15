@@ -504,8 +504,6 @@ void mgpu_xc_tpbased_greedy_distribute(){
 
     }
 
-    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
-
 #ifdef DEBUG
 
     // print information for debugging
@@ -645,8 +643,6 @@ void mgpu_xc_pbased_greedy_distribute(){
         mpi_xcflags[mincore][ptpf_pb[i].x] = 1;
     }
 
-
-    printf(" XC Greedy Distribute GPU: %i number of points = %i point-primitive product= %i \n", gpu -> mpirank, tpts_pcore[gpu -> mpirank], ptpf_pcore[gpu -> mpirank]);
 
 //#ifdef DEBUG
 
@@ -844,8 +840,6 @@ memcpy(gpu -> gpu_xcq -> primf_locator -> _hostData, mgpu_xcq -> primf_locator -
 memcpy(gpu -> gpu_xcq -> basf -> _hostData, mgpu_xcq -> basf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotbf);
 memcpy(gpu -> gpu_xcq -> primf -> _hostData, mgpu_xcq -> primf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotpf);
 
-printf(" Repack XC data for GPU: new: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, mgpu_xcq -> nbins, mgpu_xcq -> npoints);
-printf(" Repack XC data for GPU: new: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, mgpu_xcq -> ntotbf, mgpu_xcq -> ntotpf);
 
 #ifdef DEBUG
 // print information for debugging
