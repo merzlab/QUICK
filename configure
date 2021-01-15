@@ -1096,6 +1096,34 @@ modfolder=$QUICK_HOME/src/modules
 EOF
 
 #  !---------------------------------------------------------------------!
+#  ! Generate quick.rc in install directory                              !
+#  !---------------------------------------------------------------------!
+cat > "$quick_prefix/quick.rc" << EOF
+export QUICK_INSTALL=$quick_prefix
+export QUICK_BASIS=$quick_prefix/basis
+export PATH=$quick_prefix/bin:$PATH
+EOF
+
+if [ "$shared" = 'yes' ]; then
+libpaths=''
+libpath=''
+
+if [ "$testtype" = 'installtest' ]; then
+  libpath="$quick_prefix/lib"
+else
+  libpath="$quick_prefix/build/lib"
+fi
+
+for buildtype in $buildtypes; do
+  libpaths="$libpath/$buildtype:$libpaths"
+done
+
+cat >> "$quick_prefix/quick.rc" << EOF
+export LD_LIBRARY_PATH=$libpaths$LD_LIBRARY_PATH
+EOF
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
