@@ -1626,13 +1626,13 @@ void prune_grid_sswgrad(){
 
 
         PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
-
+#ifdef CUDA_MPIV
         cudaEvent_t t_startp, t_endp;
         float t_timep;
         cudaEventCreate(&t_startp);
         cudaEventCreate(&t_endp);
         cudaEventRecord(t_startp, 0);
-
+#endif
 
         gpu -> gpu_xcq -> dweight_ssd -> Download();
         gpu -> gpu_xcq -> exc -> Download();
@@ -1760,6 +1760,7 @@ void prune_grid_sswgrad(){
         free(tmp_quadwt);
         free(tmp_gatm);
 
+#ifdef CUDA_MPIV
         cudaEventRecord(t_endp, 0);
         cudaEventSynchronize(t_endp);
         cudaEventElapsedTime(&t_timep, t_startp, t_endp);
@@ -1767,6 +1768,7 @@ void prune_grid_sswgrad(){
         gpu -> timer -> t_xcpg += (double) t_timep/1000;
         cudaEventDestroy(t_startp);
         cudaEventDestroy(t_endp);
+#endif
 
 }	
 
@@ -1899,7 +1901,7 @@ void print_uploaded_dft_info(){
     fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight_ssd=%i \n",i,
     gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i],
     gpu -> gpu_xcq -> sswt -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm -> _hostData[i],
-    gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
+    gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
   }
 
   PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS")
