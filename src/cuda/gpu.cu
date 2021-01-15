@@ -1690,6 +1690,9 @@ void prune_grid_sswgrad(){
 
         gpu -> timer -> t_xcrb += (double) t_time/1000;
 
+        cudaEventDestroy(t_start);
+        cudaEventDestroy(t_end);
+
 #endif
 
          gpu -> gpu_xcq -> npoints_ssd = count;
@@ -1704,6 +1707,8 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
 
+        cudaEventCreate(&t_start);
+        cudaEventCreate(&t_end);
         cudaEventRecord(t_start, 0);
          
         sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
@@ -1766,6 +1771,7 @@ void prune_grid_sswgrad(){
         cudaEventElapsedTime(&t_timep, t_startp, t_endp);
 
         gpu -> timer -> t_xcpg += (double) t_timep/1000;
+
         cudaEventDestroy(t_startp);
         cudaEventDestroy(t_endp);
 #endif
