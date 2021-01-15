@@ -177,7 +177,6 @@ subroutine fullx
    nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
 #endif
    call cpu_time(t2)
-   write(*,*) "rhost time 1", t1, t2, t2-t1
    
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
