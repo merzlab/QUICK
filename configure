@@ -1100,8 +1100,8 @@ EOF
 #  !---------------------------------------------------------------------!
 cat > "$quick_prefix/quick.rc" << EOF
 export QUICK_INSTALL=$quick_prefix
-export QUICK_BASIS=$quick_prefix/basis
-export PATH=$quick_prefix/bin:\$PATH
+export QUICK_BASIS=\$QUICK_INSTALL/basis
+export PATH=\$QUICK_INSTALL/bin:\$PATH
 EOF
 
 if [ "$shared" = 'yes' ]; then
@@ -1109,9 +1109,9 @@ libpaths=''
 libpath=''
 
 if [ "$testtype" = 'installtest' ]; then
-  libpath="$quick_prefix/lib"
+  libpath="\$QUICK_INSTALL/lib"
 else
-  libpath="$quick_prefix/build/lib"
+  libpath="\$QUICK_INSTALL/build/lib"
 fi
 
 for buildtype in $buildtypes; do
