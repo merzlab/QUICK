@@ -76,6 +76,13 @@ int getAdjustment(int mpisize, int mpirank, int count){
   for(int i=0; i<mpisize; ++i)
     residuals[i]=ptcount[i]-average;
 #ifdef DEBUG
+  if(master) cout << "mpirank= "<< mpirank << " sum= " << sum << " average= " << average << endl;  
+
+  if(master) cout << "mpirank= "<< mpirank << " discrepencies:" << endl;
+  
+  for(int i=0; i<mpisize; ++i)
+    residuals[i]=ptcount[i]-average;
+
   if(master){
     for(int i=0; i<mpisize; ++i) cout << residuals[i] << " ";
     cout << endl; 
