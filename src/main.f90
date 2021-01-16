@@ -1,4 +1,4 @@
-! 
+!
 !************************************************************************
 !                              QUICK                                   **
 !                                                                      **
@@ -23,7 +23,7 @@
 !************************************************************************
 
     program quick
-    
+
     use allMod
     use divPB_Private, only: initialize_DivPBVars
 
@@ -33,13 +33,13 @@
     include 'mpif.h'
 #endif
 
-#ifdef CUDA 
+#ifdef CUDA
     integer :: gpu_device_id = -1
 #endif
 
     integer*4 :: iarg
     character(80) :: arg
-    logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail 
+    logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
     integer :: i,j,k
     double precision t1_t, t2_t
@@ -48,7 +48,7 @@
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
     ! Initial neccessary variables
-    call initialize1(ierr)    
+    call initialize1(ierr)
     !-------------------MPI/MASTER---------------------------------------
     masterwork_readInput: if (master) then
 
@@ -58,24 +58,24 @@
       ! open output file
       call quick_open(iOutFile,outFileName,'U','F','R',.false.)
 
-      ! At the beginning of output file, copyright information will be output first 
+      ! At the beginning of output file, copyright information will be output first
       call outputCopyright(iOutFile,ierr)
-      
+
       ! Then output file information
       call PrtDate(iOutFile,'TASK STARTS ON:')
       call print_quick_io_file(iOutFile,ierr) ! from quick_file_module
 
       ! check MPI setup and output info
       call check_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
-      
-#ifdef MPIV      
+
+#ifdef MPIV
       if (bMPI) call print_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
 #endif
-    
+
     endif masterwork_readInput
     !--------------------End MPI/MASTER----------------------------------
 
-#ifdef CUDA 
+#ifdef CUDA
 
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
@@ -85,7 +85,7 @@
 #else
     iarg = iargc()
 #endif
-    
+
     call gpu_set_device(-1)
 
     ! Handles an old mechanism where the user can specify GPU id from CLI
@@ -103,7 +103,7 @@
     endif
 
     call gpu_init()
- 
+
     ! write cuda information
     call gpu_write_info(iOutFile)
     !------------------- END CUDA ---------------------------------------
@@ -138,7 +138,7 @@
   
     ! Then do inital guess
     call cpu_time(timer_begin%TIniGuess)
-    
+
     ! a. SAD intial guess
     if (quick_method%SAD) call getMolSad()
 
@@ -147,7 +147,7 @@
 !       call mfcc
 !       call getmolmfcc
     endif
-    
+
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
@@ -183,16 +183,16 @@
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
-#if defined CUDA || defined CUDA_MPIV    
+#if defined CUDA || defined CUDA_MPIV
     call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
     ncontract, itype, aexp, dcoeff, &
-    quick_basis%first_basis_function, quick_basis%last_basis_function, & 
+    quick_basis%first_basis_function, quick_basis%last_basis_function, &
     quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
     quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
     quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
     quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
     quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
-   
+
     call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 #endif
 
@@ -217,11 +217,11 @@
     ! 5. OPT Geometry if wanted
     !-----------------------------------------------------------------
 
-    ! Geometry optimization. Currently, only cartesian version is 
-    ! available. A improvement is in optimzenew, which is based on 
-    ! internal coordinates, but is under coding.    
-    if (quick_method%opt)  call optimize(failed)     ! Cartesian 
-    if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)                             
+    ! Geometry optimization. Currently, only cartesian version is
+    ! available. A improvement is in optimzenew, which is based on
+    ! internal coordinates, but is under coding.
+    if (quick_method%opt)  call optimize(failed)     ! Cartesian
+    if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)
     if (failed) call quick_exit(iOutFile,1)          ! If geometry optimization fails
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -231,7 +231,7 @@
     !------------------------------------------------------------------
     ! 6. Other job options
     !-----------------------------------------------------------------
-    
+
     ! 6.a PB Solvent Model
     ! 11/03/2010 Blocked by Yiao Miao
 !   if (PBSOL) then
@@ -267,7 +267,7 @@
     ! 6.d clean spin for unrestricted calculation
     ! If this is an unrestricted calculation, check out the S^2 value to
     ! see if this is a reasonable wave function.  If not, modify it.
-    
+
 !    if (quick_method%unrst) then
 !        if (quick_method%debug) call debugCleanSpin
 !        if (quick_method%unrst) call spinclean
@@ -275,22 +275,22 @@
 !    endif
 
     if (master) then
-        
+
         ! Convert Cartesian coordinator to internal coordinator
         if (quick_method%zmat) call zmake
-        
+
         ! Calculate Dipole Moment
         if (quick_method%dipole) call dipole
-        
+
     endif
-    
+
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
-#ifdef CUDA 
+#ifdef CUDA
     if (master) then
        call gpu_shutdown()
     endif
@@ -301,6 +301,6 @@
     call mgpu_shutdown()
 #endif
 
-    call finalize(iOutFile,0)
-    
+    call finalize(iOutFile,0,0)
+
     end program quick

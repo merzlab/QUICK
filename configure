@@ -1134,6 +1134,34 @@ modfolder=$QUICK_HOME/src/modules
 EOF
 
 #  !---------------------------------------------------------------------!
+#  ! Generate quick.rc in install directory                              !
+#  !---------------------------------------------------------------------!
+cat > "$quick_prefix/quick.rc" << EOF
+export QUICK_INSTALL=$quick_prefix
+export QUICK_BASIS=\$QUICK_INSTALL/basis
+export PATH=\$QUICK_INSTALL/bin:\$PATH
+EOF
+
+if [ "$shared" = 'yes' ]; then
+libpaths=''
+libpath=''
+
+if [ "$testtype" = 'installtest' ]; then
+  libpath="\$QUICK_INSTALL/lib"
+else
+  libpath="\$QUICK_INSTALL/build/lib"
+fi
+
+for buildtype in $buildtypes; do
+  libpaths="$libpath/$buildtype:$libpaths"
+done
+
+cat >> "$quick_prefix/quick.rc" << EOF
+export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
+EOF
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
@@ -1145,12 +1173,13 @@ echo ""
 echo  "Next steps:"
 echo  "          Run 'make' to build QUICK."
 
-if [ "$testtype" = 'installtest' ]; then
+if [ "$aminstall" = "true" ]; then
+  echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+elif [ "$testtype" = 'installtest' ]; then
   echo  "          Run 'make install' to install executable/s, libraries and header files in $quick_prefix."
 fi
 
-echo  "          Run 'make test' to verify the executables."
-
-if [ "$aminstall" = "true" ]; then
-echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+if [ "$aminstall" = "false" ]; then
+  echo  "          Run 'make test' to verify the executables."
 fi
+

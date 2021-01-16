@@ -582,7 +582,7 @@ void gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<n
 
 	start = clock();
 
-        gpu_get_octree_info(gridx, gridy, gridz, gps->sigrad2->_cppData, gpweight, cfweight, pfweight, bin_locator, init_arr_size, leaf_count);
+        gpu_get_octree_info(gridx, gridy, gridz, gps->sigrad2->_cppData, gpweight, cfweight, pfweight, bin_locator, init_arr_size, gps->DMCutoff,leaf_count);
 
 	end = clock();
 

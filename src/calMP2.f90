@@ -26,7 +26,6 @@ subroutine calmp2
 
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
-  write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
 
   ! actually nstep is step length
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
@@ -52,7 +51,6 @@ subroutine calmp2
   if(nstep*(nstepmp2-1).eq.nelec/2)then
      nstepmp2=nstepmp2-1
   endif
-  write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
   ! Pre-step for density cutoff
   call densityCutoff
@@ -187,8 +185,6 @@ subroutine calmp2
 
         enddo
      enddo
-
-     write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
 
      do icycle=1,nsteplength
         do k3=1,nelec/2
