@@ -43,8 +43,8 @@ echo  "
       --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --debug        Compiles debug version                                 
-      --debug-time   Compiles a cuda/cudampi debug version that reports 
-                     kernel times
+      --debug-time   Compiles a debug version that reports more information
+                     on timing
       --shared       Build shared object libraries                          
       --arch <kepler|pascal|volta|turing|ampere>                                           
                      Specify gpu architecture. Applicable for cuda and      
@@ -852,7 +852,7 @@ if [ "$debug" = 'yes' ]; then
 
   case "$compiler" in
     gnu | pgi | nvidia)
-      fort_debug_flags='-g -DDEBUG'
+      fort_debug_flags='-g -DDEBUG -DDEBUGTIME'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
       ;;
@@ -867,6 +867,7 @@ if [ "$debug" = 'yes' ]; then
     cuda_debug_flags='-g -G -DDEBUG'
   fi
 elif [ "$debugtime" = 'yes' ]; then
+  fort_debug_flags='-DDEBUGTIME'
   if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
     cuda_debug_flags='-DDEBUGTIME'
   fi
