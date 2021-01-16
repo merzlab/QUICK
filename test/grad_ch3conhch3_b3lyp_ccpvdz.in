@@ -1,4 +1,4 @@
-DFT B3LYP BASIS=CC-PVDZ SCF=200 CHARGE=0 MULT=1 GRADIENT DIPOLE
+DFT B3LYP BASIS=CC-PVDZ cutoff=1.0e-9 denserms=1.0e-6 GRADIENT DIPOLE
  
  H         5.4269280037321330       5.8668001759742197       1.9440424210060896 
  C         5.2778863555062401       6.1653696715003079       0.8517883878991734 
@@ -13,41 +13,41 @@ DFT B3LYP BASIS=CC-PVDZ SCF=200 CHARGE=0 MULT=1 GRADIENT DIPOLE
  H         7.1867685623498705       2.6684759996505929      -1.0046972369643465 
  H         6.1319761352814020       2.0088922338612880       0.2503952716044978
 
-#ref_grad    -0.0151780998
-#ref_grad    -0.0046526290
-#ref_grad     0.0224292967
-#ref_grad    -0.0428955867
-#ref_grad     0.0417630231
-#ref_grad    -0.0236136475
-#ref_grad    -0.0190626664
-#ref_grad    -0.0049163030
-#ref_grad    -0.0008238439
-#ref_grad     0.0829144101
-#ref_grad    -0.0415336146
-#ref_grad     0.0032583186
-#ref_grad    -0.0097402838
-#ref_grad    -0.0089230282
-#ref_grad    -0.0315679396
-#ref_grad     0.0284187991
-#ref_grad     0.0006693281
-#ref_grad     0.0277730524
-#ref_grad    -0.0133708417
-#ref_grad     0.0096516632
-#ref_grad     0.0111881918
-#ref_grad    -0.0060747927
-#ref_grad     0.0063966308
-#ref_grad     0.0047937542
-#ref_grad     0.0088141899
-#ref_grad     0.0063155498
-#ref_grad    -0.0416764549
-#ref_grad     0.0168846846
-#ref_grad    -0.0044866386
-#ref_grad     0.0030195104
-#ref_grad    -0.0319900718
-#ref_grad     0.0021076096
-#ref_grad     0.0106351532
-#ref_grad     0.0012879197
-#ref_grad    -0.0025233011
-#ref_grad     0.0147043062
-#TOTAL_ENERGY= -248.517841409
+#ref_grad    -0.0151808119
+#ref_grad    -0.0046522267
+#ref_grad     0.0224378112
+#ref_grad    -0.0428799413
+#ref_grad     0.0417510144
+#ref_grad    -0.0235864493
+#ref_grad    -0.0190271683
+#ref_grad    -0.0048748090
+#ref_grad    -0.0008398769
+#ref_grad     0.0828958802
+#ref_grad    -0.0415366150
+#ref_grad     0.0032637794
+#ref_grad    -0.0100531507
+#ref_grad    -0.0090619222
+#ref_grad    -0.0318020519
+#ref_grad     0.0286729620
+#ref_grad     0.0007414650
+#ref_grad     0.0279642598
+#ref_grad    -0.0133388324
+#ref_grad     0.0097182969
+#ref_grad     0.0111888298
+#ref_grad    -0.0060778406
+#ref_grad     0.0063895461
+#ref_grad     0.0048041124
+#ref_grad     0.0087928517
+#ref_grad     0.0063058664
+#ref_grad    -0.0416523579
+#ref_grad     0.0168780780
+#ref_grad    -0.0044861635
+#ref_grad     0.0030291253
+#ref_grad    -0.0319625710
+#ref_grad     0.0020972684
+#ref_grad     0.0106240258
+#ref_grad     0.0012881829
+#ref_grad    -0.0025234178
+#ref_grad     0.0146884671
+#TOTAL_ENERGY= -248.517849477
 
