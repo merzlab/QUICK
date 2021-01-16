@@ -504,6 +504,8 @@ void mgpu_xc_tpbased_greedy_distribute(){
 
     }
 
+    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
+
 #ifdef DEBUG
 
     // print information for debugging
@@ -642,7 +644,6 @@ void mgpu_xc_pbased_greedy_distribute(){
         // assign the bin to corresponding core
         mpi_xcflags[mincore][ptpf_pb[i].x] = 1;
     }
-
 
 //#ifdef DEBUG
 
@@ -839,7 +840,6 @@ memcpy(gpu -> gpu_xcq -> basf_locator -> _hostData, mgpu_xcq -> basf_locator -> 
 memcpy(gpu -> gpu_xcq -> primf_locator -> _hostData, mgpu_xcq -> primf_locator -> _hostData, sizeof(int) * (gpu -> gpu_xcq -> ntotbf + 1));
 memcpy(gpu -> gpu_xcq -> basf -> _hostData, mgpu_xcq -> basf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotbf);
 memcpy(gpu -> gpu_xcq -> primf -> _hostData, mgpu_xcq -> primf -> _hostData, sizeof(int) * gpu -> gpu_xcq -> ntotpf);
-
 
 #ifdef DEBUG
 // print information for debugging
