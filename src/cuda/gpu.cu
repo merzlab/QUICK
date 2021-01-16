@@ -1634,13 +1634,6 @@ void prune_grid_sswgrad(){
         cudaEventRecord(t_startp, 0);
 #endif
 
-        cudaEvent_t t_startp, t_endp;
-        float t_timep;
-        cudaEventCreate(&t_startp);
-        cudaEventCreate(&t_endp);
-        cudaEventRecord(t_startp, 0);
-
-
         gpu -> gpu_xcq -> dweight_ssd -> Download();
         gpu -> gpu_xcq -> exc -> Download();
 
