@@ -52,12 +52,12 @@ int getAdjustment(int mpisize, int mpirank, int count){
 
 #ifdef DEBUG 
   if(master) cout << "mpirank= "<<mpirank << " init array:" << endl;
-#endif
 
   for(int i=0; i<mpisize; ++i)
     cout << ptcount[i] << " ";
   cout << endl;
 
+#endif
   //find sum
   int sum=0;
 
@@ -181,6 +181,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
     }
   }
 
+#ifdef DEBUG
   if(master){
     for(int i=0; i<mpisize; ++i){
       cout << "[" << i << "] ";
@@ -188,6 +189,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
       cout << endl;
     }
   }
+#endif
 
   // Row sum of distMatrix tells what a paticular rank looses whereas coulmn sum tells what it gains
   int loss=0, gain=0;
