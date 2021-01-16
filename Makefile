@@ -70,8 +70,8 @@ checkfolders:
 install: $(INSTALLTYPES)
 	@echo  "Installation sucessful."
 	@echo  ""
-	@echo  "Please add the following into your .bash_profile or .bashrc file."
-	@echo  "      export QUICK_BASIS=$(installfolder)/basis"
+	@echo  "Please run the following command to set environment variables."
+	@echo  "      source $(installfolder)/quick.rc"
 
 noinstall: all
 	@echo  "Please find QUICK executables in $(exefolder)."
@@ -171,6 +171,7 @@ cudampiclean:
 distclean: makeinclean
 	@-rm -f $(homefolder)/runtest
 	@-rm -rf $(buildfolder) $(exefolder)
+	@-rm -f $(homefolder)/quick.rc
 	@echo  "Removed build and bin directories."
 
 makeinclean:
@@ -192,6 +193,7 @@ uninstall: $(UNINSTALLTYPES)
 	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
 	rm -rf $(installfolder)/test; fi
 	@-rm -f $(installfolder)/runtest
+	@-rm -f $(installfolder)/quick.rc
 	@echo  "Uninstallation sucessful."
 
 nouninstall:

@@ -1626,13 +1626,13 @@ void prune_grid_sswgrad(){
 
 
         PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
-
+#ifdef CUDA_MPIV
         cudaEvent_t t_startp, t_endp;
         float t_timep;
         cudaEventCreate(&t_startp);
         cudaEventCreate(&t_endp);
         cudaEventRecord(t_startp, 0);
-
+#endif
 
         gpu -> gpu_xcq -> dweight_ssd -> Download();
         gpu -> gpu_xcq -> exc -> Download();
@@ -1690,6 +1690,9 @@ void prune_grid_sswgrad(){
 
         gpu -> timer -> t_xcrb += (double) t_time/1000;
 
+        cudaEventDestroy(t_start);
+        cudaEventDestroy(t_end);
+
 #endif
 
          gpu -> gpu_xcq -> npoints_ssd = count;
@@ -1704,6 +1707,8 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
 
+        cudaEventCreate(&t_start);
+        cudaEventCreate(&t_end);
         cudaEventRecord(t_start, 0);
          
         sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
@@ -1760,18 +1765,21 @@ void prune_grid_sswgrad(){
         free(tmp_quadwt);
         free(tmp_gatm);
 
+#ifdef CUDA_MPIV
         cudaEventRecord(t_endp, 0);
         cudaEventSynchronize(t_endp);
         cudaEventElapsedTime(&t_timep, t_startp, t_endp);
 
         gpu -> timer -> t_xcpg += (double) t_timep/1000;
+
         cudaEventDestroy(t_startp);
         cudaEventDestroy(t_endp);
+#endif
 
 }	
 
 
-void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, int nbins){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, double DMCutoff, int nbins){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
 
@@ -1797,7 +1805,7 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
 	gpu -> gpu_sim.sigrad2  = gpu->gpu_basis->sigrad2->_devData;
         gpu ->gpu_sim.bin_locator      = gpu -> gpu_xcq -> bin_locator -> _devData;
 
-	gpu -> gpu_cutoff -> DMCutoff   = 1E-9; //*DMCutoff;
+	gpu -> gpu_cutoff -> DMCutoff   = DMCutoff;
         gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
 
 	//Define cfweight and pfweight arrays seperately and uplaod to gpu until we solve the problem with atomicAdd
@@ -1899,7 +1907,7 @@ void print_uploaded_dft_info(){
     fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight_ssd=%i \n",i,
     gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i],
     gpu -> gpu_xcq -> sswt -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm -> _hostData[i],
-    gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
+    gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
   }
 
   PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS")
