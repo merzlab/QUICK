@@ -23,17 +23,19 @@ subroutine fullx
    implicit none
 
    double precision :: overlap
-   double precision :: Sminhalf(nbasis)
-   double precision :: V(3,nbasis)
-   double precision :: IDEGEN1(nbasis)
+!   double precision :: Sminhalf(nbasis)
+!   double precision :: V(3,nbasis)
+!   double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
-   double precision :: tmpx(nbasis,nbasis),tmphold(nbasis,nbasis), tmpco(nbasis,nbasis), t1, t2
+!   double precision :: tmpx(nbasis,nbasis),tmphold(nbasis,nbasis), tmpco(nbasis,nbasis), t1, t2
 
    call cpu_time(timer_begin%T1eS)
+
+   call allocfullx(quick_scratch,nbasis)
 
    do Ibas=1,nbasis
       ii = itype(1,Ibas)
@@ -84,23 +86,11 @@ subroutine fullx
 
 #if defined CUDA || defined CUDA_MPIV
 
-   tmpx=0.0d0
-   tmphold=0.0d0
-   tmpco=0.0d0
-
-   do ii=1,nbasis
-     do jj=1, nbasis
-       if(ii .eq. jj) then
-         tmpx(jj,ii)=1.0d0
-         tmphold(jj,ii)=1.0d0
-       endif
-     enddo
-   enddo
-
-   call cuda_diag(quick_scratch%hold, tmpx, tmphold,&
-   Sminhalf, IDEGEN1, quick_scratch%hold2, tmpco, V, nbasis)
+   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold,&
+   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
 #else
-   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
 #endif
 
    call cpu_time(timer_end%T1eSD)
@@ -148,15 +138,12 @@ subroutine fullx
    ! 2)  X has to be symmetric. Thus we only have to fill the bottom
    ! half. (Lower Diagonal)
 
-   call cpu_time(t1)
-
-   tmphold=0.0d0
-   tmpco=0.0d0
+!   call cpu_time(t1)
 
    do I=1,nbasis
-      if (Sminhalf(I).gt.1E-4) then
+      if (quick_scratch%Sminhalf(I).gt.1E-4) then
       !Sminhalf(I) = Sminhalf(I)**(-.5d0)
-      tmphold(i,i)= Sminhalf(I)**(-.5d0)
+      quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
       !else
       !Sminhalf(I) = 0.0d0
       endif
@@ -165,18 +152,18 @@ subroutine fullx
 #if defined CUDA || defined CUDA_MPIV
 
    call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-   nbasis, tmphold, nbasis, 0.0d0, tmpco,nbasis)
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
 
-   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, tmpco, &
+   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
    nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)   
 #else
    call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-   nbasis, tmphold, nbasis, 0.0d0, tmpco,nbasis)
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
 
-   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, tmpco, &
+   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
    nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
 #endif
-   call cpu_time(t2)
+!   call cpu_time(t2)
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
 !   call cpu_time(t1)
@@ -219,6 +206,8 @@ subroutine fullx
    ! At this point we have the transformation matrix (X) which is necessary
    ! to orthogonalize the operator matrix, and the overlap matrix (S) which
    ! is used in the DIIS-SCF procedure.
+
+   call deallocfullx(quick_scratch)
 
    return
 end subroutine fullx
