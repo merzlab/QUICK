@@ -68,6 +68,7 @@ echo  "
       --serial       Tests QUICK serial version                                
       --mpi          Tests QUICK MPI prallel version                           
       --cuda         Tests QUICK GPU version
+      --cudampi      Tests QUICK multi-GPU version
       --ncores <ncore>
                      Specify the number of cores to be used in MPI tests.
                      If unspecified, 2 cores will be used.    

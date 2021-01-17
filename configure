@@ -42,6 +42,7 @@ echo  "
       --serial       Builds a serial version                                
       --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --cudampi      Builds multi-GPU version that utilizes multiple NVIDIA GPUs  
       --debug        Compiles debug version                                 
       --debug-time   Compiles a debug version that reports more information
                      on timing
