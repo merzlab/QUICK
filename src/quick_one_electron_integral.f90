@@ -23,15 +23,11 @@ subroutine fullx
    implicit none
 
    double precision :: overlap
-!   double precision :: Sminhalf(nbasis)
-!   double precision :: V(3,nbasis)
-!   double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
-!   double precision :: tmpx(nbasis,nbasis),tmphold(nbasis,nbasis), tmpco(nbasis,nbasis), t1, t2
 
    call cpu_time(timer_begin%T1eS)
 
@@ -96,17 +92,6 @@ subroutine fullx
    call cpu_time(timer_end%T1eSD)
    timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
 
-
-! do I=1,nbasis
-!   write(*,*) "sminhalf", i, Sminhalf(I)
-! enddo
-
-!   do ii=1,nbasis
-!     do jj=1, nbasis
-!       write(*,*) "hold2", ii, jj, quick_scratch%hold2(jj,ii)
-!     enddo
-!   enddo
-
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -138,14 +123,9 @@ subroutine fullx
    ! 2)  X has to be symmetric. Thus we only have to fill the bottom
    ! half. (Lower Diagonal)
 
-!   call cpu_time(t1)
-
    do I=1,nbasis
       if (quick_scratch%Sminhalf(I).gt.1E-4) then
-      !Sminhalf(I) = Sminhalf(I)**(-.5d0)
       quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
-      !else
-      !Sminhalf(I) = 0.0d0
       endif
    enddo
 
@@ -163,43 +143,13 @@ subroutine fullx
    call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
    nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
 #endif
-!   call cpu_time(t2)
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
-!   call cpu_time(t1)
 
 !   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
 !   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
    ! Now calculate X.
    ! Xij = Sum(k=1,m) Transpose(U)kj * s^(-.5)kk * Transpose(U)ki
-!   call cpu_time(t2)
-!   write(*,*) "rhost time 2", t1, t2, t2-t1
-
-!   call cpu_time(t1)
-!   do I = 1,nbasis
-!      do J=I,nbasis
-!         sum = 0.d0
-!         do K=1,nbasis
-!            sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-!         enddo
-!         quick_qm_struct%x(I,J) = sum
-!         quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
-!      enddo
-!   enddo
-
-!         call DGEMM ('n', 'n', nbasis, 1, nbasis, 1.0d0, quick_scratch%hold2, &
-!               nbasis, Sminhalf, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
-
-!   do ii=1,nbasis
-!     do jj=1, nbasis
-!       write(*,*) "x", ii, jj, quick_qm_struct%x(jj,ii)
-!     enddo
-!   enddo
-
-!   call cpu_time(t2)
-!   write(*,*) "rhost time 3", t1, t2, t2-t1
-
-!call exit()
 
    if (quick_method%debug) call debugFullX
 
