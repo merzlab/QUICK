@@ -22,7 +22,7 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2020                                          **
+  **                                         Copyright (c) 2021                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
@@ -39,13 +39,14 @@
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
- Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
+  Manathunga, M.; Chi, J.; Cruzeiro, V.W.D.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
+  Brothers, E.; Götz, A.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State
+  University, East Lansing, MI, 2021                                                                       
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sat Jan 16 09:46:21 2021
+| TASK STARTS ON: Sun Jan 17 10:16:36 2021
 | INPUT FILE :    grad_wat_b3lyp_ccpvdz.in
 | OUTPUT FILE:    grad_wat_b3lyp_ccpvdz.out
 | DATE FILE  :    grad_wat_b3lyp_ccpvdz.dat
@@ -156,15 +157,15 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.348059954      ------         0.037     1        0.01      0.03      0.01    0.1586E+01  0.1112E+00  0.9440E+00
-|  2    -76.345917700  -.214225E-02       0.025     2        0.01      0.02      0.01    0.1706E+00  0.5863E-01  0.5912E+00
+|  1    -76.348059954      ------         0.036     1        0.01      0.03      0.01    0.1586E+01  0.1112E+00  0.9440E+00
+|  2    -76.345917700  -.214225E-02       0.024     2        0.01      0.02      0.01    0.1706E+00  0.5863E-01  0.5912E+00
 |  3    -76.321982078  -.239356E-01       0.024     3        0.01      0.02      0.01    0.2035E+00  0.3154E-01  0.3105E+00
 |  4    -76.407981573  0.859995E-01       0.023     4        0.01      0.02      0.01    0.5070E-02  0.7697E-03  0.6480E-02
 |  5    -76.408023311  0.417384E-04       0.023     5        0.01      0.02      0.01    0.7036E-03  0.1336E-03  0.1382E-02
 |  6    -76.408024853  0.154162E-05       0.023     6        0.01      0.02      0.01    0.1020E-03  0.1968E-04  0.2057E-03
 |  7    -76.408024876  0.225139E-07       0.024     7        0.01      0.02      0.01    0.2321E-04  0.4047E-05  0.4183E-04
     | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-|  8    -76.408024766  -.109406E-06       0.025     8        0.01      0.02      0.01    0.1966E-05  0.7539E-06  0.6572E-05
+|  8    -76.408024766  -.109406E-06       0.024     8        0.01      0.02      0.01    0.1966E-05  0.7539E-06  0.6572E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   8 CYLCES
 | MAX ERROR = 0.196625E-05   RMS CHANGE = 0.753925E-06   MAX CHANGE = 0.657198E-05
@@ -228,38 +229,23 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIALIZATION TIME =     0.634270000( 15.18%)
-| INITIAL GUESS TIME  =     2.634513000( 63.07%)
-| DFT GRID OPERATIONS =     0.011422000(  0.27%)
-|       TOTAL GRID FORMATION TIME   =     0.000191000(  0.00%)
-|       TOTAL GRID WEIGHT TIME      =     0.000668000(  0.02%)
-|       TOTAL OCTREE RUN TIME       =     0.010000000(  0.24%)
-|       TOTAL PRESCREENING TIME     =     0.000000000(  0.00%)
-|       TOTAL DATA PACKING TIME     =     0.000563000(  0.01%)
-| TOTAL SCF TIME      =     0.204469000(  4.89%)
-|       TOTAL OP TIME      =     0.144778000(  3.47%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.000427000(  0.01%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.603508000( 14.45%)
-|             TOTAL 1e TIME      =     0.001699000(  0.04%)
-|                KINETIC 1e INTEGRALS TIME    =     0.001178000(  0.03%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.000495000(  0.01%)
-|             TOTAL 2e TIME      =     0.124951000(  2.99%)
-|             TOTAL EXC TIME     =     0.016323000(  0.39%)
-|             TOTAL ENERGY TIME  =     0.000040000(  0.00%)
-|       TOTAL DII TIME      =     0.059626000(  1.43%)
-|             TOTAL DIAG TIME    =     0.054063000(  1.29%)
-|       DIPOLE TIME        =     0.002113000(  0.05%)
-| TOTAL GRADIENT TIME      =     0.255047000(  6.11%)
-|       TOTAL NUCLEAR GRADIENT TIME =     0.000002000(  0.00%)
-|       TOTAL 1e GRADIENT TIME      =     0.015519000(  0.37%)
-|          KINETIC 1e GRADIENT TIME      =     0.012532000(  0.30%)
-|          ATTRACTION 1e GRADIENT TIME   =     0.002973000(  0.07%)
-|       TOTAL 2e GRADIENT TIME      =     0.240776000(  5.76%)
-|       TOTAL EXC GRADIENT TIME     =     0.014253000(  0.34%)
-| TOTAL TIME          =     4.177175000
+| INITIAL GUESS TIME  =     3.910566000( 70.59%)
+| DFT GRID OPERATIONS =     0.012637000(  0.23%)
+| TOTAL SCF TIME      =     0.203136000(  3.67%)
+|       TOTAL OP TIME      =     0.144586000(  2.61%)
+|             TOTAL 1e TIME      =     0.001642000(  0.03%)
+|             TOTAL 2e TIME      =     0.124882000(  2.25%)
+|             TOTAL EXC TIME     =     0.016305000(  0.29%)
+|       TOTAL DII TIME      =     0.058490000(  1.06%)
+|             TOTAL DIAG TIME    =     0.053325000(  0.96%)
+| TOTAL GRADIENT TIME      =     0.249897000(  4.51%)
+|       TOTAL 1e GRADIENT TIME      =     0.016614000(  0.30%)
+|       TOTAL 2e GRADIENT TIME      =     0.235310000(  4.25%)
+|       TOTAL EXC GRADIENT TIME     =     0.014566000(  0.26%)
+| TOTAL TIME          =     5.539898000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  4.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sat Jan 16 09:46:26 2021
+| Normal Termination. Task Finished on: Sun Jan 17 10:16:42 2021
