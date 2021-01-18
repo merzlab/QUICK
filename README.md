@@ -1,6 +1,7 @@
 <p align="right">
 <img src="https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg">
 <img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
+<img src='https://readthedocs.org/projects/quick-docs/badge/?version=20.6.0' alt='Documentation Status' />
 </p>
 <p align="left">
 <img width="299" height="107" src="./tools/logo.png">
