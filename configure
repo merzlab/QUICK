@@ -47,7 +47,7 @@ echo  "
       --debug-time   Compiles a debug version that reports more information
                      on timing
       --shared       Build shared object libraries                          
-      --arch <kepler|pascal|volta|turing|ampere>                                           
+      --arch <kepler|maxwell|pascal|volta|turing|ampere>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
@@ -744,6 +744,10 @@ set_uspec_arch(){
 	echo "Configuring for SM3.0"
 	cuda_arch_flags="$cuda_arch_flags $sm30flags"
 	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
+      maxwell)
+        echo "Configuring for SM5.0"
+        cuda_arch_flags="$cuda_arch_flags $sm50flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       pascal)
         echo "Configuring for SM6.0"
         cuda_arch_flags="$cuda_arch_flags $sm60flags"
@@ -783,6 +787,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     sm70flags='-gencode arch=compute_70,code=sm_70'
     #SM6.0 = GP100 / P100 = DGX-1
     sm60flags='-gencode arch=compute_60,code=sm_60'
+    #SM5.0 = M40
+    sm50flags='-gencode arch=compute_50,code=sm_50'
     #SM3.0 = K80, K40, K20
     sm30flags='-gencode arch=compute_30,code=sm_30'
 
@@ -796,8 +802,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        echo "Configuring for SM3.0, SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags $sm80flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags $sm80flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
@@ -806,8 +812,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
@@ -816,8 +822,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0 and SM7.0"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0 and SM7.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
@@ -826,8 +832,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0"
-        cuda_arch_flags="$sm30flags $sm60flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
