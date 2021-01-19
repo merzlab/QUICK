@@ -26,7 +26,7 @@ fi
 for i in {ene,opt}*.in
 do
   $DO_PARALLEL $TESTsander $i < /dev/null || error
-  ${AMBERHOME}/test/dacdif -a 1.0e-3 saved/${i%.in}.out ${i%.in}.out
+  ${AMBERHOME}/test/dacdif -a 2.0e-3 saved/${i%.in}.out ${i%.in}.out
   /bin/rm -f ${i%.in}.dat
 done
 
