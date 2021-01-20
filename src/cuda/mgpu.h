@@ -1,7 +1,7 @@
 /*
   !---------------------------------------------------------------------!
   ! Written by Madu Manathunga on 04/29/2020                            !
-  !                                                                     ! 
+  !                                                                     !
   ! Copyright (C) 2020-2021 Merz lab                                    !
   ! Copyright (C) 2020-2021 Götz lab                                    !
   !                                                                     !
@@ -14,7 +14,7 @@
   ! This source file contains methods required for QUICK multi GPU      !
   ! implementation. Additional changes have been made in the gpu_type.h !
   ! where we define variables holding device information.               !
-  !                                                                     ! 
+  !                                                                     !
   !---------------------------------------------------------------------!
 */
 
@@ -47,9 +47,9 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
 
     int devID = *mpirank % gpuCount;
     cudaDeviceProp devProp;
-    status = cudaGetDeviceProperties(&devProp, devID); 
+    status = cudaGetDeviceProperties(&devProp, devID);
 
-    
+
 
     if((devProp.major < 3) || (devProp.totalGlobalMem < minMem)){
       printf("Error: GPU assigned for process %d is too old or already in use. \n", *mpirank);
@@ -70,7 +70,7 @@ void mgpu_startup(int mpirank)
 
 #if defined DEBUG || defined DEBUGTIME
     char fname[16];
-    sprintf(fname, "debug.cuda.%i", mpirank);    
+    sprintf(fname, "debug.cuda.%i", mpirank);
 
     debugFile = fopen(fname, "w+");
 #endif
@@ -95,7 +95,7 @@ void mgpu_startup(int mpirank)
 // Finalize the devices
 //-----------------------------------------------
 extern "C" void mgpu_shutdown_(void)
-{ 
+{
 
     PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
 
@@ -103,7 +103,7 @@ extern "C" void mgpu_shutdown_(void)
     delete gpu;
     cudaDeviceReset();
 
-    PRINTDEBUGNS("END DEVICE SHUTDOWN")    
+    PRINTDEBUGNS("END DEVICE SHUTDOWN")
 
 #if defined DEBUG || defined DEBUGTIME
     fclose(debugFile);
@@ -177,7 +177,7 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
 }
 
 //--------------------------------------------------------
-// Method to distribute sorted shell information among nodes  
+// Method to distribute sorted shell information among nodes
 //--------------------------------------------------------
 void mgpu_eri_greedy_distribute(){
 
@@ -193,7 +193,7 @@ void mgpu_eri_greedy_distribute(){
     // Keep track of primitive count
     int2 mpi_pidx[gpu->mpisize][nitems];
 
-    // Save a set of flags unique to each core, these will be uploaded 
+    // Save a set of flags unique to each core, these will be uploaded
     // to GPU by responsible cores
     char mpi_flags[gpu->mpisize][nitems];
 
@@ -201,7 +201,7 @@ void mgpu_eri_greedy_distribute(){
     int2 qtypes[gpu->mpisize][nitems];
 
     // Keep track of total primitive value of each core
-    int tot_pval[gpu->mpisize]; 
+    int tot_pval[gpu->mpisize];
 
     // Keep track of how many shell types each core has
     // ss, sp, sd, ps, pp, pd, dd, dp, dd
@@ -229,15 +229,15 @@ void mgpu_eri_greedy_distribute(){
         for(int q2_typ=0; q2_typ<4; q2_typ++){
 
             //Go through items
-            for (int i = 0; i<nitems; i++) {  
+            for (int i = 0; i<nitems; i++) {
 
                 // Get the shell type
                 q1     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
                 q2     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
- 
-                // Check if the picked shell types match currently interested shell types              
+
+                // Check if the picked shell types match currently interested shell types
                 if(q1 == q1_typ && q2 == q2_typ){
-                    
+
                     // Find out the core with least number of primitives of the current shell types
                     min_core = 0;       // Assume master has the lowest number of primitives
                     minp = tot_pval[0]; // Set master's primitive count as the lowest
@@ -250,12 +250,12 @@ void mgpu_eri_greedy_distribute(){
 
                     // Store the primitive value in the total primitive value counter
                     p1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]];
-                    p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]]; 
+                    p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]];
                     psum=p1+p2;
                     tot_pval[min_core] += psum;
 
-                    //Get the q indices  
-                    q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];                    
+                    //Get the q indices
+                    q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
                     q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
 
                     //Assign the indices for corresponding core
@@ -267,21 +267,21 @@ void mgpu_eri_greedy_distribute(){
 
                     // Store shell types for debugging
                     qtype_pcore[min_core][a] +=1;
-                    
+
                     //Store primitve number for debugging
                     mpi_pidx[min_core][tot_pcore[min_core]].x = p1;
                     mpi_pidx[min_core][tot_pcore[min_core]].y = p2;
 
                     // Store the Qshell type for debugging
                     qtypes[min_core][tot_pcore[min_core]].x = q1;
-                    qtypes[min_core][tot_pcore[min_core]].y = q2;                    
-                   
+                    qtypes[min_core][tot_pcore[min_core]].y = q2;
+
                     // Increase the counter for minimum core
                     tot_pcore[min_core] += 1;
-                }                
+                }
             }
 
-            // Reset the primitive counter for current shell type 
+            // Reset the primitive counter for current shell type
             memset(tot_pval,0,sizeof(int)*gpu->mpisize);
             a++;
         }
@@ -317,8 +317,8 @@ void mgpu_eri_greedy_distribute(){
 }
 
 //--------------------------------------------------------
-// Function to distribute XC quadrature bins among nodes. 
-// Method 1: Naively distribute packed bins. 
+// Function to distribute XC quadrature bins among nodes.
+// Method 1: Naively distribute packed bins.
 //--------------------------------------------------------
 /*void mgpu_xc_naive_distribute(){
 
@@ -335,7 +335,7 @@ void mgpu_eri_greedy_distribute(){
 
     memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
 
-    int dividend  = (int) (nbins/gpu->mpisize);  
+    int dividend  = (int) (nbins/gpu->mpisize);
     int remainder = nbins - (dividend * gpu->mpisize);
 
 #ifdef DEBUG
@@ -360,7 +360,7 @@ void mgpu_eri_greedy_distribute(){
             if(cremainder < 1) {
                 break;
             }
-        } 
+        }
     }
 
 #ifdef DEBUG
@@ -386,7 +386,7 @@ void mgpu_eri_greedy_distribute(){
     fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i count= %i \n", gpu -> mpirank, count);
 #endif
         }
-     
+
         xcstart = count * bin_size;
         xcend   = (count + bins_pcore[gpu->mpirank]) * bin_size;
 #ifdef DEBUG
@@ -415,8 +415,8 @@ void mgpu_eri_greedy_distribute(){
 */
 
 //--------------------------------------------------------
-// Function to distribute XC quadrature points among nodes.  
-// Method 2: Consider number of true grid points in 
+// Function to distribute XC quadrature points among nodes.
+// Method 2: Consider number of true grid points in
 // each bin during the distribution.
 //--------------------------------------------------------
 void mgpu_xc_tpbased_greedy_distribute(){
@@ -479,7 +479,7 @@ void mgpu_xc_tpbased_greedy_distribute(){
 
 
 
-    // now distribute the bins considering the total number of true grid points each core would receive 
+    // now distribute the bins considering the total number of true grid points each core would receive
 
     int mincore, min_tpts;
 
@@ -499,12 +499,12 @@ void mgpu_xc_tpbased_greedy_distribute(){
         // increase the point counter by the amount in current bin
         tpts_pcore[mincore] += tpoints[i].y;
 
-        // assign the bin to corresponding core        
+        // assign the bin to corresponding core
         mpi_xcflags[mincore][tpoints[i].x] = 1;
 
     }
 
-    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
+    // printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
 
 #ifdef DEBUG
 
@@ -527,8 +527,8 @@ void mgpu_xc_tpbased_greedy_distribute(){
 }
 
 //--------------------------------------------------------
-// Function to distribute XC quadrature points among nodes.  
-// Method 3: Consider the number of true grid point-primitive 
+// Function to distribute XC quadrature points among nodes.
+// Method 3: Consider the number of true grid point-primitive
 // funtcion product for each bin during the distribution.
 //--------------------------------------------------------
 void mgpu_xc_pbased_greedy_distribute(){
@@ -619,7 +619,7 @@ void mgpu_xc_pbased_greedy_distribute(){
     }
 #endif
 
-    // now distribute the bins considering the total number of true grid points each core would receive 
+    // now distribute the bins considering the total number of true grid points each core would receive
 
     int mincore, min_tpts, min_primf, min_ptpf;
 
@@ -651,7 +651,7 @@ void mgpu_xc_pbased_greedy_distribute(){
     //for(int i=0; i<gpu->mpisize; i++){
         //fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, i, tpts_pcore[i]);
         //printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, i, tpts_pcore[i]);
-        //printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i number of primf= %i \n", gpu -> mpirank, i, tpts_pcore[i], primf_pcore[i]);    
+        //printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i number of primf= %i \n", gpu -> mpirank, i, tpts_pcore[i], primf_pcore[i]);
     //    printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i number of primf= %i \n", gpu -> mpirank, i, tpts_pcore[i], primf_pcore[i]);
     //}
 
@@ -670,11 +670,11 @@ void mgpu_xc_pbased_greedy_distribute(){
 
 //--------------------------------------------------------
 // Function to re-pack XC grid information based on flags
-// generated by mgpu_xc_greedy_distribute function. 
-//-------------------------------------------------------- 
+// generated by mgpu_xc_greedy_distribute function.
+//--------------------------------------------------------
 void mgpu_xc_repack(){
 
-// get the total number of true bins for this mpi rank 
+// get the total number of true bins for this mpi rank
 int nbtr = 0;
 for(int i = 0; i < gpu -> gpu_xcq -> nbins; i++){
   nbtr += gpu -> gpu_xcq -> mpi_bxccompute -> _hostData[i];
@@ -698,7 +698,7 @@ for(int i=0; i< gpu -> gpu_xcq -> nbins; i++){
 XC_quadrature_type* mgpu_xcq = new XC_quadrature_type;
 
 // set properties
-mgpu_xcq -> nbins    = nbtr;  
+mgpu_xcq -> nbins    = nbtr;
 mgpu_xcq -> npoints  = ntot_tpts;
 
 mgpu_xcq -> gridx       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
@@ -742,7 +742,7 @@ for(int obidx = 0; obidx < gpu -> gpu_xcq -> nbins; obidx++){
         ++nidx;
     }
 
-    // transfer basis function info, where bffb is the number of basis functions for bin. 
+    // transfer basis function info, where bffb is the number of basis functions for bin.
     int bffb = gpu -> gpu_xcq -> basf_locator -> _hostData[obidx+1] - gpu -> gpu_xcq -> basf_locator -> _hostData[obidx];
 
     memcpy(&mgpu_xcq -> basf -> _hostData[nbfidx_ul], &gpu -> gpu_xcq -> basf -> _hostData[gpu -> gpu_xcq -> basf_locator -> _hostData[obidx]], sizeof(int) * bffb);
