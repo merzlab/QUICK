@@ -284,7 +284,7 @@ subroutine MPI_calmp2
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
   if (master) then
      call PrtAct(ioutfile,"Begin MP2 Calculation")
-     write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
+     !write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
   endif
 
   ! actually nstep is step length
@@ -312,7 +312,7 @@ subroutine MPI_calmp2
   if(nstep*(nstepmp2-1).eq.nelec/2)then
      nstepmp2=nstepmp2-1
   endif
-  write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
+  !write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
   ! Pre-step for density cutoff
   call densityCutoff
 
@@ -500,10 +500,10 @@ subroutine MPI_calmp2
      !---------------- END MPI/ ALL NODES ------------------------
 
      !---------------- MPI/ MASTER -------------------------------
-    
+
      call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
      if (master) then
-        write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
+        !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
         do icycle=1,nsteplength
            i3=nstepmp2s+icycle-1
