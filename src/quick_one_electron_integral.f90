@@ -23,9 +23,6 @@ subroutine fullx
    implicit none
 
    double precision :: overlap
-   double precision :: Sminhalf(nbasis)
-   double precision :: V(3,nbasis)
-   double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
@@ -33,6 +30,8 @@ subroutine fullx
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 
    call cpu_time(timer_begin%T1eS)
+
+   call allocfullx(quick_scratch,nbasis)
 
    do Ibas=1,nbasis
       ii = itype(1,Ibas)
@@ -81,10 +80,18 @@ subroutine fullx
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    call cpu_time(timer_begin%T1eSD)
 
-   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+#if defined CUDA || defined CUDA_MPIV
+
+   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold,&
+   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
+#else
+   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
+#endif
 
    call cpu_time(timer_end%T1eSD)
    timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
+
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -117,37 +124,40 @@ subroutine fullx
    ! half. (Lower Diagonal)
 
    do I=1,nbasis
-      if (Sminhalf(I).gt.1E-4) then
-      Sminhalf(I) = Sminhalf(I)**(-.5d0)
-      else
-      Sminhalf(I) = 0.0d0
+      if (quick_scratch%Sminhalf(I).gt.1E-4) then
+      quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
       endif
    enddo
 
+#if defined CUDA || defined CUDA_MPIV
+
+   call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)   
+#else
+   call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
+#endif
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
 
-   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
-   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
+!   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
+!   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
    ! Now calculate X.
    ! Xij = Sum(k=1,m) Transpose(U)kj * s^(-.5)kk * Transpose(U)ki
-
-   do I = 1,nbasis
-      do J=I,nbasis
-         sum = 0.d0
-         do K=1,nbasis
-            sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-         enddo
-         quick_qm_struct%x(I,J) = sum
-         quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
-      enddo
-   enddo
 
    if (quick_method%debug) call debugFullX
 
    ! At this point we have the transformation matrix (X) which is necessary
    ! to orthogonalize the operator matrix, and the overlap matrix (S) which
    ! is used in the DIIS-SCF procedure.
+
+   call deallocfullx(quick_scratch)
 
    return
 end subroutine fullx
@@ -1782,10 +1792,11 @@ end subroutine get1eEnergy
 !------------------------------------------------
 ! get1e
 !------------------------------------------------
-subroutine get1e(oneElecO)
+subroutine get1e()
    use allmod
+   use quick_scf_module
+
    implicit double precision(a-h,o-z)
-   double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
 
 !#ifdef MPIV
 !   include "mpif.h"
@@ -1804,13 +1815,14 @@ subroutine get1e(oneElecO)
 
      if (master) then
 
+       call cpu_time(timer_begin%T1e)
+       if(bCalc1e) then
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
          ! The first part is kinetic part
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
-         call cpu_time(timer_begin%T1e)
          call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
@@ -1828,12 +1840,8 @@ subroutine get1e(oneElecO)
          enddo
          call cpu_time(timer_end%T1eV)
 
-         call cpu_time(timer_end%t1e)
-         timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-         timer_cumer%TOp = timer_cumer%TOp+timer_cumer%T1e
-         timer_cumer%TSCF = timer_cumer%TSCF+timer_cumer%T1e
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
@@ -1841,7 +1849,18 @@ subroutine get1e(oneElecO)
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
-      endif
+         bCalc1e=.false.
+       else
+         quick_qm_struct%o(:,:)=oneElecO(:,:)
+       endif
+       call cpu_time(timer_end%t1e)
+
+       timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TOp = timer_cumer%TOp+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TSCF = timer_cumer%TSCF+timer_end%T1e-timer_begin%T1e
+
+       if (quick_method%printEnergy) call get1eEnergy()
+     endif
 !#ifdef MPIV
 !   else
 !

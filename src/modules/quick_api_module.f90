@@ -269,12 +269,12 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
 #ifdef CUDA_MPIV
 
-  if(master) call mgpu_query(mpisize, mgpu_count)
+  call mgpu_query(mpisize, mpirank, mgpu_id)
 
   call mgpu_setup()
 
-  if(master) call mgpu_write_info(iOutFile)
-
+  if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids)
+  
   call mgpu_init(mpirank, mpisize, mgpu_id)
 
 #endif
@@ -441,6 +441,15 @@ subroutine run_quick(self)
 
   ! stop the timer for initial guess
   call cpu_time(timer_end%TIniGuess)
+
+#ifdef CUDA_MPIV
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
+
+  timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
+                           - (timer_end%T2elb-timer_begin%T2elb)
 
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then

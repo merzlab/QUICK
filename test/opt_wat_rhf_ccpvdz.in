@@ -1,4 +1,4 @@
-HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPT DIPOLE
+HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPTIMIZE=5 DIPOLE
 
   O         -0.741530        1.752130        2.896280
   H         -1.111151        0.979769        3.352290
@@ -13,4 +13,4 @@ HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPT DIPOLE
 #ref_grad  0.0122178866
 #ref_grad  0.0344091903
 #ref_grad -0.0303553100
-#ref_min_ene -76.0273891243 
+#ref_min_ene -76.025870909 

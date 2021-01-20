@@ -18,7 +18,7 @@ module quick_scf_module
   private
 
   public :: allocate_quick_scf, deallocate_quick_scf 
-  public :: V2, oneElecO, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+  public :: V2, oneElecO, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator, bCalc1e
 !  type quick_scf_type
 
     ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
@@ -43,6 +43,8 @@ module quick_scf_module
     double precision, allocatable, dimension(:,:,:) :: allerror
 
     double precision, allocatable, dimension(:,:,:) :: alloperator
+
+    logical :: bCalc1e = .false.
 
 !  end type quick_scf_type
 

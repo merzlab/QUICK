@@ -46,10 +46,10 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Jan 17 10:15:57 2021
-| INPUT FILE :    ene_psb3_libxc_gga_631g.in
-| OUTPUT FILE:    ene_psb3_libxc_gga_631g.out
-| DATE FILE  :    ene_psb3_libxc_gga_631g.dat
+| TASK STARTS ON: Sun Jan 17 10:16:36 2021
+| INPUT FILE :    grad_wat_b3lyp_ccpvdz.in
+| OUTPUT FILE:    grad_wat_b3lyp_ccpvdz.out
+| DATE FILE  :    grad_wat_b3lyp_ccpvdz.dat
 | BASIS SET PATH: /server-home1/madu/Work/Qk/mgpu/basis
  
 |------------ GPU INFORMATION ---------------
@@ -64,30 +64,30 @@
 
  @ Read Job And Atom
 
-  KEYWORD= DFT LIBXC=GGA_X_B88,GGA_C_LYP BASIS=6-31G DIPOLE CUTOFF=1.0D-10 DENSERMS=1.0D-6 CHARGE=+1                                                                                                              
+  KEYWORD=DFT B3LYP BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT DIPOLE EXTCHARGES                                                                                                                        
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
- USING LIBXC VERSION: 4.3.4
- FUNCTIONAL INFORMATION:
- NAME = Becke 88 FAMILY = GGA KIND = EXCHANGE
- NAME = Lee, Yang & Parr FAMILY = GGA KIND = CORRELATION
+ DENSITY FUNCTIONAL = B3LYP
  DIRECT SCF 
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  DIPOLE
+ EXTERNAL CHARGES
  STANDARD GRID = SG1
+ GRADIENT CALCULATION
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE = 1000
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-09
+      TWO-e INTEGRAL   =  0.100E-08
       BASIS SET PRIME  =  0.100E-19
       MATRIX ELEMENTS  =  0.100E-09
       BASIS FUNCTION   =  0.100E-09
+      GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
- BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/mgpu/basis/6-31G.BAS
+ BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
+| BASIS FILE = /server-home1/madu/Work/Qk/mgpu/basis/CC-PVDZ.BAS
 
  @ Finish reading job
 
@@ -95,14 +95,11 @@
  @ Begin SAD initial guess
 
  For Atom Kind =    1
- ELEMENT = C 
- BASIS FUNCTIONS =    9
+ ELEMENT = O 
+ BASIS FUNCTIONS =   15
  For Atom Kind =    2
- ELEMENT = N 
- BASIS FUNCTIONS =    9
- For Atom Kind =    3
  ELEMENT = H 
- BASIS FUNCTIONS =    2
+ BASIS FUNCTIONS =    5
 
  @ Finish SAD initial guess
 
@@ -111,63 +108,32 @@
 
 
  =========== Molecule Input ==========
- TOTAL MOLECULAR CHARGE  =    1    MULTIPLICITY                =    1
- TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
- NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
- NUMBER OF ELECTRONS     =   44
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+ NUMBER OF EXTERNAL POINT CHARGES =    3
+ NUMBER OF ELECTRONS     =   10
  
  -- INPUT GEOMETRY -- :
-    C          -2.7472      -0.8366       0.8589
-    C          -1.4569      -0.4717       0.9992
-    C          -0.6277      -0.2215      -0.1532
-    C           0.6894       0.1526      -0.2017
-    C           1.4882       0.3645       0.9508
-    N           2.7314       0.7179       0.9037
-    H           1.1530       0.2966      -1.1612
-    H          -1.1103      -0.3463      -1.1067
-    H           1.0827       0.2367       1.9358
-    H          -1.0483      -0.3680       1.9877
-    H           3.2687       0.8596       1.7368
-    H           3.2084       0.8645       0.0338
-    H          -3.3689      -1.0241       1.7130
-    H          -3.2011      -0.9533      -0.1081
+    O          -0.7415       1.7521       2.8963
+    H          -1.1112       0.9798       3.3523
+    H          -0.9205       2.0364       1.9840
+ 
+ -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- 
+    -0.8340    1.6492     0.0000    -2.3560
+     0.4170    0.5448     0.0000    -3.8000
+     0.4170    0.5448     0.0000    -0.9121
  
  -- DISTANCE MATRIX -- :
-              1           2           3           4           5
+              1           2           3
       1     0.00000
-      2     2.54783     0.00000
-      3     4.58824     2.72422     0.00000
-      4     7.04901     4.79509     2.58914     0.00000
-      5     8.32128     5.78618     4.64407     2.67996     0.00000
-      6    10.76215     8.22979     6.88736     4.51608     2.44398
-      7     8.57213     6.56504     3.98880     2.03203     4.04312
-      8     4.92184     4.03998     2.03309     3.92175     6.40577
-      9     7.78692     5.28737     5.17510     4.11025     2.02752
-     10     3.95505     2.03091     4.13247     5.37308     5.36018
-     11    11.92755     9.38174     8.43475     6.24179     3.79493
-     12    11.80796     9.35025     7.54235     4.96652     3.80289
-     13     2.02747     3.99549     6.44755     8.76653     9.65437
-     14     2.03075     4.00891     5.05659     7.64543     9.41987
-              6           7           8           9          10
-      6     0.00000
-      7     4.97571     0.00000
-      8     8.43691     4.44738     0.00000
-      9     3.78663     5.85521     7.17246     0.00000
-     10     7.70867     7.36830     5.84893     4.18703     0.00000
-     11     1.89227     6.86346    10.12627     4.31181     8.49450
-     12     1.89512     4.61928     8.74549     5.51933     9.15220
-     13    12.08582    10.42828     6.94621     8.75320     4.58667
-     14    11.80313     8.78871     4.52637     9.24709     5.78457
-             11          12          13          14
-     11     0.00000
-     12     3.22015     0.00000
-     13    13.03851    13.31509     0.00000
-     14    13.16700    12.59278     3.45864     0.00000
+      2     1.83324     0.00000
+      3     1.83707     3.28673     0.00000
  
 ============== BASIS INFOS ==============
- BASIS FUNCTIONS =   70
- NSHELL =   34 NPRIM  =   92
- JSHELL =   34 JBASIS =   92
+ BASIS FUNCTIONS =   25
+ NSHELL =   12 NPRIM  =   37
+ JSHELL =   12 JBASIS =   37
  
 
  @ End Reading Molecular Information 
@@ -177,10 +143,10 @@
 
  OCTAGO: OCTree Algorithm for Grid Operations 
    PRUNING CUTOFF       = 0.100E-09
-   INITIAL GRID POINTS  =       52912
-|   FINAL GRID POINTS    =       34972
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       26224
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       32501
+   INITIAL GRID POINTS  =       11320
+|   FINAL GRID POINTS    =        8001
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        4269
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        6264
 
  @ End XC Quadrature Formation
 
@@ -191,54 +157,71 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.168718927      ------         0.062     1        0.01      0.05      0.01    0.1996E+01  0.5716E-01  0.5491E+00
-|  2   -249.427740200  -.740979E+00       0.036     2        0.01      0.03      0.01    0.2065E+00  0.3214E-01  0.3456E+00
-|  3   -249.167452892  -.260287E+00       0.036     3        0.01      0.03      0.01    0.2975E+00  0.2710E-01  0.3133E+00
-|  4   -249.558633240  0.391180E+00       0.036     4        0.01      0.03      0.01    0.1088E+00  0.1061E-01  0.1518E+00
-|  5   -249.648913123  0.902799E-01       0.036     5        0.01      0.03      0.01    0.3983E-01  0.3026E-02  0.4629E-01
-|  6   -249.654670438  0.575732E-02       0.036     6        0.01      0.03      0.01    0.1591E-01  0.1203E-02  0.1607E-01
-|  7   -249.656185304  0.151487E-02       0.036     7        0.01      0.03      0.01    0.3995E-02  0.3235E-03  0.6195E-02
-|  8   -249.656242348  0.570441E-04       0.042     8        0.02      0.03      0.01    0.1876E-02  0.9960E-04  0.1858E-02
-|  9   -249.656254935  0.125877E-04       0.040     9        0.01      0.03      0.01    0.5355E-03  0.3142E-04  0.5389E-03
-| 10   -249.656255428  0.492267E-06       0.039    10        0.01      0.03      0.01    0.2281E-03  0.1830E-04  0.2342E-03
-| 11   -249.656255709  0.281805E-06       0.038     1        0.01      0.03      0.01    0.2014E-04  0.2402E-05  0.2818E-04
-| 12   -249.656255712  0.289936E-08       0.038     2        0.01      0.03      0.01    0.1135E-04  0.8488E-06  0.1130E-04
+|  1    -76.348059954      ------         0.036     1        0.01      0.03      0.01    0.1586E+01  0.1112E+00  0.9440E+00
+|  2    -76.345917700  -.214225E-02       0.024     2        0.01      0.02      0.01    0.1706E+00  0.5863E-01  0.5912E+00
+|  3    -76.321982078  -.239356E-01       0.024     3        0.01      0.02      0.01    0.2035E+00  0.3154E-01  0.3105E+00
+|  4    -76.407981573  0.859995E-01       0.023     4        0.01      0.02      0.01    0.5070E-02  0.7697E-03  0.6480E-02
+|  5    -76.408023311  0.417384E-04       0.023     5        0.01      0.02      0.01    0.7036E-03  0.1336E-03  0.1382E-02
+|  6    -76.408024853  0.154162E-05       0.023     6        0.01      0.02      0.01    0.1020E-03  0.1968E-04  0.2057E-03
+|  7    -76.408024876  0.225139E-07       0.024     7        0.01      0.02      0.01    0.2321E-04  0.4047E-05  0.4183E-04
+    | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  8    -76.408024766  -.109406E-06       0.024     8        0.01      0.02      0.01    0.1966E-05  0.7539E-06  0.6572E-05
 ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  12 CYLCES
-| MAX ERROR = 0.113503E-04   RMS CHANGE = 0.848795E-06   MAX CHANGE = 0.113024E-04
+| REACH CONVERGENCE AFTER   8 CYLCES
+| MAX ERROR = 0.196625E-05   RMS CHANGE = 0.753925E-06   MAX CHANGE = 0.657198E-05
  -----------------------------------------------
- ALPHA ELECTRON DENSITY    =   22.0000148257
- BETA ELECTRON DENSITY     =   22.0000148257
- ELECTRONIC ENERGY    =  -456.841434081
- CORE_CORE REPULSION  =   207.185178368
- TOTAL ENERGY         =  -249.656255712
+ ALPHA ELECTRON DENSITY    =    5.0000014248
+ BETA ELECTRON DENSITY     =    5.0000014248
+ ELECTRONIC ENERGY    =   -85.518435236
+ CORE_CORE REPULSION  =     9.110410470
+ EXT CHARGE REPULSION =    -0.170609996
+ TOTAL ENERGY         =   -76.408024766
 
  @ End Energy calculation
 
+
+ ANALYTICAL GRADIENT: 
+----------------------------------------
+ COORDINATE    XYZ            GRADIENT
+----------------------------------------
+    1X    -0.7415300566    -0.0252561185
+    1Y     1.7521301338    -0.0225985839
+    1Z     2.8962802212    -0.0181904513
+    2X    -1.1111510849     0.0102139101
+    2Y     0.9797690748    -0.0035233479
+    2Z     3.3522902560     0.0292526123
+    3X    -0.9205000703     0.0152460401
+    3Y     2.0364501555     0.0259264847
+    3Z     1.9840401515    -0.0111574419
+----------------------------------------
+
+ POINT CHARGE GRADIENT: 
+----------------------------------------
+ COORDINATE    XYZ            GRADIENT
+----------------------------------------
+    1X     1.6492001259     0.0004021708
+    1Y     0.0000000000    -0.0000672816
+    1Z    -2.3560001799    -0.0000224238
+    2X     0.5448000416    -0.0001121168
+    2Y     0.0000000000     0.0000330094
+    2Z    -3.8000002902     0.0000942206
+    3X     0.5448000416    -0.0005052400
+    3Y     0.0000000000     0.0002206271
+    3Z    -0.9121000697     0.0000410718
+----------------------------------------
 
  @ Begin Charge and Dipole Calculation
 
     ATOMIC CHARGES
    ATOM          MULLIKEN            LOWDIN
-   C             -0.2146            -0.0886
-   C             -0.0194            -0.1077
-   C             -0.0682             0.0184
-   C             -0.1052            -0.1437
-   C              0.1953             0.0891
-   N             -0.5738            -0.1710
-   H              0.1637             0.1444
-   H              0.1700             0.1494
-   H              0.2030             0.1522
-   H              0.1422             0.1266
-   H              0.3756             0.2729
-   H              0.3715             0.2671
-   H              0.1825             0.1492
-   H              0.1774             0.1417
-   TOTAL         1.0000             1.0000
+   O             -0.3213            -0.5886
+   H              0.1625             0.2962
+   H              0.1589             0.2924
+   TOTAL         0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    3.5278    0.9914    0.7270    3.7359
+   -0.9811   -0.8720   -0.7887    1.5314
 
  @ End Charge and Dipole Calculation
 
@@ -246,19 +229,23 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.674145000( 48.45%)
-| DFT GRID OPERATIONS =     0.062900000(  1.82%)
-| TOTAL SCF TIME      =     0.485855000( 14.06%)
-|       TOTAL OP TIME      =     0.350410000( 10.14%)
-|             TOTAL 1e TIME      =     0.011418000(  0.33%)
-|             TOTAL 2e TIME      =     0.160397000(  4.64%)
-|             TOTAL EXC TIME     =     0.166777000(  4.83%)
-|       TOTAL DII TIME      =     0.135132000(  3.91%)
-|             TOTAL DIAG TIME    =     0.120842000(  3.50%)
-| TOTAL TIME          =     3.455619000
+| INITIAL GUESS TIME  =     3.910566000( 70.59%)
+| DFT GRID OPERATIONS =     0.012637000(  0.23%)
+| TOTAL SCF TIME      =     0.203136000(  3.67%)
+|       TOTAL OP TIME      =     0.144586000(  2.61%)
+|             TOTAL 1e TIME      =     0.001642000(  0.03%)
+|             TOTAL 2e TIME      =     0.124882000(  2.25%)
+|             TOTAL EXC TIME     =     0.016305000(  0.29%)
+|       TOTAL DII TIME      =     0.058490000(  1.06%)
+|             TOTAL DIAG TIME    =     0.053325000(  0.96%)
+| TOTAL GRADIENT TIME      =     0.249897000(  4.51%)
+|       TOTAL 1e GRADIENT TIME      =     0.016614000(  0.30%)
+|       TOTAL 2e GRADIENT TIME      =     0.235310000(  4.25%)
+|       TOTAL EXC GRADIENT TIME     =     0.014566000(  0.26%)
+| TOTAL TIME          =     5.539898000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  3.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Jan 17 10:16:01 2021
+| Normal Termination. Task Finished on: Sun Jan 17 10:16:42 2021
