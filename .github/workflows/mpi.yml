@@ -15,5 +15,7 @@ jobs:
         run: make
       - name: Install mpi
         run: make install
+      - name: Set MPI command
+        run: export DO_PARALLEL="mpirun -np 2"
       - name: Test mpi
         run: make test

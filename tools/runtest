@@ -69,9 +69,6 @@ echo  "
       --mpi          Tests QUICK MPI prallel version                           
       --cuda         Tests QUICK GPU version
       --cudampi      Tests QUICK multi-GPU version
-      --ncores <ncore>
-                     Specify the number of cores to be used in MPI tests.
-                     If unspecified, 2 cores will be used.    
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -118,7 +115,6 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
-    --ncores)      shift; ncores=$1;;
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -208,12 +204,13 @@ echo ""
 
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-  if [ `command -v mpirun | wc -l` -gt 0 ]; then
-    ismpirun='yes'
-    echo  "MPI tests will be carried out with $ncores cores. "
-  else
-    echo  "MPI tests will be carried out with a single core. "
-  fi
+if [ -z "$DO_PARALLEL" ]; then
+   export DO_PARALLEL=" "
+   echo  "Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core."
+else
+   ismpirun='yes'
+   echo  "MPI command: $DO_PARALLEL"
+fi
   echo ""
 fi
 
@@ -274,7 +271,7 @@ for buildtype in $buildtypes; do
 
     # Run the test case
     if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
-      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+      $DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
     else
       "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
     fi
