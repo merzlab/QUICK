@@ -108,14 +108,14 @@ cudampiinstall: cudampi
 
 aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
-	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
-	ln -s -f $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \
-	ln -s -f $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(installfolder)/lib/libquick-cuda.$(libsuffix); \
-	ln -s -f $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then ln -s -f $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(installfolder)/lib/libquick-cudampi.$(libsuffix); \
-	ln -s -f $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; echo "Successfully installed QUICK libraries in $(installfolder)/lib folder.";\
+	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
+	mv $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \
+	mv $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then mv $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(installfolder)/lib/libquick-cuda.$(libsuffix); \
+	mv $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then mv $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(installfolder)/lib/libquick-cudampi.$(libsuffix); \
+	mv $(buildfolder)/lib/cudampi/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; echo "Successfully installed QUICK libraries in $(installfolder)/lib folder.";\
         else echo "Error: $(installfolder)/lib folder not found."; exit 1; fi
 	@if [ -d $(installfolder)/bin ]; then \
 	for i in quick quick.MPI quick.cuda quick.cuda.MPI; do if [ -x $(exefolder)/$$i ]; then mv $(exefolder)/$$i $(installfolder)/bin/; fi; done; \

@@ -1160,9 +1160,13 @@ else
   libpath="\$QUICK_INSTALL/build/lib"
 fi
 
-for buildtype in $buildtypes; do
-  libpaths="$libpath/$buildtype:$libpaths"
-done
+if [ "$aminstall" = "true" ]; then
+  libpaths="\$QUICK_INSTALL/lib:"
+else
+  for buildtype in $buildtypes; do
+    libpaths="$libpath/$buildtype:$libpaths"
+  done
+fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
 export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
