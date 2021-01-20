@@ -399,7 +399,7 @@ for buildtype in $buildtypes; do
       
     # Check the minimum energy
     refval=$(grep "#ref_min_ene" "$i.in" | awk '{print $2}')
-    newval=$(grep "MINIMIZED ENERGY" "$i.out" | awk '{print $3}')
+    newval=$(grep "TOTAL ENERGY" "$i.out" |tail -1 | awk '{print $4}')
     echo "$refval  $newval"|awk '{
       x=sqrt(($1-$2)^2); 
       if(x>=0.00001) stat="Failed"; else stat="Passed"; 
