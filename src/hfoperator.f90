@@ -869,7 +869,7 @@ end subroutine get2edc
 subroutine get2eEnergy()
    use allmod
    implicit double precision(a-h,o-z)
-   call cpu_time(timer_begin%tE)
+   
    !------------------------------------------------
    ! This subroutine is to get 2e energy
    !------------------------------------------------

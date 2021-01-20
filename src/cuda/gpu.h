@@ -14,7 +14,7 @@
 //Madu Manathunga 07/01/2019: Libxc header files
 #include "util.h"
 #include "gpu_work.cuh"
-//#include "cuda.h"
+#include "xc_redistribute.h"
 
 // device initial and shutdown operation
 extern "C" void gpu_set_device_(int* gpu_dev_id);
@@ -39,19 +39,23 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
                                   QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN);
-extern "C" void gpu_upload_grad_(QUICKDouble* grad, QUICKDouble* gradCutoff);
+extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
-//Following methods were added by Madu Manathunga
+//Following methods weddre added by Madu Manathunga
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense);
 extern "C" void gpu_delete_dft_grid_();
-
+//void upload_xc_smem();
+void upload_pteval();
+void reupload_pteval();
+void delete_pteval(bool devOnly);
 // call subroutine
 // Fortran subroutine   --->  c interface    ->   kernel interface   ->    global       ->    kernel
 //                            [gpu_get2e]    ->      [get2e]         -> [get2e_kernel]  ->   [iclass]
 
 // c interface [gpu_get2e]
 extern "C" void gpu_get2e_(QUICKDouble* o);
+extern "C" void get1e_();
 //extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
 extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
 
@@ -65,6 +69,7 @@ void get2e(_gpu_type gpu);
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
 void get_ssw(_gpu_type gpu);
 void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
+void getpteval(_gpu_type gpu);
 void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
@@ -111,7 +116,9 @@ __global__ void getGrad_kernel_spdf8();
 
 __global__ void get_ssw_kernel();
 __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
+__global__ void get_pteval_kernel();
 __global__ void get_density_kernel();
+/*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp);*/
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
 __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals);
 __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals);
@@ -456,7 +463,7 @@ __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
                         int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, int iparent, int gid);
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid);
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);
 
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
@@ -464,6 +471,9 @@ __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gr
 //Madu Manathunga 08/20/2019
 //__device__ void pt2der(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
 //                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int ibas);
+/*__device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
+                QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, unsigned char *primf, unsigned int *primf_counter,
+                 int ibas, int ibasp);*/
 __device__ void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
                 QUICKDouble* dxdz, QUICKDouble* dydy, QUICKDouble* dydz, QUICKDouble* dzdz, int *primf, int *primf_counter,
                  int ibas, int ibasp);

@@ -48,13 +48,14 @@ subroutine gpu_write_info(io)
 end subroutine gpu_write_info
 
 #ifdef CUDA_MPIV
-subroutine mgpu_write_info(io)
+subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids)
     implicit none
     ! io unit
     integer io
 
     integer rank
     integer gpu_dev_count
+    integer mgpu_ids(gpu_dev_count)
     integer gpu_dev_id
     integer gpu_num_proc
     character(len=20) gpu_dev_name
@@ -77,16 +78,14 @@ subroutine mgpu_write_info(io)
 
     write(io,*)
 
-    call mgpu_get_dev_count(gpu_dev_count)
-
     write(io,'(a)')         '|------------ GPU INFORMATION -------------------------------'
     write(io,'(a,i8)')      '| CUDA ENABLED DEVICES          : ', gpu_dev_count
 
     do rank=0, gpu_dev_count-1
     write(io,'(a)')         '|                                                            '
     write(io,'(a,i3,a)')      '|        --    MPI RANK ',rank,' --          '
-
-    call mgpu_get_device_info(rank,gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv) 
+    gpu_dev_id=mgpu_ids(rank+1)
+    call mgpu_get_device_info(gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv) 
 
     write(io,'(a,i8)')      '|   CUDA DEVICE IN USE          : ', gpu_dev_id
     write(io,'(a,a)')       '|   CUDA DEVICE NAME            : ', gpu_dev_name(1:name_len)

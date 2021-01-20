@@ -55,19 +55,14 @@ module quick_gridpoints_module
     integer,dimension(:), allocatable   :: primf_counter
 
 #if defined CUDA || defined CUDA_MPIV
-    !an array indicating if a binned grid point is true or a dummy grid point
-    integer,dimension(:), allocatable   :: dweight
-#else
-    !in cpu case, we will have bins with different number of points. This array keeps track
-    !of the size of each bin
-    integer,dimension(:), allocatable   :: bin_counter
+    !an array indicating bin of a grid point
+    integer,dimension(:), allocatable   :: bin_locator
 #endif
+    !This array keeps track of the size of each bin
+    integer,dimension(:), allocatable   :: bin_counter
 
     !length of binned grid arrays
     integer :: gridb_count
-
-    !number of true grid points
-    integer :: ntgpts
 
     !number of bins
     integer :: nbins
@@ -285,7 +280,7 @@ module quick_gridpoints_module
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, self%init_ngpts, natom, &
     nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
-    self%gridb_count, self%ntgpts, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
+    self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
 
     timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
     timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
@@ -323,7 +318,7 @@ module quick_gridpoints_module
 
     ! save packed grid information into f90 data structures
      call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
-     self%dweight, self%basf, self%primf, self%basf_counter, self%primf_counter)
+     self%bin_locator, self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
 
 #ifdef CUDA_MPIV
     endif
@@ -393,8 +388,8 @@ module quick_gridpoints_module
 
     call cpu_time(timer_end%TDFTGrdPck)
 
-    timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - timer_cumer%TDFTGrdOct &
-                           - timer_cumer%TDFTPrscrn
+    timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - t_octree &
+                           - t_prscrn
 
 !    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
 !    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
@@ -437,10 +432,9 @@ module quick_gridpoints_module
         if (.not. allocated(self%primf_counter)) allocate(self%primf_counter(self%nbtotbf + 1))
 
 #if defined CUDA || defined CUDA_MPIV
-        if (.not. allocated(self%dweight)) allocate(self%dweight(self%gridb_count))
-#else
-        if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
+        if (.not. allocated(self%bin_locator)) allocate(self%bin_locator(self%gridb_count))
 #endif
+        if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
 
     end subroutine
 
@@ -496,10 +490,9 @@ module quick_gridpoints_module
         if (allocated(self%basf_counter)) deallocate(self%basf_counter)
         if (allocated(self%primf_counter)) deallocate(self%primf_counter)
 #if defined CUDA || defined CUDA_MPIV
-        if (allocated(self%dweight)) deallocate(self%dweight)
-#else
-        if (allocated(self%bin_counter)) deallocate(self%bin_counter)
+        if (allocated(self%bin_locator)) deallocate(self%bin_locator)
 #endif
+        if (allocated(self%bin_counter)) deallocate(self%bin_counter)
 
 #ifdef MPIV
         if(bMPI) then
@@ -550,7 +543,7 @@ module quick_gridpoints_module
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
      write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%DMCutoff
      write (ioutfile,'("   INITIAL GRID POINTS  =",I12)') self%init_ngpts
-     write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%ntgpts
+     write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%gridb_count
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =",I12)') self%nbtotpf
 
