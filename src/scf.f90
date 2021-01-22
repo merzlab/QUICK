@@ -274,8 +274,10 @@ subroutine electdiis(jscf)
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #else
-         quick_scratch%hold=MATMUL(quick_qm_struct%dense,quick_qm_struct%o)
-         quick_scratch%hold2=MATMUL(quick_qm_struct%s,quick_scratch%hold)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+               nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
 
          errormax = 0.d0
