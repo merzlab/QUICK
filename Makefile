@@ -110,8 +110,10 @@ aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
 	mv $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/serial/libblas.so ]; then mv $(buildfolder)/lib/serial/libblas.so $(installfolder)/lib/libblas.so; fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \
 	mv $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
+	if [ -e $(buildfolder)/lib/mpi/libblas.so ]; then mv $(buildfolder)/lib/mpi/libblas.so $(installfolder)/lib/libblas.so; fi; \
 	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then mv $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(installfolder)/lib/libquick-cuda.$(libsuffix); \
 	mv $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then mv $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(installfolder)/lib/libquick-cudampi.$(libsuffix); \
