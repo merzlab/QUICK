@@ -1864,6 +1864,8 @@ subroutine get1e()
      endif
 #ifdef MPIV
    else
+
+    if(bCalc1e) then
       temp2d = 0.0d0
 
       !------- MPI/ ALL NODES -------------------
@@ -1928,7 +1930,12 @@ subroutine get1e()
          call copySym(quick_qm_struct%o,nbasis)
          call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
       endif
+
+      bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
+     else
+       quick_qm_struct%o(:,:)=oneElecO(:,:)
+     endif
    endif
 #endif
 end subroutine get1e
