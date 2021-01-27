@@ -23,6 +23,7 @@ module quick_cutoff_module
   public :: cshell_dnscreen,oshell_dnscreen
   public :: schwarzoff
 
+  ! temporary variables required only for subroutines in this module
   double precision, dimension(:), allocatable :: X44
   double precision, dimension(:,:), allocatable :: X4444
 
