@@ -26,6 +26,7 @@ subroutine scf_operator(deltaO)
 !-------------------------------------------------------
    use allmod
    use quick_scf_module
+   use quick_cutoff_module, only: cshell_density_cutoff
 
    implicit none
 
@@ -73,7 +74,7 @@ subroutine scf_operator(deltaO)
    endif
 
 !  Delta density matrix cutoff
-   call densityCutoff()
+   call cshell_density_cutoff
 
 #ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
