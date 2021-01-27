@@ -33,13 +33,18 @@ subroutine allocate_quick_cutoff
   implicit none
   
   if(.not. allocated(X44)) allocate(X44(maxcontract**4))
-  
+  if(.not. allocated(X4444)) allocate(X4444(maxcontract,maxcontract))
+
+  X44 = 0.0d0
+  X4444 = 0.0d0  
+
 end subroutine allocate_quick_cutoff
 
 subroutine deallocate_quick_cutoff
   implicit none
 
   if(allocated(X44)) deallocate(X44)
+  if(allocated(X4444)) deallocate(X4444)
 
 end subroutine deallocate_quick_cutoff
 
@@ -55,6 +60,9 @@ subroutine schwarzoff
   double precision Ymaxtemp
 
   if (master) then
+
+  call allocate_quick_cutoff
+
   do II=1,nshell
      do JJ=II,nshell
         call shellcutoff(II,JJ,Ymaxtemp)
@@ -62,6 +70,9 @@ subroutine schwarzoff
         Ycutoff(JJ,II)=dsqrt(Ymaxtemp)
      enddo
   enddo
+
+  call deallocate_quick_cutoff
+
   endif
 
 #ifdef MPIV
@@ -248,7 +259,7 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
   Parameter(NN=13)
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
-  double precision X44(100000)
+!  double precision X44(100000)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
@@ -419,8 +430,8 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
   Parameter(NN=13)
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
-  double precision X44(12960)
-  double precision X4444(MAXPRIM,MAXPRIM)
+!  double precision X44(12960)
+!  double precision X4444(MAXPRIM,MAXPRIM)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
