@@ -1863,6 +1863,7 @@ subroutine get1e()
 #ifdef MPIV
    else
 
+    call cpu_time(timer_begin%t1e)
     if(bCalc1e) then
 
       !------- MPI/ ALL NODES -------------------
@@ -1875,7 +1876,6 @@ subroutine get1e()
       ! The first part is kinetic part
       ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
       !-----------------------------------------------------------------
-      call cpu_time(timer_begin%t1e)
       call cpu_time(timer_begin%T1eT)
 
       do i=1,mpi_nbasisn(mpirank)
@@ -1896,11 +1896,6 @@ subroutine get1e()
       enddo
       call cpu_time(timer_end%T1eV)
 
-      call cpu_time(timer_end%t1e)
-      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-      timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
-      timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-
       call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
 
       bCalc1e=.false.
@@ -1908,6 +1903,11 @@ subroutine get1e()
      else
        quick_qm_struct%o(:,:)=oneElecO(:,:)
      endif
+
+     call cpu_time(timer_end%t1e)
+     timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+     timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+     timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV     
 
    endif
 #endif
