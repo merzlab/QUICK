@@ -157,6 +157,7 @@ end subroutine hfoperator
 subroutine hfoperatordeltadc
    use allmod
    use quick_gaussian_class_module
+   use quick_cutoff_module, only: cshell_dnscreen
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp
@@ -300,7 +301,7 @@ subroutine hfoperatordeltadc
    do II=1,jshell
       do JJ=II,jshell
          DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II,JJ,DNtemp)
          Cutmatrix(II,JJ)=DNtemp
          Cutmatrix(JJ,II)=DNtemp
       enddo
