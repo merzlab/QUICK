@@ -1815,7 +1815,6 @@ subroutine get1e()
 #endif
 
      if (master) then
-
        call cpu_time(timer_begin%T1e)
        if(bCalc1e) then
          !=================================================================
@@ -1860,13 +1859,11 @@ subroutine get1e()
        timer_cumer%TOp = timer_cumer%TOp+timer_end%T1e-timer_begin%T1e
        timer_cumer%TSCF = timer_cumer%TSCF+timer_end%T1e-timer_begin%T1e
 
-       if (quick_method%printEnergy) call get1eEnergy()
      endif
 #ifdef MPIV
    else
 
     if(bCalc1e) then
-      temp2d = 0.0d0
 
       !------- MPI/ ALL NODES -------------------
 
@@ -1880,11 +1877,7 @@ subroutine get1e()
       !-----------------------------------------------------------------
       call cpu_time(timer_begin%t1e)
       call cpu_time(timer_begin%T1eT)
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
+
       do i=1,mpi_nbasisn(mpirank)
          Ibas=mpi_nbasis(mpirank,i)
          call get1eO(Ibas)
@@ -1908,34 +1901,14 @@ subroutine get1e()
       timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
       timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
-      ! slave node will send infos
-      if(.not.master) then
-
-         ! Copy Opertor to a temp array and then send it to master
-         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
-         ! send operator to master node
-         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-      else
-         ! master node will receive infos from every nodes
-         do i=1,mpisize-1
-            ! receive opertors from slave nodes
-            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-            ! and sum them into operator
-            do ii=1,nbasis
-               do jj=1,nbasis
-                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-               enddo
-            enddo
-         enddo
-         call copySym(quick_qm_struct%o,nbasis)
-         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
-      endif
+      call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
 
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
      else
-       if(master) quick_qm_struct%o(:,:)=oneElecO(:,:)
+       quick_qm_struct%o(:,:)=oneElecO(:,:)
      endif
+
    endif
 #endif
 end subroutine get1e
