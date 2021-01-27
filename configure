@@ -308,6 +308,10 @@ else
    echo  "Warning: Failed to detect $fort version."
 fi
 
+if [ "$fort_search" = 'gfortran' ] && [ "$fort_version_major" -ge 10 ]; then
+  fort_vspec_flags='-fallow-argument-mismatch'
+fi
+
 # check the c compiler version
 has_cc_version='no'
 cc_version='not'
@@ -484,6 +488,9 @@ fort_debug_flags=''
 cc_debug_flags=''
 cxx_debug_flags=''
 cuda_debug_flags=''
+
+# compiler version specific flags
+fort_vspec_flags=''
 
 # set common folders
 libxcobjfolder=''
@@ -899,7 +906,7 @@ for buildtype in $buildtypes; do
   # set compiler specific flags
   case "$compiler" in
     gnu)
-      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi
