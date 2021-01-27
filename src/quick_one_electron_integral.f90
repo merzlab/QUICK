@@ -1934,7 +1934,7 @@ subroutine get1e()
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
      else
-       quick_qm_struct%o(:,:)=oneElecO(:,:)
+       if(master) quick_qm_struct%o(:,:)=oneElecO(:,:)
      endif
    endif
 #endif
