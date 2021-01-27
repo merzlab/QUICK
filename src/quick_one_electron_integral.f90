@@ -1797,6 +1797,7 @@ subroutine get1e()
    use quick_scf_module
 
    implicit double precision(a-h,o-z)
+   double precision :: temp2d(nbasis,nbasis)
 
 #ifdef MPIV
    include "mpif.h"
@@ -1863,6 +1864,7 @@ subroutine get1e()
      endif
 #ifdef MPIV
    else
+      temp2d = 0.0d0
 
       !------- MPI/ ALL NODES -------------------
 
