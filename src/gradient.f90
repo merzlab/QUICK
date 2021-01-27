@@ -599,6 +599,7 @@ subroutine get_electron_replusion_grad
 
    use allmod
    use quick_gradient_module
+   use quick_cutoff_module, only: cshell_dnscreen
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -617,7 +618,7 @@ subroutine get_electron_replusion_grad
    do II=1,jshell
       do JJ=II,jshell
          DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II,JJ,DNtemp)
          Cutmatrix(II,JJ)=DNtemp
          Cutmatrix(JJ,II)=DNtemp
       enddo
