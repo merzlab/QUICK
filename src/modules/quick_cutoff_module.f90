@@ -23,8 +23,25 @@ module quick_cutoff_module
   public :: cshell_dnscreen,oshell_dnscreen
   public :: schwarzoff
 
+  double precision, dimension(:), allocatable :: X44
+  double precision, dimension(:,:), allocatable :: X4444
+
 contains
 
+subroutine allocate_quick_cutoff
+  use quick_basis_module
+  implicit none
+  
+  if(.not. allocated(X44)) allocate(X44(maxcontract**4))
+  
+end subroutine allocate_quick_cutoff
+
+subroutine deallocate_quick_cutoff
+  implicit none
+
+  if(allocated(X44)) deallocate(X44)
+
+end subroutine deallocate_quick_cutoff
 
 subroutine schwarzoff
   use allmod
