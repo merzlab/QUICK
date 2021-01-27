@@ -19,6 +19,9 @@
 module quick_cutoff_module
   implicit double precision(a-h,o-z)
   private
+  public :: cshell_density_cutoff,oshell_density_cutoff
+  public :: cshell_dnscreen,oshell_dnscreen
+  public :: schwarzoff
 
 contains
 
