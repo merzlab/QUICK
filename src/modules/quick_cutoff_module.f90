@@ -553,5 +553,9 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
 
 end subroutine classprim
 
+#define OSHELL
+#include "./include/cutoff.f90"
+#undef OSHELL
+#include "./include/cutoff.f90"
 
 end module quick_cutoff_module
