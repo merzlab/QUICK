@@ -56,9 +56,9 @@ subroutine scf_operator(deltaO)
 !  Step 1. evaluate 1e integrals
 !-----------------------------------------------------------------
 
-!#if !defined CUDA && !defined CUDA_MPIV
    call get1e()
-!#endif
+
+   if(quick_method%printEnergy) call get1eEnergy()
 
 !  if only calculate operation difference
    if (deltaO) then
