@@ -46,12 +46,11 @@ subroutine scf_operator(deltaO)
    Excsum=0.0d0
    aelec=0.0d0
    belec=0.0d0
-
-   if (.not.master) then
-     quick_qm_struct%o = 0.0d0
-     quick_qm_struct%Eel=0.0d0
-   endif
 #endif
+
+   quick_qm_struct%o = 0.0d0
+   quick_qm_struct%Eel=0.0d0
+
 !-----------------------------------------------------------------
 !  Step 1. evaluate 1e integrals
 !-----------------------------------------------------------------
