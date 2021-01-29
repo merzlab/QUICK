@@ -458,9 +458,9 @@ contains
 
          if(self%nextatom.gt.0 )then
             write(io,*)
-            write(io,'(" -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- ")')
+            write(io,'(" -- EXTERNAL POINT CHARGES: (X,Y,Z,Q) -- ")')
             do i=1,self%nextatom
-               write(io,'(4x,F7.4,3(F10.4,1x))') self%extchg(i),(self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3),self%extchg(i)
             enddo
          endif
 
