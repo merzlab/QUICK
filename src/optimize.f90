@@ -5,6 +5,7 @@
 
 subroutine optimize(failed)
    use allmod
+   use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco,failed
