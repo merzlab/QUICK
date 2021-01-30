@@ -23,7 +23,7 @@ if [ -z "$QUICK_BASIS" ]; then
   export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
 fi
 
-for i in {ene,opt}*.in
+for i in *.in
 do
   $DO_PARALLEL $TESTsander $i < /dev/null || error
   ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out ${i%.in}.out
