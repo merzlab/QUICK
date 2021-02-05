@@ -42,6 +42,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
 	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o 
 
+MIRP = $(objfolder)/mirp_fmt.o
+
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
@@ -49,8 +51,11 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 $(SUBS):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
+$(MIRP):$(objfolder)/%.o:%.cpp
+	@echo "[QUICK]  CXX $@"
+	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-all: $(SUBS)
+all: $(SUBS) $(MIRP)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
