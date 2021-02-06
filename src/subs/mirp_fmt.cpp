@@ -16,7 +16,7 @@
   !                                                                     ! 
   !---------------------------------------------------------------------!
 */
-
+#ifdef MIRP
 #include <mirp/kernels/boys.h>
 #include <mirp/math.h>
 
@@ -33,4 +33,4 @@ void mirp_fmt_(int *m, double *t, double *fmt){
   for(int i=0; i<=*m+1; ++i) fmt[i]=F[i];
 
 }
-
+#endif
