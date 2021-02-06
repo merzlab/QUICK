@@ -245,18 +245,40 @@ module quick_timer_module
 #ifdef DEBUGTIME
                 write (io,'("| ",6x,"TOTAL NUCLEAR GRADIENT TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TNucGrad, &
                         timer_cumer%TNucGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') &
+                timer_cumer%T1eTGrad,timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+#else
+#if defined CUDA || CUDA_MPIV
+                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME (OVERLAPPED WITH 2e GRAD TIME) =",F16.9,"(",F5.2,"%)")') &
+#else
+                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
 #endif
-                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eGrad, &
-                        timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+                        timer_cumer%T1eTGrad,timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+#endif
+
 #ifdef DEBUGTIME
                 write (io,'("| ",9x,"KINETIC 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eTGrad, &
                         timer_cumer%T1eTGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
                 write (io,'("| ",9x,"ATTRACTION 1e GRADIENT TIME   =",F16.9,"( ",F5.2,"%)")') timer_cumer%T1eVGrad, &
                         timer_cumer%T1eVGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+
+                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
+#if defined CUDA || CUDA_MPIV
+                (timer_cumer%T2eGrad-timer_cumer%T1eGrad), &
+                        (timer_cumer%T2eGrad-timer_cumer%T1eGrad)/(timer_end%TTotal-timer_begin%TTotal)*100
+#else
+                timer_cumer%T2eGrad,timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100                
 #endif
-                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') timer_cumer%T2eGrad, &
-                        timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+#else
+#if defined CUDA || CUDA_MPIV
+                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME (OVERLAPPED WITH 1e GRAD TIME) =",F16.9,"(",F5.2,"%)")') &
+#else
+                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
+#endif
+                timer_cumer%T2eGrad,timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
+#endif
 
                 if(quick_method%DFT) then
                    write (io,'("| ",6x,"TOTAL EXC GRADIENT TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TExGrad, &
