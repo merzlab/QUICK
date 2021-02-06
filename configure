@@ -62,6 +62,9 @@ echo  "
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
       --verbose      Enable full compilation output
+      --mirp         Use functions for ERI calculations from MIRP library. 
+                     The MIRP libary, header files and their dependencies must
+                     be available in QUICK_HOME/dependencies directory.
 
   Supported compilers are: gnu, intel, pgi, nvidia
 
