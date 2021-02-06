@@ -187,18 +187,20 @@ void mgpu_eri_greedy_distribute(){
     // Array to store total number of items each core would have
     int tot_pcore[gpu->mpisize];
 
+#ifdef DEBUG
     // Save shell indices for each core
     int2 mpi_qidx[gpu->mpisize][nitems];
 
     // Keep track of primitive count
     int2 mpi_pidx[gpu->mpisize][nitems];
 
+    // Keep track of shell type
+    int2 qtypes[gpu->mpisize][nitems];
+#endif
+
     // Save a set of flags unique to each core, these will be uploaded
     // to GPU by responsible cores
     char mpi_flags[gpu->mpisize][nitems];
-
-    // Keep track of shell type
-    int2 qtypes[gpu->mpisize][nitems];
 
     // Keep track of total primitive value of each core
     int tot_pval[gpu->mpisize];
@@ -209,12 +211,14 @@ void mgpu_eri_greedy_distribute(){
 
     //set arrays to zero
     memset(tot_pcore,0, sizeof(int)*gpu->mpisize);
-    memset(mpi_qidx,0,sizeof(int2)*gpu->mpisize*nitems);
-    memset(mpi_pidx,0,sizeof(int2)*gpu->mpisize*nitems);
     memset(mpi_flags,0,sizeof(char)*gpu->mpisize*nitems);
-    memset(qtypes,0,sizeof(int2)*gpu->mpisize*nitems);
     memset(tot_pval,0,sizeof(int)*gpu->mpisize);
     memset(qtype_pcore,0,sizeof(int2)*gpu->mpisize*16);
+#ifdef DEBUG
+    memset(mpi_qidx,0,sizeof(int2)*gpu->mpisize*nitems);
+    memset(mpi_pidx,0,sizeof(int2)*gpu->mpisize*nitems);
+    memset(qtypes,0,sizeof(int2)*gpu->mpisize*nitems);
+#endif
 
 #ifdef DEBUG
     fprintf(gpu->debugFile," Greedy distribute sqrQshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
@@ -258,15 +262,16 @@ void mgpu_eri_greedy_distribute(){
                     q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
                     q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
 
-                    //Assign the indices for corresponding core
-                    mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
-                    mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
-
                     // Save the flag
                     mpi_flags[min_core][i] = 1;
 
                     // Store shell types for debugging
                     qtype_pcore[min_core][a] +=1;
+
+#ifdef DEBUG
+                    //Assign the indices for corresponding core
+                    mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
+                    mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
 
                     //Store primitve number for debugging
                     mpi_pidx[min_core][tot_pcore[min_core]].x = p1;
@@ -275,6 +280,7 @@ void mgpu_eri_greedy_distribute(){
                     // Store the Qshell type for debugging
                     qtypes[min_core][tot_pcore[min_core]].x = q1;
                     qtypes[min_core][tot_pcore[min_core]].y = q2;
+#endif
 
                     // Increase the counter for minimum core
                     tot_pcore[min_core] += 1;
