@@ -469,6 +469,57 @@ check_lapack(){
     return 1
   fi
 
+# Function to check for MIRP library and dependencies. 
+check_mirp(){
+
+if [ "$mirp" = 'yes' ] && [ "$shared" = 'no' ]; then
+  echo "Error: MIRP requires --shared flag. Plese reconfigure."
+  exit 1
+fi
+
+if [ -z "$MIRP_HOME" ]; then
+  echo "Error: MIRP_HOME is not set!"
+  exit 1
+else
+ # check for the so library
+  if [ ! -e "$MIRP_HOME/lib/libmirp.so" ]; then
+    echo "Error: libmirp.so cannot be found!"
+    exit 1
+  fi
+fi
+
+# check for dependencies
+if [ -z "$MIRP_DEP_HOME" ]; then
+  echo "Error: MIRP_DEP_HOME is not set!"
+  exit 1
+else
+
+# check for libarb.so
+if [ ! -e "$MIRP_DEP_HOME/lib/libarb.so" ]; then
+   echo "Error: libarb.so cannot be found!"
+   exit 1
+fi
+
+# check for libgmp.so
+if [ ! -e "$MIRP_DEP_HOME/lib/libgmp.so" ]; then
+   echo "Error: libgmp.so cannot be found!"
+   exit 1
+fi
+
+# check for libmpfr.so
+if [ ! -e "$MIRP_DEP_HOME/lib/libmpfr.so" ]; then
+   echo "Error: libmpfr.so cannot be found!"
+   exit 1
+fi
+
+# check for libflint.so
+if [ ! -e "$MIRP_DEP_HOME/lib/libflint.so" ]; then
+   echo "Error: libflint.so cannot be found!"
+   exit 1
+fi
+
+fi
+
 }
 
 
@@ -580,6 +631,9 @@ verbose='@'
 lapack='no'
 mkl='no'
 
+# flag for mirp library
+mirp='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -594,6 +648,7 @@ while [ $# -gt 0 ]; do
     --debug-time)  debugtime='yes';;
     --debug)       debug='yes';;
     --verbose)     verbose='';;
+    --mirp)        mirp='yes';;
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
@@ -633,6 +688,11 @@ fi
 
 # check compiler
 check_compiler
+
+# check for dependencies
+if [ "$mirp" = "yes" ]; then
+  check_mirp
+fi
 
 # check is amber installtion is required
 if [ "$aminstall" = "true" ]; then
@@ -1059,6 +1119,12 @@ for buildtype in $buildtypes; do
         fort_flags="$fort_flags -DMKL"
         ldflags="$ldflags -L$MKLROOT/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
       fi
+
+  # set mirp library flags
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    if [ "$mirp" = "yes" ]; then
+      cxx_flags="$cxx_flags -I$MIRP_HOME/include -I$MIRP_DEP_HOME/include"
+      ldflags="$ldflags -L$MIRP_HOME/lib -lmirp"
     fi
   fi
 
@@ -1089,6 +1155,7 @@ for buildtype in $buildtypes; do
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
+
 
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
@@ -1254,6 +1321,12 @@ else
   for buildtype in $buildtypes; do
     libpaths="$libpath/$buildtype:$libpaths"
   done
+fi
+
+if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+  if [ "$mirp" = "yes" ]; then
+    libpaths="$MIRP_HOME/lib:$MIRP_DEP_HOME/lib:$libpaths"
+  fi
 fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
