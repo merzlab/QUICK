@@ -1039,6 +1039,7 @@ for buildtype in $buildtypes; do
   # set mirp library flags
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     if [ "$mirp" = "yes" ]; then
+      fort_flags="$fort_flags -DMIRP"
       cxx_flags="$cxx_flags -I$MIRP_HOME/include -I$MIRP_DEP_HOME/include"
       ldflags="$ldflags -L$MIRP_HOME/lib -lmirp"
     fi
