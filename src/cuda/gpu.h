@@ -173,6 +173,7 @@ char *trim(char *s);
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
 __device__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* vals);
+__device__ __forceinline__ void NvFmT(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp);
 
 __device__ QUICKDouble hrrwhole(int I, int J, int K, int L, \
                                 int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
