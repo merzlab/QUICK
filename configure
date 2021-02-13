@@ -62,6 +62,8 @@ echo  "
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
       --verbose      Enable full compilation output
+      --lapack       Use matrix diagonalizer from LAPACK
+      --mkl          Use matrix diagonalizer from MKL
 
   Supported compilers are: gnu, intel, pgi, nvidia
 
