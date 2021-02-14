@@ -515,6 +515,10 @@ aminstall='false'
 # control compiler output
 verbose='@'
 
+# external math libraries
+lapack='no'
+mkl='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -532,6 +536,8 @@ while [ $# -gt 0 ]; do
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
+    --lapack)      lapack='yes';;
+    --mkl)         mkl='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
@@ -973,6 +979,17 @@ for buildtype in $buildtypes; do
   # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required.
   if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
     set_mpicxx
+  fi
+
+  # For serial and mpi versions, diagonalizers from lapack/mkl may be used
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    if [ "$lapack" = 'yes' ]; then
+      fort_flags="$fort_flags -DLAPACK"
+      ldflags="$fort_flags -lopenblas"
+    elif [ "$mkl" = 'yes' ]; then
+      fort_flags="$fort_flags -DMKL"
+      ldflags="$fort_flags -L$(INTELHOME) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+    fi
   fi
 
   # set the installer
