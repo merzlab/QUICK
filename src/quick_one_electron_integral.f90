@@ -87,7 +87,7 @@ subroutine fullx
 #else
 
 #if defined LAPACK || defined MKL
-   call DIAGMKL(nbasis,quick_qm_struct%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+   call DIAGMKL(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
 #else
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf, &
    quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
