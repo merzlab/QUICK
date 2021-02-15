@@ -153,7 +153,7 @@ quick_cuda:
 	@cd $(cudafolder) && make --no-print-directory xc
 
 #================= targets for BLAS =====================================
-blas:
+blas-quick:
 	@cd $(blasfolder) && make --no-print-directory -j$(ncores) all
 #==================== libxc cpu library =================================
 libxc_cpu:
@@ -196,7 +196,7 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
+serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
