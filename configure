@@ -984,12 +984,22 @@ for buildtype in $buildtypes; do
   # For serial and mpi versions, diagonalizers from lapack/mkl may be used
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     if [ "$lapack" = 'yes' ]; then
-      fort_flags="$fort_flags -DLAPACK"
-      ldflags="$fort_flags -lopenblas"
-    elif [ "$mkl" = 'yes' ]; then
-      fort_flags="$fort_flags -DMKL"
-      ldflags="$fort_flags -L$INTELHOME -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
-    fi
+		if [[ ! -n $EBROOTOPENBLAS ]]; then
+			echo "OPENBLAS is not loaded, use conventional diagnolization"
+		else
+			echo "OPENBLAS is loaded. Use LAPACK acceleration of diagnolization"
+      		fort_flags="$fort_flags -DLAPACK"
+	  		ldflags="$ldflags -lopenblas"
+    	fi
+	elif [ "$mkl" = 'yes' ]; then
+		if [[ ! -n $MKLROOT ]]; then
+			echo "MKL is not loaded, use conventional diagnolization"
+	  	else
+	  		echo "MKL is loaded. Use MKL acceleration of diagnolization"
+      		fort_flags="$fort_flags -DMKL"
+	  		ldflags="$ldflags  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+		fi
+	fi
   fi
 
   # set the installer
@@ -1121,7 +1131,6 @@ done
 #  !---------------------------------------------------------------------!
 #  ! Generate config.h in src directory                                  !
 #  !---------------------------------------------------------------------!
-
 cat > "$QUICK_HOME/make.in" << EOF
 
 # $QUICK_VERSION configuration file
