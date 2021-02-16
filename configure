@@ -984,18 +984,18 @@ for buildtype in $buildtypes; do
   # For serial and mpi versions, diagonalizers from lapack/mkl may be used
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     if [ "$lapack" = 'yes' ]; then
-		if [[ ! -n $EBROOTOPENBLAS ]]; then
-			echo "OPENBLAS is not loaded, use conventional diagnolization"
+		if [ -z $EBROOTOPENBLAS ]; then
+			echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
 		else
-			echo "OPENBLAS is loaded. Use LAPACK acceleration of diagnolization"
+			echo "OPENBLAS is loaded. Diagonalizer from LAPACK will be used."
       		fort_flags="$fort_flags -DLAPACK"
 	  		ldflags="$ldflags -lopenblas"
     	fi
 	elif [ "$mkl" = 'yes' ]; then
-		if [[ ! -n $MKLROOT ]]; then
-			echo "MKL is not loaded, use conventional diagnolization"
+		if [ -z $MKLROOT ]; then
+			echo "MKL is not loaded. Inbuilt diagonalizer will be used."
 	  	else
-	  		echo "MKL is loaded. Use MKL acceleration of diagnolization"
+	  		echo "MKL is loaded. Diagonalizer from MKL will be used."
       		fort_flags="$fort_flags -DMKL"
 	  		ldflags="$ldflags  -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
 		fi
