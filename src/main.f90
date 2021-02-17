@@ -177,7 +177,9 @@
 !      endif
 !   else
         call g2eshell   ! pre-calculate 2 indices coeffecient to save time
+        !print *, "before calling schwarzoff, Ycutoff is ", Ycutoff
         call schwarzoff ! pre-calculate schwarz cutoff criteria
+        !print *, "after calling schwarzoff, Ycutoff is ", Ycutoff
     endif
 
 #if defined CUDA || defined CUDA_MPIV    
