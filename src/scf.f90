@@ -183,7 +183,7 @@ subroutine electdiis(jscf)
    !print *, "before diis, quick_qm_struct%o is ", quick_qm_struct%o
    do while (.not.diisdone)
     !print *, "in this iteration, quick_qm_struct%o is ", quick_qm_struct%o
-
+    print *, "in this iteration, idiis is ", idiis 
 
       call cpu_time(timer_begin%TSCF)
       !--------------------------------------------
@@ -580,7 +580,7 @@ subroutine electdiis(jscf)
 
          tmp = quick_method%integralCutoff
          call adjust_cutoff(PRMS,PCHANGE,quick_method)  !from quick_method_module
-      endif
+    endif
 
       !--------------- MPI/ALL NODES -----------------------------------------
       call cpu_time(timer_end%TSCF)

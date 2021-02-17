@@ -12,7 +12,6 @@ subroutine calmp2
   !double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
   double precision :: gpuMp2cor(1),gpuEmemorysum(1)
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT,gpuNstepmp2(1)
-  !integer(kind=16):: gpuNtemp(1)
   integer:: gpuNtemp(1)
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   integer :: nelec,nelecb
@@ -44,50 +43,10 @@ subroutine calmp2
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
- 
-    !print *, "in calmp2, quick_qm_struct%co is"
-    !do ind= 1, nbasis
-    !    do ind2= 1, nbasis
-    !        write(*, '(f8.4)', advance='no'), quick_qm_struct%co(ind,ind2)
-    !    end do
-    !    write(*, '(" ")')
-    !end do
-
-
-    !print *, "in calmp2, xyz is ", xyz
-    !print *, "in calmp2, quick_basis%Qstart is ", quick_basis%Qstart
-    !print *, "in calmp2, quick_basis%Qfinal is ", quick_basis%Qfinal
-    !print *, "in calmp2, quick_basis%kprim is ", quick_basis%kprim
-    !print *, "in calmp2, quick_basis%kstart is ", quick_basis%kstart
-    !print *, "in calmp2, quick_basis%ktype are", quick_basis%ktype
-    !print *, "in calmp2, quick_method%primLimit is", quick_method%primLimit     
-    !print *, "in calmp2, shape(quick_basis%Qsbasis) is", shape(quick_basis%Qsbasis)   
-    !print *, "in calmp2, quick_basis%Xcoeff is", quick_basis%Xcoeff
-    
-    !print *, "in calmp2, quick_basis%Qsbasis is"
-    !do ind= 1, jshell
-    !    do ind2 = 0, 3
-    !        write(*, '(i2)', advance='no'), quick_basis%Qsbasis(ind,ind2)
-    !    end do
-    !    write(*,'(" ")')
-    !end do
-
-    !print *, "in calmp2, quick_basis%Qfbasis is"
-    !do ind= 1, jshell
-    !    do ind2 = 0, 3
-    !        write(*, '(i2)', advance='no'), quick_basis%Qfbasis(ind,ind2)
-    !    end do
-    !    write(*,'(" ")')
-    !end do
-
-
-    !print *, "in calmp2, quick_basis%ksumtype is"
-    !print *, quick_basis%ksumtype
-    !print *, "in calmp2, quick_basis%ksumtype(2) is", quick_basis%ksumtype(2)
-
   
   call PrtAct(ioutfile,"Begin MP2 Calculation")
-  cutoffmp2=1.0d-8  ! cutoff criteria
+  !cutoffmp2=1.0d-8  ! cutoff criteria
+  cutoffmp2=1.0d-7
   quick_method%primLimit=1.0d-8
   quick_qm_struct%EMP2=0.0d0
 
@@ -102,7 +61,9 @@ subroutine calmp2
   print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
 
   ! actually nstep is step length
-  nstep=min(int(1.5d0/ememorysum),Nelec/2)
+  ! set max mem req for Q3 to 15GB
+  reqmemmax = 1.5d0
+  nstep=min(int(reqmemmax/ememorysum),Nelec/2)
   if(nstep<1)then
     nstep=1
   endif
@@ -114,8 +75,7 @@ subroutine calmp2
      nbasistemp=10
   endif
 
-  !print *, "in calmp2, nbasistemp is", nbasistemp
-  !print *, "in calmp2, nstep is", nstep
+  print *, "in calmp2, nstep is", nstep
 
   ! Allocate some variables
   allocate(mp2shell(nbasis))
@@ -123,8 +83,6 @@ subroutine calmp2
   allocate(orbmp2i331(nstep,nbasis,nbasistemp,nbasistemp,2))
   allocate(orbmp2j331(nstep,ivir,nbasistemp,nbasistemp,2))
   allocate(orbmp2k331(nstep,iocc,ivir,nbasis))
-
-  !print *, "in clasmp2, shape of orbmp2i331 is", shape(orbmp2i331)
 
   ! with nstep(acutally, it represetns step lenght), we can 
   ! have no. of steps for mp2 calculation
@@ -135,14 +93,9 @@ subroutine calmp2
   endif
   write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
-  !print *, "in calmp2, nstepmp2 is", nstepmp2
 
   ! Pre-step for density cutoff
   call densityCutoff
-
-  !print *, "in calmp2, shape(quick_qm_struct%co) is", shape(quick_qm_struct%co)
-
-  !print *, "in calmp2, shape(quick_qm_struct%co) is", shape(quick_qm_struct%co)
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -152,8 +105,8 @@ subroutine calmp2
   enddo
 
   ttt=MAXVAL(Ycutoff) ! Max Value of Ycutoff
+  print *, "in calmp2, ttt is", ttt
 
-  !print *, "in calmp2, jshell is", jshell
   do i3new=1,nstepmp2               ! Step counter
     print *, "i3new is ", i3new
     call flush(6)
@@ -177,8 +130,6 @@ subroutine calmp2
      do II=1,jshell
         do JJ=II,jshell
 
-        !print *, "II, JJ, Ycutoff(II,JJ), cutoffmp2/ttt are", II, JJ, Ycutoff(II,JJ), cutoffmp2/ttt
-
            if(Ycutoff(II,JJ).gt.cutoffmp2/ttt)then
             
               !print *, "before initialization, orbmp2i331 is"
@@ -192,10 +143,6 @@ subroutine calmp2
 
               do KK=1,jshell
                  do LL=KK,jshell
-
-                    !print *, "initilize orbmp2i331, orbmp2j331 for each ii,jj,kk,ll"
-                    !call initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasistemp)
-                    !call initialOrbmp2ij(orbmp2j331,nstep,nsteplength,ivir,nbasistemp,nbasistemp)
 
                     !print *, " "
                     !print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL

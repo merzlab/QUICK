@@ -1451,10 +1451,18 @@ subroutine shellmp2(nstepmp2s,nsteplength)
             NNC=Sumindex(k-1)+1
             do L=NLL1,NLL2
                NNCD=SumIndex(K+L)
-               !print *, "in shellmp2 to call classmp2,"
-               !print *, "NNA, NNAB, NNC, NNCD are", NNA, NNAB, NNC, NNCD
-               !call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength,Y_Matrix)
-                call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
+                !! NNA,NNC,NNAB,NNCD not used?
+                !This prescreening is adopted from the cuda version
+                DNmaxmp2 = max(4.0d0*cutmatrix(II,JJ), &
+                            4.0d0*cutmatrix(KK,LL), &
+                            cutmatrix(II,LL), &
+                            cutmatrix(II,KK), &
+                            cutmatrix(JJ,KK), &
+                            cutmatrix(JJ,LL))
+                if((Ycutoff(II,JJ)*Ycutoff(KK,LL).gt.quick_method%integralCutoff) .and.&
+                    (Ycutoff(II,JJ)*Ycutoff(KK,LL))*DNmaxmp2.gt.quick_method%integralCutoff)then
+                    call classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
+                endif
             enddo
          enddo
       enddo
@@ -1783,17 +1791,7 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
-   
-
-#ifdef CUDA
-    ! fine now,get value
-    !print *, "in cuda classmp2, test Y_Matrix(1,1):", Y_Matrix(1,1)
-#endif
-
-    ! II, JJ, KK, LL are from calmp2
-    !print *, "at the begining of classmp2,"
-    !print *, "II, JJ, KK, LL are", II, JJ, KK, LL
-
+! commenting starts here
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)
       Nprij=quick_basis%kstart(JJ)+JJJ-1
@@ -1825,7 +1823,7 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
          store(MM1,MM2)=Ytemp
       enddo
    enddo
-
+! commenting ends here
 
    NBI1=quick_basis%Qsbasis(II,I)
    NBI2=quick_basis%Qfbasis(II,I)
@@ -1872,12 +1870,6 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    !if(NBI1.NE.0 .OR. NBJ1.NE.0) then
    !     print *, "got nonezero NBI1 or NBJ1"
    !endif
-
-   !print *, "before get Y, quick_method%integralCutoff is", quick_method%integralCutoff
-   !print *, "in classmp2, shape(orbmp2i331) is ", shape(orbmp2i331)
-   !print "('in classmp2, III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2 are', i2, i2, i2, i2, i2, i2, i2, i2)",&
-   !          III1, III2, JJJ1, JJJ2, KKK1,KKK2, LLL1,LLL2
-   !print *, ""
 
    ! from here inspection
    !print *, "in classmp2, before getting Y,"

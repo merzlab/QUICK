@@ -47,26 +47,13 @@ subroutine scf_operator(oneElecO, deltaO)
 #ifdef MPIV
    if(master) then
 #endif
-   print *, "in scf_operator"
    call flush(6) ! flush stdout
 !  fetch 1e-integral from 1st time
-   !print *, "in scf_operator, before all, quick_qm_struct%o is"
-   !print *, quick_qm_struct%o
-   !print *, ""
    call copyDMat(oneElecO,quick_qm_struct%o,nbasis) !!quick_qm_struct%o as F got first term oneElecO
-   !print *, "in scf_operator, after copy oneElecO, quick_qm_struct%o is"
-   !print *, quick_qm_struct%o
-   !print *, "" 
 !  Now calculate kinetic and attraction energy first.
    if (quick_method%printEnergy) call get1eEnergy()
-   !print *, "in scf_operator, after get1eEnergy(), quick_qm_struct%o is"
-   !print *, quick_qm_struct%o
-   !print *, ""
 !  Sum the ECP integrals to the partial Fock matrix
    if (quick_method%ecp) call ecpoperator()
-   !print *, "in scf_operator, after ecpoperator(), quick_qm_struct%o is"
-   !print *, quick_qm_struct%o
-   !print *, "" 
 
 #ifdef MPIV
    endif
