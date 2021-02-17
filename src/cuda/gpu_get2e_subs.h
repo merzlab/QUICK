@@ -729,8 +729,8 @@ __device__ __forceinline__ void iclass_spdf10
                 //QUICKDouble T = AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz));
                 
                 QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
-                //FmT(I+J+K+L, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
-                NvFmT(I+J+K+L, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
+                FmT(I+J+K+L, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
+                //NvFmT(I+J+K+L, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
                 for (int i = 0; i<=I+J+K+L; i++) {
                     VY(0, 0, i) = VY(0, 0, i) * X2;
                 }
@@ -1212,8 +1212,8 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
                 QUICKDouble T = AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz));
                 
                 QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
-                //FmT(I+J+K+L, T, YVerticalTemp);
-                NvFmT(I+J+K+L, T, YVerticalTemp);
+                FmT(I+J+K+L, T, YVerticalTemp);
+                //NvFmT(I+J+K+L, T, YVerticalTemp);
                 for (int i = 0; i<=I+J+K+L; i++) {
                     VY(0, 0, i) = VY(0, 0, i) * X2;
                 }
