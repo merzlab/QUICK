@@ -1039,7 +1039,7 @@ for buildtype in $buildtypes; do
       if [ "$?" -eq 0 ]; then
         echo "Matrix diagonalizer from LAPACK will be used for $buildtype version."
         fort_flags="$fort_flags -DLAPACK"
-        ldflags="$ldflags -L$BLASROOT -lopenblas"
+        ldflags="$ldflags -L$BLASROOT/lib -lopenblas"
       fi
 
     elif [ "$mkl" = 'yes' ]; then
