@@ -19,7 +19,7 @@
 #  !---------------------------------------------------------------------!
 #  ! Set version                                                         !
 #  !---------------------------------------------------------------------!
-QUICK_VERSION='QUICK-20.06'
+QUICK_VERSION='QUICK-21.03'
 QUICK_HOME=`pwd`
 cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
@@ -62,6 +62,12 @@ echo  "
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
       --verbose      Enable full compilation output
+      --lapack       Use matrix diagonalizer from LAPACK. BLASROOT environment
+                     variable must be set with the correct blas installation path. 
+                     This path must contain lib and include directories.  
+      --mkl          Use matrix diagonalizer from MKL. MKLROOT environment
+                     variable must be set with the correct mkl installation path.
+                     This path must contain lib and include directories.
 
   Supported compilers are: gnu, intel, pgi, nvidia
 
@@ -412,6 +418,53 @@ fi
 
 }
 
+
+#  !---------------------------------------------------------------------!
+#  ! External library checking                                           !
+#  !---------------------------------------------------------------------!
+
+# Function to check for mkl library and dependencies.
+check_mkl(){
+  if [ -z $MKLROOT ]; then
+    echo "MKL is not loaded. Inbuilt diagonalizer will be used."
+    return 1
+  fi
+
+  MKLLIBPATH=$MKLROOT/lib/intel64
+  if [ ! -e "$MKLLIBPATH/libmkl_intel_lp64.so" ]; then
+    echo "libmkl_intel_lp64.so cannot be found. Inbuilt diagonalizer will be used."
+    return 1
+  fi
+
+  if [ ! -e "$MKLLIBPATH/libmkl_intel_thread.so" ]; then
+    echo "libmkl_intel_thread.so cannot be found. Inbuilt diagonalizer will be used."
+    return 1
+  fi
+
+  if [ ! -e "$MKLLIBPATH/libmkl_core.so" ]; then
+    echo "libmkl_core.so cannot be found. Inbuilt diagonalizer will be used."
+    return 1
+  fi
+
+}
+
+
+# Function to check for lapack library and dependencies.
+check_lapack(){
+
+  if [ ! -z "$BLASROOT" ]; then
+    if [ ! -e "$BLASROOT/lib/libopenblas.so" ]; then
+      echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
+      return 1
+    fi
+  else
+    echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
+    return 1
+  fi
+
+}
+
+
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -513,6 +566,10 @@ aminstall='false'
 # control compiler output
 verbose='@'
 
+# external math libraries
+lapack='no'
+mkl='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Check user input                                                    !
 #  !---------------------------------------------------------------------!
@@ -530,6 +587,8 @@ while [ $# -gt 0 ]; do
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
+    --lapack)      lapack='yes';;
+    --mkl)         mkl='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
@@ -973,6 +1032,26 @@ for buildtype in $buildtypes; do
     set_mpicxx
   fi
 
+  # For serial and mpi versions, diagonalizers from lapack/mkl may be used
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    if [ "$lapack" = 'yes' ]; then
+      check_lapack
+      if [ "$?" -eq 0 ]; then
+        echo "Matrix diagonalizer from LAPACK will be used for $buildtype version."
+        fort_flags="$fort_flags -DLAPACK"
+        ldflags="$ldflags -L$BLASROOT/lib -lopenblas"
+      fi
+
+    elif [ "$mkl" = 'yes' ]; then
+      check_mkl
+      if [ "$?" -eq 0 ]; then
+        echo "Matrix diagonalizer from MKL will be used for $buildtype version."
+        fort_flags="$fort_flags -DMKL"
+        ldflags="$ldflags -L$MKLROOT/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+      fi
+    fi
+  fi
+
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then
@@ -1102,7 +1181,6 @@ done
 #  !---------------------------------------------------------------------!
 #  ! Generate config.h in src directory                                  !
 #  !---------------------------------------------------------------------!
-
 cat > "$QUICK_HOME/make.in" << EOF
 
 # $QUICK_VERSION configuration file
