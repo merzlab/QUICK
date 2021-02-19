@@ -1,6 +1,6 @@
 
   !---------------------------------------------------------------------!
-  ! Written by Madu Manathunga on 02/16/2021                            !
+  ! Written by Chi Jin on 02/16/2021                                    !
   !                                                                     !
   ! Copyright (C) 2020-2021 Merz lab                                    !
   ! Copyright (C) 2020-2021 Götz lab                                    !
