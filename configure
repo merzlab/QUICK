@@ -1043,7 +1043,7 @@ for buildtype in $buildtypes; do
       if [ "$?" -eq 0 ]; then
         echo "Matrix diagonalizer from MKL will be used for $buildtype version."
         fort_flags="$fort_flags -DMKL"
-        ldflags="$ldflags -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+        ldflags="$ldflags -L$MKLROOT/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
       fi
     fi
   fi
