@@ -442,7 +442,6 @@ check_mkl(){
     return 1
   fi
 
-  echo "MKL is loaded. Diagonalizer from MKL will be used."
 }
 
 
@@ -457,7 +456,6 @@ check_lapack(){
     echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
   fi
 
-  echo "OPENBLAS is loaded. Diagonalizer from LAPACK will be used."
 }
 
 
@@ -1033,15 +1031,17 @@ for buildtype in $buildtypes; do
     if [ "$lapack" = 'yes' ]; then
       check_lapack
       if [ "$?" -eq 0 ]; then
-        fort_flags="$fort_flags -DMKL"
-        ldflags="$ldflags -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+        echo "Matrix diagonalizer from LAPACK will be used for $buildtype version."
+        fort_flags="$fort_flags -DLAPACK"
+        ldflags="$ldflags -lopenblas"
       fi
 
     elif [ "$mkl" = 'yes' ]; then
       check_mkl
       if [ "$?" -eq 0 ]; then
-        fort_flags="$fort_flags -DLAPACK"
-        ldflags="$ldflags -lopenblas"
+        echo "Matrix diagonalizer from MKL will be used for $buildtype version."
+        fort_flags="$fort_flags -DMKL"
+        ldflags="$ldflags -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
       fi
     fi
   fi
