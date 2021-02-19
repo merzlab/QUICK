@@ -447,13 +447,15 @@ check_mkl(){
 
 # Function to check for lapack library and dependencies.
 check_lapack(){
-  if [ -z $EBROOTOPENBLAS ] || [ -z "$BLASDIR" ]; then
+
+  if [ ! -z "$BLASROOT" ]; then
+    if [ ! -e "$BLASROOT/lib/libopenblas.so" ]; then
+      echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
+      return 1
+    fi
+  else
     echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
     return 1
-  fi
-
-  if [ ! -e "$EBROOTOPENBLAS/lib/libopenblas.so" ] && [ -e "$BLASDIR/lib/libopenblas.so"];then
-    echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
   fi
 
 }
@@ -1033,7 +1035,7 @@ for buildtype in $buildtypes; do
       if [ "$?" -eq 0 ]; then
         echo "Matrix diagonalizer from LAPACK will be used for $buildtype version."
         fort_flags="$fort_flags -DLAPACK"
-        ldflags="$ldflags -lopenblas"
+        ldflags="$ldflags -L$BLASROOT -lopenblas"
       fi
 
     elif [ "$mkl" = 'yes' ]; then
