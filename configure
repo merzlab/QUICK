@@ -931,13 +931,12 @@ check_mkl(){
 }
 
 check_lapack(){
-	if [ -z $EBROOTOPENBLAS ]; then
+	if [ -z $EBROOTOPENBLAS ] || [ -z "$BLASDIR" ]; then
         echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
         return 1
     fi
 	
-	OPENBLASLIBPATH=$EBROOTOPENBLAS/lib
-	if [ ! -e "$OPENBLASLIBPATH/libopenblas.so" ];then
+	if [ ! -e "$EBROOTOPENBLAS/lib/libopenblas.so" ] && [ -e "$BLASDIR/lib/libopenblas.so"];then
 		echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
 	fi
 
