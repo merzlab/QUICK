@@ -110,6 +110,9 @@
 ! DFT Parameter
     if (quick_method%DFT.or.quick_method%SEDFT) then  
       call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
 
 ! SEDFT Parameters  
@@ -357,25 +360,23 @@
 
       use quick_mpi_module
       implicit none
-
+      integer :: i, IERROR
       include 'mpif.h'
 
-      ! broadcast device count to slaves
-      call MPI_BCAST(mgpu_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
       ! allocate memory for device ids
-      call allocate_mgpu
+      if(master) call allocate_mgpu
 
-      ! get device ids
-      if (master) then
-        call mgpu_get_devices(mgpu_ids)
+      ! get slave device ids and save them for printing device info
+      if(.not. master) then
+        call MPI_SEND(mgpu_id,1,mpi_integer,0,mpirank,MPI_COMM_WORLD,IERROR)
+      else
+        mgpu_ids(1)=mgpu_id
+
+        do i=1,mpisize-1
+          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+        enddo
+        
       endif
-
-      ! broadcast device ids
-      call MPI_BCAST(mgpu_ids,mgpu_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
-      ! assign a gpu id for each worker
-      mgpu_id = mgpu_ids(mpirank+1)
 
     end subroutine mgpu_setup
 
@@ -473,13 +474,12 @@
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
 #ifdef CUDA_MPIV
-      call MPI_BCAST(quick_dft_grid%dweight,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%bin_locator,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #endif
-
+      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)

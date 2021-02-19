@@ -145,19 +145,14 @@ subroutine electdiis(jscf)
    !-------------- END MPI / ALL NODE -----------
 #endif
 
-   ! First, let's get 1e opertor which only need 1-time calculation
-   ! and store them in oneElecO and fetch it every scf time.
-   call get1e(oneElecO)
-
 #ifdef MPIV
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif
 #endif
@@ -168,14 +163,20 @@ subroutine electdiis(jscf)
       if (quick_method%DFT) then
 
       call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%bin_locator, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, &
+      quick_dft_grid%nbins, quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+
+#ifdef CUDA_MPIV
+      call mgpu_get_xclb_time(timer_cumer%TDFTlb)
+#endif
 
       endif
    endif
 #endif
 
+
+   bCalc1e = .true.
    diisdone = .false.
    deltaO = .false.
    idiis = 0
@@ -212,7 +213,7 @@ subroutine electdiis(jscf)
       if (quick_method%SEDFT) then
          call sedftoperator ! Semi-emperical DFT Operator
       else
-         call scf_operator(oneElecO, deltaO)
+         call scf_operator(deltaO)
       endif
 
       if (quick_method%debug)  call debug_SCF(jscf)
@@ -273,8 +274,10 @@ subroutine electdiis(jscf)
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #else
-         quick_scratch%hold=MATMUL(quick_qm_struct%dense,quick_qm_struct%o)
-         quick_scratch%hold2=MATMUL(quick_qm_struct%s,quick_scratch%hold)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+               nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
 
          errormax = 0.d0
@@ -552,12 +555,14 @@ subroutine electdiis(jscf)
       !--------------- END MPI/ALL NODES -------------------------------------
 
       if (master) then
+
+#ifdef USEDAT
          ! open data file then write calculated info to dat file
          call quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.)
          rewind(iDataFile)
          call dat(quick_qm_struct, iDataFile)
          close(iDataFile)
-
+#endif
          current_diis=mod(idiis-1,quick_method%maxdiisscf)
          current_diis=current_diis+1
 
@@ -620,7 +625,7 @@ subroutine electdiis(jscf)
 #ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -644,7 +649,11 @@ subroutine electdiis(jscf)
 #if defined CUDA || defined CUDA_MPIV
    if(quick_method%bCUDA) then
       if (quick_method%DFT) then
-         call gpu_delete_dft_grid()
+         if(quick_method%grad) then
+           call gpu_delete_dft_dev_grid()
+         else
+           call gpu_delete_dft_grid()
+         endif
       endif
    endif
 #endif

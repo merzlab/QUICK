@@ -22,7 +22,7 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2020                                          **
+  **                                         Copyright (c) 2021                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
@@ -39,17 +39,28 @@
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
- Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
+  Manathunga, M.; Chi, J.; Cruzeiro, V.W.D.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
+  Brothers, E.; Götz, A.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State
+  University, East Lansing, MI, 2021                                                                       
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Dec  3 20:23:04 2020
+| TASK STARTS ON: Sun Jan 17 10:15:44 2021
 | INPUT FILE :    ene_psb3_b3lyp_631g.in
 | OUTPUT FILE:    ene_psb3_b3lyp_631g.out
 | DATE FILE  :    ene_psb3_b3lyp_631g.dat
-| BASIS SET PATH: /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis
+| BASIS SET PATH: /server-home1/madu/Work/Qk/mgpu/basis
+ 
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -74,7 +85,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis/6-31G.BAS
+| BASIS FILE = /server-home1/madu/Work/Qk/mgpu/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -102,7 +113,7 @@
  TOTAL ATOM NUMBER       =   14    NUMBER OF ATOM TYPES        =    3
  NUMBER OF HYDROGEN ATOM =    8    NUMBER OF NON-HYDROGEN ATOM =    6
  NUMBER OF ELECTRONS     =   44
-
+ 
  -- INPUT GEOMETRY -- :
     C          -2.7472      -0.8366       0.8589
     C          -1.4569      -0.4717       0.9992
@@ -118,7 +129,7 @@
     H           3.2084       0.8645       0.0338
     H          -3.3689      -1.0241       1.7130
     H          -3.2011      -0.9533      -0.1081
-
+ 
  -- DISTANCE MATRIX -- :
               1           2           3           4           5
       1     0.00000
@@ -150,12 +161,12 @@
      12     3.22015     0.00000
      13    13.03851    13.31509     0.00000
      14    13.16700    12.59278     3.45864     0.00000
-
+ 
 ============== BASIS INFOS ==============
  BASIS FUNCTIONS =   70
  NSHELL =   34 NPRIM  =   92
  JSHELL =   34 JBASIS =   92
-
+ 
 
  @ End Reading Molecular Information 
 
@@ -178,26 +189,26 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.939618379      ------         0.542     1        0.00      0.54      0.00    0.2214E+01  0.5457E-01  0.5449E+00
-|  2   -249.630805954  -.130881E+01       0.674     2        0.00      0.67      0.00    0.1467E+00  0.2573E-01  0.2531E+00
-|  3   -249.484835808  -.145970E+00       0.675     3        0.00      0.67      0.00    0.1800E+00  0.1983E-01  0.2408E+00
-|  4   -249.746758520  0.261923E+00       0.656     4        0.00      0.65      0.00    0.7637E-01  0.5009E-02  0.7963E-01
-|  5   -249.764866940  0.181084E-01       0.664     5        0.00      0.66      0.00    0.2623E-01  0.1455E-02  0.2915E-01
-|  6   -249.766518047  0.165111E-02       0.674     6        0.00      0.67      0.00    0.9703E-02  0.5198E-03  0.7908E-02
-|  7   -249.766895944  0.377897E-03       0.673     7        0.00      0.67      0.00    0.1177E-02  0.8999E-04  0.1247E-02
-|  8   -249.766900877  0.493320E-05       0.650     8        0.00      0.65      0.00    0.4013E-03  0.3067E-04  0.4134E-03
-|  9   -249.766901523  0.645438E-06       0.644     9        0.00      0.64      0.00    0.1774E-03  0.9706E-05  0.1279E-03
-| 10   -249.766901601  0.777195E-07       0.674    10        0.00      0.67      0.00    0.2969E-04  0.1790E-05  0.2840E-04
-| 11   -249.766901605  0.406465E-08       0.673     1        0.00      0.67      0.00    0.6574E-05  0.6955E-06  0.6027E-05
+|  1   -250.542663836      ------         0.060     1        0.02      0.04      0.01    0.2023E+01  0.5497E-01  0.5350E+00
+|  2   -249.616243553  -.926420E+00       0.036     2        0.01      0.03      0.01    0.1584E+00  0.2207E-01  0.2509E+00
+|  3   -249.580980385  -.352632E-01       0.035     3        0.01      0.03      0.01    0.1948E+00  0.1523E-01  0.1676E+00
+|  4   -249.750167464  0.169187E+00       0.035     4        0.01      0.03      0.01    0.4932E-01  0.4501E-02  0.5686E-01
+|  5   -249.765739535  0.155721E-01       0.035     5        0.01      0.03      0.01    0.1406E-01  0.1210E-02  0.1645E-01
+|  6   -249.766670577  0.931042E-03       0.036     6        0.01      0.03      0.01    0.7204E-02  0.4106E-03  0.6179E-02
+|  7   -249.766895728  0.225151E-03       0.035     7        0.01      0.03      0.01    0.1363E-02  0.8666E-04  0.1700E-02
+|  8   -249.766900512  0.478439E-05       0.035     8        0.01      0.03      0.01    0.5060E-03  0.2548E-04  0.4525E-03
+|  9   -249.766901513  0.100045E-05       0.035     9        0.01      0.03      0.01    0.1079E-03  0.8875E-05  0.1263E-03
+| 10   -249.766901547  0.342968E-07       0.035    10        0.01      0.03      0.01    0.6483E-04  0.4148E-05  0.5409E-04
+| 11   -249.766901561  0.135253E-07       0.035     1        0.01      0.03      0.01    0.1541E-04  0.7356E-06  0.1496E-04
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  11 CYLCES
-| MAX ERROR = 0.657389E-05   RMS CHANGE = 0.695532E-06   MAX CHANGE = 0.602706E-05
+| MAX ERROR = 0.154129E-04   RMS CHANGE = 0.735606E-06   MAX CHANGE = 0.149588E-04
  -----------------------------------------------
- ALPHA ELECTRON DENSITY    =   22.0000152902
- BETA ELECTRON DENSITY     =   22.0000152902
- ELECTRONIC ENERGY    =  -456.952079973
+ ALPHA ELECTRON DENSITY    =   22.0000149039
+ BETA ELECTRON DENSITY     =   22.0000149039
+ ELECTRONIC ENERGY    =  -456.952079929
  CORE_CORE REPULSION  =   207.185178368
- TOTAL ENERGY         =  -249.766901605
+ TOTAL ENERGY         =  -249.766901561
 
  @ End Energy calculation
 
@@ -234,10 +245,10 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
     ATOMIC CHARGES
    ATOM          MULLIKEN            LOWDIN
    C             -0.2430            -0.0941
-   C             -0.0615            -0.1261
+   C             -0.0616            -0.1261
    C             -0.0797             0.0272
    C             -0.1524            -0.1664
-   C              0.2097             0.1086
+   C              0.2098             0.1086
    N             -0.6403            -0.1984
    H              0.1908             0.1498
    H              0.1972             0.1555
@@ -251,7 +262,7 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    3.4765    0.9766    0.7398    3.6861
+    3.4766    0.9767    0.7398    3.6861
 
  @ End Charge and Dipole Calculation
 
@@ -259,30 +270,19 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.606044000(  7.61%)
-| DFT GRID OPERATIONS =     0.127432000(  1.60%)
-|       TOTAL GRID FORMATION TIME   =     0.000663000(  0.01%)
-|       TOTAL GRID WEIGHT TIME      =     0.033878000(  0.43%)
-|       TOTAL OCTREE RUN TIME       =     0.016910000(  0.21%)
-|       TOTAL PRESCREENING TIME     =     0.069102000(  0.87%)
-|       TOTAL DATA PACKING TIME     =     0.006879000(  0.09%)
-| TOTAL SCF TIME      =     7.204149000( 90.45%)
-|       TOTAL OP TIME      =     7.191332000( 90.29%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.001887000(  0.02%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000514000(  0.01%)
-|             TOTAL 1e TIME      =     0.007530000(  0.09%)
-|                KINETIC 1e INTEGRALS TIME    =     0.004582000(  0.06%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.002946000(  0.04%)
-|             TOTAL 2e TIME      =     3.995639000( 50.17%)
-|             TOTAL EXC TIME     =     3.187892000( 40.02%)
-|             TOTAL ENERGY TIME  =     0.000103000(  0.00%)
-|       TOTAL DII TIME      =     0.012605000(  0.16%)
-|             TOTAL DIAG TIME    =     0.005326000(  0.07%)
-|       DIPOLE TIME        =     0.008567000(  0.11%)
-| TOTAL TIME          =     7.964772000
+| INITIAL GUESS TIME  =     1.497408000( 51.39%)
+| DFT GRID OPERATIONS =     0.059807000(  2.05%)
+| TOTAL SCF TIME      =     0.424245000( 14.56%)
+|       TOTAL OP TIME      =     0.314702000( 10.80%)
+|             TOTAL 1e TIME      =     0.011426000(  0.39%)
+|             TOTAL 2e TIME      =     0.144168000(  4.95%)
+|             TOTAL EXC TIME     =     0.147380000(  5.06%)
+|       TOTAL DII TIME      =     0.109318000(  3.75%)
+|             TOTAL DIAG TIME    =     0.098240000(  3.37%)
+| TOTAL TIME          =     2.913873000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  8.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  2.9 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Dec  3 20:23:17 2020
+| Normal Termination. Task Finished on: Sun Jan 17 10:15:47 2021

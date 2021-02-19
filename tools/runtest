@@ -21,7 +21,7 @@
 #  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
 
-QUICK_VERSION='QUICK-20.06'
+QUICK_VERSION='QUICK-21.03'
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -68,9 +68,7 @@ echo  "
       --serial       Tests QUICK serial version                                
       --mpi          Tests QUICK MPI prallel version                           
       --cuda         Tests QUICK GPU version
-      --ncores <ncore>
-                     Specify the number of cores to be used in MPI tests.
-                     If unspecified, 2 cores will be used.    
+      --cudampi      Tests QUICK multi-GPU version
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -87,21 +85,22 @@ print_test_info(){
   ismp2='no'
 
   case "$i" in
-    ene_psb5_rhf_631g)        echo "RHF energy test: s and p basis functions";;
-    ene_psb5_rhf_631gss)      echo "RHF energy test: s, p and d basis functions";;
-    ene_psb3_blyp_631g)       echo "DFT energy test: s and p basis functions, native BLYP functional";;
-    ene_psb3_blyp_631gss)     echo "DFT energy test: s, p and d basis functions, native BLYP functional";;
-    ene_psb3_b3lyp_631g)      echo "DFT energy test: s and p basis functions, native B3LYP functional";;
-    ene_psb3_b3lyp_631gss)    echo "DFT energy test: s, p and d basis functions, native B3LYP functional";;
-    ene_psb3_libxc_lda_631g)  echo "DFT energy test: s and p basis functions, libxc LDA functional";;
-    ene_psb3_libxc_gga_631g)  echo "DFT energy test: s and p basis functions, libxc GGA functional";;
-    ene_psb3_libxc_hgga_631g) echo "DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
-    ene_wat2_mp2_631g)        echo "MP2 energy test: s and p basis functions"; ismp2='yes';;
-    ene_wat2_mp2_631gss)      echo "MP2 energy test: s, p and d basis functions"; ismp2='yes';;
-    grad_psb3_b3lyp_631g)     echo "DFT gradient test: s and p basis functions";;
-    grad_psb3_b3lyp_631gss)   echo "DFT gradient test: s and p and d basis functions";;
-    opt_wat_rhf_631g)         echo "RHF geometry optimization test: s and p basis functions";;
-    opt_wat_rhf_ccpvdz)       echo "RHF geometry optimization test: s, p and d basis functions";;
+    ene_psb5_rhf_631g)            echo "RHF energy test: s and p basis functions";;
+    ene_psb5_rhf_631gss)          echo "RHF energy test: s, p and d basis functions";;
+    ene_psb3_blyp_631g)           echo "DFT energy test: s and p basis functions, native BLYP functional";;
+    ene_psb3_blyp_631gss)         echo "DFT energy test: s, p and d basis functions, native BLYP functional";;
+    ene_psb3_b3lyp_631g)          echo "DFT energy test: s and p basis functions, native B3LYP functional";;
+    ene_psb3_b3lyp_631gss)        echo "DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_psb3_libxc_lda_631g)      echo "DFT energy test: s and p basis functions, libxc LDA functional";;
+    ene_psb3_libxc_gga_631g)      echo "DFT energy test: s and p basis functions, libxc GGA functional";;
+    ene_psb3_libxc_hgga_631g)     echo "DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
+    ene_wat2_mp2_631g)            echo "MP2 energy test: s and p basis functions"; ismp2='yes';;
+    ene_wat2_mp2_631gss)          echo "MP2 energy test: s, p and d basis functions"; ismp2='yes';;
+    grad_psb3_b3lyp_631g)         echo "DFT gradient test: s and p basis functions";;
+    grad_psb3_b3lyp_631gss)       echo "DFT gradient test: s and p and d basis functions";;
+    grad_ch3conhch3_b3lyp_ccpvdz) echo "DFT gradient test: s and p and d basis functions";;
+    opt_wat_rhf_631g)             echo "RHF geometry optimization test: s and p basis functions";;
+    opt_wat_rhf_ccpvdz)           echo "RHF geometry optimization test: s, p and d basis functions";;
   esac
 
 }
@@ -116,7 +115,6 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
-    --ncores)      shift; ncores=$1;;
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -206,12 +204,13 @@ echo ""
 
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-  if [ `command -v mpirun | wc -l` -gt 0 ]; then
-    ismpirun='yes'
-    echo  "MPI tests will be carried out with $ncores cores. "
-  else
-    echo  "MPI tests will be carried out with a single core. "
-  fi
+if [ -z "$DO_PARALLEL" ]; then
+   export DO_PARALLEL=" "
+   echo  "Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core."
+else
+   ismpirun='yes'
+   echo  "MPI command: $DO_PARALLEL"
+fi
   echo ""
 fi
 
@@ -272,7 +271,7 @@ for buildtype in $buildtypes; do
 
     # Run the test case
     if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
-      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+      $DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
     else
       "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
     fi
@@ -397,7 +396,7 @@ for buildtype in $buildtypes; do
       
     # Check the minimum energy
     refval=$(grep "#ref_min_ene" "$i.in" | awk '{print $2}')
-    newval=$(grep "MINIMIZED ENERGY" "$i.out" | awk '{print $3}')
+    newval=$(grep "TOTAL ENERGY" "$i.out" |tail -1 | awk '{print $4}')
     echo "$refval  $newval"|awk '{
       x=sqrt(($1-$2)^2); 
       if(x>=0.00001) stat="Failed"; else stat="Passed"; 

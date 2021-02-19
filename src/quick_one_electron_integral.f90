@@ -23,9 +23,6 @@ subroutine fullx
    implicit none
 
    double precision :: overlap
-   double precision :: Sminhalf(nbasis)
-   double precision :: V(3,nbasis)
-   double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
@@ -33,6 +30,8 @@ subroutine fullx
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 
    call cpu_time(timer_begin%T1eS)
+
+   call allocfullx(quick_scratch,nbasis)
 
    do Ibas=1,nbasis
       ii = itype(1,Ibas)
@@ -81,10 +80,18 @@ subroutine fullx
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    call cpu_time(timer_begin%T1eSD)
 
-   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+#if defined CUDA || defined CUDA_MPIV
+
+   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold,&
+   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
+#else
+   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
+#endif
 
    call cpu_time(timer_end%T1eSD)
    timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
+
    ! Consider the following:
 
    ! X = U * s^(-.5) * transpose(U)
@@ -117,37 +124,40 @@ subroutine fullx
    ! half. (Lower Diagonal)
 
    do I=1,nbasis
-      if (Sminhalf(I).gt.1E-4) then
-      Sminhalf(I) = Sminhalf(I)**(-.5d0)
-      else
-      Sminhalf(I) = 0.0d0
+      if (quick_scratch%Sminhalf(I).gt.1E-4) then
+      quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
       endif
    enddo
 
+#if defined CUDA || defined CUDA_MPIV
+
+   call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)   
+#else
+   call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
+#endif
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
 
-   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
-   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
+!   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
+!   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
    ! Now calculate X.
    ! Xij = Sum(k=1,m) Transpose(U)kj * s^(-.5)kk * Transpose(U)ki
-
-   do I = 1,nbasis
-      do J=I,nbasis
-         sum = 0.d0
-         do K=1,nbasis
-            sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-         enddo
-         quick_qm_struct%x(I,J) = sum
-         quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
-      enddo
-   enddo
 
    if (quick_method%debug) call debugFullX
 
    ! At this point we have the transformation matrix (X) which is necessary
    ! to orthogonalize the operator matrix, and the overlap matrix (S) which
    ! is used in the DIIS-SCF procedure.
+
+   call deallocfullx(quick_scratch)
 
    return
 end subroutine fullx
@@ -1782,14 +1792,16 @@ end subroutine get1eEnergy
 !------------------------------------------------
 ! get1e
 !------------------------------------------------
-subroutine get1e(oneElecO)
+subroutine get1e()
    use allmod
-   implicit double precision(a-h,o-z)
-   double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
+   use quick_scf_module
 
-!#ifdef MPIV
-!   include "mpif.h"
-!#endif
+   implicit double precision(a-h,o-z)
+   double precision :: temp2d(nbasis,nbasis)
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -1798,19 +1810,19 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-!#ifdef MPIV
-!   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
-!#endif
+#ifdef MPIV
+   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
+#endif
 
      if (master) then
-
+       call cpu_time(timer_begin%T1e)
+       if(bCalc1e) then
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
          ! The first part is kinetic part
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
-         call cpu_time(timer_begin%T1e)
          call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
@@ -1828,12 +1840,8 @@ subroutine get1e(oneElecO)
          enddo
          call cpu_time(timer_end%T1eV)
 
-         call cpu_time(timer_end%t1e)
-         timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-         timer_cumer%TOp = timer_cumer%TOp+timer_cumer%T1e
-         timer_cumer%TSCF = timer_cumer%TSCF+timer_cumer%T1e
 
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
@@ -1841,75 +1849,68 @@ subroutine get1e(oneElecO)
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
-      endif
-!#ifdef MPIV
-!   else
-!
-!      !------- MPI/ ALL NODES -------------------
-!
-!      !=================================================================
-!      ! Step 1. evaluate 1e integrals
-!      ! This job is only done on master node since it won't cost much resource
-!      ! and parallel will even waste more than it saves
-!      !-----------------------------------------------------------------
-!      ! The first part is kinetic part
-!      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-!      !-----------------------------------------------------------------
-!      call cpu_time(timer_begin%t1e)
-!      call cpu_time(timer_begin%T1eT)
-!      do i=1,nbasis
-!         do j=1,nbasis
-!            quick_qm_struct%o(i,j)=0
-!         enddo
-!      enddo
-!      do i=1,mpi_nbasisn(mpirank)
-!         Ibas=mpi_nbasis(mpirank,i)
-!         call get1eO(Ibas)
-!      enddo
-!      call cpu_time(timer_end%T1eT)
-!
-!      !-----------------------------------------------------------------
-!      ! The second part is attraction part
-!      !-----------------------------------------------------------------
-!      call cpu_time(timer_begin%T1eV)
-!      do i=1,mpi_jshelln(mpirank)
-!         IIsh=mpi_jshell(mpirank,i)
-!         do JJsh=IIsh,jshell
-!            call attrashell(IIsh,JJsh)
-!         enddo
-!      enddo
-!      call cpu_time(timer_end%T1eV)
-!
-!      call cpu_time(timer_end%t1e)
-!      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-!      timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
-!      timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
-!
-!      ! slave node will send infos
-!      if(.not.master) then
-!
-!         ! Copy Opertor to a temp array and then send it to master
-!         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
-!         ! send operator to master node
-!         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-!      else
-!         ! master node will receive infos from every nodes
-!         do i=1,mpisize-1
-!            ! receive opertors from slave nodes
-!            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-!            ! and sum them into operator
-!            do ii=1,nbasis
-!               do jj=1,nbasis
-!                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-!               enddo
-!            enddo
-!         enddo
-!         call copySym(quick_qm_struct%o,nbasis)
-!         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
-!      endif
-!      !------- END MPI/ALL NODES ------------
-!   endif
-!#endif
+         bCalc1e=.false.
+       else
+         quick_qm_struct%o(:,:)=oneElecO(:,:)
+       endif
+       call cpu_time(timer_end%t1e)
+
+       timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TOp = timer_cumer%TOp+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TSCF = timer_cumer%TSCF+timer_end%T1e-timer_begin%T1e
+
+     endif
+#ifdef MPIV
+   else
+
+    call cpu_time(timer_begin%t1e)
+    if(bCalc1e) then
+
+      !------- MPI/ ALL NODES -------------------
+
+      !=================================================================
+      ! Step 1. evaluate 1e integrals
+      ! This job is only done on master node since it won't cost much resource
+      ! and parallel will even waste more than it saves
+      !-----------------------------------------------------------------
+      ! The first part is kinetic part
+      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
+      !-----------------------------------------------------------------
+      call cpu_time(timer_begin%T1eT)
+
+      do i=1,mpi_nbasisn(mpirank)
+         Ibas=mpi_nbasis(mpirank,i)
+         call get1eO(Ibas)
+      enddo
+      call cpu_time(timer_end%T1eT)
+
+      !-----------------------------------------------------------------
+      ! The second part is attraction part
+      !-----------------------------------------------------------------
+      call cpu_time(timer_begin%T1eV)
+      do i=1,mpi_jshelln(mpirank)
+         IIsh=mpi_jshell(mpirank,i)
+         do JJsh=IIsh,jshell
+            call attrashell(IIsh,JJsh)
+         enddo
+      enddo
+      call cpu_time(timer_end%T1eV)
+
+      call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
+
+      bCalc1e=.false.
+      !------- END MPI/ALL NODES ------------
+     else
+       quick_qm_struct%o(:,:)=oneElecO(:,:)
+     endif
+
+     call cpu_time(timer_end%t1e)
+     timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+     timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+     timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV     
+
+   endif
+#endif
 end subroutine get1e
 
 ! Ed Brothers. October 23, 2001

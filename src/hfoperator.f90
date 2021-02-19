@@ -32,6 +32,7 @@ subroutine hfoperator(oneElecO, deltaO)
    !-------------------------------------------------------
    use allmod
    use quick_gaussian_class_module
+    use quick_cutoff_module, only: cshell_density_cutoff
    implicit none
 
 
@@ -79,7 +80,7 @@ subroutine hfoperator(oneElecO, deltaO)
 
 
    ! Delta density matrix cutoff
-   call densityCutoff()
+   call cshell_density_cutoff
 
    call cpu_time(timer_begin%T2e)  ! Terminate the timer for 2e-integrals
 
@@ -156,6 +157,7 @@ end subroutine hfoperator
 subroutine hfoperatordeltadc
    use allmod
    use quick_gaussian_class_module
+   use quick_cutoff_module, only: cshell_dnscreen
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp
@@ -299,7 +301,7 @@ subroutine hfoperatordeltadc
    do II=1,jshell
       do JJ=II,jshell
          DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II,JJ,DNtemp)
          Cutmatrix(II,JJ)=DNtemp
          Cutmatrix(JJ,II)=DNtemp
       enddo
@@ -367,6 +369,7 @@ end subroutine hfoperatordeltadc
 subroutine hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
+    use quick_cutoff_module, only: cshell_density_cutoff
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp,oneElecO(nbasis,nbasis)
@@ -412,7 +415,7 @@ subroutine hfoperatordc(oneElecO)
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next two terms define the two electron part.
    !--------------------------------------------
-   call densityCutoff
+   call cshell_density_cutoff
 
    !--------------------------------------------
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -455,6 +458,7 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
    !-------------------------------------------------------
    use allmod
    use quick_gaussian_class_module
+    use quick_cutoff_module, only: cshell_density_cutoff
    implicit double precision(a-h,o-z)
 
    include "mpif.h"
@@ -517,7 +521,7 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next two terms define the two electron part.
 
-   call densityCutoff
+   call cshell_density_cutoff
 
 
    ! We reset the operator value for slave nodes. Actually, in most situation,
@@ -608,6 +612,7 @@ end subroutine mpi_hfoperator
 subroutine mpi_hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
+    use quick_cutoff_module, only: cshell_density_cutoff
    implicit double precision(a-h,o-z)
 
    include "mpif.h"
@@ -679,7 +684,7 @@ subroutine mpi_hfoperatordc(oneElecO)
 
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next two terms define the two electron part.
-   call densityCutoff
+   call cshell_density_cutoff
 
 
    ! We reset the operator value for slave nodes. Actually, in most situation,
@@ -869,7 +874,7 @@ end subroutine get2edc
 subroutine get2eEnergy()
    use allmod
    implicit double precision(a-h,o-z)
-   call cpu_time(timer_begin%tE)
+   
    !------------------------------------------------
    ! This subroutine is to get 2e energy
    !------------------------------------------------

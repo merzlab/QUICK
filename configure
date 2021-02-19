@@ -42,9 +42,12 @@ echo  "
       --serial       Builds a serial version                                
       --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
+      --cudampi      Builds multi-GPU version that utilizes multiple NVIDIA GPUs  
       --debug        Compiles debug version                                 
+      --debug-time   Compiles a debug version that reports more information
+                     on timing
       --shared       Build shared object libraries                          
-      --arch <kepler|pascal|volta|turing|ampere>                                           
+      --arch <kepler|maxwell|pascal|volta|turing|ampere>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
@@ -60,7 +63,7 @@ echo  "
                      Requires specifying AMBER home directory as prefix. 
       --verbose      Enable full compilation output
 
-  Supported compilers are: gnu, intel, pgi
+  Supported compilers are: gnu, intel, pgi, nvidia
 
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:
@@ -218,6 +221,24 @@ case "$compiler" in
       cxx_search='pgc++'
     ;;
 
+  nvidia)
+    echo "Requested compiler: NVIDIA."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='nvfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='nvc'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='nvc++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+      fort_search='nvfortran'
+      cc_search='nvc'
+      cxx_search='nvc++'
+    ;;
+
   *)
     echo  "Error: $compiler compiler tool chain is not supported."
     exit 1;;
@@ -245,7 +266,7 @@ patch_seperator='.'
 version_string="[0-9]{1,4}.[0-9]{1,4}$patch_seperator[0-9]{1,4}"
 
 # pgi compilers use a different versioning output
-if [ "$fort_search" = 'pgfortran' ]; then
+if [ "$fort_search" = 'pgfortran' ] || [ "$fort_search" = 'nvfortran' ]; then
   patch_seperator='-'
   version_string='[0-9]{1,4}.[0-9]{1,4}-[0-9]{1,4}'
   info_option='--version'
@@ -259,8 +280,8 @@ fort_version_minor=''
 fort_version_patch=''
 fort_search_string="$fort_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
-if [ "$fort_search" = 'pgfortran' ]; then
+# pgi & nvidia compilers use a different version output
+if [ "$fort_search" = 'pgfortran' ] || [ "$fort_search" = 'nvfortran' ]; then
   fort_search_string="$fort_search\s$version_string"
 fi
 
@@ -295,8 +316,8 @@ cc_version_minor=''
 cc_version_patch=''
 cc_search_string="$cc_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
-if [ "$cc_search" = 'pgcc' ]; then
+# pgi & nvidia compilers use a different version output
+if [ "$cc_search" = 'pgcc' ] || [ "$cc_search" = 'nvc' ]; then
   cc_search_string="$cc_search\s$version_string"
 fi
 
@@ -333,10 +354,15 @@ cxx_version_minor=''
 cxx_version_patch=''
 cxx_search_string="$cxx_search\s[vV]ersion\s$version_string"
 
-# pgi compilers use a different version output
+# pgi & nvidia compilers use a different version output
 if [ "$cxx_search" = 'pgc++' ]; then
   cxx_search_string="pgc\+\+\s$version_string"
 fi
+
+if [ "$cxx_search" = 'nvc++' ]; then
+  cxx_search_string="nvc\+\+\s$version_string"
+fi
+
 
 cxx_version_info=`$cxx_search $info_option 2>&1 | grep -oE "$cxx_search_string"`
 
@@ -396,6 +422,7 @@ mpi='no'
 cuda='no'
 cudampi='no'
 debug='no'
+debugtime='no'
 buildtypes=''
 installers=''
 
@@ -497,6 +524,7 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.MPI";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
+    --debug-time)  debugtime='yes';;
     --debug)       debug='yes';;
     --verbose)     verbose='';;
     --shared)      shared='yes';;
@@ -508,6 +536,7 @@ while [ $# -gt 0 ]; do
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     pgi)           compiler='pgi';;
+    nvidia)        compiler='nvidia';;
     -h| -H| -help| --help) print_help;;
      *)  echo  "Error: $1 is an unknown flag."
          echo  "       Run this script as './configure [flags] compiler'."
@@ -715,6 +744,10 @@ set_uspec_arch(){
 	echo "Configuring for SM3.0"
 	cuda_arch_flags="$cuda_arch_flags $sm30flags"
 	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
+      maxwell)
+        echo "Configuring for SM5.0"
+        cuda_arch_flags="$cuda_arch_flags $sm50flags"
+        cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       pascal)
         echo "Configuring for SM6.0"
         cuda_arch_flags="$cuda_arch_flags $sm60flags"
@@ -754,6 +787,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
     sm70flags='-gencode arch=compute_70,code=sm_70'
     #SM6.0 = GP100 / P100 = DGX-1
     sm60flags='-gencode arch=compute_60,code=sm_60'
+    #SM5.0 = M40
+    sm50flags='-gencode arch=compute_50,code=sm_50'
     #SM3.0 = K80, K40, K20
     sm30flags='-gencode arch=compute_30,code=sm_30'
 
@@ -767,8 +802,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        echo "Configuring for SM3.0, SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags $sm80flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags $sm80flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
@@ -777,8 +812,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags $sm75flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0 and SM7.5"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
@@ -787,8 +822,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0 and SM7.0"
-        cuda_arch_flags="$sm30flags $sm60flags $sm70flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0 and SM7.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
@@ -797,8 +832,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       if [ "$uspec_arch" = 'true' ]; then
         set_uspec_arch
       else
-        echo "Configuring for SM3.0, SM6.0"
-        cuda_arch_flags="$sm30flags $sm60flags"
+        echo "Configuring for SM3.0, SM5.0, SM6.0"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
@@ -823,20 +858,25 @@ if [ "$debug" = 'yes' ]; then
   blas_opt_flags='-O0'
 
   case "$compiler" in
-    gnu | pgi)
-      fort_debug_flags='-g -DDEBUG'
+    gnu | pgi | nvidia)
+      fort_debug_flags='-g -DDEBUG -DDEBUGTIME'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
       ;;
     intel)
-      fort_debug_flags='-g -traceback -DDEBUG'
+      fort_debug_flags='-g -traceback -DDEBUG -DDEBUGTIME'
       cc_debug_flags='-g -traceback -DDEBUG'
       cxx_debug_flags='-g -traceback -DDEBUG'
       ;;
   esac
 
   if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
-    cuda_debug_flags='-g -G -DDEBUG'
+    cuda_debug_flags='-g -DDEBUG'
+  fi
+elif [ "$debugtime" = 'yes' ]; then
+  fort_debug_flags='-DDEBUGTIME'
+  if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
+    cuda_debug_flags='-DDEBUGTIME'
   fi
 fi
 
@@ -876,16 +916,22 @@ for buildtype in $buildtypes; do
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
       fi
       ;;
+    nvidia)
+      fort_flags="$opt_flags $fort_debug_flags -m64 -cpp $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+      fi
+      ;;
   esac
 
   cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
-  cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
+  cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -std=c++11 -I$QUICK_HOME/build/include/$buildtype"
 
   if [ "$buildtype" = 'cuda' ] || [ "$buildtype" = 'cudampi' ]; then
 
     cpp_flags="$opt_flags -I$CUDA_HOME/include $lib_flags -DCUBLAS_USE_THUNKING"
 
-    cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $cuda_lib_flags"
+    cuda_flags="$opt_flags $cuda_debug_flags $cuda_ext_flags $cuda_arch_flags $cuda_lib_flags -Wno-deprecated-gpu-targets"
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include"
 
@@ -1096,6 +1142,38 @@ modfolder=$QUICK_HOME/src/modules
 EOF
 
 #  !---------------------------------------------------------------------!
+#  ! Generate quick.rc in install directory                              !
+#  !---------------------------------------------------------------------!
+cat > "$quick_prefix/quick.rc" << EOF
+export QUICK_INSTALL=$quick_prefix
+export QUICK_BASIS=\$QUICK_INSTALL/basis
+export PATH=\$QUICK_INSTALL/bin:\$PATH
+EOF
+
+if [ "$shared" = 'yes' ]; then
+libpaths=''
+libpath=''
+
+if [ "$testtype" = 'installtest' ]; then
+  libpath="\$QUICK_INSTALL/lib"
+else
+  libpath="\$QUICK_INSTALL/build/lib"
+fi
+
+if [ "$aminstall" = "true" ]; then
+  libpaths="\$QUICK_INSTALL/lib:"
+else
+  for buildtype in $buildtypes; do
+    libpaths="$libpath/$buildtype:$libpaths"
+  done
+fi
+
+cat >> "$quick_prefix/quick.rc" << EOF
+export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
+EOF
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Clean directories                                                   !
 #  !---------------------------------------------------------------------!
 
@@ -1107,12 +1185,13 @@ echo ""
 echo  "Next steps:"
 echo  "          Run 'make' to build QUICK."
 
-if [ "$testtype" = 'installtest' ]; then
+if [ "$aminstall" = "true" ]; then
+  echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+elif [ "$testtype" = 'installtest' ]; then
   echo  "          Run 'make install' to install executable/s, libraries and header files in $quick_prefix."
 fi
 
-echo  "          Run 'make test' to verify the executables."
-
-if [ "$aminstall" = "true" ]; then
-echo  "          Run 'make install' to install QUICK executables and libraries into AMBER home directory $quick_prefix."
+if [ "$aminstall" = "false" ]; then
+  echo  "          Run 'make test' to verify the executables."
 fi
+
