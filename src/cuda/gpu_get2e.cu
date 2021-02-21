@@ -261,7 +261,7 @@ void upload_sim_to_constant(_gpu_type gpu){
 
 
 // totTime is the timer for GPU 2e time. Only on under debug mode
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 static float totTime;
 #endif
 
@@ -327,7 +327,9 @@ void get2e(_gpu_type gpu)
     }
 #endif 
 
-//    cudaDeviceSynchronize();
+//    get1e_();
+
+    cudaDeviceSynchronize();
 //    nvtxRangePop();
 
 }
@@ -345,7 +347,11 @@ void getGrad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-   QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+    // compute one electron gradients in the meantime
+    get_oneen_grad_();
+
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
@@ -357,7 +363,8 @@ void getGrad(_gpu_type gpu)
         //#endif
     }
 
-//    cudaDeviceSynchronize();
+    cudaDeviceSynchronize();   
+
 //    nvtxRangePop();
 
 }

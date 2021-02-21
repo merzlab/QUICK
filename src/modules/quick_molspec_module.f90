@@ -3,7 +3,7 @@
 !                                                                     !
 ! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
 !                         Ken Ayers & Ed Brothers                     !
-!                                                                     ! 
+!                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
 ! Copyright (C) 2020-2021 Götz lab                                    !
 !                                                                     !
@@ -63,14 +63,14 @@ module quick_molspec_module
 
       ! atom charge and external atom charge
       double precision, dimension(:), allocatable ::chg,extchg
-      
+
       ! basis set number
       integer,pointer:: nbasis
 
    end type quick_molspec_type
 
    type (quick_molspec_type),save:: quick_molspec
-   double precision, dimension(:,:), allocatable,target :: xyz 
+   double precision, dimension(:,:), allocatable,target :: xyz
    integer,target :: natom
 
    ! interface lists
@@ -87,7 +87,7 @@ module quick_molspec_module
       module procedure init_quick_molspec
    end interface init
 
-#ifdef MPIV   
+#ifdef MPIV
    interface broadcast
       module procedure broadcast_quick_molspec
    end interface broadcast
@@ -338,23 +338,23 @@ contains
       ! parameter
       type (quick_molspec_type) self
       integer input
-      
+
       ! inner varibles
       integer i,j,k,istart,ifinal
       integer ierror
       double precision temp
       character(len=200) keywd
-      
+
 
       rewind(input)
-      
+
       call findBlock(input,1)
-      
+
       do i=1,natom
-         
+
          istart=1
          ifinal=80
-         
+
          read (input,'(A80)') keywd
          call rdword(keywd,istart,ifinal)
 
@@ -364,7 +364,7 @@ contains
          do k=1,SYMBOL_MAX
              if (keywd(istart:ifinal) == symbol(k)) self%iattype(i)=k
          enddo
-        
+
          !-----------------------------
          ! Next, find the xyz coordinates of the atom and convert to bohr.
          !-----------------------------
@@ -376,13 +376,13 @@ contains
             xyz(k,i) = temp*A_TO_BOHRS
         enddo
       enddo
-      
+
       self%xyz => xyz
-      
+
       if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input)
 
    end subroutine read_quick_molspec_2
-   
+
 
 
     subroutine read_quick_molespec_extcharges(self,input)
@@ -392,21 +392,21 @@ contains
         ! parameter
         type (quick_molspec_type) self
         integer input
-      
+
         ! inner varibles
         integer i,j,k,istart,ifinal
         integer nextatom,ierror
         double precision temp
         character(len=200) keywd
-     
+
         rewind(input)
-        call findBlock(input,2) 
+        call findBlock(input,2)
         nextatom=self%nextatom
 
         do i=1,nextatom
             istart = 1
             ifinal = 80
-            
+
             read(input,'(A80)') keywd
 
             do j=1,3
@@ -421,7 +421,7 @@ contains
             call rdnum(keywd,istart,self%extchg(i),ierror)
 
         enddo
-        
+
     end subroutine read_quick_molespec_extcharges
 
    !-------------------
@@ -434,15 +434,19 @@ contains
       type(quick_molspec_type) self
       if (io.ne.0) then
          write(io,'(/," =========== Molecule Input ==========")')
-         write(io,'("| TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
-         write(io,'("| TOTOAL ATOM NUMBER      = ",i4,4x,"NUMBER OF ATOM TYPES        = ",i4)') self%natom,self%iAtomType
-         write(io,'("| NUMBER OF HYDROGEN ATOM = ",i4,4x,"NUMBER OF NON-HYDROGEN ATOM = ",i4)') self%nhatom,self%nNonHAtom
+         write(io,'(" TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
+         write(io,'(" TOTAL ATOM NUMBER       = ",i4,4x,"NUMBER OF ATOM TYPES        = ",i4)') self%natom,self%iAtomType
+         write(io,'(" NUMBER OF HYDROGEN ATOM = ",i4,4x,"NUMBER OF NON-HYDROGEN ATOM = ",i4)') self%nhatom,self%nNonHAtom
+
+         if(self%nextatom.gt.0 )then
+           write(io,'(" NUMBER OF EXTERNAL POINT CHARGES = ",i4)') self%nextatom
+         endif
 
          if (self%nelecb.ne.0) then
-            write (io,'("| NUMBER OF ALPHA ELECTRONS = ",I4)') self%nelec
-            write (io,'("| NUMBER OF BETA ELECTRONS  = ",I4)') self%nelecb
+            write (io,'(" NUMBER OF ALPHA ELECTRONS = ",I4)') self%nelec
+            write (io,'(" NUMBER OF BETA ELECTRONS  = ",I4)') self%nelecb
          else
-            write (io,'("| NUMBER OF ELECTRONS     = ",I4)') self%nelec
+            write (io,'(" NUMBER OF ELECTRONS     = ",I4)') self%nelec
          endif
 
          write(io,*)
@@ -454,9 +458,9 @@ contains
 
          if(self%nextatom.gt.0 )then
             write(io,*)
-            write(io,'(" -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- ")')
+            write(io,'(" -- EXTERNAL POINT CHARGES: (X,Y,Z,Q) -- ")')
             do i=1,self%nextatom
-               write(io,'(4x,F7.4,3(F10.4,1x))') self%extchg(i),(self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3),self%extchg(i)
             enddo
          endif
 
@@ -467,9 +471,9 @@ contains
             call PriSym(io,self%natom,self%atomdistance,'f12.5')
          endif
       endif
-      
+
       return
-      
+
    end subroutine print_quick_molspec
 
    !-------------------
@@ -502,7 +506,7 @@ contains
             self%atomdistance(j,i)=self%atomdistance(i,j)
          enddo
       enddo
-      
+
       ! second set distnbor
       do i=1,natom
          self%distnbor(i)=1.D30

@@ -1,0 +1,33 @@
+#!/bin/sh
+#TEST-PROGRAM sander
+#TEST-DESCRIP TO_BE_DEtermined
+#TEST-PURPOSE regression, basic
+#TEST-STATE   undocumented
+
+if [ -z "$AMBERHOME" ]; then
+   echo "Error: AMBERHOME is not set!"
+   exit 1
+fi
+
+. ${AMBERHOME}/test/program_error.sh
+
+if [ -z "$TESTsander" ]; then
+   TESTsander="${AMBERHOME}/bin/quick"
+fi
+
+if [ -z "$DO_PARALLEL" ]; then
+   export DO_PARALLEL=" "
+fi
+
+if [ -z "$QUICK_BASIS" ]; then
+  export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
+fi
+
+for i in *.in
+do
+  $DO_PARALLEL $TESTsander $i < /dev/null || error
+  ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out ${i%.in}.out
+  /bin/rm -f ${i%.in}.dat
+done
+
+exit 0

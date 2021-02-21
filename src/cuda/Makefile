@@ -24,22 +24,31 @@ include $(MAKEIN)
 
 LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 
+CXXOBJ=$(objfolder)/xc_redistribute.o
+
 CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o 
 
 CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 
 CUDAFOBJ= $(objfolder)/gpu_write_info.o
 
+$(CXXOBJ):$(objfolder)/%.o:%.cpp
+	@echo "[QUICK]  CXX $@"
+	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
+
 $(CUDACOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	@echo "[QUICK]  NVCC $@"
+	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 $(CUDAXCOBJ):$(objfolder)/%.o:%.cu
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+	@echo "[QUICK]  NVCC $@"
+	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
 $(CUDAFOBJ):$(objfolder)/%.o:%.f90
-	$(FOR) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -c $< -o $@
 
 LIBXC_DEV_OBJ = $(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
@@ -93,10 +102,10 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
+allbutxc: $(CXXOBJ) $(CUDACOBJ) $(CUDAFOBJ)
 
 xc: $(CUDAXCOBJ)
-	$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
+	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

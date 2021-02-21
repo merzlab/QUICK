@@ -110,6 +110,9 @@
 ! DFT Parameter
     if (quick_method%DFT.or.quick_method%SEDFT) then  
       call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
 
 ! SEDFT Parameters  
@@ -357,25 +360,23 @@
 
       use quick_mpi_module
       implicit none
-
+      integer :: i, IERROR
       include 'mpif.h'
 
-      ! broadcast device count to slaves
-      call MPI_BCAST(mgpu_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
       ! allocate memory for device ids
-      call allocate_mgpu
+      if(master) call allocate_mgpu
 
-      ! get device ids
-      if (master) then
-        call mgpu_get_devices(mgpu_ids)
+      ! get slave device ids and save them for printing device info
+      if(.not. master) then
+        call MPI_SEND(mgpu_id,1,mpi_integer,0,mpirank,MPI_COMM_WORLD,IERROR)
+      else
+        mgpu_ids(1)=mgpu_id
+
+        do i=1,mpisize-1
+          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+        enddo
+        
       endif
-
-      ! broadcast device ids
-      call MPI_BCAST(mgpu_ids,mgpu_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-
-      ! assign a gpu id for each worker
-      mgpu_id = mgpu_ids(mpirank+1)
 
     end subroutine mgpu_setup
 
@@ -473,13 +474,12 @@
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
 #ifdef CUDA_MPIV
-      call MPI_BCAST(quick_dft_grid%dweight,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_dft_grid%bin_locator,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #endif
-
+      call MPI_BCAST(quick_dft_grid%bin_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf_counter,quick_dft_grid%nbins+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%primf_counter,quick_dft_grid%nbtotbf+1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%basf,quick_dft_grid%nbtotbf,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -515,7 +515,7 @@
          quick_dft_grid%igridptll(impi)=0
       enddo
 
-      itmpgriddist=quick_xcg_tmp%idx_grid
+      itmpgriddist=quick_dft_grid%init_ngpts
 
       do while(itmpgriddist .gt. 0)
          do impi=1, mpisize
@@ -538,7 +538,7 @@
 
    endif  
 
-    do j=1,quick_xcg_tmp%idx_grid
+    do j=1,quick_dft_grid%init_ngpts
         quick_xcg_tmp%sswt(j) = 0.0d0
         quick_xcg_tmp%tmp_sswt(j) = 0.0d0
         quick_xcg_tmp%weight(j) = 0.0d0
@@ -550,16 +550,16 @@
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
-      call MPI_BCAST(quick_xcg_tmp%idx_grid, 1, mpi_integer, 0, MPI_COMM_WORLD,mpierror)      
+      call MPI_BCAST(quick_dft_grid%init_ngpts, 1, mpi_integer, 0, MPI_COMM_WORLD,mpierror)      
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%igridptul,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%init_grid_ptx,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%init_grid_pty,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%init_grid_ptz,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%init_grid_atm,quick_xcg_tmp%idx_grid,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%arr_wtang,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%arr_rwt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_xcg_tmp%arr_rad3,quick_xcg_tmp%idx_grid,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_ptx,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_pty,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_ptz,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%init_grid_atm,quick_dft_grid%init_ngpts,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_wtang,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_rwt,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_xcg_tmp%arr_rad3,quick_dft_grid%init_ngpts,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
 
 
@@ -579,15 +579,15 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    if(.not. master) then
-      call MPI_SEND(quick_xcg_tmp%sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-      call MPI_SEND(quick_xcg_tmp%weight,quick_xcg_tmp%idx_grid,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(quick_xcg_tmp%sswt,quick_dft_grid%init_ngpts,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(quick_xcg_tmp%weight,quick_dft_grid%init_ngpts,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
    else
 
       do i=1,mpisize-1
-         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_xcg_tmp%idx_grid,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_xcg_tmp%idx_grid,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
 
-         do j=1,quick_xcg_tmp%idx_grid
+         do j=1,quick_dft_grid%init_ngpts
             quick_xcg_tmp%sswt(j)=quick_xcg_tmp%sswt(j)+quick_xcg_tmp%tmp_sswt(j)
             quick_xcg_tmp%weight(j)=quick_xcg_tmp%weight(j)+quick_xcg_tmp%tmp_weight(j)
          enddo

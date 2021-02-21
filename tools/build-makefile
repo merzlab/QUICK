@@ -56,7 +56,7 @@ cudalibxcobj=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o
 	$(libxcdevobjfolder)/lda_c_vwn_2.o $(libxcdevobjfolder)/lda_c_vwn_3.o $(libxcdevobjfolder)/lda_c_vwn_4.o $(libxcdevobjfolder)/lda_c_vwn.o \
 	$(libxcdevobjfolder)/lda_c_vwn_rpa.o $(libxcdevobjfolder)/lda_c_wigner.o $(libxcdevobjfolder)/lda_k_tf.o $(libxcdevobjfolder)/lda_k_zlp.o \
 	$(libxcdevobjfolder)/lda_x_2d.o $(libxcdevobjfolder)/lda_xc_1d_ehwlrg.o $(libxcdevobjfolder)/lda_xc_ksdt.o $(libxcdevobjfolder)/lda_xc_teter93.o \
-	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o 
+	$(libxcdevobjfolder)/lda_x.o $(libxcdevobjfolder)/lda_xc_zlp.o $(libxcdevobjfolder)/lda_x_rel.o
 #       $(libxcdevobjfolder)/lda_x_erf.o $(libxcdevobjfolder)/hyb_mgga_xc_wb97mv.o $(libxcdevobjfolder)/hyb_mgga_x_dldf.o $(libxcdevobjfolder)/hyb_mgga_x_m05.o \
 	$(libxcdevobjfolder)/mgga_c_b88.o $(libxcdevobjfolder)/mgga_c_bc95.o $(libxcdevobjfolder)/mgga_c_cs.o $(libxcdevobjfolder)/mgga_c_kcis.o \
 	$(libxcdevobjfolder)/mgga_c_m05.o $(libxcdevobjfolder)/mgga_c_m06l.o $(libxcdevobjfolder)/mgga_c_m08.o $(libxcdevobjfolder)/mgga_c_pkzb.o \
@@ -76,7 +76,7 @@ endif
 
 cublasobj       = $(objfolder)/fortran_thunking.o
 
-cusolverobj     = $(objfolder)/quick_cusolver.o 
+cusolverobj     = $(objfolder)/quick_cusolver.o
 
 octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
@@ -90,7 +90,7 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
 	$(objfolder)/quick_all_module.o
 
 OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
-        $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o $(objfolder)/schwarz.o \
+        $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o  \
         $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o $(objfolder)/inidivcon.o \
         $(objfolder)/ecp.o $(objfolder)/hfoperator.o $(objfolder)/nuclear.o \
         $(objfolder)/dft.o $(objfolder)/sedftoperator.o \
@@ -99,7 +99,7 @@ OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
-        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o  
+        $(objfolder)/fake_amber_interface.o $(objfolder)/scf_operator.o
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
@@ -139,51 +139,56 @@ cpmakein:
 
 #================= common subroutine library ============================
 quick_subs:
-	cd $(subfolder) && make -j$(ncores) all
+	@cd $(subfolder) && make --no-print-directory -j$(ncores) all
 
 #================= quick module library =================================
 quick_modules:
-	cd $(modfolder) && make all
+	@cd $(modfolder) && make --no-print-directory all
 #================= octree subroutines   =================================
 octree:
-	cd $(octfolder) && make all
+	@cd $(octfolder) && make --no-print-directory all
 #============= targets for cuda =========================================
 quick_cuda:
-	cd $(cudafolder) && make allbutxc
-	cd $(cudafolder) && make xc 
+	@cd $(cudafolder) && make --no-print-directory allbutxc
+	@cd $(cudafolder) && make --no-print-directory xc
 
 #================= targets for BLAS =====================================
-blas:
-	cd $(blasfolder) && make -j$(ncores) all
+blas-quick:
+	@cd $(blasfolder) && make --no-print-directory -j$(ncores) all
 #==================== libxc cpu library =================================
 libxc_cpu:
-	cd $(libxcfolder) && make -j$(ncores) libxc_cpu
+	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_cpu
 #==================== libxc cuda library =================================
 libxc_gpu:
-	cd $(libxcfolder) && make -j$(ncores) libxc_gpu
+	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_gpu
 
 libxc_cuda:libxc_gpu
-	cd $(libxcfolder)/maple2c_device && make -j$(ncores) all
+	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) all
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
-	$(CC) $(CPP_FLAG) -c $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #===================== target for general src files =====================
 
 $(OBJ):$(objfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for main src files ========================
 $(MAIN):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 #===================== target for compiling api test ====================
 $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
 #  !---------------------------------------------------------------------!
 #  ! Parent build targets                                                !
@@ -191,26 +196,26 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI) 
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
 
 cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda $(CFLAGS) $(LDFLAGS)
 
-mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(FC) -o $(exefolder)/quick.mpi $(MAIN) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.mpi $(TESTAPI) -L$(libfolder) -lquick -lblas -lxc $(LDFLAGS)
+mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc $(LDFLAGS)
 
 cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(FC) -o $(exefolder)/quick.cuda.mpi $(MAIN) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
-	$(FC) -o $(exefolder)/test-api.cuda.mpi $(TESTAPI) -L$(libfolder) -lquick -lxc $(CFLAGS) $(LDFLAGS)
-	 
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda $(CFLAGS) $(LDFLAGS)
+
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
@@ -218,12 +223,11 @@ cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $
 .PHONY: clean
 
 clean:
-	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/*
+	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
 	@-rm -f $(libxcobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
 	@cd $(blasfolder) && make --no-print-directory clean
 	@cd $(modfolder) && make --no-print-directory clean
 	@cd $(libxcfolder) && make --no-print-directory clean
-	@cd $(libxcfolder)/maple2c_device && make --no-print-directory clean	
-        
+	@cd $(libxcfolder)/maple2c_device && make --no-print-directory clean

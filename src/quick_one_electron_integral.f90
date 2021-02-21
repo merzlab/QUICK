@@ -23,29 +23,54 @@ subroutine fullx
    implicit none
 
    double precision :: overlap
-   double precision :: Sminhalf(nbasis)
-   double precision :: V(3,nbasis)
-   double precision :: IDEGEN1(nbasis)
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
+   double precision g_table(200),Px,Py,Pz
+   integer g_count,ii,jj,kk
+   double precision a,b,Ax,Ay,Az,Bx,By,Bz
+
+   call cpu_time(timer_begin%T1eS)
+
+   call allocfullx(quick_scratch,nbasis)
 
    do Ibas=1,nbasis
+      ii = itype(1,Ibas)
+      jj = itype(2,Ibas)
+      kk = itype(3,Ibas)
+
+      Bx = xyz(1,quick_basis%ncenter(Ibas))
+      By = xyz(2,quick_basis%ncenter(Ibas))
+      Bz = xyz(3,quick_basis%ncenter(Ibas))
+
       do Jbas=Ibas,nbasis
+         i = itype(1,Jbas)
+         j = itype(2,Jbas)
+         k = itype(3,Jbas)
+         g_count = i+ii+j+jj+k+kk
+
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+
          SJI =0.d0
          do Icon=1,ncontract(ibas)
+            b = aexp(Icon,Ibas)
             do Jcon=1,ncontract(jbas)
-               SJI_temp = overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-                     itype(1,Jbas),       itype(2,Jbas),       itype(3,Jbas), &
-                     itype(1,Ibas),       itype(2,Ibas),       itype(3,Ibas), &
-                     xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)),xyz(3,quick_basis%ncenter(Jbas)),&
-                     xyz(1,quick_basis%ncenter(Ibas)),xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+               a = aexp(Jcon,Jbas)
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
 
-               SJI =SJI + dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) * SJI_temp
+               SJI =SJI + &
+                     dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+                     *overlap(a,b, i,j,k,ii,jj,kk, &
+                     Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
             enddo
          enddo
          quick_qm_struct%s(Jbas,Ibas) = SJI
       enddo
    enddo
+
+   call cpu_time(timer_end%T1eS)
+   timer_cumer%T1eS=timer_cumer%T1eS+timer_end%T1eS-timer_begin%T1eS
 
    call copySym(quick_qm_struct%s,nbasis)
 
@@ -53,8 +78,24 @@ subroutine fullx
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
+   call cpu_time(timer_begin%T1eSD)
 
-   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,V,Sminhalf,IDEGEN1,quick_scratch%hold2,IERROR)
+#if defined CUDA || defined CUDA_MPIV
+
+   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold,&
+   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
+#else
+
+#if defined LAPACK || defined MKL
+   call DIAGMKL(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+#else
+   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
+#endif
+#endif
+
+   call cpu_time(timer_end%T1eSD)
+   timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
 
    ! Consider the following:
 
@@ -88,31 +129,32 @@ subroutine fullx
    ! half. (Lower Diagonal)
 
    do I=1,nbasis
-      if (Sminhalf(I).gt.1E-4) then
-      Sminhalf(I) = Sminhalf(I)**(-.5d0)
-      else
-      Sminhalf(I) = 0.0d0
+      if (quick_scratch%Sminhalf(I).gt.1E-4) then
+      quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
       endif
    enddo
 
+#if defined CUDA || defined CUDA_MPIV
+
+   call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)   
+#else
+   call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+
+   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
+#endif
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
 
-   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
-   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
+!   call transpose(quick_scratch%hold2,quick_qm_struct%x,nbasis)
+!   call copyDMat(quick_qm_struct%x,quick_scratch%hold2,nbasis)
    ! Now calculate X.
    ! Xij = Sum(k=1,m) Transpose(U)kj * s^(-.5)kk * Transpose(U)ki
-
-   do I = 1,nbasis
-      do J=I,nbasis
-         sum = 0.d0
-         do K=1,nbasis
-            sum = sum+quick_scratch%hold2(K,I)*quick_scratch%hold2(K,J)*Sminhalf(K)
-         enddo
-         quick_qm_struct%x(I,J) = sum
-         quick_qm_struct%x(J,I) = quick_qm_struct%x(I,J)
-      enddo
-   enddo
 
    if (quick_method%debug) call debugFullX
 
@@ -120,73 +162,120 @@ subroutine fullx
    ! to orthogonalize the operator matrix, and the overlap matrix (S) which
    ! is used in the DIIS-SCF procedure.
 
+   call deallocfullx(quick_scratch)
+
    return
 end subroutine fullx
 
-!double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-!   implicit none
-!   double precision :: kinetic
-!   double precision :: a,b
-!   integer :: i,j,k,ii,jj,kk
-!   double precision :: Ax,Ay,Az,Bx,By,Bz
-!
-!   double precision :: xi,xj,xk,overlap
-!
-!   ! The purpose of this subroutine is to calculate the kinetic energy
-!   ! of an electron  distributed between gtfs with orbital exponents a
-!   ! and b on A and B with angular momentums defined by i,j,k (a's x, y
-!   ! and z exponents, respectively) and ii,jj,and kk on B.
-!
-!   ! The first step is to see if this function is zero due to symmetry.
-!   ! If it is not, reset kinetic to 0.
-!
-!   kinetic = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk)) &
-!         +(Ax-Bx)**2 + (Ay-By)**2 + (Az-Bz)**2
-!   if (kinetic .ne. 0.d0) then
-!      kinetic=0.d0
-!
-!      ! Kinetic energy is the integral of an orbital times the second derivative
-!      ! over space of the other orbital.  For GTFs, this means that it is just a
-!      ! sum of various overlap integrals with the powers adjusted.
-!
-!      xi = dble(i)
-!      xj = dble(j)
-!      xk = dble(k)
-!      kinetic = kinetic &
-!            +        (-1.d0+     xi)*xi  *overlap(a,b,i-2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            - 2.d0*a*( 1.d0+2.d0*xi)     *overlap(a,b,i  ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            + 4.d0*(a**2.d0)             *overlap(a,b,i+2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-!      kinetic = kinetic &
-!            +         (-1.d0+     xj)*xj *overlap(a,b,i,j-2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            - 2.d0*a* ( 1.d0+2.d0*xj)    *overlap(a,b,i,j  ,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            + 4.d0*(a**2.d0)             *overlap(a,b,i,j+2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-!      kinetic = kinetic &
-!            +         (-1.d0+     xk)*xk *overlap(a,b,i,j,k-2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            - 2.d0*a* ( 1.d0+2.d0*xk)    *overlap(a,b,i,j,k  ,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz) &
-!            + 4.d0*(a**2.d0)             *overlap(a,b,i,j,k+2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
-!   endif
-!   ekinetic = kinetic/(-2.d0)
-!   return
-!end function ekinetic
+double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   implicit none
+   double precision :: kinetic
+   double precision :: a,b
+   integer :: i,j,k,ii,jj,kk,g,g_count
+   double precision :: Ax,Ay,Az,Bx,By,Bz
+   double precision :: Px,Py,Pz
+
+   double precision :: xi,xj,xk,overlap_core,g_table(200)
+
+   ! The purpose of this subroutine is to calculate the kinetic energy
+   ! of an electron  distributed between gtfs with orbital exponents a
+   ! and b on A and B with angular momentums defined by i,j,k (a's x, y
+   ! and z exponents, respectively) and ii,jj,and kk on B.
+
+   ! The first step is to see if this function is zero due to symmetry.
+   ! If it is not, reset kinetic to 0.
+
+   kinetic = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk)) &
+         +(Ax-Bx)**2 + (Ay-By)**2 + (Az-Bz)**2
+   if (kinetic .ne. 0.d0) then
+      kinetic=0.d0
+
+      ! Kinetic energy is the integral of an orbital times the second derivative
+      ! over space of the other orbital.  For GTFs, this means that it is just a
+      ! sum of various overlap integrals with the powers adjusted.
+
+      xi = dble(i)
+      xj = dble(j)
+      xk = dble(k)
+
+      kinetic = kinetic &
+            +        (-1.d0+     xi)*xi  *overlap_core(a,b,i-2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            - 2.d0*a*( 1.d0+2.d0*xi)     *overlap_core(a,b,i  ,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            + 4.d0*(a**2.d0)             *overlap_core(a,b,i+2,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+      kinetic = kinetic &
+            +         (-1.d0+     xj)*xj *overlap_core(a,b,i,j-2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            - 2.d0*a* ( 1.d0+2.d0*xj)    *overlap_core(a,b,i,j  ,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            + 4.d0*(a**2.d0)             *overlap_core(a,b,i,j+2,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+      kinetic = kinetic &
+            +         (-1.d0+     xk)*xk *overlap_core(a,b,i,j,k-2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            - 2.d0*a* ( 1.d0+2.d0*xk)    *overlap_core(a,b,i,j,k  ,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+            + 4.d0*(a**2.d0)             *overlap_core(a,b,i,j,k+2,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   endif
+   ekinetic = kinetic*(-0.5d0)  *exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+
+   return
+end function ekinetic
+
+subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+  implicit none
+
+  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
+  integer g_count,ig
+
+  g = a+b
+  do ig=0,g_count
+     g_table(1+ig) = g**(dble(-3-ig)*0.5)
+  enddo
+  inv_g = 1.0d0 / dble(g)
+  Px = (a*Ax + b*Bx)*inv_g
+  Py = (a*Ay + b*By)*inv_g
+  Pz = (a*Az + b*Bz)*inv_g
+
+  return
+end subroutine gpt
 
 
 ! Ed Brothers. October 3, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
+double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   !use quick_constants_module
+   use allmod
+
+   implicit none
+   ! INPUT PARAMETERS
+   double precision a,b                 ! exponent of basis set 1 and 2
+   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+
+   ! INNER VARIBLES
+   double precision g_table(200)
+   double precision Px,py,pz,overlap_core
+
+   overlap = overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+
+   return
+end function overlap
+
+
+double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_constants_module
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
    integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
    double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-   
+
    ! INNER VARIBLES
-   double precision element,g
-   integer ig,jg,kg
+   double precision element,g,g_table(200),elfactor
+   integer ig,jg,kg,ng
    integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
    double precision pAx,pAy,pAz,pBx,pBy,pBz
-   double precision Px,py,pz
+   double precision fpAx,fpAy,fpAz,fpBx,fpBy,fpBz
+   double precision Px,py,pz,overlap
+
    double precision xnumfact
+
 
    ! The purpose of this subroutine is to calculate the overlap between
    ! two normalized gaussians. i,j and k are the x,y,
@@ -205,10 +294,6 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
       ! g.  (g comes from gamma, as is "alpha,beta, gamma" and P comes
       ! from "Product." Also needed are the PA differences.
 
-      g = a+b
-      Px = (a*Ax + b*Bx)/g
-      Py = (a*Ay + b*By)/g
-      Pz = (a*Az + b*Bz)/g
 
       PAx= Px-Ax
       PAy= Py-Ay
@@ -222,41 +307,42 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
 
       xnumfact=fact(i)*fact(ii)*fact(j)*fact(jj)*fact(k)*fact(kk)
 
-      ! Now start looping over i,ii,j,jj,k,kk to form all the required elements.
+      ! Now start looping over i,ii,j,jj,k,kk to form all the required elements
 
       do iloop=0,i
-         do iiloop=0,ii
+         fPAx=PAx**(i-iloop)/(fact(iloop)*fact(i-iloop))
+
+         do iiloop=mod(iloop,2),ii,2
+            ix=iloop+iiloop
+            fPBx=PBx**(ii-iiloop)/(fact(iiloop)*fact(ii-iiloop))
+
             do jloop=0,j
-               do jjloop=0,jj
+               fPAy=PAy**(j-jloop)/(fact(jloop)*fact(j-jloop))
+
+               do jjloop=mod(jloop,2),jj,2
+                  jy=jloop+jjloop
+                  fPBy=PBy**(jj-jjloop)/(fact(jjloop)*fact(jj-jjloop))
+
                   do kloop=0,k
-                     do kkloop=0,kk
-                        ix=iloop+iiloop
-                        jy=jloop+jjloop
+                     fPAz=PAz**(k-kloop)/(fact(kloop)*fact(k-kloop))
+
+                     do kkloop=mod(kloop,2),kk,2
                         kz=kloop+kkloop
+                        fPBz=PBz**(kk-kkloop)/(fact(kkloop)*fact(kk-kkloop))
+
+                        element = pito3half * g_table(1+ix+jy+kz)
 
                         ! Check to see if this element is zero.
 
-                        element=(1+(-1)**(ix))*(1+(-1)**(jy))*(1+(-1)**(kz))/8
-                        if (element .ne. zero) then
 
                         ! Continue calculating the elements.  The next elements arise from the
                         ! different angular momentums portion of the GPT.
 
-                        element=PAx**(i-iloop)*PBx**(ii-iiloop) &
-                               *PAy**(j-jloop)*PBy**(jj-jjloop) &
-                               *PAz**(k-kloop)*PBz**(kk-kkloop) &
-                               *xnumfact &
-                               /(fact(iloop)*fact(iiloop)* &
-                                 fact(jloop)*fact(jjloop)* &
-                                 fact(kloop)*fact(kkloop)* &
-                                 fact(i-iloop)*fact(ii-iiloop)* &
-                                 fact(j-jloop)*fact(jj-jjloop)* &
-                                 fact(k-kloop)*fact(kk-kkloop))
+                        element=element*fPAx*fPBx*fPAy*fPBy*fPAz*fPBz*xnumfact
 
                         ! The next part arises from the integratation of a gaussian of arbitrary
                         ! angular momentum.
 
-                        element=element*g**(dble(-3 - ix - jy - kz)/2.d0)
 
                         ! Before the Gamma function code, a quick note. All gamma functions are
                         ! of the form:
@@ -269,19 +355,17 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
                         ! just requires a loop and multiplying by Pi^3/2
 
                         do iG=1,ix/2
-                           element = element * (dble(ix)/2.d0-dble(iG) + .5d0)
+                           element = element * (dble(ix)*0.5-dble(iG) + .5d0)
                         enddo
                         do jG=1,jy/2
-                           element = element * (dble(jy)/2.d0-dble(jG) + .5d0)
+                           element = element * (dble(jy)*0.5-dble(jG) + .5d0)
                         enddo
                         do kG=1,kz/2
-                           element = element * (dble(kz)/2.d0-dble(kG) + .5d0)
+                           element = element * (dble(kz)*0.5-dble(kG) + .5d0)
                         enddo
-                        element=element*pito3half
 
                         ! Now sum the whole thing into the overlap.
 
-                        endif
                         overlap = overlap + element
                      enddo
                   enddo
@@ -292,11 +376,14 @@ double precision function overlap (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz)
 
       ! The final step is multiplying in the K factor (from the gpt)
 
-      overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+!      overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
 
    endif
+
+   overlap_core = overlap
+
    return
-end function overlap
+end function overlap_core
 
 double precision function ssoverlap(a,b,Ax,Ay,Az,Bx,By,Bz)
    use quick_constants_module
@@ -1636,6 +1723,9 @@ subroutine get1eO(IBAS)
    use allmod
    implicit double precision(a-h,o-z)
    integer Ibas
+   integer g_count
+   double precision g_table(200)
+   double precision :: valopf
 
    ix = itype(1,Ibas)
    iy = itype(2,Ibas)
@@ -1645,12 +1735,15 @@ subroutine get1eO(IBAS)
    xyzzi = xyz(3,quick_basis%ncenter(Ibas))
 
    do Jbas=Ibas,nbasis
+
       jx = itype(1,Jbas)
       jy = itype(2,Jbas)
       jz = itype(3,Jbas)
       xyzxj = xyz(1,quick_basis%ncenter(Jbas))
       xyzyj = xyz(2,quick_basis%ncenter(Jbas))
       xyzzj = xyz(3,quick_basis%ncenter(Jbas))
+
+      g_count = ix+iy+iz+jx+jy+jz+2
 
       OJI = 0.d0
       do Icon=1,ncontract(ibas)
@@ -1659,12 +1752,20 @@ subroutine get1eO(IBAS)
          do Jcon=1,ncontract(jbas)
             F = dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas)
            aj = aexp(Jcon,Jbas)
-            ! The first part is the kinetic energy.
-            OJI = OJI + F*ekinetic(aj,   ai, &
+
+           valopf = opf(ai, aj, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), xyzxi, xyzyi, xyzzi, xyzxj, xyzyj, xyzzj)
+
+           if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+             ! The first part is the kinetic energy.
+             call gpt(aj,ai,xyzxj,xyzyj,xyzzj,xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_count,g_table)
+
+              OJI = OJI + F*ekinetic(aj,   ai, &
                   jx,   jy,   jz,&
                   ix,   iy,   iz, &
                   xyzxj,xyzyj,xyzzj,&
-                  xyzxi,xyzyi,xyzzi)
+                  xyzxi,xyzyi,xyzzi,Px,Py,Pz,g_table)
+           endif
          enddo
       enddo
       quick_qm_struct%o(Jbas,Ibas) = OJI
@@ -1696,14 +1797,16 @@ end subroutine get1eEnergy
 !------------------------------------------------
 ! get1e
 !------------------------------------------------
-subroutine get1e(oneElecO)
+subroutine get1e()
    use allmod
-   implicit double precision(a-h,o-z)
-   double precision oneElecO(nbasis,nbasis),temp2d(nbasis,nbasis)
+   use quick_scf_module
 
-!#ifdef MPIV
-!   include "mpif.h"
-!#endif
+   implicit double precision(a-h,o-z)
+   double precision :: temp2d(nbasis,nbasis)
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -1712,103 +1815,107 @@ subroutine get1e(oneElecO)
    !------------------------------------------------
 
 
-!#ifdef MPIV
-!   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
-!#endif
+#ifdef MPIV
+   if ((.not.bMPI).or.(nbasis.le.MIN_1E_MPI_BASIS)) then
+#endif
 
      if (master) then
-
+       call cpu_time(timer_begin%T1e)
+       if(bCalc1e) then
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
          ! The first part is kinetic part
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
-         call cpu_time(timer_begin%T1e)
+         call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
             call get1eO(Ibas)
          enddo
+         call cpu_time(timer_end%T1eT)
 
          !-----------------------------------------------------------------
          ! The second part is attraction part
          !-----------------------------------------------------------------
+         call cpu_time(timer_begin%T1eV)
          do IIsh=1,jshell
             do JJsh=IIsh,jshell
                call attrashell(IIsh,JJsh)
             enddo
          enddo
+         call cpu_time(timer_end%T1eV)
 
-         call cpu_time(timer_end%t1e)
-         timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-         timer_cumer%TOp = timer_cumer%T1e
-         timer_cumer%TSCF = timer_cumer%T1e
-   
+         timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+         timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
+
          call copySym(quick_qm_struct%o,nbasis)
          call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
          endif
-      endif
-!#ifdef MPIV
-!   else
-!
-!      !------- MPI/ ALL NODES -------------------
-!
-!      !=================================================================
-!      ! Step 1. evaluate 1e integrals
-!      ! This job is only done on master node since it won't cost much resource
-!      ! and parallel will even waste more than it saves
-!      !-----------------------------------------------------------------
-!      ! The first part is kinetic part
-!      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-!      !-----------------------------------------------------------------
-!      call cpu_time(timer_begin%t1e)
-!      quick_qm_struct%o=0.0d0
-!
-!      do i=1,mpi_nbasisn(mpirank)
-!         Ibas=mpi_nbasis(mpirank,i)
-!         call get1eO(Ibas)
-!      enddo
-!
-!      !-----------------------------------------------------------------
-!      ! The second part is attraction part
-!      !-----------------------------------------------------------------
-!      do i=1,mpi_jshelln(mpirank)
-!         IIsh=mpi_jshell(mpirank,i)
-!         do JJsh=IIsh,jshell
-!            call attrashell(IIsh,JJsh)
-!         enddo
-!      enddo
-!
-!      call cpu_time(timer_end%t1e)
-!      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
-!
-!      ! slave node will send infos
-!      if(.not.master) then
-!
-!         ! Copy Opertor to a temp array and then send it to master
-!         call copyDMat(quick_qm_struct%o,temp2d,nbasis)
-!         ! send operator to master node
-!         call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-!      else
-!         ! master node will receive infos from every nodes
-!         do i=1,mpisize-1
-!            ! receive opertors from slave nodes
-!            call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-!            ! and sum them into operator
-!            do ii=1,nbasis
-!               do jj=1,nbasis
-!                  quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-!               enddo
-!            enddo
-!         enddo
-!         call copySym(quick_qm_struct%o,nbasis)
-!         call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
-!      endif
-!      !------- END MPI/ALL NODES ------------
-!   endif
-!#endif
+         bCalc1e=.false.
+       else
+         quick_qm_struct%o(:,:)=oneElecO(:,:)
+       endif
+       call cpu_time(timer_end%t1e)
+
+       timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TOp = timer_cumer%TOp+timer_end%T1e-timer_begin%T1e
+       timer_cumer%TSCF = timer_cumer%TSCF+timer_end%T1e-timer_begin%T1e
+
+     endif
+#ifdef MPIV
+   else
+
+    call cpu_time(timer_begin%t1e)
+    if(bCalc1e) then
+
+      !------- MPI/ ALL NODES -------------------
+
+      !=================================================================
+      ! Step 1. evaluate 1e integrals
+      ! This job is only done on master node since it won't cost much resource
+      ! and parallel will even waste more than it saves
+      !-----------------------------------------------------------------
+      ! The first part is kinetic part
+      ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
+      !-----------------------------------------------------------------
+      call cpu_time(timer_begin%T1eT)
+
+      do i=1,mpi_nbasisn(mpirank)
+         Ibas=mpi_nbasis(mpirank,i)
+         call get1eO(Ibas)
+      enddo
+      call cpu_time(timer_end%T1eT)
+
+      !-----------------------------------------------------------------
+      ! The second part is attraction part
+      !-----------------------------------------------------------------
+      call cpu_time(timer_begin%T1eV)
+      do i=1,mpi_jshelln(mpirank)
+         IIsh=mpi_jshell(mpirank,i)
+         do JJsh=IIsh,jshell
+            call attrashell(IIsh,JJsh)
+         enddo
+      enddo
+      call cpu_time(timer_end%T1eV)
+
+      call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
+
+      bCalc1e=.false.
+      !------- END MPI/ALL NODES ------------
+     else
+       quick_qm_struct%o(:,:)=oneElecO(:,:)
+     endif
+
+     call cpu_time(timer_end%t1e)
+     timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
+     timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
+     timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV     
+
+   endif
+#endif
 end subroutine get1e
 
 ! Ed Brothers. October 23, 2001
@@ -1824,11 +1931,7 @@ subroutine attrashell(IIsh,JJsh)
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
-   double precision RA(3),RB(3),RP(3)
-
-   ! Variables needed later:
-   !    pi=3.1415926535897932385
-
+   double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
    Ax=xyz(1,quick_basis%katom(IIsh))
    Ay=xyz(2,quick_basis%katom(IIsh))
@@ -1837,10 +1940,6 @@ subroutine attrashell(IIsh,JJsh)
    Bx=xyz(1,quick_basis%katom(JJsh))
    By=xyz(2,quick_basis%katom(JJsh))
    Bz=xyz(3,quick_basis%katom(JJsh))
-
-   !   Cx=sumx
-   !   Cy=sumy
-   !   Cz=sumz
 
    ! The purpose of this subroutine is to calculate the nuclear attraction
    ! of an electron  distributed between gtfs with orbital exponents a
@@ -1860,47 +1959,50 @@ subroutine attrashell(IIsh,JJsh)
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
 
-
    do ips=1,quick_basis%kprim(IIsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
          b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-        
-         !Eqn 14 O&S
-         g = a+b
-         !Eqn 15 O&S
-         Px = (a*Ax + b*Bx)/g
-         Py = (a*Ay + b*By)/g
-         Pz = (a*Az + b*Bz)/g
 
-         !Calculate first two terms of O&S Eqn A20
-         constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) * 2.d0 * sqrt(g/Pi)
-         constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))/g))
+         valopf = opf(a, b, quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)), &
+         quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)), Ax, Ay, Az, Bx, By, Bz)
 
-         !nextatom=number of external MM point charges. set to 0 if none used
-         do iatom=1,natom+quick_molspec%nextatom
-            if(iatom<=natom)then
+         if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+           !Eqn 14 O&S
+           call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
+           g = a+b
+           !Eqn 15 O&S
+           inv_g = 1.0d0 / dble(g)
+
+           !Calculate first two terms of O&S Eqn A20
+           constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
+           constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+
+           !nextatom=number of external MM point charges. set to 0 if none used
+           do iatom=1,natom+quick_molspec%nextatom
+             if(iatom<=natom)then
                Cx=xyz(1,iatom)
                Cy=xyz(2,iatom)
                Cz=xyz(3,iatom)
                Z=-1.0d0*quick_molspec%chg(iatom)
-            else
+             else
                Cx=quick_molspec%extxyz(1,iatom-natom)
                Cy=quick_molspec%extxyz(2,iatom-natom)
                Cz=quick_molspec%extxyz(3,iatom-natom)
                Z=-quick_molspec%extchg(iatom-natom)
-            endif
-            constant2=constanttemp*Z
+             endif
+             constant2=constanttemp*Z
 
-            !Calculate the last term of O&S Eqn A21
-            PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
+             !Calculate the last term of O&S Eqn A21
+             PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 !            if(quick_method%fMM .and. a*b*PCsquare/g.gt.33.0d0)then
 !               xdistance=1.0d0/dsqrt(PCsquare)
 !               call fmmone(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
 !                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
 !            else
 
-               !Compute O&S Eqn A21 
+               !Compute O&S Eqn A21
                U = g* PCsquare
 
                !Calculate the last term of O&S Eqn A20
@@ -1922,22 +2024,15 @@ subroutine attrashell(IIsh,JJsh)
                      !    Cx,Cy,Cz,Px,Py,Pz,g)
                NIJ1=10*NII2+NJJ2
 
-               !    write(*,'(I2,I2,I2,I2,I2,I2)')ips,jps,IIsh,JJsh,NIJ1,iatom
-
-!write(*,'(A8,2X,I3,2X,I3,2X,I3,2X,I3,2X,I3,F20.10,2X,F20.10,2X,F20.10)') "Ax,Ay,Az",&
-!ips,jps,IIsh,JJsh,NIJ1,Bx,By,Bz
-
                call nuclearattra(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz,iatom)
 
 !            endif
 
-         enddo
-
+           enddo
+         endif
       enddo
    enddo
-
-!stop
 
    ! Xiao HE remember to multiply Z   01/12/2008
    !    attraction = attraction*(-1.d0)* Z
@@ -1953,14 +2048,13 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    use quick_constants_module
    implicit double precision(a-h,o-z)
    dimension aux(0:20)
+   double precision g_table(200)
 
    ! Variables needed later:
    !    pi=3.1415926535897932385
 
    g = a+b
-   Px = (a*Ax + b*Bx)/g
-   Py = (a*Ay + b*By)/g
-   Pz = (a*Az + b*Bz)/g
+   call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
 
    PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
 
@@ -1981,7 +2075,9 @@ double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
    U = g* PCsquare
    Maxm = i+j+k+ii+jj+kk
    call FmT(Maxm,U,aux)
-   constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz) &
+
+!   g_table = g**(-1.5)
+   constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
          * 2.d0 * sqrt(g/Pi)
    do L = 0,maxm
       aux(L) = aux(L)*constant
@@ -2161,4 +2257,28 @@ double precision recursive function attrecurse(i,j,k,ii,jj,kk,m,aux,Ax,Ay, &
    return
 end
 
+!------------------------------------------------
+! opf
+!------------------------------------------------
+double precision function opf(ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+xyzxj,xyzyj,xyzzj)
+
+  !------------------------------------------------
+  ! This function computes the overlap prefactor 
+  ! required for one electron integral prescreening
+  !------------------------------------------------
+  use quick_constants_module
+  implicit none
+
+  double precision, intent(in) :: ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+xyzxj,xyzyj,xyzzj
+  double precision :: dist2, oog
+
+  dist2 = (xyzxi-xyzxj)**2 + (xyzyi-xyzyj)**2 + (xyzzi-xyzzj)**2
+  oog = 1.0d0/(ai+aj)
+
+  opf = exp(-ai*aj*dist2*oog)*sqrt(PI*oog)*PI*oog*ci*cj
+
+  return
+end function opf
 

@@ -1,6 +1,6 @@
 !---------------------------------------------------------------------!
 ! Created by Madu Manathunga on 04/16/2020                            !
-!                                                                     ! 
+!                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
 ! Copyright (C) 2020-2021 Götz lab                                    !
 !                                                                     !
@@ -24,7 +24,7 @@ module quick_api_module
 
   type quick_api_type
     ! indicates if quick should run in library mode. This will help
-    ! setting up files for quick run. 
+    ! setting up files for quick run.
     logical :: apiMode = .false.
 
     ! used to determine if memory should be allocated and SAD guess should
@@ -34,7 +34,7 @@ module quick_api_module
     ! current md step, should come from MM code
     integer :: mdstep = 1
 
-    ! keeps track of how many times quick is called by MM code 
+    ! keeps track of how many times quick is called by MM code
     integer :: step = 1
 
     ! number of atoms
@@ -77,7 +77,7 @@ module quick_api_module
     double precision :: tot_ene = 0.0d0
 
     ! if gradients and point charge gradients are requested
-    logical :: isForce = .false.    
+    logical :: isForce = .false.
 
     ! gradients
     double precision, allocatable, dimension(:,:) :: gradient
@@ -106,7 +106,7 @@ module quick_api_module
 
   interface getQuickEnergyGradients
     module procedure get_quick_energy_gradients
-  end interface  
+  end interface
 
   interface deleteQuickJob
     module procedure delete_quick_job
@@ -200,12 +200,12 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
   integer :: ierr
   integer :: flen
 
-  ! allocate memory for quick_api_type 
+  ! allocate memory for quick_api_type
   call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
-  
+
   if(flen .gt. 1) then
 
     quick_api%apiMode = .true.
@@ -215,8 +215,8 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
   endif
 
   ! Quick calling flow is extremely horrible. Modules are
-  ! disorganized and uses stupid tricks to avoid cyclic module 
-  ! dependency. This must be fixed in future! Being a sheep 
+  ! disorganized and uses stupid tricks to avoid cyclic module
+  ! dependency. This must be fixed in future! Being a sheep
   ! for now..
 
   ! Initialize quick
@@ -243,7 +243,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
     call PrtDate(iOutFile,'TASK STARTS ON:')
     call print_quick_io_file(iOutFile,ierr)
 
-#ifdef MPIV 
+#ifdef MPIV
     ! check the mpisize and turn on mpi mode
     call check_quick_mpi(iOutFile,ierr)
 
@@ -253,10 +253,13 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
   endif
 #endif
 
-#ifdef CUDA 
+#ifdef CUDA
 
   ! startup cuda device
   call gpu_startup()
+
+  call gpu_set_device(-1)
+
   call gpu_init()
 
   ! write cuda information
@@ -266,16 +269,16 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
 #ifdef CUDA_MPIV
 
-  if(master) call mgpu_query(mpisize, mgpu_count)
+  call mgpu_query(mpisize, mpirank, mgpu_id)
 
   call mgpu_setup()
 
-  if(master) call mgpu_write_info(iOutFile)
+  if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids)
   
   call mgpu_init(mpirank, mpisize, mgpu_id)
 
 #endif
-  
+
   ! read job specifications
   call read_Job_and_Atom()
 
@@ -291,8 +294,8 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 end subroutine set_quick_job
 
 
-! computes atom types 
-subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id) 
+! computes atom types
+subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 
   implicit none
 
@@ -305,7 +308,7 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 
   ! set atm_type_id to zero
   call zeroiVec(atm_type_id, natoms)
-  
+
   ! go through the atomic numbers, find out atom types and save them in
   ! atm_type_id vector
   natm_type = 1
@@ -313,7 +316,7 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 
     new_atm_type = .true.
     iatm = atomic_numbers(i)
-    
+
     do j=1, natm_type
       if(atm_type_id(j) .eq. iatm) new_atm_type = .false.
     enddo
@@ -323,9 +326,9 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
       natm_type = natm_type+1
     endif
 
-  enddo  
+  enddo
 
-  natm_type = natm_type-1   
+  natm_type = natm_type-1
 
 end subroutine get_atom_types
 
@@ -344,7 +347,7 @@ subroutine get_quick_energy(coords, ptchg_crd, energy)
 
   call run_quick(quick_api)
 
-  ! send back total energy and charges 
+  ! send back total energy and charges
   energy = quick_api%tot_ene
 
 end subroutine get_quick_energy
@@ -364,7 +367,7 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, &
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
-  if(quick_api%nxt_ptchg>0) then 
+  if(quick_api%nxt_ptchg>0) then
     quick_api%ptchg_crd = ptchg_crd
     quick_api%ptchg_grad = ptchg_grad
   endif
@@ -388,6 +391,7 @@ subroutine run_quick(self)
   use quick_files_module
   use quick_calculated_module, only : quick_qm_struct
   use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
+  use quick_cutoff_module, only: schwarzoff
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -399,9 +403,9 @@ subroutine run_quick(self)
   logical :: failed = .false.
 
   ! print step into quick output file
-  call print_step(self)  
+  call print_step(self)
 
-  ! if dft is requested, make sure to delete dft grid variables from previous 
+  ! if dft is requested, make sure to delete dft grid variables from previous
   ! the md step before proceeding
   if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
 
@@ -412,13 +416,13 @@ subroutine run_quick(self)
   call cpu_time(timer_begin%TIniGuess)
 
   ! we will reuse density matrix for steps above 1. For the 1st step, we should
-  ! read basis file and run SAD guess. 
+  ! read basis file and run SAD guess.
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) call getMolSad()  
+    if (quick_method%SAD) call getMolSad()
 
-    ! assign basis functions 
+    ! assign basis functions
     call getMol()
 
     self%firstStep = .false.
@@ -431,7 +435,7 @@ subroutine run_quick(self)
     call schwarzoff
   endif
 
-#if defined CUDA || defined CUDA_MPIV    
+#if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
   call gpu_upload_molspecs()
 #endif
@@ -439,11 +443,20 @@ subroutine run_quick(self)
   ! stop the timer for initial guess
   call cpu_time(timer_end%TIniGuess)
 
+#ifdef CUDA_MPIV
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
+
+  timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
+                           - (timer_end%T2elb-timer_begin%T2elb)
+
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
-    call getEnergy(failed)
+    call getEnergy(failed, .false.)
   endif
-  
+
   ! compute gradients
   if ( .not. quick_method%opt .and. quick_method%grad) call gradient(failed)
 
@@ -469,7 +482,7 @@ subroutine run_quick(self)
   self%tot_ene = quick_qm_struct%Etot
 
 ! save gradients and point charge gradients in quick_api struct.
-! Note that quick_qm_struct saves both gradients in vector formats and 
+! Note that quick_qm_struct saves both gradients in vector formats and
 ! we should organize them back into matrix format.
   if (quick_method%grad) then
     k=1
@@ -491,7 +504,7 @@ subroutine run_quick(self)
     endif
   endif
 
-#ifdef MPIV 
+#ifdef MPIV
   endif
 
   ! broadcast results from master to slaves
@@ -522,7 +535,7 @@ subroutine print_step(self)
 
   write(iOutFile, '(A1)') ' '
   write(iOutFile, '(1x,A16,1x,I12)') '@ Running Step :',self%step
-  write(iOutFile, '(A1)') ' '  
+  write(iOutFile, '(A1)') ' '
 
 #ifdef MPIV
   endif
@@ -568,7 +581,7 @@ subroutine set_quick_molspecs(self)
         quick_molspec%extxyz(j,i) = self%ptchg_crd(j,i) * A_TO_BOHRS
       enddo
       quick_molspec%extchg(i)     = self%ptchg_crd(4,i)
-    enddo  
+    enddo
   endif
 
 end subroutine set_quick_molspecs
@@ -615,10 +628,10 @@ subroutine set_quick_mpi(mpi_rank, mpi_size)
 
   integer, intent(in) :: mpi_rank, mpi_size
 
-  ! save information in quick_mpi module 
+  ! save information in quick_mpi module
   mpirank    = mpi_rank
   mpisize    = mpi_size
-  libMPIMode = .true.  
+  libMPIMode = .true.
 
 end subroutine set_quick_mpi
 
@@ -637,7 +650,7 @@ subroutine broadcast_quick_mpi_results(self)
   call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
-end subroutine 
+end subroutine
 
 #endif
 
@@ -649,7 +662,7 @@ subroutine delete_quick_job
 
   implicit none
 
-#ifdef CUDA 
+#ifdef CUDA
   call gpu_shutdown()
 #endif
 
@@ -659,7 +672,7 @@ subroutine delete_quick_job
 #endif
 
   ! finalize quick
-  call finalize(iOutFile,0)
+  call finalize(iOutFile,0,1)
 
   ! deallocate memory
   call delete_quick_api_type(quick_api)

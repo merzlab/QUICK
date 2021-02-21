@@ -145,19 +145,14 @@ subroutine electdiis(jscf)
    !-------------- END MPI / ALL NODE -----------
 #endif
 
-   ! First, let's get 1e opertor which only need 1-time calculation
-   ! and store them in oneElecO and fetch it every scf time.
-   call get1e(oneElecO)
-
 #ifdef MPIV
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif
 #endif
@@ -168,14 +163,20 @@ subroutine electdiis(jscf)
       if (quick_method%DFT) then
 
       call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)        
+      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm,quick_dft_grid%bin_locator, quick_dft_grid%basf, quick_dft_grid%primf, &
+      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, &
+      quick_dft_grid%nbins, quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+
+#ifdef CUDA_MPIV
+      call mgpu_get_xclb_time(timer_cumer%TDFTlb)
+#endif
 
       endif
    endif
 #endif
 
+
+   bCalc1e = .true.
    diisdone = .false.
    deltaO = .false.
    idiis = 0
@@ -212,7 +213,7 @@ subroutine electdiis(jscf)
       if (quick_method%SEDFT) then
          call sedftoperator ! Semi-emperical DFT Operator
       else
-         call scf_operator(oneElecO, deltaO)
+         call scf_operator(deltaO)
       endif
 
       if (quick_method%debug)  call debug_SCF(jscf)
@@ -225,8 +226,9 @@ subroutine electdiis(jscf)
          ! End of Delta Matrix
          !-----------------------------------------------
          call cpu_time(timer_begin%TDII)
-         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
-         call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
+
+         quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
+         quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
 
          !if (quick_method%debug)  write(ioutfile,*) "hehe hf"
          !if (quick_method%debug)  call debug_SCF(jscf)
@@ -259,16 +261,11 @@ subroutine electdiis(jscf)
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
 
-         do i = 1, nbasis
-            do j = 1, nbasis
-               allerror(iidiis, i, j) = quick_scratch%hold2( i, j)
-            enddo
-         enddo
+         allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
 
          ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
          ! This means we now have the e(i) matrix.
          ! allerror=ODS-SDO
-
 #if defined(CUDA) || defined(CUDA_MPIV)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
@@ -277,15 +274,17 @@ subroutine electdiis(jscf)
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #else
-         quick_scratch%hold=MATMUL(quick_qm_struct%dense,quick_qm_struct%o)
-         quick_scratch%hold2=MATMUL(quick_qm_struct%s,quick_scratch%hold)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+               nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
 
          errormax = 0.d0
          do I=1,nbasis
             do J=1,nbasis
-               allerror(iidiis,I,J) = allerror(iidiis,I,J) - quick_scratch%hold2(i,j) !e=ODS=SDO
-               errormax = max(allerror(iidiis,I,J),errormax)
+               allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
+               errormax = max(allerror(J,I,iidiis),errormax)
             enddo
          enddo
 
@@ -295,12 +294,7 @@ subroutine electdiis(jscf)
          ! The easiest way to do this is to calculate e(i) . X , store
          ! this in HOLD, and then calculate Transpose[X] (.e(i) . X)
          !-----------------------------------------------
-
-         do i = 1, nbasis
-            do j = 1, nbasis
-               quick_scratch%hold2( i, j) = allerror(iidiis, i, j)
-            enddo
-         enddo
+         quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
 
@@ -317,11 +311,7 @@ subroutine electdiis(jscf)
          call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
-         do i = 1, nbasis
-            do j = 1, nbasis
-               allerror(iidiis, i, j) = quick_scratch%hold2( i, j)
-            enddo
-         enddo
+         allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
          !-----------------------------------------------
          ! 4)  Store the e'(I) and O(i).
          ! e'(i) is already stored.  Simply store the operator matrix in
@@ -329,12 +319,12 @@ subroutine electdiis(jscf)
          !-----------------------------------------------
 
          if(idiis.le.quick_method%maxdiisscf)then
-            call CopyDMat(quick_qm_struct%o,alloperator(iidiis,1:nbasis,1:nbasis),nbasis)
+            alloperator(:,:,iidiis) = quick_qm_struct%o(:,:)
          else
             do K=1,quick_method%maxdiisscf-1
-               call CopyDMat(alloperator(K+1,1:nbasis,1:nbasis),alloperator(K,1:nbasis,1:nbasis),nbasis)
+               alloperator(:,:,K) = alloperator(:,:,K+1)
             enddo
-            call CopyDMat(quick_qm_struct%o,alloperator(quick_method%maxdiisscf,1:nbasis,1:nbasis),nbasis)
+            alloperator(:,:,quick_method%maxdiisscf) = quick_qm_struct%o(:,:)
          endif
 
          !-----------------------------------------------
@@ -373,15 +363,15 @@ subroutine electdiis(jscf)
 
          ! Now copy the current matrix into HOLD2 transposed.  This will be the
          ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
-         call CopyDMat(allerror(iidiis,1:nbasis,1:nbasis),quick_scratch%hold2,nbasis)
+         quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
          do I=1,IDIISfinal
             ! Copy the transpose of error matrix I into HOLD.
-            call CopyDMat(allerror(I,1:nbasis,1:nbasis),quick_scratch%hold,nbasis)
+            quick_scratch%hold(:,:) = allerror(:,:,I) 
 
             ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
             BIJ=Sum2Mat(quick_scratch%hold2,quick_scratch%hold,nbasis)
-
+            
             ! Now place this in the B matrix.
             if(idiis.le.quick_method%maxdiisscf)then
                B(iidiis,I) = BIJ
@@ -396,17 +386,17 @@ subroutine electdiis(jscf)
             endif
          enddo
 
-
          if(idiis.gt.quick_method%maxdiisscf)then
-            call CopyDMat(allerror(1,1:nbasis,1:nbasis),quick_scratch%hold,nbasis)
+            quick_scratch%hold(:,:) = allerror(:,:,1)
             do J=1,quick_method%maxdiisscf-1
-               call CopyDMat(allerror(J+1,1:nbasis,1:nbasis),allerror(J,1:nbasis,1:nbasis),nbasis)
+               allerror(:,:,J) = allerror(:,:,J+1)
             enddo
-            call CopyDMat(quick_scratch%hold,allerror(quick_method%maxdiisscf,1:nbasis,1:nbasis),nbasis)
+            allerror(:,:,quick_method%maxdiisscf) = quick_scratch%hold(:,:)
          endif
 
          ! Now that all the BIJ elements are in place, fill in all the column
          ! and row ending -1, and fill up the rhs matrix.
+
          do I=1,IDIISfinal
             B(I,IDIISfinal+1) = -1.d0
             B(IDIISfinal+1,I) = -1.d0
@@ -424,6 +414,7 @@ subroutine electdiis(jscf)
                BCOPY(J,I)=B(J,I)
             enddo
          enddo
+
          !-----------------------------------------------
          ! 6)  Solve B*COEFF = RHS which is:
          ! _                                             _  _  _     _  _
@@ -438,7 +429,8 @@ subroutine electdiis(jscf)
          ! |_                                             _||_  _|   |_  _|
          !
          !-----------------------------------------------
-         call CopyDMat(B,BSAVE,IDIISfinal+1)
+
+         BSAVE(:,:) = B(:,:)
          call LSOLVE(IDIISfinal+1,quick_method%maxdiisscf+1,B,RHS,W,quick_method%DMCutoff,COEFF,LSOLERR)
 
          IDIIS_Error_Start = 1
@@ -463,6 +455,7 @@ subroutine electdiis(jscf)
 
             goto 111
          endif
+
          !-----------------------------------------------
          ! 7) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
          ! If the solution to step eight failed, skip this step and revert
@@ -474,11 +467,12 @@ subroutine electdiis(jscf)
                do K=1,nbasis
                   OJK=0.d0
                   do I=IDIIS_Error_Start, IDIIS_Error_End
-                     OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperator(I,K,J)
+                     OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperator(K,J,I)
                   enddo
                   quick_qm_struct%o(J,K) = OJK
                enddo
             enddo
+            
          endif
          !-----------------------------------------------
          ! 8) Diagonalize the operator matrix to form a new density matrix.
@@ -505,8 +499,13 @@ subroutine electdiis(jscf)
 
          ! Now diagonalize the operator matrix.
          call cpu_time(timer_begin%TDiag)
+
+#if defined LAPACK || defined MKL
+         call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#else
          call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
                quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#endif
          call cpu_time(timer_end%TDiag)
 
 #endif
@@ -525,19 +524,16 @@ subroutine electdiis(jscf)
                nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 #endif
 
+         quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
 
-         call CopyDMat(quick_qm_struct%dense,quick_scratch%hold,nbasis) ! Save DENSE to HOLD
-
-         ! PIJ=SIGMA[i=1,nelec/2]2CJK*CIK
-         do I=1,nbasis
-            do J=1,nbasis
-               DENSEJI = 0.d0
-               do K=1,quick_molspec%nelec/2
-                  DENSEJI = DENSEJI + (quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
-               enddo
-               quick_qm_struct%dense(J,I) = DENSEJI*2.d0
-            enddo
-         enddo
+         ! Form new density matrix using MO coefficients
+#if defined(CUDA) || defined(CUDA_MPIV)
+         call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+               nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
+#else
+         call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+               nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
+#endif
 
          call cpu_time(timer_end%TDII)
 
@@ -564,16 +560,18 @@ subroutine electdiis(jscf)
       !--------------- END MPI/ALL NODES -------------------------------------
 
       if (master) then
+
+#ifdef USEDAT
          ! open data file then write calculated info to dat file
          call quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.)
          rewind(iDataFile)
          call dat(quick_qm_struct, iDataFile)
          close(iDataFile)
-
+#endif
          current_diis=mod(idiis-1,quick_method%maxdiisscf)
          current_diis=current_diis+1
 
-         write (ioutfile,'(I3,1x)',advance="no") jscf
+         write (ioutfile,'("|",I3,1x)',advance="no") jscf
          if(quick_method%printEnergy)then
             write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
             if (jscf.ne.1) then
@@ -590,7 +588,7 @@ subroutine electdiis(jscf)
          write (ioutfile,'(E10.4,2x)',advance="no") errormax
          write (ioutfile,'(E10.4,2x,E10.4)')  PRMS,PCHANGE
 
-         if (lsolerr /= 0) write (ioutfile,'("DIIS FAILED !!", &
+         if (lsolerr /= 0) write (ioutfile,'(" DIIS FAILED !!", &
                & " PERFORM NORMAL SCF. (NOT FATAL.)")')
 
          if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF)then
@@ -599,30 +597,30 @@ subroutine electdiis(jscf)
             else
                write(ioutfile,'(90("-"))')
             endif
-            write (ioutfile,'(" REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
-            write (ioutfile,'(" MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
+            write (ioutfile,'("| REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
+            write (ioutfile,'("| MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
                   errormax,prms,pchange
             write (ioutfile,*) '-----------------------------------------------'
             if (quick_method%DFT .or. quick_method%SEDFT) then
-               write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
-               write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
+               write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
+               write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
             endif
 
-            if (quick_method%prtgap) write (ioutfile,'("HOMO-LUMO GAP (EV) =",11x,F12.6)') &
+            if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &
                   (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
             diisdone=.true.
 
 
          endif
          if(jscf >= quick_method%iscf-1) then
-            write (ioutfile,'("RAN OUT OF CYCLES.  NO CONVERGENCE.")')
-            write (ioutfile,'("PERFORM FINAL NO INTERPOLATION ITERATION")')
+            write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+            write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
             diisdone=.true.
          endif
          diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
 
          if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
-            write(ioutfile, '(4x, "--------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " -------------")') quick_method%integralCutoff
+            write(ioutfile, '(4x, "| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
          endif
 
          flush(ioutfile)
@@ -632,7 +630,7 @@ subroutine electdiis(jscf)
 #ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -649,14 +647,18 @@ subroutine electdiis(jscf)
    if(quick_method%bCUDA) then
       ! sign of the coefficient matrix resulting from cusolver is not consistent
       ! with rest of the code (e.g. gradients). We have to correct this.
-      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)       
+      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
    endif
 #endif
 
 #if defined CUDA || defined CUDA_MPIV
    if(quick_method%bCUDA) then
       if (quick_method%DFT) then
-         call gpu_delete_dft_grid()
+         if(quick_method%grad) then
+           call gpu_delete_dft_dev_grid()
+         else
+           call gpu_delete_dft_grid()
+         endif
       endif
    endif
 #endif

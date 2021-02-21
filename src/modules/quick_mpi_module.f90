@@ -30,7 +30,6 @@ module quick_mpi_module
     logical :: libMPIMode = .false. ! if mpi is initialized somewhere other than quick
     integer, allocatable :: MPI_STATUS(:)
     integer, parameter :: MIN_1E_MPI_BASIS=6
-    integer :: mgpu_count             ! number of valid devices for cudampi version
     integer, allocatable :: mgpu_ids(:)    
     integer :: mgpu_id
 
@@ -47,7 +46,6 @@ module quick_mpi_module
         
         if (bMPI .and. mpisize.eq.1) then
             bMPI=.false.
-            call PrtWrn(io,"NODE=1, TURN OFF MPI")
         endif
         
         ierr=0
@@ -65,9 +63,9 @@ module quick_mpi_module
         ierr=1
         
         write (io,*)
-        write (io,'(" - MPI Enabled -")')
-        write (io,'(" TOTAL PROCESSOR = ",i5)') mpisize
-        write (io,'(" MASTER NAME     = ",A30)') pname
+        write (io,'("| - MPI Enabled -")')
+        write (io,'("| TOTAL PROCESSOR = ",i5)') mpisize
+        write (io,'("| MASTER NAME     = ",A30)') pname
         
         ierr=0
     end subroutine print_quick_mpi
@@ -77,7 +75,7 @@ module quick_mpi_module
 
       implicit none
 
-      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mgpu_count))
+      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mpisize))
 
     end subroutine allocate_mgpu
 

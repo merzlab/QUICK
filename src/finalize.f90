@@ -26,7 +26,7 @@ Subroutine deallocate_calculated
   if (allocated(Ycutoff)) deallocate(Ycutoff)
   if (allocated(cutmatrix)) deallocate(cutmatrix)
   if (allocated(sigrad2)) deallocate(sigrad2)
-  
+
   call dealloc(quick_scratch)
   call dealloc(quick_basis)
 
@@ -45,7 +45,7 @@ subroutine deallocateall
     call  dealloc(quick_molspec)
     call  dealloc(quick_qm_struct)
     call  deallocate_calculated
-    
+
     if (quick_method%DFT) then
     call  deform_dft_grid(quick_dft_grid)
     endif
@@ -58,46 +58,52 @@ end subroutine deallocateall
 !----------------------
 ! Finialize programs
 !----------------------
-subroutine finalize(io,status)
+subroutine finalize(io,status,option)
     use allmod
     implicit none
     integer io      !output final info and close this unit
     integer status  !exit status: 1-error 0-normal
-    
+    integer option  ! 0 if called from Quick and 1 if called from the API
+
     ! Deallocate all variables
     call deallocateall
-    
+
     ! stop timer and output them
     call cpu_time(timer_end%TTotal)
 !    call timer_output(io)
-    
+
     !-------------------MPI/MASTER---------------------------------------
-    master_finalize:if (master) then
+    if (master) then
         if (status /=0) then
             call PrtDate(io,'Error Termination. Task Failed on:')
-        else
-            call timer_output(io)
+        endif
+    endif
+
+    call timer_output(io)
+       
+    if (master) then
+        if (status ==0) then
             call PrtDate(io,'Normal Termination. Task Finished on:')
         endif
-    endif master_finalize
+    endif 
     !-------------------- End MPI/MASTER ---------------------------------
 
-#ifdef MPIV    
+#ifdef MPIV
     !-------------------- MPI/ALL NODES ----------------------------------
-    if (bMPI) call MPI_FINALIZE(mpierror)
+    if (bMPI .and. option==0) call MPI_FINALIZE(mpierror)
     !-------------------- End MPI/ALL NODES-------------------------------
 #endif
 
     close(io)
-    
+
 end subroutine finalize
 
 
 !-----------------------
-! Fatal exit subroutine 
+! Fatal exit subroutine
 !-----------------------
 subroutine quick_exit(io, status)
-   
+
    !  quick_exit: exit procedure, designed to return an gentle way to exitm.
    use allmod
    implicit none
@@ -111,7 +117,7 @@ subroutine quick_exit(io, status)
    integer ierr
 
    if (status /= 0) then
-      call flush(io)       
+      call flush(io)
 #ifdef MPIV
       call mpi_abort(MPI_COMM_WORLD, status, ierr)
    else
@@ -119,8 +125,8 @@ subroutine quick_exit(io, status)
 #endif
    end if
 
-   call finalize(io,1)
-   
+   call finalize(io,1,0)
+
    call exit(status)
 
 end subroutine quick_exit

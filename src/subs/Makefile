@@ -25,9 +25,9 @@ include $(MAKEIN)
 FOR=$(FC) $(FFLAGS)
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
-	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
-	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
-	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/diagmkl.o \
+	$(objfolder)/dipole.o $(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
 	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
 	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
 	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
@@ -47,7 +47,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 #  !---------------------------------------------------------------------!
 
 $(SUBS):$(objfolder)/%.o:%.f90
-	$(FOR) -c $< -o $@
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -c $< -o $@
 
 all: $(SUBS)
 

@@ -140,7 +140,6 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
 
    ! Check for errors.
    if (natom == 1 .and. quick_method_arg%opt) then
-      call PrtWrn(io," ONLY ONE ATOM, TURN OFF OPTIMIZATION.")
       quick_method_arg%opt=.false.
    endif
 
@@ -236,9 +235,10 @@ subroutine initialGuess
 
    present = .false.
 
+#ifdef USEDAT
    ! if read matrix is requested, begin to read dmx file
    if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
-
+#endif
    if (present) then
       call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.)
 

@@ -201,7 +201,10 @@
     write (ioutfile,'(/,4x,"DIPOLE (DEBYE)")')
     write (ioutfile,'(6x,"X",9x,"Y",9x,"Z",8x,"TOTAL")')
     write (ioutfile,'(4f10.4)') xdip*2.541765d0,ydip*2.541765d0,zdip*2.541765d0,totdip
+
     call cpu_time(timer_end%TDip)
+    timer_cumer%TDip=timer_cumer%TDip+(timer_end%TDip-timer_begin%TDip)
+
     call prtact(ioutfile,"End Charge and Dipole Calculation")
     
     return
@@ -273,8 +276,9 @@
 ! If i=j=k=ii=jj=kk=iux=iuy=iuz=0, this is simply an overlap integral.
 
     IF (i+j+k+ii+jj+kk+iux+iuy+iuz == 0) THEN
+        g_table = g**(-1.5)
         xmomentrec=overlap(a,b,0,0,0,0,0,0, &
-        Ax,Ay,Az,Bx,By,Bz)
+        Ax,Ay,Az,Bx,By,Bz, Px,Py,Pz,g_table)
 
     ! Otherwise, use the recusion relation from Obara and Saika.  The first
     ! step is to find the lowest nonzero angular momentum exponent or,

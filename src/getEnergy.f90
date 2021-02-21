@@ -8,13 +8,14 @@
 !   written by Ed Brothers. 08/15/02
 !   This subroutine calculates and ouptus the energy.
 !
-subroutine getEnergy(failed)
+subroutine getEnergy(failed, isGuess)
    use allMod
    implicit none
 
    double precision :: distance
    double precision, external :: rootSquare
    integer i,j
+   logical, intent(in) :: isGuess
 
 #ifdef MPIV
    include "mpif.h"
@@ -23,12 +24,18 @@ subroutine getEnergy(failed)
    logical :: failed
 
     !Form the exchange-correlation quadrature if DFT is requested
-    if (quick_method%DFT) then
+    if (quick_method%DFT .and. .not. isGuess) then
+        if (master) call PrtAct(ioutfile,"Begin XC Quadrature Formation")
+
         call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
+
+        if (master) call print_grid_info(quick_dft_grid)
+
+        if (master) call PrtAct(ioutfile,"End XC Quadrature Formation")
     endif
 
    if (master) then
-      call PrtAct(ioutfile,"Begin Energy Calculation")
+      if(.not. isGuess) call PrtAct(ioutfile,"Begin Energy Calculation")
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
@@ -82,7 +89,7 @@ subroutine getEnergy(failed)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(failed)       ! unrestricted system
+      call uscf(failed, isGuess)       ! unrestricted system
    else
       call scf(failed)        ! restricted system
    endif
@@ -116,13 +123,13 @@ subroutine getEnergy(failed)
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
-      if (ioutfile.ne.0) then
-         write (ioutfile,'("ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
-         write (ioutfile,'("CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
+      if (ioutfile.ne.0 .and. .not. isGuess) then
+         write (ioutfile,'(" ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
+         write (ioutfile,'(" CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then
-            write (ioutfile,'("EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
+            write (ioutfile,'(" EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
          endif
-         write (ioutfile,'("TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
+         write (ioutfile,'(" TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
          call prtact(ioutfile,"End Energy calculation")
          call flush(ioutfile)
       endif

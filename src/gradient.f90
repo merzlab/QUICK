@@ -56,41 +56,8 @@ subroutine gradient(failed)
       enddo
    enddo
 
-#if defined CUDA || defined CUDA_MPIV
-!   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
-!        quick_molspec%molchg, quick_molspec%iAtomType)
-!   call gpu_upload_xyz(xyz)
-!   call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
-#endif
 
-!  calculate energy first
-!   call g2eshell
-!   call schwarzoff
-
-#if defined CUDA || defined CUDA_MPIV
-!   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-!        ncontract, itype, aexp, dcoeff, &
-!        quick_basis%first_basis_function, quick_basis%last_basis_function, &
-!        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function, &
-!        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-!        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-!        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &
-!        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
-
-!   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-   call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
-
-#endif
-
-   call getEnergy(failed)
-
-   do Ibas=1,nbasis
-      do Jbas=1,nbasis
-!          write(*,*) "Density
-!          matrix:",Ibas,Jbas,quick_qm_struct%dense(Jbas,Ibas)
-!           write(*,*) "Coefficient matrix:",Ibas,Jbas,quick_qm_struct%co(Jbas,Ibas)
-      enddo
-   enddo
+   call getEnergy(failed,.false.)
 
    if (quick_method%analgrad) then
       call scf_gradient
@@ -148,7 +115,6 @@ subroutine scf_gradient
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
-!   double precision:: tmp_grad(3*natom)
    include "mpif.h"
 #endif
 
@@ -208,93 +174,21 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
 !---------------------------------------------------------------------
-!  2) The derivative of the kinetic term
+!  2) One electron gradients
 !---------------------------------------------------------------------
-   call cpu_time(timer_begin%T1eGrad)
+! Note that we will call this subroutine asynchronously with ERI
+! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
 
-   call get_kinetic_grad
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPIV
-if(master) then
+#if !defined CUDA && !defined CUDA_MPIV
+   call get_oneen_grad
 #endif
-
-#ifdef DEBUG
-  if (quick_method%debug) then
-        write (iOutFile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
-        do Iatm=1,natom
-            do Imomentum=1,3
-                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
-                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
-            enddo
-        enddo
-  endif
-#endif
-
-#ifdef MPIV
-endif
-#endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
-
 !---------------------------------------------------------------------
-!  3) The derivative of the 1 electron nuclear attraction term ij times
-!     the density matrix element ij.
+!  3) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
-
-#ifdef MPIV
-   if (bMPI) then
-      nshell_mpi = mpi_jshelln(mpirank)
-   else
-      nshell_mpi = jshell
-   endif
-
-   do i=1,nshell_mpi
-      if (bMPI) then
-         IIsh = mpi_jshell(mpirank,i)
-      else
-         IIsh = i
-      endif
-#else
-   do IIsh=1,jshell
-#endif
-      do JJsh=IIsh,jshell
-         call attrashellopt(IIsh,JJsh)
-      enddo
-   enddo
-
 #ifdef MPIV
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef MPIV
-if(master) then
-#endif
-
-#ifdef DEBUG
-  if (quick_method%debug) then
-        write (iOutFile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED: ")')
-        do Iatm=1,natom
-            do Imomentum=1,3
-                write (iOutFile,'(I5,7x,F20.10)')Iatm, &
-                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
-            enddo
-        enddo
-  endif
-#endif
-
-#ifdef MPIV
-endif
-#endif
-
-   call cpu_time(timer_end%T1eGrad)
-   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
-
-!---------------------------------------------------------------------
-!  4) The derivative of the electron repulsion term
-!---------------------------------------------------------------------
    call cpu_time(timer_begin%T2eGrad)
 
    call get_electron_replusion_grad
@@ -302,82 +196,51 @@ endif
    call cpu_time(timer_end%T2eGrad)
    timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
 !---------------------------------------------------------------------
-!  5) If DFT, calculate the derivative of exchahnge correlation  term
+!  4) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
    if (quick_method%DFT) then
-#ifdef MPIV
-   if(master) then
-#endif
-   ! implement exc grad timer here
-#ifdef MPIV
-   endif
-#endif
-
-
       call cpu_time(timer_begin%TExGrad)
 
       call get_xc_grad
 
+#ifdef CUDA_MPIV
+      call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
+#endif
+
       call cpu_time(timer_end%TExGrad)
       timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
 
+   endif
+
+
 #ifdef MPIV
+
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+   call cpu_time(timer_begin%TGradred) 
+
+! sum up all gradient contributions
+   call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   if(quick_molspec%nextatom.gt.0) call MPI_REDUCE(quick_qm_struct%ptchg_gradient, tmp_ptchg_grad, 3*quick_molspec%nextatom,& 
+                                   mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
    if(master) then
-#endif
-   ! implement exc grad timer here
-#ifdef MPIV
-   endif
-#endif
-
+     quick_qm_struct%gradient(:) = tmp_grad(:)
+     if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
    endif
 
-!  Stop the timer and add up the total gradient times
-   call cpu_time(timer_end%TGrad)
-   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
+   call cpu_time(timer_end%TGradred)
 
-#ifdef MPIV
-!  slave node will send infos
-   if(.not.master) then
-      do i=1,natom*3
-         tmp_grad(i)=quick_qm_struct%gradient(i)
-      enddo
+   timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
 
-   call MPI_SEND(tmp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-
-   if(quick_molspec%nextatom.gt.0) then
-      do i=1,quick_molspec%nextatom*3
-         tmp_ptchg_grad(i) = quick_qm_struct%ptchg_gradient(i)
-      enddo
-      call MPI_SEND(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-   endif
-
-   else
-!  master node will receive infos from every nodes
-      do i=1,mpisize-1
-!  receive opertors from slave nodes
-         call MPI_RECV(tmp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-!  and sum them into operator
-         do ii=1,natom*3
-            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+tmp_grad(ii)
-         enddo
-
-         if(quick_molspec%nextatom.gt.0) then
-
-            call MPI_RECV(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-
-            do ii=1,quick_molspec%nextatom*3
-               quick_qm_struct%ptchg_gradient(ii) = quick_qm_struct%ptchg_gradient(ii) + tmp_ptchg_grad(ii)
-            enddo
-
-         endif
-      enddo
-  endif
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
 
@@ -417,11 +280,13 @@ endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
-!stop
-
 #ifdef MPIV
    call deallocate_quick_gradient()
 #endif
+
+!  Stop the timer and add up the total gradient times
+   call cpu_time(timer_end%TGrad)
+   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
    return
 
@@ -506,6 +371,112 @@ subroutine get_nuclear_repulsion_grad
    return
 
 end subroutine get_nuclear_repulsion_grad
+
+
+subroutine get_oneen_grad
+
+  use allmod
+  implicit none
+  integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
+
+!---------------------------------------------------------------------
+!  1) The derivative of the kinetic term
+!---------------------------------------------------------------------
+
+   call cpu_time(timer_begin%T1eGrad)
+
+   call cpu_time(timer_begin%T1eTGrad)
+
+   call get_kinetic_grad
+
+   call cpu_time(timer_end%T1eTGrad)
+   timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
+
+#ifdef MPIV
+if(master) then
+#endif
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutfile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+  endif
+#endif
+
+#ifdef MPIV
+endif
+#endif
+
+!---------------------------------------------------------------------
+!  2) The derivative of the 1 electron nuclear attraction term ij times
+!     the density matrix element ij.
+!---------------------------------------------------------------------
+
+   call cpu_time(timer_begin%T1eVGrad)
+
+#ifdef MPIV
+   if (bMPI) then
+      nshell_mpi = mpi_jshelln(mpirank)
+   else
+      nshell_mpi = jshell
+   endif
+
+   do i=1,nshell_mpi
+      if (bMPI) then
+         IIsh = mpi_jshell(mpirank,i)
+      else
+         IIsh = i
+      endif
+#else
+   do IIsh=1,jshell
+#endif
+      do JJsh=IIsh,jshell
+         call attrashellopt(IIsh,JJsh)
+      enddo
+   enddo
+
+   call cpu_time(timer_end%T1eVGrad)
+   timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
+
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
+#ifdef MPIV
+if(master) then
+#endif
+
+#ifdef DEBUG
+  if (quick_method%debug) then
+        write (iOutfile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
+        do Iatm=1,natom
+            do Imomentum=1,3
+                write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+            enddo
+        enddo
+  endif
+#endif
+
+#ifdef MPIV
+endif
+#endif
+
+   call cpu_time(timer_end%T1eGrad)
+   timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
+
+   return
+
+end subroutine get_oneen_grad
 
 
 subroutine get_kinetic_grad
@@ -595,6 +566,7 @@ subroutine get_kinetic_grad
 #endif
       ISTART = (quick_basis%ncenter(Ibas)-1) *3
          do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
+
             JSTART = (quick_basis%ncenter(Jbas)-1) *3
             DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
 
@@ -626,10 +598,13 @@ end subroutine get_kinetic_grad
 subroutine get_electron_replusion_grad
 
    use allmod
+   use quick_gradient_module
+   use quick_cutoff_module, only: cshell_dnscreen
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -639,10 +614,11 @@ subroutine get_electron_replusion_grad
 !  (i.e. the multiplicative constants from the density matrix that 
 !  arise as these are both the exchange and correlation integrals.
 
+
    do II=1,jshell
       do JJ=II,jshell
          DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II,JJ,DNtemp)
          Cutmatrix(II,JJ)=DNtemp
          Cutmatrix(JJ,II)=DNtemp
       enddo
@@ -661,11 +637,13 @@ subroutine get_electron_replusion_grad
          call gpu_upload_method(1, 0.2d0)
       endif
 
-      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-      quick_qm_struct%vec,quick_qm_struct%dense)
+      call gpu_upload_density_matrix(quick_qm_struct%dense)
       call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
+      call gpu_upload_grad(quick_method%gradCutoff)
+
+      ! next function will compute the eri gradients and add to gradient vector
       call gpu_grad(quick_qm_struct%gradient)
+
    else
 #endif
 
@@ -770,9 +748,6 @@ subroutine get_xc_grad
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
-   
-   double precision, dimension(natom*50*194) :: init_grid_ptx, init_grid_pty, init_grid_ptz, arr_wtang, arr_rwt, arr_rad3
-   integer, dimension(natom*50*194) :: init_grid_atm
 
 #ifdef MPIV
    include "mpif.h"
@@ -782,12 +757,7 @@ subroutine get_xc_grad
 
    if(quick_method%bCUDA) then
 
-      call gpu_upload_density_matrix(quick_qm_struct%dense)
-
-      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+      call gpu_reupload_dft_grid()
 
       call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)
@@ -1058,60 +1028,109 @@ subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
    use allmod
    implicit double precision(a-h,o-z)
    logical :: ijcon   
+   double precision g_table(200), valopf
+   integer i,j,k,ii,jj,kk,g_count
 
    dSM = 0.0d0
    dKEM = 0.0d0
 
+   Ax = xyz(1,quick_basis%ncenter(Jbas))
+   Bx = xyz(1,quick_basis%ncenter(Ibas))
+   Ay = xyz(2,quick_basis%ncenter(Jbas))
+   By = xyz(2,quick_basis%ncenter(Ibas))
+   Az = xyz(3,quick_basis%ncenter(Jbas))
+   Bz = xyz(3,quick_basis%ncenter(Ibas))
+   
    itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+
+   ii = itype(1,Ibas)
+   jj = itype(2,Ibas)
+   kk = itype(3,Ibas)
+   i = itype(1,Jbas)
+   j = itype(2,Jbas)
+   k = itype(3,Jbas)
+   g_count = i+ii+j+jj+k+kk+2
+
    do Icon=1,ncontract(Ibas)
+      b = aexp(Icon,Ibas)
       do Jcon=1,ncontract(Jbas)
-         if(ijcon) then
-            mcon = Icon
-         else
-            mcon = Jcon
+         a = aexp(Jcon,Jbas)
+
+         valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                  Ay, Az, Bx, By, Bz)
+
+         if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then                  
+
+           call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+          
+           if(ijcon) then
+              mcon = Icon
+           else
+              mcon = Jcon
+           endif
+           dSM= dSM + 2.d0*aexp(mcon,mbas)* &
+           dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+           *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!           xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!           xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!           xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+           dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
+           dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+           *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!           itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!           itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!           xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!           xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!           xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
          endif
-         dSM= dSM + 2.d0*aexp(mcon,mbas)* &
-         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-         *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-         dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
-         dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-         *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-         itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-         itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-         xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-         xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-         xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
       enddo
    enddo
 
    itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
    if (itype(Imomentum,mbas) /= 0) then
       itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+      ii = itype(1,Ibas)
+      jj = itype(2,Ibas)
+      kk = itype(3,Ibas)
+      i = itype(1,Jbas)
+      j = itype(2,Jbas)
+      k = itype(3,Jbas)
+      g_count = i+ii+j+jj+k+kk+2
+
       do Icon=1,ncontract(Ibas)
+         b = aexp(Icon,Ibas)
          do Jcon=1,ncontract(Jbas)
-            dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
-            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-            *overlap(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
-            dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
-            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
-            *ekinetic(aexp(Jcon,Jbas),aexp(Icon,Ibas), &
-            itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-            itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-            xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-            xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-            xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+           a = aexp(Jcon,Jbas)
+           
+           valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                    Ay, Az, Bx, By, Bz)
+           
+           if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+           
+             call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)      
+           
+             dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
+             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+             *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!             itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!             itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!             xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!             xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!             xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+             dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
+             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+             *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!             itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
+!             itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
+!             xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
+!             xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
+!             xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
+           endif
          enddo
       enddo
+
       itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
    endif
 

@@ -5,6 +5,7 @@
 
 subroutine optimize(failed)
    use allmod
+   use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco,failed
@@ -78,7 +79,7 @@ subroutine optimize(failed)
    !------------- END MPI/MASTER ----------------------------
 
 
-   do WHILE (I.le.quick_method%iopt.and..not.done)
+   do WHILE (I.lt.quick_method%iopt.and..not.done)
       I=I+1
 
       if (master) then
@@ -141,12 +142,16 @@ subroutine optimize(failed)
             quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
 
+#ifdef CUDA_MPIV
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
 
 #endif
 
-      call getEnergy(failed)
+      call getEnergy(failed, .false.)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.
@@ -255,13 +260,13 @@ subroutine optimize(failed)
 
          if (i.gt.1) then
             Write (ioutfile,'(" OPTIMIZATION STATISTICS:")')
-            Write (ioutfile,'(" ENERGY CHANGE           =",E20.10," (REQUEST=",E12.5")")') quick_qm_struct%Etot-Elast, &
+            Write (ioutfile,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")') quick_qm_struct%Etot-Elast, &
                                                                                         quick_method%EChange
-            Write (ioutfile,'(" MAXIMUM GEOMETRY CHANGE =",E20.10," (REQUEST=",E12.5")")') geomax,quick_method%geoMaxCrt
-            Write (ioutfile,'(" GEOMETRY CHANGE RMS     =",E20.10," (REQUEST=",E12.5")")') georms,quick_method%gRMSCrt
-            !Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT=",E20.10," (REQUEST=",E12.5")")') gradmax,quick_method%gradMaxCrt
-            Write (ioutfile,'(" GRADIENT NORM           =",E20.10," (REQUEST=",E12.5")")') gradnorm,quick_method%gNormCrt
-            
+            Write (ioutfile,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")') geomax,quick_method%geoMaxCrt
+            Write (ioutfile,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")') georms,quick_method%gRMSCrt
+            !Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5" )")') gradmax,quick_method%gradMaxCrt
+            Write (ioutfile,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5" )")') gradnorm,quick_method%gNormCrt
+
             EChg = quick_qm_struct%Etot-Elast
             done = quick_method%geoMaxCrt.gt.geomax
             done = done.and.(quick_method%EChange.gt.abs(EChg))
@@ -270,7 +275,7 @@ subroutine optimize(failed)
             !done = done.and.quick_method%gNormCrt.gt.gradnorm
          else
             Write (ioutfile,'(" OPTIMZATION STATISTICS:")')
-            Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT=",E20.10,"(REQUEST=",E20.10")")') gradmax,quick_method%gradMaxCrt
+            Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E20.10" )")') gradmax,quick_method%gradMaxCrt
             done = quick_method%gradMaxCrt.gt.gradmax
             done = done.and.quick_method%gNormCrt.gt.gradnorm
             if (done) then
@@ -302,8 +307,8 @@ subroutine optimize(failed)
 #endif
 
       !For DFT geometry optimization, we should delete the grid variables here
-      !and 
-      !reinitiate them in getEnergy method. 
+      !and
+      !reinitiate them in getEnergy method.
       if (quick_method%DFT) then
            if(I.le.quick_method%iopt.and..not.done) then
                 call deform_dft_grid(quick_dft_grid)
@@ -350,5 +355,3 @@ subroutine optimize(failed)
 
    return
 end subroutine optimize
-
-

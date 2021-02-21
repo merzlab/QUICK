@@ -1,0 +1,30 @@
+DFT B3LYP BASIS=cc-pvDZ cutoff=1.0e-9 denserms=1.0e-6 GRADIENT DIPOLE EXTCHARGES
+
+  O         -0.741530        1.752130        2.896280
+  H         -1.111151        0.979769        3.352290
+  H         -0.920500        2.036450        1.984040
+
+  1.6492 0.0000 -2.3560 -0.8340
+  0.5448 0.0000 -3.8000  0.4170
+  0.5448 0.0000 -0.9121  0.4170
+
+#ref_grad -0.0252563122
+#ref_grad -0.0225986288
+#ref_grad -0.0181905371
+#ref_grad  0.0102140240
+#ref_grad -0.0035232091
+#ref_grad  0.0292524797
+#ref_grad  0.0152461197
+#ref_grad  0.0259263908
+#ref_grad -0.0111572235
+#ref_ptchg_grad  0.0004021706
+#ref_ptchg_grad -0.0000672814
+#ref_ptchg_grad -0.0000224239
+#ref_ptchg_grad -0.0001121167
+#ref_ptchg_grad  0.0000330093
+#ref_ptchg_grad  0.0000942206
+#ref_ptchg_grad -0.0005052398
+#ref_ptchg_grad  0.0002206270
+#ref_ptchg_grad  0.0000410719
+#TOTAL_ENERGY= -76.408024766
+

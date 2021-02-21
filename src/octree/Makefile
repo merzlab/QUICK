@@ -27,7 +27,8 @@ CXXOBJ=$(objfolder)/octree.o $(objfolder)/grid_packer.o
 #  !---------------------------------------------------------------------!
 
 $(CXXOBJ):$(objfolder)/%.o:%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@echo "[QUICK]  CXX $@"
+	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
 all: $(CXXOBJ)	
 

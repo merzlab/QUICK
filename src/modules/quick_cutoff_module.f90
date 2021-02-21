@@ -1,26 +1,69 @@
+!---------------------------------------------------------------------!
+! Created by Madu Manathunga on 01/26/2021                            !
+!                                                                     !
+! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
+!                         Ken Ayers & Ed Brothers                     !
+!                                                                     !
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
 
-! change call g2eshell in hfgrad.f? Answer:NO
-! change shreshold!!!!!!!
-!!!!! change hfoperatordelta.f hfenergy2eshell.f hfenergyshell.f
-! change schwartz.f hfoperator.f 2eshell.f hfgrad.f 2eshellopt.f
-! do the cutoff every OPT step
 ! Xiao HE 07/07/07
 ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
+
+module quick_cutoff_module
+  implicit double precision(a-h,o-z)
+  private
+  public :: cshell_density_cutoff,oshell_density_cutoff
+  public :: cshell_dnscreen,oshell_dnscreen
+  public :: schwarzoff
+
+  ! temporary variables required only for subroutines in this module
+  double precision, dimension(:), allocatable :: X44
+  double precision, dimension(:,:), allocatable :: X4444
+
+contains
+
+subroutine allocate_quick_cutoff
+  use quick_basis_module
+  implicit none
+  
+  if(.not. allocated(X44)) allocate(X44(maxcontract**4))
+  if(.not. allocated(X4444)) allocate(X4444(maxcontract,maxcontract))
+
+  X44 = 0.0d0
+  X4444 = 0.0d0  
+
+end subroutine allocate_quick_cutoff
+
+subroutine deallocate_quick_cutoff
+  implicit none
+
+  if(allocated(X44)) deallocate(X44)
+  if(allocated(X4444)) deallocate(X4444)
+
+end subroutine deallocate_quick_cutoff
 
 subroutine schwarzoff
   use allmod
 
   Implicit none
-
 #ifdef MPIV
    include 'mpif.h'
 #endif
 
-  integer :: ii,jj
-  double precision :: Ymaxtemp
+  integer ii,jj
+  double precision Ymaxtemp
 
   if (master) then
+
+  call allocate_quick_cutoff
+
   do II=1,nshell
      do JJ=II,nshell
         call shellcutoff(II,JJ,Ymaxtemp)
@@ -28,6 +71,9 @@ subroutine schwarzoff
         Ycutoff(JJ,II)=dsqrt(Ymaxtemp)
      enddo
   enddo
+
+  call deallocate_quick_cutoff
+
   endif
 
 #ifdef MPIV
@@ -39,8 +85,6 @@ subroutine schwarzoff
 #endif
 
 end subroutine schwarzoff
-
-
 
 subroutine shellcutoff(II,JJ,Ymax)
   use allmod
@@ -111,7 +155,7 @@ subroutine shellcutoff(II,JJ,Ymax)
               ABCD=AB+CD
               ROU=AB*CD/ABCD
               RPQ=0.0d0
-              ABCDxiao=dsqrt(ABCD)    
+              ABCDxiao=dsqrt(ABCD)
 
               CDtemp=0.5d0/CD
               ABcom=AB/ABCD
@@ -184,14 +228,13 @@ subroutine shellcutoff(II,JJ,Ymax)
      enddo
   enddo
 
-
   do I=NII1,NII2
      if(I.eq.0)then
         NNA=1
      else
         NNA=Sumindex(I-1)+1
      endif
-     
+
 
      do J=NJJ1,NJJ2
         NNAB=SumINDEX(I+J)
@@ -207,8 +250,6 @@ subroutine shellcutoff(II,JJ,Ymax)
 
 end subroutine shellcutoff
 
-
-
 subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
   use allmod
 
@@ -219,7 +260,7 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
   Parameter(NN=13)
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
-  double precision X44(100000)
+!  double precision X44(100000)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
@@ -236,7 +277,7 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
      Nprij=quick_basis%kstart(JJ)+JJJ-1
      do III=1,quick_basis%kprim(II)
         Nprii=quick_basis%kstart(II)+III-1
-            
+
         X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
         do LLL=1,quick_basis%kprim(LL)
            Npril=quick_basis%kstart(LL)+LLL-1
@@ -258,7 +299,7 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
      enddo
   enddo
 
-  NBI1=quick_basis%Qsbasis(II,I)
+ NBI1=quick_basis%Qsbasis(II,I)
   NBI2=quick_basis%Qfbasis(II,I)
   NBJ1=quick_basis%Qsbasis(JJ,J)
   NBJ2=quick_basis%Qfbasis(JJ,J)
@@ -372,7 +413,6 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
            Y=Y*quick_basis%cons(III)*quick_basis%cons(JJJ)*quick_basis%cons(KKK)*quick_basis%cons(LLL)
 
         endif
-
         Ytemp=dabs(Y)
         if(dabs(Ytemp).gt.Ymax) Ymax=Ytemp
 
@@ -391,8 +431,8 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
   Parameter(NN=13)
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
-  double precision X44(12960)
-  double precision X4444(MAXPRIM,MAXPRIM)
+!  double precision X44(12960)
+!  double precision X4444(MAXPRIM,MAXPRIM)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
@@ -430,7 +470,6 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
   NBK2=quick_basis%Qfbasis(KK,K)
   NBL1=quick_basis%Qsbasis(LL,L)
   NBL2=quick_basis%Qfbasis(LL,L)
-
 
   do III=quick_basis%ksumtype(II)+NBI1,quick_basis%ksumtype(II)+NBI2
      do JJJ=quick_basis%ksumtype(JJ)+NBJ1,quick_basis%ksumtype(JJ)+NBJ2
@@ -489,7 +528,7 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
            MCX=trans(NC(1),NC(2),NC(3))
            MCD=trans(NC(1)+ND(1),NC(2)+ND(2),NC(3)+ND(3))
 
-           do itemp=1,3
+          do itemp=1,3
               if(ND(itemp).ne.0)then
                  ctemp=(RC(itemp)-RD(itemp))
                  Y1=store(MAB,MCD)+ctemp*store(MAB,MCX)
@@ -544,55 +583,11 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
      enddo
   enddo
 
-End subroutine classprim
+end subroutine classprim
 
-subroutine DNscreen(II,JJ,DNmax1)
-  use allmod
+#define OSHELL
+#include "./include/cutoff.f90"
+#undef OSHELL
+#include "./include/cutoff.f90"
 
-  Implicit double precision(a-h,o-z)
-
-  NII1=quick_basis%Qstart(II)
-  NII2=quick_basis%Qfinal(II)
-  NJJ1=quick_basis%Qstart(JJ)
-  NJJ2=quick_basis%Qfinal(JJ)
-
-  NBI1=quick_basis%Qsbasis(II,NII1)
-  NBI2=quick_basis%Qfbasis(II,NII2)
-  NBJ1=quick_basis%Qsbasis(JJ,NJJ1)
-  NBJ2=quick_basis%Qfbasis(JJ,NJJ2)
-
-  II111=quick_basis%ksumtype(II)+NBI1
-  II112=quick_basis%ksumtype(II)+NBI2
-  JJ111=quick_basis%ksumtype(JJ)+NBJ1
-  JJ112=quick_basis%ksumtype(JJ)+NBJ2
-
-  do III=II111,II112
-     do JJJ=JJ111,JJ112
-        DENSEJI=dabs(quick_qm_struct%dense(JJJ,III))
-        if(DENSEJI.gt.DNmax1)DNmax1=DENSEJI
-     enddo
-  enddo
-
-End subroutine DNscreen
-
-
-!------------------------------------------------
-! densityCutoff
-!------------------------------------------------
-subroutine densityCutoff
-   !------------------------------------------------
-   ! This subroutine is to cutoff delta density
-   !------------------------------------------------
-   use allmod
-   implicit double precision(a-h,o-z)
-
-   ! Cutmatrix(II,JJ) indicated for ii shell and jj shell, the max dense
-   do II=1,jshell
-      do JJ=II,jshell
-         DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
-         Cutmatrix(II,JJ)=DNtemp
-         Cutmatrix(JJ,II)=DNtemp
-      enddo
-   enddo
-end subroutine densityCutoff
+end module quick_cutoff_module

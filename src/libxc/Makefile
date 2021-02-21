@@ -130,7 +130,7 @@ LIBXCOBJ = $(libxcobjfolder)/special_functions.o $(libxcobjfolder)/bessel.o\
 	$(libxcobjfolder)/hyb_mgga_xc_kcis.o $(libxcobjfolder)/mgga_c_b88.o\
 	$(libxcobjfolder)/mgga_x_gx.o $(libxcobjfolder)/mgga_x_pbe_gx.o\
 	$(libxcobjfolder)/mgga_c_revscan.o $(libxcobjfolder)/mgga_x_br89_explicit.o\
-	$(libxcobjfolder)/mgga_xc_b98.o \
+	$(libxcobjfolder)/mgga_xc_b98.o
 
 ifdef COMPILE_PK09
 LIBXCOBJ += $(libxcobjfolder)/lda_c_pk09.o
@@ -141,20 +141,24 @@ endif
 #  !---------------------------------------------------------------------!
 
 $(LIBXCOBJ):$(libxcobjfolder)/%.o:%.c
-	$(CCC) $< -o $@
+	@echo "[QUICK]  CC $@"
+	$(VB)$(CCC) -c $< -o $@
 
 libxc_f90:
-	$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
-	$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
-	$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-xc_f.o"
+	$(VB)$(CCC) xc_f.c -o $(libxcobjfolder)/libxcf90_la-xc_f.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-libxc_funcs.o"
+	$(VB)$(FOR) libxc_funcs.f90 -o $(libxcobjfolder)/libxcf90_la-libxc_funcs.o
+	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-libxc.o"
+	$(VB)$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
 libxc_gpu:$(LIBXCOBJ) libxc_f90
-	$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
+	@echo "[QUICK]  CC $(libxcobjfolder)/gpu.o"
+	$(VB)$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-cuda.$(LIBEXT) $(libxcobjfolder)/*.o
 
 libxc_cpu:$(LIBXCOBJ) libxc_f90
-	$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
-
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
