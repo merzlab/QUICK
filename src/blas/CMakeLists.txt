@@ -15,9 +15,14 @@ set(CMAKE_Fortran_FLAGS ${OPT_FFLAGS})
 file(GLOB blassrc "*.f")
 
 add_library(blas ${blassrc}) #set default type to static
-set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/serial LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
+set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/serial 
+									  LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
 install(TARGETS blas EXPORT QUICK DESTINATION lib/serial)
 
 if(MPI)
-	install(TARGETS blas EXPORT QUICK DESTINATION lib/mpi)
+	add_library(blas_mpi ${blassrc})
+	set_target_properties(blas_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi
+                                      LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi
+									  OUTPUT_NAME blas)
+	install(TARGETS blas_mpi EXPORT QUICK DESTINATION lib/mpi)
 endif()

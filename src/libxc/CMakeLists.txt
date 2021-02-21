@@ -68,25 +68,34 @@ config_module_dirs(xc serial)
 install(TARGETS xc EXPORT QUICK DESTINATION lib/serial)
 
 if(MPI)
-    make_mpi_version(xc xc_mpi LANGUAGES C)
-    target_compile_definitions(xc_mpi PUBLIC MPIV)
-	set_target_properties(xc_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi)
+    #make_mpi_version(xc xc_mpi LANGUAGES C)
+    add_library(xc_mpi ${libxcsrc})
+	target_compile_definitions(xc_mpi PUBLIC MPIV)
+	set_target_properties(xc_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi
+											LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi
+											OUTPUT_NAME xc)
 	config_module_dirs(xc_mpi mpi)
 	install(TARGETS xc_mpi EXPORT QUICK DESTINATION lib/mpi)
 endif()
 
 if(USE_CUDA)
-	copy_target(xc xc_gpu SWAP_SOURCES TO gpu.c)
+	#copy_target(xc xc_gpu SWAP_SOURCES TO gpu.c)
+	add_library(xc_gpu ${libxcsrc} gpu.c)
 	target_compile_definitions(xc_gpu PUBLIC CUDA)
-	set_target_properties(xc_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/cuda LIBRARY_OUTPUT_DIRECTORY ${libfolder}/cuda)
+	set_target_properties(xc_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/cuda 
+											LIBRARY_OUTPUT_DIRECTORY ${libfolder}/cuda
+											OUTPUT_NAME xc)
 	config_module_dirs(xc_gpu cuda)
 	install(TARGETS xc_gpu EXPORT QUICK DESTINATION lib/cuda)
 endif()
 
 if(MPI AND USE_CUDA)
-	copy_target(xc_mpi xc_mpi_gpu SWAP_SOURCES TO gpu.c)
+	#copy_target(xc_mpi xc_mpi_gpu SWAP_SOURCES TO gpu.c)
+	add_library(xc_mpi_gpu ${libxcsrc} gpu.c)
 	target_compile_definitions(xc_mpi_gpu PUBLIC MPIV CUDA)
-	set_target_properties(xc_mpi_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda)
+	set_target_properties(xc_mpi_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda 
+												LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda
+												OUTPUT_NAME xc)
 	config_module_dirs(xc_mpi_gpu mpi_cuda)
 	install(TARGETS xc_mpi_gpu EXPORT QUICK DESTINATION lib/mpi_cuda)
 endif()
