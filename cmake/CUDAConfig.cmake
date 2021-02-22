@@ -1,7 +1,8 @@
-option(USE_CUDA "Build ${PROJECT_NAME} with CUDA GPU acceleration support." FALSE)
+if((USE_CUDA OR CUDAMPI) AND ("${CUDA_ARCH}" STREQUAL ""))
+	message(FATAL_ERROR "GPU architecture needs to be set for CUDA")
+endif()
 
-if(NOT ${CUDA_ARCH} STREQUAL "")
-	set(USE_CUDA TRUE)
+if((USE_CUDA OR CUDAMPI) AND NOT ("${CUDA_ARCH}" STREQUAL ""))
 	enable_language(CUDA)	
 
 	set(CMAKE_CUDA_FLAGS "-Xptxas=-v -m64 -use_fast_math")
@@ -55,7 +56,7 @@ endif()
 
 # SPDF
 option(NOF "Disables the compilation of QUICK's time consuming f functions in the ERI code of cuda version. Not recommended for production." FALSE)
-if(NOT NOF)	#-DNOF=TRUE FLAF 
+if(NOT NOF)	#-DNOF=TRUE FLAG 
     list(APPEND CUDAFLAGS -DCUDA_SPDF)
 endif()
 

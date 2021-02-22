@@ -3,7 +3,6 @@ project(QUICK NONE)
 
 include(cmake/QuickBuildSystemInit.cmake NO_POLICY_SCOPE)
 enable_language(Fortran C CXX) 
-set(USE_CUDA FALSE CACHE BOOL "")
 
 set(filelist "" CACHE INTERNAL "")
 set(cudalibxcobj "" CACHE INTERNAL "")
@@ -26,12 +25,19 @@ set(LIBDIR "${CMAKE_INSTALL_PREFIX}lib")
 # makefolders here
 file(MAKE_DIRECTORY ${exefolder} ${libfolder})
 
+set(SERIAL false CACHE BOOL "default if no build type specified")
+if((NOT SERIAL) AND (NOT USE_CUDA) AND (NOT MPI) AND (NOT CUDAMPI))
+	message(STATUS "No build type specified.")
+	message(STATUS "Proceeding with a serial build.")
+	set(SERIAL TRUE)
+endif()
+
 include(MPIConfig)
 include(CUDAConfig)
 
 # libxc_cpu/libxc_gpu here
 add_subdirectory(${libxcfolder})
-if(USE_CUDA)
+if(USE_CUDA OR CUDAMPI)
 	add_subdirectory(${maple2c_device})
 endif()
 
@@ -46,7 +52,7 @@ add_subdirectory(${quick_subs})
 
 # blas here
 add_subdirectory(${blasfolder})
-if(USE_CUDA)
+if(USE_CUDA OR CUDAMPI)
 	add_subdirectory(${cudafolder})
 endif()
 

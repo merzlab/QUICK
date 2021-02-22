@@ -19,7 +19,7 @@ set_target_properties(blas PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/seri
 									  LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
 install(TARGETS blas EXPORT QUICK DESTINATION lib/serial)
 
-if(MPI)
+if(MPI OR CUDAMPI) 
 	add_library(blas_mpi ${blassrc})
 	set_target_properties(blas_mpi PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi
                                       LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi

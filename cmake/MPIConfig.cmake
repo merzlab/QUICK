@@ -1,6 +1,7 @@
 # Make config file for MPI
 
-if(MPI)
+if(MPI OR CUDAMPI)
+
 	find_package(MPI)
 
 	foreach(LANG ${ENABLED_LANGUAGES})

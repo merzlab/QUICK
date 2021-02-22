@@ -62,10 +62,12 @@ hyb_mgga_xc_kcis.c;mgga_c_b88.c;mgga_x_gx.c;mgga_x_pbe_gx.c;\
 mgga_c_revscan.c;mgga_x_br89_explicit.c;mgga_xc_b98.c;\
 xc_f.c;libxc.f90;libxc_funcs.f90")
 
-add_library(xc ${libxcsrc})  #set default type to static
-set_target_properties(xc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/serial LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
-config_module_dirs(xc serial)
-install(TARGETS xc EXPORT QUICK DESTINATION lib/serial)
+if(SERIAL)
+	add_library(xc ${libxcsrc})  #set default type to static
+	set_target_properties(xc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/serial LIBRARY_OUTPUT_DIRECTORY ${libfolder}/serial)
+	config_module_dirs(xc serial)
+	install(TARGETS xc EXPORT QUICK DESTINATION lib/serial)
+endif()
 
 if(MPI)
     #make_mpi_version(xc xc_mpi LANGUAGES C)
@@ -89,10 +91,10 @@ if(USE_CUDA)
 	install(TARGETS xc_gpu EXPORT QUICK DESTINATION lib/cuda)
 endif()
 
-if(MPI AND USE_CUDA)
+if(CUDAMPI)
 	#copy_target(xc_mpi xc_mpi_gpu SWAP_SOURCES TO gpu.c)
 	add_library(xc_mpi_gpu ${libxcsrc} gpu.c)
-	target_compile_definitions(xc_mpi_gpu PUBLIC MPIV CUDA)
+	target_compile_definitions(xc_mpi_gpu PUBLIC CUDA_MPIV)
 	set_target_properties(xc_mpi_gpu PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda 
 												LIBRARY_OUTPUT_DIRECTORY ${libfolder}/mpi_cuda
 												OUTPUT_NAME xc)
