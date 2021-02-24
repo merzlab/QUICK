@@ -68,9 +68,10 @@ echo  "
       --mkl          Use matrix diagonalizer from MKL. MKLROOT environment
                      variable must be set with the correct mkl installation path.
                      This path must contain lib and include directories.
-      --mirp         Use functions for ERI calculations from MIRP library. 
-                     The MIRP libary, header files and their dependencies must
-                     be available in QUICK_HOME/dependencies directory.
+      --mirp         Use Boys function for ERI calculations from mirp library. 
+                     MIRP_HOME and MIRP_DEP_HOME environment variables must be set to 
+                     mirp and dependency installation directories. These paths must 
+                     contain lib and include directories.
 
   Supported compilers are: gnu, intel, pgi, nvidia
 
