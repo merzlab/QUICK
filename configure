@@ -469,6 +469,7 @@ check_lapack(){
     echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
     return 1
   fi
+}
 
 # Function to check for MIRP library and dependencies. 
 check_mirp(){
@@ -1103,8 +1104,9 @@ for buildtype in $buildtypes; do
     set_mpicxx
   fi
 
-  # For serial and mpi versions, diagonalizers from lapack/mkl may be used
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+
+    # For serial and mpi versions, diagonalizers from lapack/mkl may be used
     if [ "$lapack" = 'yes' ]; then
       check_lapack
       if [ "$?" -eq 0 ]; then
@@ -1112,7 +1114,6 @@ for buildtype in $buildtypes; do
         fort_flags="$fort_flags -DLAPACK"
         ldflags="$ldflags -L$BLASROOT/lib -lopenblas"
       fi
-
     elif [ "$mkl" = 'yes' ]; then
       check_mkl
       if [ "$?" -eq 0 ]; then
@@ -1120,14 +1121,15 @@ for buildtype in $buildtypes; do
         fort_flags="$fort_flags -DMKL"
         ldflags="$ldflags -L$MKLROOT/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
       fi
+    fi
 
-  # set mirp library flags
-  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+    # set mirp library flags
     if [ "$mirp" = "yes" ]; then
       fort_flags="$fort_flags -DMIRP"
       cxx_flags="$cxx_flags -I$MIRP_HOME/include -I$MIRP_DEP_HOME/include -DMIRP"
       ldflags="$ldflags -L$MIRP_HOME/lib -lmirp"
     fi
+
   fi
 
   # set the installer
