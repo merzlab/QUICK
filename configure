@@ -1127,7 +1127,7 @@ for buildtype in $buildtypes; do
     if [ "$mirp" = "yes" ]; then
       fort_flags="$fort_flags -DMIRP"
       cxx_flags="$cxx_flags -I$MIRP_HOME/include -I$MIRP_DEP_HOME/include -DMIRP"
-      ldflags="$ldflags -L$MIRP_HOME/lib -lmirp"
+      ldflags="$ldflags -L$MIRP_HOME/lib -L$MIRP_DEP_HOME/lib -larb -lflint -lmirp"
     fi
 
   fi
