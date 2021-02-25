@@ -14,5 +14,7 @@
 ! in f90 source files.                                                !
 !_____________________________________________________________________!
 
-#define OUTFILEHANDLE 2021 
+#define INFILEHANDLE   2020
+#define OUTFILEHANDLE  2021
+#define DATAFILEHANDLE 2029
 
