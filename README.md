@@ -46,7 +46,7 @@ Brothers, E.; Götz, A.W.; Merz,K. M. QUICK-21.03 University of California San D
 
 License
 -------
-QUICK is licensed uder Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/license.html#mozilla-public-license-version-2-0).
+QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/license.html#mozilla-public-license-version-2-0).
 
 Special Note to Users
 ---------------------
