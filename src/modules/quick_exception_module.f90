@@ -53,6 +53,9 @@ contains
     case(10)
       msg='f basis functions are currently not supported.'
 
+    default case
+      msg='Unknown error.'
+
     end select
 
     call PrtErr(OUTFILEHANDLE, trim(msg))
