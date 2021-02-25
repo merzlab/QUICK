@@ -17,8 +17,27 @@ module quick_exception_module
 
   implicit none
   private
+  public :: RaiseException
+
+  interface RaiseException
+    module procedure raise_exception
+  end interface
 
 contains
+
+  ! raises exceptions
+  subroutine raise_exception(ierr)
+
+    use quick_files_module
+    implicit none
+    integer, intent(in) :: ierr
+
+    if (ierr /= 0) then
+      call print_exception(iOutFile, ierr)
+      call quick_exit(iOutFile,1)
+    endif
+
+  end subroutine
 
 
 
