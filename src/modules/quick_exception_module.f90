@@ -30,7 +30,6 @@ contains
   ! raises exceptions
   subroutine raise_exception(ierr)
 
-    use quick_files_module
     implicit none
     integer, intent(in) :: ierr
 
@@ -53,7 +52,7 @@ contains
     case(10)
       msg='f basis functions are currently not supported.'
 
-    default case
+    case default
       msg='Unknown error.'
 
     end select
