@@ -89,7 +89,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                      elseif (shell == 'F') then
                      quick_method%ffunxiao=.false.
                      kbasis(iat) = kbasis(iat) + 10
-                     ierr=10
                   end if
                   if (shell == 'SP') then
                      do i=1,iprim
@@ -605,6 +604,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
                            jshell = jshell+1
                            elseif (shell == 'F') then
+
+                           ierr=10 
+
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
                            quick_basis%kstart(jshell) = jbasis
