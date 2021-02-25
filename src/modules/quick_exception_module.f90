@@ -33,12 +33,28 @@ contains
     integer, intent(in) :: ierr
 
     if (ierr /= 0) then
-      call print_exception(iOutFile, ierr)
-      call quick_exit(iOutFile,1)
+      call print_exception(ioutfile, ierr)
+      call quick_exit(ioutfile,1)
     endif
 
+  end subroutine raise_exception
+
+  ! picks an error message and prints
+  subroutine print_exception(ioutfile, ierr)
+
+    implicit none
+    integer, intent(in) :: ioutfile, ierr
+    character(len=200) :: msg = ''
+
+    select case(ierr)
+
+    case(10)
+      msg='f basis functions are currently not supported.'
+
+    end select
+
+    call PrtErr(ioutfile, trim(msg))
+
   end subroutine
-
-
 
 end module quick_exception_module
