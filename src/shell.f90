@@ -656,8 +656,11 @@ subroutine shell
                   !                         2m        2
                   ! Fm(T) = integral(1,0) {t   exp(-Tt )dt}
                   ! NABCD is the m value, and FM returns the FmT value
+#ifdef MIRP
+                  call mirp_fmt(NABCD,T,FM)
+#else
                   call FmT(NABCD,T,FM)
-
+#endif
                   !Go through all m values, obtain Fm values from FM array we
                   !just computed and calculate quantities required for HGP Eqn
                   !12. 
