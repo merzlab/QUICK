@@ -401,6 +401,7 @@ subroutine run_quick(self)
   type(quick_api_type), intent(inout) :: self
   integer :: ierr, i, j, k
   logical :: failed = .false.
+  ierr=0
 
   ! print step into quick output file
   call print_step(self)
@@ -420,10 +421,10 @@ subroutine run_quick(self)
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) call getMolSad()
+    if (quick_method%SAD) call getMolSad(ierr)
 
     ! assign basis functions
-    call getMol()
+    call getMol(ierr)
 
     self%firstStep = .false.
 
