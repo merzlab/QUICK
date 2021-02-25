@@ -35,17 +35,17 @@ contains
     integer, intent(in) :: ierr
 
     if (ierr /= 0) then
-      call print_exception(ioutfile, ierr)
-      call quick_exit(ioutfile,1)
+      call print_exception(ierr)
+      call quick_exit(OUTFILEHANDLE,1)
     endif
 
   end subroutine raise_exception
 
   ! picks an error message and prints
-  subroutine print_exception(ioutfile, ierr)
+  subroutine print_exception(ierr)
 
     implicit none
-    integer, intent(in) :: ioutfile, ierr
+    integer, intent(in) :: ierr
     character(len=200) :: msg = ''
 
     select case(ierr)
@@ -55,7 +55,7 @@ contains
 
     end select
 
-    call PrtErr(ioutfile, trim(msg))
+    call PrtErr(OUTFILEHANDLE, trim(msg))
 
   end subroutine
 
