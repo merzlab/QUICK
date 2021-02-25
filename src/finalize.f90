@@ -79,7 +79,7 @@ subroutine finalize(io,status,option)
         endif
     endif
 
-    call timer_output(io)
+    if (status == 0) call timer_output(io)
        
     if (master) then
         if (status ==0) then
@@ -118,14 +118,17 @@ subroutine quick_exit(io, status)
 
    if (status /= 0) then
       call flush(io)
-#ifdef MPIV
-      call mpi_abort(MPI_COMM_WORLD, status, ierr)
-   else
-      call mpi_finalize(ierr)
-#endif
    end if
 
    call finalize(io,1,0)
+
+#ifdef MPIV
+   if (status /= 0) then
+     call mpi_abort(MPI_COMM_WORLD, status, ierr)
+   else
+     call mpi_finalize(ierr)
+   endif
+#endif
 
    call exit(status)
 
