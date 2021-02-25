@@ -13,6 +13,8 @@
 ! This module performs exception handling in QUICK.                   !
 !_____________________________________________________________________!
 
+#include "util.fh"
+
 module quick_exception_module
 
   implicit none
