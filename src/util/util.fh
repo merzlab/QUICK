@@ -18,3 +18,14 @@
 #define OUTFILEHANDLE  2021
 #define DATAFILEHANDLE 2029
 
+! For the following definitions to work, one must use quick_exception_module
+! in a subroutine. 
+
+#if defined DEBUG || defined DEBUGTIME
+#define CHECK_ERROR(ierr) 
+#else
+#define CHECK_ERROR(ierr) if(ierr /= 0) call RaiseException(ierr) 
+#endif
+
+
+
