@@ -7,10 +7,14 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
-subroutine getMol()
+#include "util.fh"
+
+subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
    use allmod
+   use quick_exception_module
+
    implicit none
 
 #ifdef MPIV
@@ -18,7 +22,7 @@ subroutine getMol()
 #endif
 
    logical :: present
-   integer :: i,j,k,itemp
+   integer :: i,j,k,itemp, ierr
 
    !-----------MPI/MASTER------------------------
    if (master) then
@@ -67,7 +71,8 @@ subroutine getMol()
    ! At this point we have the positions and identities of the atoms. We also
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
-   call readbasis(natom,0,0,0,0)
+   call readbasis(natom,0,0,0,0,ierr)
+   CHECK_ERROR(ierr)
 
    quick_molspec%nbasis   => nbasis
    quick_qm_struct%nbasis => nbasis
