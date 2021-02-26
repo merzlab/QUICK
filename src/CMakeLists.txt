@@ -27,7 +27,7 @@ set(QUICK_MODULES_SOURCES
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90 
 	degen.f90 denspt.f90 diag.f90 dipole.f90 
 	EffChar.f90 eigvec.f90 
-	ekinetic.f90 findBlock.f90 fmt.f90 getinum.f90 
+	findBlock.f90 fmt.f90 getinum.f90 
 	getNum.f90 greedy_distrubute.f90 hrr.f90 iatoi.f90 
 	iatoimp.f90 io.f90 iwhole.f90 
 	lbfgs.f90 Lsolve.f90 matComp.f90 matMul.f90 
@@ -43,7 +43,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	pteval_new_imp.f90 scaMatMul.f90)
 
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90 fmm.f90 
-    getMolSad.f90 getMol.f90 shell.f90 schwarz.f90 
+    getMolSad.f90 getMol.f90 shell.f90 
     quick_one_electron_integral.f90 getEnergy.f90 inidivcon.f90 
     ecp.f90 hfoperator.f90 nuclear.f90 
     dft.f90 sedftoperator.f90 
@@ -142,22 +142,22 @@ target_link_libraries(test-api libquick)
 install(TARGETS quick DESTINATION ${BINDIR} EXPORT QUICK)
 
 if(MPI)
-	make_mpi_version(quick quick.mpi LANGUAGES Fortran)
-	target_compile_definitions(quick.mpi PRIVATE MPIV)
+	make_mpi_version(quick quick.MPI LANGUAGES Fortran)
+	target_compile_definitions(quick.MPI PRIVATE MPIV)
 
-	make_mpi_version(test-api test-api.mpi LANGUAGES Fortran)
-	target_compile_definitions(test-api.mpi PRIVATE MPIV)
+	make_mpi_version(test-api test-api.MPI LANGUAGES Fortran)
+	target_compile_definitions(test-api.MPI PRIVATE MPIV)
 
 	# change link libraries and mod dirs for MPI
-	remove_link_libraries(quick.mpi libquick)
-	target_link_libraries(quick.mpi libquick_mpi)
-	config_module_dirs(quick.mpi quick/mpi libxc/mpi)
+	remove_link_libraries(quick.MPI libquick)
+	target_link_libraries(quick.MPI libquick_mpi)
+	config_module_dirs(quick.MPI quick/mpi libxc/mpi)
 
-	remove_link_libraries(test-api.mpi libquick)
-	target_link_libraries(test-api.mpi libquick_mpi)
-	config_module_dirs(test-api.mpi quick/mpi libxc/mpi)
+	remove_link_libraries(test-api.MPI libquick)
+	target_link_libraries(test-api.MPI libquick_mpi)
+	config_module_dirs(test-api.MPI quick/mpi libxc/mpi)
 
-	install(TARGETS quick.mpi DESTINATION ${BINDIR} EXPORT QUICK)
+	install(TARGETS quick.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA)
@@ -179,19 +179,19 @@ if(CUDA)
 endif()
 
 if(CUDA AND MPI)
-	copy_target(quick.mpi quick.mpi.cuda)
-	target_compile_definitions(quick.mpi.cuda PRIVATE CUDA_MPIV)
+	copy_target(quick.MPI quick.MPI.cuda)
+	target_compile_definitions(quick.MPI.cuda PRIVATE CUDA_MPIV)
 
-	copy_target(test-api.mpi test-api.mpi.cuda)
-	target_compile_definitions(test-api.mpi.cuda PRIVATE CUDA_MPIV)
+	copy_target(test-api.MPI test-api.MPI.cuda)
+	target_compile_definitions(test-api.MPI.cuda PRIVATE CUDA_MPIV)
 
-	remove_link_libraries(quick.mpi.cuda libquick_mpi)
-	target_link_libraries(quick.mpi.cuda libquick_mpi_cuda)
-	config_module_dirs(quick.mpi.cuda quick/mpi_cuda libxc/gpu)
+	remove_link_libraries(quick.MPI.cuda libquick_mpi)
+	target_link_libraries(quick.MPI.cuda libquick_mpi_cuda)
+	config_module_dirs(quick.MPI.cuda quick/mpi_cuda libxc/gpu)
 
-	remove_link_libraries(test-api.mpi.cuda libquick_mpi)
-	target_link_libraries(test-api.mpi.cuda libquick_mpi_cuda)
-	config_module_dirs(test-api.mpi.cuda quick/mpi_cuda libxc/gpu)
+	remove_link_libraries(test-api.MPI.cuda libquick_mpi)
+	target_link_libraries(test-api.MPI.cuda libquick_mpi_cuda)
+	config_module_dirs(test-api.MPI.cuda quick/mpi_cuda libxc/gpu)
 
-	install(TARGETS quick.mpi.cuda DESTINATION ${BINDIR} EXPORT QUICK)
+	install(TARGETS quick.MPI.cuda DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
