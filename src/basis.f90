@@ -74,18 +74,23 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                read(line,*,iostat=iatom) shell,iprim,dnorm
                if (iatom == 0) then
                   quick_basis%kshell(iat) = quick_basis%kshell(iat) +1
-                  kcontract(iat) = kcontract(iat) + iprim
+                  !kcontract(iat) = kcontract(iat) + iprim
                   if (shell == 'S') then
                      kbasis(iat) = kbasis(iat) + 1
+                     kcontract(iat) = kcontract(iat) + iprim
                      elseif (shell == 'P') then
                      kbasis(iat) = kbasis(iat) + 3
+                     kcontract(iat) = kcontract(iat) + iprim * 3
                      elseif (shell == 'SP') then
                      kbasis(iat) = kbasis(iat) + 4
+                     kcontract(iat) = kcontract(iat) + iprim * 4
                      elseif (shell == 'D') then
                      kbasis(iat) = kbasis(iat) + 6
+                     kcontract(iat) = kcontract(iat) + iprim * 6
                      elseif (shell == 'F') then
                      quick_method%ffunxiao=.false.
                      kbasis(iat) = kbasis(iat) + 10
+                     kcontract(iat) = kcontract(iat) + iprim * 10
                   end if
                   if (shell == 'SP') then
                      do i=1,iprim
@@ -131,18 +136,23 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
                            read(line,*,iostat=iatom) shell,iprim,dnorm
                            if (iatom == 0) then
                               quick_basis%kshell(iat) = quick_basis%kshell(iat) +1
-                              kcontract(iat) = kcontract(iat) + iprim
+                              !kcontract(iat) = kcontract(iat) + iprim
                               if (shell == 'S') then
                                  kbasis(iat) = kbasis(iat) + 1
+                                 kcontract(iat) = kcontract(iat) + iprim
                                  elseif (shell == 'P') then
                                  kbasis(iat) = kbasis(iat) + 3
+                                 kcontract(iat) = kcontract(iat) + iprim*3
                                  elseif (shell == 'SP') then
                                  kbasis(iat) = kbasis(iat) + 4
+                                 kcontract(iat) = kcontract(iat) + iprim*4
                                  elseif (shell == 'D') then
                                  kbasis(iat) = kbasis(iat) + 6
+                                 kcontract(iat) = kcontract(iat) + iprim*6
                                  elseif (shell == 'F') then
                                  quick_method%ffunxiao=.false.
                                  kbasis(iat) = kbasis(iat) + 10
+                                 kcontract(iat) = kcontract(iat) + iprim*10
                               end if
                               if (shell == 'SP') then
                                  do i=1,iprim
@@ -207,7 +217,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
          ! MFCC
 
          !   print*,nshell,nbasis,nprim,quick_basis%kshell(iattype(i)),kbasis(iattype(i)),kcontract(iattype(i))
-        
+ 
+
          nshell = nshell + quick_basis%kshell(quick_molspec%iattype(i))
          nbasis = nbasis + kbasis(quick_molspec%iattype(i))
          nprim = nprim + kcontract(quick_molspec%iattype(i))
