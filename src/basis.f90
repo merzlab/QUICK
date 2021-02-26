@@ -6,12 +6,13 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
-subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
+subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ierr)
    !
    ! Read in the requested basisfile. This is done twice, once to get sizes and
    ! allocate variables, then again to assign the basis
    !
    use allmod
+   use quick_exception_module
    !
    implicit double precision(a-h,o-z)
    character(len=120) :: line
@@ -24,6 +25,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
    double precision AA(MAXPRIM),BB(MAXPRIM),CC(MAXPRIM)
    integer natomstart,natomfinal,nbasisstart,nbasisfinal
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
+   integer :: ierr
+
 #ifdef MPIV
    include 'mpif.h'
 #endif
@@ -612,6 +615,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal)
 
                            jshell = jshell+1
                            elseif (shell == 'F') then
+
+                           ierr=10 
+
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
                            quick_basis%kstart(jshell) = jbasis

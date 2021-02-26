@@ -1055,6 +1055,7 @@ for buildtype in $buildtypes; do
       ;;
   esac
 
+  fort_flags="$fort_flags -I$QUICK_HOME/src/util"
   cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
   cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -std=c++11 -I$QUICK_HOME/build/include/$buildtype"
 

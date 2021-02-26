@@ -12,9 +12,13 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
-subroutine getmolsad()
+#include "util.fh"
+
+subroutine getmolsad(ierr)
    use allmod
    use quick_files_module
+   use quick_exception_module
+
    implicit double precision(a-h,o-z)
 
    logical :: present,MPIsaved
@@ -24,6 +28,7 @@ subroutine getmolsad()
    integer natomsaved
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
+   integer :: ierr
 
    ! first save some important value
    quick_method_save=quick_method
@@ -104,7 +109,9 @@ subroutine getmolsad()
          ! is done in a subroutine.
          !-------------------------------------------
          nsenhai=1
-         call readbasis(nsenhai,0,0,0,0)
+         call readbasis(nsenhai,0,0,0,0,ierr)
+         CHECK_ERROR(ierr)
+         
          atombasis(iitemp)=nbasis
          write (ioutfile,'(" BASIS FUNCTIONS = ",I4)') nbasis
 

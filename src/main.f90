@@ -141,7 +141,7 @@
     call cpu_time(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) call getMolSad()
+    if (quick_method%SAD) call getMolSad(ierr)
 
     ! b. MFCC initial guess
     if (quick_method%MFCC) then
@@ -152,7 +152,7 @@
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
-    call getMol()
+    call getMol(ierr)
 
 #if defined CUDA || defined CUDA_MPIV
     call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
