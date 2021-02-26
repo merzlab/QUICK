@@ -152,6 +152,7 @@ int main(int argc, char** args)
 
   if(MISSING_LIBRARIES)
     set(${RESULT_VAR} FALSE PARENT_SCOPE)
+    message(STATUS "Looking for ${TLL_FUNCTION} in${LIBRARY_MESSAGE_TEXT} - missing prerequisites")
     return()
   endif()
 
