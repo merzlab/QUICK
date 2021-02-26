@@ -656,7 +656,7 @@ void cuda_buffer_type<T> :: ReallocateGPU()
 
    cudaError_t status;
 
-   if (_devData == NULL) // if not constructed from f90 array
+   if (_devData == NULL) // if memory has not been allocated
     {
         if (!_bPinned) {
             //Allocate GPU memeory
@@ -672,7 +672,13 @@ void cuda_buffer_type<T> :: ReallocateGPU()
 
         }
     }else{
-        status=cudaErrorNotMappedAsPointer;
+#ifndef CUDART_VERSION
+       status=cudaErrorInvalidValue
+#elif (CUDART_VERSION < 10010)
+       status=cudaErrorInvalidDevicePointer;
+#else
+       status=cudaErrorNotMappedAsPointer;
+#endif
         PRINTERROR(status, " cudaMalloc cuda_buffer_type :: Reallocation failed!");
     }
 
