@@ -84,9 +84,14 @@ elseif(mkl_ENABLED)
 	set(QUICK_BLAS mkl)
 endif()
 
-# debug time
+# debug options
 option(QUICK_DEBUG_TIME "Compiles a debug version of QUICK that reports more information on timing" FALSE)
-if(QUICK_DEBUG_TIME)
+option(QUICK_DEBUG "Compiles a debug version of QUICK with extra prints enabled." FALSE)
+
+if(QUICK_DEBUG)
+	add_definitions(-DDEBUG)
+endif()
+if(QUICK_DEBUG OR QUICK_DEBUG_TIME)
 	add_definitions(-DDEBUGTIME)
 endif()
 
