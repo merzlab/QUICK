@@ -655,7 +655,7 @@ foreach(TOOL ${3RDPARTY_TOOLS})
 	
 endforeach()
 
-# check math library configuration
+# check math library configurations
 if(LINALG_LIBS_REQUIRED AND NOT (mkl_ENABLED OR (blas_ENABLED AND lapack_ENABLED)))
 	message(FATAL_ERROR "You must enable a linear algebra library -- either blas and lapack, or mkl")
 endif()
