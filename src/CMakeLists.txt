@@ -22,7 +22,8 @@ set(QUICK_MODULES_SOURCES
 	quick_files_module.f90 quick_timer_module.f90 quick_gridpoints_module.f90 
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90 
 	quick_scratch_module.f90 quick_all_module.f90 quick_scf_module.f90 
-	quick_gradient_module.f90 quick_api_module.f90 quick_api_test_module.f90)
+	quick_gradient_module.f90 quick_api_module.f90 quick_api_test_module.f90
+	quick_cutoff_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90 
 	degen.f90 denspt.f90 diag.f90 dipole.f90 
@@ -40,7 +41,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	upcase.f90 vett.f90 whatis.f90 whole.f90 
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90 
 	pt2der.f90 sswder.f90 denspt_new_imp.f90 
-	pteval_new_imp.f90 scaMatMul.f90)
+	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90)
 
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90 fmm.f90 
     getMolSad.f90 getMol.f90 shell.f90 
@@ -80,7 +81,7 @@ endforeach()
 add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
-target_link_libraries(libquick PRIVATE xc octree blas)
+target_link_libraries(libquick PRIVATE xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
 install_libraries(libquick EXPORT QUICK)
 
 # "liblibquick" -> "libquick"
@@ -107,7 +108,7 @@ if(CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_cuda xc octree blas)
+	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS})
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
