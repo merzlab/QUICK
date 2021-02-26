@@ -9,6 +9,7 @@ Note that like all CMake options, these options are sticky.  Once passed to CMak
 - `-DCMAKE_BUILD_TYPE=<Debug|Release>`: Controls whether to build with debugging symbols (`Debug`) or not (`Release`).
 - `-DOPTIMIZE=<TRUE|FALSE>`: Controls whether to enable compiler optimizations.  On by default.
 - `-DCMAKE_INSTALL_PREFIX=...`: Controls where QUICK will be installed when you run `make install`.
+- `-DQUICK_DEBUG=TRUE`: Compiles a debug version of QUICK with extra prints enabled.
 - `-DQUICK_DEBUG_TIME=TRUE`: Compiles a debug version of QUICK that reports more information on timing
 
 #### External library control
