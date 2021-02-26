@@ -63,6 +63,9 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -diag-disable 8291")
 	set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -traceback")
 endif()
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
+	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp") # force use of preprocessor for Fortran files with the "wrong" file extension
+endif()
 
 # blas vs lapack vs MKL selection
 if(lapack_ENABLED)
