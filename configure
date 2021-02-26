@@ -925,7 +925,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
-    if [ "$cudaversion" = "11.0" ]; then
+    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" ]; then
 
       echo "CUDA Version $cudaversion detected"
 
