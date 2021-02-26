@@ -64,11 +64,21 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -traceback")
 endif()
 
-# lapack vs MKL selection
+# blas vs lapack vs MKL selection
 if(lapack_ENABLED)
 	add_definitions(-DLAPACK=1)
+	set(QUICK_LAPACK lapack)
 elseif(mkl_ENABLED)
 	add_definitions(-DMKL=1)
+	set(QUICK_LAPACK mkl)
+else()
+	set(QUICK_LAPACK "")
+endif()
+
+if(blas_ENABLED)
+	set(QUICK_BLAS blas)
+elseif(mkl_ENABLED)
+	set(QUICK_BLAS mkl)
 endif()
 
 # debug time
