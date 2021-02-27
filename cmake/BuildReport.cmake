@@ -112,7 +112,9 @@ function(print_build_report)
 	colormsg("Using host tools from:  " HIBLUE "${HOST_TOOLS_DIR}")
 	endif()
 	colormsg("Install location:       " HIBLUE "${CMAKE_INSTALL_PREFIX}${CMAKE_INSTALL_POSTFIX}")
+	if(DEFINED INSTALL_TESTS)
 	color_print_bool("Installation of Tests:  " "${INSTALL_TESTS}")
+	endif()
 	message("")
 	
 	#------------------------------------------------------------------------------------------
