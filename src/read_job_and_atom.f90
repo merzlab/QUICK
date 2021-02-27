@@ -66,8 +66,7 @@ subroutine read_job_and_atom
       ! read molecule specfication. Note this is step 1 for molspec reading
       ! and this is mainly to read atom number, atom kind and external charge number. 
       call read(quick_molspec,inFile, isTemplate, quick_api%hasKeywd, quick_api%Keywd)
-      call check(quick_molspec, ierr)
-      CHECK_ERROR(ierr)
+      SAFE_CALL(check(quick_molspec, ierr))
 
       if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
