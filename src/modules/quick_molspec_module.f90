@@ -437,7 +437,7 @@ contains
      type (quick_molspec_type), intent(in) :: self
      integer, intent(inout) :: ierr
 
-     if (self%imult /= 1) ierr=11
+     if (self%imult .ne. 1) ierr=11
 
    end subroutine check_quick_molspec
 
