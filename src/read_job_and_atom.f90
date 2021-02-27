@@ -5,6 +5,8 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 
+#include "util.fh"
+
 subroutine read_job_and_atom
    
    ! this subroutine is to read job and atoms
@@ -64,8 +66,8 @@ subroutine read_job_and_atom
       ! read molecule specfication. Note this is step 1 for molspec reading
       ! and this is mainly to read atom number, atom kind and external charge number. 
       call read(quick_molspec,inFile, isTemplate, quick_api%hasKeywd, quick_api%Keywd)
-
-      
+      call check(quick_molspec, ierr)
+      CHECK_ERROR(ierr)
 
       if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
