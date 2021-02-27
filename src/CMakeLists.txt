@@ -121,7 +121,7 @@ if(CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS})
+	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
@@ -140,6 +140,19 @@ if(MPI AND CUDA)
 	install_libraries(libquick_mpi_cuda EXPORT QUICK)
 endif()
 
+# Enable -DLAPACK or -DMKL for non-CUDA versions
+if(lapack_ENABLED)
+	target_compile_definitions(libquick PRIVATE LAPACK=1)
+	if(MPI)
+		target_compile_definitions(libquick_mpi PRIVATE LAPACK=1)
+	endif()
+elseif(mkl_ENABLED)
+	target_compile_definitions(libquick PRIVATE MKL=1)
+	if(MPI)
+		target_compile_definitions(libquick_mpi PRIVATE MKL=1)
+	endif()
+endif()
+
 # create executables
 # --------------------------------------------------------------------
 
@@ -147,11 +160,6 @@ add_executable(quick ${MAIN_SOURCES})
 target_compile_options(quick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
-
-if(mirp_ENABLED)
-	target_compile_definitions(quick PUBLIC MIRP)
-	target_link_libraries(quick mirp::mirp)
-endif()
 
 add_executable(test-api ${TEST_API_SOURCES})
 target_compile_options(test-api PRIVATE ${OPT_FFLAGS})

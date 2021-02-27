@@ -68,10 +68,8 @@ endif()
 
 # blas vs lapack vs MKL selection
 if(lapack_ENABLED)
-	add_definitions(-DLAPACK=1)
 	set(QUICK_LAPACK lapack)
 elseif(mkl_ENABLED)
-	add_definitions(-DMKL=1)
 	set(QUICK_LAPACK ${MKL_FORTRAN_LIBRARIES})
 else()
 	set(QUICK_LAPACK "")
