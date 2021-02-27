@@ -234,7 +234,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRE
 
 # install modules
 if(NOT INSIDE_AMBER)
-	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules DESTINATION include)
+	# install mod dirs
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/ DESTINATION ./include)
 endif()
 
 # install data in basis dir
