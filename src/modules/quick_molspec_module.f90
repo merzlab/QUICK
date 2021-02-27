@@ -101,6 +101,10 @@ module quick_molspec_module
       module procedure read_quick_molspec_2
    end interface read2
 
+   interface check
+     module procedure check_quick_molspec
+   end interface check
+
    interface dealloc
       module procedure deallocate_quick_molspec
    end interface dealloc
@@ -426,7 +430,7 @@ contains
     end subroutine read_quick_molespec_extcharges
 
    ! check if molecular specifications are correct
-   subroutine check_molspec(self, ierr)
+   subroutine check_quick_molspec(self, ierr)
 
      use quick_exception_module
      implicit none
@@ -436,7 +440,7 @@ contains
 
      if (self%imult /= 1) ierr=11
 
-   end subroutine check_molspec
+   end subroutine check_quick_molspec
 
    !-------------------
    ! print varibles
