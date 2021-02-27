@@ -351,9 +351,10 @@ else
    echo  "Warning: Failed to detect $cc version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cc_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+if [ "$osname" = 'osx' ] && [ `echo $cc_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
   cc_version=`$cc_search -v 2>&1 | grep -oE "$version_string" | tail -1`
-  if [ `"$cc_search" -v 2>&1 | grep "clang"` -gt 0 ]; then
+  clang_cc_str = `"$cc_search" -v 2>&1 | grep "clang"`
+  if [ -n $"clang_cc_str" ]; then
     echo  "Error: $cc compiler was requested but clang c compiler is loaded."
     echo  "       Please load the correct compiler."
     exit 1
@@ -400,9 +401,10 @@ else
    echo  "Warning: Failed to detect $cxx version."
 fi
 
-if [ "$os_name" = 'osx' ] && [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
+if [ "$osname" = 'osx' ] && [ `echo $cxx_version | grep -oE "$version_string" | wc -l` -lt 1 ] ; then
   cxx_version=`$cxx_search -v 2>&1 | grep -E "$cxx_search | [vV]ersion " | grep -oE "$version_string" | tail -1`
-  if [ `"$cxx_search" -v 2>&1 | grep "clang"` > 0 ]; then
+  clang_cxx_str = `"$cxx_search" -v 2>&1 | grep "clang"`
+  if [ -n $"clang_cxx_str" ]; then
     echo  "Error: $cxx compiler was requested but clang c++ compiler is loaded."
     echo  "       Please load the correct compiler."
     exit 1
