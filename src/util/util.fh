@@ -32,5 +32,7 @@
 #define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
 #endif
 
-
+! A safe subroutine call with error checking. Must use ierr integer variable
+! to propagate the error.
+#define SAFE_CALL(x) call x ;CHECK_ERROR(ierr)
 
