@@ -133,6 +133,11 @@ target_include_directories(xc PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(xc PUBLIC USE_CMAKE_MANGLING)
 config_module_dirs(xc libxc/serial)
 
+# supress maybe uninitialized warnings
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+	target_compile_options(xc PRIVATE -Wno-maybe-uninitialized)
+endif()
+
 if(MPI)
 	make_mpi_version(xc xc_mpi LANGUAGES C)
 	target_compile_definitions(xc_mpi PUBLIC MPIV)
