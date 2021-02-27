@@ -679,7 +679,7 @@ if(LINALG_LIBS_REQUIRED AND NOT (mkl_ENABLED OR (blas_ENABLED AND lapack_ENABLED
 	message(FATAL_ERROR "You must enable a linear algebra library -- either blas and lapack, or mkl")
 endif()
 
-if(mkl_ENABLED AND (blas_ENABLED AND lapack_ENABLED))
+if(mkl_ENABLED AND (blas_ENABLED OR lapack_ENABLED))
 	# prefer MKL to BLAS
 	set_3rdparty(blas DISABLED)
 	set_3rdparty(lapack DISABLED)
