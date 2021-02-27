@@ -7,6 +7,10 @@ if(blas_INTERNAL AND NOT INSIDE_AMBER)
 	add_subdirectory(blas)
 endif()
 
+if(lapack_INTERNAL AND NOT INSIDE_AMBER)
+	add_subdirectory(lapack)
+endif()
+
 if(CUDA)
 	add_subdirectory(cuda)
 endif()

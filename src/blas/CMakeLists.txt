@@ -45,6 +45,9 @@ set(BLAS_SOURCES
     ztrmm.f ztrsm.f zhemm.f zherk.f 
     zher2k.f lsame.f xerbla.f)
 
-add_library(blas STATIC ${BLAS_SOURCES})
-set_property(TARGET blas PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+add_library(blas ${BLAS_SOURCES})
 target_compile_options(blas PRIVATE ${OPT_FFLAGS})
+install_libraries(blas EXPORT QUICK)
+
+# Prevent name conflict with system BLAS
+set_property(TARGET blas PROPERTY OUTPUT_NAME blas-quick)

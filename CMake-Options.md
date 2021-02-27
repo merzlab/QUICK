@@ -5,6 +5,7 @@ This page gives a summary of CMake options that can be used with QUICK.  All com
 Note that like all CMake options, these options are sticky.  Once passed to CMake, they will remain set unless you set them to a different value (with -D), unset them (with -U), or delete the build directory.
 
 #### General options
+- `-DCOMPILER`: Allows selection of the toolchain to use.  `-DCOMPILER=AUTO` to use CMake default behavior.  Run CMake with no arguments to see the list of options.
 - `-DNOF=TRUE`: Disables the compilation of time consuming f functions in the ERI code of cuda version. Not recommended for production.
 - `-DCMAKE_BUILD_TYPE=<Debug|Release>`: Controls whether to build with debugging symbols (`Debug`) or not (`Release`).
 - `-DOPTIMIZE=<TRUE|FALSE>`: Controls whether to enable compiler optimizations.  On by default.
@@ -19,6 +20,7 @@ These options allow you do adjust this behavior.
 - `-DFORCE_INTERNAL_LIBS=blas`: Forces use of the internal BLAS library even if a system one is available.
 - `-DFORCE_DISABLE_LIBS=mkl`: Disable use of system MKL to replace BLAS and LAPACK 
 - `-DCMAKE_PREFIX_PATH=<path>`: Use the given path as a prefix where dependencies are installed. Libraries and headers will be searched for in `<path>/lib` and `<path>/include`.
+- `-DMKL_HOME=...`: Look for Intel MKL in the given directory.  The environment variable MKL_HOME is also searched.
 
 #### Parallel versions
 By default QUICK will only build the serial version.  This can be changed with these options:
