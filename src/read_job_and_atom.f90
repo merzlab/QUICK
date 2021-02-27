@@ -22,7 +22,7 @@ subroutine read_job_and_atom
    
    ! Instant variables
    integer i,j,k
-   integer istrt,ierror
+   integer istrt,ierr
    character(len=200) :: keyWD
    character(len=20) :: tempstring
 
@@ -72,7 +72,7 @@ subroutine read_job_and_atom
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
       if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then
          istrt = index(keywd,'TOL_ECPINT=')+10
-         call rdinum(keywd,istrt,itolecp,ierror)
+         call rdinum(keywd,istrt,itolecp,ierr)
          tolecp=2.30258d+00*itolecp
          thrshecp=10.0d0**(-1.0d0*itolecp)
          write(iOutFile,'("THRESHOLD FOR ECP-INTEGRALS PRESCREENING = ", &
