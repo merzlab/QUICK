@@ -43,6 +43,10 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90 
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90)
 
+if(mirp_ENABLED)
+	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
+endif()
+
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90 fmm.f90 
     getMolSad.f90 getMol.f90 shell.f90 
     quick_one_electron_integral.f90 getEnergy.f90 inidivcon.f90 
@@ -83,6 +87,11 @@ target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
 install_libraries(libquick EXPORT QUICK)
+
+if(mirp_ENABLED)
+	target_compile_definitions(libquick PRIVATE  MIRP)
+	target_link_libraries(libquick PRIVATE mirp::mirp)
+endif()
 
 # "liblibquick" -> "libquick"
 set_property(TARGET libquick PROPERTY OUTPUT_NAME quick)
@@ -134,6 +143,11 @@ add_executable(quick ${MAIN_SOURCES})
 target_compile_options(quick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
+
+if(mirp_ENABLED)
+	target_compile_definitions(quick PUBLIC MIRP)
+	target_link_libraries(quick mirp::mirp)
+endif()
 
 add_executable(test-api ${TEST_API_SOURCES})
 target_compile_options(test-api PRIVATE ${OPT_FFLAGS})

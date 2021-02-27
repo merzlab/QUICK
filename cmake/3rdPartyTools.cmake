@@ -29,7 +29,8 @@ mpi4py
 perlmol
 boost
 nccl
-mbx)
+mbx
+mirp)
 
 set(3RDPARTY_TOOL_USES
 "for fundamental linear algebra calculations"                                     
@@ -55,7 +56,8 @@ set(3RDPARTY_TOOL_USES
 "chemistry library used by FEW"
 "C++ support library"
 "NVIDIA parallel GPU communication library"
-"computes energies and forces for pmemd with the MB-pol model")                                                  
+"computes energies and forces for pmemd with the MB-pol model"
+"MolSSI Integral Reference Project library for computing the Boys function in QUICK")                                                  
 
 # Logic to disable tools
 set(3RDPARTY_SUBDIRS "")
@@ -573,6 +575,23 @@ if(NEED_mbx)
 	endif()
 endif()
 
+#------------------------------------------------------------------------------
+#  MIRP
+# (https://github.com/MolSSI/MIRP)
+#------------------------------------------------------------------------------ 
+
+if(NEED_mirp)
+	find_package(mirp 1.0.1 CONFIG)
+
+	if(mirp_FOUND)
+		set_3rdparty(mirp EXTERNAL)
+	else()
+		message(STATUS "Could not find mirp.  To locate it, add its install dir to the prefix path.")
+		set_3rdparty(mirp DISABLED)
+	endif()
+endif()
+
+
 # we can now reset this back to the default behavior -- targets will be made PIC as needed in the individual CMake scripts
 unset(CMAKE_POSITION_INDEPENDENT_CODE)
 
@@ -1001,4 +1020,12 @@ endif()
 
 if(mbx_EXTERNAL)
 	using_library_targets(MBX::mbx)
+endif()
+
+#------------------------------------------------------------------------------
+#  mirp
+#------------------------------------------------------------------------------ 
+
+if(mirp_EXTERNAL)
+	using_library_targets(mirp::mirp)
 endif()

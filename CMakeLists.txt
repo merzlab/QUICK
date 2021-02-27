@@ -18,7 +18,7 @@ if(NOT INSIDE_AMBER)
 	include(CudaConfig)
 
 	set(LINALG_LIBS_REQUIRED TRUE)
-	set(NEEDED_3RDPARTY_TOOLS blas lapack mkl)
+	set(NEEDED_3RDPARTY_TOOLS blas lapack mkl mirp)
 	set(REQUIRED_3RDPARTY_TOOLS )
 	set(BUNDLED_3RDPARTY_TOOLS blas)
 	include(3rdPartyTools)
