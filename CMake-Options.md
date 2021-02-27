@@ -10,17 +10,15 @@ Note that like all CMake options, these options are sticky.  Once passed to CMak
 - `-DOPTIMIZE=<TRUE|FALSE>`: Controls whether to enable compiler optimizations.  On by default.
 - `-DCMAKE_INSTALL_PREFIX=...`: Controls where QUICK will be installed when you run `make install`.
 - `-DQUICK_DEBUG=TRUE`: Compiles a debug version of QUICK with extra prints enabled.
-- `-DQUICK_DEBUG_TIME=TRUE`: Compiles a debug version of QUICK that reports more information on timing
+- `-DQUICK_DEBUG_TIME=TRUE`: Compiles a debug version of QUICK that reports more information on timing.
 
 #### External library control
 QUICK will use all external libraries that it can find (and which appear to work) on the system.
 These options allow you do adjust this behavior.
 
 - `-DFORCE_INTERNAL_LIBS=blas`: Forces use of the internal BLAS library even if a system one is available.
-- `"-DFORCE_DISABLE_LIBS=..."`:
-  - This option can be set to a semicolon-separated list of libraries to not use.  Possible values:
-    - `lapack`: Disable use of system LAPACK as a diagonalizer
-    - `mkl`: Disable use of system MKL to replace BLAS and LAPACK 
+- `-DFORCE_DISABLE_LIBS=mkl`: Disable use of system MKL to replace BLAS and LAPACK 
+- `-DCMAKE_PREFIX_PATH=<path>`: Use the given path as a prefix where dependencies are installed. Libraries and headers will be searched for in `<path>/lib` and `<path>/include`.
 
 #### Parallel versions
 By default QUICK will only build the serial version.  This can be changed with these options:
