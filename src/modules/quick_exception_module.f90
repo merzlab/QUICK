@@ -47,10 +47,15 @@ contains
     integer, intent(in) :: ierr
     character(len=200) :: msg = ''
 
+    write(*,*) ierr
+
     select case(ierr)
 
     case(10)
       msg='f basis functions are currently not supported.'
+
+    case(11)
+      msg='UHF/UDFT is currently not implemented.'
 
     case default
       msg='Unknown error.'
