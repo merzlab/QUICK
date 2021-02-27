@@ -425,6 +425,19 @@ contains
 
     end subroutine read_quick_molespec_extcharges
 
+   ! check if molecular specifications are correct
+   subroutine check_molspec(self, ierr)
+
+     use quick_exception_module
+     implicit none
+
+     type (quick_molspec_type), intent(in) :: self
+     integer, intent(inout) :: ierr
+
+     if (self%imult /= 1) ierr=11
+
+   end subroutine check_molspec
+
    !-------------------
    ! print varibles
    !-------------------
