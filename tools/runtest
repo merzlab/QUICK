@@ -32,6 +32,7 @@ installdir=`pwd`
 testdir="$installdir/test"
 qbasisdir="$installdir/basis"
 qbindir="$installdir/bin"
+export QUICK_HOME=$installdir
 
 # executables
 
@@ -84,7 +85,7 @@ print_test_info(){
 
   ismp2='no'
 
-  case "$i" in
+  case "$t" in
     ene_psb5_rhf_631g)            echo "RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)          echo "RHF energy test: s, p and d basis functions";;
     ene_psb3_blyp_631g)           echo "DFT energy test: s and p basis functions, native BLYP functional";;
@@ -103,6 +104,39 @@ print_test_info(){
     opt_wat_rhf_ccpvdz)           echo "RHF geometry optimization test: s, p and d basis functions";;
   esac
 
+}
+
+# function to run tests. t, tc and total are test name, test count and 
+# total test count respectively. accuracy sets the tolerance. 
+run_test(){
+
+    echo "Running test $tc of $total"
+    cp "$testdir/$t.in" ./
+
+    print_test_info "$t"
+
+    # Run the test case
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+      $DO_PARALLEL "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
+    else
+      "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "Error: $qexe execution failed."
+      echo ""
+      exit 1
+    fi
+
+    # Check the accuracy
+    accuracy='4.0e-3'
+    cp "$testdir/saved/$t.out" "$t.ref.out"
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.out" "$t.out"
+    /bin/rm -f "$t.ref.out" "$t.in" ddtmp* 
+
+    echo ""
+    tc=$((tc+1))
+  
 }
 
 #  !---------------------------------------------------------------------!
@@ -239,7 +273,7 @@ for buildtype in $buildtypes; do
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo  "Testing $buildtype version started on $cdate at $ctime. "
+  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. "
   echo ""
 
   # set qexe
@@ -254,166 +288,29 @@ for buildtype in $buildtypes; do
   fi
 
 
-  total=`cat "$testdir/testlist.txt" |wc -l`
-  a=1
+  total=`cat "$testdir/testlist.txt" |wc -l` # total number of test cases
+  tc=1 # test count
   cd "$testdir/runs/$buildtype"
 
   # Run energy tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/$i.in" ./
-	
-    # This variable will keep the information of jobcard
-    jobcard=`head -1 "$i.in"`
-    enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
-
-    print_test_info "$i"
-
-    # Run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
-      $DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    else
-      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
-    fi
-
-    # Check the accuracy
-    # For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
-    if [ "$enecalc" -gt 0 -a "$ismp2" = 'yes' ]; then
-
-      refval=`grep "#MP2_ENERGY" "$i.in" |awk '{print $2}'`
-      newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
-      echo "$refval  $newval"|awk '{
-        x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-        print "MP2 energy: " $2 ", Reference value: " $1 ". " stat""
-      }'                         
-
-    else 
-
-      refval=`grep "#TOTAL_ENERGY" "$i.in" | awk '{print $2}'`
-      newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
-      echo "$refval  $newval"|awk '{
-        x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-        print "Total energy: " $2 ", Reference value: " $1 ". " stat""
-      }'	
-
-    fi
-
-    echo ""
-    a=$((a+1))
+  for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+    run_test
   done
-
-
 
   # Run gradient tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/$i.in" ./
-
-    #This variable will keep the information of jobcard
-    jobcard=`head -1 "$i.in"`
-    gradcalc=`echo $jobcard | grep 'GRADIENT' | wc -l`
-
-    print_test_info "$i"
-
-    # run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
-      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    else
-      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    fi    
-
-    # Check the energy
-    refval=`grep "#TOTAL_ENERGY" "$i.in" | awk '{print $2}'`
-    newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
-    echo "$refval  $newval"|awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Total energy: " $2 ", Reference value: " $1 ". " stat""
-    }'	
-    echo ""	
-
-    #Check the accuracy of gradients of first step
-    grep "#ref_grad" "$i.in" |awk '{print $2}'>refGrad.txt
-    natoms=`grep "TOTAL ATOM NUMBER" "$i.out"| awk '{print $5}'`
-    sed -n '/ANALYTICAL GRADIENT/,+'$(($natoms*3+4))' p' "$i.out" | grep -E '[0-9][XYZ]' | awk '{print $3}' > newGrad.txt 
-    paste refGrad.txt newGrad.txt >compGrad.txt
-    awk '{
-    x=sqrt(($1-$2)^2); 
-    if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-    print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
-    }' compGrad.txt
-    echo ""
-
-    # remove gradient info files
-    rm refGrad.txt newGrad.txt compGrad.txt
-
-    # compare point charge gradients
-    nextatoms=`grep "NUMBER OF EXTERNAL POINT CHARGES" "$i.out"| awk '{print $7}'`
-    if [ ! -z "$nextatoms" ]; then 
-      grep "#ref_ptchg_grad" "$i.in" |awk '{print $2}'>refGrad.txt
-      sed -n '/POINT CHARGE GRADIENT/,+'$(($nextatoms*3+4))' p' "$i.out" | grep -E '[0-9][XYZ]' | awk '{print $3}' > newGrad.txt
-      paste refGrad.txt newGrad.txt >compGrad.txt
-      awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Final point charge gradient: " $2 ", Reference value: " $1 ". " stat""
-      }' compGrad.txt
-      echo ""      
-      
-      # remove gradient info files
-      rm refGrad.txt newGrad.txt compGrad.txt
-    fi
-
-    a=$((a+1))	
+  for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+    run_test
   done
-
 
   # Run geometry optimization tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/${i}.in" ./
-
-    print_test_info "$i"
-
-    # Run the test case
-    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
-
-    # Check the accuracy of gradients of first step
-    grep "#ref_grad" "$i.in" | awk '{print $2}'>refGrad.txt
-    sed -n '/GEOMETRY FOR OPTIMIZATION STEP   1/,/GEOMETRY FOR OPTIMIZATION STEP   2/p' "$i.out" | sed -n '/NEW_GRAD/,/OPTIMZATION STATISTICS/p' |grep '[0-9]' |awk '{print $4}'>newGrad.txt
-    paste refGrad.txt newGrad.txt >compGrad.txt
-    awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
-      }' compGrad.txt
-    echo ""
-      
-    # remove gradient info files
-    rm refGrad.txt newGrad.txt compGrad.txt
-      
-    # Check the minimum energy
-    refval=$(grep "#ref_min_ene" "$i.in" | awk '{print $2}')
-    newval=$(grep "TOTAL ENERGY" "$i.out" |tail -1 | awk '{print $4}')
-    echo "$refval  $newval"|awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Minimized energy: " $2 ", Reference value: " $1 ". " stat""
-      }'
-    echo ""
-
-    a=$((a+1))		
-
+  for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+    run_test
   done
 	
-  echo "$buildtype tests are done. All input and output files are located in $testdir/runs/$buildtype."
+  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype."
   echo ""
   cd "$testdir"
 done
-
-echo  "All tests are done! "
 
 cd $installdir
 
