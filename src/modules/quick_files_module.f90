@@ -38,8 +38,8 @@ module quick_files_module
 
 
     ! Basis set and directory
-    character(len=80) :: basisDir       = ''
-    character(len=120) :: basisFileName = ''
+    character(len=240) :: basisDir       = ''
+    character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
 
     ! ecp basis set and directory
@@ -85,10 +85,9 @@ module quick_files_module
 
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
-        call getenv("QUICK_BASIS",basisdir)
-        basisdir=trim(basisdir)
+        call get_environment_variable("QUICK_BASIS",basisdir)
 
-        call getenv("ECPs",ecpdir)
+        call get_environment_variable("ECPs",ecpdir)
 
         ! Read argument, which is input file, usually ".in" file and prepare files:
         ! .out: output file
@@ -133,7 +132,7 @@ module quick_files_module
         !Pass-in Parameter
         character keywd*(*)
         character(len=80) :: line
-        character(len=120) :: basis_sets  !stores full path to basis_sets file
+        character(len=320) :: basis_sets  !stores full path to basis_sets file
         character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
         character(len=16) :: tmp_keywd
         character(len=16) :: tmp_basisfilename
@@ -148,12 +147,6 @@ module quick_files_module
         io = 0
         tmp_basisfilename = "NULL"
 
-
-!        call EffChar(basisdir,i,j,k1,k2)
-
-!        call rdword(ecpdir,k3,k4) !AG 03/05/2007
-!        call EffChar(ecpdir,i,j,k3,k4)
-
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
         if (index(keywd,'BASIS=') /= 0) then
 
@@ -164,15 +157,12 @@ module quick_files_module
 
             j = scan(keywd(i:lenkwd),' ',.false.)
 
-            !write(basis_sets,*)  trim(basisdir),"/basis_link"
             basis_sets=trim(basisdir) // "/basis_link"
 
             basisSetName = keywd(i+6:i+j-2)
             search_keywd= "#" // trim(basisSetName)
 
             ! Check if the basis_link file exists
-            !flen=len(basis_sets)
-            !call EffChar(basis_sets,1,flen,f0,f1)
 
             inquire(file=trim(basis_sets),exist=fexist)
             if (.not.fexist) then
@@ -241,14 +231,8 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        call EffChar(basisfilename,1,80,k1,k2)
-        do i=k1,k2
-            if (basisfilename(i:i).eq.'/') j=i
-        enddo
-
-        !write(io,'(" BASIS SET = ",a)') basisfilename(j+1:k2)
         write(io,'(" BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
-        write(io,'("| BASIS FILE = ",a)') basisfilename(k1:k2)
+        write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
 
     end subroutine
 
@@ -261,8 +245,7 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        call EffChar(ecpfilename,1,80,k1,k2)
-        write(io,'("| ECP FILE = ",a)') ecpfilename(k1:k2)
+        write(io,'("| ECP FILE = ",a)') trim(ecpfilename)
     end subroutine
 
 
@@ -273,18 +256,12 @@ module quick_files_module
         integer ierr    ! Error Flag
         integer io      ! file to write
 
-        integer k1,k2
-
         ierr=1
 
-        call EffChar(inFileName,1,30,k1,k2)
-        write (io,'("| INPUT FILE :    ",a)') inFileName(k1:k2)
-        call EffChar(outFileName,1,30,k1,k2)
-        write (io,'("| OUTPUT FILE:    ",a)') outFileName(k1:k2)
-        call EffChar(dataFileName,1,30,k1,k2)
-        write (io,'("| DATE FILE  :    ",a)') dataFileName(k1:k2)
-        call EffChar(basisdir,1,80,k1,k2)
-        write (io,'("| BASIS SET PATH: ",a)') basisdir(k1:k2)
+        write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
+        write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
+        write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
+        write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
         ierr=0
         return
