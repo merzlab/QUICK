@@ -85,10 +85,9 @@ module quick_files_module
 
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
-        call getenv("QUICK_BASIS",basisdir)
-        basisdir=trim(basisdir)
+        call get_environment_variable("QUICK_BASIS",basisdir)
 
-        call getenv("ECPs",ecpdir)
+        call get_environment_variable("ECPs",ecpdir)
 
         ! Read argument, which is input file, usually ".in" file and prepare files:
         ! .out: output file
