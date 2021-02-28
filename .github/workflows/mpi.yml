@@ -26,8 +26,4 @@ jobs:
         with:
             name: mpi-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
-      - uses: actions/download-artifact@v2
-        with:
-            name: mpi-tests
-      - name: Display structure of artifacts
-        run: ls -R
+
