@@ -38,8 +38,8 @@ module quick_files_module
 
 
     ! Basis set and directory
-    character(len=80) :: basisDir       = ''
-    character(len=120) :: basisFileName = ''
+    character(len=200) :: basisDir       = ''
+    character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
 
     ! ecp basis set and directory
@@ -133,7 +133,7 @@ module quick_files_module
         !Pass-in Parameter
         character keywd*(*)
         character(len=80) :: line
-        character(len=120) :: basis_sets  !stores full path to basis_sets file
+        character(len=320) :: basis_sets  !stores full path to basis_sets file
         character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
         character(len=16) :: tmp_keywd
         character(len=16) :: tmp_basisfilename
