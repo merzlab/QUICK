@@ -147,12 +147,6 @@ module quick_files_module
         io = 0
         tmp_basisfilename = "NULL"
 
-
-!        call EffChar(basisdir,i,j,k1,k2)
-
-!        call rdword(ecpdir,k3,k4) !AG 03/05/2007
-!        call EffChar(ecpdir,i,j,k3,k4)
-
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
         if (index(keywd,'BASIS=') /= 0) then
 
@@ -163,15 +157,12 @@ module quick_files_module
 
             j = scan(keywd(i:lenkwd),' ',.false.)
 
-            !write(basis_sets,*)  trim(basisdir),"/basis_link"
             basis_sets=trim(basisdir) // "/basis_link"
 
             basisSetName = keywd(i+6:i+j-2)
             search_keywd= "#" // trim(basisSetName)
 
             ! Check if the basis_link file exists
-            !flen=len(basis_sets)
-            !call EffChar(basis_sets,1,flen,f0,f1)
 
             inquire(file=trim(basis_sets),exist=fexist)
             if (.not.fexist) then
@@ -240,12 +231,6 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        !call EffChar(basisfilename,1,80,k1,k2)
-        !do i=k1,k2
-        !    if (basisfilename(i:i).eq.'/') j=i
-        !enddo
-
-        !write(io,'(" BASIS SET = ",a)') basisfilename(j+1:k2)
         write(io,'(" BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
         write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
 
@@ -260,7 +245,6 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        !call EffChar(ecpfilename,1,80,k1,k2)
         write(io,'("| ECP FILE = ",a)') trim(ecpfilename)
     end subroutine
 
@@ -272,17 +256,11 @@ module quick_files_module
         integer ierr    ! Error Flag
         integer io      ! file to write
 
-        integer k1,k2
-
         ierr=1
 
-        !call EffChar(inFileName,1,30,k1,k2)
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
-        !call EffChar(outFileName,1,30,k1,k2)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
-        !call EffChar(dataFileName,1,30,k1,k2)
         write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
-        !call EffChar(basisdir,1,80,k1,k2)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
         ierr=0
