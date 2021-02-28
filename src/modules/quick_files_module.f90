@@ -240,14 +240,14 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        call EffChar(basisfilename,1,80,k1,k2)
-        do i=k1,k2
-            if (basisfilename(i:i).eq.'/') j=i
-        enddo
+        !call EffChar(basisfilename,1,80,k1,k2)
+        !do i=k1,k2
+        !    if (basisfilename(i:i).eq.'/') j=i
+        !enddo
 
         !write(io,'(" BASIS SET = ",a)') basisfilename(j+1:k2)
         write(io,'(" BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
-        write(io,'("| BASIS FILE = ",a)') basisfilename(k1:k2)
+        write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
 
     end subroutine
 
@@ -282,8 +282,8 @@ module quick_files_module
         write (io,'("| OUTPUT FILE:    ",a)') outFileName(k1:k2)
         call EffChar(dataFileName,1,30,k1,k2)
         write (io,'("| DATE FILE  :    ",a)') dataFileName(k1:k2)
-        call EffChar(basisdir,1,80,k1,k2)
-        write (io,'("| BASIS SET PATH: ",a)') basisdir(k1:k2)
+        !call EffChar(basisdir,1,80,k1,k2)
+        write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
         ierr=0
         return
