@@ -260,8 +260,8 @@ module quick_files_module
         ! instant variables
         integer i,j,k1,k2
 
-        call EffChar(ecpfilename,1,80,k1,k2)
-        write(io,'("| ECP FILE = ",a)') ecpfilename(k1:k2)
+        !call EffChar(ecpfilename,1,80,k1,k2)
+        write(io,'("| ECP FILE = ",a)') trim(ecpfilename)
     end subroutine
 
 
@@ -276,12 +276,12 @@ module quick_files_module
 
         ierr=1
 
-        call EffChar(inFileName,1,30,k1,k2)
-        write (io,'("| INPUT FILE :    ",a)') inFileName(k1:k2)
-        call EffChar(outFileName,1,30,k1,k2)
-        write (io,'("| OUTPUT FILE:    ",a)') outFileName(k1:k2)
-        call EffChar(dataFileName,1,30,k1,k2)
-        write (io,'("| DATE FILE  :    ",a)') dataFileName(k1:k2)
+        !call EffChar(inFileName,1,30,k1,k2)
+        write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
+        !call EffChar(outFileName,1,30,k1,k2)
+        write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
+        !call EffChar(dataFileName,1,30,k1,k2)
+        write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
         !call EffChar(basisdir,1,80,k1,k2)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
