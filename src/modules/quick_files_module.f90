@@ -38,7 +38,7 @@ module quick_files_module
 
 
     ! Basis set and directory
-    character(len=200) :: basisDir       = ''
+    character(len=240) :: basisDir       = ''
     character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
 
