@@ -144,7 +144,6 @@ set_test(){
 }
 
 
-
 # function to run tests. t, tc and total are test name, test count and 
 # total test count respectively. accuracy sets the tolerance. 
 run_test(){
@@ -169,12 +168,17 @@ run_test(){
     # Check the accuracy
     accuracy='4.0e-3'
     "$testdir/dacdif" -k -a "$accuracy" "$t.ref.out" "$t.out"
-    /bin/rm -f "$t.ref.out" "$t.in" ddtmp* 
 
     echo ""
     tc=$((tc+1))
   
 }
+
+# function to clean up files
+clean_up(){
+    /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+}
+
 
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !
@@ -351,6 +355,7 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
       set_test
       run_test
+      clean_up
     done
   fi
 
@@ -359,6 +364,7 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
       set_test
       run_test
+      clean_up
     done
   fi
 
@@ -367,6 +373,7 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
       set_test
       run_test
+      clean_up
     done
   fi
 	
