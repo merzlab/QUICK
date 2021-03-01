@@ -116,11 +116,33 @@ print_test_info(){
 
 }
 
+# function to get the total number of tests
+get_total_tests(){
+
+  if [ "$test_ene" = 'yes' ]; then
+    tot_ene_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "ene" | wc -l`
+    total_tests=$((total_tests+tot_ene_tests))
+  fi
+
+  if [ "$test_grad" = 'yes' ]; then
+    tot_grad_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "grad" | wc -l`
+    total_tests=$((total_tests+tot_grad_tests))
+  fi
+
+  if [ "$test_opt" = 'yes' ]; then
+    tot_opt_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "opt" | wc -l`
+    total_tests=$((total_tests+tot_opt_tests))
+  fi
+
+}
+
+
+
 # function to run tests. t, tc and total are test name, test count and 
 # total test count respectively. accuracy sets the tolerance. 
 run_test(){
 
-    echo "Running test $tc of $total"
+    echo "Running test $tc of $total_tests"
     cp "$testdir/$t.in" ./
 
     print_test_info "$t"
@@ -311,7 +333,11 @@ for buildtype in $buildtypes; do
   fi
 
 
-  total=`cat "$testdir/testlist.txt" |wc -l` # total number of test cases
+  total_tests=0 # total number of test cases
+
+  # get the number of tests to run
+  get_total_tests
+
   tc=1 # test count
   cd "$testdir/runs/$buildtype"
 
