@@ -270,7 +270,7 @@ for buildtype in $buildtypes; do
     print_test_info "$i"
 
     # Run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
       $DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
     else
       "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
@@ -378,7 +378,11 @@ for buildtype in $buildtypes; do
     print_test_info "$i"
 
     # Run the test case
-    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
+	$DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
+    else
+	"$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
+    fi
 
     # Check the accuracy of gradients of first step
     grep "#ref_grad" "$i.in" | awk '{print $2}'>refGrad.txt
