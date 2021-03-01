@@ -325,13 +325,14 @@ echo ""
 
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
-if [ -z "$DO_PARALLEL" ]; then
-   export DO_PARALLEL=" "
-   echo  "Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core."
-else
-   ismpirun='yes'
-   echo  "MPI command: $DO_PARALLEL"
-fi
+  if [ -z "$DO_PARALLEL" ]; then
+    echo "Error: DO_PARALLEL variable must be set for MPI/CUDAMPI tests."
+    echo ""
+    exit 1
+  else
+    ismpirun='yes'
+    echo  "MPI command: $DO_PARALLEL"
+  fi
   echo ""
 fi
 
