@@ -196,6 +196,17 @@ check_gradient(){
 
 }
 
+# check optimized geometry and force element
+check_opt(){
+
+    accuracy='4.0e-3'
+
+    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
+    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt"
+
+}
 
 
 
@@ -407,6 +418,7 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
       set_test
       run_test
+      check_opt
       clean_up
 
       echo ""
