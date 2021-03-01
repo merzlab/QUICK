@@ -208,6 +208,17 @@ check_opt(){
 
 }
 
+# check mulliken charges and dipole
+check_dipole(){
+
+    accuracy='4.0e-3'
+
+    awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.ref.out" > "$t.ref.dipole"
+    awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.out" > "$t.dipole"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole"
+
+}
 
 
 # function to clean up files
@@ -392,6 +403,7 @@ for buildtype in $buildtypes; do
       set_test
       run_test
       check_energy
+      check_dipole
       clean_up
 
       echo ""
@@ -406,6 +418,7 @@ for buildtype in $buildtypes; do
       run_test
       check_energy
       check_gradient
+      check_dipole
       clean_up
 
       echo ""
@@ -419,6 +432,7 @@ for buildtype in $buildtypes; do
       set_test
       run_test
       check_opt
+      check_dipole
       clean_up
 
       echo ""
