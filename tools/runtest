@@ -55,6 +55,12 @@ ismp2=''
 cdate=''
 ctime=''
 
+# test types
+test_ene='no'
+test_grad='no'
+test_opt='no'
+uspec_test='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -70,6 +76,10 @@ echo  "
       --mpi          Tests QUICK MPI prallel version                           
       --cuda         Tests QUICK GPU version
       --cudampi      Tests QUICK multi-GPU version
+      --ene          Run only energy tests
+      --grad         Run only gradient tests
+      --opt          Run only geometry optimization tests
+
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
