@@ -136,6 +136,13 @@ get_total_tests(){
 
 }
 
+# function to set files for a test run
+set_test(){
+
+  cp "$testdir/$t.in" ./
+  cp "$testdir/saved/$t.out" "$t.ref.out"
+}
+
 
 
 # function to run tests. t, tc and total are test name, test count and 
@@ -143,7 +150,6 @@ get_total_tests(){
 run_test(){
 
     echo "Running test $tc of $total_tests"
-    cp "$testdir/$t.in" ./
 
     print_test_info "$t"
 
@@ -162,7 +168,6 @@ run_test(){
 
     # Check the accuracy
     accuracy='4.0e-3'
-    cp "$testdir/saved/$t.out" "$t.ref.out"
     "$testdir/dacdif" -k -a "$accuracy" "$t.ref.out" "$t.out"
     /bin/rm -f "$t.ref.out" "$t.in" ddtmp* 
 
@@ -344,6 +349,7 @@ for buildtype in $buildtypes; do
   # Run energy tests
   if [ "$test_ene" = 'yes' ]; then
     for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+      set_test
       run_test
     done
   fi
@@ -351,6 +357,7 @@ for buildtype in $buildtypes; do
   # Run gradient tests
   if [ "$test_grad" = 'yes' ]; then
     for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+      set_test
       run_test
     done
   fi
@@ -358,6 +365,7 @@ for buildtype in $buildtypes; do
   # Run geometry optimization tests
   if [ "$test_opt" = 'yes' ]; then
     for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+      set_test
       run_test
     done
   fi
