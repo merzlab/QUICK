@@ -164,10 +164,6 @@ run_test(){
       echo ""
       exit 1
     fi
-
-
-    echo ""
-    tc=$((tc+1))
   
 }
 
