@@ -115,27 +115,27 @@ function(resolve_cmake_library_list LIB_PATH_OUTPUT)
 		elseif(TARGET "${LIBRARY}")
 			
 			get_property(TARGET_LIB_TYPE TARGET ${LIBRARY} PROPERTY TYPE)
-						
+
+			# Target -- check for any library dependencies
+			get_property(LIB_DEPENDENCIES TARGET ${LIBRARY} PROPERTY INTERFACE_LINK_LIBRARIES)
+
+			if(NOT "${LIB_DEPENDENCIES}" STREQUAL "")
+			
+				# avoid infinite recursion if somebody accidentally made an interface library depend on itself
+				list(REMOVE_ITEM LIB_DEPENDENCIES "${LIBRARY}")
+								
+				# now parse those dependencies!
+				resolve_cmake_library_list(INTERFACE_DEPS_LIB_PATHS ${LIB_DEPENDENCIES})
+
+				list(APPEND LIB_PATHS ${INTERFACE_DEPS_LIB_PATHS})
+			endif()
+
 			# it's an error to check if an interface library has an imported location
-			if("${TARGET_LIB_TYPE}" STREQUAL "INTERFACE_LIBRARY")
-				
-				# interface library -- but it will have dependencies that we need to get.
-				get_property(INTERFACE_LIB_DEPENDENCIES TARGET ${LIBRARY} PROPERTY INTERFACE_LINK_LIBRARIES)
-				
-				if(NOT "${INTERFACE_LIB_DEPENDENCIES}" STREQUAL "")
-				
-					# avoid infinite recursion if somebody accidentally made an interface library depend on itself
-					list(REMOVE_ITEM INTERFACE_LIB_DEPENDENCIES "${LIBRARY}")
-									
-					# now parse those dependencies!
-					resolve_cmake_library_list(INTERFACE_DEPS_LIB_PATHS ${INTERFACE_LIB_DEPENDENCIES})
-	
-					list(APPEND LIB_PATHS ${INTERFACE_DEPS_LIB_PATHS})
-				endif()				
-			else()
+			if(NOT "${TARGET_LIB_TYPE}" STREQUAL "INTERFACE_LIBRARY")
 				# must be either imported or an actual target
 				get_property(LIBRARY_HAS_IMPORTED_LOCATION TARGET ${LIBRARY} PROPERTY IMPORTED_LOCATION SET)
 				get_property(LIBRARY_HAS_IMPORTED_CONFIGURATIONS TARGET ${LIBRARY} PROPERTY IMPORTED_CONFIGURATIONS SET)
+
 
 				if(LIBRARY_HAS_IMPORTED_LOCATION)
 					# CMake imported target

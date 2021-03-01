@@ -8,6 +8,7 @@ if(NOT INSIDE_AMBER)
 	# initialization and include paths
 	#-------------------------------------------------------------
 	include(cmake/AmberBuildSystemInit.cmake NO_POLICY_SCOPE)
+	list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
 	#now enable the languages
 	enable_language(C CXX Fortran)
@@ -143,6 +144,7 @@ install(DIRECTORY test DESTINATION .)
 
 # install tests
 install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
+install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
 
 #--------------------------------------------------------------	
 # build report
