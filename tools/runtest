@@ -165,14 +165,24 @@ run_test(){
       exit 1
     fi
 
-    # Check the accuracy
-    accuracy='4.0e-3'
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.out" "$t.out"
 
     echo ""
     tc=$((tc+1))
   
 }
+
+# check electronic, nuclear and total energy
+check_energy(){
+    
+    accuracy='4.0e-5'
+
+    awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.ref.out" > "$t.ref.ene"
+    awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.out" > "$t.ene"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene"
+
+}
+
 
 # function to clean up files
 clean_up(){
@@ -355,7 +365,11 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
       set_test
       run_test
+      check_energy
       clean_up
+
+      echo ""
+      tc=$((tc+1))
     done
   fi
 
@@ -364,7 +378,11 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
       set_test
       run_test
+      check_energy
       clean_up
+
+      echo ""
+      tc=$((tc+1))
     done
   fi
 
@@ -374,6 +392,9 @@ for buildtype in $buildtypes; do
       set_test
       run_test
       clean_up
+
+      echo ""
+      tc=$((tc+1))
     done
   fi
 	
