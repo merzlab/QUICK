@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sat Feb 27 20:36:59 2021
+| TASK STARTS ON: Sun Feb 28 18:22:56 2021
 | INPUT FILE :    grad_psb3_b3lyp_631g.in
 | OUTPUT FILE:    grad_psb3_b3lyp_631g.out
 | DATE FILE  :    grad_psb3_b3lyp_631g.dat
-| BASIS SET PATH: /server-home1/madu/Work/Qk/issue66/basis
+| BASIS SET PATH: /server-home1/madu/Work/Qk/fix66/basis
 
  @ Read Job And Atom
 
@@ -76,7 +76,7 @@
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/issue66/basis/6-31G.BAS
+| BASIS FILE = /server-home1/madu/Work/Qk/fix66/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -180,20 +180,20 @@
 ------------------------------------------------------------------------------------------------------------------------
 NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.939483810      ------         0.869     1        0.00      0.87      0.00    0.2214E+01  0.5457E-01  0.5449E+00
-|  2   -249.630780920  -.130870E+01       0.934     2        0.00      0.93      0.00    0.1467E+00  0.2573E-01  0.2531E+00
-|  3   -249.484825064  -.145956E+00       0.953     3        0.00      0.95      0.00    0.1800E+00  0.1983E-01  0.2408E+00
-|  4   -249.746752443  0.261927E+00       0.929     4        0.00      0.93      0.00    0.7637E-01  0.5010E-02  0.7963E-01
-|  5   -249.764864479  0.181120E-01       0.943     5        0.00      0.94      0.00    0.2623E-01  0.1455E-02  0.2915E-01
-|  6   -249.766515511  0.165103E-02       0.959     6        0.00      0.96      0.00    0.9704E-02  0.5197E-03  0.7909E-02
-|  7   -249.766893547  0.378037E-03       0.997     7        0.00      0.99      0.00    0.1176E-02  0.9002E-04  0.1246E-02
-|  8   -249.766898488  0.494095E-05       0.996     8        0.00      0.99      0.00    0.4010E-03  0.3064E-04  0.4132E-03
-|  9   -249.766899132  0.643963E-06       1.011     9        0.00      1.01      0.00    0.1774E-03  0.9718E-05  0.1279E-03
+|  1   -250.939483810      ------         0.773     1        0.00      0.77      0.00    0.2214E+01  0.5457E-01  0.5449E+00
+|  2   -249.630780920  -.130870E+01       0.862     2        0.00      0.86      0.00    0.1467E+00  0.2573E-01  0.2531E+00
+|  3   -249.484825064  -.145956E+00       0.863     3        0.00      0.86      0.00    0.1800E+00  0.1983E-01  0.2408E+00
+|  4   -249.746752443  0.261927E+00       0.862     4        0.00      0.86      0.00    0.7637E-01  0.5010E-02  0.7963E-01
+|  5   -249.764864479  0.181120E-01       0.862     5        0.00      0.86      0.00    0.2623E-01  0.1455E-02  0.2915E-01
+|  6   -249.766515511  0.165103E-02       0.867     6        0.00      0.86      0.00    0.9704E-02  0.5197E-03  0.7909E-02
+|  7   -249.766893547  0.378037E-03       0.862     7        0.00      0.86      0.00    0.1176E-02  0.9002E-04  0.1246E-02
+|  8   -249.766898488  0.494095E-05       0.862     8        0.00      0.86      0.00    0.4010E-03  0.3064E-04  0.4132E-03
+|  9   -249.766899132  0.643963E-06       0.862     9        0.00      0.86      0.00    0.1774E-03  0.9718E-05  0.1279E-03
     | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-| 10   -249.766901652  0.251986E-05       1.086    10        0.00      1.08      0.00    0.2972E-04  0.5022E-05  0.5236E-04
-| 11   -249.766901661  0.845029E-08       1.095     1        0.00      1.09      0.00    0.1328E-04  0.6076E-05  0.6335E-04
-| 12   -249.766901664  0.353629E-08       1.076     2        0.00      1.07      0.00    0.1859E-04  0.9020E-05  0.9420E-04
-| 13   -249.766901668  0.381277E-08       1.043     3        0.00      1.04      0.00    0.1181E-05  0.1301E-06  0.1465E-05
+| 10   -249.766901652  0.251986E-05       0.986    10        0.00      0.98      0.00    0.2972E-04  0.5022E-05  0.5236E-04
+| 11   -249.766901661  0.845029E-08       0.986     1        0.00      0.98      0.00    0.1328E-04  0.6076E-05  0.6335E-04
+| 12   -249.766901664  0.353629E-08       0.985     2        0.00      0.98      0.00    0.1859E-04  0.9020E-05  0.9420E-04
+| 13   -249.766901668  0.381277E-08       0.986     3        0.00      0.98      0.00    0.1181E-05  0.1301E-06  0.1465E-05
 ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  13 CYLCES
 | MAX ERROR = 0.118121E-05   RMS CHANGE = 0.130134E-06   MAX CHANGE = 0.146488E-05
@@ -206,6 +206,8 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 
  @ End Energy calculation
 
+
+ @ Begin Gradient Calculation
 
  ANALYTICAL GRADIENT: 
 ----------------------------------------
@@ -255,6 +257,9 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
    14Z    -0.1081245083     0.0076716048
 ----------------------------------------
 
+ @ End Gradient Calculation
+
+
  @ Begin Charge and Dipole Calculation
 
     ATOMIC CHARGES
@@ -285,23 +290,23 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.166299000(  5.49%)
-| DFT GRID OPERATIONS =     0.237516000(  1.12%)
-| TOTAL SCF TIME      =    12.904076000( 60.78%)
-|       TOTAL OP TIME      =    12.861750000( 60.58%)
-|             TOTAL 1e TIME      =     0.014131000(  0.07%)
-|             TOTAL 2e TIME      =     5.441933000( 25.63%)
-|             TOTAL EXC TIME     =     7.391007000( 34.81%)
-|       TOTAL DII TIME      =     0.042062000(  0.20%)
-|             TOTAL DIAG TIME    =     0.011443000(  0.05%)
-| TOTAL GRADIENT TIME      =     6.912564000( 32.56%)
-|       TOTAL 1e GRADIENT TIME      =     0.068686000( 0.41%)
-|       TOTAL 2e GRADIENT TIME      =     3.298282000(15.54%)
-|       TOTAL EXC GRADIENT TIME     =     3.527923000( 16.62%)
-| TOTAL TIME          =    21.229807000
+| INITIAL GUESS TIME  =     1.119534000(  5.73%)
+| DFT GRID OPERATIONS =     0.219666000(  1.12%)
+| TOTAL SCF TIME      =    11.632798000( 59.56%)
+|       TOTAL OP TIME      =    11.596868000( 59.38%)
+|             TOTAL 1e TIME      =     0.012748000(  0.07%)
+|             TOTAL 2e TIME      =     4.849648000( 24.83%)
+|             TOTAL EXC TIME     =     6.721316000( 34.41%)
+|       TOTAL DII TIME      =     0.035694000(  0.18%)
+|             TOTAL DIAG TIME    =     0.010340000(  0.05%)
+| TOTAL GRADIENT TIME      =     6.547988000( 33.53%)
+|       TOTAL 1e GRADIENT TIME      =     0.065992000( 0.42%)
+|       TOTAL 2e GRADIENT TIME      =     3.098223000(15.86%)
+|       TOTAL EXC GRADIENT TIME     =     3.367254000( 17.24%)
+| TOTAL TIME          =    19.530530000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 21.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 19.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sat Feb 27 20:37:20 2021
+| Normal Termination. Task Finished on: Sun Feb 28 18:23:15 2021
