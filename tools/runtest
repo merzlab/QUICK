@@ -159,6 +159,9 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
+    --ene)      test_ene='yes';uspec_test='yes';;
+    --grad)        test_grad='yes';uspec_test='yes';;
+    --opt)         test_opt='yes';uspec_test='yes';;
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -273,6 +276,16 @@ for buildtype in $buildtypes; do
 done
 
 #  !---------------------------------------------------------------------!
+#  ! Set test tyeps                                                      !
+#  !---------------------------------------------------------------------!
+
+if [ "$uspec_test" = 'no' ]; then
+  test_ene='yes'
+  test_grad='yes'
+  test_opt='yes'
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Run tests                                                           !
 #  !---------------------------------------------------------------------!
 
@@ -303,19 +316,25 @@ for buildtype in $buildtypes; do
   cd "$testdir/runs/$buildtype"
 
   # Run energy tests
-  for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
-    run_test
-  done
+  if [ "$test_ene" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+      run_test
+    done
+  fi
 
   # Run gradient tests
-  for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
-    run_test
-  done
+  if [ "$test_grad" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+      run_test
+    done
+  fi
 
   # Run geometry optimization tests
-  for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
-    run_test
-  done
+  if [ "$test_opt" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+      run_test
+    done
+  fi
 	
   echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype."
   echo ""
