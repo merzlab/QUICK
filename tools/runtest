@@ -184,6 +184,21 @@ check_energy(){
 }
 
 
+# check nuclear and point charge gradients
+check_gradient(){
+
+    accuracy='4.0e-3'
+
+    awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.ref.out" > "$t.ref.grad"
+    awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.out" > "$t.grad"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad"
+
+}
+
+
+
+
 # function to clean up files
 clean_up(){
     /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
@@ -379,6 +394,7 @@ for buildtype in $buildtypes; do
       set_test
       run_test
       check_energy
+      check_gradient
       clean_up
 
       echo ""
