@@ -72,7 +72,9 @@ subroutine gradient(failed)
 #ifdef MPIV
    if(master) then
 #endif
-   write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
+
+   call PrtAct(ioutfile,"Begin Gradient Calculation")
+   write (ioutfile,'(" ANALYTICAL GRADIENT: ")')
    write (ioutfile,'(40("-"))')
    write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
    write (ioutfile,'(40("-"))')
@@ -84,7 +86,7 @@ subroutine gradient(failed)
    enddo
 
    write(ioutfile,'(40("-"))')
-
+   
    if(quick_method%extCharges) then
       write (ioutfile,'(/," POINT CHARGE GRADIENT: ")')
       write (ioutfile,'(40("-"))')
@@ -98,6 +100,8 @@ subroutine gradient(failed)
       enddo
       write(ioutfile,'(40("-"))')
    endif   
+
+   call PrtAct(ioutfile,"End Gradient Calculation")
 
 #ifdef MPIV
    endif
