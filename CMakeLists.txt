@@ -137,10 +137,10 @@ if(NOT INSIDE_AMBER)
 endif()
 
 # install data in basis dir
-install(DIRECTORY basis DESTINATION .)
+install(DIRECTORY basis DESTINATION AmberTools/src/quick)
 
 # install tests dir
-install(DIRECTORY test DESTINATION .)
+install(DIRECTORY test DESTINATION AmberTools/src/quick)
 
 # install tests
 install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
