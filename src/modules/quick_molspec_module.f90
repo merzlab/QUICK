@@ -119,9 +119,11 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self)
+   subroutine allocate_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
       integer i,j
+      integer, intent(inout) :: ierr
 
       type (quick_molspec_type) self
 
@@ -158,10 +160,12 @@ contains
    !-------------------
    ! set initial value
    !-------------------
-   subroutine init_quick_molspec(self)
+   subroutine init_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
+      integer, intent(inout) :: ierr
 
       self%natom => natom
       self%nElec = 0
@@ -179,10 +183,12 @@ contains
    !-------------------
    ! deallocate
    !-------------------
-   subroutine deallocate_quick_molspec(self)
+   subroutine deallocate_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
+      integer, intent(inout) :: ierr
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
@@ -202,12 +208,15 @@ contains
    !-------------------
    ! broadcast variable list
    !-------------------
-   subroutine broadcast_quick_molspec(self)
+   subroutine broadcast_quick_molspec(self,ierr)
       use quick_mpi_module
+      use quick_exception_module
+
       implicit none
       include "mpif.h"
       type (quick_molspec_type) self
       integer natom2
+      integer, intent(inout) :: ierr
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -241,12 +250,14 @@ contains
    ! this subroutine is to read charge, multiplicity, and number
    ! and kind of atom.
    !----------------------
-  subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd)
+  subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd,ierr)
 
     use quick_constants_module
+    use quick_exception_module
 
     implicit none
     type (quick_molspec_type) :: self
+    integer, intent(inout) :: ierr
     integer :: input,rdinml,i,j,k
     integer :: ierror
     integer :: iAtomType
@@ -337,13 +348,15 @@ contains
    !----------------
    ! read external charge
    !----------------
-   subroutine read_quick_molspec_2(self,input)
+   subroutine read_quick_molspec_2(self,input,ierr)
       use quick_constants_module
+      use quick_exception_module
+
       implicit none
       ! parameter
       type (quick_molspec_type) self
       integer input
-
+      integer, intent(inout) :: ierr
       ! inner varibles
       integer i,j,k,istart,ifinal
       integer ierror
@@ -384,20 +397,22 @@ contains
 
       self%xyz => xyz
 
-      if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input)
+      if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input,ierr)
 
    end subroutine read_quick_molspec_2
 
 
 
-    subroutine read_quick_molespec_extcharges(self,input)
+    subroutine read_quick_molespec_extcharges(self,input,ierr)
         use quick_constants_module
+        use quick_exception_module
+
         implicit none
 
         ! parameter
         type (quick_molspec_type) self
         integer input
-
+        integer, intent(inout) :: ierr
         ! inner varibles
         integer i,j,k,istart,ifinal
         integer nextatom,ierror
@@ -445,9 +460,13 @@ contains
    !-------------------
    ! print varibles
    !-------------------
-   subroutine print_quick_molspec(self,io)
+   subroutine print_quick_molspec(self,io,ierr)
+
+      use quick_exception_module
       use quick_constants_module
       implicit none
+       
+      integer, intent(inout) :: ierr
       integer io,i,j
       type(quick_molspec_type) self
       if (io.ne.0) then
@@ -500,9 +519,14 @@ contains
    ! read-in molespec.
    !-------------------
 
-   subroutine set_quick_molspec(self)
+   subroutine set_quick_molspec(self,ierr)
+
+      use quick_exception_module
       use quick_constants_module
+
       implicit none
+
+      integer, intent(inout) :: ierr
       integer i,j,k
       type (quick_molspec_type) self
 

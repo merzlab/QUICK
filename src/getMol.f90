@@ -38,13 +38,13 @@ subroutine getMol(ierr)
            call quick_open(infile,inFileName,'O','F','W',.true.)
 
            ! read molecule coordinates
-           call read2(quick_molspec,inFile)
+           call read2(quick_molspec,inFile,ierr)
            close(inFile)
          endif
 
          quick_molspec%nbasis   => nbasis
          quick_qm_struct%nbasis => nbasis
-         call set(quick_molspec)
+         call set(quick_molspec,ierr)
 
          ! quick forward coordinates stored in namelist to instant variables
          xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
@@ -86,7 +86,7 @@ subroutine getMol(ierr)
    !-----------MPI/MASTER------------------------
    if (master) then
       ! now print molecule specification to output file
-      call print(quick_molspec,iOutFile)
+      call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
 
       ! the following some step are setup for basis and for ECP or DFT calculation

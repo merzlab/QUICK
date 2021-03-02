@@ -44,13 +44,14 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
-    subroutine mpi_setup_job()
+    subroutine mpi_setup_job(ierr)
     use allmod
     implicit none
-    
+    integer, intent(inout) :: ierr   
+ 
     include "mpif.h"
     
-    call Broadcast(quick_method)
+    call Broadcast(quick_method,ierr)
     call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     if (quick_method%ecp) then
@@ -67,17 +68,18 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
-    subroutine mpi_setup_mol1()
+    subroutine mpi_setup_mol1(ierr)
     use allmod
     implicit none
 
     integer :: i    
+    integer, intent(inout) :: ierr
     include 'mpif.h'
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    
 ! mols specs
-    call Broadcast(quick_molspec)
+    call Broadcast(quick_molspec,ierr)
     call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 ! DFT and SEDFT specs
@@ -94,13 +96,15 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
-    subroutine mpi_setup_mol2()
+    subroutine mpi_setup_mol2(ierr)
+
     use allmod
     implicit none
+    integer, intent(inout) :: ierr
     
     include 'mpif.h'
 
-    call Broadcast(quick_molspec)
+    call Broadcast(quick_molspec,ierr)
 !    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     call MPI_BCAST(dcoeff,nbasis*maxcontract,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
