@@ -1,3 +1,4 @@
+#include "util.fh"
 #ifdef MPIV
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup MPI environment

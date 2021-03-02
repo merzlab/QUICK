@@ -1,3 +1,4 @@
+#include "util.fh"
 subroutine ecpint
    !     Contact A. V. Mitin for the ECP integral package
    return

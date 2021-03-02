@@ -47,10 +47,10 @@ subroutine read_job_and_atom
       write(iOutFile,'("  KEYWORD=",a)') keyWD
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
-      call read(quick_method,keyWD)     ! read method from Keyword
+      call read(quick_method,keyWD,ierr)     ! read method from Keyword
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
-      call check(quick_method,iOutFile) ! check the correctness
-      call print(quick_method,iOutFile) ! then print method
+      call check(quick_method,iOutFile,ierr) ! check the correctness
+      call print(quick_method,iOutFile,ierr) ! then print method
       
       ! read basis file
       call read_basis_file(keywd)

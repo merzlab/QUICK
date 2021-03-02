@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	amber_interface.f90
 !	amber_interface

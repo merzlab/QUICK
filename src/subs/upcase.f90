@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	upcase.f90
 !	new_quick
