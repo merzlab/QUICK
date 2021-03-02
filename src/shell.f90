@@ -1,3 +1,4 @@
+#include "util.fh"
 
 subroutine g2eshell
    !--------------------------------------------------------
@@ -114,7 +115,7 @@ end subroutine readInt
 !  aoint
 !  writen by Yipu Miao 07/16/12
 !-------------------------
-subroutine aoint
+subroutine aoint(ierr)
    !------------------------------
    !  This subroutine is used to store 2e-integral into files
    !------------------------------
@@ -122,6 +123,7 @@ subroutine aoint
    Implicit none
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT, I, J
    double precision leastIntegralCutoff, t1, t2
+   integer, intent(inout) :: ierr
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    call PrtAct(ioutfile,"Begin Calculation 2E TO DISK")
@@ -133,7 +135,7 @@ subroutine aoint
 
    call cpu_time(timer_begin%T2eAll)  ! Terminate the timer for 2e-integrals
 
-   call obtain_leastIntCutoff(quick_method)
+   call obtain_leastIntCutoff(quick_method,ierr)
 
 #ifdef CUDA
    write(ioutfile, '("  GPU-BASED 2-ELECTRON INTEGRAL GENERATOR")')
