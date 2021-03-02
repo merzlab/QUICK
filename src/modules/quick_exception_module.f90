@@ -57,6 +57,12 @@ contains
     case(11)
       msg='UHF/UDFT is currently not implemented.'
 
+    case(12)
+      msg='Failed to overwrite file.'
+
+    case(13)
+      msg='Failed to open file.'
+
     case default
       msg='Unknown error.'
 
