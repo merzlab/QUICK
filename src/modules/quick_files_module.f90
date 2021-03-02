@@ -52,15 +52,15 @@ module quick_files_module
 
     integer :: inFile         = INFILEHANDLE     ! input file
     integer :: iOutFile       = OUTFILEHANDLE    ! output file
-    integer :: iDmxFile       = 2022             ! density matrix file
-    integer :: iRstFile       = 2023             ! Restricted file
-    integer :: iCPHFFile      = 2024             ! CPHF file
-    integer :: iBasisFile     = 2025             ! basis set file
-    integer :: iECPFile       = 2026             ! ECP file
-    integer :: iBasisCustFile = 2027             ! custom basis set file
-    integer :: iPDBFile       = 2028             ! PDB input file
+    integer :: iDmxFile       = DMXFILEHANDLE    ! density matrix file
+    integer :: iRstFile       = RSTFILEHANDLE    ! Restricted file
+    integer :: iCPHFFile      = CPHFFILEHANDLE   ! CPHF file
+    integer :: iBasisFile     = BASISFILEHANDLE  ! basis set file
+    integer :: iECPFile       = ECPFILEHANDLE    ! ECP file
+    integer :: iBasisCustFile = BASISCFILEHANDLE ! custom basis set file
+    integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
-    integer :: iIntFile       = 2030             ! integral file
+    integer :: iIntFile       = INTFILEHANDLE    ! integral file
 
     logical :: fexist = .false.         ! Check if file exists
 
