@@ -27,7 +27,7 @@ set(QUICK_MODULES_SOURCES
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90 
 	quick_scratch_module.f90 quick_all_module.f90 quick_scf_module.f90 
 	quick_gradient_module.f90 quick_api_module.f90 quick_api_test_module.f90
-	quick_cutoff_module.f90)
+	quick_cutoff_module.f90 quick_exception_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90 
 	degen.f90 denspt.f90 diag.f90 dipole.f90 
