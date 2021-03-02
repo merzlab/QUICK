@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	fmt.f90
 !	new_quick

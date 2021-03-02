@@ -11,6 +11,8 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
+#include "util.fh"
+
 !  Grid Points Module
 module quick_gridpoints_module
 

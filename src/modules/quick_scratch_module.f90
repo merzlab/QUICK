@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! SCRATCH module.
 module quick_scratch_module
 
