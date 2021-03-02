@@ -4,7 +4,7 @@
 ! Ed Brothers. August 18,2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine optimize(failed)
+subroutine optimize(failed,ierr)
    use allmod
    use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
@@ -20,6 +20,8 @@ subroutine optimize(failed)
    integer IMCSRCH,nstor,ndiis
    double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
    double precision EChg
+   integer, intent(inout) :: ierr
+
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -152,7 +154,7 @@ subroutine optimize(failed)
 
 #endif
 
-      call getEnergy(failed, .false.)
+      call getEnergy(failed, .false., ierr)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.

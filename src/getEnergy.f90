@@ -9,7 +9,7 @@
 !   written by Ed Brothers. 08/15/02
 !   This subroutine calculates and ouptus the energy.
 !
-subroutine getEnergy(failed, isGuess)
+subroutine getEnergy(failed, isGuess, ierr)
    use allMod
    implicit none
 
@@ -17,6 +17,7 @@ subroutine getEnergy(failed, isGuess)
    double precision, external :: rootSquare
    integer i,j
    logical, intent(in) :: isGuess
+   integer, intent(inout) :: ierr
 
 #ifdef MPIV
    include "mpif.h"
@@ -92,7 +93,7 @@ subroutine getEnergy(failed, isGuess)
    if (quick_method%UNRST) then
       call uscf(failed, isGuess)       ! unrestricted system
    else
-      call scf(failed)        ! restricted system
+      call scf(failed,ierr)        ! restricted system
    endif
 
    !--------------- MPI/MASTER --------------------------
