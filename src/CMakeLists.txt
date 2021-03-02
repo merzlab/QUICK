@@ -86,6 +86,8 @@ endforeach()
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
+include_directories(util)
+
 add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
