@@ -61,6 +61,18 @@ contains
       msg='Failed to overwrite file.'
 
     case(13)
+      msg='Failed to open input file.'
+
+    case(14)
+      msg='Failed to open output file.'
+
+    case(15)
+      msg='Failed to open basis file.'
+
+    case(16)
+      msg='Failed to open .dat file.'
+
+    case(17)
       msg='Failed to open file.'
 
     case default
