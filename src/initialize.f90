@@ -44,7 +44,7 @@ subroutine initialize1(ierr)
 #endif
 
    call init(quick_method, ierr)     !initialize quick_method namelist
-   call init(quick_molspec)    !initialize quick_molspec namelist
+   call init(quick_molspec, ierr)    !initialize quick_molspec namelist
 
    call cpu_time(timer_begin%TTotal) !Trigger time counter
 
