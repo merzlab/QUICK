@@ -43,7 +43,7 @@ subroutine deallocateall
   use allmod
   implicit double precision(a-h,o-z)
 
-    call  dealloc(quick_molspec)
+    call  dealloc(quick_molspec,ierr)
     call  dealloc(quick_qm_struct)
     call  deallocate_calculated
 

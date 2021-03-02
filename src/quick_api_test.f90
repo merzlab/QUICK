@@ -65,7 +65,7 @@
     call mpi_initialize(mpisize, mpirank, master, mpierror)
 
     ! setup quick mpi using api, called only once
-    call setQuickMPI(mpirank,mpisize)
+    call setQuickMPI(mpirank,mpisize,ierr)
 #endif
 
     ! set molecule size. We consider a water molecule surounded by 3 point
@@ -101,7 +101,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges, ierr)
 
     do i=1, frames
 
@@ -113,7 +113,7 @@
 !      call getQuickEnergy(coord, xc_coord, totEne)
 
       ! b. compute energies, gradients and point charge gradients
-      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad)    
+      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad, ierr)    
 
       ! print values obtained from quick library
 #ifdef MPIV
@@ -133,7 +133,7 @@
     enddo
 
     ! finalize QUICK, required only once
-    call deleteQuickJob()
+    call deleteQuickJob(ierr)
 
     ! deallocate memory
     if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)

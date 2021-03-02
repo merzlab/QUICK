@@ -125,12 +125,12 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
   type(quick_api_type), intent(inout) :: self
   integer, intent(in)   :: natoms, nxt_ptchg
   integer, intent(in)   :: atomic_numbers(natoms)
-  integer, intent(out)  :: ierr
+  integer, intent(inout)  :: ierr
   integer :: atm_type_id(natoms)
   integer :: i, natm_type
 
   ! get atom types and number of types
-  call get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
+  call get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
 
   if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
@@ -162,12 +162,13 @@ end subroutine new_quick_api_type
 
 ! this subroutine checks if the string passed through api is a file name
 ! or a job card
-subroutine check_fqin(fqin, keywd)
+subroutine check_fqin(fqin, keywd, ierr)
 
   implicit none
 
   character(len=80), intent(in)  :: fqin
   character(len=200), intent(in) :: keywd
+  integer, intent(inout) :: ierr
 
   call upcase(keywd, 200)
 
@@ -184,10 +185,11 @@ end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
+  use quick_exception_module
 
 #ifdef MPIV
   use quick_mpi_module
@@ -199,7 +201,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
   character(len=200), intent(in) :: keywd
   integer, intent(in) :: natoms, nxt_ptchg
   integer, intent(in) :: atomic_numbers(natoms)
-  integer :: ierr
+  integer, intent(inout) :: ierr
   integer :: flen
 
   ! allocate memory for quick_api_type
@@ -212,7 +214,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
 
     quick_api%apiMode = .true.
 
-    call check_fqin(fqin, keywd)
+    call check_fqin(fqin, keywd, ierr)
 
   endif
 
@@ -291,13 +293,13 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg)
   quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   ! allocate memory for coordinates and charges in molspec
-  call alloc(quick_molspec)
+  call alloc(quick_molspec,ierr)
 
 end subroutine set_quick_job
 
 
 ! computes atom types
-subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
+subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
 
   implicit none
 
@@ -305,6 +307,7 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
   integer, intent(in)  :: atomic_numbers(natoms)
   integer, intent(out) :: natm_type
   integer, intent(out) :: atm_type_id(natoms)
+  integer, intent(inout) :: ierr
   integer :: i, j, iatm
   logical :: new_atm_type
 
@@ -335,19 +338,20 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id)
 end subroutine get_atom_types
 
 ! returns quick qm energy
-subroutine get_quick_energy(coords, ptchg_crd, energy)
+subroutine get_quick_energy(coords, ptchg_crd, energy, ierr)
 
   implicit none
 
   double precision, intent(in)  :: coords(3,quick_api%natoms)
   double precision, intent(in)  :: ptchg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
+  integer, intent(inout) :: ierr
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
   quick_api%ptchg_crd     = ptchg_crd
 
-  call run_quick(quick_api)
+  call run_quick(quick_api,ierr)
 
   ! send back total energy and charges
   energy = quick_api%tot_ene
@@ -357,7 +361,7 @@ end subroutine get_quick_energy
 
 ! calculates and returns energy, gradients and point charge gradients
 subroutine get_quick_energy_gradients(coords, ptchg_crd, &
-           energy, gradients, ptchg_grad)
+           energy, gradients, ptchg_grad, ierr)
 
   implicit none
 
@@ -366,6 +370,7 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, &
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
+  integer, intent(inout) :: ierr
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
@@ -374,7 +379,7 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, &
     quick_api%ptchg_grad = ptchg_grad
   endif
 
-  call run_quick(quick_api)
+  call run_quick(quick_api,ierr)
 
   ! send back total energy, gradients and point charge gradients
   energy     = quick_api%tot_ene
@@ -386,7 +391,7 @@ end subroutine get_quick_energy_gradients
 
 
 ! runs quick, partially resembles quick main program
-subroutine run_quick(self)
+subroutine run_quick(self,ierr)
 
   use quick_timer_module
   use quick_method_module, only : quick_method
@@ -401,19 +406,19 @@ subroutine run_quick(self)
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer :: ierr, i, j, k
+  integer, intent(inout) :: ierr
+  integer :: i, j, k
   logical :: failed = .false.
-  ierr=0
 
   ! print step into quick output file
-  call print_step(self)
+  call print_step(self,ierr)
 
   ! if dft is requested, make sure to delete dft grid variables from previous
   ! the md step before proceeding
   if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
 
   ! set molecular information into quick_molspec
-  call set_quick_molspecs(quick_api)
+  call set_quick_molspecs(quick_api,ierr)
 
   ! start the timer for initial guess
   call cpu_time(timer_begin%TIniGuess)
@@ -464,7 +469,7 @@ subroutine run_quick(self)
   if ( .not. quick_method%opt .and. quick_method%grad) call gradient(failed)
 
   ! run optimization
-  if (quick_method%opt)  call optimize(failed)
+  if (quick_method%opt)  call optimize(failed,ierr)
 
 #if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then
@@ -511,7 +516,7 @@ subroutine run_quick(self)
   endif
 
   ! broadcast results from master to slaves
-  call broadcast_quick_mpi_results(self)
+  call broadcast_quick_mpi_results(self,ierr)
 #endif
 
   ! increase internal quick step by one
@@ -521,7 +526,7 @@ end subroutine run_quick
 
 
 ! this subroutine will print the step into quick output file
-subroutine print_step(self)
+subroutine print_step(self,ierr)
 
   use quick_files_module
 #ifdef MPIV
@@ -530,6 +535,7 @@ subroutine print_step(self)
 
   implicit none
   type (quick_api_type) :: self
+  integer, intent(inout) :: ierr
 
   ! print step into quick output file
 #ifdef MPIV
@@ -549,7 +555,7 @@ end subroutine print_step
 
 ! this rubroutine will set atom number, types and number of external atoms
 ! based on the information provided through library api
-subroutine set_quick_molspecs(self)
+subroutine set_quick_molspecs(self,ierr)
 
   use quick_files_module
   use quick_constants_module
@@ -557,7 +563,8 @@ subroutine set_quick_molspecs(self)
 
   implicit none
   type (quick_api_type) :: self
-  integer :: i, j, ierr
+  integer :: i, j
+  integer, intent(inout) :: ierr
 
   ! pass the step id to quick_files_module
   wrtStep = self%step
@@ -592,12 +599,13 @@ end subroutine set_quick_molspecs
 #if defined CUDA || defined CUDA_MPIV
 
 ! uploads molecular information into gpu
-subroutine gpu_upload_molspecs
+subroutine gpu_upload_molspecs(ierr)
 
   use quick_molspec_module, only : quick_molspec
   use quick_basis_module
 
   implicit none
+  integer, intent(inout) :: ierr
 
   call gpu_setup(quick_molspec%natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
        quick_molspec%molchg, quick_molspec%iAtomType)
@@ -623,13 +631,14 @@ end subroutine gpu_upload_molspecs
 #ifdef MPIV
 
 ! sets mpi variables in quick api
-subroutine set_quick_mpi(mpi_rank, mpi_size)
+subroutine set_quick_mpi(mpi_rank, mpi_size, ierr)
 
   use quick_mpi_module
 
   implicit none
 
   integer, intent(in) :: mpi_rank, mpi_size
+  integer, intent(inout) :: ierr
 
   ! save information in quick_mpi module
   mpirank    = mpi_rank
@@ -640,12 +649,13 @@ end subroutine set_quick_mpi
 
 ! broadcasts results from master to slaves
 
-subroutine broadcast_quick_mpi_results(self)
+subroutine broadcast_quick_mpi_results(self,ierr)
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
   integer :: mpierror
+  integer, intent(inout) :: ierr
 
   include 'mpif.h'
 
@@ -658,12 +668,13 @@ end subroutine
 #endif
 
 ! fialize quick and deallocate memory of quick_api internal arrays
-subroutine delete_quick_job
+subroutine delete_quick_job(ierr)
 
   use quick_files_module
   use quick_mpi_module
 
   implicit none
+  integer, intent(inout) :: ierr
 
 #ifdef CUDA
   call gpu_shutdown()
@@ -678,17 +689,17 @@ subroutine delete_quick_job
   call finalize(iOutFile,0,1)
 
   ! deallocate memory
-  call delete_quick_api_type(quick_api)
+  call delete_quick_api_type(quick_api,ierr)
 
 end subroutine delete_quick_job
 
 
 ! deallocates memory for quick_api_type variable
-subroutine delete_quick_api_type(self)
+subroutine delete_quick_api_type(self,ierr)
 
   implicit none
   type(quick_api_type), intent(inout) :: self
-  integer :: ierr
+  integer, intent(inout) :: ierr
 
   if ( allocated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
   if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)

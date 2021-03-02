@@ -134,7 +134,7 @@
     !read job spec and mol spec
     call read_Job_and_Atom()
     !allocate essential variables
-    call alloc(quick_molspec)
+    call alloc(quick_molspec,ierr)
     if (quick_method%MFCC) call allocate_MFCC()
    
     call cpu_time(timer_end%TInitialize)
@@ -228,7 +228,7 @@
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
-    if (quick_method%opt)  call optimize(failed)     ! Cartesian
+    if (quick_method%opt)  call optimize(failed, ierr)     ! Cartesian
     if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)
     if (failed) call quick_exit(iOutFile,1)          ! If geometry optimization fails
 
