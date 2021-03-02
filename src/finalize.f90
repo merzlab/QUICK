@@ -59,12 +59,14 @@ end subroutine deallocateall
 !----------------------
 ! Finialize programs
 !----------------------
-subroutine finalize(io,status,option)
+subroutine finalize(io,status,option,ierr)
     use allmod
+    use quick_exception_module
     implicit none
     integer io      !output final info and close this unit
     integer status  !exit status: 1-error 0-normal
     integer option  ! 0 if called from Quick and 1 if called from the API
+    integer, intent(inout) :: ierr
 
     ! Deallocate all variables
     call deallocateall
@@ -76,7 +78,7 @@ subroutine finalize(io,status,option)
     !-------------------MPI/MASTER---------------------------------------
     if (master) then
         if (status /=0) then
-            call PrtDate(io,'Error Termination. Task Failed on:')
+             SAFE_CALL(PrtDate(io,'Error Termination. Task Failed on:',ierr))
         endif
     endif
 
@@ -84,7 +86,7 @@ subroutine finalize(io,status,option)
        
     if (master) then
         if (status ==0) then
-            call PrtDate(io,'Normal Termination. Task Finished on:')
+            SAFE_CALL(PrtDate(io,'Normal Termination. Task Finished on:',ierr))
         endif
     endif 
     !-------------------- End MPI/MASTER ---------------------------------

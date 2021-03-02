@@ -244,7 +244,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
     SAFE_CALL(outputCopyright(iOutFile,ierr))
 
     ! write job information into output file
-    call PrtDate(iOutFile,'TASK STARTS ON:')
+    SAFE_CALL(PrtDate(iOutFile,'TASK STARTS ON:',ierr))
     call print_quick_io_file(iOutFile,ierr)
 
 #ifdef MPIV
