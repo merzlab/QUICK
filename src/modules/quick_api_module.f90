@@ -224,7 +224,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   ! for now..
 
   ! Initialize quick
-  call initialize1(ierr)
+  SAFE_CALL(initialize1(ierr))
 
   ! set the file name and template mode in quick_files_module
   inFileName = quick_api%fqin
@@ -235,13 +235,13 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 #endif
 
     ! set quick files
-    call set_quick_files(ierr)
+    SAFE_CALL(set_quick_files(ierr))
 
     ! open output file
-    call quick_open(iOutFile,outFileName,'U','F','R',.false.)
+    SAFE_CALL(quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr))
 
     ! print copyright information
-    call outputCopyright(iOutFile,ierr)
+    SAFE_CALL(outputCopyright(iOutFile,ierr))
 
     ! write job information into output file
     call PrtDate(iOutFile,'TASK STARTS ON:')
