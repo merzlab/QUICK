@@ -115,7 +115,7 @@ subroutine getMol(ierr)
       if (quick_method%SEDFT) call read_sedft_parm
 
       !  initialize density matrix
-      call initialGuess
+      SAFE_CALL(initialGuess(ierr))
 
       call PrtAct(iOutfile,"End Reading Molecular Information ")
 
@@ -223,7 +223,7 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 ! Initial Densitry Matrix
 !--------------------------------------
-subroutine initialGuess
+subroutine initialGuess(ierr)
    use allmod
    implicit none
    logical :: present
@@ -232,6 +232,7 @@ subroutine initialGuess
    integer n,sadAtom
    integer Iatm,i,j
    double precision temp
+   integer, intent(inout) :: ierr
 
 
    ! Initialize Density arrays. Create initial density matrix guess.
