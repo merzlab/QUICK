@@ -120,7 +120,9 @@ module quick_files_module
 
     end subroutine
 
-    subroutine read_basis_file(keywd)
+    subroutine read_basis_file(keywd,ierr)
+
+        use quick_exception_module
         implicit none
 
         !Pass-in Parameter
@@ -130,6 +132,7 @@ module quick_files_module
         character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
         character(len=16) :: tmp_keywd
         character(len=16) :: tmp_basisfilename
+        integer, intent(inout) :: ierr
 
         ! local variables
         integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1,lenkwd
@@ -165,7 +168,7 @@ module quick_files_module
                 call quick_exit(iOutFile,1)
             end if
 
-            call quick_open(ibasisfile,basis_sets,'O','F','W',.true.)
+            SAFE_CALL(quick_open(ibasisfile,basis_sets,'O','F','W',.true.,ierr))
 
             do while (iofile  == 0 )
                 read(ibasisfile,'(A80)',iostat=iofile) line

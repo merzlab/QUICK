@@ -39,7 +39,7 @@ subroutine read_job_and_atom
       if(quick_api%apiMode .and. quick_api%hasKeywd) then 
         keyWD=quick_api%Keywd
       else
-        call quick_open(infile,inFileName,'O','F','W',.true.)
+        SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
         read (inFile,'(A200)') keyWD
       endif
 
