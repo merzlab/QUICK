@@ -59,12 +59,11 @@ end subroutine deallocateall
 !----------------------
 ! Finialize programs
 !----------------------
-subroutine finalize(io,status,option,ierr)
+subroutine finalize(io,ierr,option)
     use allmod
     use quick_exception_module
     implicit none
     integer io      !output final info and close this unit
-    integer status  !exit status: 1-error 0-normal
     integer option  ! 0 if called from Quick and 1 if called from the API
     integer, intent(inout) :: ierr
 
@@ -77,15 +76,15 @@ subroutine finalize(io,status,option,ierr)
 
     !-------------------MPI/MASTER---------------------------------------
     if (master) then
-        if (status /=0) then
+        if (ierr /=0) then
              SAFE_CALL(PrtDate(io,'Error Termination. Task Failed on:',ierr))
         endif
     endif
 
-    if (status == 0) call timer_output(io)
+    if (ierr == 0) call timer_output(io)
        
     if (master) then
-        if (status ==0) then
+        if (ierr ==0) then
             SAFE_CALL(PrtDate(io,'Normal Termination. Task Finished on:',ierr))
         endif
     endif 
@@ -105,34 +104,33 @@ end subroutine finalize
 !-----------------------
 ! Fatal exit subroutine
 !-----------------------
-subroutine quick_exit(io, status)
+subroutine quick_exit(io, ierr)
 
    !  quick_exit: exit procedure, designed to return an gentle way to exitm.
    use allmod
    implicit none
    integer io           ! close this unit if greater than zero
-   integer status       ! exit status; 1-error 0-normal
+   integer, intent(inout) :: ierr
 
 #ifdef MPIV
    include 'mpif.h'
 #endif
 
-   integer ierr
 
-   if (status /= 0) then
+   if (ierr /= 0) then
       call flush(io)
    end if
 
-   call finalize(io,1,0)
+   call finalize(io,ierr,0)
 
 #ifdef MPIV
-   if (status /= 0) then
-     call mpi_abort(MPI_COMM_WORLD, status, ierr)
+   if (ierr /= 0) then
+     call mpi_abort(MPI_COMM_WORLD, mpierror)
    else
-     call mpi_finalize(ierr)
+     call mpi_finalize(mpierror)
    endif
 #endif
 
-   call exit(status)
+   call exit(ierr)
 
 end subroutine quick_exit
