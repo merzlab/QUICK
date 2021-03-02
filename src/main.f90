@@ -22,11 +22,14 @@
 !  University of Florida, Gainesville, FL, 2010
 !************************************************************************
 
+#include "util.fh"
+
     program quick
 
     use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
+    use quick_exception_module
 
     implicit none
 
@@ -49,8 +52,7 @@
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
     ! Initial neccessary variables
-    ierr=0
-    call initialize1(ierr)
+    SAFE_CALL(initialize1(ierr))
     !-------------------MPI/MASTER---------------------------------------
     masterwork_readInput: if (master) then
 
