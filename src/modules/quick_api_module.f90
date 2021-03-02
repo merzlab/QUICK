@@ -686,7 +686,7 @@ subroutine delete_quick_job(ierr)
 #endif
 
   ! finalize quick
-  call finalize(iOutFile,0,1)
+  call finalize(iOutFile,ierr,0)
 
   ! deallocate memory
   call delete_quick_api_type(quick_api,ierr)
