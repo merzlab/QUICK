@@ -130,21 +130,30 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRE
 #--------------------------------------------------------------	
 # Additional files
 
-# install modules
-if(NOT INSIDE_AMBER)
-	# install mod dirs
+if(INSIDE_AMBER)
+
+	# install data in basis dir
+	install(DIRECTORY basis DESTINATION AmberTools/src/quick)
+
+	# install tests dir
+	install(DIRECTORY test DESTINATION AmberTools/src/quick)
+
+else()
+	# Standalone install
+
+	# install modules
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/ DESTINATION ./include)
+
+	# install data in basis dir
+	install(DIRECTORY basis DESTINATION .)
+
+	# install tests dir
+	install(DIRECTORY test DESTINATION .)
+
+	# install scripts
+	install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
+	install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
 endif()
-
-# install data in basis dir
-install(DIRECTORY basis DESTINATION AmberTools/src/quick)
-
-# install tests dir
-install(DIRECTORY test DESTINATION AmberTools/src/quick)
-
-# install tests
-install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
-install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
 
 #--------------------------------------------------------------	
 # build report
