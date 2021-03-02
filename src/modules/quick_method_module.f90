@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 module quick_method_module
     use quick_constants_module
     implicit none
@@ -153,11 +155,14 @@ module quick_method_module
         !------------------------
         ! Broadcast quick_method
         !------------------------
-        subroutine broadcast_quick_method(self)
+        subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
+            use quick_exception_module            
+
             implicit none
 
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             include 'mpif.h'
 
@@ -236,12 +241,15 @@ module quick_method_module
         !------------------------
         ! print quick_method
         !------------------------
-        subroutine print_quick_method(self,io)
+        subroutine print_quick_method(self,io,ierr)
             use xc_f90_types_m
             use xc_f90_lib_m
+            use quick_exception_module
+
             implicit none
             integer io
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             !libxc variables
             type(xc_f90_pointer_t) :: xc_func
@@ -429,13 +437,15 @@ endif
         !------------------------
         ! read quick_method
         !------------------------
-        subroutine read_quick_method(self,keywd)
+        subroutine read_quick_method(self,keywd,ierr)
+            use quick_exception_module
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
             integer :: itemp,rdinml,i,j
             double precision :: rdnml
             type (quick_method_type) self
+            integer, intent(inout) :: ierr
 
             call upcase(keyWD,200)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
@@ -461,7 +471,7 @@ endif
             !Read dft functional keywords and set variable values
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
-                call set_libxc_func_info(keyWD, self)
+                call set_libxc_func_info(keyWD, self, ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
@@ -585,10 +595,12 @@ endif
         !------------------------
         ! initial quick_method
         !------------------------
-        subroutine init_quick_method(self)
+        subroutine init_quick_method(self,ierr)
 
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             self%HF =  .false.       ! HF
             self%DFT =  .false.      ! DFT
@@ -678,10 +690,12 @@ endif
         !------------------------
         ! check quick_method
         !------------------------
-        subroutine check_quick_method(self,io)
+        subroutine check_quick_method(self,io,ierr)
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer io
+            integer, intent(inout) :: ierr
 
             ! If MP2, then set HF as default
             if (self%MP2) then
@@ -712,11 +726,13 @@ endif
 
         end subroutine check_quick_method
 
-        subroutine obtain_leastIntCutoff(self)
+        subroutine obtain_leastIntCutoff(self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
-
+            integer, intent(inout) :: ierr
+            
 
             self%leastIntegralCutoff = LEASTCUTOFF
 
@@ -735,11 +751,13 @@ endif
         end subroutine obtain_leastIntCutoff
 
 
-        subroutine adjust_Cutoff(PRMS,PCHANGE,self)
+        subroutine adjust_Cutoff(PRMS,PCHANGE,self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             double precision prms,pchange
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
              if(PRMS.le.TEN_TO_MINUS5 .and. self%integralCutoff.gt.1.0d0/(10.0d0**8.5d0))then
                 self%integralCutoff=TEN_TO_MINUS9
@@ -760,9 +778,10 @@ endif
 
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
-        subroutine set_libxc_func_info(f_keywd, self)
+        subroutine set_libxc_func_info(f_keywd, self,ierr)
            use xc_f90_types_m
            use xc_f90_lib_m
+           use quick_exception_module
            implicit none
            character(len=200) :: f_keywd
            type(quick_method_type) self
@@ -771,6 +790,7 @@ endif
            type(xc_f90_pointer_t) :: xc_info
            double precision :: x_hyb_coeff
            character(len=256) :: functional_name
+           integer, intent(inout) :: ierr
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
