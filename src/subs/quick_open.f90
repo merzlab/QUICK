@@ -89,7 +89,20 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
    
    
     if (ios /= 0) then
-        ierr=13
+
+        select case(funit)
+        case(INFILEHANDLE)
+          ierr=13
+        case(OUTFILEHANDLE)
+          ierr=14        
+        case(BASISFILEHANDLE)
+          ierr=15
+        case(DATAFILEHANDLE)
+          ierr=16
+        case default
+          ierr=17
+        end select
+
         return
     end if
    
