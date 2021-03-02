@@ -305,6 +305,6 @@
     call mgpu_shutdown()
 #endif
 
-    call finalize(iOutFile,0,0)
+    call finalize(iOutFile,ierr,0)
 
     end program quick
