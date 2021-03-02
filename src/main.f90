@@ -66,7 +66,7 @@
       SAFE_CALL(outputCopyright(iOutFile,ierr))
 
       ! Then output file information
-      call PrtDate(iOutFile,'TASK STARTS ON:')
+      SAFE_CALL(PrtDate(iOutFile,'TASK STARTS ON:',ierr))
       call print_quick_io_file(iOutFile,ierr) ! from quick_file_module
 
       ! check MPI setup and output info
