@@ -1,0 +1,15 @@
+# Template package config file for QUICK.
+# Configured by configure_package_config_file() to create the final file.
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# find QUICK's dependency, MPI, if it was enabled in the build
+if(@MPI@)
+	find_dependency(MPI REQUIRED COMPONENTS C Fortran)
+endif()
+
+if(NOT TARGET QUICK::libquick)
+    include("${CMAKE_CURRENT_LIST_DIR}/QUICKTargets.cmake")
+endif()
