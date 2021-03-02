@@ -123,6 +123,8 @@ module quick_files_module
     subroutine read_basis_file(keywd,ierr)
 
         use quick_exception_module
+        use quick_mpi_module
+
         implicit none
 
         !Pass-in Parameter
