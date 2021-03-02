@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	rdnml.f90
 !	new_quick
