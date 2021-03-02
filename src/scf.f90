@@ -566,7 +566,7 @@ subroutine electdiis(jscf,ierr)
 
 #ifdef USEDAT
          ! open data file then write calculated info to dat file
-         call quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.)
+         SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
          rewind(iDataFile)
          call dat(quick_qm_struct, iDataFile)
          close(iDataFile)

@@ -35,7 +35,7 @@ subroutine getMol(ierr)
 
          ! read xyz coordinates from the .in file 
          if(.not. isTemplate) then
-           call quick_open(infile,inFileName,'O','F','W',.true.)
+           SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
 
            ! read molecule coordinates
            call read2(quick_molspec,inFile,ierr)
@@ -245,7 +245,7 @@ subroutine initialGuess
    if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
 #endif
    if (present) then
-      call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.)
+      SAFE_CALL(quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.,ierr))
 
       ! read first part, which is restricted or alpha density matrix
       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
