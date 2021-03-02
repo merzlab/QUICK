@@ -14,6 +14,9 @@
 ! in f90 source files.                                                !
 !_____________________________________________________________________!
 
+#ifndef QUICK_UTIL_FH
+#define QUICK_UTIL_FH
+
 #define INFILEHANDLE   2020
 #define OUTFILEHANDLE  2021
 #define DATAFILEHANDLE 2029
@@ -36,3 +39,4 @@
 ! to propagate the error.
 #define SAFE_CALL(x) call x ;CHECK_ERROR(ierr)
 
+#endif
