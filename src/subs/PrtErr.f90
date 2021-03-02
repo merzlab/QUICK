@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	prterr.f90
 !	new_quick

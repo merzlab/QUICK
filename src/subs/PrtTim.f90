@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	prtTim.f90
 !	new_quick

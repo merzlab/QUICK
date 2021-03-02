@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! quick MPI module.
 module quick_mpi_module
 

@@ -1,3 +1,4 @@
+#include "util.fh"
 ! Be careful of (NB(itemp).eq.2.and.NB(jtemp).eq.2)
 ! Xiao HE 07/07/07 version
 ! BE careful of the array coefangxiaoL(20),allocate,main,module array,2eshell(opt),hrrsub,vertical

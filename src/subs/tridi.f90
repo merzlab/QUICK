@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	tridi.f90
 !	new_quick
