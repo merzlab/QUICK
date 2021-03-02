@@ -53,7 +53,7 @@ subroutine read_job_and_atom
       call print(quick_method,iOutFile,ierr) ! then print method
       
       ! read basis file
-      call read_basis_file(keywd)
+      SAFE_CALL(read_basis_file(keywd,ierr))
       call print_basis_file(iOutFile)
       if (quick_method%ecp) call print_ecp_file(iOutFile)
       
