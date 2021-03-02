@@ -13,10 +13,11 @@
 ! 2004.12.24 Print current time for system
 !-----------------------------------------------------------
 
-subroutine PrtDate(io,note)
+subroutine PrtDate(io,note,ierr)
   implicit none
   integer io,i
   character datim*26,note*(*)
+  integer, intent(inout) :: ierr
 
   i=len(note)
   call GDate(datim)
