@@ -43,7 +43,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       ! * Read the Effective Core Potentials (ECPs), modify the atomic charges
       !   and the total number of electrons (readecp)
       if (quick_method%ecp)    call readecp
-      call quick_open(ibasisfile,basisfilename,'O','F','W',.true.)
+      SAFE_CALL(quick_open(ibasisfile,basisfilename,'O','F','W',.true.,ierr))
       iofile = 0
       nshell = 0
       nbasis = 0
