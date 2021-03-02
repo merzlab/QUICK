@@ -76,12 +76,10 @@ module quick_files_module
 
         implicit none
         ! Pass-in parameter:
-        integer :: ierr    ! Error Flag
+        integer, intent(inout) :: ierr    ! Error Flag
 
         ! Local Varibles
         integer :: i
-
-        ierr=1
 
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
@@ -118,10 +116,6 @@ module quick_files_module
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
 
-
-!        write(*,*) inFileName, outFileName
-
-        ierr=0
         return
 
     end subroutine
