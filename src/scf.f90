@@ -1,7 +1,8 @@
+#include "util.fh"
 
 ! Ed Brothers. November 27, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-subroutine scf(failed)
+subroutine scf(failed,ierr)
    !-------------------------------------------------------
    ! this subroutine is to do scf job for restricted system
    !-------------------------------------------------------
@@ -9,6 +10,7 @@ subroutine scf(failed)
    implicit double precision(a-h,o-z)
 
    logical :: done,failed
+   integer, intent(inout) :: ierr
    done=.false.
 
    !-----------------------------------------------------------------
@@ -37,7 +39,7 @@ subroutine scf(failed)
    ! if not direct SCF, generate 2e int file
    if (quick_method%nodirect) call aoint
 
-   if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf)       ! normal scf
+   if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
    if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
 
    jscf=jscf+1
@@ -52,7 +54,7 @@ end subroutine scf
 ! electdiis
 !-------------------------------------------------------
 ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
-subroutine electdiis(jscf)
+subroutine electdiis(jscf,ierr)
 
    use allmod
    use quick_scf_module
@@ -65,6 +67,7 @@ subroutine electdiis(jscf)
 
    ! variable inputed to return
    integer :: jscf                ! scf interation
+   integer, intent(inout) :: ierr
 
    logical :: diisdone = .false.  ! flag to indicate if diis is done
    logical :: deltaO   = .false.  ! delta Operator
@@ -548,7 +551,7 @@ subroutine electdiis(jscf)
          PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
 
          tmp = quick_method%integralCutoff
-         call adjust_cutoff(PRMS,PCHANGE,quick_method)  !from quick_method_module
+         call adjust_cutoff(PRMS,PCHANGE,quick_method,ierr)  !from quick_method_module
       endif
 
       !--------------- MPI/ALL NODES -----------------------------------------
