@@ -57,13 +57,13 @@
     masterwork_readInput: if (master) then
 
       ! read input argument
-      call set_quick_files(ierr)    ! from quick_file_module
+      SAFE_CALL(set_quick_files(ierr))    ! from quick_file_module
 
       ! open output file
-      call quick_open(iOutFile,outFileName,'U','F','R',.false.)
+      SAFE_CALL(quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr))
 
       ! At the beginning of output file, copyright information will be output first
-      call outputCopyright(iOutFile,ierr)
+      SAFE_CALL(outputCopyright(iOutFile,ierr))
 
       ! Then output file information
       call PrtDate(iOutFile,'TASK STARTS ON:')
