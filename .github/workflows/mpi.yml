@@ -49,4 +49,4 @@ jobs:
       - name: Test serial
         run: |
           cd install
-          bin/quick_runtest --mpi --ncores 2
+          bin/runtest --mpi --ncores 2
