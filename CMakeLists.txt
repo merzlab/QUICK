@@ -167,7 +167,7 @@ else()
 	install(DIRECTORY test DESTINATION . USE_SOURCE_PERMISSIONS)
 
 	# install scripts
-	install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
+	install(PROGRAMS tools/runtest DESTINATION ${BINDIR})
 	install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
 endif()
 

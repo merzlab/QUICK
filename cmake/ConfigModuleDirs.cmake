@@ -12,9 +12,11 @@ function(config_module_dirs TARGETNAME TARGET_MODULE_DIR) #3rd optional argument
 	if(IS_ABSOLUTE "${TARGET_MODULE_DIR}")
 		# legacy full path, pass through unmodified
 		set(INCLUDE_DIRS ${TARGET_MODULE_DIR})
+		set(MODULE_OUTPUT_DIR ${TARGET_MODULE_DIR})
 	else()
 		# add both the build dir path and the installed path
 		set(INCLUDE_DIRS $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/${TARGET_MODULE_DIR}> $<INSTALL_INTERFACE:include/${MODULE_DIR_NAME}/${TARGET_MODULE_DIR}>)
+		set(MODULE_OUTPUT_DIR ${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/${TARGET_MODULE_DIR})
 	endif()
 
 	# convert relative module paths being included to absolute
@@ -49,7 +51,7 @@ function(config_module_dirs TARGETNAME TARGET_MODULE_DIR) #3rd optional argument
 	endforeach()
 
 	# combine the new module dirs with the rest of the include dirs
-	set_property(TARGET ${TARGETNAME} PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/${MODULE_DIR_NAME}/${TARGET_MODULE_DIR})
+	set_property(TARGET ${TARGETNAME} PROPERTY Fortran_MODULE_DIRECTORY ${MODULE_OUTPUT_DIR})
 	set_property(TARGET ${TARGETNAME} PROPERTY INCLUDE_DIRECTORIES ${INCLUDE_DIRS} ${LEFTOVER_INC_DIRS})
 	set_property(TARGET ${TARGETNAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${INCLUDE_DIRS} ${LEFTOVER_INT_INC_DIRS})
 	
