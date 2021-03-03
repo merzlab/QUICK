@@ -222,9 +222,10 @@ void mgpu_eri_greedy_distribute(){
 
 #ifdef DEBUG
     fprintf(gpu->debugFile," Greedy distribute sqrQshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+    int q1_idx, q2_idx;
 #endif
 
-    int q1_idx, q2_idx, q1, q2, p1, p2, psum, minp, min_core;
+    int  q1, q2, p1, p2, psum, minp, min_core;
     // Helps to store shell types per each core
     int a=0;
 
@@ -258,10 +259,6 @@ void mgpu_eri_greedy_distribute(){
                     psum=p1+p2;
                     tot_pval[min_core] += psum;
 
-                    //Get the q indices
-                    q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
-                    q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
-
                     // Save the flag
                     mpi_flags[min_core][i] = 1;
 
@@ -269,6 +266,10 @@ void mgpu_eri_greedy_distribute(){
                     qtype_pcore[min_core][a] +=1;
 
 #ifdef DEBUG
+                    //Get the q indices
+                    q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
+                    q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
+
                     //Assign the indices for corresponding core
                     mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
                     mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
@@ -627,7 +628,7 @@ void mgpu_xc_pbased_greedy_distribute(){
 
     // now distribute the bins considering the total number of true grid points each core would receive
 
-    int mincore, min_tpts, min_primf, min_ptpf;
+    int mincore, min_ptpf;
 
     // distribute bins based on true grid point-primitive function product per bin criteria
     for(int i=0; i<nbins; i++){

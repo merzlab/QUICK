@@ -38,11 +38,17 @@ int getAdjustment(int mpisize, int mpirank, int count){
   if(mpirank == 0) master = true;
 
   // define arrays
-  int *residuals  = new int[mpisize]{0};
-  ptcount    = new int[mpisize]{0};
+  int *residuals  = new int[mpisize];
+  ptcount    = new int[mpisize];
+
+  memset(residuals,0, sizeof(int)*mpisize);
+  memset(ptcount,0, sizeof(int)*mpisize);
 
   distMatrix=new int*[mpisize];
-  for(int i=0; i<mpisize; ++i) distMatrix[i] = new int[mpisize]{0};
+  for(int i=0; i<mpisize; ++i) {
+    distMatrix[i] = new int[mpisize];
+    memset(distMatrix[i],0, sizeof(int)*mpisize);
+  }
 
   ptcount[mpirank]=count;
 
