@@ -32,7 +32,7 @@ do
   fi
   if [ $(grep "Begin Gradient Calculation" ${i%.in}.out | wc -l) -gt 0 ]; then
     awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' ${i%.in}.out > ${i%.in}.out.grad
-    ${AMBERHOME}/test/dacdif -a 4.0e-4 saved/${i%.in}.out.grad ${i%.in}.out.grad
+    ${AMBERHOME}/test/dacdif -a 1.0e-3 saved/${i%.in}.out.grad ${i%.in}.out.grad
   fi
   ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out ${i%.in}.out
   /bin/rm -f ${i%.in}.dat
