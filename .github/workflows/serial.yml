@@ -47,5 +47,4 @@ jobs:
       - name: Test serial
         run: |
           cd install
-          bin/quick_runtest --serial
-
+          ./runtest --serial
