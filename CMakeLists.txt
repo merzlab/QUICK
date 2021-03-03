@@ -157,10 +157,10 @@ else()
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/ DESTINATION ./include)
 
 	# install data in basis dir
-	install(DIRECTORY basis DESTINATION .)
+	install(DIRECTORY basis DESTINATION . USE_SOURCE_PERMISSIONS)
 
 	# install tests dir
-	install(DIRECTORY test DESTINATION .)
+	install(DIRECTORY test DESTINATION . USE_SOURCE_PERMISSIONS)
 
 	# install scripts
 	install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)

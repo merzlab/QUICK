@@ -134,34 +134,13 @@ if(CUDA)
 		set(CUDA_DEVICE_CODE_FLAGS -Xptxas --disable-optimizer-constants)
 	endif()
 
-				
-	# --------------------------------------------------------------------
-	# import a couple of CUDA libraries used by amber tools
+	
+	if(NOT INSIDE_AMBER)
+		# --------------------------------------------------------------------
+		# import a couple of CUDA libraries used by amber tools
 
-	import_library(cublas "${CUDA_cublas_LIBRARY}")
-	import_library(cufft "${CUDA_cufft_LIBRARY}")
-	import_library(cusolver "${CUDA_cusolver_LIBRARY}")
-	import_library(curand "${CUDA_curand_LIBRARY}")
-	import_library(cusparse "${CUDA_cusparse_LIBRARY}")
- 	import_library(cudadevrt "${CUDA_cudadevrt_LIBRARY}")
-
- 	# --------------------------------------------------------------------
-	# Find the NVidia Management Library (used to detect GPUs)
-	# This library lives under the "stubs" subdirectory so we have to handle it specially.
-
-	find_library(CUDA_nvidia-ml_LIBRARY
-	    NAMES nvidia-ml
-	    PATHS "${CUDA_TOOLKIT_TARGET_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}"
-	    ENV CUDA_PATH
-	    ENV CUDA_LIB_PATH
-	    PATH_SUFFIXES lib64/stubs lib/stubs
-	    DOC "Path to the CUDA Nvidia Management Library")
-
-	if(NOT EXISTS "${CUDA_nvidia-ml_LIBRARY}")
-		message(WARNING "Cannot find the NVidia Management Library (libnvidia-ml) in your CUDA toolkit.  mdgx.cuda will not be built.") 
-	else()
- 		import_library(nvidia-ml "${CUDA_nvidia-ml_LIBRARY}")
- 	endif()
-
+		import_library(cublas "${CUDA_cublas_LIBRARY}")
+		import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+	endif()
 
 endif()

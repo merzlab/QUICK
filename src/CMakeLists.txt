@@ -109,9 +109,9 @@ if(MPI)
 	set_property(TARGET libquick_mpi PROPERTY OUTPUT_NAME quick_mpi)
 
 	# change link libraries and mod dirs for MPI
-	remove_link_libraries(libquick_mpi xc octree)
-	target_link_libraries(libquick_mpi PRIVATE xc_mpi octree_mpi)
-	config_module_dirs(libquick_mpi quick/mpi libxc/mpi)
+	remove_link_libraries(libquick_mpi octree)
+	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
+	config_module_dirs(libquick_mpi libxc/serial quick/mpi)
 
 
 	install_libraries(libquick_mpi EXPORT QUICK)
@@ -124,7 +124,7 @@ if(CUDA)
 
 	# change link libraries and mod dirs for CUDA
 	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
-	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
+	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels cublas cusolver)
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
 	install_libraries(libquick_cuda EXPORT QUICK)
@@ -135,8 +135,8 @@ if(MPI AND CUDA)
 	target_compile_definitions(libquick_mpi_cuda PRIVATE CUDA_MPIV)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
 
-	remove_link_libraries(libquick_mpi_cuda octree_mpi xc_mpi)
-	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels_mpi ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
+	remove_link_libraries(libquick_mpi_cuda octree_mpi xc)
+	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels_mpi cublas cusolver)
 	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 
 	install_libraries(libquick_mpi_cuda EXPORT QUICK)
@@ -180,11 +180,11 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(quick.MPI libquick)
 	target_link_libraries(quick.MPI libquick_mpi)
-	config_module_dirs(quick.MPI quick/mpi libxc/mpi)
+	config_module_dirs(quick.MPI quick/mpi libxc/serial)
 
 	remove_link_libraries(test-api.MPI libquick)
 	target_link_libraries(test-api.MPI libquick_mpi)
-	config_module_dirs(test-api.MPI quick/mpi libxc/mpi)
+	config_module_dirs(test-api.MPI quick/mpi libxc/serial)
 
 	install(TARGETS quick.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
