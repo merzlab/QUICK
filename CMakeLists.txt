@@ -115,29 +115,33 @@ include(QUICKCudaConfig)
 
 add_subdirectory(src)
 
-#--------------------------------------------------------------	
-# Exported targets
+if(NOT INSIDE_AMBER) # Amber is currently not set up for exported targets
 
-# directory relative to prefix where config files will be installed
-set(CMAKE_PACKAGE_CONFIG_DIR share/cmake/QUICK)
+	#--------------------------------------------------------------	
+	# Exported targets
 
-# install targets file
-install(EXPORT QUICK 
-	FILE QUICKTargets.cmake
-	NAMESPACE QUICK::
-	DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# directory relative to prefix where config files will be installed
+	set(CMAKE_PACKAGE_CONFIG_DIR share/cmake/QUICK)
 
-# install version file
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
-	VERSION ${${PROJECT_NAME}_VERSION}
-	COMPATIBILITY AnyNewerVersion)
+	# install targets file
+	install(EXPORT QUICK 
+		FILE QUICKTargets.cmake
+		NAMESPACE QUICK::
+		DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
 
-# install top-level file
-configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake
-	INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# install version file
+	include(CMakePackageConfigHelpers)
+	write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
+		VERSION ${${PROJECT_NAME}_VERSION}
+		COMPATIBILITY AnyNewerVersion)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# install top-level file
+	configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake
+		INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+endif()
 
 #--------------------------------------------------------------	
 # Additional files
