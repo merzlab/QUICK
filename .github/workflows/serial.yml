@@ -15,8 +15,20 @@ jobs:
         run: make
       - name: Install serial
         run: make install
+      - name: Set QUICK_HOME
+        run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test serial
         run: make test
+      - name: Archive test results
+        uses: actions/upload-artifact@v2
+        with:
+            name: serial-tests
+            path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+      - uses: actions/download-artifact@v2
+        with:
+            name: serial-tests
+      - name: Display structure of artifacts
+        run: ls -R
   cmake-build:
     runs-on: ubuntu-20.04
     steps:
@@ -36,3 +48,4 @@ jobs:
         run: |
           cd install
           bin/quick_runtest --serial
+

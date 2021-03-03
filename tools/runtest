@@ -32,6 +32,7 @@ installdir=`pwd`
 testdir="$installdir/test"
 qbasisdir="$installdir/basis"
 qbindir="$installdir/bin"
+export QUICK_HOME=$installdir
 
 # executables
 
@@ -54,6 +55,12 @@ ismp2=''
 cdate=''
 ctime=''
 
+# test types
+test_ene='no'
+test_grad='no'
+test_opt='no'
+uspec_test='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -69,6 +76,10 @@ echo  "
       --mpi          Tests QUICK MPI prallel version                           
       --cuda         Tests QUICK GPU version
       --cudampi      Tests QUICK multi-GPU version
+      --ene          Run only energy tests
+      --grad         Run only gradient tests
+      --opt          Run only geometry optimization tests
+
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -84,7 +95,7 @@ print_test_info(){
 
   ismp2='no'
 
-  case "$i" in
+  case "$t" in
     ene_psb5_rhf_631g)            echo "RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)          echo "RHF energy test: s, p and d basis functions";;
     ene_psb3_blyp_631g)           echo "DFT energy test: s and p basis functions, native BLYP functional";;
@@ -105,6 +116,113 @@ print_test_info(){
 
 }
 
+# function to get the total number of tests
+get_total_tests(){
+
+  if [ "$test_ene" = 'yes' ]; then
+    tot_ene_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "ene" | wc -l`
+    total_tests=$((total_tests+tot_ene_tests))
+  fi
+
+  if [ "$test_grad" = 'yes' ]; then
+    tot_grad_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "grad" | wc -l`
+    total_tests=$((total_tests+tot_grad_tests))
+  fi
+
+  if [ "$test_opt" = 'yes' ]; then
+    tot_opt_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "opt" | wc -l`
+    total_tests=$((total_tests+tot_opt_tests))
+  fi
+
+}
+
+# function to set files for a test run
+set_test(){
+
+  cp "$testdir/$t.in" ./
+  cp "$testdir/saved/$t.out" "$t.ref.out"
+}
+
+
+# function to run tests. t, tc and total are test name, test count and 
+# total test count respectively. accuracy sets the tolerance. 
+run_test(){
+
+    echo "Running test $tc of $total_tests"
+
+    print_test_info "$t"
+
+    # Run the test case
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+      $DO_PARALLEL "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
+    else
+      "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "Error: $qexe execution failed."
+      echo ""
+      exit 1
+    fi
+  
+}
+
+# check electronic, nuclear and total energy
+check_energy(){
+    
+    accuracy='4.0e-5'
+
+    awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.ref.out" > "$t.ref.ene"
+    awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.out" > "$t.ene"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene"
+
+}
+
+
+# check nuclear and point charge gradients
+check_gradient(){
+
+    accuracy='4.0e-3'
+
+    awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.ref.out" > "$t.ref.grad"
+    awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.out" > "$t.grad"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad"
+
+}
+
+# check optimized geometry and force element
+check_opt(){
+
+    accuracy='4.0e-3'
+
+    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
+    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt"
+
+}
+
+# check mulliken charges and dipole
+check_dipole(){
+
+    accuracy='4.0e-3'
+
+    awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.ref.out" > "$t.ref.dipole"
+    awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.out" > "$t.dipole"
+
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole"
+
+}
+
+
+# function to clean up files
+clean_up(){
+    /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+}
+
+
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !
 #  !---------------------------------------------------------------------
@@ -115,6 +233,9 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
+    --ene)      test_ene='yes';uspec_test='yes';;
+    --grad)        test_grad='yes';uspec_test='yes';;
+    --opt)         test_opt='yes';uspec_test='yes';;
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -229,6 +350,16 @@ for buildtype in $buildtypes; do
 done
 
 #  !---------------------------------------------------------------------!
+#  ! Set test tyeps                                                      !
+#  !---------------------------------------------------------------------!
+
+if [ "$uspec_test" = 'no' ]; then
+  test_ene='yes'
+  test_grad='yes'
+  test_opt='yes'
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Run tests                                                           !
 #  !---------------------------------------------------------------------!
 
@@ -239,7 +370,7 @@ for buildtype in $buildtypes; do
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo  "Testing $buildtype version started on $cdate at $ctime. "
+  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. "
   echo ""
 
   # set qexe
@@ -254,166 +385,61 @@ for buildtype in $buildtypes; do
   fi
 
 
-  total=`cat "$testdir/testlist.txt" |wc -l`
-  a=1
+  total_tests=0 # total number of test cases
+
+  # get the number of tests to run
+  get_total_tests
+
+  tc=1 # test count
   cd "$testdir/runs/$buildtype"
 
   # Run energy tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/$i.in" ./
-	
-    # This variable will keep the information of jobcard
-    jobcard=`head -1 "$i.in"`
-    enecalc=`echo $jobcard | grep 'ENERGY' |wc -l` 
+  if [ "$test_ene" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+      set_test
+      run_test
+      check_energy
+      check_dipole
+      clean_up
 
-    print_test_info "$i"
-
-    # Run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
-      $DO_PARALLEL "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    else
-      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null	
-    fi
-
-    # Check the accuracy
-    # For RHF and DFT,  just compare the total energy. For MP2 compare the mp2 energy. 
-    if [ "$enecalc" -gt 0 -a "$ismp2" = 'yes' ]; then
-
-      refval=`grep "#MP2_ENERGY" "$i.in" |awk '{print $2}'`
-      newval=`grep -A 20 "REACH CONVERGENCE AFTER" ${i}.out| grep "EMP2" | awk '{print $3}'`
-      echo "$refval  $newval"|awk '{
-        x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-        print "MP2 energy: " $2 ", Reference value: " $1 ". " stat""
-      }'                         
-
-    else 
-
-      refval=`grep "#TOTAL_ENERGY" "$i.in" | awk '{print $2}'`
-      newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
-      echo "$refval  $newval"|awk '{
-        x=sqrt(($1-$2)^2); 
-        if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-        print "Total energy: " $2 ", Reference value: " $1 ". " stat""
-      }'	
-
-    fi
-
-    echo ""
-    a=$((a+1))
-  done
-
-
+      echo ""
+      tc=$((tc+1))
+    done
+  fi
 
   # Run gradient tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/$i.in" ./
+  if [ "$test_grad" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+      set_test
+      run_test
+      check_energy
+      check_gradient
+      check_dipole
+      clean_up
 
-    #This variable will keep the information of jobcard
-    jobcard=`head -1 "$i.in"`
-    gradcalc=`echo $jobcard | grep 'GRADIENT' | wc -l`
-
-    print_test_info "$i"
-
-    # run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
-      mpirun -np "$ncores" "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    else
-      "$qbindir/$qexe" "${i}.in"  2> /dev/null > /dev/null
-    fi    
-
-    # Check the energy
-    refval=`grep "#TOTAL_ENERGY" "$i.in" | awk '{print $2}'`
-    newval=`grep -A 8 "REACH CONVERGENCE AFTER" "$i.out" | grep "TOTAL" | awk '{print $4}'`
-    echo "$refval  $newval"|awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Total energy: " $2 ", Reference value: " $1 ". " stat""
-    }'	
-    echo ""	
-
-    #Check the accuracy of gradients of first step
-    grep "#ref_grad" "$i.in" |awk '{print $2}'>refGrad.txt
-    natoms=`grep "TOTAL ATOM NUMBER" "$i.out"| awk '{print $5}'`
-    sed -n '/ANALYTICAL GRADIENT/,+'$(($natoms*3+4))' p' "$i.out" | grep -E '[0-9][XYZ]' | awk '{print $3}' > newGrad.txt 
-    paste refGrad.txt newGrad.txt >compGrad.txt
-    awk '{
-    x=sqrt(($1-$2)^2); 
-    if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-    print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
-    }' compGrad.txt
-    echo ""
-
-    # remove gradient info files
-    rm refGrad.txt newGrad.txt compGrad.txt
-
-    # compare point charge gradients
-    nextatoms=`grep "NUMBER OF EXTERNAL POINT CHARGES" "$i.out"| awk '{print $7}'`
-    if [ ! -z "$nextatoms" ]; then 
-      grep "#ref_ptchg_grad" "$i.in" |awk '{print $2}'>refGrad.txt
-      sed -n '/POINT CHARGE GRADIENT/,+'$(($nextatoms*3+4))' p' "$i.out" | grep -E '[0-9][XYZ]' | awk '{print $3}' > newGrad.txt
-      paste refGrad.txt newGrad.txt >compGrad.txt
-      awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Final point charge gradient: " $2 ", Reference value: " $1 ". " stat""
-      }' compGrad.txt
-      echo ""      
-      
-      # remove gradient info files
-      rm refGrad.txt newGrad.txt compGrad.txt
-    fi
-
-    a=$((a+1))	
-  done
-
+      echo ""
+      tc=$((tc+1))
+    done
+  fi
 
   # Run geometry optimization tests
-  for i in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
-    echo "Running test $a of $total"
-    cp "$testdir/${i}.in" ./
+  if [ "$test_opt" = 'yes' ]; then
+    for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+      set_test
+      run_test
+      check_opt
+      check_dipole
+      clean_up
 
-    print_test_info "$i"
-
-    # Run the test case
-    "$qbindir/$qexe" "$i.in" 2> /dev/null > /dev/null
-
-    # Check the accuracy of gradients of first step
-    grep "#ref_grad" "$i.in" | awk '{print $2}'>refGrad.txt
-    sed -n '/GEOMETRY FOR OPTIMIZATION STEP   1/,/GEOMETRY FOR OPTIMIZATION STEP   2/p' "$i.out" | sed -n '/NEW_GRAD/,/OPTIMZATION STATISTICS/p' |grep '[0-9]' |awk '{print $4}'>newGrad.txt
-    paste refGrad.txt newGrad.txt >compGrad.txt
-    awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Final gradient: " $2 ", Reference value: " $1 ". " stat""
-      }' compGrad.txt
-    echo ""
-      
-    # remove gradient info files
-    rm refGrad.txt newGrad.txt compGrad.txt
-      
-    # Check the minimum energy
-    refval=$(grep "#ref_min_ene" "$i.in" | awk '{print $2}')
-    newval=$(grep "TOTAL ENERGY" "$i.out" |tail -1 | awk '{print $4}')
-    echo "$refval  $newval"|awk '{
-      x=sqrt(($1-$2)^2); 
-      if(x>=0.00001) stat="Failed"; else stat="Passed"; 
-      print "Minimized energy: " $2 ", Reference value: " $1 ". " stat""
-      }'
-    echo ""
-
-    a=$((a+1))		
-
-  done
+      echo ""
+      tc=$((tc+1))
+    done
+  fi
 	
-  echo "$buildtype tests are done. All input and output files are located in $testdir/runs/$buildtype."
+  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype."
   echo ""
   cd "$testdir"
 done
-
-echo  "All tests are done! "
 
 cd $installdir
 
