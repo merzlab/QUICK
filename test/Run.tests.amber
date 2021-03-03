@@ -26,6 +26,14 @@ fi
 for i in *.in
 do
   $DO_PARALLEL $TESTsander $i < /dev/null || error
+  if [ $(grep "Begin Energy Calculation" ${i%.in}.out | wc -l) -gt 0 ]; then
+    awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' ${i%.in}.out > ${i%.in}.out.ene
+    ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/${i%.in}.out.ene ${i%.in}.out.ene
+  fi
+  if [ $(grep "Begin Gradient Calculation" ${i%.in}.out | wc -l) -gt 0 ]; then
+    awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' ${i%.in}.out > ${i%.in}.out.grad
+    ${AMBERHOME}/test/dacdif -a 4.0e-4 saved/${i%.in}.out.grad ${i%.in}.out.grad
+  fi
   ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out ${i%.in}.out
   /bin/rm -f ${i%.in}.dat
 done
