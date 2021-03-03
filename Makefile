@@ -135,7 +135,7 @@ test:$(TESTTYPE)
 
 buildtest:
 	@cp $(toolsfolder)/runtest $(homefolder)
-	$(homefolder)/runtest
+	@$(homefolder)/runtest
 
 installtest:
 	@if [ ! -x $(installfolder)/bin/quick* ]; then \
