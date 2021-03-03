@@ -2,13 +2,12 @@ cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and Fin
 
 project(quick LANGUAGES NONE VERSION 20.03)
 
-
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 if(NOT INSIDE_AMBER)
 
 	# initialization and include paths
 	#-------------------------------------------------------------
 	include(cmake/AmberBuildSystemInit.cmake NO_POLICY_SCOPE)
-	list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
 	#now enable the languages
 	enable_language(C CXX Fortran)
@@ -45,7 +44,15 @@ option(NOF "Disables the compilation of QUICK's time consuming f functions in th
 set_property(DIRECTORY . PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:DEBUG>)
 
 
-if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+
+	# QUICK needs to be built with -O2 not Amber's default of -O3
+	if(OPTIMIZE)
+		list(APPEND OPT_CFLAGS -O2)
+		set(OPT_CFLAGS_SPC "${OPT_CFLAGS_SPC} -O2")
+	endif()
+
+elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -traceback")
 endif()
 
@@ -53,6 +60,11 @@ endif()
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 	add_definitions(-DGNU)
+
+	if(OPTIMIZE)
+		list(APPEND OPT_FFLAGS -O2)
+		set(OPT_FFLAGS_SPC "${OPT_FFLAGS_SPC} -O2")
+	endif()
 
 	if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
 		set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
@@ -103,29 +115,33 @@ include(QUICKCudaConfig)
 
 add_subdirectory(src)
 
-#--------------------------------------------------------------	
-# Exported targets
+if(NOT INSIDE_AMBER) # Amber is currently not set up for exported targets
 
-# directory relative to prefix where config files will be installed
-set(CMAKE_PACKAGE_CONFIG_DIR share/cmake/QUICK)
+	#--------------------------------------------------------------	
+	# Exported targets
 
-# install targets file
-install(EXPORT QUICK 
-	FILE QUICKTargets.cmake
-	NAMESPACE QUICK::
-	DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# directory relative to prefix where config files will be installed
+	set(CMAKE_PACKAGE_CONFIG_DIR share/cmake/QUICK)
 
-# install version file
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
-	VERSION ${${PROJECT_NAME}_VERSION}
-	COMPATIBILITY AnyNewerVersion)
+	# install targets file
+	install(EXPORT QUICK 
+		FILE QUICKTargets.cmake
+		NAMESPACE QUICK::
+		DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
 
-# install top-level file
-configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake
-	INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# install version file
+	include(CMakePackageConfigHelpers)
+	write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake
+		VERSION ${${PROJECT_NAME}_VERSION}
+		COMPATIBILITY AnyNewerVersion)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+	# install top-level file
+	configure_package_config_file(QUICKConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake
+		INSTALL_DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfigVersion.cmake ${CMAKE_CURRENT_BINARY_DIR}/QUICKConfig.cmake DESTINATION ${CMAKE_PACKAGE_CONFIG_DIR})
+
+endif()
 
 #--------------------------------------------------------------	
 # Additional files
@@ -145,13 +161,13 @@ else()
 	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amber-modules/ DESTINATION ./include)
 
 	# install data in basis dir
-	install(DIRECTORY basis DESTINATION .)
+	install(DIRECTORY basis DESTINATION . USE_SOURCE_PERMISSIONS)
 
 	# install tests dir
-	install(DIRECTORY test DESTINATION .)
+	install(DIRECTORY test DESTINATION . USE_SOURCE_PERMISSIONS)
 
 	# install scripts
-	install(PROGRAMS tools/runtest DESTINATION ${BINDIR} RENAME quick_runtest)
+	install(PROGRAMS tools/runtest DESTINATION .)
 	install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
 endif()
 

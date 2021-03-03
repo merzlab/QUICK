@@ -138,12 +138,6 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(xc PRIVATE -Wno-maybe-uninitialized)
 endif()
 
-if(MPI)
-	make_mpi_version(xc xc_mpi LANGUAGES C)
-	target_compile_definitions(xc_mpi PUBLIC MPIV)
-	config_module_dirs(xc_mpi libxc/mpi)
-endif()
-
 if(CUDA)
 	# note: this is not a GPU implementation of libxc, it's just
 	# configured to call one.
