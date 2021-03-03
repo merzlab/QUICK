@@ -438,7 +438,7 @@ subroutine run_quick(self)
 
 #if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
-  call gpu_upload_molspecs()
+  if(.not.quick_method%opt) call gpu_upload_molspecs()
 #endif
 
   ! stop the timer for initial guess
