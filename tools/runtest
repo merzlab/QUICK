@@ -96,6 +96,22 @@ print_test_info(){
   ismp2='no'
 
   case "$t" in
+    ene_AlH3_rhf_sto3g)           echo "ALH3: RHF energy test: STO-3G basis set";;
+    ene_BeH2_rhf_sto3g)           echo "BeH2: RHF energy test: STO-3G basis set";;
+    ene_BH3_rhf_sto3g)            echo "BH3: RHF energy test: STO-3G basis set";;
+    ene_CaCl2_rhf_sto3g)          echo "CaCl2: RHF energy test: STO-3G basis set";;
+    ene_CH4_rhf_sto3g)            echo "CH4: RHF energy test: STO-3G basis set";;
+    ene_H2O_rhf_sto3g)            echo "H2O: RHF energy test: STO-3G basis set";;
+    ene_HBr_rhf_sto3g)            echo "HBr: RHF energy test: STO-3G basis set";;
+    ene_HI_rhf_sto3g)             echo "HI: RHF energy test: STO-3G basis set";;
+    ene_KCl_rhf_sto3g)            echo "KCl: RHF energy test: STO-3G basis set";;
+    ene_LiF_rhf_sto3g)            echo "LiF: RHF energy test: STO-3G basis set";;
+    ene_MgO_rhf_sto3g)            echo "MgO: RHF energy test: STO-3G basis set";;
+    ene_NaCl_rhf_sto3g)           echo "NaCl: RHF energy test: STO-3G basis set";;
+    ene_NH4_rhf_sto3g)            echo "NH4: RHF energy test: STO-3G basis set";;
+    ene_PO4_3_rhf_sto3g)          echo "PO4-3: RHF energy test: STO-3G basis set";;
+    ene_SiH4_rhf_sto3g)           echo "SiH4: RHF energy test: STO-3G basis set";;
+    ene_SO2_rhf_sto3g)            echo "SO2: RHF energy test: STO-3G basis set";;
     ene_psb5_rhf_631g)            echo "PSB5: RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)          echo "PSB5: RHF energy test: s, p and d basis functions";;
     ene_acetone_rhf_321g)         echo "Acetone: RHF energy test: s and p basis functions";;
