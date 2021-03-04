@@ -168,7 +168,7 @@ else()
 
 	# install scripts
 	install(PROGRAMS tools/runtest DESTINATION .)
-	install(PROGRAMS quick-cmake/quick.rc DESTINATION ${BINDIR})
+	install(FILES quick-cmake/quick.rc DESTINATION .)
 endif()
 
 #--------------------------------------------------------------	
