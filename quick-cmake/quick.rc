@@ -16,6 +16,6 @@ else
     exit 2
 fi
 
-export QUICK_INSTALL=$(cd "$(dirname "$this_script")/.."; pwd)
+export QUICK_INSTALL=$(cd "$(dirname "$this_script")"; pwd)
 export QUICK_BASIS="$QUICK_INSTALL/basis"
 export PATH="$QUICK_INSTALL/bin":$PATH
