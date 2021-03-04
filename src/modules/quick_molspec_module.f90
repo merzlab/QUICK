@@ -356,6 +356,7 @@ contains
          ifinal=80
 
          read (input,'(A80)') keywd
+         call upcase(keywd,80)
          call rdword(keywd,istart,ifinal)
 
          !-----------------------------
