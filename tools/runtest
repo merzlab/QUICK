@@ -98,6 +98,7 @@ print_test_info(){
   case "$t" in
     ene_psb5_rhf_631g)            echo "PSB5: RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)          echo "PSB5: RHF energy test: s, p and d basis functions";;
+    ene_acetone_rhf_321g)         echo "Acetone: RHF energy test: s and p basis functions";;
     ene_psb3_blyp_631g)           echo "PSB3: DFT energy test: s and p basis functions, native BLYP functional";;
     ene_psb3_blyp_631gss)         echo "PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
     ene_psb3_b3lyp_631g)          echo "PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
