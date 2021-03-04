@@ -96,22 +96,24 @@ print_test_info(){
   ismp2='no'
 
   case "$t" in
-    ene_psb5_rhf_631g)            echo "RHF energy test: s and p basis functions";;
-    ene_psb5_rhf_631gss)          echo "RHF energy test: s, p and d basis functions";;
-    ene_psb3_blyp_631g)           echo "DFT energy test: s and p basis functions, native BLYP functional";;
-    ene_psb3_blyp_631gss)         echo "DFT energy test: s, p and d basis functions, native BLYP functional";;
-    ene_psb3_b3lyp_631g)          echo "DFT energy test: s and p basis functions, native B3LYP functional";;
-    ene_psb3_b3lyp_631gss)        echo "DFT energy test: s, p and d basis functions, native B3LYP functional";;
-    ene_psb3_libxc_lda_631g)      echo "DFT energy test: s and p basis functions, libxc LDA functional";;
-    ene_psb3_libxc_gga_631g)      echo "DFT energy test: s and p basis functions, libxc GGA functional";;
-    ene_psb3_libxc_hgga_631g)     echo "DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
-    ene_wat2_mp2_631g)            echo "MP2 energy test: s and p basis functions"; ismp2='yes';;
-    ene_wat2_mp2_631gss)          echo "MP2 energy test: s, p and d basis functions"; ismp2='yes';;
-    grad_psb3_b3lyp_631g)         echo "DFT gradient test: s and p basis functions";;
-    grad_psb3_b3lyp_631gss)       echo "DFT gradient test: s and p and d basis functions";;
-    grad_ch3conhch3_b3lyp_ccpvdz) echo "DFT gradient test: s and p and d basis functions";;
-    opt_wat_rhf_631g)             echo "RHF geometry optimization test: s and p basis functions";;
-    opt_wat_rhf_ccpvdz)           echo "RHF geometry optimization test: s, p and d basis functions";;
+    ene_psb5_rhf_631g)            echo "PSB5: RHF energy test: s and p basis functions";;
+    ene_psb5_rhf_631gss)          echo "PSB5: RHF energy test: s, p and d basis functions";;
+    ene_psb3_blyp_631g)           echo "PSB3: DFT energy test: s and p basis functions, native BLYP functional";;
+    ene_psb3_blyp_631gss)         echo "PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
+    ene_psb3_b3lyp_631g)          echo "PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
+    ene_psb3_b3lyp_631gss)        echo "PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    grad_nacl_b3lyP_def2svp)      echo "Nacl: DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_psb3_libxc_lda_631g)      echo "PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
+    ene_psb3_libxc_gga_631g)      echo "PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
+    ene_psb3_libxc_hgga_631g)     echo "PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
+    ene_wat2_mp2_631g)            echo "Water-2 MP2 energy test: s and p basis functions"; ismp2='yes';;
+    ene_wat2_mp2_631gss)          echo "Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
+    grad_psb3_b3lyp_631g)         echo "PSB3: DFT gradient test: s and p basis functions";;
+    grad_psb3_b3lyp_631gss)       echo "PSB3: DFT gradient test: s and p and d basis functions";;
+    grad_ch3conhch3_b3lyp_ccpvdz) echo "CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    opt_wat_rhf_631g)             echo "Water: RHF geometry optimization test: s and p basis functions";;
+    opt_wat_rhf_ccpvdz)           echo "Water: RHF geometry optimization test: s, p and d basis functions";;
+    opt_nh4_pbe_def2svp)          echo "NH4+: DFT geometry optimization test: s, p and d basis functions";;
   esac
 
 }
