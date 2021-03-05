@@ -143,6 +143,21 @@ print_test_info(){
     ene_PO4_3_rhf_631g)                echo "PO4-3: RHF energy test: 6-31G basis set";;
     ene_SiH4_rhf_631g)                 echo "SiH4: RHF energy test: 6-31G basis set";;
     ene_SO2_rhf_631g)                  echo "SO2: RHF energy test: 6-31G basis set";;
+    ene_AlH3_rhf_631gs)                echo "ALH3: RHF energy test: 6-31G* basis set";;
+    ene_BeH2_rhf_631gs)                echo "BeH2: RHF energy test: 6-31G* basis set";;
+    ene_BH3_rhf_631gs)                 echo "BH3: RHF energy test: 6-31G* basis set";;
+    ene_CaCl2_rhf_631gs)               echo "CaCl2: RHF energy test: 6-31G* basis set";; # currently disabled
+    ene_CH4_rhf_631gs)                 echo "CH4: RHF energy test: 6-31G* basis set";;
+    ene_H2O_rhf_631gs)                 echo "H2O: RHF energy test: 6-31G* basis set";;
+    ene_HBr_rhf_631gs)                 echo "HBr: RHF energy test: 6-31G* basis set";; # currently disabled
+    ene_KCl_rhf_631gs)                 echo "KCl: RHF energy test: 6-31G* basis set";; # currently disabled
+    ene_LiF_rhf_631gs)                 echo "LiF: RHF energy test: 6-31G* basis set";;
+    ene_MgO_rhf_631gs)                 echo "MgO: RHF energy test: 6-31G* basis set";;
+    ene_NaCl_rhf_631gs)                echo "NaCl: RHF energy test: 6-31G* basis set";;
+    ene_NH4_rhf_631gs)                 echo "NH4: RHF energy test: 6-31G* basis set";;
+    ene_PO4_3_rhf_631gs)               echo "PO4-3: RHF energy test: 6-31G* basis set";;
+    ene_SiH4_rhf_631gs)                echo "SiH4: RHF energy test: 6-31G* basis set";;
+    ene_SO2_rhf_631gs)                 echo "SO2: RHF energy test: 6-31G* basis set";;
     ene_psb5_rhf_631g)                 echo "PSB5: RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)               echo "PSB5: RHF energy test: s, p and d basis functions";;
     ene_acetone_rhf_321g)              echo "Acetone: RHF energy test: s and p basis functions";;
