@@ -1,0 +1,5 @@
+HF  BASIS=def2-sv(p) cutoff=1.0e-9 denserms=1.0e-6  zmake ENERGY DIPOLE CHARGE=0
+
+K         -1.97649       -0.51915       -0.82769
+Cl         0.36351       -0.51915       -0.82769
+
