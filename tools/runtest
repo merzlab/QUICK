@@ -227,12 +227,12 @@ print_test_info(){
     ene_psb3_blyp_631gss)              echo "PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
     ene_psb3_b3lyp_631g)               echo "PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
     ene_psb3_b3lyp_631gss)             echo "PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
-    grad_nacl_b3lyP_def2svp)           echo "Nacl: DFT energy test: s, p and d basis functions, native B3LYP functional";;
     ene_psb3_libxc_lda_631g)           echo "PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
     ene_psb3_libxc_gga_631g)           echo "PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
     ene_psb3_libxc_hgga_631g)          echo "PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
     ene_wat2_mp2_631g)                 echo "Water-2 MP2 energy test: s and p basis functions"; ismp2='yes';;
     ene_wat2_mp2_631gss)               echo "Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
+    grad_nacl_b3lyP_def2svp)           echo "Nacl: DFT gradient test: s, p and d basis functions, native B3LYP functional";;
     grad_psb3_b3lyp_631g)              echo "PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)            echo "PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)      echo "CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
@@ -352,6 +352,13 @@ check_dipole(){
 # function to clean up files
 clean_up(){
     /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+}
+
+# function to print a summary of tests
+print_summary(){
+
+
+
 }
 
 
