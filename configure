@@ -882,10 +882,14 @@ set_uspec_arch(){
       pascal)
         echo "Configuring for SM6.0"
         cuda_arch_flags="$cuda_arch_flags $sm60flags"
-	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
+		cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       volta)
         echo "Configuring for SM7.0"
-        cuda_arch_flags="$cuda_arch_flags $sm70flags";;
+        cuda_arch_flags="$cuda_arch_flags $sm70flags"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then
+		  cuda_dc_flags='-Xptxas --disable-optimizer-constants'
+		fi
+		;;
       turing)
         echo "Configuring for SM7.5"
         cuda_arch_flags="$cuda_arch_flags $sm75flags";;
@@ -1033,12 +1037,18 @@ for buildtype in $buildtypes; do
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
+		  cflags="$cflags -fopenmp"
+		fi
       fi
       ;;
     intel)
       fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
+		  cflags="$cflags -L$MKLROOT/lib/intel64 -liomp5"
+		fi	
       fi
       ;;
     pgi)
