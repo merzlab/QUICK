@@ -356,13 +356,6 @@ clean_up(){
     /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
 }
 
-# function to print a summary of tests
-print_summary(){
-
-
-
-}
-
 
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !
