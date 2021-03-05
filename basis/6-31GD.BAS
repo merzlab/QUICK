@@ -3,7 +3,7 @@
 ! Version v0.8.12
 ! https://www.basissetexchange.org
 !----------------------------------------------------------------------
-!   Basis set: 6-31G*
+!   Basis set: 6-31G(d)
 ! Description: 6-31G + polarization on heavy atoms
 !        Role: orbital
 !     Version: 1  (Data from Gaussian 09/GAMESS)

@@ -3,7 +3,7 @@
 ! Version v0.8.12
 ! https://www.basissetexchange.org
 !----------------------------------------------------------------------
-!   Basis set: 6-311G*
+!   Basis set: 6-311G(d)
 ! Description: VTZ Valence Triple Zeta: 3 Funct.'s/Valence AO
 !        Role: orbital
 !     Version: 0  (Data from the Original Basis Set Exchange)
