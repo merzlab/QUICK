@@ -372,6 +372,69 @@ clean_up(){
     /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
 }
 
+# function to report summary
+
+print_summary(){
+
+echo "======================== Test Summary ========================" > runtest.summary.tmp0
+echo "" >> runtest.summary.tmp0
+echo "Total tests: $total_tests"
+for buildtype in "$buildtypes"; do
+  total_ene=0
+  total_grad=0
+  total_opt=0
+  failed_ene=0
+  failed_grad=0
+  failed_opt=0
+
+  sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' a > runtest.summary.tmp1
+
+  for i in `seq 1 "$total_tests"`; do
+    if [ "$i" -lt "$total_tests" ]; then
+      j=$((i+1))
+      sed -n '/Running test '$i' of '$total_tests'/,/Running test '$j' of '$total_tests'/p' runtest.summary.tmp1 > runtest.summary.tmp2
+    elif [ "$i" -eq "$total_tests" ]; then
+      sed -n '/Running test '$total_tests'/,/All '$buildtype' tests are done/p' runtest.summary.tmp1 > runtest.summary.tmp2
+    fi
+ 
+    if [ `sed -n '/energy test/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+      total_ene=$((total_ene+1))
+      if [ `sed -n '/possible FAILURE/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+        failed_ene=$((failed_ene+1))
+      fi
+      
+    elif [ `sed -n '/gradient test/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+      total_grad=$((total_grad+1))
+      if [ `sed -n '/possible FAILURE/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+        failed_grad=$((failed_grad+1))
+      fi
+    elif [ `sed -n '/geometry optimization test/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+      total_opt=$((total_opt+1))
+      if [ `sed -n '/possible FAILURE/p' runtest.summary.tmp2 | wc -l` -gt 0 ]; then
+        failed_opt=$((failed_opt+1))
+      fi
+    fi
+    
+    /bin/rm -f runtest.summary.tmp2
+  done
+  
+  failed_total=$((failed_ene+failed_grad+failed_opt))
+
+  echo "$buildtype version:" >> runtest.summary.tmp0
+  echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> runtest.summary.tmp0
+  echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> runtest.summary.tmp0
+  echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> runtest.summary.tmp0
+  echo "    Total tests: $failed_total/$total_tests (failed/total)" >> runtest.summary.tmp0
+  echo "" >> runtest.summary.tmp0
+
+  /bin/rm -f runtest.summary.tmp1
+done
+
+echo "==============================================================" >> runtest.summary.tmp0
+
+cat runtest.summary.tmp0
+/bin/rm -f runtest.summary.tmp0
+}
 
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !
