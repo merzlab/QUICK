@@ -236,6 +236,8 @@ print_test_info(){
     grad_psb3_b3lyp_631g)              echo "PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)            echo "PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)      echo "CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    grad_wat_b3lyp_ccpvdz)             echo "Water: DFT point charge gradient test: s and p and d basis functions";;
+    grad_c10h9o2s_b3yp_def2svp)        echo "C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)       echo "DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
     grad_hbdi_meoh_libxc_blyp_sto3g)   echo "HBDI-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_naip_meoh_libxc_pbeh_sto3g)   echo "NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
