@@ -886,7 +886,7 @@ set_uspec_arch(){
       volta)
         echo "Configuring for SM7.0"
         cuda_arch_flags="$cuda_arch_flags $sm70flags"
-		if [ "$(echo "$cudaversion < 10.0"| bc -l )" == 1 ]; then
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then
 		  cuda_dc_flags='-Xptxas --disable-optimizer-constants'
 		fi
 		;;
@@ -1037,7 +1037,7 @@ for buildtype in $buildtypes; do
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
-		if [ "$(echo "$cudaversion < 10.0"| bc -l )" == 1 ]; then  
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
 		  cflags="$cflags -fopenmp"
 		fi
       fi
@@ -1046,7 +1046,7 @@ for buildtype in $buildtypes; do
       fort_flags="$opt_flags $fort_debug_flags -ip -cpp -diag-disable 8291 $lib_flags -I$QUICK_HOME/build/include/$buildtype -module $QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
-		if [ "$(echo "$cudaversion < 10.0"| bc -l )" == 1 ]; then  
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
 		  cflags="$cflags -L$MKLROOT/lib/intel64 -liomp5"
 		fi	
       fi
