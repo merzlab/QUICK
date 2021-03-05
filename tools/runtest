@@ -188,6 +188,22 @@ print_test_info(){
     ene_PH3_rhf_ccpvdz)                echo "PH3: RHF energy test: cc-pVDZ basis set";;            # currently disabled
     ene_SiH4_rhf_ccpvdz)               echo "SiH4: RHF energy test: cc-pVDZ basis set";;           # currently disabled
     ene_SO2_rhf_ccpvdz)                echo "SO2: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_AlH3_rhf_def2sv_p)             echo "ALH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_BeH2_rhf_def2sv_p)             echo "BeH2: RHF energy test: DEF2-SV(P) basis set";;
+    ene_BH3_rhf_def2sv_p)              echo "BH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_CaCl2_rhf_def2sv_p)            echo "CaCl2: RHF energy test: DEF2-SV(P) basis set";;
+    ene_CH4_rhf_def2sv_p)              echo "CH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_H2O_rhf_def2sv_p)              echo "H2O: RHF energy test: DEF2-SV(P) basis set";;
+    ene_HBr_rhf_def2sv_p)              echo "HBr: RHF energy test: DEF2-SV(P) basis set";;
+    ene_HI_rhf_def2sv_p)               echo "HI: RHF energy test: DEF2-SV(P) basis set";;
+    ene_KCl_rhf_def2sv_p)              echo "KCl: RHF energy test: DEF2-SV(P) basis set";;
+    ene_LiF_rhf_def2sv_p)              echo "LiF: RHF energy test: DEF2-SV(P) basis set";;
+    ene_MgO_rhf_def2sv_p)              echo "MgO: RHF energy test: DEF2-SV(P) basis set";;
+    ene_NaCl_rhf_def2sv_p)             echo "NaCl: RHF energy test: DEF2-SV(P) basis set";;
+    ene_NH4_rhf_def2sv_p)              echo "NH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_PH3_rhf_def2sv_p)              echo "PH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_SiH4_rhf_def2sv_p)             echo "SiH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_SO2_rhf_def2sv_p)              echo "SO2: RHF energy test: DEF2-SV(P) basis set";;
     ene_AlH3_rhf_def2svp)              echo "ALH3: RHF energy test: DEF2-SVP basis set";;
     ene_BeH2_rhf_def2svp)              echo "BeH2: RHF energy test: DEF2-SVP basis set";;
     ene_BH3_rhf_def2svp)               echo "BH3: RHF energy test: DEF2-SVP basis set";;
