@@ -1,0 +1,6 @@
+HF  BASIS=def2-svp cutoff=1.0e-9 denserms=1.0e-6  zmake ENERGY DIPOLE CHARGE=0
+
+Al        -2.62270       -0.15651       -0.06051
+H         -1.52270       -0.15651       -0.06051
+H         -3.17270       -0.86950        0.57127
+H         -3.17270        0.55647       -0.69230
