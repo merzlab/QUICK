@@ -94,175 +94,177 @@ exit 0;
 print_test_info(){
 
   ismp2='no'
-
+  testinfo=""
   case "$t" in
-    ene_AlH3_rhf_sto3g)                echo "ALH3: RHF energy test: STO-3G basis set";;
-    ene_BeH2_rhf_sto3g)                echo "BeH2: RHF energy test: STO-3G basis set";;
-    ene_BH3_rhf_sto3g)                 echo "BH3: RHF energy test: STO-3G basis set";;
-    ene_CaCl2_rhf_sto3g)               echo "CaCl2: RHF energy test: STO-3G basis set";;
-    ene_CH4_rhf_sto3g)                 echo "CH4: RHF energy test: STO-3G basis set";;
-    ene_H2O_rhf_sto3g)                 echo "H2O: RHF energy test: STO-3G basis set";;
-    ene_HBr_rhf_sto3g)                 echo "HBr: RHF energy test: STO-3G basis set";;
-    ene_HI_rhf_sto3g)                  echo "HI: RHF energy test: STO-3G basis set";;
-    ene_KCl_rhf_sto3g)                 echo "KCl: RHF energy test: STO-3G basis set";;
-    ene_LiF_rhf_sto3g)                 echo "LiF: RHF energy test: STO-3G basis set";;
-    ene_MgO_rhf_sto3g)                 echo "MgO: RHF energy test: STO-3G basis set";;
-    ene_NaCl_rhf_sto3g)                echo "NaCl: RHF energy test: STO-3G basis set";;
-    ene_NH4_rhf_sto3g)                 echo "NH4: RHF energy test: STO-3G basis set";;
-    ene_PO4_3_rhf_sto3g)               echo "PO4-3: RHF energy test: STO-3G basis set";;
-    ene_SiH4_rhf_sto3g)                echo "SiH4: RHF energy test: STO-3G basis set";;
-    ene_SO2_rhf_sto3g)                 echo "SO2: RHF energy test: STO-3G basis set";;
-    ene_AlH3_rhf_321g)                 echo "ALH3: RHF energy test: 3-21G basis set";;
-    ene_BeH2_rhf_321g)                 echo "BeH2: RHF energy test: 3-21G basis set";;
-    ene_BH3_rhf_321g)                  echo "BH3: RHF energy test: 3-21G basis set";;
-    ene_CaCl2_rhf_321g)                echo "CaCl2: RHF energy test: 3-21G basis set";;
-    ene_CH4_rhf_321g)                  echo "CH4: RHF energy test: 3-21G basis set";;
-    ene_H2O_rhf_321g)                  echo "H2O: RHF energy test: 3-21G basis set";;
-    ene_HBr_rhf_321g)                  echo "HBr: RHF energy test: 3-21G basis set";;
-    ene_HI_rhf_321g)                   echo "HI: RHF energy test: 3-21G basis set";;
-    ene_KCl_rhf_321g)                  echo "KCl: RHF energy test: 3-21G basis set";;
-    ene_LiF_rhf_321g)                  echo "LiF: RHF energy test: 3-21G basis set";;
-    ene_MgO_rhf_321g)                  echo "MgO: RHF energy test: 3-21G basis set";;
-    ene_NaCl_rhf_321g)                 echo "NaCl: RHF energy test: 3-21G basis set";;
-    ene_NH4_rhf_321g)                  echo "NH4: RHF energy test: 3-21G basis set";;
-    ene_PO4_3_rhf_321g)                echo "PO4-3: RHF energy test: 3-21G basis set";;
-    ene_SiH4_rhf_321g)                 echo "SiH4: RHF energy test: 3-21G basis set";;
-    ene_SO2_rhf_321g)                  echo "SO2: RHF energy test: 3-21G basis set";;
-    ene_AlH3_rhf_631g)                 echo "ALH3: RHF energy test: 6-31G basis set";;
-    ene_BeH2_rhf_631g)                 echo "BeH2: RHF energy test: 6-31G basis set";;
-    ene_BH3_rhf_631g)                  echo "BH3: RHF energy test: 6-31G basis set";;
-    ene_CaCl2_rhf_631g)                echo "CaCl2: RHF energy test: 6-31G basis set";;            # currently disabled
-    ene_CH4_rhf_631g)                  echo "CH4: RHF energy test: 6-31G basis set";;
-    ene_H2O_rhf_631g)                  echo "H2O: RHF energy test: 6-31G basis set";;
-    ene_HBr_rhf_631g)                  echo "HBr: RHF energy test: 6-31G basis set";;              # currently disabled
-    ene_KCl_rhf_631g)                  echo "KCl: RHF energy test: 6-31G basis set";;              # currently disabled
-    ene_LiF_rhf_631g)                  echo "LiF: RHF energy test: 6-31G basis set";;
-    ene_MgO_rhf_631g)                  echo "MgO: RHF energy test: 6-31G basis set";;
-    ene_NaCl_rhf_631g)                 echo "NaCl: RHF energy test: 6-31G basis set";;
-    ene_NH4_rhf_631g)                  echo "NH4: RHF energy test: 6-31G basis set";;
-    ene_PO4_3_rhf_631g)                echo "PO4-3: RHF energy test: 6-31G basis set";;
-    ene_SiH4_rhf_631g)                 echo "SiH4: RHF energy test: 6-31G basis set";;
-    ene_SO2_rhf_631g)                  echo "SO2: RHF energy test: 6-31G basis set";;
-    ene_AlH3_rhf_631gs)                echo "ALH3: RHF energy test: 6-31G* basis set";;
-    ene_BeH2_rhf_631gs)                echo "BeH2: RHF energy test: 6-31G* basis set";;
-    ene_BH3_rhf_631gs)                 echo "BH3: RHF energy test: 6-31G* basis set";;
-    ene_CaCl2_rhf_631gs)               echo "CaCl2: RHF energy test: 6-31G* basis set";;           # currently disabled
-    ene_CH4_rhf_631gs)                 echo "CH4: RHF energy test: 6-31G* basis set";;
-    ene_H2O_rhf_631gs)                 echo "H2O: RHF energy test: 6-31G* basis set";;
-    ene_HBr_rhf_631gs)                 echo "HBr: RHF energy test: 6-31G* basis set";;             # currently disabled
-    ene_KCl_rhf_631gs)                 echo "KCl: RHF energy test: 6-31G* basis set";;             # currently disabled
-    ene_LiF_rhf_631gs)                 echo "LiF: RHF energy test: 6-31G* basis set";;
-    ene_MgO_rhf_631gs)                 echo "MgO: RHF energy test: 6-31G* basis set";;
-    ene_NaCl_rhf_631gs)                echo "NaCl: RHF energy test: 6-31G* basis set";;
-    ene_NH4_rhf_631gs)                 echo "NH4: RHF energy test: 6-31G* basis set";;
-    ene_PO4_3_rhf_631gs)               echo "PO4-3: RHF energy test: 6-31G* basis set";;
-    ene_SiH4_rhf_631gs)                echo "SiH4: RHF energy test: 6-31G* basis set";;
-    ene_SO2_rhf_631gs)                 echo "SO2: RHF energy test: 6-31G* basis set";;
-    ene_AlH3_rhf_631gss)               echo "ALH3: RHF energy test: 6-31G** basis set";;
-    ene_BeH2_rhf_631gss)               echo "BeH2: RHF energy test: 6-31G** basis set";;
-    ene_BH3_rhf_631gss)                echo "BH3: RHF energy test: 6-31G** basis set";;
-    ene_CaCl2_rhf_631gss)              echo "CaCl2: RHF energy test: 6-31G** basis set";;          # currently disabled
-    ene_CH4_rhf_631gss)                echo "CH4: RHF energy test: 6-31G** basis set";;
-    ene_H2O_rhf_631gss)                echo "H2O: RHF energy test: 6-31G** basis set";;
-    ene_HBr_rhf_631gss)                echo "HBr: RHF energy test: 6-31G** basis set";;            # currently disabled
-    ene_KCl_rhf_631gss)                echo "KCl: RHF energy test: 6-31G** basis set";;            # currently disabled
-    ene_LiF_rhf_631gss)                echo "LiF: RHF energy test: 6-31G** basis set";;
-    ene_MgO_rhf_631gss)                echo "MgO: RHF energy test: 6-31G** basis set";;
-    ene_NaCl_rhf_631gss)               echo "NaCl: RHF energy test: 6-31G** basis set";;
-    ene_NH4_rhf_631gss)                echo "NH4: RHF energy test: 6-31G** basis set";;
-    ene_PO4_3_rhf_631gss)              echo "PO4-3: RHF energy test: 6-31G** basis set";;
-    ene_SiH4_rhf_631gss)               echo "SiH4: RHF energy test: 6-31G** basis set";;
-    ene_SO2_rhf_631gss)                echo "SO2: RHF energy test: 6-31G** basis set";;
-    ene_AlH3_rhf_ccpvdz)               echo "ALH3: RHF energy test: cc-pVDZ basis set";;           # currently disabled
-    ene_BeH2_rhf_ccpvdz)               echo "BeH2: RHF energy test: cc-pVDZ basis set";;
-    ene_BH3_rhf_ccpvdz)                echo "BH3: RHF energy test: cc-pVDZ basis set";;
-    ene_CaCl2_rhf_ccpvdz)              echo "CaCl2: RHF energy test: cc-pVDZ basis set";;          # currently disabled
-    ene_CH4_rhf_ccpvdz)                echo "CH4: RHF energy test: cc-pVDZ basis set";;
-    ene_H2O_rhf_ccpvdz)                echo "H2O: RHF energy test: cc-pVDZ basis set";;
-    ene_HBr_rhf_ccpvdz)                echo "HBr: RHF energy test: cc-pVDZ basis set";;            # currently disabled
-    ene_KCl_rhf_ccpvdz)                echo "KCl: RHF energy test: cc-pVDZ basis set";;            # currently disabled
-    ene_LiF_rhf_ccpvdz)                echo "LiF: RHF energy test: cc-pVDZ basis set";;
-    ene_MgO_rhf_ccpvdz)                echo "MgO: RHF energy test: cc-pVDZ basis set";;            # currently disabled
-    ene_NaCl_rhf_ccpvdz)               echo "NaCl: RHF energy test: cc-pVDZ basis set";;           # currently disabled
-    ene_NH4_rhf_ccpvdz)                echo "NH4: RHF energy test: cc-pVDZ basis set";;
-    ene_PH3_rhf_ccpvdz)                echo "PH3: RHF energy test: cc-pVDZ basis set";;            # currently disabled
-    ene_SiH4_rhf_ccpvdz)               echo "SiH4: RHF energy test: cc-pVDZ basis set";;           # currently disabled
-    ene_SO2_rhf_ccpvdz)                echo "SO2: RHF energy test: cc-pVDZ basis set";;            # currently disabled
-    ene_AlH3_rhf_def2sv_p)             echo "ALH3: RHF energy test: DEF2-SV(P) basis set";;
-    ene_BeH2_rhf_def2sv_p)             echo "BeH2: RHF energy test: DEF2-SV(P) basis set";;
-    ene_BH3_rhf_def2sv_p)              echo "BH3: RHF energy test: DEF2-SV(P) basis set";;
-    ene_CaCl2_rhf_def2sv_p)            echo "CaCl2: RHF energy test: DEF2-SV(P) basis set";;
-    ene_CH4_rhf_def2sv_p)              echo "CH4: RHF energy test: DEF2-SV(P) basis set";;
-    ene_H2O_rhf_def2sv_p)              echo "H2O: RHF energy test: DEF2-SV(P) basis set";;
-    ene_HBr_rhf_def2sv_p)              echo "HBr: RHF energy test: DEF2-SV(P) basis set";;
-    ene_HI_rhf_def2sv_p)               echo "HI: RHF energy test: DEF2-SV(P) basis set";;
-    ene_KCl_rhf_def2sv_p)              echo "KCl: RHF energy test: DEF2-SV(P) basis set";;
-    ene_LiF_rhf_def2sv_p)              echo "LiF: RHF energy test: DEF2-SV(P) basis set";;
-    ene_MgO_rhf_def2sv_p)              echo "MgO: RHF energy test: DEF2-SV(P) basis set";;
-    ene_NaCl_rhf_def2sv_p)             echo "NaCl: RHF energy test: DEF2-SV(P) basis set";;
-    ene_NH4_rhf_def2sv_p)              echo "NH4: RHF energy test: DEF2-SV(P) basis set";;
-    ene_PH3_rhf_def2sv_p)              echo "PH3: RHF energy test: DEF2-SV(P) basis set";;
-    ene_SiH4_rhf_def2sv_p)             echo "SiH4: RHF energy test: DEF2-SV(P) basis set";;
-    ene_SO2_rhf_def2sv_p)              echo "SO2: RHF energy test: DEF2-SV(P) basis set";;
-    ene_AlH3_rhf_def2svp)              echo "ALH3: RHF energy test: DEF2-SVP basis set";;
-    ene_BeH2_rhf_def2svp)              echo "BeH2: RHF energy test: DEF2-SVP basis set";;
-    ene_BH3_rhf_def2svp)               echo "BH3: RHF energy test: DEF2-SVP basis set";;
-    ene_CaCl2_rhf_def2svp)             echo "CaCl2: RHF energy test: DEF2-SVP basis set";;
-    ene_CH4_rhf_def2svp)               echo "CH4: RHF energy test: DEF2-SVP basis set";;
-    ene_H2O_rhf_def2svp)               echo "H2O: RHF energy test: DEF2-SVP basis set";;
-    ene_HBr_rhf_def2svp)               echo "HBr: RHF energy test: DEF2-SVP basis set";;
-    ene_HI_rhf_def2svp)                echo "HI: RHF energy test: DEF2-SVP basis set";;
-    ene_KCl_rhf_def2svp)               echo "KCl: RHF energy test: DEF2-SVP basis set";;
-    ene_LiF_rhf_def2svp)               echo "LiF: RHF energy test: DEF2-SVP basis set";;
-    ene_MgO_rhf_def2svp)               echo "MgO: RHF energy test: DEF2-SVP basis set";;
-    ene_NaCl_rhf_def2svp)              echo "NaCl: RHF energy test: DEF2-SVP basis set";;
-    ene_NH4_rhf_def2svp)               echo "NH4: RHF energy test: DEF2-SVP basis set";;
-    ene_PH3_rhf_def2svp)               echo "PH3: RHF energy test: DEF2-SVP basis set";;
-    ene_SiH4_rhf_def2svp)              echo "SiH4: RHF energy test: DEF2-SVP basis set";;
-    ene_SO2_rhf_def2svp)               echo "SO2: RHF energy test: DEF2-SVP basis set";;
-    ene_AlH3_rhf_def2svpd)             echo "ALH3: RHF energy test: DEF2-SVPD basis set";;
-    ene_BeH2_rhf_def2svpd)             echo "BeH2: RHF energy test: DEF2-SVPD basis set";;
-    ene_BH3_rhf_def2svpd)              echo "BH3: RHF energy test: DEF2-SVPD basis set";;
-    ene_CaCl2_rhf_def2svpd)            echo "CaCl2: RHF energy test: DEF2-SVPD basis set";;        # currently disabled
-    ene_CH4_rhf_def2svpd)              echo "CH4: RHF energy test: DEF2-SVPD basis set";;
-    ene_H2O_rhf_def2svpd)              echo "H2O: RHF energy test: DEF2-SVPD basis set";;
-    ene_HBr_rhf_def2svpd)              echo "HBr: RHF energy test: DEF2-SVPD basis set";;          # currently disabled
-    ene_HI_rhf_def2svpd)               echo "HI: RHF energy test: DEF2-SVPD basis set";;           # currently disabled
-    ene_KCl_rhf_def2svpd)              echo "KCl: RHF energy test: DEF2-SVPD basis set";;
-    ene_LiF_rhf_def2svpd)              echo "LiF: RHF energy test: DEF2-SVPD basis set";;
-    ene_MgO_rhf_def2svpd)              echo "MgO: RHF energy test: DEF2-SVPD basis set";;
-    ene_NaCl_rhf_def2svpd)             echo "NaCl: RHF energy test: DEF2-SVPD basis set";;
-    ene_NH4_rhf_def2svpd)              echo "NH4: RHF energy test: DEF2-SVPD basis set";;
-    ene_PH3_rhf_def2svpd)              echo "PH3: RHF energy test: DEF2-SVPD basis set";;
-    ene_SiH4_rhf_def2svpd)             echo "SiH4: RHF energy test: DEF2-SVPD basis set";;
-    ene_SO2_rhf_def2svpd)              echo "SO2: RHF energy test: DEF2-SVPD basis set";;
-    ene_psb5_rhf_631g)                 echo "PSB5: RHF energy test: s and p basis functions";;
-    ene_psb5_rhf_631gss)               echo "PSB5: RHF energy test: s, p and d basis functions";;
-    ene_acetone_rhf_321g)              echo "Acetone: RHF energy test: s and p basis functions";;
-    ene_psb3_blyp_631g)                echo "PSB3: DFT energy test: s and p basis functions, native BLYP functional";;
-    ene_psb3_blyp_631gss)              echo "PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
-    ene_psb3_b3lyp_631g)               echo "PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
-    ene_psb3_b3lyp_631gss)             echo "PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
-    ene_psb3_libxc_lda_631g)           echo "PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
-    ene_psb3_libxc_gga_631g)           echo "PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
-    ene_psb3_libxc_hgga_631g)          echo "PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
-    ene_wat2_mp2_631g)                 echo "Water-2 MP2 energy test: s and p basis functions"; ismp2='yes';;
-    ene_wat2_mp2_631gss)               echo "Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
-    grad_nacl_b3lyP_def2svp)           echo "Nacl: DFT gradient test: s, p and d basis functions, native B3LYP functional";;
-    grad_psb3_b3lyp_631g)              echo "PSB3: DFT gradient test: s and p basis functions";;
-    grad_psb3_b3lyp_631gss)            echo "PSB3: DFT gradient test: s and p and d basis functions";;
-    grad_ch3conhch3_b3lyp_ccpvdz)      echo "CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
-    grad_wat_b3lyp_ccpvdz)             echo "Water: DFT point charge gradient test: s and p and d basis functions";;
-    grad_c10h9o2s_b3yp_def2svp)        echo "C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
-    grad_daspi_meoh_b3lyp_sto3g)       echo "DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
-    grad_hbdi_meoh_libxc_blyp_sto3g)   echo "HBDI-MeOH: DFT point charge gradient test: s and p basis functions";;
-    grad_naip_meoh_libxc_pbeh_sto3g)   echo "NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
-    grad_ncnaip_b3lyp_sto3g)           echo "NAIP2-MeOH: DFT point charge gradient test: s and p basis functions";;
-    grad_rpsb_meoh_rhf_sto3g)          echo "RPSB-MeOH: RHF point charge gradient test: s and p basis functions";;
-    opt_wat_rhf_631g)                  echo "Water: RHF geometry optimization test: s and p basis functions";;
-    opt_wat_rhf_ccpvdz)                echo "Water: RHF geometry optimization test: s, p and d basis functions";;
-    opt_nh4_pbe_def2svp)               echo "NH4+: DFT geometry optimization test: s, p and d basis functions";;
+    ene_AlH3_rhf_sto3g)                testinfo="ALH3: RHF energy test: STO-3G basis set";;
+    ene_BeH2_rhf_sto3g)                testinfo="BeH2: RHF energy test: STO-3G basis set";;
+    ene_BH3_rhf_sto3g)                 testinfo="BH3: RHF energy test: STO-3G basis set";;
+    ene_CaCl2_rhf_sto3g)               testinfo="CaCl2: RHF energy test: STO-3G basis set";;
+    ene_CH4_rhf_sto3g)                 testinfo="CH4: RHF energy test: STO-3G basis set";;
+    ene_H2O_rhf_sto3g)                 testinfo="H2O: RHF energy test: STO-3G basis set";;
+    ene_HBr_rhf_sto3g)                 testinfo="HBr: RHF energy test: STO-3G basis set";;
+    ene_HI_rhf_sto3g)                  testinfo="HI: RHF energy test: STO-3G basis set";;
+    ene_KCl_rhf_sto3g)                 testinfo="KCl: RHF energy test: STO-3G basis set";;
+    ene_LiF_rhf_sto3g)                 testinfo="LiF: RHF energy test: STO-3G basis set";;
+    ene_MgO_rhf_sto3g)                 testinfo="MgO: RHF energy test: STO-3G basis set";;
+    ene_NaCl_rhf_sto3g)                testinfo="NaCl: RHF energy test: STO-3G basis set";;
+    ene_NH4_rhf_sto3g)                 testinfo="NH4: RHF energy test: STO-3G basis set";;
+    ene_PO4_3_rhf_sto3g)               testinfo="PO4-3: RHF energy test: STO-3G basis set";;
+    ene_SiH4_rhf_sto3g)                testinfo="SiH4: RHF energy test: STO-3G basis set";;
+    ene_SO2_rhf_sto3g)                 testinfo="SO2: RHF energy test: STO-3G basis set";;
+    ene_AlH3_rhf_321g)                 testinfo="ALH3: RHF energy test: 3-21G basis set";;
+    ene_BeH2_rhf_321g)                 testinfo="BeH2: RHF energy test: 3-21G basis set";;
+    ene_BH3_rhf_321g)                  testinfo="BH3: RHF energy test: 3-21G basis set";;
+    ene_CaCl2_rhf_321g)                testinfo="CaCl2: RHF energy test: 3-21G basis set";;
+    ene_CH4_rhf_321g)                  testinfo="CH4: RHF energy test: 3-21G basis set";;
+    ene_H2O_rhf_321g)                  testinfo="H2O: RHF energy test: 3-21G basis set";;
+    ene_HBr_rhf_321g)                  testinfo="HBr: RHF energy test: 3-21G basis set";;
+    ene_HI_rhf_321g)                   testinfo="HI: RHF energy test: 3-21G basis set";;
+    ene_KCl_rhf_321g)                  testinfo="KCl: RHF energy test: 3-21G basis set";;
+    ene_LiF_rhf_321g)                  testinfo="LiF: RHF energy test: 3-21G basis set";;
+    ene_MgO_rhf_321g)                  testinfo="MgO: RHF energy test: 3-21G basis set";;
+    ene_NaCl_rhf_321g)                 testinfo="NaCl: RHF energy test: 3-21G basis set";;
+    ene_NH4_rhf_321g)                  testinfo="NH4: RHF energy test: 3-21G basis set";;
+    ene_PO4_3_rhf_321g)                testinfo="PO4-3: RHF energy test: 3-21G basis set";;
+    ene_SiH4_rhf_321g)                 testinfo="SiH4: RHF energy test: 3-21G basis set";;
+    ene_SO2_rhf_321g)                  testinfo="SO2: RHF energy test: 3-21G basis set";;
+    ene_AlH3_rhf_631g)                 testinfo="ALH3: RHF energy test: 6-31G basis set";;
+    ene_BeH2_rhf_631g)                 testinfo="BeH2: RHF energy test: 6-31G basis set";;
+    ene_BH3_rhf_631g)                  testinfo="BH3: RHF energy test: 6-31G basis set";;
+    ene_CaCl2_rhf_631g)                testinfo="CaCl2: RHF energy test: 6-31G basis set";;            # currently disabled
+    ene_CH4_rhf_631g)                  testinfo="CH4: RHF energy test: 6-31G basis set";;
+    ene_H2O_rhf_631g)                  testinfo="H2O: RHF energy test: 6-31G basis set";;
+    ene_HBr_rhf_631g)                  testinfo="HBr: RHF energy test: 6-31G basis set";;              # currently disabled
+    ene_KCl_rhf_631g)                  testinfo="KCl: RHF energy test: 6-31G basis set";;              # currently disabled
+    ene_LiF_rhf_631g)                  testinfo="LiF: RHF energy test: 6-31G basis set";;
+    ene_MgO_rhf_631g)                  testinfo="MgO: RHF energy test: 6-31G basis set";;
+    ene_NaCl_rhf_631g)                 testinfo="NaCl: RHF energy test: 6-31G basis set";;
+    ene_NH4_rhf_631g)                  testinfo="NH4: RHF energy test: 6-31G basis set";;
+    ene_PO4_3_rhf_631g)                testinfo="PO4-3: RHF energy test: 6-31G basis set";;
+    ene_SiH4_rhf_631g)                 testinfo="SiH4: RHF energy test: 6-31G basis set";;
+    ene_SO2_rhf_631g)                  testinfo="SO2: RHF energy test: 6-31G basis set";;
+    ene_AlH3_rhf_631gs)                testinfo="ALH3: RHF energy test: 6-31G* basis set";;
+    ene_BeH2_rhf_631gs)                testinfo="BeH2: RHF energy test: 6-31G* basis set";;
+    ene_BH3_rhf_631gs)                 testinfo="BH3: RHF energy test: 6-31G* basis set";;
+    ene_CaCl2_rhf_631gs)               testinfo="CaCl2: RHF energy test: 6-31G* basis set";;           # currently disabled
+    ene_CH4_rhf_631gs)                 testinfo="CH4: RHF energy test: 6-31G* basis set";;
+    ene_H2O_rhf_631gs)                 testinfo="H2O: RHF energy test: 6-31G* basis set";;
+    ene_HBr_rhf_631gs)                 testinfo="HBr: RHF energy test: 6-31G* basis set";;             # currently disabled
+    ene_KCl_rhf_631gs)                 testinfo="KCl: RHF energy test: 6-31G* basis set";;             # currently disabled
+    ene_LiF_rhf_631gs)                 testinfo="LiF: RHF energy test: 6-31G* basis set";;
+    ene_MgO_rhf_631gs)                 testinfo="MgO: RHF energy test: 6-31G* basis set";;
+    ene_NaCl_rhf_631gs)                testinfo="NaCl: RHF energy test: 6-31G* basis set";;
+    ene_NH4_rhf_631gs)                 testinfo="NH4: RHF energy test: 6-31G* basis set";;
+    ene_PO4_3_rhf_631gs)               testinfo="PO4-3: RHF energy test: 6-31G* basis set";;
+    ene_SiH4_rhf_631gs)                testinfo="SiH4: RHF energy test: 6-31G* basis set";;
+    ene_SO2_rhf_631gs)                 testinfo="SO2: RHF energy test: 6-31G* basis set";;
+    ene_AlH3_rhf_631gss)               testinfo="ALH3: RHF energy test: 6-31G** basis set";;
+    ene_BeH2_rhf_631gss)               testinfo="BeH2: RHF energy test: 6-31G** basis set";;
+    ene_BH3_rhf_631gss)                testinfo="BH3: RHF energy test: 6-31G** basis set";;
+    ene_CaCl2_rhf_631gss)              testinfo="CaCl2: RHF energy test: 6-31G** basis set";;          # currently disabled
+    ene_CH4_rhf_631gss)                testinfo="CH4: RHF energy test: 6-31G** basis set";;
+    ene_H2O_rhf_631gss)                testinfo="H2O: RHF energy test: 6-31G** basis set";;
+    ene_HBr_rhf_631gss)                testinfo="HBr: RHF energy test: 6-31G** basis set";;            # currently disabled
+    ene_KCl_rhf_631gss)                testinfo="KCl: RHF energy test: 6-31G** basis set";;            # currently disabled
+    ene_LiF_rhf_631gss)                testinfo="LiF: RHF energy test: 6-31G** basis set";;
+    ene_MgO_rhf_631gss)                testinfo="MgO: RHF energy test: 6-31G** basis set";;
+    ene_NaCl_rhf_631gss)               testinfo="NaCl: RHF energy test: 6-31G** basis set";;
+    ene_NH4_rhf_631gss)                testinfo="NH4: RHF energy test: 6-31G** basis set";;
+    ene_PO4_3_rhf_631gss)              testinfo="PO4-3: RHF energy test: 6-31G** basis set";;
+    ene_SiH4_rhf_631gss)               testinfo="SiH4: RHF energy test: 6-31G** basis set";;
+    ene_SO2_rhf_631gss)                testinfo="SO2: RHF energy test: 6-31G** basis set";;
+    ene_AlH3_rhf_ccpvdz)               testinfo="ALH3: RHF energy test: cc-pVDZ basis set";;           # currently disabled
+    ene_BeH2_rhf_ccpvdz)               testinfo="BeH2: RHF energy test: cc-pVDZ basis set";;
+    ene_BH3_rhf_ccpvdz)                testinfo="BH3: RHF energy test: cc-pVDZ basis set";;
+    ene_CaCl2_rhf_ccpvdz)              testinfo="CaCl2: RHF energy test: cc-pVDZ basis set";;          # currently disabled
+    ene_CH4_rhf_ccpvdz)                testinfo="CH4: RHF energy test: cc-pVDZ basis set";;
+    ene_H2O_rhf_ccpvdz)                testinfo="H2O: RHF energy test: cc-pVDZ basis set";;
+    ene_HBr_rhf_ccpvdz)                testinfo="HBr: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_KCl_rhf_ccpvdz)                testinfo="KCl: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_LiF_rhf_ccpvdz)                testinfo="LiF: RHF energy test: cc-pVDZ basis set";;
+    ene_MgO_rhf_ccpvdz)                testinfo="MgO: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_NaCl_rhf_ccpvdz)               testinfo="NaCl: RHF energy test: cc-pVDZ basis set";;           # currently disabled
+    ene_NH4_rhf_ccpvdz)                testinfo="NH4: RHF energy test: cc-pVDZ basis set";;
+    ene_PH3_rhf_ccpvdz)                testinfo="PH3: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_SiH4_rhf_ccpvdz)               testinfo="SiH4: RHF energy test: cc-pVDZ basis set";;           # currently disabled
+    ene_SO2_rhf_ccpvdz)                testinfo="SO2: RHF energy test: cc-pVDZ basis set";;            # currently disabled
+    ene_AlH3_rhf_def2sv_p)             testinfo="ALH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_BeH2_rhf_def2sv_p)             testinfo="BeH2: RHF energy test: DEF2-SV(P) basis set";;
+    ene_BH3_rhf_def2sv_p)              testinfo="BH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_CaCl2_rhf_def2sv_p)            testinfo="CaCl2: RHF energy test: DEF2-SV(P) basis set";;
+    ene_CH4_rhf_def2sv_p)              testinfo="CH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_H2O_rhf_def2sv_p)              testinfo="H2O: RHF energy test: DEF2-SV(P) basis set";;
+    ene_HBr_rhf_def2sv_p)              testinfo="HBr: RHF energy test: DEF2-SV(P) basis set";;
+    ene_HI_rhf_def2sv_p)               testinfo="HI: RHF energy test: DEF2-SV(P) basis set";;
+    ene_KCl_rhf_def2sv_p)              testinfo="KCl: RHF energy test: DEF2-SV(P) basis set";;
+    ene_LiF_rhf_def2sv_p)              testinfo="LiF: RHF energy test: DEF2-SV(P) basis set";;
+    ene_MgO_rhf_def2sv_p)              testinfo="MgO: RHF energy test: DEF2-SV(P) basis set";;
+    ene_NaCl_rhf_def2sv_p)             testinfo="NaCl: RHF energy test: DEF2-SV(P) basis set";;
+    ene_NH4_rhf_def2sv_p)              testinfo="NH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_PH3_rhf_def2sv_p)              testinfo="PH3: RHF energy test: DEF2-SV(P) basis set";;
+    ene_SiH4_rhf_def2sv_p)             testinfo="SiH4: RHF energy test: DEF2-SV(P) basis set";;
+    ene_SO2_rhf_def2sv_p)              testinfo="SO2: RHF energy test: DEF2-SV(P) basis set";;
+    ene_AlH3_rhf_def2svp)              testinfo="ALH3: RHF energy test: DEF2-SVP basis set";;
+    ene_BeH2_rhf_def2svp)              testinfo="BeH2: RHF energy test: DEF2-SVP basis set";;
+    ene_BH3_rhf_def2svp)               testinfo="BH3: RHF energy test: DEF2-SVP basis set";;
+    ene_CaCl2_rhf_def2svp)             testinfo="CaCl2: RHF energy test: DEF2-SVP basis set";;
+    ene_CH4_rhf_def2svp)               testinfo="CH4: RHF energy test: DEF2-SVP basis set";;
+    ene_H2O_rhf_def2svp)               testinfo="H2O: RHF energy test: DEF2-SVP basis set";;
+    ene_HBr_rhf_def2svp)               testinfo="HBr: RHF energy test: DEF2-SVP basis set";;
+    ene_HI_rhf_def2svp)                testinfo="HI: RHF energy test: DEF2-SVP basis set";;
+    ene_KCl_rhf_def2svp)               testinfo="KCl: RHF energy test: DEF2-SVP basis set";;
+    ene_LiF_rhf_def2svp)               testinfo="LiF: RHF energy test: DEF2-SVP basis set";;
+    ene_MgO_rhf_def2svp)               testinfo="MgO: RHF energy test: DEF2-SVP basis set";;
+    ene_NaCl_rhf_def2svp)              testinfo="NaCl: RHF energy test: DEF2-SVP basis set";;
+    ene_NH4_rhf_def2svp)               testinfo="NH4: RHF energy test: DEF2-SVP basis set";;
+    ene_PH3_rhf_def2svp)               testinfo="PH3: RHF energy test: DEF2-SVP basis set";;
+    ene_SiH4_rhf_def2svp)              testinfo="SiH4: RHF energy test: DEF2-SVP basis set";;
+    ene_SO2_rhf_def2svp)               testinfo="SO2: RHF energy test: DEF2-SVP basis set";;
+    ene_AlH3_rhf_def2svpd)             testinfo="ALH3: RHF energy test: DEF2-SVPD basis set";;
+    ene_BeH2_rhf_def2svpd)             testinfo="BeH2: RHF energy test: DEF2-SVPD basis set";;
+    ene_BH3_rhf_def2svpd)              testinfo="BH3: RHF energy test: DEF2-SVPD basis set";;
+    ene_CaCl2_rhf_def2svpd)            testinfo="CaCl2: RHF energy test: DEF2-SVPD basis set";;        # currently disabled
+    ene_CH4_rhf_def2svpd)              testinfo="CH4: RHF energy test: DEF2-SVPD basis set";;
+    ene_H2O_rhf_def2svpd)              testinfo="H2O: RHF energy test: DEF2-SVPD basis set";;
+    ene_HBr_rhf_def2svpd)              testinfo="HBr: RHF energy test: DEF2-SVPD basis set";;          # currently disabled
+    ene_HI_rhf_def2svpd)               testinfo="HI: RHF energy test: DEF2-SVPD basis set";;           # currently disabled
+    ene_KCl_rhf_def2svpd)              testinfo="KCl: RHF energy test: DEF2-SVPD basis set";;
+    ene_LiF_rhf_def2svpd)              testinfo="LiF: RHF energy test: DEF2-SVPD basis set";;
+    ene_MgO_rhf_def2svpd)              testinfo="MgO: RHF energy test: DEF2-SVPD basis set";;
+    ene_NaCl_rhf_def2svpd)             testinfo="NaCl: RHF energy test: DEF2-SVPD basis set";;
+    ene_NH4_rhf_def2svpd)              testinfo="NH4: RHF energy test: DEF2-SVPD basis set";;
+    ene_PH3_rhf_def2svpd)              testinfo="PH3: RHF energy test: DEF2-SVPD basis set";;
+    ene_SiH4_rhf_def2svpd)             testinfo="SiH4: RHF energy test: DEF2-SVPD basis set";;
+    ene_SO2_rhf_def2svpd)              testinfo="SO2: RHF energy test: DEF2-SVPD basis set";;
+    ene_psb5_rhf_631g)                 testinfo="PSB5: RHF energy test: s and p basis functions";;
+    ene_psb5_rhf_631gss)               testinfo="PSB5: RHF energy test: s, p and d basis functions";;
+    ene_acetone_rhf_321g)              testinfo="Acetone: RHF energy test: s and p basis functions";;
+    ene_psb3_blyp_631g)                testinfo="PSB3: DFT energy test: s and p basis functions, native BLYP functional";;
+    ene_psb3_blyp_631gss)              testinfo="PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
+    ene_psb3_b3lyp_631g)               testinfo="PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
+    ene_psb3_b3lyp_631gss)             testinfo="PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_psb3_libxc_lda_631g)           testinfo="PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
+    ene_psb3_libxc_gga_631g)           testinfo="PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
+    ene_psb3_libxc_hgga_631g)          testinfo="PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
+    ene_wat2_mp2_631g)                 testinfo="Water-2 MP2 energy test: s and p basis functions"; ismp2='yes';;
+    ene_wat2_mp2_631gss)               testinfo="Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
+    grad_nacl_b3lyP_def2svp)           testinfo="Nacl: DFT gradient test: s, p and d basis functions, native B3LYP functional";;
+    grad_psb3_b3lyp_631g)              testinfo="PSB3: DFT gradient test: s and p basis functions";;
+    grad_psb3_b3lyp_631gss)            testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
+    grad_ch3conhch3_b3lyp_ccpvdz)      testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    grad_wat_b3lyp_ccpvdz)             testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
+    grad_c10h9o2s_b3yp_def2svp)        testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
+    grad_daspi_meoh_b3lyp_sto3g)       testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
+    grad_hbdi_meoh_libxc_blyp_sto3g)   testinfo="HBDI-MeOH: DFT point charge gradient test: s and p basis functions";;
+    grad_naip_meoh_libxc_pbeh_sto3g)   testinfo="NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
+    grad_ncnaip_b3lyp_sto3g)           testinfo="NAIP2-MeOH: DFT point charge gradient test: s and p basis functions";;
+    grad_rpsb_meoh_rhf_sto3g)          testinfo="RPSB-MeOH: RHF point charge gradient test: s and p basis functions";;
+    opt_wat_rhf_631g)                  testinfo="Water: RHF geometry optimization test: s and p basis functions";;
+    opt_wat_rhf_ccpvdz)                testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
+    opt_nh4_pbe_def2svp)               testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
   esac
+
+  echo $testinfo 
 
 }
 
