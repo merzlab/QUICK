@@ -264,7 +264,7 @@ print_test_info(){
     opt_nh4_pbe_def2svp)               testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
   esac
 
-  echo $testinfo 
+  echo $testinfo | tee -a "$QUICK_HOME/.quick_runtest.log" 
 
 }
 
@@ -300,7 +300,7 @@ set_test(){
 # total test count respectively. accuracy sets the tolerance. 
 run_test(){
 
-    echo "Running test $tc of $total_tests"
+    echo "Running test $tc of $total_tests" | tee -a "$QUICK_HOME/.quick_runtest.log"
 
     print_test_info "$t"
 
@@ -327,7 +327,7 @@ check_energy(){
     awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.ref.out" > "$t.ref.ene"
     awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.out" > "$t.ene"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene"
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene" | tee -a "$QUICK_HOME/.quick_runtest.log" 
 
 }
 
@@ -340,7 +340,7 @@ check_gradient(){
     awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.ref.out" > "$t.ref.grad"
     awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.out" > "$t.grad"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad"
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad" | tee -a "$QUICK_HOME/.quick_runtest.log"
 
 }
 
@@ -352,7 +352,7 @@ check_opt(){
     awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
     awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt"
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt" | tee -a "$QUICK_HOME/.quick_runtest.log"
 
 }
 
@@ -364,7 +364,7 @@ check_dipole(){
     awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.ref.out" > "$t.ref.dipole"
     awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.out" > "$t.dipole"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole"
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole" | tee -a "$QUICK_HOME/.quick_runtest.log"
 
 }
 
@@ -375,12 +375,11 @@ clean_up(){
 }
 
 # function to report summary
-
 print_summary(){
 
 echo "======================== Test Summary ========================" > runtest.summary.tmp0
 echo "" >> runtest.summary.tmp0
-echo "Total tests: $total_tests"
+
 for buildtype in "$buildtypes"; do
   total_ene=0
   total_grad=0
@@ -389,7 +388,9 @@ for buildtype in "$buildtypes"; do
   failed_grad=0
   failed_opt=0
 
-  sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' a > runtest.summary.tmp1
+  buildtype=`echo "$buildtype" | sed -e 's/\s\+//g' `
+
+  sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' "$QUICK_HOME/.quick_runtest.log" > runtest.summary.tmp1
 
   for i in `seq 1 "$total_tests"`; do
     if [ "$i" -lt "$total_tests" ]; then
@@ -580,12 +581,17 @@ fi
 
 cd "$testdir"
 
+total_tests=0 # total number of test cases
+
+# get the number of tests to run
+get_total_tests
+
 for buildtype in $buildtypes; do
 
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. "
+  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a "$QUICK_HOME/.quick_runtest.log"
   echo ""
 
   # set qexe
@@ -600,10 +606,10 @@ for buildtype in $buildtypes; do
   fi
 
 
-  total_tests=0 # total number of test cases
+#  total_tests=0 # total number of test cases
 
   # get the number of tests to run
-  get_total_tests
+#  get_total_tests
 
   tc=1 # test count
   cd "$testdir/runs/$buildtype"
@@ -651,12 +657,17 @@ for buildtype in $buildtypes; do
     done
   fi
 	
-  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype."
+  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype." | tee -a "$QUICK_HOME/.quick_runtest.log"
   echo ""
   cd "$testdir"
 done
 
 cd $installdir
+
+# print test summary
+print_summary
+
+/bin/rm -f "$QUICK_HOME/.quick_runtest.log"
 
 exit 0
 
