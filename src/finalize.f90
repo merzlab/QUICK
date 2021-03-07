@@ -77,7 +77,7 @@ subroutine finalize(io,ierr,option)
     !-------------------MPI/MASTER---------------------------------------
     if (master) then
         if (ierr /=0) then
-             SAFE_CALL(PrtDate(io,'Error Termination. Task Failed on:',ierr))
+             call PrtDate(io,'Error Termination. Task Failed on:',ierr)
         endif
     endif
 
@@ -85,7 +85,7 @@ subroutine finalize(io,ierr,option)
        
     if (master) then
         if (ierr ==0) then
-            SAFE_CALL(PrtDate(io,'Normal Termination. Task Finished on:',ierr))
+            call PrtDate(io,'Normal Termination. Task Finished on:',ierr)
         endif
     endif 
     !-------------------- End MPI/MASTER ---------------------------------
@@ -106,7 +106,6 @@ end subroutine finalize
 !-----------------------
 subroutine quick_exit(io, ierr)
 
-   !  quick_exit: exit procedure, designed to return an gentle way to exitm.
    use allmod
    implicit none
    integer io           ! close this unit if greater than zero
@@ -121,13 +120,11 @@ subroutine quick_exit(io, ierr)
       call flush(io)
    end if
 
-   call finalize(io,ierr,0)
+   call finalize(io,ierr,1)
 
 #ifdef MPIV
    if (ierr /= 0) then
-     call mpi_abort(MPI_COMM_WORLD, mpierror)
-   else
-     call mpi_finalize(mpierror)
+     call mpi_abort(MPI_COMM_WORLD, ierr, mpierror)
    endif
 #endif
 
