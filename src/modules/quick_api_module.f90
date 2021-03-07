@@ -418,7 +418,7 @@ subroutine run_quick(self,ierr)
   if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
 
   ! set molecular information into quick_molspec
-  call set_quick_molspecs(quick_api,ierr)
+  SAFE_CALL(set_quick_molspecs(quick_api,ierr))
 
   ! start the timer for initial guess
   call cpu_time(timer_begin%TIniGuess)
@@ -428,10 +428,10 @@ subroutine run_quick(self,ierr)
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) call getMolSad(ierr)
+    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
 
     ! assign basis functions
-    call getMol(ierr)
+    SAFE_CALL(getMol(ierr))
 
     self%firstStep = .false.
 
@@ -462,22 +462,20 @@ subroutine run_quick(self,ierr)
 
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
-    call getEnergy(failed, .false.)
+    SAFE_CALL(getEnergy(.false.,ierr))
   endif
 
   ! compute gradients
-  if ( .not. quick_method%opt .and. quick_method%grad) call gradient(failed)
+  if ( .not. quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
 
   ! run optimization
-  if (quick_method%opt)  call optimize(failed,ierr)
+  if (quick_method%opt)  SAFE_CALL(optimize(ierr))
 
 #if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then
         call gpu_cleanup()
       endif
 #endif
-
-  if (failed) call quick_exit(iOutFile,1)
 
 #ifdef MPIV
   if(master) then
