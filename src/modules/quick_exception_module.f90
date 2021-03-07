@@ -75,6 +75,24 @@ contains
     case(17)
       msg='Failed to open file.'
 
+    case(18)
+      msg='Atom out of range for core.'
+
+    case(19)
+      msg='Systems with unpaired electrons require UHF/UDFT calculations which are currently not supported.'
+
+    case(20)
+      msg='Higher multiplicities require UHF/UDFT calculations which are currently not supported. '
+
+    case(21)
+      msg='Incorrect number of electrons for a doublet.'
+
+    case(22)
+      msg='Incorrect number of electrons for a triplet.'
+
+    case(23)
+      msg='Incorrect number of electrons for a quadruplet.'
+
     case default
       msg='Unknown error.'
 
