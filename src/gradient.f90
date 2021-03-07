@@ -17,7 +17,7 @@
 !  11/27/2001 Ed Brothers: wrote the original code
 !------------------------------------------------------------------
 
-subroutine gradient(failed)
+subroutine gradient(ierr)
 
 !------------------------------------------------------------------
 ! This subroutine carries out a gradient calculation 
@@ -26,7 +26,7 @@ subroutine gradient(failed)
    use allmod
    implicit double precision(a-h,o-z)
 
-   logical :: failed
+   integer, intent(inout) :: ierr
    character(len=1) cartsym(3)
 
 #ifdef MPIV
@@ -58,7 +58,7 @@ subroutine gradient(failed)
    enddo
 
 
-   call getEnergy(failed,.false.)
+   call getEnergy(.false.,ierr)
 
    if (quick_method%analgrad) then
       call scf_gradient
