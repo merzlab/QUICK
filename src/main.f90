@@ -227,9 +227,8 @@
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
-    if (quick_method%opt)  call optimize(failed, ierr)     ! Cartesian
-    if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)
-    if (failed) call quick_exit(iOutFile,1)          ! If geometry optimization fails
+    if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
+    if (.not.quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
