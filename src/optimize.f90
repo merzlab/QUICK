@@ -4,12 +4,12 @@
 ! Ed Brothers. August 18,2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine optimize(failed,ierr)
+subroutine optimize(ierr)
    use allmod
    use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
 
-   logical :: done,diagco,failed
+   logical :: done,diagco
    character(len=1) cartsym(3)
    dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
    dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
@@ -154,7 +154,7 @@ subroutine optimize(failed,ierr)
 
 #endif
 
-      call getEnergy(failed, .false., ierr)
+      call getEnergy(.false., ierr)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.
@@ -179,9 +179,6 @@ subroutine optimize(failed,ierr)
 #endif
         !quick_method%bCUDA=.true.
       if (master) then
-
-         if (failed) return
-
 
          !-----------------------------------------------------------------------
          ! Copy current geometry into coordsnew. Fill the rest of the array w/ zeros.
