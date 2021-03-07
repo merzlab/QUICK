@@ -111,7 +111,7 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
-	config_module_dirs(libquick_mpi libxc/serial quick/mpi)
+	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
 
 
 	install_libraries(libquick_mpi EXPORT QUICK)
