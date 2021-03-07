@@ -9,7 +9,7 @@
 !   written by Ed Brothers. 08/15/02
 !   This subroutine calculates and ouptus the energy.
 !
-subroutine getEnergy(failed, isGuess, ierr)
+subroutine getEnergy(isGuess, ierr)
    use allMod
    implicit none
 
@@ -22,8 +22,6 @@ subroutine getEnergy(failed, isGuess, ierr)
 #ifdef MPIV
    include "mpif.h"
 #endif
-
-   logical :: failed
 
     !Form the exchange-correlation quadrature if DFT is requested
     if (quick_method%DFT .and. .not. isGuess) then
@@ -91,9 +89,9 @@ subroutine getEnergy(failed, isGuess, ierr)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(failed, isGuess)       ! unrestricted system
+      call uscf(isGuess,ierr)       ! unrestricted system
    else
-      call scf(failed,ierr)        ! restricted system
+      call scf(ierr)        ! restricted system
    endif
 
    !--------------- MPI/MASTER --------------------------
