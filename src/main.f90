@@ -60,7 +60,8 @@
       SAFE_CALL(set_quick_files(ierr))    ! from quick_file_module
 
       ! open output file
-      SAFE_CALL(quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr))
+      call quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr)
+      CHECK_ERROR(ierr)
 
       ! At the beginning of output file, copyright information will be output first
       SAFE_CALL(outputCopyright(iOutFile,ierr))
@@ -132,7 +133,7 @@
     !------------------------------------------------------------------
 
     !read job spec and mol spec
-    call read_Job_and_Atom()
+    call read_Job_and_Atom(ierr)
     !allocate essential variables
     call alloc(quick_molspec,ierr)
     if (quick_method%MFCC) call allocate_MFCC()
@@ -144,7 +145,7 @@
     call cpu_time(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) call getMolSad(ierr)
+    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
 
     ! b. MFCC initial guess
     if (quick_method%MFCC) then
@@ -155,7 +156,7 @@
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
-    call getMol(ierr)
+    SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV
     if(.not.quick_method%opt)then
@@ -215,11 +216,9 @@
                           -(timer_end%T2elb-timer_begin%T2elb)
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
-        call getEnergy(failed, .false.)
+        SAFE_CALL(getEnergy(.false.,ierr))
+        
     endif
-
-    if (failed) call quick_exit(iOutFile,1)
-
 
     !------------------------------------------------------------------
     ! 5. OPT Geometry if wanted
