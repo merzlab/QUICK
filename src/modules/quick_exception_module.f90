@@ -31,7 +31,7 @@ contains
   subroutine raise_exception(ierr)
 
     implicit none
-    integer, intent(in) :: ierr
+    integer, intent(inout) :: ierr
 
     if (ierr /= 0) then
       call print_exception(ierr)
