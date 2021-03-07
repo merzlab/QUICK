@@ -19,7 +19,7 @@
 //-----------------------------------------------
 // Set up specified device and be ready to ignite
 //-----------------------------------------------
-extern "C" void gpu_set_device_(int* gpu_dev_id)
+extern "C" void gpu_set_device_(int* gpu_dev_id, int* ierr)
 {
     gpu->gpu_dev_id = *gpu_dev_id;
 #ifdef DEBUG
@@ -30,7 +30,7 @@ extern "C" void gpu_set_device_(int* gpu_dev_id)
 //-----------------------------------------------
 // create gpu class
 //-----------------------------------------------
-extern "C" void gpu_startup_(void)
+extern "C" void gpu_startup_(int* ierr)
 {
 
 #if defined DEBUG || defined DEBUGTIME
@@ -51,7 +51,7 @@ extern "C" void gpu_startup_(void)
 //-----------------------------------------------
 // Initialize the device
 //-----------------------------------------------
-extern "C" void gpu_init_(void)
+extern "C" void gpu_init_(int* ierr)
 {
     
     PRINTDEBUG("BEGIN TO INIT")
@@ -129,7 +129,7 @@ extern "C" void gpu_init_(void)
     
     if (device == -1) {
         printf("NO CUDA 1.3 (OR ABOVE) SUPPORTED GPU IS FOUND\n");
-        gpu_shutdown_();
+        gpu_shutdown_(ierr);
         exit(-1);
     }
     
@@ -172,7 +172,7 @@ extern "C" void gpu_init_(void)
             case 2:
             case 5:
                 printf("GPU SM VERSION SHOULD BE HIGHER THAN 1.3\n");
-                gpu_shutdown_();
+                gpu_shutdown_(ierr);
                 exit(-1);
                 break;
             default:
@@ -197,7 +197,7 @@ extern "C" void gpu_init_(void)
 }
 
 extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
+                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv, int* ierr)
 {
     cudaError_t cuda_error;
     cudaDeviceProp prop;
@@ -227,7 +227,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 //-----------------------------------------------
 // shutdonw gpu and terminate gpu calculation part
 //-----------------------------------------------
-extern "C" void gpu_shutdown_(void)
+extern "C" void gpu_shutdown_(int* ierr)
 {
     PRINTDEBUG("BEGIN TO SHUTDOWN")
 
