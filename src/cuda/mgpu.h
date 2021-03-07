@@ -26,7 +26,7 @@
 // Query the availability of devices.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
+extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
 
     int gpuCount = 0;           // Total number of cuda devices available
@@ -65,7 +65,7 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
 //-----------------------------------------------
 // create gpu class
 //-----------------------------------------------
-void mgpu_startup(int mpirank)
+void mgpu_startup(int mpirank, int* ierr)
 {
 
 #if defined DEBUG || defined DEBUGTIME
@@ -94,7 +94,7 @@ void mgpu_startup(int mpirank)
 //-----------------------------------------------
 // Finalize the devices
 //-----------------------------------------------
-extern "C" void mgpu_shutdown_(void)
+extern "C" void mgpu_shutdown_(int* ierr)
 {
 
     PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
@@ -113,14 +113,14 @@ extern "C" void mgpu_shutdown_(void)
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
+extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 {
 
     cudaError_t status;
     cudaDeviceProp deviceProp;
 
     // Each node starts up GPUs
-    mgpu_startup(*mpirank);
+    mgpu_startup(*mpirank, ierr);
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION")
 

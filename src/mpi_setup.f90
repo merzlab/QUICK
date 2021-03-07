@@ -391,10 +391,11 @@
 ! Madu Manathunga 07/22/2020
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    subroutine delete_mgpu_setup()
+    subroutine delete_mgpu_setup(ierr)
 
       use quick_mpi_module
       implicit none
+      integer, intent(inout) :: ierr
 
       call deallocate_mgpu()
 
