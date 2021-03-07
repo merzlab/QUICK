@@ -260,26 +260,26 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 #ifdef CUDA
 
   ! startup cuda device
-  call gpu_startup()
+  call gpu_startup(ierr)
 
-  call gpu_set_device(-1)
+  call gpu_set_device(-1,ierr)
 
-  call gpu_init()
+  call gpu_init(ierr)
 
   ! write cuda information
-  call gpu_write_info(iOutFile)
+  call gpu_write_info(iOutFile,ierr)
     !------------------- END CUDA ---------------------------------------
 #endif
 
 #ifdef CUDA_MPIV
 
-  call mgpu_query(mpisize, mpirank, mgpu_id)
+  call mgpu_query(mpisize, mpirank, mgpu_id, ierr)
 
-  call mgpu_setup()
+  call mgpu_setup(ierr)
 
-  if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids)
+  if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr)
   
-  call mgpu_init(mpirank, mpisize, mgpu_id)
+  call mgpu_init(mpirank, mpisize, mgpu_id, ierr)
 
 #endif
 
@@ -446,7 +446,7 @@ subroutine run_quick(self,ierr)
 
 #if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
-  if(.not.quick_method%opt) call gpu_upload_molspecs()
+  if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
 #endif
 
   ! stop the timer for initial guess
@@ -676,12 +676,12 @@ subroutine delete_quick_job(ierr)
   integer, intent(inout) :: ierr
 
 #ifdef CUDA
-  call gpu_shutdown()
+  call gpu_shutdown(ierr)
 #endif
 
 #ifdef CUDA_MPIV
-    call delete_mgpu_setup()
-    call mgpu_shutdown()
+    call delete_mgpu_setup(ierr)
+    call mgpu_shutdown(ierr)
 #endif
 
   ! finalize quick
