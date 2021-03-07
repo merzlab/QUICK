@@ -7,7 +7,7 @@
 
 #include "util.fh"
 
-subroutine read_job_and_atom
+subroutine read_job_and_atom(ierr)
    
    ! this subroutine is to read job and atoms
    
@@ -24,9 +24,10 @@ subroutine read_job_and_atom
    
    ! Instant variables
    integer i,j,k
-   integer istrt,ierr
+   integer istrt
    character(len=200) :: keyWD
    character(len=20) :: tempstring
+   integer, intent(inout) :: ierr
 
    if (master) then
 
@@ -47,11 +48,11 @@ subroutine read_job_and_atom
       write(iOutFile,'("  KEYWORD=",a)') keyWD
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
-      call read(quick_method,keyWD,ierr)     ! read method from Keyword
+      SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
       call check(quick_method,iOutFile,ierr) ! check the correctness
       call print(quick_method,iOutFile,ierr) ! then print method
-      
+    
       ! read basis file
       SAFE_CALL(read_basis_file(keywd,ierr))
       call print_basis_file(iOutFile)
@@ -98,7 +99,10 @@ subroutine read_job_and_atom
 
 #ifdef MPIV
    !-------------------MPI/ALL NODES---------------------------------------
-   if (bMPI) call mpi_setup_job() ! communicates nodes and pass job specs to all nodes
+   if (bMPI) then 
+     call mpi_setup_job(ierr) ! communicates nodes and pass job specs to all nodes
+     CHECK_ERROR(ierr)
+   endif
    !-------------------MPI/ALL NODES---------------------------------------
 #endif
 
