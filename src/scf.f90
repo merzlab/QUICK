@@ -2,14 +2,14 @@
 
 ! Ed Brothers. November 27, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-subroutine scf(failed,ierr)
+subroutine scf(ierr)
    !-------------------------------------------------------
    ! this subroutine is to do scf job for restricted system
    !-------------------------------------------------------
    use allmod
    implicit double precision(a-h,o-z)
 
-   logical :: done,failed
+   logical :: done
    integer, intent(inout) :: ierr
    done=.false.
 
@@ -44,7 +44,6 @@ subroutine scf(failed,ierr)
 
    jscf=jscf+1
 
-   failed = failed.and.(jscf.gt.quick_method%iscf)
    if (quick_method%debug)  call debug_SCF(jscf)
 
    return
