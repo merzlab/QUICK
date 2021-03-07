@@ -8,7 +8,7 @@
 
 #include "util.fh"
 
-subroutine gpu_write_info(io)
+subroutine gpu_write_info(io, ierr)
     implicit none
     ! io unit
     integer io
@@ -22,6 +22,7 @@ subroutine gpu_write_info(io)
     integer name_len
     integer majorv
     integer minorv
+    integer, intent(inout) :: ierr
 
 !    write(io,*)
 !    write(io,'(a)')   '|------------ CUDA INFORMATION ---------------'
@@ -35,7 +36,8 @@ subroutine gpu_write_info(io)
 !    write(io,'(a)')   '|---------------------------------------------'
     write(io,*)
     
-    call gpu_get_device_info(gpu_dev_count,gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv)
+    call gpu_get_device_info(gpu_dev_count,gpu_dev_id,gpu_dev_mem,gpu_num_proc,&
+    gpu_core_freq,gpu_dev_name,name_len,majorv,minorv,ierr)
     write(io,'(a)')        '|------------ GPU INFORMATION ---------------'
     write(io,'(a,i8)')     '| CUDA ENABLED DEVICE         : ', gpu_dev_count
     write(io,'(a,i8)')     '| CUDA DEVICE IN USE          : ', gpu_dev_id
@@ -50,7 +52,7 @@ subroutine gpu_write_info(io)
 end subroutine gpu_write_info
 
 #ifdef CUDA_MPIV
-subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids)
+subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids, ierr)
     implicit none
     ! io unit
     integer io
@@ -66,6 +68,7 @@ subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids)
     integer name_len
     integer majorv
     integer minorv
+    integer, intent(inout) :: ierr
 
 !    write(io,*)
 !    write(io,'(a)')   '|------------ CUDA INFORMATION ---------------'
@@ -87,7 +90,7 @@ subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids)
     write(io,'(a)')         '|                                                            '
     write(io,'(a,i3,a)')      '|        --    MPI RANK ',rank,' --          '
     gpu_dev_id=mgpu_ids(rank+1)
-    call mgpu_get_device_info(gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv) 
+    call mgpu_get_device_info(gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,majorv,minorv,ierr) 
 
     write(io,'(a,i8)')      '|   CUDA DEVICE IN USE          : ', gpu_dev_id
     write(io,'(a,a)')       '|   CUDA DEVICE NAME            : ', gpu_dev_name(1:name_len)
