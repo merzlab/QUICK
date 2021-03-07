@@ -42,15 +42,13 @@ module quick_mpi_module
     !----------------
     subroutine check_quick_mpi(io,ierr)
         implicit none
-        integer io, ierr
-        
-        ierr=1
+        integer io
+        integer, intent(inout) :: ierr
         
         if (bMPI .and. mpisize.eq.1) then
             bMPI=.false.
         endif
         
-        ierr=0
         return
     end subroutine
     
@@ -60,16 +58,14 @@ module quick_mpi_module
     !----------------
     subroutine print_quick_mpi(io,ierr)
         implicit none
-        integer io,ierr
-        
-        ierr=1
+        integer io
+        integer, intent(inout) :: ierr        
         
         write (io,*)
         write (io,'("| - MPI Enabled -")')
         write (io,'("| TOTAL PROCESSOR = ",i5)') mpisize
         write (io,'("| MASTER NAME     = ",A30)') pname
         
-        ierr=0
     end subroutine print_quick_mpi
 
     ! all multi gpu mpi variable allocation should go here
