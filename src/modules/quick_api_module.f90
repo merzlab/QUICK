@@ -399,6 +399,7 @@ subroutine run_quick(self,ierr)
   use quick_calculated_module, only : quick_qm_struct
   use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
+  use quick_exception_module
 #ifdef MPIV
   use quick_mpi_module
 #endif
