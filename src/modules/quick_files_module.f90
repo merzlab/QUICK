@@ -252,17 +252,14 @@ module quick_files_module
         implicit none
 
         ! Pass-in parameters:
-        integer ierr    ! Error Flag
+        integer, intent(inout) :: ierr    ! Error Flag
         integer io      ! file to write
-
-        ierr=1
 
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
         write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
-        ierr=0
         return
     end subroutine print_quick_io_file
 
