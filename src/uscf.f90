@@ -2,14 +2,15 @@
 ! Ed Brothers. December 20, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-    subroutine uscf(failed, isGuess)
+    subroutine uscf(isGuess,ierr)
     use allmod
     implicit double precision(a-h,o-z)
-
-    logical :: done,failed
+    
+    logical :: done
     integer :: nelec,nelecb
     double precision :: V2(3,nbasis)
     logical, intent(in) :: isGuess
+    integer, intent(inout) :: ierr
     done = .false.
 
     nelec = quick_molspec%nelec
@@ -306,7 +307,6 @@
         elseif(jscf >= quick_method%iscf) then
             if(.not. isGuess) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
             done=.true.
-            failed=.true.
         elseif (prms >= oldprms) then
             if (mod(dble(jscf),2.d0) == 0.d0) then
                 if(.not. isGuess) write (ioutfile,'(" NOT IMPROVING.  ", &
