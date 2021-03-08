@@ -20,6 +20,8 @@
 
 #ifdef CUDA_MPIV
 
+#define CUDA_MPIV_MINBASIS 100
+
 #include "string.h"
 
 //-----------------------------------------------
