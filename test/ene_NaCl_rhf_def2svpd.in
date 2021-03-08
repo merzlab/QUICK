@@ -1,6 +1,0 @@
-HF  BASIS=def2-svpd cutoff=1.0e-9 denserms=1.0e-6  zmake ENERGY DIPOLE CHARGE=0
-
-Na        -6.71296        1.52486        0.00000
-Cl        -4.31558        1.52486        0.00000
-
-
