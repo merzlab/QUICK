@@ -434,7 +434,6 @@ endif
             character(len=200) :: keyWD
             character(len=200) :: tempstring
             integer :: itemp,rdinml,i,j
-            double precision :: rdnml
             type (quick_method_type) self
 
             call upcase(keyWD,200)
@@ -538,25 +537,17 @@ endif
             ! Density map
             ! JOHN FAVER 12/2008
             if (index(keywd,'DENSITYMAP') /= 0) then
-                self%gridspacing = rdnml(keywd,'DENSITYMAP')
-                !In case that reading scientific notation like '1e-8' fails
-                if (self%gridspacing == 0) then
-                    i = index(keywd,'DENSITYMAP=',.false.)
-                    j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                    read(keywd(i+10:i+j-2), *) self%gridspacing
-                endif
+                i = index(keywd,'DENSITYMAP=',.false.)
+                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
+                read(keywd(i+10:i+j-2), *) self%gridspacing
                 self%calcdens = .true.
             endif
 
             ! Density lapmap
             if (index(keywd,'DENSITYLAPMAP') /= 0) then
-                self%lapgridspacing= rdnml(keywd,'DENSITYLAPMAP')
-                !In case that reading scientific notation like '1e-8' fails
-                if (self%lapgridspacing == 0) then
-                    i = index(keywd,'DENSITYLAPMAP=',.false.)
-                    j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                    read(keywd(i+14:i+j-2), *) self%lapgridspacing
-                endif
+                i = index(keywd,'DENSITYLAPMAP=',.false.)
+                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
+                read(keywd(i+14:i+j-2), *) self%lapgridspacing
                 self%calcdenslap = .true.
             endif
 
@@ -568,24 +559,16 @@ endif
 
             ! DM Max RMS
             if (index(keywd,'DENSERMS=') /= 0) then
-                self%pmaxrms = rdnml(keywd,'DENSERMS')
-                !In case that reading scientific notation like '1e-8' fails
-                if (self%pmaxrms == 0) then
-                    i = index(keywd,'DENSERMS=',.false.)
-                    j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                    read(keywd(i+9:i+j-2), *) self%pmaxrms
-                endif
+                i = index(keywd,'DENSERMS=',.false.)
+                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
+                read(keywd(i+9:i+j-2), *) self%pmaxrms
             endif
  
            ! 2e-cutoff
             if (index(keywd,'CUTOFF=') /= 0) then
-                self%acutoff = rdnml(keywd,'CUTOFF')
-                !In case that reading scientific notation like '1e-8' fails
-                if (self%acutoff == 0) then
-                    i = index(keywd,'CUTOFF=',.false.)
-                    j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                    read(keywd(i+7:i+j-2), *) self%acutoff
-                endif
+                i = index(keywd,'CUTOFF=',.false.)
+                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
+                read(keywd(i+7:i+j-2), *) self%acutoff
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
                 self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
@@ -599,13 +582,9 @@ endif
 
             ! DM cutoff
             if (index(keywd,'MATRIXZERO=') /= 0) then
-                self%DMCutoff = rdnml(keywd,'MATRIXZERO')
-                !In case that reading scientific notation like '1e-8' fails
-                if (self%DMCutoff == 0) then
-                    i = index(keywd,'MATRIXZERO=',.false.)
-                    j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                    read(keywd(i+11:i+j-2), *) self%DMCutoff
-                endif
+                i = index(keywd,'MATRIXZERO=',.false.)
+                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
+                read(keywd(i+11:i+j-2), *) self%DMCutoff
             endif
 
             ! Basis cutoff
