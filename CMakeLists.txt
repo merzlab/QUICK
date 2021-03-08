@@ -149,10 +149,10 @@ endif()
 if(INSIDE_AMBER)
 
 	# install data in basis dir
-	install(DIRECTORY basis DESTINATION AmberTools/src/quick)
+	install(DIRECTORY basis DESTINATION AmberTools/src/quick COMPONENT Data)
 
 	# install tests dir
-	install(DIRECTORY test DESTINATION AmberTools/src/quick)
+	install(DIRECTORY test DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
 else()
 	# Standalone install

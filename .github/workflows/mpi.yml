@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update   
       - name: Install deps
         run: sudo apt-get -y install gfortran openmpi-bin
       - name: Configure mpi
@@ -35,6 +37,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran cmake openmpi-bin
       - name: Configure serial
