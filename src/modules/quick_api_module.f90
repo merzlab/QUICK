@@ -260,26 +260,26 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 #ifdef CUDA
 
   ! startup cuda device
-  call gpu_startup(ierr)
+  SAFE_CALL(gpu_startup(ierr))
 
-  call gpu_set_device(-1,ierr)
+  SAFE_CALL(gpu_set_device(-1,ierr))
 
-  call gpu_init(ierr)
+  SAFE_CALL(gpu_init(ierr))
 
   ! write cuda information
-  call gpu_write_info(iOutFile,ierr)
+  SAFE_CALL(gpu_write_info(iOutFile,ierr))
     !------------------- END CUDA ---------------------------------------
 #endif
 
 #ifdef CUDA_MPIV
 
-  call mgpu_query(mpisize, mpirank, mgpu_id, ierr)
+  SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
 
-  call mgpu_setup(ierr)
+  SAFE_CALL(mgpu_setup(ierr))
 
-  if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr)
+  if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
   
-  call mgpu_init(mpirank, mpisize, mgpu_id, ierr)
+  SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
 
 #endif
 
@@ -671,17 +671,18 @@ subroutine delete_quick_job(ierr)
 
   use quick_files_module
   use quick_mpi_module
+  use quick_exception_module
 
   implicit none
   integer, intent(inout) :: ierr
 
 #ifdef CUDA
-  call gpu_shutdown(ierr)
+  SAFE_CALL(gpu_shutdown(ierr))
 #endif
 
 #ifdef CUDA_MPIV
-    call delete_mgpu_setup(ierr)
-    call mgpu_shutdown(ierr)
+  SAFE_CALL(delete_mgpu_setup(ierr))
+  SAFE_CALL(mgpu_shutdown(ierr))
 #endif
 
   ! finalize quick

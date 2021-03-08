@@ -84,14 +84,14 @@
 
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
-    call gpu_startup(ierr)
+    SAFE_CALL(gpu_startup(ierr))
 #ifdef __PGI
     iarg = COMMAND_ARGUMENT_COUNT()
 #else
     iarg = iargc()
 #endif
 
-    call gpu_set_device(-1, ierr)
+    SAFE_CALL(gpu_set_device(-1, ierr))
 
     ! Handles an old mechanism where the user can specify GPU id from CLI
     if (iarg .ne. 0) then
@@ -100,29 +100,29 @@
             if (arg.eq."-gpu") then
                 call getarg (int(i+1,4), arg)
                 read(arg, '(I2)') gpu_device_id
-                call gpu_set_device(gpu_device_id, ierr)
+                SAFE_CALL(gpu_set_device(gpu_device_id, ierr))
                 write(*,*) "read -gpu from argument=",gpu_device_id
                 exit
             endif
         enddo
     endif
 
-    call gpu_init(ierr)
+    SAFE_CALL(gpu_init(ierr))
 
     ! write cuda information
-    call gpu_write_info(iOutFile, ierr)
+    SAFE_CALL(gpu_write_info(iOutFile, ierr))
     !------------------- END CUDA ---------------------------------------
 #endif
 
 #ifdef CUDA_MPIV
 
-    call mgpu_query(mpisize ,mpirank, mgpu_id, ierr)
+    SAFE_CALL(mgpu_query(mpisize ,mpirank, mgpu_id, ierr))
 
-    call mgpu_setup(ierr)
+    SAFE_CALL(mgpu_setup(ierr))
 
-    if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr)
+    if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
     
-    call mgpu_init(mpirank, mpisize, mgpu_id, ierr)
+    SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
 
 #endif
 
@@ -298,13 +298,13 @@
     !-----------------------------------------------------------------
 #ifdef CUDA
     if (master) then
-       call gpu_shutdown(ierr)
+       SAFE_CALL(gpu_shutdown(ierr))
     endif
 #endif
 
 #ifdef CUDA_MPIV
-    call delete_mgpu_setup(ierr)
-    call mgpu_shutdown(ierr)
+    SAFE_CALL(delete_mgpu_setup(ierr))
+    SAFE_CALL(mgpu_shutdown(ierr))
 #endif
 
     call finalize(iOutFile,ierr,0)
