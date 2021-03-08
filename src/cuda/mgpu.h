@@ -36,9 +36,9 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
     status = cudaGetDeviceCount(&gpuCount);
 
     if(gpuCount == 0){
-        printf("Error: Process %d couldnt find a GPU. Make sure there are enough plugged in GPUs. \n", *mpirank);
         cudaDeviceReset();
-        exit(-1);
+        *ierr=24;
+        return;
     }/*else if(gpuCount < *mpisize){
         printf("Error: Number of launched processes is greater than the available number of GPUs. Please relaunch with lower number of processes. \n");
         cudaDeviceReset();
@@ -51,10 +51,14 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 
 
 
-    if((devProp.major < 3) || (devProp.totalGlobalMem < minMem)){
-      printf("Error: GPU assigned for process %d is too old or already in use. \n", *mpirank);
+    if(devProp.major < 3){ 
+      *ierr=29;
+      return;
+    }
+    else if(devProp.totalGlobalMem < minMem){
       cudaDeviceReset();
-      exit(-1);
+      *ierr=30;
+      return;
     }
 
     *mgpu_id = devID;
