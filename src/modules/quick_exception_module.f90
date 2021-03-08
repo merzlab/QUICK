@@ -93,6 +93,27 @@ contains
     case(23)
       msg='Incorrect number of electrons for a quadruplet.'
 
+    case(24)
+      msg='No CUDA enabled devices found.'
+ 
+    case(25)
+      msg='Illegal device ID.'
+
+    case(26)
+      msg='CUDA version required for selected device is less than 1.3.'
+
+    case(27)
+      msg='CUDA 1.3 (or higher) enabled device not found.'
+
+    case(28)
+      msg='Device microarchitecture must be higher than 1.3.'
+
+    case(29)
+      msg='Microarchitecture of selected device is less than 3.0.'
+
+    case(30)
+      msg='Selected device is already in use.'
+
     case default
       msg='Unknown error.'
 
