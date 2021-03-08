@@ -25,6 +25,7 @@ subroutine getmolsad(ierr)
    double precision:: xyzsaved(3,natom)
    character(len=80) :: keywd
    character(len=20) :: tempstring
+   character(len=20) :: sadfile
    integer natomsaved
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
@@ -150,7 +151,9 @@ subroutine getmolsad(ierr)
             enddo
          endif
          ! From SCF calculation to get initial density guess
-         if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
+         !if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
+         if(.not. quick_method%readSAD) then
+            print *, "READSAD FLAG Not Found!"
             call getenergy(failed, .true.)
             do i=1,nbasis
                do j=1,nbasis
@@ -158,10 +161,12 @@ subroutine getmolsad(ierr)
                enddo
             enddo
          else
-            ! treat Zinc specially
-            open(213,file='znsad.txt')  !Read Zn
-            do i=1,39
-               do j=1,39
+            print *, "READSAD FLAG Found!"
+            sadfile = trim(quick_molspec%atom_type_sym(iitemp))//trim('sad.txt')
+            print *, "sadfile is ", sadfile
+            open(213,file=sadfile)  !Read from sadfile
+            do i=1,nbasis
+               do j=1,nbasis
                   read(213,*) ii,jj,temp
                   atomdens(iitemp,ii,jj)=temp
                enddo
