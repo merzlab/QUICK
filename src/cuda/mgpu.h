@@ -215,7 +215,7 @@ void mgpu_eri_greedy_distribute(){
     memset(tot_pcore,0, sizeof(int)*gpu->mpisize);
     memset(mpi_flags,0,sizeof(char)*gpu->mpisize*nitems);
     memset(tot_pval,0,sizeof(int)*gpu->mpisize);
-    memset(qtype_pcore,0,sizeof(int2)*gpu->mpisize*16);
+    memset(qtype_pcore,0,sizeof(int)*gpu->mpisize*16);
 #ifdef DEBUG
     memset(mpi_qidx,0,sizeof(int2)*gpu->mpisize*nitems);
     memset(mpi_pidx,0,sizeof(int2)*gpu->mpisize*nitems);
@@ -227,73 +227,80 @@ void mgpu_eri_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    int  q1, q2, p1, p2, psum, minp, min_core;
-    // Helps to store shell types per each core
-    int a=0;
+    if(nitems > CUDA_MPIV_MINBASIS){
 
-    // Sort s,p,d for the time being, increase the value by one to facilitate sorting
-    for(int q1_typ=0; q1_typ<4; q1_typ++){
-        for(int q2_typ=0; q2_typ<4; q2_typ++){
-
-            //Go through items
-            for (int i = 0; i<nitems; i++) {
-
-                // Get the shell type
-                q1     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
-                q2     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
-
-                // Check if the picked shell types match currently interested shell types
-                if(q1 == q1_typ && q2 == q2_typ){
-
-                    // Find out the core with least number of primitives of the current shell types
-                    min_core = 0;       // Assume master has the lowest number of primitives
-                    minp = tot_pval[0]; // Set master's primitive count as the lowest
-                    for(int impi=0; impi<gpu->mpisize;impi++){
-                        if(minp > tot_pval[impi]){
-                            minp = tot_pval[impi];
-                            min_core = impi;
+        int  q1, q2, p1, p2, psum, minp, min_core;
+        // Helps to store shell types per each core
+        int a=0;
+ 
+        // Sort s,p,d for the time being, increase the value by one to facilitate sorting
+        for(int q1_typ=0; q1_typ<4; q1_typ++){
+            for(int q2_typ=0; q2_typ<4; q2_typ++){
+ 
+                //Go through items
+                for (int i = 0; i<nitems; i++) {
+ 
+                    // Get the shell type
+                    q1     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
+                    q2     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
+ 
+                    // Check if the picked shell types match currently interested shell types
+                    if(q1 == q1_typ && q2 == q2_typ){
+ 
+                        // Find out the core with least number of primitives of the current shell types
+                        min_core = 0;       // Assume master has the lowest number of primitives
+                        minp = tot_pval[0]; // Set master's primitive count as the lowest
+                        for(int impi=0; impi<gpu->mpisize;impi++){
+                            if(minp > tot_pval[impi]){
+                                minp = tot_pval[impi];
+                                min_core = impi;
+                            }
                         }
-                    }
-
-                    // Store the primitive value in the total primitive value counter
-                    p1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]];
-                    p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]];
-                    psum=p1+p2;
-                    tot_pval[min_core] += psum;
-
-                    // Save the flag
-                    mpi_flags[min_core][i] = 1;
-
-                    // Store shell types for debugging
-                    qtype_pcore[min_core][a] +=1;
+ 
+                        // Store the primitive value in the total primitive value counter
+                        p1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]];
+                        p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]];
+                        psum=p1+p2;
+                        tot_pval[min_core] += psum;
+ 
+                        // Save the flag
+                        mpi_flags[min_core][i] = 1;
+ 
+                        // Store shell types for debugging
+                        qtype_pcore[min_core][a] +=1;
 
 #ifdef DEBUG
-                    //Get the q indices
-                    q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
-                    q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
-
-                    //Assign the indices for corresponding core
-                    mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
-                    mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
-
-                    //Store primitve number for debugging
-                    mpi_pidx[min_core][tot_pcore[min_core]].x = p1;
-                    mpi_pidx[min_core][tot_pcore[min_core]].y = p2;
-
-                    // Store the Qshell type for debugging
-                    qtypes[min_core][tot_pcore[min_core]].x = q1;
-                    qtypes[min_core][tot_pcore[min_core]].y = q2;
+                        //Get the q indices
+                        q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
+                        q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
+ 
+                        //Assign the indices for corresponding core
+                        mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
+                        mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
+ 
+                        //Store primitve number for debugging
+                        mpi_pidx[min_core][tot_pcore[min_core]].x = p1;
+                        mpi_pidx[min_core][tot_pcore[min_core]].y = p2;
+ 
+                        // Store the Qshell type for debugging
+                        qtypes[min_core][tot_pcore[min_core]].x = q1;
+                        qtypes[min_core][tot_pcore[min_core]].y = q2;
 #endif
 
-                    // Increase the counter for minimum core
-                    tot_pcore[min_core] += 1;
+                        // Increase the counter for minimum core
+                        tot_pcore[min_core] += 1;
+                    }
                 }
-            }
 
-            // Reset the primitive counter for current shell type
-            memset(tot_pval,0,sizeof(int)*gpu->mpisize);
-            a++;
+                // Reset the primitive counter for current shell type
+                memset(tot_pval,0,sizeof(int)*gpu->mpisize);
+                a++;
+            }
         }
+
+    }else{
+        // set all flags of master to true if nitems is less than minimum amount
+        memset(&mpi_flags[0][0],1,sizeof(char)*nitems);  
     }
 
 #ifdef DEBUG
@@ -322,7 +329,7 @@ void mgpu_eri_greedy_distribute(){
 
     gpu -> gpu_basis -> mpi_bcompute -> Upload();
     gpu -> gpu_sim.mpi_bcompute  = gpu -> gpu_basis -> mpi_bcompute  -> _devData;
-
+    
 }
 
 //--------------------------------------------------------
