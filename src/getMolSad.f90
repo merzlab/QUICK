@@ -151,7 +151,6 @@ subroutine getmolsad(ierr)
             enddo
          endif
          ! From SCF calculation to get initial density guess
-         !if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
          if(.not. quick_method%readSAD) then
             call getenergy(failed, .true.)
             do i=1,nbasis
