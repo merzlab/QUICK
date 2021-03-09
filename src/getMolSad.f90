@@ -171,7 +171,7 @@ subroutine getmolsad(ierr)
             endif           
 
          else
-            sadfile = trim(quick_molspec%atom_type_sym(iitemp))
+            sadfile = trim(sadGuessDir) // '/' // trim(quick_molspec%atom_type_sym(iitemp))
             open(213,file=sadfile)  !Read from sadfile
             do i=1,nbasis
                do j=1,nbasis
