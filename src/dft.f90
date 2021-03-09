@@ -2835,9 +2835,7 @@ subroutine gridformnew(iitype,distance,iiang)
          CALl LD0086(XANG,YANG,ZANG,WTANG,N)
          iiang=86
       endif
-   endif
-
-   if(quick_molspec%iattype(iitype).ge.3.and.quick_molspec%iattype(iitype).le.10)then
+    else if(quick_molspec%iattype(iitype).ge.3.and.quick_molspec%iattype(iitype).le.10)then
       if(distance.lt.lpartpara(1))then
          CALL LD0006(XANG,YANG,ZANG,WTANG,N)
          iiang=6
@@ -2854,9 +2852,7 @@ subroutine gridformnew(iitype,distance,iiang)
          CALl LD0086(XANG,YANG,ZANG,WTANG,N)
          iiang=86
       endif
-   endif
-
-   if(quick_molspec%iattype(iitype).ge.11.and.quick_molspec%iattype(iitype).le.18)then
+   else if(quick_molspec%iattype(iitype).ge.11.and.quick_molspec%iattype(iitype).le.18)then
       if(distance.lt.npartpara(1))then
          CALL LD0006(XANG,YANG,ZANG,WTANG,N)
          iiang=6
@@ -2873,9 +2869,7 @@ subroutine gridformnew(iitype,distance,iiang)
          CALl LD0086(XANG,YANG,ZANG,WTANG,N)
          iiang=86
       endif
-   endif
-
-   if(quick_molspec%iattype(iitype).eq.30)then
+   else 
       CALL LD0194(XANG,YANG,ZANG,WTANG,N)
       iiang=194
    endif
