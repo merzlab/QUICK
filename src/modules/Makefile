@@ -26,7 +26,7 @@ include $(MAKEIN)
 FOR=$(FC) $(FFLAGS)
 
 modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_files_module.o $(objfolder)/quick_mpi_module.o \
-		$(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
+		$(objfolder)/quick_constants_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_method_module.o \
 		$(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
 		$(objfolder)/quick_amber_interface_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
 		$(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \

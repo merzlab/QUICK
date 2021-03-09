@@ -5,9 +5,11 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 !
-
+#include "util.fh"
 module quick_method_module
     use quick_constants_module
+    use quick_input_parser_module  
+
     implicit none
 
     type quick_method_type
@@ -433,7 +435,7 @@ endif
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
-            integer :: itemp,rdinml,i,j
+            integer :: itemp,rdinml,i,j,ierror
             type (quick_method_type) self
 
             call upcase(keyWD,200)
@@ -514,9 +516,8 @@ endif
 
             if (index(keyWD,'ECP').ne.0)  then
                 self%ECP=.true.
-                i=index(keywd,'ECP=')
-                call rdword(keywd,i,j)
-                if (keywd(i+4:j).eq.'CUSTOM')  self%custECP=.true.
+                call read(keywd, 'ECP', tempstring)
+                if (tempstring .eq. 'CUSTOM') self%custECP=.true.
             endif
 
             if (index(keyWD,'USEDFT').ne.0) then
@@ -537,59 +538,57 @@ endif
             ! Density map
             ! JOHN FAVER 12/2008
             if (index(keywd,'DENSITYMAP') /= 0) then
-                i = index(keywd,'DENSITYMAP=',.false.)
-                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                read(keywd(i+10:i+j-2), *) self%gridspacing
+                call read(keywd, 'DENSITYMAP', self%gridspacing)
                 self%calcdens = .true.
             endif
-
+            
             ! Density lapmap
             if (index(keywd,'DENSITYLAPMAP') /= 0) then
-                i = index(keywd,'DENSITYLAPMAP=',.false.)
-                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                read(keywd(i+14:i+j-2), *) self%lapgridspacing
+                call read(keywd, 'DENSITYLAPMAP', self%lapgridspacing)
                 self%calcdenslap = .true.
             endif
 
             ! opt cycls
-            if (index(keywd,'OPTIMIZE=') /= 0) self%iopt = rdinml(keywd,'OPTIMIZE')
+            if (index(keywd,'OPTIMIZE') /= 0) then
+                call read(keywd, 'OPTIMIZE', self%iopt)
+            endif
 
             ! scf cycles
-            if (index(keywd,'SCF=') /= 0) self%iscf = rdinml(keywd,'SCF')
+            if (index(keywd,'SCF') /= 0) then
+                call read(keywd, 'SCF', self%iscf)
+            endif
 
             ! DM Max RMS
-            if (index(keywd,'DENSERMS=') /= 0) then
-                i = index(keywd,'DENSERMS=',.false.)
-                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                read(keywd(i+9:i+j-2), *) self%pmaxrms
+            if (index(keywd,'DENSERMS') /= 0) then
+                call read(keywd, 'DENSERMS', self%pmaxrms)
             endif
- 
-           ! 2e-cutoff
-            if (index(keywd,'CUTOFF=') /= 0) then
-                i = index(keywd,'CUTOFF=',.false.)
-                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                read(keywd(i+7:i+j-2), *) self%acutoff
+        
+            ! 2e-cutoff
+            if (index(keywd,'CUTOFF') /= 0) then
+                call read(keywd, 'CUTOFF', self%acutoff)
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
                 self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
             endif
 
             ! Max DIIS cycles
-            if (index(keywd,'MAXDIIS=') /= 0) self%maxdiisscf=rdinml(keywd,'MAXDIIS')
+            if (index(keywd,'MAXDIIS') /= 0) then
+                call read(keywd, 'MAXDIIS', self%maxdiisscf)
+            endif
 
             ! Delta DM Cycle Start
-            if (index(keywd,'NCYC=') /= 0) self%ncyc = rdinml(keywd,'NCYC')
+            if (index(keywd,'NCYC') /= 0) then
+                call read(keywd, 'NCYC', self%ncyc)
+            endif
 
             ! DM cutoff
-            if (index(keywd,'MATRIXZERO=') /= 0) then
-                i = index(keywd,'MATRIXZERO=',.false.)
-                j = scan(keywd(i:len_trim(keywd)), ' ', .false.)
-                read(keywd(i+11:i+j-2), *) self%DMCutoff
+            if (index(keywd,'MATRIXZERO') /= 0) then
+                call read(keywd,'MATRIXZERO', self%DMCutoff)
             endif
 
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                itemp=rdinml(keywd,'BASISZERO')
+                call read(keywd,'BASISZERO', itemp)
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
 
