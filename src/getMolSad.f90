@@ -160,7 +160,7 @@ subroutine getmolsad(ierr)
             enddo
 
             if(quick_method%writeSAD) then
-               sadfile = trim(quick_molspec%atom_type_sym(iitemp))//trim('.sad')
+               sadfile = trim(quick_molspec%atom_type_sym(iitemp))
                open(212,file=sadfile)
                do i=1,nbasis
                   do j=1,nbasis
@@ -171,7 +171,7 @@ subroutine getmolsad(ierr)
             endif           
 
          else
-            sadfile = trim(quick_molspec%atom_type_sym(iitemp))//trim('.sad')
+            sadfile = trim(quick_molspec%atom_type_sym(iitemp))
             open(213,file=sadfile)  !Read from sadfile
             do i=1,nbasis
                do j=1,nbasis
