@@ -39,6 +39,7 @@ module quick_files_module
 
     ! Basis set and directory
     character(len=240) :: basisDir       = ''
+    character(len=240) :: sadGuessDir    = ''
     character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
 
@@ -186,6 +187,9 @@ module quick_files_module
             close(ibasisfile)
 
             basisfilename=trim(basisdir) // "/" // tmp_basisfilename //'.BAS'
+           
+            ! also set the sad guess directory
+            sadGuessDir=trim(basisdir) // "/" // tmp_basisfilename // '.SAD'
 
             ! Check if basis file exists. Otherwise, quit program.
             inquire(file=trim(basisfilename),exist=fexist)
@@ -198,6 +202,7 @@ module quick_files_module
 
         else
             basisfilename = trim(basisdir) // '/STO-3G.BAS'    ! default
+            sadGuessDir   = trim(basisdir) // '/STO-3G.SAD'
         endif
 
         if (index(keywd,'ECP=') /= 0) then
