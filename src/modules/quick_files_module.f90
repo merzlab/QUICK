@@ -185,7 +185,7 @@ module quick_files_module
 
             close(ibasisfile)
 
-            basisfilename=trim(basisdir) // "/" // tmp_basisfilename
+            basisfilename=trim(basisdir) // "/" // tmp_basisfilename //'.BAS'
 
             ! Check if basis file exists. Otherwise, quit program.
             inquire(file=trim(basisfilename),exist=fexist)
