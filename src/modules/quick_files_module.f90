@@ -186,10 +186,10 @@ module quick_files_module
 
             close(ibasisfile)
 
-            basisfilename=trim(basisdir) // "/" // tmp_basisfilename //'.BAS'
+            basisfilename=trim(basisdir) // "/" // trim(tmp_basisfilename) //'.BAS'
            
             ! also set the sad guess directory
-            sadGuessDir=trim(basisdir) // "/" // tmp_basisfilename // '.SAD'
+            sadGuessDir=trim(basisdir) // "/" // trim(tmp_basisfilename) // '.SAD'
 
             ! Check if basis file exists. Otherwise, quit program.
             inquire(file=trim(basisfilename),exist=fexist)
