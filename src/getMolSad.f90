@@ -156,7 +156,7 @@ subroutine getmolsad(ierr)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
-                enddo
+               enddo
             enddo
 
             if(quick_method%writeSAD) then
