@@ -25,7 +25,7 @@ subroutine getmolsad(ierr)
    double precision:: xyzsaved(3,natom)
    character(len=80) :: keywd
    character(len=20) :: tempstring
-   character(len=200) :: sadfile
+   character(len=340) :: sadfile
    integer natomsaved
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
