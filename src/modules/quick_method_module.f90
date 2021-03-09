@@ -33,8 +33,9 @@ module quick_method_module
         logical :: debug =  .false.    ! debug mode
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
-        logical :: readSAD = .false.   ! flag to read SAD guess
         logical :: writePMat = .false. ! flag to write density matrix
+        logical :: readSAD = .false.   ! flag to read SAD guess
+        logical :: writeSAD = .false.   ! flag to read SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
         logical :: prtGap =  .false.   ! flag to print HOMO-LUMO gap
         logical :: opt =  .false.      ! optimization
@@ -345,9 +346,10 @@ endif
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
-
+            if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
+            if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
+    
             if (self%zmat)      write(io,'(" Z-MATRIX CONSTRUCTION")')
             if (self%dipole)    write(io,'(" DIPOLE")')
             if (self%ecp)       write(io,'(" ECP BASIS SET")')
@@ -483,6 +485,7 @@ endif
             if (index(keywd,'DEBUG').ne.0)      self%debug=.true.
             if (index(keyWD,'READ').ne.0)       self%readDMX=.true.
             if (index(keyWD,'READSAD').ne.0)    self%readSAD=.true.
+            if (index(keyWD,'WRITESAD').ne.0)    self%writeSAD=.true.
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)      self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
@@ -609,6 +612,7 @@ endif
             self%nodirect = .false.  ! conventional SCF
             self%readDMX =  .false.  ! flag to read density matrix
             self%readSAD =  .false.  ! flag to read sad guess
+            self%writeSAD =  .false.  ! flag to write sad guess
             self%diisSCF =  .false.  ! DIIS SCF
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization

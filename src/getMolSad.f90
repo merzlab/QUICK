@@ -153,17 +153,26 @@ subroutine getmolsad(ierr)
          ! From SCF calculation to get initial density guess
          !if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
          if(.not. quick_method%readSAD) then
-            print *, "READSAD FLAG Not Found!"
             call getenergy(failed, .true.)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
-               enddo
+                enddo
             enddo
+
+            if(quick_method%writeSAD) then
+               sadfile = trim(quick_molspec%atom_type_sym(iitemp))//trim('sad.txt')
+               open(212,file=sadfile)
+               do i=1,nbasis
+                  do j=1,nbasis
+                     write(212,*) i,j,atomdens(iitemp,i,j)
+                  enddo
+               enddo
+               close(212)             
+            endif           
+
          else
-            print *, "READSAD FLAG Found!"
             sadfile = trim(quick_molspec%atom_type_sym(iitemp))//trim('sad.txt')
-            print *, "sadfile is ", sadfile
             open(213,file=sadfile)  !Read from sadfile
             do i=1,nbasis
                do j=1,nbasis
