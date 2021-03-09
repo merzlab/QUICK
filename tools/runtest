@@ -305,7 +305,7 @@ run_test(){
     print_test_info "$t"
 
     # Run the test case
-    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ] && [ "$ismp2" = 'no' ]; then
+    if [ "$buildtype" = 'mpi' ] || [ "$buildtype" = 'cudampi' ] && [ "$ismpirun" = 'yes' ]; then
       $DO_PARALLEL "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
     else
       "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
