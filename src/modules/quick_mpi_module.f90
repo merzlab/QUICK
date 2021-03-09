@@ -64,7 +64,7 @@ module quick_mpi_module
         
         write (io,*)
         write (io,'("| - MPI Enabled -")')
-        write (io,'("| TOTAL PROCESSOR = ",i5)') mpisize
+        write (io,'("| TOTAL RANKS     = ",i5)') mpisize
         write (io,'("| MASTER NAME     = ",A30)') pname
         
         ierr=0
