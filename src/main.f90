@@ -249,9 +249,9 @@
     if(quick_method%MP2) then
         if(.not. quick_method%DIVCON) then
 #ifdef MPIV
-           if (bMPI) then
-             call mpi_calmp2    ! MPI-MP2
-           else
+           if (master) then
+!             call mpi_calmp2    ! MPI-MP2
+!           else
 #endif
              call calmp2()      ! none-MPI MP2
 #ifdef MPIV
