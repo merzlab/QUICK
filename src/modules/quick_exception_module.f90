@@ -47,8 +47,6 @@ contains
     integer, intent(in) :: ierr
     character(len=200) :: msg = ''
 
-    write(*,*) ierr
-
     select case(ierr)
 
     case(10)
