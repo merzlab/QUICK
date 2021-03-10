@@ -46,10 +46,10 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Mar  7 17:43:02 2021
-| INPUT FILE :    ene_PH3_rhf_def2sv_p.in
-| OUTPUT FILE:    ene_PH3_rhf_def2sv_p.out
-| DATE FILE  :    ene_PH3_rhf_def2sv_p.dat
+| TASK STARTS ON: Tue Mar  9 15:14:54 2021
+| INPUT FILE :    grad_PH3_b3lyp_def2sv_p.in
+| OUTPUT FILE:    grad_PH3_b3lyp_def2sv_p.out
+| DATE FILE  :    grad_PH3_b3lyp_def2sv_p.dat
 | BASIS SET PATH: /home/mmanathunga/fix109/basis
 
  @ Read Job And Atom
@@ -140,21 +140,21 @@
  @ Begin Energy Calculation
 
                                          SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
-|  1   -343.006623866      ------         0.077     1        0.00      0.08      0.00    0.1246E+01  0.6421E-01  0.2910E+00
-|  2   -343.048049271  0.414254E-01       0.078     2        0.00      0.08      0.00    0.2556E-01  0.1507E-01  0.1489E+00
-|  3   -343.049419331  0.137006E-02       0.079     3        0.00      0.08      0.00    0.1784E-01  0.4910E-02  0.5323E-01
-|  4   -343.050609295  0.118996E-02       0.078     4        0.00      0.08      0.00    0.1026E-02  0.1958E-03  0.1068E-02
-|  5   -343.050612358  0.306270E-05       0.078     5        0.00      0.08      0.00    0.3550E-03  0.6119E-04  0.3683E-03
-|  6   -343.050612768  0.409852E-06       0.078     6        0.00      0.08      0.00    0.5534E-04  0.8209E-05  0.4269E-04
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+|  1   -343.006623866      ------         0.058     1        0.00      0.06      0.00    0.1246E+01  0.6421E-01  0.2910E+00
+|  2   -343.048049271  0.414254E-01       0.059     2        0.00      0.06      0.00    0.2556E-01  0.1507E-01  0.1489E+00
+|  3   -343.049419331  0.137006E-02       0.059     3        0.00      0.06      0.00    0.1784E-01  0.4910E-02  0.5323E-01
+|  4   -343.050609295  0.118996E-02       0.059     4        0.00      0.06      0.00    0.1026E-02  0.1958E-03  0.1068E-02
+|  5   -343.050612358  0.306270E-05       0.059     5        0.00      0.06      0.00    0.3550E-03  0.6119E-04  0.3683E-03
+|  6   -343.050612768  0.409852E-06       0.059     6        0.00      0.06      0.00    0.5534E-04  0.8209E-05  0.4269E-04
     | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-|  7   -343.050613146  0.378042E-06       0.081     7        0.00      0.08      0.00    0.1143E-05  0.2254E-06  0.1243E-05
-------------------------------------------------------------------------------------------------------------------------
+|  7   -343.050613146  0.378042E-06       0.061     7        0.00      0.06      0.00    0.1143E-05  0.2254E-06  0.1243E-05
+| ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   7 CYLCES
 | MAX ERROR = 0.114301E-05   RMS CHANGE = 0.225440E-06   MAX CHANGE = 0.124319E-05
- -----------------------------------------------
+| -----------------------------------------------
  ALPHA ELECTRON DENSITY    =    8.9999768478
  BETA ELECTRON DENSITY     =    8.9999768478
  ELECTRONIC ENERGY    =  -360.712203158
@@ -224,23 +224,23 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     5.243721000( 84.33%)
-| DFT GRID OPERATIONS =     0.038084000(  0.61%)
-| TOTAL SCF TIME      =     0.551629000(  8.87%)
-|       TOTAL OP TIME      =     0.550152000(  8.85%)
-|             TOTAL 1e TIME      =     0.001567000(  0.03%)
-|             TOTAL 2e TIME      =     0.178792000(  2.88%)
-|             TOTAL EXC TIME     =     0.368105000(  5.92%)
-|       TOTAL DII TIME      =     0.001430000(  0.02%)
-|             TOTAL DIAG TIME    =     0.000536000(  0.01%)
-| TOTAL GRADIENT TIME      =     0.263498000(  4.24%)
-|       TOTAL 1e GRADIENT TIME      =     0.004581000( 0.09%)
-|       TOTAL 2e GRADIENT TIME      =     0.100602000( 1.62%)
-|       TOTAL EXC GRADIENT TIME     =     0.157174000(  2.53%)
-| TOTAL TIME          =     6.218435000
+| INITIAL GUESS TIME  =     3.195541000( 83.02%)
+| DFT GRID OPERATIONS =     0.030190000(  0.78%)
+| TOTAL SCF TIME      =     0.415598000( 10.80%)
+|       TOTAL OP TIME      =     0.414528000( 10.77%)
+|             TOTAL 1e TIME      =     0.001107000(  0.03%)
+|             TOTAL 2e TIME      =     0.135668000(  3.52%)
+|             TOTAL EXC TIME     =     0.276560000(  7.18%)
+|       TOTAL DII TIME      =     0.001025000(  0.03%)
+|             TOTAL DIAG TIME    =     0.000421000(  0.01%)
+| TOTAL GRADIENT TIME      =     0.200914000(  5.22%)
+|       TOTAL 1e GRADIENT TIME      =     0.003320000( 0.11%)
+|       TOTAL 2e GRADIENT TIME      =     0.081221000( 2.11%)
+|       TOTAL EXC GRADIENT TIME     =     0.115524000(  3.00%)
+| TOTAL TIME          =     3.849205000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  6.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  3.8 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Mar  7 17:43:09 2021
+| Normal Termination. Task Finished on: Tue Mar  9 15:14:58 2021

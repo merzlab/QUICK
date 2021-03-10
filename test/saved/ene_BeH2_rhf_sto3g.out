@@ -46,10 +46,10 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Mar  4 13:53:42 2021
-| INPUT FILE :    ene_BeH2_rhf_321g.in
-| OUTPUT FILE:    ene_BeH2_rhf_321g.out
-| DATE FILE  :    ene_BeH2_rhf_321g.dat
+| TASK STARTS ON: Tue Mar  9 14:57:56 2021
+| INPUT FILE :    ene_BeH2_rhf_sto3g.in
+| OUTPUT FILE:    ene_BeH2_rhf_sto3g.out
+| DATE FILE  :    ene_BeH2_rhf_sto3g.dat
 | BASIS SET PATH: /home/mmanathunga/fix109/basis
 
  @ Read Job And Atom
@@ -122,19 +122,19 @@
  @ Begin Energy Calculation
 
                                          SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
 |  1    -15.338713886      ------         0.001     1        0.00      0.00      0.00    0.5806E+00  0.2920E+00  0.1476E+01
 |  2    -15.511642299  0.172928E+00       0.001     2        0.00      0.00      0.00    0.4415E-01  0.4316E-01  0.1512E+00
 |  3    -15.521732295  0.100900E-01       0.001     3        0.00      0.00      0.00    0.7413E-02  0.8019E-02  0.2910E-01
 |  4    -15.521998874  0.266579E-03       0.001     4        0.00      0.00      0.00    0.3102E-03  0.2399E-03  0.1101E-02
 |  5    -15.521999119  0.244944E-06       0.001     5        0.00      0.00      0.00    0.2114E-05  0.1815E-05  0.8213E-05
 |  6    -15.521999119  0.124869E-10       0.001     6        0.00      0.00      0.00    0.8714E-07  0.6342E-07  0.2944E-06
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   6 CYLCES
 | MAX ERROR = 0.871375E-07   RMS CHANGE = 0.634152E-07   MAX CHANGE = 0.294400E-06
- -----------------------------------------------
+| -----------------------------------------------
  ELECTRONIC ENERGY    =   -19.611095731
  CORE_CORE REPULSION  =     4.089096612
  TOTAL ENERGY         =   -15.521999119
@@ -177,17 +177,17 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.530379000( 93.62%)
-| TOTAL SCF TIME      =     0.006615000(  1.17%)
-|       TOTAL OP TIME      =     0.006482000(  1.14%)
-|             TOTAL 1e TIME      =     0.000329000(  0.06%)
-|             TOTAL 2e TIME      =     0.005761000(  1.02%)
-|       TOTAL DII TIME      =     0.000093000(  0.02%)
-|             TOTAL DIAG TIME    =     0.000034000(  0.01%)
-| TOTAL TIME          =     0.566551000
+| INITIAL GUESS TIME  =     0.211203000( 96.22%)
+| TOTAL SCF TIME      =     0.005192000(  2.37%)
+|       TOTAL OP TIME      =     0.005088000(  2.32%)
+|             TOTAL 1e TIME      =     0.000250000(  0.11%)
+|             TOTAL 2e TIME      =     0.004552000(  2.07%)
+|       TOTAL DII TIME      =     0.000078000(  0.04%)
+|             TOTAL DIAG TIME    =     0.000029000(  0.01%)
+| TOTAL TIME          =     0.219511000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.6 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.2 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Mar  4 13:53:43 2021
+| Normal Termination. Task Finished on: Tue Mar  9 14:57:56 2021
