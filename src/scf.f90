@@ -127,7 +127,7 @@ subroutine electdiis(jscf)
       else
          write(ioutfile,'("| ",90("-"))')
       endif
-      write(ioutfile,'("NCYC",6x)',advance="no")
+      write(ioutfile,'("| ","NCYC",6x)',advance="no")
       if (quick_method%printEnergy) write(ioutfile,'(" ENERGY ",8x,"DELTA_E",5x)',advance="no")
       write(ioutfile,'(" SCF_TIME",2x,"DII_CYC",2x," DII_TIME ",2x,"O_TIME",2x, &
             "DIAG_TIME",4x,"MAX_ERR",4x,"RMS_CHG",4x,"MAX_CHG")')
