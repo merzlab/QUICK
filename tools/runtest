@@ -534,8 +534,13 @@ else
 
 fi
 
-if [ ! -f "$testdir/testlist.txt" ]; then
-  echo  "Error: testlist.txt not found in $testdir. "
+if [ ! -f "$testdir/testlist_short.txt" ]; then
+  echo  "Error: testlist_short.txt not found in $testdir. "
+  exit 1
+fi
+
+if [ ! -f "$testdir/testlist_full.txt" ]; then
+  echo  "Error: testlist_full.txt not found in $testdir. "
   exit 1
 fi
 
