@@ -42,7 +42,6 @@ module quick_input_parser_module
                 call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
                 call quick_exit(OUTFILEHANDLE,1)
             endif         
-                 
         end subroutine read_float_keyword
 
         subroutine read_integer_keyword(line, keyword, val)
