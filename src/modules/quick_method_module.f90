@@ -440,7 +440,7 @@ endif
         !------------------------
         subroutine read_quick_method(self,keywd,ierr)
             use quick_exception_module
-           
+            use quick_mpi_module
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
