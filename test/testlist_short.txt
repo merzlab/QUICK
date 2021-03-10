@@ -15,7 +15,7 @@ grad_psb3_b3lyp_631gss            #B3LYP gradient test with s, p and d basis fun
 grad_ch3conhch3_b3lyp_ccpvdz      #B3LYP gradient test with s, p and d basis functions
 grad_nacl_b3lyP_def2svp           #B3LYP gradient test with s, p and d basis functions 
 grad_wat_b3lyp_ccpvdz             #B3LYP point charge gradient test
-grad_c10h9o2s_b3yp_def2svp        #B3LYP point charge gradient test
+grad_c10h9o2s_b3lyp_def2svp        #B3LYP point charge gradient test
 grad_daspi_meoh_b3lyp_sto3g       #B3LYP point charge gradient test
 grad_hbdi_meoh_libxc_blyp_sto3g   #BLYP point charge gradient test
 grad_naip_meoh_libxc_pbeh_sto3g   #PBE0 point charge gradient test
