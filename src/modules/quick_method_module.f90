@@ -440,6 +440,7 @@ endif
         !------------------------
         subroutine read_quick_method(self,keywd,ierr)
             use quick_exception_module
+           
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
@@ -472,6 +473,7 @@ endif
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
+                CHECK_ERROR(ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
@@ -821,6 +823,9 @@ endif
               usf1_nlen=iend-(istart+6)+1
            endif
            !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+        else
+           ierr=31
+           return
         endif
 
         nof_f=0
@@ -850,7 +855,12 @@ endif
            endif
         enddo
 
-        self%nof_functionals=nof_f
+        if(nof_f > 0) then
+          self%nof_functionals=nof_f
+        else
+          ierr=32
+          return
+        endif
 
         end subroutine set_libxc_func_info
 end module quick_method_module
