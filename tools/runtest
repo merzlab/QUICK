@@ -585,9 +585,6 @@ cd "$testdir"
 
 total_tests=0 # total number of test cases
 
-# get the number of tests to run
-get_total_tests
-
 # create runtest.log 
 echo "" > $QUICK_HOME/runtest.log
 
@@ -633,8 +630,8 @@ for buildtype in $buildtypes; do
 
 #  total_tests=0 # total number of test cases
 
-  # get the number of tests to run
-#  get_total_tests
+# get the number of tests to run
+  get_total_tests
 
   tc=1 # test count
   cd "$testdir/runs/$buildtype"
