@@ -35,13 +35,15 @@ qbindir="$installdir/bin"
 export QUICK_HOME=$installdir
 
 # executables
-
 qexe=''
 buildtypes=''
 serial='no'
 mpi='no'
 cuda='no'
 cudampi='no'
+
+# test list file
+test_list=''
 
 # flag to indicate if mpirun is available
 ismpirun='no'
@@ -60,6 +62,7 @@ test_ene='no'
 test_grad='no'
 test_opt='no'
 uspec_test='no'
+test_length='short'
 
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
