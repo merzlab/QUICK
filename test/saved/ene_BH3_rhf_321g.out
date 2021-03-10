@@ -46,7 +46,7 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Mar  4 14:26:00 2021
+| TASK STARTS ON: Tue Mar  9 14:59:01 2021
 | INPUT FILE :    ene_BH3_rhf_321g.in
 | OUTPUT FILE:    ene_BH3_rhf_321g.out
 | DATE FILE  :    ene_BH3_rhf_321g.dat
@@ -124,9 +124,9 @@
  @ Begin Energy Calculation
 
                                          SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
 |  1    -26.330979656      ------         0.002     1        0.00      0.00      0.00    0.1353E+01  0.1018E+00  0.8632E+00
 |  2    -26.207223582  -.123756E+00       0.002     2        0.00      0.00      0.00    0.6058E-01  0.1691E-01  0.8167E-01
 |  3    -26.222574058  0.153505E-01       0.002     3        0.00      0.00      0.00    0.1944E-01  0.4697E-02  0.2603E-01
@@ -136,10 +136,10 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
 |  7    -26.224209415  0.709221E-06       0.002     7        0.00      0.00      0.00    0.3671E-04  0.1211E-04  0.4593E-04
 |  8    -26.224209421  0.632720E-08       0.002     8        0.00      0.00      0.00    0.7241E-05  0.2154E-05  0.9626E-05
 |  9    -26.224209421  0.102366E-09       0.002     9        0.00      0.00      0.00    0.1927E-06  0.9601E-07  0.5042E-06
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYLCES
 | MAX ERROR = 0.192671E-06   RMS CHANGE = 0.960100E-07   MAX CHANGE = 0.504162E-06
- -----------------------------------------------
+| -----------------------------------------------
  ELECTRONIC ENERGY    =   -34.273505853
  CORE_CORE REPULSION  =     8.049296432
  TOTAL ENERGY         =   -26.224209421
@@ -184,17 +184,17 @@ NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DI
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.604254000( 92.62%)
-| TOTAL SCF TIME      =     0.019200000(  2.94%)
-|       TOTAL OP TIME      =     0.018543000(  2.84%)
-|             TOTAL 1e TIME      =     0.000489000(  0.07%)
-|             TOTAL 2e TIME      =     0.017402000(  2.67%)
-|       TOTAL DII TIME      =     0.000592000(  0.09%)
-|             TOTAL DIAG TIME    =     0.000246000(  0.04%)
-| TOTAL TIME          =     0.652414000
+| INITIAL GUESS TIME  =     0.269506000( 93.63%)
+| TOTAL SCF TIME      =     0.014643000(  5.09%)
+|       TOTAL OP TIME      =     0.014161000(  4.92%)
+|             TOTAL 1e TIME      =     0.000320000(  0.11%)
+|             TOTAL 2e TIME      =     0.013455000(  4.67%)
+|       TOTAL DII TIME      =     0.000437000(  0.15%)
+|             TOTAL DIAG TIME    =     0.000190000(  0.07%)
+| TOTAL TIME          =     0.287843000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.7 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.3 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Mar  4 14:26:01 2021
+| Normal Termination. Task Finished on: Tue Mar  9 14:59:02 2021
