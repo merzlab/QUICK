@@ -114,6 +114,12 @@ contains
     case(30)
       msg='Selected device is already in use.'
 
+    case(31)
+      msg='LIBXC keyword must be followed by a functional name.'
+
+    case(32)
+      msg='Requested LIBXC functional does not exist.'
+
     case default
       msg='Unknown error.'
 
