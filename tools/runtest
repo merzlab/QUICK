@@ -275,17 +275,17 @@ print_test_info(){
 get_total_tests(){
 
   if [ "$test_ene" = 'yes' ]; then
-    tot_ene_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "ene" | wc -l`
+    tot_ene_tests=`awk '{print $1}' "$test_list"| grep "ene" | wc -l`
     total_tests=$((total_tests+tot_ene_tests))
   fi
 
   if [ "$test_grad" = 'yes' ]; then
-    tot_grad_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "grad" | wc -l`
+    tot_grad_tests=`awk '{print $1}' "$test_list"| grep "grad" | wc -l`
     total_tests=$((total_tests+tot_grad_tests))
   fi
 
   if [ "$test_opt" = 'yes' ]; then
-    tot_opt_tests=`awk '{print $1}' "$testdir/testlist.txt"| grep "opt" | wc -l`
+    tot_opt_tests=`awk '{print $1}' "$test_list"| grep "opt" | wc -l`
     total_tests=$((total_tests+tot_opt_tests))
   fi
 
@@ -602,12 +602,32 @@ for buildtype in $buildtypes; do
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
   elif [ "$buildtype" = 'mpi' ]; then
     qexe='quick.MPI'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
   elif [ "$buildtype" = 'cuda' ]; then
     qexe='quick.cuda'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
   elif [ "$buildtype" = 'cudampi' ]; then
     qexe='quick.cuda.MPI'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
   fi
 
 
@@ -621,7 +641,7 @@ for buildtype in $buildtypes; do
 
   # Run energy tests
   if [ "$test_ene" = 'yes' ]; then
-    for t in `awk '{print $1}' "$testdir/testlist.txt"| grep "ene"`; do
+    for t in `awk '{print $1}' "$test_list"| grep "ene"`; do
       set_test
       run_test
       check_energy
@@ -635,7 +655,7 @@ for buildtype in $buildtypes; do
 
   # Run gradient tests
   if [ "$test_grad" = 'yes' ]; then
-    for t in `awk '{print $1}' "$testdir/testlist.txt" |grep "grad"`; do
+    for t in `awk '{print $1}' "$test_list" |grep "grad"`; do
       set_test
       run_test
       check_energy
@@ -650,7 +670,7 @@ for buildtype in $buildtypes; do
 
   # Run geometry optimization tests
   if [ "$test_opt" = 'yes' ]; then
-    for t in `awk '{print $1}' "$testdir/testlist.txt" | grep "opt"`; do
+    for t in `awk '{print $1}' "$test_list" | grep "opt"`; do
       set_test
       run_test
       check_opt
