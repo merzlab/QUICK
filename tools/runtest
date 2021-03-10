@@ -603,8 +603,6 @@ fi
 
 cd "$testdir"
 
-total_tests=0 # total number of test cases
-
 # create runtest.log 
 echo "" > $QUICK_HOME/runtest.log
 
@@ -615,6 +613,9 @@ for buildtype in $buildtypes; do
 
   echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a $QUICK_HOME/runtest.log
   echo ""
+
+  # initialize the total number of test cases
+  total_tests=0
 
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
