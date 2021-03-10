@@ -52,6 +52,7 @@
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
     ! Initial neccessary variables
+    ierr=0
     SAFE_CALL(initialize1(ierr))
     !-------------------MPI/MASTER---------------------------------------
     masterwork_readInput: if (master) then

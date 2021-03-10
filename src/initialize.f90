@@ -34,8 +34,6 @@ subroutine initialize1(ierr)
    ! Parameter list
    integer, intent(inout) :: ierr    ! Error Flag
 
-   ierr=0
-
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
