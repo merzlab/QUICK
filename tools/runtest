@@ -82,7 +82,7 @@ echo  "
       --ene          Run only energy tests
       --grad         Run only gradient tests
       --opt          Run only geometry optimization tests
-
+      --full         Run a large set of tests
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -453,6 +453,7 @@ while [ $# -gt 0 ]; do
     --ene)      test_ene='yes';uspec_test='yes';;
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
+    --full)        test_length='full';;
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
