@@ -614,9 +614,6 @@ for buildtype in $buildtypes; do
   echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a $QUICK_HOME/runtest.log
   echo ""
 
-  # initialize the total number of test cases
-  total_tests=0
-
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
@@ -649,9 +646,10 @@ for buildtype in $buildtypes; do
   fi
 
 
-#  total_tests=0 # total number of test cases
+  # initialize the total number of test cases
+  total_tests=0 
 
-# get the number of tests to run
+  # get the number of tests to run
   get_total_tests
 
   tc=1 # test count
