@@ -224,7 +224,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   ! for now..
 
   ! Initialize quick
-  SAFE_CALL(initialize1(ierr))
+  call initialize1(ierr)
 
   ! set the file name and template mode in quick_files_module
   inFileName = quick_api%fqin
@@ -284,7 +284,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 #endif
 
   ! read job specifications
-  call read_Job_and_Atom()
+  SAFE_CALL(read_Job_and_Atom(ierr))
 
   ! save atom number, number of atom types and number of point charges
   ! into quick_molspec
@@ -293,7 +293,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   ! allocate memory for coordinates and charges in molspec
-  call alloc(quick_molspec,ierr)
+  SAFE_CALL(alloc(quick_molspec,ierr))
 
 end subroutine set_quick_job
 
