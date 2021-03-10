@@ -20,9 +20,9 @@ module quick_input_parser_module
             character(len=*), intent(in) :: line
             character(len=*), intent(in) :: keyword
 
-            i = index(line, trim(keyword)//trim('='))
+            i = index(line, trim(keyword)//'=')
             if(i==0) then
-                call PrtErr(OUTFILEHANDLE, "USE keyword=val format in input")
+                call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
                 call quick_exit(OUTFILEHANDLE,1)
             endif
         end subroutine checkformat
@@ -39,7 +39,7 @@ module quick_input_parser_module
             j = scan(line(i:len_trim(line)), ' ', .false.)
             read(line(i+len_trim(keyword)+1:i+j-2),*, iostat=ierror) val
             if(ierror/=0) then
-                call PrtErr(OUTFILEHANDLE, "USE keyword=val format in input")
+                call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
                 call quick_exit(OUTFILEHANDLE,1)
             endif         
                  
@@ -56,7 +56,7 @@ module quick_input_parser_module
             j = scan(line(i:len_trim(line)), ' ', .false.)
             read(line(i+len_trim(keyword)+1:i+j-2),*, iostat=ierror) val
             if(ierror/=0) then
-                call PrtErr(OUTFILEHANDLE, "USE keyword=val format in input")
+                call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
                 call quick_exit(OUTFILEHANDLE,1)
             endif
         end subroutine read_integer_keyword    
@@ -72,7 +72,7 @@ module quick_input_parser_module
             j = scan(line(i:len_trim(line)), ' ', .false.)
             read(line(i+len_trim(keyword)+1:i+j-2),*, iostat=ierror) val
             if(ierror/=0) then
-                call PrtErr(OUTFILEHANDLE, "USE keyword=val format in input")
+                call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
                 call quick_exit(OUTFILEHANDLE,1)
             endif        
         end subroutine read_string_keyword
