@@ -123,18 +123,18 @@ subroutine electdiis(jscf)
    if(master) then
       write(ioutfile,'(40x," SCF ENERGY")')
       if (quick_method%printEnergy) then
-         write(ioutfile,'(120("-"))')
+         write(ioutfile,'("| ",120("-"))')
       else
-         write(ioutfile,'(90("-"))')
+         write(ioutfile,'("| ",90("-"))')
       endif
       write(ioutfile,'("NCYC",6x)',advance="no")
       if (quick_method%printEnergy) write(ioutfile,'(" ENERGY ",8x,"DELTA_E",5x)',advance="no")
       write(ioutfile,'(" SCF_TIME",2x,"DII_CYC",2x," DII_TIME ",2x,"O_TIME",2x, &
             "DIAG_TIME",4x,"MAX_ERR",4x,"RMS_CHG",4x,"MAX_CHG")')
       if (quick_method%printEnergy) then
-         write(ioutfile,'(120("-"))')
+         write(ioutfile,'("| ",120("-"))')
       else
-         write(ioutfile,'(90("-"))')
+         write(ioutfile,'("| ",90("-"))')
       endif
    endif
 
@@ -593,14 +593,14 @@ subroutine electdiis(jscf)
 
          if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF)then
             if (quick_method%printEnergy) then
-               write(ioutfile,'(120("-"))')
+               write(ioutfile,'("| ",120("-"))')
             else
-               write(ioutfile,'(90("-"))')
+               write(ioutfile,'("| ",90("-"))')
             endif
             write (ioutfile,'("| REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
             write (ioutfile,'("| MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
                   errormax,prms,pchange
-            write (ioutfile,*) '-----------------------------------------------'
+            write (ioutfile,'("| -----------------------------------------------")')
             if (quick_method%DFT .or. quick_method%SEDFT) then
                write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
                write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
