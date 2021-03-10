@@ -16,7 +16,7 @@ module quick_input_parser_module
 
         subroutine checkformat(i,line,keyword)
             implicit none
-            integer, intent(inout) :: i
+            integer, intent(out) :: i
             character(len=*), intent(in) :: line
             character(len=*), intent(in) :: keyword
 
