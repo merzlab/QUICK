@@ -435,7 +435,7 @@ endif
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
-            integer :: itemp,rdinml,i,j,ierror
+            integer :: itemp,i,j
             type (quick_method_type) self
 
             call upcase(keyWD,200)
