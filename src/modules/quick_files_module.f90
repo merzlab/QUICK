@@ -97,11 +97,14 @@ module quick_files_module
         ! if quick is in libary mode, use .qin and .qout extensions
         ! for input and output files.
 
-        if(.not. isTemplate) call getarg(1,inFileName)
-
-        i = index(inFileName,'.')
-
-        if(i .eq. 0) i = index(inFileName,' ')
+        if(.not. isTemplate) then
+          call getarg(1,inFileName)
+          i = index(inFileName,'.')
+          if(i .eq. 0) then
+            write(0,'("| Error: Invalid input file name.")')
+            call quick_exit(0,1)
+          endif
+        endif
 
         if(isTemplate) then
           outFileName=inFileName(1:i-1)//'.qout'
