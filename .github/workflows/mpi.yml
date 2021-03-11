@@ -41,16 +41,18 @@ jobs:
         run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran cmake openmpi-bin
-      - name: Configure serial
+      - name: Configure MPI
         run: |
           mkdir build
           cd build
           cmake .. -DCOMPILER=GNU -DMPI=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
-      - name: Build serial
+      - name: Build MPI
         run: |
           cd build
           make -j2 install
-      - name: Test serial
+      - name: Set MPI command
+        run: echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+      - name: Test mpi
         run: |
           cd install
-          ./runtest --mpi --full --ncores 2
+          ./runtest --mpi --full
