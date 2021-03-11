@@ -1,4 +1,4 @@
-#!/bin/sh
+m!/bin/sh
 
 #  !---------------------------------------------------------------------!
 #  ! Written by Madu Manathunga on 07/19/2020                            !
@@ -197,28 +197,28 @@ print_test_info(){
     ene_SO2_rhf_ccpvdz)                   testinfo="SO2: RHF energy test: cc-pVDZ basis set";;            # currently disabled
     grad_AlH3_b3lyp_def2sv_p)             testinfo="ALH3: DFT gradient test: DEF2-SV(P) basis set";;
     grad_BeH2_b3lyp_def2sv_p)             testinfo="BeH2: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_BH3_b3lyp_def2sv_p)              testinfo="BH3: DFT gradient test: DEF2-SV(P) basis set";;   # currently disabled
-    grad_CaCl2_b3lyp_def2sv_p)            testinfo="CaCl2: DFT gradient test: DEF2-SV(P) basis set";; # currently disabled
-    grad_CH4_b3lyp_def2sv_p)              testinfo="CH4: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_H2O_b3lyp_def2sv_p)              testinfo="H2O: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_HBr_b3lyp_def2sv_p)              testinfo="HBr: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_HI_b3lyp_def2sv_p)               testinfo="HI: DFT gradient test: DEF2-SV(P) basis set";;    # currently disabled
-    grad_KCl_b3lyp_def2sv_p)              testinfo="KCl: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_LiF_b3lyp_def2sv_p)              testinfo="LiF: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_MgO_b3lyp_def2sv_p)              testinfo="MgO: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_NaCl_b3lyp_def2sv_p)             testinfo="NaCl: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_NH4_b3lyp_def2sv_p)              testinfo="NH4: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_PH3_b3lyp_def2sv_p)              testinfo="PH3: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_SiH4_b3lyp_def2sv_p)             testinfo="SiH4: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_SO2_b3lyp_def2sv_p)              testinfo="SO2: DFT gradient test: DEF2-SV(P) basis set";;
-    grad_AlH3_b3lyp_def2svp)              testinfo="ALH3: DFT gradient test: DEF2-SVP basis set";;
-    grad_BeH2_b3lyp_def2svp)              testinfo="BeH2: DFT gradient test: DEF2-SVP basis set";;
-    grad_BH3_b3lyp_def2svp)               testinfo="BH3: DFT gradient test: DEF2-SVP basis set";;
-    grad_CaCl2_b3lyp_def2svp)             testinfo="CaCl2: DFT gradient test: DEF2-SVP basis set";;   # currently disabled
-    grad_CH4_b3lyp_def2svp)               testinfo="CH4: DFT gradient test: DEF2-SVP basis set";;
-    grad_H2O_b3lyp_def2svp)               testinfo="H2O: DFT gradient test: DEF2-SVP basis set";;
-    grad_HBr_b3lyp_def2svp)               testinfo="HBr: DFT gradient test: DEF2-SVP basis set";;
-    grad_HI_b3lyp_def2svp)                testinfo="HI: DFT gradient test: DEF2-SVP basis set";;      # currently disabled
+    grad_BH3_b3lyp_def2sv_p)              testinfo="BH3: DFT gradient test: DEF2-SV(P) basis set";;       # currently disabled
+    grad_CaCl2_b3lyp_def2sv_p)            testinfo="CaCl2: DFT gradient test: DEF2-SV(P) basis set";;     # currently disabled
+    grad_CH4_b3lyp_def2sv_p)              testinfo="CH4: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_H2O_b3lyp_def2sv_p)              testinfo="H2O: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_HBr_b3lyp_def2sv_p)              testinfo="HBr: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_HI_b3lyp_def2sv_p)               testinfo="HI: DFT gradient test: DEF2-SV(P) basis set";;        # currently disabled
+    grad_KCl_b3lyp_def2sv_p)              testinfo="KCl: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_LiF_b3lyp_def2sv_p)              testinfo="LiF: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_MgO_b3lyp_def2sv_p)              testinfo="MgO: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_NaCl_b3lyp_def2sv_p)             testinfo="NaCl: DFT gradient test: DEF2-SV(P) basis set";;      
+    grad_NH4_b3lyp_def2sv_p)              testinfo="NH4: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_PH3_b3lyp_def2sv_p)              testinfo="PH3: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_SiH4_b3lyp_def2sv_p)             testinfo="SiH4: DFT gradient test: DEF2-SV(P) basis set";;      
+    grad_SO2_b3lyp_def2sv_p)              testinfo="SO2: DFT gradient test: DEF2-SV(P) basis set";;       
+    grad_AlH3_b3lyp_def2svp)              testinfo="ALH3: DFT gradient test: DEF2-SVP basis set";;        
+    grad_BeH2_b3lyp_def2svp)              testinfo="BeH2: DFT gradient test: DEF2-SVP basis set";;        
+    grad_BH3_b3lyp_def2svp)               testinfo="BH3: DFT gradient test: DEF2-SVP basis set";;         
+    grad_CaCl2_b3lyp_def2svp)             testinfo="CaCl2: DFT gradient test: DEF2-SVP basis set";;       # currently disabled
+    grad_CH4_b3lyp_def2svp)               testinfo="CH4: DFT gradient test: DEF2-SVP basis set";;         
+    grad_H2O_b3lyp_def2svp)               testinfo="H2O: DFT gradient test: DEF2-SVP basis set";;         
+    grad_HBr_b3lyp_def2svp)               testinfo="HBr: DFT gradient test: DEF2-SVP basis set";;         
+    grad_HI_b3lyp_def2svp)                testinfo="HI: DFT gradient test: DEF2-SVP basis set";;          # currently disabled
     grad_KCl_b3lyp_def2svp)               testinfo="KCl: DFT gradient test: DEF2-SVP basis set";;
     grad_LiF_b3lyp_def2svp)               testinfo="LiF: DFT gradient test: DEF2-SVP basis set";;
     grad_MgO_b3lyp_def2svp)               testinfo="MgO: DFT gradient test: DEF2-SVP basis set";;
@@ -229,12 +229,12 @@ print_test_info(){
     grad_SO2_b3lyp_def2svp)               testinfo="SO2: DFT gradient test: DEF2-SVP basis set";;
     grad_AlH3_b3lyp_def2svpd)             testinfo="ALH3: DFT gradient test: DEF2-SVPD basis set";;
     grad_BeH2_b3lyp_def2svpd)             testinfo="BeH2: DFT gradient test: DEF2-SVPD basis set";;
-    grad_BH3_b3lyp_def2svpd)              testinfo="BH3: DFT gradient test: DEF2-SVPD basis set";;   # currently disabled
-    grad_CaCl2_b3lyp_def2svpd)            testinfo="CaCl2: DFT gradient test: DEF2-SVPD basis set";; # currently disabled
-    grad_CH4_b3lyp_def2svpd)              testinfo="CH4: DFT gradient test: DEF2-SVPD basis set";;
-    grad_H2O_b3lyp_def2svpd)              testinfo="H2O: DFT gradient test: DEF2-SVPD basis set";;
-    grad_HBr_b3lyp_def2svpd)              testinfo="HBr: DFT gradient test: DEF2-SVPD basis set";;   # currently disabled
-    grad_HI_b3lyp_def2svpd)               testinfo="HI: DFT gradient test: DEF2-SVPD basis set";;    # currently disabled
+    grad_BH3_b3lyp_def2svpd)              testinfo="BH3: DFT gradient test: DEF2-SVPD basis set";;        # currently disabled
+    grad_CaCl2_b3lyp_def2svpd)            testinfo="CaCl2: DFT gradient test: DEF2-SVPD basis set";;      # currently disabled
+    grad_CH4_b3lyp_def2svpd)              testinfo="CH4: DFT gradient test: DEF2-SVPD basis set";;        
+    grad_H2O_b3lyp_def2svpd)              testinfo="H2O: DFT gradient test: DEF2-SVPD basis set";;        
+    grad_HBr_b3lyp_def2svpd)              testinfo="HBr: DFT gradient test: DEF2-SVPD basis set";;        # currently disabled
+    grad_HI_b3lyp_def2svpd)               testinfo="HI: DFT gradient test: DEF2-SVPD basis set";;         # currently disabled
     grad_KCl_b3lyp_def2svpd)              testinfo="KCl: DFT gradient test: DEF2-SVPD basis set";;
     grad_LiF_b3lyp_def2svpd)              testinfo="LiF: DFT gradient test: DEF2-SVPD basis set";;
     grad_MgO_b3lyp_def2svpd)              testinfo="MgO: DFT gradient test: DEF2-SVPD basis set";;
@@ -419,7 +419,7 @@ check_dipole(){
 
 # function to clean up files
 clean_up(){
-    /bin/rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+    rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
 }
 
 # function to report summary
@@ -481,7 +481,7 @@ print_summary(){
         fi
       fi
       
-      /bin/rm -f .quick.runtest.${buildtype}.summary.tmp2
+      rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
     failed_total=$((failed_ene+failed_grad+failed_opt))
@@ -499,7 +499,7 @@ print_summary(){
       cat .quick.runtest.${buildtype}.summary.tmp0 >> $QUICK_HOME/.quick.runtest.summary.log
     fi
  
-    /bin/rm -f .quick.runtest.${buildtype}.summary.tmp1 .quick.runtest.${buildtype}.summary.tmp0
+    rm -f .quick.runtest.${buildtype}.summary.tmp1 .quick.runtest.${buildtype}.summary.tmp0
     
   done
 
@@ -764,15 +764,15 @@ if [ "$log" = 'yes' ]; then
   touch runtest.log
   for buildtype in $buildtypes; do
     cat $QUICK_HOME/.quick.${buildtype}.runtest.log >> $QUICK_HOME/runtest.log
-    /bin/rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
+    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
   done
   cat $QUICK_HOME/.quick.runtest.summary.log >> $QUICK_HOME/runtest.log
-  /bin/rm -f $QUICK_HOME/.quick.runtest.summary.log
+  rm -f $QUICK_HOME/.quick.runtest.summary.log
 
   echo "Output of runtest script has been written into $QUICK_HOME/runtest.log file."
 else
   for buildtype in $buildtypes; do
-    /bin/rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
+    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
   done
 fi
 
