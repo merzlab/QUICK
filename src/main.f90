@@ -58,7 +58,8 @@
     masterwork_readInput: if (master) then
 
       ! read input argument
-      SAFE_CALL(set_quick_files(ierr))    ! from quick_file_module
+      call set_quick_files(.false.,ierr)    ! from quick_file_module
+      CHECK_ERROR(ierr)
 
       ! open output file
       call quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr)
