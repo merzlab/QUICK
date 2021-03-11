@@ -172,14 +172,12 @@ subroutine check_fqin(fqin, keywd, ierr)
 
   call upcase(keywd, 200)
 
-  quick_api%fqin    = trim(fqin) // '.qin'
-
   if ((index(keywd, 'HF') .ne. 0) .or. (index(keywd, 'DFT') .ne. 0) .and. (index(keywd, 'BASIS=') .ne. 0 )) then
     quick_api%hasKeywd = .true.
     quick_api%Keywd = keywd
   endif
 
-  quick_api%fqin    = trim(fqin) // '.qin'
+  quick_api%fqin    = trim(fqin) // '.in'
 
 end subroutine check_fqin
 
@@ -235,7 +233,8 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 #endif
 
     ! set quick files
-    SAFE_CALL(set_quick_files(ierr))
+    call set_quick_files(.true.,ierr)
+    CHECK_ERROR(ierr)
 
     ! open output file
     SAFE_CALL(quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr))
