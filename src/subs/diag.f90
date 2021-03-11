@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	diag.f90
 !	new_quick

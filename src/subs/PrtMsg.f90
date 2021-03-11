@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	prtmsg.f90
 !	new_quick

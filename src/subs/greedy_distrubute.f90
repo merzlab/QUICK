@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	greedy_distrubute.f90
 !	new_quick

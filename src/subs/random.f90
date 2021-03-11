@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	random.f90
 !	new_quick

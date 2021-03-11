@@ -7,6 +7,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  Contants module. Store inportant constant. Most of them are attached with
 !  parameter property
 

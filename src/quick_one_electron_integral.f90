@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	quick_one_electron_integral.f90
 !	new_quick
