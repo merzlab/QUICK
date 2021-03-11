@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  Calculated Module, storing calculated information
 module quick_calculated_module
 

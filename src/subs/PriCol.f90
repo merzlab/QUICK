@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	prtcol.f90
 !	new_quick

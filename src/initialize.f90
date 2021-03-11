@@ -17,6 +17,8 @@
 ! allocatebasis
 !------------------------------------------------------
 
+#include "util.fh"
+
 subroutine initialize1(ierr)
 
    !  This subroutine is to initalize variables, set their default values
@@ -26,10 +28,11 @@ subroutine initialize1(ierr)
    use quick_molspec_module
    use quick_method_module
    use quick_timer_module
+   use quick_exception_module
    implicit none
 
    ! Parameter list
-   integer ierr    ! Error Flag
+   integer, intent(inout) :: ierr    ! Error Flag
 
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
@@ -38,10 +41,9 @@ subroutine initialize1(ierr)
    !------------------- End MPI  -----------------------------------
 #endif
 
-   call init(quick_method)     !initialize quick_method namelist
-   call init(quick_molspec)    !initialize quick_molspec namelist
+   call init(quick_method, ierr)     !initialize quick_method namelist
+   call init(quick_molspec, ierr)    !initialize quick_molspec namelist
 
-   ierr=0
    call cpu_time(timer_begin%TTotal) !Trigger time counter
 
    call cpu_time(timer_begin%Tinitialize) !Trigger time counter
@@ -55,10 +57,11 @@ subroutine outputCopyright(io,ierr)
 
    !  Output Copyright information
 
+   use quick_exception_module
    implicit none
 
    ! parameter list
-   integer ierr    ! Error Flag
+   integer, intent(inout) :: ierr    ! Error Flag
    integer io
 
    write(io,'(A107)') " *********************************************************************************************************"
@@ -109,8 +112,6 @@ subroutine outputCopyright(io,ierr)
    write(io,'(A107)') " If you have any comments or queries, please send us an email for technical support:                      "
    write(io,'(A107)') " quick.merzlab@gmail.com                                                                                  "
    write(io,'(A107)') "                                                                                                          "
-
-   ierr=0
 
    return
 

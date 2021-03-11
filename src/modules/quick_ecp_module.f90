@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  ECP module written by Alessandro GENONI 03/12/2006
 module quick_ecp_module
    implicit none

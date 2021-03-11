@@ -6,6 +6,9 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 !
+
+#include "util.fh"
+
 module quick_timer_module
     implicit none
 

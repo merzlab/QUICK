@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	copySym.f90
 !	new_quick

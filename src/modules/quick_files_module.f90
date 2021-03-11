@@ -52,15 +52,15 @@ module quick_files_module
 
     integer :: inFile         = INFILEHANDLE     ! input file
     integer :: iOutFile       = OUTFILEHANDLE    ! output file
-    integer :: iDmxFile       = 2022             ! density matrix file
-    integer :: iRstFile       = 2023             ! Restricted file
-    integer :: iCPHFFile      = 2024             ! CPHF file
-    integer :: iBasisFile     = 2025             ! basis set file
-    integer :: iECPFile       = 2026             ! ECP file
-    integer :: iBasisCustFile = 2027             ! custom basis set file
-    integer :: iPDBFile       = 2028             ! PDB input file
+    integer :: iDmxFile       = DMXFILEHANDLE    ! density matrix file
+    integer :: iRstFile       = RSTFILEHANDLE    ! Restricted file
+    integer :: iCPHFFile      = CPHFFILEHANDLE   ! CPHF file
+    integer :: iBasisFile     = BASISFILEHANDLE  ! basis set file
+    integer :: iECPFile       = ECPFILEHANDLE    ! ECP file
+    integer :: iBasisCustFile = BASISCFILEHANDLE ! custom basis set file
+    integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
-    integer :: iIntFile       = 2030             ! integral file
+    integer :: iIntFile       = INTFILEHANDLE    ! integral file
 
     logical :: fexist = .false.         ! Check if file exists
 
@@ -72,16 +72,15 @@ module quick_files_module
     !------------
     ! Setup input output files and basis dir
     !------------
-    subroutine set_quick_files(ierr)
+    subroutine set_quick_files(api,ierr)
 
         implicit none
         ! Pass-in parameter:
-        integer :: ierr    ! Error Flag
+        integer, intent(inout) :: ierr    ! Error Flag
+        logical, intent(in) :: api
 
         ! Local Varibles
         integer :: i
-
-        ierr=1
 
         ! Read enviromental variables: QUICK_BASIS and ECPs
         ! those can be defined in ~/.bashrc
@@ -99,17 +98,18 @@ module quick_files_module
         ! if quick is in libary mode, use .qin and .qout extensions
         ! for input and output files.
 
-        if(.not. isTemplate) call getarg(1,inFileName)
-
-        i = index(inFileName,'.')
-
-        if(i .eq. 0) i = index(inFileName,' ')
-
-        if(isTemplate) then
-          outFileName=inFileName(1:i-1)//'.qout'
+        if(.not.api) then
+          call getarg(1,inFileName)
+          i = index(inFileName,'.')
+          if(i .eq. 0) then
+            write(0,'("| Error: Invalid input file name.")')
+            call quick_exit(0,1)
+          endif
         else
-          outFileName=inFileName(1:i-1)//'.out'
+          i = index(inFileName,'.')  
         endif
+
+        outFileName=inFileName(1:i-1)//'.out'
 
         dmxFileName=inFileName(1:i-1)//'.dmx'
         rstFileName=inFileName(1:i-1)//'.rst'
@@ -118,15 +118,15 @@ module quick_files_module
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
 
-
-!        write(*,*) inFileName, outFileName
-
-        ierr=0
         return
 
     end subroutine
 
-    subroutine read_basis_file(keywd)
+    subroutine read_basis_file(keywd,ierr)
+
+        use quick_exception_module
+        use quick_mpi_module
+
         implicit none
 
         !Pass-in Parameter
@@ -136,6 +136,7 @@ module quick_files_module
         character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
         character(len=16) :: tmp_keywd
         character(len=16) :: tmp_basisfilename
+        integer, intent(inout) :: ierr
 
         ! local variables
         integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1,lenkwd
@@ -171,7 +172,7 @@ module quick_files_module
                 call quick_exit(iOutFile,1)
             end if
 
-            call quick_open(ibasisfile,basis_sets,'O','F','W',.true.)
+            SAFE_CALL(quick_open(ibasisfile,basis_sets,'O','F','W',.true.,ierr))
 
             do while (iofile  == 0 )
                 read(ibasisfile,'(A80)',iostat=iofile) line
@@ -253,17 +254,14 @@ module quick_files_module
         implicit none
 
         ! Pass-in parameters:
-        integer ierr    ! Error Flag
+        integer, intent(inout) :: ierr    ! Error Flag
         integer io      ! file to write
-
-        ierr=1
 
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
         write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
-        ierr=0
         return
     end subroutine print_quick_io_file
 

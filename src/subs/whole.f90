@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	whole.f90
 !	new_quick

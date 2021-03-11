@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	matComp.f90
 !	new_quick

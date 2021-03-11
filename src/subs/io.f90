@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	io.f90
 !	new_quick

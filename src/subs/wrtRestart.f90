@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	wrtRestart.f90
 !	new_quick
