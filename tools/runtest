@@ -65,7 +65,7 @@ uspec_test='no'
 test_length='short'
 
 # verbosity
-nolog='no'
+log='yes'
 
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
@@ -463,7 +463,7 @@ while [ $# -gt 0 ]; do
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
     --full)        test_length='full';;
-    --nolog)       nolog='yes';;   
+    --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -715,7 +715,7 @@ cd $installdir
 # print test summary
 print_summary
 
-if [ "$nolog" = 'no' ]; then
+if [ "$log" = 'yes' ]; then
   /bin/mv $QUICK_HOME/.quick.runtest.log $QUICK_HOME/runtest.log
   echo "Output of runtest script has been written into $QUICK_HOME/runtest.log file."
 else
