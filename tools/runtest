@@ -425,8 +425,17 @@ clean_up(){
 # function to report summary
 print_summary(){
 
-echo "======================== Test Summary ========================"
-echo ""
+  sum_header="======================== Test Summary ========================"
+  sum_footer="=============================================================="  
+
+  echo "$sum_header"
+  echo ""
+
+  if [ "$log" = 'yes' ]; then
+    echo "$sum_header" > $QUICK_HOME/.quick.runtest.summary.log
+    echo "" >> $QUICK_HOME/.quick.runtest.summary.log
+  fi
+
 
 for buildtype in $buildtypes; do
   total_ene=0
@@ -484,15 +493,21 @@ for buildtype in $buildtypes; do
   echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
   echo "" >> .quick.runtest.${buildtype}.summary.tmp0
 
-  cat .quick.runtest.${buildtype}.summary.tmp0 
+  cat .quick.runtest.${buildtype}.summary.tmp0
+
+  if [ "$log" = 'yes' ]; then 
+    cat .quick.runtest.${buildtype}.summary.tmp0 >> $QUICK_HOME/.quick.runtest.summary.log
+  fi
 
   /bin/rm -f .quick.runtest.${buildtype}.summary.tmp1 .quick.runtest.${buildtype}.summary.tmp0
   
 done
 
-echo "=============================================================="
+  echo "$sum_footer"
 
-#cat runtest.summary.tmp0 | tee -a $QUICK_HOME/.quick.runtest.log
+  if [ "$log" = 'yes' ]; then
+    echo "$sum_footer" >> $QUICK_HOME/.quick.runtest.summary.log
+  fi
 
 }
 
@@ -751,6 +766,8 @@ if [ "$log" = 'yes' ]; then
     cat $QUICK_HOME/.quick.${buildtype}.runtest.log >> $QUICK_HOME/runtest.log
     /bin/rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
   done
+  cat $QUICK_HOME/.quick.runtest.summary.log >> $QUICK_HOME/runtest.log
+  /bin/rm -f $QUICK_HOME/.quick.runtest.summary.log
 
   echo "Output of runtest script has been written into $QUICK_HOME/runtest.log file."
 else
