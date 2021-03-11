@@ -13,6 +13,8 @@
 !    contains: initialize_divpbVars()
 !              deallocate_divpbVars(ierror)
 
+#include "util.fh"
+
 ! PB Interface modules
   module divpb_interface
 ! 

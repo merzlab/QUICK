@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	matMul.f90
 !	new_quick

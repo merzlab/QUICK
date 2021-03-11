@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! Gaussian Module, Kenneth Ayers 1/23/04
 module quick_gaussian_class_module
 

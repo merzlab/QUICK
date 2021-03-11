@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Fake_MPI subroutine to make single CPU computation compatible

@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	readPDB.f90
 !	new_quick
