@@ -72,11 +72,12 @@ module quick_files_module
     !------------
     ! Setup input output files and basis dir
     !------------
-    subroutine set_quick_files(ierr)
+    subroutine set_quick_files(api,ierr)
 
         implicit none
         ! Pass-in parameter:
         integer, intent(inout) :: ierr    ! Error Flag
+        logical, intent(in) :: api
 
         ! Local Varibles
         integer :: i
@@ -97,20 +98,18 @@ module quick_files_module
         ! if quick is in libary mode, use .qin and .qout extensions
         ! for input and output files.
 
-        if(.not. isTemplate) then
+        if(.not.api) then
           call getarg(1,inFileName)
           i = index(inFileName,'.')
           if(i .eq. 0) then
             write(0,'("| Error: Invalid input file name.")')
             call quick_exit(0,1)
           endif
+        else
+          i = index(inFileName,'.')  
         endif
 
-        if(isTemplate) then
-          outFileName=inFileName(1:i-1)//'.qout'
-        else
-          outFileName=inFileName(1:i-1)//'.out'
-        endif
+        outFileName=inFileName(1:i-1)//'.out'
 
         dmxFileName=inFileName(1:i-1)//'.dmx'
         rstFileName=inFileName(1:i-1)//'.rst'
