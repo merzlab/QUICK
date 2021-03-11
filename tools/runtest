@@ -1,4 +1,4 @@
-m!/bin/sh
+#!/bin/sh
 
 #  !---------------------------------------------------------------------!
 #  ! Written by Madu Manathunga on 07/19/2020                            !
@@ -630,26 +630,26 @@ fi
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
    mpimsg=""
-if [ -z "$DO_PARALLEL" ]; then
-   export DO_PARALLEL=" "
-   mpimsg="Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core."
-else
-   ismpirun='yes'
-   mpimsg="MPI command: $DO_PARALLEL"
-fi
-
-echo ""
-echo "$mpimsg"   
-
-if [ "$mpi" = 'yes' ]; then
-   echo "" >> $QUICK_HOME/.quick.mpi.runtest.log
-   echo "$mpimsg" >> $QUICK_HOME/.quick.mpi.runtest.log 
-fi
-
-if [ "$cudampi" = 'yes' ]; then
-   echo "" >> $QUICK_HOME/.quick.cudampi.runtest.log
-   echo "$mpimsg" >> $QUICK_HOME/.quick.cudampi.runtest.log
-fi
+   if [ -z "$DO_PARALLEL" ]; then
+     echo "Error: MPI/CUDAMPI tests are requested but DO_PARALLEL variable is not set."
+     exit 1
+   else
+     ismpirun='yes'
+     mpimsg="MPI command: $DO_PARALLEL"
+   fi
+ 
+   echo ""
+   echo "$mpimsg"   
+ 
+   if [ "$mpi" = 'yes' ]; then
+     echo "" >> $QUICK_HOME/.quick.mpi.runtest.log
+     echo "$mpimsg" >> $QUICK_HOME/.quick.mpi.runtest.log 
+   fi
+ 
+   if [ "$cudampi" = 'yes' ]; then
+     echo "" >> $QUICK_HOME/.quick.cudampi.runtest.log
+     echo "$mpimsg" >> $QUICK_HOME/.quick.cudampi.runtest.log
+   fi
 
 fi
 
