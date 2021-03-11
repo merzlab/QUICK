@@ -64,6 +64,9 @@ test_opt='no'
 uspec_test='no'
 test_length='short'
 
+# verbosity
+nolog='no'
+
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -82,7 +85,8 @@ echo  "
       --ene          Run only energy tests
       --grad         Run only gradient tests
       --opt          Run only geometry optimization tests
-      --full         Run a large set of tests
+      --full         Run a large set of tests (Default: no)
+      --nolog        Disable writing output into runtest.log (Default: no)
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -272,7 +276,7 @@ print_test_info(){
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
   esac
 
-  echo $testinfo | tee -a $QUICK_HOME/runtest.log 
+  echo $testinfo | tee -a $QUICK_HOME/.quick.runtest.log
 
 }
 
@@ -308,7 +312,7 @@ set_test(){
 # total test count respectively. accuracy sets the tolerance. 
 run_test(){
 
-    echo "Running test $tc of $total_tests" | tee -a $QUICK_HOME/runtest.log
+    echo "Running test $tc of $total_tests" | tee -a $QUICK_HOME/.quick.runtest.log
 
     print_test_info "$t"
 
@@ -335,7 +339,7 @@ check_energy(){
     awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.ref.out" > "$t.ref.ene"
     awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$t.out" > "$t.ene"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene" | tee -a $QUICK_HOME/runtest.log
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.ene" "$t.ene" | tee -a $QUICK_HOME/.quick.runtest.log
 
 }
 
@@ -348,8 +352,7 @@ check_gradient(){
     awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.ref.out" > "$t.ref.grad"
     awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$t.out" > "$t.grad"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad" | tee -a $QUICK_HOME/runtest.log
-
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.grad" "$t.grad" | tee -a $QUICK_HOME/.quick.runtest.log
 }
 
 # check optimized geometry and force element
@@ -360,7 +363,7 @@ check_opt(){
     awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
     awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt" | tee -a $QUICK_HOME/runtest.log
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt" | tee -a $QUICK_HOME/.quick.runtest.log
 
 }
 
@@ -372,7 +375,7 @@ check_dipole(){
     awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.ref.out" > "$t.ref.dipole"
     awk '/Begin Charge and Dipole Calculation/,/End Charge and Dipole Calculation/ {print}' "$t.out" > "$t.dipole"
 
-    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole" | tee -a $QUICK_HOME/runtest.log
+    "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole" | tee -a $QUICK_HOME/.quick.runtest.log
 
 }
 
@@ -396,7 +399,7 @@ for buildtype in $buildtypes; do
   failed_grad=0
   failed_opt=0
 
-  sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/runtest.log > runtest.summary.tmp1
+  sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/.quick.runtest.log > runtest.summary.tmp1
 
   for i in `seq 1 $total_tests`; do
     if [ "$i" -lt "$total_tests" ]; then
@@ -441,7 +444,8 @@ done
 
 echo "==============================================================" >> runtest.summary.tmp0
 
-cat runtest.summary.tmp0
+cat runtest.summary.tmp0 | tee -a $QUICK_HOME/.quick.runtest.log
+
 /bin/rm -f runtest.summary.tmp0
 }
 
@@ -455,10 +459,11 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi";;
-    --ene)      test_ene='yes';uspec_test='yes';;
+    --ene)         test_ene='yes';uspec_test='yes';;
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
     --full)        test_length='full';;
+    --nolog)       nolog='yes';;   
     -h| -H| -help| --help) print_help;;
      *) 
          echo  "Neglecting unknown flag: $1";;
@@ -559,18 +564,19 @@ if [ ! -f "$testdir/testlist_full_cuda.txt" ]; then
   exit 1
 fi
 
-echo ""
+echo "" | tee -a $QUICK_HOME/.quick.runtest.log
 
 # check for mpirun 
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' ]; then
 if [ -z "$DO_PARALLEL" ]; then
    export DO_PARALLEL=" "
-   echo  "Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core."
+   echo  "Warning: DO_PARALLEL variable is not set. MPI/CUDA-MPI tests will be carried out with a single core." | tee -a $QUICK_HOME/.quick.runtest.log
 else
    ismpirun='yes'
-   echo  "MPI command: $DO_PARALLEL"
+   echo  "MPI command: $DO_PARALLEL" | tee -a $QUICK_HOME/.quick.runtest.log
 fi
-  echo ""
+
+echo "" | tee -a $QUICK_HOME/.quick.runtest.log
 fi
 
 #  !---------------------------------------------------------------------!
@@ -604,15 +610,15 @@ fi
 cd "$testdir"
 
 # create runtest.log 
-echo "" > $QUICK_HOME/runtest.log
+echo "" | tee -a $QUICK_HOME/.quick.runtest.log
 
 for buildtype in $buildtypes; do
 
   cdate=`date +'%m/%d/%Y'`
   ctime=`date +'%r'`
 
-  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a $QUICK_HOME/runtest.log
-  echo ""
+  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a $QUICK_HOME/.quick.runtest.log
+  echo "" | tee -a $QUICK_HOME/.quick.runtest.log
 
   # set qexe
   if [ "$buildtype" = 'serial' ]; then
@@ -697,16 +703,24 @@ for buildtype in $buildtypes; do
       tc=$((tc+1))
     done
   fi
-	
-  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype." | tee -a $QUICK_HOME/runtest.log
-  echo ""
+
+  echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype." | tee -a $QUICK_HOME/.quick.runtest.log
+  echo "" | tee -a $QUICK_HOME/.quick.runtest.log
+
   cd "$testdir"
 done
-
+  
 cd $installdir
 
 # print test summary
 print_summary
+
+if [ "$nolog" = 'no' ]; then
+  /bin/mv $QUICK_HOME/.quick.runtest.log $QUICK_HOME/runtest.log
+  echo "Output of runtest script has been written into $QUICK_HOME/runtest.log file."
+else
+  /bin/rm -f $QUICK_HOME/.quick.runtest.log
+fi
 
 exit 0
 
