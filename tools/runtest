@@ -79,7 +79,7 @@ echo  "
                                                                             
   Available flags are:                                                      
       --serial       Tests QUICK serial version                                
-      --mpi          Tests QUICK MPI prallel version                           
+      --mpi          Tests QUICK MPI parallel version                           
       --cuda         Tests QUICK GPU version
       --cudampi      Tests QUICK multi-GPU version
       --ene          Run only energy tests
