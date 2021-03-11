@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	eigvec.f90
 !	new_quick

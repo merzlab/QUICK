@@ -31,7 +31,7 @@ contains
   subroutine raise_exception(ierr)
 
     implicit none
-    integer, intent(in) :: ierr
+    integer, intent(inout) :: ierr
 
     if (ierr /= 0) then
       call print_exception(ierr)
@@ -51,6 +51,72 @@ contains
 
     case(10)
       msg='f basis functions are currently not supported.'
+
+    case(11)
+      msg='UHF/UDFT is currently not implemented.'
+
+    case(12)
+      msg='Failed to overwrite file.'
+
+    case(13)
+      msg='Failed to open input file.'
+
+    case(14)
+      msg='Failed to open output file.'
+
+    case(15)
+      msg='Failed to open basis file.'
+
+    case(16)
+      msg='Failed to open .dat file.'
+
+    case(17)
+      msg='Failed to open file.'
+
+    case(18)
+      msg='Atom out of range for core.'
+
+    case(19)
+      msg='Systems with unpaired electrons require UHF/UDFT calculations which are currently not supported.'
+
+    case(20)
+      msg='Higher multiplicities require UHF/UDFT calculations which are currently not supported. '
+
+    case(21)
+      msg='Incorrect number of electrons for a doublet.'
+
+    case(22)
+      msg='Incorrect number of electrons for a triplet.'
+
+    case(23)
+      msg='Incorrect number of electrons for a quadruplet.'
+
+    case(24)
+      msg='No CUDA enabled devices found.'
+ 
+    case(25)
+      msg='Illegal device ID.'
+
+    case(26)
+      msg='CUDA version required for selected device is less than 1.3.'
+
+    case(27)
+      msg='CUDA 1.3 (or higher) enabled device not found.'
+
+    case(28)
+      msg='Device microarchitecture must be higher than 1.3.'
+
+    case(29)
+      msg='Microarchitecture of selected device is less than 3.0.'
+
+    case(30)
+      msg='Selected device is already in use.'
+
+    case(31)
+      msg='LIBXC keyword must be followed by a functional name.'
+
+    case(32)
+      msg='Requested LIBXC functional does not exist.'
 
     case default
       msg='Unknown error.'

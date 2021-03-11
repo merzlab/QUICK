@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	rdword.f90
 !	new_quick

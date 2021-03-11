@@ -28,7 +28,7 @@
 // Query the availability of devices.
 //-----------------------------------------------
 
-extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
+extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
 
     int gpuCount = 0;           // Total number of cuda devices available
@@ -38,9 +38,9 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
     status = cudaGetDeviceCount(&gpuCount);
 
     if(gpuCount == 0){
-        printf("Error: Process %d couldnt find a GPU. Make sure there are enough plugged in GPUs. \n", *mpirank);
         cudaDeviceReset();
-        exit(-1);
+        *ierr=24;
+        return;
     }/*else if(gpuCount < *mpisize){
         printf("Error: Number of launched processes is greater than the available number of GPUs. Please relaunch with lower number of processes. \n");
         cudaDeviceReset();
@@ -53,10 +53,14 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
 
 
 
-    if((devProp.major < 3) || (devProp.totalGlobalMem < minMem)){
-      printf("Error: GPU assigned for process %d is too old or already in use. \n", *mpirank);
+    if(devProp.major < 3){ 
+      *ierr=29;
+      return;
+    }
+    else if(devProp.totalGlobalMem < minMem){
       cudaDeviceReset();
-      exit(-1);
+      *ierr=30;
+      return;
     }
 
     *mgpu_id = devID;
@@ -67,7 +71,7 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id)
 //-----------------------------------------------
 // create gpu class
 //-----------------------------------------------
-void mgpu_startup(int mpirank)
+void mgpu_startup(int mpirank, int* ierr)
 {
 
 #if defined DEBUG || defined DEBUGTIME
@@ -96,7 +100,7 @@ void mgpu_startup(int mpirank)
 //-----------------------------------------------
 // Finalize the devices
 //-----------------------------------------------
-extern "C" void mgpu_shutdown_(void)
+extern "C" void mgpu_shutdown_(int* ierr)
 {
 
     PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES")
@@ -115,14 +119,14 @@ extern "C" void mgpu_shutdown_(void)
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device)
+extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 {
 
     cudaError_t status;
     cudaDeviceProp deviceProp;
 
     // Each node starts up GPUs
-    mgpu_startup(*mpirank);
+    mgpu_startup(*mpirank, ierr);
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION")
 

@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	xnorm.f90
 !	new_quick

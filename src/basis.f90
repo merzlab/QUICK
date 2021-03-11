@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	basis.f90
 !	new_quick
@@ -25,7 +26,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    double precision AA(MAXPRIM),BB(MAXPRIM),CC(MAXPRIM)
    integer natomstart,natomfinal,nbasisstart,nbasisfinal
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
-   integer :: ierr
+   integer, intent(inout) :: ierr
 
 #ifdef MPIV
    include 'mpif.h'
@@ -42,7 +43,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       ! * Read the Effective Core Potentials (ECPs), modify the atomic charges
       !   and the total number of electrons (readecp)
       if (quick_method%ecp)    call readecp
-      call quick_open(ibasisfile,basisfilename,'O','F','W',.true.)
+      call quick_open(ibasisfile,basisfilename,'O','F','W',.true.,ierr)
+      CHECK_ERROR(ierr)
       iofile = 0
       nshell = 0
       nbasis = 0
