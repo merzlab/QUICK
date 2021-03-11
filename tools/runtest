@@ -280,6 +280,43 @@ print_test_info(){
 
 }
 
+# function to set correct quick executable and test list
+# must be called from a loop where $buildtype carries build type
+set_qexe_testlist(){
+
+  if [ "$buildtype" = 'serial' ]; then
+    qexe='quick'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
+  elif [ "$buildtype" = 'mpi' ]; then
+    qexe='quick.MPI'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full.txt"
+    else
+      test_list="$testdir/testlist_short.txt"
+    fi
+  elif [ "$buildtype" = 'cuda' ]; then
+    qexe='quick.cuda'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full_cuda.txt"
+    else
+      test_list="$testdir/testlist_short_cuda.txt"
+    fi
+  elif [ "$buildtype" = 'cudampi' ]; then
+    qexe='quick.cuda.MPI'
+    if [ "$test_length" = 'full' ]; then
+      test_list="$testdir/testlist_full_cuda.txt"
+    else
+      test_list="$testdir/testlist_short_cuda.txt"
+    fi
+  fi
+
+}
+
+
 # function to get the total number of tests
 get_total_tests(){
 
@@ -398,7 +435,15 @@ for buildtype in $buildtypes; do
   failed_ene=0
   failed_grad=0
   failed_opt=0
+  total_tests=0
 
+  # set testlist
+  set_qexe_testlist
+
+  # get the number of tests to run
+  get_total_tests
+
+  # grab stuff from temporary log files
   sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/.quick.${buildtype}.runtest.log > .quick.runtest.${buildtype}.summary.tmp1
 
   for i in `seq 1 $total_tests`; do
@@ -594,13 +639,12 @@ fi
 #  ! Create required directories                                         !
 #  !---------------------------------------------------------------------!
 
-if [ -d "$testdir/runs" ]; then
-  rm -rf "$testdir/runs/"*
-else
+if [ ! -d "$testdir/runs" ]; then
   mkdir -p "$testdir/runs"
 fi
 
 for buildtype in $buildtypes; do
+  rm -rf "$testdir/runs/$buildtype"
   mkdir -p "$testdir/runs/$buildtype"
 done
 
@@ -631,37 +675,8 @@ for buildtype in $buildtypes; do
   echo "" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
   
 
-  # set qexe
-  if [ "$buildtype" = 'serial' ]; then
-    qexe='quick'
-    if [ "$test_length" = 'full' ]; then
-      test_list="$testdir/testlist_full.txt"
-    else
-      test_list="$testdir/testlist_short.txt"
-    fi
-  elif [ "$buildtype" = 'mpi' ]; then
-    qexe='quick.MPI'
-    if [ "$test_length" = 'full' ]; then
-      test_list="$testdir/testlist_full.txt"
-    else
-      test_list="$testdir/testlist_short.txt"
-    fi
-  elif [ "$buildtype" = 'cuda' ]; then
-    qexe='quick.cuda'
-    if [ "$test_length" = 'full' ]; then
-      test_list="$testdir/testlist_full_cuda.txt"
-    else
-      test_list="$testdir/testlist_short_cuda.txt"
-    fi
-  elif [ "$buildtype" = 'cudampi' ]; then
-    qexe='quick.cuda.MPI'
-    if [ "$test_length" = 'full' ]; then
-      test_list="$testdir/testlist_full_cuda.txt"
-    else
-      test_list="$testdir/testlist_short_cuda.txt"
-    fi
-  fi
-
+  # set qexe and testlist
+  set_qexe_testlist
 
   # initialize the total number of test cases
   total_tests=0 
