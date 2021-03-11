@@ -623,14 +623,17 @@ else
    mpimsg="MPI command: $DO_PARALLEL"
 fi
 
+echo ""
+echo "$mpimsg"   
+
 if [ "$mpi" = 'yes' ]; then
-   echo "" | tee -a $QUICK_HOME/.quick.mpi.runtest.log
-   echo "$mpimsg" | tee -a $QUICK_HOME/.quick.mpi.runtest.log 
+   echo "" >> $QUICK_HOME/.quick.mpi.runtest.log
+   echo "$mpimsg" >> $QUICK_HOME/.quick.mpi.runtest.log 
 fi
 
 if [ "$cudampi" = 'yes' ]; then
-   echo "" | tee -a $QUICK_HOME/.quick.cudampi.runtest.log
-   echo "$mpimsg" | tee -a $QUICK_HOME/.quick.cudampi.runtest.log
+   echo "" >> $QUICK_HOME/.quick.cudampi.runtest.log
+   echo "$mpimsg" >> $QUICK_HOME/.quick.cudampi.runtest.log
 fi
 
 fi
