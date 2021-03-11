@@ -550,7 +550,7 @@ endif
 
             ! opt cycls
             if (index(keywd,'OPTIMIZE') /= 0) then
-                call read(keywd, 'OPTIMIZE', self%iopt)
+                call read(keywd, 'OPTIMIZE', self%iopt, .false.)
             endif
 
             ! scf cycles
