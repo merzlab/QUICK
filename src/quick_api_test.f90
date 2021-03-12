@@ -17,7 +17,7 @@
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
     use quick_exception_module
 #ifdef MPIV
-    use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
+    use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput, mpi_exit
     use quick_api_module, only : setQuickMPI
 #endif
 
@@ -148,6 +148,10 @@
     if ( allocated(gradients))         deallocate(gradients, stat=ierr)
     if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
     CHECK_ERROR(ierr)
+
+#ifdef MPIV
+   call mpi_exit
+#endif
 
   end program test_quick_api
 
