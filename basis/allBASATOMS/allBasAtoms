@@ -1,0 +1,72 @@
+#!/bin/bash
+WORKDIR=`pwd`
+
+SYMBOL=("H" "HE" "LI" "BE" "B" "C" "N" "O" "F" "NE" 
+    "NA" "MG" "AL" "SI" "P" "S" "CL" "AR" "K" "CA"
+    "SC" "TI" "V" "CR" "MN" "FE" "CO" "NI" "CU" "ZN" 
+    "GA" "GE" "AS" "SE" "BR" "KR" "RB" "SR" "Y" "ZR" 
+    "NB" "MO" "TC" "RU" "RH" "PD" "AG" "CD" "IN" "SN" 
+    "SB" "TE" "I" "XE" "CS" "BA" "LA" "CE" "PR" "ND" 
+    "PM" "SM" "EU" "GD" "TB" "DY" "HO" "ER" "TM" "YB" 
+    "LU" "HF" "TA" "W" "RE" "OS" "IR" "PT" "AU" "HG"
+    "TL" "PB" "BI" "PO" "AT" "RN" "FR" "RA" "AC" "TH"
+    "PA" "U")
+
+#for i in "${SYMBOL[@]}";do
+#	echo "$i"
+#done
+
+ALLBAS=()
+
+for BAS in ../*.BAS
+do
+	# remove dir to get basename
+	fname=$(basename -- $BAS)
+	# remove .BAS extension
+	fname=${fname%.*}
+	#echo $fname
+	ALLBAS+=($fname)
+done
+
+for BAS in "${ALLBAS[@]}";do
+	dirname="../$BAS.sadinput"
+	
+	if [ ! -d "$dirname" ];then
+		mkdir -p "$dirname"
+	fi
+
+	cd $dirname
+	
+for ATOM in "${SYMBOL[@]}";do
+if [ ! -f "$ATOM.in" ];then		
+cat	> "$ATOM.in" << EOF
+UHF BASIS=$BAS cutoff=1.0e-9 denserms=1.0e-6  SCF=1 writesad energy charge=0
+
+$ATOM         -0.920500        2.036450        1.984040
+
+EOF
+fi
+done
+	
+cd $WORKDIR
+done
+
+cd $WORKDIR
+echo "run sad for each atom in each basisset"
+for BAS in "${ALLBAS[@]}";do
+    dirname="../$BAS.sadinput"
+	echo $dirname
+	cp ./quick $dirname
+	cd $dirname
+	for ATOM in "${SYMBOL[@]}";do
+		echo "run atom $ATOM with $BAS"
+		./quick "$ATOM.in"
+	done
+	cd $WORKDIR
+done
+
+
+
+
+
+
