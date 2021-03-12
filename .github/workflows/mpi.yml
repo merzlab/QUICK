@@ -54,6 +54,8 @@ jobs:
           make -j2 install
       - name: Set MPI command
         run: echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+      - name: Set QUICK_CI
+        run: echo "QUICK_CI=TRUE" >> $GITHUB_ENV
       - name: Test mpi
         run: |
           cd install
