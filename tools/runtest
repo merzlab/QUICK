@@ -352,8 +352,11 @@ get_total_tests(){
 
 # function to set files for a test run
 set_test(){
+  # copy input if the test is not an api test
+  if [ `echo "$t" | grep 'api_' | wc -l` -le 1 ]; then
+    cp "$testdir/$t.in" ./
+  fi
 
-  cp "$testdir/$t.in" ./
   cp "$testdir/saved/$t.out" "$t.ref.out"
 }
 
@@ -449,7 +452,6 @@ check_dipole(){
     "$testdir/dacdif" -k -a "$accuracy" "$t.ref.dipole" "$t.dipole" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
 
 }
-
 
 # function to clean up files
 clean_up(){
