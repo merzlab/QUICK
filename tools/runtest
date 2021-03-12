@@ -518,9 +518,9 @@ print_summary(){
           failed_opt=$((failed_opt+1))
         fi
       elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_opt=$((total_api+1))
+        total_api=$((total_api+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-          failed_opt=$((failed_api+1))
+          failed_api=$((failed_api+1))
         fi
       fi
       
