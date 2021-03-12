@@ -22,7 +22,7 @@ jobs:
              echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
              echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test mpi
-        run: make test
+        run: make fulltest
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v2
