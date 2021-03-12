@@ -143,7 +143,7 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
     if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
   endif
 
-  ! save values in the quick_api struct
+ save values in the quick_api struct
   self%natoms         = natoms
   self%natm_type      = natm_type
   self%nxt_ptchg      = nxt_ptchg
@@ -685,7 +685,7 @@ subroutine delete_quick_job(ierr)
 #endif
 
   ! finalize quick
-  call finalize(iOutFile,ierr,0)
+  call finalize(iOutFile,ierr,1)
 
   ! deallocate memory
   call delete_quick_api_type(quick_api,ierr)
