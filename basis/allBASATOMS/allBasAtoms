@@ -52,6 +52,7 @@ cd $WORKDIR
 done
 
 cd $WORKDIR
+cp ../../bin/quick .
 echo "run sad for each atom in each basisset"
 for BAS in "${ALLBAS[@]}";do
     dirname="../$BAS.sadinput"
