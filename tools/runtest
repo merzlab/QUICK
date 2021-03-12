@@ -62,6 +62,7 @@ ctime=''
 test_ene='no'
 test_grad='no'
 test_opt='no'
+test_api='no'
 uspec_test='no'
 test_length='short'
 
@@ -86,6 +87,7 @@ echo  "
       --ene          Run only energy tests
       --grad         Run only gradient tests
       --opt          Run only geometry optimization tests
+      --api          Run only api tests
       --full         Run a large set of tests (Default: no)
       --nolog        Disable writing output into runtest.log (Default: no)
                                                                             
@@ -551,6 +553,7 @@ while [ $# -gt 0 ]; do
     --ene)         test_ene='yes';uspec_test='yes';;
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
+    --api)         test_api='yes';uspec_test='yes';;
     --full)        test_length='full';;
     --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
