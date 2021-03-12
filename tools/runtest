@@ -735,6 +735,7 @@ if [ "$uspec_test" = 'no' ]; then
   test_ene='yes'
   test_grad='yes'
   test_opt='yes'
+  test_api='yes'
 fi
 
 #  !---------------------------------------------------------------------!
