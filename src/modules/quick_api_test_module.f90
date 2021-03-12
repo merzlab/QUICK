@@ -18,7 +18,7 @@ module test_quick_api_module
   public :: loadTestData, printQuickOutput
 
 #ifdef MPIV
-  public :: mpi_initialize, printQuickMPIOutput
+  public :: mpi_initialize, printQuickMPIOutput, mpi_exit
 #endif
 
   ! a test system with one water and 3 point charges
@@ -138,6 +138,18 @@ contains
     call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad)
 
   end subroutine printQuickMPIOutput
+
+  subroutine mpi_exit
+
+    implicit none
+    integer :: mpierror
+
+    include 'mpif.h'
+
+    call MPI_FINALIZE(mpierror)
+    call exit(0)
+
+  end subroutine mpi_exit
 
 #endif
 
