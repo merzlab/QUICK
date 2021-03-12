@@ -24,7 +24,7 @@ jobs:
       - name: Set QUICK_CI
         run: echo "QUICK_CI=TRUE" >> $GITHUB_ENV
       - name: Test mpi
-        run: make test
+        run: make fulltest
       - name: Archive test results
         uses: actions/upload-artifact@v2
         with:
