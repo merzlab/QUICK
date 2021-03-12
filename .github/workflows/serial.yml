@@ -3,7 +3,7 @@ name: Serial Build
 on: [push, pull_request]
 
 jobs:
-  build:
+  make-build:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -17,15 +17,17 @@ jobs:
         run: make
       - name: Install serial
         run: make install
-      - name: Set QUICK_HOME
+      - name: Set environment variables
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test serial
         run: make fulltest
       - name: Archive test results
+        if: always()
         uses: actions/upload-artifact@v2
         with:
             name: serial-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+            retention-days: 3
       - uses: actions/download-artifact@v2
         with:
             name: serial-tests
@@ -41,14 +43,23 @@ jobs:
         run: sudo apt-get -y install gfortran cmake
       - name: Configure serial
         run: |
-          mkdir build
-          cd build
-          cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+             mkdir build
+             cd build
+             cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
       - name: Build serial
         run: |
-          cd build
-          make -j2 install
+             cd build
+             make -j2 install
+      - name: Set environment variables
+        run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test serial
         run: |
-          cd install
-          ./runtest --serial --full
+             cd install
+             ./runtest --serial --full
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+            name: serial-tests
+            path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+            retention-days: 3
