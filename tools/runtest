@@ -261,7 +261,7 @@ print_test_info(){
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
-    grad_c10h9o2s_b3lyp_def2svp)           testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
+    grad_c10h9o2s_b3lyp_def2svp)          testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
     grad_hbdi_meoh_libxc_blyp_sto3g)      testinfo="HBDI-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_naip_meoh_libxc_pbeh_sto3g)      testinfo="NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
@@ -275,6 +275,7 @@ print_test_info(){
     opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
+    api_water_rhf_631g)                   testinfo="Water: API test";;
   esac
 
   echo $testinfo | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
