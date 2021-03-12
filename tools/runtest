@@ -287,6 +287,7 @@ set_qexe_testlist(){
 
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
+    apiexe='test-api'
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -294,6 +295,7 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'mpi' ]; then
     qexe='quick.MPI'
+    apiexe='test-api.MPI'
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -301,6 +303,7 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'cuda' ]; then
     qexe='quick.cuda'
+    apiexe='test-api.cuda'
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
@@ -308,6 +311,7 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'cudampi' ]; then
     qexe='quick.cuda.MPI'
+    apiexe='test-api.cuda.MPI'
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
