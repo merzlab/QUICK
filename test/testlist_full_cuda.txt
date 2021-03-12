@@ -137,3 +137,4 @@ grad_rpsb_meoh_rhf_321g             #RHF point charge gradient test
 opt_wat_rhf_631g	            #RHF geometry optimization test with s and p basis functions
 opt_wat_rhf_ccpvdz	            #RHF geometry test with s, p and d basis functions
 opt_nh4_pbe_def2svp                 #DFT geometry test with s, p and d basis functions
+api_water_rhf_631g                  #API test
