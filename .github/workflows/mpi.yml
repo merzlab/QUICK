@@ -26,8 +26,8 @@ jobs:
              cp ./tools/runtest ./
              ./runtest --mpi --opt
       - name: Archive test results
-        uses: actions/upload-artifact@v2
           if: always()
+        uses: actions/upload-artifact@v2
         with:
             name: mpi-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
