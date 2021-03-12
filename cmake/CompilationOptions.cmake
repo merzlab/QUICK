@@ -39,6 +39,7 @@ set(BUILD_SHARED_LIBS ${SHARED})
 # So, we use CMAKE_<LANG>_FLAGS_DEBUG for per-config debugging flags, but use a separate optimization switch.
 option(OPTIMIZE "Whether to build code with compiler flags for optimization." TRUE)
 
+option(WARNINGS "Enable warnings." FALSE)
 option(UNUSED_WARNINGS "Enable warnings about unused variables.  Really clutters up the build output." FALSE)
 option(UNINITIALIZED_WARNINGS "Enable warnings about uninitialized variables.  Kind of clutters up the build output, but these need to be fixed." TRUE)
 

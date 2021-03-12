@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 20.03)
+project(quick LANGUAGES NONE VERSION 21.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 if(NOT INSIDE_AMBER)
@@ -44,15 +44,7 @@ option(NOF "Disables the compilation of QUICK's time consuming f functions in th
 set_property(DIRECTORY . PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:DEBUG>)
 
 
-if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-
-	# QUICK needs to be built with -O2 not Amber's default of -O3
-	if(OPTIMIZE)
-		list(APPEND OPT_CFLAGS -O2)
-		set(OPT_CFLAGS_SPC "${OPT_CFLAGS_SPC} -O2")
-	endif()
-
-elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -traceback")
 endif()
 
@@ -61,20 +53,17 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 	add_definitions(-DGNU)
 
-	if(OPTIMIZE)
-		list(APPEND OPT_FFLAGS -O2)
-		set(OPT_FFLAGS_SPC "${OPT_FFLAGS_SPC} -O2")
-	endif()
-
 	if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
 		set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
 	endif()
 
 endif()
+
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -diag-disable 8291")
 	set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -traceback")
 endif()
+
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
 	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp") # force use of preprocessor for Fortran files with the "wrong" file extension
 endif()
