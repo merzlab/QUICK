@@ -783,8 +783,8 @@ else
   done
 fi
 
-# shamefully exit if QUICK_CI environment variable is defined and tests are failed.
-if [ ! -z $QUICK_CI ] && [ $ncum_failed_tests -gt 0 ]; then
+# shamefully exit if tests are failed.
+if [ $ncum_failed_tests -gt 0 ]; then
   exit 1
 else
   exit 0
