@@ -809,6 +809,17 @@ for buildtype in $buildtypes; do
     done
   fi
 
+  # Run api tests
+  if [ "$test_api" = 'yes' ]; then
+    for t in `awk '{print $1}' "$test_list" | grep "api_"`; do
+      set_test
+      run_api_test
+      check_energy
+      check_gradient
+      clean_up
+    done
+  fi
+
   echo "All $buildtype tests are done. The output files are located in $testdir/runs/$buildtype." | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
   echo "" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
 
