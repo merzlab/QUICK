@@ -20,7 +20,7 @@ jobs:
       - name: Set QUICK_HOME
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test serial
-        run: make test
+        run: make fulltest
       - name: Archive test results
         uses: actions/upload-artifact@v2
         with:
@@ -51,4 +51,4 @@ jobs:
       - name: Test serial
         run: |
           cd install
-          ./runtest --serial
+          ./runtest --serial --full
