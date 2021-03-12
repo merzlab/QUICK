@@ -29,6 +29,7 @@ jobs:
         with:
             name: mpi-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
+            retention-days: 3
       - uses: actions/download-artifact@v2
         with:
             name: mpi-tests
@@ -65,4 +66,4 @@ jobs:
         with:
             name: mpi-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
-
+            retention-days: 3

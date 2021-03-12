@@ -27,6 +27,7 @@ jobs:
         with:
             name: serial-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+            retention-days: 3
       - uses: actions/download-artifact@v2
         with:
             name: serial-tests
@@ -61,4 +62,4 @@ jobs:
         with:
             name: serial-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
-
+            retention-days: 3
