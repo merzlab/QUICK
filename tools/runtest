@@ -374,6 +374,27 @@ run_test(){
   
 }
 
+# function to run api tests
+run_api_test(){
+    echo "Running test $tc of $total_tests" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
+
+    print_test_info "$t"
+   
+    #Run test
+    if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] && [ $ismpirun = 'yes' ]; then
+      $DO_PARALLEL "$qbindir/$apiexe" > /dev/null 2>&1
+    else
+      "$qbindir/$apiexe" > /dev/null 2>&1
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "Error: $apiexe execution failed."
+      echo ""
+      exit 1
+    fi
+
+}
+
 # check electronic, nuclear and total energy
 check_energy(){
     
