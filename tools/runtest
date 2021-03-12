@@ -47,6 +47,7 @@ test_list=''
 
 # flag to indicate if mpirun is available
 ismpirun='no'
+
 # number of cores for mpi tests
 ncores=2
 
@@ -66,6 +67,9 @@ test_length='short'
 
 # verbosity
 log='yes'
+
+# variable to keep track of total failed tests
+ncum_failed_tests=0
 
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
@@ -485,7 +489,10 @@ print_summary(){
     done
     
     failed_total=$((failed_ene+failed_grad+failed_opt))
- 
+
+    # update cumulative failed tests too
+    ncum_failed_tests=$((ncum_failed_tests+failed_total))
+
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
     echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
@@ -776,6 +783,10 @@ else
   done
 fi
 
-exit 0
-
+# shamefully exit if tests are failed.
+if [ $ncum_failed_tests -gt 0 ]; then
+  exit 1
+else
+  exit 0
+fi
 
