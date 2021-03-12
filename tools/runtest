@@ -606,8 +606,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick not found."
       exit 1
     fi
-    if [ ! -x "$qbindir/api-test" ]; then
-      echo  "Error: $qbindir/api-test not found."
+    if [ ! -x "$qbindir/test-api" ]; then
+      echo  "Error: $qbindir/test-api not found."
       exit 1
     fi
   fi
@@ -617,8 +617,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.MPI not found."
       exit 1
     fi
-    if [ ! -x "$qbindir/api-test.MPI" ]; then
-      echo  "Error: $qbindir/api-test.MPI not found."
+    if [ ! -x "$qbindir/test-api.MPI" ]; then
+      echo  "Error: $qbindir/test-api.MPI not found."
       exit 1
     fi
   fi
@@ -628,8 +628,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.cuda not found."
       exit 1
     fi
-    if [ ! -x "$qbindir/api-test.cuda" ]; then
-      echo  "Error: $qbindir/api-test.cuda not found."
+    if [ ! -x "$qbindir/test-api.cuda" ]; then
+      echo  "Error: $qbindir/test-api.cuda not found."
       exit 1
     fi
   fi
@@ -639,8 +639,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.cuda.MPI not found."
       exit 1
     fi
-    if [ ! -x "$qbindir/api-test.cuda.MPI" ]; then
-      echo  "Error: $qbindir/api-test.cuda.MPI not found."
+    if [ ! -x "$qbindir/test-api.cuda.MPI" ]; then
+      echo  "Error: $qbindir/test-api.cuda.MPI not found."
       exit 1
     fi
   fi
