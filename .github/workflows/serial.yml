@@ -19,8 +19,6 @@ jobs:
         run: make install
       - name: Set QUICK_HOME
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
-      - name: Set QUICK_CI
-        run: echo "QUICK_CI=TRUE" >> $GITHUB_ENV
       - name: Test serial
         run: make fulltest
       - name: Archive test results
@@ -50,8 +48,6 @@ jobs:
         run: |
           cd build
           make -j2 install
-      - name: Set QUICK_CI
-        run: echo "QUICK_CI=TRUE" >> $GITHUB_ENV
       - name: Test serial
         run: |
           cd install
