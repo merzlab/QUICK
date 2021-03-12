@@ -29,9 +29,9 @@ set(NO_OPT_FFLAGS -O0)
 set(NO_OPT_CFLAGS -O0)
 set(NO_OPT_CXXFLAGS -O0)
 
-set(OPT_FFLAGS -O3)
-set(OPT_CFLAGS -O3)
-set(OPT_CXXFLAGS -O3)
+set(OPT_FFLAGS -O2)
+set(OPT_CFLAGS -O2)
+set(OPT_CXXFLAGS -O2)
 
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
@@ -59,107 +59,118 @@ endmacro(add_flags)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+
+    if (WARNINGS)
 	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
-	
+    
 	if(NOT UNUSED_WARNINGS)
-		add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
+	    add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
 	endif()
-	
+    
 	if(NOT UNINITIALIZED_WARNINGS)
-		add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+    
+    if(${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 4.1)
+	if(SSE)
+	    if(TARGET_ARCH STREQUAL x86_64)
+		#-mfpmath=sse is default for x86_64, no need to specific it
+		list(APPEND OPT_CFLAGS "-mtune=native")
+	    else() # i386 needs to be told to use sse prior to using -mfpmath=sse
+		list(APPEND OPT_CFLAGS "-mtune=native -msse -mfpmath=sse")
+	    endif()
+	endif()
+    endif()    
+    
+    if(DRAGONEGG)
+	#check dragonegg
+	check_c_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_C_WORKS)
+	if(NOT DRAGONEGG_C_WORKS)
+	    message(FATAL_ERROR "Can't use C compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
 	endif()
 	
-	if(${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 4.1)
-		if(SSE)
-			if(TARGET_ARCH STREQUAL x86_64)
-          		#-mfpmath=sse is default for x86_64, no need to specific it
-          		set(OPT_CFLAGS ${OPT_CFLAGS} "-mtune=native")
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_CFLAGS "${OPT_CFLAGS} -mtune=native -msse -mfpmath=sse")
-         	endif()
-         endif()
-	endif()    
-  
-	if(DRAGONEGG)
-		#check dragonegg
-		check_c_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_C_WORKS)
-		if(NOT DRAGONEGG_C_WORKS)
-			message(FATAL_ERROR "Can't use C compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
-		endif()
-		
-		add_flags(C -fplugin=${DRAGONEGG})
-	endif()
+	add_flags(C -fplugin=${DRAGONEGG})
+    endif()
 endif()
+
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-
+    
+    if (WARNINGS)
 	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
-
+    
 	# Kill it!  Kill it with fire!
 	check_cxx_compiler_flag(-Wno-unused-local-typedefs SUPPORTS_WNO_UNUSED_LOCAL_TYPEDEFS)
 
 	if(SUPPORTS_WNO_UNUSED_LOCAL_TYPEDEFS)
-		add_flags(CXX -Wno-unused-local-typedefs)
+	    add_flags(CXX -Wno-unused-local-typedefs)
 	endif()
 	
 	if(NOT UNUSED_WARNINGS)
-		add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
+	    add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
 	endif()
 	
 	if(NOT UNINITIALIZED_WARNINGS)
-		add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
+	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
 	endif()
+    endif()
 	
-	if(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 4.1)
-		if(SSE)
-			if(TARGET_ARCH STREQUAL x86_64)
-          		#-mfpmath=sse is default for x86_64, no need to specific it
-          		set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-mtune=native")
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_CXXFLAGS "${OPT_CXXFLAGS} -mtune=native -msse -mfpmath=sse")
-         	endif()
-         endif()
-	endif()    
+    if(${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 4.1)
+	if(SSE)
+	    if(TARGET_ARCH STREQUAL x86_64)
+          	#-mfpmath=sse is default for x86_64, no need to specific it
+          	list(APPEND OPT_CXXFLAGS "-mtune=native")
+            else() # i386 needs to be told to use sse prior to using -mfpmath=sse
+          	list(APPEND OPT_CXXFLAGS "-mtune=native -msse -mfpmath=sse")
+            endif()
+        endif()
+    endif()    
   
-	if(DRAGONEGG)
-		#check dragonegg
-		check_cxx_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_CXX_WORKS)
-		if(NOT DRAGONEGG_CXX_WORKS)
-			message(FATAL_ERROR "Can't use C++ compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
-		endif()
-		
-		add_flags(CXX -fplugin=${DRAGONEGG})
+    if(DRAGONEGG)
+	#check dragonegg
+	check_cxx_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_CXX_WORKS)
+	if(NOT DRAGONEGG_CXX_WORKS)
+	    message(FATAL_ERROR "Can't use C++ compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
 	endif()
+		
+	add_flags(CXX -fplugin=${DRAGONEGG})
+    endif()
 	
 endif()
+
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 
+    add_flags(Fortran -ffree-line-length-none)
+
+    if (WARNINGS)
 	add_flags(Fortran -Wall -Wno-tabs -Wno-unused-function -ffree-line-length-none)
-	
+    
 	if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 4.1)	
-		add_flags(Fortran -Wno-unused-dummy-argument)
+	    add_flags(Fortran -Wno-unused-dummy-argument)
 	endif()	
-	
+    
 	if(NOT UNUSED_WARNINGS)
-		add_flags(Fortran -Wno-unused-variable)
+	    add_flags(Fortran -Wno-unused-variable)
 	endif()
 		
 	if(NOT UNINITIALIZED_WARNINGS)
-		add_flags(Fortran -Wno-maybe-uninitialized)
+	    add_flags(Fortran -Wno-maybe-uninitialized)
 	endif()	
+    endif()
 		
-	if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 4.1)
-		if(SSE)
-			if(TARGET_ARCH STREQUAL x86_64)
-          		#-mfpmath=sse is default for x86_64, no need to specific it
-          		set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native)
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native -msse -mfpmath=sse)
-         	endif()
-         endif()
-	endif()
+    if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 4.1)
+	if(SSE)
+	    if(TARGET_ARCH STREQUAL x86_64)
+          	#-mfpmath=sse is default for x86_64, no need to specific it
+          	set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native)
+            else() # i386 needs to be told to use sse prior to using -mfpmath=sse
+          	set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native -msse -mfpmath=sse)
+            endif()
+        endif()
+    endif()
 	
 	
-	# gcc 4.1.2 does not support putting allocatable arrays in a Fortran type...
+    # gcc 4.1.2 does not support putting allocatable arrays in a Fortran type...
     # so unfortunately file-less prmtop support in the sander API will not work
     # in this case.
     if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_LESS 4.2)
@@ -167,15 +178,15 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     endif()
     
     # Check dragonegg
-	if(DRAGONEGG)
-		#TODO: write check_fortran_compiler_flag
-		#check_fortran_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_FORTRAN_WORKS)
-		#if(NOT DRAGONEGG_FORTRAN_WORKS)
-		#	message(FATAL_ERROR "Can't use Fortran compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
-		#endif()
+    if(DRAGONEGG)
+	#TODO: write check_fortran_compiler_flag
+	#check_fortran_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_FORTRAN_WORKS)
+	#if(NOT DRAGONEGG_FORTRAN_WORKS)
+	#	message(FATAL_ERROR "Can't use Fortran compiler with Dragonegg.  Please fix whatever's broken.  Check CMakeOutput.log for details.")
+	#endif()
 		
-		add_flags(Fortran -fplugin=${DRAGONEGG})
-	endif()
+	add_flags(Fortran -fplugin=${DRAGONEGG})
+    endif()
 endif()
 
 #clang
