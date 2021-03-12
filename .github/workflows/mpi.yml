@@ -21,8 +21,10 @@ jobs:
         run: echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
       - name: Set QUICK_HOME
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+      - name: Set QUICK_CI
+        run: echo "QUICK_CI=TRUE" >> $GITHUB_ENV
       - name: Test mpi
-        run: make fulltest
+        run: make test
       - name: Archive test results
         uses: actions/upload-artifact@v2
         with:
