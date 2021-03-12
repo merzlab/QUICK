@@ -143,7 +143,7 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
     if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
   endif
 
- save values in the quick_api struct
+ ! save values in the quick_api struct
   self%natoms         = natoms
   self%natm_type      = natm_type
   self%nxt_ptchg      = nxt_ptchg
@@ -199,8 +199,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   character(len=200), intent(in) :: keywd
   integer, intent(in) :: natoms, nxt_ptchg
   integer, intent(in) :: atomic_numbers(natoms)
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
   integer :: flen
+  ierr=0
+  
 
   ! allocate memory for quick_api_type
   call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
@@ -344,7 +346,8 @@ subroutine get_quick_energy(coords, ptchg_crd, energy, ierr)
   double precision, intent(in)  :: coords(3,quick_api%natoms)
   double precision, intent(in)  :: ptchg_crd(4,quick_api%nxt_ptchg)
   double precision, intent(out) :: energy
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
+  ierr=0
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
@@ -369,7 +372,8 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, &
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
   double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
+  ierr=0
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
@@ -406,9 +410,10 @@ subroutine run_quick(self,ierr)
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
   integer :: i, j, k
   logical :: failed = .false.
+  ierr=0
 
   ! print step into quick output file
   call print_step(self,ierr)
@@ -636,12 +641,14 @@ subroutine set_quick_mpi(mpi_rank, mpi_size, ierr)
   implicit none
 
   integer, intent(in) :: mpi_rank, mpi_size
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
 
   ! save information in quick_mpi module
   mpirank    = mpi_rank
   mpisize    = mpi_size
   libMPIMode = .true.
+  ierr = 0
+  
 
 end subroutine set_quick_mpi
 
@@ -673,7 +680,8 @@ subroutine delete_quick_job(ierr)
   use quick_exception_module
 
   implicit none
-  integer, intent(inout) :: ierr
+  integer, intent(out) :: ierr
+  ierr=0
 
 #ifdef CUDA
   SAFE_CALL(gpu_shutdown(ierr))
