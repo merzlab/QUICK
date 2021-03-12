@@ -41,6 +41,7 @@ serial='no'
 mpi='no'
 cuda='no'
 cudampi='no'
+apiexe=''
 
 # test list file
 test_list=''
