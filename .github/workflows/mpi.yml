@@ -25,6 +25,7 @@ jobs:
         run: make fulltest
       - name: Archive test results
         uses: actions/upload-artifact@v2
+          if: always()
         with:
             name: mpi-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
