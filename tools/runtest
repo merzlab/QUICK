@@ -343,6 +343,11 @@ get_total_tests(){
     total_tests=$((total_tests+tot_opt_tests))
   fi
 
+  if [ "$test_api" = 'yes' ]; then
+    tot_api_tests=`awk '{print $1}' "$test_list"| grep "api" | wc -l`
+    total_tests=$((total_tests+tot_api_tests))
+  fi
+
 }
 
 # function to set files for a test run
