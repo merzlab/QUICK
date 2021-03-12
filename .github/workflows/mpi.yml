@@ -24,7 +24,7 @@ jobs:
       - name: Test mpi
         run: make test
       - name: Archive test results
-          if: always()
+        if: always()
         uses: actions/upload-artifact@v2
         with:
             name: mpi-tests
