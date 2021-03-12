@@ -477,9 +477,11 @@ print_summary(){
     total_ene=0
     total_grad=0
     total_opt=0
+    total_api=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
+    failed_api=0
     total_tests=0
  
     # set testlist
@@ -515,17 +517,23 @@ print_summary(){
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_opt=$((failed_opt+1))
         fi
+      elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+        total_opt=$((total_api+1))
+        if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_opt=$((failed_api+1))
+        fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$((failed_ene+failed_grad+failed_opt))
+    failed_total=$((failed_ene+failed_grad+failed_opt+failed_api))
  
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
     echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
