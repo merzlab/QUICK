@@ -8,6 +8,9 @@
 !        Role: orbital
 !     Version: 1  (Data from ccRepo/Grant Hill)
 !----------------------------------------------------------------------
+! Available elements: H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar 
+!                     Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr
+!----------------------------------------------------------------------
 
 
 H     0
