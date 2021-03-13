@@ -68,6 +68,7 @@ checkfolders:
 .PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall aminstall
 
 install: $(INSTALLTYPES)
+	@cp -f $(toolsfolder)/sadguess $(exefolder)
 	@echo  "Installation sucessful."
 	@echo  ""
 	@echo  "Please run the following command to set environment variables."
