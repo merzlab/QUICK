@@ -396,11 +396,9 @@ run_api_test(){
    
     #Run test
     if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] && [ $ismpirun = 'yes' ]; then
-#      $DO_PARALLEL "$testdir/$apiexe" > /dev/null 2>&1
-      $DO_PARALLEL "$testdir/$apiexe"
+      $DO_PARALLEL "$testdir/$apiexe" > /dev/null 2>&1
     else
-#      "$testdir/$apiexe" > /dev/null 2>&1
-      "$testdir/$apiexe"
+      "$testdir/$apiexe" > /dev/null 2>&1
     fi
 
     if [ "$?" -ne 0 ]; then
