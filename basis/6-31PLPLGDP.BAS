@@ -8,6 +8,8 @@
 !        Role: orbital
 !     Version: 1  (Data from Gaussian 09/GAMESS)
 !----------------------------------------------------------------------
+! Available elements: H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar
+!----------------------------------------------------------------------
 
 
 H     0
