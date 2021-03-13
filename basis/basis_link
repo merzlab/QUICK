@@ -13,35 +13,24 @@
  _________________________________________________________________________ 
 | Keyword                           | Filename                            |
 |-------------------------------------------------------------------------|
-| #STO-3G                           | STO-3G                              |
-| #3-21G                            | 3-21G                               |
-| #6-31G                            | 6-31G                               |
-| #6-31G*                           | 6-31GD                              |
-| #6-31G(d)                         | 6-31GD                              |
-| #6-31GD                           | 6-31GD                              |
-| #6-31G**                          | 6-31GDP                             |
-| #6-31G(d,p)                       | 6-31GDP                             |
-| #6-31GDP                          | 6-31GDP                             |
-| #6-31G(2df,2pd)                   | 6-31G2DF2PD                         |
-| #6-31G2DF2PD                      | 6-31G2DF2PD                         |
-| #6-311G                           | 6-311G                              |
-| #6-311G*                          | 6-311GD                             |
-| #6-311G(d)                        | 6-311GD                             |
-| #6-311GD                          | 6-311GD                             |
-| #6-311G**                         | 6-311GDP                            |
-| #6-311G(d,p)                      | 6-311GDP                            |
-| #6-311GDP                         | 6-311GDP                            |
-| #6-311G(2df,2pd)                  | 6-311G2DF2PD                        |
-| #6-311G2DF2PD                     | 6-311G2DF2PD                        |
-| #6-311+G(2d,p)                    | 6-311PLG2DP                         |
-| #6-311PLG2DP                      | 6-311PLG2DP                         |
-| #cc-pVDZ                          | CC-PVDZ                             |
-| #CC-pVDZ                          | CC-PVDZ                             |
-| #def2-svp                         | DEF2-SVP                            |
-| #DEF2-SVP                         | DEF2-SVP                            |
-| #def2-sv(p)                       | DEF2-SV_P                           |
-| #DEF2-SV_P                        | DEF2-SV_P                           |
-| #def2-svpd                        | DEF2-SVPD                           |
-| #DEF2-SVPD                        | DEF2-SVPD                           |
+| #STO-3G                           | STO-3G.BAS                          |
+| #3-21G                            | 3-21G.BAS                           |
+| #6-31G                            | 6-31G.BAS                           |
+| #6-31G*                           | 6-31GD.BAS                          |
+| #6-31G(d)                         | 6-31GD.BAS                          |
+| #6-31G**                          | 6-31GDP.BAS                         |
+| #6-31G(d,p)                       | 6-31GDP.BAS                         |
+| #6-31G(2df,2pd)                   | 6-31G2DF2PD.BAS                     |
+| #6-311G                           | 6-311G.BAS                          |
+| #6-311G*                          | 6-311GD.BAS                         |
+| #6-311G(d)                        | 6-311GD.BAS                         |
+| #6-311G**                         | 6-311GDP.BAS                        |
+| #6-311G(d,p)                      | 6-311GDP.BAS                        |
+| #6-311G(2df,2pd)                  | 6-311G2DF2PD.BAS                    |
+| #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
+| #cc-pVDZ                          | CC-PVDZ.BAS                         |
+| #def2-svp                         | DEF2-SVP.BAS                        |
+| #def2-sv(p)                       | DEF2-SV_P.BAS                       |
+| #def2-svpd                        | DEF2-SVPD.BAS                       |
 |_________________________________________________________________________|
 
