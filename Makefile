@@ -129,7 +129,7 @@ aminstall: all
 #  ! Installation targets                                                !
 #  !---------------------------------------------------------------------!
 
-.PHONY: test buildtest installtest
+.PHONY: test buildtest installtest fulltest
 
 test:$(TESTTYPE)
 
@@ -138,11 +138,18 @@ buildtest:
 	@$(homefolder)/runtest
 
 installtest:
-	@if [ ! -x $(installfolder)/bin/quick* ]; then \
-        echo  "Error: Executables not found. You must run 'make install' before running 'make test'."; \
+	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && [ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ]; then \
+        echo "Error: Executables not found. You must run 'make install' before running 'make test'."; \
         exit 1; fi
 	@cp $(toolsfolder)/runtest $(installfolder)
 	@cd $(installfolder) && ./runtest
+
+fulltest:
+	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && [ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ]; then \
+        echo "Error: Executables not found."; \
+        exit 1; fi
+	@cp $(toolsfolder)/runtest $(installfolder)
+	@cd $(installfolder) && ./runtest --full
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

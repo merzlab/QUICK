@@ -1,0 +1,4 @@
+B3LYP  BASIS=def2-sv(p) cutoff=1.0e-9 denserms=1.0e-6  zmake GRADIENT DIPOLE CHARGE=0
+
+Br        -2.46216        0.91498        0.70279
+H         -1.36216        0.91498        0.70279

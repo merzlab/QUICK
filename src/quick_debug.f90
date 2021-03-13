@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	quick_debug.f90
 !	new_quick

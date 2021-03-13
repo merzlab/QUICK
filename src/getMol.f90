@@ -22,7 +22,8 @@ subroutine getMol(ierr)
 #endif
 
    logical :: present
-   integer :: i,j,k,itemp, ierr
+   integer :: i,j,k,itemp
+   integer, intent(inout) :: ierr
 
    !-----------MPI/MASTER------------------------
    if (master) then
@@ -35,16 +36,16 @@ subroutine getMol(ierr)
 
          ! read xyz coordinates from the .in file 
          if(.not. isTemplate) then
-           call quick_open(infile,inFileName,'O','F','W',.true.)
-
+          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+          CHECK_ERROR(ierr)
            ! read molecule coordinates
-           call read2(quick_molspec,inFile)
+           call read2(quick_molspec,inFile,ierr)
            close(inFile)
          endif
 
          quick_molspec%nbasis   => nbasis
          quick_qm_struct%nbasis => nbasis
-         call set(quick_molspec)
+         call set(quick_molspec,ierr)
 
          ! quick forward coordinates stored in namelist to instant variables
          xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
@@ -55,7 +56,9 @@ subroutine getMol(ierr)
       if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) call gridformSG1()        ! Xiao HE 01/09/07 SG1 SG0 grid
 
       ! check the correctness between molecular specification and method used
-      call check_quick_method_and_molspec(iOutFile,quick_molspec,quick_method)
+      call check_quick_method_and_molspec(iOutFile,quick_molspec,quick_method,ierr)
+      CHECK_ERROR(ierr)
+
    endif
    !-----------END MPI/MASTER-----------------------
 #ifdef MPIV
@@ -86,7 +89,7 @@ subroutine getMol(ierr)
    !-----------MPI/MASTER------------------------
    if (master) then
       ! now print molecule specification to output file
-      call print(quick_molspec,iOutFile)
+      call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
 
       ! the following some step are setup for basis and for ECP or DFT calculation
@@ -115,7 +118,7 @@ subroutine getMol(ierr)
       if (quick_method%SEDFT) call read_sedft_parm
 
       !  initialize density matrix
-      call initialGuess
+      SAFE_CALL(initialGuess(ierr))
 
       call PrtAct(iOutfile,"End Reading Molecular Information ")
 
@@ -130,12 +133,15 @@ end subroutine getmol
 !--------------------
 ! check mol spec and method
 !--------------------
-subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
+subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg,ierr)
    use quick_method_module
    use quick_molspec_module
+   use quick_exception_module
+
    implicit none
 
    ! Argument
+   integer, intent(inout) :: ierr
    integer io      ! io file to write warning
    type(quick_molspec_type) quick_molspec_arg  ! molspec type
    type(quick_method_type) quick_method_arg    ! method type
@@ -166,7 +172,7 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
             quick_molspec_arg%nelec=quick_molspec_arg%nelec-8
          endif
          if (quick_molspec_arg%iattype(i) >= 18) &
-               call PrtWrn(io,"ATOM OUT OF RANGE FOR CORE")
+            ierr=18
       enddo
    endif
 
@@ -175,13 +181,14 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
    ! request. And try to correct possible error
    i = mod(dble(quick_molspec_arg%nelec),2.d0)
    if (i.ne.0 .and. .not. quick_method_arg%unrst) then
-      call PrtWrn(io,"UNPAIRED ELECTRONS REQUIRE UNRESTRICTED CALCULATIONS.")
+      ierr=19
       quick_method_arg%UNRST=.true.
+      return
    endif
 
    if (quick_molspec_arg%imult.ne.1 .and. .not. quick_method_arg%unrst) then
-      call PrtWrn(io,"HIGHER MULTIPLICITIES REQUIRE UNRESTRICTED CALCULATIONS.")
-      call quick_exit(6,1)
+      ierr=20
+      return
    endif
 
    if (quick_method_arg%unrst) then
@@ -194,16 +201,16 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
       enddo
 
       if (quick_molspec_arg%imult .eq. 2 .and. quick_molspec_arg%nelec-1 .ne. quick_molspec_arg%nelecb) then
-         call PrtWrn(io,"INCORRECT NUMBER OF ELECTRONS FOR A DOUBLET.")
-         call quick_exit(6,1)
+         ierr=21
+         return
       endif
 
       if (quick_molspec_arg%imult .eq. 3) then
          quick_molspec_arg%nelec = quick_molspec_arg%nelec+1
          quick_molspec_arg%nelecb = quick_molspec_arg%nelecb - 1
          if (quick_molspec_arg%nelec-2 .ne. quick_molspec_arg%nelecb) then
-            call PrtWrn(io,"INCORRECT NUMBER OF ELECTRONS FOR A TRIPLET.")
-            call quick_exit(6,1)
+           ierr=22
+           return
          endif
       endif
 
@@ -211,8 +218,8 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg)
          quick_molspec_arg%nelec = quick_molspec_arg%nelec+1
          quick_molspec_arg%nelecb = quick_molspec_arg%nelecb - 1
          if (quick_molspec_arg%nelec-3 .ne. quick_molspec_arg%nelecb) then
-            call PrtWrn(io,"INCORRECT NUMBER OF ELECTRONS FOR A QUADRUPLET.")
-            call quick_exit(6,1)
+           ierr=23
+           return
          endif
       endif
    endif
@@ -223,7 +230,7 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 ! Initial Densitry Matrix
 !--------------------------------------
-subroutine initialGuess
+subroutine initialGuess(ierr)
    use allmod
    implicit none
    logical :: present
@@ -232,6 +239,7 @@ subroutine initialGuess
    integer n,sadAtom
    integer Iatm,i,j
    double precision temp
+   integer, intent(inout) :: ierr
 
 
    ! Initialize Density arrays. Create initial density matrix guess.
@@ -245,7 +253,8 @@ subroutine initialGuess
    if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
 #endif
    if (present) then
-      call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.)
+      call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.,ierr)
+      CHECK_ERROR(ierr)
 
       ! read first part, which is restricted or alpha density matrix
       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)

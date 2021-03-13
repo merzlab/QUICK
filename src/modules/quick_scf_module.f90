@@ -9,6 +9,8 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
+#include "util.fh"
+
 ! This module contains subroutines and data structures related to scf
 ! and diis procedures
 

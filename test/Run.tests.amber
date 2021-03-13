@@ -1,8 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 #TEST-PROGRAM sander
 #TEST-DESCRIP TO_BE_DEtermined
 #TEST-PURPOSE regression, basic
 #TEST-STATE   undocumented
+
+# Test suite to run: full or short
+typ="short"
 
 if [ -z "$AMBERHOME" ]; then
    echo "Error: AMBERHOME is not set!"
@@ -23,21 +26,27 @@ if [ -z "$QUICK_BASIS" ]; then
   export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
 fi
 
-for i in *.in
+if [ "`basename $TESTsander`" = "quick.cuda" -o "`basename $TESTsander`" = "quick.cuda.MPI" ]; then
+  tfile="testlist_${typ}_cuda.txt"
+else
+  tfile="testlist_${typ}.txt"
+fi
+
+for i in `awk '{print $1}' $tfile`
 do
-  $DO_PARALLEL $TESTsander $i < /dev/null || error
-  if [ ! ${i:0:4} == "opt_" ]; then
-    if [ $(grep "Begin Energy Calculation" ${i%.in}.out | wc -l) -gt 0 ]; then
-      awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' ${i%.in}.out > ${i%.in}.out.ene
-      ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/${i%.in}.out.ene ${i%.in}.out.ene
+  $DO_PARALLEL $TESTsander $i.in < /dev/null || error
+  if [ "${i:0:4}" != "opt_" ]; then
+    if [ $(grep "Begin Energy Calculation" $i.out | wc -l) -gt 0 ]; then
+      awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' $i.out > $i.out.ene
+      ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/$i.out.ene $i.out.ene
     fi
-    if [ $(grep "Begin Gradient Calculation" ${i%.in}.out | wc -l) -gt 0 ]; then
-      awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' ${i%.in}.out > ${i%.in}.out.grad
-      ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out.grad ${i%.in}.out.grad
+    if [ $(grep "Begin Gradient Calculation" $i.out | wc -l) -gt 0 ]; then
+      awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' $i.out > $i.out.grad
+      ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out.grad $i.out.grad
     fi
   fi
-  ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/${i%.in}.out ${i%.in}.out
-  /bin/rm -f ${i%.in}.dat
+  ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
+  /bin/rm -f $i.dat
 done
 
 exit 0

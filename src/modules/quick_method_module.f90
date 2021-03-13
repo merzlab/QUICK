@@ -5,9 +5,12 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 !
+#include "util.fh"
 
 module quick_method_module
     use quick_constants_module
+    use quick_input_parser_module  
+
     implicit none
 
     type quick_method_type
@@ -155,11 +158,14 @@ module quick_method_module
         !------------------------
         ! Broadcast quick_method
         !------------------------
-        subroutine broadcast_quick_method(self)
+        subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
+            use quick_exception_module            
+
             implicit none
 
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             include 'mpif.h'
 
@@ -238,12 +244,15 @@ module quick_method_module
         !------------------------
         ! print quick_method
         !------------------------
-        subroutine print_quick_method(self,io)
+        subroutine print_quick_method(self,io,ierr)
             use xc_f90_types_m
             use xc_f90_lib_m
+            use quick_exception_module
+
             implicit none
             integer io
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             !libxc variables
             type(xc_f90_pointer_t) :: xc_func
@@ -433,13 +442,15 @@ endif
         !------------------------
         ! read quick_method
         !------------------------
-        subroutine read_quick_method(self,keywd)
+        subroutine read_quick_method(self,keywd,ierr)
+            use quick_exception_module
+            use quick_mpi_module
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
-            integer :: itemp,rdinml,i,j
-            double precision :: rdnml
+            integer :: itemp,i,j
             type (quick_method_type) self
+            integer, intent(inout) :: ierr
 
             call upcase(keyWD,200)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
@@ -465,7 +476,8 @@ endif
             !Read dft functional keywords and set variable values
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
-                call set_libxc_func_info(keyWD, self)
+                call set_libxc_func_info(keyWD, self, ierr)
+                CHECK_ERROR(ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
@@ -521,9 +533,8 @@ endif
 
             if (index(keyWD,'ECP').ne.0)  then
                 self%ECP=.true.
-                i=index(keywd,'ECP=')
-                call rdword(keywd,i,j)
-                if (keywd(i+4:j).eq.'CUSTOM')  self%custECP=.true.
+                call read(keywd, 'ECP', tempstring)
+                if (tempstring .eq. 'CUSTOM') self%custECP=.true.
             endif
 
             if (index(keyWD,'USEDFT').ne.0) then
@@ -544,45 +555,57 @@ endif
             ! Density map
             ! JOHN FAVER 12/2008
             if (index(keywd,'DENSITYMAP') /= 0) then
-                self%gridspacing = rdnml(keywd,'DENSITYMAP')
+                call read(keywd, 'DENSITYMAP', self%gridspacing)
                 self%calcdens = .true.
             endif
-
+            
             ! Density lapmap
             if (index(keywd,'DENSITYLAPMAP') /= 0) then
-                self%lapgridspacing= rdnml(keywd,'DENSITYLAPMAP')
+                call read(keywd, 'DENSITYLAPMAP', self%lapgridspacing)
                 self%calcdenslap = .true.
             endif
 
             ! opt cycls
-            if (index(keywd,'OPTIMIZE=') /= 0) self%iopt = rdinml(keywd,'OPTIMIZE')
+            if (index(keywd,'OPTIMIZE') /= 0) then
+                call read(keywd, 'OPTIMIZE', self%iopt, .false.)
+            endif
 
             ! scf cycles
-            if (index(keywd,'SCF=') /= 0) self%iscf = rdinml(keywd,'SCF')
+            if (index(keywd,'SCF') /= 0) then
+                call read(keywd, 'SCF', self%iscf)
+            endif
 
             ! DM Max RMS
-            if (index(keywd,'DENSERMS=') /= 0) self%pmaxrms = rdnml(keywd,'DENSERMS')
-
+            if (index(keywd,'DENSERMS') /= 0) then
+                call read(keywd, 'DENSERMS', self%pmaxrms)
+            endif
+        
             ! 2e-cutoff
-            if (index(keywd,'CUTOFF=') /= 0) then
-                self%acutoff = rdnml(keywd,'CUTOFF')
+            if (index(keywd,'CUTOFF') /= 0) then
+                call read(keywd, 'CUTOFF', self%acutoff)
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
                 self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
             endif
 
             ! Max DIIS cycles
-            if (index(keywd,'MAXDIIS=') /= 0) self%maxdiisscf=rdinml(keywd,'MAXDIIS')
+            if (index(keywd,'MAXDIIS') /= 0) then
+                call read(keywd, 'MAXDIIS', self%maxdiisscf)
+            endif
 
             ! Delta DM Cycle Start
-            if (index(keywd,'NCYC=') /= 0) self%ncyc = rdinml(keywd,'NCYC')
+            if (index(keywd,'NCYC') /= 0) then
+                call read(keywd, 'NCYC', self%ncyc)
+            endif
 
             ! DM cutoff
-            if (index(keywd,'MATRIXZERO=') /= 0) self%DMCutoff = rdnml(keywd,'MAXTRIXZERO')
+            if (index(keywd,'MATRIXZERO') /= 0) then
+                call read(keywd,'MATRIXZERO', self%DMCutoff)
+            endif
 
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                itemp=rdinml(keywd,'BASISZERO')
+                call read(keywd,'BASISZERO', itemp)
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
 
@@ -591,10 +614,12 @@ endif
         !------------------------
         ! initial quick_method
         !------------------------
-        subroutine init_quick_method(self)
+        subroutine init_quick_method(self,ierr)
 
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             self%HF =  .false.       ! HF
             self%DFT =  .false.      ! DFT
@@ -686,10 +711,12 @@ endif
         !------------------------
         ! check quick_method
         !------------------------
-        subroutine check_quick_method(self,io)
+        subroutine check_quick_method(self,io,ierr)
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer io
+            integer, intent(inout) :: ierr
 
             ! If MP2, then set HF as default
             if (self%MP2) then
@@ -720,11 +747,13 @@ endif
 
         end subroutine check_quick_method
 
-        subroutine obtain_leastIntCutoff(self)
+        subroutine obtain_leastIntCutoff(self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
-
+            integer, intent(inout) :: ierr
+            
 
             self%leastIntegralCutoff = LEASTCUTOFF
 
@@ -743,11 +772,13 @@ endif
         end subroutine obtain_leastIntCutoff
 
 
-        subroutine adjust_Cutoff(PRMS,PCHANGE,self)
+        subroutine adjust_Cutoff(PRMS,PCHANGE,self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             double precision prms,pchange
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
              if(PRMS.le.TEN_TO_MINUS5 .and. self%integralCutoff.gt.1.0d0/(10.0d0**8.5d0))then
                 self%integralCutoff=TEN_TO_MINUS9
@@ -768,9 +799,10 @@ endif
 
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
-        subroutine set_libxc_func_info(f_keywd, self)
+        subroutine set_libxc_func_info(f_keywd, self,ierr)
            use xc_f90_types_m
            use xc_f90_lib_m
+           use quick_exception_module
            implicit none
            character(len=200) :: f_keywd
            type(quick_method_type) self
@@ -779,6 +811,7 @@ endif
            type(xc_f90_pointer_t) :: xc_info
            double precision :: x_hyb_coeff
            character(len=256) :: functional_name
+           integer, intent(inout) :: ierr
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
@@ -798,6 +831,9 @@ endif
               usf1_nlen=iend-(istart+6)+1
            endif
            !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+        else
+           ierr=31
+           return
         endif
 
         nof_f=0
@@ -827,7 +863,12 @@ endif
            endif
         enddo
 
-        self%nof_functionals=nof_f
+        if(nof_f > 0) then
+          self%nof_functionals=nof_f
+        else
+          ierr=32
+          return
+        endif
 
         end subroutine set_libxc_func_info
 end module quick_method_module

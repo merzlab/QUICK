@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran
       - name: Configure serial
@@ -18,7 +20,7 @@ jobs:
       - name: Set QUICK_HOME
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test serial
-        run: make test
+        run: make fulltest
       - name: Archive test results
         uses: actions/upload-artifact@v2
         with:
@@ -33,6 +35,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran cmake
       - name: Configure serial
@@ -47,4 +51,4 @@ jobs:
       - name: Test serial
         run: |
           cd install
-          ./runtest --serial
+          ./runtest --serial --full

@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! This file list and define varibles used as modules. 
 ! Modules List:
 !    mfccmod        : MFCC Calculation

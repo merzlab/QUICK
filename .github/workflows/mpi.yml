@@ -7,8 +7,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update   
       - name: Install deps
-        run: sudo apt-get install -y gfortran openmpi-bin
+        run: sudo apt-get -y install gfortran openmpi-bin
       - name: Configure mpi
         run: ./configure --mpi --prefix $PWD/install gnu
       - name: Build mpi
@@ -20,7 +22,7 @@ jobs:
       - name: Set QUICK_HOME
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test mpi
-        run: make test
+        run: make fulltest
       - name: Archive test results
         uses: actions/upload-artifact@v2
         with:
@@ -35,18 +37,22 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Check for updates
+        run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran cmake openmpi-bin
-      - name: Configure serial
+      - name: Configure MPI
         run: |
           mkdir build
           cd build
           cmake .. -DCOMPILER=GNU -DMPI=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
-      - name: Build serial
+      - name: Build MPI
         run: |
           cd build
           make -j2 install
-      - name: Test serial
+      - name: Set MPI command
+        run: echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+      - name: Test mpi
         run: |
           cd install
-          ./runtest --mpi --ncores 2
+          ./runtest --mpi --full

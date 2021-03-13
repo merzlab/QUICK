@@ -1,0 +1,80 @@
+#!/bin/bash
+WORKDIR=`pwd`
+BASISDIR='../basis'
+
+declare -A basmap
+basmap=( ["STO-3G"]="STO-3G"
+		  ["3-21G"]="3-21G"
+		  ["6-31G"]="6-31G"
+		  ["6-31GD"]="6-31G(d)"
+	      ["6-31GDP"]="6-31G(d,p)"
+          ["6-31G2DF2PD"]="6-31G(2df,2pd)"
+	      ["6-311G"]="6-311G"
+          ["6-311GD"]="6-311G(d)"
+          ["6-311GDP"]="6-311G(d,p)"
+          ["6-311G2DF2PD"]="6-311G(2df,2pd)"
+		  ["6-311PLG2DP"]="6-311+G(2d,p)"
+          ["CC-PVDZ"]="CC-PVDZ"
+          ["DEF2-SVP"]="def2-svp"
+          ["DEF2-SV_P"]="def2-sv(p)"
+          ["DEF2-SVPD"]="def2-svpd")
+
+ALLBAS=()
+
+for BAS in $BASISDIR/*.BAS
+do
+	# remove dir to get basename
+	fname=$(basename -- $BAS)
+	# remove .BAS extension
+	fname=${fname%.*}
+	#echo $fname
+	ALLBAS+=($fname)
+done
+
+for BAS in "${ALLBAS[@]}";do
+	
+	basname=${basmap[$BAS]}
+	dirname="$BASISDIR/$BAS.sadinput"
+
+	if [  -d "$dirname" ];then
+		rm -r "$dirname"
+	fi
+	mkdir -p $dirname
+
+	cd $dirname
+	cp ../../bin/quick .
+
+# get all atoms in this basis set
+	atoms=()
+	filename="../$BAS.BAS"
+	while IFS=' '   read -r -a array;do
+    	if [ ${#array[@]} == 2 ] && [ ${array[1]} == '0' ];then
+        	atoms+=(${array[0]})
+    	fi
+	done<$filename
+	
+for ATOM in "${atoms[@]}";do
+if [ ! -f "$ATOM.in" ];then		
+cat	> "$ATOM.in" << EOF
+UHF BASIS=$basname cutoff=1.0e-9 denserms=1.0e-6  SCF=1 writesad energy charge=0
+
+$ATOM         -0.920500        2.036450        1.984040
+
+EOF
+fi
+
+echo "run atom $ATOM with $BAS"
+./quick "$ATOM.in"
+
+done
+
+
+cd $WORKDIR
+done
+
+cd $WORKDIR
+
+
+
+
+

@@ -12,6 +12,7 @@
 ! This module contains subroutines and data structures related to
 ! scf gradient calculation
 
+#include "util.fh"
 
 module quick_gradient_module
 
