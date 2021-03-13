@@ -8,6 +8,9 @@
 !        Role: orbital
 !     Version: 1  (Data from Turbomole 7.3)
 !----------------------------------------------------------------------
+! Available elements: H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K
+!                     Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr
+!----------------------------------------------------------------------
 
 
 H     0
