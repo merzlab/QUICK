@@ -39,21 +39,25 @@ serial: checkfolders
 	@echo  "Building serial version.."
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory serial
+	@mv -f $(exefolder)/test-api $(homefolder)/test/
 
 mpi: checkfolders
 	@echo  "Building mpi version.."
 	@cp -f $(buildfolder)/make.mpi.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory mpi
+	@mv -f $(exefolder)/test-api.MPI $(homefolder)/test/
 
 cuda: checkfolders
 	@echo  "Building cuda version.."
 	@cp -f $(buildfolder)/make.cuda.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory cuda
+	@mv -f $(exefolder)/test-api.cuda $(homefolder)/test/
 
 cudampi: checkfolders
 	@echo  "Building cuda-mpi version.."
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory cudampi
+	@mv -f $(exefolder)/test-api.cuda.MPI $(homefolder)/test/
 
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
@@ -78,6 +82,7 @@ noinstall: all
 
 serialinstall: serial
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
+	cp -f $(homefolder)/test/test-api $(installfolder)/test; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
 	exit 1; fi
 	@cp -f $(buildfolder)/include/serial/* $(installfolder)/include/serial
@@ -85,6 +90,7 @@ serialinstall: serial
 
 mpiinstall: mpi
 	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
+	cp -f $(homefolder)/test/test-api.MPI $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(buildfolder)/include/mpi/* $(installfolder)/include/mpi
@@ -92,6 +98,7 @@ mpiinstall: mpi
 
 cudainstall: cuda
 	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
+	cp -f $(homefolder)/test/test-api.cuda $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda $(installfolder)/bin
@@ -100,6 +107,7 @@ cudainstall: cuda
 
 cudampiinstall: cudampi
 	@if [ -x $(exefolder)/quick.cuda.MPI ]; then cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin; \
+	cp -f $(homefolder)/test/test-api.cuda.MPI $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
         exit 1; fi
 	@cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin
