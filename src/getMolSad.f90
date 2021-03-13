@@ -81,18 +81,7 @@ subroutine getmolsad(ierr)
 
          do i=1,90
             if(symbol(i).eq.quick_molspec%atom_type_sym(iitemp))then
-
-               if(mod(i,2).eq.0)then
-                  quick_molspec%imult=1
-               else
-                  quick_molspec%imult=2
-               endif
-               if(symbol(i).eq.'N ')quick_molspec%imult=4
-               if(symbol(i).eq.'O ')quick_molspec%imult=3
-               if(symbol(i).eq.'C ')quick_molspec%imult=3
-               if(symbol(i).eq.'S ')quick_molspec%imult=3
-               if(symbol(i).eq.'P ')quick_molspec%imult=4
-
+               quick_molspec%imult = spinmult(i)
                quick_molspec%chg(1)=i
                quick_molspec%iattype(1)=i
                write(ioutfile,'(" ELEMENT = ",a)') symbol(i)

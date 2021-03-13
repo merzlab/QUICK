@@ -1,6 +1,7 @@
 #!/bin/bash
-WORKDIR=`pwd`
-BASISDIR='../basis'
+WORKDIR=$QUICK_INSTALL/tools
+BASISDIR=$QUICK_BASIS
+CURDIR=`pwd`
 
 declare -A basmap
 basmap=( ["STO-3G"]="STO-3G"
@@ -19,9 +20,10 @@ basmap=( ["STO-3G"]="STO-3G"
           ["DEF2-SV_P"]="def2-sv(p)"
           ["DEF2-SVPD"]="def2-svpd")
 
+ALLBASFILE=("$@")
 ALLBAS=()
 
-for BAS in $BASISDIR/*.BAS
+for BAS in "${ALLBASFILE[@]}"
 do
 	# remove dir to get basename
 	fname=$(basename -- $BAS)
@@ -34,7 +36,7 @@ done
 for BAS in "${ALLBAS[@]}";do
 	
 	basname=${basmap[$BAS]}
-	dirname="$BASISDIR/$BAS.sadinput"
+	dirname="$CURDIR/$BAS.sadinput"
 
 	if [  -d "$dirname" ];then
 		rm -r "$dirname"
@@ -42,11 +44,10 @@ for BAS in "${ALLBAS[@]}";do
 	mkdir -p $dirname
 
 	cd $dirname
-	cp ../../bin/quick .
 
 # get all atoms in this basis set
 	atoms=()
-	filename="../$BAS.BAS"
+	filename="$QUICK_BASIS/$BAS.BAS"
 	while IFS=' '   read -r -a array;do
     	if [ ${#array[@]} == 2 ] && [ ${array[1]} == '0' ];then
         	atoms+=(${array[0]})
@@ -64,7 +65,7 @@ EOF
 fi
 
 echo "run atom $ATOM with $BAS"
-./quick "$ATOM.in"
+quick "$ATOM.in"
 
 done
 
