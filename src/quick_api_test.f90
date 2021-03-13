@@ -1,3 +1,4 @@
+#include "util.fh"
 !---------------------------------------------------------------------!
 ! Created by Madu Manathunga on 05/29/2020                            !
 !                                                                     ! 
@@ -14,8 +15,9 @@
 
     use test_quick_api_module, only : loadTestData, printQuickOutput
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
+    use quick_exception_module
 #ifdef MPIV
-    use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
+    use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput, mpi_exit
     use quick_api_module, only : setQuickMPI
 #endif
 
@@ -64,7 +66,8 @@
     call mpi_initialize(mpisize, mpirank, master, mpierror)
 
     ! setup quick mpi using api, called only once
-    call setQuickMPI(mpirank,mpisize)
+    call setQuickMPI(mpirank,mpisize,ierr)
+    CHECK_ERROR(ierr)
 #endif
 
     ! set molecule size. We consider a water molecule surounded by 3 point
@@ -83,6 +86,7 @@
     if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
     if ( .not. allocated(gradients))         allocate(gradients(3,natoms), stat=ierr)
     if ( .not. allocated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
+    CHECK_ERROR(ierr)
 
     ! fill up memory with test values, coordinates and external charges will be loded inside 
     ! the loop below.
@@ -100,7 +104,8 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges, ierr)
+    CHECK_ERROR(ierr)
 
     do i=1, frames
 
@@ -112,7 +117,8 @@
 !      call getQuickEnergy(coord, xc_coord, totEne)
 
       ! b. compute energies, gradients and point charge gradients
-      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad)    
+      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad, ierr)    
+      CHECK_ERROR(ierr)
 
       ! print values obtained from quick library
 #ifdef MPIV
@@ -132,7 +138,8 @@
     enddo
 
     ! finalize QUICK, required only once
-    call deleteQuickJob()
+    call deleteQuickJob(ierr)
+    CHECK_ERROR(ierr)
 
     ! deallocate memory
     if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
@@ -140,6 +147,11 @@
     if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
     if ( allocated(gradients))         deallocate(gradients, stat=ierr)
     if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
+    CHECK_ERROR(ierr)
+
+#ifdef MPIV
+   call mpi_exit
+#endif
 
   end program test_quick_api
 

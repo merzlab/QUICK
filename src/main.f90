@@ -22,11 +22,14 @@
 !  University of Florida, Gainesville, FL, 2010
 !************************************************************************
 
+#include "util.fh"
+
     program quick
 
     use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
+    use quick_exception_module
 
     implicit none
 
@@ -49,21 +52,24 @@
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
     ! Initial neccessary variables
-    call initialize1(ierr)
+    ierr=0
+    SAFE_CALL(initialize1(ierr))
     !-------------------MPI/MASTER---------------------------------------
     masterwork_readInput: if (master) then
 
       ! read input argument
-      call set_quick_files(ierr)    ! from quick_file_module
+      call set_quick_files(.false.,ierr)    ! from quick_file_module
+      CHECK_ERROR(ierr)
 
       ! open output file
-      call quick_open(iOutFile,outFileName,'U','F','R',.false.)
+      call quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr)
+      CHECK_ERROR(ierr)
 
       ! At the beginning of output file, copyright information will be output first
-      call outputCopyright(iOutFile,ierr)
+      SAFE_CALL(outputCopyright(iOutFile,ierr))
 
       ! Then output file information
-      call PrtDate(iOutFile,'TASK STARTS ON:')
+      SAFE_CALL(PrtDate(iOutFile,'TASK STARTS ON:',ierr))
       call print_quick_io_file(iOutFile,ierr) ! from quick_file_module
 
       ! check MPI setup and output info
@@ -80,14 +86,14 @@
 
     !------------------- CUDA -------------------------------------------
     ! startup cuda device
-    call gpu_startup()
+    SAFE_CALL(gpu_startup(ierr))
 #ifdef __PGI
     iarg = COMMAND_ARGUMENT_COUNT()
 #else
     iarg = iargc()
 #endif
 
-    call gpu_set_device(-1)
+    SAFE_CALL(gpu_set_device(-1, ierr))
 
     ! Handles an old mechanism where the user can specify GPU id from CLI
     if (iarg .ne. 0) then
@@ -96,29 +102,29 @@
             if (arg.eq."-gpu") then
                 call getarg (int(i+1,4), arg)
                 read(arg, '(I2)') gpu_device_id
-                call gpu_set_device(gpu_device_id)
+                SAFE_CALL(gpu_set_device(gpu_device_id, ierr))
                 write(*,*) "read -gpu from argument=",gpu_device_id
                 exit
             endif
         enddo
     endif
 
-    call gpu_init()
+    SAFE_CALL(gpu_init(ierr))
 
     ! write cuda information
-    call gpu_write_info(iOutFile)
+    SAFE_CALL(gpu_write_info(iOutFile, ierr))
     !------------------- END CUDA ---------------------------------------
 #endif
 
 #ifdef CUDA_MPIV
 
-    call mgpu_query(mpisize ,mpirank, mgpu_id)
+    SAFE_CALL(mgpu_query(mpisize ,mpirank, mgpu_id, ierr))
 
-    call mgpu_setup()
+    SAFE_CALL(mgpu_setup(ierr))
 
-    if(master) call mgpu_write_info(iOutFile, mpisize, mgpu_ids)
+    if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
     
-    call mgpu_init(mpirank, mpisize, mgpu_id)
+    SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
 
 #endif
 
@@ -129,9 +135,9 @@
     !------------------------------------------------------------------
 
     !read job spec and mol spec
-    call read_Job_and_Atom()
+    call read_Job_and_Atom(ierr)
     !allocate essential variables
-    call alloc(quick_molspec)
+    call alloc(quick_molspec,ierr)
     if (quick_method%MFCC) call allocate_MFCC()
    
     call cpu_time(timer_end%TInitialize)
@@ -141,7 +147,7 @@
     call cpu_time(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) call getMolSad(ierr)
+    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
 
     ! b. MFCC initial guess
     if (quick_method%MFCC) then
@@ -152,7 +158,7 @@
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
-    call getMol(ierr)
+    SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV
     if(.not.quick_method%opt)then
@@ -212,11 +218,9 @@
                           -(timer_end%T2elb-timer_begin%T2elb)
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
-        call getEnergy(failed, .false.)
+        SAFE_CALL(getEnergy(.false.,ierr))
+        
     endif
-
-    if (failed) call quick_exit(iOutFile,1)
-
 
     !------------------------------------------------------------------
     ! 5. OPT Geometry if wanted
@@ -225,9 +229,8 @@
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
-    if (quick_method%opt)  call optimize(failed)     ! Cartesian
-    if (.not.quick_method%opt .and. quick_method%grad) call gradient(failed)
-    if (failed) call quick_exit(iOutFile,1)          ! If geometry optimization fails
+    if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
+    if (.not.quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
@@ -248,9 +251,9 @@
     if(quick_method%MP2) then
         if(.not. quick_method%DIVCON) then
 #ifdef MPIV
-           if (bMPI) then
-             call mpi_calmp2    ! MPI-MP2
-           else
+           if (master) then
+!             call mpi_calmp2    ! MPI-MP2
+!           else
 #endif
              call calmp2()      ! none-MPI MP2
 #ifdef MPIV
@@ -297,15 +300,15 @@
     !-----------------------------------------------------------------
 #ifdef CUDA
     if (master) then
-       call gpu_shutdown()
+       SAFE_CALL(gpu_shutdown(ierr))
     endif
 #endif
 
 #ifdef CUDA_MPIV
-    call delete_mgpu_setup()
-    call mgpu_shutdown()
+    SAFE_CALL(delete_mgpu_setup(ierr))
+    SAFE_CALL(mgpu_shutdown(ierr))
 #endif
 
-    call finalize(iOutFile,0,0)
+    call finalize(iOutFile,ierr,0)
 
     end program quick

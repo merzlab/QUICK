@@ -1,14 +1,15 @@
+#include "util.fh"
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine optimize(failed)
+subroutine optimize(ierr)
    use allmod
    use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
 
-   logical :: done,diagco,failed
+   logical :: done,diagco
    character(len=1) cartsym(3)
    dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
    dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
@@ -19,6 +20,8 @@ subroutine optimize(failed)
    integer IMCSRCH,nstor,ndiis
    double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
    double precision EChg
+   integer, intent(inout) :: ierr
+
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -151,7 +154,7 @@ subroutine optimize(failed)
 
 #endif
 
-      call getEnergy(failed, .false.)
+      call getEnergy(.false., ierr)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.
@@ -176,9 +179,6 @@ subroutine optimize(failed)
 #endif
         !quick_method%bCUDA=.true.
       if (master) then
-
-         if (failed) return
-
 
          !-----------------------------------------------------------------------
          ! Copy current geometry into coordsnew. Fill the rest of the array w/ zeros.

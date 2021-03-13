@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Sun Feb 28 18:22:50 2021
+| TASK STARTS ON: Tue Mar  9 15:10:19 2021
 | INPUT FILE :    ene_wat2_mp2_631g.in
 | OUTPUT FILE:    ene_wat2_mp2_631g.out
 | DATE FILE  :    ene_wat2_mp2_631g.dat
-| BASIS SET PATH: /server-home1/madu/Work/Qk/fix66/basis
+| BASIS SET PATH: /home/mmanathunga/fix109/basis
 
  @ Read Job And Atom
 
@@ -73,7 +73,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/madu/Work/Qk/fix66/basis/6-31G.BAS
+| BASIS FILE = /home/mmanathunga/fix109/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -130,23 +130,23 @@
  @ Begin Energy Calculation
 
                                          SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
 |  1   -152.076243982      ------         0.020     1        0.00      0.02      0.00    0.1730E+01  0.7508E-01  0.4283E+00
 |  2   -151.887719923  -.188524E+00       0.020     2        0.00      0.02      0.00    0.2512E+00  0.2222E-01  0.1812E+00
 |  3   -151.960299253  0.725793E-01       0.020     3        0.00      0.02      0.00    0.1175E+00  0.7410E-02  0.6735E-01
 |  4   -151.976008212  0.157090E-01       0.020     4        0.00      0.02      0.00    0.2382E-01  0.2844E-02  0.1766E-01
-|  5   -151.977397072  0.138886E-02       0.020     5        0.00      0.02      0.00    0.3592E-02  0.9519E-03  0.5516E-02
+|  5   -151.977397072  0.138886E-02       0.021     5        0.00      0.02      0.00    0.3592E-02  0.9519E-03  0.5516E-02
 |  6   -151.977487517  0.904456E-04       0.020     6        0.00      0.02      0.00    0.5214E-03  0.1390E-03  0.9518E-03
 |  7   -151.977489260  0.174256E-05       0.020     7        0.00      0.02      0.00    0.1363E-03  0.4596E-04  0.2600E-03
 |  8   -151.977489418  0.158085E-06       0.020     8        0.00      0.02      0.00    0.7726E-04  0.9327E-05  0.6841E-04
 |  9   -151.977489428  0.997655E-08       0.020     9        0.00      0.02      0.00    0.1029E-04  0.3080E-05  0.1820E-04
 | 10   -151.977489429  0.686804E-09       0.020    10        0.00      0.02      0.00    0.2283E-05  0.6881E-06  0.3540E-05
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
 | MAX ERROR = 0.228316E-05   RMS CHANGE = 0.688114E-06   MAX CHANGE = 0.354004E-05
- -----------------------------------------------
+| -----------------------------------------------
  ELECTRONIC ENERGY    =  -188.605970860
  CORE_CORE REPULSION  =    36.628481432
  TOTAL ENERGY         =  -151.977489429
@@ -203,18 +203,18 @@ EMP2                =  -152.239416197
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.741553000( 75.06%)
-| TOTAL SCF TIME      =     0.202661000( 20.51%)
-|       TOTAL OP TIME      =     0.200843000( 20.33%)
-|             TOTAL 1e TIME      =     0.001617000(  0.16%)
-|             TOTAL 2e TIME      =     0.197527000( 19.99%)
-|       TOTAL DII TIME      =     0.001768000(  0.18%)
-|             TOTAL DIAG TIME    =     0.000678000(  0.07%)
-| TOTAL MP2 TIME     =     0.038218000(  3.87%)
-| TOTAL TIME          =     0.987940000
+| INITIAL GUESS TIME  =     0.517186000( 67.91%)
+| TOTAL SCF TIME      =     0.204041000( 26.79%)
+|       TOTAL OP TIME      =     0.202371000( 26.57%)
+|             TOTAL 1e TIME      =     0.001527000(  0.20%)
+|             TOTAL 2e TIME      =     0.199198000( 26.15%)
+|       TOTAL DII TIME      =     0.001600000(  0.21%)
+|             TOTAL DIAG TIME    =     0.000651000(  0.09%)
+| TOTAL MP2 TIME     =     0.036576000(  4.80%)
+| TOTAL TIME          =     0.761608000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  1.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.8 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sun Feb 28 18:22:51 2021
+| Normal Termination. Task Finished on: Tue Mar  9 15:10:20 2021
