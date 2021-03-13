@@ -178,7 +178,9 @@ module quick_files_module
             do while (iofile  == 0 )
                 read(ibasisfile,'(A80)',iostat=iofile) line
 
+                
                     call upcase(line,80)
+                    
                     if(index(line,trim(search_keywd)) .ne. 0) then
                         tmp_basisfilename=trim(line(39:74))
                         iofile=1
@@ -187,8 +189,10 @@ module quick_files_module
 
             close(ibasisfile)
 
+            tmp_basisfilename = tmp_basisfilename(1:len_trim(tmp_basisfilename)-4)
+
             basisfilename=trim(basisdir) // "/" // trim(tmp_basisfilename) //'.BAS'
-           
+
             ! also set the sad guess directory
             sadGuessDir=trim(basisdir) // "/" // trim(tmp_basisfilename) // '.SAD'
 
