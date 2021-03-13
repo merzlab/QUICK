@@ -22,7 +22,7 @@ if(NOT INSIDE_AMBER)
 	set(BUNDLED_3RDPARTY_TOOLS blas lapack)
 	include(3rdPartyTools)
 	
-	include(CompilerFlags)
+	include(QUICKCompilerFlags)
 
 	#CPack setup
 	# --------------------------------------------------------------------
