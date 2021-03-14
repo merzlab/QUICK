@@ -820,18 +820,21 @@ endif
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
         subroutine set_libxc_func_info(f_keywd, self,ierr)
+
            use xc_f90_types_m
            use xc_f90_lib_m
            use quick_exception_module
+
            implicit none
-           character(len=200) :: f_keywd
-           type(quick_method_type) self
+           character(len=200), intent(in) :: f_keywd
+           type(quick_method_type), intent(inout) :: self
+           integer, intent(inout) :: ierr
+           character(len=200) :: func1, func2 
+           character(len=256) :: functional_name
            integer :: f_id, nof_f, istart, iend, imid, f_nlen, usf1_nlen, usf2_nlen
+           double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
-           double precision :: x_hyb_coeff
-           character(len=256) :: functional_name
-           integer, intent(inout) :: ierr
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
@@ -847,10 +850,13 @@ endif
            if(imid>0) then
               usf1_nlen=imid-1
               usf2_nlen = iend-(istart+6+usf1_nlen)
+              func1=f_keywd(istart+6:istart+5+usf1_nlen)
+              func2=f_keywd(istart+usf1_nlen+7:iend)
            else
               usf1_nlen=iend-(istart+6)+1
+              func1=f_keywd(istart+6:iend)
            endif
-!           write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+           write(*,*) "func1: ",trim(func1), " func2: ",trim(func2)
         else
            ierr=31
            return
@@ -866,9 +872,7 @@ endif
 
                 call upcase(functional_name,200)
 
-                if((index(f_keywd,trim(functional_name)) .ne. 0) .and. ((usf1_nlen .eq. f_nlen) &
-                .or. (usf2_nlen .eq. f_nlen))) then
-
+                if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1
                         if(self%xc_polarization > 0) then
                                 call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)
