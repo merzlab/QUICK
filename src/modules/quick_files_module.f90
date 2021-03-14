@@ -133,9 +133,9 @@ module quick_files_module
         character keywd*(*)
         character(len=80) :: line
         character(len=320) :: basis_sets  !stores full path to basis_sets file
-        character(len=16) :: search_keywd !keywd packed with '=',used for searching basis file name
-        character(len=16) :: tmp_keywd
-        character(len=16) :: tmp_basisfilename
+        character(len=50) :: search_keywd !keywd packed with '=',used for searching basis file name
+        character(len=50) :: tmp_keywd
+        character(len=50) :: tmp_basisfilename
         integer, intent(inout) :: ierr
 
         ! local variables
@@ -162,7 +162,6 @@ module quick_files_module
 
             basisSetName = keywd(i+6:i+j-2)
             search_keywd= "#" // trim(basisSetName)
-
             ! Check if the basis_link file exists
 
             inquire(file=trim(basis_sets),exist=fexist)
