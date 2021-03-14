@@ -10,11 +10,11 @@ set(COMPILER_HELP "
                  -----------------------------------------------------------------------
   COMPILER value | C executable | C++ executable | Fortran executable | tested versions
   --------------------------------------------------------------------------------------
-      GNU        |     gcc      |      g++       |     gfortran       | 4.4.7, 4.8.4 +
-      INTEL      |     icc      |      icpc      |     ifort          | 12 - 17
-      PGI        |     pgcc     |      pgc++     |     pgf90          | 14.9, 15.4, 16.5
+      GNU        |     gcc      |      g++       |     gfortran       | 4.8.5+
+      INTEL      |     icc      |      icpc      |     ifort          | 19
+      PGI        |     pgcc     |      pgc++     |     pgf90          | 
       CLANG      |     clang    |      clang++   |     gfortran       | 
-      CRAY       |     cc       |      CC        |     ftn            | 8.4.6*
+      CRAY       |     cc       |      CC        |     ftn            | 
   --------------------------------------------------------------------------------------
       AUTO       |   <uses the default CMake-chosen compilers>
       MANUAL     |   <uses the CC, CXX, and FC environment variables, or the 
