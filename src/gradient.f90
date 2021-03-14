@@ -643,7 +643,7 @@ subroutine get_electron_replusion_grad
       endif
 
       call gpu_upload_density_matrix(quick_qm_struct%dense)
-      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
+      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
       call gpu_upload_grad(quick_method%gradCutoff)
 
       ! next function will compute the eri gradients and add to gradient vector

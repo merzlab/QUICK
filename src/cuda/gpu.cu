@@ -314,7 +314,7 @@ extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
         gpu -> gpu_sim.method = B3LYP;
 	gpu -> gpu_sim.hyb_coeff = 0.2;
     }else if (*quick_method == 2) {
-        gpu -> gpu_sim.method = DFT;
+        gpu -> gpu_sim.method = BLYP;
 	gpu -> gpu_sim.hyb_coeff = 0.0;
     }else if (*quick_method == 3) {
 	gpu -> gpu_sim.method = LIBXC;
@@ -413,7 +413,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     
     gpu -> gpu_cutoff -> integralCutoff = *integralCutoff;
     gpu -> gpu_cutoff -> primLimit      = *primLimit;
-    gpu -> gpu_cutoff -> DMCutoff       = 1E-9; //*DMCutoff;
+    gpu -> gpu_cutoff -> DMCutoff       = *DMCutoff;
     
     gpu -> gpu_cutoff -> cutMatrix  = new cuda_buffer_type<QUICKDouble>(cutMatrix, gpu->nshell, gpu->nshell);
     
@@ -1946,7 +1946,7 @@ void print_uploaded_dft_info(){
 }
 #endif
 
-extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter, int *bin_counter,int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2){
+extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter, int *bin_counter,int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2, QUICKDouble *DMCutoff){
 
 	PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
 
@@ -1955,7 +1955,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> ntotbf	= *nbtotbf;	
 	gpu -> gpu_xcq -> ntotpf	= *nbtotpf;
 //	gpu -> gpu_xcq -> bin_size	= (int) (*gridb_count / *nbins);
-	gpu -> gpu_cutoff -> DMCutoff   = 1E-9; //*DMCutoff;
+	gpu -> gpu_cutoff -> DMCutoff   = *DMCutoff;
 
 	gpu -> gpu_xcq -> gridx	= new cuda_buffer_type<QUICKDouble>(gridxb, gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> gridy	= new cuda_buffer_type<QUICKDouble>(gridyb, gpu -> gpu_xcq -> npoints);
