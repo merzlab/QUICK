@@ -824,7 +824,6 @@ endif
            use xc_f90_types_m
            use xc_f90_lib_m
            use quick_exception_module
-           use quick_input_parser_module
 
            implicit none
            character(len=200), intent(in) :: f_keywd
@@ -836,15 +835,11 @@ endif
            double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
-           character(len=50) :: val
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
         !by looking at the functional name (eg: PBE0) in libxc manual and
         !using xc_f90_functional_get_number() function in libxc library.
-
-        call read(f_keywd,'LIBXC',val,.true.)
-        write(*,*) "val: ", val
 
         imid=0
         if (index(f_keywd,'LIBXC=') /= 0) then
