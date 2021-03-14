@@ -232,7 +232,7 @@ enum QUICK_METHOD
 {
     HF    = 0,
     B3LYP = 1,
-    DFT   = 2,
+    BLYP  = 2,
     LIBXC = 3
 };
 
