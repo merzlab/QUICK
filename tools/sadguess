@@ -1,5 +1,4 @@
 #!/bin/bash
-WORKDIR=$QUICK_INSTALL/tools
 BASISDIR=$QUICK_BASIS
 CURDIR=`pwd`
 
@@ -43,7 +42,8 @@ for BAS in "${ALLBAS[@]}";do
 	fi
 	mkdir -p $dirname
 
-	cd $dirname
+	#cd $dirname
+	pushd $dirname >/dev/null
 
 # get all atoms in this basis set
 	atoms=()
@@ -64,16 +64,13 @@ $ATOM         -0.920500        2.036450        1.984040
 EOF
 fi
 
-echo "run atom $ATOM with $BAS"
-quick "$ATOM.in"
-
+	echo "run atom $ATOM with $BAS"
+	quick "$ATOM.in"
 done
 
+	popd $dirname >/dev/null
+	done
 
-cd $WORKDIR
-done
-
-cd $WORKDIR
 
 
 
