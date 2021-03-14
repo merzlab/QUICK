@@ -831,7 +831,7 @@ endif
            integer, intent(inout) :: ierr
            character(len=200) :: func1, func2 
            character(len=256) :: functional_name
-           integer :: f_id, nof_f, istart, iend, imid, usf1_nlen, usf2_nlen
+           integer :: f_id, nof_f, istart, iend, imid
            double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
@@ -848,14 +848,13 @@ endif
            imid=index(f_keywd(istart+6:iend),',')
 
            if(imid>0) then
-              usf1_nlen=imid-1
-              usf2_nlen = iend-(istart+6+usf1_nlen)
-              func1=f_keywd(istart+6:istart+5+usf1_nlen)
-              func2=f_keywd(istart+usf1_nlen+7:iend)
+              imid=istart+6+imid
+              func1=f_keywd(istart+6:imid-2)
+              func2=f_keywd(imid:iend)
            else
               func1=f_keywd(istart+6:iend)
            endif
-           write(*,*) "func1: ",trim(func1), " func2: ",trim(func2)
+           !write(*,*) "func1: ",trim(func1), " func2: ",trim(func2), istart, iend, imid
         else
            ierr=31
            return
