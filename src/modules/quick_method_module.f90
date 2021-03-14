@@ -495,17 +495,17 @@ endif
                 self%uselibxc=.true.
                 tempstring='LIBXC=HYB_GGA_XC_O3LYP'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'PBE').ne.0) then
+            elseif(index(keyWD,'PBE0').ne.0) then
                 self%uselibxc=.true.
-                tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
+                tempstring='LIBXC=HYB_GGA_XC_PBEH'
                 call set_libxc_func_info(tempstring, self, ierr)
             elseif(index(keyWD,'REVPBE').ne.0) then
                 self%uselibxc=.true.
-                tempstring='LIBXC=GGA_X_PBE_R, GGA_C_PBE'
+                tempstring='LIBXC=GGA_X_PBE_R,GGA_C_PBE'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'PBE0').ne.0) then
+            elseif(index(keyWD,'PBE').ne.0) then
                 self%uselibxc=.true.
-                tempstring='HYB_GGA_XC_PBEH'
+                tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
                 call set_libxc_func_info(tempstring, self, ierr)
             endif
             CHECK_ERROR(ierr)
@@ -850,7 +850,7 @@ endif
            else
               usf1_nlen=iend-(istart+6)+1
            endif
-           !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+!           write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
         else
            ierr=31
            return
