@@ -831,7 +831,7 @@ endif
            integer, intent(inout) :: ierr
            character(len=200) :: func1, func2 
            character(len=256) :: functional_name
-           integer :: f_id, nof_f, istart, iend, imid, f_nlen, usf1_nlen, usf2_nlen
+           integer :: f_id, nof_f, istart, iend, imid, usf1_nlen, usf2_nlen
            double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
@@ -853,7 +853,6 @@ endif
               func1=f_keywd(istart+6:istart+5+usf1_nlen)
               func2=f_keywd(istart+usf1_nlen+7:iend)
            else
-              usf1_nlen=iend-(istart+6)+1
               func1=f_keywd(istart+6:iend)
            endif
            write(*,*) "func1: ",trim(func1), " func2: ",trim(func2)
@@ -868,7 +867,6 @@ endif
            if((index(functional_name,'unknown') .eq. 0) &
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
-                f_nlen=len(trim(functional_name))
 
                 call upcase(functional_name,200)
 
