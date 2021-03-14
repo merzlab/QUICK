@@ -263,6 +263,15 @@ print_test_info(){
     grad_psb3_b3lyp_631g)                 testinfo="PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    grad_ch5nos_b3lyp_6311g)              testinfo="CH5NOS: B3LYP gradient test with 6-311G basis set";;
+    grad_ch5nos_b3lyp_6311gd)             testinfo="CH5NOS: B3LYP gradient test with 6-311G(d) basis set";;
+    grad_ch5nos_b3lyp_6311gdp)            testinfo="CH5NOS: B3LYP gradient test with 6-311G(d,p) basis set";;
+    grad_ch5nos_b3lyp_631plgdp)           testinfo="CH5NOS: B3LYP gradient test with 6-31+G(d,p) basis set";;
+    grad_ch5nos_b3lyp_631plplgdp)         testinfo="CH5NOS: B3LYP gradient test with 6-31++G(d,p) basis set";;
+    grad_ch5nos_b3lyp_6311plg2dp)         testinfo="CH5NOS: B3LYP gradient test with 6-311+G(2d,p) basis set";;
+    grad_ch5nos_b3lyp_6311plplg2d2p)      testinfo="CH5NOS: B3LYP gradient test with 6-311++G(2d,2p) basis set";;
+    grad_ch5nos_b3lyp_pc0)                testinfo="CH5NOS: B3LYP gradient test with PC-0 basis set";; 
+    grad_ch5nos_b3lyp_pc1)                testinfo="CH5NOS: B3LYP gradient test with PC-1 basis set";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
     grad_c10h9o2s_b3lyp_def2svp)           testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
