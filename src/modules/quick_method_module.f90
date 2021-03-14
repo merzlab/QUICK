@@ -478,8 +478,8 @@ endif
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
             elseif(index(keyWD,'BLYP').ne.0) then
-                self%BLYP=.true.
-                self%x_hybrid_coeff =0.0d0
+                !self%BLYP=.true.
+                !self%x_hybrid_coeff =0.0d0
             endif
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
