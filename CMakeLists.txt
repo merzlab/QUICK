@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 20.03)
+project(quick LANGUAGES NONE VERSION 21.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 if(NOT INSIDE_AMBER)
@@ -53,6 +53,10 @@ option(WARNINGS "Enable warnings." FALSE)
 set(NO_OPT_FFLAGS -O0)
 set(NO_OPT_CFLAGS -O0)
 set(NO_OPT_CXXFLAGS -O0)
+
+set(CMAKE_C_FLAGS "")
+set(CMAKE_CXX_FLAGS "")
+set(CMAKE_Fortran_FLAGS "")
 
 # GNU
 # --------------------------------------------------------------------
@@ -171,11 +175,11 @@ endif()
 
 # PGI, CRAY, CLANG: NOT SUPPORTED
 # --------------------------------------------------------------------
-if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
+if(${COMPILER} STREQUAL PGI)
     message(FATAL_ERROR "PGI compiler not supported by QUICK.")
-elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "CRAY")
+elseif(${COMPILER} STREQUAL CRAY)
     message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
-elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "CLANG")
+elseif(${COMPILER} STREQUAL CLANG)
     message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
 endif()
 
