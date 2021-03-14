@@ -39,6 +39,7 @@ serial: checkfolders
 	@echo  "Building serial version.."
 	@cp -f $(buildfolder)/make.serial.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory serial
+	@cp -f $(toolsfolder)/sadguess $(exefolder)
 
 mpi: checkfolders
 	@echo  "Building mpi version.."
@@ -68,7 +69,6 @@ checkfolders:
 .PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall aminstall
 
 install: $(INSTALLTYPES)
-	@cp -f $(toolsfolder)/sadguess $(exefolder)
 	@echo  "Installation sucessful."
 	@echo  ""
 	@echo  "Please run the following command to set environment variables."
