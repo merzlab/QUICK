@@ -483,6 +483,10 @@ endif
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_P86'
                 call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'B97').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_XC_B97_GGA'
+                call set_libxc_func_info(tempstring, self, ierr)
             elseif(index(keyWD,'PW91').ne.0) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_PW91,GGA_C_PW91'
