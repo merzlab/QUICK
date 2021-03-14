@@ -372,11 +372,12 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
       }else if(devSim_dft.method == DFT){
         QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
         QUICKDouble dfdr2;
-
+        
+        becke(density, gax, gay, gaz, gbx, gby, gbz, &dfdr, &dfdgaa, &dfdgab);
         lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, &dfdr2, &dfdgaa2, &dfdgab2);
-        dfdr = dfdr2;
-        dfdgaa = dfdgaa2;
-        dfdgab = dfdgab2;
+        dfdr   += dfdr2;
+        dfdgaa += dfdgaa2;
+        dfdgab += dfdgab2;
 
         //Calculate the first term in the dot product shown above,i.e.:
         //(2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
