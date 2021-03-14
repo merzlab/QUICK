@@ -478,8 +478,12 @@ endif
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
             elseif(index(keyWD,'BLYP').ne.0) then
-                self%BLYP=.true.
-                self%x_hybrid_coeff =0.0d0
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+                CHECK_ERROR(ierr) 
+                !self%BLYP=.true.
+                !self%x_hybrid_coeff =0.0d0
             endif
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
