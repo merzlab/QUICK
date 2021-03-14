@@ -478,6 +478,10 @@ endif
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
             elseif(index(keyWD,'BLYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_B3LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+                CHECK_ERROR(ierr) 
                 !self%BLYP=.true.
                 !self%x_hybrid_coeff =0.0d0
             endif
