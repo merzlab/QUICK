@@ -473,14 +473,42 @@ endif
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
-                CHECK_ERROR(ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
             elseif(index(keyWD,'BLYP').ne.0) then
                 self%BLYP=.true.
                 self%x_hybrid_coeff =0.0d0
+            elseif(index(keyWD,'BP86').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_B88,GGA_C_P86'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'PW91').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PW91,GGA_C_PW91'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'OLYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_OPTX,GGA_C_LYP'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'O3LYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_O3LYP'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'PBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'REVPBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE_R, GGA_C_PBE'
+                call set_libxc_func_info(keyWD, self, ierr)
+            elseif(index(keyWD,'PBE0').ne.0) then
+                self%uselibxc=.true.
+                tempstring='HYB_GGA_XC_PBEH'
+                call set_libxc_func_info(keyWD, self, ierr)
             endif
+            CHECK_ERROR(ierr)
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
