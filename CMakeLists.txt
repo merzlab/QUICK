@@ -37,47 +37,165 @@ endif()
 
 option(NOF "Disables the compilation of QUICK's time consuming f functions in the ERI code of cuda version. Not recommended for production." FALSE)
 
-# C/Fortran compiler flags
+# Compiler flags
+# These should really go into cmake/CompilerFlags.cmake but with the
+# current setup in Amber the Amber compilation flags will take
+# precedence so we need to overwrite those here until we have a fully
+# independent build system for Quick and integrate Quick in Amber
+# as ExternalProject
 # --------------------------------------------------------------------
 
 # add -DDEBUG in debug configuration
 set_property(DIRECTORY . PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:DEBUG>)
 
+option(WARNINGS "Enable warnings." FALSE)
 
+set(NO_OPT_FFLAGS -O0)
+set(NO_OPT_CFLAGS -O0)
+set(NO_OPT_CXXFLAGS -O0)
+
+# GNU
+# --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 
-	# QUICK needs to be built with -O2 not Amber's default of -O3
-	if(OPTIMIZE)
-		list(APPEND OPT_CFLAGS -O2)
-		set(OPT_CFLAGS_SPC "${OPT_CFLAGS_SPC} -O2")
-	endif()
+    set(OPT_CFLAGS -O2 -mtune=native)
 
-elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
-	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -traceback")
+    if (WARNINGS)
+	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
+    
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+    
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+    
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    
+    set(OPT_CXXFLAGS -O2 -mtune=native)
+
+    if (WARNINGS)
+	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
+    
+	# Kill it!  Kill it with fire!
+	check_cxx_compiler_flag(-Wno-unused-local-typedefs SUPPORTS_WNO_UNUSED_LOCAL_TYPEDEFS)
+
+	if(SUPPORTS_WNO_UNUSED_LOCAL_TYPEDEFS)
+	    add_flags(CXX -Wno-unused-local-typedefs)
+	endif()
+	
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+	
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+
+endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
-	add_definitions(-DGNU)
 
-	if(OPTIMIZE)
-		list(APPEND OPT_FFLAGS -O2)
-		set(OPT_FFLAGS_SPC "${OPT_FFLAGS_SPC} -O2")
-	endif()
+    set(OPT_FFLAGS -O2 -mtune=native)
 
-	if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
-		set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+    add_flags(Fortran -ffree-line-length-none)
+
+    if (WARNINGS)
+	add_flags(Fortran -Wall -Wno-tabs -Wno-unused-function -ffree-line-length-none -Wno-unused-dummy-argument)
+    
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(Fortran -Wno-unused-variable)
 	endif()
+		
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(Fortran -Wno-maybe-uninitialized)
+	endif()	
+    endif()
+
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+
+    if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+    endif()
+
+    add_definitions(-DGNU)
 
 endif()
+
+
+# Intel
+# --------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
+
+    set(CMAKE_C_FLAGS_DEBUG "-g -debug all -traceback")
+    
+    set(OPT_CFLAGS -ip -O2 -xHost)
+		
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all -traceback")
+	
+    set(OPT_CXXFLAGS -ip -O2 -xHost)
+
+endif()
+
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -diag-disable 8291")
-	set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -traceback")
+    
+    set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all -traceback")
+    set(CMAKE_Fortran_FLAGS "-cpp -diag-disable 8291")
+	
+    set(OPT_FFLAGS -ip -O2 -xHost)
+
+    if(WARNINGS)
+	add_flags(Fortran "-warn all" "-warn nounused")
+	    
+	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
+		
+	if(NOT IFORT_CHECK_INTERFACES)
+			
+	    # disable errors from type mismatches
+	    add_flags(Fortran -warn nointerfaces)
+	endif()
+    endif()		
+		
 endif()
+
+
+# PGI, CRAY, CLANG: NOT SUPPORTED
+# --------------------------------------------------------------------
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
-	set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp") # force use of preprocessor for Fortran files with the "wrong" file extension
+    message(FATAL_ERROR "PGI compiler not supported by QUICK.")
+elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "CRAY")
+    message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
+elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "CLANG")
+    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
 endif()
+
+
+# disable optimization flags if optimization is disabled
+if(NOT OPTIMIZE)
+	set(OPT_FFLAGS ${NO_OPT_FFLAGS})
+	set(OPT_CFLAGS ${NO_OPT_CFLAGS})
+	set(OPT_CXXFLAGS ${NO_OPT_CXXFLAGS})
+endif()
+
+#create space-separated versions of each flag set for use in PROPERTY COMPILE_FLAGS
+list_to_space_separated(OPT_FFLAGS_SPC ${OPT_FFLAGS})
+list_to_space_separated(OPT_CFLAGS_SPC ${OPT_CFLAGS})
+list_to_space_separated(OPT_CXXFLAGS_SPC ${OPT_CXXFLAGS})
+
+list_to_space_separated(NO_OPT_FFLAGS_SPC ${NO_OPT_FFLAGS})
+list_to_space_separated(NO_OPT_CFLAGS_SPC ${NO_OPT_CFLAGS})
+list_to_space_separated(NO_OPT_CXXFLAGS_SPC ${NO_OPT_CXXFLAGS})
+
 
 # blas vs lapack vs MKL selection
 if(lapack_ENABLED)
