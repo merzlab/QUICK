@@ -160,7 +160,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma) * weight;
-      }else if(devSim_dft.method == DFT){
+      }else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
          + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
       }
@@ -173,7 +173,7 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
          xdot = dot * gax;
          ydot = dot * gay;
          zdot = dot * gaz;
-      }else if(devSim_dft.method == DFT){
+      }else if(devSim_dft.method == BLYP){
          QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
          QUICKDouble dfdr2;
 
@@ -356,7 +356,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma);
-      }else if(devSim_dft.method == DFT){
+      }else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
               + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz));
       }
@@ -369,7 +369,7 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
         xdot = dot * gax;
         ydot = dot * gay;
         zdot = dot * gaz;
-      }else if(devSim_dft.method == DFT){
+      }else if(devSim_dft.method == BLYP){
         QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
         QUICKDouble dfdr2;
         
