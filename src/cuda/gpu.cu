@@ -314,7 +314,7 @@ extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
         gpu -> gpu_sim.method = B3LYP;
 	gpu -> gpu_sim.hyb_coeff = 0.2;
     }else if (*quick_method == 2) {
-        gpu -> gpu_sim.method = DFT;
+        gpu -> gpu_sim.method = BLYP;
 	gpu -> gpu_sim.hyb_coeff = 0.0;
     }else if (*quick_method == 3) {
 	gpu -> gpu_sim.method = LIBXC;
