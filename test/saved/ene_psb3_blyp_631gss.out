@@ -46,18 +46,30 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 15:08:00 2021
+| TASK STARTS ON: Sat Mar 13 18:21:08 2021
 | INPUT FILE :    ene_psb3_blyp_631gss.in
 | OUTPUT FILE:    ene_psb3_blyp_631gss.out
 | DATE FILE  :    ene_psb3_blyp_631gss.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /home/mmanathunga/bugfix98/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : Tesla V100-PCIE-16GB
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.38
+| CUDA DEVICE MEMORY SIZE (MB):    16160
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
   KEYWORD=BLYP BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1                                                                                                                         
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
- DENSITY FUNCTIONAL = BLYP
+ USING LIBXC VERSION: 4.3.4
+ FUNCTIONAL INFORMATION:
+ NAME = B3LYP FAMILY = HYBRID GGA KIND = EXCHANGE CORRELATION
  DIRECT SCF 
  SAD INITAL GUESS 
  USE DIIS SCF
@@ -75,7 +87,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/6-31GDP.BAS
+| BASIS FILE = /home/mmanathunga/bugfix98/basis/6-31GDP.BAS
 
  @ Finish reading job
 
@@ -179,27 +191,25 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.192052902      ------         2.475     1        0.01      2.46      0.00    0.2040E+01  0.3064E-01  0.5698E+00
-|  2   -249.439662324  -.752391E+00       3.663     2        0.01      3.65      0.00    0.1983E+00  0.2121E-01  0.4688E+00
-|  3   -248.782809238  -.656853E+00       3.662     3        0.01      3.65      0.00    0.3283E+00  0.1920E-01  0.4531E+00
-|  4   -249.547187767  0.764379E+00       3.652     4        0.01      3.64      0.00    0.1976E+00  0.7536E-02  0.2098E+00
-|  5   -249.702515889  0.155328E+00       3.656     5        0.01      3.64      0.00    0.5420E-01  0.2516E-02  0.7284E-01
-|  6   -249.716360696  0.138448E-01       3.655     6        0.01      3.64      0.00    0.3067E-01  0.1002E-02  0.3004E-01
-|  7   -249.720971458  0.461076E-02       3.654     7        0.01      3.64      0.00    0.8344E-02  0.2865E-03  0.1142E-01
-|  8   -249.721127863  0.156405E-03       3.657     8        0.01      3.64      0.00    0.5655E-02  0.1344E-03  0.3498E-02
-|  9   -249.721192510  0.646470E-04       3.655     9        0.01      3.64      0.00    0.9399E-03  0.4479E-04  0.1208E-02
-| 10   -249.721196476  0.396547E-05       3.657    10        0.01      3.64      0.00    0.4432E-03  0.1761E-04  0.5494E-03
-| 11   -249.721197713  0.123772E-05       3.655     1        0.01      3.64      0.00    0.5558E-04  0.2251E-05  0.5692E-04
-| 12   -249.721197724  0.111942E-07       3.655     2        0.01      3.64      0.00    0.2508E-04  0.7817E-06  0.2330E-04
+|  1   -251.064245086      ------         0.133     1        0.02      0.11      0.01    0.2483E+01  0.2946E-01  0.5625E+00
+|  2   -249.776983782  -.128726E+01       0.100     2        0.02      0.08      0.01    0.9350E-01  0.7421E-02  0.1576E+00
+|  3   -249.790528363  0.135446E-01       0.100     3        0.02      0.08      0.01    0.9217E-01  0.4065E-02  0.8958E-01
+|  4   -249.832385726  0.418574E-01       0.100     4        0.02      0.08      0.01    0.4426E-01  0.1167E-02  0.4970E-01
+|  5   -249.837258135  0.487241E-02       0.100     5        0.02      0.08      0.01    0.1571E-01  0.4954E-03  0.1349E-01
+|  6   -249.837895860  0.637725E-03       0.101     6        0.02      0.08      0.01    0.5555E-02  0.1894E-03  0.5050E-02
+|  7   -249.837988204  0.923440E-04       0.101     7        0.02      0.08      0.01    0.1579E-02  0.4820E-04  0.1013E-02
+|  8   -249.837998383  0.101793E-04       0.101     8        0.02      0.08      0.01    0.3043E-03  0.1060E-04  0.2954E-03
+|  9   -249.837998816  0.432634E-06       0.099     9        0.01      0.09      0.01    0.6179E-04  0.3426E-05  0.7412E-04
+| 10   -249.837998847  0.314461E-07       0.097    10        0.01      0.08      0.01    0.9971E-05  0.5426E-06  0.1070E-04
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  12 CYLCES
-| MAX ERROR = 0.250796E-04   RMS CHANGE = 0.781680E-06   MAX CHANGE = 0.232964E-04
+| REACH CONVERGENCE AFTER  10 CYLCES
+| MAX ERROR = 0.997057E-05   RMS CHANGE = 0.542603E-06   MAX CHANGE = 0.107032E-04
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =   22.0000124676
- BETA ELECTRON DENSITY     =   22.0000124676
- ELECTRONIC ENERGY    =  -456.906376093
+ ALPHA ELECTRON DENSITY    =   22.0000122445
+ BETA ELECTRON DENSITY     =   22.0000122445
+ ELECTRONIC ENERGY    =  -457.023177216
  CORE_CORE REPULSION  =   207.185178368
- TOTAL ENERGY         =  -249.721197724
+ TOTAL ENERGY         =  -249.837998847
 
  @ End Energy calculation
 
@@ -235,25 +245,25 @@
 
     ATOMIC CHARGES
    ATOM          MULLIKEN            LOWDIN
-   C             -0.1568            -0.0886
-   C             -0.0012            -0.0938
-   C             -0.0125             0.0218
-   C             -0.0769            -0.1317
-   C              0.2097             0.0781
-   N             -0.4472            -0.0792
-   H              0.1271             0.1371
-   H              0.1383             0.1432
-   H              0.1627             0.1444
-   H              0.1032             0.1212
-   H              0.3271             0.2354
-   H              0.3201             0.2291
-   H              0.1573             0.1460
-   H              0.1491             0.1371
+   C             -0.1827            -0.0925
+   C             -0.0420            -0.1103
+   C             -0.0222             0.0314
+   C             -0.1218            -0.1526
+   C              0.2181             0.0969
+   N             -0.4986            -0.0991
+   H              0.1520             0.1409
+   H              0.1641             0.1480
+   H              0.1866             0.1494
+   H              0.1247             0.1242
+   H              0.3441             0.2398
+   H              0.3382             0.2339
+   H              0.1745             0.1497
+   H              0.1650             0.1403
    TOTAL         1.0000             1.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    3.5047    0.9849    0.7213    3.7112
+    3.4773    0.9770    0.7342    3.6858
 
  @ End Charge and Dipole Calculation
 
@@ -261,19 +271,19 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     2.476484000(  5.44%)
-| DFT GRID OPERATIONS =     0.274583000(  0.60%)
-| TOTAL SCF TIME      =    42.720280000( 93.89%)
-|       TOTAL OP TIME      =    42.561963000( 93.54%)
-|             TOTAL 1e TIME      =     0.024261000(  0.05%)
-|             TOTAL 2e TIME      =    30.329568000( 66.66%)
-|             TOTAL EXC TIME     =    12.182602000( 26.77%)
-|       TOTAL DII TIME      =     0.157486000(  0.35%)
-|             TOTAL DIAG TIME    =     0.046239000(  0.10%)
-| TOTAL TIME          =    45.501377000
+| INITIAL GUESS TIME  =     3.298670000( 65.57%)
+| DFT GRID OPERATIONS =     0.056647000(  1.13%)
+| TOTAL SCF TIME      =     1.056315000( 21.00%)
+|       TOTAL OP TIME      =     0.895862000( 17.81%)
+|             TOTAL 1e TIME      =     0.023780000(  0.47%)
+|             TOTAL 2e TIME      =     0.437311000(  8.69%)
+|             TOTAL EXC TIME     =     0.410048000(  8.15%)
+|       TOTAL DII TIME      =     0.159703000(  3.17%)
+|             TOTAL DIAG TIME    =     0.109206000(  2.17%)
+| TOTAL TIME          =     5.030556000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 45.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.0 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 15:08:46 2021
+| Normal Termination. Task Finished on: Sat Mar 13 18:21:13 2021
