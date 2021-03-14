@@ -485,7 +485,7 @@ endif
                 call set_libxc_func_info(tempstring, self, ierr)
             elseif(index(keyWD,'B97').ne.0) then
                 self%uselibxc=.true.
-                tempstring='LIBXC=GGA_XC_B97_GGA'
+                tempstring='LIBXC=GGA_XC_B97_GGA1'
                 call set_libxc_func_info(tempstring, self, ierr)
             elseif(index(keyWD,'PW91').ne.0) then
                 self%uselibxc=.true.
