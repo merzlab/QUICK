@@ -169,6 +169,7 @@ config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 
 install(TARGETS quick DESTINATION ${BINDIR} EXPORT QUICK)
+install(TARGETS test-api DESTINATION ${BINDIR} EXPORT QUICK)
 
 if(MPI)
 	make_mpi_version(quick quick.MPI LANGUAGES Fortran)
@@ -187,6 +188,7 @@ if(MPI)
 	config_module_dirs(test-api.MPI quick/mpi libxc/serial)
 
 	install(TARGETS quick.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+	install(TARGETS test-api.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA)
@@ -205,6 +207,7 @@ if(CUDA)
 	config_module_dirs(test-api.cuda quick/cuda libxc/gpu)
 
 	install(TARGETS quick.cuda DESTINATION ${BINDIR} EXPORT QUICK)
+	install(TARGETS test-api.cuda DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA AND MPI)
@@ -223,4 +226,5 @@ if(CUDA AND MPI)
 	config_module_dirs(test-api.cuda.MPI quick/mpi_cuda libxc/gpu)
 
 	install(TARGETS quick.cuda.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+	install(TARGETS test-api.cuda.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 endif()

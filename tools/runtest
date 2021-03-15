@@ -41,6 +41,7 @@ serial='no'
 mpi='no'
 cuda='no'
 cudampi='no'
+apiexe=''
 
 # test list file
 test_list=''
@@ -62,6 +63,7 @@ ctime=''
 test_ene='no'
 test_grad='no'
 test_opt='no'
+test_api='no'
 uspec_test='no'
 test_length='short'
 
@@ -70,6 +72,9 @@ log='yes'
 
 # variable to keep track of total failed tests
 ncum_failed_tests=0
+
+# path to api executables
+apipath=''
 
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
@@ -89,6 +94,7 @@ echo  "
       --ene          Run only energy tests
       --grad         Run only gradient tests
       --opt          Run only geometry optimization tests
+      --api          Run only api tests
       --full         Run a large set of tests (Default: no)
       --nolog        Disable writing output into runtest.log (Default: no)
                                                                             
@@ -296,6 +302,7 @@ print_test_info(){
     opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
+    api_water_rhf_631g)                   testinfo="Water: API test";;
   esac
 
   echo $testinfo | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
@@ -308,6 +315,14 @@ set_qexe_testlist(){
 
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
+    apiexe='test-api'
+
+    if [ -x "$testdir/test-api" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -315,6 +330,14 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'mpi' ]; then
     qexe='quick.MPI'
+    apiexe='test-api.MPI'
+
+    if [ -x "$testdir/test-api.MPI" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.MPI" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -322,6 +345,14 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'cuda' ]; then
     qexe='quick.cuda'
+    apiexe='test-api.cuda'
+
+    if [ -x "$testdir/test-api.cuda" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.cuda" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
@@ -329,6 +360,14 @@ set_qexe_testlist(){
     fi
   elif [ "$buildtype" = 'cudampi' ]; then
     qexe='quick.cuda.MPI'
+    apiexe='test-api.cuda.MPI'
+
+    if [ -x "$testdir/test-api.cuda.MPI" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.cuda.MPI" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
@@ -357,12 +396,20 @@ get_total_tests(){
     total_tests=$((total_tests+tot_opt_tests))
   fi
 
+  if [ "$test_api" = 'yes' ]; then
+    tot_api_tests=`awk '{print $1}' "$test_list"| grep "api" | wc -l`
+    total_tests=$((total_tests+tot_api_tests))
+  fi
+
 }
 
 # function to set files for a test run
 set_test(){
+  # copy input if the test is not an api test
+  if [ `echo "$t" | grep 'api_' | wc -l` -lt 1 ]; then
+    cp "$testdir/$t.in" ./
+  fi
 
-  cp "$testdir/$t.in" ./
   cp "$testdir/saved/$t.out" "$t.ref.out"
 }
 
@@ -388,6 +435,27 @@ run_test(){
       exit 1
     fi
   
+}
+
+# function to run api tests
+run_api_test(){
+    echo "Running test $tc of $total_tests" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
+
+    print_test_info "$t"
+   
+    #Run test
+    if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] && [ $ismpirun = 'yes' ]; then
+      $DO_PARALLEL "$apipath/$apiexe" > /dev/null 2>&1
+    else
+      "$apipath/$apiexe" > /dev/null 2>&1
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "Error: $apiexe execution failed."
+      echo ""
+      exit 1
+    fi
+
 }
 
 # check electronic, nuclear and total energy
@@ -438,7 +506,6 @@ check_dipole(){
 
 }
 
-
 # function to clean up files
 clean_up(){
     rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
@@ -463,9 +530,11 @@ print_summary(){
     total_ene=0
     total_grad=0
     total_opt=0
+    total_api=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
+    failed_api=0
     total_tests=0
  
     # set testlist
@@ -501,12 +570,17 @@ print_summary(){
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_opt=$((failed_opt+1))
         fi
+      elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+        total_api=$((total_api+1))
+        if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_api=$((failed_api+1))
+        fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$((failed_ene+failed_grad+failed_opt))
+    failed_total=$((failed_ene+failed_grad+failed_opt+failed_api))
 
     # update cumulative failed tests too
     ncum_failed_tests=$((ncum_failed_tests+failed_total))
@@ -515,6 +589,7 @@ print_summary(){
     echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
@@ -549,6 +624,7 @@ while [ $# -gt 0 ]; do
     --ene)         test_ene='yes';uspec_test='yes';;
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
+    --api)         test_api='yes';uspec_test='yes';;
     --full)        test_length='full';;
     --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
@@ -581,24 +657,48 @@ fi
 
 if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
 
-  if [ "$serial" = 'yes' ] && [ ! -x "$qbindir/quick" ]; then
-    echo  "Error: $qbindir/quick not found."
-    exit 1
+  if [ "$serial" = 'yes' ]; then
+    if [ ! -x "$qbindir/quick" ]; then
+      echo  "Error: $qbindir/quick not found."
+      exit 1
+    fi
+    if [ ! -x "$testdir/test-api" ] | [ ! -x "$qbindir/test-api" ]; then
+      echo  "Error: test-api not found in $testdir or $qbindir."
+      exit 1
+    fi
   fi
 
-  if [ "$mpi" = 'yes' ] && [ ! -x "$qbindir/quick.MPI" ]; then
-    echo  "Error: $qbindir/quick.MPI not found."
-    exit 1
+  if [ "$mpi" = 'yes' ]; then
+    if [ ! -x "$qbindir/quick.MPI" ]; then
+      echo  "Error: $qbindir/quick.MPI not found."
+      exit 1
+    fi
+    if [ ! -x "$testdir/test-api.MPI" ] | [ ! -x "$qbindir/test-api.MPI" ]; then
+      echo  "Error: test-api.MPI not found in $testdir or $qbindir."
+      exit 1
+    fi
   fi
 
-  if [ "$cuda" = 'yes' ] && [ ! -x "$qbindir/quick.cuda" ]; then
-    echo  "Error: $qbindir/quick.cuda not found."
-    exit 1
+  if [ "$cuda" = 'yes' ]; then
+    if [ ! -x "$qbindir/quick.cuda" ]; then
+      echo  "Error: $qbindir/quick.cuda not found."
+      exit 1
+    fi
+    if [ ! -x "$testdir/test-api.cuda" ] | [ ! -x "$qbindir/test-api.cuda" ]; then
+      echo  "Error: test-api.cuda not found in $testdir or $qbindir."
+      exit 1
+    fi
   fi
 
-  if [ "$cudampi" = 'yes' ] && [ ! -x "$qbindir/quick.cuda.MPI" ]; then
-    echo  "Error: $qbindir/quick.cuda.MPI not found."
-    exit 1
+  if [ "$cudampi" = 'yes' ]; then
+    if [ ! -x "$qbindir/quick.cuda.MPI" ]; then
+      echo  "Error: $qbindir/quick.cuda.MPI not found."
+      exit 1
+    fi
+    if [ ! -x "$testdir/test-api.cuda.MPI" ] | [ ! -x "$qbindir/test-api.cuda.MPI" ]; then
+      echo  "Error: test-api.cuda.MPI not found in $testdir or $qbindir."
+      exit 1
+    fi
   fi
 
 else
@@ -699,6 +799,7 @@ if [ "$uspec_test" = 'no' ]; then
   test_ene='yes'
   test_grad='yes'
   test_opt='yes'
+  test_api='yes'
 fi
 
 #  !---------------------------------------------------------------------!
@@ -770,6 +871,17 @@ for buildtype in $buildtypes; do
 
       echo ""
       tc=$((tc+1))
+    done
+  fi
+
+  # Run api tests
+  if [ "$test_api" = 'yes' ]; then
+    for t in `awk '{print $1}' "$test_list" | grep "api_"`; do
+      set_test
+      run_api_test
+      check_energy
+      check_gradient
+      clean_up
     done
   fi
 
