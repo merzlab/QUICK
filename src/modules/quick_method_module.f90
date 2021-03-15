@@ -37,8 +37,8 @@ module quick_method_module
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
         logical :: writePMat = .false. ! flag to write density matrix
-        logical :: readSAD = .false.   ! flag to read SAD guess
-        logical :: writeSAD = .false.   ! flag to read SAD guess
+        logical :: readSAD = .true.    ! flag to read SAD guess
+        logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
         logical :: prtGap =  .false.   ! flag to print HOMO-LUMO gap
         logical :: opt =  .false.      ! optimization
