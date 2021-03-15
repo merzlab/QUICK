@@ -1,78 +1,83 @@
 #!/bin/bash
-BASISDIR=$QUICK_BASIS
-CURDIR=`pwd`
 
-declare -A basmap
-basmap=( ["STO-3G"]="STO-3G"
-		  ["3-21G"]="3-21G"
-		  ["6-31G"]="6-31G"
-		  ["6-31GD"]="6-31G(d)"
-	      ["6-31GDP"]="6-31G(d,p)"
-          ["6-31G2DF2PD"]="6-31G(2df,2pd)"
-	      ["6-311G"]="6-311G"
-          ["6-311GD"]="6-311G(d)"
-          ["6-311GDP"]="6-311G(d,p)"
-          ["6-311G2DF2PD"]="6-311G(2df,2pd)"
-		  ["6-311PLG2DP"]="6-311+G(2d,p)"
-          ["CC-PVDZ"]="CC-PVDZ"
-          ["DEF2-SVP"]="def2-svp"
-          ["DEF2-SV_P"]="def2-sv(p)"
-          ["DEF2-SVPD"]="def2-svpd")
+usage(){
+    echo
+    echo "Generate SAD guess for all elements in basis set file"
+    echo
+    echo "Usage: $0 BASIS"
+    echo
+    echo "  BASIS = Basis set (string)"
+    echo "  The basis set set must be present in \$QUICK_HOME/basis"
+    echo "  and correctly specified in \$QUICK_HOME/basis_link"
+    echo
+    exit 1
+}
 
-ALLBASFILE=("$@")
-ALLBAS=()
-
-for BAS in "${ALLBASFILE[@]}"
-do
-	# remove dir to get basename
-	fname=$(basename -- $BAS)
-	# remove .BAS extension
-	fname=${fname%.*}
-	#echo $fname
-	ALLBAS+=($fname)
-done
-
-for BAS in "${ALLBAS[@]}";do
-	
-	basname=${basmap[$BAS]}
-	dirname="$CURDIR/$BAS.sadinput"
-
-	if [  -d "$dirname" ];then
-		rm -r "$dirname"
-	fi
-	mkdir -p $dirname
-
-	#cd $dirname
-	pushd $dirname >/dev/null
-
-# get all atoms in this basis set
-	atoms=()
-	filename="$QUICK_BASIS/$BAS.BAS"
-	while IFS=' '   read -r -a array;do
-    	if [ ${#array[@]} == 2 ] && [ ${array[1]} == '0' ];then
-        	atoms+=(${array[0]})
-    	fi
-	done<$filename
-	
-for ATOM in "${atoms[@]}";do
-if [ ! -f "$ATOM.in" ];then		
-cat	> "$ATOM.in" << EOF
-UHF BASIS=$basname cutoff=1.0e-9 denserms=1.0e-6  SCF=1 writesad energy charge=0
-
-$ATOM         -0.920500        2.036450        1.984040
-
-EOF
+if [ $# -lt 1 ]; then
+    usage
 fi
 
-	echo "run atom $ATOM with $BAS"
-	quick "$ATOM.in"
+if [ -z "$QUICK_BASIS" ]; then
+    echo "QUICK_BASIS is not set. Cannot continue."
+    exit 1
+fi
+
+# get basis set file name from basis_link file
+basis=$1
+basfile=$(awk "tolower(\"#$basis\")==tolower(\$2){print \$4}" $QUICK_BASIS/basis_link)
+
+if [ -z "$basfile" ]; then
+    echo "Basis set name does not seem to exist in $QUICK_HOME/basis_link"
+    exit 1
+fi
+
+# set jobs and sad guess directories
+basname=${basfile%.*}
+jobdir=$(pwd)/${basname}.jobs
+saddir=$(pwd)/${basname}.SAD
+
+mkdir -p $jobdir
+mkdir -p $saddir
+
+# get all atoms in this basis set
+atoms=()
+while IFS=' '   read -r -a array;do
+    if [ ${#array[@]} == 2 ] && [ ${array[1]} == '0' ];then
+        atoms+=(${array[0]})
+    fi
+done < $QUICK_BASIS/$basfile
+
+# compute SAD guess for all atoms 
+pushd $jobdir >/dev/null
+
+for atom in "${atoms[@]}"; do
+
+    cat	> "$atom.in" << EOF
+ UHF BASIS=$basis cutoff=1.0e-9 denserms=1.0e-6  SCF=1 wrsad energy charge=0
+ 
+ $atom         -0.920500        2.036450        1.984040
+ 
+EOF
+
+    echo "run atom $atom with $basis"
+    quick ${atom}.in
+    sadfile=${atom^^}
+    if [ ! -f $sadfile ]; then
+	echo "  >> could not generate SAD guess for atom $atom"
+    else
+	mv ${atom^^} $saddir/
+    fi
+
 done
 
-	popd $dirname >/dev/null
-	done
+popd $dirname >/dev/null
 
+echo ">>> All done"
 
-
-
-
-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
