@@ -272,8 +272,16 @@ print_test_info(){
     grad_ch5nos_b3lyp_6311plplg2d2p)      testinfo="CH5NOS: B3LYP gradient test with 6-311++G(2d,2p) basis set";;
     grad_ch5nos_b3lyp_pc0)                testinfo="CH5NOS: B3LYP gradient test with PC-0 basis set";; 
     grad_ch5nos_b3lyp_pc1)                testinfo="CH5NOS: B3LYP gradient test with PC-1 basis set";;
+    grad_ch5nos_b97_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, B97 functional";;
+    grad_ch5nos_bp86_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, BP86 functional";;
+    grad_ch5nos_o3lyp_631g)               testinfo="CH5NOS: DFT gradient test: s and p basis functions, O3LYP functional";;
+    grad_ch5nos_olyp_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, OLYP functional";;
+    grad_ch5nos_pbe0_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE0 functional";;
+    grad_ch5nos_pbe_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE functional";;
+    grad_ch5nos_pw91_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PW91 functional";;
+    grad_ch5nos_revpbe_631g)              testinfo="CH5NOS: DFT gradient test: s and p basis functions, revPBE functional";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
-    grad_c10h9o2s_b3lyp_def2svp)           testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
+    grad_c10h9o2s_b3lyp_def2svp)          testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
     grad_hbdi_meoh_libxc_blyp_sto3g)      testinfo="HBDI-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_naip_meoh_libxc_pbeh_sto3g)      testinfo="NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
