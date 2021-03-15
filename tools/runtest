@@ -264,6 +264,7 @@ print_test_info(){
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
     grad_ch5nos_b97_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, B97 functional";;
+    grad_ch5nos_b97-gga1_631g             testinfo="CH5NOS: DFT gradient test: s and p basis functions, B97-GGA1 functiona;";;
     grad_ch5nos_bp86_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, BP86 functional";;
     grad_ch5nos_o3lyp_631g)               testinfo="CH5NOS: DFT gradient test: s and p basis functions, O3LYP functional";;
     grad_ch5nos_olyp_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, OLYP functional";;
