@@ -127,6 +127,15 @@ grad_psb3_b3lyp_631g              #B3LYP gradient test with s and p basis functi
 grad_psb3_b3lyp_631gss            #B3LYP gradient test with s, p and d basis functions
 grad_ch3conhch3_b3lyp_ccpvdz      #B3LYP gradient test with s, p and d basis functions
 grad_nacl_b3lyP_def2svp           #B3LYP gradient test with s, p and d basis functions 
+grad_ch5nos_b3lyp_6311g           #B3LYP gradient test with 6-311G basis set
+grad_ch5nos_b3lyp_6311gd          #B3LYP gradient test with 6-311G(d) basis set
+grad_ch5nos_b3lyp_6311gdp         #B3LYP gradient test with 6-311G(d,p) basis set
+grad_ch5nos_b3lyp_631plgdp        #B3LYP gradient test with 6-31+G(d,p) basis set
+grad_ch5nos_b3lyp_631plplgdp      #B3LYP gradient test with 6-31++G(d,p) basis set
+grad_ch5nos_b3lyp_6311plg2dp      #B3LYP gradient test with 6-311+G(2d,p) basis set
+grad_ch5nos_b3lyp_6311plplg2d2p   #B3LYP gradient test with 6-311++(2d,2p) basis set
+grad_ch5nos_b3lyp_pc0             #B3LYP gradient test with PC-0 basis set
+grad_ch5nos_b3lyp_pc1             #B3LYP gradient test with PC-1 basis set
 grad_ch5nos_b97_631g              #B97 gradient test with s and p basis functions
 grad_ch5nos_b97-gga1_631g         #B97-GGA1 gradient test with s and p basis functions
 grad_ch5nos_bp86_631g             #BP86 gradient test with s and p basis functions
