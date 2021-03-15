@@ -73,6 +73,9 @@ log='yes'
 # variable to keep track of total failed tests
 ncum_failed_tests=0
 
+# path to api executables
+apipath=''
+
 #  !---------------------------------------------------------------------!
 #  ! Function definitions                                                !
 #  !---------------------------------------------------------------------!
@@ -253,8 +256,8 @@ print_test_info(){
     ene_psb5_rhf_631g)                    testinfo="PSB5: RHF energy test: s and p basis functions";;
     ene_psb5_rhf_631gss)                  testinfo="PSB5: RHF energy test: s, p and d basis functions";;
     ene_acetone_rhf_321g)                 testinfo="Acetone: RHF energy test: s and p basis functions";;
-    ene_psb3_blyp_631g)                   testinfo="PSB3: DFT energy test: s and p basis functions, native BLYP functional";;
-    ene_psb3_blyp_631gss)                 testinfo="PSB3: DFT energy test: s, p and d basis functions, native BLYP functional";;
+    ene_psb3_blyp_631g)                   testinfo="PSB3: DFT energy test: s and p basis functions, BLYP functional";;
+    ene_psb3_blyp_631gss)                 testinfo="PSB3: DFT energy test: s, p and d basis functions, BLYP functional";;
     ene_psb3_b3lyp_631g)                  testinfo="PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
     ene_psb3_b3lyp_631gss)                testinfo="PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
     ene_psb3_libxc_lda_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
@@ -266,6 +269,24 @@ print_test_info(){
     grad_psb3_b3lyp_631g)                 testinfo="PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    grad_ch5nos_b3lyp_6311g)              testinfo="CH5NOS: B3LYP gradient test with 6-311G basis set";;
+    grad_ch5nos_b3lyp_6311gd)             testinfo="CH5NOS: B3LYP gradient test with 6-311G(d) basis set";;
+    grad_ch5nos_b3lyp_6311gdp)            testinfo="CH5NOS: B3LYP gradient test with 6-311G(d,p) basis set";;
+    grad_ch5nos_b3lyp_631plgdp)           testinfo="CH5NOS: B3LYP gradient test with 6-31+G(d,p) basis set";;
+    grad_ch5nos_b3lyp_631plplgdp)         testinfo="CH5NOS: B3LYP gradient test with 6-31++G(d,p) basis set";;
+    grad_ch5nos_b3lyp_6311plg2dp)         testinfo="CH5NOS: B3LYP gradient test with 6-311+G(2d,p) basis set";;
+    grad_ch5nos_b3lyp_6311plplg2d2p)      testinfo="CH5NOS: B3LYP gradient test with 6-311++G(2d,2p) basis set";;
+    grad_ch5nos_b3lyp_pc0)                testinfo="CH5NOS: B3LYP gradient test with PC-0 basis set";; 
+    grad_ch5nos_b3lyp_pc1)                testinfo="CH5NOS: B3LYP gradient test with PC-1 basis set";;
+    grad_ch5nos_b97_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, B97 functional";;
+    grad_ch5nos_b97-gga1_631g)            testinfo="CH5NOS: DFT gradient test: s and p basis functions, B97-GGA1 functional;";;
+    grad_ch5nos_bp86_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, BP86 functional";;
+    grad_ch5nos_o3lyp_631g)               testinfo="CH5NOS: DFT gradient test: s and p basis functions, O3LYP functional";;
+    grad_ch5nos_olyp_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, OLYP functional";;
+    grad_ch5nos_pbe0_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE0 functional";;
+    grad_ch5nos_pbe_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE functional";;
+    grad_ch5nos_pw91_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PW91 functional";;
+    grad_ch5nos_revpbe_631g)              testinfo="CH5NOS: DFT gradient test: s and p basis functions, revPBE functional";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
     grad_c10h9o2s_b3lyp_def2svp)          testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
@@ -295,6 +316,13 @@ set_qexe_testlist(){
   if [ "$buildtype" = 'serial' ]; then
     qexe='quick'
     apiexe='test-api'
+
+    if [ -x "$testdir/test-api" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -303,6 +331,13 @@ set_qexe_testlist(){
   elif [ "$buildtype" = 'mpi' ]; then
     qexe='quick.MPI'
     apiexe='test-api.MPI'
+
+    if [ -x "$testdir/test-api.MPI" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.MPI" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full.txt"
     else
@@ -311,6 +346,13 @@ set_qexe_testlist(){
   elif [ "$buildtype" = 'cuda' ]; then
     qexe='quick.cuda'
     apiexe='test-api.cuda'
+
+    if [ -x "$testdir/test-api.cuda" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.cuda" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
@@ -319,6 +361,13 @@ set_qexe_testlist(){
   elif [ "$buildtype" = 'cudampi' ]; then
     qexe='quick.cuda.MPI'
     apiexe='test-api.cuda.MPI'
+
+    if [ -x "$testdir/test-api.cuda.MPI" ]; then
+      apipath=$testdir
+    elif [ -x "$qbindir/test-api.cuda.MPI" ]; then
+      apipath=$qbindir
+    fi
+
     if [ "$test_length" = 'full' ]; then
       test_list="$testdir/testlist_full_cuda.txt"
     else
@@ -396,9 +445,9 @@ run_api_test(){
    
     #Run test
     if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] && [ $ismpirun = 'yes' ]; then
-      $DO_PARALLEL "$testdir/$apiexe" > /dev/null 2>&1
+      $DO_PARALLEL "$apipath/$apiexe" > /dev/null 2>&1
     else
-      "$testdir/$apiexe" > /dev/null 2>&1
+      "$apipath/$apiexe" > /dev/null 2>&1
     fi
 
     if [ "$?" -ne 0 ]; then
@@ -613,8 +662,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick not found."
       exit 1
     fi
-    if [ ! -x "$testdir/test-api" ]; then
-      echo  "Error: $testdir/test-api not found."
+    if [ ! -x "$testdir/test-api" ] | [ ! -x "$qbindir/test-api" ]; then
+      echo  "Error: test-api not found in $testdir or $qbindir."
       exit 1
     fi
   fi
@@ -624,8 +673,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.MPI not found."
       exit 1
     fi
-    if [ ! -x "$testdir/test-api.MPI" ]; then
-      echo  "Error: $testdir/test-api.MPI not found."
+    if [ ! -x "$testdir/test-api.MPI" ] | [ ! -x "$qbindir/test-api.MPI" ]; then
+      echo  "Error: test-api.MPI not found in $testdir or $qbindir."
       exit 1
     fi
   fi
@@ -635,8 +684,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.cuda not found."
       exit 1
     fi
-    if [ ! -x "$testdir/test-api.cuda" ]; then
-      echo  "Error: $testdir/test-api.cuda not found."
+    if [ ! -x "$testdir/test-api.cuda" ] | [ ! -x "$qbindir/test-api.cuda" ]; then
+      echo  "Error: test-api.cuda not found in $testdir or $qbindir."
       exit 1
     fi
   fi
@@ -646,8 +695,8 @@ if [ "$serial" = 'yes' -o "$mpi" = 'yes' -o "$cuda" = 'yes' -o "$cudampi" = 'yes
       echo  "Error: $qbindir/quick.cuda.MPI not found."
       exit 1
     fi
-    if [ ! -x "$testdir/test-api.cuda.MPI" ]; then
-      echo  "Error: $testdir/test-api.cuda.MPI not found."
+    if [ ! -x "$testdir/test-api.cuda.MPI" ] | [ ! -x "$qbindir/test-api.cuda.MPI" ]; then
+      echo  "Error: test-api.cuda.MPI not found in $testdir or $qbindir."
       exit 1
     fi
   fi
