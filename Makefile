@@ -82,6 +82,7 @@ serialinstall: serial
 	exit 1; fi
 	@cp -f $(buildfolder)/include/serial/* $(installfolder)/include/serial
 	@cp -f $(buildfolder)/lib/serial/* $(installfolder)/lib/serial
+	@cp -f $(toolsfolder)/sadguess $(installfolder)/bin
 
 mpiinstall: mpi
 	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
