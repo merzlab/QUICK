@@ -675,8 +675,8 @@ endif
             self%debug =  .false.    ! debug mode
             self%nodirect = .false.  ! conventional SCF
             self%readDMX =  .false.  ! flag to read density matrix
-            self%readSAD =  .false.  ! flag to read sad guess
-            self%writeSAD =  .false.  ! flag to write sad guess
+            self%readSAD =  .true.   ! flag to read sad guess
+            self%writeSAD = .false.  ! flag to write sad guess
             self%diisSCF =  .false.  ! DIIS SCF
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization
