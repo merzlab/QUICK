@@ -496,10 +496,10 @@ endif
             if (index(keyWD,'FREQ').ne.0)       self%freq=.true.
             if (index(keywd,'DEBUG').ne.0)      self%debug=.true.
             if (index(keyWD,'READ').ne.0)       self%readDMX=.true.
-            if (index(keyWD,'READSAD').ne.0)    self%readSAD=.true.
-            if (index(keyWD,'WRITESAD').ne.0)    self%writeSAD=.true.
+            if (index(keyWD,'RDSAD').ne.0)      self%readSAD=.true.  ! READSAD would clash with READ
+            if (index(keyWD,'WRSAD').ne.0)      self%writeSAD=.true.
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
-            if (index(keyWD,'DIPOLE').ne.0)      self%dipole=.true.
+            if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
