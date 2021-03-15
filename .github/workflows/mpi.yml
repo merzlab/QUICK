@@ -59,7 +59,7 @@ jobs:
       - name: Test mpi
         run: |
           cd install
-          ./runtest --mpi --full
+          ./runtest --mpi --full 
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v2
