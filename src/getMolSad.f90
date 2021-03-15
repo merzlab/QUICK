@@ -21,7 +21,7 @@ subroutine getmolsad(ierr)
 
    implicit double precision(a-h,o-z)
 
-   logical :: present,MPIsaved
+   logical :: present, MPIsaved, readSAD
    double precision:: xyzsaved(3,natom)
    character(len=80) :: keywd
    character(len=20) :: tempstring
@@ -139,36 +139,52 @@ subroutine getmolsad(ierr)
                quick_qm_struct%denseb(I,I)=diagelementb
             enddo
          endif
+
+         ! AWG Check if SAD file is present when requesting readSAD
+         ! AWG If not present fall back to computing SAD guess
+         ! AWG note the whole structure of this routine should be improved
+         readSAD = quick_method%readSAD
+         if (readSAD) then
+            sadfile = trim(sadGuessDir) // '/' // &
+                           trim(quick_molspec%atom_type_sym(iitemp))
+            inquire (file=sadfile, exist=present)
+            if (.not. present) readSAD = .false.
+         end if
+
          ! From SCF calculation to get initial density guess
-         if(.not. quick_method%readSAD) then
-            call getenergy(failed, .true.)
+         if(readSAD) then
+
+            open(212,file=sadfile)  !Read from sadfile
+            do i=1,nbasis
+               do j=1,nbasis
+                  read(212,*) ii,jj,temp
+                  atomdens(iitemp,ii,jj)=temp
+               enddo
+            enddo
+            close(212)
+
+         else
+
+            ! Compute SAD guess
+            call getenergy(.true., ierr)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
                enddo
             enddo
 
+            ! write SAD guess if requested
             if(quick_method%writeSAD) then
                sadfile = trim(quick_molspec%atom_type_sym(iitemp))
-               open(212,file=sadfile)
+               open(213,file=sadfile)
                do i=1,nbasis
                   do j=1,nbasis
-                     write(212,*) i,j,atomdens(iitemp,i,j)
+                     write(213,*) i,j,atomdens(iitemp,i,j)
                   enddo
                enddo
-               close(212)             
+               close(213)             
             endif           
 
-         else
-            sadfile = trim(sadGuessDir) // '/' // trim(quick_molspec%atom_type_sym(iitemp))
-            open(213,file=sadfile)  !Read from sadfile
-            do i=1,nbasis
-               do j=1,nbasis
-                  read(213,*) ii,jj,temp
-                  atomdens(iitemp,ii,jj)=temp
-               enddo
-            enddo
-            close(213)
          endif
 
          call deallocate_calculated
