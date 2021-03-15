@@ -4,11 +4,9 @@ on: [push, pull_request]
 
 jobs:
   make-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Check for updates
-        run:  sudo apt-get update   
       - name: Install deps
         run: sudo apt-get -y install gfortran openmpi-bin
       - name: Configure mpi
@@ -36,11 +34,9 @@ jobs:
       - name: Display structure of artifacts
         run: ls -R
   cmake-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Check for updates
-        run:  sudo apt-get update
       - name: Install deps
         run: sudo apt-get -y install gfortran cmake openmpi-bin
       - name: Configure MPI
@@ -59,7 +55,7 @@ jobs:
       - name: Test mpi
         run: |
           cd install
-          ./runtest --mpi --full
+          ./runtest --mpi --full 
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v2
