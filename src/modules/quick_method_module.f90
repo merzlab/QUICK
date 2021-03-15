@@ -473,7 +473,6 @@ endif
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
-                CHECK_ERROR(ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
@@ -481,10 +480,46 @@ endif
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
                 call set_libxc_func_info(tempstring, self, ierr)
-                CHECK_ERROR(ierr) 
                 !self%BLYP=.true.
                 !self%x_hybrid_coeff =0.0d0
+            elseif(index(keyWD,'BP86').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_B88,GGA_C_P86'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'B97-GGA1').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_XC_B97_GGA1'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PW91').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PW91,GGA_C_PW91'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'OLYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_OPTX,GGA_C_LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'B97').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_B97'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'O3LYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_O3LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PBE0').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_PBEH'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'REVPBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE_R,GGA_C_PBE'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
+                call set_libxc_func_info(tempstring, self, ierr)
             endif
+            CHECK_ERROR(ierr)
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
@@ -796,18 +831,21 @@ endif
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
         subroutine set_libxc_func_info(f_keywd, self,ierr)
+
            use xc_f90_types_m
            use xc_f90_lib_m
            use quick_exception_module
+
            implicit none
-           character(len=200) :: f_keywd
-           type(quick_method_type) self
-           integer :: f_id, nof_f, istart, iend, imid, f_nlen, usf1_nlen, usf2_nlen
+           character(len=200), intent(in) :: f_keywd
+           type(quick_method_type), intent(inout) :: self
+           integer, intent(inout) :: ierr
+           character(len=200) :: func1, func2 
+           character(len=256) :: functional_name
+           integer :: f_id, nof_f, istart, iend, imid
+           double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
-           double precision :: x_hyb_coeff
-           character(len=256) :: functional_name
-           integer, intent(inout) :: ierr
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
@@ -821,12 +859,13 @@ endif
            imid=index(f_keywd(istart+6:iend),',')
 
            if(imid>0) then
-              usf1_nlen=imid-1
-              usf2_nlen = iend-(istart+6+usf1_nlen)
+              imid=istart+6+imid
+              func1=f_keywd(istart+6:imid-2)
+              func2=f_keywd(imid:iend)
            else
-              usf1_nlen=iend-(istart+6)+1
+              func1=f_keywd(istart+6:iend)
            endif
-           !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+           !write(*,*) "func1: ",trim(func1), " func2: ",trim(func2), istart, iend, imid
         else
            ierr=31
            return
@@ -838,13 +877,10 @@ endif
            if((index(functional_name,'unknown') .eq. 0) &
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
-                f_nlen=len(trim(functional_name))
 
                 call upcase(functional_name,200)
 
-                if((index(f_keywd,trim(functional_name)) .ne. 0) .and. ((usf1_nlen .eq. f_nlen) &
-                .or. (usf2_nlen .eq. f_nlen))) then
-
+                if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1
                         if(self%xc_polarization > 0) then
                                 call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)
