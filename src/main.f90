@@ -148,6 +148,9 @@
 
     ! a. SAD intial guess
     if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
+    if (quick_method%writeSAD) then
+       call quick_exit(iOutFile,ierr)
+    end if
 
     ! b. MFCC initial guess
     if (quick_method%MFCC) then
