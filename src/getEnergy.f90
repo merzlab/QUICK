@@ -18,10 +18,14 @@ subroutine getEnergy(isGuess, ierr)
    integer i,j
    logical, intent(in) :: isGuess
    integer, intent(inout) :: ierr
+   logical :: verbose
 
 #ifdef MPIV
    include "mpif.h"
 #endif
+
+   verbose = .true.
+   if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.
 
     !Form the exchange-correlation quadrature if DFT is requested
     if (quick_method%DFT .and. .not. isGuess) then
@@ -35,7 +39,7 @@ subroutine getEnergy(isGuess, ierr)
     endif
 
    if (master) then
-      if(.not. isGuess) call PrtAct(ioutfile,"Begin Energy Calculation")
+      if (verbose) call PrtAct(ioutfile,"Begin Energy Calculation")
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
@@ -89,7 +93,7 @@ subroutine getEnergy(isGuess, ierr)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(isGuess,ierr)       ! unrestricted system
+      call uscf(verbose,ierr)       ! unrestricted system
    else
       call scf(ierr)        ! restricted system
    endif
@@ -123,7 +127,7 @@ subroutine getEnergy(isGuess, ierr)
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
-      if (ioutfile.ne.0 .and. .not. isGuess) then
+      if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
          write (ioutfile,'(" CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then

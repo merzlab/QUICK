@@ -622,7 +622,7 @@ subroutine electdiis(jscf,ierr)
          diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
 
          if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
-            write(ioutfile, '(4x, "| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
+            write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
          endif
 
          flush(ioutfile)
