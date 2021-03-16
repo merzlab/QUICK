@@ -53,9 +53,9 @@ pushd $jobdir >/dev/null
 for atom in "${atoms[@]}"; do
 
     cat	> "$atom.in" << EOF
- UHF BASIS=$basis cutoff=1.0e-9 denserms=1.0e-6  SCF=1 wrsad energy charge=0
+ UHF BASIS=$basis cutoff=1.0e-10 denserms=1.0e-6 SCF=100 wrsad energy charge=0
  
- $atom         -0.920500        2.036450        1.984040
+ $atom  0.0  0.0  0.0
  
 EOF
 

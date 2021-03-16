@@ -536,7 +536,10 @@ endif
             if (index(keywd,'DEBUG').ne.0)      self%debug=.true.
             if (index(keyWD,'READ').ne.0)       self%readDMX=.true.
             if (index(keyWD,'RDSAD').ne.0)      self%readSAD=.true.  ! READSAD would clash with READ
-            if (index(keyWD,'WRSAD').ne.0)      self%writeSAD=.true.
+            if (index(keyWD,'WRSAD').ne.0) then
+               self%writeSAD = .true.
+               self%readSAD = .false. ! switch off reading of SAD guess which was set to true by default
+            end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
