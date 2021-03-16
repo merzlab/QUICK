@@ -133,7 +133,6 @@ endif()
 if(MPI AND CUDA)
 	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
 	target_compile_definitions(libquick_mpi_cuda PRIVATE CUDA_MPIV)
-	remove_compile_definitions(libquick_mpi_cuda CUDA)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
 
 	remove_link_libraries(libquick_mpi_cuda octree_mpi xc)
