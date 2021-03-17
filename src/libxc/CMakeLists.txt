@@ -142,7 +142,7 @@ if(CUDA)
 	# note: this is not a GPU implementation of libxc, it's just
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
-	target_compile_definitions(xc_gpu PUBLIC CUDA)
+	target_compile_definitions(xc_gpu PRIVATE CUDA)
 	config_module_dirs(xc_gpu libxc/gpu)
 endif()
 
