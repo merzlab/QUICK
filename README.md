@@ -7,20 +7,26 @@
 <img width="299" height="107" src="./tools/logo.png">
 </p>
 
-An open source, GPU enabled, linear scaling *ab initio* and density functional
+An open source, GPU enabled, *ab initio* and density functional
 theory program developed by Götz lab at University of California San Diego and Merz
 lab at Michigan State University.
 
 Features
 --------
-* Single point Hartree-Fock calculations (closed shell only) 
-* Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available, closed shell only).
-* Gradient and geometry optimization calculations (LBFGS solver available)
+* Hartree-Fock energy calculations 
+* Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available).
+* Gradient and geometry optimization calculations 
 * Mulliken charge analysis
+* Supports QM/MM calculations with Amber21
+
+Limitations
+-----------
+* Supports only closed shell systems
+* Supports energy/gradient calculations with basis functions upto d  
 
 Installation
 ------------
-Supported platforms: Linux and OSX
+Supported platforms: Linux
 
 * [Installation Guide](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#installation-guide)
    1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#compatible-compilers-and-hardware)
@@ -41,7 +47,7 @@ Citation
 --------
 Please cite QUICK-21.03 as follows.
 
-Manathunga, M.; Chi, J.; Cruzeiro, V.W.D.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
+Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
 Brothers, E.; Götz, A.W.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021.
 
 License
