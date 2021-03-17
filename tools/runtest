@@ -265,7 +265,6 @@ print_test_info(){
     ene_psb3_libxc_hgga_631g)             testinfo="PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
     ene_wat2_mp2_631g)                    testinfo="Water-2 MP2 energy test: s and p basis functions"; ismp2='yes';;
     ene_wat2_mp2_631gss)                  testinfo="Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
-    grad_nacl_b3lyP_def2svp)              testinfo="Nacl: DFT gradient test: s, p and d basis functions, native B3LYP functional";;
     grad_psb3_b3lyp_631g)                 testinfo="PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
