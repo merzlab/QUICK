@@ -22,7 +22,7 @@ Features
 Limitations
 -----------
 * Supports only closed shell systems
-* Supports energy/gradient calculations with basis functions upto d  
+* Supports energy/gradient calculations with basis functions up to d  
 
 Installation
 ------------
