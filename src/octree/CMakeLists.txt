@@ -15,5 +15,5 @@ endif()
 if(CUDA)
 	# This GPU implementation works for both CUDA and CUDA MPI
 	copy_target(octree octree_gpu)
-	target_compile_definitions(octree_gpu PUBLIC CUDA)
+	target_compile_definitions(octree_gpu PRIVATE CUDA)
 endif()
