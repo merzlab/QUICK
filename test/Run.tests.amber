@@ -34,19 +34,21 @@ fi
 
 for i in `awk '{print $1}' $tfile`
 do
-  $DO_PARALLEL $TESTsander $i.in < /dev/null || error
-  if [ "${i:0:4}" != "opt_" ]; then
-    if [ $(grep "Begin Energy Calculation" $i.out | wc -l) -gt 0 ]; then
-      awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' $i.out > $i.out.ene
-      ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/$i.out.ene $i.out.ene
+  if [ "${i:0:4}" != "api_" ]; then
+    $DO_PARALLEL $TESTsander $i.in < /dev/null || error
+    if [ "${i:0:4}" != "opt_" ]; then
+      if [ $(grep "Begin Energy Calculation" $i.out | wc -l) -gt 0 ]; then
+        awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' $i.out > $i.out.ene
+        ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/$i.out.ene $i.out.ene
+      fi
+      if [ $(grep "Begin Gradient Calculation" $i.out | wc -l) -gt 0 ]; then
+        awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' $i.out > $i.out.grad
+        ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out.grad $i.out.grad
+      fi
     fi
-    if [ $(grep "Begin Gradient Calculation" $i.out | wc -l) -gt 0 ]; then
-      awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' $i.out > $i.out.grad
-      ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out.grad $i.out.grad
-    fi
+    ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
+    /bin/rm -f $i.dat
   fi
-  ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
-  /bin/rm -f $i.dat
 done
 
 exit 0
