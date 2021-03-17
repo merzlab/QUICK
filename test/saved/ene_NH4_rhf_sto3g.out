@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 14:58:56 2021
+| TASK STARTS ON: Wed Mar 17 12:09:29 2021
 | INPUT FILE :    ene_NH4_rhf_sto3g.in
 | OUTPUT FILE:    ene_NH4_rhf_sto3g.out
 | DATE FILE  :    ene_NH4_rhf_sto3g.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -61,6 +61,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  MAX SCF CYCLES =    200
@@ -73,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = STO-3G,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/STO-3G.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//STO-3G.BAS
 
  @ Finish reading job
 
@@ -129,12 +130,12 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -55.618754912      ------         0.002     1        0.00      0.00      0.00    0.1464E+01  0.2607E+00  0.8869E+00
-|  2    -55.848323707  0.229569E+00       0.002     2        0.00      0.00      0.00    0.8852E-01  0.4144E-01  0.1405E+00
-|  3    -55.866001782  0.176781E-01       0.002     3        0.00      0.00      0.00    0.2237E-01  0.9246E-02  0.4082E-01
-|  4    -55.867492855  0.149107E-02       0.002     4        0.00      0.00      0.00    0.1258E-02  0.6380E-03  0.4785E-02
-|  5    -55.867496988  0.413257E-05       0.002     5        0.00      0.00      0.00    0.1055E-03  0.7749E-04  0.4636E-03
-|  6    -55.867497047  0.584893E-07       0.002     6        0.00      0.00      0.00    0.3647E-06  0.1589E-06  0.1023E-05
+|  1    -55.618754912      ------         0.006     1        0.00      0.01      0.00    0.1464E+01  0.2607E+00  0.8869E+00
+|  2    -55.848323707  0.229569E+00       0.005     2        0.00      0.01      0.00    0.8852E-01  0.4144E-01  0.1405E+00
+|  3    -55.866001782  0.176781E-01       0.005     3        0.00      0.01      0.00    0.2237E-01  0.9246E-02  0.4082E-01
+|  4    -55.867492855  0.149107E-02       0.005     4        0.00      0.00      0.00    0.1258E-02  0.6380E-03  0.4785E-02
+|  5    -55.867496988  0.413257E-05       0.005     5        0.00      0.00      0.00    0.1055E-03  0.7749E-04  0.4636E-03
+|  6    -55.867497047  0.584892E-07       0.004     6        0.00      0.00      0.00    0.3647E-06  0.1589E-06  0.1023E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   6 CYLCES
 | MAX ERROR = 0.364723E-06   RMS CHANGE = 0.158942E-06   MAX CHANGE = 0.102275E-05
@@ -185,17 +186,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.211227000( 92.86%)
-| TOTAL SCF TIME      =     0.013960000(  6.14%)
-|       TOTAL OP TIME      =     0.013824000(  6.08%)
-|             TOTAL 1e TIME      =     0.000437000(  0.19%)
-|             TOTAL 2e TIME      =     0.012921000(  5.68%)
-|       TOTAL DII TIME      =     0.000115000(  0.05%)
-|             TOTAL DIAG TIME    =     0.000044000(  0.02%)
-| TOTAL TIME          =     0.227479000
+| INITIAL GUESS TIME  =     0.458126000( 88.58%)
+| TOTAL SCF TIME      =     0.032034000(  6.19%)
+|       TOTAL OP TIME      =     0.031536000(  6.10%)
+|             TOTAL 1e TIME      =     0.001154000(  0.22%)
+|             TOTAL 2e TIME      =     0.029163000(  5.64%)
+|       TOTAL DII TIME      =     0.000458000(  0.09%)
+|             TOTAL DIAG TIME    =     0.000308000(  0.06%)
+| TOTAL TIME          =     0.517204000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 14:58:57 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:09:29 2021
