@@ -61,7 +61,7 @@ Manathunga, M.; Miao, Y.; Mu, D.; Götz, A. W.; Merz, K. M.
 Parallel Implementation of Density Functional Theory Methods in the Quantum Interaction Computational Kernel Program. 
 [*J. Chem. Theory Comput.* 16, 4315-4326 (2020)](https://dx.doi.org/10.1021/acs.jctc.0c00632).
 
-and for all XC functionals except B3LYP:
+and in addition for any XC functional except B3LYP:
 
 Lehtola, S.; Steigemann, C.; Oliveira, M. J. T.; Marques, M. A. L.
 Recent developments in Libxc - A comprehensive library of functionals for density functional theory.
