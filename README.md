@@ -55,11 +55,17 @@ Please cite QUICK-21.03 as follows.
 Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
 Brothers, E.; Götz, A.W.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021.
 
-If you perform density functional theory calculations please also cite these publications:
+If you perform density functional theory calculations please also cite:
 
 Manathunga, M.; Miao, Y.; Mu, D.; Götz, A. W.; Merz, K. M.
 Parallel Implementation of Density Functional Theory Methods in the Quantum Interaction Computational Kernel Program. 
 [*J. Chem. Theory Comput.* 16, 4315-4326 (2020)](https://dx.doi.org/10.1021/acs.jctc.0c00632).
+
+and for all XC functionals except B3LYP:
+
+Lehtola, S.; Steigemann, C.; Oliveira, M. J. T.; Marques, M. A. L.
+Recent developments in Libxc - A comprehensive library of functionals for density functional theory.
+[*Software X* 7, 1 (2018)](http://dx.doi.org/10.1016/j.softx.2017.11.002)
 
 If you use the GPU version please also cite:
 
