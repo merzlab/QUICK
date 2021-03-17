@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 14:57:57 2021
+| TASK STARTS ON: Wed Mar 17 12:09:21 2021
 | INPUT FILE :    ene_CaCl2_rhf_sto3g.in
 | OUTPUT FILE:    ene_CaCl2_rhf_sto3g.out
 | DATE FILE  :    ene_CaCl2_rhf_sto3g.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -61,6 +61,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  MAX SCF CYCLES =    200
@@ -73,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = STO-3G,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/STO-3G.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//STO-3G.BAS
 
  @ Finish reading job
 
@@ -125,17 +126,17 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1  -1586.135310760      ------         0.067     1        0.00      0.07      0.00    0.8917E+01  0.6262E+00  0.7522E+01
-|  2  -1571.885183745  -.142501E+02       0.064     2        0.00      0.06      0.00    0.8489E-01  0.4658E-01  0.4887E+00
-|  3  -1571.926394436  0.412107E-01       0.064     3        0.00      0.06      0.00    0.8208E-02  0.8011E-02  0.7299E-01
-|  4  -1571.927233502  0.839066E-03       0.063     4        0.00      0.06      0.00    0.7045E-03  0.8131E-03  0.3862E-02
-|  5  -1571.927250910  0.174080E-04       0.063     5        0.00      0.06      0.00    0.1238E-03  0.1895E-03  0.1002E-02
-|  6  -1571.927251596  0.686338E-06       0.064     6        0.00      0.06      0.00    0.8923E-05  0.1259E-04  0.6271E-04
-|  7  -1571.927251599  0.283717E-08       0.063     7        0.00      0.06      0.00    0.1416E-05  0.1340E-05  0.6458E-05
-|  8  -1571.927251599  0.404725E-10       0.065     8        0.00      0.06      0.00    0.1062E-06  0.1004E-06  0.1019E-05
+|  1  -1586.135310760      ------         0.176     1        0.00      0.17      0.00    0.8917E+01  0.6262E+00  0.7522E+01
+|  2  -1571.885183745  -.142501E+02       0.155     2        0.00      0.15      0.00    0.8489E-01  0.4658E-01  0.4887E+00
+|  3  -1571.926394436  0.412107E-01       0.156     3        0.00      0.15      0.00    0.8208E-02  0.8011E-02  0.7299E-01
+|  4  -1571.927233502  0.839066E-03       0.156     4        0.00      0.15      0.00    0.7045E-03  0.8131E-03  0.3862E-02
+|  5  -1571.927250910  0.174080E-04       0.156     5        0.00      0.15      0.00    0.1238E-03  0.1895E-03  0.1002E-02
+|  6  -1571.927251596  0.686327E-06       0.153     6        0.00      0.15      0.00    0.8923E-05  0.1258E-04  0.6266E-04
+|  7  -1571.927251599  0.283785E-08       0.128     7        0.00      0.13      0.00    0.1416E-05  0.1340E-05  0.6467E-05
+|  8  -1571.927251599  0.388809E-10       0.128     8        0.00      0.13      0.00    0.9177E-07  0.7993E-07  0.5621E-06
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   8 CYLCES
-| MAX ERROR = 0.106202E-06   RMS CHANGE = 0.100416E-06   MAX CHANGE = 0.101880E-05
+| MAX ERROR = 0.917743E-07   RMS CHANGE = 0.799263E-07   MAX CHANGE = 0.562127E-06
 | -----------------------------------------------
  ELECTRONIC ENERGY    = -1968.569622947
  CORE_CORE REPULSION  =   396.642371348
@@ -167,11 +168,11 @@
    CA             0.2231            -0.6771
    CL            -0.1116             0.3385
    CL            -0.1116             0.3385
-   TOTAL         0.0000             0.0000
+   TOTAL        -0.0000            -0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    0.0000    0.0000    0.0000    0.0000
+    0.0000   -0.0000    0.0000    0.0000
 
  @ End Charge and Dipole Calculation
 
@@ -179,17 +180,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     3.033280000( 85.38%)
-| TOTAL SCF TIME      =     0.516443000( 14.54%)
-|       TOTAL OP TIME      =     0.514214000( 14.47%)
-|             TOTAL 1e TIME      =     0.003301000(  0.09%)
-|             TOTAL 2e TIME      =     0.507462000( 14.28%)
-|       TOTAL DII TIME      =     0.002157000(  0.06%)
-|             TOTAL DIAG TIME    =     0.000781000(  0.02%)
-| TOTAL TIME          =     3.552560000
+| INITIAL GUESS TIME  =     0.278622000( 17.65%)
+| TOTAL SCF TIME      =     1.266485000( 80.22%)
+|       TOTAL OP TIME      =     1.244105000( 78.80%)
+|             TOTAL 1e TIME      =     0.056783000(  3.60%)
+|             TOTAL 2e TIME      =     1.127416000( 71.41%)
+|       TOTAL DII TIME      =     0.020377000(  1.29%)
+|             TOTAL DIAG TIME    =     0.017547000(  1.11%)
+| TOTAL TIME          =     1.578743000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  3.6 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  1.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 14:58:00 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:09:22 2021

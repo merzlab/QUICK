@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 15:00:52 2021
+| TASK STARTS ON: Wed Mar 17 12:09:49 2021
 | INPUT FILE :    ene_H2O_rhf_631g.in
 | OUTPUT FILE:    ene_H2O_rhf_631g.out
 | DATE FILE  :    ene_H2O_rhf_631g.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -61,6 +61,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  MAX SCF CYCLES =    200
@@ -73,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/6-31G.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//6-31G.BAS
 
  @ Finish reading job
 
@@ -125,16 +126,16 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -75.808437973      ------         0.003     1        0.00      0.00      0.00    0.1343E+01  0.1008E+00  0.4094E+00
-|  2    -75.917467876  0.109030E+00       0.003     2        0.00      0.00      0.00    0.2415E+00  0.3065E-01  0.1744E+00
-|  3    -75.951031454  0.335636E-01       0.003     3        0.00      0.00      0.00    0.1156E+00  0.1151E-01  0.6450E-01
-|  4    -75.960837067  0.980561E-02       0.003     4        0.00      0.00      0.00    0.2453E-01  0.5312E-02  0.2391E-01
-|  5    -75.961942282  0.110521E-02       0.003     5        0.00      0.00      0.00    0.5424E-02  0.2508E-02  0.1132E-01
-|  6    -75.962072440  0.130159E-03       0.003     6        0.00      0.00      0.00    0.1305E-02  0.5514E-03  0.2882E-02
-|  7    -75.962078501  0.606071E-05       0.003     7        0.00      0.00      0.00    0.3358E-03  0.1860E-03  0.9400E-03
-|  8    -75.962079011  0.509650E-06       0.003     8        0.00      0.00      0.00    0.2455E-04  0.1404E-04  0.4362E-04
-|  9    -75.962079015  0.448431E-08       0.003     9        0.00      0.00      0.00    0.6615E-05  0.3514E-05  0.9927E-05
-| 10    -75.962079015  0.283606E-09       0.003    10        0.00      0.00      0.00    0.1458E-05  0.7273E-06  0.2933E-05
+|  1    -75.808437973      ------         0.059     1        0.00      0.06      0.00    0.1343E+01  0.1008E+00  0.4094E+00
+|  2    -75.917467876  0.109030E+00       0.056     2        0.00      0.05      0.00    0.2415E+00  0.3065E-01  0.1744E+00
+|  3    -75.951031454  0.335636E-01       0.055     3        0.00      0.05      0.00    0.1156E+00  0.1151E-01  0.6450E-01
+|  4    -75.960837067  0.980561E-02       0.055     4        0.00      0.05      0.00    0.2453E-01  0.5312E-02  0.2391E-01
+|  5    -75.961942282  0.110521E-02       0.055     5        0.00      0.05      0.00    0.5424E-02  0.2508E-02  0.1132E-01
+|  6    -75.962072440  0.130159E-03       0.053     6        0.00      0.05      0.00    0.1305E-02  0.5514E-03  0.2882E-02
+|  7    -75.962078501  0.606071E-05       0.050     7        0.00      0.05      0.00    0.3358E-03  0.1860E-03  0.9400E-03
+|  8    -75.962079011  0.509650E-06       0.051     8        0.00      0.05      0.00    0.2455E-04  0.1404E-04  0.4362E-04
+|  9    -75.962079015  0.448433E-08       0.049     9        0.00      0.05      0.00    0.6615E-05  0.3514E-05  0.9927E-05
+| 10    -75.962079015  0.283606E-09       0.048    10        0.00      0.05      0.00    0.1458E-05  0.7273E-06  0.2933E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
 | MAX ERROR = 0.145781E-05   RMS CHANGE = 0.727281E-06   MAX CHANGE = 0.293291E-05
@@ -169,7 +170,7 @@
    O             -0.8018            -0.6160
    H              0.4009             0.3080
    H              0.4009             0.3080
-   TOTAL         0.0000             0.0000
+   TOTAL        -0.0000            -0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -181,17 +182,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.507522000( 93.87%)
-| TOTAL SCF TIME      =     0.029250000(  5.41%)
-|       TOTAL OP TIME      =     0.028833000(  5.33%)
-|             TOTAL 1e TIME      =     0.000430000(  0.08%)
-|             TOTAL 2e TIME      =     0.027908000(  5.16%)
-|       TOTAL DII TIME      =     0.000372000(  0.07%)
-|             TOTAL DIAG TIME    =     0.000157000(  0.03%)
-| TOTAL TIME          =     0.540675000
+| INITIAL GUESS TIME  =     0.346848000( 35.75%)
+| TOTAL SCF TIME      =     0.550861000( 56.78%)
+|       TOTAL OP TIME      =     0.534480000( 55.09%)
+|             TOTAL 1e TIME      =     0.018909000(  1.95%)
+|             TOTAL 2e TIME      =     0.492407000( 50.75%)
+|       TOTAL DII TIME      =     0.013900000(  1.43%)
+|             TOTAL DIAG TIME    =     0.011437000(  1.18%)
+| TOTAL TIME          =     0.970249000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  1.0 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 15:00:52 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:09:49 2021
