@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 15:20:09 2021
+| TASK STARTS ON: Wed Mar 17 12:12:57 2021
 | INPUT FILE :    grad_BeH2_b3lyp_def2svpd.in
 | OUTPUT FILE:    grad_BeH2_b3lyp_def2svpd.out
 | DATE FILE  :    grad_BeH2_b3lyp_def2svpd.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -62,6 +62,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  STANDARD GRID = SG1
@@ -77,7 +78,7 @@
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = DEF2-SVPD,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/DEF2-SVPD.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//DEF2-SVPD.BAS
 
  @ Finish reading job
 
@@ -141,17 +142,17 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -15.791568862      ------         0.035     1        0.00      0.04      0.00    0.6729E+00  0.7508E-01  0.4978E+00
-|  2    -15.848950685  0.573818E-01       0.045     2        0.00      0.04      0.00    0.7678E-01  0.2341E-01  0.2855E+00
-|  3    -15.862953387  0.140027E-01       0.044     3        0.00      0.04      0.00    0.1449E-01  0.2939E-02  0.2113E-01
-|  4    -15.863511433  0.558046E-03       0.045     4        0.00      0.04      0.00    0.7703E-03  0.4981E-03  0.8393E-02
-|  5    -15.863513078  0.164487E-05       0.045     5        0.00      0.04      0.00    0.1698E-03  0.3881E-04  0.3887E-03
-|  6    -15.863513118  0.402605E-07       0.045     6        0.00      0.04      0.00    0.2995E-05  0.1056E-05  0.1028E-04
+|  1    -15.791568862      ------         0.128     1        0.00      0.13      0.00    0.6729E+00  0.7508E-01  0.4978E+00
+|  2    -15.848950685  0.573818E-01       0.127     2        0.00      0.12      0.00    0.7678E-01  0.2341E-01  0.2855E+00
+|  3    -15.862953387  0.140027E-01       0.127     3        0.00      0.12      0.00    0.1449E-01  0.2939E-02  0.2113E-01
+|  4    -15.863511433  0.558046E-03       0.128     4        0.00      0.12      0.00    0.7703E-03  0.4981E-03  0.8393E-02
+|  5    -15.863513078  0.164487E-05       0.128     5        0.00      0.12      0.00    0.1698E-03  0.3881E-04  0.3887E-03
+|  6    -15.863513118  0.402605E-07       0.127     6        0.00      0.12      0.00    0.2995E-05  0.1056E-05  0.1028E-04
 | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-|  7    -15.863513140  0.220089E-07       0.045     7        0.00      0.04      0.00    0.9642E-07  0.2351E-06  0.4277E-05
+|  7    -15.863513140  0.220089E-07       0.128     7        0.00      0.13      0.00    0.9642E-07  0.2351E-06  0.4277E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   7 CYLCES
-| MAX ERROR = 0.964186E-07   RMS CHANGE = 0.235133E-06   MAX CHANGE = 0.427740E-05
+| MAX ERROR = 0.964176E-07   RMS CHANGE = 0.235133E-06   MAX CHANGE = 0.427740E-05
 | -----------------------------------------------
  ALPHA ELECTRON DENSITY    =    3.0000299254
  BETA ELECTRON DENSITY     =    3.0000299254
@@ -205,7 +206,7 @@
    BE            -0.2752             0.4543
    H              0.1376            -0.2272
    H              0.1376            -0.2272
-   TOTAL         0.0000             0.0000
+   TOTAL        -0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -217,23 +218,23 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.448507000( 74.34%)
-| DFT GRID OPERATIONS =     0.024548000(  1.26%)
-| TOTAL SCF TIME      =     0.304501000( 15.63%)
-|       TOTAL OP TIME      =     0.303165000( 15.56%)
-|             TOTAL 1e TIME      =     0.000886000(  0.05%)
-|             TOTAL 2e TIME      =     0.071626000(  3.68%)
-|             TOTAL EXC TIME     =     0.229656000( 11.79%)
-|       TOTAL DII TIME      =     0.001293000(  0.07%)
-|             TOTAL DIAG TIME    =     0.000541000(  0.03%)
-| TOTAL GRADIENT TIME      =     0.165451000(  8.49%)
-|       TOTAL 1e GRADIENT TIME      =     0.004973000( 0.28%)
-|       TOTAL 2e GRADIENT TIME      =     0.067491000( 3.46%)
-|       TOTAL EXC GRADIENT TIME     =     0.092525000(  4.75%)
-| TOTAL TIME          =     1.948565000
+| INITIAL GUESS TIME  =     1.045439000( 46.17%)
+| DFT GRID OPERATIONS =     0.025443000(  1.12%)
+| TOTAL SCF TIME      =     0.931298000( 41.13%)
+|       TOTAL OP TIME      =     0.911571000( 40.26%)
+|             TOTAL 1e TIME      =     0.037643000(  1.66%)
+|             TOTAL 2e TIME      =     0.447395000( 19.76%)
+|             TOTAL EXC TIME     =     0.385605000( 17.03%)
+|       TOTAL DII TIME      =     0.017810000(  0.79%)
+|             TOTAL DIAG TIME    =     0.015592000(  0.69%)
+| TOTAL GRADIENT TIME      =     0.262543000( 11.60%)
+|       TOTAL 1e GRADIENT TIME      =     0.059888000( 2.68%)
+|       TOTAL 2e GRADIENT TIME      =     0.096298000( 4.25%)
+|       TOTAL EXC GRADIENT TIME     =     0.105260000(  4.65%)
+| TOTAL TIME          =     2.264148000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  1.9 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  2.3 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 15:20:11 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:12:58 2021

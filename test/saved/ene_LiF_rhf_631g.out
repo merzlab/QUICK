@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 15:00:52 2021
+| TASK STARTS ON: Wed Mar 17 12:09:49 2021
 | INPUT FILE :    ene_LiF_rhf_631g.in
 | OUTPUT FILE:    ene_LiF_rhf_631g.out
 | DATE FILE  :    ene_LiF_rhf_631g.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -61,6 +61,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  MAX SCF CYCLES =    200
@@ -73,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/6-31G.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//6-31G.BAS
 
  @ Finish reading job
 
@@ -123,15 +124,15 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -106.603055181      ------         0.007     1        0.00      0.01      0.00    0.6135E+00  0.5196E-01  0.4172E+00
-|  2   -106.839616427  0.236561E+00       0.006     2        0.00      0.01      0.00    0.2862E+00  0.2355E-01  0.1349E+00
-|  3   -106.903115423  0.634990E-01       0.006     3        0.00      0.01      0.00    0.5250E-01  0.8926E-02  0.3991E-01
-|  4   -106.907026631  0.391121E-02       0.006     4        0.00      0.01      0.00    0.1884E-01  0.4351E-02  0.1847E-01
-|  5   -106.907770327  0.743696E-03       0.006     5        0.00      0.01      0.00    0.3231E-02  0.8215E-03  0.3345E-02
-|  6   -106.907813336  0.430091E-04       0.006     6        0.00      0.01      0.00    0.8158E-03  0.2307E-03  0.1299E-02
-|  7   -106.907815905  0.256856E-05       0.006     7        0.00      0.01      0.00    0.7703E-04  0.2660E-04  0.1487E-03
-|  8   -106.907815932  0.272417E-07       0.006     8        0.00      0.01      0.00    0.7892E-05  0.3586E-05  0.2107E-04
-|  9   -106.907815933  0.411655E-09       0.006     9        0.00      0.01      0.00    0.2146E-05  0.7516E-06  0.3794E-05
+|  1   -106.603055181      ------         0.068     1        0.00      0.07      0.00    0.6135E+00  0.5196E-01  0.4172E+00
+|  2   -106.839616427  0.236561E+00       0.063     2        0.00      0.06      0.00    0.2862E+00  0.2355E-01  0.1349E+00
+|  3   -106.903115423  0.634990E-01       0.061     3        0.00      0.06      0.00    0.5250E-01  0.8926E-02  0.3991E-01
+|  4   -106.907026631  0.391121E-02       0.057     4        0.00      0.06      0.00    0.1884E-01  0.4351E-02  0.1847E-01
+|  5   -106.907770327  0.743696E-03       0.056     5        0.00      0.05      0.00    0.3231E-02  0.8215E-03  0.3345E-02
+|  6   -106.907813336  0.430091E-04       0.055     6        0.00      0.05      0.00    0.8158E-03  0.2307E-03  0.1299E-02
+|  7   -106.907815905  0.256856E-05       0.054     7        0.00      0.05      0.00    0.7703E-04  0.2660E-04  0.1487E-03
+|  8   -106.907815932  0.272419E-07       0.054     8        0.00      0.05      0.00    0.7892E-05  0.3586E-05  0.2107E-04
+|  9   -106.907815933  0.411569E-09       0.052     9        0.00      0.05      0.00    0.2146E-05  0.7516E-06  0.3794E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYLCES
 | MAX ERROR = 0.214614E-05   RMS CHANGE = 0.751582E-06   MAX CHANGE = 0.379436E-05
@@ -176,17 +177,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.695355000( 91.95%)
-| TOTAL SCF TIME      =     0.057896000(  7.66%)
-|       TOTAL OP TIME      =     0.057247000(  7.57%)
-|             TOTAL 1e TIME      =     0.000772000(  0.10%)
-|             TOTAL 2e TIME      =     0.055636000(  7.36%)
-|       TOTAL DII TIME      =     0.000614000(  0.08%)
-|             TOTAL DIAG TIME    =     0.000257000(  0.03%)
-| TOTAL TIME          =     0.756251000
+| INITIAL GUESS TIME  =     0.274736000( 31.73%)
+| TOTAL SCF TIME      =     0.555266000( 64.12%)
+|       TOTAL OP TIME      =     0.538574000( 62.19%)
+|             TOTAL 1e TIME      =     0.033449000(  3.86%)
+|             TOTAL 2e TIME      =     0.467798000( 54.02%)
+|       TOTAL DII TIME      =     0.014545000(  1.68%)
+|             TOTAL DIAG TIME    =     0.011861000(  1.37%)
+| TOTAL TIME          =     0.865955000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.8 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.9 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 15:00:53 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:09:50 2021
