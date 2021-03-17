@@ -46,11 +46,11 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar  9 15:14:52 2021
+| TASK STARTS ON: Wed Mar 17 12:11:56 2021
 | INPUT FILE :    grad_NH4_b3lyp_def2sv_p.in
 | OUTPUT FILE:    grad_NH4_b3lyp_def2sv_p.out
 | DATE FILE  :    grad_NH4_b3lyp_def2sv_p.dat
-| BASIS SET PATH: /home/mmanathunga/fix109/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -62,6 +62,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  STANDARD GRID = SG1
@@ -77,7 +78,7 @@
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = DEF2-SV(P),  TYPE = CARTESIAN
-| BASIS FILE = /home/mmanathunga/fix109/basis/DEF2-SV_P.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//DEF2-SV_P.BAS
 
  @ Finish reading job
 
@@ -145,12 +146,12 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -57.144619154      ------         0.057     1        0.00      0.06      0.00    0.2313E+01  0.7198E-01  0.3512E+00
-|  2    -56.827160218  -.317459E+00       0.059     2        0.00      0.06      0.00    0.7297E-01  0.1187E-01  0.1153E+00
-|  3    -56.824791874  -.236834E-02       0.059     3        0.00      0.06      0.00    0.9263E-01  0.6677E-02  0.6186E-01
-|  4    -56.836340414  0.115485E-01       0.059     4        0.00      0.06      0.00    0.7878E-02  0.5347E-03  0.4572E-02
-|  5    -56.836422772  0.823575E-04       0.059     5        0.00      0.06      0.00    0.2186E-03  0.1423E-04  0.1566E-03
-|  6    -56.836422835  0.635782E-07       0.059     6        0.00      0.06      0.00    0.2508E-05  0.3291E-06  0.2924E-05
+|  1    -57.144619154      ------         0.164     1        0.00      0.16      0.00    0.2313E+01  0.7198E-01  0.3512E+00
+|  2    -56.827160218  -.317459E+00       0.147     2        0.00      0.14      0.00    0.7297E-01  0.1187E-01  0.1153E+00
+|  3    -56.824791874  -.236834E-02       0.150     3        0.00      0.15      0.00    0.9263E-01  0.6677E-02  0.6186E-01
+|  4    -56.836340414  0.115485E-01       0.150     4        0.00      0.15      0.00    0.7878E-02  0.5347E-03  0.4572E-02
+|  5    -56.836422772  0.823575E-04       0.150     5        0.00      0.15      0.00    0.2186E-03  0.1423E-04  0.1566E-03
+|  6    -56.836422835  0.635783E-07       0.142     6        0.00      0.14      0.00    0.2508E-05  0.3291E-06  0.2924E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   6 CYLCES
 | MAX ERROR = 0.250761E-05   RMS CHANGE = 0.329129E-06   MAX CHANGE = 0.292365E-05
@@ -229,23 +230,23 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.430237000( 69.64%)
-| DFT GRID OPERATIONS =     0.037122000(  1.81%)
-| TOTAL SCF TIME      =     0.354656000( 17.27%)
-|       TOTAL OP TIME      =     0.353899000( 17.23%)
-|             TOTAL 1e TIME      =     0.000935000(  0.05%)
-|             TOTAL 2e TIME      =     0.071002000(  3.46%)
-|             TOTAL EXC TIME     =     0.280967000( 13.68%)
-|       TOTAL DII TIME      =     0.000709000(  0.03%)
-|             TOTAL DIAG TIME    =     0.000297000(  0.01%)
-| TOTAL GRADIENT TIME      =     0.225633000( 10.99%)
-|       TOTAL 1e GRADIENT TIME      =     0.003415000( 0.20%)
-|       TOTAL 2e GRADIENT TIME      =     0.053384000( 2.60%)
-|       TOTAL EXC GRADIENT TIME     =     0.168031000(  8.18%)
-| TOTAL TIME          =     2.053795000
+| INITIAL GUESS TIME  =     0.284470000( 17.90%)
+| DFT GRID OPERATIONS =     0.052690000(  3.32%)
+| TOTAL SCF TIME      =     0.942075000( 59.29%)
+|       TOTAL OP TIME      =     0.931349000( 58.61%)
+|             TOTAL 1e TIME      =     0.039568000(  2.49%)
+|             TOTAL 2e TIME      =     0.393750000( 24.78%)
+|             TOTAL EXC TIME     =     0.455842000( 28.69%)
+|       TOTAL DII TIME      =     0.009423000(  0.59%)
+|             TOTAL DIAG TIME    =     0.007787000(  0.49%)
+| TOTAL GRADIENT TIME      =     0.308803000( 19.43%)
+|       TOTAL 1e GRADIENT TIME      =     0.057589000( 3.69%)
+|       TOTAL 2e GRADIENT TIME      =     0.063466000( 3.99%)
+|       TOTAL EXC GRADIENT TIME     =     0.186487000( 11.74%)
+| TOTAL TIME          =     1.589047000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.1 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  1.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  9 15:14:54 2021
+| Normal Termination. Task Finished on: Wed Mar 17 12:11:57 2021
