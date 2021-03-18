@@ -389,7 +389,7 @@ subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
   ! set number of external atoms in quick_molspec
   quick_molspec%nextatom  = quick_api%nxt_ptchg
 
-  if(quick_api%nxt_ptchg > 0) then
+  if(quick_api%nxt_ptchg .gt. 0) then
     call allocate_point_charge(.false., ierr)
     quick_api%ptchg_crd     = ptchg_crd
   endif
@@ -399,7 +399,7 @@ subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
   ! send back total energy and charges
   energy = quick_api%tot_ene
 
-  if(quick_api%nxt_ptchg > 0) call deallocate_point_charge(.false., ierr)
+  if(quick_api%nxt_ptchg .gt. 0) call deallocate_point_charge(.false., ierr)
 
 end subroutine get_quick_energy
 
@@ -427,7 +427,7 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   ! set number of external atoms in quick_molspec
   quick_molspec%nextatom  = quick_api%nxt_ptchg
 
-  if(quick_api%nxt_ptchg>0) then
+  if(quick_api%nxt_ptchg .gt. 0) then
     call allocate_point_charge(.true., ierr)
     quick_api%ptchg_crd = ptchg_crd
     quick_api%ptchg_grad = ptchg_grad
@@ -439,7 +439,7 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   energy     = quick_api%tot_ene
   gradients     = quick_api%gradient
 
-  if(quick_api%nxt_ptchg>0) then
+  if(quick_api%nxt_ptchg .gt. 0) then
     ptchg_grad = quick_api%ptchg_grad
     call deallocate_point_charge(.true., ierr)
   endif
@@ -565,7 +565,7 @@ subroutine run_quick(self,ierr)
       enddo
     enddo
 
-    if (quick_method%extCharges .and. self%nxt_ptchg>0) then
+    if (quick_method%extCharges .and. self%nxt_ptchg .gt. 0) then
       k=1
       do i=1,self%nxt_ptchg
         do j=1,3
@@ -649,7 +649,7 @@ subroutine set_quick_molspecs(self,ierr)
   quick_molspec%xyz => xyz
 
   ! save the external point charges and coordinates
-  if(self%nxt_ptchg>0) then
+  if(self%nxt_ptchg .gt. 0) then
     do i=1, self%nxt_ptchg
       do j=1,3
         quick_molspec%extxyz(j,i) = self%ptchg_crd(j,i) * A_TO_BOHRS
