@@ -329,18 +329,21 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
 end subroutine get_atom_types
 
 ! returns quick qm energy
-subroutine get_quick_energy(coords, ptchg_crd, energy, ierr)
+subroutine get_quick_energy(coords, ptchg_crd, nxt_ptchg, energy, ierr)
 
   implicit none
-
+  
+  integer, intent(in)           :: nxt_ptchg
   double precision, intent(in)  :: coords(3,quick_api%natoms)
-  double precision, intent(in)  :: ptchg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)  :: ptchg_crd(4,nxt_ptchg)
   double precision, intent(out) :: energy
   integer, intent(out) :: ierr
   ierr=0
 
   ! assign passed parameter values into quick_api struct
+  api%nxt_ptchg = nxt_ptchg
   quick_api%coords         = coords
+
   quick_api%ptchg_crd     = ptchg_crd
 
   call run_quick(quick_api,ierr)
@@ -352,22 +355,25 @@ end subroutine get_quick_energy
 
 
 ! calculates and returns energy, gradients and point charge gradients
-subroutine get_quick_energy_gradients(coords, ptchg_crd, &
+subroutine get_quick_energy_gradients(coords, ptchg_crd, nxt_ptchg,&
            energy, gradients, ptchg_grad, ierr)
 
   implicit none
 
+  integer, intent(in)             :: nxt_ptchg 
   double precision, intent(in)    :: coords(3,quick_api%natoms)
-  double precision, intent(in)    :: ptchg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)    :: ptchg_crd(4,nxt_ptchg)
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
-  double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
+  double precision, intent(inout) :: ptchg_grad(3,nxt_ptchg)
   integer, intent(out) :: ierr
   ierr=0
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
-  if(quick_api%nxt_ptchg>0) then
+  api%nxt_ptchg = nxt_ptchg
+
+  if(api%nxt_ptchg>0) then
     quick_api%ptchg_crd = ptchg_crd
     quick_api%ptchg_grad = ptchg_grad
   endif
