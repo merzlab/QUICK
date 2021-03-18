@@ -146,7 +146,7 @@ contains
       enddo
       ! if exist external charge
 
-      allocate_quick_extcharge(self,ierr)      
+      call allocate_quick_extcharge(self,ierr)      
 
       !if (self%nextatom.gt.0) then
       !   if (.not. allocated(self%extxyz)) allocate(self%extxyz(3, self%nextatom))
