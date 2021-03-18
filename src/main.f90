@@ -137,7 +137,7 @@
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
     !allocate essential variables
-    call alloc(quick_molspec,ierr)
+    call alloc(quick_molspec,.false.,ierr)
     if (quick_method%MFCC) call allocate_MFCC()
    
     call cpu_time(timer_end%TInitialize)
@@ -161,7 +161,7 @@
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
-    SAFE_CALL(getMol(ierr))
+    SAFE_CALL(getMol(.false.,ierr))
 
 #if defined CUDA || defined CUDA_MPIV
     if(.not.quick_method%opt)then

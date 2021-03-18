@@ -14,7 +14,7 @@
 
 #include "util.fh"
 
-subroutine getmolsad(ierr)
+subroutine getmolsad(api,ierr)
    use allmod
    use quick_files_module
    use quick_exception_module
@@ -30,6 +30,7 @@ subroutine getmolsad(ierr)
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
    integer :: ierr
+   logical, intent(in) :: api
 
    ! first save some important value
    quick_method_save=quick_method
@@ -113,11 +114,11 @@ subroutine getmolsad(ierr)
 
          ! if quick is called through api multiple times, this is necessary
          if(wrtStep .gt. 1) then
-           call dealloc(quick_qm_struct)
+           call dealloc(api,quick_qm_struct)
          endif
 
          quick_qm_struct%nbasis => nbasis
-         call alloc(quick_qm_struct)
+         call alloc(api,quick_qm_struct)
          call init(quick_qm_struct)
 
          ! this following subroutine is as same as normal basis set normlization
@@ -188,7 +189,7 @@ subroutine getmolsad(ierr)
          endif
 
          call deallocate_calculated
-         call dealloc(quick_qm_struct)
+         call dealloc(api,quick_qm_struct)
       enddo
       call PrtAct(ioutfile,"Finish SAD initial guess")
    endif
