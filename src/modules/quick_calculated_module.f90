@@ -217,10 +217,10 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
-         if (quick_method%extCharges) then
-            if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
-         endif
       endif
+
+      ! allocate memory for point charge gradient vector
+      call allocate_quick_ptchg_grad(self)
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
@@ -250,6 +250,23 @@ contains
       endif
 
    end subroutine
+
+   
+   subroutine allocate_quick_ptchg_grad(self)
+      use quick_method_module,only: quick_method
+      use quick_molspec_module,only: quick_molspec
+      implicit none
+
+      type (quick_qm_struct_type), intent(inout) :: self
+
+      if (quick_method%grad) then
+         if (quick_method%extCharges) then
+            if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
+         endif
+      endif
+
+   end subroutine allocate_quick_ptchg_grad
+
 
    !--------------
    ! subroutine to write data to dat file
@@ -341,10 +358,10 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if (allocated(self%gradient)) deallocate(self%gradient)
-         if (quick_method%extCharges) then
-            if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
-         endif
       endif
+
+      ! deallocate memory of point charge gradient vector
+      call deallocate_quick_ptchg_grad(self)
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
@@ -369,6 +386,21 @@ contains
       endif
 
    end subroutine
+
+   subroutine deallocate_quick_ptchg_grad(self)
+     use quick_method_module,only: quick_method
+     implicit none
+
+     type (quick_qm_struct_type), intent(inout) :: self
+
+     if (quick_method%grad) then
+        if (quick_method%extCharges) then
+           if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
+        endif
+     endif     
+
+   end subroutine deallocate_quick_ptchg_grad
+
 
 #ifdef MPIV
    !-------------------
