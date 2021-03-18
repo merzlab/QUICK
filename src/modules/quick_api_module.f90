@@ -118,12 +118,12 @@ contains
 
 
 ! allocates memory for a new quick_api_type variable
-subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
+subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer, intent(in)   :: natoms, nxt_ptchg
+  integer, intent(in)   :: natoms
   integer, intent(in)   :: atomic_numbers(natoms)
   integer, intent(inout)  :: ierr
   integer :: atm_type_id(natoms)
@@ -137,16 +137,9 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
   if ( .not. allocated(self%gradient))          allocate(self%gradient(3,natoms), stat=ierr)
 
-  ! allocate memory only if external charges exist
-  if(nxt_ptchg>0) then
-    if ( .not. allocated(self%ptchg_crd))     allocate(self%ptchg_crd(4,nxt_ptchg), stat=ierr)
-    if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
-  endif
-
  ! save values in the quick_api struct
   self%natoms         = natoms
   self%natm_type      = natm_type
-  self%nxt_ptchg      = nxt_ptchg
   self%atomic_numbers = atomic_numbers
 
   do i=1, natm_type
@@ -155,8 +148,6 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   ! set result vectors and matrices to zero
   self%gradient  = 0.0d0
-
-  if(nxt_ptchg>0) self%ptchg_grad = 0.0d0
 
 end subroutine new_quick_api_type
 
@@ -183,7 +174,7 @@ end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -197,7 +188,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   character(len=80), intent(in)  :: fqin
   character(len=200), intent(in) :: keywd
-  integer, intent(in) :: natoms, nxt_ptchg
+  integer, intent(in) :: natoms
   integer, intent(in) :: atomic_numbers(natoms)
   integer, intent(out) :: ierr
   integer :: flen
@@ -205,7 +196,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   
 
   ! allocate memory for quick_api_type
-  call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
+  call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
@@ -291,7 +282,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   ! into quick_molspec
   quick_molspec%natom     = quick_api%natoms
   quick_molspec%iAtomType = quick_api%natm_type
-  quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   ! allocate memory for coordinates and charges in molspec
   SAFE_CALL(alloc(quick_molspec,.false.,ierr))
