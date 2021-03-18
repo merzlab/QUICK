@@ -381,15 +381,20 @@ subroutine get_quick_energy(coords, ptchg_crd, nxt_ptchg, energy, ierr)
   ierr=0
 
   ! assign passed parameter values into quick_api struct
-  api%nxt_ptchg = nxt_ptchg
+  quick_api%nxt_ptchg = nxt_ptchg
   quick_api%coords         = coords
 
-  quick_api%ptchg_crd     = ptchg_crd
+  if(quick_api%nxt_ptchg > 0) then
+    call allocate_point_charge(.false., ierr)
+    quick_api%ptchg_crd     = ptchg_crd
+  endif
 
   call run_quick(quick_api,ierr)
 
   ! send back total energy and charges
   energy = quick_api%tot_ene
+
+  if(quick_api%nxt_ptchg > 0) call deallocate_point_charge(.false., ierr)
 
 end subroutine get_quick_energy
 
@@ -411,9 +416,10 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, nxt_ptchg,&
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
-  api%nxt_ptchg = nxt_ptchg
+  quick_api%nxt_ptchg = nxt_ptchg
 
-  if(api%nxt_ptchg>0) then
+  if(quick_api%nxt_ptchg>0) then
+    call allocate_point_charge(.true., ierr)
     quick_api%ptchg_crd = ptchg_crd
     quick_api%ptchg_grad = ptchg_grad
   endif
@@ -424,7 +430,10 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, nxt_ptchg,&
   energy     = quick_api%tot_ene
   gradients     = quick_api%gradient
 
-  if(quick_api%nxt_ptchg>0) ptchg_grad = quick_api%ptchg_grad
+  if(quick_api%nxt_ptchg>0) then
+    ptchg_grad = quick_api%ptchg_grad
+    call deallocate_point_charge(.true., ierr)
+  endif
 
 end subroutine get_quick_energy_gradients
 
