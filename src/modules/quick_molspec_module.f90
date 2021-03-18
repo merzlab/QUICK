@@ -220,12 +220,29 @@ contains
       if (allocated(self%chg)) deallocate(self%chg)
 
       ! if exist external charge
+      !if (self%nextatom.gt.0) then
+      !   if (allocated(self%extxyz)) deallocate(self%extxyz)
+      !   if (allocated(self%extchg)) deallocate(self%extchg)
+      !endif
+
+      call deallocate_quick_extcharge(self,ierr)
+
+   end subroutine deallocate_quick_molspec
+
+   subroutine deallocate_quick_extcharge(self,ierr)
+      use quick_exception_module
+      implicit none
+
+      type (quick_molspec_type), intent(inout) :: self
+      integer, intent(inout) :: ierr
+
+      ! if exist external charge
       if (self%nextatom.gt.0) then
          if (allocated(self%extxyz)) deallocate(self%extxyz)
          if (allocated(self%extchg)) deallocate(self%extchg)
       endif
 
-   end subroutine deallocate_quick_molspec
+   end subroutine deallocate_quick_extcharge
 
 #ifdef MPIV
    !-------------------
