@@ -369,7 +369,7 @@ subroutine deallocate_point_charge(isgrad,ierr)
 end subroutine deallocate_point_charge
 
 ! returns quick qm energy
-subroutine get_quick_energy(coords, ptchg_crd, nxt_ptchg, energy, ierr)
+subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
   implicit none
   
@@ -400,7 +400,7 @@ end subroutine get_quick_energy
 
 
 ! calculates and returns energy, gradients and point charge gradients
-subroutine get_quick_energy_gradients(coords, ptchg_crd, nxt_ptchg,&
+subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
 
   implicit none
