@@ -122,7 +122,7 @@ subroutine quick_exit(io, ierr)
       call flush(io)
    end if
 
-   call finalize(io,ierr,1)
+   call finalize(io,.false.,ierr,1)
 
 #ifdef MPIV
    if (ierr /= 0) then
