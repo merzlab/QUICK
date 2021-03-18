@@ -328,6 +328,46 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
 
 end subroutine get_atom_types
 
+! allocate memory for point charges and gradients
+subroutine allocate_point_charge(isgrad,ierr)
+
+  use quick_molspec_module
+  use quick_calculated_module
+  implicit none
+  integer, intent(in) :: isgrad
+  integer, intent(inout) :: ierr
+  
+  ! allocate memory only if external charges exist
+  if ( .not. allocated(api%ptchg_crd)) allocate(api%ptchg_crd(4,nxt_ptchg), stat=ierr)
+  call allocate_quick_extcharge(quick_molspec,ierr)
+
+  if(isgrad) then
+    if ( .not. allocated(api%ptchg_grad)) allocate(api%ptchg_grad(3,nxt_ptchg), stat=ierr)
+    call allocate_quick_ptchg_grad(quick_qm_struct)
+  endif
+  
+
+end subroutine allocate_point_charge
+
+! allocate memory for point charges and gradients
+subroutine deallocate_point_charge(isgrad,ierr)
+
+  use quick_molspec_module
+  use quick_calculated_module
+  implicit none
+  integer, intent(in) :: isgrad
+  integer, intent(inout) :: ierr
+
+  if ( allocated(self%ptchg_crd))     deallocate(self%ptchg_crd, stat=ierr)
+  call deallocate_quick_extcharge(quick_molspec,ierr)
+
+  if(isgrad) then
+    if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)  
+    call deallocate_quick_ptchg_grad(quick_qm_struct) 
+  endif
+
+end subroutine deallocate_point_charge
+
 ! returns quick qm energy
 subroutine get_quick_energy(coords, ptchg_crd, nxt_ptchg, energy, ierr)
 
@@ -708,9 +748,6 @@ subroutine delete_quick_api_type(self,ierr)
   if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
   if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
   if ( allocated(self%gradient))          deallocate(self%gradient, stat=ierr)
-
-  if ( allocated(self%ptchg_crd))     deallocate(self%ptchg_crd, stat=ierr)
-  if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
 
 end subroutine delete_quick_api_type
 
