@@ -39,12 +39,13 @@ Subroutine deallocate_calculated
 
 end subroutine deallocate_calculated
 
-subroutine deallocateall
+subroutine deallocateall(api)
   use allmod
   implicit double precision(a-h,o-z)
+  logical, intent(in) :: api
 
-    call  dealloc(quick_molspec,ierr)
-    call  dealloc(quick_qm_struct)
+    call  dealloc(quick_molspec,api,ierr)
+    call  dealloc(quick_qm_struct,api)
     call  deallocate_calculated
 
     if (quick_method%DFT) then
@@ -59,16 +60,17 @@ end subroutine deallocateall
 !----------------------
 ! Finialize programs
 !----------------------
-subroutine finalize(io,ierr,option)
+subroutine finalize(io,api,ierr,option)
     use allmod
     use quick_exception_module
     implicit none
     integer io      !output final info and close this unit
     integer option  ! 0 if called from Quick and 1 if called from the API
     integer, intent(inout) :: ierr
+    logical, intent(in) :: api
 
     ! Deallocate all variables
-    call deallocateall
+    call deallocateall(api)
 
     ! stop timer and output them
     call cpu_time(timer_end%TTotal)
