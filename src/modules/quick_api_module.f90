@@ -250,7 +250,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 
 #ifdef MPIV
     ! check the mpisize and turn on mpi mode
-    call check_quick_mpi(iOutFile,ierr)
+    !call check_quick_mpi(iOutFile,ierr)
 
     ! print mpi info into output
     if(bMPI) call print_quick_mpi(iOutFile,ierr)
