@@ -467,6 +467,13 @@ subroutine run_quick(self,ierr)
   logical :: failed = .false.
   ierr=0
 
+  ! trun off extcharges in quick_method is external charges become zero
+  if(quick_api%nxt_ptchg .eq. 0) then
+    quick_method%extCharges = .false.
+  else
+    quick_method%extCharges = .true.
+  endif
+
   ! print step into quick output file
   call print_step(self,ierr)
 
