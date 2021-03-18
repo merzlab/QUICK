@@ -143,7 +143,7 @@ subroutine scf_gradient
 
 !  Set the values of gradient arry to zero 
    quick_qm_struct%gradient       = 0.0d0
-   if (quick_method%extCharges) quick_qm_struct%ptchg_gradient = 0.0d0
+   if (quick_molspec%nextatom .gt. 0) quick_qm_struct%ptchg_gradient = 0.0d0
 
 !---------------------------------------------------------------------
 !  1) The derivative of the nuclear repulsion.
