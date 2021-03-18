@@ -119,11 +119,12 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self,ierr)
+   subroutine allocate_quick_molspec(self,api,ierr)
       use quick_exception_module
       implicit none
       integer i,j
       integer, intent(inout) :: ierr
+      logical, intent(in) :: api
 
       type (quick_molspec_type) self
 
@@ -144,9 +145,9 @@ contains
             self%AtomDistance(i,j)=0d0
          enddo
       enddo
-      ! if exist external charge
 
-      call allocate_quick_extcharge(self,ierr)      
+      ! allocate memory for point charges if not called from api
+      if(.not. api) call allocate_quick_extcharge(self,ierr)      
 
       !if (self%nextatom.gt.0) then
       !   if (.not. allocated(self%extxyz)) allocate(self%extxyz(3, self%nextatom))
@@ -206,12 +207,13 @@ contains
    !-------------------
    ! deallocate
    !-------------------
-   subroutine deallocate_quick_molspec(self,ierr)
+   subroutine deallocate_quick_molspec(self,api,ierr)
       use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
       integer, intent(inout) :: ierr
+      logical, intent(in) :: api
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
@@ -225,7 +227,7 @@ contains
       !   if (allocated(self%extchg)) deallocate(self%extchg)
       !endif
 
-      call deallocate_quick_extcharge(self,ierr)
+      if(.not. api) call deallocate_quick_extcharge(self,ierr)
 
    end subroutine deallocate_quick_molspec
 
