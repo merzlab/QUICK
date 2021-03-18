@@ -344,6 +344,7 @@ subroutine allocate_point_charge(isgrad,ierr)
 
   if(isgrad) then
     if ( .not. allocated(quick_api%ptchg_grad)) allocate(quick_api%ptchg_grad(3,quick_api%nxt_ptchg), stat=ierr)
+    quick_api%ptchg_grad =0.0d0
     call allocate_quick_ptchg_grad(quick_qm_struct)
   endif
   
