@@ -39,9 +39,10 @@ Subroutine deallocate_calculated
 
 end subroutine deallocate_calculated
 
-subroutine deallocateall(api)
+subroutine deallocateall(api,ierr)
   use allmod
   implicit none
+  integer, intent(inout) :: ierr
   logical, intent(in) :: api
 
     call  dealloc(quick_molspec,api,ierr)
@@ -70,7 +71,7 @@ subroutine finalize(io,api,ierr,option)
     logical, intent(in) :: api
 
     ! Deallocate all variables
-    call deallocateall(api)
+    call deallocateall(api,ierr)
 
     ! stop timer and output them
     call cpu_time(timer_end%TTotal)
