@@ -83,9 +83,7 @@
     ! fourth column is the charge. 
     if ( .not. allocated(atomic_numbers)) allocate(atomic_numbers(natoms), stat=ierr) 
     if ( .not. allocated(coord))          allocate(coord(3,natoms), stat=ierr)
-    if ( .not. allocated(xc_coord))       allocate(xc_coord(4,nxt_charges), stat=ierr)
     if ( .not. allocated(gradients))         allocate(gradients(3,natoms), stat=ierr)
-    if ( .not. allocated(ptchgGrad))      allocate(ptchgGrad(3,nxt_charges), stat=ierr)
     CHECK_ERROR(ierr)
 
     ! fill up memory with test values, coordinates and external charges will be loded inside 
@@ -100,7 +98,6 @@
 
     ! set result vectors and matrices to zero
     gradients    = 0.0d0
-    ptchgGrad = 0.0d0
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
@@ -110,14 +107,23 @@
     do i=1, frames
 
       ! load coordinates and external point charges for ith step
-      call loadTestData(i, natoms, nxt_charges, coord, xc_coord)
+      nxt_charges = mod(i,4)
+
+      if ( .not. allocated(xc_coord)) allocate(xc_coord(4,nxt_charges), stat=ierr)      
+      if ( .not. allocated(ptchgGrad)) allocate(ptchgGrad(3,nxt_charges), stat=ierr)
+      CHECK_ERROR(ierr)
+
+      call loadTestData(i, natoms, nxt_charges, coord, xc_coord) 
+
+      ptchgGrad = 0.0d0
 
       ! compute required quantities, call only a or b. 
       ! a. compute energy
 !      call getQuickEnergy(coord, nxt_charges, xc_coord, totEne)
 
       ! b. compute energies, gradients and point charge gradients
-      call getQuickEnergyGradients(coord, nxt_charges, xc_coord, totEne, gradients, ptchgGrad, ierr)    
+      call getQuickEnergyGradients(coord, nxt_charges, xc_coord, &
+         totEne, gradients, ptchgGrad, ierr)    
       CHECK_ERROR(ierr)
 
       ! print values obtained from quick library
@@ -135,6 +141,9 @@
       call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad)
 #endif
 
+      if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
+      if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
+      CHECK_ERROR(ierr)
     enddo
 
     ! finalize QUICK, required only once
@@ -144,9 +153,7 @@
     ! deallocate memory
     if ( allocated(atomic_numbers)) deallocate(atomic_numbers, stat=ierr)
     if ( allocated(coord))          deallocate(coord, stat=ierr)
-    if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
     if ( allocated(gradients))         deallocate(gradients, stat=ierr)
-    if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
     CHECK_ERROR(ierr)
 
 #ifdef MPIV
