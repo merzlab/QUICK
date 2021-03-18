@@ -334,15 +334,17 @@ subroutine allocate_point_charge(isgrad,ierr)
   use quick_molspec_module
   use quick_calculated_module
   implicit none
-  integer, intent(in) :: isgrad
+  logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
   
   ! allocate memory only if external charges exist
-  if ( .not. allocated(api%ptchg_crd)) allocate(api%ptchg_crd(4,nxt_ptchg), stat=ierr)
+  if ( .not. allocated(quick_api%ptchg_crd)) allocate(quick_api%ptchg_crd(4,quick_api%nxt_ptchg), stat=ierr)
+
+  quick_molspec%nextatom  = quick_api%nxt_ptchg
   call allocate_quick_extcharge(quick_molspec,ierr)
 
   if(isgrad) then
-    if ( .not. allocated(api%ptchg_grad)) allocate(api%ptchg_grad(3,nxt_ptchg), stat=ierr)
+    if ( .not. allocated(quick_api%ptchg_grad)) allocate(quick_api%ptchg_grad(3,quick_api%nxt_ptchg), stat=ierr)
     call allocate_quick_ptchg_grad(quick_qm_struct)
   endif
   
@@ -355,14 +357,14 @@ subroutine deallocate_point_charge(isgrad,ierr)
   use quick_molspec_module
   use quick_calculated_module
   implicit none
-  integer, intent(in) :: isgrad
+  logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
 
-  if ( allocated(self%ptchg_crd))     deallocate(self%ptchg_crd, stat=ierr)
+  if ( allocated(quick_api%ptchg_crd))     deallocate(quick_api%ptchg_crd, stat=ierr)
   call deallocate_quick_extcharge(quick_molspec,ierr)
 
   if(isgrad) then
-    if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)  
+    if ( allocated(quick_api%ptchg_grad))     deallocate(quick_api%ptchg_grad, stat=ierr)  
     call deallocate_quick_ptchg_grad(quick_qm_struct) 
   endif
 
