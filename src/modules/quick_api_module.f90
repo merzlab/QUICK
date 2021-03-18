@@ -340,7 +340,6 @@ subroutine allocate_point_charge(isgrad,ierr)
   ! allocate memory only if external charges exist
   if ( .not. allocated(quick_api%ptchg_crd)) allocate(quick_api%ptchg_crd(4,quick_api%nxt_ptchg), stat=ierr)
 
-  quick_molspec%nextatom  = quick_api%nxt_ptchg
   call allocate_quick_extcharge(quick_molspec,ierr)
 
   if(isgrad) then
@@ -384,7 +383,10 @@ subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
   ! assign passed parameter values into quick_api struct
   quick_api%nxt_ptchg = nxt_ptchg
-  quick_api%coords         = coords
+  quick_api%coords        = coords
+
+  ! set number of external atoms in quick_molspec
+  quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   if(quick_api%nxt_ptchg > 0) then
     call allocate_point_charge(.false., ierr)
@@ -419,6 +421,9 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
   quick_api%nxt_ptchg = nxt_ptchg
+
+  ! set number of external atoms in quick_molspec
+  quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   if(quick_api%nxt_ptchg>0) then
     call allocate_point_charge(.true., ierr)
