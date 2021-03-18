@@ -29,7 +29,7 @@ subroutine getmolsad(api,ierr)
    integer natomsaved
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
-   integer :: ierr
+   integer, intent(inout) :: ierr
    logical, intent(in) :: api
 
    ! first save some important value
