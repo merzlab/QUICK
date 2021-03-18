@@ -114,11 +114,11 @@ subroutine getmolsad(api,ierr)
 
          ! if quick is called through api multiple times, this is necessary
          if(wrtStep .gt. 1) then
-           call dealloc(api,quick_qm_struct)
+           call dealloc(quick_qm_struct,api)
          endif
 
          quick_qm_struct%nbasis => nbasis
-         call alloc(api,quick_qm_struct)
+         call alloc(quick_qm_struct,api)
          call init(quick_qm_struct)
 
          ! this following subroutine is as same as normal basis set normlization
@@ -189,7 +189,7 @@ subroutine getmolsad(api,ierr)
          endif
 
          call deallocate_calculated
-         call dealloc(api,quick_qm_struct)
+         call dealloc(quick_qm_struct,api)
       enddo
       call PrtAct(ioutfile,"Finish SAD initial guess")
    endif
