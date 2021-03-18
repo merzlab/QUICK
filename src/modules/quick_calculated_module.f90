@@ -262,7 +262,7 @@ contains
       type (quick_qm_struct_type), intent(inout) :: self
 
       if (quick_method%grad) then
-         if (quick_method%extCharges) then
+         if (quick_molspec%nextatom .gt. 0) then
             if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
          endif
       endif
