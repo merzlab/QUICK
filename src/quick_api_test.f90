@@ -104,7 +104,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges, ierr)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, ierr)
     CHECK_ERROR(ierr)
 
     do i=1, frames
@@ -114,10 +114,10 @@
 
       ! compute required quantities, call only a or b. 
       ! a. compute energy
-!      call getQuickEnergy(coord, xc_coord, totEne)
+!      call getQuickEnergy(coord, nxt_charges, xc_coord, totEne)
 
       ! b. compute energies, gradients and point charge gradients
-      call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad, ierr)    
+      call getQuickEnergyGradients(coord, nxt_charges, xc_coord, totEne, gradients, ptchgGrad, ierr)    
       CHECK_ERROR(ierr)
 
       ! print values obtained from quick library
