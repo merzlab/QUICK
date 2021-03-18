@@ -372,6 +372,7 @@ end subroutine deallocate_point_charge
 ! returns quick qm energy
 subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
+  use quick_molspec_module
   implicit none
   
   integer, intent(in)           :: nxt_ptchg
@@ -407,6 +408,7 @@ end subroutine get_quick_energy
 subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
 
+  use quick_molspec_module
   implicit none
 
   integer, intent(in)             :: nxt_ptchg 
