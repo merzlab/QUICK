@@ -41,7 +41,7 @@ end subroutine deallocate_calculated
 
 subroutine deallocateall(api)
   use allmod
-  implicit double precision(a-h,o-z)
+  implicit none
   logical, intent(in) :: api
 
     call  dealloc(quick_molspec,api,ierr)
