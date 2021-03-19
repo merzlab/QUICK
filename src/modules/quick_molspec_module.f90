@@ -123,12 +123,11 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self,api,ierr)
+   subroutine allocate_quick_molspec(self,ierr)
       use quick_exception_module
       implicit none
       integer i,j
       integer, intent(inout) :: ierr
-      logical, intent(in) :: api
 
       type (quick_molspec_type) self
 
@@ -219,13 +218,12 @@ contains
    !-------------------
    ! deallocate
    !-------------------
-   subroutine deallocate_quick_molspec(self,api,ierr)
+   subroutine deallocate_quick_molspec(self,ierr)
       use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
       integer, intent(inout) :: ierr
-      logical, intent(in) :: api
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)

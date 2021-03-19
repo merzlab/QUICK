@@ -185,7 +185,7 @@ contains
    !--------------
    ! subroutine to allocate variables
    !--------------
-   subroutine allocate_quick_qm_struct(self,api)
+   subroutine allocate_quick_qm_struct(self)
       use quick_method_module,only: quick_method
       use quick_molspec_module,only: quick_molspec
       implicit none
@@ -197,7 +197,6 @@ contains
       integer nelecb
 
       type (quick_qm_struct_type) self
-      logical, intent(in) :: api
 
       nbasis=self%nbasis
       natom=quick_molspec%natom
@@ -225,9 +224,6 @@ contains
       if (quick_method%grad) then
          if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
       endif
-
-      ! allocate memory for point charge gradient vector
-      if(.not. api) call allocate_quick_ptchg_grad(self)
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
@@ -347,7 +343,7 @@ contains
    !--------------
    ! subroutine to deallocate variables
    !--------------
-   subroutine deallocate_quick_qm_struct(self,api)
+   subroutine deallocate_quick_qm_struct(self)
       use quick_method_module,only: quick_method
       implicit none
       integer io
@@ -359,7 +355,6 @@ contains
       integer nelecb
 
       type (quick_qm_struct_type) self
-      logical, intent(in) :: api
 
       nullify(self%nbasis)
       ! those matrices is necessary for all calculation or the basic of other calculation
