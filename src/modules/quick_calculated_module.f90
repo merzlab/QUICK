@@ -256,24 +256,14 @@ contains
          if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
       endif
 
-   end subroutine
-
-   
-   subroutine allocate_quick_ptchg_grad(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
-      implicit none
-
-      type (quick_qm_struct_type), intent(inout) :: self
-
       if (quick_method%grad) then
          if (quick_molspec%nextatom .gt. 0) then
             if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
          endif
       endif
 
-   end subroutine allocate_quick_ptchg_grad
-
+   end subroutine
+   
    !-----------------------------
    ! subroutine to realloate data
    !-----------------------------
