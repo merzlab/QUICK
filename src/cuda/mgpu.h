@@ -32,7 +32,7 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
 
     int gpuCount = 0;           // Total number of cuda devices available
-    size_t minMem = 8000000000; // Threshold  memory (in bytes) for device selection criteria
+    size_t minMem = 4000000000; // Threshold  memory (in bytes) for device selection criteria
     cudaError_t status;
 
     status = cudaGetDeviceCount(&gpuCount);
