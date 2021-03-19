@@ -155,6 +155,11 @@ module quick_calculated_module
    interface dealloc
       module procedure deallocate_quick_qm_struct
    end interface dealloc
+
+   interface realloc
+      module procedure reallocate_quick_qm_struct
+   end interface realloc
+
 #ifdef MPIV
    interface broadcast
       module procedure broadcast_quick_qm_struct
@@ -269,6 +274,30 @@ contains
 
    end subroutine allocate_quick_ptchg_grad
 
+   !-----------------------------
+   ! subroutine to realloate data
+   !-----------------------------
+
+   subroutine reallocate_quick_qm_struct(self,ierr)
+
+     use quick_exception_module
+     use quick_molspec_module,only: quick_molspec
+
+     implicit none
+
+     type (quick_qm_struct_type), intent(inout) :: self
+     integer, intent(inout) :: ierr
+     integer :: current_size     
+
+     if(quick_molspec%nextatom .gt. 0) then
+       if(allocated(self%ptchg_gradient)) current_size= size(self%ptchg_gradient)
+       if(current_size /= quick_molspec%nextatom*3) then
+         deallocate(self%ptchg_gradient, stat=ierr)
+         allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
+       endif
+     endif
+
+   end subroutine reallocate_quick_qm_struct
 
    !--------------
    ! subroutine to write data to dat file

@@ -84,6 +84,10 @@ module quick_molspec_module
       module procedure allocate_quick_molspec
    end interface alloc
 
+   interface realloc
+      module procedure reallocate_quick_molspec
+   end interface realloc   
+
    interface init
       module procedure init_quick_molspec
    end interface init
@@ -170,6 +174,33 @@ contains
       endif      
 
    end subroutine allocate_quick_extcharge
+
+
+   !-----------------------------
+   ! subroutine to realloate data
+   !-----------------------------
+
+   subroutine reallocate_quick_molspec(self,ierr)
+
+     use quick_exception_module
+
+     implicit none
+     
+     type (quick_molspec_type), intent(inout) :: self
+     integer, intent(inout) :: ierr
+     integer :: current_size
+
+     if(self%nextatom .gt. 0) then
+       if(allocated(self%extchg)) current_size= size(self%extchg)
+       if(current_size /= self%nextatom) then
+         deallocate(self%extchg, stat=ierr)
+         deallocate(self%extxyz, stat=ierr)
+         allocate(self%extchg(self%nextatom), stat=ierr)
+         allocate(self%extxyz(3,self%nextatom), stat=ierr)
+       endif
+     endif
+
+   end subroutine reallocate_quick_molspec
 
    !-------------------
    ! set initial value
