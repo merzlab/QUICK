@@ -382,10 +382,10 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if (allocated(self%gradient)) deallocate(self%gradient)
+         if (quick_method%extCharges) then
+            if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
+         endif
       endif
-
-      ! deallocate memory of point charge gradient vector
-      if(.not. api) call deallocate_quick_ptchg_grad(self)
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
@@ -410,21 +410,6 @@ contains
       endif
 
    end subroutine
-
-   subroutine deallocate_quick_ptchg_grad(self)
-     use quick_method_module,only: quick_method
-     implicit none
-
-     type (quick_qm_struct_type), intent(inout) :: self
-
-     if (quick_method%grad) then
-        if (quick_method%extCharges) then
-           if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
-        endif
-     endif     
-
-   end subroutine deallocate_quick_ptchg_grad
-
 
 #ifdef MPIV
    !-------------------
