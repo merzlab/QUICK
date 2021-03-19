@@ -159,7 +159,7 @@ subroutine qm2_quick_energy(escf,scf_mchg)
     !------------------END MPI/ALL NODES---------------------------------    
 
     !allocate essential variables
-    if (quick_first_call) call alloc(quick_molspec,.true.)
+    if (quick_first_call) call alloc(quick_molspec)
 
 !*****************************************************************
 ! 2. Next step is to read job and initial guess

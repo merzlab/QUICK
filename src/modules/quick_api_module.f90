@@ -284,7 +284,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   quick_molspec%iAtomType = quick_api%natm_type
 
   ! allocate memory for coordinates and charges in molspec
-  SAFE_CALL(alloc(quick_molspec,.false.,ierr))
+  SAFE_CALL(alloc(quick_molspec,ierr))
 
 end subroutine set_quick_job
 
@@ -494,10 +494,10 @@ subroutine run_quick(self,ierr)
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) SAFE_CALL(getMolSad(.true.,ierr))
+    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
 
     ! assign basis functions
-    SAFE_CALL(getMol(.true.,ierr))
+    SAFE_CALL(getMol(ierr))
 
     self%firstStep = .false.
 
@@ -754,7 +754,7 @@ subroutine delete_quick_job(ierr)
 #endif
 
   ! finalize quick
-  call finalize(iOutFile,.true.,ierr,1)
+  call finalize(iOutFile,ierr,1)
 
   ! deallocate memory
   call delete_quick_api_type(quick_api,ierr)
