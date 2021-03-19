@@ -417,7 +417,7 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   double precision, intent(in)    :: ptchg_crd(4,nxt_ptchg)
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
-  double precision, intent(inout) :: ptchg_grad(3,nxt_ptchg)
+  double precision, intent(out) :: ptchg_grad(3,nxt_ptchg)
   integer, intent(out) :: ierr
   ierr=0
 
@@ -431,7 +431,6 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   if(quick_api%nxt_ptchg .gt. 0) then
     call allocate_point_charge(.true., ierr)
     quick_api%ptchg_crd = ptchg_crd
-    quick_api%ptchg_grad = ptchg_grad
   endif
 
   call run_quick(quick_api,ierr)
