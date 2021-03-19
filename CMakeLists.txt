@@ -274,7 +274,7 @@ if(INSIDE_AMBER)
 	install(DIRECTORY basis DESTINATION AmberTools/src/quick COMPONENT Data)
 
 	# install tests dir
-	install(DIRECTORY test DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
+	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
 else()
 	# Standalone install
