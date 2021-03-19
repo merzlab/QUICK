@@ -312,6 +312,6 @@
     SAFE_CALL(mgpu_shutdown(ierr))
 #endif
 
-    call finalize(iOutFile,.false.,ierr,0)
+    call finalize(iOutFile,ierr,0)
 
     end program quick
