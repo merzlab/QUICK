@@ -9,7 +9,7 @@
 
 #include "util.fh"
 
-subroutine getMol(api,ierr)
+subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
    use allmod
@@ -24,7 +24,6 @@ subroutine getMol(api,ierr)
    logical :: present
    integer :: i,j,k,itemp
    integer, intent(inout) :: ierr
-   logical, intent(in) :: api
 
    !-----------MPI/MASTER------------------------
    if (master) then
@@ -82,7 +81,7 @@ subroutine getMol(api,ierr)
    quick_qm_struct%nbasis => nbasis
 
    call allocate_basis(quick_method)
-   call alloc(quick_qm_struct,api)
+   call alloc(quick_qm_struct)
    call init(quick_qm_struct)
 
 
