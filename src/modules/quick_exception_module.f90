@@ -110,7 +110,7 @@ contains
       msg='Microarchitecture of selected device is less than 3.0.'
 
     case(30)
-      msg='Selected device is already in use.'
+      msg='Insufficient memory available on selected device.'
 
     case(31)
       msg='LIBXC keyword must be followed by a functional name.'
