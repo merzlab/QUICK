@@ -340,12 +340,12 @@ subroutine allocate_point_charge(isgrad,ierr)
   ! allocate memory only if external charges exist
   if ( .not. allocated(quick_api%ptchg_crd)) allocate(quick_api%ptchg_crd(4,quick_api%nxt_ptchg), stat=ierr)
 
-  call allocate_quick_extcharge(quick_molspec,ierr)
+  call realloc(quick_molspec,ierr)
 
   if(isgrad) then
     if ( .not. allocated(quick_api%ptchg_grad)) allocate(quick_api%ptchg_grad(3,quick_api%nxt_ptchg), stat=ierr)
     quick_api%ptchg_grad =0.0d0
-    call allocate_quick_ptchg_grad(quick_qm_struct)
+    call realloc(quick_qm_struct,ierr)
   endif
   
 
@@ -361,11 +361,9 @@ subroutine deallocate_point_charge(isgrad,ierr)
   integer, intent(inout) :: ierr
 
   if ( allocated(quick_api%ptchg_crd))     deallocate(quick_api%ptchg_crd, stat=ierr)
-  call deallocate_quick_extcharge(quick_molspec,ierr)
 
   if(isgrad) then
     if ( allocated(quick_api%ptchg_grad))     deallocate(quick_api%ptchg_grad, stat=ierr)  
-    call deallocate_quick_ptchg_grad(quick_qm_struct) 
   endif
 
 end subroutine deallocate_point_charge
