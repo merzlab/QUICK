@@ -197,6 +197,8 @@ contains
          deallocate(self%extxyz, stat=ierr)
          allocate(self%extchg(self%nextatom), stat=ierr)
          allocate(self%extxyz(3,self%nextatom), stat=ierr)
+         self%extchg=0.0d0
+         self%extxyz=0.0d0
        endif
      endif
 

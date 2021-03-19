@@ -294,6 +294,7 @@ contains
        if(current_size /= quick_molspec%nextatom*3) then
          deallocate(self%ptchg_gradient, stat=ierr)
          allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
+         self%ptchg_gradient=0.0d0
        endif
      endif
 
