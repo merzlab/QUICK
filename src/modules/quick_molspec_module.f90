@@ -150,31 +150,20 @@ contains
          enddo
       enddo
 
-      ! allocate memory for point charges if not called from api
-      if(.not. api) call allocate_quick_extcharge(self,ierr)      
-
-   end subroutine allocate_quick_molspec
-
-   subroutine allocate_quick_extcharge(self,ierr)
-      use quick_exception_module
-      implicit none
-      integer i,j
-      integer, intent(inout) :: ierr
-      type (quick_molspec_type), intent(inout) :: self     
-
       if (self%nextatom.gt.0) then
-         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextatom))
-         if (.not. allocated(self%extchg)) allocate(self%extchg(self%nextatom))
+         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,
+         self%nextatom))
+         if (.not. allocated(self%extchg))
+         allocate(self%extchg(self%nextatom))
          do i=1,self%nextatom
             do j=1,3
                self%extxyz(j,i)=0d0
             enddo
             self%extchg(i)=0d0
          enddo
-      endif      
+      endif
 
-   end subroutine allocate_quick_extcharge
-
+   end subroutine allocate_quick_molspec
 
    !-----------------------------
    ! subroutine to realloate data
