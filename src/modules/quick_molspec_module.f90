@@ -233,24 +233,13 @@ contains
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%chg)) deallocate(self%chg)
 
-      if(.not. api) call deallocate_quick_extcharge(self,ierr)
-
-   end subroutine deallocate_quick_molspec
-
-   subroutine deallocate_quick_extcharge(self,ierr)
-      use quick_exception_module
-      implicit none
-
-      type (quick_molspec_type), intent(inout) :: self
-      integer, intent(inout) :: ierr
-
       ! if exist external charge
       if (self%nextatom.gt.0) then
-         if (allocated(self%extxyz)) deallocate(self%extxyz)
-         if (allocated(self%extchg)) deallocate(self%extchg)
+        if (allocated(self%extxyz)) deallocate(self%extxyz)
+        if (allocated(self%extchg)) deallocate(self%extchg)
       endif
 
-   end subroutine deallocate_quick_extcharge
+   end subroutine deallocate_quick_molspec
 
 #ifdef MPIV
    !-------------------
