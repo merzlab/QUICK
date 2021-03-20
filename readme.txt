@@ -13,5 +13,13 @@ Q3 max mem has been increased from 1.5GB to 15GB
 -----
 01/06/2021
 copied from 0923_mysv, this is to investigate Q3 kernel
+----
+03/20/2021
+synced with Merz/Master
+
+module purge
+module load GCC/8.3.0 CUDA/10.1.243
+./configure  --serial --cuda --arch volta --prefix ./make_install gnu
+
 
 

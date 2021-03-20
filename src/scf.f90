@@ -185,7 +185,6 @@ subroutine electdiis(jscf,ierr)
    ! Now Begin DIIS
    !print *, "before diis, quick_qm_struct%o is ", quick_qm_struct%o
    do while (.not.diisdone)
-    !print *, "in this iteration, quick_qm_struct%o is ", quick_qm_struct%o
     print *, "in this iteration, idiis is ", idiis 
 
       call cpu_time(timer_begin%TSCF)
@@ -214,17 +213,15 @@ subroutine electdiis(jscf,ierr)
 
       if (quick_method%debug)  call debug_SCF(jscf)
     
-      !print *, "in this iteration, before call scf_operator quick_qm_struct%o is ", quick_qm_struct%o
-
       if (quick_method%SEDFT) then
+         print *, "call sedftoperator"
          call sedftoperator ! Semi-emperical DFT Operator
       else
+         print *, "call scf_operator"
          call scf_operator(deltaO)
       endif
 
-      !if (idiis.eq.1) then
-      !  print *, "in this iteration, after call scf_operator quick_qm_struct%o is", quick_qm_struct%o
-      !endif
+      
 
       if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -232,6 +229,7 @@ subroutine electdiis(jscf,ierr)
       call cpu_time(timer_end%TOp)
       !------------- MASTER NODE -------------------------------
       if (master) then
+         print *, "in master node"
          !-----------------------------------------------
          ! End of Delta Matrix
          !-----------------------------------------------

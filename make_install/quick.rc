@@ -1,0 +1,3 @@
+export QUICK_INSTALL=/mnt/home/jinchi/QUICK_CMAKE/Serial_MPI_CUDA/0923_myfix/make_install
+export QUICK_BASIS=$QUICK_INSTALL/basis
+export PATH=$QUICK_INSTALL/bin:$PATH

@@ -84,6 +84,9 @@ subroutine scf_operator(deltaO)
    call cpu_time(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV
+    
+   print *, "in scf_operator, get CUDA"
+
    if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
