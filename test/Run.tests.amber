@@ -39,14 +39,26 @@ do
     if [ "${i:0:4}" != "opt_" ]; then
       if [ $(grep "Begin Energy Calculation" $i.out | wc -l) -gt 0 ]; then
         awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' $i.out > $i.out.ene
-        ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/$i.out.ene $i.out.ene
+        if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+          ${AMBERHOME}/test/dacdif -f -a 4.0e-5 saved/$i.out.ene $i.out.ene
+        else
+          ${AMBERHOME}/test/dacdif -a 4.0e-5 saved/$i.out.ene $i.out.ene
+        fi
       fi
       if [ $(grep "Begin Gradient Calculation" $i.out | wc -l) -gt 0 ]; then
         awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' $i.out > $i.out.grad
-        ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out.grad $i.out.grad
+        if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+          ${AMBERHOME}/test/dacdif -f -a 4.0e-3 saved/$i.out.grad $i.out.grad
+        else
+          ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out.grad $i.out.grad
+        fi
       fi
     fi
-    ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
+    if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+      ${AMBERHOME}/test/dacdif -f -a 4.0e-3 saved/$i.out $i.out
+    else
+      ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
+    fi
     /bin/rm -f $i.dat
   fi
 done
