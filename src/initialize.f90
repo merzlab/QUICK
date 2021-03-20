@@ -106,7 +106,7 @@ subroutine outputCopyright(io,ierr)
    write(io,'(A107)') "                                                                                                          "
    write(io,'(A107)') " Cite this work as:                                                                                       "
    write(io,'(A107)') " Manathunga, M.; Chi, J.; Cruzeiro, V.W.D.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;"
-   write(io,'(A107)') "  Brothers, E.; Götz, A.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State"
+   write(io,'(A107)') " Brothers, E.; Goetz, A.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State"
    write(io,'(A107)') " University, East Lansing, MI, 2021                                                                       "
    write(io,'(A107)') "                                                                                                          "
    write(io,'(A107)') " If you have any comments or queries, please send us an email for technical support:                      "
