@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	getNum.f90
 !	new_quick

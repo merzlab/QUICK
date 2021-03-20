@@ -9,6 +9,8 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
+#include "util.fh"
+
 ! This module contains subroutines and data structures related to scf
 ! and diis procedures
 
@@ -18,7 +20,7 @@ module quick_scf_module
   private
 
   public :: allocate_quick_scf, deallocate_quick_scf 
-  public :: V2, oneElecO, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+  public :: V2, oneElecO, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator, bCalc1e
 !  type quick_scf_type
 
     ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
@@ -43,6 +45,8 @@ module quick_scf_module
     double precision, allocatable, dimension(:,:,:) :: allerror
 
     double precision, allocatable, dimension(:,:,:) :: alloperator
+
+    logical :: bCalc1e = .false.
 
 !  end type quick_scf_type
 

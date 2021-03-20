@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	EffChar.f90
 !	new_quick

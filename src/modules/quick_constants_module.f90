@@ -7,6 +7,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  Contants module. Store inportant constant. Most of them are attached with
 !  parameter property
 
@@ -96,6 +98,17 @@ module quick_constants_module
    & 'LU','HF','TA','W ','RE','OS','IR','PT','AU','HG', &
    & 'TL','PB','BI','PO','AT','RN','FR','RA','AC','TH', &
    & 'PA','U '/)
+
+    integer, dimension(1:92) :: SPINMULT = &
+     (/2,                                                 1, &
+       2, 1,                               2, 3, 4, 3, 2, 1, &
+       2, 1,                               2, 3, 4, 3, 2, 1, &
+       2, 1, 2, 3, 4, 7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, &
+       2, 1, 2, 3, 6, 7, 6, 5, 4, 1, 2, 1, 2, 3, 4, 3, 2, 1, &
+       2, 1, &
+        2, 1, 4, 5, 6, 7, 8, 9, 6, 5, 4, 3, 2, 1, &
+             2, 3, 4, 5, 6, 5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, &
+       2, 1, 2, 3, 4, 5/)
 
     double precision, dimension(0:83) :: EMASS
 

@@ -5,7 +5,9 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 
-subroutine read_job_and_atom
+#include "util.fh"
+
+subroutine read_job_and_atom(ierr)
    
    ! this subroutine is to read job and atoms
    
@@ -16,14 +18,16 @@ subroutine read_job_and_atom
    use quick_calculated_module
    use quick_ecp_module
    use quick_api_module
+   use quick_exception_module
 
    implicit none
    
    ! Instant variables
    integer i,j,k
-   integer istrt,ierror
+   integer istrt
    character(len=200) :: keyWD
    character(len=20) :: tempstring
+   integer, intent(inout) :: ierr
 
    if (master) then
 
@@ -36,7 +40,7 @@ subroutine read_job_and_atom
       if(quick_api%apiMode .and. quick_api%hasKeywd) then 
         keyWD=quick_api%Keywd
       else
-        call quick_open(infile,inFileName,'O','F','W',.true.)
+        SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
         read (inFile,'(A200)') keyWD
       endif
 
@@ -44,13 +48,13 @@ subroutine read_job_and_atom
       write(iOutFile,'("  KEYWORD=",a)') keyWD
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
-      call read(quick_method,keyWD)     ! read method from Keyword
+      SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
-      call check(quick_method,iOutFile) ! check the correctness
-      call print(quick_method,iOutFile) ! then print method
-      
+      call check(quick_method,iOutFile,ierr) ! check the correctness
+      call print(quick_method,iOutFile,ierr) ! then print method
+    
       ! read basis file
-      call read_basis_file(keywd)
+      SAFE_CALL(read_basis_file(keywd,ierr))
       call print_basis_file(iOutFile)
       if (quick_method%ecp) call print_ecp_file(iOutFile)
       
@@ -62,14 +66,15 @@ subroutine read_job_and_atom
 
       ! read molecule specfication. Note this is step 1 for molspec reading
       ! and this is mainly to read atom number, atom kind and external charge number. 
-      call read(quick_molspec,inFile, isTemplate, quick_api%hasKeywd, quick_api%Keywd)
+      call read(quick_molspec,inFile, isTemplate, quick_api%hasKeywd, quick_api%Keywd, ierr)
+      SAFE_CALL(check(quick_molspec, ierr))
 
       if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
       if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then
          istrt = index(keywd,'TOL_ECPINT=')+10
-         call rdinum(keywd,istrt,itolecp,ierror)
+         call rdinum(keywd,istrt,itolecp,ierr)
          tolecp=2.30258d+00*itolecp
          thrshecp=10.0d0**(-1.0d0*itolecp)
          write(iOutFile,'("THRESHOLD FOR ECP-INTEGRALS PRESCREENING = ", &
@@ -94,7 +99,10 @@ subroutine read_job_and_atom
 
 #ifdef MPIV
    !-------------------MPI/ALL NODES---------------------------------------
-   if (bMPI) call mpi_setup_job() ! communicates nodes and pass job specs to all nodes
+   if (bMPI) then 
+     call mpi_setup_job(ierr) ! communicates nodes and pass job specs to all nodes
+     CHECK_ERROR(ierr)
+   endif
    !-------------------MPI/ALL NODES---------------------------------------
 #endif
 

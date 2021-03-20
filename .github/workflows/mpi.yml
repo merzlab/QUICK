@@ -3,17 +3,63 @@ name: MPI Build
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  make-build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
-        run: sudo apt-get install -y gfortran openmpi-bin
+        run: sudo apt-get -y install gfortran openmpi-bin
       - name: Configure mpi
         run: ./configure --mpi --prefix $PWD/install gnu
       - name: Build mpi
         run: make
       - name: Install mpi
         run: make install
+      - name: Set environment variables
+        run: |
+             echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+             echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Test mpi
-        run: make test
+        run: make fulltest
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+            name: mpi-tests
+            path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
+            retention-days: 3
+      - uses: actions/download-artifact@v2
+        with:
+            name: mpi-tests
+      - name: Display structure of artifacts
+        run: ls -R
+  cmake-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: sudo apt-get -y install gfortran cmake openmpi-bin
+      - name: Configure MPI
+        run: |
+             mkdir build
+             cd build
+             cmake .. -DCOMPILER=GNU -DMPI=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+      - name: Build MPI
+        run: |
+             cd build
+             make -j2 install
+      - name: Set environment variables
+        run: |
+             echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+             echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+      - name: Test mpi
+        run: |
+          cd install
+          ./runtest --mpi --full 
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+            name: mpi-tests
+            path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
+            retention-days: 3

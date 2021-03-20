@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! electron densitry modules. Written by John F. 11/25/2008
 module quick_electrondensity_module
     implicit none

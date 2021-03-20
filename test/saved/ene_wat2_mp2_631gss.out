@@ -22,7 +22,7 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2020                                          **
+  **                                         Copyright (c) 2021                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
@@ -39,17 +39,18 @@
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
- Manathunga, M.; Mu, D.; Miao, Y.;He, X.; Ayers,K; Brothers, E.; Götz, A.; Merz,K. M. QUICK-20.03         
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2020             
+  Manathunga, M.; Chi, J.; Cruzeiro, V.W.D.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
+  Brothers, E.; Götz, A.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State
+  University, East Lansing, MI, 2021                                                                       
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Thu Dec  3 20:27:04 2020
+| TASK STARTS ON: Wed Mar 17 11:49:42 2021
 | INPUT FILE :    ene_wat2_mp2_631gss.in
 | OUTPUT FILE:    ene_wat2_mp2_631gss.out
 | DATE FILE  :    ene_wat2_mp2_631gss.dat
-| BASIS SET PATH: /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
 
  @ Read Job And Atom
 
@@ -60,6 +61,7 @@
  SAD INITAL GUESS 
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
  Z-MATRIX CONSTRUCTION
  DIPOLE
  MAX SCF CYCLES =    200
@@ -72,7 +74,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /server-home1/cruzeiro/amber_dev/AmberTools/src/quick/basis/6-31GSS.BAS
+| BASIS FILE = /scratch/cruzeiro/quick/basis//6-31GDP.BAS
 
  @ Finish reading job
 
@@ -119,7 +121,7 @@
 
 ============== BASIS INFOS ==============
  BASIS FUNCTIONS =   50
- NSHELL =   20 NPRIM  =   42
+ NSHELL =   20 NPRIM  =   84
  JSHELL =   20 JBASIS =   42
 
 
@@ -129,37 +131,34 @@
  @ Begin Energy Calculation
 
                                          SCF ENERGY
-------------------------------------------------------------------------------------------------------------------------
-NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
-------------------------------------------------------------------------------------------------------------------------
-|  1   -151.984056296      ------         0.051     1        0.00      0.05      0.00    0.1753E+01  0.3843E-01  0.4144E+00
-|  2   -151.979065323  -.499097E-02       0.065     2        0.00      0.06      0.00    0.2286E+00  0.9305E-02  0.1694E+00
-|  3   -152.036659891  0.575946E-01       0.065     3        0.00      0.06      0.00    0.9421E-01  0.3469E-02  0.5475E-01
-|  4   -152.049427375  0.127675E-01       0.064     4        0.00      0.06      0.00    0.2797E-01  0.1258E-02  0.2389E-01
-|  5   -152.050675436  0.124806E-02       0.065     5        0.00      0.06      0.00    0.5596E-02  0.5881E-03  0.7218E-02
-|  6   -152.050816094  0.140658E-03       0.063     6        0.00      0.06      0.00    0.1537E-02  0.1448E-03  0.1738E-02
-|  7   -152.050823240  0.714558E-05       0.064     7        0.00      0.06      0.00    0.5113E-03  0.4001E-04  0.4437E-03
-|  8   -152.050823937  0.697575E-06       0.065     8        0.00      0.06      0.00    0.8089E-04  0.1779E-04  0.1766E-03
-|  9   -152.050824027  0.897534E-07       0.065     9        0.00      0.06      0.00    0.2325E-04  0.4512E-05  0.4660E-04
-| 10   -152.050824032  0.490456E-08       0.064    10        0.00      0.06      0.00    0.3566E-05  0.5845E-06  0.6698E-05
-------------------------------------------------------------------------------------------------------------------------
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+|  1   -151.970212549      ------         0.201     1        0.01      0.19      0.01    0.1753E+01  0.3829E-01  0.4183E+00
+|  2   -151.979201830  0.898928E-02       0.214     2        0.01      0.20      0.01    0.2332E+00  0.9275E-02  0.1682E+00
+|  3   -152.036901291  0.576995E-01       0.216     3        0.01      0.20      0.01    0.9494E-01  0.3444E-02  0.5502E-01
+|  4   -152.049516489  0.126152E-01       0.203     4        0.01      0.19      0.01    0.2768E-01  0.1178E-02  0.2243E-01
+|  5   -152.050695759  0.117927E-02       0.171     5        0.01      0.16      0.01    0.5339E-02  0.5276E-03  0.6275E-02
+|  6   -152.050818001  0.122243E-03       0.170     6        0.01      0.16      0.01    0.1422E-02  0.1191E-03  0.1450E-02
+|  7   -152.050823375  0.537361E-05       0.172     7        0.01      0.16      0.01    0.5047E-03  0.3530E-04  0.4178E-03
+|  8   -152.050823947  0.572499E-06       0.171     8        0.01      0.16      0.01    0.7873E-04  0.1483E-04  0.1708E-03
+|  9   -152.050824010  0.625589E-07       0.171     9        0.01      0.16      0.01    0.1764E-04  0.3974E-05  0.4220E-04
+| 10   -152.050824014  0.358192E-08       0.172    10        0.01      0.16      0.01    0.3785E-05  0.5821E-06  0.7597E-05
+| ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYLCES
-| MAX ERROR = 0.356561E-05   RMS CHANGE = 0.584504E-06   MAX CHANGE = 0.669825E-05
- -----------------------------------------------
- ELECTRONIC ENERGY    =  -188.679305464
+| MAX ERROR = 0.378489E-05   RMS CHANGE = 0.582116E-06   MAX CHANGE = 0.759694E-05
+| -----------------------------------------------
+ ELECTRONIC ENERGY    =  -188.679305445
  CORE_CORE REPULSION  =    36.628481432
- TOTAL ENERGY         =  -152.050824032
+ TOTAL ENERGY         =  -152.050824014
 
  @ End Energy calculation
 
 
  @ Begin MP2 Calculation
 
-| CURRENT MEMORY USAGE= 0.149012E-03 M
-TOTAL STEP          =     1
-EFFECT INTEGRALS    =   34780
-SECOND ORDER ENERGY =    -0.403468374
-EMP2                =  -152.454292406
+SECOND ORDER ENERGY =    -0.403468388
+EMP2                =  -152.454292402
 
  @ End MP2 Calculation
 
@@ -193,7 +192,7 @@ EMP2                =  -152.454292406
    H              0.3551             0.2389
    H              0.3621             0.2533
    H              0.3276             0.2247
-   TOTAL         0.0000             0.0000
+   TOTAL        -0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -205,24 +204,18 @@ EMP2                =  -152.454292406
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.324284000( 61.59%)
-| TOTAL SCF TIME      =     0.634109000( 29.49%)
-|       TOTAL OP TIME      =     0.629417000( 29.27%)
-|             OVERLAP 1e INTEGRALS TIME      =     0.000636000(  0.03%)
-|             OVERLAP 1e DIAGONALIZATION TIME =     0.000227000(  0.01%)
-|             TOTAL 1e TIME      =     0.002052000(  0.10%)
-|                KINETIC 1e INTEGRALS TIME    =     0.001577000(  0.07%)
-|                ATTRACTION 1e INTEGRALS TIME =     0.000474000(  0.02%)
-|             TOTAL 2e TIME      =     0.627218000( 29.17%)
-|             TOTAL ENERGY TIME  =     0.000052000(  0.00%)
-|       TOTAL DII TIME      =     0.004573000(  0.21%)
-|             TOTAL DIAG TIME    =     0.002001000(  0.09%)
-|       DIPOLE TIME        =     0.002933000(  0.14%)
-| TOTAL MP2 TIME     =     0.149124000(  6.94%)
-| TOTAL TIME          =     2.150276000
+| INITIAL GUESS TIME  =     1.737278000( 43.18%)
+| TOTAL SCF TIME      =     1.914441000( 47.59%)
+|       TOTAL OP TIME      =     1.795478000( 44.63%)
+|             TOTAL 1e TIME      =     0.054778000(  1.36%)
+|             TOTAL 2e TIME      =     1.680082000( 41.76%)
+|       TOTAL DII TIME      =     0.115250000(  2.86%)
+|             TOTAL DIAG TIME    =     0.066773000(  1.66%)
+| TOTAL MP2 TIME     =     0.313199000(  7.79%)
+| TOTAL TIME          =     4.022945000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  4.0 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Dec  3 20:27:10 2020
+| Normal Termination. Task Finished on: Wed Mar 17 11:49:45 2021

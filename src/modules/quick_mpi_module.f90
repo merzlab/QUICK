@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 ! quick MPI module.
 module quick_mpi_module
 
@@ -30,7 +32,6 @@ module quick_mpi_module
     logical :: libMPIMode = .false. ! if mpi is initialized somewhere other than quick
     integer, allocatable :: MPI_STATUS(:)
     integer, parameter :: MIN_1E_MPI_BASIS=6
-    integer :: mgpu_count             ! number of valid devices for cudampi version
     integer, allocatable :: mgpu_ids(:)    
     integer :: mgpu_id
 
@@ -41,16 +42,13 @@ module quick_mpi_module
     !----------------
     subroutine check_quick_mpi(io,ierr)
         implicit none
-        integer io, ierr
-        
-        ierr=1
+        integer io
+        integer, intent(inout) :: ierr
         
         if (bMPI .and. mpisize.eq.1) then
             bMPI=.false.
-            call PrtWrn(io,"| NODE=1, TURN OFF MPI")
         endif
         
-        ierr=0
         return
     end subroutine
     
@@ -60,16 +58,14 @@ module quick_mpi_module
     !----------------
     subroutine print_quick_mpi(io,ierr)
         implicit none
-        integer io,ierr
-        
-        ierr=1
+        integer io
+        integer, intent(inout) :: ierr        
         
         write (io,*)
         write (io,'("| - MPI Enabled -")')
-        write (io,'("| TOTAL PROCESSOR = ",i5)') mpisize
+        write (io,'("| TOTAL RANKS     = ",i5)') mpisize
         write (io,'("| MASTER NAME     = ",A30)') pname
         
-        ierr=0
     end subroutine print_quick_mpi
 
     ! all multi gpu mpi variable allocation should go here
@@ -77,7 +73,7 @@ module quick_mpi_module
 
       implicit none
 
-      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mgpu_count))
+      if( .not. allocated(mgpu_ids)) allocate(mgpu_ids(mpisize))
 
     end subroutine allocate_mgpu
 

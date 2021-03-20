@@ -24,11 +24,17 @@ include $(MAKEIN)
 
 LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 
+CXXOBJ=$(objfolder)/xc_redistribute.o
+
 CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_MP2.o
 
 CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 
 CUDAFOBJ= $(objfolder)/gpu_write_info.o
+
+$(CXXOBJ):$(objfolder)/%.o:%.cpp
+	@echo "[QUICK]  CXX $@"
+	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(CUDACOBJ):$(objfolder)/%.o:%.cu
 	@echo "[QUICK]  NVCC $@"
@@ -96,7 +102,7 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-allbutxc: $(CUDACOBJ) $(CUDAFOBJ)
+allbutxc: $(CXXOBJ) $(CUDACOBJ) $(CUDAFOBJ)
 
 xc: $(CUDAXCOBJ)
 	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o

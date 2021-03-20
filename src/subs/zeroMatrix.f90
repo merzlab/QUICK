@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	zeroMatrix.f90
 !	new_quick

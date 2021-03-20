@@ -1,3 +1,4 @@
+#include "util.fh"
 ! ----------------------------------------------------------------------
 ! This file contains the LBFGS algorithm and supporting routines
 

@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	getEnergy.f90
 !	new_quick
@@ -8,7 +9,7 @@
 !   written by Ed Brothers. 08/15/02
 !   This subroutine calculates and ouptus the energy.
 !
-subroutine getEnergy(failed, isGuess)
+subroutine getEnergy(isGuess, ierr)
    use allMod
    implicit none
 
@@ -16,12 +17,15 @@ subroutine getEnergy(failed, isGuess)
    double precision, external :: rootSquare
    integer i,j
    logical, intent(in) :: isGuess
+   integer, intent(inout) :: ierr
+   logical :: verbose
 
 #ifdef MPIV
    include "mpif.h"
 #endif
 
-   logical :: failed
+   verbose = .true.
+   if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.
 
     !Form the exchange-correlation quadrature if DFT is requested
     if (quick_method%DFT .and. .not. isGuess) then
@@ -35,7 +39,7 @@ subroutine getEnergy(failed, isGuess)
     endif
 
    if (master) then
-      if(.not. isGuess) call PrtAct(ioutfile,"Begin Energy Calculation")
+      if (verbose) call PrtAct(ioutfile,"Begin Energy Calculation")
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
@@ -89,9 +93,9 @@ subroutine getEnergy(failed, isGuess)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(failed, isGuess)       ! unrestricted system
+      call uscf(verbose,ierr)       ! unrestricted system
    else
-      call scf(failed)        ! restricted system
+      call scf(ierr)        ! restricted system
    endif
 
    !--------------- MPI/MASTER --------------------------
@@ -123,7 +127,7 @@ subroutine getEnergy(failed, isGuess)
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
-      if (ioutfile.ne.0 .and. .not. isGuess) then
+      if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
          write (ioutfile,'(" CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then

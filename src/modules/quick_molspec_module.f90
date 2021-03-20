@@ -12,6 +12,7 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
+#include "util.fh"
 
 ! molecule specification Module
 module quick_molspec_module
@@ -101,6 +102,10 @@ module quick_molspec_module
       module procedure read_quick_molspec_2
    end interface read2
 
+   interface check
+     module procedure check_quick_molspec
+   end interface check
+
    interface dealloc
       module procedure deallocate_quick_molspec
    end interface dealloc
@@ -114,9 +119,11 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self)
+   subroutine allocate_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
       integer i,j
+      integer, intent(inout) :: ierr
 
       type (quick_molspec_type) self
 
@@ -153,10 +160,12 @@ contains
    !-------------------
    ! set initial value
    !-------------------
-   subroutine init_quick_molspec(self)
+   subroutine init_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
+      integer, intent(inout) :: ierr
 
       self%natom => natom
       self%nElec = 0
@@ -174,10 +183,12 @@ contains
    !-------------------
    ! deallocate
    !-------------------
-   subroutine deallocate_quick_molspec(self)
+   subroutine deallocate_quick_molspec(self,ierr)
+      use quick_exception_module
       implicit none
 
       type (quick_molspec_type) self
+      integer, intent(inout) :: ierr
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
@@ -197,12 +208,15 @@ contains
    !-------------------
    ! broadcast variable list
    !-------------------
-   subroutine broadcast_quick_molspec(self)
+   subroutine broadcast_quick_molspec(self,ierr)
       use quick_mpi_module
+      use quick_exception_module
+
       implicit none
       include "mpif.h"
       type (quick_molspec_type) self
       integer natom2
+      integer, intent(inout) :: ierr
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -236,12 +250,14 @@ contains
    ! this subroutine is to read charge, multiplicity, and number
    ! and kind of atom.
    !----------------------
-  subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd)
+  subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd,ierr)
 
     use quick_constants_module
+    use quick_exception_module
 
     implicit none
     type (quick_molspec_type) :: self
+    integer, intent(inout) :: ierr
     integer :: input,rdinml,i,j,k
     integer :: ierror
     integer :: iAtomType
@@ -332,13 +348,15 @@ contains
    !----------------
    ! read external charge
    !----------------
-   subroutine read_quick_molspec_2(self,input)
+   subroutine read_quick_molspec_2(self,input,ierr)
       use quick_constants_module
+      use quick_exception_module
+
       implicit none
       ! parameter
       type (quick_molspec_type) self
       integer input
-
+      integer, intent(inout) :: ierr
       ! inner varibles
       integer i,j,k,istart,ifinal
       integer ierror
@@ -356,6 +374,7 @@ contains
          ifinal=80
 
          read (input,'(A80)') keywd
+         call upcase(keywd,80)
          call rdword(keywd,istart,ifinal)
 
          !-----------------------------
@@ -379,20 +398,22 @@ contains
 
       self%xyz => xyz
 
-      if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input)
+      if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input,ierr)
 
    end subroutine read_quick_molspec_2
 
 
 
-    subroutine read_quick_molespec_extcharges(self,input)
+    subroutine read_quick_molespec_extcharges(self,input,ierr)
         use quick_constants_module
+        use quick_exception_module
+
         implicit none
 
         ! parameter
         type (quick_molspec_type) self
         integer input
-
+        integer, intent(inout) :: ierr
         ! inner varibles
         integer i,j,k,istart,ifinal
         integer nextatom,ierror
@@ -424,12 +445,29 @@ contains
 
     end subroutine read_quick_molespec_extcharges
 
+   ! check if molecular specifications are correct
+   subroutine check_quick_molspec(self, ierr)
+
+     use quick_exception_module
+     implicit none
+
+     type (quick_molspec_type), intent(in) :: self
+     integer, intent(inout) :: ierr
+
+     if (self%imult .ne. 1) ierr=11
+
+   end subroutine check_quick_molspec
+
    !-------------------
    ! print varibles
    !-------------------
-   subroutine print_quick_molspec(self,io)
+   subroutine print_quick_molspec(self,io,ierr)
+
+      use quick_exception_module
       use quick_constants_module
       implicit none
+       
+      integer, intent(inout) :: ierr
       integer io,i,j
       type(quick_molspec_type) self
       if (io.ne.0) then
@@ -458,9 +496,9 @@ contains
 
          if(self%nextatom.gt.0 )then
             write(io,*)
-            write(io,'(" -- EXTERNAL POINT CHARGES: (Q,X,Y,Z) -- ")')
+            write(io,'(" -- EXTERNAL POINT CHARGES: (X,Y,Z,Q) -- ")')
             do i=1,self%nextatom
-               write(io,'(4x,F7.4,3(F10.4,1x))') self%extchg(i),(self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3),self%extchg(i)
             enddo
          endif
 
@@ -482,9 +520,14 @@ contains
    ! read-in molespec.
    !-------------------
 
-   subroutine set_quick_molspec(self)
+   subroutine set_quick_molspec(self,ierr)
+
+      use quick_exception_module
       use quick_constants_module
+
       implicit none
+
+      integer, intent(inout) :: ierr
       integer i,j,k
       type (quick_molspec_type) self
 

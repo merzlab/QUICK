@@ -8,6 +8,9 @@
 !        Role: orbital
 !     Version: 0  (Data from the Original Basis Set Exchange)
 !----------------------------------------------------------------------
+! Available elements: H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K
+!                     Ca
+!----------------------------------------------------------------------
 
 
 H     0

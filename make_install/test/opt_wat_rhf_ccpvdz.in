@@ -1,0 +1,16 @@
+HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPT DIPOLE
+
+  O         -0.741530        1.752130        2.896280
+  H         -1.111151        0.979769        3.352290
+  H         -0.920500        2.036450        1.984040
+
+#ref_grad -0.0151130232
+#ref_grad -0.0143996271
+#ref_grad -0.0109250921
+#ref_grad  0.0028951366
+#ref_grad -0.0200095631
+#ref_grad  0.0412804021
+#ref_grad  0.0122178866
+#ref_grad  0.0344091903
+#ref_grad -0.0303553100
+#ref_min_ene -76.0273891243 

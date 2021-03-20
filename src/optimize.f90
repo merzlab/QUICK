@@ -1,13 +1,15 @@
+#include "util.fh"
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine optimize(failed)
+subroutine optimize(ierr)
    use allmod
+   use quick_cutoff_module, only: schwarzoff
    implicit double precision(a-h,o-z)
 
-   logical :: done,diagco,failed
+   logical :: done,diagco
    character(len=1) cartsym(3)
    dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
    dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
@@ -18,6 +20,8 @@ subroutine optimize(failed)
    integer IMCSRCH,nstor,ndiis
    double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
    double precision EChg
+   integer, intent(inout) :: ierr
+
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -78,7 +82,7 @@ subroutine optimize(failed)
    !------------- END MPI/MASTER ----------------------------
 
 
-   do WHILE (I.le.quick_method%iopt.and..not.done)
+   do WHILE (I.lt.quick_method%iopt.and..not.done)
       I=I+1
 
       if (master) then
@@ -141,12 +145,16 @@ subroutine optimize(failed)
             quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-      call gpu_upload_grad(quick_qm_struct%gradient, quick_method%gradCutoff)
 
+#ifdef CUDA_MPIV
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
 
 #endif
 
-      call getEnergy(failed, .false.)
+      call getEnergy(.false., ierr)
 
       !   This line is for test only
       !   quick_method%bCUDA = .false.
@@ -171,9 +179,6 @@ subroutine optimize(failed)
 #endif
         !quick_method%bCUDA=.true.
       if (master) then
-
-         if (failed) return
-
 
          !-----------------------------------------------------------------------
          ! Copy current geometry into coordsnew. Fill the rest of the array w/ zeros.

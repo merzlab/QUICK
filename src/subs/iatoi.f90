@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	iatoi.f90
 !	new_quick
