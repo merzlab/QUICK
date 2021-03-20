@@ -938,7 +938,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       else
 
         echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags $sm80flags"
+        cuda_arch_flags="$sm50flags $sm60flags $sm70flags $sm75flags $sm80flags"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
