@@ -238,7 +238,7 @@
         !print *, "before MP2, quick_qm_struct%o is ", quick_qm_struct%o
         if(.not. quick_method%DIVCON) then
 
-!The below part now moves to shell.f90
+!The below part now moves to gpu_mp2_wrapper
 !#ifdef CUDA
 !        if(quick_method%bCUDA) then
 !            print *, "use cuda for MP2, first upload inputs deleted in SCF"
