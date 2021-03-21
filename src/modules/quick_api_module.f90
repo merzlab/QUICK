@@ -118,12 +118,12 @@ contains
 
 
 ! allocates memory for a new quick_api_type variable
-subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
+subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer, intent(in)   :: natoms, nxt_ptchg
+  integer, intent(in)   :: natoms
   integer, intent(in)   :: atomic_numbers(natoms)
   integer, intent(inout)  :: ierr
   integer :: atm_type_id(natoms)
@@ -137,16 +137,9 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
   if ( .not. allocated(self%gradient))          allocate(self%gradient(3,natoms), stat=ierr)
 
-  ! allocate memory only if external charges exist
-  if(nxt_ptchg>0) then
-    if ( .not. allocated(self%ptchg_crd))     allocate(self%ptchg_crd(4,nxt_ptchg), stat=ierr)
-    if ( .not. allocated(self%ptchg_grad))     allocate(self%ptchg_grad(3,nxt_ptchg), stat=ierr)
-  endif
-
  ! save values in the quick_api struct
   self%natoms         = natoms
   self%natm_type      = natm_type
-  self%nxt_ptchg      = nxt_ptchg
   self%atomic_numbers = atomic_numbers
 
   do i=1, natm_type
@@ -155,8 +148,6 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   ! set result vectors and matrices to zero
   self%gradient  = 0.0d0
-
-  if(nxt_ptchg>0) self%ptchg_grad = 0.0d0
 
 end subroutine new_quick_api_type
 
@@ -183,7 +174,7 @@ end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -197,7 +188,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
 
   character(len=80), intent(in)  :: fqin
   character(len=200), intent(in) :: keywd
-  integer, intent(in) :: natoms, nxt_ptchg
+  integer, intent(in) :: natoms
   integer, intent(in) :: atomic_numbers(natoms)
   integer, intent(out) :: ierr
   integer :: flen
@@ -205,7 +196,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   
 
   ! allocate memory for quick_api_type
-  call new_quick_api_type(quick_api, natoms, atomic_numbers, nxt_ptchg, ierr)
+  call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
@@ -291,7 +282,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, nxt_ptchg, ierr)
   ! into quick_molspec
   quick_molspec%natom     = quick_api%natoms
   quick_molspec%iAtomType = quick_api%natm_type
-  quick_molspec%nextatom  = quick_api%nxt_ptchg
 
   ! allocate memory for coordinates and charges in molspec
   SAFE_CALL(alloc(quick_molspec,ierr))
@@ -338,48 +328,107 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
 
 end subroutine get_atom_types
 
-! returns quick qm energy
-subroutine get_quick_energy(coords, ptchg_crd, energy, ierr)
+! allocate memory for point charges and gradients
+subroutine allocate_point_charge(isgrad,ierr)
 
+  use quick_molspec_module
+  use quick_calculated_module
   implicit none
+  logical, intent(in) :: isgrad
+  integer, intent(inout) :: ierr
+  
+  ! allocate memory only if external charges exist
+  if ( .not. allocated(quick_api%ptchg_crd)) allocate(quick_api%ptchg_crd(4,quick_api%nxt_ptchg), stat=ierr)
 
+  call realloc(quick_molspec,ierr)
+
+  if(isgrad) then
+    if ( .not. allocated(quick_api%ptchg_grad)) allocate(quick_api%ptchg_grad(3,quick_api%nxt_ptchg), stat=ierr)
+    quick_api%ptchg_grad =0.0d0
+    call realloc(quick_qm_struct,ierr)
+  endif
+  
+
+end subroutine allocate_point_charge
+
+! allocate memory for point charges and gradients
+subroutine deallocate_point_charge(isgrad,ierr)
+
+  use quick_molspec_module
+  use quick_calculated_module
+  implicit none
+  logical, intent(in) :: isgrad
+  integer, intent(inout) :: ierr
+
+  if ( allocated(quick_api%ptchg_crd))     deallocate(quick_api%ptchg_crd, stat=ierr)
+
+  if(isgrad) then
+    if ( allocated(quick_api%ptchg_grad))     deallocate(quick_api%ptchg_grad, stat=ierr)  
+  endif
+
+end subroutine deallocate_point_charge
+
+! returns quick qm energy
+subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
+
+  use quick_molspec_module
+  implicit none
+  
+  integer, intent(in)           :: nxt_ptchg
   double precision, intent(in)  :: coords(3,quick_api%natoms)
-  double precision, intent(in)  :: ptchg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)  :: ptchg_crd(4,nxt_ptchg)
   double precision, intent(out) :: energy
   integer, intent(out) :: ierr
   ierr=0
 
   ! assign passed parameter values into quick_api struct
-  quick_api%coords         = coords
-  quick_api%ptchg_crd     = ptchg_crd
+  quick_api%nxt_ptchg = nxt_ptchg
+  quick_api%coords        = coords
+
+  ! set number of external atoms in quick_molspec
+  quick_molspec%nextatom  = quick_api%nxt_ptchg
+
+  if(quick_api%nxt_ptchg .gt. 0) then
+    call allocate_point_charge(.false., ierr)
+    quick_api%ptchg_crd     = ptchg_crd
+  endif
 
   call run_quick(quick_api,ierr)
 
   ! send back total energy and charges
   energy = quick_api%tot_ene
 
+  if(quick_api%nxt_ptchg .gt. 0) call deallocate_point_charge(.false., ierr)
+
 end subroutine get_quick_energy
 
 
 ! calculates and returns energy, gradients and point charge gradients
-subroutine get_quick_energy_gradients(coords, ptchg_crd, &
+subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
 
+  use quick_molspec_module
   implicit none
 
+  integer, intent(in)             :: nxt_ptchg 
   double precision, intent(in)    :: coords(3,quick_api%natoms)
-  double precision, intent(in)    :: ptchg_crd(4,quick_api%nxt_ptchg)
+  double precision, intent(in)    :: ptchg_crd(4,nxt_ptchg)
   double precision, intent(out)   :: energy
   double precision, intent(out)   :: gradients(3,quick_api%natoms)
-  double precision, intent(inout) :: ptchg_grad(3,quick_api%nxt_ptchg)
+  double precision, intent(out) :: ptchg_grad(3,nxt_ptchg)
   integer, intent(out) :: ierr
   ierr=0
 
   ! assign passed parameter values into quick_api struct
   quick_api%coords         = coords
-  if(quick_api%nxt_ptchg>0) then
+  quick_api%nxt_ptchg = nxt_ptchg
+
+  ! set number of external atoms in quick_molspec
+  quick_molspec%nextatom  = quick_api%nxt_ptchg
+
+  if(quick_api%nxt_ptchg .gt. 0) then
+    call allocate_point_charge(.true., ierr)
     quick_api%ptchg_crd = ptchg_crd
-    quick_api%ptchg_grad = ptchg_grad
   endif
 
   call run_quick(quick_api,ierr)
@@ -388,7 +437,10 @@ subroutine get_quick_energy_gradients(coords, ptchg_crd, &
   energy     = quick_api%tot_ene
   gradients     = quick_api%gradient
 
-  if(quick_api%nxt_ptchg>0) ptchg_grad = quick_api%ptchg_grad
+  if(quick_api%nxt_ptchg .gt. 0) then
+    ptchg_grad = quick_api%ptchg_grad
+    call deallocate_point_charge(.true., ierr)
+  endif
 
 end subroutine get_quick_energy_gradients
 
@@ -414,6 +466,13 @@ subroutine run_quick(self,ierr)
   integer :: i, j, k
   logical :: failed = .false.
   ierr=0
+
+  ! trun off extcharges in quick_method is external charges become zero
+  if(quick_api%nxt_ptchg .eq. 0) then
+    quick_method%extCharges = .false.
+  else
+    quick_method%extCharges = .true.
+  endif
 
   ! print step into quick output file
   call print_step(self,ierr)
@@ -504,7 +563,7 @@ subroutine run_quick(self,ierr)
       enddo
     enddo
 
-    if (quick_method%extCharges .and. self%nxt_ptchg>0) then
+    if (quick_method%extCharges .and. self%nxt_ptchg .gt. 0) then
       k=1
       do i=1,self%nxt_ptchg
         do j=1,3
@@ -588,7 +647,7 @@ subroutine set_quick_molspecs(self,ierr)
   quick_molspec%xyz => xyz
 
   ! save the external point charges and coordinates
-  if(self%nxt_ptchg>0) then
+  if(self%nxt_ptchg .gt. 0) then
     do i=1, self%nxt_ptchg
       do j=1,3
         quick_molspec%extxyz(j,i) = self%ptchg_crd(j,i) * A_TO_BOHRS
@@ -712,9 +771,6 @@ subroutine delete_quick_api_type(self,ierr)
   if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
   if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
   if ( allocated(self%gradient))          deallocate(self%gradient, stat=ierr)
-
-  if ( allocated(self%ptchg_crd))     deallocate(self%ptchg_crd, stat=ierr)
-  if ( allocated(self%ptchg_grad))     deallocate(self%ptchg_grad, stat=ierr)
 
 end subroutine delete_quick_api_type
 

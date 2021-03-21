@@ -84,6 +84,10 @@ module quick_molspec_module
       module procedure allocate_quick_molspec
    end interface alloc
 
+   interface realloc
+      module procedure reallocate_quick_molspec
+   end interface realloc   
+
    interface init
       module procedure init_quick_molspec
    end interface init
@@ -144,9 +148,9 @@ contains
             self%AtomDistance(i,j)=0d0
          enddo
       enddo
-      ! if exist external charge
+
       if (self%nextatom.gt.0) then
-         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3, self%nextatom))
+         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextatom))
          if (.not. allocated(self%extchg)) allocate(self%extchg(self%nextatom))
          do i=1,self%nextatom
             do j=1,3
@@ -155,7 +159,36 @@ contains
             self%extchg(i)=0d0
          enddo
       endif
+
    end subroutine allocate_quick_molspec
+
+   !-----------------------------
+   ! subroutine to realloate data
+   !-----------------------------
+
+   subroutine reallocate_quick_molspec(self,ierr)
+
+     use quick_exception_module
+
+     implicit none
+     
+     type (quick_molspec_type), intent(inout) :: self
+     integer, intent(inout) :: ierr
+     integer :: current_size
+
+     if(self%nextatom .gt. 0) then
+       if(allocated(self%extchg)) current_size= size(self%extchg)
+       if(current_size /= self%nextatom) then
+         deallocate(self%extchg, stat=ierr)
+         deallocate(self%extxyz, stat=ierr)
+         allocate(self%extchg(self%nextatom), stat=ierr)
+         allocate(self%extxyz(3,self%nextatom), stat=ierr)
+         self%extchg=0.0d0
+         self%extxyz=0.0d0
+       endif
+     endif
+
+   end subroutine reallocate_quick_molspec
 
    !-------------------
    ! set initial value
@@ -198,8 +231,8 @@ contains
 
       ! if exist external charge
       if (self%nextatom.gt.0) then
-         if (allocated(self%extxyz)) deallocate(self%extxyz)
-         if (allocated(self%extchg)) deallocate(self%extchg)
+        if (allocated(self%extxyz)) deallocate(self%extxyz)
+        if (allocated(self%extchg)) deallocate(self%extchg)
       endif
 
    end subroutine deallocate_quick_molspec
