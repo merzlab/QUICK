@@ -789,40 +789,40 @@ end subroutine mpi_hfoperatordc
 !------------------------------------------------
 ! get2e
 !------------------------------------------------
-subroutine get2e(II_arg)
-
-   !------------------------------------------------
-   ! This subroutine is to get 2e integral
-   !------------------------------------------------
-   use allmod
-   implicit double precision(a-h,o-z)
-   double precision testtmp,cutoffTest
-   integer II_arg
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   II = II_arg
-   do JJ = II,jshell
-      testtmp = Ycutoff(II,JJ)
-      do KK = II,jshell
-         do LL = KK,jshell
-
-          cutoffTest = testtmp * Ycutoff(KK,LL)
-          if (cutoffTest .gt. quick_method%integralCutoff) then
-            DNmax =  max(4.0d0*cutmatrix(II,JJ), &
-                  4.0d0*cutmatrix(KK,LL), &
-                  cutmatrix(II,LL), &
-                  cutmatrix(II,KK), &
-                  cutmatrix(JJ,KK), &
-                  cutmatrix(JJ,LL))
-            ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
-            ! ignore the calculation to save computation time
-            
-            if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
-                  call shell
-           endif
-         enddo
-      enddo
-   enddo
-end subroutine get2e
+!subroutine get2e(II_arg)
+!
+!   !------------------------------------------------
+!   ! This subroutine is to get 2e integral
+!   !------------------------------------------------
+!   use allmod
+!   implicit double precision(a-h,o-z)
+!   double precision testtmp,cutoffTest
+!   integer II_arg
+!   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+!   II = II_arg
+!   do JJ = II,jshell
+!      testtmp = Ycutoff(II,JJ)
+!      do KK = II,jshell
+!         do LL = KK,jshell
+!
+!          cutoffTest = testtmp * Ycutoff(KK,LL)
+!          if (cutoffTest .gt. quick_method%integralCutoff) then
+!            DNmax =  max(4.0d0*cutmatrix(II,JJ), &
+!                  4.0d0*cutmatrix(KK,LL), &
+!                  cutmatrix(II,LL), &
+!                  cutmatrix(II,KK), &
+!                  cutmatrix(JJ,KK), &
+!                  cutmatrix(JJ,LL))
+!            ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
+!            ! ignore the calculation to save computation time
+!            
+!            if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
+!                  call shell
+!           endif
+!         enddo
+!      enddo
+!   enddo
+!end subroutine get2e
 
 !------------------------------------------------
 ! get2edc
