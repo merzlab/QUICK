@@ -22,15 +22,22 @@ module quick_cshell_eri_module
    implicit double precision(a-h,o-z)
    private
 #ifdef OSHELL
-   public :: get_oshell_eri
-   public :: get_oshell_eri_energy
+!   public :: get_oshell_eri
+!   public :: get_oshell_eri_energy
 #else
-   public :: cshell ! Should be private, but we still need this for deprecated
+!   public :: cshell ! Should be private, but we still need this for deprecated
                     ! subroutines such as addInt in shell.f90
-   public :: get_cshell_eri
-   public :: get_cshell_eri_energy
-   public :: get_eri_precomputables
+!   public :: get_cshell_eri
+!   public :: get_cshell_eri_energy
+   public :: getEriPrecomputables
 #endif 
+
+#ifndef OSHELL
+interface getEriPrecomputables
+  module procedure get_eri_precomputables
+end interface getEriPrecomputables
+#endif
+
 contains
 
 #ifndef OSHELL
@@ -128,6 +135,54 @@ subroutine get_eri_precomputables
 #endif
 
 end subroutine get_eri_precomputables
+#endif
+
+
+#ifdef OSHELL
+subroutine get_oshell_eri(II_arg)
+#else
+subroutine get_cshell_eri(II_arg)
+#endif
+
+   !------------------------------------------------
+   ! This subroutine is to get 2e integral
+   !------------------------------------------------
+   use allmod
+   implicit double precision(a-h,o-z)
+   double precision testtmp,cutoffTest
+   integer II_arg
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   II = II_arg
+   do JJ = II,jshell
+      testtmp = Ycutoff(II,JJ)
+      do KK = II,jshell
+         do LL = KK,jshell
+
+          cutoffTest = testtmp * Ycutoff(KK,LL)
+          if (cutoffTest .gt. quick_method%integralCutoff) then
+            DNmax =  max(4.0d0*cutmatrix(II,JJ), &
+                  4.0d0*cutmatrix(KK,LL), &
+                  cutmatrix(II,LL), &
+                  cutmatrix(II,KK), &
+                  cutmatrix(JJ,KK), &
+                  cutmatrix(JJ,LL))
+            ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
+            ! ignore the calculation to save computation time
+
+            if ( cutoffTest * DNmax  .gt. quick_method%integralCutoff ) &
+#ifdef OSHELL 
+                call oshell
+#else
+                call cshell
+#endif
+           endif
+         enddo
+      enddo
+   enddo
+#ifdef OSHELL
+end subroutine get_oshell_eri
+#else
+end subroutine get_cshell_eri
 #endif
 
 #ifdef OSHELL
