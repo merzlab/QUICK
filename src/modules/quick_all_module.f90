@@ -56,7 +56,6 @@
     use quick_electrondensity_module
     use quick_MPI_module
     use quick_timer_module
-    use AMBER_interface_module
     implicit none
     end module allmod
 !********************************************************
