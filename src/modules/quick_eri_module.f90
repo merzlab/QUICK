@@ -37,7 +37,6 @@ module quick_cshell_eri_module
 interface getOshellEri
   module procedure get_oshell_eri
 end interface getOshellEri
-#endif
 
 #else
 
