@@ -92,7 +92,8 @@ subroutine scf_operator(oneElecO, deltaO)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+
+  if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
          call gpu_upload_method(0, 1.0d0)
