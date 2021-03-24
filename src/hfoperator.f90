@@ -34,6 +34,7 @@ subroutine hfoperator(oneElecO, deltaO)
    use allmod
    use quick_gaussian_class_module
     use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cshell_eri_module, only: getCshellEri
    implicit none
 
 
@@ -119,7 +120,7 @@ subroutine hfoperator(oneElecO, deltaO)
       ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
       ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
       do II=1,jshell
-         call get2e(II)
+         call getCshellEri(II)
       enddo
 !stop
 
@@ -460,6 +461,7 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
    use allmod
    use quick_gaussian_class_module
     use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cshell_eri_module, only: getCshellEri
    implicit double precision(a-h,o-z)
 
    include "mpif.h"
@@ -547,7 +549,7 @@ subroutine mpi_hfoperator(oneElecO, deltaO)
    do i=1,mpi_jshelln(mpirank)
       ii=mpi_jshell(mpirank,i)
      ! write (*,'(A22,2x,I5,2x,I5,2x,I5)') "Madu: i,mpirank,ii",i,mpirank,ii  
-      call get2e(II)
+      call getCshellEri(II)
    enddo
 
    ! After evaluation of 2e integrals, we can communicate every node so

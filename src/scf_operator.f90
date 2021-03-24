@@ -28,6 +28,7 @@ subroutine scf_operator(deltaO)
    use allmod
    use quick_scf_module
    use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cshell_eri_module, only: getCshellEri 
 
    implicit none
 
@@ -133,16 +134,16 @@ subroutine scf_operator(deltaO)
    if(bMPI) then
       do i=1,mpi_jshelln(mpirank)
          ii=mpi_jshell(mpirank,i)
-         call get2e(II)
+         call getCshellEri(II)
       enddo
    else
       do II=1,jshell
-         call get2e(II)
+         call getCshellEri(II)
       enddo
    endif        
 #else
       do II=1,jshell
-         call get2e(II)
+         call getCshellEri(II)
       enddo
 #endif
 
