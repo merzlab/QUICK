@@ -139,7 +139,7 @@ if(CUDA)
 
     # optimization level
     if(OPTIMIZE)
-        list(APPEND CUDA_NVCC_FLAGS -O3)
+        list(APPEND CUDA_NVCC_FLAGS -O2)
     else()
         list(APPEND CUDA_NVCC_FLAGS -O0)
     endif()
