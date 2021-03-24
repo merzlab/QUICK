@@ -33,8 +33,10 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_timer_module.o $(objfolder)/quick_gridpoints_module.o \
 		$(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o \
 		$(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o $(objfolder)/quick_scf_module.o \
-		$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_gradient_module.o \
-		$(objfolder)/quick_api_module.o $(objfolder)/quick_api_test_module.o 
+		$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_gradient_module.o
+
+
+apimodobj=$(objfolder)/quick_api_module.o $(objfolder)/quick_api_test_module.o
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                !
@@ -44,7 +46,11 @@ $(modobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-all:$(modobj)
+$(apimodobj):$(objfolder)/%.o:%.f90
+	@echo "[QUICK]  FC $@"
+	 $(VB)$(FOR) -c $< -o $@
+
+all:$(modobj) $(apimodobj)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
