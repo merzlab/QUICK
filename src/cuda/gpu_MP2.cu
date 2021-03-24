@@ -893,7 +893,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
         hybrid_coeff = 1.0;
     }else if (devSim_MP2.method == B3LYP){
         hybrid_coeff = 0.2;
-    }else if (devSim_MP2.method == DFT){
+    }else if (devSim_MP2.method == BLYP){
         hybrid_coeff = 0.0;
     }
     
