@@ -455,6 +455,7 @@ subroutine run_quick(self,ierr)
   use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
   use quick_exception_module
+  use quick_cshell_eri_module, only: getEriPrecomputables
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -503,7 +504,7 @@ subroutine run_quick(self,ierr)
 
   ! pre-calculate 2 index coefficients and schwarz cutoff criteria
   if(.not.quick_method%opt) then
-    call g2eshell
+    call getEriPrecomputables
     call schwarzoff
   endif
 

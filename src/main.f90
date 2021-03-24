@@ -30,6 +30,7 @@
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
+    use quick_cshell_eri_module, only: getEriPrecomputables
 
     implicit none
 
@@ -191,7 +192,7 @@
 !        call getEnergy(failed)
 !      endif
 !   else
-        call g2eshell   ! pre-calculate 2 indices coeffecient to save time
+        call getEriPrecomputables   ! pre-calculate 2 indices coeffecient to save time
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
