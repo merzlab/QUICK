@@ -197,6 +197,245 @@ end subroutine get_oshell_eri
 end subroutine get_cshell_eri
 #endif
 
+! Vertical Recursion by Xiao HE 07/07/07 version
+#ifdef OSHELL
+subroutine oshell
+#else
+subroutine cshell
+#endif
+
+   use allmod
+
+   Implicit double precision(a-h,o-z)
+   double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
+   Parameter(NN=13)
+   double precision FM(0:13)
+   double precision RA(3),RB(3),RC(3),RD(3)
+
+   double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+   COMMON /COM1/RA,RB,RC,RD
+
+   do M=1,3
+      RA(M)=xyz(M,quick_basis%katom(II))
+      RB(M)=xyz(M,quick_basis%katom(JJ))
+      RC(M)=xyz(M,quick_basis%katom(KK))
+      RD(M)=xyz(M,quick_basis%katom(LL))
+   enddo
+
+  ! Get angular momenta quantum number for each of the 4 shells
+  ! s=0~0, p=1~1, sp=0~1, d=2~2, f=3~3
+
+   NII1=quick_basis%Qstart(II)
+   NII2=quick_basis%Qfinal(II)
+   NJJ1=quick_basis%Qstart(JJ)
+   NJJ2=quick_basis%Qfinal(JJ)
+   NKK1=quick_basis%Qstart(KK)
+   NKK2=quick_basis%Qfinal(KK)
+   NLL1=quick_basis%Qstart(LL)
+   NLL2=quick_basis%Qfinal(LL)
+
+   NNAB=(NII2+NJJ2)
+   NNCD=(NKK2+NLL2)
+
+   NABCDTYPE=NNAB*10+NNCD
+
+
+   NNAB=sumindex(NNAB)
+   NNCD=sumindex(NNCD)
+   NNA=sumindex(NII1-1)+1
+   NNC=sumindex(NKK1-1)+1
+
+   !The summation of the highest angular momentum number 
+   !of each shell. 
+   NABCD=NII2+NJJ2+NKK2+NLL2
+   ITT=0
+
+   do JJJ=1,quick_basis%kprim(JJ)
+
+      Nprij=quick_basis%kstart(JJ)+JJJ-1
+
+      ! the second cycle is for i prim
+      ! II and NpriI are the tracking indices
+      do III=1,quick_basis%kprim(II)
+         Nprii=quick_basis%kstart(II)+III-1
+         !For NpriI and NpriJ primitives, we calculate the following quantities
+         AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ). Eqn 8 of HGP.
+         ABtemp=0.5d0/AB         ! ABtemp = 1/(2Apri) = 1/2(expo(NpriI)+expo(NpriJ))
+         ! This is term is required for Eqn 6 of HGP. 
+         cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+
+         do M=1,3
+            !Eqn 9 of HGP
+            ! P' is the weighting center of NpriI and NpriJ
+            !                           --->           --->
+            ! ->  ------>       expo(I)*xyz(I)+expo(J)*xyz(J)
+            ! P = P'(I,J)  = ------------------------------
+            !                       expo(I) + expo(J)
+            P(M)=Ppri(M,Nprii,Nprij)
+
+            !Multiplication of Eqns 9  by Eqn 8 of HGP.. 
+            !                        -->            -->
+            ! ----->         expo(I)*xyz(I)+expo(J)*xyz(J)                                 -->            -->
+            ! AAtemp = ----------------------------------- * (expo(I) + expo(J)) = expo(I)*xyz(I)+expo(J)*xyz(J)
+            !                  expo(I) + expo(J)
+            AAtemp(M)=P(M)*AB
+
+            !Requires for HGP Eqn 6. 
+            ! ----->   ->  ->
+            ! Ptemp  = P - A
+            Ptemp(M)=P(M)-RA(M)
+         enddo
+
+         ! the third cycle is for l prim
+         ! LLL and npriL are the tracking indices
+         do LLL=1,quick_basis%kprim(LL)
+            Npril=quick_basis%kstart(LL)+LLL-1
+
+            ! the forth cycle is for k prim
+            ! the KKK and nprik are the tracking indices
+            do KKK=1,quick_basis%kprim(KK)
+               Nprik=quick_basis%kstart(KK)+KKK-1
+
+               ! prim cutoff: cutoffprim(I,J,K,L) = dnmax * cutprim(I,J) * cutprim(K,L)
+               cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
+               if(cutoffprim.gt.quick_method%primLimit)then
+
+                  !Nita quantity of HGP Eqn 10. This is same as
+                  !zita (AB) above. 
+                  CD=Apri(Nprik,Npril)  ! CD = Apri = expo(NpriK) + expo(NpriL)
+
+                  !First term of HGP Eqn 12 without sqrt. 
+                  ABCD=AB+CD            ! ABCD = expo(NpriI)+expo(NpriJ)+expo(NpriK)+expo(NpriL)
+
+                  !First term of HGP Eqn 13.
+                  !         AB * CD      (expo(I)+expo(J))*(expo(K)+expo(L))
+                  ! Rou = ----------- = ------------------------------------
+                  !         AB + CD         expo(I)+expo(J)+expo(K)+expo(L)
+                  ROU=AB*CD/ABCD
+
+                  RPQ=0.0d0
+
+                  !First term of HGP Eqn 12 with sqrt. 
+                  !              _______________________________
+                  ! ABCDxiao = \/expo(I)+expo(J)+expo(K)+expo(L)
+                  ABCDxiao=dsqrt(ABCD)
+
+                  !Not sure why we calculate the following. 
+                  CDtemp=0.5d0/CD       ! CDtemp =  1/2(expo(NpriK)+expo(NpriL))
+
+                  !These terms are required for HGP Eqn 6.
+                  !                expo(I)+expo(J)                        expo(K)+expo(L)
+                  ! ABcom = --------------------------------  CDcom = --------------------------------
+                  !          expo(I)+expo(J)+expo(K)+expo(L)           expo(I)+expo(J)+expo(K)+expo(L)
+                  ABcom=AB/ABCD
+                  CDcom=CD/ABCD
+
+                  ! ABCDtemp = 1/2(expo(I)+expo(J)+expo(K)+expo(L))
+                  ABCDtemp=0.5d0/ABCD
+
+                  do M=1,3
+
+                     !Calculate Q of HGP 10, which is same as P above. 
+                     ! Q' is the weighting center of NpriK and NpriL
+                     !                           --->           --->
+                     ! ->  ------>       expo(K)*xyz(K)+expo(L)*xyz(L)
+                     ! Q = P'(K,L)  = ------------------------------
+                     !                       expo(K) + expo(L)
+                     Q(M)=Ppri(M,Nprik,Npril)
+
+                     !HGP Eqn 10. 
+                     ! W' is the weight center for NpriI,NpriJ,NpriK and NpriL
+                     !                --->             --->             --->            --->
+                     ! ->     expo(I)*xyz(I) + expo(J)*xyz(J) + expo(K)*xyz(K) +expo(L)*xyz(L)
+                     ! W = -------------------------------------------------------------------
+                     !                    expo(I) + expo(J) + expo(K) + expo(L)
+                     W(M)=(AAtemp(M)+Q(M)*CD)/ABCD
+
+                     !Required for HGP Eqn 13.
+                     !        ->  ->  2
+                     ! RPQ =| P - Q |
+                     XXXtemp=P(M)-Q(M)
+                     RPQ=RPQ+XXXtemp*XXXtemp
+
+                     !Not sure why we need the next two terms. 
+                     ! ---->   ->  ->
+                     ! Qtemp = Q - K
+                     Qtemp(M)=Q(M)-RC(M)
+
+                     ! ----->   ->  ->
+                     ! WQtemp = W - Q
+                     ! ----->   ->  ->
+                     ! WPtemp = W - P
+                     WQtemp(M)=W(M)-Q(M)
+
+                     !Required for HGP Eqns 6 and 16.
+                     WPtemp(M)=W(M)-P(M)
+                  enddo
+
+                  !HGP Eqn 13. 
+                  !             ->  -> 2
+                  ! T = ROU * | P - Q|
+                  T=RPQ*ROU
+                  !                         2m        2
+                  ! Fm(T) = integral(1,0) {t   exp(-Tt )dt}
+                  ! NABCD is the m value, and FM returns the FmT value
+#ifdef MIRP
+                  call mirp_fmt(NABCD,T,FM)
+#else
+                  call FmT(NABCD,T,FM)
+#endif
+                  !Go through all m values, obtain Fm values from FM array we
+                  !just computed and calculate quantities required for HGP Eqn
+                  !12. 
+                  do iitemp=0,NABCD
+                     ! Yxiaotemp(1,1,iitemp) is the starting point of recurrsion
+                     Yxiaotemp(1,1,iitemp)=FM(iitemp)/ABCDxiao
+                     !              _______________________________
+                     ! ABCDxiao = \/expo(I)+expo(J)+expo(K)+expo(L)
+                  enddo
+
+                  ITT=ITT+1
+                  ! now we will do vrr and and the double-electron integral
+                  call vertical(NABCDTYPE)
+                  do I2=NNC,NNCD
+                     do I1=NNA,NNAB
+                        Yxiao(ITT,I1,I2)=Yxiaotemp(I1,I2,0)
+                     enddo
+                  enddo
+               endif
+            enddo
+         enddo
+      enddo
+   enddo
+
+   do I=NII1,NII2
+      NNA=Sumindex(I-1)+1
+      do J=NJJ1,NJJ2
+         NNAB=SumINDEX(I+J)
+         do K=NKK1,NKK2
+            NNC=Sumindex(k-1)+1
+            do L=NLL1,NLL2
+               NNCD=SumIndex(K+L)
+#ifdef OSHELL
+                call iclass_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
+#else
+                call iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
+#endif
+            enddo
+         enddo
+      enddo
+   enddo
+   201 return
+#ifdef OSHELL
+end subroutine oshell
+#else
+end subroutine cshell
+#endif
+
 #ifdef OSHELL
 end module quick_oshell_eri_module
 #else
