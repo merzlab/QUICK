@@ -29,27 +29,23 @@ subroutine getMol(ierr)
    if (master) then
 
       ! Read info from AMBER
-      if (amber_interface_logic) then
-         call read_AMBER_crd
-      else
-         call PrtAct(iOutfile,"Begin Reading Molecular Information")
+      call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
-         ! read xyz coordinates from the .in file 
-         if(.not. isTemplate) then
-          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
-          CHECK_ERROR(ierr)
-           ! read molecule coordinates
-           call read2(quick_molspec,inFile,ierr)
-           close(inFile)
-         endif
+      ! read xyz coordinates from the .in file 
+      if(.not. isTemplate) then
+       call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+       CHECK_ERROR(ierr)
+        ! read molecule coordinates
+        call read2(quick_molspec,inFile,ierr)
+        close(inFile)
+      endif
 
-         quick_molspec%nbasis   => nbasis
-         quick_qm_struct%nbasis => nbasis
-         call set(quick_molspec,ierr)
+      quick_molspec%nbasis   => nbasis
+      quick_qm_struct%nbasis => nbasis
+      call set(quick_molspec,ierr)
 
-         ! quick forward coordinates stored in namelist to instant variables
-         xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
-      end if   !amber_interface_logic
+      ! quick forward coordinates stored in namelist to instant variables
+      xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
 
       ! Now read in another line
       ! to see the specific grid has been requested if it is a DFT job
