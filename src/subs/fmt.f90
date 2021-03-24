@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	fmt.f90
 !	new_quick
@@ -56,7 +57,7 @@ Subroutine FmT(MaxM,X,vals)
              5.29428148329736d-02 )*Y+1.15702180856167d-01
         WW1 = (X+X)*F1+E
      endif
-  else if (X > 3.0d-05 .or. (X>3.0d-07.and.maxm<4)) then
+  else if (X > 1.0d-01 .or. (X>1.0d-04.and.maxm<4)) then
      F1 =((((((((-8.36313918003957d-08*X+1.21222603512827d-06 )*X- &
           1.15662609053481d-05 )*X+9.25197374512647d-05 )*X- &
           6.40994113129432d-04 )*X+3.78787044215009d-03 )*X- &
@@ -68,7 +69,7 @@ Subroutine FmT(MaxM,X,vals)
      WW1 = (1.d0-X)/dble(2*maxm+1)
   endif
 
-  if (X > 3.0d-5 .or. (X>3.0d-07.and.maxm<4) ) then
+  if (X > 1.0d-1 .or. (X>1.0d-04.and.maxm<4) ) then
      vals(0) = WW1
      do m=1,maxm
         vals(m) = (((2*m-1)*vals(m-1))- E)*0.5d0*XINV

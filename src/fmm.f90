@@ -1,3 +1,4 @@
+#include "util.fh"
 ! prepare all combinations SS, PS, SP, PP, Xiao HE 01/14/2008
 ! Be careful of coeff
 ! nuclearspdf.f90

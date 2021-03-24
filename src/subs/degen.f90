@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	degen.f90
 !	new_quick

@@ -16,17 +16,28 @@
 | #STO-3G                           | STO-3G.BAS                          |
 | #3-21G                            | 3-21G.BAS                           |
 | #6-31G                            | 6-31G.BAS                           |
-| #6-31G*                           | 6-31GS.BAS                          |
-| #6-31G**                          | 6-31GSS.BAS                         |
+| #6-31G*                           | 6-31GD.BAS                          |
+| #6-31G(d)                         | 6-31GD.BAS                          |
+| #6-31G**                          | 6-31GDP.BAS                         |
+| #6-31G(d,p)                       | 6-31GDP.BAS                         |
 | #6-311G                           | 6-311G.BAS                          |
+| #6-311G*                          | 6-311GD.BAS                         |
+| #6-311G(d)                        | 6-311GD.BAS                         |
+| #6-311G**                         | 6-311GDP.BAS                        |
 | #6-311G(d,p)                      | 6-311GDP.BAS                        |
-| #6-311G(2df,2pd)                  | 6-311G2DF2PD.BAS                    |
-| #6-31G(2df,2pd)                   | 6-31G2DF2PD.BAS                     |
+| #6-31+G*                          | 6-31PLGD.BAS                        |
+| #6-31+G(d)                        | 6-31PLGD.BAS                        |
+| #6-31+G**                         | 6-31PLGDP.BAS                       |
+| #6-31+G(d,p)                      | 6-31PLGDP.BAS                       |
+| #6-31++G**                        | 6-31PLPLGDP.BAS                     |
+| #6-31++G(d,p)                     | 6-31PLPLGDP.BAS                     |
 | #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
-| #6-311G*                          | 6-311GS.BAS                         |
-| #6-311G**                         | 6-311GSS.BAS                        |
+| #6-311++G(2d,2p)                  | 6-311PLPLG2D2P.BAS                  |
 | #cc-pVDZ                          | CC-PVDZ.BAS                         |
 | #def2-svp                         | DEF2-SVP.BAS                        |
+| #def2-sv(p)                       | DEF2-SV_P.BAS                       |
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
+| #PC-0                             | PC0.BAS                             |
+| #PC-1                             | PC1.BAS                             |
 |_________________________________________________________________________|
 

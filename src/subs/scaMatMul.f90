@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !       prterr.f90
 !       new_quick
@@ -19,7 +20,7 @@ subroutine scalarMatMul(O,n1,n2,scalar)
 
     do i=1,n1
         do j=1,n2
-            O(i,j)= O(i,j)*scalar
+            O(j,i)= O(j,i)*scalar
         enddo
     enddo
 

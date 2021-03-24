@@ -1,0 +1,198 @@
+  *********************************************************************************************************
+  **                                                                                                     **
+  **           888888888888                                                                              **
+  **         8888888888888888                                                                            **
+  **      888888888888888888                                                                             **
+  **     888888888888888888                                                                              **
+  **    888888888888888                                                                                  **
+  **   88888888888888888888                               88888                       8888:              **
+  **   8888888888888888888888Z                            88888                       8888:              **
+  **   888888888888888888888888?                          88888                       8888:              **
+  **   8888888888888      8888888                                        888888       8888:              **
+  **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+  **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+  **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+  **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+  **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+  **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+  **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+  **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+  **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+  **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+  **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+  **                                                                                                     **
+  **                                                                                                     **
+  **                                         Copyright (c) 2021                                          **
+  **                          Regents of the University of California San Diego                          **
+  **                                    & Michigan State University                                      **
+  **                                        All Rights Reserved.                                         **
+  **                                                                                                     **
+  **                   This software provided pursuant to a license agreement containing                 **
+  **                   restrictions on its disclosure, duplication, and use. This software               **
+  **                   contains confidential and proprietary information, and may not be                 **
+  **                   extracted or distributed, in whole or in part, for any purpose                    **
+  **                   whatsoever, without the express written permission of the authors.                **
+  **                   This notice, and the associated author list, must be attached to                  **
+  **                   all copies, or extracts, of this software. Any additional                         **
+  **                   restrictions set forth in the license agreement also apply to this                **
+  **                   software.                                                                         **
+  *********************************************************************************************************
+                                                                                                           
+  Cite this work as:                                                                                       
+  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
+  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+                                                                                                           
+  If you have any comments or queries, please send us an email for technical support:                      
+  quick.merzlab@gmail.com                                                                                  
+                                                                                                           
+| TASK STARTS ON: Wed Mar 17 12:11:30 2021
+| INPUT FILE :    ene_H2O_rhf_ccpvdz.in
+| OUTPUT FILE:    ene_H2O_rhf_ccpvdz.out
+| DATE FILE  :    ene_H2O_rhf_ccpvdz.dat
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+
+ @ Read Job And Atom
+
+  KEYWORD=HF  BASIS=CC-PVDZ CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=0                                                                                                                           
+ ============== JOB CARD =============
+ METHOD = HATREE FOCK
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
+ Z-MATRIX CONSTRUCTION
+ DIPOLE
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE = 1000
+ COMPUTATIONAL CUTOFF: 
+      TWO-e INTEGRAL   =  0.100E-08
+      BASIS SET PRIME  =  0.100E-19
+      MATRIX ELEMENTS  =  0.100E-09
+      BASIS FUNCTION   =  0.100E-09
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
+| BASIS FILE = /scratch/cruzeiro/quick/basis//CC-PVDZ.BAS
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = O 
+ BASIS FUNCTIONS =   15
+ For Atom Kind =    2
+ ELEMENT = H 
+ BASIS FUNCTIONS =    5
+
+ @ Finish SAD initial guess
+
+
+ @ Begin Reading Molecular Information
+
+
+ =========== Molecule Input ==========
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =    3    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    2    NUMBER OF NON-HYDROGEN ATOM =    1
+ NUMBER OF ELECTRONS     =   10
+
+ -- INPUT GEOMETRY -- :
+    O          -0.3384       0.0038       0.2392
+    H          -0.3351      -0.0019      -0.8328
+    H           0.6735      -0.0019       0.5935
+
+ -- DISTANCE MATRIX -- :
+              1           2           3
+      1     0.00000
+      2     2.02582     0.00000
+      3     2.02607     3.30113     0.00000
+
+============== BASIS INFOS ==============
+ BASIS FUNCTIONS =   25
+ NSHELL =   12 NPRIM  =   56
+ JSHELL =   12 JBASIS =   37
+
+
+ @ End Reading Molecular Information 
+
+
+ @ Begin Energy Calculation
+
+                                         SCF ENERGY
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+|  1    -75.724143252      ------         0.130     1        0.00      0.13      0.00    0.1368E+01  0.8221E-01  0.8315E+00
+|  2    -75.977281793  0.253139E+00       0.118     2        0.00      0.12      0.00    0.8583E-01  0.2469E-01  0.2394E+00
+|  3    -75.994005845  0.167241E-01       0.118     3        0.00      0.12      0.00    0.4860E-01  0.8862E-02  0.1019E+00
+|  4    -75.999027402  0.502156E-02       0.119     4        0.00      0.12      0.00    0.7570E-02  0.2193E-02  0.1796E-01
+|  5    -75.999387411  0.360009E-03       0.118     5        0.00      0.12      0.00    0.4100E-02  0.1220E-02  0.1293E-01
+|  6    -75.999475753  0.883425E-04       0.118     6        0.00      0.12      0.00    0.1418E-02  0.4762E-03  0.5437E-02
+|  7    -75.999485839  0.100855E-04       0.119     7        0.00      0.12      0.00    0.1809E-03  0.5663E-04  0.5874E-03
+|  8    -75.999485986  0.147006E-06       0.119     8        0.00      0.12      0.00    0.2647E-04  0.1052E-04  0.9348E-04
+|  9    -75.999485992  0.658683E-08       0.108     9        0.00      0.11      0.00    0.7224E-05  0.3098E-05  0.2319E-04
+| 10    -75.999485993  0.467594E-09       0.101    10        0.00      0.10      0.00    0.1177E-05  0.4937E-06  0.3839E-05
+| ------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER  10 CYLCES
+| MAX ERROR = 0.117651E-05   RMS CHANGE = 0.493735E-06   MAX CHANGE = 0.383911E-05
+| -----------------------------------------------
+ ELECTRONIC ENERGY    =   -84.199957722
+ CORE_CORE REPULSION  =     8.200471729
+ TOTAL ENERGY         =   -75.999485993
+
+ @ End Energy calculation
+
+
+ @ Begin Zmake conversion
+
+  
+ Z-MATRIX:
+
+   ATOM  ELEMENTAL  BOND LENGTH    BOND ANGLE    DIHEDRAL ANGLE
+  NUMBER  SYMBOL    (ANGSTROMS)    (DEGREES)       (DEGREES)
+     I                 I-NA         I-NA-NB        I-NA-NB-NC      NA   NB   NC
+
+     1      O        0.00000  0     0.00000  0      0.00000  0      0    0    0
+     2      H        1.07202  1     0.00000  0      0.00000  0      1    0    0
+     3      H        1.07215  1   109.11820  1      0.00000  0      1    2    0
+
+ @ End Zmake conversion
+
+
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   O             -0.4302            -0.6081
+   H              0.2151             0.3038
+   H              0.2151             0.3044
+   TOTAL        -0.0000            -0.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+    1.6931   -0.0190   -1.1971    2.0737
+
+ @ End Charge and Dipole Calculation
+
+
+ @ Output Timing Information
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     1.079846000( 46.03%)
+| TOTAL SCF TIME      =     1.220521000( 52.03%)
+|       TOTAL OP TIME      =     1.202338000( 51.25%)
+|             TOTAL 1e TIME      =     0.052807000(  2.25%)
+|             TOTAL 2e TIME      =     1.093057000( 46.59%)
+|       TOTAL DII TIME      =     0.015841000(  0.68%)
+|             TOTAL DIAG TIME    =     0.013010000(  0.55%)
+| TOTAL TIME          =     2.345963000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes  2.3 seconds.
+
+ @ Finish Output Timing Information
+
+| Normal Termination. Task Finished on: Wed Mar 17 12:11:31 2021

@@ -18,7 +18,7 @@ module test_quick_api_module
   public :: loadTestData, printQuickOutput
 
 #ifdef MPIV
-  public :: mpi_initialize, printQuickMPIOutput
+  public :: mpi_initialize, printQuickMPIOutput, mpi_exit
 #endif
 
   ! a test system with one water and 3 point charges
@@ -61,6 +61,9 @@ module test_quick_api_module
    0.5448, 0.0000,-3.8000,  0.4130, &
    0.5448, 0.0000,-0.9121,  0.4130/
 
+   ! number of point charges per frame
+   integer :: nptg_pframe = 3
+
   interface loadTestData
     module procedure load_test_data
   end interface loadTestData
@@ -85,7 +88,7 @@ contains
     enddo
 
     if(nxt_charges>0) then
-      k=nxt_charges*4*(frame-1) + 1
+      k=nptg_pframe*4*(frame-1) + 1
       do i=1,nxt_charges
         do j=1,4
           xc_coord(j,i) = all_extchg(k)
@@ -138,6 +141,18 @@ contains
     call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad)
 
   end subroutine printQuickMPIOutput
+
+  subroutine mpi_exit
+
+    implicit none
+    integer :: mpierror
+
+    include 'mpif.h'
+
+    call MPI_FINALIZE(mpierror)
+    call exit(0)
+
+  end subroutine mpi_exit
 
 #endif
 

@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	fake_amber_interface.f90
 !	fake_amber_interface

@@ -1,0 +1,247 @@
+  *********************************************************************************************************
+  **                                                                                                     **
+  **           888888888888                                                                              **
+  **         8888888888888888                                                                            **
+  **      888888888888888888                                                                             **
+  **     888888888888888888                                                                              **
+  **    888888888888888                                                                                  **
+  **   88888888888888888888                               88888                       8888:              **
+  **   8888888888888888888888Z                            88888                       8888:              **
+  **   888888888888888888888888?                          88888                       8888:              **
+  **   8888888888888      8888888                                        888888       8888:              **
+  **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+  **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+  **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+  **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+  **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+  **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+  **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+  **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+  **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+  **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+  **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+  **                                                                                                     **
+  **                                                                                                     **
+  **                                         Copyright (c) 2021                                          **
+  **                          Regents of the University of California San Diego                          **
+  **                                    & Michigan State University                                      **
+  **                                        All Rights Reserved.                                         **
+  **                                                                                                     **
+  **                   This software provided pursuant to a license agreement containing                 **
+  **                   restrictions on its disclosure, duplication, and use. This software               **
+  **                   contains confidential and proprietary information, and may not be                 **
+  **                   extracted or distributed, in whole or in part, for any purpose                    **
+  **                   whatsoever, without the express written permission of the authors.                **
+  **                   This notice, and the associated author list, must be attached to                  **
+  **                   all copies, or extracts, of this software. Any additional                         **
+  **                   restrictions set forth in the license agreement also apply to this                **
+  **                   software.                                                                         **
+  *********************************************************************************************************
+                                                                                                           
+  Cite this work as:                                                                                       
+  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
+  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+                                                                                                           
+  If you have any comments or queries, please send us an email for technical support:                      
+  quick.merzlab@gmail.com                                                                                  
+                                                                                                           
+| TASK STARTS ON: Wed Mar 17 12:11:57 2021
+| INPUT FILE :    grad_PH3_b3lyp_def2sv_p.in
+| OUTPUT FILE:    grad_PH3_b3lyp_def2sv_p.out
+| DATE FILE  :    grad_PH3_b3lyp_def2sv_p.dat
+| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+
+ @ Read Job And Atom
+
+  KEYWORD=B3LYP  BASIS=DEF2-SV(P) CUTOFF=1.0E-9 DENSERMS=1.0E-6 ZMAKE GRADIENT DIPOLE CHARGE=0                                                                                                                    
+ ============== JOB CARD =============
+ METHOD = DENSITY FUNCTIONAL THEORY
+ DENSITY FUNCTIONAL = B3LYP
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
+ Z-MATRIX CONSTRUCTION
+ DIPOLE
+ STANDARD GRID = SG1
+ GRADIENT CALCULATION
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE = 1000
+ COMPUTATIONAL CUTOFF: 
+      TWO-e INTEGRAL   =  0.100E-08
+      BASIS SET PRIME  =  0.100E-19
+      MATRIX ELEMENTS  =  0.100E-09
+      BASIS FUNCTION   =  0.100E-09
+      GRADIENT CUTOFF  =  0.100E-08
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = DEF2-SV(P),  TYPE = CARTESIAN
+| BASIS FILE = /scratch/cruzeiro/quick/basis//DEF2-SV_P.BAS
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = P 
+ BASIS FUNCTIONS =   19
+ For Atom Kind =    2
+ ELEMENT = H 
+ BASIS FUNCTIONS =    2
+
+ @ Finish SAD initial guess
+
+
+ @ Begin Reading Molecular Information
+
+
+ =========== Molecule Input ==========
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =    4    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    3    NUMBER OF NON-HYDROGEN ATOM =    1
+ NUMBER OF ELECTRONS     =   18
+
+ -- INPUT GEOMETRY -- :
+    P          -1.3784      -0.6787      -0.6594
+    H           0.0009      -0.4063      -0.7522
+    H          -1.7025      -0.1727      -1.9338
+    H          -1.7025       0.5002       0.0410
+
+ -- DISTANCE MATRIX -- :
+              1           2           3           4
+      1     0.00000
+      2     2.66261     0.00000
+      3     2.66263     3.94247     0.00000
+      4     2.66262     3.94245     3.94246     0.00000
+
+============== BASIS INFOS ==============
+ BASIS FUNCTIONS =   25
+ NSHELL =   14 NPRIM  =   49
+ JSHELL =   14 JBASIS =   30
+
+
+ @ End Reading Molecular Information 
+
+
+ @ Begin XC Quadrature Formation
+
+ OCTAGO: OCTree Algorithm for Grid Operations 
+   PRUNING CUTOFF       = 0.100E-09
+   INITIAL GRID POINTS  =       15016
+|   FINAL GRID POINTS    =       10319
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        3963
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        4667
+
+ @ End XC Quadrature Formation
+
+
+ @ Begin Energy Calculation
+
+                                         SCF ENERGY
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+|  1   -343.006623866      ------         0.163     1        0.00      0.16      0.00    0.1246E+01  0.6421E-01  0.2910E+00
+|  2   -343.048049271  0.414254E-01       0.148     2        0.00      0.15      0.00    0.2556E-01  0.1507E-01  0.1489E+00
+|  3   -343.049419331  0.137006E-02       0.149     3        0.00      0.15      0.00    0.1784E-01  0.4910E-02  0.5323E-01
+|  4   -343.050609295  0.118996E-02       0.149     4        0.00      0.15      0.00    0.1026E-02  0.1958E-03  0.1068E-02
+|  5   -343.050612358  0.306271E-05       0.149     5        0.00      0.15      0.00    0.3550E-03  0.6119E-04  0.3683E-03
+|  6   -343.050612768  0.409852E-06       0.135     6        0.00      0.13      0.00    0.5534E-04  0.8209E-05  0.4269E-04
+| -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
+|  7   -343.050613146  0.378043E-06       0.124     7        0.00      0.12      0.00    0.1143E-05  0.2254E-06  0.1243E-05
+| ------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER   7 CYLCES
+| MAX ERROR = 0.114301E-05   RMS CHANGE = 0.225440E-06   MAX CHANGE = 0.124319E-05
+| -----------------------------------------------
+ ALPHA ELECTRON DENSITY    =    8.9999768478
+ BETA ELECTRON DENSITY     =    8.9999768478
+ ELECTRONIC ENERGY    =  -360.712203158
+ CORE_CORE REPULSION  =    17.661590012
+ TOTAL ENERGY         =  -343.050613146
+
+ @ End Energy calculation
+
+
+ @ Begin Gradient Calculation
+
+ ANALYTICAL GRADIENT: 
+----------------------------------------
+ COORDINATE    XYZ            GRADIENT
+----------------------------------------
+    1X    -1.3784101053     0.0083606164
+    1Y    -0.6786700518     0.0212087369
+    1Z    -0.6593600504    -0.0076313614
+    2X     0.0008900001    -0.0099216555
+    2Y    -0.4063000310    -0.0046112394
+    2Z    -0.7521600574     0.0016766843
+    3X    -1.7025301300     0.0010419525
+    3Y    -0.1726700132    -0.0061050531
+    3Z    -1.9338001477     0.0091372634
+    4X    -1.7025301300     0.0008523249
+    4Y     0.5002100382    -0.0103220115
+    4Z     0.0409700031    -0.0033692022
+----------------------------------------
+
+ @ End Gradient Calculation
+
+
+ @ Begin Zmake conversion
+
+  
+ Z-MATRIX:
+
+   ATOM  ELEMENTAL  BOND LENGTH    BOND ANGLE    DIHEDRAL ANGLE
+  NUMBER  SYMBOL    (ANGSTROMS)    (DEGREES)       (DEGREES)
+     I                 I-NA         I-NA-NB        I-NA-NB-NC      NA   NB   NC
+
+     1      P        0.00000  0     0.00000  0      0.00000  0      0    0    0
+     2      H        1.40899  1     0.00000  0      0.00000  0      1    0    0
+     3      H        1.40900  1    95.52004  1      0.00000  0      1    2    0
+     4      H        1.40900  1    95.51966  1    -96.10933  1      1    2    3
+
+ @ End Zmake conversion
+
+
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   P             -0.0992            -0.0858
+   H              0.0331             0.0264
+   H              0.0331             0.0291
+   H              0.0331             0.0303
+   TOTAL        -0.0000            -0.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+    0.2976    0.7971   -0.2715    0.8931
+
+ @ End Charge and Dipole Calculation
+
+
+ @ Output Timing Information
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     0.283816000( 17.09%)
+| DFT GRID OPERATIONS =     0.043141000(  2.60%)
+| TOTAL SCF TIME      =     1.063814000( 64.08%)
+|       TOTAL OP TIME      =     1.050869000( 63.30%)
+|             TOTAL 1e TIME      =     0.046555000(  2.80%)
+|             TOTAL 2e TIME      =     0.538812000( 32.45%)
+|             TOTAL EXC TIME     =     0.415865000( 25.05%)
+|       TOTAL DII TIME      =     0.011231000(  0.68%)
+|             TOTAL DIAG TIME    =     0.009260000(  0.56%)
+| TOTAL GRADIENT TIME      =     0.275345000( 16.58%)
+|       TOTAL 1e GRADIENT TIME      =     0.057121000( 3.50%)
+|       TOTAL 2e GRADIENT TIME      =     0.087324000( 5.26%)
+|       TOTAL EXC GRADIENT TIME     =     0.129538000(  7.80%)
+| TOTAL TIME          =     1.660261000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes  1.7 seconds.
+
+ @ Finish Output Timing Information
+
+| Normal Termination. Task Finished on: Wed Mar 17 12:11:58 2021

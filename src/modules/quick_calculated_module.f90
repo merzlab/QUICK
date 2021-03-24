@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  Calculated Module, storing calculated information
 module quick_calculated_module
 
@@ -99,6 +101,9 @@ module quick_calculated_module
       ! electron energy
       double precision :: EEl
 
+      ! exchange correlation energy
+      double precision :: Exc
+
       ! core energy
       double precision :: ECore
 
@@ -150,6 +155,11 @@ module quick_calculated_module
    interface dealloc
       module procedure deallocate_quick_qm_struct
    end interface dealloc
+
+   interface realloc
+      module procedure reallocate_quick_qm_struct
+   end interface realloc
+
 #ifdef MPIV
    interface broadcast
       module procedure broadcast_quick_qm_struct
@@ -187,6 +197,7 @@ contains
       integer nelecb
 
       type (quick_qm_struct_type) self
+
       nbasis=self%nbasis
       natom=quick_molspec%natom
       nelec=quick_molspec%nelec
@@ -212,9 +223,6 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
-         if (quick_method%extCharges) then
-            if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
-         endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
@@ -244,7 +252,39 @@ contains
          if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
       endif
 
+      if (quick_method%grad) then
+         if (quick_molspec%nextatom .gt. 0) then
+            if(.not. allocated(self%ptchg_gradient)) allocate(self%ptchg_gradient(3*quick_molspec%nextatom))
+         endif
+      endif
+
    end subroutine
+   
+   !-----------------------------
+   ! subroutine to realloate data
+   !-----------------------------
+
+   subroutine reallocate_quick_qm_struct(self,ierr)
+
+     use quick_exception_module
+     use quick_molspec_module,only: quick_molspec
+
+     implicit none
+
+     type (quick_qm_struct_type), intent(inout) :: self
+     integer, intent(inout) :: ierr
+     integer :: current_size     
+
+     if(quick_molspec%nextatom .gt. 0) then
+       if(allocated(self%ptchg_gradient)) current_size= size(self%ptchg_gradient)
+       if(current_size /= quick_molspec%nextatom*3) then
+         deallocate(self%ptchg_gradient, stat=ierr)
+         allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
+         self%ptchg_gradient=0.0d0
+       endif
+     endif
+
+   end subroutine reallocate_quick_qm_struct
 
    !--------------
    ! subroutine to write data to dat file
@@ -315,6 +355,7 @@ contains
       integer nelecb
 
       type (quick_qm_struct_type) self
+
       nullify(self%nbasis)
       ! those matrices is necessary for all calculation or the basic of other calculation
       if (allocated(self%s)) deallocate(self%s)
@@ -406,6 +447,7 @@ contains
       call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
       call MPI_BCAST(self%EEl,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

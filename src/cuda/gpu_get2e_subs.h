@@ -1513,7 +1513,7 @@ __device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerti
                 3.79490003707156E-03  )*Y+1.61723488664661E-02  )*Y- \
               5.29428148329736E-02  )*Y+1.15702180856167E-01 ;
 	WW1 += (X+X)*F1;
-    }else if (X > 3.0E-5 || (X> 3.0E-7 && MaxM < 4)){
+    }else if (X > 1.0E-1 || (X> 1.0E-4 && MaxM < 4)){
         
         F1 =(((((((( -8.36313918003957E-08 *X+1.21222603512827E-06  )*X- \
                    1.15662609053481E-05  )*X+9.25197374512647E-05  )*X- \
@@ -1526,7 +1526,7 @@ __device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerti
     }
     
     
-    if (X > 3.0E-5 || (X> 3.0E-7 && MaxM < 4)) {
+    if (X > 1.0E-1 || (X> 1.0E-4 && MaxM < 4)) {
         LOC3(YVerticalTemp, 0, 0, 0, VDIM1, VDIM2, VDIM3) = WW1;
         for (int m = 1; m<= MaxM; m++) {
             LOC3(YVerticalTemp, 0, 0, m, VDIM1, VDIM2, VDIM3) = (((2*m-1)*LOC3(YVerticalTemp, 0, 0, m-1, VDIM1, VDIM2, VDIM3))- E)*0.5*XINV;
@@ -1539,6 +1539,7 @@ __device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerti
     }
     return;
 }
+
 
 /*
  sqr for double precision. there no internal function to do that in fast-math-lib of CUDA

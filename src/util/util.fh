@@ -1,0 +1,50 @@
+!---------------------------------------------------------------------!
+! Created by Madu Manathunga on 02/25/2021                            !
+!                                                                     !
+! Copyright (C) 2020-2021 Merz lab                                    !
+! Copyright (C) 2020-2021 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
+
+!---------------------------------------------------------------------!
+! This header file contains macro definitions. Must be only included  !
+! in f90 source files.                                                !
+!_____________________________________________________________________!
+
+#ifndef QUICK_UTIL_FH
+#define QUICK_UTIL_FH
+
+#define INFILEHANDLE     2020
+#define OUTFILEHANDLE    2021
+#define DMXFILEHANDLE    2022
+#define RSTFILEHANDLE    2023
+#define CPHFFILEHANDLE   2024
+#define BASISFILEHANDLE  2025
+#define ECPFILEHANDLE    2026
+#define BASISCFILEHANDLE 2027
+#define PDBFILEHANDLE    2028
+#define DATAFILEHANDLE   2029
+#define INTFILEHANDLE    2030
+
+! For the following definitions to work, one must use quick_exception_module
+! in a subroutine. For MPI/CUDAMPI versions, quick_mpi_module must be used. 
+
+#if defined DEBUG || defined DEBUGTIME
+#define CHECK_ERROR(ierr) 
+#else
+#ifdef MPIV
+#define CHECK_ERR if(master .and. ierr /= 0)
+#else
+#define CHECK_ERR if(ierr /= 0)
+#endif
+#define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
+#endif
+
+! A safe subroutine call with error checking. Must use ierr integer variable
+! to propagate the error.
+#define SAFE_CALL(x) call x ;CHECK_ERROR(ierr)
+
+#endif

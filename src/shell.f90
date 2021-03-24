@@ -1,3 +1,4 @@
+#include "util.fh"
 
 subroutine g2eshell
    !--------------------------------------------------------
@@ -114,7 +115,7 @@ end subroutine readInt
 !  aoint
 !  writen by Yipu Miao 07/16/12
 !-------------------------
-subroutine aoint
+subroutine aoint(ierr)
    !------------------------------
    !  This subroutine is used to store 2e-integral into files
    !------------------------------
@@ -122,6 +123,7 @@ subroutine aoint
    Implicit none
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT, I, J
    double precision leastIntegralCutoff, t1, t2
+   integer, intent(inout) :: ierr
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    call PrtAct(ioutfile,"Begin Calculation 2E TO DISK")
@@ -133,7 +135,7 @@ subroutine aoint
 
    call cpu_time(timer_begin%T2eAll)  ! Terminate the timer for 2e-integrals
 
-   call obtain_leastIntCutoff(quick_method)
+   call obtain_leastIntCutoff(quick_method,ierr)
 
 #ifdef CUDA
    write(ioutfile, '("  GPU-BASED 2-ELECTRON INTEGRAL GENERATOR")')
@@ -656,8 +658,11 @@ subroutine shell
                   !                         2m        2
                   ! Fm(T) = integral(1,0) {t   exp(-Tt )dt}
                   ! NABCD is the m value, and FM returns the FmT value
+#ifdef MIRP
+                  call mirp_fmt(NABCD,T,FM)
+#else
                   call FmT(NABCD,T,FM)
-
+#endif
                   !Go through all m values, obtain Fm values from FM array we
                   !just computed and calculate quantities required for HGP Eqn
                   !12. 
@@ -2282,6 +2287,9 @@ subroutine shellopt
    ! NNA=1
    ! NNC=1
 
+   ! allocate scratch memory for X arrays
+   call allocshellopt(quick_scratch,maxcontract)
+
    do I=NII1,NII2
       NNA=Sumindex(I-2)+1
       do J=NJJ1,NJJ2
@@ -2299,6 +2307,9 @@ subroutine shellopt
          enddo
       enddo
    enddo
+
+   ! deallocate scratch memory for X arrays
+   call deallocshellopt(quick_scratch)
 
 end subroutine shellopt
 
@@ -2320,12 +2331,12 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
    Parameter(NN=14)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
-   double precision X44(129600)
+!   double precision X44(129600)
 
-   double precision X44aa(4096)
-   double precision X44bb(4096)
-   double precision X44cc(4096)
-   double precision X44dd(4096)
+!   double precision X44aa(4096)
+!   double precision X44bb(4096)
+!   double precision X44cc(4096)
+!   double precision X44dd(4096)
    double precision AA,BB,CC,DD
 
    COMMON /COM1/RA,RB,RC,RD
@@ -2357,10 +2368,10 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
                if(cutoffprim.gt.quick_method%gradCutoff)then
                   ITT=ITT+1
-                  X44(ITT)=X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
-                  X44AA(ITT)=X44(ITT)*AA*2.0d0
-                  X44BB(ITT)=X44(ITT)*BB*2.0d0
-                  X44CC(ITT)=X44(ITT)*CC*2.0d0
+                  quick_scratch%X44(ITT)=X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
+                  quick_scratch%X44AA(ITT)=quick_scratch%X44(ITT)*AA*2.0d0
+                  quick_scratch%X44BB(ITT)=quick_scratch%X44(ITT)*BB*2.0d0
+                  quick_scratch%X44CC(ITT)=quick_scratch%X44(ITT)*CC*2.0d0
                   !                       X44DD(ITT)=X44(ITT)*DD*2.0d0
                endif
             enddo
@@ -2377,7 +2388,7 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
          !                           YtempBB=0.0d0
          !                           YtempCC=0.0d0
          do itemp=1,ITT
-            Ytemp=Ytemp+X44(itemp)*Yxiao(itemp,MM1,MM2)
+            Ytemp=Ytemp+quick_scratch%X44(itemp)*Yxiao(itemp,MM1,MM2)
             !                           YtempAA=YtempAA+X44AA(itemp)*Yxiao(itemp,MM1,MM2)
             !                           YtempBB=YtempBB+X44BB(itemp)*Yxiao(itemp,MM1,MM2)
             !                           YtempCC=YtempCC+X44CC(itemp)*Yxiao(itemp,MM1,MM2)
@@ -2398,9 +2409,9 @@ subroutine classopt(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
          YtempBB=0.0d0
          YtempCC=0.0d0
          do itemp=1,ITT
-            YtempAA=YtempAA+X44AA(itemp)*Yxiao(itemp,MM1,MM2)
-            YtempBB=YtempBB+X44BB(itemp)*Yxiao(itemp,MM1,MM2)
-            YtempCC=YtempCC+X44CC(itemp)*Yxiao(itemp,MM1,MM2)
+            YtempAA=YtempAA+quick_scratch%X44AA(itemp)*Yxiao(itemp,MM1,MM2)
+            YtempBB=YtempBB+quick_scratch%X44BB(itemp)*Yxiao(itemp,MM1,MM2)
+            YtempCC=YtempCC+quick_scratch%X44CC(itemp)*Yxiao(itemp,MM1,MM2)
 
             !                  if(II.eq.1.and.JJ.eq.1.and.KK.eq.13.and.LL.eq.13)then
             !                    print*,KKK-39,LLL-39,III+12,JJJ+12,itemp,X44AA(itemp),Yxiao(itemp,MM1,MM2)

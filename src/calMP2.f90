@@ -1,3 +1,4 @@
+#include "util.fh"
 ! Ed Brothers. November 27, 2001
 ! Xiao HE. September 14,2008
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
@@ -5,6 +6,7 @@
 subroutine calmp2
   use allmod
   use quick_gaussian_class_module
+  use quick_cutoff_module, only: cshell_density_cutoff
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff,gpuMP2WrapperTimeStart, gpuMP2WrapperTimeEnd
@@ -56,7 +58,6 @@ subroutine calmp2
 
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
-  write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
 
   print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
 
@@ -91,11 +92,10 @@ subroutine calmp2
   if(nstep*(nstepmp2-1).eq.nelec/2)then
      nstepmp2=nstepmp2-1
   endif
-  write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
 
 
   ! Pre-step for density cutoff
-  call densityCutoff
+  call cshell_density_cutoff
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -295,39 +295,18 @@ subroutine calmp2
         enddo
      enddo
 
-       !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') ntemp
-
-     !print *, "in calmp2, shape of orbmp2k331 is ", shape(orbmp2k331)
-     !do ind1=1, nelec/2
-     !   do ind2=1, nelec/2
-     !       do ind3=1,ivir
-     !           do ind4=1, nbasis
-     !               write(*, '(f10.6)', advance='no'),&
-     !                   orbmp2k331(ind1, ind2, ind3, ind4)
-     !           enddo
-     !           write(*,'(" ")')
-     !       enddo 
-     !   enddo     
-     !enddo
-    
-
-     !do icycle=1,nsteplength
-     !   do k3=1,nelec/2
-     !       do j3=1,nbasis-nelec/2
-     !       do l3=1,nbasis-nelec/2
-     !          L3new=l3+nelec/2
-     !           do lll=1,nbasis
-     !               write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
-     !           enddo
-     !       enddo
-     !       enddo
-     !   enddo
-     !enddo
-
-
-
-    !print *, "in calmp2, print quick_qm_struct%co"
-    !call print_matrix(quick_qm_struct%co(LLL,L3new), nbasis)
+     do icycle=1,nsteplength
+        do k3=1,nelec/2
+            do j3=1,nbasis-nelec/2
+            do l3=1,nbasis-nelec/2
+            L3new=l3+nelec/2
+                do lll=1,nbasis
+                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(icycle,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+                enddo
+            enddo
+            enddo
+        enddo
+     enddo
 
      do icycle=1,nsteplength
         i3=nstepmp2s+icycle-1
@@ -386,6 +365,7 @@ end subroutine calmp2
 subroutine MPI_calmp2
   use allmod
   use quick_gaussian_class_module
+  use quick_cutoff_module, only: cshell_density_cutoff
   implicit double precision(a-h,o-z)
 
   include "mpif.h"
@@ -419,7 +399,7 @@ subroutine MPI_calmp2
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
   if (master) then
      call PrtAct(ioutfile,"Begin MP2 Calculation")
-     write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
+     !write(ioutfile,'("| CURRENT MEMORY USAGE= ",E12.6," M")') ememorysum
   endif
 
   ! actually nstep is step length
@@ -447,9 +427,9 @@ subroutine MPI_calmp2
   if(nstep*(nstepmp2-1).eq.nelec/2)then
      nstepmp2=nstepmp2-1
   endif
-  write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
+  !write(ioutfile,'("TOTAL STEP          =",I6)') nstepmp2
   ! Pre-step for density cutoff
-  call densityCutoff
+  call cshell_density_cutoff
 
   ! first save coeffecient.
   do i=1,nbasis
@@ -636,10 +616,10 @@ subroutine MPI_calmp2
      !---------------- END MPI/ ALL NODES ------------------------
 
      !---------------- MPI/ MASTER -------------------------------
-    
+
      call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
      if (master) then
-        write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
+        !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
         do icycle=1,nsteplength
            i3=nstepmp2s+icycle-1

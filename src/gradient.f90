@@ -1,3 +1,4 @@
+#include "util.fh"
 
 !  Created by Madu Manathunga on 08/12/2019 
 !  Copyright 2019 Michigan State University. All rights reserved.
@@ -16,7 +17,7 @@
 !  11/27/2001 Ed Brothers: wrote the original code
 !------------------------------------------------------------------
 
-subroutine gradient(failed)
+subroutine gradient(ierr)
 
 !------------------------------------------------------------------
 ! This subroutine carries out a gradient calculation 
@@ -25,7 +26,7 @@ subroutine gradient(failed)
    use allmod
    implicit double precision(a-h,o-z)
 
-   logical :: failed
+   integer, intent(inout) :: ierr
    character(len=1) cartsym(3)
 
 #ifdef MPIV
@@ -57,15 +58,7 @@ subroutine gradient(failed)
    enddo
 
 
-   call getEnergy(failed,.false.)
-
-   do Ibas=1,nbasis
-      do Jbas=1,nbasis
-!          write(*,*) "Density
-!          matrix:",Ibas,Jbas,quick_qm_struct%dense(Jbas,Ibas)
-!           write(*,*) "Coefficient matrix:",Ibas,Jbas,quick_qm_struct%co(Jbas,Ibas)
-      enddo
-   enddo
+   call getEnergy(.false.,ierr)
 
    if (quick_method%analgrad) then
       call scf_gradient
@@ -80,7 +73,9 @@ subroutine gradient(failed)
 #ifdef MPIV
    if(master) then
 #endif
-   write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
+
+   call PrtAct(ioutfile,"Begin Gradient Calculation")
+   write (ioutfile,'(" ANALYTICAL GRADIENT: ")')
    write (ioutfile,'(40("-"))')
    write (ioutfile,'(" COORDINATE",4x,"XYZ",12x,"GRADIENT")')
    write (ioutfile,'(40("-"))')
@@ -92,7 +87,7 @@ subroutine gradient(failed)
    enddo
 
    write(ioutfile,'(40("-"))')
-
+   
    if(quick_method%extCharges) then
       write (ioutfile,'(/," POINT CHARGE GRADIENT: ")')
       write (ioutfile,'(40("-"))')
@@ -106,6 +101,8 @@ subroutine gradient(failed)
       enddo
       write(ioutfile,'(40("-"))')
    endif   
+
+   call PrtAct(ioutfile,"End Gradient Calculation")
 
 #ifdef MPIV
    endif
@@ -123,7 +120,6 @@ subroutine scf_gradient
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
-!   double precision:: tmp_grad(3*natom)
    include "mpif.h"
 #endif
 
@@ -147,7 +143,7 @@ subroutine scf_gradient
 
 !  Set the values of gradient arry to zero 
    quick_qm_struct%gradient       = 0.0d0
-   if (quick_method%extCharges) quick_qm_struct%ptchg_gradient = 0.0d0
+   if (quick_molspec%nextatom .gt. 0) quick_qm_struct%ptchg_gradient = 0.0d0
 
 !---------------------------------------------------------------------
 !  1) The derivative of the nuclear repulsion.
@@ -194,6 +190,10 @@ endif
 !---------------------------------------------------------------------
 !  3) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
    call cpu_time(timer_begin%T2eGrad)
 
    call get_electron_replusion_grad
@@ -203,80 +203,49 @@ endif
 !---------------------------------------------------------------------
 !  4) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
+#ifdef MPIV
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
    if (quick_method%DFT) then
-#ifdef MPIV
-   if(master) then
-#endif
-   ! implement exc grad timer here
-#ifdef MPIV
-   endif
-#endif
-
-
       call cpu_time(timer_begin%TExGrad)
 
       call get_xc_grad
 
+#ifdef CUDA_MPIV
+      call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
+#endif
+
       call cpu_time(timer_end%TExGrad)
       timer_cumer%TExGrad = timer_cumer%TExGrad + timer_end%TExGrad-timer_begin%TExGrad
 
+   endif
+
+
 #ifdef MPIV
+
+   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+
+   call cpu_time(timer_begin%TGradred) 
+
+! sum up all gradient contributions
+   call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   if(quick_molspec%nextatom.gt.0) call MPI_REDUCE(quick_qm_struct%ptchg_gradient, tmp_ptchg_grad, 3*quick_molspec%nextatom,& 
+                                   mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
    if(master) then
-#endif
-   ! implement exc grad timer here
-#ifdef MPIV
-   endif
-#endif
-
+     quick_qm_struct%gradient(:) = tmp_grad(:)
+     if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
    endif
 
-!  Stop the timer and add up the total gradient times
-   call cpu_time(timer_end%TGrad)
-   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
+   call cpu_time(timer_end%TGradred)
 
-#ifdef MPIV
-!  slave node will send infos
-   if(.not.master) then
-      do i=1,natom*3
-         tmp_grad(i)=quick_qm_struct%gradient(i)
-      enddo
+   timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
 
-   call MPI_SEND(tmp_grad,3*natom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-
-   if(quick_molspec%nextatom.gt.0) then
-      do i=1,quick_molspec%nextatom*3
-         tmp_ptchg_grad(i) = quick_qm_struct%ptchg_gradient(i)
-      enddo
-      call MPI_SEND(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-   endif
-
-   else
-!  master node will receive infos from every nodes
-      do i=1,mpisize-1
-!  receive opertors from slave nodes
-         call MPI_RECV(tmp_grad,3*natom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-!  and sum them into operator
-         do ii=1,natom*3
-            quick_qm_struct%gradient(ii)=quick_qm_struct%gradient(ii)+tmp_grad(ii)
-         enddo
-
-         if(quick_molspec%nextatom.gt.0) then
-
-            call MPI_RECV(tmp_ptchg_grad,3*quick_molspec%nextatom,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-
-            do ii=1,quick_molspec%nextatom*3
-               quick_qm_struct%ptchg_gradient(ii) = quick_qm_struct%ptchg_gradient(ii) + tmp_ptchg_grad(ii)
-            enddo
-
-         endif
-      enddo
-  endif
 #endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 if(master) then
 #endif
 
@@ -316,11 +285,13 @@ endif
 #endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!
 
-!stop
-
 #ifdef MPIV
    call deallocate_quick_gradient()
 #endif
+
+!  Stop the timer and add up the total gradient times
+   call cpu_time(timer_end%TGrad)
+   timer_cumer%TGrad=timer_cumer%TGrad+timer_end%TGrad-timer_begin%TGrad
 
    return
 
@@ -420,6 +391,7 @@ subroutine get_oneen_grad
 !---------------------------------------------------------------------
 !  1) The derivative of the kinetic term
 !---------------------------------------------------------------------
+
    call cpu_time(timer_begin%T1eGrad)
 
    call cpu_time(timer_begin%T1eTGrad)
@@ -631,11 +603,12 @@ end subroutine get_kinetic_grad
 subroutine get_electron_replusion_grad
 
    use allmod
+   use quick_gradient_module
+   use quick_cutoff_module, only: cshell_dnscreen
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   double precision :: tmpGrad(3*natom) 
   
 #ifdef MPIV
    include "mpif.h"
@@ -646,12 +619,11 @@ subroutine get_electron_replusion_grad
 !  (i.e. the multiplicative constants from the density matrix that 
 !  arise as these are both the exchange and correlation integrals.
 
-   tmpGrad = 0.0d0
 
    do II=1,jshell
       do JJ=II,jshell
          DNtemp=0.0d0
-         call DNscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II,JJ,DNtemp)
          Cutmatrix(II,JJ)=DNtemp
          Cutmatrix(JJ,II)=DNtemp
       enddo
@@ -670,18 +642,12 @@ subroutine get_electron_replusion_grad
          call gpu_upload_method(1, 0.2d0)
       endif
 
-      call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
-      quick_qm_struct%vec,quick_qm_struct%dense)
-      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit)
-      call gpu_upload_grad(tmpGrad, quick_method%gradCutoff)
+      call gpu_upload_density_matrix(quick_qm_struct%dense)
+      call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
+      call gpu_upload_grad(quick_method%gradCutoff)
 
-      ! next function will compute the eri gradients store in tmpGrad and send
-      ! back
-      call gpu_grad(tmpGrad)
-
-      do i=1, 3*natom
-        quick_qm_struct%gradient(i) = quick_qm_struct%gradient(i) + tmpGrad(i)
-      enddo
+      ! next function will compute the eri gradients and add to gradient vector
+      call gpu_grad(quick_qm_struct%gradient)
 
    else
 #endif
@@ -796,12 +762,7 @@ subroutine get_xc_grad
 
    if(quick_method%bCUDA) then
 
-      call gpu_upload_density_matrix(quick_qm_struct%dense)
-
-      call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb, quick_dft_grid%gridzb, quick_dft_grid%gridb_sswt, &
-      quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, quick_dft_grid%dweight, quick_dft_grid%basf, quick_dft_grid%primf, &
-      quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%gridb_count, quick_dft_grid%nbins,&
-      quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2)
+      call gpu_reupload_dft_grid()
 
       call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)

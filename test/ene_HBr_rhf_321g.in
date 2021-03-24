@@ -1,0 +1,4 @@
+HF  BASIS=3-21G cutoff=1.0e-9 denserms=1.0e-6  zmake ENERGY DIPOLE CHARGE=0
+
+Br        -2.46216        0.91498        0.70279
+H         -1.36216        0.91498        0.70279

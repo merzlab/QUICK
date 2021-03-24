@@ -12,18 +12,24 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
-subroutine getmolsad()
+#include "util.fh"
+
+subroutine getmolsad(ierr)
    use allmod
    use quick_files_module
+   use quick_exception_module
+
    implicit double precision(a-h,o-z)
 
-   logical :: present,MPIsaved
+   logical :: present, MPIsaved, readSAD
    double precision:: xyzsaved(3,natom)
    character(len=80) :: keywd
    character(len=20) :: tempstring
+   character(len=340) :: sadfile
    integer natomsaved
    type(quick_method_type) quick_method_save
    type(quick_molspec_type) quick_molspec_save
+   integer, intent(inout) :: ierr
 
    ! first save some important value
    quick_method_save=quick_method
@@ -75,18 +81,7 @@ subroutine getmolsad()
 
          do i=1,90
             if(symbol(i).eq.quick_molspec%atom_type_sym(iitemp))then
-
-               if(mod(i,2).eq.0)then
-                  quick_molspec%imult=1
-               else
-                  quick_molspec%imult=2
-               endif
-               if(symbol(i).eq.'N ')quick_molspec%imult=4
-               if(symbol(i).eq.'O ')quick_molspec%imult=3
-               if(symbol(i).eq.'C ')quick_molspec%imult=3
-               if(symbol(i).eq.'S ')quick_molspec%imult=3
-               if(symbol(i).eq.'P ')quick_molspec%imult=4
-
+               quick_molspec%imult = spinmult(i)
                quick_molspec%chg(1)=i
                quick_molspec%iattype(1)=i
                write(ioutfile,'(" ELEMENT = ",a)') symbol(i)
@@ -104,8 +99,9 @@ subroutine getmolsad()
          ! is done in a subroutine.
          !-------------------------------------------
          nsenhai=1
-         !print *, "in getmolsad, readbasis is to be called"
-         call readbasis(nsenhai,0,0,0,0)
+         call readbasis(nsenhai,0,0,0,0,ierr)
+         CHECK_ERROR(ierr)
+         
          atombasis(iitemp)=nbasis
          write (ioutfile,'(" BASIS FUNCTIONS = ",I4)') nbasis
 
@@ -143,24 +139,52 @@ subroutine getmolsad()
                quick_qm_struct%denseb(I,I)=diagelementb
             enddo
          endif
+
+         ! AWG Check if SAD file is present when requesting readSAD
+         ! AWG If not present fall back to computing SAD guess
+         ! AWG note the whole structure of this routine should be improved
+         readSAD = quick_method%readSAD
+         if (readSAD) then
+            sadfile = trim(sadGuessDir) // '/' // &
+                           trim(quick_molspec%atom_type_sym(iitemp))
+            inquire (file=sadfile, exist=present)
+            if (.not. present) readSAD = .false.
+         end if
+
          ! From SCF calculation to get initial density guess
-         if(quick_molspec%atom_type_sym(iitemp).ne.'ZN')then ! if not ZN
-            call getenergy(failed, .true.)
+         if(readSAD) then
+
+            open(212,file=sadfile)  !Read from sadfile
+            do i=1,nbasis
+               do j=1,nbasis
+                  read(212,*) ii,jj,temp
+                  atomdens(iitemp,ii,jj)=temp
+               enddo
+            enddo
+            close(212)
+
+         else
+
+            ! Compute SAD guess
+            call getenergy(.true., ierr)
             do i=1,nbasis
                do j=1,nbasis
                   atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
                enddo
             enddo
-         else
-            ! treat Zinc specially
-            open(213,file='znsad.txt')  !Read Zn
-            do i=1,39
-               do j=1,39
-                  read(213,*) ii,jj,temp
-                  atomdens(iitemp,ii,jj)=temp
+
+            ! write SAD guess if requested
+            if(quick_method%writeSAD) then
+               sadfile = trim(quick_molspec%atom_type_sym(iitemp))
+               open(213,file=sadfile)
+               do i=1,nbasis
+                  do j=1,nbasis
+                     write(213,*) i,j,atomdens(iitemp,i,j)
+                  enddo
                enddo
-            enddo
-            close(213)
+               close(213)             
+            endif           
+
          endif
 
          call deallocate_calculated

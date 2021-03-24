@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	rdword.f90
 !	new_quick
@@ -28,8 +29,8 @@ SUBROUTINE RDWORD(STRING,ISTART,ISTOP)
   endif
   INWORD = .FALSE.
   IBEGIN = ISTART
-  do 100 I=IBEGIN,IEND
-     if(STRING(I:I) == ' ')then
+  do I=IBEGIN,IEND
+     if(STRING(I:I) == ' ' .or. (string(i:i) == achar(9)))then
         if(INWORD)then
            ISTOP = I-1
            RETURN
@@ -40,7 +41,7 @@ SUBROUTINE RDWORD(STRING,ISTART,ISTOP)
            ISTART = I
         endif
      endif
-100 enddo
+  enddo
 
   ! if WE GET HERE, then EITHER THE WORD FOUND EXTENDS ALL THE WAY TO
   ! THE END OF THE STRING, OR NO WORD WAS FOUND IN THE REMAINING

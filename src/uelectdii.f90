@@ -1,7 +1,8 @@
+#include "util.fh"
 ! Ed Brothers. May 14, 2002
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine uelectdiis(jscf,PRMS,isGuess)
+subroutine uelectdiis(jscf,PRMS,verbose)
    use allmod
    implicit none
 
@@ -9,7 +10,7 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
    logical :: diisdone
    double precision :: PRMS
    integer :: jscf
-   logical, intent(in) :: isGuess
+   logical, intent(in) :: verbose
 
    double precision :: BIJ,CIJ,DENSEIJ,errormax,HOLDIJ,LSOLERR,OIJ,OJK,OLDPRMS,PCHANGE,PRMS2
    double precision :: t1,t2, tempij,DENSEJI
@@ -373,7 +374,7 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
             enddo
          enddo
       else
-         if(.not. isGuess) write (ioutfile,'(" DIIS FAILED !! RETURN TO ", &
+         if(verbose) write (ioutfile,'(" DIIS FAILED !! RETURN TO ", &
                & "NORMAL SCF. (NOT FATAL.)")')
          jscf=jscf-1
          diisdone=.true.
@@ -553,42 +554,42 @@ subroutine uelectdiis(jscf,PRMS,isGuess)
 
       call cpu_time(t2)
 
-      if(.not. isGuess) write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
+      if(verbose) write (ioutfile,'(/,"| SCF CYCLE      = ",I8, &
             & "      TIME      = ",F6.2)') &
             jscf,T2-T1
-      if(.not. isGuess) write (ioutfile,'("| DIIS CYCLE     = ",I8, &
+      if(verbose) write (ioutfile,'("| DIIS CYCLE     = ",I8, &
             & "      MAX ERROR = ",E12.6)') &
             idiis,errormax
-      if(.not. isGuess) write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
+      if(verbose) write (ioutfile,'("| RMS CHANGE     = ",E12.6, &
             & "  MAX CHANGE= ",E12.6)') &
             PRMS,PCHANGE
 
       if (quick_method%DFT .OR. quick_method%SEDFT) then
-         if(.not. isGuess) write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') &
+         if(verbose) write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') &
                quick_qm_struct%aelec
-         if(.not. isGuess) write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') &
+         if(verbose) write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') &
                quick_qm_struct%belec
       endif
 
       if (quick_method%prtgap) then
-         if(.not. isGuess) write (ioutfile,'(" ALPHA HOMO-LUMO GAP (EV) =", &
+         if(verbose) write (ioutfile,'(" ALPHA HOMO-LUMO GAP (EV) =", &
                & 11x,F12.6)') (quick_qm_struct%E(nelec+1) - quick_qm_struct%E(nelec))*27.2116d0
-         if(.not. isGuess) write (ioutfile,'(" BETA HOMO-LUMO GAP (EV)  =", &
+         if(verbose) write (ioutfile,'(" BETA HOMO-LUMO GAP (EV)  =", &
                & 11x,F12.6)') (quick_qm_struct%EB(nelecb+1) - quick_qm_struct%EB(nelecb))*27.2116d0
       endif
 
       if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0)then
-         if(.not. isGuess) write (ioutfile,' &
+         if(verbose) write (ioutfile,' &
                & (" PREPARING FOR FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
          elseif(OLDPRMS <= PRMS) then
-         if(.not. isGuess) write (ioutfile,' &
+         if(verbose) write (ioutfile,' &
                & (" DIIS NOT IMPROVING. RETURN TO TRADITIONAL SCF.")')
          diisdone=.true.
       endif
       if(jscf >= quick_method%iscf-1) then
-         if(.not. isGuess) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
-         if(.not. isGuess) write (ioutfile,' &
+         if(verbose) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
+         if(verbose) write (ioutfile,' &
                & (" PERFORM FINAL NO INTERPOLATION ITERATION")')
          diisdone=.true.
       endif

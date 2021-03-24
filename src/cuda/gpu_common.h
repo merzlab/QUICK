@@ -12,10 +12,11 @@
 
 #include <stdio.h>
 #include <cuda.h>
+#include <cuda_runtime_api.h>
 #include "nvToolsExt.h"
 #include "../octree/gpack_common.h"
 
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 static FILE *debugFile = NULL;
 #endif
 
@@ -94,7 +95,7 @@ fflush(stdout);\
 
 
 // Timer for debug
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 #define TIMERSTART() \
 cudaEvent_t start,end;\
 float time;\
@@ -136,7 +137,7 @@ cudaEventDestroy(end);
 
 
 // CUDA safe call
-#ifdef DEBUG
+#if defined DEBUG || defined DEBUGTIME
 #define QUICK_SAFE_CALL(x)\
 {\
 TIMERSTART()\
@@ -232,7 +233,7 @@ enum QUICK_METHOD
 {
     HF    = 0,
     B3LYP = 1,
-    DFT   = 2,
+    BLYP  = 2,
     LIBXC = 3
 };
 

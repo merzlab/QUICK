@@ -1,3 +1,4 @@
+#include "util.fh"
 !
 !	sum2Mat.f90
 !	new_quick

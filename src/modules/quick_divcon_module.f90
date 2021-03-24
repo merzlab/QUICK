@@ -6,6 +6,8 @@
 !	Copyright 2011 University of Florida. All rights reserved.
 !
 
+#include "util.fh"
+
 !  D&C module,  Div & Con varibles
 module quick_divcon_module
 

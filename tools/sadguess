@@ -1,0 +1,83 @@
+#!/bin/bash
+
+usage(){
+    echo
+    echo "Generate SAD guess for all elements in basis set file"
+    echo
+    echo "Usage: $0 BASIS"
+    echo
+    echo "  BASIS = Basis set (string)"
+    echo "  The basis set set must be present in \$QUICK_HOME/basis"
+    echo "  and correctly specified in \$QUICK_HOME/basis_link"
+    echo
+    exit 1
+}
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+if [ -z "$QUICK_BASIS" ]; then
+    echo "QUICK_BASIS is not set. Cannot continue."
+    exit 1
+fi
+
+# get basis set file name from basis_link file
+basis=$1
+basfile=$(awk "tolower(\"#$basis\")==tolower(\$2){print \$4}" $QUICK_BASIS/basis_link)
+
+if [ -z "$basfile" ]; then
+    echo "Basis set name does not seem to exist in $QUICK_HOME/basis_link"
+    exit 1
+fi
+
+# set jobs and sad guess directories
+basname=${basfile%.*}
+jobdir=$(pwd)/${basname}.jobs
+saddir=$(pwd)/${basname}.SAD
+
+mkdir -p $jobdir
+mkdir -p $saddir
+
+# get all atoms in this basis set
+atoms=()
+while IFS=' '   read -r -a array;do
+    if [ ${#array[@]} == 2 ] && [ ${array[1]} == '0' ];then
+        atoms+=(${array[0]})
+    fi
+done < $QUICK_BASIS/$basfile
+
+# compute SAD guess for all atoms 
+pushd $jobdir >/dev/null
+
+for atom in "${atoms[@]}"; do
+
+    cat	> "$atom.in" << EOF
+ UHF BASIS=$basis cutoff=1.0e-10 denserms=1.0e-6 SCF=100 wrsad energy charge=0
+ 
+ $atom  0.0  0.0  0.0
+ 
+EOF
+
+    echo "run atom $atom with $basis"
+    quick ${atom}.in
+    sadfile=${atom^^}
+    if [ ! -f $sadfile ]; then
+	echo "  >> could not generate SAD guess for atom $atom"
+    else
+	mv ${atom^^} $saddir/
+    fi
+
+done
+
+popd $dirname >/dev/null
+
+echo ">>> All done"
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 

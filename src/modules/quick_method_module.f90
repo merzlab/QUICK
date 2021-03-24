@@ -5,9 +5,12 @@
 !	Created by Yipu Miao on 2/18/11.
 !	Copyright 2011 University of Florida. All rights reserved.
 !
+#include "util.fh"
 
 module quick_method_module
     use quick_constants_module
+    use quick_input_parser_module  
+
     implicit none
 
     type quick_method_type
@@ -34,6 +37,8 @@ module quick_method_module
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
         logical :: writePMat = .false. ! flag to write density matrix
+        logical :: readSAD = .true.    ! flag to read SAD guess
+        logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
         logical :: prtGap =  .false.   ! flag to print HOMO-LUMO gap
         logical :: opt =  .false.      ! optimization
@@ -153,11 +158,14 @@ module quick_method_module
         !------------------------
         ! Broadcast quick_method
         !------------------------
-        subroutine broadcast_quick_method(self)
+        subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
+            use quick_exception_module            
+
             implicit none
 
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             include 'mpif.h'
 
@@ -236,12 +244,15 @@ module quick_method_module
         !------------------------
         ! print quick_method
         !------------------------
-        subroutine print_quick_method(self,io)
+        subroutine print_quick_method(self,io,ierr)
             use xc_f90_types_m
             use xc_f90_lib_m
+            use quick_exception_module
+
             implicit none
             integer io
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             !libxc variables
             type(xc_f90_pointer_t) :: xc_func
@@ -345,7 +356,9 @@ endif
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
-
+            if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
+            if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
+    
             if (self%zmat)      write(io,'(" Z-MATRIX CONSTRUCTION")')
             if (self%dipole)    write(io,'(" DIPOLE")')
             if (self%ecp)       write(io,'(" ECP BASIS SET")')
@@ -429,13 +442,15 @@ endif
         !------------------------
         ! read quick_method
         !------------------------
-        subroutine read_quick_method(self,keywd)
+        subroutine read_quick_method(self,keywd,ierr)
+            use quick_exception_module
+            use quick_mpi_module
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
-            integer :: itemp,rdinml,i,j
-            double precision :: rdnml
+            integer :: itemp,i,j
             type (quick_method_type) self
+            integer, intent(inout) :: ierr
 
             call upcase(keyWD,200)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
@@ -461,14 +476,54 @@ endif
             !Read dft functional keywords and set variable values
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
-                call set_libxc_func_info(keyWD, self)
+                call set_libxc_func_info(keyWD, self, ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
                 self%B3LYP=.true.
                 self%x_hybrid_coeff =0.2d0
             elseif(index(keyWD,'BLYP').ne.0) then
-                self%BLYP=.true.
-                self%x_hybrid_coeff =0.0d0
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+                !self%BLYP=.true.
+                !self%x_hybrid_coeff =0.0d0
+            elseif(index(keyWD,'BP86').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_B88,GGA_C_P86'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'B97-GGA1').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_XC_B97_GGA1'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PW91').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PW91,GGA_C_PW91'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'OLYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_OPTX,GGA_C_LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'B97').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_B97'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'O3LYP').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_O3LYP'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PBE0').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=HYB_GGA_XC_PBEH'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'REVPBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE_R,GGA_C_PBE'
+                call set_libxc_func_info(tempstring, self, ierr)
+            elseif(index(keyWD,'PBE').ne.0) then
+                self%uselibxc=.true.
+                tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
+                call set_libxc_func_info(tempstring, self, ierr)
             endif
+            CHECK_ERROR(ierr)
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
@@ -480,8 +535,13 @@ endif
             if (index(keyWD,'FREQ').ne.0)       self%freq=.true.
             if (index(keywd,'DEBUG').ne.0)      self%debug=.true.
             if (index(keyWD,'READ').ne.0)       self%readDMX=.true.
+            if (index(keyWD,'RDSAD').ne.0)      self%readSAD=.true.  ! READSAD would clash with READ
+            if (index(keyWD,'WRSAD').ne.0) then
+               self%writeSAD = .true.
+               self%readSAD = .false. ! switch off reading of SAD guess which was set to true by default
+            end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
-            if (index(keyWD,'DIPOLE').ne.0)      self%dipole=.true.
+            if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
@@ -515,9 +575,8 @@ endif
 
             if (index(keyWD,'ECP').ne.0)  then
                 self%ECP=.true.
-                i=index(keywd,'ECP=')
-                call rdword(keywd,i,j)
-                if (keywd(i+4:j).eq.'CUSTOM')  self%custECP=.true.
+                call read(keywd, 'ECP', tempstring)
+                if (tempstring .eq. 'CUSTOM') self%custECP=.true.
             endif
 
             if (index(keyWD,'USEDFT').ne.0) then
@@ -538,45 +597,57 @@ endif
             ! Density map
             ! JOHN FAVER 12/2008
             if (index(keywd,'DENSITYMAP') /= 0) then
-                self%gridspacing = rdnml(keywd,'DENSITYMAP')
+                call read(keywd, 'DENSITYMAP', self%gridspacing)
                 self%calcdens = .true.
             endif
-
+            
             ! Density lapmap
             if (index(keywd,'DENSITYLAPMAP') /= 0) then
-                self%lapgridspacing= rdnml(keywd,'DENSITYLAPMAP')
+                call read(keywd, 'DENSITYLAPMAP', self%lapgridspacing)
                 self%calcdenslap = .true.
             endif
 
             ! opt cycls
-            if (index(keywd,'OPTIMIZE=') /= 0) self%iopt = rdinml(keywd,'OPTIMIZE')
+            if (index(keywd,'OPTIMIZE') /= 0) then
+                call read(keywd, 'OPTIMIZE', self%iopt, .false.)
+            endif
 
             ! scf cycles
-            if (index(keywd,'SCF=') /= 0) self%iscf = rdinml(keywd,'SCF')
+            if (index(keywd,'SCF') /= 0) then
+                call read(keywd, 'SCF', self%iscf)
+            endif
 
             ! DM Max RMS
-            if (index(keywd,'DENSERMS=') /= 0) self%pmaxrms = rdnml(keywd,'DENSERMS')
-
+            if (index(keywd,'DENSERMS') /= 0) then
+                call read(keywd, 'DENSERMS', self%pmaxrms)
+            endif
+        
             ! 2e-cutoff
-            if (index(keywd,'CUTOFF=') /= 0) then
-                self%acutoff = rdnml(keywd,'CUTOFF')
+            if (index(keywd,'CUTOFF') /= 0) then
+                call read(keywd, 'CUTOFF', self%acutoff)
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
                 self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
             endif
 
             ! Max DIIS cycles
-            if (index(keywd,'MAXDIIS=') /= 0) self%maxdiisscf=rdinml(keywd,'MAXDIIS')
+            if (index(keywd,'MAXDIIS') /= 0) then
+                call read(keywd, 'MAXDIIS', self%maxdiisscf)
+            endif
 
             ! Delta DM Cycle Start
-            if (index(keywd,'NCYC=') /= 0) self%ncyc = rdinml(keywd,'NCYC')
+            if (index(keywd,'NCYC') /= 0) then
+                call read(keywd, 'NCYC', self%ncyc)
+            endif
 
             ! DM cutoff
-            if (index(keywd,'MATRIXZERO=') /= 0) self%DMCutoff = rdnml(keywd,'MAXTRIXZERO')
+            if (index(keywd,'MATRIXZERO') /= 0) then
+                call read(keywd,'MATRIXZERO', self%DMCutoff)
+            endif
 
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                itemp=rdinml(keywd,'BASISZERO')
+                call read(keywd,'BASISZERO', itemp)
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
 
@@ -585,10 +656,12 @@ endif
         !------------------------
         ! initial quick_method
         !------------------------
-        subroutine init_quick_method(self)
+        subroutine init_quick_method(self,ierr)
 
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
             self%HF =  .false.       ! HF
             self%DFT =  .false.      ! DFT
@@ -605,6 +678,8 @@ endif
             self%debug =  .false.    ! debug mode
             self%nodirect = .false.  ! conventional SCF
             self%readDMX =  .false.  ! flag to read density matrix
+            self%readSAD =  .true.   ! flag to read sad guess
+            self%writeSAD = .false.  ! flag to write sad guess
             self%diisSCF =  .false.  ! DIIS SCF
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization
@@ -678,10 +753,12 @@ endif
         !------------------------
         ! check quick_method
         !------------------------
-        subroutine check_quick_method(self,io)
+        subroutine check_quick_method(self,io,ierr)
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer io
+            integer, intent(inout) :: ierr
 
             ! If MP2, then set HF as default
             if (self%MP2) then
@@ -700,7 +777,7 @@ endif
 
             ! OPT not available for MP2
             if (self%MP2 .and. self%OPT) then
-                call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLE")
+                call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLY")
                 self%OPT = .false.
             endif
 
@@ -712,11 +789,13 @@ endif
 
         end subroutine check_quick_method
 
-        subroutine obtain_leastIntCutoff(self)
+        subroutine obtain_leastIntCutoff(self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             type(quick_method_type) self
-
+            integer, intent(inout) :: ierr
+            
 
             self%leastIntegralCutoff = LEASTCUTOFF
 
@@ -735,11 +814,13 @@ endif
         end subroutine obtain_leastIntCutoff
 
 
-        subroutine adjust_Cutoff(PRMS,PCHANGE,self)
+        subroutine adjust_Cutoff(PRMS,PCHANGE,self,ierr)
             use quick_constants_module
+            use quick_exception_module
             implicit none
             double precision prms,pchange
             type(quick_method_type) self
+            integer, intent(inout) :: ierr
 
              if(PRMS.le.TEN_TO_MINUS5 .and. self%integralCutoff.gt.1.0d0/(10.0d0**8.5d0))then
                 self%integralCutoff=TEN_TO_MINUS9
@@ -760,17 +841,22 @@ endif
 
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
-        subroutine set_libxc_func_info(f_keywd, self)
+        subroutine set_libxc_func_info(f_keywd, self,ierr)
+
            use xc_f90_types_m
            use xc_f90_lib_m
+           use quick_exception_module
+
            implicit none
-           character(len=200) :: f_keywd
-           type(quick_method_type) self
-           integer :: f_id, nof_f, istart, iend, imid, f_nlen, usf1_nlen, usf2_nlen
+           character(len=200), intent(in) :: f_keywd
+           type(quick_method_type), intent(inout) :: self
+           integer, intent(inout) :: ierr
+           character(len=200) :: func1, func2 
+           character(len=256) :: functional_name
+           integer :: f_id, nof_f, istart, iend, imid
+           double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
-           double precision :: x_hyb_coeff
-           character(len=256) :: functional_name
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
@@ -784,12 +870,16 @@ endif
            imid=index(f_keywd(istart+6:iend),',')
 
            if(imid>0) then
-              usf1_nlen=imid-1
-              usf2_nlen = iend-(istart+6+usf1_nlen)
+              imid=istart+6+imid
+              func1=f_keywd(istart+6:imid-2)
+              func2=f_keywd(imid:iend)
            else
-              usf1_nlen=iend-(istart+6)+1
+              func1=f_keywd(istart+6:iend)
            endif
-           !write(*,*) "Reading LIBXC key words: ",f_keywd(istart+6:iend), imid, usf1_nlen, usf2_nlen
+           !write(*,*) "func1: ",trim(func1), " func2: ",trim(func2), istart, iend, imid
+        else
+           ierr=31
+           return
         endif
 
         nof_f=0
@@ -798,13 +888,10 @@ endif
            if((index(functional_name,'unknown') .eq. 0) &
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
-                f_nlen=len(trim(functional_name))
 
                 call upcase(functional_name,200)
 
-                if((index(f_keywd,trim(functional_name)) .ne. 0) .and. ((usf1_nlen .eq. f_nlen) &
-                .or. (usf2_nlen .eq. f_nlen))) then
-
+                if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1
                         if(self%xc_polarization > 0) then
                                 call xc_f90_func_init(xc_func, xc_info, f_id, XC_POLARIZED)
@@ -819,7 +906,12 @@ endif
            endif
         enddo
 
-        self%nof_functionals=nof_f
+        if(nof_f > 0) then
+          self%nof_functionals=nof_f
+        else
+          ierr=32
+          return
+        endif
 
         end subroutine set_libxc_func_info
 end module quick_method_module
