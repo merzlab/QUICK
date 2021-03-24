@@ -35,6 +35,7 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o $(objfolder)/quick_scf_module.o \
 		$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_gradient_module.o
 
+oshellmodoj=$(objfolder)/oshell_quick_eri_module.o
 
 apimodobj=$(objfolder)/quick_api_module.o $(objfolder)/quick_api_test_module.o
 
@@ -46,11 +47,15 @@ $(modobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
+$(oshellmodoj):$(objfolder)/oshell_%.o:%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -DOSHELL -c $< -o $@
+
 $(apimodobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	 $(VB)$(FOR) -c $< -o $@
 
-all:$(modobj) $(apimodobj)
+all:$(modobj) $(oshellmodoj) $(apimodobj)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
