@@ -28,7 +28,7 @@ subroutine scf_operator(deltaO)
    use allmod
    use quick_scf_module
    use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEri 
+   use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
 
    implicit none
 
@@ -156,7 +156,7 @@ subroutine scf_operator(deltaO)
    call copySym(quick_qm_struct%o,nbasis)
 
 !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-   if(quick_method%printEnergy) call get2eEnergy()
+   if(quick_method%printEnergy) call getCshellEriEnergy
 
 !  recover density if calculate difference
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
