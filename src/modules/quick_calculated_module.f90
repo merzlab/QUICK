@@ -46,8 +46,15 @@ module quick_calculated_module
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
 
+      ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
+      ! Matrix
+      double precision,dimension(:,:), allocatable :: ob
+
       ! saved operator matrix
       double precision,dimension(:,:), allocatable :: oSave
+
+      ! saved beta operator matrix
+      double precision,dimension(:,:), allocatable :: obSave
 
       ! saved dft operator matrix
       double precision,dimension(:,:), allocatable :: oSaveDFT
@@ -76,9 +83,18 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseSave
 
+      ! saved beta density matrix
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: densebSave
+
       ! saved density matrix
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseOld
+
+      ! saved beta density matrix
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: densebOld
+
       ! Initial density matrix
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseInt
@@ -239,6 +255,9 @@ contains
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
+         if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
+         if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
+         if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
          if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
          if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
       endif
@@ -391,6 +410,9 @@ contains
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
+         if(allocated(self%ob)) deallocate(self%ob)
+         if(allocated(self%densebSave)) deallocate(self%densebSave)
+         if(allocated(self%densebOld)) deallocate(self%densebOld)
          if (allocated(self%cob)) deallocate(self%cob)
          if (allocated(self%Eb)) deallocate(self%Eb)
       endif
