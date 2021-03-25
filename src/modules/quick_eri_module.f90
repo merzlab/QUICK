@@ -24,7 +24,7 @@ module quick_cshell_eri_module
 #ifdef OSHELL
    public :: getOshellEri, getOshellEriEnergy
 #else
-!   public :: cshell ! Should be private, but we still need this for deprecated
+   public :: cshell ! Should be private, but we still need this for deprecated
                     ! subroutines such as addInt in shell.f90
    public :: getCshellEri, getCshellEriEnergy
    public :: getEriPrecomputables
