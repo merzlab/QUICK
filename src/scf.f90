@@ -212,11 +212,7 @@ subroutine electdiis(jscf,ierr)
 
       if (quick_method%debug)  call debug_SCF(jscf)
 
-      if (quick_method%SEDFT) then
-         call sedftoperator ! Semi-emperical DFT Operator
-      else
-         call scf_operator(deltaO)
-      endif
+      call scf_operator(deltaO)
 
       if (quick_method%debug)  call debug_SCF(jscf)
 
