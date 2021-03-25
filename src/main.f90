@@ -253,7 +253,7 @@
 
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
-        if(.not. quick_method%DIVCON) then
+    !    if(.not. quick_method%DIVCON) then
 #ifdef MPIV
            if (master) then
 !             call mpi_calmp2    ! MPI-MP2
@@ -263,9 +263,9 @@
 #ifdef MPIV
            endif
 #endif
-        else
-            call calmp2divcon   ! DIV&CON MP2
-        endif
+    !    else
+    !        call calmp2divcon   ! DIV&CON MP2
+    !    endif
     endif   !(quick_method%MP2)
 
     ! 6.c Freqency calculation and mode analysis
