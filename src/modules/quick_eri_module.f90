@@ -644,6 +644,39 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                do KKK=KKK1,KKK2
                   do LLL=LLL1,LLL2
                      call hrrwhole
+#ifdef OSHELL
+                     DENSELK=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
+                     DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                     DENSEKIA=quick_qm_struct%dense(KKK,III)
+                     DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+                     DENSELJA=quick_qm_struct%dense(LLL,JJJ)
+                     DENSELIA=quick_qm_struct%dense(LLL,III)
+
+                     DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                     DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+                     DENSELJB=quick_qm_struct%denseb(LLL,JJJ)
+                     DENSELIB=quick_qm_struct%denseb(LLL,III)
+
+                     quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.d0*DENSELK*Y
+                     quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+2.d0*DENSEJI*Y
+                     quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*DENSELJA*Y
+                     quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*DENSEKJA*Y
+                     quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSELIA*Y
+                     quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+                     quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSELIA*Y
+                     quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+
+                     quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+2.d0*DENSELK*Y
+                     quick_qm_struct%ob(LLL,KKK) = quick_qm_struct%ob(LLL,KKK)+2.d0*DENSEJI*Y
+                     quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSELJB*Y
+                     quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)-quick_method%x_hybrid_coeff*DENSEKJB*Y
+                     quick_qm_struct%ob(JJJ,KKK) = quick_qm_struct%ob(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSELIB*Y
+                     quick_qm_struct%ob(JJJ,LLL) = quick_qm_struct%ob(JJJ,LLL)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+                     quick_qm_struct%ob(KKK,JJJ) = quick_qm_struct%ob(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSELIB*Y
+                     quick_qm_struct%ob(LLL,JJJ) = quick_qm_struct%ob(LLL,JJJ)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+
+#else
                      !write(*,*) Y,III,JJJ,KKK,LLL
                      DENSEKI=quick_qm_struct%dense(KKK,III)
                      DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
@@ -662,7 +695,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                      quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
                      quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
                      quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
-
+#endif
                   enddo
                enddo
             enddo
@@ -676,6 +709,39 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                         call hrrwhole
                           !write(*,*) Y,III,JJJ,KKK,LLL
                         if(III.lt.JJJ.and.KKK.lt.LLL)then
+#ifdef OSHELL
+                           DENSELK=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
+                           DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                           DENSEKIA=quick_qm_struct%dense(KKK,III)
+                           DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+                           DENSELJA=quick_qm_struct%dense(LLL,JJJ)
+                           DENSELIA=quick_qm_struct%dense(LLL,III)
+
+                           DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                           DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+                           DENSELJB=quick_qm_struct%denseb(LLL,JJJ)
+                           DENSELIB=quick_qm_struct%denseb(LLL,III)
+
+
+                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.d0*DENSELK*Y
+                           quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+2.d0*DENSEJI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*DENSELJA*Y
+                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*DENSEKJA*Y
+                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSELIA*Y
+                           quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSELIA*Y
+                           quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+
+                           quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+2.d0*DENSELK*Y
+                           quick_qm_struct%ob(LLL,KKK) = quick_qm_struct%ob(LLL,KKK)+2.d0*DENSEJI*Y
+                           quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSELJB*Y
+                           quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)-quick_method%x_hybrid_coeff*DENSEKJB*Y
+                           quick_qm_struct%ob(JJJ,KKK) = quick_qm_struct%ob(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSELIB*Y
+                           quick_qm_struct%ob(JJJ,LLL) = quick_qm_struct%ob(JJJ,LLL)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+                           quick_qm_struct%ob(KKK,JJJ) = quick_qm_struct%ob(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSELIB*Y
+                           quick_qm_struct%ob(LLL,JJJ) = quick_qm_struct%ob(LLL,JJJ)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+#else
                            DENSEKI=quick_qm_struct%dense(KKK,III)
                            DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                            DENSELJ=quick_qm_struct%dense(LLL,JJJ)
@@ -694,8 +760,24 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%o(JJJ,LLL) = quick_qm_struct%o(JJJ,LLL)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
                            quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSELI*Y
                            quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
-
+#endif
                            elseif(III.eq.JJJ.and.KKK.eq.LLL)then
+#ifdef OSHELL
+
+                           DENSEJJ=quick_qm_struct%dense(KKK,KKK)+quick_qm_struct%denseb(KKK,KKK)
+                           DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                           DENSEJIA=quick_qm_struct%dense(KKK,III)
+                           DENSEJIB=quick_qm_struct%denseb(KKK,III)
+
+                           quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEJJ*Y
+                           quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+DENSEII*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*DENSEJIA*Y
+
+                           quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+DENSEJJ*Y
+                           quick_qm_struct%ob(KKK,KKK) = quick_qm_struct%ob(KKK,KKK)+DENSEII*Y
+                           quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSEJIB*Y
+#else
 
                            DENSEJI=quick_qm_struct%dense(KKK,III)
                            DENSEJJ=quick_qm_struct%dense(KKK,KKK)
@@ -706,8 +788,28 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III) &
                                 -quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
 
-
+#endif
                            elseif(JJJ.eq.KKK.and.JJJ.eq.LLL)then
+#ifdef OSHELL
+                           DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+                           DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)+quick_qm_struct%denseb(JJJ,JJJ)
+
+                           DENSEJIA=quick_qm_struct%dense(JJJ,III)
+                           DENSEJJA=quick_qm_struct%dense(JJJ,JJJ)
+
+                           DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+                           DENSEJJB=quick_qm_struct%denseb(JJJ,JJJ)
+
+                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEJJ*Y &
+                                -quick_method%x_hybrid_coeff*DENSEJJA*Y
+                           quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*2.0d0*DENSEJIA*Y
+
+                           quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+DENSEJJ*Y &
+                                -quick_method%x_hybrid_coeff*DENSEJJB*Y
+                           quick_qm_struct%ob(JJJ,JJJ) = quick_qm_struct%ob(JJJ,JJJ)+2.0d0*DENSEJI*Y &
+                                -2.0d0*quick_method%x_hybrid_coeff*DENSEJIB*Y
+#else
 
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
                            DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
@@ -717,11 +819,34 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                                 -quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
                            quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)+2.0d0*DENSEJI*Y &
                                 -quick_method%x_hybrid_coeff*DENSEJI*Y
+#endif
                            !        ! Find  all the (ii|ij) integrals.
                            !        ! Find all the (ij|ij) integrals
 
                            ! Find all the (ij|ik) integrals where j>i,k>j
                            elseif(KKK.eq.LLL.and.III.lt.JJJ.and.JJJ.ne.KKK)then
+#ifdef OSHELL
+                           DENSEKK=quick_qm_struct%dense(KKK,KKK)+quick_qm_struct%denseb(KKK,KKK)
+                           DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                           DENSEKIA=quick_qm_struct%dense(KKK,III)
+                           DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+
+                           DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                           DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+
+                           quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEKK*Y
+                           quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+2.d0*DENSEJI*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*DENSEKJA*Y
+                           quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+                           quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+
+                           quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+DENSEKK*Y
+                           quick_qm_struct%ob(KKK,KKK) = quick_qm_struct%ob(KKK,KKK)+2.d0*DENSEJI*Y
+                           quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSEKJB*Y
+                           quick_qm_struct%ob(KKK,JJJ) = quick_qm_struct%ob(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+                           quick_qm_struct%ob(JJJ,KKK) = quick_qm_struct%ob(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+#else
                            DENSEKI=quick_qm_struct%dense(KKK,III)
                            DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                            DENSEKK=quick_qm_struct%dense(KKK,KKK)
@@ -733,8 +858,31 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKJ*Y
                            quick_qm_struct%o(KKK,JJJ) = quick_qm_struct%o(KKK,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
                            quick_qm_struct%o(JJJ,KKK) = quick_qm_struct%o(JJJ,KKK)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
+#endif
+
                            !        ! Find all the (ik|jj) integrals where j>i, k>j.
                            elseif(III.eq.JJJ.and.KKK.lt.LLL)then
+#ifdef OSHELL
+                           DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+                           DENSEKJ=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
+
+                           DENSEKIA=quick_qm_struct%dense(LLL,III)
+                           DENSEJIA=quick_qm_struct%dense(KKK,III)
+
+                           DENSEKIB=quick_qm_struct%denseb(LLL,III)
+                           DENSEJIB=quick_qm_struct%denseb(KKK,III)
+
+                           quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+DENSEII*Y
+                           quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.d0*DENSEKJ*Y
+                           quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*DENSEKIA*Y
+                           quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*DENSEJIA*Y
+
+                           quick_qm_struct%ob(LLL,KKK) = quick_qm_struct%ob(LLL,KKK)+DENSEII*Y
+                           quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+2.d0*DENSEKJ*Y
+                           quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSEKIB*Y
+                           quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)-quick_method%x_hybrid_coeff*DENSEJIB*Y
+#else
+
                            DENSEII=quick_qm_struct%dense(III,III)
                            DENSEJI=quick_qm_struct%dense(KKK,III)
                            DENSEKI=quick_qm_struct%dense(LLL,III)
@@ -745,6 +893,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.d0*DENSEKJ*Y
                            quick_qm_struct%o(KKK,III) = quick_qm_struct%o(KKK,III)-quick_method%x_hybrid_coeff*.5d0*DENSEKI*Y
                            quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJI*Y
+#endif
                         endif
 
                      else
@@ -752,12 +901,46 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            call hrrwhole
                            !   write(*,*) Y, III,JJJ,KKK,LLL
                            if(III.eq.JJJ.and.III.eq.KKK.and.III.eq.LLL)then
+#ifdef OSHELL
+                              DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                              DENSEIIA=quick_qm_struct%dense(III,III)
+                              DENSEIIB=quick_qm_struct%denseb(III,III)
+
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y-quick_method%x_hybrid_coeff &
+                                                           *DENSEIIA*Y
+
+                              quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+DENSEII*Y- &
+                                                            quick_method%x_hybrid_coeff*DENSEIIB*Y
+#else
                               DENSEII=quick_qm_struct%dense(III,III)
 
                               ! do all the (ii|ii) integrals.
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y &
                                 -quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
+#endif
                               elseif(III.eq.JJJ.and.III.eq.KKK.and.III.lt.LLL)then
+#ifdef OSHELL
+                              DENSEJI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+                              DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                              DENSEJIA=quick_qm_struct%dense(LLL,III)
+                              DENSEIIA=quick_qm_struct%dense(III,III)
+
+                              DENSEJIB=quick_qm_struct%denseb(LLL,III)
+                              DENSEIIB=quick_qm_struct%denseb(III,III)
+
+                              ! Find  all the (ii|ij) integrals.
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+DENSEII*Y &
+                                -quick_method%x_hybrid_coeff*DENSEIIA*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*2.0d0*DENSEJIA*Y
+
+                              quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)+DENSEII*Y &
+                                -quick_method%x_hybrid_coeff*DENSEIIB*Y
+                              quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+2.0d0*DENSEJI*Y &
+                                -quick_method%x_hybrid_coeff*2.0d0*DENSEJIB*Y
+#else
                               DENSEJI=quick_qm_struct%dense(LLL,III)
                               DENSEII=quick_qm_struct%dense(III,III)
 
@@ -766,8 +949,33 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                                 -quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+2.0d0*DENSEJI*Y &
                                 -quick_method%x_hybrid_coeff*DENSEJI*Y
+#endif
 
                               elseif(III.eq.KKK.and.JJJ.eq.LLL.and.III.lt.JJJ)then
+#ifdef OSHELL
+                              DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                              DENSEJIA=quick_qm_struct%dense(JJJ,III)
+                              DENSEJJA=quick_qm_struct%dense(JJJ,JJJ)
+                              DENSEIIA=quick_qm_struct%dense(III,III)
+
+                              DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+                              DENSEJJB=quick_qm_struct%denseb(JJJ,JJJ)
+                              DENSEIIB=quick_qm_struct%denseb(III,III)
+
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEJI*Y &
+                                                           -quick_method%x_hybrid_coeff*DENSEJIA*Y
+                              quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)-quick_method%x_hybrid_coeff* &
+                                                           DENSEIIA*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff* &
+                                                           DENSEJJA*Y
+
+                              quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+2.0d0*DENSEJI*Y &
+                                                            -quick_method%x_hybrid_coeff*DENSEJIB*Y
+                              quick_qm_struct%ob(JJJ,JJJ) = quick_qm_struct%ob(JJJ,JJJ)-quick_method%x_hybrid_coeff*DENSEIIB*Y
+                              quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)-quick_method%x_hybrid_coeff*DENSEJJB*Y
+#else
+
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
                               DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
                               DENSEII=quick_qm_struct%dense(III,III)
@@ -777,7 +985,40 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                                 -quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
                               quick_qm_struct%o(JJJ,JJJ) = quick_qm_struct%o(JJJ,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*.5d0*DENSEJJ*Y
+#endif
                               elseif(III.eq.KKK.and.III.lt.JJJ.and.JJJ.lt.LLL)then
+#ifdef OSHELL
+                              DENSEKI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+                              DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                              DENSEKIA=quick_qm_struct%dense(LLL,III)
+                              DENSEKJA=quick_qm_struct%dense(LLL,JJJ)
+                              DENSEIIA=quick_qm_struct%dense(III,III)
+                              DENSEJIA=quick_qm_struct%dense(JJJ,III)
+
+                              DENSEKIB=quick_qm_struct%denseb(LLL,III)
+                              DENSEKJB=quick_qm_struct%denseb(LLL,JJJ)
+                              DENSEIIB=quick_qm_struct%denseb(III,III)
+                              DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+
+                              quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEKI*Y &
+                                -quick_method%x_hybrid_coeff*DENSEKIA*Y
+                              quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+2.0d0*DENSEJI*Y &
+                                - quick_method%x_hybrid_coeff*DENSEJIA*Y
+                              quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff* &
+                                                           2.d0*DENSEKJA*Y
+                              quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff* &
+                                                           DENSEIIA*Y
+
+                              quick_qm_struct%ob(JJJ,III) = quick_qm_struct%ob(JJJ,III)+2.0d0*DENSEKI*Y &
+                                                            -quick_method%x_hybrid_coeff*DENSEKIB*Y
+                              quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)+2.0d0*DENSEJI*Y &
+                                                            - quick_method%x_hybrid_coeff*DENSEJIB*Y
+                              quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)-quick_method%x_hybrid_coeff* &
+                                                            2.0d0*DENSEKJB*Y
+                              quick_qm_struct%ob(LLL,JJJ) = quick_qm_struct%ob(LLL,JJJ)-quick_method%x_hybrid_coeff* &
+                                                            DENSEIIB*Y
+#else
                               DENSEKI=quick_qm_struct%dense(LLL,III)
                               DENSEKJ=quick_qm_struct%dense(LLL,JJJ)
                               DENSEII=quick_qm_struct%dense(III,III)
@@ -790,7 +1031,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                                 - quick_method%x_hybrid_coeff*0.5d0*DENSEJI*Y
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)-quick_method%x_hybrid_coeff*1.d0*DENSEKJ*Y
                               quick_qm_struct%o(LLL,JJJ) = quick_qm_struct%o(LLL,JJJ)-quick_method%x_hybrid_coeff*.5d0*DENSEII*Y
-
+#endif
                            endif
                         endif
                      endif
