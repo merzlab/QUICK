@@ -22,13 +22,11 @@ module quick_cshell_eri_module
    implicit double precision(a-h,o-z)
    private
 #ifdef OSHELL
-   public :: getOshellEri
-!   public :: get_oshell_eri_energy
+   public :: getOshellEri, getOshellEriEnergy
 #else
 !   public :: cshell ! Should be private, but we still need this for deprecated
                     ! subroutines such as addInt in shell.f90
-   public :: getCshellEri
-!   public :: get_cshell_eri_energy
+   public :: getCshellEri, getCshellEriEnergy
    public :: getEriPrecomputables
 #endif 
 
@@ -37,6 +35,10 @@ module quick_cshell_eri_module
 interface getOshellEri
   module procedure get_oshell_eri
 end interface getOshellEri
+
+interface getOshellEriEnergy
+  module procedure get_oshell_eri_energy
+end interface getOshellEriEnergy
 
 #else
 
@@ -47,6 +49,10 @@ end interface getEriPrecomputables
 interface getCshellEri
   module procedure get_cshell_eri
 end interface getCshellEri
+
+interface getCshellEriEnergy
+  module procedure get_cshell_eri_energy
+end interface getCshellEriEnergy
 
 #endif
 
@@ -1049,6 +1055,30 @@ end subroutine iclass_oshell
 end subroutine iclass_cshell
 #endif
 
+
+#ifdef OSHELL
+subroutine get_oshell_eri_energy
+#else
+subroutine get_cshell_eri_energy
+#endif
+   use allmod
+   implicit double precision(a-h,o-z)
+
+   call cpu_time(timer_begin%TE)
+#ifdef OSHELL
+   quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)+ &
+                       Sum2Mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+#else
+   quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+#endif
+   quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
+   call cpu_time(timer_end%TE)
+   timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
+#ifdef OSHELL
+end subroutine get_oshell_eri_energy
+#else
+end subroutine get_cshell_eri_energy
+#endif
 
 
 #ifdef OSHELL
