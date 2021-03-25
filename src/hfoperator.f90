@@ -874,16 +874,16 @@ end subroutine get2edc
 !------------------------------------------------
 ! get1eEnergy
 !------------------------------------------------
-subroutine get2eEnergy()
-   use allmod
-   implicit double precision(a-h,o-z)
-   
-   !------------------------------------------------
-   ! This subroutine is to get 2e energy
-   !------------------------------------------------
-   call cpu_time(timer_begin%TE)  ! Terminate the timer for energy
-   quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
-   quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
-   call cpu_time(timer_end%TE)  ! Terminate the timer for energy
-   timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE ! add the time to cumer
-end subroutine get2eEnergy
+!subroutine get2eEnergy()
+!   use allmod
+!   implicit double precision(a-h,o-z)
+!   
+!   !------------------------------------------------
+!   ! This subroutine is to get 2e energy
+!   !------------------------------------------------
+!   call cpu_time(timer_begin%TE)  ! Terminate the timer for energy
+!   quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+!   quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
+!   call cpu_time(timer_end%TE)  ! Terminate the timer for energy
+!   timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE ! add the time to cumer
+!end subroutine get2eEnergy
