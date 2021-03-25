@@ -180,7 +180,7 @@
 
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
-    if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+    !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
     if(.not.quick_method%opt)then
