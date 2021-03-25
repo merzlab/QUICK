@@ -44,11 +44,11 @@ subroutine getEnergy(isGuess, ierr)
       call fullX
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
-      if (quick_method%DivCon) then
-         call DivideS
-         call DivideX
-         call PDCDivided
-      endif
+      !if (quick_method%DivCon) then
+      !   call DivideS
+      !   call DivideX
+      !   call PDCDivided
+      !endif
 
       !Classical Nuclear-Nuclear interaction energy
       quick_qm_struct%Ecore=0.d0      ! atom-extcharge and atom-atom replusion
