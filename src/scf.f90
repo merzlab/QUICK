@@ -40,7 +40,7 @@ subroutine scf(ierr)
    if (quick_method%nodirect) call aoint
 
    if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
-   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
+!   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
 
    jscf=jscf+1
 
