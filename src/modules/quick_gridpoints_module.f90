@@ -553,4 +553,103 @@ module quick_gridpoints_module
 
 #include "./include/labedev.fh"
 
+subroutine get_sigrad
+
+   ! calculate the radius of the sphere of basis function signifigance.
+   ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
+   ! Also, the radius of the sphere comes from the spherical average of
+   ! the basis function, from Perez-Jorda and Yang, Chem. Phys. Lett., 241,
+   ! 1995, pg 469-76.
+   ! The spherical average of a gaussian function is:
+
+   ! (1 + 2 L)/4  (3 + 2 L)/4  L
+   ! 2            a            r
+   ! ave  = ---------------------------------
+   ! 2
+   ! a r                      3
+   ! E     Sqrt[Pi] Sqrt[Gamma[- + L]]
+   ! 2
+   ! where a is the most diffuse (smallest) orbital exponent and L is the
+   ! sum of the angular momentum exponents.  This code finds the r value where
+   ! the average is the signifigance threshold (signif) and this r value is
+   ! called the target below. Rearranging gives us:
+
+   ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
+   !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
+   ! 2
+   use allmod
+   implicit double precision(a-h,o-z)
+
+#ifdef MPIV
+   include 'mpif.h'
+#endif
+
+#ifdef MPIV
+   if(master) then
+#endif
+     write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+#ifdef MPIV
+   endif
+#endif
+
+   do Ibas=1,nbasis
+
+      ! Find the minimum gaussian exponent.
+
+      amin=10.D10
+      do Icon=1,ncontract(Ibas)
+         amin=min(amin,aexp(Icon,Ibas))
+      enddo
+
+      ! calculate L.
+
+      L = itype(1,Ibas)+ itype(2,Ibas)+ itype(3,Ibas)
+
+      ! calculate 2 Pi Gamma[L+3/2]
+      ! Remember that Gamma[i+1/2]=(i-1+1/2) Gamma[i-1+1/2] until you get to
+      ! Gamma[1/2] = Sqrt[Pi]
+      gamma=1.d0
+      do i=1,L+1
+         gamma = gamma * (dble(L+1-i) + .5d0)
+      enddo
+      gamma2pi=gamma*11.13665599366341569
+
+      ! Now put it all together to get the target value.
+
+      target = quick_method%basisCufoff* &
+
+            (((2.d0*amin)**(dble(L)+1.5))/gamma2pi)**(-.5d0)
+
+      ! Now search to find the correct radial value.
+
+      stepsize=1.d0
+      radial=0.d0
+
+      do WHILE (stepsize.gt.1.d-4)
+         radial=radial+stepsize
+         current=Dexp(-amin*radial*radial)*radial**(dble(L))
+         if (current < target) then
+            radial=radial-stepsize
+            stepsize=stepsize/10.d0
+         endif
+      enddo
+
+      ! Store the square of the radii of signifigance as this is what the
+      ! denisty calculator works in.
+
+      sigrad2(Ibas)=radial*radial
+
+#ifdef MPIV
+      if(master) then
+#endif
+        write (iOutFile,'(I4,7x,F12.6)') Ibas,radial
+#ifdef MPIV
+      endif
+#endif
+
+   enddo
+
+end subroutine get_sigrad
+
+
 end module quick_gridpoints_module
