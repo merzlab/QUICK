@@ -575,7 +575,10 @@ module quick_gridpoints_module
       ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
       !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
       ! 2
-      use allmod
+      use quick_files_module
+      use quick_method_module
+      use quick_gaussian_class_module
+      use quick_mpi_module
       implicit double precision(a-h,o-z)
    
 #ifdef MPIV
@@ -656,7 +659,7 @@ module quick_gridpoints_module
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-      use allmod
+      use quick_molspec_module
       implicit double precision(a-h,o-z)
       parameter(MAXGNUMBER=30)
       double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
@@ -1055,7 +1058,7 @@ module quick_gridpoints_module
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
    subroutine gridformnew(iitype,distance,iiang)
-      use allmod
+      use quick_molspec_module
       implicit double precision(a-h,o-z)
    
       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
@@ -1142,7 +1145,7 @@ module quick_gridpoints_module
    end gridformnew
 
    subroutine gridformSG1
-      use allmod
+      
       implicit none
       integer itemp,i
       itemp=50
