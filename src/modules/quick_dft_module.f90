@@ -15,7 +15,7 @@
 ! This module should contain stuff relevent for DFT
 module quick_dft_module
 
-  implicit double precision
+  implicit double precision(a-h,o-z)
   private
 
   public :: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e 
