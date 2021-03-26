@@ -579,6 +579,7 @@ module quick_gridpoints_module
       use quick_method_module
       use quick_gaussian_class_module
       use quick_mpi_module
+      use quick_basis_module
       implicit double precision(a-h,o-z)
    
 #ifdef MPIV
@@ -1053,7 +1054,7 @@ module quick_gridpoints_module
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
    
-   end gridformSG0
+   end subroutine gridformSG0
    
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
@@ -1142,7 +1143,7 @@ module quick_gridpoints_module
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
    
-   end gridformnew
+   end subroutine gridformnew
 
    subroutine gridformSG1
       
@@ -1154,7 +1155,7 @@ module quick_gridpoints_module
          RWT(I)=2.d0*dble(itemp+1)*(dble(I)**5.d0) &
                *dble(itemp+1-I)**(-7.d0)
       enddo
-   end subroutine
+   end subroutine gridformSG1
    
 #include "./include/labedev.fh"
    
