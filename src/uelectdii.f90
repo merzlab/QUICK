@@ -96,8 +96,8 @@ subroutine uelectdiis(jscf,PRMS,verbose)
       jscf=jscf+1
       call cpu_time(t1)
       if (quick_method%HF) call uhfoperatora
-      if (quick_method%DFT) call udftoperatora
-      if (quick_method%SEDFT) call usedftoperatora
+      !if (quick_method%DFT) call udftoperatora
+      !if (quick_method%SEDFT) call usedftoperatora
 
       do I=1,nbasis
          do J=1,nbasis
@@ -167,8 +167,8 @@ subroutine uelectdiis(jscf,PRMS,verbose)
       ! alloperatorb array.)
 
       if (quick_method%HF) call uhfoperatorb
-      if (quick_method%DFT) call udftoperatorb
-      if (quick_method%SEDFT) call usedftoperatorb
+      !if (quick_method%DFT) call udftoperatorb
+      !if (quick_method%SEDFT) call usedftoperatorb
 
       do I=1,nbasis
          do J=1,nbasis
