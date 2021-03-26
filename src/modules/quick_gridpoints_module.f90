@@ -652,4 +652,408 @@ subroutine get_sigrad
 end subroutine get_sigrad
 
 
+! Xiao HE 2/9/07
+! SG-0 standard grid CHIEN SH and Gill PMW,JCC 27,730,2006
+! Gill PMW and CHIEN SH,JCC 24,732,2003
+! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
+
+subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
+   use allmod
+   implicit double precision(a-h,o-z)
+   parameter(MAXGNUMBER=30)
+   double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
+
+   !      double precision :: ratomic(18)
+   !      data ratomic &
+         !      /1.30d0,0.0d0,1.95d0,2.20d0,1.45d0, 1.20d0,1.10d0 &
+         !      ,1.10d0,1.20d0,0.0d0,2.30d0,2.20d0,2.10d0,1.30d0,1.30d0,1.10d0,
+         !      &
+         !      1.45d0,0.0d0/
+
+   double precision :: aa46(46),aa52(52)
+   data aa46 &
+         /0.001505892474584d0,0.19397997519818d0, &
+         0.009949112846861d0,0.262363963659648d0, &
+         0.026212787562514d0,0.267428126763970d0, &
+         0.050215014094684d0,0.248662024728409d0, &
+         0.081660512821456d0,0.219828495609352d0, &
+         0.120092694277137d0,0.187495823926848d0, &
+         0.164915797166005d0,0.155234272915304d0, &
+         0.215411397226014d0,0.125066174707640d0, &
+         0.270754073298502d0,0.098100418872551d0, &
+         0.330027592716307d0,0.074860364849399d0, &
+         0.392241993524124d0,0.055477247414685d0, &
+         0.456351572232027d0,0.039817159733692d0, &
+         0.521273620526389d0,0.027571576765108d0, &
+         0.585907670629421d0,0.018325604666402d0, &
+         0.649154963911799d0,0.011611019656801d0, &
+         0.709937833943106d0,0.006947749930384d0, &
+         0.767218686284763d0,0.003875771461057d0, &
+         0.820018260579743d0,0.001978563506850d0, &
+         0.867432877982759d0,0.000898892530630d0, &
+         0.908650423041717d0,0.000347557889758d0, &
+         0.942964955771737d0,0.000105728680567d0, &
+         0.969790557585917d0,0.000021565953939d0, &
+         0.988681214124179d0,0.000001920578888d0/
+
+   data aa52 &
+         /0.00121189595314421d0,0.165909597900741d0, &
+         0.00795083508342117d0,0.229969050948748d0, &
+         0.0209119707010145d0,0.24044079379164d0, &
+         0.040062890303616d0,0.229758620259279d0, &
+         0.065227756094948d0,0.209301634430997d0, &
+         0.0961248739663807d0,0.184563873212425d0, &
+         0.132381145124222d0,0.158605827354705d0, &
+         0.173541771179187d0,0.133246033424505d0, &
+         0.219078862911660d0,0.109577661754471d0, &
+         0.268400049319685d0,0.0882300767430008d0, &
+         0.320857458070521d0,0.0695182568002067d0, &
+         0.375757171448330d0,0.0535371508529839d0, &
+         0.432369144701918d0,0.0402264558385049d0, &
+         0.489937515066220d0,0.0294181396250844d0, &
+         0.547691197495453d0,0.0208730234574819d0, &
+         0.604854644468783d0,0.0143097962966441d0, &
+         0.660658636490247d0,0.00942831962752039d0, &
+         0.714350964474867d0,0.00592827752359897d0, &
+         0.765206863851496d0,0.00352379596677165d0, &
+         0.812539062502577d0,0.0019544295871423d0, &
+         0.855707311124978d0,0.000992804711502569d0, &
+         0.894127278139190d0,0.000449166032352755d0, &
+         0.927278723938938d0,0.000173072023044939d0, &
+         0.954712978447157d0,0.0000525042596156813d0, &
+         0.976060296284965d0,0.0000106871851953229d0, &
+         0.991042553891775d0,0.000000950391838932671d0/
+
+   do i=1,MAXGNUMBER
+      RGRIDt(i)=0.0d0
+      RWTt(i)=0.0d0
+   enddo
+
+   if(quick_molspec%iattype(iitype).le.10)then
+      do i=1,23
+         RGRIDt(i)=-dlog(aa46(2*i-1))
+         RWTt(i)=aa46(2*i)/aa46(2*i-1)
+      enddo
+   else
+      do i=1,26
+         RGRIDt(i)=-dlog(aa52(2*i-1))
+         RWTt(i)=aa52(2*i)/aa52(2*i-1)
+      enddo
+   endif
+
+   !  This subroutine calculates the angular and radial grid points
+   !  and weights.  The current implementation presupposes Lebedev angular
+   !  and Euler-Maclaurin radial grids.
+
+   !  First, calculate the angular points and weights.
+
+   if(quick_molspec%iattype(iitype).eq.1.or.quick_molspec%iattype(iitype).eq.3)then
+      if(ILEB.le.6)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.9)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.10)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.11)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.12)then
+         CALl LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.13)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.19)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.20)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.21)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.22)then
+         CALl LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.23)then
+         CALl LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+      endif
+   endif
+   if(quick_molspec%iattype(iitype).eq.6)then
+      if(ILEB.le.6)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.8)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.9)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.11)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.13)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.14)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.15)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.16)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.18)then
+         CALl LD0170(XANG,YANG,ZANG,WTANG,N)
+         iiang=170
+         elseif(ILEB.le.20)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.21)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.22)then
+         CALl LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.23)then
+         CALl LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+      endif
+   endif
+   if(quick_molspec%iattype(iitype).eq.7)then
+      if(ILEB.le.6)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.9)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.10)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.12)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.14)then
+         CALl LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.15)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.17)then
+         CALl LD0170(XANG,YANG,ZANG,WTANG,N)
+         iiang=170
+         elseif(ILEB.le.20)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.21)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.23)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+      endif
+   endif
+   if(quick_molspec%iattype(iitype).eq.8)then
+      if(ILEB.le.5)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.6)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.8)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.9)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.13)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.14)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.19)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.20)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.21)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.22)then
+         CALl LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.23)then
+         CALl LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+      endif
+   endif
+   if(quick_molspec%iattype(iitype).eq.9)then
+      if(ILEB.le.4)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.6)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.10)then
+         CALL LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.12)then
+         CALL LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.14)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.16)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.18)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.21)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.22)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.23)then
+         CALl LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+      endif
+   endif
+
+   if(quick_molspec%iattype(iitype).eq.15)then
+      if(ILEB.le.5)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.9)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.13)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.16)then
+         CALL LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.17)then
+         CALl LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.19)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.20)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.23)then
+         CALl LD0170(XANG,YANG,ZANG,WTANG,N)
+         iiang=170
+         elseif(ILEB.le.24)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.25)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.26)then
+         CALl LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+      endif
+   endif
+
+   if(quick_molspec%iattype(iitype).eq.16)then
+      if(ILEB.le.4)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.5)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.13)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.15)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.16)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.18)then
+         CALl LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.19)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.22)then
+         CALl LD0170(XANG,YANG,ZANG,WTANG,N)
+         iiang=170
+         elseif(ILEB.le.23)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.24)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.25)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.26)then
+         CALl LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+      endif
+   endif
+
+   if(quick_molspec%iattype(iitype).eq.17)then
+      if(ILEB.le.4)then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(ILEB.le.11)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.13)then
+         CALL LD0026(XANG,YANG,ZANG,WTANG,N)
+         iiang=26
+         elseif(ILEB.le.15)then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(ILEB.le.16)then
+         CALl LD0050(XANG,YANG,ZANG,WTANG,N)
+         iiang=50
+         elseif(ILEB.le.17)then
+         CALl LD0074(XANG,YANG,ZANG,WTANG,N)
+         iiang=74
+         elseif(ILEB.le.19)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.22)then
+         CALl LD0170(XANG,YANG,ZANG,WTANG,N)
+         iiang=170
+         elseif(ILEB.le.23)then
+         CALl LD0146(XANG,YANG,ZANG,WTANG,N)
+         iiang=146
+         elseif(ILEB.le.24)then
+         CALl LD0110(XANG,YANG,ZANG,WTANG,N)
+         iiang=110
+         elseif(ILEB.le.25)then
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(ILEB.le.26)then
+         CALl LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+      endif
+   endif
+
+   !  The Lebedev weights are returned normalized to 1.  Multiply them by
+   !  4Pi to get the correct value.
+
+   do I=1,iiang
+      wtang(I)=wtang(I)*12.56637061435917295385d0
+   enddo
+
+end gridformSG0
+
+
+
 end module quick_gridpoints_module
