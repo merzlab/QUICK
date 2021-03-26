@@ -1140,6 +1140,18 @@ module quick_gridpoints_module
       enddo
    
    end gridformnew
+
+   subroutine gridformSG1
+      use allmod
+      implicit none
+      integer itemp,i
+      itemp=50
+      do I=1,itemp
+         RGRID(I)=(I**2.d0)/dble((itemp+1-I)*(itemp+1-I))
+         RWT(I)=2.d0*dble(itemp+1)*(dble(I)**5.d0) &
+               *dble(itemp+1-I)**(-7.d0)
+      enddo
+   end subroutine
    
 #include "./include/labedev.fh"
    
