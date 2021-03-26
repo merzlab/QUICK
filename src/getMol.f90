@@ -111,7 +111,7 @@ subroutine getMol(ierr)
 
    if (master) then
       ! Read params for semi-emipeircal DFT
-      if (quick_method%SEDFT) call read_sedft_parm
+      ! if (quick_method%SEDFT) call read_sedft_parm
 
       !  initialize density matrix
       SAFE_CALL(initialGuess(ierr))
