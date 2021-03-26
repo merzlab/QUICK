@@ -551,8 +551,6 @@ module quick_gridpoints_module
 
    end subroutine print_grid_information
 
-#include "./include/labedev.fh"
-
 subroutine get_sigrad
 
    ! calculate the radius of the sphere of basis function signifigance.
@@ -1054,6 +1052,95 @@ subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
 
 end gridformSG0
 
+! Xiao HE 1/9/07
+! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
+subroutine gridformnew(iitype,distance,iiang)
+   use allmod
+   implicit double precision(a-h,o-z)
 
+   double precision :: hpartpara(4),lpartpara(4),npartpara(4)
+
+   data hpartpara /0.2500d0,0.5000d0,1.0000d0,4.5000d0/
+   data lpartpara /0.1667d0,0.5000d0,0.9000d0,3.5000d0/
+   data npartpara /0.1000d0,0.4000d0,0.8000d0,2.5000d0/
+
+   !  This subroutine calculates the angular and radial grid points
+   !  and weights.  The current implementation presupposes Lebedev angular
+   !  and Euler-Maclaurin radial grids.
+
+   !  First, calculate the angular points and weights.
+
+   if(quick_molspec%iattype(iitype).ge.1.and.quick_molspec%iattype(iitype).le.2)then
+      if(distance.lt.hpartpara(1))then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(distance.lt.hpartpara(2))then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(distance.lt.hpartpara(3))then
+         CALL LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(distance.lt.hpartpara(4))then
+         CALL LD0194(XANG,YANG,ZANG,WTANG,N)
+         iiang=194
+      else
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+      endif
+   endif
+
+   if(quick_molspec%iattype(iitype).ge.3.and.quick_molspec%iattype(iitype).le.10)then
+      if(distance.lt.lpartpara(1))then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(distance.lt.lpartpara(2))then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(distance.lt.lpartpara(3))then
+         CALL LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(distance.lt.lpartpara(4))then
+         CALL LD0194(XANG,YANG,ZANG,WTANG,N)
+         iiang=194
+      else
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+      endif
+   endif
+
+   if(quick_molspec%iattype(iitype).ge.11.and.quick_molspec%iattype(iitype).le.18)then
+      if(distance.lt.npartpara(1))then
+         CALL LD0006(XANG,YANG,ZANG,WTANG,N)
+         iiang=6
+         elseif(distance.lt.npartpara(2))then
+         CALL LD0038(XANG,YANG,ZANG,WTANG,N)
+         iiang=38
+         elseif(distance.lt.npartpara(3))then
+         CALL LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+         elseif(distance.lt.npartpara(4))then
+         CALL LD0194(XANG,YANG,ZANG,WTANG,N)
+         iiang=194
+      else
+         CALl LD0086(XANG,YANG,ZANG,WTANG,N)
+         iiang=86
+      endif
+   endif
+   if(quick_molspec%iattype(iitype).eq.30)then
+      CALL LD0194(XANG,YANG,ZANG,WTANG,N)
+      iiang=194
+   endif
+
+
+   !  The Lebedev weights are returned normalized to 1.  Multiply them by
+   !  4Pi to get the correct value.
+
+   do I=1,iiang
+      wtang(I)=wtang(I)*12.56637061435917295385d0
+   enddo
+
+end gridformnew
+
+#include "./include/labedev.fh"
 
 end module quick_gridpoints_module
