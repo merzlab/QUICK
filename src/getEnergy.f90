@@ -12,6 +12,7 @@
 subroutine getEnergy(isGuess, ierr)
    use allMod
    use quick_gridpoints_module
+   use quick_scf_module
    implicit none
 
    double precision :: distance
