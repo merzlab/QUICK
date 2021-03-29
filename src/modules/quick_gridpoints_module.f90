@@ -575,11 +575,7 @@ module quick_gridpoints_module
       ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
       !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
       ! 2
-      use quick_files_module
-      use quick_method_module
-      use quick_gaussian_class_module
-      use quick_mpi_module
-      use quick_basis_module
+      use allmod
       implicit double precision(a-h,o-z)
    
 #ifdef MPIV
@@ -660,7 +656,7 @@ module quick_gridpoints_module
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-      use quick_molspec_module
+      use allmod
       implicit double precision(a-h,o-z)
       parameter(MAXGNUMBER=30)
       double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
@@ -1059,7 +1055,7 @@ module quick_gridpoints_module
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
    subroutine gridformnew(iitype,distance,iiang)
-      use quick_molspec_module
+      use allmod
       implicit double precision(a-h,o-z)
    
       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
@@ -1091,9 +1087,7 @@ module quick_gridpoints_module
             CALl LD0086(XANG,YANG,ZANG,WTANG,N)
             iiang=86
          endif
-      endif
-   
-      if(quick_molspec%iattype(iitype).ge.3.and.quick_molspec%iattype(iitype).le.10)then
+      else if(quick_molspec%iattype(iitype).ge.3.and.quick_molspec%iattype(iitype).le.10)then
          if(distance.lt.lpartpara(1))then
             CALL LD0006(XANG,YANG,ZANG,WTANG,N)
             iiang=6
@@ -1110,9 +1104,7 @@ module quick_gridpoints_module
             CALl LD0086(XANG,YANG,ZANG,WTANG,N)
             iiang=86
          endif
-      endif
-   
-      if(quick_molspec%iattype(iitype).ge.11.and.quick_molspec%iattype(iitype).le.18)then
+      else if(quick_molspec%iattype(iitype).ge.11.and.quick_molspec%iattype(iitype).le.18)then
          if(distance.lt.npartpara(1))then
             CALL LD0006(XANG,YANG,ZANG,WTANG,N)
             iiang=6
@@ -1129,8 +1121,7 @@ module quick_gridpoints_module
             CALl LD0086(XANG,YANG,ZANG,WTANG,N)
             iiang=86
          endif
-      endif
-      if(quick_molspec%iattype(iitype).eq.30)then
+      else
          CALL LD0194(XANG,YANG,ZANG,WTANG,N)
          iiang=194
       endif
@@ -1146,7 +1137,7 @@ module quick_gridpoints_module
    end subroutine gridformnew
 
    subroutine gridformSG1
-      
+      use allmod
       implicit none
       integer itemp,i
       itemp=50
