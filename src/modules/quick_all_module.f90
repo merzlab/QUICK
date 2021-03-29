@@ -45,7 +45,6 @@
     use quick_basis_module
     use quick_params_module
     use quick_molspec_module
-    use quick_gridpoints_module
     use quick_calculated_module
     use quick_gaussian_class_module
     use quick_SCRATCH_module
