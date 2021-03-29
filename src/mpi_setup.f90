@@ -70,6 +70,7 @@
 !
     subroutine mpi_setup_mol1(ierr)
     use allmod
+    use quick_gridpoints_module
     implicit none
 
     integer :: i    
@@ -99,6 +100,7 @@
     subroutine mpi_setup_mol2(ierr)
 
     use allmod
+    use quick_gridpoints_module
     implicit none
     integer, intent(inout) :: ierr
     
@@ -406,6 +408,7 @@
 
  subroutine setup_xc_mpi_1
    use allmod
+   use quick_gridpoints_module
    implicit double precision(a-h,o-z)
 
    include 'mpif.h'
@@ -427,6 +430,7 @@
 !  Madu Manathunga 01/03/2020
 !-----------------------------------------------------------------------------
    use allmod
+   use quick_gridpoints_module
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
@@ -508,6 +512,7 @@
    subroutine setup_ssw_mpi
 
    use allmod
+   use quick_gridpoints_module
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
@@ -578,6 +583,7 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    subroutine get_mpi_ssw
 
    use allmod
+   use quick_gridpoints_module
    implicit double precision(a-h,o-z)
 
    include 'mpif.h'
