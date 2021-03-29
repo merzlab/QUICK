@@ -93,7 +93,7 @@ OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/
         $(objfolder)/getMolSad.o $(objfolder)/getMol.o $(objfolder)/shell.o  \
         $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o \
         $(objfolder)/ecp.o $(objfolder)/nuclear.o \
-        $(objfolder)/scf.o $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
+        $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
         $(objfolder)/uelectdii.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/optimize.o $(objfolder)/gradient.o $(objfolder)/hessian.o \
         $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o \
