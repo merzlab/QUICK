@@ -31,6 +31,7 @@
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
     use quick_cshell_eri_module, only: getEriPrecomputables
+    use quick_gradient_module, only: gradient
 
     implicit none
 

@@ -46,6 +46,7 @@ end subroutine calchessian
 
 subroutine fdhessian(failed)
   use allmod
+  use quick_gradient_module, only: scf_gradient
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
