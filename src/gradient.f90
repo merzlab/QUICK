@@ -740,6 +740,7 @@ subroutine get_xc_grad
 !-------------------------------------------------------------------------
 
    use allmod
+   use quick_gridpoints_module
    use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
    use xc_f90_types_m
    use xc_f90_lib_m

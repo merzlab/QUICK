@@ -13,6 +13,7 @@ subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
    use allmod
+   use quick_gridpoints_module
    use quick_exception_module
 
    implicit none

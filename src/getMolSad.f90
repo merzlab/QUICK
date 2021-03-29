@@ -16,6 +16,7 @@
 
 subroutine getmolsad(ierr)
    use allmod
+   use quick_gridpoints_module
    use quick_files_module
    use quick_exception_module
 

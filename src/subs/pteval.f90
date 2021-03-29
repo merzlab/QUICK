@@ -4,6 +4,7 @@
 
     subroutine pteval(gridx,gridy,gridz,phi,dphidx,dphidy,dphidz,Iphi)
     use allmod
+    use quick_gridpoints_module
     implicit double precision(a-h,o-z)
 
     ! Given a point in space, this function calculates the value of basis

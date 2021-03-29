@@ -15,6 +15,7 @@
 
 subroutine wrtrestart
   use allmod
+  use quick_gridpoints_module
   implicit none
   integer istart,ifinal
   integer i

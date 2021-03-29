@@ -13,6 +13,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    ! allocate variables, then again to assign the basis
    !
    use allmod
+   use quick_gridpoints_module
    use quick_exception_module
    !
    implicit double precision(a-h,o-z)

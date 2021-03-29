@@ -6,6 +6,7 @@
 
 subroutine optimize(ierr)
    use allmod
+   use quick_gridpoints_module
    use quick_cutoff_module, only: schwarzoff
    use quick_cshell_eri_module, only: getEriPrecomputables
    implicit double precision(a-h,o-z)

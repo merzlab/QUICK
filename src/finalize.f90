@@ -19,6 +19,7 @@ Subroutine deallocate_calculated
 !   variables.  Large sized arrays should only be allocated when
 !   they are needed.  Eventually someone will deal with this.
   use allmod
+  use quick_gridpoints_module
   if (allocated(Yxiao)) deallocate(Yxiao)
   if (allocated(Yxiaotemp)) deallocate(Yxiaotemp)
   if (allocated(Yxiaoprim)) deallocate(Yxiaoprim)
@@ -41,6 +42,7 @@ end subroutine deallocate_calculated
 
 subroutine deallocateall(ierr)
   use allmod
+  use quick_gridpoints_module
   implicit none
   integer, intent(inout) :: ierr
 
