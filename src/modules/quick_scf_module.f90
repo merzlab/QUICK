@@ -166,6 +166,7 @@ contains
   
      use allmod
      use quick_gridpoints_module
+     use quick_scf_operator_module, only: scf_operator
   
      implicit none
   
