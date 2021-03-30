@@ -79,9 +79,6 @@ module quick_calculated_module
       ! saved density matrix
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseOld
-      ! Initial density matrix
-      ! the dimension is nbasis*nbasis.
-      double precision,dimension(:,:), allocatable :: denseInt
 
       ! A matrix of orbital degeneracies
       integer, dimension(:),allocatable :: iDegen
@@ -213,7 +210,6 @@ contains
       if(.not. allocated(self%dense)) allocate(self%dense(nbasis,nbasis))
       if(.not. allocated(self%denseSave)) allocate(self%denseSave(nbasis,nbasis))
       if(.not. allocated(self%denseOld)) allocate(self%denseOld(nbasis,nbasis))
-      if(.not. allocated(self%denseInt)) allocate(self%denseInt(nbasis,nbasis))
       if(.not. allocated(self%E)) allocate(self%E(nbasis))
       if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
@@ -367,7 +363,6 @@ contains
       if (allocated(self%dense)) deallocate(self%dense)
       if (allocated(self%denseSave)) deallocate(self%denseSave)
       if (allocated(self%denseOld)) deallocate(self%denseOld)
-      if (allocated(self%denseInt)) deallocate(self%denseInt)
       if (allocated(self%E)) deallocate(self%E)
       if (allocated(self%iDegen)) deallocate(self%iDegen)
 
@@ -439,7 +434,6 @@ contains
       call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseInt,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
@@ -519,7 +513,6 @@ contains
       call zeroMatrix(self%dense,nbasis)
       call zeroMatrix(self%denseSave,nbasis)
       call zeroMatrix(self%denseOld,nbasis)
-      call zeroMatrix(self%denseInt,nbasis)
       call zeroVec(self%E,nbasis)
       call zeroiVec(self%iDegen,nbasis)
       call zeroVec(self%Mulliken,natom)
