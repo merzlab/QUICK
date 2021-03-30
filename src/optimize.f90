@@ -117,12 +117,6 @@ subroutine optimize(ierr)
          enddo
       endif
 
-      do II=1,nbasis
-         do J =1,nbasis
-            quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
-         enddo
-      enddo
-
 #if defined CUDA || defined CUDA_MPIV
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
             quick_molspec%molchg, quick_molspec%iAtomType)
