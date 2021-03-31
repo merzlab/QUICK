@@ -457,6 +457,7 @@ subroutine run_quick(self,ierr)
   use quick_exception_module
   use quick_cshell_eri_module, only: getEriPrecomputables
   use quick_gradient_module, only: gradient
+  use quick_optimizer_module, only: optimize
 #ifdef MPIV
   use quick_mpi_module
 #endif
