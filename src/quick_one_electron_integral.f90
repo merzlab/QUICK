@@ -1774,27 +1774,6 @@ subroutine get1eO(IBAS)
 
 end subroutine get1eO
 
-
-!------------------------------------------------
-! get1eEnergy
-!------------------------------------------------
-subroutine get1eEnergy()
-   !------------------------------------------------
-   ! This subroutine is to get 1e integral
-   !------------------------------------------------
-   use allmod
-   implicit double precision(a-h,o-z)
-   call cpu_time(timer_begin%tE)
-
-   call copySym(quick_qm_struct%o,nbasis)
-   quick_qm_struct%Eel=0.d0
-   quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
-   call cpu_time(timer_end%tE)
-   timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
-
-end subroutine get1eEnergy
-
-
 !------------------------------------------------
 ! get1e
 !------------------------------------------------
