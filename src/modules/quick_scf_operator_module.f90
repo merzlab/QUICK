@@ -36,6 +36,7 @@ contains
      use allmod
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
+     use quick_oei_module, only:get1eEnergy
   
      implicit none
   
@@ -67,7 +68,7 @@ contains
   
      call get1e()
   
-     if(quick_method%printEnergy) call get1eEnergy()
+     if(quick_method%printEnergy) call get1eEnergy
   
   !  if only calculate operation difference
      if (deltaO) then
