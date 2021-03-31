@@ -302,12 +302,6 @@ subroutine initialGuess(ierr)
       endif
    endif
 
-            do I=1,nbasis
-               do J =1,nbasis
-                  quick_qm_struct%denseInt(J,I) = quick_qm_struct%dense(J,I)
-               enddo
-            enddo
-
    call deallocate_mol_sad
 
    ! debug initial guess
