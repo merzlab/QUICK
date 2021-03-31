@@ -34,13 +34,21 @@ contains
      !------------------------------------------------
      ! This subroutine is to get 1e integral
      !------------------------------------------------
-     use allmod
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module,only: quick_method
+     use quick_timer_module, only:timer_begin, timer_end, timer_cumer
+     use quick_basis_module
+
      implicit double precision(a-h,o-z)
+
      call cpu_time(timer_begin%tE)
   
      call copySym(quick_qm_struct%o,nbasis)
      quick_qm_struct%Eel=0.d0
      quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+     if (quick_method%unrst) quick_qm_struct%Eel = quick_qm_struct%Eel &
+       +sum2mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+
      call cpu_time(timer_end%tE)
      timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
   
