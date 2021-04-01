@@ -286,6 +286,16 @@ subroutine initialGuess(ierr)
       if (quick_method%SAD) then
          call getSadDense
       endif
+
+      if(quick_method%unrst) then
+        do I=1,nbasis
+          do J =1,nbasis
+            quick_qm_struct%dense(J,I) = quick_qm_struct%dense(J,I)/2.d0
+            quick_qm_struct%denseb(J,I) = quick_qm_struct%dense(J,I)
+          enddo
+        enddo
+      endif
+
    endif
 
    ! debug initial guess
