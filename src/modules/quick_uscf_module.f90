@@ -142,7 +142,7 @@ contains
      integer :: I,J,K,L,IERROR
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-     double precision :: PRMS,PCHANGE, tmp
+     double precision :: PRMS,PRMS2,PCHANGE, tmp
   
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -183,10 +183,10 @@ contains
      ! As in scf.F, each step wil be reviewed as we pass through the code.
      !---------------------------------------------------------------------------
   
-     call allocate_quick_uscf()
+     call allocate_quick_uscf(ierr)
   
      if(master) then
-        write(ioutfile,'(40x," SCF ENERGY")')
+        write(ioutfile,'(40x," USCF ENERGY")')
         if (quick_method%printEnergy) then
            write(ioutfile,'("| ",120("-"))')
         else
@@ -212,10 +212,12 @@ contains
   
 #ifdef MPIV
      if (bMPI) then
-  !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+        call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+        call MPI_BCAST(quick_qm_struct%cob,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+        call MPI_BCAST(quick_qm_struct%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -253,7 +255,7 @@ contains
         !--------------------------------------------
         ! 1)  Form the operator matrix for step i, O(i).
         !--------------------------------------------
-        temp=Sum2Mat(quick_qm_struct%dense,quick_qm_struct%s,nbasis)
+        !temp=Sum2Mat(quick_qm_struct%dense,quick_qm_struct%s,nbasis)
   
         ! Determine dii cycle and scf cycle
         idiis=idiis+1
@@ -273,11 +275,11 @@ contains
         ! if want to calculate operator difference?
         if(jscf.ge.quick_method%ncyc) deltaO = .true.
   
-        if (quick_method%debug)  call debug_SCF(jscf)
+        !if (quick_method%debug)  call debug_SCF(jscf)
   
-        call scf_operator(deltaO)
+        call uscf_operator(deltaO)
   
-        if (quick_method%debug)  call debug_SCF(jscf)
+        !if (quick_method%debug)  call debug_SCF(jscf)
   
         ! Terminate Operator timer
         call cpu_time(timer_end%TOp)
@@ -341,6 +343,61 @@ contains
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #endif
   
+           do I=1,nbasis
+              do J=1,nbasis
+                 allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
+              enddo
+           enddo
+
+           ! 3)  Form the beta operator matrix for step i, O(i).  (Store in alloperatorb array.)
+           quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
+           quick_qm_struct%densebOld(:,:) = quick_qm_struct%denseb(:,:)
+           
+           ! 4)  Form beta error matrix for step i.
+           ! e(i) = e(i,alpha part)+Ob Db S - S Db Ob
+  
+           ! First, calculate quick_qm_struct%denseb*S and store in the scratch
+           ! matrix hold. Then calculate O*(quick_qm_struct%denseb*S).  As the operator matrix is
+           ! symmetric, the above code can be used. Add this (the ODS term) into the allerror
+           ! matrix.
+
+#ifdef CUDA
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+#else      
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
+                    nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
+                    nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+#endif
+
+           do I=1,nbasis
+              do J=1,nbasis
+                 allerror(J,I,iidiis) = allerror(J,I,iidiis) + quick_scratch%hold2(J,I) !e=ODS=SDO
+              enddo
+           enddo
+
+           ! Calculate Db O.Then calculate S (DbO) and subtract that from the allerror matrix.
+           ! This means we now have the complete e(i) matrix.
+
+#ifdef CUDA
+
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
+                 nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+        
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+#else
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
+                 nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+#endif
+
            errormax = 0.d0
            do I=1,nbasis
               do J=1,nbasis
@@ -350,7 +407,7 @@ contains
            enddo
   
            !-----------------------------------------------
-           ! 3)  Move e to an orthogonal basis.  e'(i) = Transpose[X] .e(i). X
+           ! 5)  Move e to an orthogonal basis.  e'(i) = Transpose[X] .e(i). X
            ! X is symmetric, but we do not know anything about the symmetry of e.
            ! The easiest way to do this is to calculate e(i) . X , store
            ! this in HOLD, and then calculate Transpose[X] (.e(i) . X)
@@ -374,22 +431,25 @@ contains
 #endif
            allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
            !-----------------------------------------------
-           ! 4)  Store the e'(I) and O(i).
+           ! 6)  Store the e'(I) and O(i).
            ! e'(i) is already stored.  Simply store the operator matrix in
            ! all operator.
            !-----------------------------------------------
   
            if(idiis.le.quick_method%maxdiisscf)then
               alloperator(:,:,iidiis) = quick_qm_struct%o(:,:)
+              alloperatorB(:,:,iidiis) = quick_qm_struct%ob(:,:)
            else
               do K=1,quick_method%maxdiisscf-1
                  alloperator(:,:,K) = alloperator(:,:,K+1)
+                 alloperatorB(:,:,K) = alloperatorB(:,:,K+1)
               enddo
               alloperator(:,:,quick_method%maxdiisscf) = quick_qm_struct%o(:,:)
+              alloperatorB(:,:,quick_method%maxdiisscf) = quick_qm_struct%ob(:,:)
            endif
   
            !-----------------------------------------------
-           ! 5)  Form matrix B, which is:
+           ! 7)  Form matrix B, which is:
            !       _                                                 _
            !       |                                                   |
            !       |  B(1,1)      B(1,2)     . . .     B(1,J)      -1  |
@@ -477,7 +537,7 @@ contains
            enddo
   
            !-----------------------------------------------
-           ! 6)  Solve B*COEFF = RHS which is:
+           ! 8)  Solve B*COEFF = RHS which is:
            ! _                                             _  _  _     _  _
            ! |                                               ||    |   |    |
            ! |  B(1,1)      B(1,2)     . . .     B(1,J)  -1  ||  C1|   |  0 |
@@ -518,7 +578,7 @@ contains
            endif
   
            !-----------------------------------------------
-           ! 7) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
+           ! 9) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
            ! If the solution to step eight failed, skip this step and revert
            ! to a standard scf cycle.
            !-----------------------------------------------
@@ -536,7 +596,7 @@ contains
               
            endif
            !-----------------------------------------------
-           ! 8) Diagonalize the operator matrix to form a new density matrix.
+           ! 10) Diagonalize the operator matrix to form a new density matrix.
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
@@ -570,6 +630,8 @@ contains
            call cpu_time(timer_end%TDiag)
   
 #endif
+
+           timer_cumer%TDiag=timer_end%TDiag-timer_begin%TDiag
   
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
@@ -589,15 +651,13 @@ contains
   
            ! Form new density matrix using MO coefficients
 #if defined(CUDA) || defined(CUDA_MPIV)
-           call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
+           call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
+                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
 #else
-           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
+           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
+                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
 #endif
-  
-           call cpu_time(timer_end%TDII)
-  
+
            ! Now check for convergence. pchange is the max change
            ! and prms is the rms
            PCHANGE=0.d0
@@ -607,9 +667,109 @@ contains
               enddo
            enddo
            PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
-  
+
+
+           !-----------------------------------------------
+           ! 11) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
+           ! If the solution to step eight failed, skip this step and revert
+           ! to a standard scf cycle.
+           !-----------------------------------------------
+           ! Xiao HE 07/20/2007,if the B matrix is ill-conditioned, remove the first,second... error vector
+           if (LSOLERR == 0) then
+              do J=1,nbasis
+                 do K=1,nbasis
+                    OJK=0.d0
+                    do I=IDIIS_Error_Start, IDIIS_Error_End
+                       OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperatorB(K,J,I)
+                    enddo
+                    quick_qm_struct%ob(J,K) = OJK
+                 enddo
+              enddo
+
+           endif
+
+           !-----------------------------------------------
+           ! 12) Diagonalize the beta operator matrix to form a new beta density matrix.
+           ! First you have to transpose this into an orthogonal basis, which
+           ! is accomplished by calculating Transpose[X] . O . X.
+           !-----------------------------------------------
+#if defined(CUDA) || defined(CUDA_MPIV)
+
+          call cpu_time(timer_begin%TDiag)
+          call cuda_diag(quick_qm_struct%ob, quick_qm_struct%x, quick_scratch%hold,&
+                quick_qm_struct%EB, quick_qm_struct%idegen, &
+                quick_qm_struct%vec, quick_qm_struct%cob, &
+                V2, nbasis)
+           call cpu_time(timer_end%TDiag)
+
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
+#else
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
+
+           ! Now diagonalize the operator matrix.
+           call cpu_time(timer_begin%TDiag)
+
+#if defined LAPACK || defined MKL
+           call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+#else
+           call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
+                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#endif
+           call cpu_time(timer_end%TDiag)
+
+#endif
+           timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
+
+           ! Calculate C = XC' and form a new density matrix.
+           ! The C' is from the above diagonalization.  Also, save the previous
+           ! Density matrix to check for convergence.
+           !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
+
+#if defined(CUDA) || defined(CUDA_MPIV)
+
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
+#else
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
+#endif
+
+           quick_scratch%hold(:,:) = quick_qm_struct%denseb(:,:)
+
+           ! Form new density matrix using MO coefficients
+#if defined(CUDA) || defined(CUDA_MPIV)
+           call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
+                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
+#else
+           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
+                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
+#endif
+
+           ! Now check for convergence. pchange is the max change
+           ! and prms is the rms
+           do I=1,nbasis
+              do J=1,nbasis
+                 PCHANGE=max(PCHANGE,abs(quick_qm_struct%denseb(J,I)-quick_scratch%hold(J,I)))
+              enddo
+           enddo
+           PRMS2 = rms(quick_qm_struct%denseb,quick_scratch%hold,nbasis)
+           PRMS = MAX(PRMS,PRMS2)
+
+           call cpu_time(timer_end%TDII)  
+
            tmp = quick_method%integralCutoff
            call adjust_cutoff(PRMS,PCHANGE,quick_method,ierr)  !from quick_method_module
+
+        !do I=1,nbasis; do J=1,nbasis
+        !  write(*,*) jscf,i,j,quick_qm_struct%dense(j,i),quick_qm_struct%denseb(j,i),&
+        !  quick_qm_struct%co(j,i), quick_qm_struct%cob(j,i)
+        !enddo; enddo
+
         endif
   
         !--------------- MPI/ALL NODES -----------------------------------------
@@ -617,7 +777,6 @@ contains
         timer_cumer%TOp=timer_end%TOp-timer_begin%TOp+timer_cumer%TOp
         timer_cumer%TSCF=timer_end%TSCF-timer_begin%TSCF+timer_cumer%TSCF
         timer_cumer%TDII=timer_end%TDII-timer_begin%TDII+timer_cumer%TDII
-        timer_cumer%TDiag=timer_end%TDiag-timer_begin%TDiag+timer_cumer%TDiag
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
@@ -667,8 +826,8 @@ contains
                  write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
               endif
   
-              if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &
-                    (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
+              !if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &
+              !      (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
               diisdone=.true.
   
   
@@ -691,23 +850,27 @@ contains
 #ifdef MPIV
         if (bMPI) then
            call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-  !         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(quick_qm_struct%densebOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(quick_qm_struct%cob,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(quick_qm_struct%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
         endif
 #endif
-        if (quick_method%debug)  call debug_SCF(jscf)
+        !if (quick_method%debug)  call debug_SCF(jscf)
      enddo
   
 #if defined CUDA || defined CUDA_MPIV
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
+     call scalarMatMul(quick_qm_struct%cob,nbasis,nbasis,-1.0d0)
 #endif
   
 #if defined CUDA || defined CUDA_MPIV
@@ -720,7 +883,7 @@ contains
     endif
 #endif
   
-     call deallocate_quick_scf()
+     call deallocate_quick_uscf(ierr)
   
      return
   end subroutine uelectdiis
