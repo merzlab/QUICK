@@ -251,6 +251,7 @@ contains
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
          if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
+         if(.not. allocated(self%obSave)) allocate(self%obSave(nbasis,nbasis))
          if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
          if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
          if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
@@ -405,6 +406,7 @@ contains
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
          if(allocated(self%ob)) deallocate(self%ob)
+         if(allocated(self%obSave)) deallocate(self%obSave)
          if(allocated(self%densebSave)) deallocate(self%densebSave)
          if(allocated(self%densebOld)) deallocate(self%densebOld)
          if (allocated(self%cob)) deallocate(self%cob)
