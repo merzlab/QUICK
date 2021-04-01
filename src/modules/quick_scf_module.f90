@@ -55,14 +55,14 @@ module quick_scf_module
 contains
 
 ! This subroutine allocates memory for quick_scf type and initializes them to zero. 
-  subroutine allocate_quick_scf()
+  subroutine allocate_quick_scf(ierr)
 
     use quick_method_module
     use quick_basis_module
 
     implicit none 
 
-    integer :: ierr
+    integer, intent(inout) :: ierr
 
     if(.not. allocated(V2))          allocate(V2(3, nbasis), stat=ierr)
     if(.not. allocated(oneElecO))    allocate(oneElecO(nbasis, nbasis), stat=ierr)
@@ -89,11 +89,11 @@ contains
 
   end subroutine allocate_quick_scf 
 
-  subroutine deallocate_quick_scf()
+  subroutine deallocate_quick_scf(ierr)
 
     implicit none
 
-    integer :: ierr
+    integer, intent(inout) :: ierr
 
     if(allocated(V2))          deallocate(V2, stat=ierr)
     if(allocated(oneElecO))    deallocate(oneElecO, stat=ierr)
@@ -230,7 +230,7 @@ contains
      ! As in scf.F, each step wil be reviewed as we pass through the code.
      !---------------------------------------------------------------------------
   
-     call allocate_quick_scf()
+     call allocate_quick_scf(ierr)
   
      if(master) then
         write(ioutfile,'(40x," SCF ENERGY")')
@@ -767,7 +767,7 @@ contains
     endif
 #endif
   
-     call deallocate_quick_scf()
+     call deallocate_quick_scf(ierr)
   
      return
   end subroutine electdiis
