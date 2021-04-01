@@ -229,6 +229,7 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 subroutine initialGuess(ierr)
    use allmod
+   use quick_sad_guess_module, only: getSadDense 
    implicit none
    logical :: present
    integer :: failed
@@ -237,6 +238,7 @@ subroutine initialGuess(ierr)
    integer Iatm,i,j
    double precision temp
    integer, intent(inout) :: ierr
+
 
 
    ! Initialize Density arrays. Create initial density matrix guess.
@@ -282,27 +284,9 @@ subroutine initialGuess(ierr)
 
       !  SAD inital guess
       if (quick_method%SAD) then
-
-         n=0
-         do Iatm=1,natom
-            do sadAtom=1,10
-
-               if(symbol(quick_molspec%iattype(Iatm)).eq. &
-                     quick_molspec%atom_type_sym(sadAtom))then
-                  do i=1,atombasis(sadAtom)
-                     do j=1,atombasis(sadAtom)
-
-                        quick_qm_struct%dense(i+n,j+n)=atomdens(sadAtom,i,j)
-                     enddo
-                  enddo
-                  n=n+atombasis(sadAtom)
-               endif
-            enddo
-         enddo
+         call getSadDense
       endif
    endif
-
-   call deallocate_mol_sad
 
    ! debug initial guess
    if (quick_method%debug) call debugInitialGuess
