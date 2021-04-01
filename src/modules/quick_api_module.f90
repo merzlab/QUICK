@@ -458,6 +458,7 @@ subroutine run_quick(self,ierr)
   use quick_cshell_eri_module, only: getEriPrecomputables
   use quick_gradient_module, only: gradient
   use quick_optimizer_module, only: optimize
+  use quick_sad_guess_module, only: getSadGuess
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -495,7 +496,7 @@ subroutine run_quick(self,ierr)
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
+    if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
 
     ! assign basis functions
     SAFE_CALL(getMol(ierr))

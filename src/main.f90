@@ -33,6 +33,7 @@
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_gradient_module, only: gradient
     use quick_optimizer_module, only: optimize
+    use quick_sad_guess_module, only: getSadGuess
 
     implicit none
 
@@ -150,7 +151,7 @@
     call cpu_time(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
+    if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
     if (quick_method%writeSAD) then
        call quick_exit(iOutFile,ierr)
     end if
