@@ -43,11 +43,14 @@ contains
 
      call cpu_time(timer_begin%tE)
   
-     call copySym(quick_qm_struct%o,nbasis)
      quick_qm_struct%Eel=0.d0
+     call copySym(quick_qm_struct%o,nbasis)
      quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
-     if (quick_method%unrst) quick_qm_struct%Eel = quick_qm_struct%Eel &
-       +sum2mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+
+     if (quick_method%unrst) then
+       call copySym(quick_qm_struct%ob,nbasis)
+       quick_qm_struct%Eel = quick_qm_struct%Eel+sum2mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+     endif
 
      call cpu_time(timer_end%tE)
      timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
