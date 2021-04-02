@@ -13,6 +13,7 @@ subroutine getEnergy(isGuess, ierr)
    use allMod
    use quick_gridpoints_module
    use quick_scf_module
+   use quick_uscf_module, only: uscf
    implicit none
 
    double precision :: distance
@@ -95,7 +96,11 @@ subroutine getEnergy(isGuess, ierr)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(verbose,ierr)       ! unrestricted system
+      if(isGuess) then
+        call uscf_sad(verbose,ierr)
+      else
+        call uscf(ierr)       ! unrestricted system
+      endif
    else
       call scf(ierr)        ! restricted system
    endif
