@@ -305,7 +305,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 //-----------------------------------------------
 //  upload method and hybrid coefficient
 //-----------------------------------------------
-extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
+extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* hyb_coeff)
 {
     if (*quick_method == 0) {
         gpu -> gpu_sim.method = HF;
@@ -320,6 +320,9 @@ extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
 	gpu -> gpu_sim.method = LIBXC;
 	gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
     }
+
+    gpu -> gpu_sim.is_oshell = *is_oshell;
+
 }
 
 //-----------------------------------------------
