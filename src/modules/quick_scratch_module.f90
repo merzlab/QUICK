@@ -90,7 +90,7 @@ module quick_scratch_module
             if (allocated(self%hold2)) deallocate(self%hold2)
 #ifdef MPIV
             if(allocated(self%osum)) deallocate(self%osum)
-            if(.not. allocated(self%obsum)) deallocate(self%obsum)
+            if(allocated(self%obsum)) deallocate(self%obsum)
 #endif
             return
             
