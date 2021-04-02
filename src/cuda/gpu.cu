@@ -1151,6 +1151,69 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     PRINTDEBUG("COMPLETE UPLOADING O MATRIX")
 }
 
+//-----------------------------------------------
+//  upload calculated information for uscf
+//-----------------------------------------------
+
+extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb)
+{
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+
+    PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX")
+
+    gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(ob,      gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> ob        ->  DeleteGPU();
+    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+
+    /*
+     obULL is the unsigned long long int type of Ob matrix. The reason to do so is because
+     Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
+     an comprimise way is to multiple a very large number (OSCALE), first and divided it
+     after atomic operator.
+     */
+    for (int i = 0; i<gpu->nbasis; i++) {
+        for (int j = 0; j<gpu->nbasis; j++) {
+            QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
+
+            if (LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)<(QUICKDouble)0.0)
+            {
+                valUII = 0ull - valUII;
+            }
+
+            LOC2( gpu->gpu_calculated->obULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
+        }
+    }
+    //    gpu -> gpu_calculated -> o        -> Upload();
+    gpu -> gpu_calculated -> denseb    -> Upload();
+    gpu -> gpu_calculated -> obULL     -> Upload();
+
+    //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
+    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
+    gpu -> gpu_sim.obULL              =  gpu -> gpu_calculated -> obULL -> _devData;
+
+
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("UPLOAD CALCULATE",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("COMPLETE UPLOADING BETA O MATRIX")
+
+}
+
+
 // Added by Madu Manathunga on 01/07/2020
 //This method uploads density matrix onto gpu for XC gradient calculation
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
