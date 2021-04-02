@@ -119,7 +119,7 @@ contains
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
-  
+        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
      endif
 #endif
   
@@ -141,7 +141,7 @@ contains
   !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
-           call gpu_get2e(quick_qm_struct%o)  
+           call gpu_get_oshell_eri(quick_qm_struct%o, quick_qm_struct%ob)
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
