@@ -300,7 +300,7 @@ contains
         !--------------------------------------------
         ! 1)  Form the operator matrix for step i, O(i).
         !--------------------------------------------
-        temp=Sum2Mat(quick_qm_struct%dense,quick_qm_struct%s,nbasis)
+        !temp=Sum2Mat(quick_qm_struct%dense,quick_qm_struct%s,nbasis)
   
         ! Determine dii cycle and scf cycle
         idiis=idiis+1
