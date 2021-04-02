@@ -1167,7 +1167,7 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX")
 
-    gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(ob,      gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> ob        ->  DeleteGPU();
     gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
@@ -1178,7 +1178,7 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
      an comprimise way is to multiple a very large number (OSCALE), first and divided it
      after atomic operator.
      */
-    for (int i = 0; i<gpu->nbasis; i++) {
+    /*for (int i = 0; i<gpu->nbasis; i++) {
         for (int j = 0; j<gpu->nbasis; j++) {
             QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
 
@@ -1189,7 +1189,7 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
             LOC2( gpu->gpu_calculated->obULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
         }
-    }
+    }*/
     //    gpu -> gpu_calculated -> o        -> Upload();
     gpu -> gpu_calculated -> denseb    -> Upload();
     gpu -> gpu_calculated -> obULL     -> Upload();
