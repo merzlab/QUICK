@@ -16,6 +16,36 @@
 #define STOREDIM STOREDIM_L
 #endif
 
+#ifdef OSHELL
+#ifdef int_spd
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel()
+#elif defined int_spdf
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf()
+#elif defined int_spdf2
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf2()
+#elif defined int_spdf3
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf3()
+#elif defined int_spdf4
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf4()
+#elif defined int_spdf5
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf5()
+#elif defined int_spdf6
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf6()
+#elif defined int_spdf7
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf7()
+#elif defined int_spdf8
+__global__ void
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf8()
+#endif
+#else
 #ifdef int_spd
 __global__ void 
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel()
@@ -43,6 +73,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf7()
 #elif defined int_spdf8
 __global__ void 
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
+#endif
 #endif
 {
 
@@ -118,6 +149,31 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
                     int jjj = devSim.sorted_Qnumber[JJ];
                     int kkk = devSim.sorted_Qnumber[KK];
                     int lll = devSim.sorted_Qnumber[LL];
+#ifdef OSHELL
+#ifdef int_spd
+                    iclass_oshell_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf
+                    if ( (kkk + lll) >= 4 ) {
+                        iclass_oshell_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                    }
+#elif defined int_spdf2
+                    if ( (iii + jjj) >= 4 ) {
+                        iclass_oshell_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                    }
+#elif defined int_spdf3
+                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf4
+                    iclass_oshell_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf5
+                    iclass_oshell_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf6
+                    iclass_oshell_grad_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf7
+                    iclass_oshell_grad_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#elif defined int_spdf8
+                    iclass_oshell_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+#endif
+#else
 #ifdef int_spd
                     iclass_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
 #elif defined int_spdf
@@ -141,6 +197,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
 #elif defined int_spdf8
                     iclass_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
 #endif
+#endif
                     
                 }
             }
@@ -159,8 +216,11 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
  performance algrithem for electron intergral evaluation. See description below for details
  */
 #ifdef int_spd
+#ifdef OSHELL
+__device__ __forceinline__ void iclass_oshell_grad
+#else
 __device__ __forceinline__ void iclass_grad
-
+#endif
 (int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
     /*
@@ -442,12 +502,21 @@ __device__ __forceinline__ void iclass_grad
                         
                         QUICKDouble constant = 0.0 ;
                         
+#ifdef OSHELL
+                        QUICKDouble DENSEKI = (QUICKDouble) (LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis));
+                        QUICKDouble DENSEKJ = (QUICKDouble) (LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis));
+                        QUICKDouble DENSELJ = (QUICKDouble) (LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis));
+                        QUICKDouble DENSELI = (QUICKDouble) (LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis));
+                        QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, KKK-1, nbasis, nbasis));
+                        QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis));
+#else
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
                         QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
                         QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis);
                         QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis);
                         QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis);
                         QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis);
+#endif
                         
                         if (II < JJ && II < KK && KK < LL ||
                             ( III < KKK && III < JJJ && KKK < LLL)) {
@@ -530,6 +599,25 @@ __device__ __forceinline__ void iclass_grad
  iclass subroutine is to generate 2-electron intergral using HRR and VRR method, which is the most
  performance algrithem for electron intergral evaluation. See description below for details
  */
+#ifdef OSHELL
+#ifdef int_spdf
+__device__ __forceinline__ void iclass_oshell_grad_spdf
+#elif defined int_spdf2
+__device__ __forceinline__ void iclass_oshell_grad_spdf2
+#elif defined int_spdf3
+__device__ __forceinline__ void iclass_oshell_grad_spdf3
+#elif defined int_spdf4
+__device__ __forceinline__ void iclass_oshell_grad_spdf4
+#elif defined int_spdf5
+__device__ __forceinline__ void iclass_oshell_grad_spdf5
+#elif defined int_spdf6
+__device__ __forceinline__ void iclass_oshell_grad_spdf6
+#elif defined int_spdf7
+__device__ __forceinline__ void iclass_oshell_grad_spdf7
+#elif defined int_spdf8
+__device__ __forceinline__ void iclass_oshell_grad_spdf8
+#endif
+#else
 #ifdef int_spdf
 __device__ __forceinline__ void iclass_grad_spdf
 #elif defined int_spdf2
@@ -547,7 +635,7 @@ __device__ __forceinline__ void iclass_grad_spdf7
 #elif defined int_spdf8
 __device__ __forceinline__ void iclass_grad_spdf8
 #endif
-
+#endif
 (int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
     /*
@@ -822,12 +910,21 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                     
                                     QUICKDouble constant = 0.0 ;
                                     
+#ifdef OSHELL
+                                    QUICKDouble DENSEKI = (QUICKDouble) (LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis));
+                                    QUICKDouble DENSEKJ = (QUICKDouble) (LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis));
+                                    QUICKDouble DENSELJ = (QUICKDouble) (LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis));
+                                    QUICKDouble DENSELI = (QUICKDouble) (LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis));
+                                    QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, KKK-1, nbasis, nbasis));
+                                    QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis));
+#else
                                     QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
                                     QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
                                     QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis);
                                     QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis);
                                     QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis);
                                     QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis);
+#endif
                                     
                                     if (II < JJ && II < KK && KK < LL ||
                                         ( III < KKK && III < JJJ && KKK < LLL)) {
