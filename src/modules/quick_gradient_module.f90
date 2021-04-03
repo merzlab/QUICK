@@ -19,7 +19,7 @@ module quick_gradient_module
   implicit double precision(a-h,o-z)
   private
 
-  public :: scf_gradient, gradient
+  public :: scf_gradient, gradient, get_oneen_grad
   public :: tmp_grad, tmp_ptchg_grad
   
   double precision, allocatable, dimension(:) :: tmp_grad
@@ -214,9 +214,9 @@ contains
   ! Note that we will call this subroutine asynchronously with ERI
   ! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
   
-#if !defined CUDA && !defined CUDA_MPIV
+!#if !defined CUDA && !defined CUDA_MPIV
      call get_oneen_grad
-#endif
+!#endif
   !---------------------------------------------------------------------
   !  3) The derivative of the electron repulsion term
   !---------------------------------------------------------------------
