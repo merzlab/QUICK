@@ -2824,6 +2824,93 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
+//-----------------------------------------------
+//  compute 2-e integrals for open shell system
+//-----------------------------------------------
+extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob)
+{
+    PRINTDEBUG("BEGIN TO RUN GET_OSHELL_ERI")
+
+    upload_sim_to_constant(gpu);
+
+    PRINTDEBUG("BEGIN TO RUN KERNEL")
+ 
+    get_oshell_eri(gpu);
+
+    PRINTDEBUG("COMPLETE KERNEL")
+    gpu -> gpu_calculated -> oULL -> Download();
+    gpu -> gpu_calculated -> obULL -> Download();
+
+    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);
+    cudaMemsetAsync(gpu -> gpu_calculated -> obULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);
+
+
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKULL valbULL = LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB, valbDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+            }
+            else
+            {
+                valDB  = (QUICKDouble) valULL;
+            }
+
+            if (valbULL >= 0x8000000000000000ull) {
+                valbDB  = -(QUICKDouble)(valbULL ^ 0xffffffffffffffffull);
+            }
+            else
+            {
+                valbDB  = (QUICKDouble) valbULL;
+            }
+
+            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valbDB*ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valbDB*ONEOVEROSCALE;
+        }
+    }
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+
+    gpu -> gpu_calculated -> o    -> DownloadSum(o);
+    gpu -> gpu_calculated -> ob   -> DownloadSum(ob);
+
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("DOWNLOAD O",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("DELETE TEMP VARIABLES")
+
+    if(gpu -> gpu_sim.method == HF){
+      delete gpu->gpu_calculated->o;
+      delete gpu->gpu_calculated->dense;
+      delete gpu->gpu_calculated->oULL;
+      delete gpu->gpu_calculated->ob;
+      delete gpu->gpu_calculated->denseb;
+      delete gpu->gpu_calculated->obULL;
+    }
+
+
+    delete gpu->gpu_cutoff->cutMatrix;
+
+    PRINTDEBUG("COMPLETE RUNNING GET2E")
+}
+
 
 extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {
