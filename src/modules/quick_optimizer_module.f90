@@ -32,8 +32,9 @@ contains
      use quick_gridpoints_module
      use quick_cutoff_module, only: schwarzoff
      use quick_cshell_eri_module, only: getEriPrecomputables
-    use quick_cshell_gradient_module, only: cshell_gradient
-    use quick_oshell_gradient_module, only: oshell_gradient
+     use quick_cshell_gradient_module, only: cshell_gradient
+     use quick_oshell_gradient_module, only: oshell_gradient
+     use quick_exception_module
      implicit double precision(a-h,o-z)
   
      logical :: done,diagco
