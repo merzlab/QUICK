@@ -2442,7 +2442,11 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
-    getGrad(gpu);
+    if(gpu -> gpu_sim.is_oshell == true){
+        get_oshell_eri_grad(gpu);
+    }else{
+        getGrad(gpu);
+    }
     
     PRINTDEBUG("COMPLETE KERNEL")
     
