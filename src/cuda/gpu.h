@@ -80,6 +80,7 @@ void gpu_delete_sswgrad_vars();
 void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
+void get_oshell_eri_grad(_gpu_type gpu);
 // global [get2e_kernel]
 __global__ void get2e_kernel();
 __global__ void get2e_kernel_spdf();
