@@ -31,7 +31,7 @@ module quick_cshell_gradient_module
 #ifdef OSHELL
    public  :: oshell_gradient, uscf_gradient, get_oshell_oneen_grad
 #else
-  public  :: cshell_gradient, get_cshell_oneen_grad, scf_gradient, get_nuc_repulsion_grad, get_ijbas_derivative_new_imp
+  public  :: cshell_gradient, get_cshell_oneen_grad, scf_gradient, get_nuclear_repulsion_grad, get_ijbas_derivative
   public :: allocate_quick_gradient, deallocate_quick_gradient, tmp_grad, tmp_ptchg_grad
   
   double precision, allocatable, dimension(:) :: tmp_grad
@@ -589,7 +589,7 @@ contains
 
      use allmod
 #ifdef OSHELL
-     use quick_cshell_gradient_module, only:get_ijbas_derivative_new_imp
+     use quick_cshell_gradient_module, only:get_ijbas_derivative
 #endif
 
      implicit double precision(a-h,o-z)
@@ -737,7 +737,7 @@ contains
    use quick_oshell_eri_grad_module, only: oshell_eri_grad
 #else
    use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
-   use quick_cshell_grad_module, only: cshell_eri_grad
+   use quick_cshell_eri_grad_module, only: cshell_eri_grad
 #endif
      implicit double precision(a-h,o-z)
   
@@ -828,9 +828,9 @@ contains
                           cutoffTest=testCutoff*DNmax
                           if(cutoffTest.gt.quick_method%gradCutoff)then
 #ifdef OSHELL
-                             call oshell_grad
+                             call oshell_eri_grad
 #else
-                             call cshell_grad
+                             call cshell_eri_grad
 #endif
                           endif
                        endif
@@ -933,7 +933,6 @@ contains
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
-           if(quick_method%xc_polarization > 0 ) then
 #ifdef OSHELL
               call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
               quick_method%functional_id(ifunc),XC_POLARIZED)
@@ -941,7 +940,6 @@ contains
               call xc_f90_func_init(xc_func(ifunc), &
               xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
 #endif
-           endif
         enddo
      endif
   
@@ -1241,17 +1239,9 @@ contains
              dSM= dSM + 2.d0*aexp(mcon,mbas)* &
              dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
              *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-  !           xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-  !           xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-  !           xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
              dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
              dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
              *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-  !           itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-  !           itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-  !           xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-  !           xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-  !           xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
            endif
         enddo
      enddo
@@ -1284,19 +1274,9 @@ contains
                dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
                dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
                *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-  !             itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-  !             itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-  !             xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-  !             xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-  !             xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
                dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
                dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
                *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-  !             itype(1,Jbas),itype(2,Jbas),itype(3,Jbas), &
-  !             itype(1,Ibas),itype(2,Ibas),itype(3,Ibas), &
-  !             xyz(1,quick_basis%ncenter(Jbas)),xyz(2,quick_basis%ncenter(Jbas)), &
-  !             xyz(3,quick_basis%ncenter(Jbas)),xyz(1,quick_basis%ncenter(Ibas)), &
-  !             xyz(2,quick_basis%ncenter(Ibas)),xyz(3,quick_basis%ncenter(Ibas)))
              endif
            enddo
         enddo
