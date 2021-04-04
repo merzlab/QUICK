@@ -46,12 +46,15 @@ end subroutine calchessian
 
 subroutine fdhessian(failed)
   use allmod
-  use quick_gradient_module, only: scf_gradient
+  use quick_cshell_gradient_module, only: cshell_gradient
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
   logical :: failed
+  integer :: ierr ! temporarily adding ierr here, but error propagation must be
+                  ! fixed soon
 
+  ierr=0
   cartsym(1) = 'X'
   cartsym(2) = 'Y'
   cartsym(3) = 'Z'
@@ -83,7 +86,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call scf_gradient
+           if (quick_method%HF) call cshell_gradient(ierr)
            !                if (quick_method%DFT) call dftgrad
            !               if (quick_method%SEDFT) call sedftgrad
         endif
@@ -100,7 +103,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call scf_gradient
+           if (quick_method%HF) call cshell_gradient(ierr)
            !                if (quick_method%DFT) call dftgrad
            !                if (quick_method%SEDFT) call sedftgrad
         endif
