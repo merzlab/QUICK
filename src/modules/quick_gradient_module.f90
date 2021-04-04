@@ -1,6 +1,9 @@
 !---------------------------------------------------------------------!
 ! Created by Madu Manathunga on 06/29/2020                            !
 !                                                                     ! 
+! Previous contributors: Yipu Miao, Xio He, Alessandro Genoni,        !
+!                         Ken Ayers & Ed Brothers                     !
+!                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
 ! Copyright (C) 2020-2021 Götz lab                                    !
 !                                                                     !
@@ -9,24 +12,35 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
-! This module contains subroutines and data structures related to
-! scf gradient calculation
+!---------------------------------------------------------------------!
+! This module contains subroutines and data structures related to     ! 
+! scf gradient calculation.                                           !
+!---------------------------------------------------------------------!
 
 #include "util.fh"
 
-module quick_gradient_module
+#ifdef OSHELL
+module quick_oshell_gradient_module
+#else
+module quick_cshell_gradient_module
+#endif
 
   implicit double precision(a-h,o-z)
   private
 
-  public :: scf_gradient, gradient, get_oneen_grad
-  public :: tmp_grad, tmp_ptchg_grad
+#ifdef OSHELL
+   public  :: oshell_gradient, uscf_gradient, get_oshell_oneen_grad
+#else
+  public  :: cshell_gradient, get_cshell_oneen_grad, scf_gradient, get_nuc_repulsion_grad, get_ijbas_derivative_new_imp
+  public :: allocate_quick_gradient, deallocate_quick_gradient, tmp_grad, tmp_ptchg_grad
   
   double precision, allocatable, dimension(:) :: tmp_grad
   double precision, allocatable, dimension(:) :: tmp_ptchg_grad
+#endif
 
 contains
 
+#ifndef OSHELL
   subroutine allocate_quick_gradient()
 
     use quick_molspec_module, only : quick_molspec, natom
@@ -54,8 +68,14 @@ contains
     endif
   
   end subroutine deallocate_quick_gradient
+#endif
 
-  subroutine gradient(ierr)
+
+#ifdef OSHELL 
+  subroutine oshell_gradient(ierr)
+#else
+  subroutine cshell_gradient(ierr)
+#endif
   
   !------------------------------------------------------------------
   ! This subroutine carries out a gradient calculation 
@@ -92,7 +112,11 @@ contains
      call getEnergy(.false.,ierr)
   
      if (quick_method%analgrad) then
+#ifdef OSHELL
+        call uscf_gradient
+#else
         call scf_gradient
+#endif
      endif
   
 #if defined CUDA || defined CUDA_MPIV
@@ -140,11 +164,23 @@ contains
 #endif
   
      return
+
+#ifdef OSHELL
+  end subroutine oshell_gradient
+#else
+  end subroutine cshell_gradient
+#endif
   
-  end subroutine gradient
   
+#ifdef OSHELL
+  subroutine uscf_gradient
+#else
   subroutine scf_gradient
+#endif
      use allmod
+#ifdef OSHELL
+     use quick_cshell_gradient_module
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -215,7 +251,11 @@ contains
   ! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
   
 !#if !defined CUDA && !defined CUDA_MPIV
-     call get_oneen_grad
+#ifdef OSHELL
+    call get_oshell_oneen_grad
+#else
+    call get_cshell_oneen_grad
+#endif
 !#endif
   !---------------------------------------------------------------------
   !  3) The derivative of the electron repulsion term
@@ -226,7 +266,11 @@ contains
   
      call cpu_time(timer_begin%T2eGrad)
   
-     call get_electron_replusion_grad
+#ifdef OSHELL
+     call get_oshell_eri_grad
+#else
+     call get_cshell_eri_grad
+#endif
   
      call cpu_time(timer_end%T2eGrad)
      timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
@@ -240,7 +284,11 @@ contains
      if (quick_method%DFT) then
         call cpu_time(timer_begin%TExGrad)
   
-        call get_xc_grad
+#ifdef OSHELL
+        call get_oshell_xc_grad
+#else
+        call get_cshell_xc_grad
+#endif
   
 #ifdef CUDA_MPIV
         call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
@@ -325,8 +373,13 @@ contains
   
      return
   
+#ifdef OSHELL
+  end subroutine uscf_gradient
+#else
   end subroutine scf_gradient
+#endif
   
+#ifndef OSHELL
   subroutine get_nuclear_repulsion_grad
   
      use allmod
@@ -406,10 +459,15 @@ contains
      return
   
   end subroutine get_nuclear_repulsion_grad
-  
-  
-  subroutine get_oneen_grad
-  
+#endif  
+
+ 
+#ifdef OSHELL 
+  subroutine get_oshell_oneen_grad
+#else
+  subroutine get_cshell_oneen_grad
+#endif  
+
     use allmod
     implicit none
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
@@ -426,7 +484,11 @@ contains
   
      call cpu_time(timer_begin%T1eTGrad)
   
-     call get_kinetic_grad
+#ifdef OSHELL
+     call get_oshell_kinetic_grad
+#else
+     call get_cshell_kinetic_grad
+#endif
   
      call cpu_time(timer_end%T1eTGrad)
      timer_cumer%T1eTGrad=timer_cumer%T1eTGrad+timer_end%T1eTGrad-timer_begin%T1eTGrad
@@ -510,13 +572,26 @@ contains
      timer_cumer%T1eGrad = timer_cumer%T1eGrad + timer_end%T1eGrad-timer_begin%T1eGrad
   
      return
+ 
+#ifdef OSHELL 
+  end subroutine get_oshell_oneen_grad
+#else
+  end subroutine get_cshell_oneen_grad
+#endif 
   
-  end subroutine get_oneen_grad
   
-  
-  subroutine get_kinetic_grad
-  
+ 
+#ifdef OSHELL
+  subroutine get_oshell_kinetic_grad
+#else
+  subroutine get_cshell_kinetic_grad
+#endif 
+
      use allmod
+#ifdef OSHELL
+     use quick_cshell_gradient_module, only:get_ijbas_derivative_new_imp
+#endif
+
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -550,10 +625,22 @@ contains
      do I=1,nbasis
         do J=1,nbasis
            HOLDJI = 0.d0
+#ifdef OSHELL
+         do k=1,quick_molspec%nelec
+            HOLDJI =HOLDJI+(quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
+         enddo
+
+         do k=1,quick_molspec%nelecb
+            HOLDJI =HOLDJI+(quick_qm_struct%Eb(K)*quick_qm_struct%cob(J,K)*quick_qm_struct%cob(I,K))
+         enddo
+         quick_scratch%hold(J,I)=HOLDJI
+
+#else
            do K=1,quick_molspec%nelec/2
            HOLDJI = HOLDJI + (quick_qm_struct%E(K)*quick_qm_struct%co(J,K)*quick_qm_struct%co(I,K))
            enddo
            quick_scratch%hold(J,I) = 2.d0*HOLDJI
+#endif
         enddo
      enddo
 #ifdef MPIV
@@ -603,7 +690,11 @@ contains
            do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
   
               JSTART = (quick_basis%ncenter(Jbas)-1) *3
+#ifdef OSHELL
+            DENSEJI = quick_qm_struct%dense(Jbas,Ibas)+quick_qm_struct%denseb(Jbas,Ibas)
+#else
               DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
+#endif
   
   !  We have selected our two basis functions, now loop over angular momentum.
               do Imomentum=1,3
@@ -627,13 +718,27 @@ contains
   
      return
   
-  end subroutine get_kinetic_grad
+#ifdef OSHELL
+  end subroutine get_oshell_kinetic_grad
+#else
+  end subroutine get_cshell_kinetic_grad
+#endif
   
   
-  subroutine get_electron_replusion_grad
+#ifdef OSHELL
+  subroutine get_oshell_eri_grad
+#else
+  subroutine get_cshell_eri_grad
+#endif
   
      use allmod
-     use quick_cutoff_module, only: cshell_dnscreen
+#ifdef OSHELL
+   use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
+   use quick_oshell_eri_grad_module, only: oshell_eri_grad
+#else
+   use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
+   use quick_cshell_grad_module, only: cshell_eri_grad
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -649,14 +754,20 @@ contains
   !  arise as these are both the exchange and correlation integrals.
   
   
-     do II=1,jshell
-        do JJ=II,jshell
-           DNtemp=0.0d0
-           call cshell_dnscreen(II,JJ,DNtemp)
-           Cutmatrix(II,JJ)=DNtemp
-           Cutmatrix(JJ,II)=DNtemp
-        enddo
-     enddo
+!     do II=1,jshell
+!        do JJ=II,jshell
+!           DNtemp=0.0d0
+!           call cshell_dnscreen(II,JJ,DNtemp)
+!           Cutmatrix(II,JJ)=DNtemp
+!           Cutmatrix(JJ,II)=DNtemp
+!        enddo
+!     enddo
+
+#ifdef OSHELL
+      call oshell_density_cutoff
+#else
+      call cshell_density_cutoff
+#endif
   
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
@@ -674,6 +785,10 @@ contains
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
         call gpu_upload_grad(quick_method%gradCutoff)
+
+#ifdef OSHELL
+        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+#endif
   
         ! next function will compute the eri gradients and add to gradient vector
         call gpu_grad(quick_qm_struct%gradient)
@@ -712,7 +827,11 @@ contains
                           cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
                           cutoffTest=testCutoff*DNmax
                           if(cutoffTest.gt.quick_method%gradCutoff)then
-                             call shellopt
+#ifdef OSHELL
+                             call oshell_grad
+#else
+                             call cshell_grad
+#endif
                           endif
                        endif
                     endif
@@ -730,10 +849,18 @@ contains
   
      return
   
-  end subroutine get_electron_replusion_grad
+#ifdef OSHELL
+  end subroutine get_oshell_eri_grad
+#else
+  end subroutine get_cshell_eri_grad
+#endif
   
   
-  subroutine get_xc_grad
+#ifdef OSHELL
+  subroutine get_oshell_xc_grad
+#else
+  subroutine get_cshell_xc_grad
+#endif
   
   !-------------------------------------------------------------------------
   !  This subroutine will calculate:
@@ -807,11 +934,13 @@ contains
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
            if(quick_method%xc_polarization > 0 ) then
+#ifdef OSHELL
               call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
               quick_method%functional_id(ifunc),XC_POLARIZED)
-           else
+#else
               call xc_f90_func_init(xc_func(ifunc), &
               xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
+#endif
            endif
         enddo
      endif
@@ -1049,9 +1178,14 @@ contains
   
      return
   
-  end subroutine get_xc_grad
+#ifdef OSHELL
+  end subroutine get_oshell_xc_grad
+#else
+  end subroutine get_cshell_xc_grad
+#endif
   
-  
+
+#ifndef OSHELL  
   subroutine get_ijbas_derivative(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
   
   !-------------------------------------------------------------------------
@@ -1177,5 +1311,10 @@ contains
      return
   
   end subroutine get_ijbas_derivative
+#endif
 
-end module quick_gradient_module
+#ifdef OSHELL
+end module quick_oshell_gradient_module
+#else
+end module quick_cshell_gradient_module
+#endif
