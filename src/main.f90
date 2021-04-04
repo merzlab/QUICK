@@ -31,7 +31,8 @@
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
     use quick_cshell_eri_module, only: getEriPrecomputables
-    use quick_gradient_module, only: gradient
+    use quick_cshell_gradient_module, only: cshell_gradient
+    use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module, only: optimize
     use quick_sad_guess_module, only: getSadGuess
 
@@ -237,7 +238,14 @@
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
     if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
-    if (.not.quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
+    
+    if (.not.quick_method%opt .and. quick_method%grad) then
+        if (quick_method%UNRST) then
+            SAFE_CALL(oshell_gradient(ierr))
+        else
+            SAFE_CALL(cshell_gradient(ierr))
+        endif
+    endif
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.

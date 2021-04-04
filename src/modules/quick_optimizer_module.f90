@@ -32,7 +32,8 @@ contains
      use quick_gridpoints_module
      use quick_cutoff_module, only: schwarzoff
      use quick_cshell_eri_module, only: getEriPrecomputables
-     use quick_gradient_module, only: scf_gradient
+    use quick_cshell_gradient_module, only: cshell_gradient
+    use quick_oshell_gradient_module, only: oshell_gradient
      implicit double precision(a-h,o-z)
   
      logical :: done,diagco
@@ -183,13 +184,11 @@ contains
   
         ! 11/19/2010 YIPU MIAO BLOCKED SOME SUBS.
         if (quick_method%analgrad) then
-           !            if (quick_method%UNRST) then
-           !                if (quick_method%HF) call uhfgrad
-           !                if (quick_method%DFT) call uDFTgrad
-           !                if (quick_method%SEDFT) call uSEDFTgrad
-           !            else
-           call scf_gradient
-           !            endif
+           if (quick_method%UNRST) then
+             SAFE_CALL(oshell_gradient(ierr))
+           else
+             SAFE_CALL(cshell_gradient(ierr))
+           endif
         endif
   
 #if defined CUDA || defined CUDA_MPIV
