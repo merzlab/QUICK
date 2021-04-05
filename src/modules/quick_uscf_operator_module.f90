@@ -307,20 +307,28 @@ contains
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
-     double precision, dimension(1) :: libxc_rho
-     double precision, dimension(1) :: libxc_sigma
+     double precision, dimension(2) :: libxc_rho
+     double precision, dimension(3) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
-     double precision, dimension(1) :: libxc_vrhoa
-     double precision, dimension(1) :: libxc_vsigmaa
+     double precision, dimension(2) :: libxc_vrho
+     double precision, dimension(3) :: libxc_vsigma
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_func
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) :: xc_info   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ierror 
-     double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, &
-     dfdgab2, dfdr, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
-     gax, gay, gaz, gbx, gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
-     sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
-     tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc
-  
+!     double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, dfdgbb,&
+!     dfdgab2, dfdr, dfdrb, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+!     gax, gay, gaz, gbx, gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
+!     sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+!     tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc
+ 
+      double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, dfdgbb, &
+      dfdgab2, dfdr, dfdrb, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+      gax, gay, gaz, gbx, gby, gbz, gaa, gab, gbb, gridx, gridy, gridz, phi, phi2, quicktest, &
+      sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+      tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc, excpp, &
+      xdotb, ydotb, zdotb
+
+ 
 #ifdef MPIV
      integer :: i, ii, irad_end, irad_init, jj
 #endif
@@ -347,13 +355,8 @@ contains
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
-           if(quick_method%xc_polarization > 0 ) then
-              call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
-                    quick_method%functional_id(ifunc),XC_POLARIZED)
-           else
-              call xc_f90_func_init(xc_func(ifunc), &
-                    xc_info(ifunc),quick_method%functional_id(ifunc),XC_UNPOLARIZED)
-           endif
+          call xc_f90_func_init(xc_func(ifunc), xc_info(ifunc), &
+          quick_method%functional_id(ifunc),XC_POLARIZED)
         enddo
      endif
   
@@ -407,83 +410,101 @@ contains
   !               call denspt(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
   !               gbx,gby,gbz)
   
-                 call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+                 call denspt_oshell(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
                  gbx,gby,gbz,Ibin)
   
-                 if (density < quick_method%DMCutoff ) then
+                 if ((density < quick_method%DMCutoff) .and. (densityb < quick_method%DMCutoff)) then
                     continue
                  else
   
   !  This allows the calculation of the derivative of the functional with regard to the 
   !  density (dfdr), with regard to the alpha-alpha density invariant (df/dgaa), and the
   !  alpha-beta density invariant.
-  
-                    densitysum=2.0d0*density
-                    sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
-  
-                    libxc_rho(1)=densitysum
-                    libxc_sigma(1)=sigma
-  
-                    tsttmp_exc=0.0d0
-                    tsttmp_vrhoa=0.0d0
-                    tsttmp_vsigmaa=0.0d0
+ 
+                    gaa = (gax*gax+gay*gay+gaz*gaz)
+                    gbb = (gbx*gbx+gby*gby+gbz*gbz)
+                    gab = (gax*gbx+gay*gby+gaz*gbz)
+               
+                    libxc_rho(1)=density
+                    libxc_rho(2)=densityb
+               
+                    libxc_sigma(1)=gaa
+                    libxc_sigma(2)=gab
+                    libxc_sigma(3)=gbb
+               
+                    excpp=0.0d0
+                    dfdr=0.0d0
+                    dfdrb=0.0d0
+               
+                    dfdgaa=0.0d0
+                    dfdgab=0.0d0
+                    dfdgbb=0.0d0 
   
                     if(quick_method%uselibxc) then
                        do ifunc=1, quick_method%nof_functionals
                           select case(xc_f90_info_family(xc_info(ifunc)))
                              case(XC_FAMILY_LDA)
                                 call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
-                                libxc_exc(1), libxc_vrhoa(1))
-                                libxc_vsigmaa(1) = 0.0d0
+                                libxc_exc(1), libxc_vrho(1))
+                                libxc_vsigma(1) = 0.0d0
+                                libxc_vsigma(2) = 0.0d0
+                                libxc_vsigma(3) = 0.0d0
                              case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
                                 call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
-                                libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                                libxc_exc(1), libxc_vrho(1), libxc_vsigma(1))
                           end select
   
-                          tsttmp_exc=tsttmp_exc+libxc_exc(1)
-                          tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
-                          tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
+                          excpp=excpp+libxc_exc(1)
+                          dfdr=dfdr+libxc_vrho(1)
+                          dfdrb=dfdrb+libxc_vrho(2)
+                        
+                          dfdgaa=dfdgaa+libxc_vsigma(1)
+                          dfdgab=dfdgab+libxc_vsigma(2)
+                          dfdgbb=dfdgbb+libxc_vsigma(3)
                        enddo
-  
-                       zkec=densitysum*tsttmp_exc
-                       dfdr=tsttmp_vrhoa
-                       xiaodot=tsttmp_vsigmaa*4
+
+                       zkec=(density+densityb)*excpp 
   
   !  Calculate the first term in the dot product shown above,
   !  i.e.: (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b)) doT Grad(Phimu Phinu))
-                       xdot=xiaodot*gax
-                       ydot=xiaodot*gay
-                       zdot=xiaodot*gaz
-  
-                    elseif(quick_method%BLYP) then
-  
-                       call becke_E(density, densityb, gax, gay, gaz, gbx, gby,gbz, Ex)
-                       call lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz,Ec)
-  
-                       zkec=Ex+Ec
-                       
-                       call becke(density, gax, gay, gaz, gbx, gby, gbz, dfdr, dfdgaa, dfdgab)
-                       call lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, dfdr2, dfdgaa2, dfdgab2)
-  
-                       dfdr = dfdr + dfdr2
-                       dfdgaa = dfdgaa + dfdgaa2
-                       dfdgab = dfdgab + dfdgab2
-  
+
                        xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
                        ydot = 2.d0*dfdgaa*gay + dfdgab*gby
                        zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+          
+                       xdotb = 2.d0*dfdgbb*gbx + dfdgab*gax
+                       ydotb = 2.d0*dfdgbb*gby + dfdgab*gay
+                       zdotb = 2.d0*dfdgbb*gbz + dfdgab*gaz
+  
+                    elseif(quick_method%BLYP) then
+  
+                    !   call becke_E(density, densityb, gax, gay, gaz, gbx, gby,gbz, Ex)
+                    !   call lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz,Ec)
+  
+                    !   zkec=Ex+Ec
+                       
+                    !   call becke(density, gax, gay, gaz, gbx, gby, gbz, dfdr, dfdgaa, dfdgab)
+                    !   call lyp(density, densityb, gax, gay, gaz, gbx, gby, gbz, dfdr2, dfdgaa2, dfdgab2)
+  
+                    !   dfdr = dfdr + dfdr2
+                    !   dfdgaa = dfdgaa + dfdgaa2
+                    !   dfdgab = dfdgab + dfdgab2
+  
+                    !   xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
+                    !   ydot = 2.d0*dfdgaa*gay + dfdgab*gby
+                    !   zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
   
                     elseif(quick_method%B3LYP) then
   
-                       call b3lyp_e(densitysum, sigma, zkec)
-                       call b3lypf(densitysum, sigma, dfdr, xiaodot)
+                    !   call b3lyp_e(densitysum, sigma, zkec)
+                    !   call b3lypf(densitysum, sigma, dfdr, xiaodot)
   
-                       xdot=xiaodot*gax
-                       ydot=xiaodot*gay
-                       zdot=xiaodot*gaz
+                    !   xdot=xiaodot*gax
+                    !   ydot=xiaodot*gay
+                    !   zdot=xiaodot*gaz
   
                     endif
-  
+
                     quick_qm_struct%Exc = quick_qm_struct%Exc + zkec*weight
   
                     quick_qm_struct%aelec = weight*density+quick_qm_struct%aelec
@@ -518,6 +539,10 @@ contains
                              tempgz = phi*dphi2dz + phi2*dphidz
                              quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+(temp*dfdr+&
                              xdot*tempgx+ydot*tempgy+zdot*tempgz)*weight
+
+                             quick_qm_struct%ob(Jbas,Ibas)=quick_qm_struct%ob(Jbas,Ibas)+(temp*dfdrb+&
+                             xdotb*tempgx+ydotb*tempgy+zdotb*tempgz)*weight
+
                              jcount=jcount+1
                           enddo
                        endif
