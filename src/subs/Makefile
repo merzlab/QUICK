@@ -44,6 +44,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 
 MIRP = $(objfolder)/mirp_fmt.o
 
+OSHELLSUBS=$(objfolder)/oshell_denspt.o
+
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
@@ -51,11 +53,16 @@ MIRP = $(objfolder)/mirp_fmt.o
 $(SUBS):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
+
+$(OSHELLSUBS):$(objfolder)/oshell_%.o:%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -DOSHELL -c $< -o $@
+
 $(MIRP):$(objfolder)/%.o:%.cpp
 	@echo "[QUICK]  CXX $@"
 	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-all: $(SUBS) $(MIRP)
+all: $(SUBS) $(OSHELLSUBS) $(MIRP)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
