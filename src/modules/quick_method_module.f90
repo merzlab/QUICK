@@ -459,6 +459,14 @@ endif
             if (index(keyWD,'MP2').ne.0)        self%MP2=.true.
             if (index(keyWD,'HF').ne.0)         self%HF=.true.
             if (index(keyWD,'DFT').ne.0)        self%DFT=.true.
+            if (index(keyWD,'UHF').ne.0) then
+                self%HF=.true.
+                self%UNRST=.true.
+            endif
+            if (index(keyWD,'UDFT').ne.0) then
+                self%DFT=.true.
+                self%UNRST=.true.
+            endif
             if (index(keyWD,'SEDFT').ne.0)      self%SEDFT=.true.
             if (index(keyWD,'PBSOL').ne.0)      self%PBSOL=.true.
             if (index(keyWD,'ANNIHILATE').ne.0) self%annil=.true.
@@ -478,8 +486,15 @@ endif
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
-                self%B3LYP=.true.
-                self%x_hybrid_coeff =0.2d0
+                ! Native b3lyp is only implemented for closed shell
+                if (self%UNRST) then
+                  self%uselibxc=.true.
+                  tempstring='LIBXC=HYB_GGA_XC_B3LYP'
+                  call set_libxc_func_info(tempstring, self, ierr)
+                else
+                  self%B3LYP=.true.
+                  self%x_hybrid_coeff =0.2d0
+                endif
             elseif(index(keyWD,'BLYP').ne.0) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
@@ -581,16 +596,6 @@ endif
 
             if (index(keyWD,'USEDFT').ne.0) then
                 self%SEDFT=.true.
-                self%UNRST=.true.
-            endif
-
-            if (index(keyWD,'UHF').ne.0) then
-                self%HF=.true.
-                self%UNRST=.true.
-            endif
-
-            if (index(keyWD,'UDFT').ne.0) then
-                self%DFT=.true.
                 self%UNRST=.true.
             endif
 
