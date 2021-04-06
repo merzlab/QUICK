@@ -145,13 +145,6 @@ struct XC_quadrature_type{
         int smem_size;                                 //size of shared memory buffer in xc kernels 
 };
 
-// type to carry libxc dev data. 
-struct gpu_libxc_type{
-
-    gpu_libxc_info** glinfo;        // pointer to an array hosting gpu_libxc_info type pointers
-    int nauxfunc;                   // number of auxilary functions, equal to the length of array pointed by glinfo 
-
-}
 
 struct gpu_simulation_type {
     
@@ -159,7 +152,6 @@ struct gpu_simulation_type {
     QUICK_METHOD                    method;
     DFT_calculated_type*            DFT_calculated;
     XC_quadrature_type*             xcq;
-    gpu_libxc_type*                 libxc_data;
     QUICKDouble                     hyb_coeff;   
     bool                            is_oshell;
  
@@ -239,6 +231,10 @@ struct gpu_simulation_type {
 
     int maxpfpbin;            //maximum number of primitive function per bin xc kernels
     int maxbfpbin;            //maximum number of basis function per bin in xc kernels
+
+    // libxc data
+    gpu_libxc_info** glinfo;        // pointer to an array hosting gpu_libxc_info type pointers
+    int nauxfunc;                   // number of auxilary functions, equal to the length of array pointed by glinfo     
 
     // Gaussian Type function
     
