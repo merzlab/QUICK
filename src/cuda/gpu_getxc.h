@@ -123,9 +123,9 @@ __global__ void get_density_kernel()
 // while the other will compute them. 
 //-----------------------------------------------
 #ifdef HMEM
-__global__ void getxc_hmem_kernel(gpu_libxc_info** glinfo, int nof_functionals)
+__global__ void getxc_hmem_kernel()
 #else
-__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
+__global__ void getxc_kernel()
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -194,6 +194,8 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
          double d_sigma = (double)sigma;
          double d_zk, d_vrho, d_vsigma;
          d_zk = d_vrho = d_vsigma = 0.0;
+         int nof_functionals = devSim_dft.nauxfunc;
+         gpu_libxc_info** glinfo = devSim_dft.glinfo;
 
          for(int i=0; i<nof_functionals; i++){
            double tmp_d_zk, tmp_d_vrho, tmp_d_vsigma;
@@ -308,9 +310,9 @@ __global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals)
 // while the other will compute them. 
 //-----------------------------------------------
 #ifdef HMEM
-__global__ void get_xcgrad_hmem_kernel(gpu_libxc_info** glinfo, int nof_functionals)
+__global__ void get_xcgrad_hmem_kernel()
 #else
-__global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
+__global__ void get_xcgrad_kernel()
 #endif
 {
 
@@ -392,6 +394,8 @@ __global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals)
         double d_sigma = (double)sigma;
         double d_zk, d_vrho, d_vsigma;
         d_zk = d_vrho = d_vsigma = 0.0;
+        int nof_functionals = devSim_dft.nauxfunc;
+        gpu_libxc_info** glinfo = devSim_dft.glinfo;
 
         for(int i=0; i<nof_functionals; i++){
           double tmp_d_zk, tmp_d_vrho, tmp_d_vsigma;

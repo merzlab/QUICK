@@ -13,7 +13,6 @@
 
 //Madu Manathunga 07/01/2019: Libxc header files
 #include "util.h"
-#include "gpu_work.cuh"
 #include "xc_redistribute.h"
 
 // device initial and shutdown operation
@@ -73,8 +72,8 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
 void get_ssw(_gpu_type gpu);
 void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
 void getpteval(_gpu_type gpu);
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
-void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
+void getxc(_gpu_type gpu);
+void getxc_grad(_gpu_type gpu);
 void prune_grid_sswgrad();
 void gpu_delete_sswgrad_vars();
 void get2e_MP2(_gpu_type gpu);
@@ -124,8 +123,8 @@ __global__ void get_pteval_kernel();
 __global__ void get_density_kernel();
 /*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp);*/
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
-__global__ void getxc_kernel(gpu_libxc_info** glinfo, int nof_functionals);
-__global__ void get_xcgrad_kernel(gpu_libxc_info** glinfo, int nof_functionals);
+__global__ void getxc_kernel();
+__global__ void get_xcgrad_kernel();
 __global__ void get_sswgrad_kernel();
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 

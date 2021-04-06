@@ -2342,7 +2342,10 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         //Madu: Initialize gpu libxc and upload information to GPU
         gpu_libxc_info** glinfo = NULL;
 
-        if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+        if(nof_aux_functionals > 0) {
+          gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+          gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
+        }
 
         //libxc_cleanup(glinfo, nof_functionals);
 
@@ -2370,7 +2373,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
 
         upload_sim_to_constant_dft(gpu);
 
-	getxc_grad(gpu, glinfo, nof_aux_functionals);
+	getxc_grad(gpu);
 
         gpu -> gradULL -> Download();
 
@@ -2930,9 +2933,10 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 #endif
     //Madu: Initialize gpu libxc and upload information to GPU
     gpu_libxc_info** glinfo = NULL;
-    if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-
-    //libxc_cleanup(glinfo, nof_functionals);
+    if(nof_aux_functionals > 0) {
+      gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+      gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
+    } 
 
     gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
 
@@ -2973,7 +2977,7 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
         fprintf(gpu->debugFile,"FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
 #endif
 
-    getxc(gpu, glinfo, nof_aux_functionals);
+    getxc(gpu);
     gpu -> gpu_calculated -> oULL -> Download();
     gpu -> DFT_calculated -> Download();
 
@@ -3033,6 +3037,8 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
+
+    //libxc_cleanup(glinfo, nof_functionals);
 
 }
 

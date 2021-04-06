@@ -85,7 +85,7 @@ void getpteval(_gpu_type gpu){
     cudaDeviceSynchronize();
 }
 
-void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
+void getxc(_gpu_type gpu){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -100,7 +100,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
     
 	cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+        QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     }else{
 
@@ -108,7 +108,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
         cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+        QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     }
 
@@ -128,7 +128,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 }
 
 
-void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
+void getxc_grad(_gpu_type gpu){
 
 #ifdef DEBUG
     cudaEvent_t start,end;
@@ -143,7 +143,7 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
         cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((get_xcgrad_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>(glinfo, nof_functionals)));
+        QUICK_SAFE_CALL((get_xcgrad_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     }else{
 
@@ -151,7 +151,7 @@ void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals){
 
         cudaDeviceSynchronize();
  
-        QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>(glinfo, nof_functionals)));
+        QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
     }
 
