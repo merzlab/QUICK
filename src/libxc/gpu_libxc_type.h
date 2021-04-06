@@ -34,4 +34,7 @@ typedef struct {
         double *d_vsigma; //Output array
 }gpu_libxc_out;
 
+//gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np);
+//void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo, gpu_libxc_in* d_glin, gpu_libxc_out* d_glout);
+
 #endif
