@@ -2340,14 +2340,12 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         fprintf(gpu->debugFile,"Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
         //Madu: Initialize gpu libxc and upload information to GPU
-        gpu_libxc_info** glinfo = NULL;
 
         if(nof_aux_functionals > 0) {
           gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
           gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
         }
 
-        //libxc_cleanup(glinfo, nof_functionals);
 
         /*gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
         gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
@@ -2397,7 +2395,7 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         delete gpu -> grad;
         delete gpu -> gradULL;
         delete gpu->gpu_calculated->dense; 
-    
+        libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);    
 }
 
 
@@ -2932,7 +2930,6 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
 #endif
     //Madu: Initialize gpu libxc and upload information to GPU
-    gpu_libxc_info** glinfo = NULL;
     if(nof_aux_functionals > 0) {
       gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
       gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
@@ -3038,7 +3035,7 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
 
-    //libxc_cleanup(glinfo, nof_functionals);
+    libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);
 
 }
 
