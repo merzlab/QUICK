@@ -125,11 +125,11 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 
 }
 
-void libxc_cleanup(gpu_libxc_info** d_glinfo, int *n_func){
+void libxc_cleanup(gpu_libxc_info** d_glinfo, int n_func){
 
-	for(int i=0; i< *n_func; i++){
+	for(int i=0; i< n_func; i++){
 
-	 gpu_libxc_cleanup(d_glinfo[i], NULL, NULL);
+	 gpu_libxc_cleanup(d_glinfo[i]);
 
 	}
 
