@@ -24,7 +24,6 @@ typedef struct {
         double *d_gdm;
         double *d_ds;
         double *d_rhoLDA;
-        void *d_std_libxc_work_params;
 }gpu_libxc_info;
 
 typedef struct {
