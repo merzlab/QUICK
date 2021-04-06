@@ -56,7 +56,6 @@ work_lda(const xc_func_type *p, int np, const double *rho,
   if(r.order < 0) return;
 
 #if defined CUDA || defined CUDA_MPIV
-#include "gpu_extern.h"
 
 #define GET_XSTR(fval) GET_STR(fval)
 #define GET_STR(fval) #fval
