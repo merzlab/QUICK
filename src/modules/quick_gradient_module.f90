@@ -227,7 +227,7 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
+#ifdef DEBUG
 !     if (quick_method%debug) then
           write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
           do Iatm=1,natom
@@ -237,7 +237,7 @@ contains
               enddo
           enddo
 !     endif
-!#endif
+#endif
   
 #ifdef MPIV
   endif
@@ -327,14 +327,14 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
+#ifdef DEBUG
 !    if (quick_method%debug) then
           write (*,'(/," DEBUG STEP : TOTAL GRADIENT: ")')
           do Iatm=1,natom*3
                   write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
           enddo
 !    endif
-!#endif
+#endif
   
 #ifdef MPIV
   endif
@@ -497,7 +497,7 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
+#ifdef DEBUG
 !    if (quick_method%debug) then
           write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
           do Iatm=1,natom
@@ -507,7 +507,7 @@ contains
               enddo
           enddo
 !    endif
-!#endif
+#endif
   
 #ifdef MPIV
   endif
@@ -552,7 +552,7 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
+#ifdef DEBUG
 !    if (quick_method%debug) then
           write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
           do Iatm=1,natom
@@ -562,7 +562,7 @@ contains
               enddo
           enddo
 !    endif
-!#endif
+#endif
   
 #ifdef MPIV
   endif
@@ -843,7 +843,7 @@ contains
      endif
 #endif
 
-!#ifdef DEBUG
+#ifdef DEBUG
 !    if (quick_method%debug) then
           write (*,'(/," DEBUG STEP 4 :  ERI GRADIENT ADDED:")')
           do Iatm=1,natom
@@ -853,7 +853,7 @@ contains
               enddo
           enddo
 !    endif
-!#endif
+#endif
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -1237,7 +1237,7 @@ contains
      endif
 #endif
 
-!#ifdef DEBUG
+#ifdef DEBUG
 !    if (quick_method%debug) then
           write (*,'(/," DEBUG STEP 5 :  XC GRADIENT ADDED:")')
           do Iatm=1,natom
@@ -1247,7 +1247,7 @@ contains
               enddo
           enddo
 !    endif
-!#endif  
+#endif  
 
      return
   
