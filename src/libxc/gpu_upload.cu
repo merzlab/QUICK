@@ -87,9 +87,6 @@ int get_gpu_worker(const xc_func_type *p){
         switch(p->info->family){
         case(XC_FAMILY_LDA):
                 gpu_wt = GPU_WORK_LDA;
-#ifdef DEBUG 
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, WORKER: %d \n", __FILE__, __LINE__, __func__, gpu_wt);
-#endif
 		break;
 	case(XC_FAMILY_HYB_GGA):
         case(XC_FAMILY_GGA):
@@ -111,20 +108,12 @@ int get_gpu_worker(const xc_func_type *p){
 }
 
 gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np){
-	gpu_libxc_info h_glinfo;
 
-#ifdef DEBUG 
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, mix_coeff);
-#endif
+	gpu_libxc_info h_glinfo;
 
 	h_glinfo.func_id = p->info->number;
 	h_glinfo.gpu_worker = get_gpu_worker(p);	
-
 	h_glinfo.mix_coeff = mix_coeff;
-
-#ifdef DEBUG 
-                printf("FILE: %s, LINE: %d, FUNCTION: %s, mix_coeff: %f \n", __FILE__, __LINE__, __func__, h_glinfo.mix_coeff);
-#endif
 
 	h_glinfo.d_maple2c_params = gpu_upload_maple2c_params(p);
 	h_glinfo.d_worker_params = gpu_upload_work_params(p, ggwp);
