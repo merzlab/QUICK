@@ -227,17 +227,17 @@ contains
   if(master) then
 #endif
   
-#ifdef DEBUG
-     if (quick_method%debug) then
-          write (iOutFile,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
+!#ifdef DEBUG
+!     if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (iOutFile,'(I5,7x,F20.10)')Iatm, &
+                  write (*,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-     endif
-#endif
+!     endif
+!#endif
   
 #ifdef MPIV
   endif
@@ -327,14 +327,14 @@ contains
   if(master) then
 #endif
   
-#ifdef DEBUG
-    if (quick_method%debug) then
-          write (iOutFile,'(/," DEBUG STEP4: TOTAL GRADIENT: ")')
+!#ifdef DEBUG
+!    if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP : TOTAL GRADIENT: ")')
           do Iatm=1,natom*3
-                  write (iOutFile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+                  write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
           enddo
-    endif
-#endif
+!    endif
+!#endif
   
 #ifdef MPIV
   endif
@@ -497,17 +497,17 @@ contains
   if(master) then
 #endif
   
-#ifdef DEBUG
-    if (quick_method%debug) then
-          write (iOutfile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+!#ifdef DEBUG
+!    if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                  write (*,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-    endif
-#endif
+!    endif
+!#endif
   
 #ifdef MPIV
   endif
@@ -552,17 +552,17 @@ contains
   if(master) then
 #endif
   
-#ifdef DEBUG
-    if (quick_method%debug) then
-          write (iOutfile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
+!#ifdef DEBUG
+!    if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (iOutfile,'(I5,7x,F20.10)')Iatm, &
+                  write (*,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-    endif
-#endif
+!    endif
+!#endif
   
 #ifdef MPIV
   endif
@@ -842,6 +842,18 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      endif
 #endif
+
+!#ifdef DEBUG
+!    if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP 4 :  ERI GRADIENT ADDED:")')
+          do Iatm=1,natom
+              do Imomentum=1,3
+                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+              enddo
+          enddo
+!    endif
+!#endif
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -900,15 +912,21 @@ contains
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
-     implicit double precision(a-h,o-z)
+     implicit none
   
-     integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-     common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-     double precision, dimension(1) :: libxc_rho
-     double precision, dimension(1) :: libxc_sigma
+     integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
+     irad_end, ierror, imomentum
+     double precision :: density, densityb, densitysum, dfdgaa, dfdgaa2, dfdgab, dfdgbb, &
+     dfdgab2, dfdr, dfdrb, dfdr2, dphi2dx, dphi2dy, dphi2dz, dphidx, dphidy, dphidz, &
+     gax, gay, gaz, gbx, gby, gbz, gaa, gab, gbb, gridx, gridy, gridz, phi, phi2, quicktest, &
+     sigma, sswt, temp, tempgx, tempgy, tempgz, tsttmp_exc, tsttmp_vrhoa, &
+     tsttmp_vsigmaa, weight, xdot, ydot, zdot, xiaodot, zkec, Ex, Ec, Eelxc, excpp, &
+     xdotb, ydotb, zdotb, dxdx, dxdy, dxdz, dydy, dydz, dzdz
+     double precision, dimension(2) :: libxc_rho
+     double precision, dimension(3) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
-     double precision, dimension(1) :: libxc_vrhoa
-     double precision, dimension(1) :: libxc_vsigmaa
+     double precision, dimension(2) :: libxc_vrho
+     double precision, dimension(3) :: libxc_vsigma
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
   
@@ -956,24 +974,9 @@ contains
         do Ibin=1, quick_dft_grid%nbins
 #endif
   
-  !         if(quick_method%iSG.eq.1)then
-  !            call gridformnew(iatm,RGRID(Irad),iiangt)
-  !            rad = radii(quick_molspec%iattype(iatm))
-  !         else
-  !            call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-  !            rad = radii2(quick_molspec%iattype(iatm))
-  !         endif
-  
-  !         rad3 = rad*rad*rad
-  !         do Iang=1,iiangt
-  !            gridx=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-  !            gridy=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-  !            gridz=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-  
   !  Calculate the weight of the grid point in the SSW scheme.  If
   !  the grid point has a zero weight, we can skip it.
   
-  !    do Ibin=1, quick_dft_grid%nbins
           Igp=quick_dft_grid%bin_counter(Ibin)+1
   
           do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
@@ -985,9 +988,6 @@ contains
              sswt=quick_dft_grid%gridb_sswt(Igp)
              weight=quick_dft_grid%gridb_weight(Igp)
              Iatm=quick_dft_grid%gridb_atm(Igp)
-  
-  !            sswt=SSW(gridx,gridy,gridz,Iatm)
-  !            weight=sswt*WTANG(Iang)*RWT(Irad)*rad3
               
               if (weight < quick_method%DMCutoff ) then
                  continue
@@ -1011,10 +1011,19 @@ contains
                  
   
   !  evaluate the densities at the grid point and the gradient at that grid point            
-                 call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+#ifdef OSHELL
+                 call denspt_oshell(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
                  gbx,gby,gbz,Ibin)
+#else          
+                 call denspt_cshell(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
+                 gbx,gby,gbz,Ibin)
+#endif
   
+#ifdef OSHELL
+                 if ((density < quick_method%DMCutoff) .and. (densityb < quick_method%DMCutoff)) then
+#else
                  if (density < quick_method%DMCutoff ) then
+#endif
                     continue
   
                  else
@@ -1022,39 +1031,71 @@ contains
   !  with regard to the density (dfdr), with regard to the alpha-alpha
   !  density invariant (df/dgaa), and the alpha-beta density invariant.
   
+#ifdef OSHELL
+                    gaa = (gax*gax+gay*gay+gaz*gaz)
+                    gbb = (gbx*gbx+gby*gby+gbz*gbz)
+                    gab = (gax*gbx+gay*gby+gaz*gbz)
+        
+                    libxc_rho(1)=density
+                    libxc_rho(2)=densityb
+        
+                    libxc_sigma(1)=gaa
+                    libxc_sigma(2)=gab
+                    libxc_sigma(3)=gbb
+#else
                     densitysum=2.0d0*density
                     sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
   
                     libxc_rho(1)=densitysum
                     libxc_sigma(1)=sigma
+#endif
   
-                    tsttmp_exc=0.0d0
-                    tsttmp_vrhoa=0.0d0
-                    tsttmp_vsigmaa=0.0d0
+                    excpp=0.0d0
+                    dfdr=0.0d0
+                    dfdrb=0.0d0
+                
+                    dfdgaa=0.0d0
+                    dfdgab=0.0d0
+                    dfdgbb=0.0d0
   
                     if(quick_method%uselibxc) then
                        do ifunc=1, quick_method%nof_functionals
                           select case(xc_f90_info_family(xc_info(ifunc)))
                              case(XC_FAMILY_LDA)
                                 call xc_f90_lda_exc_vxc(xc_func(ifunc),1,libxc_rho(1), &
-                                libxc_exc(1), libxc_vrhoa(1))
+                                libxc_exc(1), libxc_vrho(1))
+                                libxc_vsigma(1) = 0.0d0
+                                libxc_vsigma(2) = 0.0d0
+                                libxc_vsigma(3) = 0.0d0
                              case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
                                 call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
-                                libxc_exc(1), libxc_vrhoa(1), libxc_vsigmaa(1))
+                                libxc_exc(1), libxc_vrho(1), libxc_vsigma(1))
                           end select
-  
-                          tsttmp_exc=tsttmp_exc+libxc_exc(1)
-                          tsttmp_vrhoa=tsttmp_vrhoa+libxc_vrhoa(1)
-                          tsttmp_vsigmaa=tsttmp_vsigmaa+libxc_vsigmaa(1)
+
+                        excpp=excpp+libxc_exc(1)
+                        dfdr=dfdr+libxc_vrho(1)
+                        dfdgaa=dfdgaa+libxc_vsigma(1)
+#ifdef OSHELL
+                        dfdrb=dfdrb+libxc_vrho(2)
+                        dfdgab=dfdgab+libxc_vsigma(2)
+                        dfdgbb=dfdgbb+libxc_vsigma(3)
+#endif  
+
                        enddo
   
-                       zkec=densitysum*tsttmp_exc
-                       dfdr=tsttmp_vrhoa
-                       xiaodot=tsttmp_vsigmaa*4
-  
-                       xdot=xiaodot*gax
-                       ydot=xiaodot*gay
-                       zdot=xiaodot*gaz
+                       zkec=(density+densityb)*excpp
+#ifdef OSHELL
+                       xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
+                       ydot = 2.d0*dfdgaa*gay + dfdgab*gby
+                       zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+                    
+                       xdotb = 2.d0*dfdgbb*gbx + dfdgab*gax
+                       ydotb = 2.d0*dfdgbb*gby + dfdgab*gay
+                       zdotb = 2.d0*dfdgbb*gbz + dfdgab*gaz
+#else               
+                       xdot = 4.0d0*dfdgaa*gax
+                       ydot = 4.0d0*dfdgaa*gay
+                       zdot = 4.0d0*dfdgaa*gaz
                     
                     elseif(quick_method%BLYP) then
   
@@ -1082,7 +1123,7 @@ contains
                        xdot=xiaodot*gax
                        ydot=xiaodot*gay
                        zdot=xiaodot*gaz
-  
+#endif 
                     endif
   
   ! Now loop over basis functions and compute the addition to the matrix
@@ -1140,6 +1181,28 @@ contains
                              + xdot*(dxdz*phi2+dphidz*dphi2dx) &
                              + ydot*(dydz*phi2+dphidz*dphi2dy) &
                              + zdot*(dzdz*phi2+dphidz*dphi2dz))
+
+#ifdef OSHELL
+                             quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
+                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+                             (dfdrb*dphidx*phi2 &
+                             + xdotb*(dxdx*phi2+dphidx*dphi2dx) &
+                             + ydotb*(dxdy*phi2+dphidx*dphi2dy) &
+                             + zdotb*(dxdz*phi2+dphidx*dphi2dz))
+                             quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) - &
+                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+                             (dfdrb*dphidy*phi2 &
+                             + xdotb*(dxdy*phi2+dphidy*dphi2dx) &
+                             + ydotb*(dydy*phi2+dphidy*dphi2dy) &
+                             + zdotb*(dydz*phi2+dphidy*dphi2dz))
+                             quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) - &
+                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+                             (dfdrb*dphidz*phi2 &
+                             + xdotb*(dxdz*phi2+dphidz*dphi2dx) &
+                             + ydotb*(dydz*phi2+dphidz*dphi2dy) &
+                             + zdotb*(dzdz*phi2+dphidz*dphi2dz))
+#endif
+
                              jcount=jcount+1
                           enddo
                        endif
@@ -1173,7 +1236,19 @@ contains
         enddo
      endif
 #endif
-  
+
+!#ifdef DEBUG
+!    if (quick_method%debug) then
+          write (*,'(/," DEBUG STEP 5 :  XC GRADIENT ADDED:")')
+          do Iatm=1,natom
+              do Imomentum=1,3
+                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
+              enddo
+          enddo
+!    endif
+!#endif  
+
      return
   
 #ifdef OSHELL
