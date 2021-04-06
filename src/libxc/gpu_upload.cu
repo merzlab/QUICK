@@ -118,13 +118,9 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
 	h_glinfo.d_maple2c_params = gpu_upload_maple2c_params(p);
 	h_glinfo.d_worker_params = gpu_upload_work_params(p, ggwp);
         //allocate device memory for some work params required by gga_x worker.
-          h_glinfo.d_gdm = gpu_upload_libxc_out_array(np);
-          h_glinfo.d_ds = gpu_upload_libxc_out_array(np);
-          h_glinfo.d_rhoLDA = gpu_upload_libxc_out_array(np);
-        //h_glinfo.d_zk = gpu_upload_libxc_out(np);
-        //h_glinfo.d_vrho = gpu_upload_libxc_out(np);
-        //h_glinfo.d_vsigma = gpu_upload_libxc_out(np);
-       // h_glinfo.d_std_libxc_work_params = gpu_upload_std_libxc_work_params(p, &h_r, np);
+        h_glinfo.d_gdm = gpu_upload_libxc_out_array(np);
+        h_glinfo.d_ds = gpu_upload_libxc_out_array(np);
+        h_glinfo.d_rhoLDA = gpu_upload_libxc_out_array(np);
 
 	gpu_libxc_info* d_glinfo;
 	cudaMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));
@@ -133,6 +129,7 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
 	return d_glinfo;
 }
 
+/*
 gpu_libxc_out* gpu_upload_libxc_out(int np){
 	gpu_libxc_out h_glout;
 	h_glout.d_zk = gpu_upload_libxc_out_array(np);
@@ -158,4 +155,4 @@ gpu_libxc_in* gpu_upload_libxc_in(const double* h_rho, const double *h_sigma, in
 
         return d_glin;
 }
-
+*/
