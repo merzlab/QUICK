@@ -772,16 +772,6 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
   
-        if(quick_method%HF)then
-           call gpu_upload_method(0, quick_method%UNRST, 1.0d0)
-        elseif(quick_method%uselibxc)then
-           call gpu_upload_method(3, quick_method%UNRST, quick_method%x_hybrid_coeff)
-        elseif(quick_method%BLYP)then
-           call gpu_upload_method(2, quick_method%UNRST, 0.0d0)
-        elseif(quick_method%B3LYP)then
-           call gpu_upload_method(1, quick_method%UNRST, 0.2d0)
-        endif
-  
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
         call gpu_upload_grad(quick_method%gradCutoff)
@@ -940,8 +930,7 @@ contains
   
         call gpu_reupload_dft_grid()
   
-        call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
-  quick_method%xc_polarization)
+        call gpu_xcgrad(quick_qm_struct%gradient)
   
         call gpu_delete_dft_grid()
   

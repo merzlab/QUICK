@@ -106,16 +106,6 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
   
-        if(quick_method%HF)then      
-           call gpu_upload_method(0, quick_method%UNRST, 1.0d0)
-        elseif(quick_method%uselibxc)then
-          call gpu_upload_method(3, quick_method%UNRST, quick_method%x_hybrid_coeff)
-        elseif(quick_method%BLYP)then
-           call gpu_upload_method(2, quick_method%UNRST, 0.0d0)
-        elseif(quick_method%B3LYP)then
-           call gpu_upload_method(1, quick_method%UNRST, 0.2d0)
-        endif
-  
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
@@ -341,14 +331,7 @@ contains
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
-  
-#ifdef DEBUG
-        if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
-#endif
-  
-        call gpu_getxc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o,&
-        quick_method%nof_functionals, quick_method%functional_id, quick_method%xc_polarization)
-  
+        call gpu_getxc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
      endif
 #else
   
