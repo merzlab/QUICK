@@ -18,15 +18,9 @@
 
 //-----------------------------------------------
 // Calculate the density and gradients of density at
-// each grid point. Huge memory (hmem) version will 
-// use precomputed basis function values and gradients
-// while the other will compute them. 
+// each grid point.
 //-----------------------------------------------
-#ifdef HMEM
-__global__ void get_density_hmem_kernel()
-#else
 __global__ void get_density_kernel()
-#endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -37,13 +31,9 @@ __global__ void get_density_kernel()
     int bfloc_st  = devSim_dft.basf_locator[bin_id];
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
 
-#ifdef HMEM
-      int phii = devSim_dft.phi_loc[gid];
-#else
       QUICKDouble gridx = devSim_dft.gridx[gid];
       QUICKDouble gridy = devSim_dft.gridy[gid];
       QUICKDouble gridz = devSim_dft.gridz[gid];
-#endif
 
       QUICKDouble density = 0.0;
       QUICKDouble gax = 0.0;
@@ -55,14 +45,7 @@ __global__ void get_density_kernel()
         int ibas = (int) devSim_dft.basf[i];
         QUICKDouble phi, dphidx, dphidy, dphidz;
 
-#ifdef HMEM
-        phi    = devSim_dft.phi[phii];
-        dphidx = devSim_dft.dphidx[phii];
-        dphidy = devSim_dft.dphidy[phii];
-        dphidz = devSim_dft.dphidz[phii];
-#else
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-#endif
 
         if (abs(phi+dphidx+dphidy+dphidz) >= devSim_dft.DMCutoff ) {
 
@@ -72,36 +55,20 @@ __global__ void get_density_kernel()
           gay = gay + denseii * dphidy;
           gaz = gaz + denseii * dphidz;
 
-#ifdef HMEM
-          int phij = phii+1;
-#endif
           for(int j=i+1; j< bfloc_end; j++){
 
             int jbas = devSim_dft.basf[j];
             QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-#ifdef HMEM
-            phi2    = devSim_dft.phi[phij];
-            dphidx2 = devSim_dft.dphidx[phij];
-            dphidy2 = devSim_dft.dphidy[phij];
-            dphidz2 = devSim_dft.dphidz[phij];
-#else
             pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
-#endif
 
             QUICKDouble denseij = LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
             density = density + denseij * phi * phi2;
             gax = gax + denseij * ( phi * dphidx2 + phi2 * dphidx );
             gay = gay + denseij * ( phi * dphidy2 + phi2 * dphidy );
             gaz = gaz + denseij * ( phi * dphidz2 + phi2 * dphidz );
-#ifdef HMEM
-            ++phij;
-#endif
           }
         }
-#ifdef HMEM
-        ++phii;
-#endif
       }
 
       devSim_dft.densa[gid] = density;
@@ -116,17 +83,7 @@ __global__ void get_density_kernel()
 }
 
 
-//-----------------------------------------------
-// Calculate the density and gradients of density at
-// each grid point. Huge memory (hmem) version will 
-// use precomputed basis function values and gradients
-// while the other will compute them. 
-//-----------------------------------------------
-#ifdef HMEM
-__global__ void getxc_hmem_kernel()
-#else
 __global__ void getxc_kernel()
-#endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -137,13 +94,10 @@ __global__ void getxc_kernel()
     int bfloc_st  = devSim_dft.basf_locator[bin_id];
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
 
-#ifdef HMEM
-    int phi_st = devSim_dft.phi_loc[gid];
-#else
     QUICKDouble gridx = devSim_dft.gridx[gid];
     QUICKDouble gridy = devSim_dft.gridy[gid];
     QUICKDouble gridz = devSim_dft.gridz[gid];
-#endif
+
     QUICKDouble weight = devSim_dft.weight[gid];
     QUICKDouble density = devSim_dft.densa[gid];
     QUICKDouble densityb = devSim_dft.densb[gid];
@@ -251,37 +205,19 @@ __global__ void getxc_kernel()
           val1 = 0ull - val1;
       QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
 
-#ifdef HMEM
-      int phii = phi_st;
-#endif
       for (int i = bfloc_st; i< bfloc_end; ++i) {
 
         int ibas = devSim_dft.basf[i];
         QUICKDouble phi, dphidx, dphidy, dphidz;
 
-#ifdef HMEM
-        int phij = phi_st;
-        phi    = devSim_dft.phi[phii];
-        dphidx = devSim_dft.dphidx[phii];
-        dphidy = devSim_dft.dphidy[phii];
-        dphidz = devSim_dft.dphidz[phii];
-#else
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-#endif
         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
           for (int j = bfloc_st; j < bfloc_end; j++) {
 
             int jbas = devSim_dft.basf[j];
             QUICKDouble phi2, dphidx2, dphidy2, dphidz2;           
 
-#ifdef HMEM
-            phi2    = devSim_dft.phi[phij];
-            dphidx2 = devSim_dft.dphidx[phij];
-            dphidy2 = devSim_dft.dphidy[phij];
-            dphidz2 = devSim_dft.dphidz[phij];
-#else
             pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
-#endif
             QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
             + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
 
@@ -289,31 +225,15 @@ __global__ void getxc_kernel()
             if ( _tmp * weight < (QUICKDouble)0.0)
                    val1 = 0ull - val1;
             QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
-#ifdef HMEM
-            ++phij;
-#endif
           }
         }
-#ifdef HMEM 
-        ++phii;
-#endif
       }
     }
   }
     
 }
 
-//-----------------------------------------------
-// Calculate the density and gradients of density at
-// each grid point. Huge memory (hmem) version will 
-// use precomputed basis function values and gradients
-// while the other will compute them. 
-//-----------------------------------------------
-#ifdef HMEM
-__global__ void get_xcgrad_hmem_kernel()
-#else
 __global__ void get_xcgrad_kernel()
-#endif
 {
 
   //declare smem grad vector
@@ -335,9 +255,6 @@ __global__ void get_xcgrad_kernel()
     int bfloc_st  = devSim_dft.basf_locator[bin_id];
     int bfloc_end = devSim_dft.basf_locator[bin_id+1];
 
-#ifdef HMEM
-    int phi_st = devSim_dft.phi_loc[gid];
-#endif
 
     QUICKDouble gridx = devSim_dft.gridx[gid];
     QUICKDouble gridy = devSim_dft.gridy[gid];
@@ -433,23 +350,10 @@ __global__ void get_xcgrad_kernel()
       }
       devSim_dft.exc[gid] = _tmp;
 
-#ifdef HMEM
-      int phii = phi_st;
-#endif
-
       for (int i = bfloc_st; i< bfloc_end; i++) {
         int ibas = devSim_dft.basf[i];
         QUICKDouble phi, dphidx, dphidy, dphidz;
-
-#ifdef HMEM
-        int phij = phi_st;
-        phi    = devSim_dft.phi[phii];
-        dphidx = devSim_dft.dphidx[phii];
-        dphidy = devSim_dft.dphidy[phii];
-        dphidz = devSim_dft.dphidz[phii];
-#else
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-#endif
 
         if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
 
@@ -464,14 +368,7 @@ __global__ void get_xcgrad_kernel()
             int jbas = devSim_dft.basf[j];
             QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
 
-#ifdef HMEM
-            phi2    = devSim_dft.phi[phij];
-            dphidx2 = devSim_dft.dphidx[phij];
-            dphidy2 = devSim_dft.dphidy[phij];
-            dphidz2 = devSim_dft.dphidz[phij];
-#else
             pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
-#endif
 
             QUICKDouble denseij = (QUICKDouble) LOC2(devSim_dft.dense, ibas, jbas, devSim_dft.nbasis, devSim_dft.nbasis);
 
@@ -493,14 +390,8 @@ __global__ void get_xcgrad_kernel()
             GRADADD(smemGrad[Istart], Gradx);
             GRADADD(smemGrad[Istart+1], Grady);
             GRADADD(smemGrad[Istart+2], Gradz);
-#ifdef HMEM
-            ++phij;
-#endif
           }
         }
-#ifdef HMEM
-        ++phii;
-#endif
       }
     }
     //Set weights for sswder calculation

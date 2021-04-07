@@ -7,9 +7,6 @@
 
 static __constant__ gpu_simulation_type devSim_dft;
 
-#define HMEM
-#include "gpu_getxc.h"
-#undef HMEM
 #include "gpu_getxc.h"
 
 /*
@@ -94,23 +91,11 @@ void getxc(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-    if(gpu->gpu_sim.prePtevl == true){
-
-        QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-    
-	cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((getxc_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-    }else{
-
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
 
         QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-    }
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -137,23 +122,11 @@ void getxc_grad(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-    if(gpu->gpu_sim.prePtevl == true){
-
-        QUICK_SAFE_CALL((get_density_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-        cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((get_xcgrad_hmem_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-    }else{
-
         QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
  
         QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-
-    }
 
     cudaDeviceSynchronize();
 
