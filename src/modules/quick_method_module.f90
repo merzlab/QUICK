@@ -153,6 +153,17 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
+#if defined CUDA || defined CUDA_MPIV
+    interface upload
+        module procedure upload_method
+    end interface upload
+
+    interface delete
+        module procedure delete_method
+    end interface delete
+
+#endif
+
     contains
 #ifdef MPIV
         !------------------------
@@ -919,4 +930,40 @@ endif
         endif
 
         end subroutine set_libxc_func_info
+
+        ! subroutine to upload method and libxc info in to gpu
+#if defined CUDA || defined CUDA_MPIV        
+        subroutine upload_method(self, ierr)
+          
+          implicit none
+          
+          type(quick_method_type), intent(in) :: self
+          integer, intent(inout) :: ierr
+
+          if (self%bCUDA) then
+            if(self%HF)then
+               call gpu_upload_method(0, self%UNRST, 1.0d0)
+            elseif(self%uselibxc)then
+              call gpu_upload_method(3, self%UNRST, self%x_hybrid_coeff)
+              call gpu_upload_libxc(self%nof_functionals, self%functional_id, self%xc_polarization, ierr)
+            elseif(self%BLYP)then
+               call gpu_upload_method(2, self%UNRST, 0.0d0)
+            elseif(self%B3LYP)then
+               call gpu_upload_method(1, self%UNRST, 0.2d0)
+            endif            
+
+          endif
+        end subroutine upload_method
+
+        subroutine delete_method(ierr)
+
+          implicit none
+          integer, intent(inout) :: ierr
+
+          call gpu_delete_libxc(ierr)
+
+        end subroutine delete_method
+
+#endif
+
 end module quick_method_module
