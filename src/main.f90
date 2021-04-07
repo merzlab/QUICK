@@ -169,6 +169,8 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV
+    call upload(quick_method, ierr)
+
     if(.not.quick_method%opt)then
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
                      quick_molspec%molchg, quick_molspec%iAtomType)
@@ -313,6 +315,10 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
+#if defined CUDA || defined CUDA_MPIV
+    call delete(quick_method,ierr)
+#endif
+
 #ifdef CUDA
     if (master) then
        SAFE_CALL(gpu_shutdown(ierr))
