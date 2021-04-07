@@ -761,7 +761,7 @@ endif
             self%nof_functionals = 0
 
 #if defined CUDA || defined CUDA_MPIV
-            self%bCUDA  = .false.
+            self%bCUDA  = .true.
 #endif
 
         end subroutine init_quick_method
@@ -940,27 +940,32 @@ endif
           type(quick_method_type), intent(in) :: self
           integer, intent(inout) :: ierr
 
+          
+
           if (self%bCUDA) then
             if(self%HF)then
-               call gpu_upload_method(0, self%UNRST, 1.0d0)
+              call gpu_upload_method(0, self%UNRST, 1.0d0)
             elseif(self%uselibxc)then
               call gpu_upload_method(3, self%UNRST, self%x_hybrid_coeff)
               call gpu_upload_libxc(self%nof_functionals, self%functional_id, self%xc_polarization, ierr)
             elseif(self%BLYP)then
-               call gpu_upload_method(2, self%UNRST, 0.0d0)
+              call gpu_upload_method(2, self%UNRST, 0.0d0)
             elseif(self%B3LYP)then
-               call gpu_upload_method(1, self%UNRST, 0.2d0)
+              call gpu_upload_method(1, self%UNRST, 0.2d0)
             endif            
 
           endif
         end subroutine upload_method
 
-        subroutine delete_method(ierr)
+        subroutine delete_method(self,ierr)
 
           implicit none
+          type(quick_method_type), intent(in) :: self
           integer, intent(inout) :: ierr
 
-          call gpu_delete_libxc(ierr)
+          if(self%uselibxc) then
+            call gpu_delete_libxc(ierr)
+          endif
 
         end subroutine delete_method
 
