@@ -64,10 +64,6 @@ subroutine getMol(ierr)
    !-----------END MPI/ALL NODES--------------------
 #endif
 
-#if defined CUDA || defined CUDA_MPIV 
-   quick_method%bCUDA = .true.
-#endif
-
    ! At this point we have the positions and identities of the atoms. We also
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
