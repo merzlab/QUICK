@@ -12,6 +12,7 @@
 #include "gpu.h"
 #include <ctime>
 #include <time.h>
+#include "gpu_libxc.h"
 
 #ifdef CUDA_MPIV
 #include "mgpu.h"
@@ -322,6 +323,24 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
     }
 
     gpu -> gpu_sim.is_oshell = *is_oshell;
+
+}
+
+//-----------------------------------------------
+//  upload libxc information
+//-----------------------------------------------
+extern "C" void gpu_upload_libxc_(int* nof_functionals, int* functional_id, int* xc_polarization, int *ierr)
+{
+
+    int nof_aux_functionals = *nof_functionals;
+#ifdef DEBUG
+    fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+#endif
+    //Madu: Initialize gpu libxc and upload information to GPU
+    if(nof_aux_functionals > 0) {
+      gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+      gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
+    }    
 
 }
 
@@ -2324,47 +2343,7 @@ void gpu_delete_sswgrad_vars(){
 
 }
 
-/*Madu Manathunga 06/25/2019
-Integration of libxc GPU version. The included file below contains all libxc methods
-*/
-#include "gpu_libxc.cu"
-
-extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
-
-        /*The following variable will hold the number of auxilary functionals in case of
-        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-        //from input. */
-        int nof_aux_functionals = *nof_functionals;
-
-#ifdef DEBUG
-        fprintf(gpu->debugFile,"Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
-#endif
-        //Madu: Initialize gpu libxc and upload information to GPU
-
-        if(nof_aux_functionals > 0) {
-          gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-          gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
-        }
-
-
-        /*gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
-        gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
-        gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
-        gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
-
-        for (int i = 0; i<gpu->natom * 3; i++) {
-
-          QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
-
-          if ( gpu->grad->_hostData[i] <(QUICKDouble)0.0){
-            valUII = 0ull - valUII;
-          }
-
-          gpu->gradULL ->_hostData[i] = valUII;
-        }
-
-        gpu -> gradULL -> Upload();
-        */
+extern "C" void gpu_xcgrad_(QUICKDouble *grad){
 
         // calculate smem size
         gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
@@ -2395,7 +2374,6 @@ extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functi
         delete gpu -> grad;
         delete gpu -> gradULL;
         delete gpu->gpu_calculated->dense; 
-        libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);    
 }
 
 
@@ -2917,14 +2895,14 @@ extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob)
 }
 
 
-extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
+extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
     /*The following variable will hold the number of auxilary functionals in case of
     //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
     //from input. */
-    int nof_aux_functionals = *nof_functionals;
+/*    int nof_aux_functionals = *nof_functionals;
 
 #ifdef DEBUG
 	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
@@ -2934,6 +2912,7 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
       gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
       gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
     } 
+*/
 
     gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
 
@@ -2968,11 +2947,6 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
 
     upload_sim_to_constant_dft(gpu);
     PRINTDEBUG("BEGIN TO RUN KERNEL")
-
-        //Madu Manathunga 07/01/2019 added libxc variable
-#ifdef DEBUG
-        fprintf(gpu->debugFile,"FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
-#endif
 
     getxc(gpu);
     gpu -> gpu_calculated -> oULL -> Download();
@@ -3034,8 +3008,6 @@ extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* 
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
     delete gpu->gpu_calculated->oULL;
-
-    libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);
 
 }
 
@@ -3503,4 +3475,10 @@ void delete_pteval(bool devOnly){
 */
 }
 
-
+//-----------------------------------------------
+//  delete libxc information
+//-----------------------------------------------
+extern "C" void gpu_delete_libxc_(int *ierr)
+{
+    libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);
+}
