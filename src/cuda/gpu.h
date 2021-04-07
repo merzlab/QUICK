@@ -57,8 +57,7 @@ void delete_pteval(bool devOnly);
 extern "C" void gpu_get2e_(QUICKDouble* o);
 extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob);
 extern "C" void get1e_();
-//extern "C" void gpu_getxc_(int* isg, QUICKDouble* sigrad2, QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
-extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization);
+extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o);
 
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
 extern "C" void gpu_grad_(QUICKDouble* grad);
