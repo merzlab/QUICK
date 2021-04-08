@@ -8,6 +8,9 @@
 static __constant__ gpu_simulation_type devSim_dft;
 
 #include "gpu_getxc.h"
+#define OSHELL
+#include "gpu_getxc.h"
+#undef OSHELL
 
 /*
  upload gpu simulation type to constant memory
@@ -91,11 +94,22 @@ void getxc(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-        QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+    if(gpu -> gpu_sim.is_oshell == true){
+
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((oshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+
+    }else{
+
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+
+        cudaDeviceSynchronize();
+
+        QUICK_SAFE_CALL((cshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+    }
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -122,11 +136,22 @@ void getxc_grad(_gpu_type gpu){
     cudaEventRecord(start, 0);
 #endif
 
-        QUICK_SAFE_CALL((get_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+    if(gpu -> gpu_sim.is_oshell == true){
+
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         cudaDeviceSynchronize();
- 
-        QUICK_SAFE_CALL((get_xcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+
+        QUICK_SAFE_CALL((oshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size >>>()));
+
+    }else{
+
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+
+        cudaDeviceSynchronize();
+
+        QUICK_SAFE_CALL((cshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+    }
 
     cudaDeviceSynchronize();
 
