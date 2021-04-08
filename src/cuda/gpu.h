@@ -54,15 +54,17 @@ void delete_pteval(bool devOnly);
 //                            [gpu_get2e]    ->      [get2e]         -> [get2e_kernel]  ->   [iclass]
 
 // c interface [gpu_get2e]
-extern "C" void gpu_get2e_(QUICKDouble* o);
-extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob);
 extern "C" void get1e_();
-extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o);
-
-extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
-extern "C" void gpu_grad_(QUICKDouble* grad);
-
 extern "C" void get_oneen_grad_();
+extern "C" void gpu_get_cshell_eri_(QUICKDouble* o);
+extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob);
+extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o);
+extern "C" void gpu_get_oshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, QUICKDouble *ob);
+extern "C" void gpu_get_oshell_eri_grad_(QUICKDouble* grad);
+extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad);
+extern "C" void gpu_get_oshell_xcgrad_(QUICKDouble *grad);
+extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad);
+extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName);
 
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
@@ -122,8 +124,6 @@ __global__ void get_pteval_kernel();
 __global__ void get_density_kernel();
 /*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp);*/
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
-__global__ void getxc_kernel();
-__global__ void get_xcgrad_kernel();
 __global__ void get_sswgrad_kernel();
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
