@@ -752,16 +752,6 @@ contains
   !  terms with respect to X times the coefficient found in the energy.
   !  (i.e. the multiplicative constants from the density matrix that 
   !  arise as these are both the exchange and correlation integrals.
-  
-  
-!     do II=1,jshell
-!        do JJ=II,jshell
-!           DNtemp=0.0d0
-!           call cshell_dnscreen(II,JJ,DNtemp)
-!           Cutmatrix(II,JJ)=DNtemp
-!           Cutmatrix(JJ,II)=DNtemp
-!        enddo
-!     enddo
 
 #ifdef OSHELL
       call oshell_density_cutoff
@@ -778,10 +768,10 @@ contains
 
 #ifdef OSHELL
         call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+        call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
+#else
+        call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
 #endif
-  
-        ! next function will compute the eri gradients and add to gradient vector
-        call gpu_grad(quick_qm_struct%gradient)
   
      else
 #endif
@@ -930,7 +920,11 @@ contains
   
         call gpu_reupload_dft_grid()
   
-        call gpu_xcgrad(quick_qm_struct%gradient)
+#ifdef OSHELL
+        call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
+#else
+        call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+#endif
   
         call gpu_delete_dft_grid()
   

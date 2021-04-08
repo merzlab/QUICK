@@ -120,7 +120,7 @@ contains
   !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
-           call gpu_get2e(quick_qm_struct%o)  
+           call gpu_get_cshell_eri(quick_qm_struct%o)  
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -301,7 +301,7 @@ contains
   
      if(quick_method%bCUDA) then
   
-        call gpu_getxc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
+        call gpu_get_cshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
   
      endif
 #else

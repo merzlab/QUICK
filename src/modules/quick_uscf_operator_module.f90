@@ -331,7 +331,8 @@ contains
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
-        call gpu_getxc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
+        call gpu_get_oshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
+        quick_qm_struct%ob)
      endif
 #else
   
