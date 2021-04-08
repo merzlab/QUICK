@@ -47,11 +47,11 @@ __device__ void gpu_work_lda_c(gpu_libxc_info* glinfo, const double d_rhoa, cons
 	if(r.order > 0){
 		drs = -r.rs/(d_w->xc_dim*dens);
 
-		*d_vrho = r.f + dens*r.dfdrs*drs;
-		/*if(p->nspin == XC_POLARIZED){
-			vrho[1] = vrho[0] - (r.z + 1.0)*r.dfdz;
-			vrho[0] = vrho[0] - (r.z - 1.0)*r.dfdz;
-		}*/
+		d_vrho[0] = r.f + dens*r.dfdrs*drs;
+		if(r.nspin == XC_POLARIZED){
+			d_vrho[1] = d_vrho[0] - (r.z + 1.0)*r.dfdz;
+			d_vrho[0] = d_vrho[0] - (r.z - 1.0)*r.dfdz;
+		}
 	}
 	
 
