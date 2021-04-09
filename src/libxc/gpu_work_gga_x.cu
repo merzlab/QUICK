@@ -11,7 +11,14 @@ typedef void (*ggaxk_ptr)(const void *p,  xc_gga_work_x_t *r);
 
 __device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_rhob, double *d_sigma, double *d_zk, double *d_vrho, double *d_vsigma, int nspin){
 
-        double d_rho = d_rhoa+d_rhob;
+        double d_rho[2]; 
+        if(nspin == XC_UNPOLARIZED){
+          d_rho[0] = d_rhoa+d_rhob;
+          d_rho[1] = 0.0;
+        }else{
+          d_rho[0] = d_rhoa;
+          d_rho[1] = d_rhob;          
+        }
 
 	gpu_libxc_info* d_glinfo;
 	d_glinfo = (gpu_libxc_info*)glinfo;
@@ -29,7 +36,7 @@ __device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_r
           is2 = 2*is;
           
           double gdm = max(sqrt(d_sigma[is2])/d_w->sfact, d_w->dens_threshold);
-          double ds = d_rho/d_w->sfact;
+          double ds = d_rho[is]/d_w->sfact;
           double rhoLDA = pow(ds, d_w->alpha);
           d_rg.x  = gdm/pow(ds, d_w->beta);
           
@@ -45,7 +52,7 @@ __device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_r
         
         }
 
-        *d_zk = zk/d_rho;
+        *d_zk = zk/(d_rho[0]+d_rho[1]);
 
 /*	double gdm = max(sqrt(d_sigma)/d_w->sfact, d_w->dens_threshold);
 	double ds = d_rho/d_w->sfact;
