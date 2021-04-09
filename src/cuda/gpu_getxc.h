@@ -251,6 +251,7 @@ __global__ void cshell_getxc_kernel()
                      break;
 
              case GPU_WORK_GGA_X:
+                     
                      gpu_work_gga_x(tmp_glinfo, d_rhoa, d_rhob, (QUICKDouble*)&d_sigma, &tmp_d_zk, (QUICKDouble*)&tmp_d_vrho, (QUICKDouble*)&tmp_d_vsigma, NSPIN);
                      break;
 
@@ -266,6 +267,7 @@ __global__ void cshell_getxc_kernel()
            d_vsigma[1] += (tmp_d_vsigma[1] * tmp_glinfo->mix_coeff);
            d_vsigma[2] += (tmp_d_vsigma[2] * tmp_glinfo->mix_coeff);
 #endif
+
          }
 
          _tmp = ((QUICKDouble) (d_zk * (d_rhoa + d_rhob)) * weight);
@@ -320,12 +322,12 @@ __global__ void cshell_getxc_kernel()
             QUICKDouble phi2, dphidx2, dphidy2, dphidz2;           
 
             pteval_new(gridx, gridy, gridz, &phi2, &dphidx2, &dphidy2, &dphidz2, devSim_dft.primf, devSim_dft.primf_locator, jbas, j);
+
             QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
             + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
 
             QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
-            if ( _tmp * weight < (QUICKDouble)0.0)
-                   val1 = 0ull - val1;
+            if ( _tmp * weight < (QUICKDouble)0.0) val1 = 0ull - val1;
             QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
 
 #ifdef OSHELL
@@ -333,7 +335,7 @@ __global__ void cshell_getxc_kernel()
               + ydotb * (phi*dphidy2 + phi2*dphidy) + zdotb * (phi*dphidz2 + phi2*dphidz))*weight;
 
             QUICKULL val2 = (QUICKULL) (fabs( _tmpb * OSCALE) + (QUICKDouble)0.5);
-              val2 = 0ull - val2;
+              if ( _tmpb * weight < (QUICKDouble)0.0) val2 = 0ull - val2;
             QUICKADD(LOC2(devSim_dft.obULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val2);
 #endif
           }
