@@ -11,9 +11,9 @@ void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){
 
 	dryrun = 1;
 
-	double rho[1] = {0.0};
-	double sigma[1] = {0.0};
-	double exc[1], vrho[1], vsigma[1];
+	double rho[2] = {0.0, 0.0};
+	double sigma[3] = {0.0, 0.0, 0.0};
+	double exc[1], vrho[2], vsigma[3];
 
 	switch(p->info->family){
 	case(XC_FAMILY_LDA):
