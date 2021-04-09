@@ -30,7 +30,7 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 
 	if(*num_of_funcs == 1){
 		if(*xc_polarization > 0){
-			//xc_func_init(&func, arr_func_id[0], XC_POLARIZED);
+			xc_func_init(&hyb_func, arr_func_id[0], XC_POLARIZED);
 		}else{
 			xc_func_init(&hyb_func, arr_func_id[0], XC_UNPOLARIZED);
 		}
@@ -93,10 +93,10 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 		xc_func_type func;
 
                 if(*xc_polarization > 0){
-                        //xc_func_init(&func, arr_func_id[i], XC_POLARIZED);
+                        xc_func_init(&func, arr_func_id_[i], XC_POLARIZED);
                 }else{
                         xc_func_init(&func, arr_func_id_[i], XC_UNPOLARIZED);
-
+                }
 		//Madu: Put this inside a new libxc param init method
 		gpu_libxc_info* unkptr;
 
@@ -135,7 +135,6 @@ gpu_libxc_info** init_gpu_libxc(int * num_of_funcs, int * arr_func_id, int* xc_p
 
                 h_glinfo_array[i] = unkptr;
 	        xc_func_end(&func);
-                }
         }
 
         return h_glinfo_array;
