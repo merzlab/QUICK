@@ -366,12 +366,23 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                   ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
                   ! can be equal.
 #ifdef OSHELL
-                  DENSEKI=quick_qm_struct%dense(KKK,III)+quick_qm_struct%denseb(KKK,III)
-                  DENSEKJ=quick_qm_struct%dense(KKK,JJJ)+quick_qm_struct%denseb(KKK,JJJ)
-                  DENSELJ=quick_qm_struct%dense(LLL,JJJ)+quick_qm_struct%denseb(LLL,JJJ)
-                  DENSELI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+
                   DENSELK=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
                   DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                  DENSEKIA=quick_qm_struct%dense(KKK,III)
+                  DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+                  DENSELJA=quick_qm_struct%dense(LLL,JJJ)
+                  DENSELIA=quick_qm_struct%dense(LLL,III)
+
+                  DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                  DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+                  DENSELJB=quick_qm_struct%denseb(LLL,JJJ)
+                  DENSELIB=quick_qm_struct%denseb(LLL,III)
+
+                  constant = (4.d0*DENSEJI*DENSELK- 2.0d0*quick_method%x_hybrid_coeff*DENSEKIA*DENSELJA &
+                        -2.0d0*quick_method%x_hybrid_coeff*DENSELIA*DENSEKJA-2.0d0*quick_method%x_hybrid_coeff*DENSEKIB*DENSELJB &
+                        -2.0d0*quick_method%x_hybrid_coeff*DENSELIB*DENSEKJB)
 #else
                   DENSEKI=quick_qm_struct%dense(KKK,III)
                   DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
@@ -379,11 +390,11 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                   DENSELI=quick_qm_struct%dense(LLL,III)
                   DENSELK=quick_qm_struct%dense(LLL,KKK)
                   DENSEJI=quick_qm_struct%dense(JJJ,III)
-#endif
-
 
                   constant = (4.d0*DENSEJI*DENSELK-quick_method%x_hybrid_coeff*DENSEKI*DENSELJ &
                         -quick_method%x_hybrid_coeff*DENSELI*DENSEKJ)
+#endif
+
                   Agrad1=Agrad1+Yaa(1)*constant
                   Agrad2=Agrad2+Yaa(2)*constant
                   Agrad3=Agrad3+Yaa(3)*constant
@@ -415,12 +426,25 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         ! can be equal.
 
 #ifdef OSHELL
-                        DENSEKI=quick_qm_struct%dense(KKK,III)+quick_qm_struct%denseb(KKK,III)
-                        DENSEKJ=quick_qm_struct%dense(KKK,JJJ)+quick_qm_struct%denseb(KKK,JJJ)
-                        DENSELJ=quick_qm_struct%dense(LLL,JJJ)+quick_qm_struct%denseb(LLL,JJJ)
-                        DENSELI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+
                         DENSELK=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
                         DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                        DENSEKIA=quick_qm_struct%dense(KKK,III)
+                        DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+                        DENSELJA=quick_qm_struct%dense(LLL,JJJ)
+                        DENSELIA=quick_qm_struct%dense(LLL,III)
+
+                        DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                        DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+                        DENSELJB=quick_qm_struct%denseb(LLL,JJJ)
+                        DENSELIB=quick_qm_struct%denseb(LLL,III)
+
+                        constant = (4.d0*DENSEJI*DENSELK- 2.0d0*quick_method%x_hybrid_coeff*DENSEKIA*DENSELJA &
+                              -2.0d0*quick_method%x_hybrid_coeff*DENSELIA*DENSEKJA &
+                              -2.0d0*quick_method%x_hybrid_coeff*DENSEKIB*DENSELJB &
+                              -2.0d0*quick_method%x_hybrid_coeff*DENSELIB*DENSEKJB)
+
 #else
                         DENSEKI=quick_qm_struct%dense(KKK,III)
                         DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
@@ -428,12 +452,10 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         DENSELI=quick_qm_struct%dense(LLL,III)
                         DENSELK=quick_qm_struct%dense(LLL,KKK)
                         DENSEJI=quick_qm_struct%dense(JJJ,III)
-#endif
 
                         constant = (4.d0*DENSEJI*DENSELK-quick_method%x_hybrid_coeff*DENSEKI*DENSELJ &
-
                               -quick_method%x_hybrid_coeff*DENSELI*DENSEKJ)
-
+#endif
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
                         Agrad3=Agrad3+Yaa(3)*constant
@@ -450,17 +472,21 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         ! Find  all the (ii|jj) integrals.
 
 #ifdef OSHELL
-                        DENSEJI=quick_qm_struct%dense(KKK,III)+quick_qm_struct%denseb(KKK,III)
                         DENSEJJ=quick_qm_struct%dense(KKK,KKK)+quick_qm_struct%denseb(KKK,KKK)
                         DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                        DENSEJIA=quick_qm_struct%dense(KKK,III)
+                        DENSEJIB=quick_qm_struct%denseb(KKK,III)
+
+                        constant = (DENSEII*DENSEJJ-quick_method%x_hybrid_coeff*DENSEJIA*DENSEJIA &
+                                    -quick_method%x_hybrid_coeff*DENSEJIB*DENSEJIB)
 #else
                         DENSEJI=quick_qm_struct%dense(KKK,III)
                         DENSEJJ=quick_qm_struct%dense(KKK,KKK)
                         DENSEII=quick_qm_struct%dense(III,III)
-#endif
-
 
                         constant = (DENSEII*DENSEJJ-.5d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI)
+#endif
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -478,13 +504,21 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 #ifdef OSHELL
                         DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
                         DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)+quick_qm_struct%denseb(JJJ,JJJ)
+
+                        DENSEJIA=quick_qm_struct%dense(JJJ,III)
+                        DENSEJJA=quick_qm_struct%dense(JJJ,JJJ)
+
+                        DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+                        DENSEJJB=quick_qm_struct%denseb(JJJ,JJJ)
+
+                        constant = 2.0d0*DENSEJJ*DENSEJI-2.0d0*quick_method%x_hybrid_coeff*DENSEJJA*DENSEJIA &
+                                   -2.0d0*quick_method%x_hybrid_coeff*DENSEJJB*DENSEJIB
 #else
                         DENSEJI=quick_qm_struct%dense(JJJ,III)
                         DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
-#endif
-
 
                         constant = 2.0d0*DENSEJJ*DENSEJI-quick_method%x_hybrid_coeff*DENSEJJ*DENSEJI
+#endif
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -506,18 +540,25 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         ! Find all the (ij|kk) integrals where j>i, k>j.
 
 #ifdef OSHELL
-                        DENSEKI=quick_qm_struct%dense(KKK,III)+quick_qm_struct%denseb(KKK,III)
-                        DENSEKJ=quick_qm_struct%dense(KKK,JJJ)+quick_qm_struct%denseb(KKK,JJJ)
                         DENSEKK=quick_qm_struct%dense(KKK,KKK)+quick_qm_struct%denseb(KKK,KKK)
                         DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+
+                        DENSEKIA=quick_qm_struct%dense(KKK,III)
+                        DENSEKJA=quick_qm_struct%dense(KKK,JJJ)
+
+                        DENSEKIB=quick_qm_struct%denseb(KKK,III)
+                        DENSEKJB=quick_qm_struct%denseb(KKK,JJJ)
+
+                        constant=(2.d0*DENSEJI*DENSEKK-2.0d0*quick_method%x_hybrid_coeff*DENSEKIA*DENSEKJA &
+                                  -2.0d0*quick_method%x_hybrid_coeff*DENSEKIB*DENSEKJB)
 #else
                         DENSEKI=quick_qm_struct%dense(KKK,III)
                         DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                         DENSEKK=quick_qm_struct%dense(KKK,KKK)
                         DENSEJI=quick_qm_struct%dense(JJJ,III)
-#endif
 
-                       constant=(2.d0*DENSEJI*DENSEKK-quick_method%x_hybrid_coeff*DENSEKI*DENSEKJ)
+                        constant=(2.d0*DENSEJI*DENSEKK-quick_method%x_hybrid_coeff*DENSEKI*DENSEKJ)
+#endif
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -533,18 +574,26 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                         elseif(III.eq.JJJ.and.KKK.lt.LLL)then
                         ! Find all the (ii|jk) integrals where j>i, k>j.
 #ifdef OSHELL
-                        DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
-                        DENSEJI=quick_qm_struct%dense(KKK,III)+quick_qm_struct%denseb(KKK,III)
-                        DENSEKI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+
                         DENSEKJ=quick_qm_struct%dense(LLL,KKK)+quick_qm_struct%denseb(LLL,KKK)
+                        DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                        DENSEJIA=quick_qm_struct%dense(KKK,III)
+                        DENSEKIA=quick_qm_struct%dense(LLL,III)
+
+                        DENSEJIB=quick_qm_struct%denseb(KKK,III)
+                        DENSEKIB=quick_qm_struct%denseb(LLL,III)
+
+                        constant = (2.d0*DENSEKJ*DENSEII-2.0d0*quick_method%x_hybrid_coeff*DENSEJIA*DENSEKIA &
+                                   -2.0d0*quick_method%x_hybrid_coeff*DENSEJIB*DENSEKIB)
 #else
                         DENSEII=quick_qm_struct%dense(III,III)
                         DENSEJI=quick_qm_struct%dense(KKK,III)
                         DENSEKI=quick_qm_struct%dense(LLL,III)
                         DENSEKJ=quick_qm_struct%dense(LLL,KKK)
-#endif
 
                         constant = (2.d0*DENSEKJ*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI)
+#endif
 
                         Agrad1=Agrad1+Yaa(1)*constant
                         Agrad2=Agrad2+Yaa(2)*constant
@@ -579,12 +628,23 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 #ifdef OSHELL
                            DENSEJI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
                            DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                           DENSEJIA=quick_qm_struct%dense(LLL,III)
+                           DENSEIIA=quick_qm_struct%dense(III,III)
+
+                           DENSEJIB=quick_qm_struct%denseb(LLL,III)
+                           DENSEIIB=quick_qm_struct%denseb(III,III)
+
+                           constant = 2.0d0*DENSEJI*DENSEII-2.0d0*quick_method%x_hybrid_coeff*DENSEJIA*DENSEIIA &
+                                      -2.0d0*quick_method%x_hybrid_coeff*DENSEJIB*DENSEIIB
+
 #else
                            DENSEJI=quick_qm_struct%dense(LLL,III)
                            DENSEII=quick_qm_struct%dense(III,III)
-#endif
 
                            constant = 2.0d0*DENSEJI*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEII
+#endif
+
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
@@ -601,16 +661,28 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 
 #ifdef OSHELL
                            DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
-                           DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)+quick_qm_struct%denseb(JJJ,JJJ)
-                           DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
+                           DENSEJIA=quick_qm_struct%dense(JJJ,III)
+                           DENSEJJA=quick_qm_struct%dense(JJJ,JJJ)
+                           DENSEIIA=quick_qm_struct%dense(III,III)
+
+                           DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+                           DENSEJJB=quick_qm_struct%denseb(JJJ,JJJ)
+                           DENSEIIB=quick_qm_struct%denseb(III,III)
+
+                           constant =(2.0d0*DENSEJI*DENSEJI-quick_method%x_hybrid_coeff*DENSEJIA*DENSEJIA &
+                           -quick_method%x_hybrid_coeff*DENSEJJA*DENSEIIA &
+                           -quick_method%x_hybrid_coeff*DENSEJIB*DENSEJIB &
+                           -quick_method%x_hybrid_coeff*DENSEJJB*DENSEIIB)
+
 #else
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
                            DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
                            DENSEII=quick_qm_struct%dense(III,III)
-#endif
 
-                           constant =(2.0d0*DENSEJI*DENSEJI-0.5d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI &
+                           constant =(2.0d0*DENSEJI*DENSEJI-0.50d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI &
                            -0.50d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
+#endif
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
@@ -625,19 +697,34 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                            elseif(III.eq.KKK.and.III.lt.JJJ.and.JJJ.lt.LLL)then
                            ! Find all the (ij|ik) integrals where j>i,k>j
 #ifdef OSHELL
-                           DENSEKI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
-                           DENSEKJ=quick_qm_struct%dense(LLL,JJJ)+quick_qm_struct%denseb(LLL,JJJ)
-                           DENSEII=quick_qm_struct%dense(III,III)+quick_qm_struct%denseb(III,III)
+
                            DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+                           DENSEKI=quick_qm_struct%dense(LLL,III)+quick_qm_struct%denseb(LLL,III)
+
+                           DENSEKIA=quick_qm_struct%dense(LLL,III)
+                           DENSEKJA=quick_qm_struct%dense(LLL,JJJ)
+                           DENSEIIA=quick_qm_struct%dense(III,III)
+                           DENSEJIA=quick_qm_struct%dense(JJJ,III)
+
+                           DENSEKIB=quick_qm_struct%denseb(LLL,III)
+                           DENSEKJB=quick_qm_struct%denseb(LLL,JJJ)
+                           DENSEIIB=quick_qm_struct%denseb(III,III)
+                           DENSEJIB=quick_qm_struct%denseb(JJJ,III)
+
+                           constant = (4.0d0*DENSEJI*DENSEKI-2.0d0*quick_method%x_hybrid_coeff*DENSEJIA*DENSEKIA &
+                           -2.0d0*quick_method%x_hybrid_coeff*DENSEKJA*DENSEIIA &
+                           -2.0d0*quick_method%x_hybrid_coeff*DENSEJIB*DENSEKIB &
+                           -2.0d0*quick_method%x_hybrid_coeff*DENSEKJB*DENSEIIB )
+
 #else
                            DENSEKI=quick_qm_struct%dense(LLL,III)
                            DENSEKJ=quick_qm_struct%dense(LLL,JJJ)
                            DENSEII=quick_qm_struct%dense(III,III)
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
-#endif
 
                            constant = (4.0d0*DENSEJI*DENSEKI-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI &
                            -quick_method%x_hybrid_coeff*DENSEKJ*DENSEII)
+#endif
 
                            Agrad1=Agrad1+Yaa(1)*constant
                            Agrad2=Agrad2+Yaa(2)*constant
