@@ -146,7 +146,7 @@ contains
      if (quick_method%ecp) call ecpint
   
      ! if not direct SCF, generate 2e int file
-     if (quick_method%nodirect) call aoint
+     ! if (quick_method%nodirect) call aoint
   
      if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
   !   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf

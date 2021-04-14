@@ -102,15 +102,15 @@ contains
      endif
 #endif
   
-     if (quick_method%nodirect) then
-#ifdef CUDA
-        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
-#else
-#ifndef MPI
-        call addInt
-#endif
-#endif
-     else
+!     if (quick_method%nodirect) then
+!#ifdef CUDA
+!        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
+!#else
+!#ifndef MPI
+!        call addInt
+!#endif
+!#endif
+!     else
   !-----------------------------------------------------------------
   ! Step 2. evaluate 2e integrals
   !-----------------------------------------------------------------
@@ -148,7 +148,7 @@ contains
 #if defined CUDA || defined CUDA_MPIV 
         endif                             
 #endif
-     endif
+ !    endif
   
   !  Remember the operator is symmetric
      call copySym(quick_qm_struct%o,nbasis)
