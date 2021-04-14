@@ -503,12 +503,22 @@ __device__ __forceinline__ void iclass_grad
                         QUICKDouble constant = 0.0 ;
                         
 #ifdef OSHELL
-                        QUICKDouble DENSEKI = (QUICKDouble) (LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis));
-                        QUICKDouble DENSEKJ = (QUICKDouble) (LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis));
                         QUICKDouble DENSELJ = (QUICKDouble) (LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis));
                         QUICKDouble DENSELI = (QUICKDouble) (LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis));
                         QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, KKK-1, nbasis, nbasis));
                         QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis));
+
+                        QUICKDouble DENSEKIA = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
+                        QUICKDouble DENSEKJA = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
+                        QUICKDouble DENSELJA = (QUICKDouble) LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis);
+                        QUICKDouble DENSELIA = (QUICKDouble) LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis);
+                        QUICKDouble DENSEJIA = (QUICKDouble) LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis);
+
+                        QUICKDouble DENSEKIB = (QUICKDouble) LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis);
+                        QUICKDouble DENSEKJB = (QUICKDouble) LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis);
+                        QUICKDouble DENSELJB = (QUICKDouble) LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis);
+                        QUICKDouble DENSELIB = (QUICKDouble) LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis);
+                        QUICKDouble DENSEJIB = (QUICKDouble) LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis);
 #else
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
                         QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
@@ -520,17 +530,38 @@ __device__ __forceinline__ void iclass_grad
                         
                         if (II < JJ && II < KK && KK < LL ||
                             ( III < KKK && III < JJJ && KKK < LLL)) {
+#ifdef OSHELL
+                            constant = ( 4.0 * DENSEJI * DENSELK - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSELJA - 2.0 * devSim.hyb_coeff * DENSELIA * DENSEKJA
+                                       - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSELJB - 2.0 * devSim.hyb_coeff * DENSELIB * DENSEKJB);
+#else
                             constant = ( 4.0 * DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSELJ - devSim.hyb_coeff * DENSELI * DENSEKJ);
+#endif
                         }else{
                             if (III < KKK) {
                                 if( III == JJJ && KKK == LLL){
+#ifdef OSHELL
+                                    constant = (DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKIA * DENSEKIA - devSim.hyb_coeff * DENSEKIB * DENSEKIB);
+#else
                                     constant = (DENSEJI * DENSELK - 0.5 * devSim.hyb_coeff * DENSEKI * DENSEKI);
+#endif
                                 }else if (JJJ == KKK && JJJ == LLL){
+#ifdef OSHELL
+                                    constant = 2.0 * DENSELJ * DENSEJI - 2.0 * devSim.hyb_coeff * DENSELJA * DENSEJIA - 2.0 * devSim.hyb_coeff * DENSELJB * DENSEJIB;
+#else
                                     constant = 2.0 * DENSELJ * DENSEJI - devSim.hyb_coeff * DENSELJ * DENSEJI;
+#endif
                                 }else if (KKK == LLL && III < JJJ && JJJ != KKK){
+#ifdef OSHELL
+                                    constant = (2.0* DENSEJI * DENSELK - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSEKJA - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSEKJB);
+#else
                                     constant = (2.0* DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSEKJ);
+#endif
                                 }else if ( III == JJJ && KKK < LLL){
+#ifdef OSHELL
+                                    constant = (2.0* DENSELK * DENSEJI - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSELIA - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSELIB);
+#else
                                     constant = (2.0* DENSELK * DENSEJI - devSim.hyb_coeff * DENSEKI * DENSELI);
+#endif
                                 }
                             }
                             else{
@@ -538,14 +569,25 @@ __device__ __forceinline__ void iclass_grad
                                     if (III == JJJ && III == KKK && III == LLL) {
                                         // Do nothing
                                     }else if (III==JJJ && III==KKK && III < LLL){
-                                        //constant = DENSELI * DENSEJI;
+#ifdef OSHELL
+                                        constant = 2.0 * DENSELI * DENSEJI - 2.0 * devSim.hyb_coeff * DENSELIA * DENSEJIA - 2.0 * devSim.hyb_coeff * DENSELIB * DENSEJIB;
+#else
 					constant = 2.0 * DENSELI * DENSEJI - devSim.hyb_coeff * DENSELI * DENSEJI;
+#endif
                                     }else if (III==KKK && JJJ==LLL && III < JJJ){
-                                        //constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+#ifdef OSHELL
+                                        constant = (2.0 * DENSEJI * DENSEJI - devSim.hyb_coeff * DENSEJIA * DENSEJIA - devSim.hyb_coeff * DENSELJA * DENSEKIA
+                                                   - devSim.hyb_coeff * DENSEJIB * DENSEJIB - devSim.hyb_coeff * DENSELJB * DENSEKIB);
+#else
 					constant = (2.0 * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSELJ * DENSEKI);
+#endif
                                     }else if (III== KKK && III < JJJ && JJJ < LLL){
-                                        //constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+#ifdef OSHELL
+                                        constant = (4.0 * DENSEJI * DENSELI - 2.0 * devSim.hyb_coeff * DENSEJIA * DENSELIA - 2.0 * devSim.hyb_coeff * DENSELJA * DENSEKIA
+                                                   - 2.0 * devSim.hyb_coeff * DENSEJIB * DENSELIB - 2.0 * devSim.hyb_coeff * DENSELJB * DENSEKIB);
+#else
 					constant = (4.0 * DENSEJI * DENSELI - devSim.hyb_coeff * DENSEJI * DENSELI - devSim.hyb_coeff * DENSELJ * DENSEKI);
+#endif
                                     }
                                 }
                             }
@@ -911,12 +953,23 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                     QUICKDouble constant = 0.0 ;
                                     
 #ifdef OSHELL
-                                    QUICKDouble DENSEKI = (QUICKDouble) (LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis));
-                                    QUICKDouble DENSEKJ = (QUICKDouble) (LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis));
                                     QUICKDouble DENSELJ = (QUICKDouble) (LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis));
                                     QUICKDouble DENSELI = (QUICKDouble) (LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis));
                                     QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL-1, KKK-1, nbasis, nbasis)+LOC2(devSim.denseb, LLL-1, KKK-1, nbasis, nbasis));
                                     QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis)+LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis));
+
+                                    QUICKDouble DENSEKIA = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
+                                    QUICKDouble DENSEKJA = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
+                                    QUICKDouble DENSELJA = (QUICKDouble) LOC2(devSim.dense, LLL-1, JJJ-1, nbasis, nbasis);
+                                    QUICKDouble DENSELIA = (QUICKDouble) LOC2(devSim.dense, LLL-1, III-1, nbasis, nbasis);
+                                    QUICKDouble DENSEJIA = (QUICKDouble) LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis);
+
+                                    QUICKDouble DENSEKIB = (QUICKDouble) LOC2(devSim.denseb, KKK-1, III-1, nbasis, nbasis);
+                                    QUICKDouble DENSEKJB = (QUICKDouble) LOC2(devSim.denseb, KKK-1, JJJ-1, nbasis, nbasis);
+                                    QUICKDouble DENSELJB = (QUICKDouble) LOC2(devSim.denseb, LLL-1, JJJ-1, nbasis, nbasis);
+                                    QUICKDouble DENSELIB = (QUICKDouble) LOC2(devSim.denseb, LLL-1, III-1, nbasis, nbasis);
+                                    QUICKDouble DENSEJIB = (QUICKDouble) LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis);
+
 #else
                                     QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK-1, III-1, nbasis, nbasis);
                                     QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK-1, JJJ-1, nbasis, nbasis);
@@ -929,21 +982,43 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                     if (II < JJ && II < KK && KK < LL ||
                                         ( III < KKK && III < JJJ && KKK < LLL)) {
                                         //constant = ( 4.0 * DENSEJI * DENSELK - DENSEKI * DENSELJ - DENSELI * DENSEKJ);
-					constant = ( 4.0 * DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSELJ - devSim.hyb_coeff * DENSELI * DENSEKJ);
+#ifdef OSHELL
+					constant = ( 4.0 * DENSEJI * DENSELK - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSELJA - 2.0 * devSim.hyb_coeff * DENSELIA * DENSEKJA
+                                                   - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSELJB - 2.0 * devSim.hyb_coeff * DENSELIB * DENSEKJB);
+#else
+                                        constant = ( 4.0 * DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSELJ - devSim.hyb_coeff * DENSELI * DENSEKJ);
+#endif
                                     }else{
                                         if (III < KKK) {
                                             if( III == JJJ && KKK == LLL){
                                                 //constant = (DENSEJI * DENSELK - 0.5 * DENSEKI * DENSEKI);
+#ifdef OSHELL
+                                                constant = (DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKIA * DENSEKIA - devSim.hyb_coeff * DENSEKIB * DENSEKIB);
+#else
                                                 constant = (DENSEJI * DENSELK - 0.5 * devSim.hyb_coeff * DENSEKI * DENSEKI);
+#endif
+
                                             }else if (JJJ == KKK && JJJ == LLL){
                                                 //constant = DENSELJ * DENSEJI;
+#ifdef OSHELL
+                                                constant = 2.0 * DENSELJ * DENSEJI - 2.0 * devSim.hyb_coeff * DENSELJA * DENSEJIA - 2.0 * devSim.hyb_coeff * DENSELJB * DENSEJIB;
+#else
                                                 constant = 2.0 * DENSELJ * DENSEJI - devSim.hyb_coeff * DENSELJ * DENSEJI;
+#endif
                                             }else if (KKK == LLL && III < JJJ && JJJ != KKK){
                                                 //constant = (2.0* DENSEJI * DENSELK - DENSEKI * DENSEKJ);
+#ifdef OSHELL
+                                                constant = (2.0* DENSEJI * DENSELK - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSEKJA - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSEKJB);
+#else
                                                 constant = (2.0* DENSEJI * DENSELK - devSim.hyb_coeff * DENSEKI * DENSEKJ);
+#endif
                                             }else if ( III == JJJ && KKK < LLL){
                                                 //constant = (2.0* DENSELK * DENSEJI - DENSEKI * DENSELI);
+#ifdef OSHELL
+                                                constant = (2.0* DENSELK * DENSEJI - 2.0 * devSim.hyb_coeff * DENSEKIA * DENSELIA - 2.0 * devSim.hyb_coeff * DENSEKIB * DENSELIB);
+#else
                                                 constant = (2.0* DENSELK * DENSEJI - devSim.hyb_coeff * DENSEKI * DENSELI);
+#endif
                                             }
                                         }
                                         else{
@@ -952,14 +1027,28 @@ __device__ __forceinline__ void iclass_grad_spdf8
                                                     // Do nothing
                                                 }else if (III==JJJ && III==KKK && III < LLL){
                                                     //constant = DENSELI * DENSEJI;
+#ifdef OSHELL
+                                                    constant = 2.0 * DENSELI * DENSEJI - 2.0 * devSim.hyb_coeff * DENSELIA * DENSEJIA - 2.0 * devSim.hyb_coeff * DENSELIB * DENSEJIB;
+#else
 						    constant = 2.0 * DENSELI * DENSEJI - devSim.hyb_coeff * DENSELI * DENSEJI;
+#endif
                                                 }else if (III==KKK && JJJ==LLL && III < JJJ){
                                                     //constant = (1.5 * DENSEJI * DENSEJI - 0.5 * DENSELJ * DENSEKI);
+#ifdef OSHELL
+                                                    constant = (2.0 * DENSEJI * DENSEJI - devSim.hyb_coeff * DENSEJIA * DENSEJIA - devSim.hyb_coeff * DENSELJA * DENSEKIA
+                                                               - devSim.hyb_coeff * DENSEJIB * DENSEJIB - devSim.hyb_coeff * DENSELJB * DENSEKIB);
+#else
                                                     constant = (2.0 * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSEJI * DENSEJI - 0.5 * devSim.hyb_coeff * DENSELJ * DENSEKI);
+#endif
 
                                                 }else if (III== KKK && III < JJJ && JJJ < LLL){
                                                     //constant = (3.0 * DENSEJI * DENSELI - DENSELJ * DENSEKI);
+#ifdef OSHELL
+                                                    constant = (4.0 * DENSEJI * DENSELI - 2.0 * devSim.hyb_coeff * DENSEJIA * DENSELIA - 2.0 * devSim.hyb_coeff * DENSELJA * DENSEKIA
+                                                               - 2.0 * devSim.hyb_coeff * DENSEJIB * DENSELIB - 2.0 * devSim.hyb_coeff * DENSELJB * DENSEKIB);
+#else
                                                     constant = (4.0 * DENSEJI * DENSELI - devSim.hyb_coeff * DENSEJI * DENSELI - devSim.hyb_coeff * DENSELJ * DENSEKI);
+#endif
                                                 }
                                             }
                                         }
