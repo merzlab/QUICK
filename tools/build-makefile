@@ -89,7 +89,7 @@ modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(
         $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 	$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_all_module.o
 
-OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o $(objfolder)/fmm.o \
+OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o  \
         $(objfolder)/getMol.o $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o \
         $(objfolder)/ecp.o $(objfolder)/nuclear.o \
         $(objfolder)/uscf.o $(objfolder)/finalize.o $(objfolder)/uhfoperator.o \
