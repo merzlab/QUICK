@@ -10,8 +10,6 @@ subroutine calmp2
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff,gpuMP2WrapperTimeStart, gpuMP2WrapperTimeEnd
-  ! add Y_Matrix here
-  !double precision :: Y_Matrix(nbasis*nbasis, nbasis*nbasis)
   double precision :: gpuMp2cor(1),gpuEmemorysum(1)
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NONZEROCOUNT,gpuNstepmp2(1)
   integer:: gpuNtemp(1)
@@ -24,8 +22,6 @@ subroutine calmp2
     call PrtAct(ioutfile,"Begin MP2 Calculation")
 
     call cpu_time(gpuMP2WrapperTimeStart)
-    !call gpu_mp2_wrapper(quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
-    !        cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,mp2cor)
     call gpu_mp2_wrapper(quick_qm_struct%co,quick_qm_struct%vec,quick_qm_struct%dense,quick_qm_struct%E,&
             cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,gpuMp2cor,&
             gpuEmemorysum, gpuNstepmp2, gpuNtemp)    
@@ -45,10 +41,15 @@ subroutine calmp2
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
+  print *, "calmp2 starts, nfrozencore is ", nfrozencore, "nelec is ", nelec
+  if(.not. quick_method%frzCore)then
+    print *, "Do not use frozen core approximation!"
+    nfrozencore = 0
+  endif
+
   
   call PrtAct(ioutfile,"Begin MP2 Calculation")
-  !cutoffmp2=1.0d-8  ! cutoff criteria
-  cutoffmp2=1.0d-7
+  cutoffmp2=1.0d-8  ! cutoff criteria
   quick_method%primLimit=1.0d-8
   quick_qm_struct%EMP2=0.0d0
 
@@ -59,12 +60,10 @@ subroutine calmp2
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
 
-  print *, "On Serial side, quick_method%integralCutoff is", quick_method%integralCutoff
-
   ! actually nstep is step length
   ! set max mem req for Q3 to 15GB
   reqmemmax = 1.5d0
-  nstep=min(int(reqmemmax/ememorysum),Nelec/2)
+  nstep=min(int(reqmemmax/ememorysum),Nelec/2-nfrozencore)
   if(nstep<1)then
     nstep=1
   endif
@@ -87,12 +86,11 @@ subroutine calmp2
 
   ! with nstep(acutally, it represetns step lenght), we can 
   ! have no. of steps for mp2 calculation
-  nstepmp2=nelec/2/nstep
+  nstepmp2=(nelec/2-nfrozencore)/nstep
   nstepmp2=nstepmp2+1
-  if(nstep*(nstepmp2-1).eq.nelec/2)then
+  if(nstep*(nstepmp2-1).eq.(nelec/2-nfrozencore))then
      nstepmp2=nstepmp2-1
   endif
-
 
   ! Pre-step for density cutoff
   call cshell_density_cutoff
@@ -105,7 +103,10 @@ subroutine calmp2
   enddo
 
   ttt=MAXVAL(Ycutoff) ! Max Value of Ycutoff
-  print *, "in calmp2, ttt is", ttt
+
+  print *, "job step is ", nstepmp2
+  print *, "nstep is ", nstep
+  call flush(6)
 
   do i3new=1,nstepmp2               ! Step counter
     print *, "i3new is ", i3new
@@ -113,39 +114,26 @@ subroutine calmp2
 
      call cpu_time(timer_begin%TMP2)
      ntemp=0    ! integer counter
-     nstepmp2s=(i3new-1)*nstep+1    ! Step start n
-     nstepmp2f=i3new*nstep          ! Step end n
-
-     !print *, "nstepmp2s is", nstepmp2s
-     !print *, "nstepmp2f is", nstepmp2f
+     nstepmp2s=(i3new-1)*nstep+1+nfrozencore    ! Step start n
+     nstepmp2f=i3new*nstep+nfrozencore          ! Step end n
 
      if(i3new.eq.nstepmp2)nstepmp2f=nelec/2
      nsteplength=nstepmp2f-nstepmp2s+1  ! Step Lengh, from nstepmp2s to nstepmp2f
      
-     !print *, "nsteplength is", nsteplength
-
+     print *, "nstepmp2s is ", nstepmp2s
+     print *, "nstepmp2f is ", nstepmp2f
 
      ! Initial orbmp2k331
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
      do II=1,jshell
         do JJ=II,jshell
-
            if(Ycutoff(II,JJ).gt.cutoffmp2/ttt)then
-            
-              !print *, "before initialization, orbmp2i331 is"
-              !print *, orbmp2i331
-              !print *, shape(orbmp2i331)
               call initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasistemp)
               call initialOrbmp2ij(orbmp2j331,nstep,nsteplength,ivir,nbasistemp,nbasistemp)
-              !print *, "after initialization, orbmp2i331 is"
-              !print *, orbmp2i331
-            
 
               do KK=1,jshell
                  do LL=KK,jshell
 
-                    !print *, " "
-                    !print "(' in calmp2, II, JJ, KK, LL are', i2, i2, i2, i2)", II, JJ, KK, LL
                     ! Schwarts cutoff is implemented here
                     comax=0.d0
                     testCutoff = Ycutoff(II,JJ)*Ycutoff(KK,LL)
@@ -176,39 +164,13 @@ subroutine calmp2
                             enddo
                        enddo
                        
-                       !print *, "in calmp2, comax is", comax
-
                        testCutoff=testCutoff*comax
                        if(testCutoff.gt.cutoffmp2)then
                           dnmax=comax
                           ntemp=ntemp+1
-                          !print *, "before shellmp2, II,JJ,KK,LL are", II, JJ, KK, LL
-                          !call shellmp2(nstepmp2s,nsteplength, Y_Matrix)
                            call shellmp2(nstepmp2s,nsteplength)
                         endif
                                                 
-                       !print *, "in calmp2, ii,jj,kk,ll are",ii-1,jj-1,kk-1,ll-1
-
-
-           !print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
-           !do ind1= 1, 1       !to jshell
-           !     do ind2= 1, 1      !to nbasis
-           !         do ind3=1, nbasistemp
-           !             do ind4=1, nbasistemp
-           !                 do ind5=1, 2
-           !                     write(*, '(f10.6)', advance='no'),&
-           !                         orbmp2i331(ind1, ind2, ind3, ind4, ind5)
-           !                 end do
-           !             end do
-           !             write(*,'(" ")')  ! inner two layers on the same line
-           !         end do
-           !     end do
-           !end do
-
-
-
-
-
                     endif
 
                  enddo
@@ -252,7 +214,7 @@ subroutine calmp2
                     enddo
 
                     do j33=1,ivir
-                       do k33=1,nelec/2
+                       do k33=1+nfrozencore,nelec/2
                           atemp=quick_scratch%hold(k33,III)
                           atemp2=quick_scratch%hold(k33,JJJ)
                           do icycle=1,nsteplength
@@ -268,29 +230,6 @@ subroutine calmp2
                  enddo
               enddo
            endif
-
-!print orbmp2i331
-       ! NONZEROCOUNT = 0
-       ! print *, "in calmp2, II and JJ are", II, JJ
-       !    print *, "orbmp2i331 is"     !nstep*nbasis*nbasistemp*nbasistemp*2
-       !    do ind1= 1, jshell
-       !         do ind2= 1, nbasis
-       !             do ind3=1, nbasistemp
-       !                 do ind4=1, nbasistemp
-       !                     do ind5=1, 2
-       !                         if(orbmp2i331(ind1, ind2, ind3, ind4,ind5).gt.0) then
-       !                             NONZEROCOUNT = NONZEROCOUNT+1
-       !                         endif
-       !                         write(*, '(f10.6)', advance='no'),&
-       !                             orbmp2i331(ind1, ind2, ind3, ind4, ind5)
-       !                     end do
-       !                 end do
-       !                 write(*,'(" ")')  ! inner two layers on the same line
-       !             end do
-       !         end do
-       !    end do
-       ! print *, "NONZEROCOUNT is", NONZEROCOUNT
-!print done
 
         enddo
      enddo
@@ -324,12 +263,12 @@ subroutine calmp2
 
            do J3=1,nbasis-nelec/2
               do L3=1,nbasis-nelec/2
-                 if(k3.gt.i3)then
+                 if(k3.gt.i3 .and. k3>nfrozencore .and. i3>nfrozencore)then
                     quick_qm_struct%EMP2=quick_qm_struct%EMP2+2.0d0/(quick_qm_struct%E(i3)+quick_qm_struct%E(k3) &
                         -quick_qm_struct%E(j3+nelec/2)-quick_qm_struct%E(l3+nelec/2)) &
                          *orbmp2(j3,l3)*(2.0d0*orbmp2(j3,l3)-orbmp2(l3,j3))
                  endif
-                 if(k3.eq.i3)then
+                 if(k3.eq.i3 .and. k3>nfrozencore .and. i3>nfrozencore)then
                     quick_qm_struct%EMP2=quick_qm_struct%EMP2+1.0d0/(quick_qm_struct%E(i3)+quick_qm_struct%E(k3) &
                         -quick_qm_struct%E(j3+nelec/2)-quick_qm_struct%E(l3+nelec/2)) &
                          *orbmp2(j3,l3)*(2.0d0*orbmp2(j3,l3)-orbmp2(l3,j3))
@@ -343,7 +282,6 @@ subroutine calmp2
 
         
      call cpu_time(timer_end%TMP2)
-     !print *, "timer_cumer%TMP2 is ",timer_cumer%TMP2
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
   enddo

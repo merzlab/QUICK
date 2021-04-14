@@ -42,6 +42,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       ! * Allocate arrays whose dimensions depend on NATOM (allocateatoms_ecp)
       ! * Read the Effective Core Potentials (ECPs), modify the atomic charges
       !   and the total number of electrons (readecp)
+      print *, "call readbasis"
       if (quick_method%ecp)    call readecp
       call quick_open(ibasisfile,basisfilename,'O','F','W',.true.,ierr)
       CHECK_ERROR(ierr)
@@ -56,13 +57,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       atmbs2=.true.
       icont=0
       quick_method%ffunxiao=.true.
+      nfrozencore = 0
 
       ! parse the file and find the sizes of things to allocate them in memory
       do while (iofile  == 0 )
          read(ibasisfile,'(A80)',iostat=iofile) line
-         !print *, "line is ", line
            read(line,*,iostat=io) atom,ii
-         !print *, "io is ",io, "ii is ", ii
          if (io == 0 .and. ii == 0) then
             isatom = .true.
             call upcase(atom,2)
@@ -80,7 +80,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                read(ibasisfile,'(A80)',iostat=iofile) line
                read(line,*,iostat=iatom) shell,iprim,dnorm
                if (iatom == 0) then
-                  !print *, "iat is ", iat ! iat should be atom index
                   quick_basis%kshell(iat) = quick_basis%kshell(iat) +1
                   !kcontract(iat) = kcontract(iat) + iprim
                   if (shell == 'S') then
@@ -187,9 +186,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       !do i=1,83
       !  if (quick_basis%kshell(i) /= 0) print *, symbol(i),quick_basis%kshell(i),kcontract(i),kbasis(i)
       !enddo
-    
-      !print *, "natomxiao is ", natomxiao
-      !print *, "nbasis is", nbasis
 
       do i=1,natomxiao
 
@@ -233,7 +229,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
          nshell = nshell + quick_basis%kshell(quick_molspec%iattype(i))
          nbasis = nbasis + kbasis(quick_molspec%iattype(i))
          nprim = nprim + kcontract(quick_molspec%iattype(i))
-
+         nfrozencore = nfrozencore + frozencore(quick_molspec%iattype(i))/2
+    
          ! MFCC
          if(i.eq.natomfinal)nbasisfinal=nbasis
          do ixiao=1,npmfcc
@@ -261,9 +258,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
          ! MFCC
 
       enddo
-      !print *, "at end, nbasis is", nbasis
-      !print *, "nshell is", nshell
-      !print *, "nprim is", nprim
       ! =============MPI/MASTER=====================
    endif masterwork
    ! =============END MPI/MASTER=====================
@@ -381,11 +375,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    itype     = 0
    ncontract = 0
    
-   !print *, "for alloc quick_basis"
-   !print *, "natom is ", natom
-   !print *, "nshell is ", nshell
-   !print *, "nbasis is ", nbasis    
-
    call alloc(quick_basis,natom,nshell,nbasis)
    
    do ixiao=1,nshell

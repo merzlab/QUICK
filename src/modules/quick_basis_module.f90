@@ -40,7 +40,8 @@ module quick_basis_module
         type (gaussian), dimension(:), pointer :: gauss_fnc => null()
 
         ! total shell number
-        integer, pointer :: nshell
+        !integer, pointer :: nshell
+        !integer, pointer :: nfrozencore
 
         ! total primitive guassian function number
         integer, pointer :: nprim
@@ -126,7 +127,7 @@ module quick_basis_module
    double precision, dimension(:,:), allocatable :: aexp,dcoeff                         ! to be sub
 
 
-   integer,target :: nshell,nprim,jshell,jbasis
+   integer,target :: nshell,nprim,jshell,jbasis,nfrozencore
    integer,target :: nbasis
    integer :: maxcontract
 
