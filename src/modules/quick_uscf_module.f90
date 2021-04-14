@@ -362,7 +362,7 @@ contains
            ! symmetric, the above code can be used. Add this (the ODS term) into the allerror
            ! matrix.
 
-#ifdef CUDA
+#if defined(CUDA) || defined(CUDA_MPIV)
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
            
@@ -385,7 +385,7 @@ contains
            ! Calculate Db O.Then calculate S (DbO) and subtract that from the allerror matrix.
            ! This means we now have the complete e(i) matrix.
 
-#ifdef CUDA
+#if defined(CUDA) || defined(CUDA_MPIV)
 
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
                  nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold,nbasis)
