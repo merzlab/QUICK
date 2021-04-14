@@ -585,7 +585,7 @@ module quick_gridpoints_module
 #ifdef MPIV
       if(master) then
 #endif
-        write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+        if (quick_method%debug) write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
 #ifdef MPIV
       endif
 #endif
@@ -640,7 +640,7 @@ module quick_gridpoints_module
 #ifdef MPIV
          if(master) then
 #endif
-           write (iOutFile,'(I4,7x,F12.6)') Ibas,radial
+           if (quick_method%debug) write (iOutFile,'(I4,7x,F12.6)') Ibas,radial
 #ifdef MPIV
          endif
 #endif
