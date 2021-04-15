@@ -23,7 +23,10 @@ module quick_oei_module
   implicit double precision(a-h,o-z)
   private
 
-  public :: get1eEnergy, get1e, attrashellopt
+  public :: get1eEnergy, get1e, attrashellopt, ekinetic
+  public :: bCalc1e
+
+  logical :: bCalc1e = .false.
 
 contains
 
@@ -59,7 +62,6 @@ contains
 
 subroutine get1e()
    use allmod
-   use quick_scf_module
 
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
@@ -110,14 +112,14 @@ subroutine get1e()
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
          call copySym(quick_qm_struct%o,nbasis)
-         call CopyDMat(quick_qm_struct%o,oneElecO,nbasis)
+         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
-                call PriSym(iOutFile,nbasis,oneElecO,'f14.8')
+                call PriSym(iOutFile,nbasis,quick_qm_struct%oneElecO,'f14.8')
          endif
          bCalc1e=.false.
        else
-         quick_qm_struct%o(:,:)=oneElecO(:,:)
+         quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
        endif
        call cpu_time(timer_end%t1e)
 
@@ -161,12 +163,12 @@ subroutine get1e()
       enddo
       call cpu_time(timer_end%T1eV)
 
-      call copyDMat(quick_qm_struct%o,oneElecO,nbasis)
+      call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
 
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
      else
-       quick_qm_struct%o(:,:)=oneElecO(:,:)
+       quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
      endif
 
 
@@ -186,6 +188,7 @@ subroutine get1eO(IBAS)
    ! This subroutine is to get 1e integral Operator
    !------------------------------------------------
    use allmod
+   use quick_overlap_module, only: gpt, opf
    implicit double precision(a-h,o-z)
    integer Ibas 
    integer g_count
@@ -241,6 +244,7 @@ end subroutine get1eO
 
 subroutine attrashell(IIsh,JJsh)
    use allmod
+   use quick_overlap_module, only: gpt, opf, overlap_core
    !    use xiaoconstants
    implicit double precision(a-h,o-z)
    dimension aux(0:20)
@@ -359,13 +363,14 @@ end subroutine attrashell
 
   subroutine attrashellopt(IIsh,JJsh)
      use allmod
+     use quick_overlap_module, only: opf, overlap
      !    use xiaoconstants
      implicit double precision(a-h,o-z)
      dimension aux(0:20)
      double precision AA(3),BB(3),CC(3),PP(3)
      common /xiaoattra/attra,aux,AA,BB,CC,PP,g
   
-     double precision RA(3),RB(3),RP(3), valopf
+     double precision RA(3),RB(3),RP(3), valopf, g_table(200)
 #ifdef MPIV
      include "mpif.h"
 #endif
@@ -473,25 +478,9 @@ end subroutine attrashell
      return
   end subroutine attrashellopt
 
-subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
-  implicit none
-
-  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
-  integer g_count,ig
-
-  g = a+b
-  do ig=0,g_count
-     g_table(1+ig) = g**(dble(-3-ig)*0.5)
-  enddo
-  inv_g = 1.0d0 / dble(g)
-  Px = (a*Ax + b*Bx)*inv_g
-  Py = (a*Ay + b*By)*inv_g
-  Pz = (a*Az + b*Bz)*inv_g
-
-  return
-end subroutine gpt
 
 double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   use quick_overlap_module, only: overlap_core
    implicit none
    double precision :: kinetic
    double precision :: a,b
@@ -499,7 +488,7 @@ double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz
    double precision :: Ax,Ay,Az,Bx,By,Bz
    double precision :: Px,Py,Pz
 
-   double precision :: xi,xj,xk,overlap_core,g_table(200)
+   double precision :: xi,xj,xk,g_table(200)
 
    ! The purpose of this subroutine is to calculate the kinetic energy
    ! of an electron  distributed between gtfs with orbital exponents a
@@ -540,28 +529,4 @@ double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz
    return
 end function ekinetic
 
-
-double precision function opf(ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
-xyzxj,xyzyj,xyzzj)
-
-  !------------------------------------------------
-  ! This function computes the overlap prefactor 
-  ! required for one electron integral prescreening
-  !------------------------------------------------
-  use quick_constants_module
-  implicit none 
-
-  double precision, intent(in) :: ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
-  xyzxj,xyzyj,xyzzj
-  double precision :: dist2, oog
-
-  dist2 = (xyzxi-xyzxj)**2 + (xyzyi-xyzyj)**2 + (xyzzi-xyzzj)**2
-  oog = 1.0d0/(ai+aj)
-
-  opf = exp(-ai*aj*dist2*oog)*sqrt(PI*oog)*PI*oog*ci*cj
-
-  return
-end function opf
-
-  
 end module quick_oei_module

@@ -22,9 +22,152 @@ module quick_overlap_module
 
   implicit double precision(a-h,o-z)
   private  
-  public :: fullx, overlap_core
+  public :: fullx, overlap, overlap_core, ssoverlap, gpt, opf
 
 contains
+
+function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) result(ovlp_core)
+   use quick_constants_module
+   implicit none
+   ! INPUT PARAMETERS
+   double precision a,b                 ! exponent of basis set 1 and 2
+   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+
+   ! INNER VARIBLES
+   double precision element,g,g_table(200),elfactor
+   integer ig,jg,kg,ng
+   integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
+   double precision pAx,pAy,pAz,pBx,pBy,pBz
+   double precision fpAx,fpAy,fpAz,fpBx,fpBy,fpBz
+   double precision Px,py,pz,ovlp,ovlp_core
+
+   double precision xnumfact
+
+
+   ! The purpose of this subroutine is to calculate the overlap between
+   ! two normalized gaussians. i,j and k are the x,y,
+   ! and z exponents for the gaussian with exponent a, and ii,jj, and kk
+   ! have the same order for b.
+
+   ! The first step is to see if this function is zero due to symmetry.
+   ! If it is not, reset ovlp to 0.
+   ovlp = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk))+(Ax-Bx)**2+(Ay-By)**2+(Az-Bz)**2
+   if (ovlp.ne.zero) then
+
+      ovlp=zero
+      ! If it is not zero, construct P and g values.  The gaussian product
+      ! theory states the product of two s gaussians on centers A and B
+      ! with exponents a and b forms a new s gaussian on P with exponent
+      ! g.  (g comes from gamma, as is "alpha,beta, gamma" and P comes
+      ! from "Product." Also needed are the PA differences.
+      PAx= Px-Ax
+      PAy= Py-Ay
+      PAz= Pz-Az
+      PBx= Px-Bx
+      PBy= Py-By
+      PBz= Pz-Bz
+
+      ! There is also a few factorials that are needed in the integral many
+      ! times.  Calculate these as well.
+
+      xnumfact=fact(i)*fact(ii)*fact(j)*fact(jj)*fact(k)*fact(kk)
+
+      ! Now start looping over i,ii,j,jj,k,kk to form all the required elements
+
+      do iloop=0,i
+         fPAx=PAx**(i-iloop)/(fact(iloop)*fact(i-iloop))
+
+         do iiloop=mod(iloop,2),ii,2
+            ix=iloop+iiloop
+            fPBx=PBx**(ii-iiloop)/(fact(iiloop)*fact(ii-iiloop))
+
+            do jloop=0,j
+               fPAy=PAy**(j-jloop)/(fact(jloop)*fact(j-jloop))
+
+               do jjloop=mod(jloop,2),jj,2
+                  jy=jloop+jjloop
+                  fPBy=PBy**(jj-jjloop)/(fact(jjloop)*fact(jj-jjloop))
+
+                  do kloop=0,k
+                     fPAz=PAz**(k-kloop)/(fact(kloop)*fact(k-kloop))
+
+                     do kkloop=mod(kloop,2),kk,2
+                        kz=kloop+kkloop
+                        fPBz=PBz**(kk-kkloop)/(fact(kkloop)*fact(kk-kkloop))
+
+                        element = pito3half * g_table(1+ix+jy+kz)
+
+                        ! Check to see if this element is zero.
+                        ! Continue calculating the elements.  The next elements arise from the
+                        ! different angular momentums portion of the GPT.
+
+                        element=element*fPAx*fPBx*fPAy*fPBy*fPAz*fPBz*xnumfact
+
+                        ! The next part arises from the integratation of a gaussian of arbitrary
+                        ! angular momentum.
+
+
+                        ! Before the Gamma function code, a quick note. All gamma functions are
+                        ! of the form:
+                        ! 1
+                        ! Gamma[- + integer].  Now since Gamma[z] = (z-1)Gamma(z-1)
+                        ! 2
+
+                        ! We can say Gamma(0.5 + i) = (i-1+.5)(i-2+.5)...(i-i+.5)Gamma(0.5)
+                        ! and Gamma(.5) is Sqrt(Pi).  Thus to calculate the three gamma
+                        ! just requires a loop and multiplying by Pi^3/2
+
+                        do iG=1,ix/2
+                           element = element * (dble(ix)*0.5-dble(iG) + .5d0)
+                        enddo
+                        do jG=1,jy/2
+                           element = element * (dble(jy)*0.5-dble(jG) + .5d0)
+                        enddo
+                        do kG=1,kz/2
+                           element = element * (dble(kz)*0.5-dble(kG) + .5d0)
+                        enddo
+
+                        ! Now sum the whole thing into the overlap.
+
+                        ovlp = ovlp + element
+                     enddo
+                  enddo
+               enddo
+            enddo
+         enddo
+      enddo
+
+
+      ! The final step is multiplying in the K factor (from the gpt)
+
+!      ovlp = ovlp*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+
+   endif
+
+   ovlp_core = ovlp
+
+end function overlap_core
+
+
+function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) result(ovlp)
+   !use quick_constants_module
+   use allmod
+
+   implicit none
+   ! INPUT PARAMETERS
+   double precision a,b                 ! exponent of basis set 1 and 2
+   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+
+   ! INNER VARIBLES
+   double precision g_table(200)
+   double precision Px,py,pz,ovlp
+
+   ovlp = overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+   ovlp = ovlp*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+
+end function overlap
 
 subroutine fullx
    !   The purpose of this subroutine is to calculate the transformation
@@ -33,7 +176,6 @@ subroutine fullx
    use allmod
    implicit none
 
-   double precision :: overlap
    double precision :: SJI,sum, SJI_temp
    integer Ibas,Jbas,Icon,Jcon,i,j,k,IERROR
    double precision g_table(200),Px,Py,Pz
@@ -178,149 +320,149 @@ subroutine fullx
    return
 end subroutine fullx
 
-double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-   !use quick_constants_module
-   use allmod
-
-   implicit none
-   ! INPUT PARAMETERS
-   double precision a,b                 ! exponent of basis set 1 and 2
-   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
-   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-
-   ! INNER VARIBLES
-   double precision g_table(200)
-   double precision Px,py,pz,overlap_core
-
-   overlap = overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-   overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
-
-   return
-end function overlap
-
-double precision function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-   use quick_constants_module
-   implicit none
-   ! INPUT PARAMETERS
-   double precision a,b                 ! exponent of basis set 1 and 2
-   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
-   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
-
-   ! INNER VARIBLES
-   double precision element,g,g_table(200),elfactor
-   integer ig,jg,kg,ng
-   integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
-   double precision pAx,pAy,pAz,pBx,pBy,pBz
-   double precision fpAx,fpAy,fpAz,fpBx,fpBy,fpBz
-   double precision Px,py,pz,overlap
-
-   double precision xnumfact
-
-
-   ! The purpose of this subroutine is to calculate the overlap between
-   ! two normalized gaussians. i,j and k are the x,y,
-   ! and z exponents for the gaussian with exponent a, and ii,jj, and kk
-   ! have the same order for b.
-
-   ! The first step is to see if this function is zero due to symmetry.
-   ! If it is not, reset overlap to 0.
-   overlap = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk))+(Ax-Bx)**2+(Ay-By)**2+(Az-Bz)**2
-   if (overlap.ne.zero) then
-
-      overlap=zero
-      ! If it is not zero, construct P and g values.  The gaussian product
-      ! theory states the product of two s gaussians on centers A and B
-      ! with exponents a and b forms a new s gaussian on P with exponent
-      ! g.  (g comes from gamma, as is "alpha,beta, gamma" and P comes
-      ! from "Product." Also needed are the PA differences.
-      PAx= Px-Ax
-      PAy= Py-Ay
-      PAz= Pz-Az
-      PBx= Px-Bx
-      PBy= Py-By
-      PBz= Pz-Bz
-
-      ! There is also a few factorials that are needed in the integral many
-      ! times.  Calculate these as well.
-
-      xnumfact=fact(i)*fact(ii)*fact(j)*fact(jj)*fact(k)*fact(kk)
-
-      ! Now start looping over i,ii,j,jj,k,kk to form all the required elements
-
-      do iloop=0,i
-         fPAx=PAx**(i-iloop)/(fact(iloop)*fact(i-iloop))
-
-         do iiloop=mod(iloop,2),ii,2
-            ix=iloop+iiloop
-            fPBx=PBx**(ii-iiloop)/(fact(iiloop)*fact(ii-iiloop))
-
-            do jloop=0,j
-               fPAy=PAy**(j-jloop)/(fact(jloop)*fact(j-jloop))
-
-               do jjloop=mod(jloop,2),jj,2
-                  jy=jloop+jjloop
-                  fPBy=PBy**(jj-jjloop)/(fact(jjloop)*fact(jj-jjloop))
-
-                  do kloop=0,k
-                     fPAz=PAz**(k-kloop)/(fact(kloop)*fact(k-kloop))
-
-                     do kkloop=mod(kloop,2),kk,2
-                        kz=kloop+kkloop
-                        fPBz=PBz**(kk-kkloop)/(fact(kkloop)*fact(kk-kkloop))
-
-                        element = pito3half * g_table(1+ix+jy+kz)
-
-                        ! Check to see if this element is zero.
-                        ! Continue calculating the elements.  The next elements arise from the
-                        ! different angular momentums portion of the GPT.
-
-                        element=element*fPAx*fPBx*fPAy*fPBy*fPAz*fPBz*xnumfact
-
-                        ! The next part arises from the integratation of a gaussian of arbitrary
-                        ! angular momentum.
-
-
-                        ! Before the Gamma function code, a quick note. All gamma functions are
-                        ! of the form:
-                        ! 1
-                        ! Gamma[- + integer].  Now since Gamma[z] = (z-1)Gamma(z-1)
-                        ! 2
-
-                        ! We can say Gamma(0.5 + i) = (i-1+.5)(i-2+.5)...(i-i+.5)Gamma(0.5)
-                        ! and Gamma(.5) is Sqrt(Pi).  Thus to calculate the three gamma
-                        ! just requires a loop and multiplying by Pi^3/2
-
-                        do iG=1,ix/2
-                           element = element * (dble(ix)*0.5-dble(iG) + .5d0)
-                        enddo
-                        do jG=1,jy/2
-                           element = element * (dble(jy)*0.5-dble(jG) + .5d0)
-                        enddo
-                        do kG=1,kz/2
-                           element = element * (dble(kz)*0.5-dble(kG) + .5d0)
-                        enddo
-
-                        ! Now sum the whole thing into the overlap.
-
-                        overlap = overlap + element
-                     enddo
-                  enddo
-               enddo
-            enddo
-         enddo
-      enddo
-
-
-      ! The final step is multiplying in the K factor (from the gpt)
-
-!      overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
-
-   endif
-
-   overlap_core = overlap
-
-   return
-end function overlap_core
+!double precision function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!   !use quick_constants_module
+!   use allmod
+!
+!   implicit none
+!   ! INPUT PARAMETERS
+!   double precision a,b                 ! exponent of basis set 1 and 2
+!   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+!   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+!
+!   ! INNER VARIBLES
+!   double precision g_table(200)
+!   double precision Px,py,pz,overlap_core
+!
+!   overlap = overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!   overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+!
+!   return
+!end function overlap
+!
+!double precision function overlap_core(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+!   use quick_constants_module
+!   implicit none
+!   ! INPUT PARAMETERS
+!   double precision a,b                 ! exponent of basis set 1 and 2
+!   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+!   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+!
+!   ! INNER VARIBLES
+!   double precision element,g,g_table(200),elfactor
+!   integer ig,jg,kg,ng
+!   integer iiloop,iloop,jloop,jjloop,kloop,kkloop,ix,jy,kz
+!   double precision pAx,pAy,pAz,pBx,pBy,pBz
+!   double precision fpAx,fpAy,fpAz,fpBx,fpBy,fpBz
+!   double precision Px,py,pz,overlap
+!
+!   double precision xnumfact
+!
+!
+!   ! The purpose of this subroutine is to calculate the overlap between
+!   ! two normalized gaussians. i,j and k are the x,y,
+!   ! and z exponents for the gaussian with exponent a, and ii,jj, and kk
+!   ! have the same order for b.
+!
+!   ! The first step is to see if this function is zero due to symmetry.
+!   ! If it is not, reset overlap to 0.
+!   overlap = (1+(-1)**(i+ii))*(1+(-1)**(j+jj))*(1+(-1)**(k+kk))+(Ax-Bx)**2+(Ay-By)**2+(Az-Bz)**2
+!   if (overlap.ne.zero) then
+!
+!      overlap=zero
+!      ! If it is not zero, construct P and g values.  The gaussian product
+!      ! theory states the product of two s gaussians on centers A and B
+!      ! with exponents a and b forms a new s gaussian on P with exponent
+!      ! g.  (g comes from gamma, as is "alpha,beta, gamma" and P comes
+!      ! from "Product." Also needed are the PA differences.
+!      PAx= Px-Ax
+!      PAy= Py-Ay
+!      PAz= Pz-Az
+!      PBx= Px-Bx
+!      PBy= Py-By
+!      PBz= Pz-Bz
+!
+!      ! There is also a few factorials that are needed in the integral many
+!      ! times.  Calculate these as well.
+!
+!      xnumfact=fact(i)*fact(ii)*fact(j)*fact(jj)*fact(k)*fact(kk)
+!
+!      ! Now start looping over i,ii,j,jj,k,kk to form all the required elements
+!
+!      do iloop=0,i
+!         fPAx=PAx**(i-iloop)/(fact(iloop)*fact(i-iloop))
+!
+!         do iiloop=mod(iloop,2),ii,2
+!            ix=iloop+iiloop
+!            fPBx=PBx**(ii-iiloop)/(fact(iiloop)*fact(ii-iiloop))
+!
+!            do jloop=0,j
+!               fPAy=PAy**(j-jloop)/(fact(jloop)*fact(j-jloop))
+!
+!               do jjloop=mod(jloop,2),jj,2
+!                  jy=jloop+jjloop
+!                  fPBy=PBy**(jj-jjloop)/(fact(jjloop)*fact(jj-jjloop))
+!
+!                  do kloop=0,k
+!                     fPAz=PAz**(k-kloop)/(fact(kloop)*fact(k-kloop))
+!
+!                     do kkloop=mod(kloop,2),kk,2
+!                        kz=kloop+kkloop
+!                        fPBz=PBz**(kk-kkloop)/(fact(kkloop)*fact(kk-kkloop))
+!
+!                        element = pito3half * g_table(1+ix+jy+kz)
+!
+!                        ! Check to see if this element is zero.
+!                        ! Continue calculating the elements.  The next elements arise from the
+!                        ! different angular momentums portion of the GPT.
+!
+!                        element=element*fPAx*fPBx*fPAy*fPBy*fPAz*fPBz*xnumfact
+!
+!                        ! The next part arises from the integratation of a gaussian of arbitrary
+!                        ! angular momentum.
+!
+!
+!                        ! Before the Gamma function code, a quick note. All gamma functions are
+!                        ! of the form:
+!                        ! 1
+!                        ! Gamma[- + integer].  Now since Gamma[z] = (z-1)Gamma(z-1)
+!                        ! 2
+!
+!                        ! We can say Gamma(0.5 + i) = (i-1+.5)(i-2+.5)...(i-i+.5)Gamma(0.5)
+!                        ! and Gamma(.5) is Sqrt(Pi).  Thus to calculate the three gamma
+!                        ! just requires a loop and multiplying by Pi^3/2
+!
+!                        do iG=1,ix/2
+!                           element = element * (dble(ix)*0.5-dble(iG) + .5d0)
+!                        enddo
+!                        do jG=1,jy/2
+!                           element = element * (dble(jy)*0.5-dble(jG) + .5d0)
+!                        enddo
+!                        do kG=1,kz/2
+!                           element = element * (dble(kz)*0.5-dble(kG) + .5d0)
+!                        enddo
+!
+!                        ! Now sum the whole thing into the overlap.
+!
+!                        overlap = overlap + element
+!                     enddo
+!                  enddo
+!               enddo
+!            enddo
+!         enddo
+!      enddo
+!
+!
+!      ! The final step is multiplying in the K factor (from the gpt)
+!
+!!      overlap = overlap*exp(-((a*b*((Ax-Bx)**2.d0 + (Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
+!
+!   endif
+!
+!   overlap_core = overlap
+!
+!   return
+!end function overlap_core
 
 double precision function ssoverlap(a,b,Ax,Ay,Az,Bx,By,Bz)
    use quick_constants_module
@@ -330,6 +472,46 @@ double precision function ssoverlap(a,b,Ax,Ay,Az,Bx,By,Bz)
    ssoverlap = pito3half*1.d0*(a+b)**(-3.d0/2.d0)*Exp(-((a*b*((Ax-Bx)**2.d0+(Ay-By)**2.d0+(Az-Bz)**2.d0))/(a+b)))
 
 end function ssoverlap
+
+double precision function opf(ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+xyzxj,xyzyj,xyzzj)
+
+  !------------------------------------------------
+  ! This function computes the overlap prefactor 
+  ! required for one electron integral prescreening
+  !------------------------------------------------
+  use quick_constants_module
+  implicit none
+
+  double precision, intent(in) :: ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
+  xyzxj,xyzyj,xyzzj
+  double precision :: dist2, oog
+
+  dist2 = (xyzxi-xyzxj)**2 + (xyzyi-xyzyj)**2 + (xyzzi-xyzzj)**2
+  oog = 1.0d0/(ai+aj)
+
+  opf = exp(-ai*aj*dist2*oog)*sqrt(PI*oog)*PI*oog*ci*cj
+
+  return
+end function opf
+
+subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+  implicit none
+
+  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
+  integer g_count,ig
+
+  g = a+b
+  do ig=0,g_count
+     g_table(1+ig) = g**(dble(-3-ig)*0.5)
+  enddo
+  inv_g = 1.0d0 / dble(g)
+  Px = (a*Ax + b*Bx)*inv_g
+  Py = (a*Ay + b*By)*inv_g
+  Pz = (a*Az + b*Bz)*inv_g
+
+  return
+end subroutine gpt
 
 end module quick_overlap_module
 
