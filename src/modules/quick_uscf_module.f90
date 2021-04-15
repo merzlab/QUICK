@@ -120,6 +120,7 @@ contains
      use quick_gridpoints_module
      use quick_uscf_operator_module, only: uscf_operator
      use quick_scf_module  
+     use quick_oei_module, only: bCalc1e
 
      implicit none
   
