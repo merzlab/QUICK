@@ -1156,7 +1156,11 @@ subroutine aoint(ierr)
          do KK = II,jshell; do LL = KK,jshell
             if ( Ycutoff(II,JJ)*Ycutoff(KK,LL).gt. quick_method%leastIntegralCutoff) then
                dnmax = 1.0
+#ifdef OSHELL
+               call oshell
+#else
                call cshell
+#endif
                intnum = intnum+1
             endif
          enddo; enddo;
