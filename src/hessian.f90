@@ -131,6 +131,8 @@ end subroutine fdhessian
 
 subroutine HFHessian
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
   dimension itype2(3,2),ielecfld(3)
@@ -3840,6 +3842,8 @@ end subroutine hess2elec
 
 subroutine hfdmxderuse(IDX)
   use allmod
+  use quick_overlap_module, only: gpt
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension GRADIENT2(natom*3)
   double precision g_table(200),a,b
@@ -4855,6 +4859,7 @@ end subroutine graddmx2elec
 
 subroutine dmxderiv(IDX,BU)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
   implicit double precision(a-h,o-z)
   double precision BU(*)
   double precision g_table(200),a,b
@@ -5190,8 +5195,10 @@ double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
      idx,idy,idz,Ax,Ay,Az, &
      Bx,By,Bz,Cx,Cy,Cz,Z)
   use quick_constants_module
+  use quick_overlap_module, only: overlap
   implicit double precision(a-h,o-z)
   dimension aux(0:20)
+  double precision :: g_table(200)
 
   ! Variables needed later:
   !    pi=3.1415926535897932385
@@ -5255,6 +5262,7 @@ end function electricfld
 
 subroutine ewtdmxder(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
@@ -5603,6 +5611,8 @@ end subroutine ewtdmxder
 
 subroutine duhfoperatora(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
@@ -6482,6 +6492,8 @@ end subroutine duhfoperatora
 
 subroutine duhfoperatorb(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove

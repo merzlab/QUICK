@@ -4,6 +4,8 @@
 
     subroutine uhfoperatora
     use allmod
+    use quick_overlap_module, only: gpt
+    use quick_oei_module, only: ekinetic
     implicit double precision(a-h,o-z)
     double precision g_table(200)
     integer i,j,k,ii,jj,kk,g_count
@@ -469,6 +471,8 @@
 
     subroutine uhfoperatorb
     use allmod
+    use quick_overlap_module, only: gpt
+    use quick_oei_module, only: ekinetic
     implicit double precision(a-h,o-z)
    double precision g_table(200)
    integer i,j,k,ii,jj,kk,g_count
