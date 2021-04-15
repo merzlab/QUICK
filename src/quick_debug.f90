@@ -18,9 +18,10 @@
 ! this subroutine is to output some infos in debug mode in SCF
 subroutine debug_SCF(jscf)
    use allmod
+   use quick_overlap_module, only: overlap, gpt
    implicit none
-   double precision total,overlap
-   integer i,j,k,l,jscf
+   double precision total, g_table(200),Ax,Ay,Az,Bx,By,Bz, Px,Py,Pz,a,b
+   integer i,j,k,l,ii,jj,kk,jscf,g_count,ibas,jbas
 
    !Densitry matrix
    write(ioutfile,'("DENSITY MATRIX AT START OF CYCLE",I4)') jscf
@@ -49,18 +50,35 @@ subroutine debug_SCF(jscf)
 
    ! n=sigma(PS)
    total=0.d0
-   do I=1,nbasis
-      do J=1,nbasis
-         do K=1,ncontract(I)
-            do L=1,ncontract(J)
+   do Ibas=1,nbasis
+      ii = itype(1,I)
+      jj = itype(2,I)
+      kk = itype(3,I)
+
+      Bx = xyz(1,quick_basis%ncenter(Ibas))
+      By = xyz(2,quick_basis%ncenter(Ibas))
+      Bz = xyz(3,quick_basis%ncenter(Ibas))
+
+      do Jbas=1,nbasis
+
+         i = itype(1,Jbas)
+         j = itype(2,Jbas)
+         k = itype(3,Jbas)
+         g_count = i+ii+j+jj+k+kk
+
+         Ax = xyz(1,quick_basis%ncenter(Jbas))
+         Ay = xyz(2,quick_basis%ncenter(Jbas))
+         Az = xyz(3,quick_basis%ncenter(Jbas))
+
+         do K=1,ncontract(Ibas)
+            b = aexp(K,Ibas)
+            do L=1,ncontract(Jbas)
+               a = aexp(L,Jbas)
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
                total = total + quick_qm_struct%dense(I,J)* &
                      dcoeff(K,I)*dcoeff(L,J) &
-                     *overlap(aexp(L,J),aexp(K,I), &
-                     itype(1,J),itype(2,J),itype(3,J), &
-                     itype(1,I),itype(2,I),itype(3,I), &
-                     xyz(1,quick_basis%ncenter(J)),xyz(2,quick_basis%ncenter(J)), &
-                     xyz(3,quick_basis%ncenter(J)),xyz(1,quick_basis%ncenter(I)), &
-                     xyz(2,quick_basis%ncenter(I)),xyz(3,quick_basis%ncenter(I)))
+                     *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
             enddo
          enddo
       enddo
