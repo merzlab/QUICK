@@ -20,14 +20,11 @@ module quick_scf_module
   private
 
   public :: allocate_quick_scf, deallocate_quick_scf, scf 
-  public :: V2, oneElecO, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator, bCalc1e
+  public :: V2, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
 !  type quick_scf_type
 
     ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
     double precision, allocatable, dimension(:,:) :: V2
-
-    ! one electron operator, a matrix of size nbasis,nbasis
-    double precision, allocatable, dimension(:,:)   :: oneElecO
 
     ! matrices required for diis procedure
     double precision, allocatable, dimension(:,:)   :: B
@@ -46,8 +43,6 @@ module quick_scf_module
 
     double precision, allocatable, dimension(:,:,:) :: alloperator
 
-    logical :: bCalc1e = .false.
-
 !  end type quick_scf_type
 
 !  type (quick_scf_type), save :: quick_scf
@@ -65,7 +60,6 @@ contains
     integer, intent(inout) :: ierr
 
     if(.not. allocated(V2))          allocate(V2(3, nbasis), stat=ierr)
-    if(.not. allocated(oneElecO))    allocate(oneElecO(nbasis, nbasis), stat=ierr)
     if(.not. allocated(B))           allocate(B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BSAVE))       allocate(BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BCOPY))       allocate(BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
@@ -77,7 +71,6 @@ contains
 
     !initialize values to zero
     V2          = 0.0d0
-    oneElecO    = 0.0d0
     B           = 0.0d0
     BSAVE       = 0.0d0
     BCOPY       = 0.0d0
@@ -96,7 +89,6 @@ contains
     integer, intent(inout) :: ierr
 
     if(allocated(V2))          deallocate(V2, stat=ierr)
-    if(allocated(oneElecO))    deallocate(oneElecO, stat=ierr)
     if(allocated(B))           deallocate(B, stat=ierr)
     if(allocated(BSAVE))       deallocate(BSAVE, stat=ierr)
     if(allocated(BCOPY))       deallocate(BCOPY, stat=ierr)
@@ -167,7 +159,8 @@ contains
      use allmod
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
-  
+     use quick_oei_module, only: bCalc1e 
+ 
      implicit none
   
 #ifdef MPIV
