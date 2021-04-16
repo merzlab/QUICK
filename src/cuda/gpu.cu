@@ -1186,7 +1186,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
                                   int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
-                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN)
+                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN, int* nfrozencore)
 {
     
 #ifdef DEBUG
@@ -1203,17 +1203,20 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> jshell          =   *jshell;
     gpu -> gpu_basis -> jbasis          =   *jbasis;
     gpu -> gpu_basis -> maxcontract     =   *maxcontract;
-    
+	gpu -> gpu_basis -> nfrozencore		=	*nfrozencore;   
+
     gpu -> nshell                       =   *nshell;
     gpu -> nprim                        =   *nprim;
     gpu -> jshell                       =   *jshell;
     gpu -> jbasis                       =   *jbasis;
+	gpu	-> nfrozencore					=	*nfrozencore;
     
     gpu -> gpu_sim.nshell                   =   *nshell;
     gpu -> gpu_sim.nprim                    =   *nprim;
     gpu -> gpu_sim.jshell                   =   *jshell;
     gpu -> gpu_sim.jbasis                   =   *jbasis;
     gpu -> gpu_sim.maxcontract              =   *maxcontract;
+	gpu -> gpu_sim.nfrozencore				= 	*nfrozencore;
     
     
     gpu -> gpu_basis -> ncontract                   =   new cuda_buffer_type<int>(ncontract, gpu->nbasis);//gpu->nbasis);

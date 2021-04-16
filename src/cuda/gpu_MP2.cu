@@ -193,6 +193,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) thirdQuarterTransKernel(int III
     int nElec = devSim_MP2.nElec;
 	int iocc = nElec/2;
 	int ivir = nbasis - iocc;
+	int nfrozencore = devSim_MP2.nfrozencore;
 	QUICKDouble* coefficient = devSim_MP2.coefficient;
 	
 /*
@@ -220,16 +221,17 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) thirdQuarterTransKernel(int III
 	__syncthreads();
 */
 
-	int myInt = ivir*iocc*nsteplength/totalThreads;
-	if(ivir*iocc*nsteplength-myInt*totalThreads>offside) myInt++;
+	int myInt = ivir*(iocc-nfrozencore)*nsteplength/totalThreads;
+	if(ivir*(iocc-nfrozencore)*nsteplength-myInt*totalThreads>offside) myInt++;
 
 	for(int i=1;i<=myInt;i++)
 	{
 		int currentInt = totalThreads*(i-1)+offside;
 		int icycle = currentInt%nsteplength;
 		currentInt /= nsteplength;
-		int k33 = currentInt%iocc;
-		int j33 = currentInt/iocc;	
+		int k33 = currentInt%(iocc-nfrozencore);
+		k33 += nfrozencore;
+		int j33 = currentInt/(iocc-nfrozencore);	
 	
 		if(j33<ivir && k33<iocc && icycle<nsteplength)
 		{
@@ -306,6 +308,10 @@ void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepm
 	int nElec = gpu->nElec;
 	int iocc = nElec/2;
 	int ivir = nbasis - nElec/2;
+
+	int nfrozencore = gpu->nfrozencore;
+	printf("in fourQuarterTransHost, nfrozencore is %d\n ",nfrozencore);	
+
 	QUICKDouble cutoffmp2 = 1.0E-8;
 	QUICKDouble ttt = 0;
 	QUICKDouble* YCutoff = gpu->gpu_cutoff->YCutoff->_hostData;
@@ -321,7 +327,7 @@ void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepm
 	
 	QUICKDouble ememorysum = iocc*ivir*nbasis*8.0/1024.0/1024.0/1024.0;
 	QUICKDouble reqmemmax = 1.5;
-	int nstep = MIN(int(reqmemmax/ememorysum),nElec/2);
+	int nstep = MIN(int(reqmemmax/ememorysum),iocc-nfrozencore);
 	if(nstep<1) 
 		nstep = 1;
 	printf("nstepsize is %d\n", nstep);
@@ -353,8 +359,8 @@ void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepm
     QUICKDouble* MP2cor = new QUICKDouble[1];
     MP2cor[0]= 0;
 	
-	int nstepmp2 = nElec/2/nstep;
-	if(nstep*nstepmp2<nElec/2)
+	int nstepmp2 = (iocc-nfrozencore)/nstep;
+	if(nstep*nstepmp2<iocc-nfrozencore)
 		nstepmp2++;
 	*nstepmp2ptr = nstepmp2;
 	printf("TOTAL STEP is %d\n", nstepmp2);	
@@ -365,8 +371,8 @@ void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepm
 
 	for(int i3new=1;i3new<=nstepmp2;i3new++)
 	{
-		int nstepmp2s = (i3new-1)*nstep+1;
-		int nstepmp2f = i3new*nstep;
+		int nstepmp2s = (i3new-1)*nstep+1+nfrozencore;
+		int nstepmp2f = i3new*nstep+nfrozencore;
 		if(i3new==nstepmp2)
 			nstepmp2f=nElec/2;
 		
@@ -374,14 +380,6 @@ void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepm
 		printf("i3new is %d\n", i3new);
         printf("nsteplength is %d\n", nsteplength);
 		
-		/*
-		cudaError_t err = cudaGetLastError();
-    	if (err != cudaSuccess)
-    	{
-        	printf("MP2 error: 0x%x (%s)\n", err, cudaGetErrorString(err));
-    	}
-		*/	 
-
 		fflush(stdout);		
 
 		cudaMemset(orbmp2k331_d, 0, sizeof(QUICKDouble)*nstep*iocc*ivir*nbasis);
@@ -512,6 +510,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) finalMP2AccumulationKernel(int 
     int nbasis = devSim_MP2.nbasis;
 	int iocc = nElec/2;
     int ivir = nbasis - iocc;
+	int nfrozencore = devSim_MP2.nfrozencore;
 
     int offside = blockIdx.x*blockDim.x+threadIdx.x;
 	int totalThreads = blockDim.x*gridDim.x;
@@ -528,7 +527,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) finalMP2AccumulationKernel(int 
 
     	if(j3<ivir && l3<ivir)
     	{	
-        	if(k3>i3)
+        	if(k3>i3 && k3>=nfrozencore)
         	{
             	QUICKADD(MP2cor[0], 2.0/(molorbe[i3]+molorbe[k3]-molorbe[j3+iocc]-molorbe[l3+iocc]) \
                                 *LOC2(orbmp2, j3, l3, ivir, ivir) \
@@ -536,7 +535,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) finalMP2AccumulationKernel(int 
                                 - LOC2(orbmp2, l3, j3, ivir, ivir)));
 
         	}
-        	if(k3==i3)
+        	if(k3==i3 && k3>=nfrozencore)
        		{
             	QUICKADD(MP2cor[0],1.0/(molorbe[i3]+molorbe[k3]-molorbe[j3+iocc]-molorbe[l3+iocc]) \
                                 *LOC2(orbmp2,j3,l3,ivir, ivir) \

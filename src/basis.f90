@@ -229,8 +229,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
          nshell = nshell + quick_basis%kshell(quick_molspec%iattype(i))
          nbasis = nbasis + kbasis(quick_molspec%iattype(i))
          nprim = nprim + kcontract(quick_molspec%iattype(i))
-         nfrozencore = nfrozencore + frozencore(quick_molspec%iattype(i))/2
-    
+         if(quick_method%frzCore)then
+            nfrozencore = nfrozencore + frozencore(quick_molspec%iattype(i))/2
+         endif
+
          ! MFCC
          if(i.eq.natomfinal)nbasisfinal=nbasis
          do ixiao=1,npmfcc

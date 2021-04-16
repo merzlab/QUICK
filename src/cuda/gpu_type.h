@@ -178,6 +178,7 @@ struct gpu_simulation_type {
     int                             fStart;
     int                             ffStart;
     int                             maxL;
+	int								nfrozencore;
 
 	//New XC implementation
     int npoints;                                //Total number of packed grid points
@@ -346,7 +347,7 @@ struct gpu_basis_type {
     
     int                             fStart;
     int                             ffStart;
-    
+    int								nfrozencore;
     // Gaussian Type function
 
     cuda_buffer_type<int>*          ncontract;
@@ -446,7 +447,8 @@ struct gpu_type {
     int                             jshell;
     int                             jbasis;
     int                             maxL;
-    
+	int								nfrozencore;  
+
     cuda_buffer_type<int>*          iattype;
     cuda_buffer_type<QUICKDouble>*  xyz;
     cuda_buffer_type<QUICKDouble>*  chg;

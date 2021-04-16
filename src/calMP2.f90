@@ -16,6 +16,11 @@ subroutine calmp2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   integer :: nelec,nelecb
 
+    if(.not. quick_method%frzCore)then
+        print *, "Do not use fc approximation! nfrozencore is ", nfrozencore
+    endif
+
+
 #ifdef CUDA
     if(quick_method%bCUDA) then
     
@@ -41,13 +46,6 @@ subroutine calmp2
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
 
-  print *, "calmp2 starts, nfrozencore is ", nfrozencore, "nelec is ", nelec
-  if(.not. quick_method%frzCore)then
-    print *, "Do not use frozen core approximation!"
-    nfrozencore = 0
-  endif
-
-  
   call PrtAct(ioutfile,"Begin MP2 Calculation")
   cutoffmp2=1.0d-8  ! cutoff criteria
   quick_method%primLimit=1.0d-8

@@ -40,8 +40,8 @@ module quick_basis_module
         type (gaussian), dimension(:), pointer :: gauss_fnc => null()
 
         ! total shell number
-        !integer, pointer :: nshell
-        !integer, pointer :: nfrozencore
+        integer, pointer :: nshell
+        integer, pointer :: nfrozencore
 
         ! total primitive guassian function number
         integer, pointer :: nprim

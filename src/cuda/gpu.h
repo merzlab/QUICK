@@ -38,7 +38,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
                                   int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
-                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN);
+                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN, int* nfrozencore);
 extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
@@ -75,7 +75,6 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
 void gpu_delete_sswgrad_vars();
-//void get2e_MP2(_gpu_type gpu);
 void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
