@@ -5263,6 +5263,7 @@ end function electricfld
 subroutine ewtdmxder(IDX)
   use allmod
   use quick_overlap_module, only: gpt, overlap
+  use quick_uscf_operator_module, only: uscf_operator
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
@@ -5293,7 +5294,8 @@ subroutine ewtdmxder(IDX)
   ! Now get the alpha operator matrix and start building the first derivative
   ! of the energy weighted density matrix.
 
-  call uhfoperatorA
+  !call uhfoperatorA
+  call uscf_operator
 
   do I=1,nbasis
      do J=1,nbasis
@@ -5342,7 +5344,7 @@ subroutine ewtdmxder(IDX)
 
   ! Now get the beta operator matrix.
 
-  call uhfoperatorB
+  ! call uhfoperatorB
 
   do I=1,nbasis
      do J=1,nbasis
