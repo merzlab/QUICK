@@ -298,9 +298,11 @@ print_test_info(){
     grad_naip_meoh_libxc_pbeh_def2svp)    testinfo="NAIP-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_ncnaip_b3lyp_631gss)             testinfo="NAIP2-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_rpsb_meoh_rhf_321g)              testinfo="RPSB-MeOH: RHF point charge gradient test: s and p basis functions";;
+    grad_ohrad_b3lyp_631gss)              testinfo="OH radical: UDFT B3LYP gradient test";;
     opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
+    opt_merad_b3lyp_631gss)               testinfo="Methyl radical: UDFT B3LYP geometry optimization test";;
     api_water_rhf_631g)                   testinfo="Water: API test";;
   esac
 
