@@ -21,7 +21,7 @@ module quick_uscf_module
   implicit none
   private
 
-  public :: uscf 
+  public :: uscf,allocate_quick_uscf,deallocate_quick_uscf,alloperatorB 
 
   double precision, allocatable, dimension(:,:,:) :: alloperatorB
 
