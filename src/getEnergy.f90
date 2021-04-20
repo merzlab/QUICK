@@ -99,7 +99,8 @@ subroutine getEnergy(isGuess, ierr)
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
       if(isGuess) then
-        call uscf_sad(verbose,ierr)
+        !call uscf_sad(verbose,ierr)
+        !call uscf_sad_new(ierr)
       else
         call uscf(ierr)       ! unrestricted system
       endif
