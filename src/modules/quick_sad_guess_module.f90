@@ -172,8 +172,6 @@ contains
               if (.not. present) readSAD = .false.
            end if
  
-           readSAD=.false.
- 
            ! From SCF calculation to get initial density guess
            if(readSAD) then
   
@@ -193,7 +191,6 @@ contains
               do i=1,nbasis
                  do j=1,nbasis
                     atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
-                    !write(*,*) i,j,atomdens(iitemp,i,j)
                  enddo
               enddo
   
