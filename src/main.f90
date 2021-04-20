@@ -143,7 +143,7 @@
     call read_Job_and_Atom(ierr)
     !allocate essential variables
     call alloc(quick_molspec,ierr)
-    if (quick_method%MFCC) call allocate_MFCC()
+    !if (quick_method%MFCC) call allocate_MFCC()
    
     call cpu_time(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
@@ -158,10 +158,10 @@
     end if
 
     ! b. MFCC initial guess
-    if (quick_method%MFCC) then
-!       call mfcc
-!       call getmolmfcc
-    endif
+    !if (quick_method%MFCC) then
+    !    call mfcc
+    !    call getmolmfcc
+    !endif
 
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure

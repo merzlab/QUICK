@@ -94,7 +94,7 @@ OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o  \
         $(objfolder)/ecp.o $(objfolder)/nuclear.o \
 	$(objfolder)/finalize.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
         $(objfolder)/calMP2.o $(objfolder)/hessian.o \
-        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/MFCC.o $(objfolder)/basis.o 
+        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/basis.o 
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
