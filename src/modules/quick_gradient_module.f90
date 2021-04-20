@@ -227,17 +227,17 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
-!     if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
+#ifdef DEBUG
+     if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-!     endif
-!#endif
+     endif
+#endif
   
 #ifdef MPIV
   endif
@@ -327,14 +327,14 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
-!    if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP : TOTAL GRADIENT: ")')
+#ifdef DEBUG
+    if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP : TOTAL GRADIENT: ")')
           do Iatm=1,natom*3
-                  write (*,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
           enddo
-!    endif
-!#endif
+    endif
+#endif
   
 #ifdef MPIV
   endif
@@ -498,17 +498,17 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
-!    if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
+#ifdef DEBUG
+    if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-!    endif
-!#endif
+    endif
+#endif
   
 #ifdef MPIV
   endif
@@ -553,17 +553,17 @@ contains
   if(master) then
 #endif
   
-!#ifdef DEBUG
-!    if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
+#ifdef DEBUG
+    if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-!    endif
-!#endif
+    endif
+#endif
   
 #ifdef MPIV
   endif
@@ -824,17 +824,17 @@ contains
      endif
 #endif
 
-!#ifdef DEBUG
-!    if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP 4 :  ERI GRADIENT ADDED:")')
+#ifdef DEBUG
+    if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP 4 :  ERI GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-!    endif
-!#endif
+    endif
+#endif
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -1221,17 +1221,17 @@ contains
      endif
 #endif
 
-!#ifdef DEBUG
-!    if (quick_method%debug) then
-          write (*,'(/," DEBUG STEP 5 :  XC GRADIENT ADDED:")')
+#ifdef DEBUG
+    if (quick_method%debug) then
+          write (ioutfile,'(/," DEBUG STEP 5 :  XC GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
-                  write (*,'(I5,7x,F20.10)')Iatm, &
+                  write (ioutfile,'(I5,7x,F20.10)')Iatm, &
                   quick_qm_struct%gradient((Iatm-1)*3+Imomentum)
               enddo
           enddo
-!    endif
-!#endif  
+    endif
+#endif  
 
      return
   
