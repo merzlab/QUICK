@@ -5268,6 +5268,7 @@ subroutine ewtdmxder(IDX)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
   integer i,j,k,ii,jj,kk,g_count
+  logical :: deltaO   = .false.  ! delta Operator
 
   ! This program calculates and uses the first derivative of the energy
   ! weighted density matrix.
@@ -5295,7 +5296,7 @@ subroutine ewtdmxder(IDX)
   ! of the energy weighted density matrix.
 
   !call uhfoperatorA
-  call uscf_operator
+  call uscf_operator(deltaO)
 
   do I=1,nbasis
      do J=1,nbasis
