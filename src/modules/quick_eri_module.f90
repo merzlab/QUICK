@@ -100,7 +100,7 @@ subroutine get_eri_precomputables
 
                AA=quick_basis%gcexpo(ips,quick_basis%ksumtype(ics))    ! so we have the exponent part for ics shell ips prim
                BB=quick_basis%gcexpo(jps,quick_basis%ksumtype(jcs))    ! and jcs shell jps prim
-               Apri(NA,NB)=AA+BB                     ! A'=expo(A)+expo(B)
+               Apri(NA,NB)=AA+BB                     ! A'=expo(A)+expo(B), HGP eqn 8 
                do i=1,3
                   XYZA(i)=xyz(i,quick_basis%katom(ics))     ! xyz(A)
                   XYZB(i)=xyz(i,quick_basis%katom(jcs))     ! xyz(B)
@@ -110,7 +110,7 @@ subroutine get_eri_precomputables
                            (xyz(2,quick_basis%katom(ics))-xyz(2,quick_basis%katom(jcs)))**2 + &
                            (xyz(3,quick_basis%katom(ics))-xyz(3,quick_basis%katom(jcs)))**2 )
 
-               ! P' is the weighting center of NpriI and NpriJ
+               ! P' is the weighting center of NpriI and NpriJ, HGP eqn 9
                !              expo(A)*xyz(A)+expo(B)*xyz(B)
                ! P'(A,B)  = ------------------------------
                !                 expo(A) + expo(B)
@@ -118,6 +118,7 @@ subroutine get_eri_precomputables
                   Ppri(i,NA,NB) = (XYZA(i)*AA + XYZB(i)*BB)/(AA+BB)
                enddo
 
+               ! Compute HGP eqn 15
                !                    expo(A)*expo(B)*(xyz(A)-xyz(B))^2              1
                ! K'(A,B) =  exp[ - ------------------------------------]* -------------------
                !                            expo(A)+expo(B)                  expo(A)+expo(B)
