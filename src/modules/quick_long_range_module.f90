@@ -20,12 +20,23 @@ module quick_long_range_module
   implicit none
   private
 
+  public :: computeLongRange
+
+  ! module specific data structures
+  double precision :: store(120,120)      ! store primitive integrals from vrr
+  double precision :: RA(3), RB(3), RC(3) ! cartesian coordinates of the 3 centers
+  double precision :: Zc, Cc              ! charge and a magic number of the external gaussian
+
+  interface computeLongRange
+    module procedure compute_long_range
+  end interface computeLongRange
+
 contains
 
   subroutine compute_long_range
 
     !----------------------------------------------------------------------!
-    ! This is the main driver for computing long range interactions. The   !
+    ! This is the main driver for computing long range potential. The      !
     ! goal is to compute (ij|c) three center integral and add a potential  !
     ! into Fock matrix. Here i,j are two basis functions, c is a gaussian  !
     ! located at a certain distance. To make use of the existing ERI code, !
@@ -36,48 +47,50 @@ contains
     use quick_basis_module
 
     implicit none
-    integer :: II, JJ ! shell pairs
-    integer :: nc, Cc ! number of external gaussian to loop through, index     
-    double precision :: Zc    ! charge 
-    double precision :: Rc(3) ! cartesian coordinates of the center of external gaussian
+    integer :: II, JJ         ! shell pairs
 
     ! set number of external gaussians and charge for testing
-    nc=1 
-    Zc= 1.0d0
+    Cc=1.0d0
+    Zc= 0.5d0
     Rc=0.0d0    
 
     do II = 1, jshell
       do JJ = II, jshell  
-        do Cc = 1, nc 
-          call compute_lngr_int(II,JJ,Cc,Zc,Rc)
-        enddo
+        call compute_lngr_int(II,JJ)
       enddo
     enddo
 
   end subroutine compute_long_range
 
 
-  subroutine compute_lngr_int(II,JJ,KK,Zc,RC)
+  subroutine compute_lngr_int(II,JJ)
 
     use quick_basis_module
-    integer, intent(in) :: II, JJ, KK
-    double precision, intent(in) :: Zc, RC(3)
+    use quick_method_module
+    use quick_molspec_module
+    use quick_params_module
+
+    integer, intent(in) :: II, JJ
 
     integer :: M, LL, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NNAB, NNCD, NABCDTYPE, &
-               NNA, NNC, NABCD, ITT, JJJ, III, Nprij, Nprii, iitemp, I1, I2 
-    double precision :: RA(3),RB(3),RD(3), P(3), AAtemp(3), Ptemp(3), Q(3), W(3), WQtemp(3), &
-                        WPtemp(3), FM(0:13)
+               NNA, NNC, NABCD, ITT, Nprij, Nprii, iitemp, I1, I2, I, J, K, L 
+    double precision :: P(3), AAtemp(3), Ptemp(3), Q(3), W(3), WQtemp(3), &
+                        Qtemp(3), WPtemp(3), FM(0:13)
     double precision :: AA, AB, ABtemp, cutoffprim1, cutoffprim, CD, ABCD, ROU, RPQ, ABCDsqrt, &
-                        ABcom, CDcom, XXXtemp, Qtemp, T
+                        ABcom, CDtemp, ABCDtemp, CDcom, XXXtemp, T
+
+    ! put the variables used in VRR & HRR in common blocks for the sake of consistency
+    common /VRRcom/ Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+    !common /hrrstore/ NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+    ! also put the following variables in a common block
+    ! common /COM1/ RA, RB, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
 
     ! set the coordinates of shell centers
     do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
       RB(M)=xyz(M,quick_basis%katom(JJ))
     enddo
-
-    ! set the center of null gaussian
-    RD=0.0d0
 
     ! Get angular momentum quantum number for each shell
     ! s=0~0, p=1~1, sp=0~1, d=2~2, f=3~3
@@ -205,6 +218,10 @@ contains
             XXXtemp=P(M)-Q(M)
             RPQ=RPQ+XXXtemp*XXXtemp            
 
+            ! ---->   ->  ->
+            ! Qtemp = Q - K
+            Qtemp(M)=Q(M)-RC(M)
+
             ! ----->   ->  ->
             ! WQtemp = W - Q
             ! ----->   ->  ->
@@ -241,7 +258,7 @@ contains
 
           ITT=ITT+1
 
-          ! now we will do vrr and and the double-electron integral
+          ! now we will do vrr 
           call vertical(NABCDTYPE)
 
           do I2=NNC,NNCD
@@ -254,7 +271,145 @@ contains
       enddo
     enddo
 
+    do I=NII1,NII2
+       NNA=Sumindex(I-1)+1
+       do J=NJJ1,NJJ2
+          NNAB=SumINDEX(I+J)
+          do K=NKK1,NKK2
+             NNC=Sumindex(k-1)+1
+             do L=NLL1,NLL2
+                NNCD=SumIndex(K+L)
+                call iclass_lngr_int(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+             enddo
+          enddo
+       enddo
+    enddo
+
+    return
+
   end subroutine compute_lngr_int
+
+  subroutine iclass_lngr_int(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+
+    use quick_basis_module
+    use quick_constants_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_calculated_module
+
+    implicit none
+
+    integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, II, JJ
+
+    ! variables in common blocks
+    !integer :: NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, NII1, NII2, NJJ1, &
+    !           NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
+    !double precision :: Ptemp(3), Qtemp(3), WPtemp(3), WQtemp(3), RA(3), RB(3), RC(3), &
+    !                    ABtemp, CDtemp, ABCDtemp, ABcom, CDcom
+
+    integer :: ITT, Nprii, Nprij, MM1, MM2, itemp, III1, III2, JJJ1, JJJ2, KKK1, KKK2, &
+               LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2 
+    double precision :: X44(129600)
+    double precision :: X2, Ytemp
+
+    ! put the variables used in VRR & HRR in common blocks for the sake of consistency
+    !common /VRRcom/ Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+    !common /hrrstore/ NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    !common /COM1/ RA, RB, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
+
+    store=0.0d0
+
+    ITT=0
+    do JJJ=1,quick_basis%kprim(JJ)
+       Nprij=quick_basis%kstart(JJ)+JJJ-1
+ 
+       do III=1,quick_basis%kprim(II)
+          Nprii=quick_basis%kstart(II)+III-1
+ 
+          ! X0 = 2.0d0*(PI)**(2.5d0), constants for HGP 15, X0 comes from constants module 
+          ! multiplied twice for KAB and KCD
+ 
+          X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+          !cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+
+          ! We no longer have Nprik, Npril. Omit the primitive integral screening for now.
+          !cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
+          !if(cutoffprim.gt.quick_method%primLimit)then
+            
+            ! Compute HGP eqn 15 for ket vector.
+            !                    expo(A)*expo(B)*(xyz(A)-xyz(B))^2              1
+            ! K'(A,B) =  exp[ - ------------------------------------]* -------------------
+            !                            expo(A)+expo(B)                  expo(A)+expo(B)
+            !
+            ! Since we have a null gaussian (ie. expo(B) is zero), this equations becomes the following.
+            !
+            ! K'(A,B) =  1/expo(A) 
+
+            ITT = ITT+1
+            !This is the KAB x KCD value reqired for HGP 12.
+            !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) is treated as 1.0. 
+            X44(ITT) = X2*(1/Zc)
+          !endif
+       enddo
+    enddo
+
+    ! Compute HGP eqn 12.
+    do MM2=NNC,NNCD
+      do MM1=NNA,NNAB
+        Ytemp=0.0d0
+        do itemp=1,ITT
+          Ytemp=Ytemp+X44(itemp)*Yxiao(itemp,MM1,MM2)
+        enddo
+        store(MM1,MM2)=Ytemp
+      enddo
+    enddo
+
+    !Get the start and end basis numbers for each angular momentum. 
+    !For eg. Qsbasis and Qfbasis are 1 and 3 for P basis. 
+    NBI1=quick_basis%Qsbasis(II,I)
+    NBI2=quick_basis%Qfbasis(II,I)
+    NBJ1=quick_basis%Qsbasis(JJ,J)
+    NBJ2=quick_basis%Qfbasis(JJ,J)
+    NBK1=0
+    NBK2=0
+    NBL1=0
+    NBL2=0
+
+    ! This is a whacky way of specifying integrals. We are interested in (IJ|00)
+    ! type integrals. This means, IJKLtype will have 0, 100, 200, 300, 1000, 
+    ! 1100, 1200, 1300, 2000, 2100, 2200, 2300, 3000, 3100, 3200, 3300 values
+    ! for (00|00), (01|00), (02|00) and so on.
+    IJtype=10*I+J
+    KLtype=10*K+L
+    IJKLtype=100*IJtype+KLtype
+
+    if((max(I,J,K,L).eq.2.and.(J.ne.0.or.L.ne.0)).or.(max(I,J,K,L).ge.3))IJKLtype=999
+
+    !quick_basis%ksumtype array has a cumulative sum of number of components of all
+    !shells 
+    III1=quick_basis%ksumtype(II)+NBI1
+    III2=quick_basis%ksumtype(II)+NBI2
+    JJJ1=quick_basis%ksumtype(JJ)+NBJ1
+    JJJ2=quick_basis%ksumtype(JJ)+NBJ2
+    KKK1=1+NBK1
+    KKK2=1+NBK2
+    LLL1=1+NBL1
+    LLL2=1+NBL2    
+
+    KKK=1
+    LLL=1
+
+    do III=III1,III2
+      do JJJ=JJJ1,JJJ2
+        call hrr_lngr
+        write(*,*) "lngr Y:",IJKLtype,III,JJJ,Y
+!        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Cc*Y
+      enddo
+    enddo
+
+  end subroutine iclass_lngr_int
+
+#include "./include/hrr_lngr.f90"
 
 end module quick_long_range_module
 
