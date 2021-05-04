@@ -73,7 +73,7 @@
       call print_quick_io_file(iOutFile,ierr) ! from quick_file_module
 
       ! check MPI setup and output info
-      call check_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
+      !call check_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
 
 #ifdef MPIV
       if (bMPI) call print_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module

@@ -39,9 +39,10 @@ Subroutine deallocate_calculated
 
 end subroutine deallocate_calculated
 
-subroutine deallocateall
+subroutine deallocateall(ierr)
   use allmod
-  implicit double precision(a-h,o-z)
+  implicit none
+  integer, intent(inout) :: ierr
 
     call  dealloc(quick_molspec,ierr)
     call  dealloc(quick_qm_struct)
@@ -68,7 +69,7 @@ subroutine finalize(io,ierr,option)
     integer, intent(inout) :: ierr
 
     ! Deallocate all variables
-    call deallocateall
+    call deallocateall(ierr)
 
     ! stop timer and output them
     call cpu_time(timer_end%TTotal)
