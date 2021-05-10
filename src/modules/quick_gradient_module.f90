@@ -82,6 +82,7 @@ contains
   !------------------------------------------------------------------
   
      use allmod
+     use quick_long_range_grad_module
      implicit double precision(a-h,o-z)
   
      integer, intent(inout) :: ierr
@@ -117,6 +118,9 @@ contains
 #else
         call scf_gradient
 #endif
+
+        call computeLongRangeGrad
+
      endif
   
 #if defined CUDA || defined CUDA_MPIV
