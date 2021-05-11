@@ -411,7 +411,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       !====== END MPI/MASTER ================
 
       
-      blngr_test=.true.
+      blngr_test=.false.
 
       do i=1,natomxiao
          if (.not. atmbs2(quick_molspec%iattype(i))) then
@@ -453,10 +453,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               aex(jbasis)=AA(k)
                               gcs(jbasis)=BB(k)
                               jbasis = jbasis+1
-!                              quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
-!                              quick_basis%gcexpo(k,Ninitial)=AA(k)
-
-!***************************************** setting manually for testing long range
                              
                               if(blngr_test) then
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)
@@ -465,8 +461,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               endif
 
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
-
-                              write(*,*) "gccoef", BB(k), quick_basis%gccoeff(k,Ninitial),"expo",quick_basis%gcexpo(k,Ninitial)
 
                               if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                            enddo
