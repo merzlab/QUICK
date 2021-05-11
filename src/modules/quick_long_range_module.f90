@@ -367,7 +367,7 @@ contains
             ITT = ITT+1
             !This is the KAB x KCD value reqired for HGP 12.
             !itt is the m value. 
-            X44(ITT) = X2*(1/Zc)
+            X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
 
 write(*,*) "lngr itt, x0,xcoeff1,x2,xcoeff2,x44: ",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
 (1/Zc)*Cc*(0.75/PI)**1.5,X44(ITT)
@@ -428,7 +428,7 @@ write(*,*) "lngr store", MM1,MM2,store(MM1,MM2)
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_lngr
-        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y*Cc*(Zc/PI)**1.5
+        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y
         write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
