@@ -92,7 +92,7 @@ contains
   subroutine quick_cew_prescf()
     
     use quick_api_module, only : quick_api
-    
+    use quick_long_range_module, only: computeLongRange    
     implicit none
 
     double precision :: E
@@ -229,6 +229,12 @@ contains
     !        Compute (ij|a0)
     !        H(i,j) += qa * (quick_cew%zeta/PI)**1.5d0 * (ij|a0)
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
+
+      do a=1, quick_api%natom
+        qa = quick_api%atomic_numbers(a)
+        call computeLongRange(quick_api%coords(1:3,a), quick_cew%zeta, qa)
+      enddo
+
     !
     ! do a=1, quick_api%nxt_ptchg
     !   qa = quick_api%ptchg_crd(4,a)
@@ -238,6 +244,12 @@ contains
     !        H(i,j) += qa * (quick_cew%zeta/PI)**1.5d0 * (ij|a0)
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
     !
+
+      do a=1, quick_api%nxt_ptchg
+        qa = quick_api%ptchg_crd(4,a)
+        call computeLongRange(quick_api%ptchg_crd(1:3,a), quick_cew%zeta, qa)
+      enddo
+
     ! Notice that we are ADDING (not subtracting) this term to
     ! the core Hamiltonian, because the density matrix is a
     ! "number density", whereas the electron charge density
