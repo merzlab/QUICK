@@ -410,7 +410,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    masterwork_readfile: if (master) then
       !====== END MPI/MASTER ================
 
-      
+      ! Adding this option to disable normalization if necessary. For testing
+      ! long range integrals, one can use normalized contraction coefficients
+      ! in CUSTOM basis set and read them in. Set to true for such testing.    
       blngr_test=.false.
 
       do i=1,natomxiao
