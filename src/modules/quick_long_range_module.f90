@@ -33,7 +33,7 @@ module quick_long_range_module
 
 contains
 
-  subroutine compute_long_range
+  subroutine compute_long_range(double precision c_coords, double precision  c_zeta, double precision c_chg)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !
@@ -47,22 +47,27 @@ contains
     use quick_basis_module
 
     implicit none
+    double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer :: II, JJ         ! shell pairs
 
     ! set number of external gaussians and charge for testing
-    Cc=2.0000000000D+00
-    Zc=7.5000000000D-01
-    Rc(1)=1.5000000000D+00 
-    Rc(2)=2.5000000000D+00
-    RC(3)=3.5000000000D+00
+    !Cc=2.0000000000D+00
+    !Zc=7.5000000000D-01
+    !Rc(1)=1.5000000000D+00 
+    !Rc(2)=2.5000000000D+00
+    !RC(3)=3.5000000000D+00
 
-    !do II = 1, jshell
-    !  do JJ = II, jshell  
-        II=2
-        JJ=1
+    RC=c_coords
+    Zc=c_zeta
+    Cc=c_chg
+
+    do II = 1, jshell
+      do JJ = II, jshell  
+        !II=2
+        !JJ=1
         call compute_lngr_int(II,JJ)
-    !  enddo
-    !enddo
+      enddo
+    enddo
 
   end subroutine compute_long_range
 
@@ -361,9 +366,8 @@ contains
 
             ITT = ITT+1
             !This is the KAB x KCD value reqired for HGP 12.
-            !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) for external gaussian
-            !comes from York group. Note that gccoeff for null gaussian is treated as 1.0. 
-            X44(ITT) = X2*(1/Zc)*Cc*(0.75/PI)**1.5
+            !itt is the m value. 
+            X44(ITT) = X2*(1/Zc)
 
 write(*,*) "lngr itt, x0,xcoeff1,x2,xcoeff2,x44: ",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
 (1/Zc)*Cc*(0.75/PI)**1.5,X44(ITT)
@@ -424,7 +428,7 @@ write(*,*) "lngr store", MM1,MM2,store(MM1,MM2)
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_lngr
-        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y
+        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y*Cc*(Zc/PI)**1.5
         write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
