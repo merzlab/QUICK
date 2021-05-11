@@ -27,9 +27,9 @@ module quick_long_range_grad_module
   double precision :: storeaa(120,120)
   double precision :: storebb(120,120)
   double precision :: storecc(120,120)
-  double precision :: storedd(120,120)
   double precision :: RA(3), RB(3), RC(3) ! cartesian coordinates of the 3 centers
   double precision :: Zc, Cc              ! charge and a magic number of the external gaussian
+  integer :: iC ! index of the third center required for gradient addition
 
   interface computeLongRangeGrad
     module procedure compute_long_range_grad
@@ -37,7 +37,8 @@ module quick_long_range_grad_module
 
 contains
 
-  subroutine compute_long_range_grad
+  subroutine compute_long_range_grad(double precision c_coords, double precision  c_zeta, &
+  double precision c_chg, integer c_idx)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !
@@ -51,22 +52,29 @@ contains
     use quick_basis_module
 
     implicit none
+    double precision, intent(in) :: c_coords(3), c_zeta, c_chg
+    double precision, intent(in) :: c_idx
     integer :: II, JJ         ! shell pairs
 
     ! set number of external gaussians and charge for testing
-    Cc=2.0000000000D+00
-    Zc=7.5000000000D-01
-    Rc(1)=1.5000000000D+00
-    Rc(2)=2.5000000000D+00
-    RC(3)=3.5000000000D+00
+    !Cc=2.0000000000D+00
+    !Zc=7.5000000000D-01
+    !Rc(1)=1.5000000000D+00
+    !Rc(2)=2.5000000000D+00
+    !RC(3)=3.5000000000D+00
 
-    !do II = 1, jshell
-    !  do JJ = II, jshell  
-        II=1
-        JJ=1
+    RC=c_coords
+    Zc=c_zeta
+    Cc=c_chg
+    iC=c_idx
+
+    do II = 1, jshell
+      do JJ = II, jshell  
+        !II=1
+        !JJ=1
         call compute_lngr_int_grad(II,JJ)
-    !  enddo
-    !enddo
+      enddo
+    enddo
 
   end subroutine compute_long_range_grad
 
@@ -332,7 +340,7 @@ contains
     integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, II, JJ, NNABfirst, NNCDfirst
 
     integer :: ITT, Nprii, Nprij, MM1, MM2, itemp, III1, III2, JJJ1, JJJ2, KKK1, KKK2, &
-               LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2, iA, iB, iC, &
+               LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2, iA, iB, &
                iAstart, iBstart, iCstart
 
     double precision :: AA, BB, X2, Ytemp, YtempAA, YtempBB, YtempCC, Agrad1, Agrad2, Agrad3, &
@@ -375,7 +383,7 @@ contains
             ITT = ITT+1
             !This is the KAB x KCD value reqired for HGP 12.
             !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) is treated as 1.0. 
-            quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(0.75/PI)**1.5
+            quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
 
 write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
 (1/Zc)*Cc*(0.75/PI)**1.5,quick_scratch%X44(ITT)
@@ -471,10 +479,6 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
     iA = quick_basis%ncenter(III2)
     iB = quick_basis%ncenter(JJJ2)
 
-!********* Find out what to do about this guy ************
-    iC = 1 
-!*********************************************************
-
     iAstart = (iA-1)*3
     iBstart = (iB-1)*3
     iCstart = (iC-1)*3
@@ -485,20 +489,22 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_lngr_grad
-        write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
-        Ybb(1),Ybb(2),Ybb(3)
+!        write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
+!        Ybb(1),Ybb(2),Ybb(3)
 
-!        quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+quick_qm_struct%dense(JJJ,III)*Cc*Yaa(1)
-!        quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+quick_qm_struct%dense(JJJ,III)*Cc*Ybb(1)
-!        quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+quick_qm_struct%dense(JJJ,III)*Cc*Ycc(1)
-     
-!        quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+quick_qm_struct%dense(JJJ,III)*Cc*Yaa(2)
-!        quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+quick_qm_struct%dense(JJJ,III)*Cc*Ybb(2)
-!        quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+quick_qm_struct%dense(JJJ,III)*Cc*Ycc(2)
-     
-!        quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+quick_qm_struct%dense(JJJ,III)*Cc*Yaa(3)
-!        quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+quick_qm_struct%dense(JJJ,III)*Cc*Ybb(3)
-!        quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+quick_qm_struct%dense(JJJ,III)*Cc*Ycc(3)
+         quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+quick_qm_struct%dense(JJJ,III)*Yaa(1)
+         quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+quick_qm_struct%dense(JJJ,III)*Yaa(2)
+         quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+quick_qm_struct%dense(JJJ,III)*Yaa(3)
+
+         quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+quick_qm_struct%dense(JJJ,III)*Ybb(1)
+         quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+quick_qm_struct%dense(JJJ,III)*Ybb(2)
+         quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+quick_qm_struct%dense(JJJ,III)*Ybb(3)
+ 
+         if(iC < natom) then     
+           quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+quick_qm_struct%dense(JJJ,III)*Ycc(1)
+           quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+quick_qm_struct%dense(JJJ,III)*Ycc(2)
+           quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+quick_qm_struct%dense(JJJ,III)*Ycc(3)
+         endif
       enddo
     enddo
 
