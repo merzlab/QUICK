@@ -456,9 +456,10 @@ contains
   subroutine quick_cew_grad()
     
     use quick_api_module, only : quick_api
+    use quick_long_range_grad_module, only: computeLongRangeGrad
     
     implicit none
-
+    double precision :: c_coord(3)
     !
     ! erf(beta*r)/r as r -> 0
     !
@@ -566,6 +567,19 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
+
+    do c=1, (quick_api%natom+quick_api%nxt_ptchg)
+      if(c < quick_api%natom) then
+        c_coord=quick_api%coords(1:3,c)
+        qc=quick_api%atomic_numbers(c)
+      else
+        c_coord=quick_api%ptchg_crd(1:3,c)
+        qc=quick_api%ptchg_crd(4,c)        
+      endif
+
+      call computeLongRangeGrad(c_coord,quick_cew%zeta,qc,c)
+
+    enddo
 
     call quick_cew_grad_quad()
 
