@@ -50,13 +50,6 @@ contains
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer :: II, JJ         ! shell pairs
 
-    ! set number of external gaussians and charge for testing
-    !Cc=2.0000000000D+00
-    !Zc=7.5000000000D-01
-    !Rc(1)=1.5000000000D+00 
-    !Rc(2)=2.5000000000D+00
-    !RC(3)=3.5000000000D+00
-
     RC=c_coords
     Zc=c_zeta
     Cc=c_chg
@@ -307,21 +300,10 @@ contains
 
     integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, II, JJ
 
-    ! variables in common blocks
-    !integer :: NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, NII1, NII2, NJJ1, &
-    !           NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
-    !double precision :: Ptemp(3), Qtemp(3), WPtemp(3), WQtemp(3), RA(3), RB(3), RC(3), &
-    !                    ABtemp, CDtemp, ABCDtemp, ABcom, CDcom
-
     integer :: ITT, Nprii, Nprij, MM1, MM2, itemp, III1, III2, JJJ1, JJJ2, KKK1, KKK2, &
                LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2 
     double precision :: X44(129600)
     double precision :: X2, Ytemp
-
-    ! put the variables used in VRR & HRR in common blocks for the sake of consistency
-    !common /VRRcom/ Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
-    !common /hrrstore/ NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-    !common /COM1/ RA, RB, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
 
     store=0.0d0
 
