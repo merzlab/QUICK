@@ -15,25 +15,25 @@
 ! interactions in QM/MM.                                              !
 !_____________________________________________________________________!
 
-module quick_long_range_module
+module quick_lri_module
 
   implicit none
   private
 
-  public :: computeLongRange
+  public :: computeLRI
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
   double precision :: RA(3), RB(3), RC(3) ! cartesian coordinates of the 3 centers
   double precision :: Zc, Cc              ! charge and a magic number of the external gaussian
 
-  interface computeLongRange
-    module procedure compute_long_range
-  end interface computeLongRange
+  interface computeLRI
+    module procedure compute_lri
+  end interface computeLRI
 
 contains
 
-  subroutine compute_long_range(c_coords, c_zeta, c_chg)
+  subroutine compute_lri(c_coords, c_zeta, c_chg)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !
@@ -58,14 +58,14 @@ contains
       do JJ = II, jshell  
         !II=2
         !JJ=1
-        call compute_lngr_int(II,JJ)
+        call compute_tci(II,JJ)
       enddo
     enddo
 
-  end subroutine compute_long_range
+  end subroutine compute_lri
 
 
-  subroutine compute_lngr_int(II,JJ)
+  subroutine compute_tci(II,JJ)
 
     use quick_basis_module
     use quick_method_module
@@ -277,7 +277,7 @@ contains
              NNC=Sumindex(k-1)+1
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
-                call iclass_lngr_int(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+                call iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
              enddo
           enddo
        enddo
@@ -285,9 +285,9 @@ contains
 
     return
 
-  end subroutine compute_lngr_int
+  end subroutine compute_tci
 
-  subroutine iclass_lngr_int(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+  subroutine iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
 
     use quick_basis_module
     use quick_constants_module
@@ -390,15 +390,15 @@ contains
 
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
-        call hrr_lngr
+        call hrr_tci
         quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y
         !write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
 
-  end subroutine iclass_lngr_int
+  end subroutine iclass_tci
 
-#include "./include/hrr_lngr.f90"
+#include "./include/hrr_lri.f90"
 
-end module quick_long_range_module
+end module quick_lri_module
 
