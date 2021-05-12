@@ -37,8 +37,7 @@ module quick_long_range_grad_module
 
 contains
 
-  subroutine compute_long_range_grad(double precision c_coords, double precision  c_zeta, &
-  double precision c_chg, integer c_idx)
+  subroutine compute_long_range_grad(c_coords, c_zeta, c_chg, c_idx)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !
@@ -350,7 +349,6 @@ contains
     storeaa=0.0d0
     storebb=0.0d0
     storecc=0.0d0
-    storedd=0.0d0
 
     ITT=0
     do JJJ=1,quick_basis%kprim(JJ)

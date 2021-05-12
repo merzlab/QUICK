@@ -33,7 +33,7 @@ module quick_long_range_module
 
 contains
 
-  subroutine compute_long_range(double precision c_coords, double precision  c_zeta, double precision c_chg)
+  subroutine compute_long_range(c_coords, c_zeta, c_chg)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !

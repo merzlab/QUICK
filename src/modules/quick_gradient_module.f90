@@ -119,8 +119,6 @@ contains
         call scf_gradient
 #endif
 
-        call computeLongRangeGrad
-
      endif
   
 #if defined CUDA || defined CUDA_MPIV
