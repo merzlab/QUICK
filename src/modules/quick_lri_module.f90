@@ -36,9 +36,9 @@ contains
   subroutine compute_lri(c_coords, c_zeta, c_chg)
 
     !----------------------------------------------------------------------!
-    ! This is the main driver for computing long range potential. The      !
-    ! goal is to compute (ij|c) three center integral and add a potential  !
-    ! into Fock matrix. Here i,j are two basis functions, c is a gaussian  !
+    ! The goal of this subroutine is to compute (ij|c) three center        !
+    ! integral and add a potential into Fock matrix.                       !
+    ! Here i,j are two basis functions, c is a gaussian                    !
     ! located at a certain distance. To make use of the existing ERI code, !
     ! we approximate above integral with (ij|c0) four center integral where!
     ! 0 is another gaussian with zero exponent.                            !
@@ -66,6 +66,12 @@ contains
 
 
   subroutine compute_tci(II,JJ)
+
+    !----------------------------------------------------------------------!
+    ! This subroutine computes quantities required for OSHGP algorithm,    !
+    ! values of Boys function and calls appropriate subroutines to that    !
+    ! performs VRR and HRR.                                                !
+    !______________________________________________________________________!
 
     use quick_basis_module
     use quick_method_module
@@ -289,6 +295,12 @@ contains
 
   subroutine iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
 
+    !----------------------------------------------------------------------!
+    ! This subroutine computes contracted 3 center integrals by calling    !
+    ! the appropriate subroutine and adds the integral contributions into  !
+    ! core hamiltonian.                                                    !
+    !______________________________________________________________________!
+
     use quick_basis_module
     use quick_constants_module
     use quick_method_module
@@ -391,7 +403,8 @@ contains
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_tci
-        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y
+        ! assumes that core operator formation is done
+        quick_qm_struct%oneElecO(JJJ,III)=quick_qm_struct%oneElecO(JJJ,III)+Y
         !write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
