@@ -88,12 +88,8 @@ contains
     double precision :: AA, AB, ABtemp, cutoffprim1, cutoffprim, CD, ABCD, ROU, RPQ, ABCDsqrt, &
                         ABcom, CDtemp, ABCDtemp, CDcom, XXXtemp, T
 
-    ! put the variables used in VRR & HRR in common blocks for the sake of consistency
+    ! put the variables used in VRR in a common block (legacy code needs this)
     common /VRRcom/ Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
-    !common /hrrstore/ NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-
-    ! also put the following variables in a common block
-    ! common /COM1/ RA, RB, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
 
     ! set the coordinates of shell centers
     do M=1,3
@@ -111,8 +107,6 @@ contains
     NKK2=0
     NLL1=0
     NLL2=0
-
-    write(*,*) "II JJ NII1 NJJ1:",II, JJ, NII1, NJJ1
 
     NNAB=(NII2+NJJ2)
     NNCD=(NKK2+NLL2)
@@ -249,8 +243,6 @@ contains
           ! T = ROU * | P - Q|
           T=RPQ*ROU
 
-          write(*,*) "HGP 13 T=",T,NABCD
-
           ! Compute boys function values, HGP eqn 14.
           !                         2m        2
           ! Fm(T) = integral(1,0) {t   exp(-Tt )dt}
@@ -267,12 +259,9 @@ contains
           do iitemp=0,NABCD
              ! Yxiaotemp(1,1,iitemp) is the starting point of recurrsion
              Yxiaotemp(1,1,iitemp)=FM(iitemp)/ABCDsqrt
-             write(*,*) "FM",FM(iitemp)
           enddo
 
           ITT=ITT+1
-
-          write(*,*) "NABCDTYPE",NABCDTYPE
 
           ! now we will do vrr 
           call vertical(NABCDTYPE)
@@ -295,7 +284,6 @@ contains
              NNC=Sumindex(k-1)+1
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
-                write(*,*) "Calling iclass_lngr_int: I J K L", I, J, K, L
                 call iclass_lngr_int(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
              enddo
           enddo
@@ -348,7 +336,6 @@ contains
           ! multiplied twice for KAB and KCD
  
           X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
-          write(*,*) "X0,Xcoeff",X0,quick_basis%Xcoeff(Nprii,Nprij,I,J)
           !cutoffprim1=dnmax*cutprim(Nprii,Nprij)
 
           ! We no longer have Nprik, Npril. Omit the primitive integral screening for now.
@@ -369,8 +356,6 @@ contains
             !itt is the m value. 
             X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
 
-write(*,*) "lngr itt, x0,xcoeff1,x2,xcoeff2,x44: ",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
-(1/Zc)*Cc*(0.75/PI)**1.5,X44(ITT)
           !endif
        enddo
     enddo
@@ -381,10 +366,8 @@ write(*,*) "lngr itt, x0,xcoeff1,x2,xcoeff2,x44: ",itt,x0,quick_basis%Xcoeff(Npr
         Ytemp=0.0d0
         do itemp=1,ITT
           Ytemp=Ytemp+X44(itemp)*Yxiao(itemp,MM1,MM2)
-            write(*,*) "lngr X44, Yxio, Ytemp: ", X44(itemp),Yxiao(itemp,MM1,MM2),Ytemp
         enddo
         store(MM1,MM2)=Ytemp
-write(*,*) "lngr store", MM1,MM2,store(MM1,MM2)
       enddo
     enddo
 
@@ -407,8 +390,6 @@ write(*,*) "lngr store", MM1,MM2,store(MM1,MM2)
     KLtype=10*K+L
     IJKLtype=100*IJtype+KLtype
 
-    write(*,*) "IJKLtype", IJKLtype
-
     if((max(I,J,K,L).eq.2.and.(J.ne.0.or.L.ne.0)).or.(max(I,J,K,L).ge.3))IJKLtype=999
 
     !quick_basis%ksumtype array has a cumulative sum of number of components of all
@@ -429,7 +410,7 @@ write(*,*) "lngr store", MM1,MM2,store(MM1,MM2)
       do JJJ=JJJ1,JJJ2
         call hrr_lngr
         quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+Y
-        write(*,*) JJJ,III,"lngr Y:", Y
+        !write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
 
