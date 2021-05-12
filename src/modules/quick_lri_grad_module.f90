@@ -40,9 +40,9 @@ contains
   subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx)
 
     !----------------------------------------------------------------------!
-    ! This is the main driver for computing long range potential. The      !
-    ! goal is to compute (ij|c) three center integral and add a potential  !
-    ! into Fock matrix. Here i,j are two basis functions, c is a gaussian  !
+    ! The goal of this subroutine is to compute (ij|c) three center        !
+    ! integral gradients. (i.e. d(ij|c)/dA_i)                              !
+    ! Here i,j are two basis functions, c is a gaussian                    !     
     ! located at a certain distance. To make use of the existing ERI code, !
     ! we approximate above integral with (ij|c0) four center integral where!
     ! 0 is another gaussian with zero exponent.                            !
@@ -52,15 +52,8 @@ contains
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
-    double precision, intent(in) :: c_idx
+    integer, intent(in) :: c_idx
     integer :: II, JJ         ! shell pairs
-
-    ! set number of external gaussians and charge for testing
-    !Cc=2.0000000000D+00
-    !Zc=7.5000000000D-01
-    !Rc(1)=1.5000000000D+00
-    !Rc(2)=2.5000000000D+00
-    !RC(3)=3.5000000000D+00
 
     RC=c_coords
     Zc=c_zeta
@@ -80,6 +73,12 @@ contains
 
   subroutine compute_tci_grad(II,JJ)
 
+    !----------------------------------------------------------------------!
+    ! This subroutine computes quantities required for OSHGP algorithm,    !
+    ! values of Boys function and calls appropriate subroutines to that    !
+    ! performs VRR and HRR.                                                !
+    !______________________________________________________________________!
+
     use quick_basis_module
     use quick_method_module
     use quick_molspec_module
@@ -95,12 +94,8 @@ contains
     double precision :: AA, AB, ABtemp, cutoffprim1, cutoffprim, CD, ABCD, ROU, RPQ, ABCDsqrt, &
                         ABcom, CDtemp, ABCDtemp, CDcom, XXXtemp, T
 
-    ! put the variables used in VRR & HRR in common blocks for the sake of consistency
+    ! put the variables used in VRR in common a block (legacy code needs this)
     common /VRRcom/ Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
-    !common /hrrstore/ NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-
-    ! also put the following variables in a common block
-    ! common /COM1/ RA, RB, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NABCDTYPE, NABCD
 
     ! set the coordinates of shell centers
     do M=1,3
@@ -119,7 +114,7 @@ contains
     NLL1=0
     NLL2=0
 
-    write(*,*) "II JJ NII1 NJJ1:",II, JJ, NII1, NJJ1
+    !write(*,*) "II JJ NII1 NJJ1:",II, JJ, NII1, NJJ1
 
     NNAB=(NII2+NJJ2)
     NNCD=(NKK2+NLL2)
@@ -261,7 +256,7 @@ contains
           ! T = ROU * | P - Q|
           T=RPQ*ROU
 
-          write(*,*) "HGP 13 T=",T,NABCD
+          !write(*,*) "HGP 13 T=",T,NABCD
 
           ! Compute boys function values, HGP eqn 14.
           !                         2m        2
@@ -279,12 +274,12 @@ contains
           do iitemp=0,NABCD
              ! Yxiaotemp(1,1,iitemp) is the starting point of recurrsion
              Yxiaotemp(1,1,iitemp)=FM(iitemp)/ABCDsqrt
-             write(*,*) "FM",FM(iitemp)
+          !   write(*,*) "FM",FM(iitemp)
           enddo
 
           ITT=ITT+1
 
-          write(*,*) "NABCDTYPE",NABCDTYPE
+          !write(*,*) "NABCDTYPE",NABCDTYPE
 
           ! now we will do vrr 
           call vertical(NABCDTYPE+11)
@@ -326,6 +321,12 @@ contains
   end subroutine compute_tci_grad
 
   subroutine iclass_tci_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
+
+    !----------------------------------------------------------------------!
+    ! This subroutine computes contracted 3 center integrals by calling    !
+    ! the appropriate subroutine and adds the integral contributions into  !
+    ! gradient vector.                                                     !
+    !______________________________________________________________________!
 
     use quick_basis_module
     use quick_constants_module
@@ -383,8 +384,8 @@ contains
             !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) is treated as 1.0. 
             quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
 
-write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
-(1/Zc)*Cc*(0.75/PI)**1.5,quick_scratch%X44(ITT)
+            !write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
+            !(1/Zc)*Cc*(Zc/PI)**1.5,quick_scratch%X44(ITT)
 
             !compute the first term of eqn 20 for 3 centers. 
             quick_scratch%X44AA(ITT)=quick_scratch%X44(ITT)*AA*2.0d0
@@ -402,12 +403,12 @@ write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff
         do itemp=1,ITT
           Ytemp=Ytemp+quick_scratch%X44(itemp)*Yxiao(itemp,MM1,MM2)
 
-            write(*,*) "lngr grad X44, Yxio, Ytemp: ",&
-quick_scratch%X44(itemp),Yxiao(itemp,MM1,MM2),Ytemp
+            !write(*,*) "lngr grad X44, Yxio, Ytemp: ",&
+            !quick_scratch%X44(itemp),Yxiao(itemp,MM1,MM2),Ytemp
 
         enddo
         store(MM1,MM2)=Ytemp
- write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
+        !write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
       enddo
     enddo
 
@@ -421,14 +422,14 @@ quick_scratch%X44(itemp),Yxiao(itemp,MM1,MM2),Ytemp
              YtempBB=YtempBB+quick_scratch%X44BB(itemp)*Yxiao(itemp,MM1,MM2)
              YtempCC=YtempCC+quick_scratch%X44CC(itemp)*Yxiao(itemp,MM1,MM2)
 
-            write(*,*) "lngr grad X44AA, Yxio, YtempAA: ",&
-quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
+             !write(*,*) "lngr grad X44AA, Yxio, YtempAA: ",&
+             !quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
           enddo
           storeAA(MM1,MM2)=YtempAA
           storeBB(MM1,MM2)=YtempBB
           storeCC(MM1,MM2)=YtempCC
 
- write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
+          !write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
        enddo
     enddo
 
@@ -461,7 +462,7 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
     KLtype=10*K+L
     IJKLtype=100*IJtype+KLtype
 
-    write(*,*) "IJKLtype", IJKLtype
+    !write(*,*) "IJKLtype", IJKLtype
 
     !quick_basis%ksumtype array has a cumulative sum of number of components of all
     !shells 
@@ -487,8 +488,8 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_tci_grad
-!        write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
-!        Ybb(1),Ybb(2),Ybb(3)
+        !write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
+        !Ybb(1),Ybb(2),Ybb(3),Ycc(1),Ycc(2),Ycc(3)
 
          quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+quick_qm_struct%dense(JJJ,III)*Yaa(1)
          quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+quick_qm_struct%dense(JJJ,III)*Yaa(2)
