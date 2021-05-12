@@ -17,7 +17,7 @@
 ! range corrected QM/MM.                                              !
 !_____________________________________________________________________!
 
-subroutine hrr_lngr_grad
+subroutine hrr_tci_grad
 
   use quick_basis_module
   use quick_params_module   
@@ -127,5 +127,5 @@ subroutine hrr_lngr_grad
 
 100 continue
 
-end subroutine hrr_lngr_grad
+end subroutine hrr_tci_grad
 

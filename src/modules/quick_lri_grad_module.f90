@@ -15,12 +15,12 @@
 ! gradients in QM/MM.                                                 !
 !_____________________________________________________________________!
 
-module quick_long_range_grad_module
+module quick_lri_grad_module
 
   implicit none
   private
 
-  public :: computeLongRangeGrad
+  public :: computeLRIGrad
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
@@ -31,13 +31,13 @@ module quick_long_range_grad_module
   double precision :: Zc, Cc              ! charge and a magic number of the external gaussian
   integer :: iC ! index of the third center required for gradient addition
 
-  interface computeLongRangeGrad
-    module procedure compute_long_range_grad
-  end interface computeLongRangeGrad
+  interface computeLRIGrad
+    module procedure compute_lri_grad
+  end interface computeLRIGrad
 
 contains
 
-  subroutine compute_long_range_grad(c_coords, c_zeta, c_chg, c_idx)
+  subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx)
 
     !----------------------------------------------------------------------!
     ! This is the main driver for computing long range potential. The      !
@@ -71,14 +71,14 @@ contains
       do JJ = II, jshell  
         !II=1
         !JJ=1
-        call compute_lngr_int_grad(II,JJ)
+        call compute_tci_grad(II,JJ)
       enddo
     enddo
 
-  end subroutine compute_long_range_grad
+  end subroutine compute_lri_grad
 
 
-  subroutine compute_lngr_int_grad(II,JJ)
+  subroutine compute_tci_grad(II,JJ)
 
     use quick_basis_module
     use quick_method_module
@@ -312,7 +312,7 @@ contains
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
                 NNCDfirst=SumIndex(K+L+1)
-                call iclass_lngr_int_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
+                call iclass_tci_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
              enddo
           enddo
        enddo
@@ -323,9 +323,9 @@ contains
 
     return
 
-  end subroutine compute_lngr_int_grad
+  end subroutine compute_tci_grad
 
-  subroutine iclass_lngr_int_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
+  subroutine iclass_tci_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 
     use quick_basis_module
     use quick_constants_module
@@ -486,7 +486,7 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
 
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
-        call hrr_lngr_grad
+        call hrr_tci_grad
 !        write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
 !        Ybb(1),Ybb(2),Ybb(3)
 
@@ -506,9 +506,9 @@ quick_scratch%X44AA(itemp),Yxiao(itemp,MM1,MM2),YtempAA
       enddo
     enddo
 
-  end subroutine iclass_lngr_int_grad
+  end subroutine iclass_tci_grad
 
-#include "./include/hrr_lngr_grad.f90"
+#include "./include/hrr_lri_grad.f90"
 
-end module quick_long_range_grad_module
+end module quick_lri_grad_module
 
