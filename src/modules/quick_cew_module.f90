@@ -92,7 +92,7 @@ contains
   subroutine quick_cew_prescf()
     
     use quick_api_module, only : quick_api
-    use quick_long_range_module, only: computeLongRange    
+    use quick_lri_module, only: computeLRI    
     implicit none
 
     double precision :: E
@@ -232,7 +232,7 @@ contains
 
       do a=1, quick_api%natom
         qa = quick_api%atomic_numbers(a)
-        call computeLongRange(quick_api%coords(1:3,a), quick_cew%zeta, qa)
+        call computeLRI(quick_api%coords(1:3,a), quick_cew%zeta, qa)
       enddo
 
     !
@@ -247,7 +247,7 @@ contains
 
       do a=1, quick_api%nxt_ptchg
         qa = quick_api%ptchg_crd(4,a)
-        call computeLongRange(quick_api%ptchg_crd(1:3,a), quick_cew%zeta, qa)
+        call computeLRI(quick_api%ptchg_crd(1:3,a), quick_cew%zeta, qa)
       enddo
 
     ! Notice that we are ADDING (not subtracting) this term to
@@ -456,7 +456,7 @@ contains
   subroutine quick_cew_grad()
     
     use quick_api_module, only : quick_api
-    use quick_long_range_grad_module, only: computeLongRangeGrad
+    use quick_lri_grad_module, only: computeLRI
     
     implicit none
     double precision :: c_coord(3)
@@ -577,7 +577,7 @@ contains
         qc=quick_api%ptchg_crd(4,c)        
       endif
 
-      call computeLongRangeGrad(c_coord,quick_cew%zeta,qc,c)
+      call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
 
     enddo
 
