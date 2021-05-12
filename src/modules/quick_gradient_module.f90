@@ -82,12 +82,14 @@ contains
   !------------------------------------------------------------------
   
      use allmod
-     use quick_long_range_grad_module
+     use quick_lri_grad_module
      implicit double precision(a-h,o-z)
   
      integer, intent(inout) :: ierr
      character(len=1) cartsym(3)
-  
+     double precision :: c_coords(3),c_zeta,c_chg ! for testing lri gradients
+     integer :: c_idx  ! for testing lri gradients
+ 
 #ifdef MPIV
      include "mpif.h"
 #endif
@@ -118,6 +120,18 @@ contains
 #else
         call scf_gradient
 #endif
+
+!For testing long range integral gradients
+!-----------------------------------------------
+!       c_chg=2.0000000000D+00
+!       c_zeta=7.5000000000D-01
+!       c_coords(1)=1.5000000000D+00
+!       c_coords(2)=2.5000000000D+00
+!       c_coords(3)=3.5000000000D+00
+!       c_idx=1
+!
+!       call computeLRIGrad(c_coords,c_zeta,c_chg,c_idx)
+!-----------------------------------------------
 
      endif
   
