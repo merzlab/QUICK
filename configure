@@ -1143,6 +1143,12 @@ for buildtype in $buildtypes; do
 
   fi
 
+  
+  if [ "$aminstall" = "true" ]; then
+      ldflags="$ldflags -L$quick_prefix/lib -lcew"
+  fi
+
+  
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then

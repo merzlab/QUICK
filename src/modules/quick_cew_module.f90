@@ -25,30 +25,40 @@ module quick_cew_module
   type(quick_cew_type),save :: quick_cew
   double precision,parameter :: sqrt_pi = 1.7724538509055159d0
 
-
-
-  subroutine cew_getrecip( pt, pot ) bind(c,name="cew_getpotatpt_")
-    use, intrinsic :: iso_c_binding
-    implicit none
-    real(kind=c_double),intent(in) :: pt
-    real(kind=c_double),intent(out) :: pot
-  end subroutine cew_getrecip
-
-  subroutine cew_getgrdgrad( pt, pot ) bind(c,name="cew_getgrdatpt_")
-    use, intrinsic :: iso_c_binding
-    implicit none
-    real(kind=c_double),intent(in) :: pt
-    real(kind=c_double),intent(out) :: pot
-  end subroutine cew_getgrdgrad
+  double precision,parameter :: AMBERELE = 18.2223d0
+  double precision,parameter :: BOHRS_TO_A = 0.529177249d0
+  double precision,parameter :: AU_PER_AMBER_CHARGE = 1.d0 / amberele
+  double precision,parameter :: AU_PER_AMBER_ANGSTROM = 1.d0 / bohrs_to_a
+  double precision,parameter :: AU_PER_AMBER_KCAL_PER_MOL = &
+       & AU_PER_AMBER_CHARGE *  AU_PER_AMBER_CHARGE / AU_PER_AMBER_ANGSTROM
+  double precision,parameter :: AU_PER_AMBER_FORCE = &
+       & AU_PER_AMBER_KCAL_PER_MOL / AU_PER_AMBER_ANGSTROM
 
   
-  subroutine cew_accdens( pt, pot ) bind(c,name="cew_accdensatpt_")
-    use, intrinsic :: iso_c_binding
-    implicit none
-    real(kind=c_double),intent(in) :: pt
-    real(kind=c_double),intent(out) :: pot
-  end subroutine cew_accdens
-
+  interface
+     subroutine cew_getrecip( pt, pot ) bind(c,name="cew_getpotatpt_")
+       use, intrinsic :: iso_c_binding
+       implicit none
+       real(kind=c_double),intent(in) :: pt
+       real(kind=c_double),intent(out) :: pot
+     end subroutine cew_getrecip
+     
+     subroutine cew_getgrdatpt( pt, grd ) bind(c,name="cew_getgrdatpt_")
+       use, intrinsic :: iso_c_binding
+       implicit none
+       real(kind=c_double),intent(in) :: pt
+       real(kind=c_double),intent(out) :: grd
+     end subroutine cew_getgrdatpt
+     
+     
+     subroutine cew_accdens( pt, dens, grd ) bind(c,name="cew_accdensatpt_")
+       use, intrinsic :: iso_c_binding
+       implicit none
+       real(kind=c_double),intent(in) :: pt
+       real(kind=c_double),intent(in) :: dens
+       real(kind=c_double),intent(out) :: grd
+     end subroutine cew_accdens
+  end interface
 
   
 contains
@@ -83,7 +93,7 @@ contains
     integer,intent(in) :: nqm
     double precision,intent(in) :: qmq(nqm)
 
-    call new_quick_cew_type( quick_cew )
+    call new_quick_cew_type( quick_cew,beta,nqm,qmq )
 
   end subroutine new_quick_cew
 
@@ -91,8 +101,11 @@ contains
   
   subroutine quick_cew_prescf()
     
-    use quick_api_module, only : quick_api
-    use quick_lri_module, only: computeLRI    
+    !use quick_api_module, only : quick_api
+    use quick_molspec_module, only: quick_molspec
+    use quick_lri_module, only : computeLRI
+    use quick_calculated_module, only : quick_qm_struct
+    
     implicit none
 
     double precision :: E
@@ -101,6 +114,8 @@ contains
     double precision :: rvec(3),r
     double precision :: ew_self
     integer :: a,b
+
+    !double precision :: Emm, Eqm, Epot
     
     ! CEw: https://pubs.acs.org/doi/pdf/10.1021/acs.jctc.6b00198
     ! See Eq (83).
@@ -167,13 +182,17 @@ contains
     ! This is the first term in Eq. (92).
     ! [which is a component of the 1st term in Eq (89)]
     !
-    do a=1, quick_api%natom
-       qa = quick_api%atomic_numbers(a)
-       do b=1, quick_api%nxt_ptchg
-          qb = quick_api%ptchg_crd(4,b)
-          rvec = quick_api%coords(1:3,a)-quick_api%ptchg_crd(1:3,b)
+
+    !Emm = 0.d0
+    do b=1, quick_molspec%nextatom
+       qb = quick_molspec%extchg(b)
+       do a=1, quick_molspec%natom
+          qa = quick_molspec%chg(a)
+          rvec = quick_molspec%xyz(1:3,a)-quick_molspec%extxyz(1:3,b)
           r = sqrt(rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3))
           E = E - qa*qb*erf( quick_cew%beta * r ) / r
+          !Emm = Emm + qa*qb*(1.-erf( quick_cew%beta * r )) / r
+          !write(6,*)"Emm",qa,qb,r,Emm
        end do
     end do
 
@@ -196,16 +215,19 @@ contains
     !
     ! E -= \sum_{a \in QM} \sum_{b \in QM} (Za-Qa/2)*Qb*erf(\beta r)/r
     !
-    do a=1, quick_api%natom
-       qa = quick_api%atomic_numbers(a) - 0.5d0 * quick_cew%qmq(a)
-       do b=1, quick_api%natom
+    !Eqm = 0.d0
+    do a=1, quick_molspec%natom
+       qa = quick_molspec%chg(a) - 0.5d0 * quick_cew%qmq(a)
+       do b=1, quick_molspec%natom
           qb = quick_cew%qmq(b)
           if ( a /= b ) then
-             rvec = quick_api%coords(1:3,a)-quick_api%coords(1:3,b)
+             rvec = quick_molspec%xyz(1:3,a)-quick_molspec%xyz(1:3,b)
              r = sqrt(rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3))
              E = E - qa*qb*erf( quick_cew%beta * r ) / r
+             !Eqm = Eqm - qa*qb*erf( quick_cew%beta * r ) / r
           else
              E = E - qa*qb*ew_self
+             !Eqm = Eqm - qa*qb*ew_self
           end if
        end do
     end do
@@ -222,22 +244,22 @@ contains
     ! TODO *****************************************************
     !
     !
-    ! do a=1, quick_api%natom
-    !   qa = quick_api%atomic_numbers(a)
+    ! do a=1, quick_molspec%natom
+    !   qa = quick_molspec%chg(a)
     !   foreach AO i
     !      foreach AO j
     !        Compute (ij|a0)
     !        H(i,j) += qa * (quick_cew%zeta/PI)**1.5d0 * (ij|a0)
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
 
-      do a=1, quick_api%natom
-        qa = quick_api%atomic_numbers(a)
-        call computeLRI(quick_api%coords(1:3,a), quick_cew%zeta, qa)
-      enddo
+    do a=1, quick_molspec%natom
+       qa = quick_cew%qmq(a)
+       call computeLRI(quick_molspec%xyz(1:3,a), quick_cew%zeta, qa)
+    enddo
 
     !
     ! do a=1, quick_api%nxt_ptchg
-    !   qa = quick_api%ptchg_crd(4,a)
+    !   qa = quick_molspec%extchg(a)
     !   foreach AO i
     !      foreach AO j
     !        Compute (ij|a0)
@@ -245,10 +267,10 @@ contains
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
     !
 
-      do a=1, quick_api%nxt_ptchg
-        qa = quick_api%ptchg_crd(4,a)
-        call computeLRI(quick_api%ptchg_crd(1:3,a), quick_cew%zeta, qa)
-      enddo
+    do a=1, quick_molspec%nextatom
+       qa = quick_molspec%extchg(a)
+       call computeLRI(quick_molspec%extxyz(1:3,a), quick_cew%zeta, qa)
+    enddo
 
     ! Notice that we are ADDING (not subtracting) this term to
     ! the core Hamiltonian, because the density matrix is a
@@ -267,13 +289,19 @@ contains
     ! Interact the nuceli with the reciprocal space potential
     ! This is the 1st term in Eq (87)
     !
-    do a=1, quick_api%natom
-       qa = quick_api%atomic_numbers(a)
+    !Epot = 0.d0
+    do a=1, quick_molspec%natom
+       qa = quick_molspec%chg(a)
        pot = 0.d0
-       call cew_getrecip( quick_api%coords(1,a), pot )
+       call cew_getrecip( quick_molspec%xyz(1,a), pot )
        E = E + qa * pot
+       !Epot = Epot + qa * pot
     end do
 
+    !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
+
+    quick_qm_struct%ECore = quick_qm_struct%ECore + E
+    
     
     !
     ! Interact the electron density with the reciprocal
@@ -300,6 +328,7 @@ contains
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
+   use quick_gridpoints_module, only : quick_dft_grid
    implicit none
 
 #ifdef MPIV
@@ -340,38 +369,40 @@ contains
    do Ibin=irad_init, irad_end
    
 #else
-    do Ibin=1, quick_dft_grid%nbins
+
+      
+   do Ibin=1, quick_dft_grid%nbins
 #endif
 
-        Igp=quick_dft_grid%bin_counter(Ibin)+1
+      Igp=quick_dft_grid%bin_counter(Ibin)+1
 
-        do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
+      do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
 
-           gridx=quick_dft_grid%gridxb(Igp)
-           gridy=quick_dft_grid%gridyb(Igp)
-           gridz=quick_dft_grid%gridzb(Igp)
+         gridx=quick_dft_grid%gridxb(Igp)
+         gridy=quick_dft_grid%gridyb(Igp)
+         gridz=quick_dft_grid%gridzb(Igp)
 
-           sswt=quick_dft_grid%gridb_sswt(Igp)
-           weight=quick_dft_grid%gridb_weight(Igp)
-           Iatm=quick_dft_grid%gridb_atm(Igp)
-
-            if (weight < quick_method%DMCutoff ) then
-               continue
-            else
-
-               icount=quick_dft_grid%basf_counter(Ibin)+1
-               do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+         sswt=quick_dft_grid%gridb_sswt(Igp)
+         weight=quick_dft_grid%gridb_weight(Igp)
+         Iatm=quick_dft_grid%gridb_atm(Igp)
+         
+         if (weight < quick_method%DMCutoff ) then
+            continue
+         else
+            
+            icount=quick_dft_grid%basf_counter(Ibin)+1
+            do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                Ibas=quick_dft_grid%basf(icount)+1
-                  call pteval(gridx,gridy,gridz,phi,dphidx,dphidy, &
-                  dphidz,Ibas)
-                  phixiao(Ibas)=phi
-                  dphidxxiao(Ibas)=dphidx
-                  dphidyxiao(Ibas)=dphidy
-                  dphidzxiao(Ibas)=dphidz
-
-                  icount=icount+1
-               enddo
-
+               call pteval(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                    dphidz,Ibas)
+               phixiao(Ibas)=phi
+               dphidxxiao(Ibas)=dphidx
+               dphidyxiao(Ibas)=dphidy
+               dphidzxiao(Ibas)=dphidz
+               
+               icount=icount+1
+            enddo
+            
 !  Next, evaluate the densities at the grid point and the gradient
 !  at that grid point.
 
@@ -383,12 +414,12 @@ contains
                !else
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-               cew_pt(1) = gridx
-               cew_pt(2) = gridy
-               cew_pt(3) = gridz
-               Vrecip = 0.d0
-               call cew_getrecip( cew_pt(1), Vrecip )
-               dfdr = -Vrecip
+            cew_pt(1) = gridx
+            cew_pt(2) = gridy
+            cew_pt(3) = gridz
+            Vrecip = 0.d0
+            call cew_getrecip( cew_pt(1), Vrecip )
+            dfdr = -Vrecip
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                
@@ -396,28 +427,28 @@ contains
 !  density (dfdr), with regard to the alpha-alpha density invariant (df/dgaa), and the
 !  alpha-beta density invariant.
 
-                  densitysum=2.0d0*density
-                  sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
+            densitysum=2.0d0*density
+            sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
 
 !  Now loop over basis functions and compute the addition to the matrix element.
-!                  do Ibas=1,nbasis
-                  icount=quick_dft_grid%basf_counter(Ibin)+1
-                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
-                  Ibas=quick_dft_grid%basf(icount)+1
+            !                  do Ibas=1,nbasis
+            icount=quick_dft_grid%basf_counter(Ibin)+1
+            do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
+               Ibas=quick_dft_grid%basf(icount)+1
 
-                     phi=phixiao(Ibas)
-                     dphidx=dphidxxiao(Ibas)
-                     dphidy=dphidyxiao(Ibas)
-                     dphidz=dphidzxiao(Ibas)
-                     quicktest = DABS(dphidx+dphidy+dphidz+phi)
+               phi=phixiao(Ibas)
+               dphidx=dphidxxiao(Ibas)
+               dphidy=dphidyxiao(Ibas)
+               dphidz=dphidzxiao(Ibas)
+               quicktest = DABS(dphidx+dphidy+dphidz+phi)
 
                      if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
                         jcount=icount
                         do while(jcount<quick_dft_grid%basf_counter(Ibin+1)+1)
-                        Jbas = quick_dft_grid%basf(jcount)+1
-                        !do Jbas=Ibas,nbasis
+                           Jbas = quick_dft_grid%basf(jcount)+1
+                           !do Jbas=Ibas,nbasis
                            phi2=phixiao(Jbas)
                            !dphi2dx=dphidxxiao(Jbas)
                            !dphi2dy=dphidyxiao(Jbas)
@@ -435,13 +466,12 @@ contains
                      icount=icount+1
                   enddo
                endif
-            endif
-         !enddo
+               !endif
+               !enddo
 
-         Igp=Igp+1
-      enddo
-   enddo
-
+            Igp=Igp+1
+         enddo
+      end do
 
    return
 
@@ -455,11 +485,19 @@ contains
 
   subroutine quick_cew_grad()
     
-    use quick_api_module, only : quick_api
-    use quick_lri_grad_module, only: computeLRI
+    !use quick_api_module, only : quick_api
+    use quick_molspec_module, only : quick_molspec
+    use quick_calculated_module, only : quick_qm_struct
+    use quick_lri_grad_module, only: computeLRIGrad
+    use quick_gridpoints_module, only : quick_dft_grid
     
     implicit none
-    double precision :: c_coord(3)
+    integer :: a,b,c,k,oa,ob,oc
+    double precision :: c_coord(3), rvec(3)
+    double precision :: r,r2,oor2,oor3,qa,qb,qc
+    double precision :: dedr
+    double precision :: ew_self
+    double precision :: ga(3), gb(3), gc(3)
     !
     ! erf(beta*r)/r as r -> 0
     !
@@ -467,12 +505,12 @@ contains
 
 
     
-    do a=1, quick_api%natom
+    do a=1, quick_molspec%natom
        qa = quick_cew%qmq(a)
-       do b=1, quick_api%natom
+       do b=1, quick_molspec%natom
           if ( a /= b ) then
-             qb = quick_api%atomic_numbers(b) - 0.5d0 * quick_cew%qmq(b)
-             rvec = quick_api%coords(1:3,a)-quick_api%coords(1:3,b)
+             qb = quick_molspec%chg(b) - 0.5d0 * quick_cew%qmq(b)
+             rvec = quick_molspec%xyz(1:3,a)-quick_molspec%xyz(1:3,b)
              r2 = rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3)
              r  = sqrt(r2)
              oor2 = 1.d0 / r2
@@ -484,33 +522,34 @@ contains
                   & - erf(quick_cew%beta*r) * oor3 )
              !
              rvec = rvec * dedr
-             quick_api%gradient(1,a) = quick_api%gradient(1,a) + rvec(1)
-             quick_api%gradient(2,a) = quick_api%gradient(2,a) + rvec(2)
-             quick_api%gradient(3,a) = quick_api%gradient(3,a) + rvec(3)
-             quick_api%gradient(1,b) = quick_api%gradient(1,b) - rvec(1)
-             quick_api%gradient(2,b) = quick_api%gradient(2,b) - rvec(2)
-             quick_api%gradient(3,b) = quick_api%gradient(3,b) - rvec(3)
+             oa = 3*(a-1)
+             ob = 3*(b-1)
+             do k=1,3
+                quick_qm_struct%gradient(oa+k) = quick_qm_struct%gradient(oa+k) + rvec(k)
+                quick_qm_struct%gradient(ob+k) = quick_qm_struct%gradient(ob+k) - rvec(k)
+             end do
          end if
        end do
     end do
 
     
-    do a=1, quick_api%natom
-       qa = quick_api%atomic_numbers(a)
+    do a=1, quick_molspec%natom
+       qa = quick_molspec%chg(a)
        rvec = 0.d0
-       call cew_getrecipgrad( quick_api%coords(1,a), rvec(1) )
-       gradient(1,a) = gradient(1,a) + qa * rvec(1)
-       gradient(2,a) = gradient(2,a) + qa * rvec(2)
-       gradient(3,a) = gradient(3,a) + qa * rvec(3)
+       call cew_getgrdatpt( quick_molspec%xyz(1,a), rvec(1) )
+       oa = 3*(a-1)
+       do k=1,3
+          quick_qm_struct%gradient(oa+k) = quick_qm_struct%gradient(oa+k) + qa * rvec(k)
+       end do
     end do
 
     
-    do a=1, quick_api%nxt_ptchg
-       qa = quick_api%ptchg_crd(4,a)
-       do b=1, quick_api%natom
+    do a=1, quick_molspec%nextatom
+       qa = quick_molspec%extchg(a)
+       do b=1, quick_molspec%natom
           if ( a /= b ) then
-             qb = quick_api%atomic_numbers(b)
-             rvec = quick_api%ptchg_crd(1:3,a)-quick_api%coords(1:3,b)
+             qb = quick_molspec%chg(b)
+             rvec = quick_molspec%extxyz(1:3,a)-quick_molspec%xyz(1:3,b)
              r2 = rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3)
              r  = sqrt(r2)
              oor2 = 1.d0 / r2
@@ -522,12 +561,12 @@ contains
                   & - erf(quick_cew%beta*r) * oor3 )
              !
              rvec = rvec * dedr
-             quick_api%ptchg_grad(1,a) = quick_api%ptchg_grad(1,a) + rvec(1)
-             quick_api%ptchg_grad(2,a) = quick_api%ptchg_grad(2,a) + rvec(2)
-             quick_api%ptchg_grad(3,a) = quick_api%ptchg_grad(3,a) + rvec(3)
-             quick_api%gradient(1,b) = quick_api%gradient(1,b) - rvec(1)
-             quick_api%gradient(2,b) = quick_api%gradient(2,b) - rvec(2)
-             quick_api%gradient(3,b) = quick_api%gradient(3,b) - rvec(3)
+             oa = 3*(a-1)
+             ob = 3*(b-1)
+             do k=1,3
+                quick_qm_struct%ptchg_gradient(oa+k) = quick_qm_struct%ptchg_gradient(oa+k) + rvec(k)
+                quick_qm_struct%gradient(ob+k) = quick_qm_struct%gradient(ob+k) - rvec(k)
+             end do
          end if
        end do
     end do
@@ -537,8 +576,8 @@ contains
     ! TODO *****************************************************
     !
     !
-    ! do c=1, quick_api%natom
-    !   qc = quick_api%atomic_numbers(a) * (quick_cew%zeta/PI)**1.5d0
+    ! do c=1, quick_molspec%natom
+    !   qc = quick_molspec%chg(a) * (quick_cew%zeta/PI)**1.5d0
     !   foreach AO i
     !      foreach AO j
     !        Compute (ij|c0)
@@ -553,7 +592,7 @@ contains
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
     !
     ! do c=1, quick_api%nxt_ptchg
-    !   qc = quick_api%ptchg_crd(4,a) * (quick_cew%zeta/PI)**1.5d0
+    !   qc = quick_molspec%extchg(a) * (quick_cew%zeta/PI)**1.5d0
     !   foreach AO i
     !      foreach AO j
     !        Compute (ij|c0)
@@ -567,19 +606,17 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
-
-    do c=1, (quick_api%natom+quick_api%nxt_ptchg)
-      if(c < quick_api%natom) then
-        c_coord=quick_api%coords(1:3,c)
-        qc=quick_api%atomic_numbers(c)
-      else
-        c_coord=quick_api%ptchg_crd(1:3,c)
-        qc=quick_api%ptchg_crd(4,c)        
-      endif
-
-      call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
-
+    do c=1, (quick_molspec%natom + quick_molspec%nextatom)
+       if ( c <= quick_molspec%natom ) then
+          c_coord=quick_molspec%xyz(1:3,c)
+          qc=quick_cew%qmq(c)
+       else
+          c_coord=quick_molspec%extxyz(1:3,c)
+          qc=quick_molspec%extchg(c)   
+       end if
+       call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
     enddo
+
 
     call quick_cew_grad_quad()
 
@@ -597,6 +634,11 @@ contains
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
+   use quick_gridpoints_module, only : quick_dft_grid
+   !use quick_api_module, only : quick_api
+   use quick_calculated_module, only : quick_qm_struct
+   
+   
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -608,7 +650,9 @@ contains
    double precision, dimension(1) :: libxc_vsigmaa
    
    double precision :: Vrecip, cew_pt(3), chargedens, cew_grd(3)
-
+   integer :: Iatm,Ibas,Ibasstart,Ibin,icount,Igp,Jbas,jcount
+   integer :: k,oi
+   
 #ifdef MPIV
    include "mpif.h"
 #endif
@@ -714,9 +758,10 @@ contains
                   cew_pt(3) = gridz
                   cew_grd = 0.d0
                   call cew_accdens(cew_pt(1),chargedens,cew_grd(1))
-                  quick_api%gradient(1,Iatm) = quick_api%gradient(1,Iatm) + cew_grd(1)
-                  quick_api%gradient(2,Iatm) = quick_api%gradient(2,Iatm) + cew_grd(2)
-                  quick_api%gradient(3,Iatm) = quick_api%gradient(3,Iatm) + cew_grd(3)
+                  oi = 3*(Iatm-1)
+                  do k=1,3
+                     quick_qm_struct%gradient(oi+k) = quick_qm_struct%gradient(oi+k) + cew_grd(k)
+                  end do
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

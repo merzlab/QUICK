@@ -37,7 +37,7 @@ module quick_lri_grad_module
 
 contains
 
-  subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx)
+  subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx )
 
     !----------------------------------------------------------------------!
     ! The goal of this subroutine is to compute (ij|c) three center        !
@@ -49,7 +49,10 @@ contains
     !______________________________________________________________________!
 
     use quick_basis_module
-
+    use quick_lri_module, only : has_angrenorm
+    use quick_lri_module, only : angrenorm
+    use quick_lri_module, only : CalcAngRenorm
+    
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer, intent(in) :: c_idx
@@ -60,6 +63,15 @@ contains
     Cc=c_chg
     iC=c_idx
 
+
+    if ( .not. has_angrenorm ) then
+       has_angrenorm = .true.
+       if ( associated( angrenorm ) ) deallocate( angrenorm )
+       allocate( angrenorm( nbasis ) )
+       call CalcAngRenorm( nbasis,angrenorm )
+    end if
+
+    
     do II = 1, jshell
       do JJ = II, jshell  
         !II=1
@@ -334,6 +346,7 @@ contains
     use quick_molspec_module
     use quick_calculated_module
     use quick_scratch_module
+    use quick_lri_module, only : angrenorm
 
     implicit none
 
@@ -346,6 +359,8 @@ contains
     double precision :: AA, BB, X2, Ytemp, YtempAA, YtempBB, YtempCC, Agrad1, Agrad2, Agrad3, &
                         Bgrad1, Bgrad2, Bgrad3, Cgrad1, Cgrad2, Cgrad3
 
+    double precision :: afact
+    
     store=0.0d0
     storeaa=0.0d0
     storebb=0.0d0
@@ -480,7 +495,11 @@ contains
 
     iAstart = (iA-1)*3
     iBstart = (iB-1)*3
-    iCstart = (iC-1)*3
+    if ( iC <= natom ) then
+       iCstart = (iC-1)*3
+    else
+       iCstart = (iC-natom-1)*3
+    end if
 
     KKK=1
     LLL=1
@@ -491,19 +510,39 @@ contains
         !write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
         !Ybb(1),Ybb(2),Ybb(3),Ycc(1),Ycc(2),Ycc(3)
 
-         quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+quick_qm_struct%dense(JJJ,III)*Yaa(1)
-         quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+quick_qm_struct%dense(JJJ,III)*Yaa(2)
-         quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+quick_qm_struct%dense(JJJ,III)*Yaa(3)
+        afact = angrenorm(JJJ) * angrenorm(III)
+        
+        quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1) &
+             & +quick_qm_struct%dense(JJJ,III)*Yaa(1)*afact
+        quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2) &
+             & +quick_qm_struct%dense(JJJ,III)*Yaa(2)*afact
+        quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3) &
+             & +quick_qm_struct%dense(JJJ,III)*Yaa(3)*afact
 
-         quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+quick_qm_struct%dense(JJJ,III)*Ybb(1)
-         quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+quick_qm_struct%dense(JJJ,III)*Ybb(2)
-         quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+quick_qm_struct%dense(JJJ,III)*Ybb(3)
+        quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1) &
+             & +quick_qm_struct%dense(JJJ,III)*Ybb(1)*afact
+        quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2) &
+             & +quick_qm_struct%dense(JJJ,III)*Ybb(2)*afact
+        quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3) &
+             & +quick_qm_struct%dense(JJJ,III)*Ybb(3)*afact
  
-         if(iC < natom) then     
-           quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+quick_qm_struct%dense(JJJ,III)*Ycc(1)
-           quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+quick_qm_struct%dense(JJJ,III)*Ycc(2)
-           quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+quick_qm_struct%dense(JJJ,III)*Ycc(3)
+         if(iC <= natom) then     
+            quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(1)*afact
+            quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(2)*afact
+            quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(3)*afact
+         else
+            quick_qm_struct%ptchg_gradient(iCSTART+1) = quick_qm_struct%ptchg_gradient(iCSTART+1) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(1)*afact
+            quick_qm_struct%ptchg_gradient(iCSTART+2) = quick_qm_struct%ptchg_gradient(iCSTART+2) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(2)*afact
+            quick_qm_struct%ptchg_gradient(iCSTART+3) = quick_qm_struct%ptchg_gradient(iCSTART+3) &
+                 & +quick_qm_struct%dense(JJJ,III)*Ycc(3)*afact
          endif
+
+        
       enddo
     enddo
 

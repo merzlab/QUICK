@@ -21,18 +21,55 @@ module quick_lri_module
   private
 
   public :: computeLRI
+  public :: has_angrenorm
+  public :: angrenorm
+  public :: CalcAngRenorm
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
   double precision :: RA(3), RB(3), RC(3) ! cartesian coordinates of the 3 centers
   double precision :: Zc, Cc              ! charge and a magic number of the external gaussian
 
+  logical,save :: has_angrenorm = .false.
+  double precision,pointer,save :: angrenorm(:) => NULL()
+  
   interface computeLRI
     module procedure compute_lri
   end interface computeLRI
 
 contains
 
+  
+  subroutine CalcAngRenorm(n,fact)
+    use quick_basis_module
+    implicit none
+    integer,intent(in) :: n
+    double precision,intent(out) :: fact(n)
+    integer,parameter :: LMAX = 7
+    double precision :: dfs(0:LMAX)
+    integer :: ibas,i,ii,jj,kk,ltot
+    
+    dfs=1.d0
+    do i=1,LMAX
+       dfs(i) = dfs(i-1) * ( 2.d0*(i-1) + 1.d0 )
+    end do
+    write(6,*)dfs
+    
+    fact = 0.d0
+  
+    do ibas=1,n
+       ii = itype(1,ibas)
+       jj = itype(2,ibas)
+       kk = itype(3,ibas)
+       ltot = ii+jj+kk
+       write(6,*)ibas,ii,jj,kk,size(fact)
+       fact(ibas) = sqrt( dfs(ltot) / ( dfs(ii)*dfs(jj)*dfs(kk) ) )
+    end do
+    
+  end subroutine CalcAngRenorm
+
+
+  
   subroutine compute_lri(c_coords, c_zeta, c_chg)
 
     !----------------------------------------------------------------------!
@@ -54,6 +91,14 @@ contains
     Zc=c_zeta
     Cc=c_chg
 
+    if ( .not. has_angrenorm ) then
+       has_angrenorm = .true.
+       if ( associated( angrenorm ) ) deallocate( angrenorm )
+       allocate( angrenorm( nbasis ) )
+       call CalcAngRenorm( nbasis,angrenorm )
+    end if
+
+    
     do II = 1, jshell
       do JJ = II, jshell  
         !II=2
@@ -404,7 +449,10 @@ contains
       do JJJ=JJJ1,JJJ2
         call hrr_tci
         ! assumes that core operator formation is done
-        quick_qm_struct%oneElecO(JJJ,III)=quick_qm_struct%oneElecO(JJJ,III)+Y
+        !quick_qm_struct%oneElecO(JJJ,III)=quick_qm_struct%oneElecO(JJJ,III)+Y
+        quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III) &
+             & + Y * angrenorm(JJJ) * angrenorm(III)
+        
         !write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo

@@ -15,6 +15,7 @@ subroutine getEnergy(isGuess, ierr)
    use quick_scf_module
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
+   use quick_cew_module, only : quick_cew
 
    implicit none
 
@@ -33,7 +34,7 @@ subroutine getEnergy(isGuess, ierr)
    if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.
 
     !Form the exchange-correlation quadrature if DFT is requested
-    if (quick_method%DFT .and. .not. isGuess) then
+    if ( ( quick_method%DFT .or. quick_cew%use_cew ) .and. .not. isGuess ) then
         if (master) call PrtAct(ioutfile,"Begin XC Quadrature Formation")
 
         call form_dft_grid(quick_dft_grid, quick_xcg_tmp)

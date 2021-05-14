@@ -62,7 +62,8 @@ contains
 
 subroutine get1e()
    use allmod
-
+   use quick_cew_module, only : quick_cew, quick_cew_prescf
+   
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
 
@@ -111,7 +112,23 @@ subroutine get1e()
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
+         if ( quick_cew%use_cew ) then
+            !quick_qm_struct%o = 0.d0
+            call quick_cew_prescf()
+         end if
+         
          call copySym(quick_qm_struct%o,nbasis)
+
+
+         ! write(6,*)"Hcore,S"
+         ! do i=1,nbasis
+         !    do j=1,nbasis
+         !       write(6,'(2i4,2es16.5)')i,j,quick_qm_struct%o(i,j),quick_qm_struct%s(i,j)
+         !    end do
+         !    !write(6,*)
+         ! end do
+         ! stop
+         
          call CopyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
