@@ -21,6 +21,7 @@ module quick_lri_grad_module
   private
 
   public :: computeLRIGrad
+  public :: computeLRINumGrad
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
@@ -35,8 +36,97 @@ module quick_lri_grad_module
     module procedure compute_lri_grad
   end interface computeLRIGrad
 
+  interface computeLRINumGrad
+    module procedure compute_lri_numgrad
+  end interface computeLRINumGrad
+
 contains
 
+
+
+
+  
+  subroutine compute_lri_numgrad( c_coords, c_zeta, c_chg, c_idx )
+    use quick_lri_module, only : computeLRI
+    
+    use quick_basis_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_params_module
+    use quick_scratch_module
+    use quick_calculated_module
+    use quick_cshell_eri_module
+    
+    implicit none
+    
+    double precision, intent(in) :: c_coords(3), c_zeta, c_chg
+    integer, intent(in) :: c_idx
+    
+    double precision,parameter :: delta = 2.e-5
+    double precision :: elo, ehi
+    integer :: a,k,o
+    double precision :: ccrd(3)
+
+    
+    do a=1,natom
+       o = 3*(a-1)
+       do k=1,3
+          xyz(k,a) = xyz(k,a) + delta
+          call getEriPrecomputables
+          quick_qm_struct%o = 0.d0
+          call computeLRI( c_coords, c_zeta, c_chg )
+          call copySym(quick_qm_struct%o,nbasis)
+          ehi = sum(quick_qm_struct%dense*quick_qm_struct%o)
+          
+          xyz(k,a) = xyz(k,a) - 2.d0*delta
+          call getEriPrecomputables
+          quick_qm_struct%o = 0.d0
+          call computeLRI( c_coords, c_zeta, c_chg )
+          call copySym(quick_qm_struct%o,nbasis)
+          elo = sum(quick_qm_struct%dense*quick_qm_struct%o)
+          
+          xyz(k,a) = xyz(k,a) + delta
+          
+          quick_qm_struct%gradient(o+k) = &
+               & quick_qm_struct%gradient(o+k) + (ehi-elo)/(2.d0*delta)
+       end do
+    end do
+    call getEriPrecomputables
+
+    if ( c_idx <= natom ) then
+       o = 3*(c_idx-1)
+    else
+       o = 3*(c_idx-natom-1)
+    end if
+    do k=1,3
+       ccrd(k) = c_coords(k) + delta
+       quick_qm_struct%o = 0.d0
+       call computeLRI( ccrd, c_zeta, c_chg )
+       call copySym(quick_qm_struct%o,nbasis)
+       ehi = sum(quick_qm_struct%dense*quick_qm_struct%o)
+       
+       ccrd(k) = c_coords(k) - delta
+       quick_qm_struct%o = 0.d0
+       call computeLRI( ccrd, c_zeta, c_chg )
+       call copySym(quick_qm_struct%o,nbasis)
+       elo = sum(quick_qm_struct%dense*quick_qm_struct%o)
+
+       if ( c_idx <= natom ) then
+          quick_qm_struct%gradient(o+k) = &
+               & quick_qm_struct%gradient(o+k) + (ehi-elo)/(2.d0*delta)
+       else
+          quick_qm_struct%ptchg_gradient(o+k) = &
+               & quick_qm_struct%ptchg_gradient(o+k) + (ehi-elo)/(2.d0*delta)
+       end if
+    end do
+    
+
+  end subroutine compute_lri_numgrad
+
+
+
+
+  
   subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx )
 
     !----------------------------------------------------------------------!
@@ -75,7 +165,7 @@ contains
     do II = 1, jshell
       do JJ = II, jshell  
         !II=1
-        !JJ=1
+         !JJ=1
         call compute_tci_grad(II,JJ)
       enddo
     enddo
@@ -397,7 +487,7 @@ contains
             ITT = ITT+1
             !This is the KAB x KCD value reqired for HGP 12.
             !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) is treated as 1.0. 
-            quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
+            quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5d0
 
             !write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
             !(1/Zc)*Cc*(Zc/PI)**1.5,quick_scratch%X44(ITT)
@@ -504,6 +594,12 @@ contains
     KKK=1
     LLL=1
 
+    if ( abs(RC(1)-28.900) < 0.01 ) then
+       write(6,'(A,3ES18.9)')"RC ",RC(1),  RC(2),  RC(3)
+       write(6,'(A,3ES18.9)')"RA ",xyz(1:3,iA)
+       write(6,'(A,3ES18.9)')"RB ",xyz(1:3,iB)
+    end if
+    
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_tci_grad
@@ -511,7 +607,16 @@ contains
         !Ybb(1),Ybb(2),Ybb(3),Ycc(1),Ycc(2),Ycc(3)
 
         afact = angrenorm(JJJ) * angrenorm(III)
+        ! The off-diagonal blocks are only computed once, so we need to
+        ! scale by 2 to consider the full density matrix for these blocks
+        if ( II /= JJ ) afact = afact * 2.d0
+
+        if ( abs(RC(1)-28.900) < 0.01 ) then
+           write(6,'(2I4,6es13.4)')III,JJJ, &
+                & Ybb(1),Ybb(2),Ybb(3),Yaa(1),Yaa(2),Yaa(3)
+        end if
         
+
         quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1) &
              & +quick_qm_struct%dense(JJJ,III)*Yaa(1)*afact
         quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2) &

@@ -393,7 +393,7 @@ contains
             ITT = ITT+1
             !This is the KAB x KCD value reqired for HGP 12.
             !itt is the m value. 
-            X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5
+            X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5d0
 
           !endif
        enddo

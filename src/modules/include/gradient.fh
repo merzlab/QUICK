@@ -82,6 +82,9 @@ contains
   !------------------------------------------------------------------
   
      use allmod
+
+     use quick_cew_module, only : quick_cew_grad
+
      implicit double precision(a-h,o-z)
   
      integer, intent(inout) :: ierr
@@ -178,6 +181,9 @@ contains
   subroutine scf_gradient
 #endif
      use allmod
+#ifdef CEW
+     use quick_cew_module, only : quick_cew_grad
+#endif
 #ifdef OSHELL
      use quick_cshell_gradient_module
 #endif
@@ -270,6 +276,13 @@ contains
      call get_oshell_eri_grad
 #else
      call get_cshell_eri_grad
+#endif
+
+#ifdef CEW
+  !---------------------------------------------------------------------
+  !  3-2) CEW gradient
+  !---------------------------------------------------------------------
+     call quick_cew_grad
 #endif
   
      call cpu_time(timer_end%T2eGrad)

@@ -489,6 +489,7 @@ contains
     use quick_molspec_module, only : quick_molspec
     use quick_calculated_module, only : quick_qm_struct
     use quick_lri_grad_module, only: computeLRIGrad
+    !use quick_lri_grad_module, only: computeLRINumGrad
     use quick_gridpoints_module, only : quick_dft_grid
     
     implicit none
@@ -547,27 +548,25 @@ contains
     do a=1, quick_molspec%nextatom
        qa = quick_molspec%extchg(a)
        do b=1, quick_molspec%natom
-          if ( a /= b ) then
-             qb = quick_molspec%chg(b)
-             rvec = quick_molspec%extxyz(1:3,a)-quick_molspec%xyz(1:3,b)
-             r2 = rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3)
-             r  = sqrt(r2)
-             oor2 = 1.d0 / r2
-             oor3 = oor2 / r
-             !
-             ! dedr =>  - qa*qb * (1/r) * d/dr * erf(beta*r)/r
-             !
-             dedr = -qa*qb*( ew_self * exp(-quick_cew%zeta*r2) * oor2 &
-                  & - erf(quick_cew%beta*r) * oor3 )
-             !
-             rvec = rvec * dedr
-             oa = 3*(a-1)
-             ob = 3*(b-1)
-             do k=1,3
-                quick_qm_struct%ptchg_gradient(oa+k) = quick_qm_struct%ptchg_gradient(oa+k) + rvec(k)
-                quick_qm_struct%gradient(ob+k) = quick_qm_struct%gradient(ob+k) - rvec(k)
-             end do
-         end if
+          qb = quick_molspec%chg(b)
+          rvec = quick_molspec%extxyz(1:3,a)-quick_molspec%xyz(1:3,b)
+          r2 = rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3)
+          r  = sqrt(r2)
+          oor2 = 1.d0 / r2
+          oor3 = oor2 / r
+          !
+          ! dedr =>  - qa*qb * (1/r) * d/dr * erf(beta*r)/r
+          !
+          dedr = -qa*qb*( ew_self * exp(-quick_cew%zeta*r2) * oor2 &
+               & - erf(quick_cew%beta*r) * oor3 )
+          !
+          rvec = rvec * dedr
+          oa = 3*(a-1)
+          ob = 3*(b-1)
+          do k=1,3
+             quick_qm_struct%ptchg_gradient(oa+k) = quick_qm_struct%ptchg_gradient(oa+k) + rvec(k)
+             quick_qm_struct%gradient(ob+k) = quick_qm_struct%gradient(ob+k) - rvec(k)
+          end do
        end do
     end do
 
@@ -627,6 +626,146 @@ contains
 
 
 
+  subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: p
+    
+    double precision,parameter :: a = 0.64
+    integer :: iat,jat
+    double precision :: uw(natom)
+    double precision :: mu,muoa,g,s,z
+    double precision :: rxg(4,natom)
+    double precision :: rigv(3),rig,rig2
+    double precision :: rjgv(3),rjg,rjg2
+    double precision :: rijv(3),rij,rij2
+    double precision :: sumw
+   
+
+    uw = 0.d0
+    
+    do iat=1,natom
+       rigv(1) = xyz(1,iat)-gridx
+       rigv(2) = xyz(2,iat)-gridy
+       rigv(3) = xyz(3,iat)-gridz
+       rig2 = rigv(1)*rigv(1)+rigv(2)*rigv(2)+rigv(3)*rigv(3)
+       rig = sqrt(rig2)
+       rxg(1:3,iat) = rigv(1:3)
+       rxg(4,iat) = rig
+    end do
+
+
+    ! Calculate wi(rg)
+    do iat=1,natom
+       uw(iat) = 1.d0
+       
+       rigv(1:3) = rxg(1:3,iat)
+       rig = rxg(4,iat)
+
+       ! wi(rg) = \prod_{j /= i} s(mu_{ij})
+       do jat=1,natom
+          if ( jat == iat ) then
+             cycle
+          end if
+          rjgv(1:3) = rxg(1:3,jat)
+          rjg = rxg(4,jat)
+          
+          rijv(1) = xyz(1,iat)-xyz(1,jat)
+          rijv(2) = xyz(2,iat)-xyz(2,jat)
+          rijv(3) = xyz(3,iat)-xyz(3,jat)
+          rij2 = rijv(1)*rijv(1)+rijv(2)*rijv(2)+rijv(3)*rijv(3)
+          rij = sqrt(rij2)
+
+          mu = (rig-rjg)/rij
+
+          
+          if ( mu <= -a ) then
+             g = -1.d0
+          else if ( mu >= a ) then
+             g = 1.d0
+          else
+             muoa = mu/a
+             z = (35.d0*muoa - 35.d0*muoa**3 &
+                  & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             g = z
+          end if
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(es20.10)')mu
+          
+          s = 0.50d0 * (1.d0-g)
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(2es20.10)')mu,s
+
+          uw(iat) = uw(iat) * s
+       end do
+    end do
+
+    
+    sumw = 0.d0
+    do iat=1,natom
+       sumw = sumw + uw(iat)
+    end do
+    p = uw(Iparent) / sumw
+
+    !write(6,'(es20.10)')sumw
+
+    
+  end subroutine getssw
+
+
+
+  subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,p,dp)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: p
+    double precision,intent(out) :: dp(3,natom)
+    double precision,parameter :: delta = 5.d-5
+    double precision :: phi,plo
+    double precision :: tmpxyz(3,natom)
+    double precision :: tx,ty,tz
+    integer :: iat,k
+
+    tmpxyz=xyz
+    tx = gridx - xyz(1,Iparent)
+    ty = gridy - xyz(2,Iparent)
+    tz = gridz - xyz(3,Iparent)
+
+    
+    do iat=1,natom
+       do k=1,3
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,phi)
+
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) - 2.d0*delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,plo)
+
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+
+          dp(k,iat) = (phi-plo)/(2.d0*delta)
+       end do
+    end do
+    
+  end subroutine getsswnumder
+
+
+
+
+  
+
+
+
 
   subroutine quick_cew_grad_quad()
 
@@ -651,7 +790,14 @@ contains
    
    double precision :: Vrecip, cew_pt(3), chargedens, cew_grd(3)
    integer :: Iatm,Ibas,Ibasstart,Ibin,icount,Igp,Jbas,jcount
-   integer :: k,oi
+   integer :: k,oi,i
+   !double precision,allocatable :: spcder(:)
+   double precision :: grdx,grdy,grdz
+   double precision :: sumg(3)
+   double precision :: dp(3,natom)
+
+   !allocate( spcder(3*natom) )
+   !spcder = 0.d0
    
 #ifdef MPIV
    include "mpif.h"
@@ -695,7 +841,7 @@ contains
                   Ibas=quick_dft_grid%basf(icount)+1
 
                   call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
-                  dphidz,Ibas,icount)
+                       & dphidz,Ibas,icount)
 
                   phixiao(Ibas)=phi
                   dphidxxiao(Ibas)=dphidx
@@ -709,7 +855,7 @@ contains
 
 !  evaluate the densities at the grid point and the gradient at that grid point            
                call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
-               gbx,gby,gbz,Ibin)
+                    & gbx,gby,gbz,Ibin)
 
                if (density < quick_method%DMCutoff ) then
                   continue
@@ -719,15 +865,18 @@ contains
 !  with regard to the density (dfdr), with regard to the alpha-alpha
 !  density invariant (df/dgaa), and the alpha-beta density invariant.
 
+
+
+                  
                   densitysum=2.0d0*density
                   sigma=4.0d0*(gax*gax+gay*gay+gaz*gaz)
 
                   libxc_rho(1)=densitysum
                   libxc_sigma(1)=sigma
 
-                  tsttmp_exc=0.0d0
-                  tsttmp_vrhoa=0.0d0
-                  tsttmp_vsigmaa=0.0d0
+                  !tsttmp_exc=0.0d0
+                  !tsttmp_vrhoa=0.0d0
+                  !tsttmp_vsigmaa=0.0d0
 
                   ! call becke_E(density, densityb, gax, gay, gaz, gbx, gby,gbz, Ex)
                   ! call lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz,Ec)
@@ -741,13 +890,18 @@ contains
                   ! dfdgaa = dfdgaa + dfdgaa2
                   ! dfdgab = dfdgab + dfdgab2
                   
-                  ! xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
-                  ! ydot = 2.d0*dfdgaa*gay + dfdgab*gby
-                  ! zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+                  !xdot = 2.d0*dfdgaa*gax + dfdgab*gbx
+                  !ydot = 2.d0*dfdgaa*gay + dfdgab*gby
+                  !zdot = 2.d0*dfdgaa*gaz + dfdgab*gbz
+                  xdot = 0.d0
+                  ydot = 0.d0
+                  zdot = 0.d0
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   
                   Vrecip = 0.d0
+                  zkec=0.d0
+                  dfdr=0.d0
                   call cew_getrecip( cew_pt(1), Vrecip )
                   zkec = -densitysum*Vrecip
                   dfdr = -Vrecip
@@ -767,7 +921,8 @@ contains
 
 
 ! Now loop over basis functions and compute the addition to the matrix
-! element.
+                  ! element.
+                  sumg = 0.d0
                   icount=quick_dft_grid%basf_counter(Ibin)+1
                   do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                      Ibas=quick_dft_grid%basf(icount)+1
@@ -786,8 +941,8 @@ contains
                      if (quicktest < quick_method%DMCutoff ) then
                         continue
                      else
-                        call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
-                        dydy,dydz,dzdz,Ibas,icount)
+                        !call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &
+                        !     & dydy,dydz,dzdz,Ibas,icount)
 
                         Ibasstart=(quick_basis%ncenter(Ibas)-1)*3
 
@@ -803,31 +958,41 @@ contains
                            !call pteval_new_imp(gridx,gridy,gridz,phi2,dphi2dx,dphi2dy, &
                            !dphi2dz,Jbas,jcount)
 
-                           quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
-                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
-                           (dfdr*dphidx*phi2 &
-                           + xdot*(dxdx*phi2+dphidx*dphi2dx) &
-                           + ydot*(dxdy*phi2+dphidx*dphi2dy) &
-                           + zdot*(dxdz*phi2+dphidx*dphi2dz))
-                           quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) - &
-                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
-                           (dfdr*dphidy*phi2 &
-                           + xdot*(dxdy*phi2+dphidy*dphi2dx) &
-                           + ydot*(dydy*phi2+dphidy*dphi2dy) &
-                           + zdot*(dydz*phi2+dphidy*dphi2dz))
-                           quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) - &
-                           2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
-                           (dfdr*dphidz*phi2 &
-                           + xdot*(dxdz*phi2+dphidz*dphi2dx) &
-                           + ydot*(dydz*phi2+dphidz*dphi2dy) &
-                           + zdot*(dzdz*phi2+dphidz*dphi2dz))
+                           grdx= -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*(dfdr*dphidx*phi2)
+                           grdy= -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*(dfdr*dphidy*phi2)
+                           grdz= -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*(dfdr*dphidz*phi2)
+
+
+                           !
+                           ! This is the d\rho/dX contribution from line 1 of Eq (39)
+                           !
+                           quick_qm_struct%gradient(Ibasstart+1) = &
+                                & quick_qm_struct%gradient(Ibasstart+1) + grdx
+                           quick_qm_struct%gradient(Ibasstart+2) = &
+                                & quick_qm_struct%gradient(Ibasstart+2) + grdy
+                           quick_qm_struct%gradient(Ibasstart+3) = &
+                                & quick_qm_struct%gradient(Ibasstart+3) + grdz
+
+                           sumg(1) = sumg(1) + grdx
+                           sumg(2) = sumg(2) + grdy
+                           sumg(3) = sumg(3) + grdz
+                           
                            jcount=jcount+1
                         enddo
                      endif
 
                   icount=icount+1
-                  enddo
+               enddo
 
+               !
+               ! This is the d\rho/dx * dx/dX contribution from line 1 of Eq (39)
+               !
+               
+               oi = 3*(Iatm-1)
+               do k=1,3
+                  quick_qm_struct%gradient(oi+k) = quick_qm_struct%gradient(oi+k) - sumg(k)
+               end do
+                  
 !  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
 !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
 !  the density and the weight are not zero. Now check to see fi the weight is one. If it isn't, we need to
@@ -837,17 +1002,32 @@ contains
                   if (sswt == 1.d0) then
                      continue
                   else
-                     call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
+                     ! The sswder routine is not giving me the proper weight gradients
+                     !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
+
+                     !write(6,*)"xyz",xyz
+                     call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),sumg(1),dp)
+                     !write(6,*)"dp",dp
+                     sumg(1) = weight / sswt
+                     DO i=1,natom
+                        oi = 3*(i-1)
+                        do k=1,3
+                           quick_qm_struct%gradient(oi+k)=quick_qm_struct%gradient(oi+k) &
+                                & + dp(k,i)*zkec*sumg(1)
+                        end do
+                     END DO
+
+                     
                   endif
                endif
             endif
 !         enddo
 
       Igp=Igp+1
-      enddo
    enddo
-
-
+end do
+   !deallocate( spcder )
+   
    return
 
 

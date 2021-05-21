@@ -687,12 +687,12 @@ contains
            current_diis=current_diis+1
 
            ! DELETE ME
-           write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
-                & quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
+           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
+           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
 
-           do i=1,10 ! DELETE ME
-              write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
-           end do ! DELETE ME
+           !do i=1,10 ! DELETE ME
+           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
+           !end do ! DELETE ME
            
            
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
