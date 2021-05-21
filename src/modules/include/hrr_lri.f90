@@ -41,7 +41,7 @@ subroutine hrr_tci
        M3=1         
        Y=store(M1,M3)
  
-       !Y=Y*quick_basis%cons(III)*quick_basis%cons(JJJ)
+       Y=Y*quick_basis%cons(III)*quick_basis%cons(JJJ)
 
        !write(*,*) "Case 2000: ", Y, quick_basis%cons(III),quick_basis%cons(JJJ),&
        !Y/(quick_basis%cons(III)*quick_basis%cons(JJJ))
@@ -81,7 +81,7 @@ subroutine hrr_tci
          Y=Y+coefangL(i)*store(angL(i),1)
        enddo
 
-       !Y=Y*quick_basis%cons(III)*quick_basis%cons(JJJ)
+       Y=Y*quick_basis%cons(III)*quick_basis%cons(JJJ)
 
        !write(*,*) "Case 999: ", Y,quick_basis%cons(III),quick_basis%cons(JJJ),&
        !Y/(quick_basis%cons(III)*quick_basis%cons(JJJ))

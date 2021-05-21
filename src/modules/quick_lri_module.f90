@@ -445,14 +445,19 @@ contains
     KKK=1
     LLL=1
 
+    !write(6,*)
     do III=III1,III2
+
+       !write(6,'(I3,2F13.5)')III,angrenorm(III),quick_basis%cons(III)
+
+       
       do JJJ=JJJ1,JJJ2
         call hrr_tci
         ! assumes that core operator formation is done
         !quick_qm_struct%oneElecO(JJJ,III)=quick_qm_struct%oneElecO(JJJ,III)+Y
         quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III) &
-             & + Y * angrenorm(JJJ) * angrenorm(III)
-        
+             & + Y !* angrenorm(JJJ) * angrenorm(III)
+             !& + Y * quick_basis%cons(III)*quick_basis%cons(JJJ)
         !write(*,*) JJJ,III,"lngr Y:", Y
       enddo
     enddo
