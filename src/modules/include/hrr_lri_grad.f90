@@ -32,6 +32,7 @@ subroutine hrr_tci_grad
   double precision :: tempconstant
 
   tempconstant=1.0d0
+  tempconstant=quick_basis%cons(III)*quick_basis%cons(JJJ)
 
   call lefthrr(RA,RB,quick_basis%KLMN(1:3,III),quick_basis%KLMN(1:3,JJJ),IJtype,coefangL,angL,numangularL)
 

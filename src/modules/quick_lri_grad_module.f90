@@ -606,7 +606,7 @@ contains
         !write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
         !Ybb(1),Ybb(2),Ybb(3),Ycc(1),Ycc(2),Ycc(3)
 
-        afact = angrenorm(JJJ) * angrenorm(III)
+        afact = 1.d0 ! angrenorm(JJJ) * angrenorm(III)
         ! The off-diagonal blocks are only computed once, so we need to
         ! scale by 2 to consider the full density matrix for these blocks
         if ( II /= JJ ) afact = afact * 2.d0
