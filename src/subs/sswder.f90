@@ -9,6 +9,10 @@
 ! dimension UW(maxatm),wtgrad(3*maxatm)
     dimension uw(natom),wtgrad(3*natom)
 
+
+    DO I=1,natom
+       UW(I) = 1.d0
+    ENDDO
 ! Beofre we look at anything else, zero out wtgrad.
 
     DO I=1,natom*3
@@ -64,7 +68,7 @@
                     -5.d0*frctnto7)/16.d0
                     UW(Iatm)=UW(Iatm)*.5d0*(1.d0-gofconfocal)
                 ELSE
-                    continue
+                   continue
                 ENDIF
             ENDIF
         ENDDO

@@ -193,7 +193,8 @@ contains
 #else
   subroutine scf_gradient
 #endif
-     use allmod
+    use allmod
+    use quick_cew_module, only : quick_cew_grad
 #ifdef OSHELL
      use quick_cshell_gradient_module
 #endif
@@ -287,7 +288,11 @@ contains
 #else
      call get_cshell_eri_grad
 #endif
-  
+
+
+     call quick_cew_grad
+
+     
      call cpu_time(timer_end%T2eGrad)
      timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
   !---------------------------------------------------------------------
