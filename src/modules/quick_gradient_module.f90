@@ -1260,12 +1260,15 @@ contains
                     icount=icount+1
                     enddo
 
+#define TOTALDERIV
 
+#ifdef TOTALDERIV
+                    ! new
                     oi = 3*(Iatm-1)
                     quick_qm_struct%gradient(oi+1) =quick_qm_struct%gradient(oi+1) - tsum(1)
                     quick_qm_struct%gradient(oi+2) =quick_qm_struct%gradient(oi+2) - tsum(2)
                     quick_qm_struct%gradient(oi+3) =quick_qm_struct%gradient(oi+3) - tsum(3)
-
+#endif
                     
   !  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
   !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
@@ -1276,8 +1279,9 @@ contains
                     if (sswt == 1.d0) then
                        continue
                     else
-                       !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
-                       
+
+#ifdef TOTALDERIV
+                       !new
                        call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
                        tsum(1) = weight / sswt
                        DO i=1,natom
@@ -1287,7 +1291,10 @@ contains
                                   & + dp(k,i)*zkec*tsum(1)
                           end do
                        END DO
-
+#else
+                       !old
+                       call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
+#endif
                        
                     endif
                  endif
