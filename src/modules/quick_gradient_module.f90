@@ -934,7 +934,10 @@ contains
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
 
-
+     double precision :: tgrd(3), tsum(3)
+     integer :: i,k,oi
+     double precision,allocatable :: dp(:,:)
+     
      !return
 
 
@@ -944,6 +947,9 @@ contains
         ! unitialized data is coming from.
         return
      end if
+
+     allocate( dp(3,natom) )
+     dp = 0.d0
      
      
 #ifdef MPIV
@@ -1149,7 +1155,11 @@ contains
                     endif
   
   ! Now loop over basis functions and compute the addition to the matrix
-  ! element.
+                    ! element.
+
+                    tgrd=0.d0
+                    tsum=0.d0
+                    
                     icount=quick_dft_grid%basf_counter(Ibin)+1
                     do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                        Ibas=quick_dft_grid%basf(icount)+1
@@ -1184,45 +1194,63 @@ contains
   
                              !call pteval_new_imp(gridx,gridy,gridz,phi2,dphi2dx,dphi2dy, &
                              !dphi2dz,Jbas,jcount)
-  
-                             quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
-                             2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+
+
+                             tgrd(1) = -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
                              (dfdr*dphidx*phi2 &
                              + xdot*(dxdx*phi2+dphidx*dphi2dx) &
                              + ydot*(dxdy*phi2+dphidx*dphi2dy) &
                              + zdot*(dxdz*phi2+dphidx*dphi2dz))
-                             quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) - &
-                             2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+
+                             tgrd(2) = -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
                              (dfdr*dphidy*phi2 &
                              + xdot*(dxdy*phi2+dphidy*dphi2dx) &
                              + ydot*(dydy*phi2+dphidy*dphi2dy) &
                              + zdot*(dydz*phi2+dphidy*dphi2dz))
-                             quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) - &
-                             2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
+
+                             tgrd(3) = -2.d0*quick_qm_struct%dense(Ibas,Jbas)*weight*&
                              (dfdr*dphidz*phi2 &
                              + xdot*(dxdz*phi2+dphidz*dphi2dx) &
                              + ydot*(dydz*phi2+dphidz*dphi2dy) &
                              + zdot*(dzdz*phi2+dphidz*dphi2dz))
 
+                             tsum = tsum + tgrd
+                             
+                             quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) + tgrd(1)
+                             
+                             quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) + tgrd(2)
+                             
+                             quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) + tgrd(3)
+                             
+
 #ifdef OSHELL
-                             quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) - &
-                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+
+                             tgrd(1) = -2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
                              (dfdrb*dphidx*phi2 &
                              + xdotb*(dxdx*phi2+dphidx*dphi2dx) &
                              + ydotb*(dxdy*phi2+dphidx*dphi2dy) &
                              + zdotb*(dxdz*phi2+dphidx*dphi2dz))
-                             quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) - &
-                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+
+                             tgrd(2) = -2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
                              (dfdrb*dphidy*phi2 &
                              + xdotb*(dxdy*phi2+dphidy*dphi2dx) &
                              + ydotb*(dydy*phi2+dphidy*dphi2dy) &
                              + zdotb*(dydz*phi2+dphidy*dphi2dz))
-                             quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) - &
-                             2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
+
+                             tgrd(3) = -2.d0*quick_qm_struct%denseb(Ibas,Jbas)*weight*&
                              (dfdrb*dphidz*phi2 &
                              + xdotb*(dxdz*phi2+dphidz*dphi2dx) &
                              + ydotb*(dydz*phi2+dphidz*dphi2dy) &
                              + zdotb*(dzdz*phi2+dphidz*dphi2dz))
+
+                             tsum = tsum + tgrd
+                             
+                             quick_qm_struct%gradient(Ibasstart+1) =quick_qm_struct%gradient(Ibasstart+1) + tgrd(1)
+                             
+                             quick_qm_struct%gradient(Ibasstart+2)= quick_qm_struct%gradient(Ibasstart+2) + tgrd(2)
+                             
+                             quick_qm_struct%gradient(Ibasstart+3)= quick_qm_struct%gradient(Ibasstart+3) + tgrd(3)
+                             
 #endif
 
                              jcount=jcount+1
@@ -1231,7 +1259,14 @@ contains
   
                     icount=icount+1
                     enddo
-  
+
+
+                    oi = 3*(Iatm-1)
+                    quick_qm_struct%gradient(oi+1) =quick_qm_struct%gradient(oi+1) - tsum(1)
+                    quick_qm_struct%gradient(oi+2) =quick_qm_struct%gradient(oi+2) - tsum(2)
+                    quick_qm_struct%gradient(oi+3) =quick_qm_struct%gradient(oi+3) - tsum(3)
+
+                    
   !  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
   !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
   !  the density and the weight are not zero. Now check to see fi the weight is one. If it isn't, we need to
@@ -1241,7 +1276,19 @@ contains
                     if (sswt == 1.d0) then
                        continue
                     else
-                       call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
+                       !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
+                       
+                       call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
+                       tsum(1) = weight / sswt
+                       DO i=1,natom
+                          oi = 3*(i-1)
+                          do k=1,3
+                             quick_qm_struct%gradient(oi+k)=quick_qm_struct%gradient(oi+k) &
+                                  & + dp(k,i)*zkec*tsum(1)
+                          end do
+                       END DO
+
+                       
                     endif
                  endif
               endif
