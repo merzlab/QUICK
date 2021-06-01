@@ -945,11 +945,6 @@ contains
         return
      end if
      
-     libxc_rho = 0.d0
-     libxc_sigma = 0.d0
-     libxc_exc = 0.d0
-     libxc_vrho = 0.d0
-     libxc_vsigma = 0.d0
      
 #ifdef MPIV
      include "mpif.h"
@@ -1085,12 +1080,6 @@ contains
                     if(quick_method%uselibxc) then
 
 
-                       libxc_rho = 0.d0
-                       libxc_sigma = 0.d0
-                       libxc_exc = 0.d0
-                       libxc_vrho = 0.d0
-                       libxc_vsigma = 0.d0
-                       
                        do ifunc=1, quick_method%nof_functionals
                           select case(xc_f90_info_family(xc_info(ifunc)))
                              case(XC_FAMILY_LDA)
@@ -1102,13 +1091,6 @@ contains
                              case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
                                 call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
                                      libxc_exc(1), libxc_vrho(1), libxc_vsigma(1))
-                             case default
-                                
-                                libxc_rho = 0.d0
-                                libxc_sigma = 0.d0
-                                libxc_exc = 0.d0
-                                libxc_vrho = 0.d0
-                                libxc_vsigma = 0.d0
                        
                           end select
 
