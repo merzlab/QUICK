@@ -194,7 +194,7 @@ contains
   subroutine scf_gradient
 #endif
     use allmod
-    use quick_cew_module, only : quick_cew_grad
+    use quick_cew_module, only : quick_cew, quick_cew_grad
 #ifdef OSHELL
      use quick_cshell_gradient_module
 #endif
@@ -289,8 +289,9 @@ contains
      call get_cshell_eri_grad
 #endif
 
-
-     call quick_cew_grad
+     if ( quick_cew%use_cew ) then
+        call quick_cew_grad
+     end if
 
      
      call cpu_time(timer_end%T2eGrad)
@@ -909,7 +910,8 @@ contains
   !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu.
   !-------------------------------------------------------------------------
   
-     use allmod
+    use allmod
+    use quick_method_module, only : quick_method
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
@@ -931,7 +933,24 @@ contains
      double precision, dimension(3) :: libxc_vsigma
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
      type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
-  
+
+
+     !return
+
+
+     if ( quick_method%HF ) then
+        ! If we don't return for HF+CEW, then the unitialized data will enter
+        ! the gradients somehow and screw everything up.  Not sure where the
+        ! unitialized data is coming from.
+        return
+     end if
+     
+     libxc_rho = 0.d0
+     libxc_sigma = 0.d0
+     libxc_exc = 0.d0
+     libxc_vrho = 0.d0
+     libxc_vsigma = 0.d0
+     
 #ifdef MPIV
      include "mpif.h"
 #endif
@@ -1064,6 +1083,14 @@ contains
                     dfdgbb=0.0d0
   
                     if(quick_method%uselibxc) then
+
+
+                       libxc_rho = 0.d0
+                       libxc_sigma = 0.d0
+                       libxc_exc = 0.d0
+                       libxc_vrho = 0.d0
+                       libxc_vsigma = 0.d0
+                       
                        do ifunc=1, quick_method%nof_functionals
                           select case(xc_f90_info_family(xc_info(ifunc)))
                              case(XC_FAMILY_LDA)
@@ -1074,7 +1101,15 @@ contains
                                 libxc_vsigma(3) = 0.0d0
                              case(XC_FAMILY_GGA, XC_FAMILY_HYB_GGA)
                                 call xc_f90_gga_exc_vxc(xc_func(ifunc),1,libxc_rho(1), libxc_sigma(1), &
-                                libxc_exc(1), libxc_vrho(1), libxc_vsigma(1))
+                                     libxc_exc(1), libxc_vrho(1), libxc_vsigma(1))
+                             case default
+                                
+                                libxc_rho = 0.d0
+                                libxc_sigma = 0.d0
+                                libxc_exc = 0.d0
+                                libxc_vrho = 0.d0
+                                libxc_vsigma = 0.d0
+                       
                           end select
 
                         excpp=excpp+libxc_exc(1)
