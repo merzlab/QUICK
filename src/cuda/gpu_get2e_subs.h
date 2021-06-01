@@ -108,14 +108,18 @@ __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 #endif
 {
+	//if(threadIdx.x == 0)
+	//printf("inside get2e_kernel\n");
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
-    
+	//printf("offside is %d\n", offside);
+	//printf("totalThreads is %d\n", totalThreads); 
+   
     // jshell and jshell2 defines the regions in i+j and k+l axes respectively.    
     // sqrQshell= Qshell x Qshell; where Qshell is the number of sorted shells (see gpu_upload_basis_ in gpu.cu)
     // for details on sorting. 
  
-#ifdef int_spd
+#ifdef int_spd	//kernel 0, zone 0,1,2,3,4
 /*
  Here we walk through full cutoff matrix.
 
@@ -129,11 +133,12 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
  |_____________|  |
 
 */
-
+	//printf("is int_spd");
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell;
+	//printf("jshell and jshell2 are %llu\n", jshell);
 
-#elif defined int_spdf
+#elif defined int_spdf	//kernel 1, zone 1,3,4
 
 /*  
  Here we walk through following region of the cutoff matrix.
@@ -152,18 +157,18 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - devSim.fStart;
     
-#elif defined int_spdf2
+#elif defined int_spdf2	//kernel 2, zone 2,3,4
 
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - devSim.fStart;
 
-#elif defined int_spdf3
+#elif defined int_spdf3	//kernel 3, zone 3,4
 
     QUICKULL jshell0 = (QUICKULL) devSim.fStart;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell - jshell0;
     QUICKULL jshell2 = (QUICKULL) devSim.sqrQshell - jshell0;
     
-#elif defined int_spdf4
+#elif defined int_spdf4	//kernel 4, zone 4
     
     QUICKULL jshell0 = (QUICKULL) devSim.fStart;
     QUICKULL jshell00 = (QUICKULL) devSim.ffStart;
@@ -235,6 +240,9 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
+
+		//printf("a is %llu", a);
+		//printf("b is %llu", b);
 
 #elif defined int_spdf
         
@@ -348,7 +356,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
             a = 0;
             b = 0;
         }
-
+// a,b are thread ordinates (x,y)
 #endif
 
 #ifdef CUDA_MPIV
@@ -361,6 +369,12 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
         int ii = devSim.sorted_Q[II];
         int kk = devSim.sorted_Q[KK];
         
+		//printf("II is %d\n",II);
+		//printf("KK is %d\n",KK);
+		//printf("ii is %d\n",ii);
+		//printf("kk is %d\n",kk);
+			
+
         if (ii<=kk){
             
             

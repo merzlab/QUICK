@@ -42,6 +42,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       ! * Allocate arrays whose dimensions depend on NATOM (allocateatoms_ecp)
       ! * Read the Effective Core Potentials (ECPs), modify the atomic charges
       !   and the total number of electrons (readecp)
+      print *, "call readbasis"
       if (quick_method%ecp)    call readecp
       call quick_open(ibasisfile,basisfilename,'O','F','W',.true.,ierr)
       CHECK_ERROR(ierr)
@@ -56,6 +57,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       atmbs2=.true.
       icont=0
       quick_method%ffunxiao=.true.
+      nfrozencore = 0
 
       ! parse the file and find the sizes of things to allocate them in memory
       do while (iofile  == 0 )
@@ -227,6 +229,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
          nshell = nshell + quick_basis%kshell(quick_molspec%iattype(i))
          nbasis = nbasis + kbasis(quick_molspec%iattype(i))
          nprim = nprim + kcontract(quick_molspec%iattype(i))
+         if(quick_method%frzCore)then
+            nfrozencore = nfrozencore + frozencore(quick_molspec%iattype(i))/2
+         endif
 
          ! MFCC
          if(i.eq.natomfinal)nbasisfinal=nbasis

@@ -32,18 +32,19 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg);
 extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
 extern "C" void gpu_upload_energy_(QUICKDouble* E);
-extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense);
+extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E);
 extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jbasis, int* maxcontract, \
                                   int* ncontract, int* itype,     QUICKDouble* aexp,      QUICKDouble* dcoeff,\
                                   int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
-                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN);
+                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN, int* nfrozencore);
 extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
 //Following methods weddre added by Madu Manathunga
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense);
+extern "C" void gpu_upload_coefficient_matrix_(QUICKDouble* coefficient);
 extern "C" void gpu_delete_dft_grid_();
 //void upload_xc_smem();
 void upload_pteval();
@@ -74,7 +75,7 @@ void getxc(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void getxc_grad(_gpu_type gpu, gpu_libxc_info** glinfo, int nof_functionals);
 void prune_grid_sswgrad();
 void gpu_delete_sswgrad_vars();
-void get2e_MP2(_gpu_type gpu);
+void get2e_MP2(_gpu_type gpu, QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 // global [get2e_kernel]
@@ -164,6 +165,7 @@ __device__ void iclass_grad_spdf7(int I, int J, int K, int L, unsigned int II, u
 __device__ void iclass_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax);
 
 void upload_sim_to_constant(_gpu_type gpu);
+void upload_sim_to_constant_MP2(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);
 
 void upload_para_to_const();
@@ -512,4 +514,52 @@ __device__ QUICKDouble lyp_e(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QU
 __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
 
+
+//Chi Jin 09/23/2020
+//MP2
+__global__ void get2e_MP2_kernel();
+__global__ void firstQuarterTransKernel(int II,int JJ,int nstepmp2s, int nsteplength, int nstep, int nbasistemp, unsigned long long int* ntempptr_d,\
+QUICKDouble cutoffmp2, QUICKDouble* orbmp2i331);
+__global__ void secondQuarterTransKernel(int III, int JJJ, int IIInew,int JJJnew,int nsteplength, int nstep, int nbasistemp, QUICKDouble* orbmp2i331, QUICKDouble* orbmp2j331);
+__global__ void thirdQuarterTransKernel(int III, int JJJ, int IIInew,int JJJnew, int nsteplength, int nstep, int nbasistemp, QUICKDouble* orbmp2j331, QUICKDouble* orbmp2k331);
+__global__ void forthQuarterTransKernel(int icycle, int i3, int k3, int nstep, QUICKDouble* orbmp2k331, QUICKDouble* orbmp2);
+__global__ void finalMP2AccumulationKernel(int i3, int k3, QUICKDouble* orbmp2, QUICKDouble* MP2cor);
+__device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, \
+	int nstepmp2s, int nsteplength, int nstep, int nbasistemp, QUICKDouble DNMax, QUICKDouble* orbmp2i331);
+void fourQuarterTransHost(_gpu_type gpu, QUICKDouble* ememorysumptr, int* nstepmp2ptr, unsigned long long int* ntempptr);
+
+__device__ void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp);
+__device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store,
+                         QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,  \
+                         QUICKDouble WPtempx,QUICKDouble WPtempy,QUICKDouble WPtempz, \
+                         QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,  \
+                         QUICKDouble WQtempx,QUICKDouble WQtempy,QUICKDouble WQtempz, \
+                         QUICKDouble ABCDtemp,QUICKDouble ABtemp, \
+                         QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom);
+__device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
+                                int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+                                QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
+                                QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
+                                QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+__device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+                       QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
+                       int KLMNAx, int KLMNAy, int KLMNAz,
+                       int KLMNBx, int KLMNBy, int KLMNBz,
+                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+
+void upload_para_to_const_MP2();
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
+QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor,\
+QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp);
+
+
+/*
+#undef STOREDIM
+#ifdef int_spd
+#define STOREDIM STOREDIM_S
+#else
+#define STOREDIM STOREDIM_L
+#endif
+*/
 #endif

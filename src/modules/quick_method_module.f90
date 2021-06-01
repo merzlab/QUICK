@@ -39,6 +39,7 @@ module quick_method_module
         logical :: writePMat = .false. ! flag to write density matrix
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
+        logical :: frzCore = .false.   ! frozen core approximation
         logical :: diisSCF =  .false.  ! DIIS SCF
         logical :: prtGap =  .false.   ! flag to print HOMO-LUMO gap
         logical :: opt =  .false.      ! optimization
@@ -359,6 +360,7 @@ endif
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
+            if (self%frzCore)   write(io, '(" FROZEN CORE APPROXIMATION")')
             if (self%zmat)      write(io,'(" Z-MATRIX CONSTRUCTION")')
             if (self%dipole)    write(io,'(" DIPOLE")')
             if (self%ecp)       write(io,'(" ECP BASIS SET")')
@@ -540,6 +542,7 @@ endif
                self%writeSAD = .true.
                self%readSAD = .false. ! switch off reading of SAD guess which was set to true by default
             end if
+            if (index(keyWD,'FROZENC').ne.0)  self%frzCore=.true. ! “FROZENCORE” clashes with “CORE”
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
@@ -680,6 +683,7 @@ endif
             self%readDMX =  .false.  ! flag to read density matrix
             self%readSAD =  .true.   ! flag to read sad guess
             self%writeSAD = .false.  ! flag to write sad guess
+            self%frzCore = .false.   ! frozen core approximation
             self%diisSCF =  .false.  ! DIIS SCF
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization

@@ -285,6 +285,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     
     upload_para_to_const();
 
+	//for MP2, added here!
+	upload_para_to_const_MP2();
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -1066,7 +1068,8 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 #endif   
  
-    gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
+	printf("Don't do gpu -> gpu_cutoff -> YCutoff -> DeleteCPU()\n");
+    //gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
     gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
     gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
  
@@ -1087,7 +1090,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 //-----------------------------------------------
 //  upload calculated information
 //-----------------------------------------------
-extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense)
+extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E)
 {
     
 #ifdef DEBUG
@@ -1102,9 +1105,11 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+	gpu -> gpu_calculated -> coefficient    =   new cuda_buffer_type<QUICKDouble>(co,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    
-    
+	gpu -> gpu_calculated -> mp2cor = new cuda_buffer_type<QUICKDouble>(1); //to store finally mp2 correction
+	gpu	-> gpu_calculated -> molorbe		= 	new cuda_buffer_type<QUICKDouble>(E, gpu->nbasis);
+	
     /*
      oULL is the unsigned long long int type of O matrix. The reason to do so is because
      Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
@@ -1128,13 +1133,19 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     
     //    gpu -> gpu_calculated -> o        -> Upload();
     gpu -> gpu_calculated -> dense    -> Upload();
-    gpu -> gpu_calculated -> oULL     -> Upload();
-    
+    gpu -> gpu_calculated -> coefficient -> Upload();
+	gpu -> gpu_calculated -> oULL     -> Upload();
+	gpu -> gpu_calculated -> mp2cor -> Upload();
+	gpu -> gpu_calculated -> molorbe         -> Upload();
+
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+	gpu -> gpu_sim.coefficient		 =  gpu -> gpu_calculated -> coefficient -> _devData;
     gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
-    
-    
+	gpu -> gpu_sim.mp2cor = gpu -> gpu_calculated -> mp2cor  -> _devData;
+	gpu -> gpu_sim.molorbe               = gpu -> gpu_calculated -> molorbe -> _devData;
+
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
@@ -1157,6 +1168,16 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
 }
 
+// Added by Chi Jin on 11/07/2020. Do we need this, since we did this in gpu_upload_calculated?
+// Probably not. This function is not called anywhere
+extern "C" void gpu_upload_coefficient_matrix_(QUICKDouble* coefficient)
+{
+	gpu -> gpu_calculated -> coefficient = new cuda_buffer_type<QUICKDouble>(coefficient,  gpu->nbasis, gpu->nbasis);
+	gpu -> gpu_calculated -> coefficient -> Upload();
+	gpu -> gpu_sim.coefficient = gpu -> gpu_calculated -> coefficient -> _devData;
+}
+
+
 //-----------------------------------------------
 //  upload basis set information
 //-----------------------------------------------
@@ -1165,7 +1186,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
                                   int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
                                   int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
                                   int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
-                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN)
+                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN, int* nfrozencore)
 {
     
 #ifdef DEBUG
@@ -1182,17 +1203,20 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> jshell          =   *jshell;
     gpu -> gpu_basis -> jbasis          =   *jbasis;
     gpu -> gpu_basis -> maxcontract     =   *maxcontract;
-    
+	gpu -> gpu_basis -> nfrozencore		=	*nfrozencore;   
+
     gpu -> nshell                       =   *nshell;
     gpu -> nprim                        =   *nprim;
     gpu -> jshell                       =   *jshell;
     gpu -> jbasis                       =   *jbasis;
+	gpu	-> nfrozencore					=	*nfrozencore;
     
     gpu -> gpu_sim.nshell                   =   *nshell;
     gpu -> gpu_sim.nprim                    =   *nprim;
     gpu -> gpu_sim.jshell                   =   *jshell;
     gpu -> gpu_sim.jbasis                   =   *jbasis;
     gpu -> gpu_sim.maxcontract              =   *maxcontract;
+	gpu -> gpu_sim.nfrozencore				= 	*nfrozencore;
     
     
     gpu -> gpu_basis -> ncontract                   =   new cuda_buffer_type<int>(ncontract, gpu->nbasis);//gpu->nbasis);
@@ -1492,11 +1516,13 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> prim_start -> DeleteCPU();
     
     gpu -> gpu_basis -> Qnumber -> DeleteCPU();
-    gpu -> gpu_basis -> Qstart -> DeleteCPU();
-    gpu -> gpu_basis -> Qfinal -> DeleteCPU();
     
-    gpu -> gpu_basis -> Qsbasis -> DeleteCPU();
-    gpu -> gpu_basis -> Qfbasis -> DeleteCPU();
+	// for MP2, let them be here for a while
+	//gpu -> gpu_basis -> Qstart -> DeleteCPU();
+    //gpu -> gpu_basis -> Qfinal -> DeleteCPU();
+    
+    //gpu -> gpu_basis -> Qsbasis -> DeleteCPU();
+    //gpu -> gpu_basis -> Qfbasis -> DeleteCPU();
     gpu -> gpu_basis -> gccoeff -> DeleteCPU();
     gpu -> gpu_basis -> cons -> DeleteCPU();
     gpu -> gpu_basis -> gcexpo -> DeleteCPU();
@@ -2426,7 +2452,7 @@ extern "C" void gpu_grad_(QUICKDouble* grad)
     cudaEventDestroy(end);
 #endif
     
-    PRINTDEBUG("COMPLETE RUNNING GRAD")
+    PRINTDEBUG("COMPLETE RUNNING GRAD");
 }
 
 
@@ -2678,10 +2704,13 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
+ 	delete gpu->gpu_calculated->coefficient;
     delete gpu->gpu_calculated->oULL;
-    delete gpu->gpu_cutoff->cutMatrix;
+	delete gpu->gpu_calculated->mp2cor;
+	delete gpu->gpu_calculated->molorbe;
+	delete gpu->gpu_cutoff->cutMatrix;
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
-    delete gpu->gpu_cutoff->YCutoff;
+	delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
     
     
@@ -2701,7 +2730,7 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("BEGIN TO RUN KERNEL")
     
     get2e(gpu);
- 
+
     PRINTDEBUG("COMPLETE KERNEL")
     gpu -> gpu_calculated -> oULL -> Download();
 
@@ -2758,6 +2787,114 @@ extern "C" void gpu_get2e_(QUICKDouble* o)
     PRINTDEBUG("COMPLETE RUNNING GET2E")
 }
 
+
+//-----------------------------------------------
+//  compute mp2
+//-----------------------------------------------
+
+extern "C" void gpu_calmp2_(QUICKDouble* mp2cor, QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp)
+{
+	PRINTDEBUG("BEGIN TO RUN gpu_calmp2");
+	
+	upload_sim_to_constant_MP2(gpu);
+
+	PRINTDEBUG("BEGIN TO RUN KERNEL")
+	
+	get2e_MP2(gpu, ememorysum, nstepmp2, ntemp);
+	printf("in gpu_calmp2_, get2e_MP2 is done\n");
+	
+	PRINTDEBUG("COMPLETE KERNEL")
+	
+	float time = 0;
+	cudaEvent_t before_download, downloaded, copied;
+    cudaEventCreate(&before_download);
+    cudaEventCreate(&downloaded);
+	cudaEventCreate(&copied);
+    cudaEventRecord(before_download, 0);
+
+	printf("here to download gpu->gpu_calculated->mp2cor\n");
+    gpu->gpu_calculated->mp2cor->Download();
+    printf("gpu->gpu_calculated->mp2cor downloaded\n");
+	printf("gpu->gpu_calculated->mp2cor->_hostData is %lf\n", *gpu->gpu_calculated->mp2cor->_hostData);
+
+	cudaEventRecord(downloaded, 0);
+	cudaEventSynchronize(downloaded);
+	cudaEventElapsedTime(&time, before_download, downloaded);
+	printf("in gpu_calmp2, total mp2cor download time is %6.3f ms\n", time);
+
+	memcpy(mp2cor, gpu->gpu_calculated->mp2cor->_hostData, sizeof(QUICKDouble));
+
+	cudaEventRecord(copied, 0);
+	cudaEventSynchronize(copied);
+    cudaEventElapsedTime(&time, downloaded, copied);
+	printf("in gpu_calmp2, total mp2cor copy time is %6.3f ms\n", time);
+
+	cudaEventDestroy(before_download);
+	cudaEventDestroy(downloaded);
+	cudaEventDestroy(copied);
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+	
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("DOWNLOAD O",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("DELETE TEMP VARIABLES")
+	
+    delete gpu->gpu_calculated->o;
+    delete gpu->gpu_calculated->dense;
+    delete gpu->gpu_calculated->coefficient;
+	delete gpu->gpu_calculated->oULL;
+ 	delete gpu->gpu_calculated->mp2cor;
+	delete gpu->gpu_calculated->molorbe;
+	delete gpu->gpu_cutoff->cutMatrix;
+
+    PRINTDEBUG("COMPLETE RUNNING MP2")
+}
+
+extern "C" void gpu_mp2_wrapper_(QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense, QUICKDouble* E,\
+QUICKDouble* cutmatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit,QUICKDouble* DMCutoff, QUICKDouble* mp2cor,\
+QUICKDouble* ememorysum, int* nstepmp2, unsigned long long int* ntemp)
+{
+	float time = 0;
+	cudaEvent_t before_upload, uploaded, mp2_done;
+	cudaEventCreate(&before_upload);
+	cudaEventCreate(&uploaded);
+	cudaEventCreate(&mp2_done);
+	cudaEventRecord(before_upload, 0);
+
+	//not changed the signature of this functure for the moment:
+	QUICKDouble* o = new QUICKDouble(0);
+	gpu_upload_calculated_(o,co,vec,dense,E);
+	free(o);
+	gpu_upload_cutoff_(cutmatrix,integralCutoff,primLimit,DMCutoff);
+	
+	cudaEventRecord(uploaded, 0);
+	cudaEventSynchronize(uploaded);
+	cudaEventElapsedTime(&time, before_upload, uploaded);
+	printf("in gpu_mp2_wrapper, total upload time is %6.3f ms\n", time);
+
+	gpu_calmp2_(mp2cor, ememorysum, nstepmp2, ntemp);
+
+	cudaEventRecord(mp2_done, 0);
+    cudaEventSynchronize(mp2_done);
+    cudaEventElapsedTime(&time, uploaded, mp2_done);
+    printf("in gpu_mp2_wrapper, total calmp2 time is %6.3f ms\n", time);
+	printf("in gpu_mp2_wrapper, finally mp2cor is %lf\n", *mp2cor);	
+
+	cudaDeviceSynchronize();
+}
 
 extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
 {

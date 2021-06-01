@@ -297,12 +297,17 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
 // interface to call Kernel subroutine
 void get2e(_gpu_type gpu)
 {
+	//printf("inside void get2e(_gpu_type gpu)\n");
+	//printf("gpu->maxL is %d\n", gpu->maxL);
     // Part spd
 //    nvtxRangePushA("SCF 2e");
 
+	//printf("before enter get2e_kernel\n");
     QUICK_SAFE_CALL((get2e_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
- 
+	//printf("gpu->maxL is %d\n", gpu->maxL); 
+
 #ifdef CUDA_SPDF
+	//printf("CUDA_SPDF\n");
     if (gpu->maxL >= 3) {
         // Part f-1
         QUICK_SAFE_CALL((get2e_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));

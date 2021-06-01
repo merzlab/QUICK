@@ -84,7 +84,10 @@ subroutine scf_operator(deltaO)
    call cpu_time(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+
+  print *, "in scf_operator, get CUDA"
+
+  if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
          call gpu_upload_method(0, 1.0d0)
@@ -105,6 +108,8 @@ subroutine scf_operator(deltaO)
 
    if (quick_method%nodirect) then
 #ifdef CUDA
+      print *, "call gpu_addint"
+      print *, ""
       call gpu_addint(quick_qm_struct%o, intindex, intFileName)
 #else
 #ifndef MPI
@@ -120,14 +125,17 @@ subroutine scf_operator(deltaO)
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then          
-         call gpu_get2e(quick_qm_struct%o)  
+      if (quick_method%bCUDA) then  
+      !print *, "before gpu_get2e, quick_qm_struct%o is ", quick_qm_struct%o        
+         call gpu_get2e(quick_qm_struct%o)  !c function
+      !print *, "after gpu_get2e, quick_qm_struct%o is ", quick_qm_struct%o
       else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
 #if defined MPIV && !defined CUDA_MPIV 
+   print *, "defined MPIV and not defined CUDA_MPIV"
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -141,9 +149,15 @@ subroutine scf_operator(deltaO)
       enddo
    endif        
 #else
+    !print *, "Here in scf_operator, jshell is", jshell
+    !print *, "Here in scf_operator, before adding 2e integrals, quick_qm_struct%o is"
+    !print *, quick_qm_struct%o
       do II=1,jshell
-         call get2e(II)
+         call get2e(II) !!serial get2e and added to quick_qm_struct%o: get2e->shell->iclass
       enddo
+    !print *, "Here in scf_operator, after adding 2e integrals, quick_qm_struct%o is"
+    !print *, quick_qm_struct%o
+    !print *, " "
 #endif
 
 #if defined CUDA || defined CUDA_MPIV 

@@ -31,7 +31,15 @@ struct gpu_calculated_type {
     int                             nbasis; // number of basis sets
     cuda_buffer_type<QUICKDouble>*  o;      // O matrix
     cuda_buffer_type<QUICKDouble>*  dense;  // Density Matrix
-    cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
+    cuda_buffer_type<QUICKDouble>*  coefficient; //Coefficient Matrix
+	//cuda_buffer_type<QUICKDouble>*  Y_Matrix;  // Y Matrix
+	cuda_buffer_type<QUICKDouble>*  mp2cor;
+	//cuda_buffer_type<QUICKDouble>*  orbmp2i331; //first quarter of ERI transformation
+	//cuda_buffer_type<QUICKDouble>*  orbmp2j331; //second quarter of ERI transformation
+	//cuda_buffer_type<QUICKDouble>*  orbmp2k331; //third quarter of ERI transformation
+	//cuda_buffer_type<QUICKDouble>*  orbmp2;		//forth quarter of ERI transformation
+	cuda_buffer_type<QUICKDouble>*  molorbe;
+	cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
@@ -170,6 +178,7 @@ struct gpu_simulation_type {
     int                             fStart;
     int                             ffStart;
     int                             maxL;
+	int								nfrozencore;
 
 	//New XC implementation
     int npoints;                                //Total number of packed grid points
@@ -273,7 +282,15 @@ struct gpu_simulation_type {
     QUICKDouble*                    o;
     QUICKULL*                       oULL;
     QUICKDouble*                    dense;
-    
+	QUICKDouble*					coefficient;
+	//QUICKDouble*					Y_Matrix;
+	QUICKDouble*					mp2cor;
+	//QUICKDouble* 					orbmp2i331;
+	//QUICKDouble*                    orbmp2j331;
+	//QUICKDouble*                    orbmp2k331;
+	//QUICKDouble*                    orbmp2;
+	QUICKDouble*                    molorbe;
+
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;
     QUICKDouble*                    expoSum;
@@ -330,7 +347,7 @@ struct gpu_basis_type {
     
     int                             fStart;
     int                             ffStart;
-    
+    int								nfrozencore;
     // Gaussian Type function
 
     cuda_buffer_type<int>*          ncontract;
@@ -430,7 +447,8 @@ struct gpu_type {
     int                             jshell;
     int                             jbasis;
     int                             maxL;
-    
+	int								nfrozencore;  
+
     cuda_buffer_type<int>*          iattype;
     cuda_buffer_type<QUICKDouble>*  xyz;
     cuda_buffer_type<QUICKDouble>*  chg;
