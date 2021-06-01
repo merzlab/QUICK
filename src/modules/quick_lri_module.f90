@@ -91,12 +91,12 @@ contains
     Zc=c_zeta
     Cc=c_chg
 
-    if ( .not. has_angrenorm ) then
-       has_angrenorm = .true.
-       if ( associated( angrenorm ) ) deallocate( angrenorm )
-       allocate( angrenorm( nbasis ) )
-       call CalcAngRenorm( nbasis,angrenorm )
-    end if
+    !if ( .not. has_angrenorm ) then
+    !   has_angrenorm = .true.
+    !   if ( associated( angrenorm ) ) deallocate( angrenorm )
+    !   allocate( angrenorm( nbasis ) )
+    !   call CalcAngRenorm( nbasis,angrenorm )
+    !end if
 
     
     do II = 1, jshell

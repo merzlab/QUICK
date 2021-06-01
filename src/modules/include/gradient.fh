@@ -282,7 +282,7 @@ contains
   !---------------------------------------------------------------------
   !  3-2) CEW gradient
   !---------------------------------------------------------------------
-     call quick_cew_grad
+     if ( quick_cew%use_cew ) call quick_cew_grad
 #endif
   
      call cpu_time(timer_end%T2eGrad)

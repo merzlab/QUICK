@@ -191,8 +191,6 @@ contains
           rvec = quick_molspec%xyz(1:3,a)-quick_molspec%extxyz(1:3,b)
           r = sqrt(rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3))
           E = E - qa*qb*erf( quick_cew%beta * r ) / r
-          !Emm = Emm + qa*qb*(1.-erf( quick_cew%beta * r )) / r
-          !write(6,*)"Emm",qa,qb,r,Emm
        end do
     end do
 
@@ -224,10 +222,8 @@ contains
              rvec = quick_molspec%xyz(1:3,a)-quick_molspec%xyz(1:3,b)
              r = sqrt(rvec(1)*rvec(1)+rvec(2)*rvec(2)+rvec(3)*rvec(3))
              E = E - qa*qb*erf( quick_cew%beta * r ) / r
-             !Eqm = Eqm - qa*qb*erf( quick_cew%beta * r ) / r
           else
              E = E - qa*qb*ew_self
-             !Eqm = Eqm - qa*qb*ew_self
           end if
        end do
     end do
@@ -295,7 +291,6 @@ contains
        pot = 0.d0
        call cew_getrecip( quick_molspec%xyz(1,a), pot )
        E = E + qa * pot
-       !Epot = Epot + qa * pot
     end do
 
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
@@ -329,6 +324,7 @@ contains
    use xc_f90_types_m
    use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid
+   use quick_molspec_module, only : quick_molspec
    implicit none
 
 #ifdef MPIV
@@ -355,7 +351,7 @@ contains
 #endif
 
 
-   double precision :: Vrecip, cew_pt(3)
+   double precision :: Vrecip, cew_pt(3),localsswt
    
 
 #if defined MPIV && !defined CUDA_MPIV
@@ -402,6 +398,9 @@ contains
                
                icount=icount+1
             enddo
+
+            call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
+            weight = weight * localsswt/sswt
             
 !  Next, evaluate the densities at the grid point and the gradient
 !  at that grid point.
@@ -538,6 +537,9 @@ contains
        qa = quick_molspec%chg(a)
        rvec = 0.d0
        call cew_getgrdatpt( quick_molspec%xyz(1,a), rvec(1) )
+       ! write(6,'(a,i4,7f15.10)')"planewavegrd ",a-1,qa, &
+       !      & quick_molspec%xyz(1,a),quick_molspec%xyz(2,a),quick_molspec%xyz(3,a), &
+       !      & rvec(1),rvec(2),rvec(3)
        oa = 3*(a-1)
        do k=1,3
           quick_qm_struct%gradient(oa+k) = quick_qm_struct%gradient(oa+k) + qa * rvec(k)
@@ -605,17 +607,17 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
+
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
        if ( c <= quick_molspec%natom ) then
           c_coord=quick_molspec%xyz(1:3,c)
           qc=quick_cew%qmq(c)
        else
-          c_coord=quick_molspec%extxyz(1:3,c)
-          qc=quick_molspec%extchg(c)   
+          c_coord=quick_molspec%extxyz(1:3,c-quick_molspec%natom)
+          qc=quick_molspec%extchg(c-quick_molspec%natom)   
        end if
        call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
     enddo
-
 
     call quick_cew_grad_quad()
 
@@ -714,14 +716,13 @@ contains
 
 
 
-  subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,p,dp)
+  subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,dp)
     implicit none
     double precision,intent(in) :: gridx,gridy,gridz
     integer,intent(in) :: Iparent,natom
     double precision,intent(in) :: xyz(3,natom)
-    double precision,intent(out) :: p
     double precision,intent(out) :: dp(3,natom)
-    double precision,parameter :: delta = 5.d-5
+    double precision,parameter :: delta = 2.5d-5
     double precision :: phi,plo
     double precision :: tmpxyz(3,natom)
     double precision :: tx,ty,tz
@@ -776,7 +777,7 @@ contains
    use quick_gridpoints_module, only : quick_dft_grid
    !use quick_api_module, only : quick_api
    use quick_calculated_module, only : quick_qm_struct
-   
+   use quick_molspec_module, only : quick_molspec
    
    implicit double precision(a-h,o-z)
 
@@ -793,7 +794,7 @@ contains
    integer :: k,oi,i
    !double precision,allocatable :: spcder(:)
    double precision :: grdx,grdy,grdz
-   double precision :: sumg(3)
+   double precision :: sumg(3),localsswt
    double precision :: dp(3,natom)
 
    !allocate( spcder(3*natom) )
@@ -852,15 +853,21 @@ contains
                enddo
 
                
+               call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
+               weight = weight * localsswt/sswt
+            
 
-!  evaluate the densities at the grid point and the gradient at that grid point            
+               !  evaluate the densities at the grid point and the gradient at that grid point
+
+               
+               
                call denspt_new_imp(gridx,gridy,gridz,density,densityb,gax,gay,gaz, &
                     & gbx,gby,gbz,Ibin)
+               
 
-               if (density < quick_method%DMCutoff ) then
-                  continue
-
-               else
+               !if (density < quick_method%DMCutoff ) then
+               !   continue
+            !else
 !  This allows the calculation of the derivative of the functional
 !  with regard to the density (dfdr), with regard to the alpha-alpha
 !  density invariant (df/dgaa), and the alpha-beta density invariant.
@@ -902,11 +909,14 @@ contains
                   Vrecip = 0.d0
                   zkec=0.d0
                   dfdr=0.d0
+                  cew_pt(1) = gridx
+                  cew_pt(2) = gridy
+                  cew_pt(3) = gridz
                   call cew_getrecip( cew_pt(1), Vrecip )
                   zkec = -densitysum*Vrecip
                   dfdr = -Vrecip
 
-                  chargedens = - weight * densitysum
+                  chargedens = -weight * densitysum
                   cew_pt(1) = gridx
                   cew_pt(2) = gridy
                   cew_pt(3) = gridz
@@ -990,25 +1000,23 @@ contains
                
                oi = 3*(Iatm-1)
                do k=1,3
-                  quick_qm_struct%gradient(oi+k) = quick_qm_struct%gradient(oi+k) - sumg(k)
+                 quick_qm_struct%gradient(oi+k) = quick_qm_struct%gradient(oi+k) - sumg(k)
                end do
                   
 !  We are now completely done with the derivative of the exchange correlation energy with nuclear displacement
 !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
-!  the density and the weight are not zero. Now check to see fi the weight is one. If it isn't, we need to
-!  actually calculate the energy and the derivatives of the quadrature at this point. Due to the volume of code,
-!  this is done in sswder. Note that if a new weighting scheme is ever added, this needs
-!  to be modified with a second subprogram.
-                  if (sswt == 1.d0) then
-                     continue
-                  else
+               !  the density and the weight are not zero.
+               
+                  !if (sswt == 1.d0) then
+                  !   continue
+                  !else
                      ! The sswder routine is not giving me the proper weight gradients
                      !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
 
-                     !write(6,*)"xyz",xyz
-                     call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),sumg(1),dp)
-                     !write(6,*)"dp",dp
-                     sumg(1) = weight / sswt
+                     
+                     call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
+                     sumg(1) = weight / localsswt
+                     !write(6,'(3es20.10)')weight,localsswt,sumg(1)
                      DO i=1,natom
                         oi = 3*(i-1)
                         do k=1,3
@@ -1018,9 +1026,9 @@ contains
                      END DO
 
                      
-                  endif
+                  !endif
                endif
-            endif
+            !endif
 !         enddo
 
       Igp=Igp+1
