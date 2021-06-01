@@ -85,6 +85,8 @@ subroutine scf_operator(deltaO)
 
 #if defined CUDA || defined CUDA_MPIV
 
+  print *, "in scf_operator, get CUDA"
+
   if (quick_method%bCUDA) then
 
       if(quick_method%HF)then      
