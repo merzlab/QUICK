@@ -33,14 +33,12 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_timer_module.o $(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o \
 		$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o \
 		$(objfolder)/quick_overlap_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_cutoff_module.o \
-		$(objfolder)/quick_eri_module.o \
-		$(objfolder)/quick_eri_grad_module.o $(objfolder)/quick_oei_module.o $(objfolder)/quick_dft_module.o \
-		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o
-
-oshellmodoj=$(objfolder)/oshell_quick_eri_module.o $(objfolder)/oshell_quick_eri_grad_module.o \
-		$(objfolder)/oshell_quick_gradient_module.o
-
-modobj2=$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
+		$(objfolder)/quick_eri_module.o $(objfolder)/oshell_quick_eri_module.o \
+		$(objfolder)/quick_eri_grad_module.o $(objfolder)/oshell_quick_eri_grad_module.o $(objfolder)/quick_oei_module.o \
+		$(objfolder)/quick_dft_module.o \
+		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
+		$(objfolder)/oshell_quick_gradient_module.o \
+		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
 		$(objfolder)/quick_optimizer_module.o
 
 apimodobj=$(objfolder)/quick_api_module.o $(objfolder)/quick_api_test_module.o
@@ -53,19 +51,11 @@ $(modobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-$(modobj2):$(objfolder)/%.o:%.f90
-	@echo "[QUICK]  FC $@"
-	$(VB)$(FOR) -c $< -o $@
-
-$(oshellmodoj):$(objfolder)/oshell_%.o:%.f90
-	@echo "[QUICK]  FC $@"
-	$(VB)$(FOR) -DOSHELL -c $< -o $@
-
 $(apimodobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	 $(VB)$(FOR) -c $< -o $@
 
-all:$(modobj) $(oshellmodoj) $(modobj2) $(apimodobj)
+all:$(modobj) $(apimodobj)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -73,6 +63,5 @@ all:$(modobj) $(oshellmodoj) $(modobj2) $(apimodobj)
 
 .PHONY: clean
 
-clean: 
-	@-rm -f *.mod *.o 
-	
+clean:
+	@-rm -f *.mod *.o

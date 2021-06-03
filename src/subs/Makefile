@@ -25,7 +25,8 @@ include $(MAKEIN)
 FOR=$(FC) $(FFLAGS)
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
-	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/diagmkl.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/oshell_denspt.o \
+	$(objfolder)/diag.o $(objfolder)/diagmkl.o \
 	$(objfolder)/dipole.o $(objfolder)/EffChar.o $(objfolder)/eigvec.o \
 	$(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
 	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
@@ -40,11 +41,9 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
 	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
-	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o 
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
 
 MIRP = $(objfolder)/mirp_fmt.o
-
-OSHELLSUBS=$(objfolder)/oshell_denspt.o
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
@@ -54,15 +53,11 @@ $(SUBS):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-$(OSHELLSUBS):$(objfolder)/oshell_%.o:%.f90
-	@echo "[QUICK]  FC $@"
-	$(VB)$(FOR) -DOSHELL -c $< -o $@
-
 $(MIRP):$(objfolder)/%.o:%.cpp
 	@echo "[QUICK]  CXX $@"
 	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-all: $(SUBS) $(OSHELLSUBS) $(MIRP)
+all: $(SUBS) $(MIRP)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -71,4 +66,4 @@ all: $(SUBS) $(OSHELLSUBS) $(MIRP)
 .PHONY: clean
 
 clean:
-	@-rm -f *.o  
+	@-rm -f *.o
