@@ -1,7 +1,7 @@
 !
 !	getMol.f90
 !	new_quick
-!        
+!
 !       Updated by Madu Manathunga on 04/20/2019
 !	Created by Yipu Miao on 3/4/11.
 !	Copyright 2011 University of Florida. All rights reserved.
@@ -32,7 +32,7 @@ subroutine getMol(ierr)
       ! Read info from AMBER
       call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
-      ! read xyz coordinates from the .in file 
+      ! read xyz coordinates from the .in file
       if(.not. isTemplate) then
        call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
        CHECK_ERROR(ierr)
@@ -225,7 +225,7 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 subroutine initialGuess(ierr)
    use allmod
-   use quick_sad_guess_module, only: getSadDense 
+   use quick_sad_guess_module, only: getSadDense
    implicit none
    logical :: present
    integer :: failed
