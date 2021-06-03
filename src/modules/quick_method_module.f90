@@ -100,7 +100,7 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         !tol
-        double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
+        double precision :: pmaxrms        = 1.0d-4   ! density matrix convergence criteria
         double precision :: aCutoff        = 1.0d-7   ! 2e cutoff
         double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
         !signif
@@ -742,7 +742,7 @@ endif
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
 
-            self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
+            self%pmaxrms        = 1.0d-4   ! density matrix convergence criteria
             self%aCutoff        = 1.0d-7   ! 2e cutoff
             self%basisCufoff    = 1.0d-10  ! basis set cutoff
 

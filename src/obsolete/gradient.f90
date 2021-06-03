@@ -51,6 +51,13 @@ subroutine gradient(ierr)
       enddo
    enddo
 
+   do II=1,nbasis
+      do J =1,nbasis
+         quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
+      enddo
+   enddo
+
+
    call getEnergy(.false.,ierr)
 
    if (quick_method%analgrad) then

@@ -94,6 +94,10 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseOld
 
+      ! saved beta density matrix
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: densebOld
+
       ! A matrix of orbital degeneracies
       integer, dimension(:),allocatable :: iDegen
 
@@ -274,7 +278,7 @@ contains
       endif
 
    end subroutine
-
+   
    !-----------------------------
    ! subroutine to realloate data
    !-----------------------------
@@ -288,7 +292,7 @@ contains
 
      type (quick_qm_struct_type), intent(inout) :: self
      integer, intent(inout) :: ierr
-     integer :: current_size
+     integer :: current_size     
 
      if(quick_molspec%nextatom .gt. 0) then
        if(allocated(self%ptchg_gradient)) current_size= size(self%ptchg_gradient)
@@ -317,7 +321,7 @@ contains
       integer idimA
       integer nelecb
 
-
+      
       integer idatafile
       type (quick_qm_struct_type) self
 
