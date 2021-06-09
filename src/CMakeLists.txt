@@ -50,8 +50,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90
-	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
-	oshell_denspt.f90)
+	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90)
 
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
@@ -85,7 +84,11 @@ endforeach()
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
-include_directories(util)
+include_directories(util modules/include)
+
+configure_file(subs/denspt.f90 "${CMAKE_CURRENT_BINARY_DIR}/denspt2.f90" COPYONLY)
+set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/denspt2.f90" PROPERTIES COMPILE_DEFINITIONS OSHELL)
+list(APPEND QUICK_SUBS_SOURCES_FULLPATH "${CMAKE_CURRENT_BINARY_DIR}/denspt2.f90")
 
 add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
