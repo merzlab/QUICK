@@ -13,11 +13,10 @@
 !_____________________________________________________________________!
 
 #ifdef OSHELL
-   subroutine denspt_oshell &
+   subroutine denspt_oshell(gridx,gridy,gridz,densitya,densityb,gax,gay,gaz,gbx,gby,gbz,Ibin)
 #else
-   subroutine denspt_cshell &
+   subroutine denspt_cshell(gridx,gridy,gridz,densitya,densityb,gax,gay,gaz,gbx,gby,gbz,Ibin)
 #endif
-   (gridx,gridy,gridz,densitya,densityb,gax,gay,gaz,gbx,gby,gbz,Ibin)
    use quick_basis_module
    use quick_calculated_module
    use quick_method_module
