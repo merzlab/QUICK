@@ -28,6 +28,7 @@ subroutine scf_operator(deltaO)
    use allmod
    use quick_scf_module
    use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
 
    implicit none
 
@@ -133,16 +134,16 @@ subroutine scf_operator(deltaO)
    if(bMPI) then
       do i=1,mpi_jshelln(mpirank)
          ii=mpi_jshell(mpirank,i)
-         call get2e(II)
+         call getCshellEri(II)
       enddo
    else
       do II=1,jshell
-         call get2e(II)
+         call getCshellEri(II)
       enddo
    endif        
 #else
       do II=1,jshell
-         call get2e(II)
+         call getCshellEri(II)
       enddo
 #endif
 
@@ -155,7 +156,7 @@ subroutine scf_operator(deltaO)
    call copySym(quick_qm_struct%o,nbasis)
 
 !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-   if(quick_method%printEnergy) call get2eEnergy()
+   if(quick_method%printEnergy) call getCshellEriEnergy
 
 !  recover density if calculate difference
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
@@ -262,6 +263,8 @@ subroutine get_xc
 !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu. 
 !----------------------------------------------------------------
    use allmod
+   use quick_gridpoints_module
+   use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
    use xc_f90_types_m
    use xc_f90_lib_m
    implicit none

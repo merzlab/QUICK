@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include "gpu_common.h"
+#include "gpu_libxc_type.h"
 
 // CUDA-C includes
 #include <cuda.h>
@@ -30,8 +31,11 @@ struct gpu_calculated_type {
     int                             natom;  // number of atom
     int                             nbasis; // number of basis sets
     cuda_buffer_type<QUICKDouble>*  o;      // O matrix
+    cuda_buffer_type<QUICKDouble>*  ob;     // beta O matrix
     cuda_buffer_type<QUICKDouble>*  dense;  // Density Matrix
+    cuda_buffer_type<QUICKDouble>*  denseb; // Beta Density Matrix
     cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
+    cuda_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
@@ -149,6 +153,7 @@ struct gpu_simulation_type {
     DFT_calculated_type*            DFT_calculated;
     XC_quadrature_type*             xcq;
     QUICKDouble                     hyb_coeff;   
+    bool                            is_oshell;
  
     // used for DFT
     int                             isg;        // isg algrothm
@@ -227,6 +232,10 @@ struct gpu_simulation_type {
     int maxpfpbin;            //maximum number of primitive function per bin xc kernels
     int maxbfpbin;            //maximum number of basis function per bin in xc kernels
 
+    // libxc data
+    gpu_libxc_info** glinfo;        // pointer to an array hosting gpu_libxc_info type pointers
+    int nauxfunc;                   // number of auxilary functions, equal to the length of array pointed by glinfo     
+
     // Gaussian Type function
     
     int*                            ncontract;
@@ -273,6 +282,9 @@ struct gpu_simulation_type {
     QUICKDouble*                    o;
     QUICKULL*                       oULL;
     QUICKDouble*                    dense;
+    QUICKDouble*                    ob;
+    QUICKULL*                       obULL;
+    QUICKDouble*                    denseb;
     
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;

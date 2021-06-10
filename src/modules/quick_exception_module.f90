@@ -77,10 +77,10 @@ contains
       msg='Atom out of range for core.'
 
     case(19)
-      msg='Systems with unpaired electrons require UHF/UDFT calculations which are currently not supported.'
+      msg='Systems with unpaired electrons require UHF/UDFT calculations.'
 
     case(20)
-      msg='Higher multiplicities require UHF/UDFT calculations which are currently not supported. '
+      msg='Higher multiplicities require UHF/UDFT calculations.'
 
     case(21)
       msg='Incorrect number of electrons for a doublet.'

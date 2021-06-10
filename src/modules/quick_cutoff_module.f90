@@ -588,8 +588,8 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
 end subroutine classprim
 
 #define OSHELL
-#include "./include/cutoff.f90"
+#include "./include/cutoff.fh"
 #undef OSHELL
-#include "./include/cutoff.f90"
+#include "./include/cutoff.fh"
 
 end module quick_cutoff_module

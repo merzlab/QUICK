@@ -30,6 +30,11 @@
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
+    use quick_cshell_eri_module, only: getEriPrecomputables
+    use quick_cshell_gradient_module, only: cshell_gradient
+    use quick_oshell_gradient_module, only: oshell_gradient
+    use quick_optimizer_module, only: optimize
+    use quick_sad_guess_module, only: getSadGuess
 
     implicit none
 
@@ -138,7 +143,7 @@
     call read_Job_and_Atom(ierr)
     !allocate essential variables
     call alloc(quick_molspec,ierr)
-    if (quick_method%MFCC) call allocate_MFCC()
+    !if (quick_method%MFCC) call allocate_MFCC()
    
     call cpu_time(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
@@ -147,16 +152,16 @@
     call cpu_time(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
+    if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
     if (quick_method%writeSAD) then
        call quick_exit(iOutFile,ierr)
     end if
 
     ! b. MFCC initial guess
-    if (quick_method%MFCC) then
-!       call mfcc
-!       call getmolmfcc
-    endif
+    !if (quick_method%MFCC) then
+    !    call mfcc
+    !    call getmolmfcc
+    !endif
 
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
@@ -164,6 +169,8 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV
+    call upload(quick_method, ierr)
+
     if(.not.quick_method%opt)then
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
                      quick_molspec%molchg, quick_molspec%iAtomType)
@@ -179,7 +186,7 @@
 
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
-    if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+    !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
     if(.not.quick_method%opt)then
@@ -191,7 +198,7 @@
 !        call getEnergy(failed)
 !      endif
 !   else
-        call g2eshell   ! pre-calculate 2 indices coeffecient to save time
+        call getEriPrecomputables   ! pre-calculate 2 indices coeffecient to save time
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
@@ -233,7 +240,14 @@
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
     if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
-    if (.not.quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
+    
+    if (.not.quick_method%opt .and. quick_method%grad) then
+        if (quick_method%UNRST) then
+            SAFE_CALL(oshell_gradient(ierr))
+        else
+            SAFE_CALL(cshell_gradient(ierr))
+        endif
+    endif
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
@@ -252,7 +266,7 @@
 
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
-        if(.not. quick_method%DIVCON) then
+    !    if(.not. quick_method%DIVCON) then
 #ifdef MPIV
            if (master) then
 !             call mpi_calmp2    ! MPI-MP2
@@ -262,9 +276,9 @@
 #ifdef MPIV
            endif
 #endif
-        else
-            call calmp2divcon   ! DIV&CON MP2
-        endif
+    !    else
+    !        call calmp2divcon   ! DIV&CON MP2
+    !    endif
     endif   !(quick_method%MP2)
 
     ! 6.c Freqency calculation and mode analysis
@@ -301,6 +315,10 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
+#if defined CUDA || defined CUDA_MPIV
+    call delete(quick_method,ierr)
+#endif
+
 #ifdef CUDA
     if (master) then
        SAFE_CALL(gpu_shutdown(ierr))

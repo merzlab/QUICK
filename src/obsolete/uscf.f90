@@ -2,7 +2,7 @@
 ! Ed Brothers. December 20, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-    subroutine uscf(verbose,ierr)
+    subroutine uscf_sad(verbose,ierr)
     use allmod
     implicit double precision(a-h,o-z)
     
@@ -86,8 +86,8 @@
     ! 1)  Form alpha operator matrix.
 
         if (quick_method%HF) call uhfoperatora
-        if (quick_method%DFT) call udftoperatora
-        if (quick_method%SEDFT) call usedftoperatora
+    !    if (quick_method%DFT) call udftoperatora
+    !    if (quick_method%SEDFT) call usedftoperatora
 
        ! call shift(sval,.true.,jscf)
 
@@ -192,8 +192,8 @@
     ! 1)  Form beta operator matrix.
 
         if (quick_method%HF) call uhfoperatorb
-        if (quick_method%DFT) call udftoperatorb
-        if (quick_method%SEDFT) call usedftoperatorb
+    !    if (quick_method%DFT) call udftoperatorb
+    !    if (quick_method%SEDFT) call usedftoperatorb
 
        ! call shift(sval,.false.,jscf)
 
@@ -333,4 +333,4 @@
         endif
     enddo
 
-    end subroutine uscf
+    end subroutine uscf_sad

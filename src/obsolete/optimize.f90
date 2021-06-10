@@ -6,7 +6,10 @@
 
 subroutine optimize(ierr)
    use allmod
+   use quick_gridpoints_module
    use quick_cutoff_module, only: schwarzoff
+   use quick_cshell_eri_module, only: getEriPrecomputables
+   use quick_gradient_module, only: scf_gradient
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco
@@ -125,7 +128,7 @@ subroutine optimize(ierr)
 #endif
 
       ! calculate energy first
-      call g2eshell
+      call getEriPrecomputables
       call schwarzoff
 
 #if defined CUDA || defined CUDA_MPIV

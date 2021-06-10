@@ -263,6 +263,8 @@ end subroutine formCPHFA
 
 subroutine formCPHFB
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
    double precision g_table(200)
    integer i,j,k,ii,jj,kk,g_count
@@ -889,6 +891,7 @@ end subroutine formcphfb
 
 subroutine CPHFB4cnt(Ibas,Jbas,IIbas,JJbas)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
   implicit double precision(a-h,o-z)
 
   dimension isame(4,8),deriv(4,3),icenter(4)

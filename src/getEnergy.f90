@@ -11,6 +11,11 @@
 !
 subroutine getEnergy(isGuess, ierr)
    use allMod
+   use quick_gridpoints_module
+   use quick_scf_module
+   use quick_uscf_module, only: uscf
+   use quick_overlap_module, only: fullx
+
    implicit none
 
    double precision :: distance
@@ -44,11 +49,11 @@ subroutine getEnergy(isGuess, ierr)
       call fullX
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
-      if (quick_method%DivCon) then
-         call DivideS
-         call DivideX
-         call PDCDivided
-      endif
+      !if (quick_method%DivCon) then
+      !   call DivideS
+      !   call DivideX
+      !   call PDCDivided
+      !endif
 
       !Classical Nuclear-Nuclear interaction energy
       quick_qm_struct%Ecore=0.d0      ! atom-extcharge and atom-atom replusion
@@ -93,7 +98,12 @@ subroutine getEnergy(isGuess, ierr)
    ! unrestred system will call uscf. the logical variable failed indicated failed convergence.
    ! convergence criteria can be set in the job or default value.
    if (quick_method%UNRST) then
-      call uscf(verbose,ierr)       ! unrestricted system
+      if(isGuess) then
+        !call uscf_sad(verbose,ierr)
+        !call uscf_sad_new(ierr)
+      else
+        call uscf(ierr)       ! unrestricted system
+      endif
    else
       call scf(ierr)        ! restricted system
    endif

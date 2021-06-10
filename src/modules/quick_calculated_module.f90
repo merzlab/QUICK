@@ -43,11 +43,21 @@ module quick_calculated_module
       ! is independent on orbital coefficent
       double precision,dimension(:,:), allocatable :: x
 
+      ! one electron operator, a matrix of size nbasis,nbasis
+      double precision, allocatable, dimension(:,:)   :: oneElecO
+
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
 
+      ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
+      ! Matrix
+      double precision,dimension(:,:), allocatable :: ob
+
       ! saved operator matrix
       double precision,dimension(:,:), allocatable :: oSave
+
+      ! saved beta operator matrix
+      double precision,dimension(:,:), allocatable :: obSave
 
       ! saved dft operator matrix
       double precision,dimension(:,:), allocatable :: oSaveDFT
@@ -76,9 +86,17 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseSave
 
+      ! saved beta density matrix
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: densebSave
+
       ! saved density matrix
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseOld
+
+      ! saved beta density matrix
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: densebOld
 
       ! A matrix of orbital degeneracies
       integer, dimension(:),allocatable :: iDegen
@@ -203,6 +221,7 @@ contains
       ! those matrices is necessary for all calculation or the basic of other calculation
       if(.not. allocated(self%s)) allocate(self%s(nbasis,nbasis))
       if(.not. allocated(self%x)) allocate(self%x(nbasis,nbasis))
+      if(.not. allocated(self%oneElecO)) allocate(self%oneElecO(nbasis,nbasis))
       if(.not. allocated(self%o)) allocate(self%o(nbasis,nbasis))
       if(.not. allocated(self%oSave)) allocate(self%oSave(nbasis,nbasis))
       if(.not. allocated(self%co)) allocate(self%co(nbasis,nbasis))
@@ -235,6 +254,10 @@ contains
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
+         if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
+         if(.not. allocated(self%obSave)) allocate(self%obSave(nbasis,nbasis))
+         if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
+         if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
          if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
          if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
       endif
@@ -356,6 +379,7 @@ contains
       ! those matrices is necessary for all calculation or the basic of other calculation
       if (allocated(self%s)) deallocate(self%s)
       if (allocated(self%x)) deallocate(self%x)
+      if (allocated(self%oneElecO)) deallocate(self%oneElecO)
       if (allocated(self%o)) deallocate(self%o)
       if (allocated(self%oSave)) deallocate(self%oSave)
       if (allocated(self%co)) deallocate(self%co)
@@ -386,6 +410,10 @@ contains
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
+         if(allocated(self%ob)) deallocate(self%ob)
+         if(allocated(self%obSave)) deallocate(self%obSave)
+         if(allocated(self%densebSave)) deallocate(self%densebSave)
+         if(allocated(self%densebOld)) deallocate(self%densebOld)
          if (allocated(self%cob)) deallocate(self%cob)
          if (allocated(self%Eb)) deallocate(self%Eb)
       endif
@@ -427,6 +455,7 @@ contains
       call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%x,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%co,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -506,6 +535,7 @@ contains
 
       call zeroMatrix(self%s,nbasis)
       call zeroMatrix(self%x,nbasis)
+      call zeroMatrix(self%oneElecO,nbasis)
       call zeroMatrix(self%o,nbasis)
       call zeroMatrix(self%oSave,nbasis)
       call zeroMatrix(self%co,nbasis)

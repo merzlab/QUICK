@@ -125,8 +125,6 @@ work_gga_x
 
 #if defined CUDA || defined CUDA_MPIV
 
-#include "gpu_extern.h"
-
 #define GET_XSTR(fval) GET_STR(fval)
 #define GET_STR(fval) #fval
 

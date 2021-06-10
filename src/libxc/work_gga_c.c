@@ -42,7 +42,6 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
   if(r.order < 0) return;
 
 #if defined CUDA || defined CUDA_MPIV
-#include "gpu_extern.h"
 
 #define GET_XSTR(fval) GET_STR(fval)
 #define GET_STR(fval) #fval

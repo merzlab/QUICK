@@ -4,6 +4,7 @@
 
     subroutine pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz,dydy,dydz,dzdz,Iphi,icount)
     use allmod
+    use quick_gridpoints_module
     implicit double precision(a-h,o-z)
 
     ! Given a point in space, this function calculates the value of basis

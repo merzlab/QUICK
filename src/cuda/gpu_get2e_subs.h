@@ -73,6 +73,42 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
  finally,  kernel 4: zone 4(get2e_kernel_spdf4())
 
  */
+#ifdef OSHELL
+#ifdef int_spd
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel()
+#elif defined int_spdf
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf()
+#elif defined int_spdf2
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf2()
+#elif defined int_spdf3
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf3()
+#elif defined int_spdf4
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf4()
+#elif defined int_spdf5
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf5()
+#elif defined int_spdf6
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf6()
+#elif defined int_spdf7
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf7()
+#elif defined int_spdf8
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf8()
+#elif defined int_spdf9
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf9()
+#elif defined int_spdf10
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf10()
+#endif
+#else
 #ifdef int_spd
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel()
@@ -106,6 +142,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf9()
 #elif defined int_spdf10
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
+#endif
 #endif
 {
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
@@ -386,7 +423,72 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
                 int lll = devSim.sorted_Qnumber[LL];
 
                 
-                
+      
+#ifdef OSHELL
+#ifdef int_spd
+                    iclass_oshell(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+
+#elif defined int_spdf
+                if ( (kkk + lll) <= 6 && (kkk + lll) > 4) {
+                    iclass_oshell_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+
+
+#elif defined int_spdf2
+                if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
+                    iclass_oshell_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+
+#elif defined int_spdf3
+
+
+                if ( (iii + jjj) >= 5 && (iii + jjj) <= 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
+                    iclass_oshell_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+
+#elif defined int_spdf4
+
+
+                if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
+                    iclass_oshell_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+
+#elif defined int_spdf5
+
+                if ( (kkk + lll) == 6 && (iii + jjj) >= 4 && (iii + jjj) <= 6) {
+                    iclass_oshell_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+#elif defined int_spdf6
+                if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 4) {
+                    iclass_oshell_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+#elif defined int_spdf7
+
+
+                if ( (iii + jjj) >=5 && (iii + jjj) <= 6 && (kkk + lll) == 6) {
+                    iclass_oshell_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+
+#elif defined int_spdf8
+
+
+                if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
+                    iclass_oshell_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+#elif defined int_spdf9
+
+
+                if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
+                    iclass_oshell_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+#elif defined int_spdf10
+
+
+                if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
+                    iclass_oshell_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+                }
+#endif
+#else          
 #ifdef int_spd
                     iclass(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
                 
@@ -453,6 +555,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
                     iclass_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
                 }
 #endif
+#endif
                 
             }
         }
@@ -467,6 +570,31 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
  iclass subroutine is to generate 2-electron intergral using HRR and VRR method, which is the most
  performance algrithem for electron intergral evaluation. See description below for details
  */
+#ifdef OSHELL
+#ifdef int_spd
+__device__ __forceinline__ void iclass_oshell
+#elif defined int_spdf
+__device__ __forceinline__ void iclass_oshell_spdf
+#elif defined int_spdf2
+__device__ __forceinline__ void iclass_oshell_spdf2
+#elif defined int_spdf3
+__device__ __forceinline__ void iclass_oshell_spdf3
+#elif defined int_spdf4
+__device__ __forceinline__ void iclass_oshell_spdf4
+#elif defined int_spdf5
+__device__ __forceinline__ void iclass_oshell_spdf5
+#elif defined int_spdf6
+__device__ __forceinline__ void iclass_oshell_spdf6
+#elif defined int_spdf7
+__device__ __forceinline__ void iclass_oshell_spdf7
+#elif defined int_spdf8
+__device__ __forceinline__ void iclass_oshell_spdf8
+#elif defined int_spdf9
+__device__ __forceinline__ void iclass_oshell_spdf9
+#elif defined int_spdf10
+__device__ __forceinline__ void iclass_oshell_spdf10
+#endif
+#else
 #ifdef int_spd
 __device__ __forceinline__ void iclass
 #elif defined int_spdf
@@ -489,6 +617,7 @@ __device__ __forceinline__ void iclass_spdf8
 __device__ __forceinline__ void iclass_spdf9
 #elif defined int_spdf10
 __device__ __forceinline__ void iclass_spdf10
+#endif
 #endif
                                       (int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
@@ -897,7 +1026,11 @@ __device__ __forceinline__ void iclass_spdf10
                         if (abs(Y) > devSim.integralCutoff)
 #endif
                         {
+#ifdef OSHELL
+                            addint_oshell(devSim.oULL,devSim.obULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.denseb, devSim.nbasis);
+#else
                             addint(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
+#endif
                         }
                         
                     }
@@ -910,7 +1043,7 @@ __device__ __forceinline__ void iclass_spdf10
 
 
 
-
+#ifndef OSHELL
 #ifdef int_spd
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID)
@@ -1353,7 +1486,7 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
         }
     }
 }
-
+#endif
 
 
 
@@ -1362,9 +1495,153 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
 #define new_quick_2_gpu_get2e_subs_h
 
 
-
-__device__ __forceinline__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis){
+#ifdef OSHELL
+__device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis)
+#else
+__device__ __forceinline__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis)
+#endif
+{
     
+#ifdef OSHELL
+    QUICKDouble DENSELK = (QUICKDouble) (LOC2(dense, LLL-1, KKK-1, nbasis, nbasis)+LOC2(denseb, LLL-1, KKK-1, nbasis, nbasis));
+    QUICKDouble DENSEJI = (QUICKDouble) (LOC2(dense, JJJ-1, III-1, nbasis, nbasis)+LOC2(denseb, JJJ-1, III-1, nbasis, nbasis));
+
+    QUICKDouble DENSEKIA = (QUICKDouble) LOC2(dense, KKK-1, III-1, nbasis, nbasis);
+    QUICKDouble DENSEKJA = (QUICKDouble) LOC2(dense, KKK-1, JJJ-1, nbasis, nbasis);
+    QUICKDouble DENSELJA = (QUICKDouble) LOC2(dense, LLL-1, JJJ-1, nbasis, nbasis);
+    QUICKDouble DENSELIA = (QUICKDouble) LOC2(dense, LLL-1, III-1, nbasis, nbasis);
+
+    QUICKDouble DENSEKIB = (QUICKDouble) LOC2(denseb, KKK-1, III-1, nbasis, nbasis);
+    QUICKDouble DENSEKJB = (QUICKDouble) LOC2(denseb, KKK-1, JJJ-1, nbasis, nbasis);
+    QUICKDouble DENSELJB = (QUICKDouble) LOC2(denseb, LLL-1, JJJ-1, nbasis, nbasis);
+    QUICKDouble DENSELIB = (QUICKDouble) LOC2(denseb, LLL-1, III-1, nbasis, nbasis);
+
+
+    // ATOMIC ADD VALUE 1
+    QUICKDouble _tmp = 2.0;
+    if (KKK==LLL) {
+        _tmp = 1.0;
+    }
+
+    QUICKDouble val1d = _tmp*DENSELK*Y;
+    QUICKULL val1 = (QUICKULL) (fabs(val1d*OSCALE) + (QUICKDouble)0.5);
+    if ( val1d < (QUICKDouble)0.0) val1 = 0ull - val1;
+    QUICKADD(LOC2(oULL, JJJ-1, III-1, nbasis, nbasis), val1);
+    QUICKADD(LOC2(obULL, JJJ-1, III-1, nbasis, nbasis), val1);
+
+    // ATOMIC ADD VALUE 2
+    if ((LLL != JJJ) || (III!=KKK)) {
+        _tmp = 2.0;
+        if (III==JJJ) {
+            _tmp = 1.0;
+        }
+
+        QUICKDouble val2d = _tmp*DENSEJI*Y;
+        QUICKULL val2 = (QUICKULL) (fabs(val2d*OSCALE) + (QUICKDouble)0.5);
+        if ( val2d < (QUICKDouble)0.0) val2 = 0ull - val2;
+        QUICKADD(LOC2(oULL, LLL-1, KKK-1, nbasis, nbasis), val2);
+        QUICKADD(LOC2(obULL, LLL-1, KKK-1, nbasis, nbasis), val2);
+    }
+
+    // ATOMIC ADD VALUE 3
+    QUICKDouble val3da = hybrid_coeff*DENSELJA*Y;
+
+    QUICKULL val3a = (QUICKULL) (fabs(val3da*OSCALE) + (QUICKDouble)0.5);
+    if (((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        val3a = (QUICKULL) (fabs(2*val3da*OSCALE) + (QUICKDouble)0.5);
+    }
+    if ( DENSELJA*Y < (QUICKDouble)0.0) val3a = 0ull - val3a;
+    QUICKADD(LOC2(oULL, KKK-1, III-1, nbasis, nbasis), 0ull-val3a);
+
+
+    QUICKDouble val3db = hybrid_coeff*DENSELJB*Y;
+
+    QUICKULL val3b = (QUICKULL) (fabs(val3db*OSCALE) + (QUICKDouble)0.5);
+    if (((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        val3b = (QUICKULL) (fabs(2*val3db*OSCALE) + (QUICKDouble)0.5);
+    }
+    if ( DENSELJB*Y < (QUICKDouble)0.0) val3b = 0ull - val3b;
+    QUICKADD(LOC2(obULL, KKK-1, III-1, nbasis, nbasis), 0ull-val3b);
+
+    // ATOMIC ADD VALUE 4
+    if (KKK != LLL) {
+        QUICKDouble val4da = hybrid_coeff*DENSEKJA*Y;
+
+        QUICKULL val4a = (QUICKULL) (fabs(val4da*OSCALE) + (QUICKDouble)0.5);
+        if ( val4da < (QUICKDouble)0.0) val4a = 0ull - val4a;
+        QUICKADD(LOC2(oULL, LLL-1, III-1, nbasis, nbasis), 0ull-val4a);
+    }
+
+
+    if (KKK != LLL) {
+        QUICKDouble val4db = hybrid_coeff*DENSEKJB*Y;
+
+        QUICKULL val4b = (QUICKULL) (fabs(val4db*OSCALE) + (QUICKDouble)0.5);
+        if ( val4db < (QUICKDouble)0.0) val4b = 0ull - val4b;
+        QUICKADD(LOC2(obULL, LLL-1, III-1, nbasis, nbasis), 0ull-val4b);
+    }
+
+    // ATOMIC ADD VALUE 5
+    QUICKDouble val5da = hybrid_coeff*DENSELIA*Y;
+
+    QUICKULL val5a = (QUICKULL) (fabs(val5da*OSCALE) + (QUICKDouble)0.5);
+    if ( val5da < (QUICKDouble)0.0) val5a = 0ull - val5a;
+
+    if ((III != JJJ && III<KKK) || ((III == JJJ) && (III == KKK) && (III < LLL)) || ((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        QUICKADD(LOC2(oULL, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), 0ull-val5a);
+    }
+    // ATOMIC ADD VALUE 5 - 2
+    if ( III != JJJ && JJJ == KKK) {
+        QUICKADD(LOC2(oULL, JJJ-1, KKK-1, nbasis, nbasis), 0ull-val5a);
+    }
+
+
+    QUICKDouble val5db = hybrid_coeff*DENSELIB*Y;
+
+    QUICKULL val5b = (QUICKULL) (fabs(val5db*OSCALE) + (QUICKDouble)0.5);
+    if ( val5db < (QUICKDouble)0.0) val5b = 0ull - val5b;
+
+    if ((III != JJJ && III<KKK) || ((III == JJJ) && (III == KKK) && (III < LLL)) || ((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        QUICKADD(LOC2(obULL, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), 0ull-val5b);
+    }
+    // ATOMIC ADD VALUE 5 - 2
+    if ( III != JJJ && JJJ == KKK) {
+        QUICKADD(LOC2(obULL, JJJ-1, KKK-1, nbasis, nbasis), 0ull-val5b);
+    }
+
+    // ATOMIC ADD VALUE 6
+    if (III != JJJ) {
+        if (KKK != LLL) {
+            QUICKDouble val6da = hybrid_coeff*DENSEKIA*Y;
+            QUICKULL val6a = (QUICKULL) (fabs(val6da*OSCALE) + (QUICKDouble)0.5);
+            if ( val6da < (QUICKDouble)0.0) val6a = 0ull - val6a;
+
+            QUICKADD(LOC2(oULL, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), 0ull-val6a);
+
+            // ATOMIC ADD VALUE 6 - 2
+            if (JJJ == LLL && III!= KKK) {
+                QUICKADD(LOC2(oULL, LLL-1, JJJ-1, nbasis, nbasis), 0ull-val6a);
+            }
+        }
+    }
+
+    if (III != JJJ) {
+        if (KKK != LLL) {
+            QUICKDouble val6db = hybrid_coeff*DENSEKIB*Y;
+            QUICKULL val6b = (QUICKULL) (fabs(val6db*OSCALE) + (QUICKDouble)0.5);
+            if ( val6db < (QUICKDouble)0.0) val6b = 0ull - val6b;
+
+            QUICKADD(LOC2(obULL, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), 0ull-val6b);
+
+            // ATOMIC ADD VALUE 6 - 2
+            if (JJJ == LLL && III!= KKK) {
+                QUICKADD(LOC2(obULL, LLL-1, JJJ-1, nbasis, nbasis), 0ull-val6b);
+            }
+        }
+    }
+
+#else
+
     QUICKDouble DENSEKI = (QUICKDouble) LOC2(dense, KKK-1, III-1, nbasis, nbasis);
     QUICKDouble DENSEKJ = (QUICKDouble) LOC2(dense, KKK-1, JJJ-1, nbasis, nbasis);
     QUICKDouble DENSELJ = (QUICKDouble) LOC2(dense, LLL-1, JJJ-1, nbasis, nbasis);
@@ -1451,8 +1728,10 @@ __device__ __forceinline__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, i
             }
         }
     }
+#endif
 }
 
+#ifndef OSHELL
 __device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp)
 {
     
@@ -1536,6 +1815,7 @@ __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
 }
 
 //#endif
+#endif
 #endif
 
 #undef STOREDIM

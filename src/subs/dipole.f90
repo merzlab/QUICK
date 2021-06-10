@@ -267,9 +267,11 @@
     Ax,Ay,Az,Bx,By,Bz, &
     Cx,Cy,Cz,Px,Py,Pz,g) &
     result(xmomentrec)
-
+    
+    use quick_overlap_module, only: overlap
     implicit double precision(a-h,o-z)
     dimension iexponents(9),center(12)
+    double precision g_table(200)
 
 ! The this is taken from the recursive relation found in Obara and Saika,
 ! J. Chem. Phys. 84 (7) 1986, 3963.

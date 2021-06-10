@@ -179,6 +179,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
   use quick_exception_module
+  use quick_method_module
 
 #ifdef MPIV
   use quick_mpi_module
@@ -277,6 +278,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
+
+#if defined CUDA || defined CUDA_MPIV
+  call upload(quick_method, ierr)
+#endif
 
   ! save atom number, number of atom types and number of point charges
   ! into quick_molspec
@@ -455,6 +460,11 @@ subroutine run_quick(self,ierr)
   use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
   use quick_exception_module
+  use quick_cshell_eri_module, only: getEriPrecomputables
+  use quick_cshell_gradient_module, only: cshell_gradient
+  use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_optimizer_module, only: optimize
+  use quick_sad_guess_module, only: getSadGuess
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -492,7 +502,7 @@ subroutine run_quick(self,ierr)
   if(self%firstStep .and. self%reuse_dmx) then
 
     ! perform the initial guess
-    if (quick_method%SAD) SAFE_CALL(getMolSad(ierr))
+    if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
 
     ! assign basis functions
     SAFE_CALL(getMol(ierr))
@@ -503,7 +513,7 @@ subroutine run_quick(self,ierr)
 
   ! pre-calculate 2 index coefficients and schwarz cutoff criteria
   if(.not.quick_method%opt) then
-    call g2eshell
+    call getEriPrecomputables
     call schwarzoff
   endif
 
@@ -530,7 +540,13 @@ subroutine run_quick(self,ierr)
   endif
 
   ! compute gradients
-  if ( .not. quick_method%opt .and. quick_method%grad) SAFE_CALL(gradient(ierr))
+  if (.not.quick_method%opt .and. quick_method%grad) then
+      if (quick_method%UNRST) then
+          SAFE_CALL(oshell_gradient(ierr))
+      else
+          SAFE_CALL(cshell_gradient(ierr))
+      endif
+  endif
 
   ! run optimization
   if (quick_method%opt)  SAFE_CALL(optimize(ierr))
@@ -737,10 +753,15 @@ subroutine delete_quick_job(ierr)
   use quick_files_module
   use quick_mpi_module
   use quick_exception_module
+  use quick_method_module
 
   implicit none
   integer, intent(out) :: ierr
   ierr=0
+
+#if defined CUDA || defined CUDA_MPIV
+    call delete(quick_method,ierr)
+#endif
 
 #ifdef CUDA
   SAFE_CALL(gpu_shutdown(ierr))

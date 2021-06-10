@@ -100,7 +100,7 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         !tol
-        double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
+        double precision :: pmaxrms        = 1.0d-4   ! density matrix convergence criteria
         double precision :: aCutoff        = 1.0d-7   ! 2e cutoff
         double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
         !signif
@@ -152,6 +152,17 @@ module quick_method_module
     interface check
         module procedure check_quick_method
     end interface check
+
+#if defined CUDA || defined CUDA_MPIV
+    interface upload
+        module procedure upload_method
+    end interface upload
+
+    interface delete
+        module procedure delete_method
+    end interface delete
+
+#endif
 
     contains
 #ifdef MPIV
@@ -459,6 +470,14 @@ endif
             if (index(keyWD,'MP2').ne.0)        self%MP2=.true.
             if (index(keyWD,'HF').ne.0)         self%HF=.true.
             if (index(keyWD,'DFT').ne.0)        self%DFT=.true.
+            if (index(keyWD,'UHF').ne.0) then
+                self%HF=.true.
+                self%UNRST=.true.
+            endif
+            if (index(keyWD,'UDFT').ne.0) then
+                self%DFT=.true.
+                self%UNRST=.true.
+            endif
             if (index(keyWD,'SEDFT').ne.0)      self%SEDFT=.true.
             if (index(keyWD,'PBSOL').ne.0)      self%PBSOL=.true.
             if (index(keyWD,'ANNIHILATE').ne.0) self%annil=.true.
@@ -478,8 +497,15 @@ endif
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
             elseif(index(keyWD,'B3LYP').ne.0) then
-                self%B3LYP=.true.
-                self%x_hybrid_coeff =0.2d0
+                ! Native b3lyp is only implemented for closed shell
+                if (self%UNRST) then
+                  self%uselibxc=.true.
+                  tempstring='LIBXC=HYB_GGA_XC_B3LYP'
+                  call set_libxc_func_info(tempstring, self, ierr)
+                else
+                  self%B3LYP=.true.
+                  self%x_hybrid_coeff =0.2d0
+                endif
             elseif(index(keyWD,'BLYP').ne.0) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
@@ -527,6 +553,8 @@ endif
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
+
+            if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
@@ -581,16 +609,6 @@ endif
 
             if (index(keyWD,'USEDFT').ne.0) then
                 self%SEDFT=.true.
-                self%UNRST=.true.
-            endif
-
-            if (index(keyWD,'UHF').ne.0) then
-                self%HF=.true.
-                self%UNRST=.true.
-            endif
-
-            if (index(keyWD,'UDFT').ne.0) then
-                self%DFT=.true.
                 self%UNRST=.true.
             endif
 
@@ -724,7 +742,7 @@ endif
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
 
-            self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
+            self%pmaxrms        = 1.0d-4   ! density matrix convergence criteria
             self%aCutoff        = 1.0d-7   ! 2e cutoff
             self%basisCufoff    = 1.0d-10  ! basis set cutoff
 
@@ -745,7 +763,7 @@ endif
             self%nof_functionals = 0
 
 #if defined CUDA || defined CUDA_MPIV
-            self%bCUDA  = .false.
+            self%bCUDA  = .true.
 #endif
 
         end subroutine init_quick_method
@@ -914,4 +932,45 @@ endif
         endif
 
         end subroutine set_libxc_func_info
+
+        ! subroutine to upload method and libxc info in to gpu
+#if defined CUDA || defined CUDA_MPIV        
+        subroutine upload_method(self, ierr)
+          
+          implicit none
+          
+          type(quick_method_type), intent(in) :: self
+          integer, intent(inout) :: ierr
+
+          
+
+          if (self%bCUDA) then
+            if(self%HF)then
+              call gpu_upload_method(0, self%UNRST, 1.0d0)
+            elseif(self%uselibxc)then
+              call gpu_upload_method(3, self%UNRST, self%x_hybrid_coeff)
+              call gpu_upload_libxc(self%nof_functionals, self%functional_id, self%xc_polarization, ierr)
+            elseif(self%BLYP)then
+              call gpu_upload_method(2, self%UNRST, 0.0d0)
+            elseif(self%B3LYP)then
+              call gpu_upload_method(1, self%UNRST, 0.2d0)
+            endif            
+
+          endif
+        end subroutine upload_method
+
+        subroutine delete_method(self,ierr)
+
+          implicit none
+          type(quick_method_type), intent(in) :: self
+          integer, intent(inout) :: ierr
+
+          if(self%uselibxc) then
+            call gpu_delete_libxc(ierr)
+          endif
+
+        end subroutine delete_method
+
+#endif
+
 end module quick_method_module

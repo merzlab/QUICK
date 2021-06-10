@@ -6,68 +6,72 @@ static const double B2 = -1.62613336586517367779736042170; /* muGE - B1 */
 
 typedef void (*ggaxk_ptr)(const void *p,  xc_gga_work_x_t *r);
 
-//****************** Uncomment to compile all libxc kernels*************************//
 #include "gpu_fstructs.h"
 #include "gpu_fsign_ggaxk.h"
-//****************** Uncomment to compile all libxc kernels*************************//
 
-__device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_rhob, double d_sigma, double *d_zk, double *d_vrho, double *d_vsigma){
+__device__ void gpu_work_gga_x(gpu_libxc_info* glinfo, double d_rhoa, double d_rhob, double *d_sigma, double *d_zk, double *d_vrho, double *d_vsigma, int nspin){
 
-	double d_rho=d_rhoa + d_rhob;
+        double d_rho[2]; 
+        if(nspin == XC_UNPOLARIZED){
+          d_rho[0] = d_rhoa+d_rhob;
+          d_rho[1] = 0.0;
+        }else{
+          d_rho[0] = d_rhoa;
+          d_rho[1] = d_rhob;          
+        }
 
-		gpu_libxc_info* d_glinfo;
-		d_glinfo = (gpu_libxc_info*)glinfo;
+	gpu_libxc_info* d_glinfo;
+	d_glinfo = (gpu_libxc_info*)glinfo;
 
-		gpu_ggax_work_params *d_w;
-		d_w = (gpu_ggax_work_params*)(d_glinfo->d_worker_params);
+	gpu_ggax_work_params *d_w;
+	d_w = (gpu_ggax_work_params*)(d_glinfo->d_worker_params);
 
-		xc_gga_work_x_t d_rg;
-		d_rg.order = 1;
+	xc_gga_work_x_t d_rg;
+	d_rg.order = 1;
 
-		double test_gdm = max(sqrt(d_sigma)/d_w->sfact, d_w->dens_threshold);
-		double test_ds = d_rho/d_w->sfact;
-		double test_rhoLDA = pow(test_ds, d_w->alpha);
-		double test_rgx  = test_gdm/pow(test_ds, d_w->beta);
-		d_rg.x = test_rgx;
+        int is, is2;
+        double zk = 0.0;
 
-#ifdef DEBUG 
-//			printf("rho: %.10e  sigma: %.10e  sfac: %.10e  alpha: %.10e  beta: %.10e  d_rg->x: %.10e \n ", glin->d_rho[gid], glin->d_sigma[gid],
-//			d_w->sfact, d_w->alpha, d_w->beta, d_rg->x);		
-//			printf("rho: %.10e  sigma: %.10e  test_gdm: %.10e  test_ds: %.10e  test_rhoLDA: %.10e  d_rg->x: %.10e \n ", d_rho,d_sigma
-//			,test_gdm, test_ds, test_rhoLDA, d_rg->x); 
-#endif
-		
-//****************** Uncomment to compile all libxc kernels*************************//
-		(maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);
-//****************** Uncomment to compile all libxc kernels*************************//
+        for(is =0;is<nspin; is++){
+          is2 = 2*is;
+          
+          double gdm = max(sqrt(d_sigma[is2])/d_w->sfact, d_w->dens_threshold);
+          double ds = d_rho[is]/d_w->sfact;
+          double rhoLDA = pow(ds, d_w->alpha);
+          d_rg.x  = gdm/pow(ds, d_w->beta);
+          
+          (maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);
+          
+          zk += (rhoLDA * d_w->c_zk0 * d_rg.f);
+          
+          d_vrho[is] += (rhoLDA/ds) * (d_w->c_vrho0 * d_rg.f + d_w->c_vrho1 * d_rg.dfdx * d_rg.x);
+          
+          if(gdm > d_w->dens_threshold){
+            d_vsigma[is2] = rhoLDA * (d_w->c_vsigma0 * d_rg.dfdx * d_rg.x/(2.0 * d_sigma[is2]));
+          }
+        
+        }
 
-#ifdef DEBUG 
-//                        printf("rho: %.10e  sigma: %.10e  test_rhoLDA: %.10e  test_ds: %.10e  d_rg->f: %.10e \n ", d_rho, d_sigma,
-//                        test_rhoLDA, d_w->c_zk0, d_rg->f);
-			//printf("test_cu.cu: test_gpu_params(): f: %f, dfdr: %f \n", d_rg->f, d_rg->dfdx);
-#endif	
+        *d_zk = zk/(d_rho[0]+d_rho[1]);
 
-		double test_zk = (test_rhoLDA * d_w->c_zk0 * d_rg.f)/ d_rho;
-		*d_zk = test_zk;
-	
-		double test_vrho = (test_rhoLDA/test_ds)* (d_w->c_vrho0 * d_rg.f + d_w->c_vrho1 * d_rg.dfdx * d_rg.x);
-		*d_vrho = test_vrho;
+/*	double gdm = max(sqrt(d_sigma)/d_w->sfact, d_w->dens_threshold);
+	double ds = d_rho/d_w->sfact;
+	double rhoLDA = pow(ds, d_w->alpha);
+	double rgx  = gdm/pow(ds, d_w->beta);
+	d_rg.x = rgx;
 
-		if(test_gdm > d_w->dens_threshold){
-			double test_vsigma = test_rhoLDA* (d_w->c_vsigma0 * d_rg.dfdx*d_rg.x/(2*d_sigma));
-			*d_vsigma = test_vsigma;
-        	}
+	(maple2cf_ggaxk[d_w->k_index])(d_glinfo->d_maple2c_params, &d_rg);
 
-#ifdef DEBUG 
-//                        printf("rho: %.10e  sigma: %.10e  test_gdm: %.10e  test_ds: %.10e  test_rhoLDA: %.10e  d_rg->x: %.10e \n ", d_rho,d_sigma
-//                        ,test_gdm, test_ds, test_rhoLDA, d_rg.x);
+	double zk = (rhoLDA * d_w->c_zk0 * d_rg.f)/ d_rho;
+	*d_zk = zk;
 
-//			printf("rho: %.10e  sigma: %.10e  d_rg->f: %.10e  d_rg->dfdx: %.10e \n",d_rho, d_sigma, d_rg.f, d_rg.dfdx);
+	double vrho = (rhoLDA/ds)* (d_w->c_vrho0 * d_rg.f + d_w->c_vrho1 * d_rg.dfdx * d_rg.x);
+	*d_vrho = vrho;
 
-                        //printf("rho: %.10e  sigma: %.10e  glout->d_zk: %.10e  glout->d_vrho: %.10e  glout->d_vsigma: %.10e \n ", glin->d_rho[gid], glin->d_sigma[gid],
-                        //test_zk, test_vrho, test_gdm);
-	        	//printf("zk: %f, vrho: %f, vsigma: %f \n", glout->d_zk[gid], glout->d_vrho[gid], glout->d_vsigma[gid]);
-#endif
-        		
+	if(gdm > d_w->dens_threshold){
+		double vsigma = rhoLDA* (d_w->c_vsigma0 * d_rg.dfdx*d_rg.x/(2*d_sigma));
+		*d_vsigma = vsigma;
+	}
+*/
 }
 

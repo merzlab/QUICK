@@ -12,10 +12,17 @@
 #include "gpu.h"
 #include <ctime>
 #include <time.h>
+#include "gpu_libxc.h"
 
 #ifdef CUDA_MPIV
 #include "mgpu.h"
 #endif
+
+#include "gpu_get2e_getxc_drivers.h"
+#define OSHELL
+#include "gpu_get2e_getxc_drivers.h"
+#undef OSHELL
+
 //-----------------------------------------------
 // Set up specified device and be ready to ignite
 //-----------------------------------------------
@@ -305,7 +312,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 //-----------------------------------------------
 //  upload method and hybrid coefficient
 //-----------------------------------------------
-extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
+extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* hyb_coeff)
 {
     if (*quick_method == 0) {
         gpu -> gpu_sim.method = HF;
@@ -320,6 +327,27 @@ extern "C" void gpu_upload_method_(int* quick_method, double* hyb_coeff)
 	gpu -> gpu_sim.method = LIBXC;
 	gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
     }
+
+    gpu -> gpu_sim.is_oshell = *is_oshell;
+
+}
+
+//-----------------------------------------------
+//  upload libxc information
+//-----------------------------------------------
+extern "C" void gpu_upload_libxc_(int* nof_functionals, int* functional_id, int* xc_polarization, int *ierr)
+{
+
+    int nof_aux_functionals = *nof_functionals;
+#ifdef DEBUG
+    fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
+#endif
+    //Madu: Initialize gpu libxc and upload information to GPU
+    if(nof_aux_functionals > 0) {
+      gpu -> gpu_sim.glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
+      gpu -> gpu_sim.nauxfunc = nof_aux_functionals;
+    }    
+
 }
 
 //-----------------------------------------------
@@ -1147,6 +1175,69 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     
     PRINTDEBUG("COMPLETE UPLOADING O MATRIX")
 }
+
+//-----------------------------------------------
+//  upload calculated information for uscf
+//-----------------------------------------------
+
+extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb)
+{
+
+#ifdef DEBUG
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
+    cudaEventRecord(start, 0);
+#endif
+
+    PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX")
+
+    gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> ob        ->  DeleteGPU();
+    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+
+    /*
+     obULL is the unsigned long long int type of Ob matrix. The reason to do so is because
+     Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
+     an comprimise way is to multiple a very large number (OSCALE), first and divided it
+     after atomic operator.
+     */
+    /*for (int i = 0; i<gpu->nbasis; i++) {
+        for (int j = 0; j<gpu->nbasis; j++) {
+            QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
+
+            if (LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)<(QUICKDouble)0.0)
+            {
+                valUII = 0ull - valUII;
+            }
+
+            LOC2( gpu->gpu_calculated->obULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
+        }
+    }*/
+    //    gpu -> gpu_calculated -> o        -> Upload();
+    gpu -> gpu_calculated -> denseb    -> Upload();
+    gpu -> gpu_calculated -> obULL     -> Upload();
+
+    //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
+    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
+    gpu -> gpu_sim.obULL              =  gpu -> gpu_calculated -> obULL -> _devData;
+
+
+#ifdef DEBUG
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    float time;
+    cudaEventElapsedTime(&time, start, end);
+    PRINTUSINGTIME("UPLOAD CALCULATE",time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(end);
+#endif
+
+    PRINTDEBUG("COMPLETE UPLOADING BETA O MATRIX")
+
+}
+
 
 // Added by Madu Manathunga on 01/07/2020
 //This method uploads density matrix onto gpu for XC gradient calculation
@@ -2258,79 +2349,6 @@ void gpu_delete_sswgrad_vars(){
 
 }
 
-/*Madu Manathunga 06/25/2019
-Integration of libxc GPU version. The included file below contains all libxc methods
-*/
-#include "gpu_libxc.cu"
-
-extern "C" void gpu_xcgrad_(QUICKDouble *grad, int* nof_functionals, int* functional_id, int* xc_polarization){
-
-        /*The following variable will hold the number of auxilary functionals in case of
-        //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-        //from input. */
-        int nof_aux_functionals = *nof_functionals;
-
-#ifdef DEBUG
-        fprintf(gpu->debugFile,"Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
-#endif
-        //Madu: Initialize gpu libxc and upload information to GPU
-        gpu_libxc_info** glinfo = NULL;
-
-        if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-
-        //libxc_cleanup(glinfo, nof_functionals);
-
-        /*gpu -> grad = new cuda_buffer_type<QUICKDouble>(grad, 3 * gpu->natom);
-        gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
-        gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
-        gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
-
-        for (int i = 0; i<gpu->natom * 3; i++) {
-
-          QUICKULL valUII = (QUICKULL) (fabs ( gpu->grad->_hostData[i] * GRADSCALE));
-
-          if ( gpu->grad->_hostData[i] <(QUICKDouble)0.0){
-            valUII = 0ull - valUII;
-          }
-
-          gpu->gradULL ->_hostData[i] = valUII;
-        }
-
-        gpu -> gradULL -> Upload();
-        */
-
-        // calculate smem size
-        gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
-
-        upload_sim_to_constant_dft(gpu);
-
-	getxc_grad(gpu, glinfo, nof_aux_functionals);
-
-        gpu -> gradULL -> Download();
-
-        for (int i = 0; i< 3 * gpu->natom; i++) {
-          QUICKULL valULL = gpu->gradULL->_hostData[i];
-          QUICKDouble valDB;
-
-          if (valULL >= 0x8000000000000000ull) {
-            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-          }
-          else
-          {
-            valDB  = (QUICKDouble) valULL;
-          }
-
-          gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
-        }
-
-        gpu -> grad -> DownloadSum(grad);
-
-        delete gpu -> grad;
-        delete gpu -> gradULL;
-        delete gpu->gpu_calculated->dense; 
-    
-}
-
 
 extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_basis->ncontract);
@@ -2366,67 +2384,6 @@ extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
     
-}
-
-extern "C" void gpu_grad_(QUICKDouble* grad)
-{
-    PRINTDEBUG("BEGIN TO RUN GRAD")
-    
-    upload_sim_to_constant(gpu);
-    
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
-    
-    getGrad(gpu);
-    
-    PRINTDEBUG("COMPLETE KERNEL")
-    
-    if(gpu -> gpu_sim.method == HF){
-    
-      gpu -> gradULL -> Download();
-    
-      for (int i = 0; i< 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-        
-        if (valULL >= 0x8000000000000000ull) {
-            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-        }
-        else
-        {
-            valDB  = (QUICKDouble) valULL;
-        }
-        
-        gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
-      }
-    }
-    
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
-#endif
-    
-    if(gpu -> gpu_sim.method == HF){
-
-      gpu -> grad -> DownloadSum(grad);
-    
-      delete gpu -> grad;
-      delete gpu -> gradULL;
-      delete gpu->gpu_calculated->dense;
-    }
-
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    PRINTUSINGTIME("DOWNLOAD GRAD",time);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
-#endif
-    
-    PRINTDEBUG("COMPLETE RUNNING GRAD")
 }
 
 
@@ -2689,195 +2646,6 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     
 }
 
-//-----------------------------------------------
-//  core part, compute 2-e integrals
-//-----------------------------------------------
-extern "C" void gpu_get2e_(QUICKDouble* o)
-{
-    PRINTDEBUG("BEGIN TO RUN GET2E")
-    
-    upload_sim_to_constant(gpu);
-    
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
-    
-    get2e(gpu);
- 
-    PRINTDEBUG("COMPLETE KERNEL")
-    gpu -> gpu_calculated -> oULL -> Download();
-
-    
-    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);    
-
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            }
-            else
-            {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-        }
-    }
-    
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
-#endif
-    
-    gpu -> gpu_calculated -> o    -> DownloadSum(o);
-
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    PRINTUSINGTIME("DOWNLOAD O",time);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
-#endif
-    
-    PRINTDEBUG("DELETE TEMP VARIABLES")
-   
-    if(gpu -> gpu_sim.method == HF){ 
-      delete gpu->gpu_calculated->o;
-      delete gpu->gpu_calculated->dense;
-      delete gpu->gpu_calculated->oULL;
-    }
-        
-
-    delete gpu->gpu_cutoff->cutMatrix;
-    
-    PRINTDEBUG("COMPLETE RUNNING GET2E")
-}
-
-
-extern "C" void gpu_getxc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, int* nof_functionals, int* functional_id, int* xc_polarization)
-{
-    PRINTDEBUG("BEGIN TO RUN GETXC")
-
-    /*The following variable will hold the number of auxilary functionals in case of
-    //a hybrid functional. Otherwise, the value will be remained as the num. of functionals 
-    //from input. */
-    int nof_aux_functionals = *nof_functionals;
-
-#ifdef DEBUG
-	fprintf(gpu->debugFile, "Calling init_gpu_libxc.. %d %d %d \n", nof_aux_functionals, functional_id[0], *xc_polarization);
-#endif
-    //Madu: Initialize gpu libxc and upload information to GPU
-    gpu_libxc_info** glinfo = NULL;
-    if(nof_aux_functionals > 0) glinfo = init_gpu_libxc(&nof_aux_functionals, functional_id, xc_polarization);
-
-    //libxc_cleanup(glinfo, nof_functionals);
-
-    gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
-
-    QUICKULL valUII = (QUICKULL) (fabs ( *Eelxc * OSCALE + (QUICKDouble)0.5));
-
-    if (*Eelxc<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-
-    gpu -> DFT_calculated -> _hostData[0].Eelxc = valUII;
-
-    valUII = (QUICKULL) (fabs ( *aelec * OSCALE + (QUICKDouble)0.5));
-
-    if (*aelec<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-    gpu -> DFT_calculated -> _hostData[0].aelec = valUII;
-
-    valUII = (QUICKULL) (fabs ( *belec * OSCALE + (QUICKDouble)0.5));
-
-    if (*belec<(QUICKDouble)0.0)
-    {
-        valUII = 0ull - valUII;
-    }
-
-    gpu -> DFT_calculated -> _hostData[0].belec = valUII;
-
-    gpu -> DFT_calculated -> Upload();
-    gpu -> gpu_sim.DFT_calculated= gpu -> DFT_calculated->_devData;
-
-    upload_sim_to_constant_dft(gpu);
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
-
-        //Madu Manathunga 07/01/2019 added libxc variable
-#ifdef DEBUG
-        fprintf(gpu->debugFile,"FILE: %s, LINE: %d, FUNCTION: %s, nof_aux_functionals: %d \n", __FILE__, __LINE__, __func__, nof_aux_functionals);
-#endif
-
-    getxc(gpu, glinfo, nof_aux_functionals);
-    gpu -> gpu_calculated -> oULL -> Download();
-    gpu -> DFT_calculated -> Download();
-
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            }
-            else
-            {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-        }
-    }
-    gpu -> gpu_calculated -> o    -> DownloadSum(o);
-    QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
-    QUICKDouble valDB;
-
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *Eelxc = (QUICKDouble)valDB*ONEOVEROSCALE;
-
-    valULL = gpu->DFT_calculated -> _hostData[0].aelec;
-
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *aelec = (QUICKDouble)valDB*ONEOVEROSCALE;
-
-    valULL = gpu->DFT_calculated -> _hostData[0].belec;
-
-    if (valULL >= 0x8000000000000000ull) {
-        valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-    }
-    else
-    {
-        valDB  = (QUICKDouble) valULL;
-    }
-    *belec = (QUICKDouble)valDB*ONEOVEROSCALE;
-
-    PRINTDEBUG("DELETE TEMP VARIABLES")
-
-    delete gpu->gpu_calculated->o;
-    delete gpu->gpu_calculated->dense;
-    delete gpu->gpu_calculated->oULL;
-
-}
 
 char *trim(char *s) {
     char *ptr;
@@ -3343,4 +3111,10 @@ void delete_pteval(bool devOnly){
 */
 }
 
-
+//-----------------------------------------------
+//  delete libxc information
+//-----------------------------------------------
+extern "C" void gpu_delete_libxc_(int *ierr)
+{
+    libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);
+}

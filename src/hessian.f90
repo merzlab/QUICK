@@ -46,11 +46,15 @@ end subroutine calchessian
 
 subroutine fdhessian(failed)
   use allmod
+  use quick_cshell_gradient_module, only: cshell_gradient
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
   logical :: failed
+  integer :: ierr ! temporarily adding ierr here, but error propagation must be
+                  ! fixed soon
 
+  ierr=0
   cartsym(1) = 'X'
   cartsym(2) = 'Y'
   cartsym(3) = 'Z'
@@ -82,7 +86,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call scf_gradient
+           if (quick_method%HF) call cshell_gradient(ierr)
            !                if (quick_method%DFT) call dftgrad
            !               if (quick_method%SEDFT) call sedftgrad
         endif
@@ -99,7 +103,7 @@ subroutine fdhessian(failed)
            !                if (quick_method%DFT) call udftgrad
            !                if (quick_method%SEDFT) call usedftgrad
         else
-           if (quick_method%HF) call scf_gradient
+           if (quick_method%HF) call cshell_gradient(ierr)
            !                if (quick_method%DFT) call dftgrad
            !                if (quick_method%SEDFT) call sedftgrad
         endif
@@ -127,6 +131,8 @@ end subroutine fdhessian
 
 subroutine HFHessian
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
   dimension itype2(3,2),ielecfld(3)
@@ -3836,6 +3842,8 @@ end subroutine hess2elec
 
 subroutine hfdmxderuse(IDX)
   use allmod
+  use quick_overlap_module, only: gpt
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension GRADIENT2(natom*3)
   double precision g_table(200),a,b
@@ -4851,6 +4859,7 @@ end subroutine graddmx2elec
 
 subroutine dmxderiv(IDX,BU)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
   implicit double precision(a-h,o-z)
   double precision BU(*)
   double precision g_table(200),a,b
@@ -5186,8 +5195,10 @@ double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
      idx,idy,idz,Ax,Ay,Az, &
      Bx,By,Bz,Cx,Cy,Cz,Z)
   use quick_constants_module
+  use quick_overlap_module, only: overlap
   implicit double precision(a-h,o-z)
   dimension aux(0:20)
+  double precision :: g_table(200)
 
   ! Variables needed later:
   !    pi=3.1415926535897932385
@@ -5251,10 +5262,13 @@ end function electricfld
 
 subroutine ewtdmxder(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_uscf_operator_module, only: uscf_operator
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
   integer i,j,k,ii,jj,kk,g_count
+  logical :: deltaO   = .false.  ! delta Operator
 
   ! This program calculates and uses the first derivative of the energy
   ! weighted density matrix.
@@ -5281,7 +5295,8 @@ subroutine ewtdmxder(IDX)
   ! Now get the alpha operator matrix and start building the first derivative
   ! of the energy weighted density matrix.
 
-  call uhfoperatorA
+  !call uhfoperatorA
+  call uscf_operator(deltaO)
 
   do I=1,nbasis
      do J=1,nbasis
@@ -5330,7 +5345,7 @@ subroutine ewtdmxder(IDX)
 
   ! Now get the beta operator matrix.
 
-  call uhfoperatorB
+  ! call uhfoperatorB
 
   do I=1,nbasis
      do J=1,nbasis
@@ -5599,6 +5614,8 @@ end subroutine ewtdmxder
 
 subroutine duhfoperatora(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
@@ -6478,6 +6495,8 @@ end subroutine duhfoperatora
 
 subroutine duhfoperatorb(IDX)
   use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove

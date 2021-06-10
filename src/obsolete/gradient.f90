@@ -51,6 +51,13 @@ subroutine gradient(ierr)
       enddo
    enddo
 
+   do II=1,nbasis
+      do J =1,nbasis
+         quick_qm_struct%dense(J,Ii) = quick_qm_struct%denseInt(J,iI)
+      enddo
+   enddo
+
+
    call getEnergy(.false.,ierr)
 
    if (quick_method%analgrad) then
@@ -733,6 +740,8 @@ subroutine get_xc_grad
 !-------------------------------------------------------------------------
 
    use allmod
+   use quick_gridpoints_module
+   use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
    use xc_f90_types_m
    use xc_f90_lib_m
    implicit double precision(a-h,o-z)

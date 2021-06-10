@@ -13,6 +13,7 @@ subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
    use allmod
+   use quick_gridpoints_module
    use quick_exception_module
 
    implicit none
@@ -29,27 +30,23 @@ subroutine getMol(ierr)
    if (master) then
 
       ! Read info from AMBER
-      if (amber_interface_logic) then
-         call read_AMBER_crd
-      else
-         call PrtAct(iOutfile,"Begin Reading Molecular Information")
+      call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
-         ! read xyz coordinates from the .in file 
-         if(.not. isTemplate) then
-          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
-          CHECK_ERROR(ierr)
-           ! read molecule coordinates
-           call read2(quick_molspec,inFile,ierr)
-           close(inFile)
-         endif
+      ! read xyz coordinates from the .in file 
+      if(.not. isTemplate) then
+       call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+       CHECK_ERROR(ierr)
+        ! read molecule coordinates
+        call read2(quick_molspec,inFile,ierr)
+        close(inFile)
+      endif
 
-         quick_molspec%nbasis   => nbasis
-         quick_qm_struct%nbasis => nbasis
-         call set(quick_molspec,ierr)
+      quick_molspec%nbasis   => nbasis
+      quick_qm_struct%nbasis => nbasis
+      call set(quick_molspec,ierr)
 
-         ! quick forward coordinates stored in namelist to instant variables
-         xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
-      end if   !amber_interface_logic
+      ! quick forward coordinates stored in namelist to instant variables
+      xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
 
       ! Now read in another line
       ! to see the specific grid has been requested if it is a DFT job
@@ -65,10 +62,6 @@ subroutine getMol(ierr)
    !-----------MPI/ALL NODES------------------------
    if (bMPI)  call mpi_setup_mol1()
    !-----------END MPI/ALL NODES--------------------
-#endif
-
-#if defined CUDA || defined CUDA_MPIV 
-   quick_method%bCUDA = .true.
 #endif
 
    ! At this point we have the positions and identities of the atoms. We also
@@ -115,7 +108,7 @@ subroutine getMol(ierr)
 
    if (master) then
       ! Read params for semi-emipeircal DFT
-      if (quick_method%SEDFT) call read_sedft_parm
+      ! if (quick_method%SEDFT) call read_sedft_parm
 
       !  initialize density matrix
       SAFE_CALL(initialGuess(ierr))
@@ -232,6 +225,7 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 subroutine initialGuess(ierr)
    use allmod
+   use quick_sad_guess_module, only: getSadDense 
    implicit none
    logical :: present
    integer :: failed
@@ -240,6 +234,7 @@ subroutine initialGuess(ierr)
    integer Iatm,i,j
    double precision temp
    integer, intent(inout) :: ierr
+
 
 
    ! Initialize Density arrays. Create initial density matrix guess.
@@ -279,33 +274,25 @@ subroutine initialGuess(ierr)
 
 
       ! MFCC Initial Guess
-      if(quick_method%MFCC)then
-         call MFCC_initial_guess
-      endif
+      !if(quick_method%MFCC)then
+      !   call MFCC_initial_guess
+      !endif
 
       !  SAD inital guess
       if (quick_method%SAD) then
-
-         n=0
-         do Iatm=1,natom
-            do sadAtom=1,10
-
-               if(symbol(quick_molspec%iattype(Iatm)).eq. &
-                     quick_molspec%atom_type_sym(sadAtom))then
-                  do i=1,atombasis(sadAtom)
-                     do j=1,atombasis(sadAtom)
-
-                        quick_qm_struct%dense(i+n,j+n)=atomdens(sadAtom,i,j)
-                     enddo
-                  enddo
-                  n=n+atombasis(sadAtom)
-               endif
-            enddo
-         enddo
+         call getSadDense
       endif
-   endif
 
-   call deallocate_mol_sad
+      if(quick_method%unrst) then
+        do I=1,nbasis
+          do J =1,nbasis
+            quick_qm_struct%dense(J,I) = quick_qm_struct%dense(J,I)/2.d0
+            quick_qm_struct%denseb(J,I) = quick_qm_struct%dense(J,I)
+          enddo
+        enddo
+      endif
+
+   endif
 
    ! debug initial guess
    if (quick_method%debug) call debugInitialGuess
