@@ -366,7 +366,6 @@ contains
    do Ibin=irad_init, irad_end
    
 #else
-
       
    do Ibin=1, quick_dft_grid%nbins
 #endif

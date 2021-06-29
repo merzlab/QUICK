@@ -15,6 +15,7 @@ subroutine getEnergy(isGuess, ierr)
    use quick_scf_module
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
+   use quick_cew_module, only : quick_cew
 
 #ifdef CEW
    use quick_cew_module, only : quick_cew
@@ -42,6 +43,7 @@ subroutine getEnergy(isGuess, ierr)
         .or. quick_cew%use_cew &
 #endif
         ) .and. .not. isGuess ) then
+
         if (master) call PrtAct(ioutfile,"Begin XC Quadrature Formation")
 
         call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
