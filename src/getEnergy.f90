@@ -15,7 +15,6 @@ subroutine getEnergy(isGuess, ierr)
    use quick_scf_module
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
-   use quick_cew_module, only : quick_cew
 
 #ifdef CEW
    use quick_cew_module, only : quick_cew

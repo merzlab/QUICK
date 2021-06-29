@@ -1143,14 +1143,9 @@ for buildtype in $buildtypes; do
 
   fi
 
-<<<<<<< HEAD
   # set amber installation flags
   if [ "$aminstall" = "true" ]; then
       fort_flags="$fort_flags -DCEW"
-=======
-  
-  if [ "$aminstall" = "true" ]; then
->>>>>>> 4249a2cdac05cceb17620a68293701b322b41865
       ldflags="$ldflags -L$quick_prefix/lib -lcew"
   fi
 
