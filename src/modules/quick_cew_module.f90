@@ -1,3 +1,4 @@
+#ifdef CEW
 module quick_cew_module
 
   use, intrinsic :: iso_c_binding
@@ -1040,9 +1041,6 @@ end do
 
 
   end subroutine quick_cew_grad_quad
-
-
-
-
   
 end module quick_cew_module
+#endif

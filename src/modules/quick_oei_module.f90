@@ -62,7 +62,10 @@ contains
 
 subroutine get1e()
    use allmod
+
+#ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
+#endif
    
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
@@ -112,10 +115,12 @@ subroutine get1e()
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
+#ifdef CEW
          if ( quick_cew%use_cew ) then
             !quick_qm_struct%o = 0.d0
             call quick_cew_prescf()
          end if
+#endif
          
          call copySym(quick_qm_struct%o,nbasis)
 

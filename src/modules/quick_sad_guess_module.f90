@@ -39,7 +39,10 @@ contains
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
+
+#ifdef CEW 
      use quick_cew_module, only : quick_cew
+#endif
   
      implicit double precision(a-h,o-z)
   
@@ -189,8 +192,10 @@ contains
   
            else
 
+#ifdef CEW
               use_cew_save = quick_cew%use_cew
               quick_cew%use_cew = .false.
+#endif
               
               ! Compute SAD guess
               call sad_uscf(.true., ierr)
@@ -199,9 +204,9 @@ contains
                     atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
                  enddo
               enddo
-
+#ifdef CEW
               quick_cew%use_cew = use_cew_save
-              
+#endif              
               ! write SAD guess if requested
               if(quick_method%writeSAD) then
                  sadfile = trim(quick_molspec%atom_type_sym(iitemp))
