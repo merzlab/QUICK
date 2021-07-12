@@ -376,3 +376,12 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 }
 
+
+#ifndef OSHELL
+extern "C" void gpu_get_oei_()
+{
+        upload_sim_to_constant_oei(gpu);
+
+        getOEI(gpu);
+}
+#endif
