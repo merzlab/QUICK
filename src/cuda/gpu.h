@@ -53,6 +53,10 @@ void delete_pteval(bool devOnly);
 // Fortran subroutine   --->  c interface    ->   kernel interface   ->    global       ->    kernel
 //                            [gpu_get2e]    ->      [get2e]         -> [get2e_kernel]  ->   [iclass]
 
+// c interface one electron integrals
+void getOEI(_gpu_type gpu);
+void upload_sim_to_constant_oei(_gpu_type gpu);
+
 // c interface [gpu_get2e]
 extern "C" void get1e_();
 extern "C" void get_oneen_grad_();
