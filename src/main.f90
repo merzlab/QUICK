@@ -215,6 +215,8 @@
  
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
+      call upload_oei()
+
       call gpu_get_oei()
 
     endif

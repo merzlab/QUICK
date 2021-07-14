@@ -380,8 +380,30 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #ifndef OSHELL
 extern "C" void gpu_get_oei_()
 {
+
+        gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+  
+        gpu -> gpu_calculated -> o -> Upload();
+ 
+        cudaMemset(gpu -> gpu_calculated -> o -> _devData, 0, sizeof(QUICKDouble)*gpu->nbasis*gpu->nbasis);
+
+        gpu -> gpu_sim.o              =  gpu -> gpu_calculated -> o -> _devData;       	
+        
         upload_sim_to_constant_oei(gpu);
+ 
+        upload_para_to_const_oei();
 
         getOEI(gpu);
+
+        gpu -> gpu_calculated -> o -> Download();
+
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+            printf("OEI host O: %d %d %f \n", i, j, LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis));
+        }
+    }
+
+    SAFE_DELETE(gpu -> gpu_calculated -> o);
+
 }
 #endif
