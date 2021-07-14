@@ -1112,6 +1112,54 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 }
 
+
+//-----------------------------------------------
+//  upload information for OEI calculation
+//-----------------------------------------------
+extern "C" void upload_oei_(int *ierr)
+{
+
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+
+  unsigned char sort_method = 0;
+
+    if(sort_method == 0){
+        unsigned int a = 0;
+
+        // store Qshell indices, at this point we already have Qshells sorted according to type.
+        for (int qp = 0; qp <= 6 ; ++qp){
+            for (int q = 0; q <= 3; ++q) {
+                for (int p = 0; p <= 3; ++p) {
+                    if (p+q==qp){  
+                       unsigned int b = 0;   
+                       for(int i=0; i < gpu->gpu_basis->Qshell; ++i){
+                           for(int j=0; j < gpu->gpu_basis->Qshell; ++j){
+                           //    int j = gpu->gpu_basis->Qshell - i - 1;
+                               if(gpu->gpu_basis->sorted_Qnumber->_hostData[i] == q && gpu->gpu_basis->sorted_Qnumber->_hostData[j] == p){
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].x = i;
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].y = j;
+                                   ++a;
+                                   ++b;
+                               }
+                           }
+                       } 
+                       
+                    }      
+                }
+            }
+        }
+     }
+
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
+  gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
+
+  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) printf("sorted_Qnumber: %d %d \n", gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x,\
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y);
+
+  //SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ)
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
+}
+
 //-----------------------------------------------
 //  upload calculated information
 //-----------------------------------------------
@@ -2383,6 +2431,8 @@ extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+
+    SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ);
     
 }
 
