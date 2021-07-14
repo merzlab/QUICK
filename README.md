@@ -82,4 +82,4 @@ Special Note to Users
 QUICK is still in the experimental stage and we do not guarantee
 it will work flawlessly in all your applications. But we are working hard to
 detect and fix issues. If you experience any compile or runtime issues, please
-report to us through issues section of this repository.
+report to us through issues section of this repository. 
