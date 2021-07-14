@@ -28,6 +28,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    integer natomstart,natomfinal,nbasisstart,nbasisfinal
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
    integer, intent(inout) :: ierr
+   logical :: blngr_test
+
 
 #ifdef MPIV
    include 'mpif.h'
@@ -408,6 +410,11 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    masterwork_readfile: if (master) then
       !====== END MPI/MASTER ================
 
+      ! Adding this option to disable normalization if necessary. For testing
+      ! long range integrals, one can use normalized contraction coefficients
+      ! in CUSTOM basis set and read them in. Set to true for such testing.    
+      blngr_test=.false.
+
       do i=1,natomxiao
          if (.not. atmbs2(quick_molspec%iattype(i))) then
             iofile = 0
@@ -448,8 +455,15 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               aex(jbasis)=AA(k)
                               gcs(jbasis)=BB(k)
                               jbasis = jbasis+1
-                              quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
+                             
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
+                              endif
+
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
+
                               if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                            enddo
                            xnewtemp=xnewnorm(0,0,0,iprim,quick_basis%gccoeff(1:iprim,Ninitial),quick_basis%gcexpo(1:iprim,Ninitial))
@@ -484,7 +498,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               quick_basis%cons(Ninitial)=1.0d0
                               quick_basis%KLMN(JJJ,Ninitial)=1
                               do k=1,iprim
-                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
+                              endif
+                                 !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -521,7 +540,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            Ninitial=Ninitial+1
                            quick_basis%cons(Ninitial)=1.0d0
                            do k=1,iprim
-                              quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
+                              !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
+                              endif
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
                               if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                            enddo
@@ -535,7 +559,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               quick_basis%cons(Ninitial)=1.0d0
                               quick_basis%KLMN(JJJ,Ninitial)=1
                               do k=1,iprim
-                                 quick_basis%gccoeff(k,Ninitial)=CC(k)*xnorm(AA(k),1,0,0)
+                                 !quick_basis%gccoeff(k,Ninitial)=CC(k)*xnorm(AA(k),1,0,0)
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=CC(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=CC(k)*xnorm(AA(k),1,0,0)
+                              endif
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -592,8 +621,16 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               endif
 
                               do k=1,iprim
-                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
+                                 !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
+                                 !           quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
+
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                             quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
+                              endif
+
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -680,8 +717,14 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                  quick_basis%cons(Ninitial)=1.0d0
                               endif
                               do k=1,iprim
-                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
+                                 !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
+                                 !       quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
+                              if(blngr_test) then
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)
+                              else
+                                quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                         quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
+                              endif
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo

@@ -9,6 +9,10 @@
 ! dimension UW(maxatm),wtgrad(3*maxatm)
     dimension uw(natom),wtgrad(3*natom)
 
+
+    DO I=1,natom
+       UW(I) = 1.d0
+    ENDDO
 ! Beofre we look at anything else, zero out wtgrad.
 
     DO I=1,natom*3
@@ -64,7 +68,7 @@
                     -5.d0*frctnto7)/16.d0
                     UW(Iatm)=UW(Iatm)*.5d0*(1.d0-gofconfocal)
                 ELSE
-                    continue
+                   continue
                 ENDIF
             ENDIF
         ENDDO
@@ -196,3 +200,140 @@
     ENDDO
     return
     end subroutine sswder
+
+
+
+
+  subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: p
+    
+    double precision,parameter :: a = 0.64
+    integer :: iat,jat
+    double precision :: uw(natom)
+    double precision :: mu,muoa,g,s,z
+    double precision :: rxg(4,natom)
+    double precision :: rigv(3),rig,rig2
+    double precision :: rjgv(3),rjg,rjg2
+    double precision :: rijv(3),rij,rij2
+    double precision :: sumw
+   
+
+    uw = 0.d0
+    
+    do iat=1,natom
+       rigv(1) = xyz(1,iat)-gridx
+       rigv(2) = xyz(2,iat)-gridy
+       rigv(3) = xyz(3,iat)-gridz
+       rig2 = rigv(1)*rigv(1)+rigv(2)*rigv(2)+rigv(3)*rigv(3)
+       rig = sqrt(rig2)
+       rxg(1:3,iat) = rigv(1:3)
+       rxg(4,iat) = rig
+    end do
+
+
+    ! Calculate wi(rg)
+    do iat=1,natom
+       uw(iat) = 1.d0
+       
+       rigv(1:3) = rxg(1:3,iat)
+       rig = rxg(4,iat)
+
+       ! wi(rg) = \prod_{j /= i} s(mu_{ij})
+       do jat=1,natom
+          if ( jat == iat ) then
+             cycle
+          end if
+          rjgv(1:3) = rxg(1:3,jat)
+          rjg = rxg(4,jat)
+          
+          rijv(1) = xyz(1,iat)-xyz(1,jat)
+          rijv(2) = xyz(2,iat)-xyz(2,jat)
+          rijv(3) = xyz(3,iat)-xyz(3,jat)
+          rij2 = rijv(1)*rijv(1)+rijv(2)*rijv(2)+rijv(3)*rijv(3)
+          rij = sqrt(rij2)
+
+          mu = (rig-rjg)/rij
+
+          
+          if ( mu <= -a ) then
+             g = -1.d0
+          else if ( mu >= a ) then
+             g = 1.d0
+          else
+             muoa = mu/a
+             z = (35.d0*muoa - 35.d0*muoa**3 &
+                  & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             g = z
+          end if
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(es20.10)')mu
+          
+          s = 0.50d0 * (1.d0-g)
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(2es20.10)')mu,s
+
+          uw(iat) = uw(iat) * s
+       end do
+    end do
+
+    
+    sumw = 0.d0
+    do iat=1,natom
+       sumw = sumw + uw(iat)
+    end do
+    p = uw(Iparent) / sumw
+
+    !write(6,'(es20.10)')sumw
+
+    
+  end subroutine getssw
+
+
+
+  subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,dp)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: dp(3,natom)
+    double precision,parameter :: delta = 2.5d-5
+    double precision :: phi,plo
+    double precision :: tmpxyz(3,natom)
+    double precision :: tx,ty,tz
+    integer :: iat,k
+
+    tmpxyz=xyz
+    tx = gridx - xyz(1,Iparent)
+    ty = gridy - xyz(2,Iparent)
+    tz = gridz - xyz(3,Iparent)
+
+    
+    do iat=1,natom
+       do k=1,3
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,phi)
+
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) - 2.d0*delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,plo)
+
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+
+          dp(k,iat) = (phi-plo)/(2.d0*delta)
+       end do
+    end do
+    
+  end subroutine getsswnumder
+
+

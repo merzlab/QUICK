@@ -160,6 +160,7 @@ contains
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
+     use quick_lri_module, only: computeLRI
  
      implicit none
   
@@ -183,7 +184,9 @@ contains
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
-  
+
+     double precision :: c_coords(3),c_zeta,c_chg
+
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
      ! scf convergence as detailed in J. Comp. Chem, Vol 3, #4, pg 566-60, 1982.
@@ -280,7 +283,17 @@ contains
         endif
      endif
 #endif
-  
+
+!-----------------------------------------------
+!     c_chg=2.0000000000D+00
+!     c_zeta=7.5000000000D-01
+!     c_coords(1)=1.5000000000D+00
+!     c_coords(2)=2.5000000000D+00
+!     c_coords(3)=3.5000000000D+00  
+!
+!     call computeLRI(c_coords,c_zeta,c_chg)
+!-----------------------------------------------
+
   
      bCalc1e = .true.
      diisdone = .false.
@@ -672,7 +685,16 @@ contains
 #endif
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-  
+
+           ! DELETE ME
+           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
+           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
+
+           !do i=1,10 ! DELETE ME
+           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
+           !end do ! DELETE ME
+           
+           
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
            if(quick_method%printEnergy)then
               write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore

@@ -39,6 +39,10 @@ contains
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
+
+#ifdef CEW 
+     use quick_cew_module, only : quick_cew
+#endif
   
      implicit double precision(a-h,o-z)
   
@@ -51,6 +55,7 @@ contains
      type(quick_method_type) quick_method_save
      type(quick_molspec_type) quick_molspec_save
      integer, intent(inout) :: ierr
+     logical :: use_cew_save
   
      ! first save some important value
      quick_method_save=quick_method
@@ -165,6 +170,7 @@ contains
            ! AWG If not present fall back to computing SAD guess
            ! AWG note the whole structure of this routine should be improved
            readSAD = quick_method%readSAD
+           !readSAD = .false.
            if (readSAD) then
               sadfile = trim(sadGuessDir) // '/' // &
                              trim(quick_molspec%atom_type_sym(iitemp))
@@ -185,7 +191,12 @@ contains
               close(212)
   
            else
- 
+
+#ifdef CEW
+              use_cew_save = quick_cew%use_cew
+              quick_cew%use_cew = .false.
+#endif
+              
               ! Compute SAD guess
               call sad_uscf(.true., ierr)
               do i=1,nbasis
@@ -193,7 +204,9 @@ contains
                     atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
                  enddo
               enddo
-  
+#ifdef CEW
+              quick_cew%use_cew = use_cew_save
+#endif              
               ! write SAD guess if requested
               if(quick_method%writeSAD) then
                  sadfile = trim(quick_molspec%atom_type_sym(iitemp))

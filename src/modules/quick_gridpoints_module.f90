@@ -157,8 +157,10 @@ module quick_gridpoints_module
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
 
+    
     call alloc_xcg_tmp_variables(xcg_tmp)
 
+    
 #ifdef MPIV
   if(bMPI) then
     call alloc_mpi_grid_variables(self)
@@ -275,15 +277,21 @@ module quick_gridpoints_module
    if(master) then
 #endif
 
+      
     ! initialize cpp data structure for octree and grid point packing
     call gpack_initialize()
 
+
+    
     ! run octree, pack grid points and get the array sizes for f90 memory allocation
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, self%init_ngpts, natom, &
     nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
     self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
 
+
+
+    
     timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
     timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
 

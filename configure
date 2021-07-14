@@ -1143,6 +1143,13 @@ for buildtype in $buildtypes; do
 
   fi
 
+  # set amber installation flags
+  if [ "$aminstall" = "true" ]; then
+      fort_flags="$fort_flags -DCEW"
+      ldflags="$ldflags -L$quick_prefix/lib -lcew"
+  fi
+
+  
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then

@@ -465,6 +465,11 @@ subroutine run_quick(self,ierr)
   use quick_oshell_gradient_module, only: oshell_gradient
   use quick_optimizer_module, only: optimize
   use quick_sad_guess_module, only: getSadGuess
+
+#ifdef CEW 
+  use quick_cew_module, only : quick_cew
+#endif
+
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -489,7 +494,13 @@ subroutine run_quick(self,ierr)
 
   ! if dft is requested, make sure to delete dft grid variables from previous
   ! the md step before proceeding
-  if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
+  if(( self%step .gt. 1 ) .and. (quick_method%DFT &
+#ifdef CEW
+  .or. quick_cew%use_cew &
+#endif
+   )) then
+    call deform_dft_grid(quick_dft_grid)
+  endif
 
   ! set molecular information into quick_molspec
   SAFE_CALL(set_quick_molspecs(quick_api,ierr))
