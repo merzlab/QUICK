@@ -711,7 +711,7 @@ contains
     
   end subroutine iclass_tci_grad
 
-#include "./include/hrr_lri_grad.f90"
+#include "./include/hrr_lri_grad.fh"
 
 end module quick_lri_grad_module
 

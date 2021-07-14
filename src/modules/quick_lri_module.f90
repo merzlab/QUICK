@@ -464,7 +464,7 @@ contains
 
   end subroutine iclass_tci
 
-#include "./include/hrr_lri.f90"
+#include "./include/hrr_lri.fh"
 
 end module quick_lri_module
 
