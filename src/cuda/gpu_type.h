@@ -67,6 +67,9 @@ struct gpu_cutoff_type {
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
     QUICKDouble                     gradCutoff;
+
+    // One electron pre-sorting cutoff
+    cuda_buffer_type<int2>*         sorted_OEICutoffIJ;
     
 };
 
@@ -303,6 +306,7 @@ struct gpu_simulation_type {
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
     QUICKDouble                     gradCutoff;
+    int2*                           sorted_OEICutoffIJ;
     
     
     // for ERI generator
