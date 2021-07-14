@@ -153,12 +153,12 @@ contains
   !  Remember the operator is symmetric
      call copySym(quick_qm_struct%o,nbasis)
   
-  !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-     if(quick_method%printEnergy) call getCshellEriEnergy
-  
   !  recover density if calculate difference
      if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
   
+  !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
+     if(quick_method%printEnergy) call getCshellEriEnergy
+
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
