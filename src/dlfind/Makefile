@@ -110,6 +110,9 @@ ifeq ($(arch),gfortran)
   LDFLAGS    = -L/home/jkk/lib/ATLAS/LINUX_jk37vig_g95/ATLAS/lib/Linux_P4SSE2 \
                 -lm -lopenblas
   F90EXT     = F90
+  ARCH       = ar
+  ARCHFLAGS  = cr
+  LIBEXT     = a 
 endif
 ########################################################################
 
@@ -133,21 +136,20 @@ OBJ_LAPACK = $(OBJDIR)/dlf_hdlc_matrixlib.o $(OBJDIR)/dlf_hdlc_primitive.o $(OBJ
 
 OBJ =  $(OBJ_NOLAPACK) $(OBJ_LAPACK) 
 
-find:	$(OBJ_MOD) $(OBJ) $(OBJDIR)/main.o $(OBJDIR)/dlf_serial.o
+find:	$(OBJ_MOD) $(OBJ) $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/dlf_serial.o
 	@echo "Linking ..."
-	$(F90) $(F90FLAGS) -o find.x $(OBJDIR)/main.o $(OBJ) $(OBJDIR)/dlf_serial.o $(OBJ_MOD)  $(LDFLAGS)
-	@cp find.x $(arch)/find_$(arch).x
+	$(ARCH) $(ARCHFLAGS) dlfind.$(LIBEXT) $(OBJDIR)/dlfind_main_driver.o $(OBJ) $(OBJDIR)/dlf_serial.o $(OBJ_MOD)
 
-parallel: $(OBJ_MOD) $(OBJ) $(OBJDIR)/main.o $(OBJDIR)/dlf_mpi.o
-	@echo "Linking ..."
-	$(MPI_F90) $(F90FLAGS) -o Pfind.x $(OBJDIR)/main.o $(OBJ) $(OBJDIR)/dlf_mpi.o $(OBJ_MOD)  $(MPI_LDFLAGS)
-	@cp Pfind.x $(arch)/Pfind_$(arch).x
+#parallel: $(OBJ_MOD) $(OBJ) $(OBJDIR)/main.o $(OBJDIR)/dlf_mpi.o
+#	@echo "Linking ..."
+#	$(MPI_F90) $(F90FLAGS) -o Pfind.x $(OBJDIR)/main.o $(OBJ) $(OBJDIR)/dlf_mpi.o $(OBJ_MOD)  $(MPI_LDFLAGS)
+#	@cp Pfind.x $(arch)/Pfind_$(arch).x
 
  
 obj:	$(OBJ_MOD) $(OBJ) 
 
-draw:	 $(OBJDIR)/dlf_stat_module.o $(OBJDIR)/dlf_global_module.o $(OBJDIR)/dlf_serial.o $(OBJDIR)/main.o $(OBJDIR)/draw.o
-	$(F90) -o draw.x $(OBJDIR)/main.o $(OBJDIR)/dlf_serial.o $(OBJDIR)/draw.o
+draw:	 $(OBJDIR)/dlf_stat_module.o $(OBJDIR)/dlf_global_module.o $(OBJDIR)/dlf_serial.o $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/draw.o
+	$(F90) -o draw.x $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/dlf_serial.o $(OBJDIR)/draw.o
 
 png:
 #	./draw.x
@@ -204,7 +206,7 @@ endif
 # Utilities
 #
 clean:
-	rm -f $(OBJ_MOD) $(OBJ) $(OBJDIR)/*.mod $(OBJDIR)/main.o $(OBJDIR)/*_d.?9? $(OBJDIR)/dlf_mpi.o $(OBJDIR)/dlf_serial.o 
+	rm -f $(OBJ_MOD) $(OBJ) $(OBJDIR)/*.mod $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/*_d.?9? $(OBJDIR)/dlf_mpi.o $(OBJDIR)/dlf_serial.o 
 
 # remove all module directories and executables
 clean_all:
@@ -253,7 +255,7 @@ $(OBJDIR)/dlf_sort.o $(OBJDIR)/dlf_sort_module.mod: $(OBJDIR)/dlf_parameter_modu
 $(OBJDIR)/dlf_serial.o: $(OBJDIR)/dlf_global.mod $(OBJDIR)/dlf_parameter_module.mod dlf_serial.f90
 $(OBJDIR)/dlf_mpi.o $(OBJDIR)/dlf_mpi_module.mod: $(OBJDIR)/dlf_global.mod $(OBJDIR)/dlf_parameter_module.mod dlf_mpi.f90
 $(OBJDIR)/dlf_microiter.o $(OBJDIR)/dlf_microiter.mod: $(OBJDIR)/dlf_global.mod $(OBJDIR)/dlf_parameter_module.mod dlf_microiter.f90
-$(OBJDIR)/main.o $(OBJDIR)/driver_module.mod: $(OBJDIR)/dlf_global.mod $(OBJDIR)/dlf_parameter_module.mod main.f90
+$(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/driver_module.mod: $(OBJDIR)/dlf_global.mod $(OBJDIR)/dlf_parameter_module.mod dlfind_main_driver.f90
 
 # They might look like:
 #dlf_linalg.o: dlfhdlc_matrixlib.mod dlf_parameter_module.mod dlf_linalg.f90
