@@ -1,0 +1,28 @@
+
+
+set efinal_rest [ get_matrix_element matrix=dl-find.energy indices= {0 0 } format= "%24.12f" ]
+delete_object dl-find.energy
+
+#puts "Final energies: full: $efinal_full restarted $efinal_rest"
+
+set e_ref E_REF
+
+times
+
+delete_object c
+delete_object c2
+delete_object z
+
+# Test result
+if { $efinal_rest != $efinal_full } {
+  chemerr "Failed to restart E_full= $efinal_full E_restart= $efinal_rest"
+}
+#return "OK"
+if { abs( $efinal_rest - $e_ref) > 1.0e-8 } {
+   chemerr "Failed .. E= $efinal_local, should be $e_ref"
+} 
+
+
+
+
+

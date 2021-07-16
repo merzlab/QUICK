@@ -1,0 +1,6 @@
+# This is only the call for dl-find. It will be used twice for restart tests
+
+# limit for L-BFGS convergence 0.000000005 (5.E-9)
+
+dl-find coords=c theory=dl_poly :  [ list $args_mm ] \
+    tolerance=0.0005 maxene=10000 maxcycle=10000 list_option=full \
