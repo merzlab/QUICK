@@ -1,0 +1,139 @@
+# COPYRIGHT
+#
+#  Copyright 2007 Johannes Kaestner (kaestner@theochem.uni-stuttgart.de),
+#  Tom Keal (thomas.keal@stfc.ac.uk)
+#
+#  This file is part of DL-FIND.
+#
+#  DL-FIND is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as 
+#  published by the Free Software Foundation, either version 3 of the 
+#  License, or (at your option) any later version.
+#
+#  DL-FIND is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public 
+#  License along with DL-FIND.  If not, see 
+#  <http://www.gnu.org/licenses/>.
+#
+# 
+#include temp.mk#
+SHELL      = /bin/sh
+CC         = @CC@
+CFLAGS     = @CFLAGS@ -I../../include -I@TCL_INCLUDE@
+F90        = @F90@
+F90FLAGS   = @F90FLAGS@
+ARCHIVE    = @ARCHIVE@
+RANLIB     = @RANLIB@
+LDFLAGS    = -L../../lib @LDFLAGS@ 
+CPP	   = /lib/cpp
+
+F90EXT     = F90
+ALLOC = old
+PPFLAGS    = -DOLDALLOC
+#PPFLAGS =  
+#ALLOC = new
+.SUFFIXES:
+.SUFFIXES: .f90 .c .o
+
+LIB = ../../lib/libdlf.a
+
+# modules used by more than one file
+OBJ_MOD = dlf_stat_module.o dlf_global_module.o dlf_allocate.o dlf_util.o \
+          dlf_sort.o
+
+# Objects that work without numerical libraries 
+OBJ_NOLAPACK = dl-find.o dlf_convergence.o dlf_checkpoint.o dlf_svnversion.o \
+       dlf_formstep.o dlf_scalestep.o dlf_lbfgs.o dlf_time.o \
+       dlf_task.o dlf_neb.o dlf_qts.o dlf_dimer.o dlf_conint.o dlf_coords.o \
+       dlf_parallel_opt.o dlf_microiter.o
+
+# Objects that need LAPACK linked in
+OBJ_LAPACK = dlf_hdlc_matrixlib.o dlf_hdlc_primitive.o dlf_hdlc_constraint.o \
+         dlf_hdlc_hdlclib.o dlf_hdlc_interface.o dlf_linalg.o
+
+# Select serial or parallel version
+ifeq ($(findstring DMPI,$(CFLAGS)),DMPI)
+	OBJ_MPI = dlf_mpi.o
+else
+	OBJ_MPI = dlf_serial.o
+endif
+
+
+OBJ =  dlf.o $(OBJ_MOD) $(OBJ_NOLAPACK) $(OBJ_LAPACK) $(OBJ_MPI) 
+
+
+all:	$(LIB)
+
+exe:	$(LIB)
+	(cd ../chemsh; make notk)
+
+$(LIB): $(OBJ)
+	rm -f $(LIB)
+	$(ARCHIVE) $(LIB) $(OBJ) 
+	$(RANLIB) $(LIB)
+
+clean:	
+	touch x.o
+	rm -f $(LIB) *.o *.mod 
+
+#	echo 'subroutine dlf_svnversion(iver)' > dlf_svnversion.f90
+#	echo '  character(*) :: iver' >> dlf_svnversion.f90
+#	echo -n '  iver="' >> dlf_svnversion.f90
+
+dlf_svnversion.f90: FORCE 
+	cp dlf_svnversion.head dlf_svnversion.f90
+	-svnversion -n . >> dlf_svnversion.f90
+	echo '"' >> dlf_svnversion.f90
+	echo "end subroutine dlf_svnversion" >> dlf_svnversion.f90
+
+FORCE:
+
+
+.f90.o:
+ifeq ($(ALLOC),old)
+	   sed -e"s/call allocate *(/ aLLocate(/g" \
+               -e"/ aLLocate(/s/,/(/" \
+               -e"/ aLLocate(/s/\(.*\))/\1))/" \
+               -e"s/call deallocate *(/deallocate(/" $*.f90 > $*_d.$(F90EXT)
+else
+	  cp $*.f90 $*_d.$(F90EXT)
+endif	
+
+	$(F90) $(F90FLAGS) $(PPFLAGS) -c $*_d.$(F90EXT) -o $*.o
+	rm $*_d.$(F90EXT)
+
+
+#dependencies from g95:
+dlf_stat_module.o dlf_stat.mod dlf_parameter_module.mod: dlf_stat_module.f90
+dlf_global_module.o dlf_global.mod: dlf_parameter_module.mod dlf_global_module.f90
+dlf_allocate.o dlf_allocate.mod: dlf_parameter_module.mod dlf_allocate.f90
+dlf_util.o dlf_store.mod bspline.mod: dlf_global.mod dlf_allocate.mod dlf_parameter_module.mod dlf_util.f90
+dl-find.o: dlf_store.mod dlf_allocate.mod dlf_stat.mod dlf_global.mod dlf_parameter_module.mod dl-find.f90
+dlf_convergence.o dlf_convergence.mod: dlf_global.mod dlf_parameter_module.mod dlf_convergence.f90
+dlf_checkpoint.o dlf_checkpoint.mod: dlf_stat.mod dlf_parameter_module.mod dlf_global.mod dlf_checkpoint.f90
+dlf_svnversion.o: dlf_svnversion.f90
+dlf_formstep.o dlf_hessian.mod dlf_formstep_module.mod: dlf_stat.mod dlf_checkpoint.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_formstep.f90
+dlf_scalestep.o dlf_linesearch.mod dlf_scalestep_module.mod: dlf_checkpoint.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_scalestep.f90
+dlf_lbfgs.o lbfgs_module.mod: dlf_checkpoint.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_lbfgs.f90
+dlf_time.o dlf_time.mod: dlf_global.mod dlf_parameter_module.mod dlf_time.f90
+dlf_task.o dlf_task_module.mod: dlf_store.mod dlf_allocate.mod dlf_stat.mod dlf_global.mod dlf_parameter_module.mod dlf_task.f90
+dlf_neb.o dlf_neb.mod: dlf_checkpoint.mod dlf_stat.mod bspline.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_neb.f90
+dlf_qts.o dlf_qts.mod: dlf_global.mod dlf_neb.mod dlf_parameter_module.mod dlf_qts.f90
+dlf_dimer.o dlf_dimer.mod: dlf_checkpoint.mod dlf_stat.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_dimer.f90
+dlf_conint.o dlf_conint.mod: dlf_checkpoint.mod dlf_hessian.mod dlf_stat.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_conint.f90
+dlf_coords.o: dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_coords.f90
+dlf_hdlc_matrixlib.o dlfhdlc_matrixlib.mod: dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_hdlc_matrixlib.f90
+dlf_hdlc_primitive.o dlfhdlc_primitive.mod: dlfhdlc_matrixlib.mod dlf_global.mod dlf_parameter_module.mod dlf_hdlc_primitive.f90
+dlf_hdlc_constraint.o dlfhdlc_constraint.mod: dlfhdlc_matrixlib.mod dlf_allocate.mod dlf_global.mod dlf_parameter_module.mod dlf_hdlc_constraint.f90
+dlf_hdlc_hdlclib.o dlfhdlc_hdlclib.mod: dlf_checkpoint.mod dlfhdlc_constraint.mod dlfhdlc_primitive.mod dlfhdlc_matrixlib.mod dlf_global.mod dlf_parameter_module.mod dlf_hdlc_hdlclib.f90
+dlf_hdlc_interface.o: dlf_checkpoint.mod dlf_allocate.mod dlfhdlc_hdlclib.mod dlf_global.mod dlf_parameter_module.mod dlf_hdlc_interface.f90
+dlf_linalg.o: dlfhdlc_matrixlib.mod dlf_parameter_module.mod dlf_linalg.f90
+dlf_parallel_opt.o: dlf_sort_module.mod dlf_checkpoint.mod dlf_allocate.mod dlf_stat.mod dlf_global.mod dlf_parameter_module.mod dlf_parallel_opt.f90
+dlf_sort.o dlf_sort_module.mod: dlf_parameter_module.mod dlf_sort.f90
+dlf_serial.o: dlf_global.mod dlf_parameter_module.mod dlf_serial.f90
+dlf_mpi.o dlf_mpi_module.mod: dlf_global.mod dlf_parameter_module.mod dlf_mpi.f90
+dlf_microiter.o: dlf_global.mod dlf_parameter_module.mod dlf_microiter.f90

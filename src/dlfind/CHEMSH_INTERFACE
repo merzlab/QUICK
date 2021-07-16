@@ -1,0 +1,8 @@
+#
+#  this file defines the interface between
+#  the DL-FIND and ChemShell
+#
+MODULENAME dl-find
+LIBRARY libdlf.a 1
+DECLARATION add_dlf_commands
+TCLFILE dlf.tcl

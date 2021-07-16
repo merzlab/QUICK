@@ -1,0 +1,13 @@
+dlfind_gamess.o:		../m4/common/cndx41
+dlfind_gamess.o:		../m4/common/dlfind
+dlfind_gamess.o:		../m4/common/dump3
+dlfind_gamess.o:		../m4/common/errcodes
+dlfind_gamess.o:		../m4/common/funct
+dlfind_gamess.o:		../m4/common/infoa
+dlfind_gamess.o:		../m4/common/machin
+dlfind_gamess.o:		../m4/common/misc
+dlfind_gamess.o:		../m4/common/restar
+dlfind_gamess.o:		../m4/common/restri
+dlfind_gamess.o:		../m4/common/runlab
+dlfind_gamess.o:		../m4/common/seerch
+dlfind_gamess.o:		../m4/common/sizes
