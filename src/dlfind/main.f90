@@ -85,67 +85,67 @@ module driver_parameter_module
 !!$  real(rk),parameter :: vdamp=15.D0 ! change of frequencies towards TS. +inf -> no change
 end module driver_parameter_module
 
-program main
-  use driver_module
-  use driver_parameter_module
-  use dlfind_quick, only: quick_opt
+!program main
+!  use driver_module
+!  use driver_parameter_module
+!  use dlfind_quick, only: quick_opt
   !use vib_pot
-  implicit none
-  integer :: ivar
+!  implicit none
+!  integer :: ivar
 
-  call dlf_mpi_initialize() ! only necessary for a parallel build; 
+!  call dlf_mpi_initialize() ! only necessary for a parallel build; 
                             ! can be present for a serial build
-  call dlf_output(6,0)
+!  call dlf_output(6,0)
 
-  call driver_init
+!  call driver_init
 
-  select case (isystem)
-  case (1)
+!  select case (isystem)
+!  case (1)
     !call system ("rm -f dimer.xy")
     !do ivar=1,100
-      call dl_find(9,3,6,1) ! no frame in coords2
+!      call dl_find(9,3,6,1) ! no frame in coords2
 !      call dl_find(3,4,3,1) ! one frame in coords2
 !      call dl_find(3,16,1,1) ! 5 frames in coords2
 !      call dl_find(3,58,1,1) ! 19 frames in coords2
     !  call system ("echo '' >> dimer.xy")
     !end do
-  case (2)
+!  case (2)
    ! call dl_find(12,1,4)
-    call dl_find(12,16,8,1) ! 1 frame + masses
-  case (3)
+!    call dl_find(12,16,8,1) ! 1 frame + masses
+!  case (3)
     !call dl_find(99,1,33)
     !call dl_find(30,1,15)
 
     ! LJ-particle surface with one atom hopping on it
-    call dl_find(9,3,6,1) ! 1 frame + weigths + masses
+!    call dl_find(9,3,6,1) ! 1 frame + weigths + masses
 
-  case (4,5)
-    call dl_find(3,4,2,1)
+ ! case (4,5)
+!    call dl_find(3,4,2,1)
 
-  case (6)
-    call dl_find(12,16,8,1) ! 1 frame + masses
+!  case (6)
+!    call dl_find(12,16,8,1) ! 1 frame + masses
     !call read_pot_destroy
-  case (7)
-    call dl_find(3,4,1,1) ! one frame in coords2
+ ! case (7)
+!    call dl_find(3,4,1,1) ! one frame in coords2
 
-  case (8)
-    call dl_find(num_dim,num_dim+num_dim/3,num_dim/3,1) ! one frame + masses in coords2
+!  case (8)
+!    call dl_find(num_dim,num_dim+num_dim/3,num_dim/3,1) ! one frame + masses in coords2
 
-  case (9)
-    call quick_opt()
+!  case (9)
+!    call quick_opt()
 
-  case default
-    call dlf_mpi_finalize() ! only necessary for a parallel build;
+ ! case default
+  !  call dlf_mpi_finalize() ! only necessary for a parallel build;
                             ! can be present for a serial build
 
-    stop "Wrong isystem"
-  end select
+!!    stop "Wrong isystem"
+!  end select
 
-  call dlf_mpi_finalize() ! only necessary for a parallel build;
+!  call dlf_mpi_finalize() ! only necessary for a parallel build;
                           ! can be present for a serial build
 
 
-end program main
+!end program main
 
 ! **********************************************************************
 ! subroutines that have to be provided to dl_find from outside
