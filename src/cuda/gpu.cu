@@ -1116,12 +1116,39 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 //-----------------------------------------------
 //  upload information for OEI calculation
 //-----------------------------------------------
-extern "C" void upload_oei_(int *ierr)
+extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble* extchg, int *ierr)
 {
 
-  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+    // store coordinates and charges for oei calculation     
+    gpu -> nextatom   = *nextatom;
+    gpu -> allxyz     = new cuda_buffer_type<QUICKDouble>(3, gpu->natom+gpu->nextatom);
+    gpu -> allchg     = new cuda_buffer_type<QUICKDouble>(gpu->natom+gpu->nextatom);
 
-  unsigned char sort_method = 0;
+    memcpy(gpu -> allxyz -> _hostData, gpu -> xyz -> _hostData, sizeof(QUICKDouble)*3*gpu->natom);
+    memcpy(gpu -> allchg -> _hostData, gpu -> chg -> _hostData, sizeof(QUICKDouble)*gpu->natom);
+
+    // manually append f90 data
+    unsigned int idxf90data=0;
+    for(unsigned int i=0; i<gpu->nextatom; ++i)
+        for(unsigned int j=0; j<3; ++j)
+            gpu -> allxyz -> _hostData[ i * gpu->nextatom + j + gpu->natom ] = extxyz[idxf90data++];
+
+    idxf90data=0;
+    for(unsigned int i=0; i<gpu->nextatom; ++i)
+        for(unsigned int j=0; j<3; ++j)
+            gpu -> allchg -> _hostData[ i * gpu->nextatom + j + gpu->natom ] = extchg[idxf90data++];
+
+    gpu -> allxyz -> Upload();
+    gpu -> allchg -> Upload();
+
+    gpu -> gpu_sim.nextatom  = *nextatom;
+    gpu -> gpu_sim.allxyz    = gpu -> allxyz -> _devData;
+    gpu -> gpu_sim.allchg    = gpu -> allchg -> _devData;    
+
+    // allocate array for sorted shell pair info
+    gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+
+    unsigned char sort_method = 0;
 
     if(sort_method == 0){
         unsigned int a = 0;
@@ -1153,11 +1180,21 @@ extern "C" void upload_oei_(int *ierr)
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
   gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
 
-  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) printf("sorted_Qnumber: %d %d \n", gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x,\
+//  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) printf("sorted_Qnumber: %d %d \n", gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x,\
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y);
 
   //SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ)
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
+}
+
+
+//-----------------------------------------------
+//  delete oei information
+//-----------------------------------------------
+extern "C" void gpu_delete_oei_(){
+    SAFE_DELETE(gpu -> allxyz);
+    SAFE_DELETE(gpu -> allchg);
+    SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ);
 }
 
 //-----------------------------------------------
