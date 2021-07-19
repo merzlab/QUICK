@@ -63,13 +63,15 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
      which means they are corrosponding coorinates for shell II, JJ and nuclei.
      */
 
-    QUICKDouble Ax = LOC2(devSim.xyz, 0 , devSim.katom[II]-1, 3, devSim.natom);
-    QUICKDouble Ay = LOC2(devSim.xyz, 1 , devSim.katom[II]-1, 3, devSim.natom);
-    QUICKDouble Az = LOC2(devSim.xyz, 2 , devSim.katom[II]-1, 3, devSim.natom);
+    unsigned int totalatom = devSim.natom+devSim.nextatom;
 
-    QUICKDouble Bx = LOC2(devSim.xyz, 0 , devSim.katom[JJ]-1, 3, devSim.natom);
-    QUICKDouble By = LOC2(devSim.xyz, 1 , devSim.katom[JJ]-1, 3, devSim.natom);
-    QUICKDouble Bz = LOC2(devSim.xyz, 2 , devSim.katom[JJ]-1, 3, devSim.natom);
+    QUICKDouble Ax = LOC2(devSim.allxyz, 0 , devSim.katom[II]-1, 3, totalatom);
+    QUICKDouble Ay = LOC2(devSim.allxyz, 1 , devSim.katom[II]-1, 3, totalatom);
+    QUICKDouble Az = LOC2(devSim.allxyz, 2 , devSim.katom[II]-1, 3, totalatom);
+
+    QUICKDouble Bx = LOC2(devSim.allxyz, 0 , devSim.katom[JJ]-1, 3, totalatom);
+    QUICKDouble By = LOC2(devSim.allxyz, 1 , devSim.katom[JJ]-1, 3, totalatom);
+    QUICKDouble Bz = LOC2(devSim.allxyz, 2 , devSim.katom[JJ]-1, 3, totalatom);
 
     /*
      kPrimI and kPrimJ indicates the number of primitives in shell II and JJ. 
@@ -79,8 +81,8 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
     int kPrimI = devSim.kprim[II];
     int kPrimJ = devSim.kprim[JJ];
 
-    int kStartI = devSim.kstart[II]-1;
-    int kStartJ = devSim.kstart[JJ]-1;
+    //int kStartI = devSim.kstart[II]-1;
+    //int kStartJ = devSim.kstart[JJ]-1;
 
     /* 
     sum of basis functions for shell II and JJ. For eg, for a p shell, KsumtypeI or KsumtypeJ
@@ -140,12 +142,12 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
         // multiply by contraction coefficients
         _tmp *= LOC2(devSim.gccoeff, III, KsumtypeI, MAXPRIM, gpu->nbasis) * LOC2(devSim.gccoeff, JJJ, KsumtypeJ, MAXPRIM, gpu->nbasis); 
 
-        for(int iatom=0; iatom<devSim.natom; ++iatom){
+        for(int iatom=0; iatom<totalatom; ++iatom){
 
-            QUICKDouble Cx = LOC2(devSim.xyz, 0 , iatom, 3, devSim.natom);
-            QUICKDouble Cy = LOC2(devSim.xyz, 1 , iatom, 3, devSim.natom);
-            QUICKDouble Cz = LOC2(devSim.xyz, 2 , iatom, 3, devSim.natom);           
-            QUICKDouble chg = -1.0 * devSim.chg[iatom];
+            QUICKDouble Cx = LOC2(devSim.allxyz, 0 , iatom, 3, totalatom);
+            QUICKDouble Cy = LOC2(devSim.allxyz, 1 , iatom, 3, totalatom);
+            QUICKDouble Cz = LOC2(devSim.allxyz, 2 , iatom, 3, totalatom);           
+            QUICKDouble chg = -1.0 * devSim.allchg[iatom];
 
             // compute OS A21
             QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
