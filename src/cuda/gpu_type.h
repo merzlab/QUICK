@@ -164,6 +164,7 @@ struct gpu_simulation_type {
     QUICKDouble*                    sigrad2;    // basis set range
     
     int                             natom;
+    int                             nextatom;
     int                             nbasis;
     int                             nshell;
     int                             nprim;
@@ -435,6 +436,7 @@ struct gpu_type {
 
     // Molecule specification part
     int                             natom;
+    int                             nextatom;
     int                             nbasis;
     int                             nElec;
     int                             imult;
