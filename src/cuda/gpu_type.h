@@ -251,9 +251,11 @@ struct gpu_simulation_type {
     //charge and atom type
     int*                            iattype;
     QUICKDouble*                    chg;
+    QUICKDouble*                    allchg; // charges of nuclei and external charges for oei
     
     // Some more infos about basis function
     QUICKDouble*                    xyz;
+    QUICKDouble*                    allxyz; // coordinates of nuclei and external charges for oei
 /*
     int*                            first_basis_function;
     int*                            last_basis_function;
@@ -451,7 +453,9 @@ struct gpu_type {
     
     cuda_buffer_type<int>*          iattype;
     cuda_buffer_type<QUICKDouble>*  xyz;
+    cuda_buffer_type<QUICKDouble>*  allxyz; // coordinates of nuclei and external point charges
     cuda_buffer_type<QUICKDouble>*  chg;
+    cuda_buffer_type<QUICKDouble>*  allchg; // charges of nuclei and external point charges
     cuda_buffer_type<DFT_calculated_type>*
                                     DFT_calculated;
     
