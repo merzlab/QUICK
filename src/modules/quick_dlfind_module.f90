@@ -1,0 +1,125 @@
+module quick_dlfind_module
+   use dlf_parameter_module, only: rk
+   implicit none
+   private
+   real(rk),allocatable :: tmpcoords(:),tmpcoords2(:)  
+   integer, allocatable :: spec(:)
+   double precision(:)  :: mass
+
+contains 
+   subroutine dlfind_init
+      use dlf_parameter_module, only: rk
+      use dlf_global, only: glob,pi,stdout,printl,printf
+      use dlf_stat, only: stat
+      use dlf_allocate, only: allocate,deallocate
+      use dlf_store, only: store_initialise
+      use dlf_constants, only: dlf_constants_init,dlf_constants_get
+      use quick_constants_module, only: EMASS
+      use quick_molspec_module, only: natom, quick_molspec
+
+      implicit none
+      integer              :: ivar,nat,nframe,nmass,nweight,nz,tsrel,iat, jat
+      integer              :: massweight,ierr
+      real(rk)             :: svar
+      integer              :: tdlf_farm
+      integer              :: n_po_scaling
+      integer              :: coupled_states
+      integer              :: micro_esp_fit
+    
+      call dlf_coords_init
+      call dlf_default_init(nspec,spec)
+    
+      ivar=1
+      massweight=0
+      tdlf_farm=1 ! set default value
+      n_po_scaling=0 ! set default value
+      coupled_states=1 ! set default value
+      micro_esp_fit=0 ! set default value
+
+
+      call dlf_default_set(3*natom)
+
+      if (.not. allocated(tmpcoords)) allocate(tmpcoords(3*natom))
+      if (.not. allocated(tmpcoords2)) allocate(tmpcoords2(natom))      
+      if (.not. allocated(spec)) allocate(spec(3*natom))
+      if (.not. allocated(mass)) allocate(mass(natom))
+
+      do iat=1, natom
+         tmpcoords2(iat)=EMASS(quick_molspec%iattype(iat))
+         print*, tmpcoords2(iat)
+      enddo
+
+      ! initialise (reset) all statistics counters
+      stat%sene=0
+      stat%pene=0
+      call dlf_stat_reset
+
+      ! initialise dlf_store
+      call store_initialise
+
+   end subroutine dlfind_init
+
+   subroutine dlfind_run
+      implicit none
+      use quick_molspec_module, only: natom, quick_molspec 
+      logical                      :: needhessian ! do we need a Hessian?
+
+      integer       :: nvarin ! number of variables to read in
+                                     !  3*nat
+      integer       :: nvarin2! number of variables to read in
+                        !  in the second array (coords2)
+      integer       :: nspec  ! number of values in the integer
+                        !  array spec
+                                     ! a parallel run, 0 otherwise
+      integer              :: ivar,nat,nframe,nmass,nweight,nz,iat, jat
+      integer              :: n_po_scaling
+      
+      nframe = 0
+      nz= natom
+      nweight=0
+      n_po_scaling=0 ! set default value
+
+      ! allocate storage
+      call dlf_allocate_glob(nvarin,nvarin2,nspec,tmpcoords,tmpcoords2,spec,&
+      nz,nframe,nmass,nweight,n_po_scaling)
+
+      ! initialise coordinate transform, allocate memory for it
+      call dlf_coords_init
+
+      ! initialise search algorithm
+      call dlf_formstep_init(needhessian)
+
+      ! initialise line search
+      call linesearch_init
+
+
+      ! ====================================================================
+      ! CLOSE DOWN
+      ! ====================================================================
+
+      ! shut down finally
+      call dlf_deallocate_glob()
+
+      ! delete memory for line search 
+      call linesearch_destroy
+
+      ! delete memory for search algorithm
+      call dlf_formstep_destroy
+
+      ! delete memory for internal coordinates
+      call dlf_coords_destroy
+
+
+   end subroutine dlfind_run
+
+   subroutine dlfind_final
+      implicit none
+
+      if (allocated(tmpcoords)) deallocate(tmpcoords)
+      if (allocated(tmpcoords2)) deallocate(tmpcoords2)
+      if (allocated(spec)) deallocate(spec)
+      if (allocated(mass)) deallocate(mass)
+
+   end subroutine dlfind_final
+
+end module quick_dlfind_module
