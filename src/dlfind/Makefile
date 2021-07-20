@@ -138,7 +138,7 @@ OBJ =  $(OBJ_NOLAPACK) $(OBJ_LAPACK)
 
 find:	$(OBJ_MOD) $(OBJ) $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/dlf_serial.o
 	@echo "Linking ..."
-	$(ARCH) $(ARCHFLAGS) dlfind.$(LIBEXT) $(OBJDIR)/dlfind_main_driver.o $(OBJ) $(OBJDIR)/dlf_serial.o $(OBJ_MOD)
+	$(ARCH) $(ARCHFLAGS) libdlfind.$(LIBEXT) $(OBJDIR)/dlfind_main_driver.o $(OBJ) $(OBJDIR)/dlf_serial.o $(OBJ_MOD)
 
 #parallel: $(OBJ_MOD) $(OBJ) $(OBJDIR)/main.o $(OBJDIR)/dlf_mpi.o
 #	@echo "Linking ..."
@@ -206,7 +206,7 @@ endif
 # Utilities
 #
 clean:
-	rm -f $(OBJ_MOD) $(OBJ) $(OBJDIR)/*.mod $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/*_d.?9? $(OBJDIR)/dlf_mpi.o $(OBJDIR)/dlf_serial.o 
+	rm -f $(OBJ_MOD) $(OBJ) $(OBJDIR)/*.mod $(OBJDIR)/dlfind_main_driver.o $(OBJDIR)/*_d.?9? $(OBJDIR)/dlf_mpi.o $(OBJDIR)/dlf_serial.o libdlfind.$(LIBEXT) 
 
 # remove all module directories and executables
 clean_all:
