@@ -125,8 +125,6 @@ cudaEventDestroy(end);
 
 #define TEXDENSE(a,b) fetch_texture_double(textureDense, (a-1)*devSim.nbasis+(b-1))
 
-
-
 #define GRADADD(address, val) \
 { \
     QUICKULL val2 = (QUICKULL) (fabs((val)*GRADSCALE) + (QUICKDouble)0.5); \
@@ -134,6 +132,8 @@ cudaEventDestroy(end);
     QUICKADD(address, val2); \
 }
 
+// use intrinsic fp64 atomic add
+#define CUDAADD(address, val) atomicAdd(&(address),(val))
 
 // CUDA safe call
 #if defined DEBUG || defined DEBUGTIME
