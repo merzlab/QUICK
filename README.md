@@ -59,7 +59,7 @@ If you perform density functional theory calculations please also cite:
 
 Manathunga, M.; Miao, Y.; Mu, D.; Götz, A. W.; Merz, K. M.
 Parallel Implementation of Density Functional Theory Methods in the Quantum Interaction Computational Kernel Program. 
-[*J. Chem. Theory Comput.* 16, 4315-4326 (2020)](https://dx.doi.org/10.1021/acs.jctc.0c00632).
+[*J. Chem. Theory Comput.* 16, 4315-4326 (2020)](https://pubs.acs.org/doi/10.1021/acs.jctc.0c00290).
 
 and in addition for any XC functional except B3LYP:
 
