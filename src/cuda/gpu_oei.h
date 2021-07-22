@@ -18,9 +18,7 @@
 
 #include "gpu_fmt.h"
 
-#define CUDAADD(address, val) atomicAdd(&(address),(val))
-
-__device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, QUICKDouble* store){
+__device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, unsigned int iatom, QUICKDouble* store){
 
     // obtain the start and final basis function indices for given shells II and JJ. They will help us to save the integral
     // contribution into correct location in Fock matrix. 
@@ -42,9 +40,25 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             // multiply the integral value by normalization constants. 
             QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
 
-            // Now add the contribution into Fock matrix.
-            CUDAADD(LOC2(devSim.o, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Y);
+            /*if( III == 10 && JJJ == 50 ) {
 
+            printf("OEI debug: III JJJ I J iatm i j c1 c2 store Y %d %d %d %d %d %d %d %f %f %f %f\n", III, JJJ, I, J, iatom, i-1, j-1, devSim.cons[III-1], \
+            devSim.cons[JJJ-1], LOC2(store, i-1, j-1, STOREDIM, STOREDIM), Y);
+            printf("OEI debug: dt1 dt2 dt3 dt4 dt5 dt6:  %d %d %d %d %d %d \n", LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis),\
+            LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis));
+            }*/
+
+
+#ifdef LEGACY_ATOMIC_ADD
+            QUICKULL Yull = (QUICKULL) (fabs( Y * OSCALE) + (QUICKDouble)0.5);
+
+            if (Y < (QUICKDouble)0.0) Yull = 0ull - Yull;
+
+            // Now add the contribution into Fock matrix.
+            QUICKADD(LOC2(devSim.oULL, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Yull);
+#else
+            QUICKADD(LOC2(devSim.o, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Y);
+#endif
             //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOC2(store, i-1, j-1, STOREDIM, STOREDIM));
 
         }
@@ -53,7 +67,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 }
 
 
-__device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ ){
+__device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ , unsigned int iatom, unsigned int totalatom){
 
     /*
      kAtom A, B  is the coresponding atom for shell II, JJ
@@ -62,8 +76,6 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
      Ai, Bi, Ci are the coordinates for atom katomA, katomB, katomC,
      which means they are corrosponding coorinates for shell II, JJ and nuclei.
      */
-
-    unsigned int totalatom = devSim.natom+devSim.nextatom;
 
     QUICKDouble Ax = LOC2(devSim.allxyz, 0 , devSim.katom[II]-1, 3, totalatom);
     QUICKDouble Ay = LOC2(devSim.allxyz, 1 , devSim.katom[II]-1, 3, totalatom);
@@ -142,7 +154,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
         // multiply by contraction coefficients
         _tmp *= LOC2(devSim.gccoeff, III, KsumtypeI, MAXPRIM, gpu->nbasis) * LOC2(devSim.gccoeff, JJJ, KsumtypeJ, MAXPRIM, gpu->nbasis); 
 
-        for(int iatom=0; iatom<totalatom; ++iatom){
+//        for(int iatom=0; iatom<totalatom; ++iatom){
 
             QUICKDouble Cx = LOC2(devSim.allxyz, 0 , iatom, 3, totalatom);
             QUICKDouble Cy = LOC2(devSim.allxyz, 1 , iatom, 3, totalatom);
@@ -165,12 +177,12 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme. 
             OEint_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, Zeta, store, YVerticalTemp);
-        }
+//        }
 
     }
 
     // retrive computed integral values from store array and update the Fock matrix 
-    addint_oei(I, J, II, JJ, store);
+    addint_oei(I, J, II, JJ, iatom, store);
 
 }
 
@@ -181,12 +193,18 @@ __global__ void getOEI_kernel(){
 
   unsigned int jshell = devSim.Qshell;
 
-  for (QUICKULL i = offset; i < jshell * jshell; i+= totalThreads) {
+  unsigned int totalatom = devSim.natom+devSim.nextatom;
+
+  for (QUICKULL i = offset; i < jshell * jshell * totalatom; i+= totalThreads) {
 
     // use the global index to obtain shell pair. Note that here we obtain a couple of indices that helps us to obtain
     // shell number (ii and jj) and quantum numbers (iii, jjj).
-    int II = devSim.sorted_OEICutoffIJ[i].x;
-    int JJ = devSim.sorted_OEICutoffIJ[i].y;
+    
+    unsigned int iatom = (int) i/(jshell * jshell);
+    unsigned int idx   = i - iatom * jshell * jshell;
+
+    int II = devSim.sorted_OEICutoffIJ[idx].x;
+    int JJ = devSim.sorted_OEICutoffIJ[idx].y;
 
     // get the shell numbers of selected shell pair
     int ii = devSim.sorted_Q[II];
@@ -199,7 +217,7 @@ __global__ void getOEI_kernel(){
     //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
 
     // compute coulomb attraction for the selected shell pair.  
-    iclass_oei(iii, jjj, ii, jj);
+    iclass_oei(iii, jjj, ii, jj, iatom, totalatom);
 
   }
 
