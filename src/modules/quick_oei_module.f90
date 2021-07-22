@@ -23,7 +23,7 @@ module quick_oei_module
   implicit double precision(a-h,o-z)
   private
 
-  public :: get1eEnergy, get1e, attrashellopt, ekinetic
+  public :: get1eEnergy, get1e, attrashellopt, ekinetic, kineticO, attrashell
   public :: bCalc1e
 
   logical :: bCalc1e = .false.
@@ -84,6 +84,7 @@ subroutine get1e()
      if (master) then
        call cpu_time(timer_begin%T1e)
        if(bCalc1e) then
+
          !=================================================================
          ! Step 1. evaluate 1e integrals
          !-----------------------------------------------------------------
@@ -92,7 +93,7 @@ subroutine get1e()
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1eT)
          do Ibas=1,nbasis
-            call get1eO(Ibas)
+            call kineticO(Ibas)
          enddo
          call cpu_time(timer_end%T1eT)
 
@@ -101,23 +102,32 @@ subroutine get1e()
          ! The second part is attraction part
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1eV)
+
+#ifdef CUDA
+         call gpu_get_oei(quick_qm_struct%o)
+#else
          do IIsh=1,jshell
             do JJsh=IIsh,jshell
                call attrashell(IIsh,JJsh)
             enddo
          enddo
+#endif
+
          call cpu_time(timer_end%T1eV)
 
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
 
          call copySym(quick_qm_struct%o,nbasis)
+
          call CopyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
+
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,quick_qm_struct%oneElecO,'f14.8')
          endif
          bCalc1e=.false.
+
        else
          quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
        endif
@@ -147,7 +157,7 @@ subroutine get1e()
 
       do i=1,mpi_nbasisn(mpirank)
          Ibas=mpi_nbasis(mpirank,i)
-         call get1eO(Ibas)
+      !   call kineticO(Ibas)
       enddo
       call cpu_time(timer_end%T1eT)
 
@@ -182,7 +192,7 @@ subroutine get1e()
 end subroutine get1e
 
 
-subroutine get1eO(IBAS)
+subroutine kineticO(IBAS)
 
    !------------------------------------------------
    ! This subroutine is to get 1e integral Operator
@@ -239,7 +249,7 @@ subroutine get1eO(IBAS)
       quick_qm_struct%o(Jbas,Ibas) = OJI
    enddo
 
-end subroutine get1eO
+end subroutine kineticO
 
 
 subroutine attrashell(IIsh,JJsh)
