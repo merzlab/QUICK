@@ -54,6 +54,7 @@ void delete_pteval(bool devOnly);
 //                            [gpu_get2e]    ->      [get2e]         -> [get2e_kernel]  ->   [iclass]
 
 // c interface one electron integrals
+extern "C" void gpu_get_oei_(QUICKDouble* o);
 void getOEI(_gpu_type gpu);
 void upload_sim_to_constant_oei(_gpu_type gpu);
 void upload_para_to_const_oei();
