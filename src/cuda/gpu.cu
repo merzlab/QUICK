@@ -1180,22 +1180,24 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
   gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
 
-//  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) printf("sorted_Qnumber: %d %d \n", gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x,\
-  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y);
+/*
+  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
 
-  //SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ)
+   int II = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x;
+   int JJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y;
+
+   int ii = gpu->gpu_basis->sorted_Q->_hostData[II];
+   int jj = gpu->gpu_basis->sorted_Q->_hostData[JJ];
+
+    int iii = gpu->gpu_basis->sorted_Qnumber->_hostData[II];
+    int jjj = gpu->gpu_basis->sorted_Qnumber->_hostData[JJ];
+
+    printf("%i II JJ ii jj iii jjj %d %d %d %d %d %d \n",i, II, JJ, ii, jj, iii, jjj);
+  }
+*/
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
 }
 
-
-//-----------------------------------------------
-//  delete oei information
-//-----------------------------------------------
-extern "C" void gpu_delete_oei_(){
-    SAFE_DELETE(gpu -> allxyz);
-    SAFE_DELETE(gpu -> allchg);
-    SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ);
-}
 
 //-----------------------------------------------
 //  upload calculated information
@@ -2469,7 +2471,10 @@ extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
 
+    SAFE_DELETE(gpu->allxyz);
+    SAFE_DELETE(gpu->allchg);
     SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ);
+    
     
 }
 
