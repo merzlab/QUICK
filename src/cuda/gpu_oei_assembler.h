@@ -1,6 +1,6 @@
 /*
  !---------------------------------------------------------------------!
- ! Written by QUICK-GenInt code generator on 16/07/2021                !
+ ! Written by QUICK-GenInt code generator on 21/07/2021                !
  !                                                                     !
  ! Copyright (C) 2020-2021 Merz lab                                    !
  ! Copyright (C) 2020-2021 Götz lab                                    !
@@ -10,7 +10,6 @@
  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
  !_____________________________________________________________________!
 */
-
 
 __device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,
         QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,
@@ -219,78 +218,78 @@ __device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDoub
   if(I == 2 && J == 2){ 
     DDint_0 dd(PAx, PAy, PAz, PBx, PBy, PBz, PCx, PCy, PCz, Zeta, YVerticalTemp); 
     LOC2(store, 4, 4, STOREDIM, STOREDIM) += dd.x_4_4;
-    LOC2(store, 5, 4, STOREDIM, STOREDIM) += dd.x_5_4;
-    LOC2(store, 6, 4, STOREDIM, STOREDIM) += dd.x_6_4;
-    LOC2(store, 7, 4, STOREDIM, STOREDIM) += dd.x_7_4;
-    LOC2(store, 8, 4, STOREDIM, STOREDIM) += dd.x_8_4;
-    LOC2(store, 9, 4, STOREDIM, STOREDIM) += dd.x_9_4;
     LOC2(store, 4, 5, STOREDIM, STOREDIM) += dd.x_4_5;
-    LOC2(store, 5, 5, STOREDIM, STOREDIM) += dd.x_5_5;
-    LOC2(store, 6, 5, STOREDIM, STOREDIM) += dd.x_6_5;
-    LOC2(store, 7, 5, STOREDIM, STOREDIM) += dd.x_7_5;
-    LOC2(store, 8, 5, STOREDIM, STOREDIM) += dd.x_8_5;
-    LOC2(store, 9, 5, STOREDIM, STOREDIM) += dd.x_9_5;
     LOC2(store, 4, 6, STOREDIM, STOREDIM) += dd.x_4_6;
-    LOC2(store, 5, 6, STOREDIM, STOREDIM) += dd.x_5_6;
-    LOC2(store, 6, 6, STOREDIM, STOREDIM) += dd.x_6_6;
-    LOC2(store, 7, 6, STOREDIM, STOREDIM) += dd.x_7_6;
-    LOC2(store, 8, 6, STOREDIM, STOREDIM) += dd.x_8_6;
-    LOC2(store, 9, 6, STOREDIM, STOREDIM) += dd.x_9_6;
     LOC2(store, 4, 7, STOREDIM, STOREDIM) += dd.x_4_7;
-    LOC2(store, 5, 7, STOREDIM, STOREDIM) += dd.x_5_7;
-    LOC2(store, 6, 7, STOREDIM, STOREDIM) += dd.x_6_7;
-    LOC2(store, 7, 7, STOREDIM, STOREDIM) += dd.x_7_7;
-    LOC2(store, 8, 7, STOREDIM, STOREDIM) += dd.x_8_7;
-    LOC2(store, 9, 7, STOREDIM, STOREDIM) += dd.x_9_7;
     LOC2(store, 4, 8, STOREDIM, STOREDIM) += dd.x_4_8;
-    LOC2(store, 5, 8, STOREDIM, STOREDIM) += dd.x_5_8;
-    LOC2(store, 6, 8, STOREDIM, STOREDIM) += dd.x_6_8;
-    LOC2(store, 7, 8, STOREDIM, STOREDIM) += dd.x_7_8;
-    LOC2(store, 8, 8, STOREDIM, STOREDIM) += dd.x_8_8;
-    LOC2(store, 9, 8, STOREDIM, STOREDIM) += dd.x_9_8;
     LOC2(store, 4, 9, STOREDIM, STOREDIM) += dd.x_4_9;
+    LOC2(store, 5, 4, STOREDIM, STOREDIM) += dd.x_5_4;
+    LOC2(store, 5, 5, STOREDIM, STOREDIM) += dd.x_5_5;
+    LOC2(store, 5, 6, STOREDIM, STOREDIM) += dd.x_5_6;
+    LOC2(store, 5, 7, STOREDIM, STOREDIM) += dd.x_5_7;
+    LOC2(store, 5, 8, STOREDIM, STOREDIM) += dd.x_5_8;
     LOC2(store, 5, 9, STOREDIM, STOREDIM) += dd.x_5_9;
+    LOC2(store, 6, 4, STOREDIM, STOREDIM) += dd.x_6_4;
+    LOC2(store, 6, 5, STOREDIM, STOREDIM) += dd.x_6_5;
+    LOC2(store, 6, 6, STOREDIM, STOREDIM) += dd.x_6_6;
+    LOC2(store, 6, 7, STOREDIM, STOREDIM) += dd.x_6_7;
+    LOC2(store, 6, 8, STOREDIM, STOREDIM) += dd.x_6_8;
     LOC2(store, 6, 9, STOREDIM, STOREDIM) += dd.x_6_9;
+    LOC2(store, 7, 4, STOREDIM, STOREDIM) += dd.x_7_4;
+    LOC2(store, 7, 5, STOREDIM, STOREDIM) += dd.x_7_5;
+    LOC2(store, 7, 6, STOREDIM, STOREDIM) += dd.x_7_6;
+    LOC2(store, 7, 7, STOREDIM, STOREDIM) += dd.x_7_7;
+    LOC2(store, 7, 8, STOREDIM, STOREDIM) += dd.x_7_8;
     LOC2(store, 7, 9, STOREDIM, STOREDIM) += dd.x_7_9;
+    LOC2(store, 8, 4, STOREDIM, STOREDIM) += dd.x_8_4;
+    LOC2(store, 8, 5, STOREDIM, STOREDIM) += dd.x_8_5;
+    LOC2(store, 8, 6, STOREDIM, STOREDIM) += dd.x_8_6;
+    LOC2(store, 8, 7, STOREDIM, STOREDIM) += dd.x_8_7;
+    LOC2(store, 8, 8, STOREDIM, STOREDIM) += dd.x_8_8;
     LOC2(store, 8, 9, STOREDIM, STOREDIM) += dd.x_8_9;
+    LOC2(store, 9, 4, STOREDIM, STOREDIM) += dd.x_9_4;
+    LOC2(store, 9, 5, STOREDIM, STOREDIM) += dd.x_9_5;
+    LOC2(store, 9, 6, STOREDIM, STOREDIM) += dd.x_9_6;
+    LOC2(store, 9, 7, STOREDIM, STOREDIM) += dd.x_9_7;
+    LOC2(store, 9, 8, STOREDIM, STOREDIM) += dd.x_9_8;
     LOC2(store, 9, 9, STOREDIM, STOREDIM) += dd.x_9_9;
 
 #ifdef DEBUG_OEI 
     printf("II %d JJ %d DD store[4,4] = %f \n", II, JJ, LOC2(store, 4, 4, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[5,4] = %f \n", II, JJ, LOC2(store, 5, 4, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[6,4] = %f \n", II, JJ, LOC2(store, 6, 4, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[7,4] = %f \n", II, JJ, LOC2(store, 7, 4, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[8,4] = %f \n", II, JJ, LOC2(store, 8, 4, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[9,4] = %f \n", II, JJ, LOC2(store, 9, 4, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[4,5] = %f \n", II, JJ, LOC2(store, 4, 5, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[5,5] = %f \n", II, JJ, LOC2(store, 5, 5, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[6,5] = %f \n", II, JJ, LOC2(store, 6, 5, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[7,5] = %f \n", II, JJ, LOC2(store, 7, 5, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[8,5] = %f \n", II, JJ, LOC2(store, 8, 5, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[9,5] = %f \n", II, JJ, LOC2(store, 9, 5, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[4,6] = %f \n", II, JJ, LOC2(store, 4, 6, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[5,6] = %f \n", II, JJ, LOC2(store, 5, 6, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[6,6] = %f \n", II, JJ, LOC2(store, 6, 6, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[7,6] = %f \n", II, JJ, LOC2(store, 7, 6, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[8,6] = %f \n", II, JJ, LOC2(store, 8, 6, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[9,6] = %f \n", II, JJ, LOC2(store, 9, 6, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[4,7] = %f \n", II, JJ, LOC2(store, 4, 7, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[5,7] = %f \n", II, JJ, LOC2(store, 5, 7, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[6,7] = %f \n", II, JJ, LOC2(store, 6, 7, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[7,7] = %f \n", II, JJ, LOC2(store, 7, 7, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[8,7] = %f \n", II, JJ, LOC2(store, 8, 7, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[9,7] = %f \n", II, JJ, LOC2(store, 9, 7, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[4,8] = %f \n", II, JJ, LOC2(store, 4, 8, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[5,8] = %f \n", II, JJ, LOC2(store, 5, 8, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[6,8] = %f \n", II, JJ, LOC2(store, 6, 8, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[7,8] = %f \n", II, JJ, LOC2(store, 7, 8, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[8,8] = %f \n", II, JJ, LOC2(store, 8, 8, STOREDIM, STOREDIM)); 
-    printf("II %d JJ %d DD store[9,8] = %f \n", II, JJ, LOC2(store, 9, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[4,9] = %f \n", II, JJ, LOC2(store, 4, 9, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[5,4] = %f \n", II, JJ, LOC2(store, 5, 4, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[5,5] = %f \n", II, JJ, LOC2(store, 5, 5, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[5,6] = %f \n", II, JJ, LOC2(store, 5, 6, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[5,7] = %f \n", II, JJ, LOC2(store, 5, 7, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[5,8] = %f \n", II, JJ, LOC2(store, 5, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[5,9] = %f \n", II, JJ, LOC2(store, 5, 9, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[6,4] = %f \n", II, JJ, LOC2(store, 6, 4, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[6,5] = %f \n", II, JJ, LOC2(store, 6, 5, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[6,6] = %f \n", II, JJ, LOC2(store, 6, 6, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[6,7] = %f \n", II, JJ, LOC2(store, 6, 7, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[6,8] = %f \n", II, JJ, LOC2(store, 6, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[6,9] = %f \n", II, JJ, LOC2(store, 6, 9, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[7,4] = %f \n", II, JJ, LOC2(store, 7, 4, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[7,5] = %f \n", II, JJ, LOC2(store, 7, 5, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[7,6] = %f \n", II, JJ, LOC2(store, 7, 6, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[7,7] = %f \n", II, JJ, LOC2(store, 7, 7, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[7,8] = %f \n", II, JJ, LOC2(store, 7, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[7,9] = %f \n", II, JJ, LOC2(store, 7, 9, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[8,4] = %f \n", II, JJ, LOC2(store, 8, 4, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[8,5] = %f \n", II, JJ, LOC2(store, 8, 5, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[8,6] = %f \n", II, JJ, LOC2(store, 8, 6, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[8,7] = %f \n", II, JJ, LOC2(store, 8, 7, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[8,8] = %f \n", II, JJ, LOC2(store, 8, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[8,9] = %f \n", II, JJ, LOC2(store, 8, 9, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[9,4] = %f \n", II, JJ, LOC2(store, 9, 4, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[9,5] = %f \n", II, JJ, LOC2(store, 9, 5, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[9,6] = %f \n", II, JJ, LOC2(store, 9, 6, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[9,7] = %f \n", II, JJ, LOC2(store, 9, 7, STOREDIM, STOREDIM)); 
+    printf("II %d JJ %d DD store[9,8] = %f \n", II, JJ, LOC2(store, 9, 8, STOREDIM, STOREDIM)); 
     printf("II %d JJ %d DD store[9,9] = %f \n", II, JJ, LOC2(store, 9, 9, STOREDIM, STOREDIM)); 
 #endif 
 
