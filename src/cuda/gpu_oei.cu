@@ -22,7 +22,7 @@
 static __constant__ gpu_simulation_type devSim;
 static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 
-#define STOREDIM 10
+#define STOREDIM 20
 
 #include "gpu_oei_classes.h"
 #include "gpu_oei_definitions.h"
