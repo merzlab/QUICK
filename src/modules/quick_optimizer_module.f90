@@ -34,6 +34,7 @@ contains
      use quick_cshell_eri_module, only: getEriPrecomputables
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
+     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
      use quick_exception_module
      implicit double precision(a-h,o-z)
 
@@ -106,7 +107,8 @@ contains
            Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
         endif
      endif
-
+     
+     if (master) call dlfind_init
      !------------- END MPI/MASTER ----------------------------
 
 
@@ -338,6 +340,8 @@ contains
         endif
 
      enddo
+
+     if (master) call dlfind_final
 
 
      if (master) then
