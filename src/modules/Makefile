@@ -23,7 +23,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS) -I ../dlfind/gfortran/objects
+FOR=$(FC) $(FFLAGS)
 
 modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(objfolder)/quick_files_module.o \
 		$(objfolder)/quick_constants_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_method_module.o \
