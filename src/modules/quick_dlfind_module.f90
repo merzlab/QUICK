@@ -2,6 +2,7 @@ module quick_dlfind_module
    use dlf_parameter_module, only: rk
    implicit none
    private
+   public :: dlfind_init, dlfind_run, dlfind_final 
    real(rk),allocatable :: tmpcoords(:),tmpcoords2(:)  
    integer, allocatable :: spec(:)
 !   double precision  :: mass(:)
