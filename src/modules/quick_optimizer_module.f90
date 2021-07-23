@@ -34,7 +34,8 @@ contains
      use quick_cshell_eri_module, only: getEriPrecomputables
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
-     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
+     use quick_dlfind_module, only: dlfind_init
+!     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
      use quick_exception_module
      implicit double precision(a-h,o-z)
 
@@ -341,7 +342,7 @@ contains
 
      enddo
 
-     if (master) call dlfind_final
+!     if (master) call dlfind_final
 
 
      if (master) then
