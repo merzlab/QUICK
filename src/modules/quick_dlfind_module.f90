@@ -2,14 +2,20 @@ module quick_dlfind_module
    use dlf_parameter_module, only: rk
    implicit none
    private
-   public :: dlfind_init, dlfind_run, dlfind_final 
+   public :: dlfind_init
+!   public :: dlfind_init, dlfind_run, dlfind_final 
    real(rk),allocatable :: tmpcoords(:),tmpcoords2(:)  
    integer, allocatable :: spec(:)
 !   double precision  :: mass(:)
 
-contains 
+contains
+!   subroutine dlfind_quick_test
+
+!      call dlf_coords_init
+
+!   end subroutine dlfind_quick_test
    subroutine dlfind_init
-      use dlf_parameter_module, only: rk
+!      use dlf_parameter_module, only: rk
       use dlf_global, only: glob,pi,stdout,printl,printf
       use dlf_stat, only: stat
       use dlf_allocate, only: allocate,deallocate
@@ -58,9 +64,10 @@ contains
 
    end subroutine dlfind_init
 
+#if 0 
    subroutine dlfind_run
       use quick_molspec_module, only: natom, quick_molspec 
-      USE dlf_parameter_module, only: rk
+!      USE dlf_parameter_module, only: rk
       use dlf_global, only: glob,stderr,stdout,printl,pi
       USE lbfgs_module
 
@@ -136,5 +143,5 @@ contains
 !      if (allocated(mass)) deallocate(mass)
 
    end subroutine dlfind_final
-
+#endif
 end module quick_dlfind_module
