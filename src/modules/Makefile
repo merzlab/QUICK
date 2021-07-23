@@ -23,7 +23,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS)
+FOR=$(FC) $(FFLAGS) -I ../dlfind/gfortran/objects
 
 modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(objfolder)/quick_files_module.o \
 		$(objfolder)/quick_constants_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_method_module.o \
@@ -39,7 +39,7 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 		$(objfolder)/oshell_quick_gradient_module.o \
 		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
-		$(objfolder)/quick_optimizer_module.o 
+		$(objfolder)/quick_dlfind_module.o $(objfolder)/quick_optimizer_module.o
 
 apimodobj=$(objfolder)/quick_api_module.o  $(objfolder)/quick_api_test_module.o
 
