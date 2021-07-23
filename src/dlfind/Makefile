@@ -20,8 +20,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) -c -I. $(FFLAGS) 
-
+FOR=$(FC) $(FFLAGS)
 
 # modules used by more than one file
 OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o $(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
@@ -47,19 +46,19 @@ OBJ_MAIN = $(dlfindobjfolder)/dlfind_main_driver.o $(dlfindobjfolder)/dlf_serial
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-$(OBJ_MOD): $(dlfindobjfolder)/%.o:%.f90
+$(OBJ_MOD):$(dlfindobjfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-$(OBJ): $(dlfindobjfolder)/%.o:%.f90
+$(OBJ):$(dlfindobjfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-$(OBJ_MAIN): $(dlfindobjfolder)/%.o:%.f90
+$(OBJ_MAIN):$(dlfindobjfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-dlfind: $(OBJ_MOD) $(OBJ) $(OBJ_MAIN)
+dlfind:$(OBJ_MOD) $(OBJ) $(OBJ_MAIN)
 	$(VB) $(ARCH) $(ARCHFLAGS) $(libfolder)/libdlfind.$(LIBEXT) $(dlfindobjfolder)/*.o
 
 #  !---------------------------------------------------------------------!
