@@ -4,7 +4,7 @@ module quick_dlfind_module
    private
    real(rk),allocatable :: tmpcoords(:),tmpcoords2(:)  
    integer, allocatable :: spec(:)
-   double precision(:)  :: mass
+!   double precision  :: mass(:)
 
 contains 
    subroutine dlfind_init
@@ -19,8 +19,7 @@ contains
 
       implicit none
       integer              :: ivar,nat,nframe,nmass,nweight,nz,tsrel,iat, jat
-      integer              :: massweight,ierr
-      real(rk)             :: svar
+      integer              :: ierr,nspec
       integer              :: tdlf_farm
       integer              :: n_po_scaling
       integer              :: coupled_states
@@ -30,21 +29,20 @@ contains
       call dlf_default_init(nspec,spec)
     
       ivar=1
-      massweight=0
       tdlf_farm=1 ! set default value
       n_po_scaling=0 ! set default value
       coupled_states=1 ! set default value
       micro_esp_fit=0 ! set default value
 
 
-      call dlf_default_set(3*natom)
+      call dlf_default_set(3*quick_molspec%natom)
 
-      if (.not. allocated(tmpcoords)) allocate(tmpcoords(3*natom))
-      if (.not. allocated(tmpcoords2)) allocate(tmpcoords2(natom))      
-      if (.not. allocated(spec)) allocate(spec(3*natom))
-      if (.not. allocated(mass)) allocate(mass(natom))
+      if (.not. allocated(tmpcoords)) allocate(tmpcoords(3*quick_molspec%natom))
+      if (.not. allocated(tmpcoords2)) allocate(tmpcoords2(quick_molspec%natom))      
+      if (.not. allocated(spec)) allocate(spec(3*quick_molspec%natom))
+!      if (.not. allocated(mass)) allocate(mass(quick_molspec%natom))
 
-      do iat=1, natom
+      do iat=1, quick_molspec%natom
          tmpcoords2(iat)=EMASS(quick_molspec%iattype(iat))
          print*, tmpcoords2(iat)
       enddo
@@ -60,8 +58,12 @@ contains
    end subroutine dlfind_init
 
    subroutine dlfind_run
-      implicit none
       use quick_molspec_module, only: natom, quick_molspec 
+      USE dlf_parameter_module, only: rk
+      use dlf_global, only: glob,stderr,stdout,printl,pi
+      USE lbfgs_module
+
+      implicit none
       logical                      :: needhessian ! do we need a Hessian?
 
       integer       :: nvarin ! number of variables to read in
@@ -73,10 +75,14 @@ contains
                                      ! a parallel run, 0 otherwise
       integer              :: ivar,nat,nframe,nmass,nweight,nz,iat, jat
       integer              :: n_po_scaling
-      
+      integer              :: nicore=0
+      logical              :: massweight
+ 
+      nvarin=3*quick_molspec%natom
       nframe = 0
-      nz= natom
+      nz= quick_molspec%natom
       nweight=0
+      massweight=.False.
       n_po_scaling=0 ! set default value
 
       ! allocate storage
@@ -91,6 +97,14 @@ contains
 
       ! initialise line search
       call linesearch_init
+
+    
+      call dlf_cartesian_xtoi(quick_molspec%natom,nvarin,nicore,massweight,glob%xcoords,glob%xgradient,&
+    glob%icoords,glob%igradient)
+      
+      CALL DLF_LBFGS_STEP(GLOB%ICOORDS,GLOB%IGRADIENT,GLOB%STEP)
+
+      call dlf_cartesian_itox(quick_molspec%natom,nvarin,nicore,massweight,glob%icoords,glob%xcoords)
 
 
       ! ====================================================================
@@ -118,7 +132,7 @@ contains
       if (allocated(tmpcoords)) deallocate(tmpcoords)
       if (allocated(tmpcoords2)) deallocate(tmpcoords2)
       if (allocated(spec)) deallocate(spec)
-      if (allocated(mass)) deallocate(mass)
+!      if (allocated(mass)) deallocate(mass)
 
    end subroutine dlfind_final
 
