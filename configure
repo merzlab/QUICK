@@ -605,6 +605,7 @@ fort_vspec_flags=''
 libxcobjfolder=''
 libxcdevobjfolder=''
 blasobjfolder=''
+dlfindobjfolder=''
 
 # keep track of which build types to clean
 cleantypes=''
@@ -829,8 +830,6 @@ for buildtype in $buildtypes; do
     blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
   fi
 
-
-
   if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/gpu/libxcobj"
@@ -843,6 +842,12 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
+  
+  # create dlfindobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/dlfindobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/dlfindobj" 
+  fi
+  dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
 
 done
 
@@ -1170,7 +1175,9 @@ for buildtype in $buildtypes; do
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
-
+  
+  # set dlfindobj folder
+  dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
 
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
@@ -1204,6 +1211,7 @@ srcfolder=$QUICK_HOME/src
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
+dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
@@ -1215,6 +1223,7 @@ exefolder=$QUICK_HOME/bin
 objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
+dlfindobjfolder=$dlfindobjfolder
 mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
 blasobjfolder=$blasobjfolder
 libfolder=$QUICK_HOME/build/lib/$buildtype
@@ -1305,6 +1314,7 @@ installfolder=$quick_prefix
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
+dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
