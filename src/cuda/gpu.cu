@@ -1222,7 +1222,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_basis ->Xcoeff_oei->Upload();
   gpu -> gpu_sim.Xcoeff_oei                       =   gpu -> gpu_basis -> Xcoeff_oei -> _devData;
 
-  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
+/*  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
 
    int II = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x;
    int JJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y;
@@ -1235,7 +1235,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 
     printf("%i II JJ ii jj iii jjj %d %d %d %d %d %d \n",i, II, JJ, ii, jj, iii, jjj);
   }
-
+*/
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
   gpu->gpu_basis->Xcoeff_oei-> DeleteCPU();
   gpu -> gpu_basis -> kstart -> DeleteCPU();
