@@ -294,6 +294,7 @@ struct gpu_simulation_type {
     
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;
+    QUICKDouble*                    Xcoeff_oei; // precomputed overlap prefactor for oei
     QUICKDouble*                    expoSum;
     QUICKDouble*                    weightedCenterX;
     QUICKDouble*                    weightedCenterY;
@@ -384,6 +385,7 @@ struct gpu_basis_type {
     cuda_buffer_type<int>*          sorted_Q;
     cuda_buffer_type<QUICKDouble>*  gccoeff;
     cuda_buffer_type<QUICKDouble>*  Xcoeff;                     // 4-dimension one
+    cuda_buffer_type<QUICKDouble>*  Xcoeff_oei;                 // 4-dimension one, precomputed overlap prefactor for oei
     cuda_buffer_type<QUICKDouble>*  expoSum;                    // 4-dimension one
     cuda_buffer_type<QUICKDouble>*  weightedCenterX;            // 4-dimension one
     cuda_buffer_type<QUICKDouble>*  weightedCenterY;            // 4-dimension one
