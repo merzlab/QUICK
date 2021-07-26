@@ -93,15 +93,15 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
     int kPrimI = devSim.kprim[II];
     int kPrimJ = devSim.kprim[JJ];
 
-    //int kStartI = devSim.kstart[II]-1;
-    //int kStartJ = devSim.kstart[JJ]-1;
+    int kStartI = devSim.kstart[II]-1;
+    int kStartJ = devSim.kstart[JJ]-1;
 
     /* 
     sum of basis functions for shell II and JJ. For eg, for a p shell, KsumtypeI or KsumtypeJ
     would be 3.
     */ 
-    int KsumtypeI = devSim.Ksumtype[II]-1;
-    int KsumtypeJ = devSim.Ksumtype[JJ]-1;
+    //int KsumtypeI = devSim.Ksumtype[II]-1;
+    //int KsumtypeJ = devSim.Ksumtype[JJ]-1;
 
     /*
      Store array holds contracted integral values computed using VRR algorithm. 
@@ -143,16 +143,8 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
         QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start+III, jj_start+JJJ, devSim.prim_total, devSim.prim_total);
         QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start+III, jj_start+JJJ, devSim.prim_total, devSim.prim_total);
 
-        // calculation below may be reduced by precomputing 
-
-        QUICKDouble ssoverlap = PI_TO_3HALF * pow(Zeta, -1.5) * exp( - LOC2(devSim.gcexpo, III , devSim.Ksumtype[II] - 1, MAXPRIM, devSim.nbasis) *\
-        LOC2(devSim.gcexpo, JJJ , devSim.Ksumtype[JJ] - 1, MAXPRIM, devSim.nbasis) * (pow(Ax-Bx, 2) + pow(Ay-By, 2) + pow(Az-Bz, 2)) / Zeta);
-
-        // compute the first two terms of OS eqn A20
-        QUICKDouble _tmp = 2.0 * sqrt(Zeta/PI) * ssoverlap;            
-
-        // multiply by contraction coefficients
-        _tmp *= LOC2(devSim.gccoeff, III, KsumtypeI, MAXPRIM, gpu->nbasis) * LOC2(devSim.gccoeff, JJJ, KsumtypeJ, MAXPRIM, gpu->nbasis); 
+        // get Xcoeff, which is a product of overlap prefactor and contraction coefficients 
+        QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI+III, kStartJ+JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
 //        for(int iatom=0; iatom<totalatom; ++iatom){
 
@@ -170,8 +162,8 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             FmT(I+J, U, YVerticalTemp);
 
             // compute all auxilary integrals and store
-            for (int i = 0; i<=I+J; i++) {
-                VY(0, 0, i) = VY(0, 0, i) * _tmp * chg;
+            for (int n = 0; n<=I+J; n++) {
+                VY(0, 0, n) = VY(0, 0, n) * Xcoeff_oei * chg;
                 //printf("aux: %d %f \n", i, VY(0, 0, i));
             }
 
