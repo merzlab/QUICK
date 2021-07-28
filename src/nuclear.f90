@@ -1441,24 +1441,11 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
 
    select case (NIJ1+11)
 
-   case(0)
-   case(10)
-      call PSattra(0)
-   case(1)
-      call SPattra(0)
    case(11)
       call SPattra(0)
       call PSattra(0)
       call PSattra(1)
       call PPattra(0)
-   case(20)
-      call PSattra(0)
-      call PSattra(1)
-      call DSattra(0)
-   case(2)
-      call SPattra(0)
-      call SPattra(1)
-      call SDattra(0)
    case(21)
       call PSattra(0)
       call PSattra(1)
@@ -1511,28 +1498,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
       do itemp=0,1
          call PDattra(itemp)
       enddo
-
-   case(30)
-
-      do itemp=0,2
-         call PSattra(itemp)
-      enddo
-      do itemp=0,1
-         call DSattra(itemp)
-      enddo
-
-      call FSattra(0)
-
-   case(3)
-
-      do itemp=0,2
-         call SPattra(itemp)
-      enddo
-      do itemp=0,1
-         call SDattra(itemp)
-      enddo
-
-      call SFattra(0)
 
    case(31)
 
@@ -1695,34 +1660,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
       do itemp=0,1
          call DFattra(itemp)
       enddo
-
-   case(40)
-
-      do itemp=0,3
-         call PSattra(itemp)
-      enddo
-      do itemp=0,2
-         call DSattra(itemp)
-      enddo
-      do itemp=0,1
-         call FSattra(itemp)
-      enddo
-
-      call GSattra(0)
-
-   case(4)
-
-      do itemp=0,3
-         call SPattra(itemp)
-      enddo
-      do itemp=0,2
-         call SDattra(itemp)
-      enddo
-      do itemp=0,1
-         call SFattra(itemp)
-      enddo
-
-      call SGattra(0)
 
    case(41)
 
