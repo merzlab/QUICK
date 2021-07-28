@@ -2050,209 +2050,209 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
 
 
    ! new opt
-   select case (NIJ1)
-
-   case(0)
-   case(10)
-      call PSattraopt(0)
-   case(1)
-      call SPattraopt(0)
-   case(11)
-
-      call SPattraopt(0)
-      call PSattraopt(0)
-      call PSattraopt(1)
-      call PPattraopt(0)
-
-   case(20)
-
-      call PSattraopt(0)
-      call PSattraopt(1)
-      call DSattraopt(0)
-
-   case(2)
-
-      call SPattraopt(0)
-      call SPattraopt(1)
-      call SDattraopt(0)
-
-   case(21)
-
-      call PSattraopt(0)
-      call PSattraopt(1)
-      call PSattraopt(2)
-      call DSattraopt(0)
-      call DSattraopt(1)
-      call DPattraopt(0)
-
-   case(12)
-
-      call SPattraopt(0)
-      call SPattraopt(1)
-      call SPattraopt(2)
-      call SDattraopt(0)
-      call SDattraopt(1)
-      call PDattraopt(0)
-
-
-   case(22)
-
-      do itempt=0,3
-         call PSattraopt(itempt)
-      enddo
-      do itempt=0,1
-         call PPattraopt(itempt)
-      enddo
-      do itempt=0,2
-         call DSattraopt(itempt)
-      enddo
-      do itempt=0,1
-         call DPattraopt(itempt)
-      enddo
-
-      call DDattraopt(0)
-
-   case(30)
-
-      do itemp=0,2
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call DSattraopt(itemp)
-      enddo
-
-      call FSattraopt(0)
-
-   case(3)
-
-      do itemp=0,2
-         call SPattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call SDattraopt(itemp)
-      enddo
-
-      call SFattraopt(0)
-
-   case(31)
-
-      do itemp=0,3
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call PPattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call DSattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call DPattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call FSattraopt(itemp)
-      enddo
-
-      call FPattraopt(0)
-
-   case(13)
-
-      do itemp=0,3
-         call SPattraopt(itemp)
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call PPattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call SDattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call PDattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call SFattraopt(itemp)
-      enddo
-
-      call PFattraopt(0)
-
-   case(32)
-
-      do itemp=0,4
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call PPattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call DSattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call DPattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call FSattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call FPattraopt(itemp)
-      enddo
-
-      call FDattraopt(0)
-
-   case(23)
-
-      do itemp=0,4
-         call SPattraopt(itemp)
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call PPattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call SDattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call PDattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call SFattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call PFattraopt(itemp)
-      enddo
-
-      call DFattraopt(0)
-
-   case(33)
-
-      do itemp=0,5
-         call PSattraopt(itemp)
-      enddo
-      do itemp=0,4
-         call PPattraopt(itemp)
-      enddo
-      do itemp=0,4
-         call DSattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call DPattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call DDattraopt(itemp)
-      enddo
-      do itemp=0,3
-         call FSattraopt(itemp)
-      enddo
-      do itemp=0,2
-         call FPattraopt(itemp)
-      enddo
-      do itemp=0,1
-         call FDattraopt(itemp)
-      enddo
-
-      call FFattraopt(0)
-
-
-   end select
+!   select case (NIJ1)
+!
+!   case(0)
+!   case(10)
+!      call PSattraopt(0)
+!   case(1)
+!      call SPattraopt(0)
+!   case(11)
+!
+!      call SPattraopt(0)
+!      call PSattraopt(0)
+!      call PSattraopt(1)
+!      call PPattraopt(0)
+!
+!   case(20)
+!
+!      call PSattraopt(0)
+!      call PSattraopt(1)
+!      call DSattraopt(0)
+!
+!   case(2)
+!
+!      call SPattraopt(0)
+!      call SPattraopt(1)
+!      call SDattraopt(0)
+!
+!   case(21)
+!
+!      call PSattraopt(0)
+!      call PSattraopt(1)
+!      call PSattraopt(2)
+!      call DSattraopt(0)
+!      call DSattraopt(1)
+!      call DPattraopt(0)
+!
+!   case(12)
+!
+!      call SPattraopt(0)
+!      call SPattraopt(1)
+!      call SPattraopt(2)
+!      call SDattraopt(0)
+!      call SDattraopt(1)
+!      call PDattraopt(0)
+!
+!
+!   case(22)
+!
+!      do itempt=0,3
+!         call PSattraopt(itempt)
+!      enddo
+!      do itempt=0,1
+!         call PPattraopt(itempt)
+!      enddo
+!      do itempt=0,2
+!         call DSattraopt(itempt)
+!      enddo
+!      do itempt=0,1
+!         call DPattraopt(itempt)
+!      enddo
+!
+!      call DDattraopt(0)
+!
+!   case(30)
+!
+!      do itemp=0,2
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call DSattraopt(itemp)
+!      enddo
+!
+!      call FSattraopt(0)
+!
+!   case(3)
+!
+!      do itemp=0,2
+!         call SPattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call SDattraopt(itemp)
+!      enddo
+!
+!      call SFattraopt(0)
+!
+!   case(31)
+!
+!      do itemp=0,3
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call PPattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call DSattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call DPattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call FSattraopt(itemp)
+!      enddo
+!
+!      call FPattraopt(0)
+!
+!   case(13)
+!
+!      do itemp=0,3
+!         call SPattraopt(itemp)
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call PPattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call SDattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call PDattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call SFattraopt(itemp)
+!      enddo
+!
+!      call PFattraopt(0)
+!
+!   case(32)
+!
+!      do itemp=0,4
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call PPattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call DSattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call DPattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call FSattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call FPattraopt(itemp)
+!      enddo
+!
+!      call FDattraopt(0)
+!
+!   case(23)
+!
+!      do itemp=0,4
+!         call SPattraopt(itemp)
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call PPattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call SDattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call PDattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call SFattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call PFattraopt(itemp)
+!      enddo
+!
+!      call DFattraopt(0)
+!
+!   case(33)
+!
+!      do itemp=0,5
+!         call PSattraopt(itemp)
+!      enddo
+!      do itemp=0,4
+!         call PPattraopt(itemp)
+!      enddo
+!      do itemp=0,4
+!         call DSattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call DPattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call DDattraopt(itemp)
+!      enddo
+!      do itemp=0,3
+!         call FSattraopt(itemp)
+!      enddo
+!      do itemp=0,2
+!         call FPattraopt(itemp)
+!      enddo
+!      do itemp=0,1
+!         call FDattraopt(itemp)
+!      enddo
+!
+!      call FFattraopt(0)
+!
+!
+!   end select
 
    Agrad1=0.0d0
    Agrad2=0.0d0
@@ -2302,9 +2302,9 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
                Xconstant2=Xconstant1*quick_basis%cons(JJJ)*DENSEJI
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
 
-               Cgrad1=Cgrad1+Xconstant2*attraxiaoopt(1,itemp1,itemp2,0)
-               Cgrad2=Cgrad2+Xconstant2*attraxiaoopt(2,itemp1,itemp2,0)
-               Cgrad3=Cgrad3+Xconstant2*attraxiaoopt(3,itemp1,itemp2,0)
+!               Cgrad1=Cgrad1+Xconstant2*attraxiaoopt(1,itemp1,itemp2,0)
+!               Cgrad2=Cgrad2+Xconstant2*attraxiaoopt(2,itemp1,itemp2,0)
+!               Cgrad3=Cgrad3+Xconstant2*attraxiaoopt(3,itemp1,itemp2,0)
 
                itemp1new=trans(quick_basis%KLMN(1,III)+1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
                Agrad1=Agrad1+2.0d0*Xconstant2* &
@@ -2363,6 +2363,12 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
          enddo
       enddo
    enddo
+
+   ! use the gradient invariance to determine the derivatives wrt nuclei/external
+   ! point charge.
+   CGrad1 = -(AGrad1+BGrad1)
+   CGrad2 = -(AGrad2+BGrad2)
+   CGrad3 = -(AGrad3+BGrad3)
 
    quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+ AGrad1
    quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+ AGrad2
