@@ -1132,7 +1132,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
 
     if(glob%tcoords2) then
       call allocate( glob%xcoords2,3,nat,nframe)
-      glob%xcoords2 = reshape(tmpcoords2(1:nat*3*nframe),(/3,nat,nframe/))
+!      glob%xcoords2 = reshape(tmpcoords2(1:nat*3*nframe),(/3,nat,nframe/))
     end if
 
     call allocate( glob%xgradient,3,nat)
@@ -1140,18 +1140,18 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     !nuclear charges
     call allocate( glob%znuc,nat)
     if(nz==nat) then
-      glob%znuc(:)=spec(nat+1:nat+nz)
+!      glob%znuc(:)=spec(nat+1:nat+nz)
     else
-      glob%znuc(:)=1
+!      glob%znuc(:)=1
     end if
     
-    glob%xcoords = reshape(tmpcoords,(/3,nat/))
-    glob%spec(:) = spec(1:nat)
+ !   glob%xcoords = reshape(tmpcoords,(/3,nat/))
+ !   glob%spec(:) = spec(1:nat)
 
     if(glob%ncons>0) then
       call allocate( glob%icons,5,glob%ncons)
       ivar=nat+nz
-      glob%icons=reshape(spec(ivar+1:ivar+5*glob%ncons),(/5,glob%ncons/))
+  !    glob%icons=reshape(spec(ivar+1:ivar+5*glob%ncons),(/5,glob%ncons/))
     else
       call allocate( glob%icons,5,1)
       glob%icons(:,:)=0
@@ -1161,7 +1161,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     if(glob%nconn>0) then
       call allocate( glob%iconn,2,glob%nconn)
       ivar=nat+nz+glob%ncons
-      glob%iconn=reshape(spec(ivar+1:ivar+2*glob%nconn),(/2,glob%nconn/))
+ !     glob%iconn=reshape(spec(ivar+1:ivar+2*glob%nconn),(/2,glob%nconn/))
     else
       call allocate( glob%iconn,2,1)
       glob%iconn(:,:)=0
@@ -1171,7 +1171,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     call allocate(glob%micspec, nat)
     if (glob%imicroiter > 0) then
        ivar = nat + nz + 5*glob%ncons + 2*glob%nconn
-       glob%micspec(:) = spec(ivar+1:ivar+nat)
+ !      glob%micspec(:) = spec(ivar+1:ivar+nat)
        do ivar = 1, nat
           if (glob%micspec(ivar) < 0 .or. glob%micspec(ivar) > 1) then
              write(stdout,'(a,2i5)') 'Atom, Micspec: ', ivar, glob%micspec(ivar)
@@ -1205,7 +1205,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
 
     call allocate( glob%mass,nat)
     if(nmass>0) then
-      glob%mass=tmpcoords2(nat*3*nframe+nweight+1:nat*3*nframe+nweight+nat)
+ !     glob%mass=tmpcoords2(nat*3*nframe+nweight+1:nat*3*nframe+nweight+nat)
       ! use atomic mass unit (mass of the electron) only in case of quantum TS search
       if((glob%icoord==190.or.glob%icoord==390).and.&
           glob%iopt/=11.and.glob%iopt/=13) then
@@ -1258,7 +1258,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     call allocate( glob%xcoords,1,nvarin)
     if(glob%tcoords2) then
       call allocate( glob%xcoords2,1,nvarin,nframe)
-      glob%xcoords2 = reshape(tmpcoords2,(/1,nvarin,nframe/))
+ !     glob%xcoords2 = reshape(tmpcoords2,(/1,nvarin,nframe/))
     end if
     call allocate( glob%xgradient,1,nvarin)
     ! NOT TO BE USED
@@ -1271,7 +1271,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     call allocate( glob%weight,1)
     call allocate( glob%mass,1)
 
-    glob%xcoords = reshape(tmpcoords,(/1,nvarin/))
+  !  glob%xcoords = reshape(tmpcoords,(/1,nvarin/))
 
   end if
   glob%toldenergy=.false.
