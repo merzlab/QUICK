@@ -28,6 +28,8 @@ static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 #include "gpu_oei_definitions.h"
 #include "gpu_oei_assembler.h"
 #include "gpu_oei.h"
+#include "gpu_oei_grad_assembler.h"
+#include "gpu_oei_grad.h"
 
 /*
   upload trans array to constant memory
@@ -185,9 +187,15 @@ void getOEI(_gpu_type gpu){
 
 //  QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    getOEI_kernel<<<1, 1>>>();
+    getOEI_kernel<<<80, 256>>>();
 
 }
 
+void get_oei_grad(_gpu_type gpu){
 
+//  QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+
+    get_oei_grad_kernel<<<1, 1>>>();
+
+}
 
