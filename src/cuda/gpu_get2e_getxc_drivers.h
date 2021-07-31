@@ -445,4 +445,43 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 #endif
 
 }
+
+extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
+{
+
+    upload_sim_to_constant_oei(gpu);
+
+    get_oei_grad(gpu);
+
+#ifdef LEGACY_ATOMIC_ADD
+      gpu -> gradULL -> Download();
+
+      for (int i = 0; i< 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+
+        if (valULL >= 0x8000000000000000ull) {
+            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+        }
+        else
+        {
+            valDB  = (QUICKDouble) valULL;
+        }
+
+        gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
+      }
+#else
+
+    gpu->grad->Download();
+
+#endif
+
+//    gpu->grad->DownloadSum(grad);
+
+  for(int i=0; i<3*gpu->natom; ++i){
+    printf("grad: %d %f \n", i, gpu->grad->_hostData[i]);
+  }
+
+}
+
 #endif
