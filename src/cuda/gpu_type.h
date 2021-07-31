@@ -179,6 +179,7 @@ struct gpu_simulation_type {
     int                             fStart;
     int                             ffStart;
     int                             maxL;
+    int                             Qshell_OEI; // number of Qshell pairs after OEI prescreening
 
 	//New XC implementation
     int npoints;                                //Total number of packed grid points
@@ -323,7 +324,9 @@ struct gpu_simulation_type {
     
     // For Grad
     QUICKDouble*                    grad;
+    QUICKDouble*                    ptchg_grad;
     QUICKULL*                       gradULL;
+    QUICKULL*                       ptchg_gradULL;
   
     // mpi variable definitions
     int                             mpirank;
@@ -463,7 +466,9 @@ struct gpu_type {
     
     // For gradient
     cuda_buffer_type<QUICKDouble>*  grad;
+    cuda_buffer_type<QUICKDouble>*  ptchg_grad;
     cuda_buffer_type<QUICKULL>*     gradULL;
+    cuda_buffer_type<QUICKULL>*     ptchg_gradULL;
 
     gpu_calculated_type*            gpu_calculated;
     gpu_basis_type*                 gpu_basis;
