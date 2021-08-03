@@ -215,9 +215,7 @@
  
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
-      call upload_oei()
-
-      call gpu_get_oei()
+      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
     endif
 #endif
