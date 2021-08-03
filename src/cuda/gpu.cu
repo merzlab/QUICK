@@ -1145,41 +1145,6 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     gpu -> gpu_sim.allxyz    = gpu -> allxyz -> _devData;
     gpu -> gpu_sim.allchg    = gpu -> allchg -> _devData;    
 
-    // allocate array for sorted shell pair info
-    gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
-
-    unsigned char sort_method = 0;
-
-    if(sort_method == 0){
-        unsigned int a = 0;
-
-        // store Qshell indices, at this point we already have Qshells sorted according to type.
-        for (int qp = 0; qp <= 6 ; ++qp){
-            for (int q = 0; q <= 3; ++q) {
-                for (int p = 0; p <= 3; ++p) {
-                    if (p+q==qp){  
-                       unsigned int b = 0;   
-                       for(int i=0; i < gpu->gpu_basis->Qshell; ++i){
-                           for(int j=0; j < gpu->gpu_basis->Qshell; ++j){
-                           //    int j = gpu->gpu_basis->Qshell - i - 1;
-                               if(gpu->gpu_basis->sorted_Qnumber->_hostData[i] == q && gpu->gpu_basis->sorted_Qnumber->_hostData[j] == p){
-                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].x = i;
-                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].y = j;
-                                   ++a;
-                                   ++b;
-                               }
-                           }
-                       } 
-                       
-                    }      
-                }
-            }
-        }
-     }
-
-  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
-  gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
-
   // precompute the product of overlap prefactor and contraction coefficients and store
   gpu -> gpu_basis -> Xcoeff_oei                   =   new cuda_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
 
@@ -1222,6 +1187,74 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_basis ->Xcoeff_oei->Upload();
   gpu -> gpu_sim.Xcoeff_oei                       =   gpu -> gpu_basis -> Xcoeff_oei -> _devData;
 
+
+  // allocate array for sorted shell pair info
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+
+  unsigned char sort_method = 0;
+  unsigned int a = 0;
+
+  if(sort_method == 0){
+
+      // store Qshell indices, at this point we already have Qshells sorted according to type.
+      for (int qp = 0; qp <= 6 ; ++qp){
+          for (int q = 0; q <= 3; ++q) {
+              for (int p = 0; p <= 3; ++p) {
+                  if (p+q==qp){
+                     unsigned int b = 0;
+                     for(int i=0; i < gpu->gpu_basis->Qshell; ++i){
+                         for(int j=0; j < gpu->gpu_basis->Qshell; ++j){
+                             if(gpu->gpu_basis->sorted_Qnumber->_hostData[i] == q && gpu->gpu_basis->sorted_Qnumber->_hostData[j] == p){
+                                 // check if the product of overlap prefactor and contraction coefficients is greater than the threshold
+                                 // if a given basis function pair has at least one primitive pair that satify this condition, we will add it
+
+                                 /*bool bSignificant=false;
+
+                                 int kPrimI = gpu -> gpu_basis -> kprim -> _hostData[i];
+                                 int kPrimJ = gpu -> gpu_basis -> kprim -> _hostData[j];
+
+                                 int kStartI = gpu -> gpu_basis -> kstart -> _hostData[i]-1;
+                                 int kStartJ = gpu -> gpu_basis -> kstart -> _hostData[j]-1;
+
+                                 for(int iprim=0; iprim < kPrimI * kPrimJ ; ++iprim){
+                                   int JJJ = (int) iprim/kPrimI;
+                                   int III = (int) iprim-kPrimI*JJJ;
+
+                                   QUICKDouble Xcoeff_oei = LOC4(gpu->gpu_basis->Xcoeff_oei->_hostData, kStartI+III, kStartJ+JJJ, q - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[i]], \
+                                                            p - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[j]], gpu->jbasis, gpu->jbasis, 2, 2);
+
+                                   printf("xcoeff_oei: %d %d %d %d %.10e \n", kStartI+III, kStartJ+JJJ, q - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[i]], \
+                                          p - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[j]], Xcoeff_oei);
+
+
+                                   //if(Xcoeff_oei > gpu -> gpu_cutoff -> integralCutoff){
+                                   if(abs(Xcoeff_oei) > 0.0 ){
+                                     bSignificant=true;
+                                     break;
+                                   }
+
+                                 }
+
+                                 if(bSignificant){*/
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].x = i;
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].y = j;
+                                   ++a;
+                                   ++b;
+                                 //}
+                             }
+                         }
+                     }
+
+                  }
+              }
+          }
+      }
+  }
+
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
+  gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
+  gpu -> gpu_sim.Qshell_OEI = a; 
+
 /*  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
 
    int II = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x;
@@ -1233,7 +1266,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     int iii = gpu->gpu_basis->sorted_Qnumber->_hostData[II];
     int jjj = gpu->gpu_basis->sorted_Qnumber->_hostData[JJ];
 
-    printf("%i II JJ ii jj iii jjj %d %d %d %d %d %d \n",i, II, JJ, ii, jj, iii, jjj);
+    printf("%i II JJ ii jj iii jjj %d %d %d %d %d %d nprim_i: %d nprim_j: %d \n",i, II, JJ, ii, jj, iii, jjj, gpu->gpu_basis->kprim->_hostData[ii], gpu->gpu_basis->kprim->_hostData[jj]);
   }
 */
   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
@@ -1763,7 +1796,10 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     gpu -> grad = new cuda_buffer_type<QUICKDouble>(3 * gpu->natom);
     gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
 
-    gpu -> grad -> DeleteGPU();
+    //gpu -> grad -> DeleteGPU();
+    gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
+    gpu -> grad -> Upload();
+
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
    
     gpu -> gradULL -> Upload();
