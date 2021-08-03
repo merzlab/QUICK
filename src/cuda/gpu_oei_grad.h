@@ -17,8 +17,8 @@
 */
 
 
-__device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, unsigned int kPrimI, \
-                                unsigned int kPrimJ, unsigned int iatom, QUICKDouble* store){
+__device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, \
+                             unsigned int iatom, QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB){
 
     // obtain the start and final basis function indices for given shells II and JJ. They will help us to save the integral
     // contribution into correct location in Fock matrix. 
@@ -49,14 +49,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
             QUICKDouble constant =  devSim.cons[III-1] * devSim.cons[JJJ-1] * DENSEJI;
 
-            for(int iprim=0; iprim < kPrimI * kPrimJ ; ++iprim){
-
-                int jjj = (int) iprim/kPrimI;
-                int iii = (int) iprim-kPrimI*jjj;
-
-                QUICKDouble AA = LOC2(devSim.gcexpo, iii , devSim.Ksumtype[II] - 1, MAXPRIM, nbasis);
-                QUICKDouble BB = LOC2(devSim.gcexpo, jjj , devSim.Ksumtype[JJ] - 1, MAXPRIM, nbasis);
-
                 // devTrans maps a basis function with certain angular momentum to store array. Get the correct indices now.  
                 int j = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,JJJ-1,3,nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,nbasis),\
                                LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
@@ -65,9 +57,9 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                 int itemp = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,nbasis)+1, LOC2(devSim.KLMN,1,III-1,3,nbasis),\
                                LOC2(devSim.KLMN,2,III-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
 
-                AGradx += 2.0 * constant * AA * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
+                   AGradx += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
 
-printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, AGradx);           
+//printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradx);           
 
                 if(LOC2(devSim.KLMN,0,III-1,3,nbasis) >= 1){
            
@@ -75,7 +67,7 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                                   LOC2(devSim.KLMN,2,III-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
                  
                     AGradx -= constant * LOC2(devSim.KLMN,0,III-1,3,nbasis) * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
-            printf("constant klmn store2 AGradx %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,0,III-1,3,nbasis), itemp-1, j-1, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradx);
+//            printf("constant klmn store2 AGradx %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,0,III-1,3,nbasis), itemp-1, j-1, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradx);
 
            
                 }
@@ -84,7 +76,10 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                 itemp = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,nbasis), LOC2(devSim.KLMN,1,III-1,3,nbasis)+1,\
                                LOC2(devSim.KLMN,2,III-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
 
-                AGrady += 2.0 * constant * AA * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
+                   AGrady += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
+
+//printf("constant AA store1 Agrady %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGrady);
+
 
                 if(LOC2(devSim.KLMN,1,III-1,3,nbasis) >= 1){
               
@@ -101,7 +96,11 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                 itemp = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,nbasis), LOC2(devSim.KLMN,1,III-1,3,nbasis),\
                                LOC2(devSim.KLMN,2,III-1,3,nbasis)+1, TRANSDIM, TRANSDIM, TRANSDIM);
 
-                AGradz += 2.0 * constant * AA * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
+
+                   AGradz += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
+
+//printf("constant AA store1 Agradz %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradz);
+
 
                 if(LOC2(devSim.KLMN,2,III-1,3,nbasis) >= 1){
 
@@ -118,7 +117,8 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                 j = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,JJJ-1,3,nbasis)+1, LOC2(devSim.KLMN,1,JJJ-1,3,nbasis),\
                                LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
 
-                BGradx += 2.0 * constant * BB * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
+
+                   BGradx += constant * LOC2(storeBB, i-1, j-1, STOREDIM, STOREDIM);
  
             //if( III == 1 && JJJ == 4 && I == 0 && J == 1) {
             //printf("constant BB store1 Bgradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, BB, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGradx);
@@ -144,7 +144,7 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                 j = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,JJJ-1,3,nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,nbasis)+1,\
                                LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
 
-                BGrady += 2.0 * constant * BB * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
+                   BGrady += constant * LOC2(storeBB, i-1, j-1, STOREDIM, STOREDIM);
  
                 if(LOC2(devSim.KLMN,1,JJJ-1,3,nbasis) >= 1){
  
@@ -159,8 +159,8 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                 // sum up gradient wrt z-coordinate of second center 
                 j = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,JJJ-1,3,nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,nbasis),\
                                LOC2(devSim.KLMN,2,JJJ-1,3,nbasis)+1, TRANSDIM, TRANSDIM, TRANSDIM);
-            
-                BGradz += 2.0 * constant * BB * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
+
+                   BGradz += constant * LOC2(storeBB, i-1, j-1, STOREDIM, STOREDIM);
             
                 if(LOC2(devSim.KLMN,2,JJJ-1,3,nbasis) >= 1){
  
@@ -170,9 +170,7 @@ printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-
                     BGradz -= constant * LOC2(devSim.KLMN,2,JJJ-1,3,nbasis) * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
 //            printf("constant klmn store2 BGradz %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), i-1, j-1, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGradz);
                 }
-
               
-            }
 
             if( III == 1 && JJJ == 4 && I == 0 && J == 1) {
 
@@ -257,16 +255,44 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
     //int KsumtypeJ = devSim.Ksumtype[JJ]-1;
 
     /*
-     Store array holds contracted integral values computed using VRR algorithm. 
-     See J. Chem. Phys. 1986, 84, 3963−3974 for theoretical details.
+    At this point, we will need 3 arrays. The first, store, will keep the sum of primitive integral 
+    values as in oei code. Gradient calculation also requires scaling certain primitive integral values
+    by the exponents on each center. It is possible to eliminate the second and third arrays, by looping
+    through the primitives and updating the grad vector during each cycle. But this incurs a huge performance
+    penalty.
      */
+
     QUICKDouble store[STOREDIM*STOREDIM];
+    QUICKDouble storeAA[STOREDIM*STOREDIM];
+    QUICKDouble storeBB[STOREDIM*STOREDIM];
 
-    // initialize store array
+    /*
+     initialize the region of store array that we will be using. This region is determined by looking at the
+     Sumindex array with angular momentums of the shells.
+    */  
 
-    for(int i=0; i<STOREDIM; ++i){
-        for(int j=0; j<STOREDIM; ++j){
-            LOC2(store, j, i, STOREDIM, STOREDIM) = 0.0;
+    for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+        for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+            if (i < STOREDIM && j < STOREDIM) {
+                LOC2(store, j, i, STOREDIM, STOREDIM) = 0.0;
+            }
+        }
+    }
+
+    for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+        for(int j=Sumindex[I+1]; j<Sumindex[I+3]; ++j){
+           if (i < STOREDIM && j < STOREDIM) {
+               LOC2(storeAA, j, i, STOREDIM, STOREDIM) = 0.0;
+           }
+        }
+    }
+
+
+    for(int i=Sumindex[J+1]; i< Sumindex[J+3]; ++i){
+        for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+           if (i < STOREDIM && j < STOREDIM) {
+               LOC2(storeBB, j, i, STOREDIM, STOREDIM) = 0.0;
+           }
         }
     }
 
@@ -274,6 +300,7 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
 
         int JJJ = (int) i/kPrimI;
         int III = (int) i-kPrimI*JJJ;
+
 
         /*
          In the following comments, we have I, J, K, L denote the primitive gaussian function we use, and
@@ -295,6 +322,10 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
         QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start+III, jj_start+JJJ, devSim.prim_total, devSim.prim_total);
         QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start+III, jj_start+JJJ, devSim.prim_total, devSim.prim_total);
         QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start+III, jj_start+JJJ, devSim.prim_total, devSim.prim_total);
+
+
+        QUICKDouble AA = LOC2(devSim.gcexpo, III , devSim.Ksumtype[II] - 1, MAXPRIM, nbasis);
+        QUICKDouble BB = LOC2(devSim.gcexpo, JJJ , devSim.Ksumtype[JJ] - 1, MAXPRIM, nbasis);
 
         // get Xcoeff, which is a product of overlap prefactor and contraction coefficients 
         QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI+III, kStartJ+JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
@@ -321,15 +352,49 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
                 //printf("aux: %d %f \n", i, VY(0, 0, i));
             }
 
+            /*
+            oei grad assembler will save primitive integral values into the following temporary array. 
+            Note that we dont worry about the initialization since we store integral values rather than 
+            summing up values.
+            */
+            QUICKDouble store2[STOREDIM*STOREDIM];
+
             // decompose all attraction integrals to their auxilary integrals through VRR scheme. 
-            oei_grad_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, Zeta, store, YVerticalTemp);
-//        }
+            oei_grad_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, AA, BB, Zeta, store2, YVerticalTemp);
+
+            // sum up primitive integral values into store array
+            for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+              for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+                if (i < STOREDIM && j < STOREDIM) {
+                  LOC2(store, j, i , STOREDIM, STOREDIM) += LOC2(store2, j, i, STOREDIM, STOREDIM);
+                }
+              }
+            }
+
+            // scale primitive integral values with exponent of the first center and add up into storeAA
+            for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+              for(int j=Sumindex[I+1]; j<Sumindex[I+3]; ++j){
+                if (i < STOREDIM && j < STOREDIM) {
+                  LOC2(storeAA, j, i , STOREDIM, STOREDIM) += LOC2(store2, j, i, STOREDIM, STOREDIM) * AA * 2.0;
+                }
+              }
+            }
+             
+            // scale primitive integral values with exponent of the second center and add up into storeBB
+            for(int i=Sumindex[J+1]; i< Sumindex[J+3]; ++i){
+              for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+                if (i < STOREDIM && j < STOREDIM) {
+                  LOC2(storeBB, j, i , STOREDIM, STOREDIM) += LOC2(store2, j, i, STOREDIM, STOREDIM) * BB * 2.0;
+                }
+              }
+            }
+
         }
 
     }
 
     // retrive computed integral values from store array and update the Fock matrix 
-    add_oei_grad(I, J, II, JJ, kPrimI, kPrimJ, iatom, store);
+    add_oei_grad(I, J, II, JJ, iatom, store, storeAA, storeBB);
 
 }
 
