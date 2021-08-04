@@ -19,7 +19,7 @@ contains
 !      use dlf_global, only: glob,pi,stdout,printl,printf
       use dlf_global, only: glob,pi,stdout,printl,printf,stderr
       use dlf_stat, only: stat
-      use dlf_allocate, only: allocate,deallocate
+!      use dlf_allocate, only: allocate,deallocate
       use dlf_store, only: store_initialise
       use dlf_constants, only: dlf_constants_init,dlf_constants_get
       use quick_constants_module, only: EMASS
@@ -30,7 +30,7 @@ contains
       integer              :: ivar,nat,nframe,nmass,nweight,nz,tsrel,iat, jat
       integer              :: ierr,nspec
       integer              :: tdlf_farm
-      integer              :: n_po_scaling
+      integer              :: n_po_scaling, massweight
       integer              :: coupled_states
       integer              :: micro_esp_fit
       logical                      :: needhessian ! do we need a Hessian?
@@ -38,9 +38,13 @@ contains
       integer       :: nvarin2! number of variables to read in
 !      integer       :: nspec  ! number of values in the integer
     
+      glob%icoord = 0
+!      glob%tatoms = .TRUE.
+!      nvarin=3*quick_molspec%natom 
       nspec=3*quick_molspec%natom
-      spec(:)=0
-      call dlf_coords_init
+!      spec(:)=0
+      if (.not. allocated(spec)) allocate(spec(3*quick_molspec%natom))
+!      call dlf_coords_init
       call dlf_default_init(nspec,spec)
     
       ivar=1
@@ -48,13 +52,18 @@ contains
       n_po_scaling=0 ! set default value
       coupled_states=1 ! set default value
       micro_esp_fit=0 ! set default value
+      massweight=0
 
+      ! get logical variables (communication with c-code requires integers)
+      glob%tatoms=(ivar==1)
+      glob%tsrelative=(tsrel==1)
+      glob%massweight=(massweight==1)
+      glob%micro_esp_fit = (micro_esp_fit == 1)
 
       call dlf_default_set(3*quick_molspec%natom)
 
       if (.not. allocated(tmpcoords)) allocate(tmpcoords(3*quick_molspec%natom))
       if (.not. allocated(tmpcoords2)) allocate(tmpcoords2(quick_molspec%natom))      
-      if (.not. allocated(spec)) allocate(spec(3*quick_molspec%natom))
 !      if (.not. allocated(mass)) allocate(mass(quick_molspec%natom))
 
       do iat=1, quick_molspec%natom
@@ -76,6 +85,7 @@ contains
       nframe = 0
       nz= quick_molspec%natom
       nweight=0
+print*, "nvarin:",nvarin
       ! allocate storage
       call dlf_allocate_glob(nvarin,nvarin2,nspec,tmpcoords,tmpcoords2,spec,&
       nz,nframe,nmass,nweight,n_po_scaling)
@@ -110,30 +120,65 @@ contains
                                      ! a parallel run, 0 otherwise
       integer              :: ivar,nat,nframe,nmass,nweight,nz,iat, jat
       integer              :: n_po_scaling
-      integer              :: nicore=0
+!      integer              :: nicore=0
       logical              :: massweight
  
       nvarin=3*quick_molspec%natom
       massweight=.False.
       n_po_scaling=0 ! set default value
 print*,"Entered dlfind_run"
+
       !dimension conversion
-      glob%xcoords = reshape(coords,(/3,nat/))
-      glob%xgradient = reshape(gradient,(/3,nat/))
-print*,glob%xgradient
+      do iat = 1, natom
+        do jat = 1, 3
+          glob%xcoords(jat,iat) = coords((iat-1)*3+jat)
+        enddo
+      enddo
+print*,"glob%xcoords:"
+
+do iat=1, natom
+    print*,(glob%xcoords(iat,jat),jat=1,3)
+enddo
+
+      do iat = 1, natom
+        do jat = 1, 3
+          glob%xgradient(jat,iat) = gradient((iat-1)*3+jat)
+        enddo
+      enddo
+print*,"glob%xgradient:"
+
+do iat=1, natom
+    print*,(glob%xgradient(iat,jat),jat=1,3)
+enddo
     
-      call dlf_cartesian_xtoi(quick_molspec%natom,nvarin,nicore,massweight,glob%xcoords,glob%xgradient,&
+      call dlf_cartesian_xtoi(quick_molspec%natom,nvarin,glob%nicore,massweight,glob%xcoords,glob%xgradient,&
     glob%icoords,glob%igradient)
+
+
+print*,"before lbfgs_icoords:"
+
+!do iat=1, natom
+    print*,glob%icoords
+!enddo
       
       CALL DLF_LBFGS_STEP(GLOB%ICOORDS,GLOB%IGRADIENT,GLOB%STEP)
 
-      call dlf_cartesian_itox(quick_molspec%natom,nvarin,nicore,massweight,glob%icoords,glob%xcoords)
+print*,"after lbfgs_icoords:"
+
+!do iat=1, natom
+    print*,glob%icoords
+!enddo
+      glob%icoords(:)=glob%icoords(:) + glob%step(:)
+
+      call dlf_cartesian_itox(quick_molspec%natom,nvarin,glob%nicore,massweight,glob%icoords,glob%xcoords)
 
       do iat=1,natom
          do jat=1,3
-            coords((jat-1)*3 + iat) = glob%xcoords(iat,jat)
+            coords((iat-1)*3 + jat) = glob%xcoords(jat,iat)
          enddo
       enddo
+print*,"newcoords:"
+print*,coords
 
    end subroutine dlfind_run
 
