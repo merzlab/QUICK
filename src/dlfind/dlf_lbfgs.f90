@@ -144,6 +144,10 @@ SUBROUTINE dlf_lbfgs_step(x,g,step_)
   INTEGER  :: oldpoint,ivar
   real(RK) ,external :: ddot
 ! **********************************************************************
+
+print*,"icoords:", x
+print*,"igradient:", g
+
   if(.not.tinit) call dlf_fail("LBFGS not initialised!")
   if(.not.lbfgs%tinit) then
     print*,"Instance of L-BFGS:",trim(lbfgs%tag)
