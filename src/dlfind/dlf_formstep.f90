@@ -513,6 +513,7 @@ subroutine dlf_formstep_init(needhessian_)
     call allocate(oldcoords,glob%nivar)
 ! L-BFGS
   case (3)
+print*,"glob%nivar",glob%nivar
     call dlf_lbfgs_init(glob%nivar,glob%lbfgs_mem)
   case (9)
 ! fd-test
