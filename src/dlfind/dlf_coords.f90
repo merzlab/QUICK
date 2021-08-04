@@ -140,6 +140,7 @@ subroutine dlf_coords_init
     ! and initialise extra Lagrange-Newton coordinates
     if (glob%icoord == 10) call dlf_ln_allocate
 
+print*,"glob%nat", glob%nat
     ! set weight
     ivar=1
     do iat=1,glob%nat
@@ -858,8 +859,10 @@ subroutine dlf_cartesian_xtoi(nat,nivar,nicore,massweight,xcoords,xgradient,&
           iat,glob%spec(iat)
       call dlf_fail("Wrong spec setting")
     end if
+print*,"iivar", iivar
     if (glob%micspec(iat) == 1) then
        iinner = iivar
+print*,"iinner", iinner
     else
        iouter = iivar
     end if    
@@ -960,8 +963,10 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
           iat,glob%spec(iat)
       call dlf_fail("Wrong spec setting")
     end if
+print*,"iivar", iivar
     if (glob%micspec(iat) == 1) then
        iinner = iivar
+print*,"iinner", iinner
     else
        iouter = iivar
     end if
