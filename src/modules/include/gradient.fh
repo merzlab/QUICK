@@ -531,7 +531,7 @@ contains
         call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
 #ifdef OSHELL
-        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+        call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
 #else 
@@ -559,8 +559,6 @@ contains
   
      call cpu_time(timer_end%T1eVGrad)
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
-
-write(*,*) "attraction time - host = ", timer_end%T1eVGrad-timer_begin%T1eVGrad 
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)

@@ -701,6 +701,8 @@ subroutine gpu_upload_molspecs(ierr)
 
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
+  call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
 end subroutine gpu_upload_molspecs
 
 #endif
