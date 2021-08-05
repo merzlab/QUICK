@@ -1363,7 +1363,6 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> ob        ->  DeleteGPU();
-    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
 
     /*
@@ -1385,13 +1384,13 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
         }
     }*/
     //    gpu -> gpu_calculated -> o        -> Upload();
-    gpu -> gpu_calculated -> denseb    -> Upload();
     gpu -> gpu_calculated -> obULL     -> Upload();
 
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
-    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
     gpu -> gpu_sim.obULL              =  gpu -> gpu_calculated -> obULL -> _devData;
 
+
+    gpu_upload_beta_density_matrix_(denseb);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -1415,6 +1414,13 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> dense    -> Upload();
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+}
+
+extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb)
+{
+    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> denseb    -> Upload();
+    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
 }
 
 //-----------------------------------------------
