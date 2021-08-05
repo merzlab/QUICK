@@ -1131,12 +1131,11 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     unsigned int idxf90data=0;
     for(unsigned int i=0; i<gpu->nextatom; ++i)
         for(unsigned int j=0; j<3; ++j)
-            gpu -> allxyz -> _hostData[ i * gpu->nextatom + j + gpu->natom ] = extxyz[idxf90data++];
+            gpu -> allxyz -> _hostData[ (gpu->natom + i) * 3 + j ] = extxyz[idxf90data++];
 
     idxf90data=0;
     for(unsigned int i=0; i<gpu->nextatom; ++i)
-        for(unsigned int j=0; j<3; ++j)
-            gpu -> allchg -> _hostData[ i * gpu->nextatom + j + gpu->natom ] = extchg[idxf90data++];
+        gpu -> allchg -> _hostData[ gpu->natom + i ] = extchg[idxf90data++];
 
     gpu -> allxyz -> Upload();
     gpu -> allchg -> Upload();
