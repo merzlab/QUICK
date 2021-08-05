@@ -274,6 +274,7 @@ contains
     call get_oshell_oneen_grad
 #else
     call get_cshell_oneen_grad
+!    call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
 #endif
 !#endif
   !---------------------------------------------------------------------
@@ -545,7 +546,20 @@ contains
   !---------------------------------------------------------------------
   
      call cpu_time(timer_begin%T1eVGrad)
-  
+ 
+#if defined CUDA || defined CUDA_MPIV
+
+        call gpu_upload_density_matrix(quick_qm_struct%dense)
+        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
+        call gpu_upload_grad(quick_method%gradCutoff)
+
+        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+
+#ifdef OSHELL
+        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+#endif
+
+#else 
 #ifdef MPIV
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
@@ -566,9 +580,12 @@ contains
            call attrashellopt(IIsh,JJsh)
         enddo
      enddo
+#endif
   
      call cpu_time(timer_end%T1eVGrad)
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
+
+write(*,*) "attraction time - host = ", timer_end%T1eVGrad-timer_begin%T1eVGrad 
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -788,12 +805,12 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
   
-        call gpu_upload_density_matrix(quick_qm_struct%dense)
-        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
-        call gpu_upload_grad(quick_method%gradCutoff)
+!        call gpu_upload_density_matrix(quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
+!        call gpu_upload_grad(quick_method%gradCutoff)
 
 #ifdef OSHELL
-        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+!        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
         call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
 #else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)

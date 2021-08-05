@@ -59,17 +59,12 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
                    AGradx += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
 
-//printf("constant AA store1 Agradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradx);           
-
                 if(LOC2(devSim.KLMN,0,III-1,3,nbasis) >= 1){
            
                     itemp = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,nbasis)-1, LOC2(devSim.KLMN,1,III-1,3,nbasis),\
                                   LOC2(devSim.KLMN,2,III-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
                  
                     AGradx -= constant * LOC2(devSim.KLMN,0,III-1,3,nbasis) * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
-//            printf("constant klmn store2 AGradx %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,0,III-1,3,nbasis), itemp-1, j-1, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradx);
-
-           
                 }
            
                 // sum up gradient wrt y-coordinate of first center
@@ -78,8 +73,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
                    AGrady += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
 
-//printf("constant AA store1 Agrady %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGrady);
-
 
                 if(LOC2(devSim.KLMN,1,III-1,3,nbasis) >= 1){
               
@@ -87,8 +80,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                                   LOC2(devSim.KLMN,2,III-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
               
                     AGrady -= constant * LOC2(devSim.KLMN,1,III-1,3,nbasis) * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
-//            printf("constant klmn store2 AGrady %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,1,III-1,3,nbasis), itemp-1, j-1, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGrady);
-
             
                 }
            
@@ -99,8 +90,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
                    AGradz += constant * LOC2(storeAA, itemp-1, j-1, STOREDIM, STOREDIM);
 
-//printf("constant AA store1 Agradz %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, AA, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradz);
-
 
                 if(LOC2(devSim.KLMN,2,III-1,3,nbasis) >= 1){
 
@@ -108,9 +97,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                                   LOC2(devSim.KLMN,2,III-1,3,nbasis)-1, TRANSDIM, TRANSDIM, TRANSDIM);
 
                     AGradz -= constant * LOC2(devSim.KLMN,2,III-1,3,nbasis) * LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM);
-//            printf("constant klmn store2 AGradz %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,2,III-1,3,nbasis), itemp-1, j-1, LOC2(store, itemp-1, j-1, STOREDIM, STOREDIM), itemp-1, j-1, AGradz);
-
-
                 }
 
                 // sum up gradient wrt x-coordinate of second center 
@@ -120,10 +106,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
                    BGradx += constant * LOC2(storeBB, i-1, j-1, STOREDIM, STOREDIM);
  
-            //if( III == 1 && JJJ == 4 && I == 0 && J == 1) {
-            //printf("constant BB store1 Bgradx %d %d %d %d %f %f %f %d %d %f \n", III-1, JJJ-1, I, J, constant, BB, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGradx);
-
-            //}
 
                 if(LOC2(devSim.KLMN,0,JJJ-1,3,nbasis) >= 1){
 
@@ -131,11 +113,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                               LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM); 
  
                     BGradx -= constant * LOC2(devSim.KLMN,0,JJJ-1,3,nbasis) * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
-
-            //if( III == 1 && JJJ == 4 && I == 0 && J == 1) {
-//            printf("constant klmn store2 BGradx %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,0,JJJ-1,3,nbasis), i-1, j-1, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGradx);
-
-            //}
  
                 }
 
@@ -152,8 +129,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                               LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
  
                     BGrady -= constant * LOC2(devSim.KLMN,1,JJJ-1,3,nbasis) * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
-//            printf("constant klmn store2 BGrady %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,1,JJJ-1,3,nbasis), i-1, j-1, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGrady);
-
                 }
 
                 // sum up gradient wrt z-coordinate of second center 
@@ -168,16 +143,7 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
                               LOC2(devSim.KLMN,2,JJJ-1,3,nbasis)-1, TRANSDIM, TRANSDIM, TRANSDIM);
  
                     BGradz -= constant * LOC2(devSim.KLMN,2,JJJ-1,3,nbasis) * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
-//            printf("constant klmn store2 BGradz %d %d %d %d %f %d %d %d %f %d %d %f \n", III-1, JJJ-1, I, J, constant, LOC2(devSim.KLMN,2,JJJ-1,3,nbasis), i-1, j-1, LOC2(store, i-1, j-1, STOREDIM, STOREDIM), i-1, j-1, BGradz);
                 }
-              
-
-            if( III == 1 && JJJ == 4 && I == 0 && J == 1) {
-
-           // printf("OEI grad debug: III JJJ I J iatm Ax Ay Az Bx By Bz %d %d %d %d %d %f %f %f %f %f %f\n", III-1, JJJ-1, I, J, iatom, AGradx, \
-            AGrady, AGradz, BGradx, BGrady, BGradz);
-
-            }
 
         }
     }
@@ -195,9 +161,16 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     GRADADD(devSim.gradULL[BStart + 1], BGrady);
     GRADADD(devSim.gradULL[BStart + 2], BGradz);
 
+if(iatom < devSim.natom){
     GRADADD(devSim.gradULL[CStart], (-AGradx-BGradx));
     GRADADD(devSim.gradULL[CStart + 1], (-AGrady-BGrady));
     GRADADD(devSim.gradULL[CStart + 2], (-AGradz-BGradz));
+}else{
+    CStart = (iatom-devSim.natom) * 3;
+    GRADADD(devSim.ptchg_gradULL[CStart], (-AGradx-BGradx));
+    GRADADD(devSim.ptchg_gradULL[CStart + 1], (-AGrady-BGrady));
+    GRADADD(devSim.ptchg_gradULL[CStart + 2], (-AGradz-BGradz));
+}
 
 #else
 
@@ -209,9 +182,16 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     QUICKADD(devSim.grad[BStart + 1], BGrady);
     QUICKADD(devSim.grad[BStart + 2], BGradz);
 
+if(iatom < devSim.natom){
     QUICKADD(devSim.grad[CStart], (-AGradx-BGradx));
     QUICKADD(devSim.grad[CStart + 1], (-AGrady-BGrady));
     QUICKADD(devSim.grad[CStart + 2], (-AGradz-BGradz));
+}else{
+    CStart = (iatom-devSim.natom) * 3;
+    QUICKADD(devSim.ptchg_grad[CStart], (-AGradx-BGradx));
+    QUICKADD(devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
+    QUICKADD(devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
+}
 
 #endif
 
@@ -360,7 +340,7 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
             QUICKDouble store2[STOREDIM*STOREDIM];
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme. 
-            oei_grad_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, AA, BB, Zeta, store2, YVerticalTemp);
+            oei_grad_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, Zeta, store2, YVerticalTemp);
 
             // sum up primitive integral values into store array
             for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
