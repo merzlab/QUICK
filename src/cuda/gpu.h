@@ -32,6 +32,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
 extern "C" void gpu_upload_energy_(QUICKDouble* E);
 extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense);
+extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb);
 extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb);
 extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jbasis, int* maxcontract, \
                                   int* ncontract, int* itype,     QUICKDouble* aexp,      QUICKDouble* dcoeff,\
