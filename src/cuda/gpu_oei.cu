@@ -196,7 +196,7 @@ void get_oei_grad(_gpu_type gpu){
 
 //  QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    get_oei_grad_kernel<<<1, 1>>>();
+    get_oei_grad_kernel<<<80, 256>>>();
 
 }
 
