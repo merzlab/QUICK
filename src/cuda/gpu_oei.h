@@ -111,9 +111,11 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 
     // initialize store array
 
-    for(int i=0; i<STOREDIM; ++i){
-        for(int j=0; j<STOREDIM; ++j){
-            LOC2(store, j, i, STOREDIM, STOREDIM) = 0.0;
+    for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+        for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+            if (i < STOREDIM && j < STOREDIM) {
+                LOC2(store, j, i, STOREDIM, STOREDIM) = 0.0;
+            }
         }
     }
 
