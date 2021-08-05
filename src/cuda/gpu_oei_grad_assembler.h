@@ -12,8 +12,8 @@
 */
 
 __device__ __inline__ void oei_grad_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,
-        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble AA,
-        QUICKDouble BB, QUICKDouble Zeta, QUICKDouble* store2, QUICKDouble* YVerticalTemp){ 
+        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble Zeta,
+        QUICKDouble* store2, QUICKDouble* YVerticalTemp){ 
 
   /* SS integral gradient, m=0 */ 
   if(I == 0 && J == 0){ 
