@@ -154,7 +154,7 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     int BStart = (devSim.katom[JJ]-1) * 3;
     int CStart = iatom * 3;
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
     GRADADD(devSim.gradULL[AStart], AGradx);
     GRADADD(devSim.gradULL[AStart + 1], AGrady);
     GRADADD(devSim.gradULL[AStart + 2], AGradz);
@@ -174,7 +174,7 @@ if(iatom < devSim.natom){
     GRADADD(devSim.ptchg_gradULL[CStart + 2], (-AGradz-BGradz));
 }
 
-#else
+/*#else
 
     QUICKADD(devSim.grad[AStart], AGradx);
     QUICKADD(devSim.grad[AStart + 1], AGrady);
@@ -196,7 +196,7 @@ if(iatom < devSim.natom){
 }
 
 #endif
-
+*/
 }
 
 

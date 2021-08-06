@@ -383,23 +383,23 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
     gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     -> Upload();
     gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
-#else
+/*#else
     gpu -> gpu_calculated -> o     -> Upload();
     gpu -> gpu_sim.o = gpu -> gpu_calculated -> o -> _devData;
 #endif
-        
+*/        
     upload_sim_to_constant_oei(gpu);
  
     upload_para_to_const_oei();
 
     getOEI(gpu);
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> oULL -> Download();
 
     for (int i = 0; i< gpu->nbasis; i++) {
@@ -418,7 +418,7 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
             LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
         }
     }
-#else
+/*#else
     gpu -> gpu_calculated -> o -> Download();
 
     for (int i = 0; i< gpu->nbasis; i++) {
@@ -428,7 +428,7 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
     }
 
 #endif
-
+*/
 
     /*for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {            
@@ -440,9 +440,9 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     SAFE_DELETE(gpu -> gpu_calculated -> o);
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
     SAFE_DELETE(gpu -> gpu_calculated -> oULL);
-#endif
+//#endif
 
 }
 
@@ -453,15 +453,16 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     if(gpu -> nextatom > 0) {
         gpu -> ptchg_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
         gpu -> ptchg_gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu -> nextatom);       
         gpu -> ptchg_gradULL -> Upload();
         gpu -> gpu_sim.ptchg_gradULL =  gpu -> ptchg_gradULL -> _devData;
         gpu -> ptchg_grad -> DeleteGPU();
-#else
+/*#else
         gpu -> ptchg_grad -> Upload();
         gpu -> gpu_sim.ptchg_grad =  gpu -> ptchg_grad -> _devData;
 #endif
+*/
     }
 
     upload_sim_to_constant_oei(gpu);
@@ -469,9 +470,9 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     get_oei_grad(gpu);
 
     // download gradients
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
       gpu -> gradULL -> Download();
-
+      cudaMemsetAsync(gpu -> gradULL -> _devData, 0, sizeof(QUICKULL)*3*gpu->natom);
       for (int i = 0; i< 3 * gpu->natom; i++) {
         QUICKULL valULL = gpu->gradULL->_hostData[i];
         QUICKDouble valDB;
@@ -486,21 +487,23 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 
         gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
       }
-#else
+/*#else
 
     gpu->grad->Download();
 
-#endif
+#endif*/
 
-/*  for(int i=0; i<3*gpu->natom; ++i){
-    printf("grad: %d %f \n", i, gpu->grad->_hostData[i]);
+    gpu->grad->DownloadSum(grad);
 
-  }
+/*    for(int i=0; i<3*gpu->natom; ++i){
+      printf("grad: %d %f %f \n", i, grad[i], gpu->grad->_hostData[i]);
+  
+    }
 */
     // download point charge gradients
     if(gpu -> nextatom > 0) {
 
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
         gpu -> ptchg_gradULL -> Download();
 
         for (int i = 0; i< 3 * gpu->nextatom; i++) {
@@ -517,12 +520,12 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 
             gpu->ptchg_grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
       }
-#else
+/*#else
 
       gpu->ptchg_grad->Download();
 
 #endif
-
+*/
 /*      for(int i=0; i<3*gpu->nextatom; ++i){
           printf("ptchg_grad: %d %f \n", i, gpu->ptchg_grad->_hostData[i]);
       }
@@ -531,13 +534,11 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
   
     }
 
-    gpu->grad->DownloadSum(grad);
-
   // ptchg_grad is no longer needed. reclaim the memory.
   if(gpu -> nextatom > 0) {
-#ifdef LEGACY_ATOMIC_ADD
+//#ifdef LEGACY_ATOMIC_ADD
       SAFE_DELETE(gpu -> ptchg_gradULL);
-#endif
+//#endif
       SAFE_DELETE(gpu -> ptchg_grad);
   }
 }
