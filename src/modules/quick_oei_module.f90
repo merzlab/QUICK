@@ -157,7 +157,7 @@ subroutine get1e()
 
       do i=1,mpi_nbasisn(mpirank)
          Ibas=mpi_nbasis(mpirank,i)
-      !   call kineticO(Ibas)
+         call kineticO(Ibas)
       enddo
       call cpu_time(timer_end%T1eT)
 
@@ -165,12 +165,17 @@ subroutine get1e()
       ! The second part is attraction part
       !-----------------------------------------------------------------
       call cpu_time(timer_begin%T1eV)
+
+#ifdef CUDA_MPIV
+      call gpu_get_oei(quick_qm_struct%o)
+#else
       do i=1,mpi_jshelln(mpirank)
          IIsh=mpi_jshell(mpirank,i)
          do JJsh=IIsh,jshell
             call attrashell(IIsh,JJsh)
          enddo
       enddo
+#endif
       call cpu_time(timer_end%T1eV)
 
       call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
