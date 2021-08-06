@@ -335,6 +335,7 @@ struct gpu_simulation_type {
     // multi-GPU variables
     char*                           mpi_bcompute;
     char*                           mpi_bxccompute;
+    char*                           mpi_boeicompute;
 
     int                             mpi_xcstart;
     int                             mpi_xcend;
@@ -405,6 +406,7 @@ struct gpu_basis_type {
 
     // For multi GPU version
     cuda_buffer_type<char>*           mpi_bcompute;
+    cuda_buffer_type<char>*           mpi_boeicompute;
 
     void upload_all();
     
