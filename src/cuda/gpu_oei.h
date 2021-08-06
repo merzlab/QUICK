@@ -199,21 +199,29 @@ __global__ void getOEI_kernel(){
     unsigned int iatom = (int) i/(jshell * jshell);
     unsigned int idx   = i - iatom * jshell * jshell;
 
-    int II = devSim.sorted_OEICutoffIJ[idx].x;
-    int JJ = devSim.sorted_OEICutoffIJ[idx].y;
+#ifdef CUDA_MPIV
+      if(devSim.mpi_boeicompute[idx] > 0){
+#endif
 
-    // get the shell numbers of selected shell pair
-    int ii = devSim.sorted_Q[II];
-    int jj = devSim.sorted_Q[JJ];
+        int II = devSim.sorted_OEICutoffIJ[idx].x;
+        int JJ = devSim.sorted_OEICutoffIJ[idx].y;
+        
+        // get the shell numbers of selected shell pair
+        int ii = devSim.sorted_Q[II];
+        int jj = devSim.sorted_Q[JJ];
+        
+        // get the quantum number (or angular momentum of shells, s=0, p=1 and so on.)
+        int iii = devSim.sorted_Qnumber[II];
+        int jjj = devSim.sorted_Qnumber[JJ];
+        
+        //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
+        
+        // compute coulomb attraction for the selected shell pair.  
+        iclass_oei(iii, jjj, ii, jj, iatom, totalatom);
 
-    // get the quantum number (or angular momentum of shells, s=0, p=1 and so on.)
-    int iii = devSim.sorted_Qnumber[II];
-    int jjj = devSim.sorted_Qnumber[JJ];
-    
-    //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
-
-    // compute coulomb attraction for the selected shell pair.  
-    iclass_oei(iii, jjj, ii, jj, iatom, totalatom);
+#ifdef CUDA_MPIV
+      }
+#endif
 
   }
 

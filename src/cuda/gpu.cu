@@ -1254,6 +1254,10 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
   gpu -> gpu_sim.Qshell_OEI = a; 
 
+#ifdef CUDA_MPIV
+  mgpu_oei_greedy_distribute();
+#endif
+
 /*  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
 
    int II = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x;
