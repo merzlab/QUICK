@@ -45,6 +45,8 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
 
             QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ-1, III-1, nbasis, nbasis);
 
+            if(devSim.is_oshell) DENSEJI += (QUICKDouble) LOC2(devSim.denseb, JJJ-1, III-1, nbasis, nbasis);
+
             if( III != JJJ ) DENSEJI *= 2.0;
 
             QUICKDouble constant =  devSim.cons[III-1] * devSim.cons[JJJ-1] * DENSEJI;
