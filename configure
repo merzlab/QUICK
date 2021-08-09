@@ -859,6 +859,11 @@ for buildtype in $buildtypes; do
 
 done
 
+# create common include folder
+if [ ! -d "$QUICK_HOME/build/include/common" ]; then
+  mkdir -p "$QUICK_HOME/build/include/common"
+fi
+
 #  !---------------------------------------------------------------------!
 #  ! Query system information                                            !
 #  !---------------------------------------------------------------------!
