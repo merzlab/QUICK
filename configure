@@ -601,6 +601,9 @@ cuda_debug_flags=''
 # compiler version specific flags
 fort_vspec_flags=''
 
+# external library specific flags
+dlfind_flags=''
+
 # set common folders
 libxcobjfolder=''
 libxcdevobjfolder=''
