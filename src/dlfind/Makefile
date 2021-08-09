@@ -20,7 +20,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS)
+FOR=$(FC) $(DLFIND_FLAGS)
 
 # modules used by more than one file
 OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o $(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
