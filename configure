@@ -781,6 +781,11 @@ if [ "$useprefix" = "true" ] && [ "$aminstall" = "false" ]; then
     fi
   done
 
+  # create common include folder
+  if [ ! -d "$quick_prefix/include/common" ]; then
+    mkdir -p "$quick_prefix/include/common"
+  fi
+
   # set install and uninstall types
   install_string='install'
   uninstall_string='uninstall'
