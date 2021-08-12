@@ -57,7 +57,12 @@ fflush(stdout);\
 #define MAX(A,B)    (A>=B?A:B)
 #define MIN(A,B)    (A<B?A:B)
 
-#define VY(a,b,c) LOC3(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+#define LOCSTORE(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x+blockIdx.x*blockDim.x+threadIdx.x]
+#define LOCVY(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*gridDim.x*blockDim.x+blockIdx.x*blockDim.x+threadIdx.x]
+
+//#define VY(a,b,c) LOC3(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+
 
 #define PRINTERROR(err, s) \
 {\

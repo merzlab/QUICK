@@ -38,12 +38,12 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
                            LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
              
             // multiply the integral value by normalization constants. 
-            QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOC2(store, i-1, j-1, STOREDIM, STOREDIM);
+            QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM);
 
             /*if( III == 10 && JJJ == 50 ) {
 
             printf("OEI debug: III JJJ I J iatm i j c1 c2 store Y %d %d %d %d %d %d %d %f %f %f %f\n", III, JJJ, I, J, iatom, i-1, j-1, devSim.cons[III-1], \
-            devSim.cons[JJJ-1], LOC2(store, i-1, j-1, STOREDIM, STOREDIM), Y);
+            devSim.cons[JJJ-1], LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM), Y);
             printf("OEI debug: dt1 dt2 dt3 dt4 dt5 dt6:  %d %d %d %d %d %d \n", LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis),\
             LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis));
             }*/
@@ -59,7 +59,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 /*#else
             QUICKADD(LOC2(devSim.o, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Y);
 #endif*/
-            //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOC2(store, i-1, j-1, STOREDIM, STOREDIM));
+            //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM));
 
         }
     }
@@ -67,7 +67,8 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 }
 
 
-__device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ , unsigned int iatom, unsigned int totalatom){
+__device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ , unsigned int iatom, unsigned int totalatom, \
+    QUICKDouble *YVerticalTemp, QUICKDouble *store){
 
     /*
      kAtom A, B  is the coresponding atom for shell II, JJ
@@ -107,14 +108,14 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
      Store array holds contracted integral values computed using VRR algorithm. 
      See J. Chem. Phys. 1986, 84, 3963−3974 for theoretical details.
      */
-    QUICKDouble store[STOREDIM*STOREDIM];
+    //QUICKDouble store[STOREDIM*STOREDIM];
 
     // initialize store array
 
     for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
         for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
             if (i < STOREDIM && j < STOREDIM) {
-                LOC2(store, j, i, STOREDIM, STOREDIM) = 0.0;
+                LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0.0;
             }
         }
     }
@@ -160,7 +161,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
 
             // compute boys function values, the third term of OS A20
-            QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
+//            QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
 
             FmT(I+J, U, YVerticalTemp);
 
@@ -217,7 +218,7 @@ __global__ void getOEI_kernel(){
         //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
         
         // compute coulomb attraction for the selected shell pair.  
-        iclass_oei(iii, jjj, ii, jj, iatom, totalatom);
+        iclass_oei(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
 
 #ifdef CUDA_MPIV
       }
