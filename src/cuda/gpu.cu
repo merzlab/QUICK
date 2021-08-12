@@ -237,7 +237,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 //-----------------------------------------------
 extern "C" void gpu_allocate_scratch_(){
 
-    gpu -> device_scratch           =   new device_scratch;
+    gpu -> scratch           =   new gpu_scratch;
 
     /* The sizes of these arrays must be (# blocks * # threads per block * store dimension). 
        Note 1: that store dimension would be 35*35 in OEI code and 84*84 in ERI code when we have F functions. We will choose the max here.
@@ -245,26 +245,26 @@ extern "C" void gpu_allocate_scratch_(){
     */
     unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
 
-    gpu -> device_scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
-    gpu -> device_scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
-    gpu -> device_scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
-    gpu -> device_scratch -> storeBB       = new cuda_buffer_type<QUICKDouble>(store_size);
-    gpu -> device_scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
-    gpu -> device_scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
+    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeBB       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
 
-    gpu -> gpu_sim.store         = gpu -> device_scratch -> store -> _devData;
-    gpu -> gpu_sim.store2        = gpu -> device_scratch -> store2 -> _devData;
-    gpu -> gpu_sim.storeAA       = gpu -> device_scratch -> storeAA -> _devData;
-    gpu -> gpu_sim.storeBB       = gpu -> device_scratch -> storeBB -> _devData;
-    gpu -> gpu_sim.storeCC       = gpu -> device_scratch -> storeCC -> _devData;
-    gpu -> gpu_sim.YVerticalTemp = gpu -> device_scratch -> YVerticalTemp _devData;
+    gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;
+    gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
+    gpu -> gpu_sim.storeAA       = gpu -> scratch -> storeAA -> _devData;
+    gpu -> gpu_sim.storeBB       = gpu -> scratch -> storeBB -> _devData;
+    gpu -> gpu_sim.storeCC       = gpu -> scratch -> storeCC -> _devData;
+    gpu -> gpu_sim.YVerticalTemp = gpu -> scratch -> YVerticalTemp -> _devData;
 
-    gpu -> device_scratch -> store -> DeleteCPU();
-    gpu -> device_scratch -> store2 -> DeleteCPU();
-    gpu -> device_scratch -> storeAA -> DeleteCPU();
-    gpu -> device_scratch -> storeBB -> DeleteCPU();
-    gpu -> device_scratch -> storeCC -> DeleteCPU();
-    gpu -> device_scratch -> YVerticalTemp -> DeleteCPU();
+    gpu -> scratch -> store -> DeleteCPU();
+    gpu -> scratch -> store2 -> DeleteCPU();
+    gpu -> scratch -> storeAA -> DeleteCPU();
+    gpu -> scratch -> storeBB -> DeleteCPU();
+    gpu -> scratch -> storeCC -> DeleteCPU();
+    gpu -> scratch -> YVerticalTemp -> DeleteCPU();
 
 }
 
@@ -273,12 +273,12 @@ extern "C" void gpu_allocate_scratch_(){
 //-----------------------------------------------
 extern "C" void gpu_deallocate_scratch_(){
 
-   SAFE_DELETE(gpu -> device_scratch -> store);
-   SAFE_DELETE(gpu -> device_scratch -> store2);
-   SAFE_DELETE(gpu -> device_scratch -> storeAA);
-   SAFE_DELETE(gpu -> device_scratch -> storeBB);
-   SAFE_DELETE(gpu -> device_scratch -> storeCC);
-   SAFE_DELETE(gpu -> device_scratch -> YVerticalTemp);
+   SAFE_DELETE(gpu -> scratch -> store);
+   SAFE_DELETE(gpu -> scratch -> store2);
+   SAFE_DELETE(gpu -> scratch -> storeAA);
+   SAFE_DELETE(gpu -> scratch -> storeBB);
+   SAFE_DELETE(gpu -> scratch -> storeCC);
+   SAFE_DELETE(gpu -> scratch -> YVerticalTemp);
 
 }
 
@@ -342,8 +342,6 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
     
     upload_para_to_const();
-
-    gpu_allocate_scratch();
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);

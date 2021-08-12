@@ -40,7 +40,7 @@ struct gpu_calculated_type {
 };
 
 // struct to hold large temporary device arrays
-struct device_scratch{
+struct gpu_scratch{
 
     cuda_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
     cuda_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
@@ -503,6 +503,7 @@ struct gpu_type {
     
     cuda_buffer_type<QUICKULL>*     intCount;
 
+    gpu_scratch*                 scratch;
     
 /*    
     // Method
