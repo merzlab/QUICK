@@ -235,7 +235,9 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 //-----------------------------------------------
 // allocate memory for device scratch 
 //-----------------------------------------------
-extern "C" gpu_allocate_scratch(){
+extern "C" void gpu_allocate_scratch_(){
+
+    gpu -> device_scratch           =   new device_scratch;
 
     /* The sizes of these arrays must be (# blocks * # threads per block * store dimension). 
        Note 1: that store dimension would be 35*35 in OEI code and 84*84 in ERI code when we have F functions. We will choose the max here.
@@ -269,7 +271,7 @@ extern "C" gpu_allocate_scratch(){
 //-----------------------------------------------
 // deallocate device scratch 
 //-----------------------------------------------
-extern "C" gpu_allocate_scratch(){
+extern "C" void gpu_deallocate_scratch_(){
 
    SAFE_DELETE(gpu -> device_scratch -> store);
    SAFE_DELETE(gpu -> device_scratch -> store2);
@@ -338,9 +340,10 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.imult            =   *imult;
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
-    gpu -> device_scratch           =   new device_scratch;
     
     upload_para_to_const();
+
+    gpu_allocate_scratch();
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -355,7 +358,9 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 
     PRINTDEBUG("FINISH SETUP")
 #endif
-    
+
+       
+ 
 }
 
 //Madu Manathunga: 08/31/2019
