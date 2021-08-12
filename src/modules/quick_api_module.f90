@@ -276,6 +276,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
 #endif
 
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_allocate_scratch()
+#endif
+
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
 
@@ -773,7 +777,11 @@ subroutine delete_quick_job(ierr)
   ierr=0
 
 #if defined CUDA || defined CUDA_MPIV
-    call delete(quick_method,ierr)
+  call delete(quick_method,ierr)
+#endif
+
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_deallocate_scratch()
 #endif
 
 #ifdef CUDA

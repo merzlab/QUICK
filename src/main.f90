@@ -133,7 +133,9 @@
 
 #endif
 
-
+#if defined CUDA || defined CUDA_MPIV
+    call gpu_allocate_scratch()
+#endif
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
@@ -321,6 +323,11 @@
 #if defined CUDA || defined CUDA_MPIV
     call delete(quick_method,ierr)
 #endif
+
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_deallocate_scratch()
+#endif
+
 
 #ifdef CUDA
     if (master) then
