@@ -39,6 +39,18 @@ struct gpu_calculated_type {
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
+// struct to hold large temporary device arrays
+struct device_scratch{
+
+    cuda_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
+    cuda_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
+    cuda_buffer_type<QUICKDouble>* storeAA;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* storeBB;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* storeCC;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* YVerticalTemp;  // holds boys function values
+
+};
+
 struct gpu_timer_type{
 
    double                           t_2elb; // time for eri load balancing in mgpu version
@@ -339,6 +351,15 @@ struct gpu_simulation_type {
 
     int                             mpi_xcstart;
     int                             mpi_xcend;
+
+    // pointers to temporary data structures
+    QUICKDouble*                    store;
+    QUICKDouble*                    store2;
+    QUICKDouble*                    storeAA;
+    QUICKDouble*                    storeBB;
+    QUICKDouble*                    storeCC;
+    QUICKDouble*                    YVerticalTemp;
+
 };
 
 struct gpu_basis_type {
