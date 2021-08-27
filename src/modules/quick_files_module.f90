@@ -267,7 +267,7 @@ module quick_files_module
 
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
-        write (io,'("| DATE FILE  :    ",a)') trim(dataFileName)
+        write (io,'("| DATA FILE  :    ",a)') trim(dataFileName)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
         return
