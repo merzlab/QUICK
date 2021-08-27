@@ -553,11 +553,11 @@ contains
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
         call gpu_upload_grad(quick_method%gradCutoff)
 
-        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
-
 #ifdef OSHELL
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
+
+        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
 #else 
 #ifdef MPIV
