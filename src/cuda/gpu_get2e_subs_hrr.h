@@ -37,7 +37,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole(int I, int J, int K, int L, \
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+                Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
             }
         }
     }
@@ -73,7 +73,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2(int I, int J, int K, int L, \
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM ) {
-                Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+                Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
             }
         }
     }
@@ -105,7 +105,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_1(int I, int J, int K, int L, \
     if (L == 2) {
         for (int i = 0; i<numAngularL; i++) {
             if (angularL[i] <= STOREDIM ) {
-                Y += coefAngularL[i] * LOC2(store, angularL[i]-1,
+                Y += coefAngularL[i] * LOCSTORE(store, angularL[i]-1,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1 , \
@@ -125,7 +125,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_1(int I, int J, int K, int L, \
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM ) {
-                Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+                Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
             }
         }
     }
@@ -157,7 +157,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_2(int I, int J, int K, int L, \
     if (J == 2) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularR[j] <= STOREDIM ) {
-                Y += coefAngularR[j] * LOC2(store,
+                Y += coefAngularR[j] * LOCSTORE(store,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1, \
@@ -180,7 +180,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_2(int I, int J, int K, int L, \
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM ) {
-                Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+                Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
             }
         }
     }
@@ -207,7 +207,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_5(int I, int J, int K, int L, \
     if ((K+L)== 6 && (I+J)==4) // k+l = 6, and i+j = 4
     {
         
-        QUICKDouble Y = LOC2(store,  \
+        QUICKDouble Y = LOCSTORE(store,  \
                              (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                         LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                         LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -232,7 +232,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_5(int I, int J, int K, int L, \
     
     for (int i = 0; i<numAngularL; i++) {
         if (angularL[i] <= STOREDIM ) {
-            Y += coefAngularL[i] * LOC2(store, angularL[i]-1,
+            Y += coefAngularL[i] * LOCSTORE(store, angularL[i]-1,
                                         (int) LOC3(devTrans, LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), \
                                                    LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), \
                                                    LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1 , \
@@ -260,7 +260,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_6(int I, int J, int K, int L, \
     if ((K+L)== 4 && (I+J)==6) // k+l = 4, and i+j = 6
     {
         
-        QUICKDouble Y = LOC2(store,  \
+        QUICKDouble Y = LOCSTORE(store,  \
                              (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                         LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                         LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -284,7 +284,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_6(int I, int J, int K, int L, \
     
     for (int j = 0; j<numAngularR; j++) {
         if (angularR[j] <= STOREDIM ) {
-            Y += coefAngularR[j] * LOC2(store,
+            Y += coefAngularR[j] * LOCSTORE(store,
                                         (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                                    LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                                    LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1, \
@@ -317,7 +317,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_3(int I, int J, int K, int L, \
     if ((K+L)== 5 && (I+J)==5) // k+l = 5, and i+j = 5
     {
         
-        QUICKDouble Y = LOC2(store,  \
+        QUICKDouble Y = LOCSTORE(store,  \
                  (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -343,7 +343,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_3(int I, int J, int K, int L, \
         
         for (int i = 0; i<numAngularL; i++) {
             if (angularL[i] <= STOREDIM ) {
-                Y += coefAngularL[i] * LOC2(store, angularL[i]-1,
+                Y += coefAngularL[i] * LOCSTORE(store, angularL[i]-1,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1 , \
@@ -368,7 +368,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_3(int I, int J, int K, int L, \
         
         for (int j = 0; j<numAngularR; j++) {
             if (angularR[j] <= STOREDIM ) {
-                Y += coefAngularR[j] * LOC2(store,
+                Y += coefAngularR[j] * LOCSTORE(store,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1, \
@@ -398,7 +398,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_3(int I, int J, int K, int L, \
         for (int i = 0; i<numAngularL; i++) {
             for (int j = 0; j<numAngularR; j++) {
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM ) {
-                    Y += coefAngularL[i] * coefAngularR[j] * LOC2(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
+                    Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
                 }
             }
         }
@@ -431,7 +431,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_4(int I, int J, int K, int L, \
     if ((K+L)== 5) // k+l = 5, and i = 3 and j = 3
     {
         
-        Y = LOC2(store,  \
+        Y = LOCSTORE(store,  \
                  (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -454,7 +454,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_4(int I, int J, int K, int L, \
         
         for (int j = 0; j<numAngularR; j++) {
             if (angularR[j] <= STOREDIM ) {
-                Y += coefAngularR[j] * LOC2(store,
+                Y += coefAngularR[j] * LOCSTORE(store,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1, \
@@ -479,7 +479,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_7(int I, int J, int K, int L, \
 {
     QUICKDouble Y = 0.0;
     if ((I+J) == 5) {
-        Y = LOC2(store,  \
+        Y = LOCSTORE(store,  \
                  (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                             LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -500,7 +500,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_7(int I, int J, int K, int L, \
         
         for (int i = 0; i<numAngularL; i++) {
             if (angularL[i] <= STOREDIM ) {
-                Y += coefAngularL[i] * LOC2(store, angularL[i]-1,
+                Y += coefAngularL[i] * LOCSTORE(store, angularL[i]-1,
                                             (int) LOC3(devTrans, LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), \
                                                        LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1 , \
@@ -524,7 +524,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_8(int I, int J, int K, int L, \
                                                    QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                                    QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    QUICKDouble Y = LOC2(store,  \
+    QUICKDouble Y = LOCSTORE(store,  \
                          (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -543,7 +543,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_9(int I, int J, int K, int L, \
                                                    QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                                    QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    QUICKDouble Y = LOC2(store,  \
+    QUICKDouble Y = LOCSTORE(store,  \
                          (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,
@@ -562,7 +562,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole2_10(int I, int J, int K, int L, 
                                                     QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                                     QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    QUICKDouble Y = LOC2(store,  \
+    QUICKDouble Y = LOCSTORE(store,  \
                          (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), \
                                     LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) + LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM)-1,

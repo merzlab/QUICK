@@ -887,7 +887,7 @@ contains
      use allmod
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_oshell_eri_module, only: getOshellEri, getOshellEriEnergy 
-     use quick_oei_module, only:get1eEnergy, get1e
+     use quick_oei_module, only:get1eEnergy, kineticO, attrashell
   
      implicit none
   
@@ -903,7 +903,19 @@ contains
   !  Step 1. evaluate 1e integrals
   !-----------------------------------------------------------------
   
-     call get1e()
+     ! compute kinetic integrals
+     do I=1,nbasis
+       call kineticO(I)
+     enddo
+
+     ! compute Coulomb attraction integrals
+     do I=1,jshell
+       do J=I,jshell
+         call attrashell(I,J)
+       enddo
+     enddo
+
+     call copySym(quick_qm_struct%o,nbasis)
 
      quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
   

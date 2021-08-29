@@ -39,6 +39,18 @@ struct gpu_calculated_type {
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
+// struct to hold large temporary device arrays
+struct gpu_scratch{
+
+    cuda_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
+    cuda_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
+    cuda_buffer_type<QUICKDouble>* storeAA;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* storeBB;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* storeCC;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    cuda_buffer_type<QUICKDouble>* YVerticalTemp;  // holds boys function values
+
+};
+
 struct gpu_timer_type{
 
    double                           t_2elb; // time for eri load balancing in mgpu version
@@ -67,6 +79,9 @@ struct gpu_cutoff_type {
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
     QUICKDouble                     gradCutoff;
+
+    // One electron pre-sorting cutoff
+    cuda_buffer_type<int2>*         sorted_OEICutoffIJ;
     
 };
 
@@ -161,6 +176,7 @@ struct gpu_simulation_type {
     QUICKDouble*                    sigrad2;    // basis set range
     
     int                             natom;
+    int                             nextatom;
     int                             nbasis;
     int                             nshell;
     int                             nprim;
@@ -175,6 +191,7 @@ struct gpu_simulation_type {
     int                             fStart;
     int                             ffStart;
     int                             maxL;
+    int                             Qshell_OEI; // number of Qshell pairs after OEI prescreening
 
 	//New XC implementation
     int npoints;                                //Total number of packed grid points
@@ -247,9 +264,11 @@ struct gpu_simulation_type {
     //charge and atom type
     int*                            iattype;
     QUICKDouble*                    chg;
+    QUICKDouble*                    allchg; // charges of nuclei and external charges for oei
     
     // Some more infos about basis function
     QUICKDouble*                    xyz;
+    QUICKDouble*                    allxyz; // coordinates of nuclei and external charges for oei
 /*
     int*                            first_basis_function;
     int*                            last_basis_function;
@@ -288,6 +307,7 @@ struct gpu_simulation_type {
     
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;
+    QUICKDouble*                    Xcoeff_oei; // precomputed overlap prefactor for oei
     QUICKDouble*                    expoSum;
     QUICKDouble*                    weightedCenterX;
     QUICKDouble*                    weightedCenterY;
@@ -303,6 +323,7 @@ struct gpu_simulation_type {
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
     QUICKDouble                     gradCutoff;
+    int2*                           sorted_OEICutoffIJ;
     
     
     // for ERI generator
@@ -315,7 +336,9 @@ struct gpu_simulation_type {
     
     // For Grad
     QUICKDouble*                    grad;
+    QUICKDouble*                    ptchg_grad;
     QUICKULL*                       gradULL;
+    QUICKULL*                       ptchg_gradULL;
   
     // mpi variable definitions
     int                             mpirank;
@@ -324,9 +347,19 @@ struct gpu_simulation_type {
     // multi-GPU variables
     char*                           mpi_bcompute;
     char*                           mpi_bxccompute;
+    char*                           mpi_boeicompute;
 
     int                             mpi_xcstart;
     int                             mpi_xcend;
+
+    // pointers to temporary data structures
+    QUICKDouble*                    store;
+    QUICKDouble*                    store2;
+    QUICKDouble*                    storeAA;
+    QUICKDouble*                    storeBB;
+    QUICKDouble*                    storeCC;
+    QUICKDouble*                    YVerticalTemp;
+
 };
 
 struct gpu_basis_type {
@@ -377,6 +410,7 @@ struct gpu_basis_type {
     cuda_buffer_type<int>*          sorted_Q;
     cuda_buffer_type<QUICKDouble>*  gccoeff;
     cuda_buffer_type<QUICKDouble>*  Xcoeff;                     // 4-dimension one
+    cuda_buffer_type<QUICKDouble>*  Xcoeff_oei;                 // 4-dimension one, precomputed overlap prefactor for oei
     cuda_buffer_type<QUICKDouble>*  expoSum;                    // 4-dimension one
     cuda_buffer_type<QUICKDouble>*  weightedCenterX;            // 4-dimension one
     cuda_buffer_type<QUICKDouble>*  weightedCenterY;            // 4-dimension one
@@ -393,6 +427,7 @@ struct gpu_basis_type {
 
     // For multi GPU version
     cuda_buffer_type<char>*           mpi_bcompute;
+    cuda_buffer_type<char>*           mpi_boeicompute;
 
     void upload_all();
     
@@ -431,6 +466,7 @@ struct gpu_type {
 
     // Molecule specification part
     int                             natom;
+    int                             nextatom;
     int                             nbasis;
     int                             nElec;
     int                             imult;
@@ -445,13 +481,17 @@ struct gpu_type {
     
     cuda_buffer_type<int>*          iattype;
     cuda_buffer_type<QUICKDouble>*  xyz;
+    cuda_buffer_type<QUICKDouble>*  allxyz; // coordinates of nuclei and external point charges
     cuda_buffer_type<QUICKDouble>*  chg;
+    cuda_buffer_type<QUICKDouble>*  allchg; // charges of nuclei and external point charges
     cuda_buffer_type<DFT_calculated_type>*
                                     DFT_calculated;
     
     // For gradient
     cuda_buffer_type<QUICKDouble>*  grad;
+    cuda_buffer_type<QUICKDouble>*  ptchg_grad;
     cuda_buffer_type<QUICKULL>*     gradULL;
+    cuda_buffer_type<QUICKULL>*     ptchg_gradULL;
 
     gpu_calculated_type*            gpu_calculated;
     gpu_basis_type*                 gpu_basis;
@@ -463,6 +503,7 @@ struct gpu_type {
     
     cuda_buffer_type<QUICKULL>*     intCount;
 
+    gpu_scratch*                 scratch;
     
 /*    
     // Method

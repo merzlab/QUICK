@@ -133,7 +133,9 @@
 
 #endif
 
-
+#if defined CUDA || defined CUDA_MPIV
+    call gpu_allocate_scratch()
+#endif
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
@@ -214,6 +216,9 @@
       quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
  
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+
+      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
     endif
 #endif
 
@@ -318,6 +323,11 @@
 #if defined CUDA || defined CUDA_MPIV
     call delete(quick_method,ierr)
 #endif
+
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_deallocate_scratch()
+#endif
+
 
 #ifdef CUDA
     if (master) then

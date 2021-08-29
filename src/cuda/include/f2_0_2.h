@@ -16,10 +16,10 @@ __device__ __inline__  void h2_0_2(QUICKDouble* YVerticalTemp, QUICKDouble* stor
     f_0_2_t f_0_2_0 ( f_0_1_0, f_0_1_1, VY( 0, 0, 0 ), VY( 0, 0, 1 ), CDtemp, ABcom, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz);
 
     // WRITE LAST FOR I =            0  J=           2
-    LOC2(store,  0,  4, STOREDIM, STOREDIM) = f_0_2_0.x_0_4 ;
-    LOC2(store,  0,  5, STOREDIM, STOREDIM) = f_0_2_0.x_0_5 ;
-    LOC2(store,  0,  6, STOREDIM, STOREDIM) = f_0_2_0.x_0_6 ;
-    LOC2(store,  0,  7, STOREDIM, STOREDIM) = f_0_2_0.x_0_7 ;
-    LOC2(store,  0,  8, STOREDIM, STOREDIM) = f_0_2_0.x_0_8 ;
-    LOC2(store,  0,  9, STOREDIM, STOREDIM) = f_0_2_0.x_0_9 ;
+    LOCSTORE(store,  0,  4, STOREDIM, STOREDIM) = f_0_2_0.x_0_4 ;
+    LOCSTORE(store,  0,  5, STOREDIM, STOREDIM) = f_0_2_0.x_0_5 ;
+    LOCSTORE(store,  0,  6, STOREDIM, STOREDIM) = f_0_2_0.x_0_6 ;
+    LOCSTORE(store,  0,  7, STOREDIM, STOREDIM) = f_0_2_0.x_0_7 ;
+    LOCSTORE(store,  0,  8, STOREDIM, STOREDIM) = f_0_2_0.x_0_8 ;
+    LOCSTORE(store,  0,  9, STOREDIM, STOREDIM) = f_0_2_0.x_0_9 ;
 }

@@ -168,6 +168,8 @@ contains
 
         call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
+        call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
 #ifdef CUDA_MPIV
       timer_begin%T2elb = timer_end%T2elb
       call mgpu_get_2elb_time(timer_end%T2elb)

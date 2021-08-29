@@ -183,6 +183,164 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 }
 
 //--------------------------------------------------------
+// Function to distribute sorted OEI shell information among nodes
+//--------------------------------------------------------
+void mgpu_oei_greedy_distribute(){
+
+    // Total number of items to distribute
+    int nitems=gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell;
+
+    // Array to store total number of items each core would have
+    int tot_pcore[gpu->mpisize];
+
+#ifdef DEBUG
+    // Save shell indices for each core
+    int2 mpi_qidx[gpu->mpisize][nitems];
+
+    // Keep track of primitive count
+    int2 mpi_pidx[gpu->mpisize][nitems];
+
+    // Keep track of shell type
+    int2 qtypes[gpu->mpisize][nitems];
+#endif
+
+    // Save a set of flags unique to each core, these will be uploaded
+    // to GPU by responsible cores
+    char mpi_flags[gpu->mpisize][nitems];
+
+    // Keep track of total primitive value of each core
+    int tot_pval[gpu->mpisize];
+
+    // Keep track of how many shell types each core has
+    // ss, sp, sd, ps, pp, pd, dd, dp, dd
+    int qtype_pcore[gpu->mpisize][16];
+
+    //set arrays to zero
+    memset(tot_pcore,0, sizeof(int)*gpu->mpisize);
+    memset(mpi_flags,0,sizeof(char)*gpu->mpisize*nitems);
+    memset(tot_pval,0,sizeof(int)*gpu->mpisize);
+    memset(qtype_pcore,0,sizeof(int)*gpu->mpisize*16);
+
+#ifdef DEBUG
+    memset(mpi_qidx,0,sizeof(int2)*gpu->mpisize*nitems);
+    memset(mpi_pidx,0,sizeof(int2)*gpu->mpisize*nitems);
+    memset(qtypes,0,sizeof(int2)*gpu->mpisize*nitems);
+#endif
+
+#ifdef DEBUG
+    fprintf(gpu->debugFile," Greedy distribute OEI Qshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+    int q1_idx, q2_idx;
+#endif
+
+    if(nitems > CUDA_MPIV_MINBASIS){
+
+        int  q1, q2, p1, p2, psum, minp, min_core;
+        // Helps to store shell types per each core
+        int a=0;
+
+        // Sort s,p,d for the time being, increase the value by one to facilitate sorting
+        for(int q1_typ=0; q1_typ<4; q1_typ++){
+            for(int q2_typ=0; q2_typ<4; q2_typ++){
+
+
+                //Go through items
+                for (int i = 0; i<nitems; i++) {
+
+                    // Get the shell type
+                    q1     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].x];
+                    q2     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].y];
+
+                    // Check if the picked shell types match currently interested shell types
+                    if(q1 == q1_typ && q2 == q2_typ){
+
+                        // Find out the core with least number of primitives of the current shell types
+                        min_core = 0;       // Assume master has the lowest number of primitives
+                        minp = tot_pval[0]; // Set master's primitive count as the lowest
+                        for(int impi=0; impi<gpu->mpisize;impi++){
+                            if(minp > tot_pval[impi]){
+                                minp = tot_pval[impi];
+                                min_core = impi;
+                            }
+                        }
+
+                        // Store the primitive value in the total primitive value counter
+                        p1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].x]];
+                        p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].y]];
+                        psum=p1+p2;
+                        tot_pval[min_core] += psum;
+                        
+                        // Save the flag
+                        mpi_flags[min_core][i] = 1;
+                        
+                        // Store shell types for debugging
+                        qtype_pcore[min_core][a] +=1;
+
+#ifdef DEBUG            
+                        //Get the q indices
+                        q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].x];
+                        q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_OEICutoffIJ ->_hostData[i].y];
+                        
+                        //Assign the indices for corresponding core
+                        mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
+                        mpi_qidx[min_core][tot_pcore[min_core]].y = q2_idx;
+                        
+                        //Store primitve number for debugging
+                        mpi_pidx[min_core][tot_pcore[min_core]].x = p1;
+                        mpi_pidx[min_core][tot_pcore[min_core]].y = p2;
+                        
+                        // Store the Qshell type for debugging
+                        qtypes[min_core][tot_pcore[min_core]].x = q1;
+                        qtypes[min_core][tot_pcore[min_core]].y = q2;
+#endif 
+
+                        // Increase the counter for minimum core
+                        tot_pcore[min_core] += 1;
+                    }   
+                }   
+
+                // Reset the primitive counter for current shell type
+                memset(tot_pval,0,sizeof(int)*gpu->mpisize);
+                a++;
+            }
+        }
+
+    }else{
+        // set all flags of master to true if nitems is less than minimum amount
+        memset(&mpi_flags[0][0],1,sizeof(char)*nitems);
+    }
+
+#ifdef DEBUG
+    // Print information for debugging
+    for(int impi=0; impi<gpu->mpisize; impi++){
+        for(int icount=0; icount<tot_pcore[impi]; icount++){
+            fprintf(gpu->debugFile," Greedy Distribute OEI GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y, \
+            qtypes[impi][icount].x, qtypes[impi][icount].y, mpi_pidx[impi][icount].x, mpi_pidx[impi][icount].y);
+        }
+    }
+
+    for(int impi=0; impi<gpu->mpisize;impi++){
+        fprintf(gpu->debugFile," Greedy Distribute OEI GPU: %i ss= %i sp= %i sd= %i sf= %i ps= %i pp= %i pd= %i pf= %i ds= %i dp= %i dd= %i df= %i fs= %i fp=%i fd=%i ff=%i \n",impi, qtype_pcore[impi][0], \
+        qtype_pcore[impi][1], qtype_pcore[impi][2], qtype_pcore[impi][3], qtype_pcore[impi][4], qtype_pcore[impi][5], \
+        qtype_pcore[impi][6], qtype_pcore[impi][7], qtype_pcore[impi][8], qtype_pcore[impi][9], qtype_pcore[impi][10],\
+        qtype_pcore[impi][11], qtype_pcore[impi][12], qtype_pcore[impi][13], qtype_pcore[impi][14], qtype_pcore[impi][15]);
+    }
+
+    fprintf(gpu->debugFile," Greedy Distribute OEI GPU: %i Total shell pairs for this GPU= %i \n", gpu -> mpirank, tot_pcore[gpu -> mpirank]);
+#endif
+
+    // Upload the flags to GPU
+    gpu -> gpu_basis -> mpi_boeicompute = new cuda_buffer_type<char>(nitems);
+
+    memcpy(gpu -> gpu_basis -> mpi_boeicompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(char)*nitems);
+
+    gpu -> gpu_basis -> mpi_boeicompute -> Upload();
+    gpu -> gpu_sim.mpi_boeicompute  = gpu -> gpu_basis -> mpi_boeicompute  -> _devData;
+
+}
+
+
+
+//--------------------------------------------------------
 // Method to distribute sorted shell information among nodes
 //--------------------------------------------------------
 void mgpu_eri_greedy_distribute(){
