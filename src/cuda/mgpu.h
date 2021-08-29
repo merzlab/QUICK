@@ -305,7 +305,6 @@ void mgpu_oei_greedy_distribute(){
         }
 
     }else{
-        printf("too small #shells");
         // set all flags of master to true if nitems is less than minimum amount
         memset(&mpi_flags[0][0],1,sizeof(char)*nitems);
     }
