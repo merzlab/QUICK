@@ -61,6 +61,7 @@ echo  "
                      production.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
+      --cew          Compiles source code necessary for CEW QM/MM with AMBER.
       --verbose      Enable full compilation output
       --lapack       Use matrix diagonalizer from LAPACK. BLASROOT environment
                      variable must be set with the correct blas installation path. 
@@ -625,6 +626,7 @@ nof='no'
 
 # amber related variables
 aminstall='false'
+cew='no'
 
 # control compiler output
 verbose='@'
@@ -654,6 +656,7 @@ while [ $# -gt 0 ]; do
     --shared)      shared='yes';;
     --nof)         nof='yes';;
     --amber)       aminstall='true';;
+    --cew)         cew='yes';;
     --lapack)      lapack='yes';;
     --mkl)         mkl='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
@@ -1145,8 +1148,11 @@ for buildtype in $buildtypes; do
 
   # set amber installation flags
   if [ "$aminstall" = "true" ]; then
-      fort_flags="$fort_flags -DCEW"
-      ldflags="$ldflags -L$quick_prefix/lib -lcew"
+      ldflags="$ldflags -L$quick_prefix/lib"
+      if [ "$cew" = "yes" ]; then
+          fort_flags="$fort_flags -DCEW"
+          ldflags="$ldflags -lcew"
+      fi
   fi
 
   
