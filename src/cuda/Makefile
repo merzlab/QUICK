@@ -26,7 +26,7 @@ LIBXC_CUDA_FLAGS = -I$(libxcfolder)
 
 CXXOBJ=$(objfolder)/xc_redistribute.o
 
-CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_oei.o 
+CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_tci.o $(objfolder)/gpu_oei.o 
 
 CUDAXCOBJ=$(objfolder)/gpu_getxc.o
 
