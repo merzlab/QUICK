@@ -89,6 +89,8 @@ void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
+void get_tci(_gpu_type gpu);
+
 // global [get2e_kernel]
 __global__ void get2e_kernel();
 __global__ void get2e_kernel_spdf();
@@ -224,8 +226,22 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 __device__ void iclass_oshell_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 
+__device__ void iclass_tci(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf3(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf4(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf5(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf6(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf7(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf9(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf10(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+
+
 void upload_sim_to_constant(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);
+void upload_sim_to_constant_tci(_gpu_type gpu);
 
 void upload_para_to_const();
 char *trim(char *s);
@@ -234,6 +250,7 @@ char *trim(char *s);
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
 __device__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
+__device__ __forceinline__ void addint_tci(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* vals);
 
 __device__ QUICKDouble hrrwhole(int I, int J, int K, int L, \
@@ -520,6 +537,17 @@ __device__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
+                        int KLMNAx, int KLMNAy, int KLMNAz,
+                        int KLMNBx, int KLMNBy, int KLMNBz,
+                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+
+__device__ int lefthrr_tci(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+                       QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
+                       int KLMNAx, int KLMNAy, int KLMNAz,
+                       int KLMNBx, int KLMNBy, int KLMNBz,
+                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+__device__ int lefthrr_tci23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                         int KLMNAx, int KLMNAy, int KLMNAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
