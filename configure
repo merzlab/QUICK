@@ -1324,7 +1324,6 @@ modfolder=$QUICK_HOME/src/modules
 
 EOF
 
-# modified 2021-09-07 by Kiyoto Aramis Tanemura. Introduce environmental variable for QUICK/ASE interface
 #  !---------------------------------------------------------------------!
 #  ! Generate quick.rc in install directory                              !
 #  !---------------------------------------------------------------------!
@@ -1334,7 +1333,6 @@ export QUICK_BASIS=\$QUICK_INSTALL/basis
 export PATH=\$QUICK_INSTALL/bin:\$PATH
 export ASE_QUICK_COMMAND=$installer
 EOF
-# end modifications by Kiyoto Aramis Tanemura on 2021-09-07
 
 if [ "$shared" = 'yes' ]; then
 libpaths=''
