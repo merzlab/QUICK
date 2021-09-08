@@ -1884,6 +1884,23 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
 }
 
 
+//-----------------------------------------------
+//  upload information for LRI calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
+{
+
+    gpu -> lri_data = new lri_data_type;
+    
+    gpu -> lri_data -> zeta = *zeta;
+    gpu -> lri_data -> cc   = new cuda_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
+    gpu -> lri_data -> cc -> Upload();
+    
+    gpu -> gpu_sim.lri_zeta = gpu -> lri_data -> zeta;
+    gpu -> gpu_sim.lri_cc   = gpu -> lri_data -> cc -> _devData;  
+
+}
+
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
 
@@ -3362,4 +3379,11 @@ extern "C" void gpu_delete_libxc_(int *ierr)
 }
 
 
+//-------------------------------------------------
+//  delete information uploaded for LRI calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_lri_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> cc);
+}
 
