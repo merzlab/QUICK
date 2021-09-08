@@ -160,6 +160,12 @@ struct XC_quadrature_type{
         int smem_size;                                 //size of shared memory buffer in xc kernels 
 };
 
+struct lri_data_type{
+
+    int zeta;
+    cuda_buffer_type<QUICKDouble>* cc;
+
+};
 
 struct gpu_simulation_type {
     
@@ -360,6 +366,10 @@ struct gpu_simulation_type {
     QUICKDouble*                    storeCC;
     QUICKDouble*                    YVerticalTemp;
 
+    // for long range integrals
+    QUICKDouble                     lri_zeta;
+    QUICKDouble*                    lri_cc;
+
 };
 
 struct gpu_basis_type {
@@ -503,8 +513,9 @@ struct gpu_type {
     
     cuda_buffer_type<QUICKULL>*     intCount;
 
-    gpu_scratch*                 scratch;
+    gpu_scratch*                    scratch;
     
+    lri_data_type*                  lri_data;
 /*    
     // Method
     cuda_gpu_type();
