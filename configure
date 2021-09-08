@@ -1331,7 +1331,7 @@ cat > "$quick_prefix/quick.rc" << EOF
 export QUICK_INSTALL=$quick_prefix
 export QUICK_BASIS=\$QUICK_INSTALL/basis
 export PATH=\$QUICK_INSTALL/bin:\$PATH
-export ASE_QUICK_COMMAND=$installer
+export ASE_QUICK=$installer
 EOF
 
 if [ "$shared" = 'yes' ]; then
