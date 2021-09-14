@@ -597,12 +597,13 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 #endif
 */
 
-    /*for (int i = 0; i< gpu->nbasis; i++) {
+/*    int idxf90=0;
+    for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {            
             printf("OEI host O: %d %d %f %f \n", i, j, LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis), o[idxf90++]);
         }
-    }*/
-
+    }
+*/
     gpu -> gpu_calculated -> o    -> DownloadSum(o);
 
     SAFE_DELETE(gpu -> gpu_calculated -> o);
