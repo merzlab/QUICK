@@ -90,6 +90,7 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
 void get_tci(_gpu_type gpu);
+void upload_para_to_const_tci();
 
 // global [get2e_kernel]
 __global__ void get2e_kernel();
@@ -226,18 +227,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 __device__ void iclass_oshell_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 
-__device__ void iclass_tci(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf3(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf4(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf5(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf6(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf7(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf9(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf10(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-
+__device__ void iclass_tci(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_tci_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
 void upload_sim_to_constant(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);

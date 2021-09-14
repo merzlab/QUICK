@@ -22,26 +22,20 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci(int I, int J, int K, int L, 
 {
     QUICKDouble Y;
     
-    int angularL[12], angularR[12];
-    QUICKDouble coefAngularL[12], coefAngularR[12];
+    int angularL[12];
+    QUICKDouble coefAngularL[12];
     Y = (QUICKDouble) 0.0;
     
     int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
                               LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                               J, coefAngularL, angularL);
-    int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
-                              LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
-                              LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
-                              L, coefAngularR, angularR);
     for (int i = 0; i<numAngularL; i++) {
-        for (int j = 0; j<numAngularR; j++) {
-            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                Y += coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1 , STOREDIM, STOREDIM);
-            }
+            if (angularL[i] <= STOREDIM) {
+                Y += coefAngularL[i]  * LOCSTORE(store, angularL[i]-1, 0 , STOREDIM, STOREDIM);
         }
     }
-    Y = Y * devSim.cons[III-1] * devSim.cons[JJJ-1] * devSim.cons[KKK-1] * devSim.cons[LLL-1];
+    Y = Y * devSim.cons[III-1] * devSim.cons[JJJ-1];
     //#endif
     return Y;
 }
