@@ -340,7 +340,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.imult            =   *imult;
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
-    
+    gpu -> gpu_sim.use_cew          =   false;   
+ 
     upload_para_to_const();
 
 #ifdef DEBUG
