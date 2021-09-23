@@ -382,6 +382,14 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
     }
 
     gpu -> gpu_sim.is_oshell = *is_oshell;
+}
+
+//-----------------------------------------------
+//  set cew variables
+//-----------------------------------------------
+extern "C" void gpu_set_cew_(bool *use_cew){
+
+    gpu -> use_cew = *use_cew;
 
 }
 
@@ -1897,6 +1905,16 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
     gpu -> lri_data -> cc -> Upload();
     
     gpu -> gpu_sim.lri_zeta = gpu -> lri_data -> zeta;
+
+/*    printf("zeta %f \n", gpu -> gpu_sim.lri_zeta);
+
+    for(int i=0; i < (gpu->natom+gpu->nextatom); i++)
+      printf("cc %d %f \n", i, gpu -> lri_data -> cc -> _hostData[i]);
+
+    for(int iatom=0; iatom < (gpu->natom+gpu->nextatom); iatom++)
+      printf("allxyz %d %f %f %f \n", iatom, LOC2( gpu->allxyz->_hostData, 0, iatom, 3, devSim.natom+devSim.nextatom),\
+      LOC2( gpu->allxyz->_hostData, 1, iatom, 3, devSim.natom+devSim.nextatom), LOC2( gpu->allxyz->_hostData, 2, iatom, 3, devSim.natom+devSim.nextatom));
+*/
     gpu -> gpu_sim.lri_cc   = gpu -> lri_data -> cc -> _devData;  
 
 }
