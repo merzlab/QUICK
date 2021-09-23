@@ -161,7 +161,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel_spdf2()
 #endif
 
 #ifdef CUDA_MPIV
-        if(devSim.mpi_bcompute[a] > 0){
+        if(devSim.mpi_bcompute[b] > 0){
 #endif 
 
         int II = devSim.sorted_YCutoffIJ[b].x;
