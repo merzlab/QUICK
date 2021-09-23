@@ -516,6 +516,7 @@ struct gpu_type {
     gpu_scratch*                    scratch;
     
     lri_data_type*                  lri_data;
+    bool                            use_cew;
 /*    
     // Method
     cuda_gpu_type();
