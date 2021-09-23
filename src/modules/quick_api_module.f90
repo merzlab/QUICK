@@ -181,6 +181,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   use quick_exception_module
   use quick_method_module
 
+#ifdef CEW 
+  use quick_cew_module, only : quick_cew
+#endif
+
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -285,6 +289,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
 #if defined CUDA || defined CUDA_MPIV
   call upload(quick_method, ierr)
+
+#ifdef CEW
+  call upload(quick_cew, ierr)
+#endif
 #endif
 
   ! save atom number, number of atom types and number of point charges
