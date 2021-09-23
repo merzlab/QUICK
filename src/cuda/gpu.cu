@@ -389,7 +389,7 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
 //-----------------------------------------------
 extern "C" void gpu_set_cew_(bool *use_cew){
 
-    gpu -> use_cew = *use_cew;
+    gpu -> gpu_sim.use_cew = *use_cew;
 
 }
 

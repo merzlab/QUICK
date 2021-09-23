@@ -369,6 +369,7 @@ struct gpu_simulation_type {
     // for long range integrals
     QUICKDouble                     lri_zeta;
     QUICKDouble*                    lri_cc;
+    bool                            use_cew;
 
 };
 
@@ -516,7 +517,7 @@ struct gpu_type {
     gpu_scratch*                    scratch;
     
     lri_data_type*                  lri_data;
-    bool                            use_cew;
+    
 /*    
     // Method
     cuda_gpu_type();
