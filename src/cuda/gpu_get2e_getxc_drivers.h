@@ -172,7 +172,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
     cudaEventRecord(start, 0);
 #endif
 
-    if(gpu -> gpu_sim.method == HF){
+    if(gpu -> gpu_sim.method == HF && !gpu->gpu_sim.use_cew){
 
       gpu -> grad -> DownloadSum(grad);
 
@@ -618,6 +618,8 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
 extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 {
+
+    cudaMemset(gpu -> gradULL -> _devData, 0, sizeof(QUICKULL)*3*gpu->natom);
 
     // upload point charge grad vector
     if(gpu -> nextatom > 0) {
