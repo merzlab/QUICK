@@ -90,6 +90,7 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
 void get_tci(_gpu_type gpu);
+void get_tci_grad(_gpu_type gpu);
 void upload_para_to_const_tci();
 
 // global [get2e_kernel]
@@ -229,6 +230,37 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 
 __device__ void iclass_tci(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 __device__ void iclass_tci_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+
+__device__ void iclass_oshell_tci_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
+__device__ void iclass_tci_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
+__device__ void iclass_oshell_tci_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
+__device__ void iclass_tci_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
+
+__device__ void hrrwholegrad_tci(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+                                             QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
+                                             int I, int J, int III, int JJJ, int IJKLTYPE, \
+                                             QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, \
+                                             QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                             QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz);
+
+__device__ void hrrwholegrad_tci2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+                                             QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
+                                             int I, int J, int III, int JJJ, int IJKLTYPE, \
+                                             QUICKDouble* store, QUICKDouble AA, QUICKDouble BB,\
+                                             QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                             QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz);
+
+__device__ void hrrwholegrad_tci2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
+                                              int I, int J, int III, int JJJ, int IJKLTYPE,
+                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, \
+                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz);
+
 
 void upload_sim_to_constant(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);
