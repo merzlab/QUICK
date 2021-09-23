@@ -43,23 +43,10 @@ namespace tci{
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_tci_subs.h"
-//#include "gpu_tci_subs_grad.h"
+#include "gpu_tci_subs_grad.h"
 
 
 //===================================
-
-#undef int_spd
-#define int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-//#include "gpu_tci_subs_grad.h"
 
 #undef int_spd
 #undef int_spdf
@@ -72,41 +59,12 @@ namespace tci{
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
-//#include "gpu_tci_subs_grad.h"
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#define int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-//#include "gpu_tci_subs_grad.h"
+#include "gpu_tci_subs_grad.h"
 
 
 #ifdef CUDA_SPDF
 //===================================
 
-/*
-#undef int_spd
-#define int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-*/
-
 #undef int_spd
 #undef int_spdf
 #define int_spdf2
@@ -120,120 +78,6 @@ namespace tci{
 #undef int_spdf10
 #include "gpu_tci_subs.h"
 
-/*
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#define int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#define int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#define int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#define int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#define int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#define int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#define int_spdf9
-#undef int_spdf10
-#include "gpu_tci_subs.h"
-
-#undef int_spd
-#undef int_spdf
-#undef int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#define int_spdf10
-#include "gpu_tci_subs.h"
-*/
 #endif
 
 #undef int_spd
@@ -306,7 +150,7 @@ void get_tci(_gpu_type gpu)
 
 
 // interface to call Kernel subroutine
-/*
+
 void get_tci_grad(_gpu_type gpu)
 {
 
@@ -317,7 +161,7 @@ void get_tci_grad(_gpu_type gpu)
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
-        QUICK_SAFE_CALL((get_tci_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_tci_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((get_tci_grad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-3
@@ -330,7 +174,7 @@ void get_tci_grad(_gpu_type gpu)
 //    nvtxRangePop();
 
 }
-*/
+
 
 // =======   KERNEL SECTION ===========================
 void upload_para_to_const_tci(){
