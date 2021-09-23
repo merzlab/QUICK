@@ -124,8 +124,15 @@ subroutine get1e()
 
 #ifdef CEW
          if ( quick_cew%use_cew ) then
-            !quick_qm_struct%o = 0.d0
+            
+            call cpu_time(timer_begin%Tcew)
+
             call quick_cew_prescf()
+
+            call cpu_time(timer_end%Tcew)
+
+            timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
+
          end if
 #endif
          
