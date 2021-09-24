@@ -41,8 +41,14 @@ Subroutine deallocate_calculated
 end subroutine deallocate_calculated
 
 subroutine deallocateall(ierr)
+
   use allmod
   use quick_gridpoints_module
+
+#ifdef CEW
+  use quick_cew_module, only : quick_cew
+#endif
+
   implicit none
   integer, intent(inout) :: ierr
 
@@ -50,11 +56,13 @@ subroutine deallocateall(ierr)
     call  dealloc(quick_qm_struct)
     call  deallocate_calculated
 
-    if (quick_method%DFT) then
-    call  deform_dft_grid(quick_dft_grid)
+    if (quick_method%DFT &
+#ifdef CEW
+      .or. quick_cew%use_cew &
+#endif
+    ) then
+      call  deform_dft_grid(quick_dft_grid)
     endif
-
-
 
 end subroutine deallocateall
 
