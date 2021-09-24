@@ -10,6 +10,9 @@ module quick_cew_module
   public :: quick_cew_prescf
   public :: quick_cew_grad
 
+#if defined CUDA || defined CUDA_MPIV
+  public :: upload
+#endif
   
   private
 
@@ -61,7 +64,13 @@ module quick_cew_module
      end subroutine cew_accdens
   end interface
 
-  
+#if defined CUDA || defined CUDA_MPIV
+  ! MM: interface for GPU uploading of cew info
+  interface upload
+    module procedure upload_cew
+  end interface upload
+#endif  
+
 contains
 
   
@@ -1040,6 +1049,20 @@ end do
 
 
   end subroutine quick_cew_grad_quad
+
+#if defined CUDA || defined CUDA_MPIV
+  ! MM: upload cew info onto GPU
+  subroutine upload_cew(self, ierr)
+
+    implicit none
+    type(quick_cew_type), intent(in) :: self
+    integer, intent(out) :: ierr
+
+    ierr=0
+    call gpu_set_cew(self%use_cew)
+
+  end subroutine upload_cew
+#endif
   
 end module quick_cew_module
 #endif
