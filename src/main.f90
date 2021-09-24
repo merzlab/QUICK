@@ -35,6 +35,9 @@
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module, only: optimize
     use quick_sad_guess_module, only: getSadGuess
+#ifdef CEW
+    use quick_cew_module, only : quick_cew
+#endif
 
     implicit none
 
@@ -179,6 +182,10 @@
       call gpu_upload_xyz(xyz)
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
+
+!#ifdef CEW
+    call gpu_set_cew(.true.,ierr) 
+!#endif
 #endif
 
     !------------------------------------------------------------------
