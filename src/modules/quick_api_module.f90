@@ -543,6 +543,10 @@ subroutine run_quick(self,ierr)
 #if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
+
+#ifdef CEW
+  call gpu_set_cew(quick_cew%use_cew,ierr)
+#endif
 #endif
 
   ! stop the timer for initial guess
