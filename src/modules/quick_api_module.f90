@@ -651,13 +651,30 @@ end subroutine print_step
 subroutine set_quick_molspecs(self,ierr)
 
   use quick_files_module
-  use quick_constants_module
+  use quick_constants_module, only: BOHRS_TO_A, BOHRS_TO_A_AMBER, symbol
   use quick_molspec_module, only : quick_molspec, xyz
+
+#ifdef CEW
+  use quick_cew_module, only: quick_cew
+#endif
 
   implicit none
   type (quick_api_type) :: self
   integer :: i, j
   integer, intent(inout) :: ierr
+  double precision :: A_TO_BOHRS
+
+  A_TO_BOHRS = 1.0D0 / BOHRS_TO_A
+
+#ifdef CEW
+  if (quick_cew%use_cew) then
+    ! Amber-consistent conversion factors for use with CEw
+    ! Parts of the Ewald are performed by sander, cew, and quick;
+    ! they need to use consistent conversions in order for real
+    ! and reciprocal space interactions to properly cancel.
+    A_TO_BOHRS = 1.0D0 / BOHRS_TO_A_AMBER
+  endif
+#endif
 
   ! pass the step id to quick_files_module
   wrtStep = self%step
