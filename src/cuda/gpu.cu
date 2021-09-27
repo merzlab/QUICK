@@ -1901,11 +1901,10 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 
     gpu -> lri_data = new lri_data_type;
     
-    gpu -> lri_data -> zeta = *zeta;
     gpu -> lri_data -> cc   = new cuda_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
     gpu -> lri_data -> cc -> Upload();
     
-    gpu -> gpu_sim.lri_zeta = gpu -> lri_data -> zeta;
+    gpu -> gpu_sim.lri_zeta = *zeta;
 
 /*    printf("zeta %f \n", gpu -> gpu_sim.lri_zeta);
 
