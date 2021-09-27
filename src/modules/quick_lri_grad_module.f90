@@ -41,10 +41,6 @@ module quick_lri_grad_module
   end interface computeLRINumGrad
 
 contains
-
-
-
-
   
   subroutine compute_lri_numgrad( c_coords, c_zeta, c_chg, c_idx )
     use quick_lri_module, only : computeLRI
@@ -139,9 +135,6 @@ contains
     !______________________________________________________________________!
 
     use quick_basis_module
-    !use quick_lri_module, only : has_angrenorm
-    !use quick_lri_module, only : angrenorm
-    !use quick_lri_module, only : CalcAngRenorm
     
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
@@ -153,19 +146,8 @@ contains
     Cc=c_chg
     iC=c_idx
 
-
-    !if ( .not. has_angrenorm ) then
-    !   has_angrenorm = .true.
-    !   if ( associated( angrenorm ) ) deallocate( angrenorm )
-    !   allocate( angrenorm( nbasis ) )
-    !   call CalcAngRenorm( nbasis,angrenorm )
-    !end if
-
-    
     do II = 1, jshell
       do JJ = II, jshell  
-        !II=1
-         !JJ=1
         call compute_tci_grad(II,JJ)
       enddo
     enddo
@@ -376,7 +358,6 @@ contains
           do iitemp=0,NABCD
              ! Yxiaotemp(1,1,iitemp) is the starting point of recurrsion
              Yxiaotemp(1,1,iitemp)=FM(iitemp)/ABCDsqrt
-          !   write(*,*) "FM",FM(iitemp)
           enddo
 
           ITT=ITT+1
@@ -386,9 +367,11 @@ contains
           ! now we will do vrr 
           call vertical(NABCDTYPE+11)
 
+
           do I2=NNC,NNCDfirst
              do I1=NNA,NNABfirst
                 Yxiao(ITT,I1,I2)=Yxiaotemp(I1,I2,0)
+                !write(*,*) "FM", Yxiao(ITT,I1,I2)*ABCDsqrt, "Fm*sqrt", Yxiao(ITT,I1,I2)
              enddo
           enddo          
 
@@ -490,9 +473,10 @@ contains
             !itt is the m value. Note that the gaussian contraction coefficient (gccoeff) is treated as 1.0. 
             quick_scratch%X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5d0
 
-            !write(*,*) "lngr grad itt, x0,xcoeff1,x2,xcoeff2,x44:",itt,x0,quick_basis%Xcoeff(Nprii,Nprij,I,J),x2,&
-            !(1/Zc)*Cc*(Zc/PI)**1.5,quick_scratch%X44(ITT)
-
+            !write(*,*) "lngr grad itt, xcoeff1,x2,Zc, Cc, xcoeff2,x44:",itt,x0,x2,&
+            !Zc, Cc, (1/Zc)*Cc*(Zc/PI)**1.5,quick_scratch%X44(ITT)
+ 
+            !write(*,*) "X44 X44AA", quick_scratch%X44(ITT), quick_scratch%X44(ITT)*AA*2.0d0
             !compute the first term of eqn 20 for 3 centers. 
             quick_scratch%X44AA(ITT)=quick_scratch%X44(ITT)*AA*2.0d0
             quick_scratch%X44BB(ITT)=quick_scratch%X44(ITT)*BB*2.0d0
@@ -513,6 +497,7 @@ contains
             !quick_scratch%X44(itemp),Yxiao(itemp,MM1,MM2),Ytemp
 
         enddo
+        !write(*,*) "lngr store2", Ytemp
         store(MM1,MM2)=Ytemp
         !write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
       enddo
@@ -535,7 +520,7 @@ contains
           storeBB(MM1,MM2)=YtempBB
           storeCC(MM1,MM2)=YtempCC
 
-          !write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, storeAA(MM1,MM2)
+          !write(*,*) "lngr grad: MM1, MM2, storeAA", MM1, MM2, YtempAA, YtempBB
        enddo
     enddo
 
@@ -622,16 +607,12 @@ contains
     !    write(6,*)
     ! end if
 
-    
-
     grda = 0.d0
     grdb = 0.d0
     
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
         call hrr_tci_grad
-        !write(*,*) "lngr Y:",IJKLtype,RA(1),RB(1),RC(1),Yaa(1),Yaa(2),Yaa(3),&
-        !Ybb(1),Ybb(2),Ybb(3),Ycc(1),Ycc(2),Ycc(3)
 
         afact = 1.d0 ! angrenorm(JJJ) * angrenorm(III)
         ! The off-diagonal blocks are only computed once, so we need to
@@ -649,7 +630,9 @@ contains
         !         & Yaa(1),Yaa(2),Yaa(3),Ybb(1),Ybb(2),Ybb(3)
         ! end if
 
-
+!        write(*,*) "II, JJ, III JJJ dmx Y:",II, JJ, III, JJJ, quick_qm_struct%dense(JJJ,III)*afact,IJKLtype,RA(1),RB(1),RC(1),&
+!        Yaa(1),Yaa(2),Yaa(3), Ybb(1),Ybb(2),Ybb(3)
+        
         grda(1:3) = grda(1:3) + quick_qm_struct%dense(JJJ,III)*Yaa(1:3)*afact
         grdb(1:3) = grdb(1:3) + quick_qm_struct%dense(JJJ,III)*Ybb(1:3)*afact
         
