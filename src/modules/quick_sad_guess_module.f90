@@ -149,7 +149,7 @@ contains
            ! this following subroutine is as same as normal basis set normlization
            call normalize_basis()
            if (quick_method%ecp) call store_basis_to_ecp()
-           if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
+           !if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
   
            ! Initialize Density arrays. Create initial density matrix guess.
            present = .false.
