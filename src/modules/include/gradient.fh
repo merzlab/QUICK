@@ -121,18 +121,6 @@ contains
         call scf_gradient
 #endif
 
-!For testing long range integral gradients
-!-----------------------------------------------
-!       c_chg=2.0000000000D+00
-!       c_zeta=7.5000000000D-01
-!       c_coords(1)=1.5000000000D+00
-!       c_coords(2)=2.5000000000D+00
-!       c_coords(3)=3.5000000000D+00
-!       c_idx=1
-!
-!       call computeLRIGrad(c_coords,c_zeta,c_chg,c_idx)
-!-----------------------------------------------
-
      endif
   
 #if defined CUDA || defined CUDA_MPIV
