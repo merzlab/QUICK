@@ -36,7 +36,7 @@
     use quick_optimizer_module, only: optimize
     use quick_sad_guess_module, only: getSadGuess
 #ifdef CEW
-    use quick_cew_module, only : quick_cew
+    use quick_cew_module
 #endif
 
     implicit none
