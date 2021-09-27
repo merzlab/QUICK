@@ -199,10 +199,12 @@ integer, dimension(incoreSize) :: bIncore
 
     interface alloc
         module procedure allocate_quick_basis
+        module procedure allocate_host_xc_basis
     end interface alloc
 
     interface dealloc
         module procedure deallocate_quick_basis
+        module procedure deallocate_host_xc_basis
     end interface dealloc
 
     interface print
@@ -276,7 +278,6 @@ contains
    !----------------
    subroutine deallocate_quick_basis(self)
         use quick_gaussian_class_module
-        use quick_method_module
         implicit none
         type (quick_basis_type) self
 
@@ -311,35 +312,57 @@ contains
         if(allocated(Kpri))          deallocate(Kpri)
         if(allocated(cutprim))       deallocate(cutprim)
         if(allocated(Ppri))          deallocate(Ppri)
-        if(allocated(quick_basis%Xcoeff)) deallocate(quick_basis%Xcoeff)
-        if(quick_method%DFT)then
-           if(allocated(phiXiao))    deallocate(phiXiao)
-           if(allocated(dPhidXXiao)) deallocate(dPhidXXiao)
-           if(allocated(dPhidYXiao)) deallocate(dPhidYXiao)
-           if(allocated(dPhidZXiao)) deallocate(dPhidZXiao)
-        end if
+        if(allocated(self%Xcoeff)) deallocate(self%Xcoeff)
 
    end subroutine deallocate_quick_basis
 
 
-   subroutine allocate_basis(quick_method_arg)
-      use quick_method_module
+   subroutine allocate_basis(self)
 
       implicit none
-      type(quick_method_type) quick_method_arg
+      type (quick_basis_type) :: self
 
       if(.not. allocated(Apri)) allocate(Apri(jbasis,jbasis))
       if(.not. allocated(Kpri)) allocate(Kpri(jbasis,jbasis))
       if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
       if(.not. allocated(Ppri)) allocate(Ppri(3,jbasis,jbasis))
-      if(.not. allocated(quick_basis%Xcoeff)) allocate(quick_basis%Xcoeff(jbasis,jbasis,0:3,0:3))
-      if(quick_method_arg%DFT)then
-         if(.not. allocated(phiXiao)) allocate(phiXiao(nbasis))
-         if(.not. allocated(dPhidXXiao)) allocate(dPhidXXiao(nbasis))
-         if(.not. allocated(dPhidYXiao)) allocate(dPhidYXiao(nbasis))
-         if(.not. allocated(dPhidZXiao)) allocate(dPhidZXiao(nbasis))
-      end if
+      if(.not. allocated(self%Xcoeff)) allocate(self%Xcoeff(jbasis,jbasis,0:3,0:3))
    end subroutine
+
+   ! following arrays are only required for host version of xc, allocate and
+   ! deallocate them separately. Note that we use quick_basis_arg and isDFT
+   ! as dummy arguments to call this through the alloc interface
+   subroutine allocate_host_xc_basis(self, isDFT)
+
+     implicit none
+     type(quick_basis_type) :: self
+     logical, intent(in) :: isDFT
+
+     if(isDFT) then
+       if(.not. allocated(phiXiao)) allocate(phiXiao(nbasis))
+       if(.not. allocated(dPhidXXiao)) allocate(dPhidXXiao(nbasis))
+       if(.not. allocated(dPhidYXiao)) allocate(dPhidYXiao(nbasis))
+       if(.not. allocated(dPhidZXiao)) allocate(dPhidZXiao(nbasis))
+     endif
+
+   end subroutine allocate_host_xc_basis
+
+   ! deallocate dft specific data structures
+   subroutine deallocate_host_xc_basis(self, isDFT)
+
+     implicit none
+     type(quick_basis_type) :: self
+     logical, intent(in) :: isDFT
+
+     if(isDFT)then
+        if(allocated(phiXiao))    deallocate(phiXiao)
+        if(allocated(dPhidXXiao)) deallocate(dPhidXXiao)
+        if(allocated(dPhidYXiao)) deallocate(dPhidYXiao)
+        if(allocated(dPhidZXiao)) deallocate(dPhidZXiao)
+     end if
+
+   subroutine deallocate_host_xc_basis(self, isDFT)
+
 
    subroutine print_quick_basis(self,ioutfile)
         implicit none
