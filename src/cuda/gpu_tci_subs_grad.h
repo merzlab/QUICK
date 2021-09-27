@@ -80,15 +80,15 @@ get_tci_grad_kernel_spdf2()
         int ii = devSim.sorted_Q[II];
         int jj = devSim.sorted_Q[JJ];
         
-            int kk = 0;
-            int ll = 0;
+            //int kk = 0;
+            //int ll = 0;
             
             
 /*            if ( !((devSim.katom[ii] == devSim.katom[jj]) &&
                    (devSim.katom[ii] == iatom))     // In case 4 indices are in the same atom
                 ) {
 */                
-                int nshell = devSim.nshell;
+                //int nshell = devSim.nshell;
                 
                 /*QUICKDouble DNMax = MAX(MAX(4.0*LOC2(devSim.cutMatrix, ii, jj, nshell, nshell), 4.0*LOC2(devSim.cutMatrix, kk, ll, nshell, nshell)),
                                         MAX(MAX(LOC2(devSim.cutMatrix, ii, ll, nshell, nshell),     LOC2(devSim.cutMatrix, ii, kk, nshell, nshell)),
@@ -161,8 +161,8 @@ __device__ __forceinline__ void iclass_tci_grad
     
     int kStartI = devSim.kstart[II]-1;
     int kStartJ = devSim.kstart[JJ]-1;
-    int kStartK = 0;
-    int kStartL = 0;
+    //int kStartK = 0;
+    //int kStartL = 0;
    
     int K=0;
     int L=0; 
@@ -233,7 +233,7 @@ __device__ __forceinline__ void iclass_tci_grad
         
         for (int j = 0; j<kPrimK*kPrimL; j++){
             int LLL = (int) j/kPrimK;
-            int KKK = (int) j-kPrimK*LLL;
+            //int KKK = (int) j-kPrimK*LLL;
             
             //if (cutoffPrim * LOC2(devSim.cutPrim, kStartK+KKK, kStartL+LLL, devSim.jbasis, devSim.jbasis) > devSim.primLimit) {
                 
