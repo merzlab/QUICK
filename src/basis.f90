@@ -384,7 +384,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
    ! various arrays that depend on the # of basis functions
 
-   call allocate_quick_gridpoints(nbasis)
+   !call allocate_quick_gridpoints(nbasis)
 
    ! xiao He may reconsider this
    call alloc(quick_scratch,nbasis)
