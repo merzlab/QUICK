@@ -172,7 +172,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
     cudaEventRecord(start, 0);
 #endif
 
-    if(gpu -> gpu_sim.method == HF && !gpu->gpu_sim.use_cew){
+    if(gpu -> gpu_sim.method == HF){
 
       gpu -> grad -> DownloadSum(grad);
 
@@ -506,6 +506,8 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 
 //#ifdef LEGACY_ATOMIC_ADD
         gpu -> ptchg_gradULL -> Download();
+   
+        cudaMemsetAsync(gpu -> ptchg_gradULL -> _devData, 0, sizeof(QUICKULL)*3*gpu->nextatom);
 
         for (int i = 0; i< 3 * gpu->nextatom; i++) {
             QUICKULL valULL = gpu->ptchg_gradULL->_hostData[i];
@@ -536,7 +538,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     }
 
   // ptchg_grad is no longer needed. reclaim the memory.
-  if(gpu -> nextatom > 0) {
+  if(gpu -> nextatom > 0 && !gpu->gpu_sim.use_cew) {
 //#ifdef LEGACY_ATOMIC_ADD
       SAFE_DELETE(gpu -> ptchg_gradULL);
 //#endif
@@ -618,24 +620,6 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
 extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 {
-
-    cudaMemset(gpu -> gradULL -> _devData, 0, sizeof(QUICKULL)*3*gpu->natom);
-
-    // upload point charge grad vector
-    if(gpu -> nextatom > 0) {
-        gpu -> ptchg_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
-//#ifdef LEGACY_ATOMIC_ADD
-        
-        gpu -> ptchg_gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu -> nextatom);
-        gpu -> ptchg_gradULL -> Upload();
-        gpu -> gpu_sim.ptchg_gradULL =  gpu -> ptchg_gradULL -> _devData;
-        gpu -> ptchg_grad -> DeleteGPU();
-/*#else
-        gpu -> ptchg_grad -> Upload();
-        gpu -> gpu_sim.ptchg_grad =  gpu -> ptchg_grad -> _devData;
-#endif
-*/
-    }
 
     upload_sim_to_constant_tci(gpu);
 
