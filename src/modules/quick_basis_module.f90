@@ -199,6 +199,7 @@ integer, dimension(incoreSize) :: bIncore
 
     interface alloc
         module procedure allocate_quick_basis
+        module procedure allocate_basis
         module procedure allocate_host_xc_basis
     end interface alloc
 
@@ -361,7 +362,7 @@ contains
         if(allocated(dPhidZXiao)) deallocate(dPhidZXiao)
      end if
 
-   subroutine deallocate_host_xc_basis(self, isDFT)
+   end subroutine deallocate_host_xc_basis
 
 
    subroutine print_quick_basis(self,ioutfile)
