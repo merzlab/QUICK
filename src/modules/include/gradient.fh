@@ -265,6 +265,17 @@ contains
 !    call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
 #endif
 !#endif
+
+  !---------------------------------------------------------------------
+  !  2.1) CEW gradients
+  !---------------------------------------------------------------------
+
+#ifdef CEW
+     if ( quick_cew%use_cew ) then
+        call quick_cew_grad
+     end if
+#endif
+
   !---------------------------------------------------------------------
   !  3) The derivative of the electron repulsion term
   !---------------------------------------------------------------------
@@ -280,12 +291,6 @@ contains
      call get_cshell_eri_grad
 #endif
 
-#ifdef CEW
-     if ( quick_cew%use_cew ) then
-        call quick_cew_grad
-     end if
-#endif
-     
      call cpu_time(timer_end%T2eGrad)
      timer_cumer%T2eGrad = timer_cumer%T2eGrad + timer_end%T2eGrad-timer_begin%T2eGrad
   !---------------------------------------------------------------------
