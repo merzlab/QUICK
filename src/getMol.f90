@@ -69,7 +69,7 @@ subroutine getMol(ierr)
    quick_molspec%nbasis   => nbasis
    quick_qm_struct%nbasis => nbasis
 
-   call allocate_basis(quick_method)
+   call alloc(quick_basis)
    call alloc(quick_qm_struct)
    call init(quick_qm_struct)
 
