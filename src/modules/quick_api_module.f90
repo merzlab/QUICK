@@ -182,7 +182,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   use quick_method_module
 
 #ifdef CEW 
-  use quick_cew_module, only : quick_cew
+  use quick_cew_module
 #endif
 
 #ifdef MPIV
