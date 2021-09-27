@@ -183,9 +183,9 @@
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
 
-!#ifdef CEW
-    call gpu_set_cew(.true.,ierr) 
-!#endif
+#ifdef CEW
+    call gpu_set_cew(quick_cew,ierr) 
+#endif
 #endif
 
     !------------------------------------------------------------------
