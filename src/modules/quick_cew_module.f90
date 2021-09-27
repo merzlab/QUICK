@@ -115,6 +115,8 @@ contains
     use quick_molspec_module, only: quick_molspec
     use quick_lri_module, only : computeLRI
     use quick_calculated_module, only : quick_qm_struct
+    use quick_basis_module
+    use quick_method_module, only: quick_method
     
     implicit none
 
@@ -123,7 +125,10 @@ contains
     double precision :: qa,qb
     double precision :: rvec(3),r
     double precision :: ew_self
-    integer :: a,b
+    integer :: a,b,c,ierr
+    double precision, dimension(:), allocatable :: chgs
+
+    ierr=0
 
     !double precision :: Emm, Eqm, Epot
     
@@ -258,6 +263,29 @@ contains
     !        H(i,j) += qa * (quick_cew%zeta/PI)**1.5d0 * (ij|a0)
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
 
+
+#if defined(CUDA) || defined(CUDA_MPIV)
+
+    if(.not. allocated(chgs)) allocate(chgs(quick_molspec%natom+quick_molspec%nextatom))
+
+    do c=1, (quick_molspec%natom + quick_molspec%nextatom)
+      if ( c <= quick_molspec%natom ) then
+        chgs(c)=quick_cew%qmq(c)
+      else
+        chgs(c)=quick_molspec%extchg(c-quick_molspec%natom)
+      endif
+    enddo
+
+    call gpu_upload_lri(quick_cew%zeta, chgs, ierr)
+
+    if(allocated(chgs)) deallocate(chgs)
+
+    call gpu_get_lri(quick_qm_struct%o)
+
+    if ( .not. (quick_method%grad .or. quick_method%opt) ) call gpu_delete_lri(ierr)
+
+#else
+
     do a=1, quick_molspec%natom
        qa = quick_cew%qmq(a)
        call computeLRI(quick_molspec%xyz(1:3,a), quick_cew%zeta, qa)
@@ -277,6 +305,7 @@ contains
        qa = quick_molspec%extchg(a)
        call computeLRI(quick_molspec%extxyz(1:3,a), quick_cew%zeta, qa)
     enddo
+#endif
 
     ! Notice that we are ADDING (not subtracting) this term to
     ! the core Hamiltonian, because the density matrix is a
@@ -501,12 +530,15 @@ contains
     use quick_gridpoints_module, only : quick_dft_grid
     
     implicit none
-    integer :: a,b,c,k,oa,ob,oc
+    integer :: a,b,c,k,oa,ob,oc,ierr
     double precision :: c_coord(3), rvec(3)
     double precision :: r,r2,oor2,oor3,qa,qb,qc
     double precision :: dedr
     double precision :: ew_self
     double precision :: ga(3), gb(3), gc(3)
+
+    ierr=0
+
     !
     ! erf(beta*r)/r as r -> 0
     !
@@ -616,7 +648,13 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
+#if defined(CUDA) || defined(CUDA_MPIV)
 
+    call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+
+    call gpu_delete_lri(ierr)
+
+#else
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
        if ( c <= quick_molspec%natom ) then
           c_coord=quick_molspec%xyz(1:3,c)
@@ -627,6 +665,7 @@ contains
        end if
        call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
     enddo
+#endif
 
     call quick_cew_grad_quad()
 
