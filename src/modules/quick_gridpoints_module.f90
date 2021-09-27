@@ -170,6 +170,9 @@ module quick_gridpoints_module
 #endif
     call cpu_time(timer_begin%TDFTGrdGen)
 
+    ! form SG1 grid
+    if(quick_method%iSG.eq.1) call gridformSG1()
+
     idx_grid = 0
     do Iatm=1,natom
         if(quick_method%iSG.eq.1)then
@@ -216,6 +219,9 @@ module quick_gridpoints_module
 #ifdef MPIV
    endif
 #endif
+
+    ! compute the radius of significance for basis functions on each center
+    call get_sigrad()
 
     !Calculate the grid weights and store them
 #if defined CUDA || defined CUDA_MPIV
