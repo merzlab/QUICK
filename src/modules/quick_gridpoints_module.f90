@@ -160,16 +160,16 @@ module quick_gridpoints_module
     
     call alloc_xcg_tmp_variables(xcg_tmp)
 
-
-
-
-    
 #ifdef MPIV
-  if(bMPI) then
-    call alloc_mpi_grid_variables(self)
+   if(master) then
+#endif
+   
+   if (quick_method%iSG.eq.1) call gridformSG1() 
+
+#ifdef MPIV
   endif
 
-   if (master .and. quick_method%iSG.eq.1) call gridformSG1() 
+   call alloc_mpi_grid_variables(self)
 
    call mpi_bcast_grid_vars()
 
