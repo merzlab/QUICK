@@ -159,18 +159,26 @@ module quick_gridpoints_module
 
     
     call alloc_xcg_tmp_variables(xcg_tmp)
+
+
+
+
     
 #ifdef MPIV
   if(bMPI) then
     call alloc_mpi_grid_variables(self)
   endif
 
+   if (master .and. quick_method%iSG.eq.1) call gridformSG1() 
+
+   call mpi_bcast_grid_vars()
+
    if(master) then
 #endif
     call cpu_time(timer_begin%TDFTGrdGen)
 
     ! form SG1 grid
-    if(quick_method%iSG.eq.1) call gridformSG1()
+    !if(quick_method%iSG.eq.1) call gridformSG1()
 
     idx_grid = 0
     do Iatm=1,natom
