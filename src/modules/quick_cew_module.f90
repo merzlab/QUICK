@@ -69,6 +69,10 @@ module quick_cew_module
   interface upload
     module procedure upload_cew
   end interface upload
+
+  interface delete
+    module procedure delete_cew_vrecip
+  end interface
 #endif  
 
 contains
