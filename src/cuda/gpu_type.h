@@ -164,6 +164,7 @@ struct lri_data_type{
 
     int zeta;
     cuda_buffer_type<QUICKDouble>* cc;
+    cuda_buffer_type<QUICKDouble>* vrecip;
 
 };
 
@@ -369,6 +370,7 @@ struct gpu_simulation_type {
     // for long range integrals
     QUICKDouble                     lri_zeta;
     QUICKDouble*                    lri_cc;
+    QUICKDouble*                    cew_vrecip;
     bool                            use_cew;
 
 };
@@ -467,6 +469,7 @@ struct gpu_type {
     unsigned int                    gradThreadsPerBlock;
     unsigned int                    xc_blocks;	//Num of blocks for octree based dft implementation
     unsigned int                    xc_threadsPerBlock; //Num of threads/block for octree based dft implementation   
+    unsigned int                    sswGradThreadsPerBlock;
 
     // mpi variable definitions
     int                             mpirank;
