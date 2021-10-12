@@ -92,6 +92,10 @@ void get_oshell_eri_grad(_gpu_type gpu);
 void get_tci(_gpu_type gpu);
 void get_tci_grad(_gpu_type gpu);
 void upload_para_to_const_tci();
+void getcew_xc(_gpu_type gpu);
+void getcew_xc_grad(_gpu_type gpu);
+void get_cew_accdens(_gpu_type gpu);
+__global__ void getcew_xc_kernel();
 
 // global [get2e_kernel]
 __global__ void get2e_kernel();
@@ -133,10 +137,12 @@ __global__ void getGrad_kernel_spdf8();
 __global__ void get_ssw_kernel();
 __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight);
 __global__ void get_pteval_kernel();
-__global__ void get_density_kernel();
+__global__ void get_oshell_density_kernel();
+__global__ void get_cshell_density_kernel();
 /*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp);*/
 __device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
 __global__ void get_sswgrad_kernel();
+__global__ void get_sswnumgrad_kernel();
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
 
@@ -578,8 +584,12 @@ __device__ int lefthrr_tci23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
 
 __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid);
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);
-
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
+
+__device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* xyz, int atm );
+__device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble *xyz,\
+QUICKDouble xparent, QUICKDouble yparent, QUICKDouble zparent, QUICKDouble xatom, QUICKDouble yatom, QUICKDouble zatom,\
+int iatom, int iparent, unsigned int natom);
 
 //Madu Manathunga 08/20/2019
 //__device__ void pt2der(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* dxdx, QUICKDouble* dxdy,
@@ -624,5 +634,8 @@ __device__ QUICKDouble lyp_e(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QU
 
 __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
+__global__ void getcew_xc_kernel();
+__global__ void oshell_getcew_xc_grad_kernel();
+__global__ void cshell_getcew_xc_grad_kernel();
 
 #endif
