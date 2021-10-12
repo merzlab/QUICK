@@ -346,6 +346,8 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 
         upload_sim_to_constant_dft(gpu);
 
+        memset(gpu->grad->_hostData, 0, gpu -> gpu_xcq -> smem_size);
+
         getxc_grad(gpu);
 
         gpu -> gradULL -> Download();
@@ -362,7 +364,7 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
             valDB  = (QUICKDouble) valULL;
           }
 
-          gpu->grad->_hostData[i] = (QUICKDouble)valDB*ONEOVERGRADSCALE;
+          gpu->grad->_hostData[i] += (QUICKDouble)valDB*ONEOVERGRADSCALE;
         }
 
         gpu -> grad -> DownloadSum(grad);
@@ -569,6 +571,10 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     get_tci(gpu);  
 
+    //compute xc quad potential
+    upload_sim_to_constant_dft(gpu);
+    getcew_xc(gpu);
+
 //#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> oULL -> Download();
 
@@ -700,6 +706,49 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 //#endif
       SAFE_DELETE(gpu -> ptchg_grad);
   }  
+
+}
+
+extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
+{
+
+    memset(gpu -> grad -> _hostData, 0, sizeof(QUICKDouble)*3*gpu->natom);
+
+    // calculate smem size
+    gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
+
+    //compute xc quad potential
+    upload_sim_to_constant_dft(gpu);
+
+    getcew_xc_grad(gpu);
+
+    // download gradients
+//#ifdef LEGACY_ATOMIC_ADD
+      gpu -> gradULL -> Download();
+      cudaMemsetAsync(gpu -> gradULL -> _devData, 0, sizeof(QUICKULL)*3*gpu->natom);
+      for (int i = 0; i< 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+
+        if (valULL >= 0x8000000000000000ull) {
+            valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+        }
+        else
+        {
+            valDB  = (QUICKDouble) valULL;
+        }
+
+        // make sure to add rather than assign. we already computed one part of the cew
+        // gradients on host asynchronously.
+        gpu->grad->_hostData[i] += (QUICKDouble)valDB*ONEOVERGRADSCALE;
+      }
+/*#else
+
+    gpu->grad->Download();
+
+#endif*/
+
+    gpu->grad->DownloadSum(grad);
 
 }
 
