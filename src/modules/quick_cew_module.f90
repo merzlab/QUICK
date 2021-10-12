@@ -1083,7 +1083,7 @@ contains
 
                      
                      call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
-                     sumg(1) = weight / localsswt
+                     sumg(1) = weight / sswt
                      !write(6,'(3es20.10)')weight,localsswt,sumg(1)
                      DO i=1,natom
                         oi = 3*(i-1)
