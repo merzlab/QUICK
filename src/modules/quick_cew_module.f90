@@ -362,8 +362,9 @@ contains
     ! and negate it.
     !
 
+#if !defined (CUDA) && !defined (CUDA_MPIV)
     call quick_cew_prescf_quad()
-    
+#endif    
     
   end subroutine quick_cew_prescf
 
