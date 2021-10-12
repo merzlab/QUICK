@@ -196,6 +196,7 @@ extern "C" void gpu_init_(int* ierr)
         gpu -> twoEThreadsPerBlock      = SM_2X_2E_THREADS_PER_BLOCK;
         gpu -> XCThreadsPerBlock        = SM_2X_XC_THREADS_PER_BLOCK;
         gpu -> gradThreadsPerBlock      = SM_2X_GRAD_THREADS_PER_BLOCK;
+        gpu -> sswGradThreadsPerBlock   = SM_2X_SSW_GRAD_THREADS_PER_BLOCK; 
     }
     
     PRINTDEBUG("FINISH INIT")
@@ -1919,6 +1920,17 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 
 }
 
+//-----------------------------------------------
+//  upload information for CEW quad calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_cew_vrecip_(QUICKDouble *vrecip, int *count, int *ierr){
+
+  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(vrecip, *count);
+  gpu -> lri_data -> vrecip -> Upload();
+  gpu -> gpu_sim.cew_vrecip   = gpu -> lri_data -> vrecip -> _devData;
+
+}
+
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
 
@@ -3405,3 +3417,10 @@ extern "C" void gpu_delete_lri_(int *ierr)
     SAFE_DELETE(gpu -> lri_data -> cc);
 }
 
+//-------------------------------------------------
+//  delete info uploaded for CEW quad calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_cew_vrecip_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> vrecip);
+}
