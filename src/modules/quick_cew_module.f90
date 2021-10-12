@@ -540,6 +540,7 @@ contains
     use quick_lri_grad_module, only: computeLRIGrad
     !use quick_lri_grad_module, only: computeLRINumGrad
     use quick_gridpoints_module, only : quick_dft_grid
+    use quick_method_module, only: quick_method
     
     implicit none
     integer :: a,b,c,k,oa,ob,oc,ierr
@@ -665,6 +666,12 @@ contains
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
     call gpu_delete_lri(ierr)
+
+    if(quick_method%HF) then
+      call gpu_reupload_dft_grid()
+      call gpu_getcew_grad_quad(quick_qm_struct%gradient)
+      call delete_cew_vrecip(quick_cew, ierr)
+    endif
 
 #else
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
