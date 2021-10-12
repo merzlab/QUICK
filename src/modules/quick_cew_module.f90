@@ -686,8 +686,9 @@ contains
     enddo
 #endif
 
+#if !defined (CUDA) && !defined (CUDA_MPIV)
     call quick_cew_grad_quad()
-
+#endif
     
   end subroutine quick_cew_grad
 
