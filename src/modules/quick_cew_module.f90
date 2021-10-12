@@ -284,11 +284,16 @@ contains
 
     call gpu_upload_lri(quick_cew%zeta, chgs, ierr)
 
-    if(allocated(chgs)) deallocate(chgs)
+    call upload_cew_vrecip
 
     call gpu_get_lri(quick_qm_struct%o)
 
-    if ( .not. (quick_method%grad .or. quick_method%opt) ) call gpu_delete_lri(ierr)
+    if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
+      call gpu_delete_lri(ierr)
+      call delete_cew_vrecip(quick_cew, ierr)
+    endif
+
+    if(allocated(chgs)) deallocate(chgs)
 
 #else
 
