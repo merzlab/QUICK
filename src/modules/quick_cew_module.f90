@@ -12,6 +12,8 @@ module quick_cew_module
 
 #if defined CUDA || defined CUDA_MPIV
   public :: upload
+  public :: delete
+  public :: cew_accdens
 #endif
   
   private
