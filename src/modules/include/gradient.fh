@@ -190,7 +190,7 @@ contains
 #endif
      implicit double precision(a-h,o-z)
   
-     integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef MPIV
      include "mpif.h"
@@ -206,7 +206,9 @@ contains
   !  the gradient codes in this program.
   !  The gradient at this level of theory is the sum of five terms.
   !---------------------------------------------------------------------
-  
+
+  ierr=0  
+
   !  Start the timer for gradient calculation
      call cpu_time(timer_begin%TGrad)
   
@@ -318,6 +320,22 @@ contains
   
      endif
   
+  ! delete dft grid from the device if dft/cew was used
+#if defined CUDA || defined CUDA_MPIV
+  if (quick_method%bCUDA) then
+
+    if (quick_method%DFT &
+#ifdef CEW
+       .or. quick_cew%use_cew &
+#endif
+       )then
+         call gpu_delete_dft_grid()
+#ifdef CEW
+     if ( quick_cew%use_cew ) call delete(quick_cew, ierr) 
+#endif
+    endif
+  endif
+#endif
   
 #ifdef MPIV
   
