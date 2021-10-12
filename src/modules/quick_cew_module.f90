@@ -921,8 +921,8 @@ contains
                enddo
 
                
-               call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
-               weight = weight * localsswt/sswt
+               !call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
+               !weight = weight * localsswt/sswt
             
 
                !  evaluate the densities at the grid point and the gradient at that grid point
