@@ -1101,6 +1101,53 @@ end do
     call gpu_set_cew(self%use_cew)
 
   end subroutine upload_cew
+
+  subroutine upload_cew_vrecip
+
+    use quick_gridpoints_module, only : quick_dft_grid
+    implicit none
+    integer :: Ibin, Igp, ierr
+    double precision, dimension(:), allocatable :: vrecip
+    double precision :: cew_pt(3), gridx, gridy, gridz, tmp_vrecip
+
+    ierr=0
+
+    if(.not. allocated(vrecip)) allocate(vrecip(quick_dft_grid%gridb_count))
+
+      do Ibin=1, quick_dft_grid%nbins
+        Igp=quick_dft_grid%bin_counter(Ibin)+1
+
+        do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
+
+           cew_pt(1)=quick_dft_grid%gridxb(Igp)
+           cew_pt(2)=quick_dft_grid%gridyb(Igp)
+           cew_pt(3)=quick_dft_grid%gridzb(Igp)    
+           tmp_vrecip=0.0d0
+
+           call cew_getrecip( cew_pt(1), tmp_vrecip )
+           vrecip(Igp) = -tmp_vrecip
+           Igp=Igp+1
+        enddo
+      enddo
+
+    call gpu_upload_cew_vrecip(vrecip, quick_dft_grid%gridb_count, ierr)
+
+    if(allocated(vrecip)) deallocate(vrecip)
+
+  end subroutine upload_cew_vrecip
+
+  subroutine delete_cew_vrecip(self, ierr)
+
+    implicit none
+    type(quick_cew_type), intent(in) :: self ! dummy argument to access through interface
+    integer, intent(inout) :: ierr
+
+    ierr=0
+  
+    call gpu_delete_cew_vrecip(ierr)
+
+  end subroutine delete_cew_vrecip
+
 #endif
   
 end module quick_cew_module
