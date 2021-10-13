@@ -183,7 +183,7 @@ contains
 #endif
     use allmod
 #ifdef CEW
-    use quick_cew_module, only : quick_cew, quick_cew_grad
+    use quick_cew_module, only : quick_cew, quick_cew_grad, delete
 #endif
 #ifdef OSHELL
      use quick_cshell_gradient_module
