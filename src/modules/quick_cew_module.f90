@@ -1075,9 +1075,9 @@ contains
 !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
                !  the density and the weight are not zero.
                
-                  !if (sswt == 1.d0) then
-                  !   continue
-                  !else
+                  if (sswt == 1.d0) then
+                     continue
+                  else
                      ! The sswder routine is not giving me the proper weight gradients
                      !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
 
@@ -1094,7 +1094,7 @@ contains
                      END DO
 
                      
-                  !endif
+                  endif
                endif
             !endif
 !         enddo
