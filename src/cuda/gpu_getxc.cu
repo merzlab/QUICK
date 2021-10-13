@@ -7,6 +7,10 @@
 
 static __constant__ gpu_simulation_type devSim_dft;
 
+#if defined DEBUG || defined DEBUGTIME
+static float totTime;
+#endif
+
 #include "gpu_getxc.h"
 #include "gpu_cew_xc.h"
 #define OSHELL
@@ -25,11 +29,6 @@ void upload_sim_to_constant_dft(_gpu_type gpu){
     PRINTERROR(status, " cudaMemcpyToSymbol, dft sim copy to constants failed")
     PRINTDEBUG("FINISH UPLOAD CONSTANT DFT");
 }
-
-
-#if defined DEBUG || defined DEBUGTIME
-static float totTime;
-#endif
 
 
 void get_ssw(_gpu_type gpu){
