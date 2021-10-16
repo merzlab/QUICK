@@ -869,6 +869,8 @@ contains
    !spcder = 0.d0
    
 #ifdef MPIV
+   integer :: irad_init, irad_end
+
    include "mpif.h"
 #endif
 
