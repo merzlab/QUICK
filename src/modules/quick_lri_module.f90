@@ -101,12 +101,18 @@ contains
 
     use quick_basis_module
     use quick_method_module, only: quick_method
+#if defined MPIV && !defined CUDA_MPIV
+    use quick_mpi_module
+#endif
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     double precision :: c0c0, cutoffTest
     integer :: II, JJ, icount, icount2         ! shell pairs
- 
+
+#if defined MPIV && !defined CUDA_MPIV
+    integer :: i
+#endif 
 
     RC=c_coords
     Zc=c_zeta
@@ -120,21 +126,48 @@ contains
 
     !write(*,*) "c0c0: ", c0c0
 
-    do II = 1, jshell
-      do JJ = II, jshell  
-        icount = icount +1
+#if defined MPIV && !defined CUDA_MPIV 
+  !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
+  !  which has 
+  !  4 jshell, and 2 nodes will take 2 jshell respectively.
+     if(bMPI) then
+        do i=1,mpi_jshelln(mpirank)
+           ii=mpi_jshell(mpirank,i)
+           call prescreen_compute_tci(II,c0c0)
+        enddo
+     else
+        do II=1,jshell
+           call prescreen_compute_tci(II,c0c0)
+        enddo
+     endif
+#else
+     do II=1,jshell
+        call prescreen_compute_tci(II,c0c0)
+     enddo
+#endif
+
+  end subroutine compute_lri
+
+
+  subroutine prescreen_compute_tci(II,c0c0)
+
+    use quick_basis_module
+    use quick_method_module, only: quick_method
+
+    implicit none
+    integer, intent(in) :: II
+    double precision, intent(in) :: c0c0
+    integer :: JJ
+
+
+      do JJ = II, jshell
         !cutoffTest = Ycutoff(II,JJ) * sqrt(c0c0)
         !if( cutoffTest .gt. quick_method%integralCutoff) then
           call compute_tci(II,JJ,c0c0)
-        !  icount2=icount2+1
         !endif
       enddo
-    enddo
 
-    !write(*,*) "intcounts", jshell, icount, icount2
-
-
-  end subroutine compute_lri
+  end subroutine prescreen_compute_tci
 
 
   subroutine compute_tci(II,JJ,c0c0)
