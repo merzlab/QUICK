@@ -196,6 +196,21 @@ subroutine get1e()
 #endif
       call cpu_time(timer_end%T1eV)
 
+#ifdef CEW
+
+         if ( quick_cew%use_cew ) then
+
+            call cpu_time(timer_begin%Tcew)
+
+            call quick_cew_prescf()
+
+            call cpu_time(timer_end%Tcew)
+
+            timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
+
+         endif
+#endif
+
       call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
 
       bCalc1e=.false.
