@@ -129,6 +129,10 @@ contains
 
     implicit none
 
+#ifdef MPIV
+   include "mpif.h"
+#endif
+
     double precision :: E
     double precision :: pot
     double precision :: qa,qb
@@ -136,6 +140,10 @@ contains
     double precision :: ew_self
     integer :: a,b,c,ierr
     double precision, dimension(:), allocatable :: chgs
+#ifdef MPIV
+    double precision :: Esum
+    Esum = 0.0d0
+#endif
 
     ierr=0
 
@@ -210,10 +218,10 @@ contains
     !Emm = 0.d0
 
 #ifdef MPIV
-    if(master) then
-#endif
-
+    do b=1+mpirank,quick_molspec%nextatom, mpisize
+#else
     do b=1, quick_molspec%nextatom
+#endif
        qb = quick_molspec%extchg(b)
        do a=1, quick_molspec%natom
           qa = quick_molspec%chg(a)
@@ -222,10 +230,6 @@ contains
           E = E - qa*qb*erf( quick_cew%beta * r ) / r
        end do
     end do
-
-#ifdef MPIV
-    endif
-#endif
 
     ! 
     ! Remove the interaction of the nuclei with the Ewald Gaussians
@@ -248,9 +252,10 @@ contains
     !Eqm = 0.d0
 
 #ifdef MPIV
-    if(master) then
-#endif
+    do a=1+mpirank,quick_molspec%natom, mpisize
+#else
     do a=1, quick_molspec%natom
+#endif
        qa = quick_molspec%chg(a) - 0.5d0 * quick_cew%qmq(a)
        do b=1, quick_molspec%natom
           qb = quick_cew%qmq(b)
@@ -263,9 +268,6 @@ contains
           end if
        end do
     end do
-#ifdef MPIV
-    endif
-#endif
 
 
 
@@ -354,7 +356,9 @@ contains
     !
     !Epot = 0.d0
 #ifdef MPIV
-    if(master) then
+    do a=1+mpirank,quick_molspec%natom, mpisize
+#else
+    do a=1, quick_molspec%natom
 #endif
     do a=1, quick_molspec%natom
        qa = quick_molspec%chg(a)
@@ -362,10 +366,12 @@ contains
        call cew_getrecip( quick_molspec%xyz(1,a), pot )
        E = E + qa * pot
     end do
-#ifdef MPIV
-    endif
-#endif
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
+
+#ifdef MPIV
+    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, MPI_COMM_WORLD, mpierror)
+    E=Esum
+#endif
 
     quick_qm_struct%ECore = quick_qm_struct%ECore + E
     
@@ -584,9 +590,10 @@ contains
 
 
 #ifdef MPIV
-    if(master) then
-#endif    
+    do a=1+mpirank, quick_molspec%natom, mpisize
+#else
     do a=1, quick_molspec%natom
+#endif
        qa = quick_cew%qmq(a)
        do b=1, quick_molspec%natom
           if ( a /= b ) then
@@ -614,7 +621,11 @@ contains
     end do
 
     
+#ifdef MPIV
+    do a=1+mpirank,quick_molspec%natom,mpisize
+#else    
     do a=1, quick_molspec%natom
+#endif
        qa = quick_molspec%chg(a)
        rvec = 0.d0
        call cew_getgrdatpt( quick_molspec%xyz(1,a), rvec(1) )
@@ -628,7 +639,11 @@ contains
     end do
 
     
+#ifdef MPIV
+    do a=1+mpirank,quick_molspec%nextatom, mpisize
+#else    
     do a=1, quick_molspec%nextatom
+#endif
        qa = quick_molspec%extchg(a)
        do b=1, quick_molspec%natom
           qb = quick_molspec%chg(b)
@@ -652,9 +667,6 @@ contains
           end do
        end do
     end do
-#ifdef MPIV
-    endif
-#endif
 
     !
     ! TODO *****************************************************
