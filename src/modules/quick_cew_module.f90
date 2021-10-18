@@ -360,7 +360,6 @@ contains
 #else
     do a=1, quick_molspec%natom
 #endif
-    do a=1, quick_molspec%natom
        qa = quick_molspec%chg(a)
        pot = 0.d0
        call cew_getrecip( quick_molspec%xyz(1,a), pot )
