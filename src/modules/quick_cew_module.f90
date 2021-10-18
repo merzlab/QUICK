@@ -123,7 +123,10 @@ contains
     use quick_calculated_module, only : quick_qm_struct
     use quick_basis_module
     use quick_method_module, only: quick_method
-    
+#ifdef MPIV
+    use quick_mpi_module
+#endif    
+
     implicit none
 
     double precision :: E
@@ -205,6 +208,11 @@ contains
     !
 
     !Emm = 0.d0
+
+#ifdef MPIV
+    if(master) then
+#endif
+
     do b=1, quick_molspec%nextatom
        qb = quick_molspec%extchg(b)
        do a=1, quick_molspec%natom
@@ -215,6 +223,9 @@ contains
        end do
     end do
 
+#ifdef MPIV
+    endif
+#endif
 
     ! 
     ! Remove the interaction of the nuclei with the Ewald Gaussians
@@ -235,6 +246,10 @@ contains
     ! E -= \sum_{a \in QM} \sum_{b \in QM} (Za-Qa/2)*Qb*erf(\beta r)/r
     !
     !Eqm = 0.d0
+
+#ifdef MPIV
+    if(master) then
+#endif
     do a=1, quick_molspec%natom
        qa = quick_molspec%chg(a) - 0.5d0 * quick_cew%qmq(a)
        do b=1, quick_molspec%natom
@@ -248,7 +263,9 @@ contains
           end if
        end do
     end do
-
+#ifdef MPIV
+    endif
+#endif
 
 
 
@@ -336,13 +353,18 @@ contains
     ! This is the 1st term in Eq (87)
     !
     !Epot = 0.d0
+#ifdef MPIV
+    if(master) then
+#endif
     do a=1, quick_molspec%natom
        qa = quick_molspec%chg(a)
        pot = 0.d0
        call cew_getrecip( quick_molspec%xyz(1,a), pot )
        E = E + qa * pot
     end do
-
+#ifdef MPIV
+    endif
+#endif
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
 
     quick_qm_struct%ECore = quick_qm_struct%ECore + E
@@ -541,7 +563,10 @@ contains
     !use quick_lri_grad_module, only: computeLRINumGrad
     use quick_gridpoints_module, only : quick_dft_grid
     use quick_method_module, only: quick_method
-    
+#ifdef MPIV
+    use quick_mpi_module
+#endif    
+
     implicit none
     integer :: a,b,c,k,oa,ob,oc,ierr
     double precision :: c_coord(3), rvec(3)
@@ -558,7 +583,9 @@ contains
     ew_self = 2.d0 * quick_cew%beta / sqrt_pi
 
 
-    
+#ifdef MPIV
+    if(master) then
+#endif    
     do a=1, quick_molspec%natom
        qa = quick_cew%qmq(a)
        do b=1, quick_molspec%natom
@@ -625,7 +652,9 @@ contains
           end do
        end do
     end do
-
+#ifdef MPIV
+    endif
+#endif
 
     !
     ! TODO *****************************************************
