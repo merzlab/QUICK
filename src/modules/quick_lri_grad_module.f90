@@ -121,8 +121,6 @@ contains
 
 
 
-
-  
   subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx )
 
     !----------------------------------------------------------------------!
@@ -135,24 +133,62 @@ contains
     !______________________________________________________________________!
 
     use quick_basis_module
+
+#if defined MPIV && !defined CUDA_MPIV
+    use quick_mpi_module
+#endif
     
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer, intent(in) :: c_idx
     integer :: II, JJ         ! shell pairs
+#if defined MPIV && !defined CUDA_MPIV
+    integer :: i
+#endif
 
     RC=c_coords
     Zc=c_zeta
     Cc=c_chg
     iC=c_idx
 
-    do II = 1, jshell
-      do JJ = II, jshell  
-        call compute_tci_grad(II,JJ)
-      enddo
-    enddo
+#if defined MPIV && !defined CUDA_MPIV 
+  !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
+  !  which has 
+  !  4 jshell, and 2 nodes will take 2 jshell respectively.
+     if(bMPI) then
+        do i=1,mpi_jshelln(mpirank)
+           ii=mpi_jshell(mpirank,i)
+           call prescreen_compute_tci_grad(II)
+        enddo
+     else
+        do II=1,jshell
+           call prescreen_compute_tci_grad(II)
+        enddo
+     endif
+#else
+     do II=1,jshell
+        call prescreen_compute_tci_grad(II)
+     enddo
+#endif
 
   end subroutine compute_lri_grad
+
+
+  subroutine prescreen_compute_tci_grad(II)
+
+    use quick_basis_module
+    use quick_method_module, only: quick_method
+
+    implicit none
+    integer, intent(in) :: II
+    integer :: JJ
+
+
+      do JJ = II, jshell
+          call compute_tci_grad(II,JJ)
+      enddo
+
+  end subroutine prescreen_compute_tci_grad
 
 
   subroutine compute_tci_grad(II,JJ)
