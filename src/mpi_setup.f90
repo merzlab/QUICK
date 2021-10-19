@@ -363,6 +363,7 @@
 
     endif
 
+    call mpi_distribute_atoms(quick_molspec%natom, quick_molspec%nextatom)
     
     end subroutine MPI_setup_hfoperator
 
