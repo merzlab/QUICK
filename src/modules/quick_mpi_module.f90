@@ -35,6 +35,11 @@ module quick_mpi_module
     integer, allocatable :: mgpu_ids(:)    
     integer :: mgpu_id
 
+    integer, allocatable :: natomll(:)
+    integer, allocatable :: natomul(:)
+    integer, allocatable :: nextatomll(:)
+    integer, allocatable :: nextatomul(:)
+
     contains
     
     !----------------
@@ -86,6 +91,30 @@ module quick_mpi_module
     
     end subroutine deallocate_mgpu
 
+    subroutine mpi_distribute_atoms(natom, nextatom)
 
+      implicit none
+      integer, intent(in) :: natom
+      integer, intent(in) :: nextatom
 
+      if( .not. allocated(natomll)) allocate(natomll(mpisize))
+      if( .not. allocated(natomul)) allocate(natomul(mpisize))
+      if( .not. allocated(nextatomll)) allocate(nextatomll(mpisize))
+      if( .not. allocated(nextatomul)) allocate(nextatomul(mpisize))
+
+      call naive_distribute(natom,mpisize,natomll,natomul)
+      call naive_distribute(nextatom,mpisize,nextatomll,nextatomul)
+
+    end subroutine mpi_distribute_atoms
+
+    subroutine mpi_delete_atoms()
+
+      implicit none
+
+      if(allocated(natomll)) deallocate(natomll)
+      if(allocated(natomul)) deallocate(natomul)
+      if(allocated(nextatomll)) deallocate(nextatomll)
+      if(allocated(nextatomul)) deallocate(nextatomul)      
+
+    end subroutine mpi_delete_atoms
 end module quick_mpi_module

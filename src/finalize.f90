@@ -64,6 +64,10 @@ subroutine deallocateall(ierr)
       call  deform_dft_grid(quick_dft_grid)
     endif
 
+#ifdef MPIV
+    call mpi_delete_atoms
+#endif
+
 end subroutine deallocateall
 
 
