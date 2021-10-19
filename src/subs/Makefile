@@ -41,7 +41,7 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
 	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
-	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o
+	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o $(objfolder)/naive_distribute.o
 
 MIRP = $(objfolder)/mirp_fmt.o
 
