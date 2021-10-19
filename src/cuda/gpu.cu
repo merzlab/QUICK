@@ -247,11 +247,22 @@ extern "C" void gpu_allocate_scratch_(){
     unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
 
     gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store -> DeleteCPU();
+
     gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store2 -> DeleteCPU();
+
     gpu -> scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeAA -> DeleteCPU();
+
     gpu -> scratch -> storeBB       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeBB -> DeleteCPU();
+
     gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeCC -> DeleteCPU();
+
     gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
+    gpu -> scratch -> YVerticalTemp -> DeleteCPU();
 
     gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;
     gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
@@ -259,13 +270,6 @@ extern "C" void gpu_allocate_scratch_(){
     gpu -> gpu_sim.storeBB       = gpu -> scratch -> storeBB -> _devData;
     gpu -> gpu_sim.storeCC       = gpu -> scratch -> storeCC -> _devData;
     gpu -> gpu_sim.YVerticalTemp = gpu -> scratch -> YVerticalTemp -> _devData;
-
-    gpu -> scratch -> store -> DeleteCPU();
-    gpu -> scratch -> store2 -> DeleteCPU();
-    gpu -> scratch -> storeAA -> DeleteCPU();
-    gpu -> scratch -> storeBB -> DeleteCPU();
-    gpu -> scratch -> storeCC -> DeleteCPU();
-    gpu -> scratch -> YVerticalTemp -> DeleteCPU();
 
 }
 
