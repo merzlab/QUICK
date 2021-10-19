@@ -141,8 +141,14 @@ contains
     integer :: a,b,c,ierr
     double precision, dimension(:), allocatable :: chgs
 #ifdef MPIV
+    integer :: atominit, atomlast, extatominit, extatomlast
     double precision :: Esum
     Esum = 0.0d0
+
+    atominit = natomll(mpirank+1)
+    atomlast = natomul(mpirank+1)
+    extatominit = nextatomll(mpirank+1)
+    extatomlast = nextatomul(mpirank+1)
 #endif
 
     ierr=0
@@ -218,7 +224,7 @@ contains
     !Emm = 0.d0
 
 #ifdef MPIV
-    do b=1+mpirank,quick_molspec%nextatom, mpisize
+    do b=extatominit, extatomlast
 #else
     do b=1, quick_molspec%nextatom
 #endif
@@ -252,7 +258,7 @@ contains
     !Eqm = 0.d0
 
 #ifdef MPIV
-    do a=1+mpirank,quick_molspec%natom, mpisize
+    do a=atominit, atomlast
 #else
     do a=1, quick_molspec%natom
 #endif
@@ -356,7 +362,7 @@ contains
     !
     !Epot = 0.d0
 #ifdef MPIV
-    do a=1+mpirank,quick_molspec%natom, mpisize
+    do a=atominit, atomlast
 #else
     do a=1, quick_molspec%natom
 #endif
@@ -580,6 +586,15 @@ contains
     double precision :: ew_self
     double precision :: ga(3), gb(3), gc(3)
 
+#ifdef MPIV
+    integer :: atominit, atomlast, extatominit, extatomlast
+
+    atominit = natomll(mpirank+1)
+    atomlast = natomul(mpirank+1)
+    extatominit = nextatomll(mpirank+1)
+    extatomlast = nextatomul(mpirank+1)
+#endif
+
     ierr=0
 
     !
@@ -589,7 +604,7 @@ contains
 
 
 #ifdef MPIV
-    do a=1+mpirank, quick_molspec%natom, mpisize
+    do a=atominit, atomlast
 #else
     do a=1, quick_molspec%natom
 #endif
@@ -621,7 +636,7 @@ contains
 
     
 #ifdef MPIV
-    do a=1+mpirank,quick_molspec%natom,mpisize
+    do a=atominit, atomlast
 #else    
     do a=1, quick_molspec%natom
 #endif
@@ -639,7 +654,7 @@ contains
 
     
 #ifdef MPIV
-    do a=1+mpirank,quick_molspec%nextatom, mpisize
+    do a=extatominit, extatomlast
 #else    
     do a=1, quick_molspec%nextatom
 #endif
