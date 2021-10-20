@@ -18,6 +18,10 @@
 #include "mgpu.h"
 #endif
 
+#ifdef CEW
+#include "iface.hpp"
+#endif
+
 #include "gpu_get2e_getxc_drivers.h"
 #define OSHELL
 #include "gpu_get2e_getxc_drivers.h"
