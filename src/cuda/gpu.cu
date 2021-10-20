@@ -1927,9 +1927,28 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 //-----------------------------------------------
 //  upload information for CEW quad calculation
 //-----------------------------------------------
-extern "C" void gpu_upload_cew_vrecip_(QUICKDouble *vrecip, int *count, int *ierr){
+extern "C" void gpu_upload_cew_vrecip_(int *ierr){
 
-  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(vrecip, *count);
+  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+  QUICKDouble *gridpt = new QUICKDouble[3];
+
+  for(int i=0; i<gpu -> gpu_xcq -> npoints; i++){
+
+    gridpt[0] = gpu -> gpu_xcq -> gridx -> _hostData[i];
+    gridpt[1] = gpu -> gpu_xcq -> gridy -> _hostData[i];
+    gridpt[2] = gpu -> gpu_xcq -> gridz -> _hostData[i];
+
+    QUICKDouble vrecip = 0.0;
+
+#ifdef CEW
+    cew_getpotatpt_(gridpt, &vrecip);
+#endif
+
+    gpu -> lri_data -> vrecip -> _hostData[i] = -vrecip;
+
+  }
+
   gpu -> lri_data -> vrecip -> Upload();
   gpu -> gpu_sim.cew_vrecip   = gpu -> lri_data -> vrecip -> _devData;
 
