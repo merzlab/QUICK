@@ -66,10 +66,6 @@ contains
   !  Step 1. evaluate 1e integrals
   !-----------------------------------------------------------------
   
-     call get1e()
-  
-     if(quick_method%printEnergy) call get1eEnergy
-  
   !  if only calculate operation difference
      if (deltaO) then
   !     save density matrix
@@ -89,8 +85,6 @@ contains
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
   
-  !  Start the timer for 2e-integrals
-     call cpu_time(timer_begin%T2e)
   
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
@@ -101,7 +95,11 @@ contains
   
      endif
 #endif
-  
+ 
+     call get1e()
+
+     if(quick_method%printEnergy) call get1eEnergy
+ 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
 !        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
@@ -118,6 +116,9 @@ contains
   ! The previous two terms are the one electron part of the Fock matrix.
   ! The next two terms define the two electron part.
   !-----------------------------------------------------------------
+  !  Start the timer for 2e-integrals
+     call cpu_time(timer_begin%T2e)
+
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
            call gpu_get_cshell_eri(quick_qm_struct%o)  

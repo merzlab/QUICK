@@ -384,13 +384,13 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
 
-    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 //#ifdef LEGACY_ATOMIC_ADD
-    gpu -> gpu_calculated -> o        ->  DeleteGPU();
-    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu -> gpu_calculated -> oULL     -> Upload();
-    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
+//    gpu -> gpu_calculated -> o        ->  DeleteGPU();
+//    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> oULL     -> Upload();
+//    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
 /*#else
     gpu -> gpu_calculated -> o     -> Upload();
     gpu -> gpu_sim.o = gpu -> gpu_calculated -> o -> _devData;
@@ -404,6 +404,8 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
 //#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> oULL -> Download();
+
+    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);
 
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
@@ -441,10 +443,10 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     gpu -> gpu_calculated -> o    -> DownloadSum(o);
 
-    SAFE_DELETE(gpu -> gpu_calculated -> o);
+//    SAFE_DELETE(gpu -> gpu_calculated -> o);
 
 //#ifdef LEGACY_ATOMIC_ADD
-    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
+//    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
 //#endif
 
 }
@@ -552,13 +554,13 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 extern "C" void gpu_get_lri_(QUICKDouble* o)
 {
   
-    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 //#ifdef LEGACY_ATOMIC_ADD
-    gpu -> gpu_calculated -> o        ->  DeleteGPU();
-    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu -> gpu_calculated -> oULL     -> Upload();
-    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
+//    gpu -> gpu_calculated -> o        ->  DeleteGPU();
+//    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> oULL     -> Upload();
+//    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
 /*#else
     gpu -> gpu_calculated -> o     -> Upload();
     gpu -> gpu_sim.o = gpu -> gpu_calculated -> o -> _devData;
@@ -577,6 +579,8 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
 //#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> oULL -> Download();
+
+    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);
 
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
@@ -615,10 +619,10 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 */
     gpu -> gpu_calculated -> o    -> DownloadSum(o);
 
-    SAFE_DELETE(gpu -> gpu_calculated -> o);
+//    SAFE_DELETE(gpu -> gpu_calculated -> o);
 
 //#ifdef LEGACY_ATOMIC_ADD
-    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
+//    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
 //#endif
 
 }
