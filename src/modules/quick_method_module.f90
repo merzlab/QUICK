@@ -245,6 +245,7 @@ module quick_method_module
 
             !mpi variables for libxc implementation
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
