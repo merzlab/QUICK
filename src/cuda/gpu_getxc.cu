@@ -112,6 +112,8 @@ void getxc(_gpu_type gpu){
         QUICK_SAFE_CALL((cshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     }
 
+    cudaDeviceSynchronize();
+
 #ifdef DEBUG
     cudaEventRecord(end, 0);
     cudaEventSynchronize(end);
