@@ -186,17 +186,17 @@ static float totTime;
 // interface for kernel launching
 void getOEI(_gpu_type gpu){
 
-//  QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    getOEI_kernel<<<80, 256>>>();
+    cudaDeviceSynchronize();
 
 }
 
 void get_oei_grad(_gpu_type gpu){
 
-//  QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    get_oei_grad_kernel<<<80, 256>>>();
+    cudaDeviceSynchronize();
 
 }
 
