@@ -182,8 +182,8 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel_spdf2()
                                     MAX(MAX(LOC2(devSim.cutMatrix, ii, ll, nshell, nshell),     LOC2(devSim.cutMatrix, ii, kk, nshell, nshell)),
                                         MAX(LOC2(devSim.cutMatrix, jj, kk, nshell, nshell),     LOC2(devSim.cutMatrix, jj, ll, nshell, nshell))));
             
-            if ((LOC2(devSim.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim.YCutoff, ii, jj, nshell, nshell))> devSim.integralCutoff && \
-                (LOC2(devSim.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim.YCutoff, ii, jj, nshell, nshell) * DNMax) > devSim.integralCutoff) {
+            if ((LOC2(devSim.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim.YCutoff, ii, jj, nshell, nshell))> DEFAULT_INTEGRAL_CUTOFF && \
+                (LOC2(devSim.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim.YCutoff, ii, jj, nshell, nshell) * DNMax) > DEFAULT_INTEGRAL_CUTOFF) {
 */                
                 int iii = devSim.sorted_Qnumber[II];
                 int jjj = devSim.sorted_Qnumber[JJ];
@@ -480,7 +480,7 @@ __device__ __forceinline__ void iclass_tci_spdf2
 #ifdef int_spd
                         if (abs(Y) > 0.0e0)
 #else
-                        if (abs(Y) > devSim.integralCutoff)
+                        if (abs(Y) > DEFAULT_INTEGRAL_CUTOFF)
 #endif
                         {
                             addint_tci(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
