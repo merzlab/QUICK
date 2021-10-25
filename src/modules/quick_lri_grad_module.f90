@@ -133,6 +133,7 @@ contains
     !______________________________________________________________________!
 
     use quick_basis_module
+    use quick_lri_module, only: compute_c0c0 
 
 #if defined MPIV && !defined CUDA_MPIV
     use quick_mpi_module
@@ -141,6 +142,7 @@ contains
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer, intent(in) :: c_idx
+    double precision :: c0c0
     integer :: II, JJ         ! shell pairs
 #if defined MPIV && !defined CUDA_MPIV
     integer :: i
@@ -151,6 +153,10 @@ contains
     Cc=c_chg
     iC=c_idx
 
+    c0c0=0.0d0
+
+    call compute_c0c0(RC, Zc, Cc, c0c0)
+
 #if defined MPIV && !defined CUDA_MPIV 
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
   !  which has 
@@ -158,34 +164,39 @@ contains
      if(bMPI) then
         do i=1,mpi_jshelln(mpirank)
            ii=mpi_jshell(mpirank,i)
-           call prescreen_compute_tci_grad(II)
+           call prescreen_compute_tci_grad(II,c0c0)
         enddo
      else
         do II=1,jshell
-           call prescreen_compute_tci_grad(II)
+           call prescreen_compute_tci_grad(II,c0c0)
         enddo
      endif
 #else
      do II=1,jshell
-        call prescreen_compute_tci_grad(II)
+        call prescreen_compute_tci_grad(II,c0c0)
      enddo
 #endif
 
   end subroutine compute_lri_grad
 
 
-  subroutine prescreen_compute_tci_grad(II)
+  subroutine prescreen_compute_tci_grad(II,c0c0)
 
     use quick_basis_module
     use quick_method_module, only: quick_method
 
     implicit none
     integer, intent(in) :: II
+    double precision, intent(in) :: c0c0
+    double precision :: cutoffTest
     integer :: JJ
 
 
       do JJ = II, jshell
-          call compute_tci_grad(II,JJ)
+          cutoffTest = Ycutoff(II,JJ) * sqrt(c0c0)
+          if( cutoffTest .gt. quick_method%coreIntegralCutoff) then
+              call compute_tci_grad(II,JJ)
+          endif
       enddo
 
   end subroutine prescreen_compute_tci_grad
