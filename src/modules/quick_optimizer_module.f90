@@ -368,7 +368,7 @@ contains
         enddo
 
         write (ioutfile,*)
-        write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
+        write (ioutfile,'(" MINIMIZED ENERGY=",F20.10)') quick_qm_struct%Etot
         Write (ioutfile,'("===============================================================")')
 
 
