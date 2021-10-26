@@ -24,6 +24,7 @@ module quick_lri_module
   public :: has_angrenorm
   public :: angrenorm
   public :: CalcAngRenorm
+  public :: compute_c0c0
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
@@ -84,7 +85,7 @@ contains
     double precision, intent(out) :: c0c0
     double precision :: zeta, nita, K_AB, K_CD    
 
-    c0c0 = 1/sqrt(2.0d0*c_zeta) * X0/(c_zeta*c_zeta) * c_chg * (c_zeta/PI)**1.5d0 
+    c0c0 = abs(1/sqrt(2.0d0*c_zeta) * X0/(c_zeta*c_zeta) * c_chg * (c_zeta/PI)**1.5d0) 
 
   end subroutine compute_c0c0
   
@@ -107,8 +108,8 @@ contains
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
-    double precision :: c0c0, cutoffTest
-    integer :: II, JJ, icount, icount2         ! shell pairs
+    double precision :: c0c0
+    integer :: II, JJ         ! shell pairs
 
 #if defined MPIV && !defined CUDA_MPIV
     integer :: i
@@ -118,13 +119,9 @@ contains
     Zc=c_zeta
     Cc=c_chg
 
-    icount =0
-    icount2=0
     c0c0=0.0d0
 
-    !call compute_c0c0(RC, Zc, Cc, c0c0)
-
-    !write(*,*) "c0c0: ", c0c0
+    call compute_c0c0(RC, Zc, Cc, c0c0)
 
 #if defined MPIV && !defined CUDA_MPIV 
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
@@ -157,14 +154,14 @@ contains
     implicit none
     integer, intent(in) :: II
     double precision, intent(in) :: c0c0
+    double precision :: cutoffTest
     integer :: JJ
 
-
       do JJ = II, jshell
-        !cutoffTest = Ycutoff(II,JJ) * sqrt(c0c0)
-        !if( cutoffTest .gt. quick_method%integralCutoff) then
+        cutoffTest = Ycutoff(JJ,II) * sqrt(c0c0)
+        if( cutoffTest .gt. quick_method%coreIntegralCutoff) then
           call compute_tci(II,JJ,c0c0)
-        !endif
+        endif
       enddo
 
   end subroutine prescreen_compute_tci
