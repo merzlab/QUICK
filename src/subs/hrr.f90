@@ -880,6 +880,10 @@ subroutine hrrwholeopt
    double precision coefangxiaoLnew(20),coefangxiaoRnew(20)
    integer angxiaoLnew(20),angxiaoRnew(20),numangularLnew,numangularRnew
 
+   ! MM: some variables to improve memory access
+   double precision :: tmp_Y, tmp_coefang
+   integer :: itmp_ang, klmn_local
+
    COMMON /COM1/RA,RB,RC,RD
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -895,43 +899,52 @@ subroutine hrrwholeopt
 
    do itemp=1,3
 
-      do itempxiao=1,3
-         NA(itempxiao)=quick_basis%KLMN(itempxiao,III)
-      enddo
+      NA(1:3)=quick_basis%KLMN(1:3,III) 
 
-      NA(itemp)=quick_basis%KLMN(itemp,III)+1
+      klmn_local = quick_basis%KLMN(itemp,III)
+
+      NA(itemp)=klmn_local+1
 
       call lefthrr(RA,RB,NA(1:3),quick_basis%KLMN(1:3,JJJ),IJtype+10,coefangxiaoLnew,angxiaoLnew,numangularLnew)
-      Yaa(itemp)=0.0d0
+
+      tmp_Y = 0.0d0
       do i=1,numangularLnew
+
+         tmp_coefang = coefangxiaoLnew(i)
+         itmp_ang     = angxiaoLnew(i)
+
          do jxiao=1,numangularR
-            Yaa(itemp)=Yaa(itemp)+coefangxiaoLnew(i)*coefangxiaoR(jxiao)* &
-                  storeAA(angxiaoLnew(i),angxiaoR(jxiao))
-
-
+            tmp_Y = tmp_Y + tmp_coefang * coefangxiaoR(jxiao)* &
+                  storeAA(itmp_ang, angxiaoR(jxiao))
          enddo
       enddo
 
+      Yaa(itemp)=tmp_Y
 
-      if(quick_basis%KLMN(itemp,III).ge.1)then
+      if(klmn_local.ge.1)then
 
-         do itempxiao=1,3
-            NA(itempxiao)=quick_basis%KLMN(itempxiao,III)
-         enddo
+         NA(1:3)=quick_basis%KLMN(1:3,III)
 
-         NA(itemp)=quick_basis%KLMN(itemp,III)-1
+         NA(itemp)=klmn_local-1
 
          call lefthrr(RA,RB,NA(1:3),quick_basis%KLMN(1:3,JJJ),IJtype-10,coefangxiaoLnew,angxiaoLnew,numangularLnew)
-         do i=1,numangularLnew
-            do jxiao=1,numangularR
-               Yaa(itemp)=Yaa(itemp)-quick_basis%KLMN(itemp,III)*coefangxiaoLnew(i)* &
 
-                     coefangxiaoR(jxiao)*store(angxiaoLnew(i),angxiaoR(jxiao))
+         do i=1,numangularLnew
+
+            tmp_coefang = coefangxiaoLnew(i)
+            itmp_ang    = angxiaoLnew(i)
+
+            do jxiao=1,numangularR
+               tmp_Y=tmp_Y-klmn_local*tmp_coefang* &
+                     coefangxiaoR(jxiao)*store(itmp_ang,angxiaoR(jxiao))
             enddo
          enddo
       endif
 
-      Yaa(itemp)=Yaa(itemp)*tempconstant
+      tmp_Y = tmp_Y * tempconstant
+
+      Yaa(itemp)=tmp_Y
+
    enddo
 
    do itemp=1,3
