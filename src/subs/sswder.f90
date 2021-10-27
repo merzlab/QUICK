@@ -201,6 +201,9 @@
     return
     end subroutine sswder
 
+! Following subroutine was implemented by Tim Giese based on Stratmann,
+! Scuseria, and Frisch, Chem. Phys. Lett., v257 1996, pg 213-223 paper.
+
 #define SSW_POLYFAC1 (3.4179687500)
 #define SSW_POLYFAC2 (8.344650268554688)
 #define SSW_POLYFAC3 (12.223608791828156)
@@ -266,6 +269,20 @@
           else if ( mu >= a ) then
              g = 1.d0
           else
+
+             !muoa = mu/a
+             !z = (35.d0*muoa - 35.d0*muoa**3 &
+             !     & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             !g = z
+
+             ! MM optimized above statements as follows. 
+
+             !We can reduce the MUL operations by precomputing polynomial constants in eqn14. 
+             !constant of the first term, 3.4179687500 = 35.0 * (1/0.64) * (1/16) 
+             !constant of the second term, 8.344650268554688 = 35.0 * (1/0.64)^3 * (1/16) 
+             !constant of the third term, 12.223608791828156 = 21.0 * (1/0.64)^5 * (1/16) 
+             !constant of the fourth term, 7.105427357601002 = 5.0 * (1/0.64)^7 * (1/16)
+
              muoa = mu
              muoa3 = muoa * muoa * muoa
 
