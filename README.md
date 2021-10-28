@@ -25,7 +25,6 @@ Features
 
 Limitations
 -----------
-* Supports only closed shell systems
 * Supports energy/gradient calculations with basis functions up to d
 * Supports only Cartesian basis functions (no spherical harmonics)
 * Effective core potentials (ECPs) are not supported
