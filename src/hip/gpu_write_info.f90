@@ -39,13 +39,13 @@ subroutine gpu_write_info(io, ierr)
     call gpu_get_device_info(gpu_dev_count,gpu_dev_id,gpu_dev_mem,gpu_num_proc,&
     gpu_core_freq,gpu_dev_name,name_len,majorv,minorv,ierr)
     write(io,'(a)')        '|------------ GPU INFORMATION ---------------'
-    write(io,'(a,i8)')     '| CUDA ENABLED DEVICE         : ', gpu_dev_count
-    write(io,'(a,i8)')     '| CUDA DEVICE IN USE          : ', gpu_dev_id
-    write(io,'(a,a)')        '| CUDA DEVICE NAME            : ', gpu_dev_name(1:name_len)
-    write(io,'(a,i8)')     '| CUDA DEVICE PM              : ', gpu_num_proc
-    write(io,'(a,f8.2)')   '| CUDA DEVICE CORE FREQ(GHZ)  : ', gpu_core_freq
-    write(io,'(a,i8)')     '| CUDA DEVICE MEMORY SIZE (MB): ', gpu_dev_mem
-    write(io,'(a,i6,a,i1)')     '| SUPPORTING CUDA VERSION     : ', majorv,'.',minorv
+    write(io,'(a,i8)')     '| AMD DEVICE COUNT            : ', gpu_dev_count
+    write(io,'(a,i8)')     '| AMD DEVICE IN USE           : ', gpu_dev_id
+    write(io,'(a,a)')        '| AMD DEVICE NAME             : ', gpu_dev_name(1:name_len)
+    write(io,'(a,i8)')     '| AMD DEVICE PM               : ', gpu_num_proc
+    write(io,'(a,f8.2)')   '| AMD DEVICE CORE FREQ(GHZ)   : ', gpu_core_freq
+    write(io,'(a,i8)')     '| AMD DEVICE MEMORY SIZE (MB) : ', gpu_dev_mem
+    write(io,'(a,i6,a,i1)')     '| SUPPORTING ROCm VERSION     : ', majorv,'.',minorv
     write(io,'(a)')        '|--------------------------------------------'
     if (majorv <=1 .and. minorv<=2) call prtWrn(io,"Selected GPU does not support double-precision computation.")
     
