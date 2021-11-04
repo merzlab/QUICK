@@ -43,6 +43,7 @@ echo  "
       --mpi          Compiles MPI parallel version                           
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --cudampi      Builds multi-GPU version that utilizes multiple NVIDIA GPUs  
+      --hip          Builds GPU version that utilizes a single AMD GPU
       --debug        Compiles debug version                                 
       --debug-time   Compiles a debug version that reports more information
                      on timing
@@ -535,6 +536,8 @@ serial='no'
 mpi='no'
 cuda='no'
 cudampi='no'
+hip='no'
+hipmpi='no'
 debug='no'
 debugtime='no'
 buildtypes=''
@@ -545,6 +548,7 @@ fort='no'
 cc='no'
 cxx='no'
 nvcc='no'
+hipcc='no'
 
 # where to install
 useprefix='false'
@@ -562,6 +566,7 @@ cc_flags=''
 cxx_flags=''
 cuda_flags=''
 cpp_flags=''
+hip_flags=''
 
 # archiver related variables
 arch='ar'
@@ -577,21 +582,27 @@ cflags=''
 opt_flags='-O2'
 blas_opt_flags='-O3'
 
-# cuda architecture flags
+# cuda/hip architecture flags
 uspec_arch='false'
-cuda_arch=''
+gpu_arch=''
 cuda_arch_flags=''
+hip_arch=''
+hip_arch_flags=''
 
-# extra cuda flags
+# extra cuda/hip flags
 cuda_ext_flags='-m64 -use_fast_math'
 cuda_dc_flags=''
+hip_ext_flags=''
+hip_dc_flags=''
 
-# cuda include flags
+# cuda/hip include flags
 cuda_incl_flags=''
+hip_incl_flags=''
 
 # flags to generate PIC in so library case
 lib_flags=''
 cuda_lib_flags=''
+hip_lib_flags=''
 
 # debug flags
 fort_debug_flags=''
@@ -649,6 +660,8 @@ while [ $# -gt 0 ]; do
     --mpi)         mpi='yes'; buildtypes="$buildtypes mpi"; cleantypes="$cleantypes mpiclean"; installers="$installers quick.MPI";;
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
+    --hip)         hip='yes'; buildtypes="$buildtypes hip"; cleantypes="$cleantypes hipclean"; installers="$installers quick.hip";;
+    --hipmpi)     hipmpi='yes'; buildtypes="$buildtypes hipmpi"; cleantypes="$cleantypes hipmpiclean"; installers="$installers quick.hip.MPI";;
     --debug-time)  debugtime='yes';;
     --debug)       debug='yes';;
     --verbose)     verbose='';;
@@ -659,7 +672,7 @@ while [ $# -gt 0 ]; do
     --cew)         cew='yes';;
     --lapack)      lapack='yes';;
     --mkl)         mkl='yes';;
-    --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
+    --arch)        shift; gpu_arch="$gpu_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
     gnu)           compiler='gnu';;
@@ -687,7 +700,7 @@ fi
 # check the os first
 check_os
 
-if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then
+if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] || [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then
   echo  "Warning: QUICK cuda and cuda-mpi versions have never been tested on $osname os."
 fi
 
@@ -820,7 +833,7 @@ for buildtype in $buildtypes; do
     mkdir -p "$QUICK_HOME/build/obj/$buildtype/main"
   fi
 
-  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
+  if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' -o "$buildtype" = 'hip' -o "$buildtype" = 'hipmpi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/cpu/libxcobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/cpu/libxcobj"
     fi
@@ -834,7 +847,7 @@ for buildtype in $buildtypes; do
 
 
 
-  if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
+  if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' -o "$buildtype" = 'hip' -o "$buildtype" = 'hipmpi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
       mkdir -p "$QUICK_HOME/build/common/gpu/libxcobj"
     fi
@@ -846,6 +859,8 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
+
+
 
 done
 
@@ -872,7 +887,7 @@ done
 
 # this function sets the user defined cuda architecture flags, if specified
 set_uspec_arch(){
-  for carch in $cuda_arch; do
+  for carch in $gpu_arch; do
     case "$carch" in
       kepler)
 	echo "Configuring for SM3.0"
@@ -987,13 +1002,67 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 fi
 
 #  !---------------------------------------------------------------------!
+#  ! Check for HIP tool kit and compiler                                 !
+#  !---------------------------------------------------------------------!
+
+# this function sets the user defined cuda architecture flags, if specified
+set_uspec_hip_arch(){
+  for carch in $gpu_arch; do
+    case "$carch" in
+      gfx906)
+        echo "Configuring for gfx906"
+        hip_arch_flags="$hip_arch_flags -offload-arch=gfx906";;
+      gfx908)
+        echo "Configuring for gfx908"
+        hip_arch_flags="$hip_arch_flags -offload-arch=gfx908";;
+    esac
+  done
+}
+
+if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
+  if [ -z "$HIP_PATH" ]; then
+    echo  "Error: HIP_PATH environment variable is not set."
+    echo  "Please make sure ROCm toolkit is loaded."
+    exit 1
+  fi
+
+  if [ ! -x "$HIP_PATH/bin/hipcc" ]; then
+    echo  "Error: hipcc compiler is not available in $HIP_PATH/bin/"
+    exit 1
+  fi
+
+  if [ -z "$HIPCC" ]; then hipcc="$HIP_PATH/bin/hipcc"; else hipcc="$HIPCC"; fi
+
+
+    hipversion_str=`$hipcc --version | grep 'HIP version:' | cut -d' ' -f3 `
+    hipversion_major=`echo $hipversion_str | cut -d '.' -f1`
+    hipversion_minor=`echo $hipversion_str | cut -d '.' -f2`
+    hipversion="$hipversion_major.$hipversion_minor"
+
+    if [ "$hipversion" = "4.3" ]; then
+
+      echo "HIP Version $hipversion detected"
+
+    else
+      echo "Warning: QUICK has never been tested with HIP Version $hipversion."
+    fi
+
+    set_uspec_hip_arch
+
+    if [ -z $verbose ]; then
+      hip_ext_flags="$hip_ext_flags -v"
+    fi
+  
+fi
+
+#  !---------------------------------------------------------------------!
 #  ! Set common flags                                                    !
 #  !---------------------------------------------------------------------!
 
 # set debug flags
 if [ "$debug" = 'yes' ]; then
-  opt_flags='-O0'
-  blas_opt_flags='-O0'
+#  opt_flags='-O0'
+#  blas_opt_flags='-O0'
 
   case "$compiler" in
     gnu | pgi | nvidia)
@@ -1011,11 +1080,22 @@ if [ "$debug" = 'yes' ]; then
   if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
     cuda_debug_flags='-g -DDEBUG'
   fi
+
+  if [ "$hip" = 'yes' -o "$hipmpi" = 'yes' ]; then
+    hip_debug_flags='-g -DDEBUG'
+  fi
+
 elif [ "$debugtime" = 'yes' ]; then
+
   fort_debug_flags='-DDEBUGTIME'
   if [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
     cuda_debug_flags='-DDEBUGTIME'
   fi
+  if [ "$hip" = 'yes' -o "$hipmpi" = 'yes' ]; then
+    hip_debug_flags='-DDEBUGTIME'
+  fi
+
+
 fi
 
 # set library flags if so library is requested
@@ -1026,6 +1106,12 @@ if [ "$shared" = 'yes' ]; then
   arch_flags='-shared -o'
   ranlib='echo'
   libext='so'
+
+  if [ "$hip" = 'yes' -o "$hipmpi" = 'yes' ]; then
+    echo  "Error: shared library support is not currently available for hip and hipmpi versions."
+    exit 1    
+  fi
+
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1087,6 +1173,22 @@ for buildtype in $buildtypes; do
     fi
   fi
 
+  # set flags for hip and hipmpi versions
+  if [ "$buildtype" = 'hip' ] || [ "$buildtype" = 'hipmpi' ]; then
+
+    cpp_flags="$opt_flags -I$HIP_PATH/include $lib_flags"
+
+    hip_flags="$opt_flags $hip_debug_flags $hip_ext_flags $hip_arch_flags $hip_lib_flags"
+
+    hip_incl_flags="-L$HIP_PATH/lib -I$HIP_PATH/include"
+
+    if [ "$nof" = 'yes' ]; then
+      echo "F functions will not be compiled in the $buildtype version."
+    else
+      hip_incl_flags="$hip_incl_flags -DHIP_SPDF"
+    fi
+  fi
+
   # set directives based on the build type. These stuff were previously in config.h
 
   if [ "$buildtype" = 'mpi' ]; then
@@ -1107,6 +1209,20 @@ for buildtype in $buildtypes; do
     cc_flags="$cc_flags -DMPIV -DCUDA_MPIV"
     cxx_flags="$cxx_flags -DMPIV -DCUDA_MPIV"
     cuda_incl_flags="$cuda_incl_flags -DMPIV -DCUDA_MPIV"
+
+  elif [ "$buildtype" = 'hip' ]; then
+
+    fort_flags="$fort_flags -DHIP"
+    cc_flags="$cc_flags -DHIP"
+    cxx_flags="$cxx_flags -DHIP"
+    hip_incl_flags="$hip_incl_flags -DHIP"
+
+  elif [ "$buildtype" = 'hipmpi' ]; then
+
+    fort_flags="$fort_flags -DMPIV -DHIP_MPIV"
+    cc_flags="$cc_flags -DMPIV -DHIP_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DHIP_MPIV"
+    hip_incl_flags="$hip_incl_flags -DMPIV -DHIP_MPIV"
 
   fi
 
@@ -1166,6 +1282,10 @@ for buildtype in $buildtypes; do
     installer='quick.cuda'
   elif [ "$buildtype" = 'cudampi' ]; then
     installer='quick.cuda.MPI'
+  elif [ "$buildtype" = 'hip' ]; then
+    installer='quick.hip'
+  elif [ "$buildtype" = 'hipmpi' ]; then
+    installer='quick.hip.MPI'
   fi
 
   # set the test type
@@ -1180,6 +1300,10 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder=""
   elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     blasobjfolder=""
+    libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
+    libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
+  elif [ "$buildtype" = 'hip' -o "$buildtype" = 'hipmpi' ]; then
+    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
@@ -1220,6 +1344,9 @@ libxcfolder=$QUICK_HOME/src/libxc
 cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
+hipfolder=$QUICK_HOME/src/hip
+rocblasfolder=$QUICK_HOME/src/hip/rocblas
+rocsolverfolder=$QUICK_HOME/src/hip/rocsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
@@ -1244,6 +1371,7 @@ FC=$fort
 CC=$cc
 CXX=$cxx
 CUDAC=$nvcc
+HIPCC=$hipcc
 
 #!---------------------------------------------------------------------!
 #! Archiver and flags for the libraries                                !
@@ -1276,6 +1404,21 @@ CPP_FLAG=$cpp_flags
 CUDA_FLAGS=$cuda_flags
 CUDA_INCL_FLAGS=$cuda_incl_flags
 CUDA_DC_FLAGS=$cuda_dc_flags
+CFLAGS=$cflags
+
+EOF
+fi
+
+if [ "$buildtype" = 'hip' ] || [ "$buildtype" = 'hipmpi' ]; then
+cat >> "$QUICK_HOME/build/make.$buildtype.in" << EOF
+#!---------------------------------------------------------------------!
+#! HIP specific flags                                                  !
+#!---------------------------------------------------------------------!
+
+CPP_FLAG=$cpp_flags
+HIP_FLAGS=$hip_flags
+HIP_INCL_FLAGS=$hip_incl_flags
+HIP_DC_FLAGS=$hip_dc_flags
 CFLAGS=$cflags
 
 EOF
@@ -1319,6 +1462,7 @@ subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
 libxcfolder=$QUICK_HOME/src/libxc
 cudafolder=$QUICK_HOME/src/cuda
+hipfolder=$QUICK_HOME/src/hip
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
