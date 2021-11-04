@@ -155,7 +155,7 @@ libxc_f90:
 libxc_gpu:$(LIBXCOBJ) libxc_f90
 	@echo "[QUICK]  CC $(libxcobjfolder)/gpu.o"
 	$(VB)$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
-	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-cuda.$(LIBEXT) $(libxcobjfolder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-gpu.$(LIBEXT) $(libxcobjfolder)/*.o
 
 libxc_cpu:$(LIBXCOBJ) libxc_f90
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc.$(LIBEXT) $(libxcobjfolder)/*.o
