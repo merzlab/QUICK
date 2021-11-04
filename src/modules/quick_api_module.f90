@@ -250,7 +250,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   endif
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined HIP
 
   ! startup cuda device
   SAFE_CALL(gpu_startup(ierr))
@@ -264,7 +264,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
     !------------------- END CUDA ---------------------------------------
 #endif
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
 
   SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
 
@@ -276,14 +276,14 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
 #endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call gpu_allocate_scratch()
 #endif
 
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call upload(quick_method, ierr)
 #endif
 
@@ -532,7 +532,7 @@ subroutine run_quick(self,ierr)
     call schwarzoff
   endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
 #endif
@@ -540,7 +540,7 @@ subroutine run_quick(self,ierr)
   ! stop the timer for initial guess
   call cpu_time(timer_end%TIniGuess)
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -566,7 +566,7 @@ subroutine run_quick(self,ierr)
   ! run optimization
   if (quick_method%opt)  SAFE_CALL(optimize(ierr))
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       if (quick_method%bCUDA) then
         call gpu_cleanup()
       endif
@@ -706,7 +706,7 @@ subroutine set_quick_molspecs(self,ierr)
 
 end subroutine set_quick_molspecs
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
 ! uploads molecular information into gpu
 subroutine gpu_upload_molspecs(ierr)
@@ -793,19 +793,19 @@ subroutine delete_quick_job(ierr)
   integer, intent(out) :: ierr
   ierr=0
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call delete(quick_method,ierr)
 #endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call gpu_deallocate_scratch()
 #endif
 
-#ifdef CUDA
+#if defined CUDA || defined HIP
   SAFE_CALL(gpu_shutdown(ierr))
 #endif
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
   SAFE_CALL(delete_mgpu_setup(ierr))
   SAFE_CALL(mgpu_shutdown(ierr))
 #endif

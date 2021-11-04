@@ -107,7 +107,7 @@ subroutine get1e()
          !-----------------------------------------------------------------
          call cpu_time(timer_begin%T1eV)
 
-#ifdef CUDA
+#if defined CUDA || defined HIP
          call gpu_get_oei(quick_qm_struct%o)
 #else
          do IIsh=1,jshell
@@ -177,7 +177,7 @@ subroutine get1e()
       !-----------------------------------------------------------------
       call cpu_time(timer_begin%T1eV)
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
       call gpu_get_oei(quick_qm_struct%o)
 #else
       do i=1,mpi_jshelln(mpirank)

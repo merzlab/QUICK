@@ -123,7 +123,7 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         logical :: bCUDA                ! if CUDA is used here
 #endif
 
@@ -153,7 +153,7 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
     interface upload
         module procedure upload_method
     end interface upload
@@ -762,7 +762,7 @@ endif
             self%xc_polarization = 0
             self%nof_functionals = 0
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
             self%bCUDA  = .true.
 #endif
 
@@ -934,7 +934,7 @@ endif
         end subroutine set_libxc_func_info
 
         ! subroutine to upload method and libxc info in to gpu
-#if defined CUDA || defined CUDA_MPIV        
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV        
         subroutine upload_method(self, ierr)
           
           implicit none
