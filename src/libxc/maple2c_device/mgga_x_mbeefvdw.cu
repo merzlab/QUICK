@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include "../util.h"
 #include "../gpu_fstructs.h"
 

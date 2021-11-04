@@ -1,5 +1,5 @@
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#include "hip/hip_runtime.h"
+//#include "device_launch_parameters.h"
 #include <stdio.h>
 #include "util.h"
 

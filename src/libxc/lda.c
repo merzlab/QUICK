@@ -11,7 +11,7 @@
 #include "funcs_lda.c"
 
 /* get the lda functional */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_lda(const xc_func_type *func, int np, const double *rho, double *zk, double *vrho, double *v2rho2, double *v3rho3, void *gpu_work_params)
 #else
 void 
@@ -62,7 +62,7 @@ xc_lda(const xc_func_type *func, int np, const double *rho, double *zk, double *
   assert(func->info!=NULL && func->info->lda!=NULL);
 
   /* call the LDA routines */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   func->info->lda(func, np, rho, zk, vrho, v2rho2, v3rho3, gpu_work_params);
 #else
   func->info->lda(func, np, rho, zk, vrho, v2rho2, v3rho3);
@@ -71,7 +71,7 @@ xc_lda(const xc_func_type *func, int np, const double *rho, double *zk, double *
 
 
 /* specializations */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void
 xc_lda_exc(const xc_func_type *p, int np, const double *rho, double *zk, void *gpu_work_params)
 {
@@ -136,7 +136,7 @@ xc_lda_kxc(const xc_func_type *p, int np, const double *rho, double *v3rho3)
 #define DELTA_RHO 1e-6
 
 /* get the xc kernel through finite differences */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void
 xc_lda_fxc_fd(const xc_func_type *func, int np, const double *rho, double *v2rho2, void *gpu_work_params)
 #else
@@ -158,13 +158,13 @@ xc_lda_fxc_fd(const xc_func_type *func, int np, const double *rho, double *v2rho
       
       rho2[i] = rho[i] + DELTA_RHO;
       rho2[j] = (func->nspin == XC_POLARIZED) ? rho[j] : 0.0;
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       xc_lda_vxc(func, 1, rho2, vc1, gpu_work_params);
 #else
      xc_lda_vxc(func, 1, rho2, vc1);
 #endif 
       if(rho[i]<2.0*DELTA_RHO){ /* we have to use a forward difference */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 	xc_lda_vxc(func, 1, rho, vc2, gpu_work_params);
 #else
 	xc_lda_vxc(func, 1, rho, vc2);
@@ -175,7 +175,7 @@ xc_lda_fxc_fd(const xc_func_type *func, int np, const double *rho, double *v2rho
 	
       }else{                    /* centered difference (more precise)  */
 	rho2[i] = rho[i] - DELTA_RHO;
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 	xc_lda_vxc(func, 1, rho2, vc2, gpu_work_params);
 #else
 	xc_lda_vxc(func, 1, rho2, vc2);
@@ -191,7 +191,7 @@ xc_lda_fxc_fd(const xc_func_type *func, int np, const double *rho, double *v2rho
   } /* for(ip) */
 }
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void
 xc_lda_kxc_fd(const xc_func_type *func, int np, const double *rho, double *v3rho3, void *gpu_work_params)
 #else
@@ -209,19 +209,19 @@ xc_lda_kxc_fd(const xc_func_type *func, int np, const double *rho, double *v3rho
       double rho2[2], vc1[2], vc2[2], vc3[2];
 
       for(n=0; n<func->nspin; n++) rho2[n] = rho[n];
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       xc_lda_vxc(func, 1, rho, vc2, gpu_work_params);
 #else
 	xc_lda_vxc(func, 1, rho, vc2);
 #endif
       rho2[i] += DELTA_RHO;
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       xc_lda_vxc(func, 1, rho2, vc1, gpu_work_params);
 #else
 	xc_lda_vxc(func, 1, rho2, vc1);
 #endif	
       rho2[i] -= 2.0*DELTA_RHO;
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       xc_lda_vxc(func, 1, rho2, vc3, gpu_work_params);    
 #else
 	xc_lda_vxc(func, 1, rho2, vc3);

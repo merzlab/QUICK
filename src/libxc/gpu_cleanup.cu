@@ -5,13 +5,13 @@ void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo){
         // device memory pointed by these child pointers, we must access them.
 	gpu_libxc_info* h_glinfo;
 	h_glinfo = (gpu_libxc_info*)malloc(sizeof(gpu_libxc_info));
-	cudaMemcpy(h_glinfo, d_glinfo, sizeof(gpu_libxc_info), cudaMemcpyDeviceToHost);
+	hipMemcpy(h_glinfo, d_glinfo, sizeof(gpu_libxc_info), hipMemcpyDeviceToHost);
 
-        cudaFree(h_glinfo->d_maple2c_params);
-        cudaFree(h_glinfo->d_gdm);
-        cudaFree(h_glinfo->d_ds);
-        cudaFree(h_glinfo->d_rhoLDA);
-        cudaFree(d_glinfo);
+        hipFree(h_glinfo->d_maple2c_params);
+        hipFree(h_glinfo->d_gdm);
+        hipFree(h_glinfo->d_ds);
+        hipFree(h_glinfo->d_rhoLDA);
+        hipFree(d_glinfo);
 
         free(h_glinfo);
 

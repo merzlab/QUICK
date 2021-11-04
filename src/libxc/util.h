@@ -197,12 +197,12 @@ typedef struct xc_lda_work_t {
   double d2fdrs2, d2fdrsz, d2fdz2;            /* second derivatives of e  */
   double d3fdrs3, d3fdrs2z, d3fdrsz2, d3fdz3; /*  third derivatives of e  */
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   int nspin;
 #endif
 } xc_lda_work_t;
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_lda_fxc_fd(const xc_func_type *p, int np, const double *rho, double *fxc, void *gpu_work_params);
 void xc_lda_kxc_fd(const xc_func_type *p, int np, const double *rho, double *kxc, void *gpu_work_params);
 #else
@@ -360,7 +360,7 @@ const char *get_kind(const xc_func_type *func);
 const char *get_family(const xc_func_type *func);
 
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 #include "gpu.h"
 #endif
 
