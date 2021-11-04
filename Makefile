@@ -27,7 +27,7 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-.PHONY: nobuildtypes serial mpi cuda cudampi all
+.PHONY: nobuildtypes serial mpi cuda cudampi hip hipmpi all
 
 all:$(BUILDTYPES)
 	@echo  "Building successful."
@@ -59,6 +59,18 @@ cudampi: checkfolders
 	@cd $(buildfolder) && make --no-print-directory cudampi
 	@mv -f $(exefolder)/test-api.cuda.MPI $(homefolder)/test/
 
+hip: checkfolders
+	@echo  "Building hip version.."
+	@cp -f $(buildfolder)/make.hip.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make --no-print-directory hip
+	@mv -f $(exefolder)/test-api.hip $(homefolder)/test/
+
+hipmpi: checkfolders
+	@echo  "Building hip-mpi version.."
+	@cp -f $(buildfolder)/make.hipampi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make --no-print-directory hipmpi
+	@mv -f $(exefolder)/test-api.hip.MPI $(homefolder)/test/
+
 checkfolders:
 	@if [ ! -d $(exefolder) ]; then echo  "Error: $(exefolder) not found. Please configure first."; \
 	exit 1; fi
@@ -69,7 +81,7 @@ checkfolders:
 #  ! Installation targets                                                !
 #  !---------------------------------------------------------------------!
 
-.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall aminstall
+.PHONY: noinstall install serialinstall mpiinstall cudainstall cudampiinstall hipinstall hipmpiinstall aminstall
 
 install: $(INSTALLTYPES)
 	@echo  "Installation sucessful."
@@ -115,6 +127,24 @@ cudampiinstall: cudampi
 	@cp -f $(buildfolder)/include/cudampi/* $(installfolder)/include/cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
+hipinstall: hip
+	@if [ -x $(exefolder)/quick.hip ]; then cp -f $(exefolder)/quick.hip $(installfolder)/bin; \
+        cp -f $(homefolder)/test/test-api.hip $(installfolder)/test; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+        exit 1; fi
+	@cp -f $(exefolder)/quick.hip $(installfolder)/bin
+	@cp -f $(buildfolder)/include/hip/* $(installfolder)/include/hip
+	@cp -f $(buildfolder)/lib/hip/* $(installfolder)/lib/hip
+
+hipmpiinstall: hipmpi
+	@if [ -x $(exefolder)/quick.hip.MPI ]; then cp -f $(exefolder)/quick.hip.MPI $(installfolder)/bin; \
+        cp -f $(homefolder)/test/test-api.hip.MPI $(installfolder)/test; \
+        else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
+        exit 1; fi
+	@cp -f $(exefolder)/quick.hip.MPI $(installfolder)/bin
+	@cp -f $(buildfolder)/include/hipmpi/* $(installfolder)/include/hipmpi
+	@cp -f $(buildfolder)/lib/hipmpi/* $(installfolder)/lib/hipmpi
+
 aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
@@ -147,14 +177,18 @@ buildtest:
 	@$(homefolder)/runtest
 
 installtest:
-	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && [ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ]; then \
+	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && \
+	[ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ] && \
+	[ ! -x $(installfolder)/bin/quick.hip ] && [ ! -x $(installfolder)/bin/quick.hip.MPI ]; then \
         echo "Error: Executables not found. You must run 'make install' before running 'make test'."; \
         exit 1; fi
 	@cp $(toolsfolder)/runtest $(installfolder)
 	@cd $(installfolder) && ./runtest
 
 fulltest:
-	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && [ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ]; then \
+	@if [ ! -x $(installfolder)/bin/quick ] && [ ! -x $(installfolder)/bin/quick.MPI ] && \
+	[ ! -x $(installfolder)/bin/quick.cuda ] && [ ! -x $(installfolder)/bin/quick.cuda.MPI ] && \
+	[ ! -x $(installfolder)/bin/quick.hip ] && [ ! -x $(installfolder)/bin/quick.hip.MPI ]; then \
         echo "Error: Executables not found."; \
         exit 1; fi
 	@cp $(toolsfolder)/runtest $(installfolder)
@@ -164,7 +198,7 @@ fulltest:
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
 
-.PHONY:serialclean mpiclean cudaclean cudampiclean makeinclean
+.PHONY:serialclean mpiclean cudaclean cudampiclean hipclean hipmpiclean makeinclean
 
 clean:$(CLEANTYPES)
 	@-rm -f $(homefolder)/runtest
@@ -186,6 +220,14 @@ cudampiclean:
 	@cp -f $(buildfolder)/make.cudampi.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory clean
 
+hipclean:
+	@cp -f $(buildfolder)/make.hip.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make --no-print-directory clean
+
+hipmpiclean:
+	@cp -f $(buildfolder)/make.hipmpi.in $(buildfolder)/make.in
+	@cd $(buildfolder) && make --no-print-directory clean
+
 distclean: makeinclean
 	@-rm -f $(homefolder)/runtest
 	@-rm -rf $(buildfolder) $(exefolder)
@@ -200,12 +242,13 @@ makeinclean:
 	@-rm -f $(octfolder)/make.in
 	@-rm -f $(blasfolder)/make.in
 	@-rm -f $(cudafolder)/make.in
+	@-rm -f $(hipfolder)/make.in
 
 #  !---------------------------------------------------------------------!
 #  ! Uninstall targets                                                   !
 #  !---------------------------------------------------------------------!
 
-.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall amuninstall
+.PHONY: nouninstall uninstall serialuninstall mpiuninstall cudauninstall cudampiuninstall hipuninstall hipmpiuninstall amuninstall
 
 uninstall: $(UNINSTALLTYPES)
 	@if [ "$(TESTTYPE)" = 'installtest' ]; then rm -rf $(installfolder)/basis; \
@@ -236,6 +279,16 @@ cudampiuninstall:
 	@-rm -f $(installfolder)/bin/quick.cuda.MPI
 	@-rm -rf $(installfolder)/include/cudampi
 	@-rm -rf $(installfolder)/lib/cudampi
+
+hipuninstall:
+	@-rm -f $(installfolder)/bin/quick.hip
+	@-rm -rf $(installfolder)/include/hip
+	@-rm -rf $(installfolder)/lib/hip
+
+hipmpiuninstall:
+	@-rm -f $(installfolder)/bin/quick.hip.MPI
+	@-rm -rf $(installfolder)/include/hipmpi
+	@-rm -rf $(installfolder)/lib/hipmpi
 
 amuninstall:
 	@-rm -f $(installfolder)/bin/quick

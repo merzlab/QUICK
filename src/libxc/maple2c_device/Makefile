@@ -20,9 +20,9 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-LIBXC_CUDA_FLAGS = -I$(libxcfolder)
+LIBXC_GPU_FLAGS = -I$(libxcfolder)
 
-CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
+GPULIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
 	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
 	$(libxcdevobjfolder)/gga_c_op_pbe.o $(libxcdevobjfolder)/gga_c_op_pw91.o $(libxcdevobjfolder)/gga_c_optc.o $(libxcdevobjfolder)/gga_c_op_xalpha.o \
@@ -74,11 +74,17 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-$(CUDALIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
-	@echo "[QUICK]  NVCC $@"
-	$(VB)$(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+#$(GPULIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
+#	@echo "[QUICK]  NVCC $@"
+#	$(VB)$(CUDAC) -fgpu-rdc -fPIC $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
 
-all: $(CUDALIBXCOBJ)
+$(GPULIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
+	@echo "[QUICK]  HIPCC $@"
+	$(VB)$(HIPCC) -fgpu-rdc -fPIC $(HIP_FLAGS) $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_GPU_FLAGS) -c $< -o $@
+
+libxc_cuda: $(GPULIBXCOBJ)
+
+libxc_hip: $(GPULIBXCOBJ)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
