@@ -442,7 +442,7 @@ contains
    double precision :: Vrecip, cew_pt(3),localsswt
    
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
@@ -933,7 +933,7 @@ contains
    include "mpif.h"
 #endif
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)

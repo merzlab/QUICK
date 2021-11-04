@@ -269,7 +269,7 @@ contains
      endif
 #endif
   
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      if(quick_method%bCUDA) then
   
         if (quick_method%DFT &
@@ -284,7 +284,7 @@ contains
         quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins, &
         quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff)
   
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
 #endif
   
@@ -369,7 +369,7 @@ contains
   
            ! The first part is ODS
   
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
   
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
@@ -389,7 +389,7 @@ contains
            ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
            ! This means we now have the e(i) matrix.
            ! allerror=ODS-SDO
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
   
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
@@ -419,7 +419,7 @@ contains
            !-----------------------------------------------
            quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
   
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
   
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
@@ -602,7 +602,7 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
   
           call cpu_time(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
@@ -638,7 +638,7 @@ contains
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
   
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
   
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
@@ -650,7 +650,7 @@ contains
            quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
   
            ! Form new density matrix using MO coefficients
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
            call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                  nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #else
@@ -775,13 +775,13 @@ contains
         if (quick_method%debug)  call debug_SCF(jscf)
      enddo
   
-#if defined CUDA || defined CUDA_MPIV
+#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
 #endif
   
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     if (quick_method%DFT &
 #ifdef CEW
        .or. quick_cew%use_cew &

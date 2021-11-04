@@ -109,7 +109,7 @@ module quick_basis_module
 
         integer, allocatable, dimension(:,:) :: KLMN
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
         integer :: mpi_qshell                   ! Total number or sorted shells
 
         integer,allocatable :: mpi_qshelln(:)   ! qshell ranges calculated by each gpu
@@ -143,7 +143,7 @@ module quick_basis_module
 logical, parameter ::  incoreInt =.false.! .true. !.false.
 integer, parameter :: incoreSize = 100000000
 integer incoreIndex
-#ifdef CUDA
+#if defined CUDA || defined HIP
 double precision, dimension(1) :: intIncore
 integer, dimension(1) :: aIncore
 integer, dimension(1) :: bIncore
@@ -268,7 +268,7 @@ contains
         enddo
 
         if(.not. allocated(self%KLMN)) allocate(self%KLMN(3,nbasis_arg))
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
         if(.not. allocated(self%mpi_qshelln)) allocate(self%mpi_qshelln(mpisize+1))
 #endif
    end subroutine allocate_quick_basis
@@ -305,7 +305,7 @@ contains
         if (allocated(self%gccoeff)) deallocate(self%gccoeff)
         if (allocated(self%KLMN)) deallocate(self%KLMN)
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
         if (allocated(self%mpi_qshelln)) deallocate(self%mpi_qshelln)
 #endif
 

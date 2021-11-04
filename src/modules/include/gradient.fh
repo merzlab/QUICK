@@ -123,7 +123,7 @@ contains
 
      endif
   
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      if (quick_method%bCUDA) then
         call gpu_cleanup()
      endif
@@ -311,7 +311,7 @@ contains
         call get_cshell_xc_grad
 #endif
   
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
         call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
 #endif
   
@@ -558,7 +558,7 @@ contains
   
      call cpu_time(timer_begin%T1eVGrad)
  
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,&
@@ -812,7 +812,7 @@ contains
       call cshell_density_cutoff
 #endif
   
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      if (quick_method%bCUDA) then
   
 !        call gpu_upload_density_matrix(quick_qm_struct%dense)
@@ -829,7 +829,7 @@ contains
      else
 #endif
   
-#if defined MPIV && !defined CUDA_MPIV 
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
   
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
@@ -872,7 +872,7 @@ contains
               enddo
            enddo
         enddo
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      endif
 #endif
 
@@ -982,7 +982,7 @@ contains
      allocate( dp(3,natom) )
      dp = 0.d0
      
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   
      if(quick_method%bCUDA) then
   
@@ -1012,7 +1012,7 @@ contains
         enddo
      endif
   
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         if(bMPI) then
            irad_init = quick_dft_grid%igridptll(mpirank+1)
            irad_end = quick_dft_grid%igridptul(mpirank+1)

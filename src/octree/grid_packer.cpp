@@ -30,7 +30,7 @@ void gpack_initialize_(){
     gps = new gpack_type;
     gps->totalGPACKMemory = 0;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     MPI_Comm_rank(MPI_COMM_WORLD, &mpirank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
 #endif
@@ -38,7 +38,7 @@ void gpack_initialize_(){
 // setup debug file if necessary
 #ifdef DEBUG
 
-  #if defined MPIV && !defined CUDA_MPIV
+  #if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     char fname[16];
     sprintf(fname, "debug.oct.%i", mpirank);
     gpackDebugFile = fopen(fname, "w+");
@@ -62,7 +62,7 @@ void gpack_finalize_(){
     delete gps->ncenter;
     delete gps->itype;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     if(mpirank == 0){
 #endif
       delete gps->gridx;
@@ -83,11 +83,11 @@ void gpack_finalize_(){
       delete gps->basf_counter;
       delete gps->primf_counter;
       delete gps->bin_counter;
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     }
 #endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     delete gps->bin_locator;    
 #endif
 
@@ -99,7 +99,7 @@ void gpack_finalize_(){
 
 }
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 // loads packed grid information into f90 data structures
 void get_gpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw, double *weight, int *atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter,int *bin_counter){
 
@@ -154,7 +154,7 @@ void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *
         gps->ncenter     = new gpack_buffer_type<int>(ncenter, gps->nbasis);
         gps->itype       = new gpack_buffer_type<int>(itype, 3, gps->nbasis);
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     if(mpirank==0){
 #endif
         gps->gridx       = new gpack_buffer_type<double>(grid_ptx, gps->arr_size);
@@ -166,13 +166,13 @@ void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *
 
         get_ssw_pruned_grid();
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     }
 #endif
 
         pack_grid_pts();
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     if(mpirank==0){
 #endif
 
@@ -183,7 +183,7 @@ void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *
 	*toct    = gps->time_octree;
 	*tprscrn = gps->time_bfpf_prescreen;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
    }
 #endif
 
@@ -360,13 +360,13 @@ void pack_grid_pts(){
         clock_t start, end;
         double time_octree;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 	setup_gpack_mpi_1();
 #endif
 
 	vector<node> octree;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     if(mpirank==0){
 #endif
 
@@ -383,7 +383,7 @@ void pack_grid_pts(){
 
 	gps -> time_octree = time_octree;
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
 	vector<node> new_imp_signodes;
 
@@ -393,7 +393,7 @@ void pack_grid_pts(){
 
 #else
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -401,7 +401,7 @@ void pack_grid_pts(){
 
     cpu_get_pfbased_basis_function_lists_new_imp(&octree);
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     delete_gpack_mpi();
 #endif
 
@@ -464,7 +464,7 @@ void get_ssw_pruned_grid(){
 }
 
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<node> *signodes, vector<bflist> *bflst){
 
         double *gridx, *gridy, *gridz, *sswt, *weight;	                 			//Keeps all grid points
@@ -833,7 +833,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         sswt  = (double*) malloc(init_arr_size * sizeof(double));
         weight= (double*) malloc(init_arr_size * sizeof(double));
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         MPI_Bcast(&leaf_count, 1, MPI_INT, 0, MPI_COMM_WORLD); 
 #endif
 	tmp_gpweight = (unsigned char*) malloc(init_arr_size * sizeof(unsigned char));
@@ -855,13 +855,13 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         double run_time;
         double time_proc_output;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 	double mpi_prep_time;
 	double mpi_run_time;
 	double mpi_post_proc_time;
 #endif
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         if(mpirank == 0){
 #endif
 
@@ -922,14 +922,14 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
         start = clock();
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 	}
 
 	setup_gpack_mpi_2(leaf_count, gridx, gridy, gridz, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, sswt, weight, iatm, bs_tracker);
 
 #endif
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 	if(mpirank == 0){
 	end = clock();
 
@@ -944,7 +944,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 	int bstart, bend;
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         bstart=mpi_binlst[mpirank];
         bend=mpi_binlst[mpirank+1];
 #else
@@ -958,7 +958,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 		}	
 	}
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         if(mpirank == 0){
         end = clock();
 
@@ -973,7 +973,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         
         get_slave_primf_contraf_lists(leaf_count, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, bs_tracker);
 
@@ -1176,7 +1176,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
           PRINTOCTTIME("PRESCREEN BASIS & PRIMITIVE FUNCTIONS : PROCESS OUTPUT", time_proc_output)
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 	}
 #endif
 
@@ -1299,7 +1299,7 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
        
 }
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
 
 void setup_gpack_mpi_1(){
 
