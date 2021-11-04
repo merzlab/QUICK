@@ -1,6 +1,5 @@
-#include "hip/hip_runtime.h"
-#include "gpu.h"
 #include <hip/hip_runtime.h>
+#include "gpu.h"
 #include "libxc_dev_funcs.h"
 #include "gpu_work_gga_x.cu"
 #include "gpu_work_gga_c.cu"
