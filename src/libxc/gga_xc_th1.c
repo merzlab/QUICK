@@ -56,7 +56,7 @@ gga_xc_th1_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_xc_th1_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
   p->params_byte_size = sizeof(gga_xc_th1_params); 
 #endif 
   params = (gga_xc_th1_params *)p->params; 

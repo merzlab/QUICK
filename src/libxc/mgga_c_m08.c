@@ -111,7 +111,7 @@ mgga_c_m08_init(xc_func_type *p)
  
   assert(p->params == NULL); 
   p->params = malloc(sizeof(mgga_c_m08_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
   p->params_byte_size = sizeof(mgga_c_m08_params); 
 #endif 
   params = (mgga_c_m08_params *) (p->params); 

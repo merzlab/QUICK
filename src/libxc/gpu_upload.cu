@@ -9,8 +9,8 @@ void* gpu_upload_maple2c_params(const xc_func_type *p){
         printf("FILE: %s, LINE: %d, FUNCTION: %s, p->params_byte_size: %d \n",
         __FILE__, __LINE__, __func__, p->params_byte_size);
 #endif
-        cudaMalloc((void**)&d_maple_params, p->params_byte_size);
-        cudaMemcpy(d_maple_params, (p->params), p->params_byte_size, cudaMemcpyHostToDevice);
+        hipMalloc((void**)&d_maple_params, p->params_byte_size);
+        hipMemcpy(d_maple_params, (p->params), p->params_byte_size, hipMemcpyHostToDevice);
         return d_maple_params;
 
 }
@@ -53,8 +53,8 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
         __FILE__, __LINE__, __func__, work_param_size);
 #endif
 
-        cudaMalloc((void**)&d_work_params, work_param_size);
-        cudaMemcpy(d_work_params, gpu_work_params, work_param_size, cudaMemcpyHostToDevice);
+        hipMalloc((void**)&d_work_params, work_param_size);
+        hipMemcpy(d_work_params, gpu_work_params, work_param_size, hipMemcpyHostToDevice);
         return d_work_params;
 
 }
@@ -63,7 +63,7 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
 double* gpu_upload_libxc_out_array(int size){
         double *d_double_arr;
         int arr_size = size * sizeof(double);
-        cudaMalloc((void**)&d_double_arr, arr_size);
+        hipMalloc((void**)&d_double_arr, arr_size);
 
         return d_double_arr;
 }
@@ -72,8 +72,8 @@ double* gpu_upload_libxc_out_array(int size){
 double* gpu_upload_libxc_input_array(const double *h_input, int size){
         double *d_double_arr;
         int arr_size = size * sizeof(double);
-        cudaMalloc((void**)&d_double_arr, arr_size);
-        cudaMemcpy(d_double_arr, h_input, arr_size, cudaMemcpyHostToDevice);
+        hipMalloc((void**)&d_double_arr, arr_size);
+        hipMemcpy(d_double_arr, h_input, arr_size, hipMemcpyHostToDevice);
 
         return d_double_arr;
 }
@@ -123,8 +123,8 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
         h_glinfo.d_rhoLDA = gpu_upload_libxc_out_array(np);
 
 	gpu_libxc_info* d_glinfo;
-	cudaMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));
-	cudaMemcpy(d_glinfo, &h_glinfo, sizeof(gpu_libxc_info), cudaMemcpyHostToDevice);
+	hipMalloc((void**)&d_glinfo, sizeof(gpu_libxc_info));
+	hipMemcpy(d_glinfo, &h_glinfo, sizeof(gpu_libxc_info), hipMemcpyHostToDevice);
 
 	return d_glinfo;
 }
@@ -138,8 +138,8 @@ gpu_libxc_out* gpu_upload_libxc_out(int np){
 
 
 	gpu_libxc_out* d_glout;
-	cudaMalloc((void**)&d_glout, sizeof(gpu_libxc_out));
-	cudaMemcpy(d_glout, &h_glout, sizeof(gpu_libxc_out), cudaMemcpyHostToDevice);
+	hipMalloc((void**)&d_glout, sizeof(gpu_libxc_out));
+	hipMemcpy(d_glout, &h_glout, sizeof(gpu_libxc_out), hipMemcpyHostToDevice);
 
 	return d_glout;
 }
@@ -150,8 +150,8 @@ gpu_libxc_in* gpu_upload_libxc_in(const double* h_rho, const double *h_sigma, in
         h_glin.d_sigma = gpu_upload_libxc_input_array(h_sigma, np);
 
         gpu_libxc_in* d_glin;
-        cudaMalloc((void**)&d_glin, sizeof(gpu_libxc_in));
-        cudaMemcpy(d_glin, &h_glin, sizeof(gpu_libxc_in), cudaMemcpyHostToDevice);
+        hipMalloc((void**)&d_glin, sizeof(gpu_libxc_in));
+        hipMemcpy(d_glin, &h_glin, sizeof(gpu_libxc_in), hipMemcpyHostToDevice);
 
         return d_glin;
 }

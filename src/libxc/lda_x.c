@@ -40,7 +40,7 @@ lda_x_init(xc_func_type *p)
   assert(p != NULL && p->params == NULL);
   p->params = malloc(sizeof(lda_x_params));
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   p->params_byte_size = sizeof(lda_x_params); //Assign the value for param size
 #endif
 
