@@ -744,7 +744,7 @@ void cuda_buffer_type<T> :: ReallocateGPU()
         }
     }else{
 #ifndef CUDART_VERSION
-       status=cudaErrorInvalidValue
+       status=cudaErrorInvalidValue;
 #elif (CUDART_VERSION < 10010)
        status=cudaErrorInvalidDevicePointer;
 #else
