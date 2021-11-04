@@ -226,7 +226,7 @@ __device__ void iclass_oshell_grad_spdf8(int I, int J, int K, int L, unsigned in
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 
 void upload_sim_to_constant(_gpu_type gpu);
-void upload_sim_to_constant_dft(gpu_type *gpu);
+void upload_sim_to_constant_dft(_gpu_type gpu);
 
 void upload_para_to_const();
 char *trim(char *s);
