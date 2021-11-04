@@ -1,0 +1,65 @@
+#include "../gpu_common.h"
+#include "./h_all_files.h"
+// Class for B =            3  L =            2
+__device__ __inline__  f_3_2_t :: f_3_2_t ( f_3_1_t t_3_1_0, f_3_1_t t_3_1_1, f_3_0_t t_3_0_0, f_3_0_t t_3_0_1, QUICKDouble CDtemp, QUICKDouble ABcom, f_2_1_t t_2_1_1, QUICKDouble ABCDtemp, QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,  QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz) {
+    x_10_4 = Qtempx * t_3_1_0.x_10_2 + WQtempx * t_3_1_1.x_10_2 + ABCDtemp * t_2_1_1.x_5_2 ;
+    x_11_4 = Qtempx * t_3_1_0.x_11_2 + WQtempx * t_3_1_1.x_11_2 + 2 * ABCDtemp * t_2_1_1.x_4_2 ;
+    x_12_4 = Qtempx * t_3_1_0.x_12_2 + WQtempx * t_3_1_1.x_12_2 + ABCDtemp * t_2_1_1.x_8_2 ;
+    x_13_4 = Qtempx * t_3_1_0.x_13_2 + WQtempx * t_3_1_1.x_13_2 + 2 * ABCDtemp * t_2_1_1.x_6_2 ;
+    x_14_4 = Qtempx * t_3_1_0.x_14_2 + WQtempx * t_3_1_1.x_14_2 + ABCDtemp * t_2_1_1.x_9_2 ;
+    x_15_4 = Qtempx * t_3_1_0.x_15_2 + WQtempx * t_3_1_1.x_15_2 ;
+    x_16_4 = Qtempx * t_3_1_0.x_16_2 + WQtempx * t_3_1_1.x_16_2 ;
+    x_17_4 = Qtempx * t_3_1_0.x_17_2 + WQtempx * t_3_1_1.x_17_2 + 3 * ABCDtemp * t_2_1_1.x_7_2 ;
+    x_18_4 = Qtempx * t_3_1_0.x_18_2 + WQtempx * t_3_1_1.x_18_2 ;
+    x_19_4 = Qtempx * t_3_1_0.x_19_2 + WQtempx * t_3_1_1.x_19_2 ;
+    x_10_5 = Qtempy * t_3_1_0.x_10_3 + WQtempy * t_3_1_1.x_10_3 + ABCDtemp * t_2_1_1.x_6_3 ;
+    x_11_5 = Qtempy * t_3_1_0.x_11_3 + WQtempy * t_3_1_1.x_11_3 + ABCDtemp * t_2_1_1.x_7_3 ;
+    x_12_5 = Qtempy * t_3_1_0.x_12_3 + WQtempy * t_3_1_1.x_12_3 + 2 * ABCDtemp * t_2_1_1.x_4_3 ;
+    x_13_5 = Qtempy * t_3_1_0.x_13_3 + WQtempy * t_3_1_1.x_13_3 ;
+    x_14_5 = Qtempy * t_3_1_0.x_14_3 + WQtempy * t_3_1_1.x_14_3 ;
+    x_15_5 = Qtempy * t_3_1_0.x_15_3 + WQtempy * t_3_1_1.x_15_3 + 2 * ABCDtemp * t_2_1_1.x_5_3 ;
+    x_16_5 = Qtempy * t_3_1_0.x_16_3 + WQtempy * t_3_1_1.x_16_3 + ABCDtemp * t_2_1_1.x_9_3 ;
+    x_17_5 = Qtempy * t_3_1_0.x_17_3 + WQtempy * t_3_1_1.x_17_3 ;
+    x_18_5 = Qtempy * t_3_1_0.x_18_3 + WQtempy * t_3_1_1.x_18_3 + 3 * ABCDtemp * t_2_1_1.x_8_3 ;
+    x_19_5 = Qtempy * t_3_1_0.x_19_3 + WQtempy * t_3_1_1.x_19_3 ;
+    x_10_6 = Qtempx * t_3_1_0.x_10_3 + WQtempx * t_3_1_1.x_10_3 + ABCDtemp * t_2_1_1.x_5_3 ;
+    x_11_6 = Qtempx * t_3_1_0.x_11_3 + WQtempx * t_3_1_1.x_11_3 + 2 * ABCDtemp * t_2_1_1.x_4_3 ;
+    x_12_6 = Qtempx * t_3_1_0.x_12_3 + WQtempx * t_3_1_1.x_12_3 + ABCDtemp * t_2_1_1.x_8_3 ;
+    x_13_6 = Qtempx * t_3_1_0.x_13_3 + WQtempx * t_3_1_1.x_13_3 + 2 * ABCDtemp * t_2_1_1.x_6_3 ;
+    x_14_6 = Qtempx * t_3_1_0.x_14_3 + WQtempx * t_3_1_1.x_14_3 + ABCDtemp * t_2_1_1.x_9_3 ;
+    x_15_6 = Qtempx * t_3_1_0.x_15_3 + WQtempx * t_3_1_1.x_15_3 ;
+    x_16_6 = Qtempx * t_3_1_0.x_16_3 + WQtempx * t_3_1_1.x_16_3 ;
+    x_17_6 = Qtempx * t_3_1_0.x_17_3 + WQtempx * t_3_1_1.x_17_3 + 3 * ABCDtemp * t_2_1_1.x_7_3 ;
+    x_18_6 = Qtempx * t_3_1_0.x_18_3 + WQtempx * t_3_1_1.x_18_3 ;
+    x_19_6 = Qtempx * t_3_1_0.x_19_3 + WQtempx * t_3_1_1.x_19_3 ;
+    x_10_7 = Qtempx * t_3_1_0.x_10_1 + WQtempx * t_3_1_1.x_10_1 + CDtemp * ( t_3_0_0.x_10_0 -  ABcom * t_3_0_1.x_10_0 ) + ABCDtemp * t_2_1_1.x_5_1 ;
+    x_11_7 = Qtempx * t_3_1_0.x_11_1 + WQtempx * t_3_1_1.x_11_1 + CDtemp * ( t_3_0_0.x_11_0 -  ABcom * t_3_0_1.x_11_0 ) + 2 * ABCDtemp * t_2_1_1.x_4_1 ;
+    x_12_7 = Qtempx * t_3_1_0.x_12_1 + WQtempx * t_3_1_1.x_12_1 + CDtemp * ( t_3_0_0.x_12_0 -  ABcom * t_3_0_1.x_12_0 ) + ABCDtemp * t_2_1_1.x_8_1 ;
+    x_13_7 = Qtempx * t_3_1_0.x_13_1 + WQtempx * t_3_1_1.x_13_1 + CDtemp * ( t_3_0_0.x_13_0 -  ABcom * t_3_0_1.x_13_0 ) + 2 * ABCDtemp * t_2_1_1.x_6_1 ;
+    x_14_7 = Qtempx * t_3_1_0.x_14_1 + WQtempx * t_3_1_1.x_14_1 + CDtemp * ( t_3_0_0.x_14_0 -  ABcom * t_3_0_1.x_14_0 ) + ABCDtemp * t_2_1_1.x_9_1 ;
+    x_15_7 = Qtempx * t_3_1_0.x_15_1 + WQtempx * t_3_1_1.x_15_1 + CDtemp * ( t_3_0_0.x_15_0 -  ABcom * t_3_0_1.x_15_0 ) ;
+    x_16_7 = Qtempx * t_3_1_0.x_16_1 + WQtempx * t_3_1_1.x_16_1 + CDtemp * ( t_3_0_0.x_16_0 -  ABcom * t_3_0_1.x_16_0 ) ;
+    x_17_7 = Qtempx * t_3_1_0.x_17_1 + WQtempx * t_3_1_1.x_17_1 + CDtemp * ( t_3_0_0.x_17_0 -  ABcom * t_3_0_1.x_17_0 ) + 3 * ABCDtemp * t_2_1_1.x_7_1 ;
+    x_18_7 = Qtempx * t_3_1_0.x_18_1 + WQtempx * t_3_1_1.x_18_1 + CDtemp * ( t_3_0_0.x_18_0 -  ABcom * t_3_0_1.x_18_0 ) ;
+    x_19_7 = Qtempx * t_3_1_0.x_19_1 + WQtempx * t_3_1_1.x_19_1 + CDtemp * ( t_3_0_0.x_19_0 -  ABcom * t_3_0_1.x_19_0 ) ;
+    x_10_8 = Qtempy * t_3_1_0.x_10_2 + WQtempy * t_3_1_1.x_10_2 + CDtemp * ( t_3_0_0.x_10_0 -  ABcom * t_3_0_1.x_10_0 ) + ABCDtemp * t_2_1_1.x_6_2 ;
+    x_11_8 = Qtempy * t_3_1_0.x_11_2 + WQtempy * t_3_1_1.x_11_2 + CDtemp * ( t_3_0_0.x_11_0 -  ABcom * t_3_0_1.x_11_0 ) + ABCDtemp * t_2_1_1.x_7_2 ;
+    x_12_8 = Qtempy * t_3_1_0.x_12_2 + WQtempy * t_3_1_1.x_12_2 + CDtemp * ( t_3_0_0.x_12_0 -  ABcom * t_3_0_1.x_12_0 ) + 2 * ABCDtemp * t_2_1_1.x_4_2 ;
+    x_13_8 = Qtempy * t_3_1_0.x_13_2 + WQtempy * t_3_1_1.x_13_2 + CDtemp * ( t_3_0_0.x_13_0 -  ABcom * t_3_0_1.x_13_0 ) ;
+    x_14_8 = Qtempy * t_3_1_0.x_14_2 + WQtempy * t_3_1_1.x_14_2 + CDtemp * ( t_3_0_0.x_14_0 -  ABcom * t_3_0_1.x_14_0 ) ;
+    x_15_8 = Qtempy * t_3_1_0.x_15_2 + WQtempy * t_3_1_1.x_15_2 + CDtemp * ( t_3_0_0.x_15_0 -  ABcom * t_3_0_1.x_15_0 ) + 2 * ABCDtemp * t_2_1_1.x_5_2 ;
+    x_16_8 = Qtempy * t_3_1_0.x_16_2 + WQtempy * t_3_1_1.x_16_2 + CDtemp * ( t_3_0_0.x_16_0 -  ABcom * t_3_0_1.x_16_0 ) + ABCDtemp * t_2_1_1.x_9_2 ;
+    x_17_8 = Qtempy * t_3_1_0.x_17_2 + WQtempy * t_3_1_1.x_17_2 + CDtemp * ( t_3_0_0.x_17_0 -  ABcom * t_3_0_1.x_17_0 ) ;
+    x_18_8 = Qtempy * t_3_1_0.x_18_2 + WQtempy * t_3_1_1.x_18_2 + CDtemp * ( t_3_0_0.x_18_0 -  ABcom * t_3_0_1.x_18_0 ) + 3 * ABCDtemp * t_2_1_1.x_8_2 ;
+    x_19_8 = Qtempy * t_3_1_0.x_19_2 + WQtempy * t_3_1_1.x_19_2 + CDtemp * ( t_3_0_0.x_19_0 -  ABcom * t_3_0_1.x_19_0 ) ;
+    x_10_9 = Qtempz * t_3_1_0.x_10_3 + WQtempz * t_3_1_1.x_10_3 + CDtemp * ( t_3_0_0.x_10_0 -  ABcom * t_3_0_1.x_10_0 ) + ABCDtemp * t_2_1_1.x_4_3 ;
+    x_11_9 = Qtempz * t_3_1_0.x_11_3 + WQtempz * t_3_1_1.x_11_3 + CDtemp * ( t_3_0_0.x_11_0 -  ABcom * t_3_0_1.x_11_0 ) ;
+    x_12_9 = Qtempz * t_3_1_0.x_12_3 + WQtempz * t_3_1_1.x_12_3 + CDtemp * ( t_3_0_0.x_12_0 -  ABcom * t_3_0_1.x_12_0 ) ;
+    x_13_9 = Qtempz * t_3_1_0.x_13_3 + WQtempz * t_3_1_1.x_13_3 + CDtemp * ( t_3_0_0.x_13_0 -  ABcom * t_3_0_1.x_13_0 ) + ABCDtemp * t_2_1_1.x_7_3 ;
+    x_14_9 = Qtempz * t_3_1_0.x_14_3 + WQtempz * t_3_1_1.x_14_3 + CDtemp * ( t_3_0_0.x_14_0 -  ABcom * t_3_0_1.x_14_0 ) + 2 * ABCDtemp * t_2_1_1.x_6_3 ;
+    x_15_9 = Qtempz * t_3_1_0.x_15_3 + WQtempz * t_3_1_1.x_15_3 + CDtemp * ( t_3_0_0.x_15_0 -  ABcom * t_3_0_1.x_15_0 ) + ABCDtemp * t_2_1_1.x_8_3 ;
+    x_16_9 = Qtempz * t_3_1_0.x_16_3 + WQtempz * t_3_1_1.x_16_3 + CDtemp * ( t_3_0_0.x_16_0 -  ABcom * t_3_0_1.x_16_0 ) + 2 * ABCDtemp * t_2_1_1.x_5_3 ;
+    x_17_9 = Qtempz * t_3_1_0.x_17_3 + WQtempz * t_3_1_1.x_17_3 + CDtemp * ( t_3_0_0.x_17_0 -  ABcom * t_3_0_1.x_17_0 ) ;
+    x_18_9 = Qtempz * t_3_1_0.x_18_3 + WQtempz * t_3_1_1.x_18_3 + CDtemp * ( t_3_0_0.x_18_0 -  ABcom * t_3_0_1.x_18_0 ) ;
+    x_19_9 = Qtempz * t_3_1_0.x_19_3 + WQtempz * t_3_1_1.x_19_3 + CDtemp * ( t_3_0_0.x_19_0 -  ABcom * t_3_0_1.x_19_0 ) + 3 * ABCDtemp * t_2_1_1.x_9_3 ;
+}
