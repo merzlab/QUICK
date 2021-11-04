@@ -15,7 +15,7 @@ static __constant__ gpu_simulation_type devSim_dft;
 /*
  upload gpu simulation type to constant memory
  */
-void upload_sim_to_constant_dft(gpu_type *gpu){
+void upload_sim_to_constant_dft(_gpu_type gpu){
     hipError_t status;
     PRINTDEBUG("UPLOAD CONSTANT DFT");
 

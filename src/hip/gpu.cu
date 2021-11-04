@@ -1928,8 +1928,6 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
         gpu ->gpu_sim.sswt      = gpu -> gpu_xcq -> sswt  -> _devData;
         gpu ->gpu_sim.weight    = gpu -> gpu_xcq -> weight-> _devData;
 
-printf("size of %lu \n", sizeof(gpu_simulation_type));
-
 	upload_sim_to_constant_dft(gpu);
 
 	get_ssw(gpu);	
