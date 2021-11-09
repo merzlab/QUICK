@@ -9,6 +9,7 @@ module quick_cew_module
   public :: new_quick_cew
   public :: quick_cew_prescf
   public :: quick_cew_grad
+  public :: print
 
 #if defined CUDA || defined CUDA_MPIV
   public :: upload
@@ -77,6 +78,9 @@ module quick_cew_module
   end interface
 #endif  
 
+  interface print
+    module procedure print_cew
+  end interface print
 contains
 
   
@@ -1192,6 +1196,23 @@ end do
   end subroutine delete_cew_vrecip
 
 #endif
+
+  subroutine print_cew(self, iOutfile, ierr)
   
+    implicit none
+    type(quick_cew_type), intent(in) :: self
+    integer, intent(out) :: iOutfile
+    integer, intent(out) :: ierr
+
+    if(self%use_cew) then 
+      write(iOutfile,'("| CEw = ON")') 
+    else
+      write(iOutfile,'("| CEw = OFF")')
+    endif
+
+    ierr=0
+
+  end subroutine print_cew
+
 end module quick_cew_module
 #endif

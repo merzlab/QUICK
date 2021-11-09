@@ -20,6 +20,10 @@ subroutine read_job_and_atom(ierr)
    use quick_api_module
    use quick_exception_module
 
+#ifdef CEW
+   use quick_cew_module, only: quick_cew, print
+#endif
+
    implicit none
    
    ! Instant variables
@@ -90,6 +94,10 @@ subroutine read_job_and_atom(ierr)
          write(iOutFile,'("THRESHOLD FOR ECP-INTEGRALS PRESCREENING = ", &
                & E15.5,"  (DEFAULT)")')thrshecp
       end if
+
+#ifdef CEW
+      SAFE_CALL(print(quick_cew, iOutFile, ierr))
+#endif
 
       call PrtAct(iOutFile,"Finish reading job")
 
