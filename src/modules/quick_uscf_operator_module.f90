@@ -68,19 +68,6 @@ contains
   !  Step 1. evaluate 1e integrals
   !-----------------------------------------------------------------
   
-     call get1e()
-
-     quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
-     
-
-     !   do I=1,nbasis; do J=1,nbasis
-     !     write(*,*) i,j,quick_qm_struct%o(j,i),quick_qm_struct%ob(j,i)   
-     !   enddo; enddo
-  
-     if(quick_method%printEnergy) call get1eEnergy()
-   
-     !write(*,*) "E1e=",quick_qm_struct%Eel
-
   !  if only calculate operation difference
   !   if (deltaO) then
   !     save density matrix
@@ -92,16 +79,12 @@ contains
   !      enddo; enddo
   
   !   endif
-  
-  !  Delta density matrix cutoff
+
      call oshell_density_cutoff
-  
+   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
-  
-  !  Start the timer for 2e-integrals
-     call cpu_time(timer_begin%T2e)
   
 #if defined CUDA || defined CUDA_MPIV
      if (quick_method%bCUDA) then
@@ -112,7 +95,13 @@ contains
         call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
      endif
 #endif
+
+     call get1e()
+
+     quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
   
+     if(quick_method%printEnergy) call get1eEnergy()
+
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
 !        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
@@ -129,6 +118,10 @@ contains
   ! The previous two terms are the one electron part of the Fock matrix.
   ! The next two terms define the two electron part.
   !-----------------------------------------------------------------
+
+  !  Start the timer for 2e-integrals
+     call cpu_time(timer_begin%T2e)
+
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
            call gpu_get_oshell_eri(quick_qm_struct%o, quick_qm_struct%ob)
