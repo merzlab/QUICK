@@ -289,10 +289,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
 #if defined CUDA || defined CUDA_MPIV
   call upload(quick_method, ierr)
-
-#ifdef CEW
-  call upload(quick_cew, ierr)
-#endif
 #endif
 
   ! save atom number, number of atom types and number of point charges
@@ -545,7 +541,7 @@ subroutine run_quick(self,ierr)
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
 
 #ifdef CEW
-  call gpu_set_cew(quick_cew%use_cew,ierr)
+  call upload(quick_cew, ierr)
 #endif
 #endif
 
