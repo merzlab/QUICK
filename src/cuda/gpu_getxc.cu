@@ -158,7 +158,9 @@ void getxc_grad(_gpu_type gpu){
 
     cudaDeviceSynchronize();
 
+#ifdef CEW
     if(gpu->gpu_sim.use_cew) get_cew_accdens(gpu);
+#endif
 
     prune_grid_sswgrad();
 

@@ -394,6 +394,7 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
     gpu -> gpu_sim.is_oshell = *is_oshell;
 }
 
+#ifdef CEW
 //-----------------------------------------------
 //  set cew variables
 //-----------------------------------------------
@@ -402,6 +403,7 @@ extern "C" void gpu_set_cew_(bool *use_cew){
     gpu -> gpu_sim.use_cew = *use_cew;
 
 }
+#endif
 
 //-----------------------------------------------
 //  upload libxc information

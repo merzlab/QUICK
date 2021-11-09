@@ -89,6 +89,8 @@ void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
+
+#ifdef CEW
 void get_tci(_gpu_type gpu);
 void get_tci_grad(_gpu_type gpu);
 void upload_para_to_const_tci();
@@ -96,6 +98,7 @@ void getcew_xc(_gpu_type gpu);
 void getcew_xc_grad(_gpu_type gpu);
 void get_cew_accdens(_gpu_type gpu);
 __global__ void getcew_xc_kernel();
+#endif
 
 // global [get2e_kernel]
 __global__ void get2e_kernel();
@@ -634,8 +637,11 @@ __device__ QUICKDouble lyp_e(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QU
 
 __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
+
+#ifdef CEW
 __global__ void getcew_xc_kernel();
 __global__ void oshell_getcew_xc_grad_kernel();
 __global__ void cshell_getcew_xc_grad_kernel();
+#endif
 
 #endif

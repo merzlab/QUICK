@@ -550,6 +550,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
   }
 }
 
+#ifdef CEW
 
 extern "C" void gpu_get_lri_(QUICKDouble* o)
 {
@@ -755,5 +756,5 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     gpu->grad->DownloadSum(grad);
 
 }
-
+#endif
 #endif

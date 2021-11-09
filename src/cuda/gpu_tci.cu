@@ -17,6 +17,8 @@
   !---------------------------------------------------------------------!
 */
 
+#ifdef CEW
+
 #include "gpu.h"
 #include <cuda.h>
 
@@ -310,4 +312,4 @@ void upload_para_to_const_tci(){
     PRINTERROR(status, " cudaMemcpyToSymbol, Trans copy to constants failed")
 
 }
-
+#endif

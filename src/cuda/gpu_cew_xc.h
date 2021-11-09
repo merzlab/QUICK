@@ -18,7 +18,6 @@
 
 #ifdef CEW
 #include "iface.hpp"
-#endif
 
 #ifndef OSHELL
 void getcew_xc(_gpu_type gpu){
@@ -95,10 +94,8 @@ void get_cew_accdens(_gpu_type gpu){
 
         QUICKDouble const *cnst_gridpt = gridpt;
 
-#ifdef CEW 
         // this function comes from cew library in amber       
         cew_accdensatpt_(cnst_gridpt, &charge_density, cewGrad);
-#endif
 
 //printf("cew_accdensatpt %f %f %f %f %f %f %f \n", gridpt[0], gridpt[1], gridpt[2], charge_density\
 ,cewGrad[0], cewGrad[1], cewGrad[2]);
@@ -285,3 +282,4 @@ __global__ void cshell_getcew_xc_grad_kernel()
   __syncthreads();
 
 }
+#endif
