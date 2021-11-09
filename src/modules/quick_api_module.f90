@@ -181,10 +181,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   use quick_exception_module
   use quick_method_module
 
-#ifdef CEW 
-  use quick_cew_module
-#endif
-
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -475,7 +471,7 @@ subroutine run_quick(self,ierr)
   use quick_sad_guess_module, only: getSadGuess
 
 #ifdef CEW 
-  use quick_cew_module, only : quick_cew
+  use quick_cew_module, only : quick_cew, upload
 #endif
 
 #ifdef MPIV
