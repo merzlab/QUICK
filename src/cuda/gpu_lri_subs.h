@@ -78,19 +78,19 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
  zone 3: kernel 0,1,2,3
  zone 4: kernel 0,1,2,3,4
  
- so first, kernel 0: zone 0,1,2,3,4 (get_tci_kernel()), if no f, then that's it.
- second,   kernel 1: zone 1,3,4(get_tci_kernel_spdf())
- then,     kernel 2: zone 2,3,4(get_tci_kernel_spdf2())
- then,     kernel 3: zone 3,4(get_tci_kernel_spdf3())
- finally,  kernel 4: zone 4(get_tci_kernel_spdf4())
+ so first, kernel 0: zone 0,1,2,3,4 (get_lri_kernel()), if no f, then that's it.
+ second,   kernel 1: zone 1,3,4(get_lri_kernel_spdf())
+ then,     kernel 2: zone 2,3,4(get_lri_kernel_spdf2())
+ then,     kernel 3: zone 3,4(get_lri_kernel_spdf3())
+ finally,  kernel 4: zone 4(get_lri_kernel_spdf4())
 
  */
 #ifdef int_spd
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel()
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel()
 #elif defined int_spdf2
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel_spdf2()
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
 #endif
 {
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
@@ -191,11 +191,11 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel_spdf2()
                 // assign values to dummy variables, to be cleaned up eventually
                 //for(int iatom=0; iatom < devSim.natom+devSim.nextatom; iatom++ ){ 
 #ifdef int_spd
-                    iclass_tci(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
+                    iclass_lri(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
                 
 #elif defined int_spdf2
                 if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
-                    iclass_tci_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
+                    iclass_lri_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
                 }
                 
 #endif
@@ -210,12 +210,12 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_tci_kernel_spdf2()
 }
 
 /*
- iclass_tci subroutine is to generate 3 center intergrals using HRR and VRR method.
+ iclass_lri subroutine is to generate 3 center intergrals using HRR and VRR method.
 */
 #ifdef int_spd
-__device__ __forceinline__ void iclass_tci
+__device__ __forceinline__ void iclass_lri
 #elif defined int_spdf2
-__device__ __forceinline__ void iclass_tci_spdf2
+__device__ __forceinline__ void iclass_lri_spdf2
 #endif
                                       (int I, int J, unsigned int II, unsigned int JJ, int iatom, \
                                       unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store)
@@ -386,14 +386,14 @@ __device__ __forceinline__ void iclass_tci_spdf2
                     VY(0, 0, i) = VY(0, 0, i) * X2;
                 }
 #ifdef int_spd
-                tci::vertical(I, J, K, L, YVerticalTemp, store, \
+                lri::vertical(I, J, K, L, YVerticalTemp, store, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
          
 #elif defined int_spdf2
                 
-                tci::vertical_spdf2(I, J, K, L, YVerticalTemp, store, \
+                lri::vertical_spdf2(I, J, K, L, YVerticalTemp, store, \
                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
@@ -464,11 +464,11 @@ __device__ __forceinline__ void iclass_tci_spdf2
 */                        
 
 #ifdef int_spd
-                        QUICKDouble Y = (QUICKDouble) hrrwhole_tci
+                        QUICKDouble Y = (QUICKDouble) hrrwhole_lri
 #elif defined int_spdf2
-                        QUICKDouble Y = (QUICKDouble) hrrwhole_tci_2_2
+                        QUICKDouble Y = (QUICKDouble) hrrwhole_lri_2_2
 #else                        
-                        QUICKDouble Y = (QUICKDouble) hrrwhole_tci_2
+                        QUICKDouble Y = (QUICKDouble) hrrwhole_lri_2
                        
 #endif
                                                                (I, J, K, L,\
@@ -483,7 +483,7 @@ __device__ __forceinline__ void iclass_tci_spdf2
                         if (abs(Y) > devSim.coreIntegralCutoff)
 #endif
                         {
-                            addint_tci(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
+                            addint_lri(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
                         }
 /*                        
                     }
@@ -496,10 +496,10 @@ __device__ __forceinline__ void iclass_tci_spdf2
 }
 
 
-#ifndef new_quick_2_gpu_tci_subs_h
-#define new_quick_2_gpu_tci_subs_h
+#ifndef new_quick_2_gpu_lri_subs_h
+#define new_quick_2_gpu_lri_subs_h
 
-__device__ __forceinline__ void addint_tci(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis)
+__device__ __forceinline__ void addint_lri(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis)
 {
     
     QUICKULL val1 = (QUICKULL) (fabs(Y*OSCALE) + (QUICKDouble)0.5);

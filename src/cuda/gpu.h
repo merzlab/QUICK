@@ -91,9 +91,9 @@ void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
 
 #ifdef CEW
-void get_tci(_gpu_type gpu);
-void get_tci_grad(_gpu_type gpu);
-void upload_para_to_const_tci();
+void get_lri(_gpu_type gpu);
+void get_lri_grad(_gpu_type gpu);
+void upload_para_to_const_lri();
 void getcew_quad(_gpu_type gpu);
 void getcew_quad_grad(_gpu_type gpu);
 void get_cew_accdens(_gpu_type gpu);
@@ -237,33 +237,33 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 __device__ void iclass_oshell_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 
-__device__ void iclass_tci(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_tci_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_lri(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_lri_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
-__device__ void iclass_oshell_tci_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+__device__ void iclass_oshell_lri_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
-__device__ void iclass_tci_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+__device__ void iclass_lri_grad (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
-__device__ void iclass_oshell_tci_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+__device__ void iclass_oshell_lri_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
-__device__ void iclass_tci_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
+__device__ void iclass_lri_grad_spdf2(int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB);
 
-__device__ void hrrwholegrad_tci(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+__device__ void hrrwholegrad_lri(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                              int I, int J, int III, int JJJ, int IJKLTYPE, \
                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, \
                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz);
 
-__device__ void hrrwholegrad_tci2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+__device__ void hrrwholegrad_lri2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                              int I, int J, int III, int JJJ, int IJKLTYPE, \
                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB,\
                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz);
 
-__device__ void hrrwholegrad_tci2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+__device__ void hrrwholegrad_lri2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                               QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                               int I, int J, int III, int JJJ, int IJKLTYPE,
                                               QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, \
@@ -273,7 +273,7 @@ __device__ void hrrwholegrad_tci2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKD
 
 void upload_sim_to_constant(_gpu_type gpu);
 void upload_sim_to_constant_dft(_gpu_type gpu);
-void upload_sim_to_constant_tci(_gpu_type gpu);
+void upload_sim_to_constant_lri(_gpu_type gpu);
 
 void upload_para_to_const();
 char *trim(char *s);
@@ -282,7 +282,7 @@ char *trim(char *s);
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
 __device__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
-__device__ __forceinline__ void addint_tci(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
+__device__ __forceinline__ void addint_lri(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* vals);
 
 __device__ QUICKDouble hrrwhole(int I, int J, int K, int L, \
@@ -574,12 +574,12 @@ __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
                         int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
 
-__device__ int lefthrr_tci(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ int lefthrr_lri(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                        int KLMNAx, int KLMNAy, int KLMNAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
-__device__ int lefthrr_tci23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ int lefthrr_lri23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                         int KLMNAx, int KLMNAy, int KLMNAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,

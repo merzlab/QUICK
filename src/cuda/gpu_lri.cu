@@ -27,9 +27,9 @@ static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 
 
-#include "gpu_tci_subs_hrr.h"
+#include "gpu_lri_subs_hrr.h"
 
-namespace tci{
+namespace lri{
 #include "int.h"
 }
 
@@ -44,8 +44,8 @@ namespace tci{
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
-#include "gpu_tci_subs.h"
-#include "gpu_tci_subs_grad.h"
+#include "gpu_lri_subs.h"
+#include "gpu_lri_subs_grad.h"
 
 
 //===================================
@@ -61,7 +61,7 @@ namespace tci{
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
-#include "gpu_tci_subs_grad.h"
+#include "gpu_lri_subs_grad.h"
 
 
 #ifdef CUDA_SPDF
@@ -78,7 +78,7 @@ namespace tci{
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
-#include "gpu_tci_subs.h"
+#include "gpu_lri_subs.h"
 
 #endif
 
@@ -98,14 +98,14 @@ namespace tci{
 /*
  upload gpu simulation type to constant memory
  */
-void upload_sim_to_constant_tci(_gpu_type gpu){
+void upload_sim_to_constant_lri(_gpu_type gpu){
     cudaError_t status;
 	status = cudaMemcpyToSymbol(devSim, &gpu->gpu_sim, sizeof(gpu_simulation_type));
 	PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
 }
 
 
-// totTime is the timer for GPU tci time. Only on under debug mode
+// totTime is the timer for GPU lri time. Only on under debug mode
 #if defined DEBUG || defined DEBUGTIME
 static float totTime;
 #endif
@@ -113,35 +113,35 @@ static float totTime;
 // =======   INTERFACE SECTION ===========================
 
 // interface to call Kernel subroutine
-void get_tci(_gpu_type gpu)
+void get_lri(_gpu_type gpu)
 {
     // Part spd
-//    nvtxRangePushA("SCF tci");
+//    nvtxRangePushA("SCF lri");
 
-    QUICK_SAFE_CALL((get_tci_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((get_lri_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL((get_tci_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_lri_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-3
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-4
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-5
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-6
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-7
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-8
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        //QUICK_SAFE_CALL((get_tci_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
 
@@ -153,21 +153,21 @@ void get_tci(_gpu_type gpu)
 
 // interface to call Kernel subroutine
 
-void get_tci_grad(_gpu_type gpu)
+void get_lri_grad(_gpu_type gpu)
 {
 
-//   nvtxRangePushA("Gradient tci");
+//   nvtxRangePushA("Gradient lri");
 
-    QUICK_SAFE_CALL((get_tci_grad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((get_lri_grad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     if (gpu->maxL >= 2) {
         //#ifdef CUDA_SPDF
         // Part f-1
-        //QUICK_SAFE_CALL((get_tci_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_lri_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL((get_tci_grad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_lri_grad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-3
-        //    QUICK_SAFE_CALL((get_tci_grad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+        //    QUICK_SAFE_CALL((get_lri_grad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
     }
 
@@ -179,7 +179,7 @@ void get_tci_grad(_gpu_type gpu)
 
 
 // =======   KERNEL SECTION ===========================
-void upload_para_to_const_tci(){
+void upload_para_to_const_lri(){
     
     int trans[TRANSDIM*TRANSDIM*TRANSDIM];
     // Data to trans

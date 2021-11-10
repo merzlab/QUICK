@@ -164,23 +164,23 @@ contains
      if(bMPI) then
         do i=1,mpi_jshelln(mpirank)
            ii=mpi_jshell(mpirank,i)
-           call prescreen_compute_tci_grad(II,c0c0)
+           call prescreen_compute_lri_grad(II,c0c0)
         enddo
      else
         do II=1,jshell
-           call prescreen_compute_tci_grad(II,c0c0)
+           call prescreen_compute_lri_grad(II,c0c0)
         enddo
      endif
 #else
      do II=1,jshell
-        call prescreen_compute_tci_grad(II,c0c0)
+        call prescreen_compute_lri_grad(II,c0c0)
      enddo
 #endif
 
   end subroutine compute_lri_grad
 
 
-  subroutine prescreen_compute_tci_grad(II,c0c0)
+  subroutine prescreen_compute_lri_grad(II,c0c0)
 
     use quick_basis_module
     use quick_method_module, only: quick_method
@@ -195,14 +195,14 @@ contains
       do JJ = II, jshell
           cutoffTest = Ycutoff(II,JJ) * sqrt(c0c0)
           if( cutoffTest .gt. quick_method%coreIntegralCutoff) then
-              call compute_tci_grad(II,JJ)
+              call compute_long_range_integral_grad(II,JJ)
           endif
       enddo
 
-  end subroutine prescreen_compute_tci_grad
+  end subroutine prescreen_compute_lri_grad
 
 
-  subroutine compute_tci_grad(II,JJ)
+  subroutine compute_long_range_integral_grad(II,JJ)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes quantities required for OSHGP algorithm,    !
@@ -439,7 +439,7 @@ contains
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
                 NNCDfirst=SumIndex(K+L+1)
-                call iclass_tci_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
+                call iclass_lri_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
              enddo
           enddo
        enddo
@@ -450,9 +450,9 @@ contains
 
     return
 
-  end subroutine compute_tci_grad
+  end subroutine compute_long_range_integral_grad
 
-  subroutine iclass_tci_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
+  subroutine iclass_lri_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes contracted 3 center integrals by calling    !
@@ -614,7 +614,7 @@ contains
     
     do III=III1,III2
       do JJJ=JJJ1,JJJ2
-        call hrr_tci_grad
+        call hrr_lri_grad
 
         afact = 1.d0 ! angrenorm(JJJ) * angrenorm(III)
         ! The off-diagonal blocks are only computed once, so we need to
@@ -645,7 +645,7 @@ contains
     end if
 
     
-  end subroutine iclass_tci_grad
+  end subroutine iclass_lri_grad
 
 #include "./include/hrr_lri_grad.fh"
 

@@ -17,7 +17,7 @@
 ! corrected QM/MM.                                                    !
 !_____________________________________________________________________!
 
-subroutine hrr_tci
+subroutine hrr_lri
 
   use quick_basis_module
   use quick_params_module
@@ -88,5 +88,5 @@ subroutine hrr_tci
 
   end select
   111 continue
-end subroutine hrr_tci
+end subroutine hrr_lri
 

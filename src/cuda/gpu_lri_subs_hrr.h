@@ -6,14 +6,14 @@
 //
 //
 
-#ifndef new_quick_2_gpu_tci_subs_hrr_h
-#define new_quick_2_gpu_tci_subs_hrr_h
+#ifndef new_quick_2_gpu_lri_subs_hrr_h
+#define new_quick_2_gpu_lri_subs_hrr_h
 
 
 #undef STOREDIM
 #define STOREDIM STOREDIM_S
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri(int I, int J, int K, int L, \
                                                 int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                 QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                 QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -26,7 +26,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci(int I, int J, int K, int L, 
     QUICKDouble coefAngularL[12];
     Y = (QUICKDouble) 0.0;
     
-    int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+    int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                               LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                               J, coefAngularL, angularL);
@@ -43,7 +43,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci(int I, int J, int K, int L, 
 #undef STOREDIM
 #define STOREDIM STOREDIM_L
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2(int I, int J, int K, int L, \
                                                  int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                  QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                  QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -56,11 +56,11 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2(int I, int J, int K, int L
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
-    int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+    int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                               LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                               J, coefAngularL, angularL);
-    int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+    int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                               LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                               L, coefAngularR, angularR);
@@ -78,7 +78,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2(int I, int J, int K, int L
 }
 
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_1(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_1(int I, int J, int K, int L, \
                                                  int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                  QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                  QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -91,7 +91,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_1(int I, int J, int K, int
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
-    int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+    int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                               LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                               J, coefAngularL, angularL);
@@ -111,7 +111,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_1(int I, int J, int K, int
         return Y;
     }
     
-    int numAngularR = lefthrr_tci23(RCx, RCy, RCz, RDx, RDy, RDz,
+    int numAngularR = lefthrr_lri23(RCx, RCy, RCz, RDx, RDy, RDz,
                                 LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                                 LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                                 L, coefAngularR, angularR);
@@ -130,7 +130,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_1(int I, int J, int K, int
 }
 
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_2(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_2(int I, int J, int K, int L, \
                                                  int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                  QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                  QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -143,7 +143,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_2(int I, int J, int K, int
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
-    int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+    int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                               LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                               L, coefAngularR, angularR);
@@ -166,7 +166,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_2(int I, int J, int K, int
     }
     
     
-    int numAngularL = lefthrr_tci23(RAx, RAy, RAz, RBx, RBy, RBz,
+    int numAngularL = lefthrr_lri23(RAx, RAy, RAz, RBx, RBy, RBz,
                                 LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                                 LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                                 J, coefAngularL, angularL);
@@ -186,7 +186,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_2(int I, int J, int K, int
 
 
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_5(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_5(int I, int J, int K, int L, \
                                                  int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                  QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                  QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -219,7 +219,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_5(int I, int J, int K, int
     QUICKDouble coefAngularL[12];
     QUICKDouble Y = 0.0;
     
-    int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+    int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                               LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                               J, coefAngularL, angularL);
@@ -239,7 +239,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_5(int I, int J, int K, int
     
 }
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_6(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_6(int I, int J, int K, int L, \
                                                    int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                    QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                    QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -271,7 +271,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_6(int I, int J, int K, int
     QUICKDouble Y = 0.0;
     
     // For hrr, only k+l need hrr, but can be simplified to only consider k+l=5 contibution
-    int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+    int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                               LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                               LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                               L, coefAngularR, angularR);
@@ -297,7 +297,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_6(int I, int J, int K, int
 
 
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_3(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int L, \
                                                  int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                  QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                  QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -330,7 +330,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_3(int I, int J, int K, int
         QUICKDouble coefAngularL[12];
         QUICKDouble Y = 0.0;
         
-        int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+        int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                                   LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                                   3, coefAngularL, angularL);
@@ -355,7 +355,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_3(int I, int J, int K, int
         QUICKDouble coefAngularR[12];
         
         QUICKDouble Y = 0.0;
-        int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+        int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                                   LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                                   3, coefAngularR, angularR);
@@ -381,11 +381,11 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_3(int I, int J, int K, int
         QUICKDouble coefAngularL[12], coefAngularR[12];
         QUICKDouble Y = (QUICKDouble) 0.0;
         
-        int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+        int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                                   LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                                   3, coefAngularL, angularL);
-        int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+        int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                                   LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                                   3, coefAngularR, angularR);
@@ -406,7 +406,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_3(int I, int J, int K, int
 
 
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_4(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_4(int I, int J, int K, int L, \
                                                    int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                    QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                    QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -441,7 +441,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_4(int I, int J, int K, int
         
         
         // For hrr, only k+l need hrr, but can be simplified to only consider k+l=5 contibution
-        int numAngularR = lefthrr_tci(RCx, RCy, RCz, RDx, RDy, RDz,
+        int numAngularR = lefthrr_lri(RCx, RCy, RCz, RDx, RDy, RDz,
                                   LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,LLL-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,LLL-1,3,devSim.nbasis),
                                   3, coefAngularR, angularR);
@@ -464,7 +464,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_4(int I, int J, int K, int
 
 // For this subroutine, the basic idea is the same with hrrwhole2_4, just swap i to k and j to l.
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_7(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_7(int I, int J, int K, int L, \
                                                    int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                    QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                    QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -487,7 +487,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_7(int I, int J, int K, int
         int angularL[12];
         QUICKDouble coefAngularL[12];
         
-        int numAngularL = lefthrr_tci(RAx, RAy, RAz, RBx, RBy, RBz,
+        int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
                                   LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis),
                                   LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis),
                                   3, coefAngularL, angularL);
@@ -511,7 +511,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_7(int I, int J, int K, int
 
 
 // For hrrwhole2_8,9,10, the situation is much simple, i=3, j=3, k=3, l=3
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_8(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_8(int I, int J, int K, int L, \
                                                    int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                    QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                    QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -530,7 +530,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_8(int I, int J, int K, int
     return Y;
 }
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_9(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_9(int I, int J, int K, int L, \
                                                    int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                    QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                    QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -549,7 +549,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_9(int I, int J, int K, int
     return Y;
 }
 
-__device__ __forceinline__ QUICKDouble hrrwhole_tci_2_10(int I, int J, int K, int L, \
+__device__ __forceinline__ QUICKDouble hrrwhole_lri_2_10(int I, int J, int K, int L, \
                                                     int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                                     QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                                     QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
@@ -569,7 +569,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_tci_2_10(int I, int J, int K, in
 }
 
 
-__device__ __forceinline__ int lefthrr_tci1(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri1(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
@@ -593,7 +593,7 @@ __device__ __forceinline__ int lefthrr_tci1(QUICKDouble RAx, QUICKDouble RAy, QU
     return numAngularL;
 }
 
-__device__ __forceinline__ int lefthrr_tci2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
@@ -662,7 +662,7 @@ __device__ __forceinline__ int lefthrr_tci2(QUICKDouble RAx, QUICKDouble RAy, QU
 
 
 
-__device__ __forceinline__ int lefthrr_tci3(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri3(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
@@ -828,7 +828,7 @@ __device__ __forceinline__ QUICKDouble quick_pow(QUICKDouble a, int power)
 
 
 
-__device__ __forceinline__ int lefthrr_tci_r(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri_r(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                        int KLMNAx, int KLMNAy, int KLMNAz,
                                        int KLMNBx, int KLMNBy, int KLMNBz,
@@ -936,7 +936,7 @@ __device__ __forceinline__ int lefthrr_tci_r(QUICKDouble RAx, QUICKDouble RAy, Q
     
 }
 
-__device__ __forceinline__ int lefthrr_tci(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                        int KLMNAx, int KLMNAy, int KLMNAz,
                                        int KLMNBx, int KLMNBy, int KLMNBz,
@@ -1488,7 +1488,7 @@ __device__ __forceinline__ int lefthrr_tci(QUICKDouble RAx, QUICKDouble RAy, QUI
     return numAngularL;
 }
 
-__device__ __forceinline__ int lefthrr_tci23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                     QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                     int KLMNAx, int KLMNAy, int KLMNAz,
                                     int KLMNBx, int KLMNBy, int KLMNBz,
@@ -1621,7 +1621,7 @@ __device__ __forceinline__ int lefthrr_tci23(QUICKDouble RAx, QUICKDouble RAy, Q
 }
 
 
-__device__ __forceinline__ int lefthrr_tci23_new(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+__device__ __forceinline__ int lefthrr_lri23_new(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                                          QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                          int KLMNAx, int KLMNAy, int KLMNAz,
                                          int KLMNBx, int KLMNBy, int KLMNBz,

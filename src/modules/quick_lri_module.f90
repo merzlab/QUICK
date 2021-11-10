@@ -130,23 +130,23 @@ contains
      if(bMPI) then
         do i=1,mpi_jshelln(mpirank)
            ii=mpi_jshell(mpirank,i)
-           call prescreen_compute_tci(II,c0c0)
+           call prescreen_compute_lri(II,c0c0)
         enddo
      else
         do II=1,jshell
-           call prescreen_compute_tci(II,c0c0)
+           call prescreen_compute_lri(II,c0c0)
         enddo
      endif
 #else
      do II=1,jshell
-        call prescreen_compute_tci(II,c0c0)
+        call prescreen_compute_lri(II,c0c0)
      enddo
 #endif
 
   end subroutine compute_lri
 
 
-  subroutine prescreen_compute_tci(II,c0c0)
+  subroutine prescreen_compute_lri(II,c0c0)
 
     use quick_basis_module
     use quick_method_module, only: quick_method
@@ -160,14 +160,14 @@ contains
       do JJ = II, jshell
         cutoffTest = Ycutoff(JJ,II) * sqrt(c0c0)
         if( cutoffTest .gt. quick_method%coreIntegralCutoff) then
-          call compute_tci(II,JJ,c0c0)
+          call compute_long_range_integral(II,JJ,c0c0)
         endif
       enddo
 
-  end subroutine prescreen_compute_tci
+  end subroutine prescreen_compute_lri
 
 
-  subroutine compute_tci(II,JJ,c0c0)
+  subroutine compute_long_range_integral(II,JJ,c0c0)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes quantities required for OSHGP algorithm,    !
@@ -382,7 +382,7 @@ contains
              NNC=Sumindex(k-1)+1
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
-                call iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+                call iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
              enddo
           enddo
        enddo
@@ -390,9 +390,9 @@ contains
 
     return
 
-  end subroutine compute_tci
+  end subroutine compute_long_range_integral
 
-  subroutine iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+  subroutine iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes contracted 3 center integrals by calling    !
@@ -505,7 +505,7 @@ contains
        !write(6,'(I3,2F13.5)')III,angrenorm(III),quick_basis%cons(III)
        
       do JJJ=JJJ1,JJJ2
-        call hrr_tci
+        call hrr_lri
 
 
         ! assumes that core operator formation is done
@@ -518,7 +518,7 @@ contains
       enddo
     enddo
 
-  end subroutine iclass_tci
+  end subroutine iclass_lri
 
 #include "./include/hrr_lri.fh"
 

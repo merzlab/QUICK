@@ -568,11 +568,11 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 #endif
 */
 
-    upload_sim_to_constant_tci(gpu);
+    upload_sim_to_constant_lri(gpu);
 
-    upload_para_to_const_tci();
+    upload_para_to_const_lri();
 
-    get_tci(gpu);  
+    get_lri(gpu);  
 
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
@@ -632,11 +632,11 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 {
 
-    upload_sim_to_constant_tci(gpu);
+    upload_sim_to_constant_lri(gpu);
 
-    upload_para_to_const_tci();
+    upload_para_to_const_lri();
 
-    get_tci_grad(gpu);
+    get_lri_grad(gpu);
 
     // download gradients
 //#ifdef LEGACY_ATOMIC_ADD
