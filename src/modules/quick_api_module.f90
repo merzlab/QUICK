@@ -471,7 +471,7 @@ subroutine run_quick(self,ierr)
   use quick_sad_guess_module, only: getSadGuess
 
 #ifdef CEW 
-  use quick_cew_module, only : quick_cew, upload
+  use quick_cew_module
 #endif
 
 #ifdef MPIV
