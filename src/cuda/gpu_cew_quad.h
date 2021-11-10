@@ -20,15 +20,15 @@
 #include "iface.hpp"
 
 #ifndef OSHELL
-void getcew_xc(_gpu_type gpu){
+void getcew_quad(_gpu_type gpu){
 
-    QUICK_SAFE_CALL((getcew_xc_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
 
     cudaDeviceSynchronize();
 }
 
 
-void getcew_xc_grad(_gpu_type gpu){
+void getcew_quad_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
@@ -36,7 +36,7 @@ void getcew_xc_grad(_gpu_type gpu){
 
         cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((oshell_getcew_xc_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+        QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
     }else{
 
@@ -44,8 +44,8 @@ void getcew_xc_grad(_gpu_type gpu){
 
         cudaDeviceSynchronize();
 
-        QUICK_SAFE_CALL((cshell_getcew_xc_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-        //QUICK_SAFE_CALL((cshell_getcew_xc_grad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>()));
+        QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+        //QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>()));
 
     }
 
@@ -115,7 +115,7 @@ void get_cew_accdens(_gpu_type gpu){
 
 
 
-__global__ void getcew_xc_kernel()
+__global__ void getcew_quad_kernel()
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -163,9 +163,9 @@ __global__ void getcew_xc_kernel()
 #endif
 
 #ifdef OSHELL
-__global__ void oshell_getcew_xc_grad_kernel()
+__global__ void oshell_getcew_quad_grad_kernel()
 #else
-__global__ void cshell_getcew_xc_grad_kernel()
+__global__ void cshell_getcew_quad_grad_kernel()
 #endif
 {
 
