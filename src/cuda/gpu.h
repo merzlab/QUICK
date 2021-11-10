@@ -28,7 +28,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
 // molecule, basis sets, and some other information
 extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* hyb_coeff);
 extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg);
-extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff);
+extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff, QUICKDouble* coreIntegralCutoff);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
 extern "C" void gpu_upload_energy_(QUICKDouble* E);
 extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense);
