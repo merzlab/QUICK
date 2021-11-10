@@ -214,9 +214,6 @@ static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
 #define X0 (5.9149671727956128778234784350536)//sqrt(2*PI^2.5)
 #define PI_TO_3HALF (5.5683279968317079)
 
-// default cutoffs for device code
-#define DEFAULT_INTEGRAL_CUTOFF (1E-12)
-
 // Energy Scale
 static const QUICKDouble OSCALE                  = (QUICKDouble) 1E12;
 static const QUICKDouble ONEOVEROSCALE           = (QUICKDouble)1.0 / OSCALE;
