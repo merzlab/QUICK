@@ -480,7 +480,7 @@ __device__ __forceinline__ void iclass_tci_spdf2
 #ifdef int_spd
                         if (abs(Y) > 0.0e0)
 #else
-                        if (abs(Y) > DEFAULT_INTEGRAL_CUTOFF)
+                        if (abs(Y) > devSim.coreIntegralCutoff)
 #endif
                         {
                             addint_tci(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
