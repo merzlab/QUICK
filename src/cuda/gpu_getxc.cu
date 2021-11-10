@@ -12,10 +12,10 @@ static float totTime;
 #endif
 
 #include "gpu_getxc.h"
-#include "gpu_cew_xc.h"
+#include "gpu_cew_quad.h"
 #define OSHELL
 #include "gpu_getxc.h"
-#include "gpu_cew_xc.h"
+#include "gpu_cew_quad.h"
 #undef OSHELL
 
 /*

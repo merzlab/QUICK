@@ -94,10 +94,10 @@ void get_oshell_eri_grad(_gpu_type gpu);
 void get_tci(_gpu_type gpu);
 void get_tci_grad(_gpu_type gpu);
 void upload_para_to_const_tci();
-void getcew_xc(_gpu_type gpu);
-void getcew_xc_grad(_gpu_type gpu);
+void getcew_quad(_gpu_type gpu);
+void getcew_quad_grad(_gpu_type gpu);
 void get_cew_accdens(_gpu_type gpu);
-__global__ void getcew_xc_kernel();
+__global__ void getcew_quad_kernel();
 #endif
 
 // global [get2e_kernel]
@@ -639,9 +639,9 @@ __device__ QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKD
                                QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz);
 
 #ifdef CEW
-__global__ void getcew_xc_kernel();
-__global__ void oshell_getcew_xc_grad_kernel();
-__global__ void cshell_getcew_xc_grad_kernel();
+__global__ void getcew_quad_kernel();
+__global__ void oshell_getcew_quad_grad_kernel();
+__global__ void cshell_getcew_quad_grad_kernel();
 #endif
 
 #endif

@@ -576,7 +576,7 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
-    getcew_xc(gpu);
+    getcew_quad(gpu);
 
 //#ifdef LEGACY_ATOMIC_ADD
     gpu -> gpu_calculated -> oULL -> Download();
@@ -725,7 +725,7 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
 
-    getcew_xc_grad(gpu);
+    getcew_quad_grad(gpu);
 
     // download gradients
 //#ifdef LEGACY_ATOMIC_ADD
