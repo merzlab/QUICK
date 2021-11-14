@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /*
   !---------------------------------------------------------------------!
   ! Written by Madu Manathunga on 12/03/2020                            !
