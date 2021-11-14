@@ -5,7 +5,7 @@
 #include "gpu_work_gga_c.cu"
 #include "gpu_work_lda.cu"
 
-static __constant__ gpu_simulation_type devSim_dft;
+__constant__ gpu_simulation_type devSim_dft;
 
 #include "gpu_getxc.h"
 #define OSHELL

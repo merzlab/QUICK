@@ -222,10 +222,10 @@ cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $
 hip: cpmakein libxc_hip octree quick_hip quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o 
-	$(VB)$(HIPCC) -g $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu $(TESTAPI) \
-	-fgpu-rdc -o $(exefolder)/test-api.hip -lgfortran	
-	$(VB)$(HIPCC) -g $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu $(MAIN) \
-	-fgpu-rdc -o $(exefolder)/quick.hip -lgfortran
+	$(VB)$(HIPCC) -g $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu \
+	$(cudaxcobj) $(TESTAPI) -fgpu-rdc -o $(exefolder)/test-api.hip -lgfortran       
+	$(VB)$(HIPCC) -g $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu \
+        $(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip -lgfortran
 
 
 #  !---------------------------------------------------------------------!
