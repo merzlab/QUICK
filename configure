@@ -594,6 +594,7 @@ cuda_ext_flags='-m64 -use_fast_math'
 cuda_dc_flags=''
 hip_ext_flags=''
 hip_dc_flags=''
+hip_ld_flags=''
 
 # cuda/hip include flags
 cuda_incl_flags=''
@@ -1020,18 +1021,18 @@ set_uspec_hip_arch(){
 }
 
 if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
-  if [ -z "$HIP_PATH" ]; then
-    echo  "Error: HIP_PATH environment variable is not set."
+  if [ -z "$ROCM_PATH" ]; then
+    echo  "Error: ROCM_PATH environment variable is not set."
     echo  "Please make sure ROCm toolkit is loaded."
     exit 1
   fi
 
-  if [ ! -x "$HIP_PATH/bin/hipcc" ]; then
-    echo  "Error: hipcc compiler is not available in $HIP_PATH/bin/"
+  if [ ! -x "$ROCM_PATH/hip/bin/hipcc" ]; then
+    echo  "Error: hipcc compiler is not available in $ROCM_PATH/hip/bin/"
     exit 1
   fi
 
-  if [ -z "$HIPCC" ]; then hipcc="$HIP_PATH/bin/hipcc"; else hipcc="$HIPCC"; fi
+  if [ -z "$HIPCC" ]; then hipcc="$ROCM_PATH/hip/bin/hipcc"; else hipcc="$HIPCC"; fi
 
 
     hipversion_str=`$hipcc --version | grep 'HIP version:' | cut -d' ' -f3 `
@@ -1176,11 +1177,15 @@ for buildtype in $buildtypes; do
   # set flags for hip and hipmpi versions
   if [ "$buildtype" = 'hip' ] || [ "$buildtype" = 'hipmpi' ]; then
 
-    cpp_flags="$opt_flags -I$HIP_PATH/include $lib_flags"
+    fort_flags="$fort_flags -D__HIP_PLATFORM_AMD__ -D__HIP_PLATFORM_HCC__"
+
+    cpp_flags="$opt_flags -I$ROCM_PATH/hip/include $lib_flags"
 
     hip_flags="$opt_flags $hip_debug_flags $hip_ext_flags $hip_arch_flags $hip_lib_flags"
 
-    hip_incl_flags="-L$HIP_PATH/lib -I$HIP_PATH/include"
+    hip_incl_flags="-I$ROCM_PATH/hip/include -I$ROCM_PATH/hipblas/include -I$ROCM_PATH/hipsolver/include"
+
+    hip_ld_flags="-L$ROCM_PATH/hip/lib -L$ROCM_PATH/hipblas/lib -L$ROCM_PATH/hipsolver/lib"
 
     if [ "$nof" = 'yes' ]; then
       echo "F functions will not be compiled in the $buildtype version."
@@ -1345,8 +1350,8 @@ cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
 hipfolder=$QUICK_HOME/src/hip
-rocblasfolder=$QUICK_HOME/src/hip/rocblas
-rocsolverfolder=$QUICK_HOME/src/hip/rocsolver
+hipblasfolder=$QUICK_HOME/src/hip/hipblas
+hipsolverfolder=$QUICK_HOME/src/hip/hipsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
@@ -1415,10 +1420,12 @@ cat >> "$QUICK_HOME/build/make.$buildtype.in" << EOF
 #! HIP specific flags                                                  !
 #!---------------------------------------------------------------------!
 
+ROCM_PATH=$ROCM_PATH
 CPP_FLAG=$cpp_flags
 HIP_FLAGS=$hip_flags
 HIP_INCL_FLAGS=$hip_incl_flags
 HIP_DC_FLAGS=$hip_dc_flags
+HIP_LD_FLAGS=$hip_ld_flags
 CFLAGS=$cflags
 
 EOF
