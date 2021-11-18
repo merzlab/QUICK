@@ -133,6 +133,8 @@ contains
     end subroutine ROCBLAS_CHECK
     ! AMD: End of error handling subroutines
 
+
+
     ! MM: Wrapper function for rocblas_dgemm. 
     subroutine quick_rocblas_dgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
         use iso_c_binding
@@ -167,9 +169,9 @@ contains
 
         integer :: i, j, lidx
 
+        ! Initialize internal variables
         rb_transa = rocblas_operation_none
         rb_transb = rocblas_operation_none
-        ! Initialize internal variables
 
         rb_m = m
         rb_n = n
@@ -216,21 +218,6 @@ contains
         ! Initialize host memory
         hA = reshape(A(1:lda,1:rb_lda), (/rb_sizea/))
         hB = reshape(B(1:ldb,1:rb_ldb), (/rb_sizeb/))
-        !hC = reshape(C, (/rb_sizec/))
-
-!        do i=1,rb_lda
-!          do j=1,lda
-!            lidx=rb_lda*(i-1)+j
-!            hA(lidx)=A(j,i)
-!          enddo
-!        enddo
-
-!        do i=1,rb_ldb
-!          do j=1,lda
-!            lidx=rb_ldb*(i-1)+j
-!            hB(lidx)=B(j,i)
-!          enddo
-!        enddo
 
         ! Copy memory from host to device
         call HIP_CHECK(hipMemcpy(dA, c_loc(hA), int(rb_sizea, c_size_t) * 8, 1))
@@ -241,7 +228,7 @@ contains
         ! Create rocBLAS handle
         call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
 
-        ! Call rocblas_dgemm
+        ! Set handle and call rocblas_dgemm
         call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))
 
         call ROCBLAS_CHECK(rocblas_dgemm(handle, rb_transa, rb_transb, rb_m, rb_n, rb_k, c_loc(rb_alpha), dA,&
@@ -254,14 +241,6 @@ contains
 
         ! Transfer result
         C = reshape(hC, (/ldc, n/))
-
-!        do i=1,n
-!          do j=1,ldc
-!            lidx=lda*(i-1)+j
-!            C(j,i)=hC(lidx)
-!            write(*,*) "rocDGEMM", j, i, C(j,i)
-!          enddo
-!        enddo
 
         ! Cleanup
         call HIP_CHECK(hipFree(dA))
