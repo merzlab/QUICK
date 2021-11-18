@@ -1183,9 +1183,9 @@ for buildtype in $buildtypes; do
 
     hip_flags="$opt_flags $hip_debug_flags $hip_ext_flags $hip_arch_flags $hip_lib_flags"
 
-    hip_incl_flags="-I$ROCM_PATH/hip/include -I$ROCM_PATH/hipblas/include -I$ROCM_PATH/hipsolver/include"
+    hip_incl_flags="-I$ROCM_PATH/hip/include -I$ROCM_PATH/rocblas/include -I$ROCM_PATH/rocsolver/include"
 
-    hip_ld_flags="-L$ROCM_PATH/hip/lib -L$ROCM_PATH/hipblas/lib -L$ROCM_PATH/hipsolver/lib"
+    hip_ld_flags="-L$ROCM_PATH/hip/lib -L$ROCM_PATH/rocblas/lib -L$ROCM_PATH/rocsolver/lib -lrocblas -lrocsolver"
 
     if [ "$nof" = 'yes' ]; then
       echo "F functions will not be compiled in the $buildtype version."
@@ -1421,6 +1421,7 @@ cat >> "$QUICK_HOME/build/make.$buildtype.in" << EOF
 #!---------------------------------------------------------------------!
 
 ROCM_PATH=$ROCM_PATH
+ROCBLAS_PATH=$ROCM_PATH/rocblas
 CPP_FLAG=$cpp_flags
 HIP_FLAGS=$hip_flags
 HIP_INCL_FLAGS=$hip_incl_flags
