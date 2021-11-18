@@ -47,4 +47,12 @@
 ! to propagate the error.
 #define SAFE_CALL(x) call x ;CHECK_ERROR(ierr)
 
+#if defined HIP || defined HIP_MPIV
+#define GPU_DGEMM rocDGEMM
+#endif
+
+#if defined CUDA || defined CUDA_MPIV
+#define GPU_DGEMM CUBLAS_DGEMM
+#endif
+
 #endif
