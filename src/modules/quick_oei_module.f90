@@ -124,8 +124,15 @@ subroutine get1e()
 
 #ifdef CEW
          if ( quick_cew%use_cew ) then
-            !quick_qm_struct%o = 0.d0
+            
+            call cpu_time(timer_begin%Tcew)
+
             call quick_cew_prescf()
+
+            call cpu_time(timer_end%Tcew)
+
+            timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
+
          end if
 #endif
          
@@ -188,6 +195,21 @@ subroutine get1e()
       enddo
 #endif
       call cpu_time(timer_end%T1eV)
+
+#ifdef CEW
+
+         if ( quick_cew%use_cew ) then
+
+            call cpu_time(timer_begin%Tcew)
+
+            call quick_cew_prescf()
+
+            call cpu_time(timer_end%Tcew)
+
+            timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
+
+         endif
+#endif
 
       call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
 

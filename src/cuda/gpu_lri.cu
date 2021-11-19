@@ -1,3 +1,4 @@
+
 /*
   !---------------------------------------------------------------------!
   ! Written by Madu Manathunga on 06/17/2021                            !
@@ -11,32 +12,175 @@
   !_____________________________________________________________________!
 
   !---------------------------------------------------------------------!
-  ! This source file contains functions required for QUICK one electron !
-  ! integral computation.                                               !
+  ! This source file contains functions required for computing 3 center !
+  ! integrals necessary for CEW method.                                 !
   !---------------------------------------------------------------------!
 */
 
+#ifdef CEW
+
 #include "gpu.h"
-#include "gpu_common.h"
+#include <cuda.h>
 
 static __constant__ gpu_simulation_type devSim;
 static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 
-#define STOREDIM 20
 
-#include "gpu_oei_classes.h"
-#include "gpu_oei_definitions.h"
-#include "gpu_oei_assembler.h"
-#include "gpu_oei.h"
-#include "gpu_oei_grad_assembler.h"
-#include "gpu_oei_grad.h"
+#include "gpu_lri_subs_hrr.h"
+
+namespace lri{
+#include "int.h"
+}
+
+#define int_spd
+#undef int_spdf
+#undef int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
+#include "gpu_lri_subs.h"
+#include "gpu_lri_subs_grad.h"
+
+
+//===================================
+
+#undef int_spd
+#undef int_spdf
+#define int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
+#include "gpu_lri_subs_grad.h"
+
+
+#ifdef CUDA_SPDF
+//===================================
+
+#undef int_spd
+#undef int_spdf
+#define int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
+#include "gpu_lri_subs.h"
+
+#endif
+
+#undef int_spd
+#undef int_spdf
+#undef int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
+
 
 /*
-  upload trans array to constant memory
-*/
-void upload_para_to_const_oei(){
+ upload gpu simulation type to constant memory
+ */
+void upload_sim_to_constant_lri(_gpu_type gpu){
+    cudaError_t status;
+	status = cudaMemcpyToSymbol(devSim, &gpu->gpu_sim, sizeof(gpu_simulation_type));
+	PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
+}
 
+
+// totTime is the timer for GPU lri time. Only on under debug mode
+#if defined DEBUG || defined DEBUGTIME
+static float totTime;
+#endif
+
+// =======   INTERFACE SECTION ===========================
+
+// interface to call Kernel subroutine
+void get_lri(_gpu_type gpu)
+{
+    // Part spd
+//    nvtxRangePushA("SCF lri");
+
+    QUICK_SAFE_CALL((get_lri_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+ 
+#ifdef CUDA_SPDF
+    if (gpu->maxL >= 3) {
+        // Part f-1
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-2
+        QUICK_SAFE_CALL((get_lri_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-3
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-4
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-5
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-6
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-7
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-8
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-9
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        // Part f-10
+        //QUICK_SAFE_CALL((get_lri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+    }
+#endif 
+
+    cudaDeviceSynchronize();
+//    nvtxRangePop();
+
+}
+
+
+// interface to call Kernel subroutine
+
+void get_lri_grad(_gpu_type gpu)
+{
+
+//   nvtxRangePushA("Gradient lri");
+
+    QUICK_SAFE_CALL((get_lri_grad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+    if (gpu->maxL >= 2) {
+        //#ifdef CUDA_SPDF
+        // Part f-1
+        //QUICK_SAFE_CALL((get_lri_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        // Part f-2
+        QUICK_SAFE_CALL((get_lri_grad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        // Part f-3
+        //    QUICK_SAFE_CALL((get_lri_grad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+        //#endif
+    }
+
+    cudaDeviceSynchronize();   
+
+//    nvtxRangePop();
+
+}
+
+
+// =======   KERNEL SECTION ===========================
+void upload_para_to_const_lri(){
+    
     int trans[TRANSDIM*TRANSDIM*TRANSDIM];
     // Data to trans
     {
@@ -168,31 +312,4 @@ void upload_para_to_const_oei(){
     PRINTERROR(status, " cudaMemcpyToSymbol, Trans copy to constants failed")
 
 }
-
-
-/*
- upload gpu simulation type to constant memory
- */
-void upload_sim_to_constant_oei(_gpu_type gpu){
-    cudaError_t status;
-        status = cudaMemcpyToSymbol(devSim, &gpu->gpu_sim, sizeof(gpu_simulation_type));
-        PRINTERROR(status, " cudaMemcpyToSymbol, sim copy to constants failed")
-}
-
-#if defined DEBUG || defined DEBUGTIME
-static float totTime;
 #endif
-
-// interface for kernel launching
-void getOEI(_gpu_type gpu){
-
-    QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-
-}
-
-void get_oei_grad(_gpu_type gpu){
-
-    QUICK_SAFE_CALL((get_oei_grad_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-
-}
-

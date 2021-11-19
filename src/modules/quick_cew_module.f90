@@ -9,7 +9,13 @@ module quick_cew_module
   public :: new_quick_cew
   public :: quick_cew_prescf
   public :: quick_cew_grad
+  public :: print
 
+#if defined CUDA || defined CUDA_MPIV
+  public :: upload
+  public :: delete
+  public :: cew_accdens
+#endif
   
   private
 
@@ -61,7 +67,20 @@ module quick_cew_module
      end subroutine cew_accdens
   end interface
 
-  
+#if defined CUDA || defined CUDA_MPIV
+  ! MM: interface for GPU uploading of cew info
+  interface upload
+    module procedure upload_cew
+  end interface upload
+
+  interface delete
+    module procedure delete_cew_vrecip
+  end interface
+#endif  
+
+  interface print
+    module procedure print_cew
+  end interface print
 contains
 
   
@@ -106,15 +125,37 @@ contains
     use quick_molspec_module, only: quick_molspec
     use quick_lri_module, only : computeLRI
     use quick_calculated_module, only : quick_qm_struct
-    
+    use quick_basis_module
+    use quick_method_module, only: quick_method
+#ifdef MPIV
+    use quick_mpi_module
+#endif    
+
     implicit none
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
 
     double precision :: E
     double precision :: pot
     double precision :: qa,qb
     double precision :: rvec(3),r
     double precision :: ew_self
-    integer :: a,b
+    integer :: a,b,c,ierr
+    double precision, dimension(:), allocatable :: chgs
+#ifdef MPIV
+    integer :: atominit, atomlast, extatominit, extatomlast
+    double precision :: Esum
+    Esum = 0.0d0
+
+    atominit = natomll(mpirank+1)
+    atomlast = natomul(mpirank+1)
+    extatominit = nextatomll(mpirank+1)
+    extatomlast = nextatomul(mpirank+1)
+#endif
+
+    ierr=0
 
     !double precision :: Emm, Eqm, Epot
     
@@ -185,7 +226,12 @@ contains
     !
 
     !Emm = 0.d0
+
+#ifdef MPIV
+    do b=extatominit, extatomlast
+#else
     do b=1, quick_molspec%nextatom
+#endif
        qb = quick_molspec%extchg(b)
        do a=1, quick_molspec%natom
           qa = quick_molspec%chg(a)
@@ -194,7 +240,6 @@ contains
           E = E - qa*qb*erf( quick_cew%beta * r ) / r
        end do
     end do
-
 
     ! 
     ! Remove the interaction of the nuclei with the Ewald Gaussians
@@ -215,7 +260,12 @@ contains
     ! E -= \sum_{a \in QM} \sum_{b \in QM} (Za-Qa/2)*Qb*erf(\beta r)/r
     !
     !Eqm = 0.d0
+
+#ifdef MPIV
+    do a=atominit, atomlast
+#else
     do a=1, quick_molspec%natom
+#endif
        qa = quick_molspec%chg(a) - 0.5d0 * quick_cew%qmq(a)
        do b=1, quick_molspec%natom
           qb = quick_cew%qmq(b)
@@ -228,7 +278,6 @@ contains
           end if
        end do
     end do
-
 
 
 
@@ -249,6 +298,34 @@ contains
     !        H(i,j) += qa * (quick_cew%zeta/PI)**1.5d0 * (ij|a0)
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
 
+
+#if defined(CUDA) || defined(CUDA_MPIV)
+
+    if(.not. allocated(chgs)) allocate(chgs(quick_molspec%natom+quick_molspec%nextatom))
+
+    do c=1, (quick_molspec%natom + quick_molspec%nextatom)
+      if ( c <= quick_molspec%natom ) then
+        chgs(c)=quick_cew%qmq(c)
+      else
+        chgs(c)=quick_molspec%extchg(c-quick_molspec%natom)
+      endif
+    enddo
+
+    call gpu_upload_lri(quick_cew%zeta, chgs, ierr)
+
+    call gpu_upload_cew_vrecip(ierr)
+
+    call gpu_get_lri(quick_qm_struct%o)
+
+    if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
+      call gpu_delete_lri(ierr)
+      call delete_cew_vrecip(quick_cew, ierr)
+    endif
+
+    if(allocated(chgs)) deallocate(chgs)
+
+#else
+
     do a=1, quick_molspec%natom
        qa = quick_cew%qmq(a)
        call computeLRI(quick_molspec%xyz(1:3,a), quick_cew%zeta, qa)
@@ -268,6 +345,7 @@ contains
        qa = quick_molspec%extchg(a)
        call computeLRI(quick_molspec%extxyz(1:3,a), quick_cew%zeta, qa)
     enddo
+#endif
 
     ! Notice that we are ADDING (not subtracting) this term to
     ! the core Hamiltonian, because the density matrix is a
@@ -287,14 +365,22 @@ contains
     ! This is the 1st term in Eq (87)
     !
     !Epot = 0.d0
+#ifdef MPIV
+    do a=atominit, atomlast
+#else
     do a=1, quick_molspec%natom
+#endif
        qa = quick_molspec%chg(a)
        pot = 0.d0
        call cew_getrecip( quick_molspec%xyz(1,a), pot )
        E = E + qa * pot
     end do
-
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
+
+#ifdef MPIV
+    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, MPI_COMM_WORLD, mpierror)
+    E=Esum
+#endif
 
     quick_qm_struct%ECore = quick_qm_struct%ECore + E
     
@@ -313,8 +399,9 @@ contains
     ! and negate it.
     !
 
+#if !defined (CUDA) && !defined (CUDA_MPIV)
     call quick_cew_prescf_quad()
-    
+#endif    
     
   end subroutine quick_cew_prescf
 
@@ -399,8 +486,8 @@ contains
                icount=icount+1
             enddo
 
-            call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
-            weight = weight * localsswt/sswt
+!            call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
+!            weight = weight * localsswt/sswt
             
 !  Next, evaluate the densities at the grid point and the gradient
 !  at that grid point.
@@ -490,22 +577,41 @@ contains
     use quick_lri_grad_module, only: computeLRIGrad
     !use quick_lri_grad_module, only: computeLRINumGrad
     use quick_gridpoints_module, only : quick_dft_grid
-    
+    use quick_method_module, only: quick_method
+#ifdef MPIV
+    use quick_mpi_module
+#endif    
+
     implicit none
-    integer :: a,b,c,k,oa,ob,oc
+    integer :: a,b,c,k,oa,ob,oc,ierr
     double precision :: c_coord(3), rvec(3)
     double precision :: r,r2,oor2,oor3,qa,qb,qc
     double precision :: dedr
     double precision :: ew_self
     double precision :: ga(3), gb(3), gc(3)
+
+#ifdef MPIV
+    integer :: atominit, atomlast, extatominit, extatomlast
+
+    atominit = natomll(mpirank+1)
+    atomlast = natomul(mpirank+1)
+    extatominit = nextatomll(mpirank+1)
+    extatomlast = nextatomul(mpirank+1)
+#endif
+
+    ierr=0
+
     !
     ! erf(beta*r)/r as r -> 0
     !
     ew_self = 2.d0 * quick_cew%beta / sqrt_pi
 
 
-    
+#ifdef MPIV
+    do a=atominit, atomlast
+#else
     do a=1, quick_molspec%natom
+#endif
        qa = quick_cew%qmq(a)
        do b=1, quick_molspec%natom
           if ( a /= b ) then
@@ -533,7 +639,11 @@ contains
     end do
 
     
+#ifdef MPIV
+    do a=atominit, atomlast
+#else    
     do a=1, quick_molspec%natom
+#endif
        qa = quick_molspec%chg(a)
        rvec = 0.d0
        call cew_getgrdatpt( quick_molspec%xyz(1,a), rvec(1) )
@@ -547,7 +657,11 @@ contains
     end do
 
     
+#ifdef MPIV
+    do a=extatominit, extatomlast
+#else    
     do a=1, quick_molspec%nextatom
+#endif
        qa = quick_molspec%extchg(a)
        do b=1, quick_molspec%natom
           qb = quick_molspec%chg(b)
@@ -571,7 +685,6 @@ contains
           end do
        end do
     end do
-
 
     !
     ! TODO *****************************************************
@@ -607,7 +720,19 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
+#if defined(CUDA) || defined(CUDA_MPIV)
 
+    call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+
+    call gpu_delete_lri(ierr)
+
+    if(quick_method%HF) then
+      call gpu_reupload_dft_grid()
+      call gpu_getcew_grad_quad(quick_qm_struct%gradient)
+      call delete_cew_vrecip(quick_cew, ierr)
+    endif
+
+#else
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
        if ( c <= quick_molspec%natom ) then
           c_coord=quick_molspec%xyz(1:3,c)
@@ -618,9 +743,11 @@ contains
        end if
        call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
     enddo
+#endif
 
+#if !defined (CUDA) && !defined (CUDA_MPIV)
     call quick_cew_grad_quad()
-
+#endif
     
   end subroutine quick_cew_grad
 
@@ -801,6 +928,8 @@ contains
    !spcder = 0.d0
    
 #ifdef MPIV
+   integer :: irad_init, irad_end
+
    include "mpif.h"
 #endif
 
@@ -853,8 +982,8 @@ contains
                enddo
 
                
-               call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
-               weight = weight * localsswt/sswt
+               !call getssw(gridx,gridy,gridz,Iatm,natom,quick_molspec%xyz,localsswt)
+               !weight = weight * localsswt/sswt
             
 
                !  evaluate the densities at the grid point and the gradient at that grid point
@@ -1007,15 +1136,15 @@ contains
 !  at this point. Now we need to do the quadrature weight derivatives. At this point in the loop, we know that
                !  the density and the weight are not zero.
                
-                  !if (sswt == 1.d0) then
-                  !   continue
-                  !else
+                  if (sswt == 1.d0) then
+                     continue
+                  else
                      ! The sswder routine is not giving me the proper weight gradients
                      !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
 
                      
                      call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
-                     sumg(1) = weight / localsswt
+                     sumg(1) = weight / sswt
                      !write(6,'(3es20.10)')weight,localsswt,sumg(1)
                      DO i=1,natom
                         oi = 3*(i-1)
@@ -1026,7 +1155,7 @@ contains
                      END DO
 
                      
-                  !endif
+                  endif
                endif
             !endif
 !         enddo
@@ -1040,6 +1169,50 @@ end do
 
 
   end subroutine quick_cew_grad_quad
+
+#if defined CUDA || defined CUDA_MPIV
+  ! MM: upload cew info onto GPU
+  subroutine upload_cew(self, ierr)
+
+    implicit none
+    type(quick_cew_type), intent(in) :: self
+    integer, intent(out) :: ierr
+
+    ierr=0
+    call gpu_set_cew(self%use_cew)
+
+  end subroutine upload_cew
+
+  subroutine delete_cew_vrecip(self, ierr)
+
+    implicit none
+    type(quick_cew_type), intent(in) :: self ! dummy argument to access through interface
+    integer, intent(inout) :: ierr
+
+    ierr=0
   
+    call gpu_delete_cew_vrecip(ierr)
+
+  end subroutine delete_cew_vrecip
+
+#endif
+
+  subroutine print_cew(self, iOutfile, ierr)
+  
+    implicit none
+    type(quick_cew_type), intent(in) :: self
+    integer, intent(out) :: iOutfile
+    integer, intent(out) :: ierr
+
+    if(self%use_cew) then 
+      write(iOutfile,'("| CEw = ON")') 
+    else
+      write(iOutfile,'("| CEw = OFF")')
+    endif
+
+    ierr=0
+
+  end subroutine print_cew
+
 end module quick_cew_module
 #endif

@@ -471,7 +471,7 @@ subroutine run_quick(self,ierr)
   use quick_sad_guess_module, only: getSadGuess
 
 #ifdef CEW 
-  use quick_cew_module, only : quick_cew
+  use quick_cew_module
 #endif
 
 #ifdef MPIV
@@ -535,6 +535,10 @@ subroutine run_quick(self,ierr)
 #if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
+
+#ifdef CEW
+  call upload(quick_cew, ierr)
+#endif
 #endif
 
   ! stop the timer for initial guess

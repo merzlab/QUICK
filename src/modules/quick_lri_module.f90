@@ -24,6 +24,7 @@ module quick_lri_module
   public :: has_angrenorm
   public :: angrenorm
   public :: CalcAngRenorm
+  public :: compute_c0c0
 
   ! module specific data structures
   double precision :: store(120,120)      ! store primitive integrals from vrr
@@ -68,7 +69,25 @@ contains
     
   end subroutine CalcAngRenorm
 
+  subroutine compute_c0c0(c_coords, c_zeta, c_chg, c0c0)
 
+    !----------------------------------------------------------------------!
+    ! The goal of this subroutine is to compute (c0|c0) integral required  !
+    ! for computing Schwartz cutoff of 3 center integrals. Note that the   !
+    ! following implementation is a result of hand solving (s0|s0) integral!
+    ! using OSHGP algorithm.                                               ! 
+    !______________________________________________________________________!
+
+    use quick_constants_module
+
+    implicit none
+    double precision, intent(in) :: c_coords(3), c_zeta, c_chg
+    double precision, intent(out) :: c0c0
+    double precision :: zeta, nita, K_AB, K_CD    
+
+    c0c0 = abs(1/sqrt(2.0d0*c_zeta) * X0/(c_zeta*c_zeta) * c_chg * (c_zeta/PI)**1.5d0) 
+
+  end subroutine compute_c0c0
   
   subroutine compute_lri(c_coords, c_zeta, c_chg)
 
@@ -82,35 +101,73 @@ contains
     !______________________________________________________________________!
 
     use quick_basis_module
+    use quick_method_module, only: quick_method
+#if defined MPIV && !defined CUDA_MPIV
+    use quick_mpi_module
+#endif
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
+    double precision :: c0c0
     integer :: II, JJ         ! shell pairs
+
+#if defined MPIV && !defined CUDA_MPIV
+    integer :: i
+#endif 
 
     RC=c_coords
     Zc=c_zeta
     Cc=c_chg
 
-    !if ( .not. has_angrenorm ) then
-    !   has_angrenorm = .true.
-    !   if ( associated( angrenorm ) ) deallocate( angrenorm )
-    !   allocate( angrenorm( nbasis ) )
-    !   call CalcAngRenorm( nbasis,angrenorm )
-    !end if
+    c0c0=0.0d0
 
-    
-    do II = 1, jshell
-      do JJ = II, jshell  
-        !II=2
-        !JJ=1
-        call compute_tci(II,JJ)
-      enddo
-    enddo
+    call compute_c0c0(RC, Zc, Cc, c0c0)
+
+#if defined MPIV && !defined CUDA_MPIV 
+  !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
+  !  which has 
+  !  4 jshell, and 2 nodes will take 2 jshell respectively.
+     if(bMPI) then
+        do i=1,mpi_jshelln(mpirank)
+           ii=mpi_jshell(mpirank,i)
+           call prescreen_compute_lri(II,c0c0)
+        enddo
+     else
+        do II=1,jshell
+           call prescreen_compute_lri(II,c0c0)
+        enddo
+     endif
+#else
+     do II=1,jshell
+        call prescreen_compute_lri(II,c0c0)
+     enddo
+#endif
 
   end subroutine compute_lri
 
 
-  subroutine compute_tci(II,JJ)
+  subroutine prescreen_compute_lri(II,c0c0)
+
+    use quick_basis_module
+    use quick_method_module, only: quick_method
+
+    implicit none
+    integer, intent(in) :: II
+    double precision, intent(in) :: c0c0
+    double precision :: cutoffTest
+    integer :: JJ
+
+      do JJ = II, jshell
+        cutoffTest = Ycutoff(JJ,II) * sqrt(c0c0)
+        if( cutoffTest .gt. quick_method%coreIntegralCutoff) then
+          call compute_long_range_integral(II,JJ,c0c0)
+        endif
+      enddo
+
+  end subroutine prescreen_compute_lri
+
+
+  subroutine compute_long_range_integral(II,JJ,c0c0)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes quantities required for OSHGP algorithm,    !
@@ -124,7 +181,7 @@ contains
     use quick_params_module
 
     integer, intent(in) :: II, JJ
-
+    double precision, intent(in) :: c0c0
     integer :: M, LL, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NNAB, NNCD, NABCDTYPE, &
                NNA, NNC, NABCD, ITT, Nprij, Nprii, iitemp, I1, I2, I, J, K, L 
     double precision :: P(3), AAtemp(3), Ptemp(3), Q(3), W(3), WQtemp(3), &
@@ -178,9 +235,6 @@ contains
         AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ). Eqn 8 of HGP.
         ABtemp=0.5d0/AB         ! ABtemp = 1/(2Apri) = 1/2(expo(NpriI)+expo(NpriJ))
 
-        ! compute this for screening integrals further 
-        cutoffprim1=dnmax*cutprim(Nprii,Nprij)
-
         do M=1,3
            !Eqn 9 of HGP
            ! P' is the weighting center of NpriI and NpriJ
@@ -208,7 +262,7 @@ contains
         KKK=1
         
         ! We no longer have Nprik, Npril. Omit the primitive integral screening for now.
-        !cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
+        !cutoffprim=cutprim(Nprii,Nprij)*sqrt(c0c0)
         !if(cutoffprim.gt.quick_method%primLimit)then
           
           ! Nita quantity of HGP Eqn 10. This is same as zita (AB) above. 
@@ -328,7 +382,7 @@ contains
              NNC=Sumindex(k-1)+1
              do L=NLL1,NLL2
                 NNCD=SumIndex(K+L)
-                call iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+                call iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
              enddo
           enddo
        enddo
@@ -336,9 +390,9 @@ contains
 
     return
 
-  end subroutine compute_tci
+  end subroutine compute_long_range_integral
 
-  subroutine iclass_tci(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
+  subroutine iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
 
     !----------------------------------------------------------------------!
     ! This subroutine computes contracted 3 center integrals by calling    !
@@ -394,7 +448,6 @@ contains
             !This is the KAB x KCD value reqired for HGP 12.
             !itt is the m value. 
             X44(ITT) = X2*(1/Zc)*Cc*(Zc/PI)**1.5d0
-
           !endif
        enddo
     enddo
@@ -445,24 +498,27 @@ contains
     KKK=1
     LLL=1
 
+
     !write(6,*)
     do III=III1,III2
 
        !write(6,'(I3,2F13.5)')III,angrenorm(III),quick_basis%cons(III)
-
        
       do JJJ=JJJ1,JJJ2
-        call hrr_tci
+        call hrr_lri
+
+
         ! assumes that core operator formation is done
         !quick_qm_struct%oneElecO(JJJ,III)=quick_qm_struct%oneElecO(JJJ,III)+Y
         quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III) &
              & + Y !* angrenorm(JJJ) * angrenorm(III)
              !& + Y * quick_basis%cons(III)*quick_basis%cons(JJJ)
         !write(*,*) JJJ,III,"lngr Y:", Y
+
       enddo
     enddo
 
-  end subroutine iclass_tci
+  end subroutine iclass_lri
 
 #include "./include/hrr_lri.fh"
 

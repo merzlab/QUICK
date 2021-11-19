@@ -1085,6 +1085,12 @@ for buildtype in $buildtypes; do
     else
       cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
     fi
+
+    # set cew flag for nvcc
+    if [ "$aminstall" = "true" ]; then
+      cuda_incl_flags="$cuda_incl_flags -I$AMBERHOME/AmberTools/src/cew -DCEW"
+    fi
+
   fi
 
   # set directives based on the build type. These stuff were previously in config.h
@@ -1151,7 +1157,12 @@ for buildtype in $buildtypes; do
       ldflags="$ldflags -L$quick_prefix/lib"
       if [ "$cew" = "yes" ]; then
           fort_flags="$fort_flags -DCEW"
-          ldflags="$ldflags -lcew"
+
+          if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+              ldflags="$ldflags -lcew_mpi"
+          else
+              ldflags="$ldflags -lcew"
+          fi
       fi
   fi
 

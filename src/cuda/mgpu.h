@@ -176,6 +176,7 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
     gpu -> twoEThreadsPerBlock      = SM_2X_2E_THREADS_PER_BLOCK;
     gpu -> XCThreadsPerBlock        = SM_2X_XC_THREADS_PER_BLOCK;
     gpu -> gradThreadsPerBlock      = SM_2X_GRAD_THREADS_PER_BLOCK;
+    gpu -> sswGradThreadsPerBlock   = SM_2X_SSW_GRAD_THREADS_PER_BLOCK;
 
     PRINTDEBUG("FINISH MULTI GPU INITIALIZATION")
 

@@ -201,8 +201,13 @@
     return
     end subroutine sswder
 
+! Following subroutine was implemented by Tim Giese based on Stratmann,
+! Scuseria, and Frisch, Chem. Phys. Lett., v257 1996, pg 213-223 paper.
 
-
+#define SSW_POLYFAC1 (3.4179687500)
+#define SSW_POLYFAC2 (8.344650268554688)
+#define SSW_POLYFAC3 (12.223608791828156)
+#define SSW_POLYFAC4 (7.105427357601002)
 
   subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
     implicit none
@@ -213,8 +218,8 @@
     
     double precision,parameter :: a = 0.64
     integer :: iat,jat
-    double precision :: uw(natom)
-    double precision :: mu,muoa,g,s,z
+    double precision :: uw(natom), uw_local
+    double precision :: mu,muoa,g,s,z,muoa3 
     double precision :: rxg(4,natom)
     double precision :: rigv(3),rig,rig2
     double precision :: rjgv(3),rjg,rjg2
@@ -237,8 +242,8 @@
 
     ! Calculate wi(rg)
     do iat=1,natom
-       uw(iat) = 1.d0
-       
+       uw_local = 1.0d0
+
        rigv(1:3) = rxg(1:3,iat)
        rig = rxg(4,iat)
 
@@ -256,7 +261,7 @@
           rij2 = rijv(1)*rijv(1)+rijv(2)*rijv(2)+rijv(3)*rijv(3)
           rij = sqrt(rij2)
 
-          mu = (rig-rjg)/rij
+          mu = (rig-rjg) * (1/rij)
 
           
           if ( mu <= -a ) then
@@ -264,18 +269,36 @@
           else if ( mu >= a ) then
              g = 1.d0
           else
-             muoa = mu/a
-             z = (35.d0*muoa - 35.d0*muoa**3 &
-                  & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
-             g = z
+
+             !muoa = mu/a
+             !z = (35.d0*muoa - 35.d0*muoa**3 &
+             !     & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             !g = z
+
+             ! MM optimized above statements as follows. 
+
+             !We can reduce the MUL operations by precomputing polynomial constants in eqn14. 
+             !constant of the first term, 3.4179687500 = 35.0 * (1/0.64) * (1/16) 
+             !constant of the second term, 8.344650268554688 = 35.0 * (1/0.64)^3 * (1/16) 
+             !constant of the third term, 12.223608791828156 = 21.0 * (1/0.64)^5 * (1/16) 
+             !constant of the fourth term, 7.105427357601002 = 5.0 * (1/0.64)^7 * (1/16)
+
+             muoa = mu
+             muoa3 = muoa * muoa * muoa
+
+             g=SSW_POLYFAC1 * muoa - SSW_POLYFAC2 * muoa3 +&
+               SSW_POLYFAC3 * muoa * muoa * muoa3 - &
+               SSW_POLYFAC4 * muoa * muoa3 * muoa3
+
           end if
           !if ( iat == 1 .and. jat == 3 ) write(6,'(es20.10)')mu
           
           s = 0.50d0 * (1.d0-g)
           !if ( iat == 1 .and. jat == 3 ) write(6,'(2es20.10)')mu,s
 
-          uw(iat) = uw(iat) * s
+          uw_local=uw_local*s
        end do
+       uw(iat)=uw_local
     end do
 
     

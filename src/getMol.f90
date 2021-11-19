@@ -48,10 +48,6 @@ subroutine getMol(ierr)
       ! quick forward coordinates stored in namelist to instant variables
       xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
 
-      ! Now read in another line
-      ! to see the specific grid has been requested if it is a DFT job
-      if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) call gridformSG1()        ! Xiao HE 01/09/07 SG1 SG0 grid
-
       ! check the correctness between molecular specification and method used
       call check_quick_method_and_molspec(iOutFile,quick_molspec,quick_method,ierr)
       CHECK_ERROR(ierr)
@@ -73,7 +69,7 @@ subroutine getMol(ierr)
    quick_molspec%nbasis   => nbasis
    quick_qm_struct%nbasis => nbasis
 
-   call allocate_basis(quick_method)
+   call alloc(quick_basis)
    call alloc(quick_qm_struct)
    call init(quick_qm_struct)
 
@@ -94,12 +90,6 @@ subroutine getMol(ierr)
       if (quick_method%ecp) call store_basis_to_ecp()      ! Alessandro GENONI 03/21/2007
 
    endif !Madu
-
-      ! calculate the radius of the sphere of basis function signifigance.
-!      if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
-
-  ! calculate the radius of the sphere of basis function signifigance.
-    if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
 
 #ifdef MPIV
    if (bMPI) call mpi_setup_mol2()

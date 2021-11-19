@@ -83,9 +83,6 @@
     call Broadcast(quick_molspec,ierr)
     call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-! DFT and SEDFT specs
-    call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(RWT,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
@@ -107,19 +104,10 @@
     include 'mpif.h'
 
     call Broadcast(quick_molspec,ierr)
-!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     call MPI_BCAST(dcoeff,nbasis*maxcontract,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     if (quick_method%ecp) then
       call MPI_BCAST(eta,nprim,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-    endif
-
-! DFT Parameter
-    if (quick_method%DFT.or.quick_method%SEDFT) then  
-      call MPI_BCAST(sigrad2,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%functional_id,size(quick_method%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
 
 ! SEDFT Parameters  
@@ -127,10 +115,21 @@
       call MPI_BCAST(At1prm,3*3*3*84,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(bndprm,3*3*3*84,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
     endif
-    
-!    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
     end
+
+    subroutine mpi_bcast_grid_vars
+
+      use quick_gridpoints_module, only: RGRID, RWT 
+      use quick_size_module, only: MAXRADGRID
+      use quick_mpi_module, only: mpierror
+      implicit none
+      include 'mpif.h'
+
+      call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(RWT,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+
+    end subroutine mpi_bcast_grid_vars   
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup Mol Basis
@@ -354,6 +353,7 @@
 
     endif
 
+    call mpi_distribute_atoms(quick_molspec%natom, quick_molspec%nextatom)
     
     end subroutine MPI_setup_hfoperator
 

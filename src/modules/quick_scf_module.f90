@@ -161,6 +161,10 @@ contains
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
+
+#ifdef CEW 
+     use quick_cew_module, only : quick_cew
+#endif
  
      implicit none
   
@@ -268,7 +272,11 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      if(quick_method%bCUDA) then
   
-        if (quick_method%DFT) then
+        if (quick_method%DFT &
+#ifdef CEW
+        .or. quick_cew%use_cew &
+#endif
+        )then
   
         call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, &
         quick_dft_grid%gridb_sswt, quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, &
@@ -774,7 +782,11 @@ contains
 #endif
   
 #if defined CUDA || defined CUDA_MPIV
-    if (quick_method%DFT) then
+    if (quick_method%DFT &
+#ifdef CEW
+       .or. quick_cew%use_cew &
+#endif
+       )then
        if(quick_method%grad) then
          call gpu_delete_dft_dev_grid()
        else

@@ -160,15 +160,25 @@ module quick_gridpoints_module
     
     call alloc_xcg_tmp_variables(xcg_tmp)
 
-    
 #ifdef MPIV
-  if(bMPI) then
-    call alloc_mpi_grid_variables(self)
+   if(master) then
+#endif
+   
+   if (quick_method%iSG.eq.1) call gridformSG1() 
+
+#ifdef MPIV
   endif
+
+   call alloc_mpi_grid_variables(self)
+
+   call mpi_bcast_grid_vars()
 
    if(master) then
 #endif
     call cpu_time(timer_begin%TDFTGrdGen)
+
+    ! form SG1 grid
+    !if(quick_method%iSG.eq.1) call gridformSG1()
 
     idx_grid = 0
     do Iatm=1,natom
@@ -216,6 +226,13 @@ module quick_gridpoints_module
 #ifdef MPIV
    endif
 #endif
+
+    ! allocate memory for data structures holding radius of significance, phi,
+    ! dphi and etc. 
+    call allocate_sigrad_phi()
+
+    ! compute the radius of significance for basis functions on each center
+    call get_sigrad()
 
     !Calculate the grid weights and store them
 #if defined CUDA || defined CUDA_MPIV
@@ -411,18 +428,38 @@ module quick_gridpoints_module
 
     end subroutine
 
-    ! allocate gridpoints
-    subroutine allocate_quick_gridpoints(nbasis)
-        implicit double precision(a-h,o-z)
-        integer nbasis
-        if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
-    end subroutine allocate_quick_gridpoints
+    ! allocate memory for radius of significance, phi and dphi for host xc
+    ! version
+    subroutine allocate_sigrad_phi
 
-    ! deallocate
-    subroutine deallocate_quick_gridpoints
+        use quick_basis_module, only: nbasis, quick_basis, alloc
         implicit double precision(a-h,o-z)
+        logical :: isDFT                 
+
+        if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
+
+#if !defined CUDA || !defined CUDA_MPIV
+        isDFT = .true.
+        call alloc(quick_basis, isDFT)
+#endif
+
+    end subroutine allocate_sigrad_phi
+
+    ! deallocate sigrad2, phi, dphi
+    subroutine deallocate_sigrad_phi
+
+        use quick_basis_module, only: quick_basis, dealloc
+        implicit double precision(a-h,o-z)
+        logical :: isDFT
+
         if (allocated(sigrad2)) deallocate(sigrad2)
-    end subroutine deallocate_quick_gridpoints
+
+#if !defined CUDA || !defined CUDA_MPIV
+        isDFT = .true.
+        call dealloc(quick_basis, isDFT)
+#endif
+
+    end subroutine deallocate_sigrad_phi
 
     ! Allocate memory for dft grid variables
     subroutine alloc_grid_variables(self)
@@ -499,6 +536,7 @@ module quick_gridpoints_module
         if (allocated(self%primf)) deallocate(self%primf)
         if (allocated(self%basf_counter)) deallocate(self%basf_counter)
         if (allocated(self%primf_counter)) deallocate(self%primf_counter)
+
 #if defined CUDA || defined CUDA_MPIV
         if (allocated(self%bin_locator)) deallocate(self%bin_locator)
 #endif
@@ -509,6 +547,9 @@ module quick_gridpoints_module
                 call dealloc_mpi_grid_variables(self)
         endif
 #endif
+        ! deallocate sigrad2, phi, dphi and etc. 
+        call deallocate_sigrad_phi()
+
     end subroutine
 
     subroutine dealloc_xcg_tmp_variables(xcg_tmp)
@@ -529,6 +570,9 @@ module quick_gridpoints_module
         if (allocated(xcg_tmp%tmp_sswt)) deallocate(xcg_tmp%tmp_sswt)
         if (allocated(xcg_tmp%tmp_weight)) deallocate(xcg_tmp%tmp_weight)
 #endif
+
+ 
+
     end subroutine
 
 #ifdef MPIV

@@ -205,6 +205,7 @@ static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
+static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;
