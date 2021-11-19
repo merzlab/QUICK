@@ -76,7 +76,7 @@ endif
 
 cublasobj       = $(objfolder)/fortran_thunking.o
 
-rocblasobj      = $(objfolder)/quick_rocblas_module.o
+rocblasobj      = $(objfolder)/rocblas_extras_module.o $(objfolder)/quick_rocblas_module.o
 
 rocblasmod      = $(objfolder)/rocblas_module.o
 
