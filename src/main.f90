@@ -36,6 +36,10 @@
     use quick_optimizer_module, only: optimize
     use quick_sad_guess_module, only: getSadGuess
 
+#if defined HIP || defined HIP_MPIV
+    use quick_rocblas_module, only: rocBlasInit, rocBlasFinalize 
+#endif
+
     implicit none
 
 #ifdef MPIV
@@ -220,6 +224,10 @@
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
     endif
+
+#if defined HIP || defined HIP_MPIV
+    call rocBlasInit(nbasis)
+#endif
 #endif
 
 #if defined CUDA_MPIV || defined HIP_MPIV
@@ -322,6 +330,10 @@
     !-----------------------------------------------------------------
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     call delete(quick_method,ierr)
+
+#if defined HIP || defined HIP_MPIV
+    call rocBlasFinalize
+#endif
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV

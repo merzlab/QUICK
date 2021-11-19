@@ -714,6 +714,10 @@ subroutine gpu_upload_molspecs(ierr)
   use quick_molspec_module, only : quick_molspec
   use quick_basis_module
 
+#if defined HIP || defined HIP_MPIV
+    use quick_rocblas_module, only: rocBlasInit
+#endif
+
   implicit none
   integer, intent(inout) :: ierr
 
@@ -734,6 +738,10 @@ subroutine gpu_upload_molspecs(ierr)
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
   call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
+#if defined HIP || defined HIP_MPIV
+    call rocBlasInit(nbasis)
+#endif
 
 end subroutine gpu_upload_molspecs
 
@@ -789,12 +797,20 @@ subroutine delete_quick_job(ierr)
   use quick_exception_module
   use quick_method_module
 
+#if defined HIP || defined HIP_MPIV
+  use quick_rocblas_module, only: rocBlasFinalize
+#endif
+
   implicit none
   integer, intent(out) :: ierr
   ierr=0
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call delete(quick_method,ierr)
+#endif
+
+#if defined HIP || defined HIP_MPIV
+    call rocBlasFinalize 
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
