@@ -1,138 +1,113 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Copyright (c) 2020 Advanced Micro Devices, Inc.
-!
-! Permission is hereby granted, free of charge, to any person obtaining a copy
-! of this software and associated documentation files (the "Software"), to deal
-! in the Software without restriction, including without limitation the rights
-! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is
-! furnished to do so, subject to the following conditions:
-!
-! The above copyright notice and this permission notice shall be included in
-! all copies or substantial portions of the Software.
-!
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-! THE SOFTWARE.
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#include "util.fh"
+!---------------------------------------------------------------------!
+! Created by Madu Manathunga on 11/19/2021                            !
+!                                                                     ! 
+! Copyright (C) 2021-2022 Merz lab                                    !
+! Copyright (C) 2021-2022 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
 
-! Madu Manathunga 11/16/2021: 
-! This module was created following fortran_gemv example provided in rocBLAS repo.
-! Some interfaces and a couple of subrouitnes were used as they were. 
-    
+!---------------------------------------------------------------------!
+! This module contains drivers required for utilizing rocBLAS in QUICK!
+!_____________________________________________________________________!   
+ 
 module quick_rocblas_module
+
+    use iso_c_binding
 
     implicit none
 
     private
-    public :: rocDGEMM
+    public :: rocBlasInit, rocDGEMM, rocBlasFinalize
 
+   
+    ! global variables
+    type(c_ptr), target :: handle ! rocblas handle, responsible for temp work space
+    type(c_ptr), target :: dA     ! device matrix A
+    type(c_ptr), target :: dB     ! device matrix B
+    type(c_ptr), target :: dC     ! device matrix C
+    real(8), dimension(:), allocatable, target :: hA ! host matrix A
+    real(8), dimension(:), allocatable, target :: hB ! host matrix B
+    real(8), dimension(:), allocatable, target :: hC ! host matrix C
 
-    ! AMD - TODO: hip workaround until plugin is ready.
-    interface
-        function hipMalloc(ptr, size) &
-                result(c_int) &
-                bind(c, name = 'hipMalloc')
-            use iso_c_binding
-            implicit none
-            type(c_ptr), value :: ptr
-            integer(c_size_t), value :: size
-        end function hipMalloc
-    end interface
-
-    interface
-        function hipFree(ptr) &
-                result(c_int) &
-                bind(c, name = 'hipFree')
-            use iso_c_binding
-            implicit none
-            type(c_ptr), value :: ptr
-        end function hipFree
-    end interface
-
-    interface
-        function hipMemcpy(dst, src, size, kind) &
-                result(c_int) &
-                bind(c, name = 'hipMemcpy')
-            use iso_c_binding
-            implicit none
-            type(c_ptr), value :: dst
-            type(c_ptr), intent(in), value :: src
-            integer(c_size_t), value :: size
-            integer(c_int), value :: kind
-        end function hipMemcpy
-    end interface
-
-    interface
-        function hipMemset(dst, val, size) &
-                result(c_int) &
-                bind(c, name = 'hipMemset')
-            use iso_c_binding
-            implicit none
-            type(c_ptr), value :: dst
-            integer(c_int), value :: val
-            integer(c_size_t), value :: size
-        end function hipMemset
-    end interface
-
-    interface
-        function hipDeviceSynchronize() &
-                result(c_int) &
-                bind(c, name = 'hipDeviceSynchronize')
-            use iso_c_binding
-            implicit none
-        end function hipDeviceSynchronize
-    end interface
-
-    interface
-        function hipDeviceReset() &
-                result(c_int) &
-                bind(c, name = 'hipDeviceReset')
-            use iso_c_binding
-            implicit none
-        end function hipDeviceReset
-    end interface
-    ! AMD - TODO end
-
+    ! interfaces
     interface rocDGEMM
         module procedure quick_rocblas_dgemm
     end interface rocDGEMM
 
+    interface rocBlasInit
+        module procedure rocblas_init
+    end interface rocBlasInit
+
+    interface rocBlasFinalize
+        module procedure rocblas_finalize
+    end interface rocBlasFinalize
+
+    
+
+
 contains
 
-    ! AMD: Error handling subroutines
-    subroutine HIP_CHECK(stat)
+    ! Initializes rocblas handle, allocates nabsis*nbasis*8 bytes of host & device 
+    ! memory for each matrix. Note that we assume the largest matrix would be nbasis x nbasis.
+    ! This must be changed if one wants to use rocDGEMM for larger matrices. 
+    subroutine rocblas_init(maxlda)
         use iso_c_binding
-    
-        implicit none
-    
-        integer(c_int) :: stat
-    
-        if(stat /= 0) then
-            write(*,*) 'Error: hip error'
-            stop
-        end if
-    end subroutine HIP_CHECK
-    
-    subroutine ROCBLAS_CHECK(stat)
-        use iso_c_binding
-    
-        implicit none
-    
-        integer(c_int) :: stat
-    
-        if(stat /= 0) then
-            write(*,*) 'Error: rocblas error'
-            stop
-        endif
-    end subroutine ROCBLAS_CHECK
-    ! AMD: End of error handling subroutines
+        use rocblas
+        use rocblas_enums
+        use rocblas_extras
 
+        implicit none
+
+        integer, intent(in) :: maxlda
+        integer :: rb_size
+        
+        rb_size=maxlda*maxlda
+
+        ! Allocate host-side memory
+        if(.not. allocated(hA)) allocate(hA(rb_size))
+        if(.not. allocated(hB)) allocate(hB(rb_size))
+        if(.not. allocated(hC)) allocate(hC(rb_size))
+
+        ! Allocate device-side memory
+        call HIP_CHECK(hipMalloc(c_loc(dA), int(rb_size, c_size_t) * 8))
+        call HIP_CHECK(hipMalloc(c_loc(dB), int(rb_size, c_size_t) * 8))
+        call HIP_CHECK(hipMalloc(c_loc(dC), int(rb_size, c_size_t) * 8))
+
+        ! Create rocBLAS handle
+        call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
+        
+        ! Set handle and call rocblas_dgemm
+        call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))
+
+    end subroutine rocblas_init
+
+
+
+
+    subroutine rocblas_finalize()
+
+        use iso_c_binding
+        use rocblas
+        use rocblas_enums
+        use rocblas_extras
+
+        implicit none
+
+        ! Cleanup
+        call HIP_CHECK(hipFree(dA))
+        call HIP_CHECK(hipFree(dB))
+        call HIP_CHECK(hipFree(dC))
+        call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
+
+        if(allocated(hA)) deallocate(hA)
+        if(allocated(hB)) deallocate(hB)
+        if(allocated(hC)) deallocate(hC)      
+
+    end subroutine rocblas_finalize
 
 
     ! MM: Wrapper function for rocblas_dgemm. 
@@ -140,6 +115,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
+        use rocblas_extras
 
         implicit none
 
@@ -156,16 +132,6 @@ contains
         
         integer(kind(rocblas_operation_none)) :: rb_transa
         integer(kind(rocblas_operation_transpose))  :: rb_transb 
-
-        real(8), dimension(:), allocatable, target :: hA
-        real(8), dimension(:), allocatable, target :: hB
-        real(8), dimension(:), allocatable, target :: hC
-
-        type(c_ptr), target :: dA
-        type(c_ptr), target :: dB
-        type(c_ptr), target :: dC
-
-        type(c_ptr), target :: handle
 
         integer :: i, j, lidx
 
@@ -205,16 +171,6 @@ contains
         rb_alpha = alpha
         rb_beta = beta
 
-        ! Allocate host-side memory
-        if(.not. allocated(hA)) allocate(hA(rb_sizea))
-        if(.not. allocated(hB)) allocate(hB(rb_sizeb))
-        if(.not. allocated(hC)) allocate(hC(rb_sizec))
-
-        ! Allocate device-side memory
-        call HIP_CHECK(hipMalloc(c_loc(dA), int(rb_sizea, c_size_t) * 8))
-        call HIP_CHECK(hipMalloc(c_loc(dB), int(rb_sizeb, c_size_t) * 8))
-        call HIP_CHECK(hipMalloc(c_loc(dC), int(rb_sizec, c_size_t) * 8))
-
         ! Initialize host memory
         hA = reshape(A(1:lda,1:rb_lda), (/rb_sizea/))
         hB = reshape(B(1:ldb,1:rb_ldb), (/rb_sizeb/))
@@ -222,17 +178,10 @@ contains
         ! Copy memory from host to device
         call HIP_CHECK(hipMemcpy(dA, c_loc(hA), int(rb_sizea, c_size_t) * 8, 1))
         call HIP_CHECK(hipMemcpy(dB, c_loc(hB), int(rb_sizeb, c_size_t) * 8, 1))
-        !call HIP_CHECK(hipMemcpy(dC, c_loc(hC), int(rb_sizec, c_size_t) * 8, 1))        
         call HIP_CHECK(hipMemset(dC, 0, int(rb_sizec, c_size_t) * 8))
 
-        ! Create rocBLAS handle
-        call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
-
-        ! Set handle and call rocblas_dgemm
-        call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))
-
-        call ROCBLAS_CHECK(rocblas_dgemm(handle, rb_transa, rb_transb, rb_m, rb_n, rb_k, c_loc(rb_alpha), dA,&
-                                         rb_lda, dB, rb_ldb, c_loc(rb_beta), dC, rb_ldc))
+        call ROCBLAS_CHECK(rocblas_dgemm(handle, rb_transa, rb_transb, rb_m, rb_n, rb_k, c_loc(rb_alpha), &
+                                         dA, rb_lda, dB, rb_ldb, c_loc(rb_beta), dC, rb_ldc))
 
         call HIP_CHECK(hipDeviceSynchronize())
 
@@ -241,16 +190,6 @@ contains
 
         ! Transfer result
         C = reshape(hC, (/ldc, n/))
-
-        ! Cleanup
-        call HIP_CHECK(hipFree(dA))
-        call HIP_CHECK(hipFree(dB))
-        call HIP_CHECK(hipFree(dC))
-        call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
-
-        if(allocated(hA)) deallocate(hA)
-        if(allocated(hB)) deallocate(hB)
-        if(allocated(hC)) deallocate(hC)     
 
     end subroutine quick_rocblas_dgemm
 
