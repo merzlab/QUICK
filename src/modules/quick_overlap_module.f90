@@ -176,6 +176,7 @@ subroutine fullx
    use allmod
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
+     use quick_rocsolver_module, only: rocDIAG
 #endif
 
    implicit none
@@ -243,12 +244,18 @@ subroutine fullx
    quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2,quick_scratch%tmpco, quick_scratch%V, nbasis)
 #else
 
+#if defined HIP || defined HIP_MPIV
+   call rocDIAG(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+#else
+
 #if defined LAPACK || defined MKL
    call DIAGMKL(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
 #else
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf,&
    quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
 #endif
+#endif
+
 #endif
 
    call cpu_time(timer_end%T1eSD)

@@ -123,6 +123,7 @@ contains
      use quick_oei_module, only: bCalc1e
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
+     use quick_rocsolver_module, only: rocDIAG
 #endif
 
      implicit none
@@ -626,11 +627,15 @@ contains
            ! Now diagonalize the operator matrix.
            call cpu_time(timer_begin%TDiag)
   
+#if defined HIP || defined HIP_MPIV
+           call rocDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#else
 #if defined LAPACK || defined MKL
            call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
 #else
            call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#endif
 #endif
            call cpu_time(timer_end%TDiag)
   
@@ -719,15 +724,19 @@ contains
            ! Now diagonalize the operator matrix.
            call cpu_time(timer_begin%TDiag)
 
+#if defined HIP || defined HIP_MPIV
+           call rocDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+#else
 #if defined LAPACK || defined MKL
            call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
 #else
            call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
 #endif
-           call cpu_time(timer_end%TDiag)
-
 #endif
+           call cpu_time(timer_end%TDiag)
+#endif
+
            timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
 
            ! Calculate C = XC' and form a new density matrix.
