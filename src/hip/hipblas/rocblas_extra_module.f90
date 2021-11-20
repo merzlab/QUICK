@@ -21,11 +21,24 @@
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+! Madu Manathunga 11/19/2021: 
+! This module contains enums currently missing in rocblas_module.f90 but required for
+! rocSolver. AMD guys should update their module soon. Then this can be eliminated.
+module rocblas_enums_extra
+
+    implicit none
+
+    enum, bind(c)
+        enumerator :: rocblas_evect_original = 211
+        enumerator :: rocblas_evect_tridiagonal = 212
+        enumerator :: rocblas_evect_none = 213
+    end enum
+end module rocblas_enums_extra
+
 ! Madu Manathunga 11/16/2021: 
 ! This module contains some extra subroutines and wrappers useful for rocBLAS and
-! rocSolver. Once the AMD team put together a plugin as they say, this module can be eliminated. 
-    
-module rocblas_extras
+! rocSolver. Once the AMD team put together a plugin as they say, this module can be eliminated.     
+module rocblas_extra
 
     implicit none
 
@@ -126,5 +139,5 @@ contains
     ! AMD: End of error handling subroutines
 
 
-end module rocblas_extras
+end module rocblas_extra
 
