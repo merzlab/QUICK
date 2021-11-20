@@ -22,10 +22,12 @@ module quick_rocblas_module
 
     private
     public :: rocBlasInit, rocDGEMM, rocBlasFinalize
-
+    public :: handle, hinfo, dinfo, dA, dB, dC, hA, hB, hC ! Required for rocSolver
    
     ! global variables
     type(c_ptr), target :: handle ! rocblas handle, responsible for temp work space
+    integer(c_int), dimension(:), allocatable, target :: hinfo ! pointer to a rocblas_int type
+    type(c_ptr), target :: dinfo    ! device pointer to a rocblas_int type
     type(c_ptr), target :: dA     ! device matrix A
     type(c_ptr), target :: dB     ! device matrix B
     type(c_ptr), target :: dC     ! device matrix C
@@ -58,7 +60,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extras
+        use rocblas_extra
 
         implicit none
 
@@ -68,20 +70,22 @@ contains
         rb_size=maxlda*maxlda
 
         ! Allocate host-side memory
+!        if(.not. allocated(hinfo)) allocate(hinfo(1))
         if(.not. allocated(hA)) allocate(hA(rb_size))
         if(.not. allocated(hB)) allocate(hB(rb_size))
         if(.not. allocated(hC)) allocate(hC(rb_size))
 
         ! Allocate device-side memory
+!        call HIP_CHECK(hipMalloc(c_loc(dinfo), int(1, c_size_t) * 4))
         call HIP_CHECK(hipMalloc(c_loc(dA), int(rb_size, c_size_t) * 8))
         call HIP_CHECK(hipMalloc(c_loc(dB), int(rb_size, c_size_t) * 8))
         call HIP_CHECK(hipMalloc(c_loc(dC), int(rb_size, c_size_t) * 8))
 
         ! Create rocBLAS handle
-        call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
+ !       call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
         
         ! Set handle and call rocblas_dgemm
-        call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))
+!        call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))
 
     end subroutine rocblas_init
 
@@ -93,7 +97,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extras
+        use rocblas_extra
 
         implicit none
 
@@ -101,11 +105,13 @@ contains
         call HIP_CHECK(hipFree(dA))
         call HIP_CHECK(hipFree(dB))
         call HIP_CHECK(hipFree(dC))
-        call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
+!        call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
+!        call HIP_CHECK(hipFree(dinfo))
 
         if(allocated(hA)) deallocate(hA)
         if(allocated(hB)) deallocate(hB)
         if(allocated(hC)) deallocate(hC)      
+!        if(allocated(hinfo)) deallocate(hinfo)
 
     end subroutine rocblas_finalize
 
@@ -115,7 +121,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extras
+        use rocblas_extra
 
         implicit none
 
@@ -171,6 +177,8 @@ contains
         rb_alpha = alpha
         rb_beta = beta
 
+        call rocBlasInit(rb_lda)
+
         ! Initialize host memory
         hA = reshape(A(1:lda,1:rb_lda), (/rb_sizea/))
         hB = reshape(B(1:ldb,1:rb_ldb), (/rb_sizeb/))
@@ -179,6 +187,12 @@ contains
         call HIP_CHECK(hipMemcpy(dA, c_loc(hA), int(rb_sizea, c_size_t) * 8, 1))
         call HIP_CHECK(hipMemcpy(dB, c_loc(hB), int(rb_sizeb, c_size_t) * 8, 1))
         call HIP_CHECK(hipMemset(dC, 0, int(rb_sizec, c_size_t) * 8))
+
+        ! Create rocBLAS handle
+        call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
+
+        ! Set handle and call rocblas_dgemm
+        call ROCBLAS_CHECK(rocblas_set_pointer_mode(handle, 0))        
 
         call ROCBLAS_CHECK(rocblas_dgemm(handle, rb_transa, rb_transb, rb_m, rb_n, rb_k, c_loc(rb_alpha), &
                                          dA, rb_lda, dB, rb_ldb, c_loc(rb_beta), dC, rb_ldc))
@@ -190,6 +204,11 @@ contains
 
         ! Transfer result
         C = reshape(hC, (/ldc, n/))
+
+        ! Destroy rockblas handle
+        call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
+
+        call rocBlasFinalize()
 
     end subroutine quick_rocblas_dgemm
 
