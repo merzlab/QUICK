@@ -76,11 +76,13 @@ endif
 
 cublasobj       = $(objfolder)/fortran_thunking.o
 
-rocblasobj      = $(objfolder)/rocblas_extras_module.o $(objfolder)/quick_rocblas_module.o
+rocblasobj      = $(objfolder)/rocblas_extra_module.o $(objfolder)/quick_rocblas_module.o
 
 rocblasmod      = $(objfolder)/rocblas_module.o
 
 cusolverobj     = $(objfolder)/quick_cusolver.o
+
+rocsolverobj    = $(objfolder)/rocsolver_extra_module.o $(objfolder)/quick_rocsolver_module.o
 
 octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
@@ -188,16 +190,18 @@ $(rocblasmod):$(objfolder)/%.o:$(ROCBLAS_PATH)/include/%.f90
 
 hipblas: $(rocblasmod) $(rocblasobj)
 
-#=============== targets for HIPBLAS =====================================
-$(hipblasobj):$(objfolder)/%.o:$(hipblasfolder)/%.c
-	@echo "[QUICK]  HIPCC $@"
-	$(VB)$(HIPCC) $(HIP_FLAGS) $(HIP_INCL_FLAGS) -c $< -o $@
-
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 	@echo "[QUICK]  CC $@"
 	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
+
+#=============== targets for ROCSOLVER ===================================
+$(rocsolverobj):$(objfolder)/%.o:$(hipsolverfolder)/%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+
+rocsolver: $(rocsolverobj)
 
 #===================== target for general src files =====================
 
@@ -239,7 +243,7 @@ cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 
-hip: cpmakein libxc_hip octree quick_hip hipblas quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+hip: cpmakein libxc_hip octree quick_hip hipblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(HIPCC) -g $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu \
