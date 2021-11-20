@@ -226,7 +226,7 @@
     endif
 
 #if defined HIP || defined HIP_MPIV
-    call rocBlasInit(nbasis)
+!    call rocBlasInit(nbasis)
 #endif
 #endif
 
@@ -332,7 +332,7 @@
     call delete(quick_method,ierr)
 
 #if defined HIP || defined HIP_MPIV
-    call rocBlasFinalize
+!    call rocBlasFinalize
 #endif
 #endif
 
