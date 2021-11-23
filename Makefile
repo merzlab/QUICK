@@ -67,7 +67,7 @@ hip: checkfolders
 
 hipmpi: checkfolders
 	@echo  "Building hip-mpi version.."
-	@cp -f $(buildfolder)/make.hipampi.in $(buildfolder)/make.in
+	@cp -f $(buildfolder)/make.hipmpi.in $(buildfolder)/make.in
 	@cd $(buildfolder) && make --no-print-directory hipmpi
 	@mv -f $(exefolder)/test-api.hip.MPI $(homefolder)/test/
 
