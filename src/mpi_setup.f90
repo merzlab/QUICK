@@ -357,7 +357,7 @@
     
     end subroutine MPI_setup_hfoperator
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup multi GPUs

@@ -76,7 +76,7 @@ void mgpu_startup(int mpirank, int* ierr)
 
 #if defined DEBUG || defined DEBUGTIME
     char fname[16];
-    sprintf(fname, "debug.cuda.%i", mpirank);
+    sprintf(fname, "debug.hip.%i", mpirank);
 
     debugFile = fopen(fname, "w+");
 #endif
@@ -147,7 +147,7 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 
     size_t val;
 
-    hipDeviceGetLimit(&val, cudaLimitStackSize);
+/*    hipDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i Stack size limit:    %zu\n", gpu -> mpirank,val);
 #endif
@@ -168,7 +168,7 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i New Stack size limit:    %zu\n", gpu -> mpirank,val);
 #endif
-
+*/
     gpu->blocks = deviceProp.multiProcessorCount;
 
     gpu -> sm_version               = SM_2X;
