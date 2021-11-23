@@ -44,6 +44,7 @@ echo  "
       --cuda         Builds GPU version that utilizes a single NVIDIA GPU   
       --cudampi      Builds multi-GPU version that utilizes multiple NVIDIA GPUs  
       --hip          Builds GPU version that utilizes a single AMD GPU
+      --hipmpi       Builds multi-GPU version that utilizes multiple AMD GPUs
       --debug        Compiles debug version                                 
       --debug-time   Compiles a debug version that reports more information
                      on timing
@@ -128,6 +129,35 @@ EOF
     mpi_cxx_flag="-lmpi_cxx"
   fi
 
+  # hipmpi version requires linking objects using hipcc. 
+  if [ "$hipmpi" = 'yes' ]; then
+
+    hip_mpi_flags=`$fort -show`
+    hip_mpi_flags=`echo "$hip_mpi_flags" | cut -d ' ' -f2-` 
+
+#    echo $hip_mpi_flags
+
+#    cat > test_hipcc.f90 << EOF
+#    program test_hipcc
+#      include 'mpif.h'
+#      integer :: mpierror
+#
+#      call MPI_INIT(mpierror)
+#
+#    end program test_hipcc
+#EOF
+
+#    $fort -c test_hipcc.f90 -o test_hipcc.o 2>/dev/null >/dev/null
+#    $hipcc $hip_mpi_flags test_hipcc.o -o testhipcc $ldflags 2>/dev/null >/dev/null
+#    if [ "$?" -ne 0 ]; then
+#      echo  "Error: Fortran90 code cannot be linked using $hipcc $hip_mpi_flags $ldflags"
+#      echo  "Try to check the commands using 'mpif90 -show' "
+#      exit 1
+#    fi
+#
+#    rm -f test_hipcc.f90 test_hipcc.o testhipcc
+  fi
+
   #try to link with libmpi_cxx
   $fort test_mpicxx.o test_prog.o -o testmpi $ldflags $mpi_cxx_flag 2>/dev/null >/dev/null
   if [ "$?" -ne 0 ]; then
@@ -182,7 +212,7 @@ case "$compiler" in
   gnu)
     echo "Requested compiler: GNU."
 
-    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ] && [ "$hipmpi" = 'no' ]; then
       if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
@@ -200,7 +230,7 @@ case "$compiler" in
   intel)
     echo "Requested compiler: Intel"
 
-    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ] && [ "$hipmpi" = 'no' ]; then
       if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
@@ -218,7 +248,7 @@ case "$compiler" in
   pgi)
     echo "Requested compiler: PGI."
 
-    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ] && [ "$hipmpi" = 'no' ]; then
       if [ -z "$FC" ]; then fort='pgfortran'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='pgcc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='pgc++'; else cxx="$CXX";fi
@@ -235,6 +265,11 @@ case "$compiler" in
 
   nvidia)
     echo "Requested compiler: NVIDIA."
+
+    if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
+      echo  "Error: NVIDIA compiler cannot be used with hip/hipmpi version."
+      exit 1
+    fi
 
     if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ]; then
       if [ -z "$FC" ]; then fort='nvfortran'; else fort="$FC";fi
@@ -270,6 +305,15 @@ fi
 if [ -z "`which $cxx 2> /dev/null`" ]; then
   echo  "Error: $cxx is not found."
   exit 1
+fi
+
+# check for hipcc compiler
+if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
+  hipcc='hipcc'
+  if [ -z "`which $hipcc 2> /dev/null`" ]; then
+    echo  "Error: $hipcc is not found."
+    exit 1
+  fi
 fi
 
 # general vars for compiler search
@@ -604,6 +648,7 @@ hip_incl_flags=''
 lib_flags=''
 cuda_lib_flags=''
 hip_lib_flags=''
+hip_mpi_flags=''
 
 # debug flags
 fort_debug_flags=''
@@ -662,7 +707,7 @@ while [ $# -gt 0 ]; do
     --cuda)        cuda='yes'; buildtypes="$buildtypes cuda"; cleantypes="$cleantypes cudaclean"; installers="$installers quick.cuda";;
     --cudampi)     cudampi='yes'; buildtypes="$buildtypes cudampi"; cleantypes="$cleantypes cudampiclean"; installers="$installers quick.cuda.MPI";;
     --hip)         hip='yes'; buildtypes="$buildtypes hip"; cleantypes="$cleantypes hipclean"; installers="$installers quick.hip";;
-    --hipmpi)     hipmpi='yes'; buildtypes="$buildtypes hipmpi"; cleantypes="$cleantypes hipmpiclean"; installers="$installers quick.hip.MPI";;
+    --hipmpi)      hipmpi='yes'; buildtypes="$buildtypes hipmpi"; cleantypes="$cleantypes hipmpiclean"; installers="$installers quick.hip.MPI";;
     --debug-time)  debugtime='yes';;
     --debug)       debug='yes';;
     --verbose)     verbose='';;
@@ -702,7 +747,7 @@ fi
 check_os
 
 if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ] || [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ] && [ ! "$osname" = 'linux' ]; then
-  echo  "Warning: QUICK cuda and cuda-mpi versions have never been tested on $osname os."
+  echo  "Warning: QUICK cuda/hip and cuda-mpi/hip-mpi versions have never been tested on $osname os."
 fi
 
 # check compiler
@@ -1040,7 +1085,7 @@ if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
     hipversion_minor=`echo $hipversion_str | cut -d '.' -f2`
     hipversion="$hipversion_major.$hipversion_minor"
 
-    if [ "$hipversion" = "4.3" ]; then
+    if [ "$hipversion" = "4.3" ] || [ "$hipversion" = "4.4" ]; then
 
       echo "HIP Version $hipversion detected"
 
@@ -1241,7 +1286,7 @@ for buildtype in $buildtypes; do
   ldflags="$fort_flags -lstdc++"
 
   # For mpi & cudampi versions, libmpi_cxx.so may be required. This has to be checked and set if required.
-  if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+  if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' -o "$buildtype" = 'hipmpi'  ]; then
     set_mpicxx
   fi
 
@@ -1438,6 +1483,7 @@ HIP_FLAGS=$hip_flags
 HIP_INCL_FLAGS=$hip_incl_flags
 HIP_DC_FLAGS=$hip_dc_flags
 HIP_LD_FLAGS=$hip_ld_flags
+HIP_MPI_LD_FLAGS=$hip_mpi_flags
 CFLAGS=$cflags
 
 EOF
