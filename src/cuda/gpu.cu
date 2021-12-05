@@ -250,7 +250,7 @@ extern "C" void gpu_allocate_scratch_(){
     */
     unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
 
-    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size*8);
     gpu -> scratch -> store -> DeleteCPU();
 
     gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
