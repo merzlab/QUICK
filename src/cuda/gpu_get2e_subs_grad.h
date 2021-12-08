@@ -151,51 +151,51 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
                     int lll = devSim.sorted_Qnumber[LL];
 #ifdef OSHELL
 #ifdef int_spd
-                    iclass_oshell_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf
                     if ( (kkk + lll) >= 4 ) {
-                        iclass_oshell_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                        iclass_oshell_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf2
                     if ( (iii + jjj) >= 4 ) {
-                        iclass_oshell_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                        iclass_oshell_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
-                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf4
-                    iclass_oshell_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf5
-                    iclass_oshell_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf6
-                    iclass_oshell_grad_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf7
-                    iclass_oshell_grad_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf8
-                    iclass_oshell_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_oshell_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #endif
 #else
 #ifdef int_spd
-                    iclass_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf
                     if ( (kkk + lll) >= 4 ) {
-                        iclass_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                        iclass_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf2
                     if ( (iii + jjj) >= 4 ) {
-                        iclass_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                        iclass_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
-                    iclass_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf4
-                    iclass_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf5
-                    iclass_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf6
-                    iclass_grad_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf7
-                    iclass_grad_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf8
-                    iclass_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB, devSim.storeCC);
+                    iclass_grad_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #endif
 #endif
                     
