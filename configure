@@ -636,7 +636,7 @@ hip_arch_flags=''
 # extra cuda/hip flags
 cuda_ext_flags='-m64 -use_fast_math'
 cuda_dc_flags=''
-hip_ext_flags=''
+hip_ext_flags='-ffast-math'
 hip_dc_flags=''
 hip_ld_flags=''
 
