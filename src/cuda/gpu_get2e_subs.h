@@ -426,133 +426,133 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
       
 #ifdef OSHELL
 #ifdef int_spd
-                    iclass_oshell(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
 
 #elif defined int_spdf
                 if ( (kkk + lll) <= 6 && (kkk + lll) > 4) {
-                    iclass_oshell_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 
 
 #elif defined int_spdf2
                 if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
-                    iclass_oshell_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 
 #elif defined int_spdf3
 
 
                 if ( (iii + jjj) >= 5 && (iii + jjj) <= 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
-                    iclass_oshell_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 
 #elif defined int_spdf4
 
 
                 if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
-                    iclass_oshell_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 
 #elif defined int_spdf5
 
                 if ( (kkk + lll) == 6 && (iii + jjj) >= 4 && (iii + jjj) <= 6) {
-                    iclass_oshell_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf6
                 if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 4) {
-                    iclass_oshell_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf7
 
 
                 if ( (iii + jjj) >=5 && (iii + jjj) <= 6 && (kkk + lll) == 6) {
-                    iclass_oshell_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 
 #elif defined int_spdf8
 
 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_oshell_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf9
 
 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_oshell_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf10
 
 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_oshell_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_oshell_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #endif
 #else          
 #ifdef int_spd
-                    iclass(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 
 #elif defined int_spdf
                 if ( (kkk + lll) <= 6 && (kkk + lll) > 4) {
-                    iclass_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
                 
 #elif defined int_spdf2
                 if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
-                    iclass_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf3
                 
                 
                 if ( (iii + jjj) >= 5 && (iii + jjj) <= 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
-                    iclass_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf4
                 
                 
                 if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 5) {
-                    iclass_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf5
                 
                 if ( (kkk + lll) == 6 && (iii + jjj) >= 4 && (iii + jjj) <= 6) {
-                    iclass_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
                 
 #elif defined int_spdf6
                 if ( (iii + jjj) == 6 && (kkk + lll) <= 6 && (kkk + lll) >= 4) {
-                    iclass_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf7
                 
                 
                 if ( (iii + jjj) >=5 && (iii + jjj) <= 6 && (kkk + lll) == 6) {
-                    iclass_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf8
                 
                 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf9
                 
                 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf10
                 
                 
                 if ( (iii + jjj) == 6 && (kkk + lll) == 6) {
-                    iclass_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp, devSim.store);
+                    iclass_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #endif
 #endif
@@ -1117,48 +1117,48 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAOInt_kernel_spdf10(QUICKULL
                 int lll = devSim.sorted_Qnumber[LL];
 #ifdef int_spd
         //        if (!((iii + jjj) > 4 || (kkk + lll) > 4)) {
-                    iclass_AOInt(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
         //        }
 #elif defined int_spdf
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf2
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf3
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf4
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #elif defined int_spdf5
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf6
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf6(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf7
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf7(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf8
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf8(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf9
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf9(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #elif defined int_spdf10
                 if ((iii + jjj) > 4 || (kkk + lll) > 4) {
-                    iclass_AOInt_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp, devSim.store);
+                    iclass_AOInt_spdf10(iii, jjj, kkk, lll, ii, jj, kk, ll, 1.0, aoint_buffer, streamID, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
 #endif
             }
