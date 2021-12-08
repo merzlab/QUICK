@@ -24,6 +24,13 @@ static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 
 #define STOREDIM 20
+#define REG_PF
+#define REG_FP
+#define REG_SF
+#define REG_FS
+//#define USE_PARTIAL_DP
+//#define USE_PARTIAL_PF
+//#define USE_PARTIAL_FP
 
 #include "gpu_oei_classes.h"
 #include "gpu_oei_definitions.h"
