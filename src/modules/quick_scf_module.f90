@@ -800,11 +800,15 @@ contains
 #endif
   
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+<<<<<<< HEAD
     if (quick_method%DFT &
 #ifdef CEW
        .or. quick_cew%use_cew &
 #endif
        )then
+=======
+    if (quick_method%DFT) then
+>>>>>>> f5d461f712a9d0a217ccd8053d206d1ee043897a
        if(quick_method%grad) then
          call gpu_delete_dft_dev_grid()
        else

@@ -90,6 +90,7 @@ contains
   !  Start the timer for 2e-integrals
      call cpu_time(timer_begin%T2e)
   
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      if (quick_method%bCUDA) then
   
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
@@ -123,6 +124,7 @@ contains
   ! The next two terms define the two electron part.
   !-----------------------------------------------------------------
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   !  Start the timer for 2e-integrals
      call cpu_time(timer_begin%T2e)
@@ -131,6 +133,9 @@ contains
 =======
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 >>>>>>> updated preprocessor directives
+=======
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+>>>>>>> f5d461f712a9d0a217ccd8053d206d1ee043897a
         if (quick_method%bCUDA) then          
            call gpu_get_oshell_eri(quick_qm_struct%o, quick_qm_struct%ob)
         else                                  

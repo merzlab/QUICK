@@ -1245,6 +1245,26 @@ for buildtype in $buildtypes; do
     fi
   fi
 
+  # set flags for hip and hipmpi versions
+  if [ "$buildtype" = 'hip' ] || [ "$buildtype" = 'hipmpi' ]; then
+
+    fort_flags="$fort_flags -D__HIP_PLATFORM_AMD__ -D__HIP_PLATFORM_HCC__"
+
+    cpp_flags="$opt_flags -I$ROCM_PATH/hip/include $lib_flags"
+
+    hip_flags="$opt_flags $hip_debug_flags $hip_ext_flags $hip_arch_flags $hip_lib_flags"
+
+    hip_incl_flags="-I$ROCM_PATH/hip/include -I$ROCM_PATH/rocblas/include -I$ROCM_PATH/rocsolver/include"
+
+    hip_ld_flags="-L$ROCM_PATH/hip/lib -L$ROCM_PATH/rocblas/lib -L$ROCM_PATH/rocsolver/lib -lrocblas -lrocsolver"
+
+    if [ "$nof" = 'yes' ]; then
+      echo "F functions will not be compiled in the $buildtype version."
+    else
+      hip_incl_flags="$hip_incl_flags -DHIP_SPDF"
+    fi
+  fi
+
   # set directives based on the build type. These stuff were previously in config.h
 
   if [ "$buildtype" = 'mpi' ]; then
