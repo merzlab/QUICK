@@ -410,7 +410,7 @@ module quick_gridpoints_module
     ! relinquish memory allocated for temporary f90 variables
     call dealloc_xcg_tmp_variables(xcg_tmp)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if MPIV
     if(master) then
 #endif
 
