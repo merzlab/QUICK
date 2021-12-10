@@ -19,7 +19,7 @@
 
 #include "gpu_fmt.h"
 
-__device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, unsigned int iatom, QUICKDouble* store){
+__device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, unsigned int iatom, QUICKDouble* store2){
 
     // obtain the start and final basis function indices for given shells II and JJ. They will help us to save the integral
     // contribution into correct location in Fock matrix. 
@@ -31,7 +31,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
 
-            // devTrans maps a basis function with certain angular momentum to store array. Get the correct indices now.  
+            // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.  
             int i = (int) LOC3(devTrans, LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis),\
                            LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
 
@@ -39,7 +39,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
                            LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), TRANSDIM, TRANSDIM, TRANSDIM);
              
             // multiply the integral value by normalization constants. 
-            QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM);
+            QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
 
             /*if( III == 10 && JJJ == 50 ) {
 
@@ -69,7 +69,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 
 
 __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ , unsigned int iatom, unsigned int totalatom, \
-    QUICKDouble *YVerticalTemp, QUICKDouble *store){
+    QUICKDouble *YVerticalTemp, QUICKDouble *store, QUICKDouble *store2){
 
     /*
      kAtom A, B  is the coresponding atom for shell II, JJ
@@ -111,12 +111,21 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
      */
     //QUICKDouble store[STOREDIM*STOREDIM];
 
-    // initialize store array
-
+    // initialize store2 array
+/*
     for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
         for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
             if (i < STOREDIM && j < STOREDIM) {
                 LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0.0;
+            }
+        }
+    }
+*/
+
+    for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+        for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0.0;
             }
         }
     }
@@ -150,7 +159,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
         // get Xcoeff, which is a product of overlap prefactor and contraction coefficients 
         QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI+III, kStartJ+JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
-        if(abs(Xcoeff_oei) > devSim.integralCutoff){
+        if(abs(Xcoeff_oei) > devSim.coreIntegralCutoff){
 //        for(int iatom=0; iatom<totalatom; ++iatom){
 
             QUICKDouble Cx = LOC2(devSim.allxyz, 0 , iatom, 3, totalatom);
@@ -159,12 +168,12 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             QUICKDouble chg = -1.0 * devSim.allchg[iatom];
 
             // compute OS A21
-            QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
+            //QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
 
             // compute boys function values, the third term of OS A20
 //            QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
 
-            FmT(I+J, U, YVerticalTemp);
+            FmT(I+J, Zeta*(pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2)), YVerticalTemp);
 
             // compute all auxilary integrals and store
             for (int n = 0; n<=I+J; n++) {
@@ -173,14 +182,25 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             }
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme. 
-            OEint_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, Zeta, store, YVerticalTemp);
+            OEint_vertical(I, J, II, JJ, Px-Ax, Py-Ay, Pz-Az, Px-Bx, Py-By, Pz-Bz, Px-Cx, Py-Cy, Pz-Cz, 1/(2.0*Zeta), store, YVerticalTemp);
+
+
+            // sum up primitive integral contributions
+            for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
+                for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
+                    if (i < STOREDIM && j < STOREDIM) {
+                        LOCSTORE(store2, j, i, STOREDIM, STOREDIM) +=  LOCSTORE(store, j, i, STOREDIM, STOREDIM);
+                    }
+                }
+            }
+
 //        }
         }
 
     }
 
     // retrive computed integral values from store array and update the Fock matrix 
-    addint_oei(I, J, II, JJ, iatom, store);
+    addint_oei(I, J, II, JJ, iatom, store2);
 
 }
 
@@ -219,7 +239,7 @@ __global__ void getOEI_kernel(){
         //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
         
         // compute coulomb attraction for the selected shell pair.  
-        iclass_oei(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
+        iclass_oei(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset);
 
 #ifdef HIP_MPIV
       }

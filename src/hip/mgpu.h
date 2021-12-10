@@ -20,7 +20,7 @@
 
 #ifdef HIP_MPIV
 
-#define HIP_MPIV_MINBASIS 100
+#define CUDA_MPIV_MINBASIS 100
 
 #include "string.h"
 
@@ -76,7 +76,7 @@ void mgpu_startup(int mpirank, int* ierr)
 
 #if defined DEBUG || defined DEBUGTIME
     char fname[16];
-    sprintf(fname, "debug.hip.%i", mpirank);
+    sprintf(fname, "debug.cuda.%i", mpirank);
 
     debugFile = fopen(fname, "w+");
 #endif
@@ -145,9 +145,9 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 
     hipDeviceSetCacheConfig(hipFuncCachePreferL1);
 
-    size_t val;
+/*    size_t val;
 
-/*    hipDeviceGetLimit(&val, cudaLimitStackSize);
+    hipDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i Stack size limit:    %zu\n", gpu -> mpirank,val);
 #endif
@@ -176,6 +176,7 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
     gpu -> twoEThreadsPerBlock      = SM_2X_2E_THREADS_PER_BLOCK;
     gpu -> XCThreadsPerBlock        = SM_2X_XC_THREADS_PER_BLOCK;
     gpu -> gradThreadsPerBlock      = SM_2X_GRAD_THREADS_PER_BLOCK;
+    gpu -> sswGradThreadsPerBlock   = SM_2X_SSW_GRAD_THREADS_PER_BLOCK;
 
     PRINTDEBUG("FINISH MULTI GPU INITIALIZATION")
 
@@ -232,7 +233,7 @@ void mgpu_oei_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > HIP_MPIV_MINBASIS){
+    if(nitems > CUDA_MPIV_MINBASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core
@@ -389,7 +390,7 @@ void mgpu_eri_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > HIP_MPIV_MINBASIS){
+    if(nitems > CUDA_MPIV_MINBASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core

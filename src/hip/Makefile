@@ -26,7 +26,7 @@ LIBXC_HIP_FLAGS = -I$(libxcfolder)
 
 CXXOBJ=$(objfolder)/xc_redistribute.o
 
-HIPCOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_oei.o 
+HIPCOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_lri.o $(objfolder)/gpu_oei.o 
 
 HIPXCOBJ=$(objfolder)/gpu_getxc.o
 
@@ -105,10 +105,6 @@ endif
 allbutxc: $(CXXOBJ) $(HIPCOBJ) $(HIPFOBJ)
 
 xc: $(HIPXCOBJ)
-#	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
-
-#xc: $(CUDAXCOBJ)
-#	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -shared $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(libfolder)/libxcgpu.so
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -118,5 +114,5 @@ xc: $(HIPXCOBJ)
 
 clean: 
 	@-rm -f *.o 
-	@-rm -f ./cublas/*.o
-	@-rm -f ./cusolver/*.o
+	@-rm -f ./rocblas/*.o
+	@-rm -f ./rocsolver/*.o

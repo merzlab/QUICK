@@ -19,6 +19,10 @@
 #include "mgpu.h"
 #endif
 
+#ifdef CEW
+#include "iface.hpp"
+#endif
+
 #include "gpu_get2e_getxc_drivers.h"
 #define OSHELL
 #include "gpu_get2e_getxc_drivers.h"
@@ -148,14 +152,14 @@ extern "C" void gpu_init_(int* ierr)
     
     hipDeviceSetCacheConfig(hipFuncCachePreferL1);
     
-    size_t val;
+/*    size_t val;
     
-//    hipDeviceGetLimit(&val, cudaLimitStackSize);
+    hipDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"Stack size limit:    %zu\n", val);
 #endif    
 
-//    hipDeviceGetLimit(&val, hipLimitPrintfFifoSize);
+    hipDeviceGetLimit(&val, hipLimitPrintfFifoSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"Printf fifo limit:   %zu\n", val);
 #endif
@@ -165,13 +169,13 @@ extern "C" void gpu_init_(int* ierr)
     fprintf(gpu->debugFile,"Heap size limit:     %zu\n", val);
 #endif
     
-    //cudaDeviceSetLimit(cudaLimitStackSize, 8192);
+    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
     
-   // hipDeviceGetLimit(&val, cudaLimitStackSize);
+    hipDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"New Stack size limit:    %zu\n", val);
 #endif
-    
+*/    
 	gpu->blocks = deviceProp.multiProcessorCount;
     if (deviceProp.major ==1) {
         switch (deviceProp.minor) {
@@ -197,6 +201,7 @@ extern "C" void gpu_init_(int* ierr)
         gpu -> twoEThreadsPerBlock      = SM_2X_2E_THREADS_PER_BLOCK;
         gpu -> XCThreadsPerBlock        = SM_2X_XC_THREADS_PER_BLOCK;
         gpu -> gradThreadsPerBlock      = SM_2X_GRAD_THREADS_PER_BLOCK;
+        gpu -> sswGradThreadsPerBlock   = SM_2X_SSW_GRAD_THREADS_PER_BLOCK; 
     }
     
     PRINTDEBUG("FINISH INIT")
@@ -246,7 +251,7 @@ extern "C" void gpu_allocate_scratch_(){
     */
     unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
 
-    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size*2);
     gpu -> scratch -> store -> DeleteCPU();
 
     gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
@@ -345,7 +350,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.imult            =   *imult;
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
-    
+    gpu -> gpu_sim.use_cew          =   false;   
+ 
     upload_para_to_const();
 
 #ifdef DEBUG
@@ -387,8 +393,18 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
     }
 
     gpu -> gpu_sim.is_oshell = *is_oshell;
+}
+
+#ifdef CEW
+//-----------------------------------------------
+//  set cew variables
+//-----------------------------------------------
+extern "C" void gpu_set_cew_(bool *use_cew){
+
+    gpu -> gpu_sim.use_cew = *use_cew;
 
 }
+#endif
 
 //-----------------------------------------------
 //  upload libxc information
@@ -485,7 +501,8 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
 //  upload cutoff criteria, will update every
 //  interation
 //-----------------------------------------------
-extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff)
+extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff,\
+                                   QUICKDouble* coreIntegralCutoff)
 {
     
 #ifdef DEBUG
@@ -498,6 +515,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     PRINTDEBUG("BEGIN TO UPLOAD CUTOFF")
     
     gpu -> gpu_cutoff -> integralCutoff = *integralCutoff;
+    gpu -> gpu_cutoff -> coreIntegralCutoff = *coreIntegralCutoff;
     gpu -> gpu_cutoff -> primLimit      = *primLimit;
     gpu -> gpu_cutoff -> DMCutoff       = *DMCutoff;
     
@@ -509,6 +527,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     
     gpu -> gpu_sim.cutMatrix        = gpu -> gpu_cutoff -> cutMatrix -> _devData;
     gpu -> gpu_sim.integralCutoff   = gpu -> gpu_cutoff -> integralCutoff;
+    gpu -> gpu_sim.coreIntegralCutoff   = gpu -> gpu_cutoff -> coreIntegralCutoff;
     gpu -> gpu_sim.primLimit        = gpu -> gpu_cutoff -> primLimit;
     gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
 
@@ -1888,6 +1907,62 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     
 }
 
+
+//-----------------------------------------------
+//  upload information for LRI calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
+{
+
+    gpu -> lri_data = new lri_data_type;
+    
+    gpu -> lri_data -> cc   = new cuda_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
+    gpu -> lri_data -> cc -> Upload();
+    
+    gpu -> gpu_sim.lri_zeta = *zeta;
+
+/*    printf("zeta %f \n", gpu -> gpu_sim.lri_zeta);
+
+    for(int i=0; i < (gpu->natom+gpu->nextatom); i++)
+      printf("cc %d %f \n", i, gpu -> lri_data -> cc -> _hostData[i]);
+
+    for(int iatom=0; iatom < (gpu->natom+gpu->nextatom); iatom++)
+      printf("allxyz %d %f %f %f \n", iatom, LOC2( gpu->allxyz->_hostData, 0, iatom, 3, devSim.natom+devSim.nextatom),\
+      LOC2( gpu->allxyz->_hostData, 1, iatom, 3, devSim.natom+devSim.nextatom), LOC2( gpu->allxyz->_hostData, 2, iatom, 3, devSim.natom+devSim.nextatom));
+*/
+    gpu -> gpu_sim.lri_cc   = gpu -> lri_data -> cc -> _devData;  
+
+}
+
+//-----------------------------------------------
+//  upload information for CEW quad calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_cew_vrecip_(int *ierr){
+
+  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+  QUICKDouble *gridpt = new QUICKDouble[3];
+
+  for(int i=0; i<gpu -> gpu_xcq -> npoints; i++){
+
+    gridpt[0] = gpu -> gpu_xcq -> gridx -> _hostData[i];
+    gridpt[1] = gpu -> gpu_xcq -> gridy -> _hostData[i];
+    gridpt[2] = gpu -> gpu_xcq -> gridz -> _hostData[i];
+
+    QUICKDouble vrecip = 0.0;
+
+#ifdef CEW
+    cew_getpotatpt_(gridpt, &vrecip);
+#endif
+
+    gpu -> lri_data -> vrecip -> _hostData[i] = -vrecip;
+
+  }
+
+  gpu -> lri_data -> vrecip -> Upload();
+  gpu -> gpu_sim.cew_vrecip   = gpu -> lri_data -> vrecip -> _devData;
+
+}
 
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
@@ -3367,4 +3442,18 @@ extern "C" void gpu_delete_libxc_(int *ierr)
 }
 
 
+//-------------------------------------------------
+//  delete information uploaded for LRI calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_lri_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> cc);
+}
 
+//-------------------------------------------------
+//  delete info uploaded for CEW quad calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_cew_vrecip_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> vrecip);
+}

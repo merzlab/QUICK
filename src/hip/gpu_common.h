@@ -35,7 +35,7 @@ fflush(stdout);\
 
 #define STOREDIM_S 35
 
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
 #define STOREDIM_L 84
 #else
 #define STOREDIM_L 84
@@ -56,8 +56,9 @@ fflush(stdout);\
 #define MAX(A,B)    (A>=B?A:B)
 #define MIN(A,B)    (A<B?A:B)
 
-#define LOCSTORE(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x+blockIdx.x*blockDim.x+threadIdx.x]
-#define LOCVY(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*gridDim.x*blockDim.x+blockIdx.x*blockDim.x+threadIdx.x]
+#define LOCSTORE(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
+#define LOCVY(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*gridDim.x*blockDim.x]
+#define LOCSTOREFULL(A,i1,i2,d1,d2,m) A[((i1+(i2)*(d1))*gridDim.x*blockDim.x)+(m*d1*d2*gridDim.x*blockDim.x)]
 
 //#define VY(a,b,c) LOC3(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
@@ -156,7 +157,7 @@ if (error != hipSuccess && error != hipErrorNotReady)\
 }\
 }
 #else
-#define QUICK_SAFE_CALL(x) {x;}
+#define QUICK_SAFE_CALL(x) x;
 #endif
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
@@ -204,6 +205,7 @@ static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
+static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;
