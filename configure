@@ -1426,8 +1426,8 @@ cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
 hipfolder=$QUICK_HOME/src/hip
-hipblasfolder=$QUICK_HOME/src/hip/hipblas
-hipsolverfolder=$QUICK_HOME/src/hip/hipsolver
+rocblasfolder=$QUICK_HOME/src/hip/rocblas
+rocsolverfolder=$QUICK_HOME/src/hip/rocsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 

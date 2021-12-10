@@ -180,7 +180,7 @@ $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for HIPBLAS =====================================
-$(rocblasobj):$(objfolder)/%.o:$(hipblasfolder)/%.f90
+$(rocblasobj):$(objfolder)/%.o:$(rocblasfolder)/%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
@@ -188,7 +188,7 @@ $(rocblasmod):$(objfolder)/%.o:$(ROCBLAS_PATH)/include/%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
-hipblas: $(rocblasmod) $(rocblasobj)
+rocblas: $(rocblasmod) $(rocblasobj)
 
 #=============== targets for CUSOLVER ===================================
 
@@ -197,7 +197,7 @@ $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
 #=============== targets for ROCSOLVER ===================================
-$(rocsolverobj):$(objfolder)/%.o:$(hipsolverfolder)/%.f90
+$(rocsolverobj):$(objfolder)/%.o:$(rocsolverfolder)/%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
 
@@ -243,7 +243,7 @@ cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 
-hip: cpmakein libxc_hip octree quick_hip hipblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+hip: cpmakein libxc_hip octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu \
@@ -251,7 +251,7 @@ hip: cpmakein libxc_hip octree quick_hip hipblas rocsolver quick_modules quick_s
 	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lblas-quick -lxc-gpu \
         $(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip -lgfortran $(HIP_LD_FLAGS)
 
-hipmpi: cpmakein libxc_hip octree quick_hip hipblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+hipmpi: cpmakein libxc_hip octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hipmpi.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hipmpi.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lblas-quick -lxc-gpu \
