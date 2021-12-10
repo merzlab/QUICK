@@ -1085,12 +1085,11 @@ if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
     hipversion_minor=`echo $hipversion_str | cut -d '.' -f2`
     hipversion="$hipversion_major.$hipversion_minor"
 
-    if [ "$hipversion" = "4.3" ] || [ "$hipversion" = "4.4" ]; then
-
-      echo "HIP Version $hipversion detected"
-
+    if [ "$hipversion_major" -ge "4" ] && [ "$hipversion_minor" -ge "4" ]; then
+      echo "HIP version $hipversion detected"
     else
-      echo "Warning: QUICK has never been tested with HIP Version $hipversion."
+      echo "Error: HIP version must be greater thant 4.4."
+      exit 1
     fi
 
     set_uspec_hip_arch
