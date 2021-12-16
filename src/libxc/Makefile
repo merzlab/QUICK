@@ -152,7 +152,7 @@ libxc_f90:
 	@echo "[QUICK]  FC $(libxcobjfolder)/libxcf90_la-libxc.o"
 	$(VB)$(FOR) libxc.f90 -o $(libxcobjfolder)/libxcf90_la-libxc.o
 
-libxc_gpu:$(LIBXCOBJ) libxc_f90
+libxc_device:$(LIBXCOBJ) libxc_f90
 	@echo "[QUICK]  CC $(libxcobjfolder)/gpu.o"
 	$(VB)$(CCC) gpu.c -o $(libxcobjfolder)/gpu.o
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libxc-gpu.$(LIBEXT) $(libxcobjfolder)/*.o

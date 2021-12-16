@@ -74,17 +74,20 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-#$(GPULIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
-#	@echo "[QUICK]  NVCC $@"
-#	$(VB)$(CUDAC) -fgpu-rdc -fPIC $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+GPULIBXC_FLAGS=
+
+ifeq "$(HIPCC)" 'no'
+GPULIBXC_FLAGS= $(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_GPU_FLAGS) 
+else
+GPULIBXC_FLAGS= $(HIPCC) -fgpu-rdc -fPIC $(HIP_FLAGS) $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_GPU_FLAGS)
+endif
 
 $(GPULIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
-	@echo "[QUICK]  HIPCC $@"
-	$(VB)$(HIPCC) -fgpu-rdc -fPIC $(HIP_FLAGS) $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_GPU_FLAGS) -c $< -o $@
+	@echo "[QUICK]  NVCC $@"
+	$(VB) $(GPULIBXC_FLAGS) -c $< -o $@
 
-libxc_cuda: $(GPULIBXCOBJ)
+libxc_device: $(GPULIBXCOBJ)
 
-libxc_hip: $(GPULIBXCOBJ)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

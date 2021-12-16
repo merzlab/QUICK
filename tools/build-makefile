@@ -165,14 +165,11 @@ blas-quick:
 libxc_cpu:
 	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_cpu
 #==================== libxc cuda library =================================
-libxc_gpu:
-	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_gpu
+libxc_device:
+	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_device
 
-libxc_cuda:libxc_gpu
-	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) libxc_cuda
-#==================== libxc hip library =================================
-libxc_hip:libxc_gpu
-	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) libxc_hip
+libxc_gpu:libxc_device
+	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) libxc_device
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
@@ -228,7 +225,7 @@ serial: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas-q
 	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc $(LDFLAGS)
 
-cuda: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+cuda: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu $(CFLAGS) $(LDFLAGS)
@@ -238,12 +235,12 @@ mpi: cpmakein libxc_cpu octree quick_modules quick_subs $(OBJ) $(MAIN) blas-quic
 	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc $(LDFLAGS)
 
-cudampi: cpmakein libxc_cuda octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+cudampi: cpmakein libxc_gpu octree quick_cuda quick_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu $(CFLAGS) $(LDFLAGS)
 
-hip: cpmakein libxc_hip octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) $(TESTAPI)
+hip: cpmakein libxc_gpu octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu \
@@ -251,7 +248,7 @@ hip: cpmakein libxc_hip octree quick_hip rocblas rocsolver quick_modules quick_s
 	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu \
         $(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip -lgfortran $(HIP_LD_FLAGS)
 
-hipmpi: cpmakein libxc_hip octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) $(TESTAPI)
+hipmpi: cpmakein libxc_gpu octree quick_hip rocblas rocsolver quick_modules quick_subs $(OBJ) $(MAIN) $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hipmpi.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hipmpi.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu \
