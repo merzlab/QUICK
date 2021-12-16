@@ -3,7 +3,7 @@
 
 #define DEV_MALLOC hipMalloc
 #define DEV_MEMCPY hipMemcpy
-#define DEV_MEMCPY_HOST_TO_DEVICE DEV_MEMCPY_HOST_TO_DEVICE
+#define DEV_MEMCPY_HOST_TO_DEVICE hipMemcpyHostToDevice 
 
 #else
 
