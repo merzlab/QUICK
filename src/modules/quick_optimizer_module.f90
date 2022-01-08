@@ -353,7 +353,7 @@ contains
         write (ioutfile,'(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
 
         do I=1,natom
-           Write (ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
+           Write (ioutfile,'(2x,A2,6x,F9.4,3x,F9.4,3x,F9.4)') &
                  symbol(quick_molspec%iattype(I)),xyz(1,I)*0.529177249d0, &
                  xyz(2,I)*0.529177249d0,xyz(3,I)*0.529177249d0
         enddo
