@@ -261,7 +261,7 @@ contains
            gradnorm = 0.d0
            write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
            write (ioutfile,'(84("-"))')
-           write (ioutfile,'(" VARIBLES",4x,"OLD_X",16x,"OLD_GRAD",10x,"NEW_GRAD",12x,"NEW_X")')
+           write (ioutfile,'(" VARIBLES",6x,"OLD_X",14x,"OLD_GRAD",10x,"NEW_GRAD",12x,"NEW_X")')
            write (ioutfile,'(84("-"))')
            do Iatm=1,natom
               do Imomentum=1,3
