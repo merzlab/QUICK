@@ -140,7 +140,6 @@ subroutine dlf_coords_init
     ! and initialise extra Lagrange-Newton coordinates
     if (glob%icoord == 10) call dlf_ln_allocate
 
-print*,"glob%nat", glob%nat
     ! set weight
     ivar=1
     do iat=1,glob%nat
@@ -859,10 +858,8 @@ subroutine dlf_cartesian_xtoi(nat,nivar,nicore,massweight,xcoords,xgradient,&
           iat,glob%spec(iat)
       call dlf_fail("Wrong spec setting")
     end if
-print*,"iivar", iivar
     if (glob%micspec(iat) == 1) then
        iinner = iivar
-print*,"iinner", iinner
     else
        iouter = iivar
     end if    
@@ -901,12 +898,13 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
+  use quick_molspec_module, only: xyz, quick_molspec
   implicit none
   integer ,intent(in)   :: nat,nivar,nicore
   logical ,intent(in)   :: massweight
   real(rk),intent(in)   :: icoords(nivar)
   real(rk),intent(inout):: xcoords(3,nat)
-  integer               :: iat,iivar,iinner,iouter
+  integer               :: iat,jat,iivar,iinner,iouter
   logical               :: warned
   real(rk)              :: massf
 ! **********************************************************************
@@ -963,10 +961,8 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
           iat,glob%spec(iat)
       call dlf_fail("Wrong spec setting")
     end if
-print*,"iivar", iivar
     if (glob%micspec(iat) == 1) then
        iinner = iivar
-print*,"iinner", iinner
     else
        iouter = iivar
     end if
@@ -979,6 +975,12 @@ print*,"iinner", iinner
     print*,iouter-1,nivar
     call dlf_fail("Error in the transformation cartesian_itox (outer)")
   end if
+ do iat=1,nat
+    do jat=1,3
+      ! xyz(jat,iat)=xcoords((iat-1)*3+jat)
+       xyz(jat,iat)=xcoords(jat,iat)
+    enddo
+ enddo
 end subroutine dlf_cartesian_itox
 !!****
 
