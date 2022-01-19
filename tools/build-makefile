@@ -139,6 +139,9 @@ quick_subs:
 #================= quick module library =================================
 quick_modules:
 	@cd $(modfolder) && make --no-print-directory all
+
+quick_opt_modules:
+	@cd $(modfolder) && make --no-print-directory post_dlfind
 #================= octree subroutines   =================================
 octree:
 	@cd $(octfolder) && make --no-print-directory all
@@ -194,7 +197,7 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu dlfind octree quick_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+serial: cpmakein libxc_cpu quick_modules dlfind octree quick_opt_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
