@@ -20,7 +20,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(DLFIND_FLAGS)
+FOR=$(FC) $(FFLAGS) $(DLFIND_FLAGS)
 
 # modules used by more than one file
 OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o $(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
@@ -40,6 +40,7 @@ OBJ_LAPACK = $(dlfindobjfolder)/dlf_hdlc_matrixlib.o $(dlfindobjfolder)/dlf_hdlc
 OBJ =  $(OBJ_NOLAPACK) $(OBJ_LAPACK) 
 
 OBJ_MAIN = $(dlfindobjfolder)/dlfind_main_driver.o $(dlfindobjfolder)/dlf_serial.o 
+##OBJ_MAIN = $(dlfindobjfolder)/dlf_serial.o 
 
 
 #  !---------------------------------------------------------------------!
