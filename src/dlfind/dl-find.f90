@@ -66,7 +66,7 @@
 !!   |
 !! return to calling program
 !!
-subroutine dl_find(nvarin,nvarin2,nspec,master&
+subroutine dl_find(nvarin,nvarin2,nspec,ierr2,master&
 #ifdef GAMESS
     ,core&
 #endif
@@ -83,6 +83,7 @@ subroutine dl_find(nvarin,nvarin2,nspec,master&
                                      !  in the second array (coords2)
   integer   ,intent(in)    :: nspec  ! number of values in the integer
                                      !  array spec
+  integer   ,intent(inout) :: ierr2
   integer   ,intent(in)    :: master ! 1 if this task is the master of
                                      ! a parallel run, 0 otherwise
 #ifdef GAMESS
@@ -98,9 +99,9 @@ subroutine dl_find(nvarin,nvarin2,nspec,master&
   call dlf_read_in(nvarin,nvarin2,nspec,master)
 
   ! task manager, main optimisation cycle
-  call dlf_task( &
+  call dlf_task(ierr2 &
 #ifdef GAMESS
-    core&
+    ,core&
 #endif
     )
 
@@ -326,9 +327,9 @@ end subroutine dlf_read_in
 !! * Destroy coordinates, formstep, linesearch
 !!
 !! SYNOPSIS
-subroutine dlf_run( &
+subroutine dlf_run(ierr2 &
 #ifdef GAMESS
-    core&
+    ,core&
 #endif
     )
 !! SOURCE
@@ -348,6 +349,7 @@ subroutine dlf_run( &
   logical  :: testconv ! is convergence checked in coords_xtoi ?
   logical  :: trestarted_report,noeandg,fd_hess_running
   logical  :: tswitch
+  integer   ,intent(inout) :: ierr2
 ! **********************************************************************
   
   ! classical rate (i.e. rate w/o tunneling) should be calculated
@@ -578,7 +580,7 @@ subroutine dlf_run( &
 #ifdef GAMESS
                  core,&
 #endif
-                 status)
+                 status,ierr2)
 
 !print*, "The gradients are:"
 !do iat=1, glob%nvar
@@ -597,7 +599,7 @@ subroutine dlf_run( &
 #ifdef GAMESS
                        core,&
 #endif
-                       status)
+                       status,ierr2)
 
 !print*, "check 2"                
 
@@ -1117,20 +1119,16 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
   integer :: nat,ivar
   real(rk):: svar
 ! **********************************************************************
-print*, "glob%tinit",glob%tinit
   if(glob%tinit) return ! this instance has been initialised
   glob%tcoords2=(nframe>0)
-print*,"glob%tatoms",glob%tatoms
   if(glob%tatoms) then
     ! input contains atoms
     if(mod(nvarin,3)/=0) call dlf_fail("nvarin has to be 3*nat")
     nat=nvarin/3
-print*,"dlf_allocate_glob - nat", nat
     glob%nvar=nvarin
     if(printl>4) write(stdout,'(a,i5,a)') &
       "Input contains ",nat," atoms"
     glob%nat=nat
-print*,"dlf_allocate_glob - glob%nat",glob%nat
 
     call allocate( glob%xcoords,3,nat)
 

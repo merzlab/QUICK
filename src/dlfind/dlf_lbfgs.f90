@@ -145,8 +145,6 @@ SUBROUTINE dlf_lbfgs_step(x,g,step_)
   real(RK) ,external :: ddot
 ! **********************************************************************
 
-print*,"icoords:", x
-print*,"igradient:", g
 
   if(.not.tinit) call dlf_fail("LBFGS not initialised!")
   if(.not.lbfgs%tinit) then

@@ -819,13 +819,13 @@ subroutine write_xyz(unit,nat,znuc,coords)
   call dlf_constants_get("ANG_AU",ang_au)
   write(unit,*) nat
   write(unit,*)
-if (unit==40) print*,"The new coordinates"
+!if (unit==40) print*,"The new coordinates"
   do iat=1,nat
     str2 = get_atom_symbol(znuc(iat))
     write(unit,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
-if (unit==40) then
-write(*,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
-endif
+!if (unit==40) then
+!write(*,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
+!endif
   end do
   call flush(unit)
 end subroutine write_xyz

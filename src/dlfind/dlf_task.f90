@@ -60,9 +60,9 @@ end module dlf_task_module
 !! In multiple image methods (NEB, dimer) call their respective init routines
 !!
 !! SYNOPSIS
-subroutine dlf_task( &
+subroutine dlf_task(ierr2 &
 #ifdef GAMESS
-    core&
+    ,core&
 #endif
     )
 !! SOURCE
@@ -79,6 +79,7 @@ subroutine dlf_task( &
   integer  :: task ! will become global!
   logical  :: tok
   real(8)  :: distort_in
+  integer   ,intent(inout) :: ierr2
 ! **********************************************************************
 
 ! 0      normal, no modification
@@ -96,11 +97,10 @@ subroutine dlf_task( &
 ! task = 0: standard optimisation, input unmodified
 ! ======================================================================
   case (0)
-print*,"dlf_task task=0"
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
-        core&
+        ,core&
 #endif
         )
 
