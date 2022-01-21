@@ -176,6 +176,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   spec(:)    =0
   coords2(:) =-1.D0
 
+!print*,'Intial Coordinates:'
   do iat = 1, nvar2
     do jat = 1, 3
        coords((iat-1)*3 + jat) = quick_molspec%xyz(jat, iat)
@@ -301,6 +302,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use driver_parameter_module
   use dlf_parameter_module, only: rk
   use allmod
+  use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_cshell_gradient_module, only: scf_gradient
   use quick_cutoff_module, only: schwarzoff
   use quick_cshell_eri_module, only: getEriPrecomputables
@@ -320,6 +322,10 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 ! **********************************************************************
 !  call test_update
   status=1
+
+!  print*, 'DL-Find coordinates:', coords
+!  print*
+!  print*, 'QUICK coordinates:',quick_molspec%xyz
 
   call getEriPrecomputables
   call schwarzoff
