@@ -337,6 +337,7 @@ subroutine dlf_run(ierr2 &
   use dlf_global, only: glob,stdout,printl,printf
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate,deallocate
+  use quick_molspec_module, only: xyz, quick_molspec
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -991,6 +992,14 @@ subroutine dlf_run(ierr2 &
 
     call write_xyz(40,glob%nat,glob%znuc,glob%xcoords)
 
+print*, 'Optimization Cycle:', stat%ccycle 
+ do iat=1,glob%nat
+    do jat=1,3
+!      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
+       xyz(jat,iat)=glob%xcoords(jat,iat)
+    enddo
+    print*, xyz(1,iat), xyz(2,iat), xyz(3,iat)
+ enddo
 !print*, "New coordinates"
 !print*, glob%xcoords*5.2917720810086E-01
 
@@ -1147,7 +1156,7 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
       glob%znuc(:)=1
     end if
     
- !   glob%xcoords = reshape(tmpcoords,(/3,nat/))
+    glob%xcoords = reshape(tmpcoords,(/3,nat/))
     glob%spec(:) = spec(1:nat)
 
     if(glob%ncons>0) then
