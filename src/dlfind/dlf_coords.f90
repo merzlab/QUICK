@@ -975,12 +975,6 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
     print*,iouter-1,nivar
     call dlf_fail("Error in the transformation cartesian_itox (outer)")
   end if
- do iat=1,nat
-    do jat=1,3
-      ! xyz(jat,iat)=xcoords((iat-1)*3+jat)
-       xyz(jat,iat)=xcoords(jat,iat)
-    enddo
- enddo
 end subroutine dlf_cartesian_itox
 !!****
 
