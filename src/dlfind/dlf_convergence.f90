@@ -94,9 +94,13 @@ subroutine convergence_test(icycle,tene,tconv)
 
   tole=glob%tolerance_e
 
-  tolrmsg= tolg / 1.5D0
-  tols=    tolg * 4.D0
-  tolrmss= tolg * 8.D0/3.D0
+  tolrmsg = 3.0D-4
+  tols    = 1.8D-3
+  tolrmss = 1.2D-3
+
+!  tolrmsg= tolg / 1.5D0
+!  tols=    tolg * 4.D0
+!  tolrmss= tolg * 8.D0/3.D0
 
   ! get values from glob%... arrays
   if(.not.texternal) call convergence_set_info("", &
