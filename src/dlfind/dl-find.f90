@@ -95,6 +95,7 @@ subroutine dl_find(nvarin,nvarin2,nspec,ierr2,master&
   ! Flag for dlf_fail - needs to be set before anything else
   glob%cleanup = 0
 
+
   ! read input parameters, set defaults
   call dlf_read_in(nvarin,nvarin2,nspec,master)
 
@@ -422,6 +423,7 @@ subroutine dlf_run(ierr2 &
     if (glob%icoord==190) glob%serial_cycle = 0
   end if
 
+!  open(unit=60,file="Water_dlfind.log",position="APPEND")
   ! report at the start
   call dlf_report(trestarted_report)
   
@@ -992,13 +994,13 @@ subroutine dlf_run(ierr2 &
 
     call write_xyz(40,glob%nat,glob%znuc,glob%xcoords)
 
-print*, 'Optimization Cycle:', stat%ccycle 
+!print*, 'Optimization Cycle:', stat%ccycle 
  do iat=1,glob%nat
     do jat=1,3
 !      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
        xyz(jat,iat)=glob%xcoords(jat,iat)
     enddo
-    print*, xyz(1,iat), xyz(2,iat), xyz(3,iat)
+!    print*, xyz(1,iat), xyz(2,iat), xyz(3,iat)
  enddo
 !print*, "New coordinates"
 !print*, glob%xcoords*5.2917720810086E-01
