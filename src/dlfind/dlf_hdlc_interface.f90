@@ -807,8 +807,8 @@ subroutine dlf_hdlc_hessian_xtoi(nat,nivar,xcoords,xhessian,ihessian)
         & for only one fragment (residue)")
   end if
 
-  IF (printl>=4) WRITE (stdout,'(/,A)') &
-      'Converting Cartesian Hessian to HDLC'
+  !IF (printl>=4) WRITE (stdout,'(/,A)') &
+  !    'Converting Cartesian Hessian to HDLC'
 
   pos=1
   istart=1
@@ -901,8 +901,8 @@ subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
 
   tok=.true.
   hdlc%interror=.false.
-  IF (printl>=4) WRITE (stdout,'(/,A)') &
-      'Converting HDLC to Cartesians'
+  !IF (printl>=4) WRITE (stdout,'(/,A)') &
+  !    'Converting HDLC to Cartesians'
 
   ipinner = 1
   ipouter = nicore + 1
