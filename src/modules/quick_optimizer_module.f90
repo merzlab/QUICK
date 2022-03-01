@@ -18,10 +18,109 @@ module quick_optimizer_module
 
   implicit double precision(a-h,o-z)
   private
+  public :: dlfind
+  public :: lopt
 
-  public :: optimize
+  interface dlfind
+        module procedure dlfindoptimize
+  end interface dlfind
+
+  interface lopt
+        module procedure optimize
+  end interface lopt
 
 contains
+
+  subroutine dlfindoptimize(ierr)
+     use allmod
+     use quick_gridpoints_module
+     use quick_cutoff_module, only: schwarzoff
+     use quick_cshell_eri_module, only: getEriPrecomputables
+     use quick_cshell_gradient_module, only: scf_gradient
+     use quick_oshell_gradient_module, only: uscf_gradient
+     use quick_dlfind_module, only: dlfind_interface
+!     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
+     use quick_exception_module
+     implicit double precision(a-h,o-z)
+
+     logical :: done,diagco
+     character(len=1) cartsym(3)
+     dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
+     dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
+     EXTERNAL LB2
+     COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
+
+     logical lsearch,diis
+     integer IMCSRCH,nstor,ndiis
+     double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
+     double precision EChg
+     integer, intent(inout) :: ierr
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
+
+     !---------------------------------------------------------
+     ! This subroutine optimizes the geometry of the molecule. It has a
+     ! variety of options that are enumerated in the text.  Please note
+     ! that all of the methods in this subroutine presuppose the use of
+     ! cartesian space for optimization.
+     !---------------------------------------------------------
+
+     cartsym(1) = 'X'
+     cartsym(2) = 'Y'
+     cartsym(3) = 'Z'
+     done=.false.      ! flag to show opt is done
+     diagco=.false.
+     iprint(1)=-1
+     iprint(2)=0
+     EPS=1.d-9
+     XTOL=1.d-11
+     EChg=0.0
+
+     ! For right now, there is no way to adjust these and only analytical
+     ! gradients
+     ! are available.  This should be changed later.
+     quick_method%analgrad=.true.
+
+     ! Some varibles to determine the geometry optimization
+     IFLAG=0
+     I=0
+
+     do j=1,natom
+        do k=1,3
+           quick_qm_struct%gradient((j-1)*3+K)=0d0
+        enddo
+     enddo
+
+     !------------- MPI/MASTER --------------------------------
+     if (master) then
+        call PrtAct(ioutfile,"Begin Optimization Job")
+
+        ! At the start of this routine we have a converged density matrix.
+        ! Check to be sure you should be here.
+        if (natom == 1) then
+           write (ioutfile,'(" ONE ATOM = NO OPTIMIZATION ")')
+           return
+        endif
+
+        if (quick_method%iopt < 0) then
+           error=0.d0
+           do I=1,natom*3
+              temp = quick_qm_struct%gradient(I)/5.D-4
+              error = temp*temp+error
+           enddo
+           Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
+        endif
+     endif
+
+!     if (master) call dlfind_init
+     !------------- END MPI/MASTER ----------------------------
+
+     call dlfind_interface(ierr)
+
+     return
+  end subroutine dlfindoptimize
 
 
 ! IOPT to control the cycles
@@ -109,7 +208,6 @@ contains
         endif
      endif
      
-!     if (master) call dlfind_init
      !------------- END MPI/MASTER ----------------------------
 
      do WHILE (I.lt.quick_method%iopt.and..not.done)
@@ -215,8 +313,12 @@ contains
            enddo
 
            ! Now let's call LBFGS.
+<<<<<<< HEAD
 !           call LBFGS(natom*3,MLBFGS,coordsnew,quick_qm_struct%Etot,quick_qm_struct%gradient,DIAGCO,HDIAG,IPRINT,EPS,XTOL,W,IFLAG)
            call dlfind_run(coordsnew,quick_qm_struct%gradient)
+=======
+           call LBFGS(natom*3,MLBFGS,coordsnew,quick_qm_struct%Etot,quick_qm_struct%gradient,DIAGCO,HDIAG,IPRINT,EPS,XTOL,W,IFLAG)
+>>>>>>> Added dl-find and legacy optimizer in same module
 
            lsearch=.false.
            diis=.true.
@@ -263,21 +365,35 @@ contains
            gradmax = -1.d0
            gradnorm = 0.d0
            write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
+<<<<<<< HEAD
            write (ioutfile,'(84("-"))')
            write (ioutfile,'(" VARIABLE",6x,"OLD_X",14x,"OLD_GRAD",10x,"NEW_GRAD",12x,"NEW_X")')
            write (ioutfile,'(84("-"))')
+=======
+           write (ioutfile,'(76("-"))')
+           write (ioutfile,'(" VARIBLES",4x,"OLD_X",12x,"OLD_GRAD",8x,"NEW_GRAD",10x,"NEW_X")')
+           write (ioutfile,'(76("-"))')
+>>>>>>> Added dl-find and legacy optimizer in same module
            do Iatm=1,natom
               do Imomentum=1,3
                  ! Max gradient change
                  gradmax = max(gradmax,dabs(quick_qm_struct%gradient((Iatm-1)*3+Imomentum)))
                  ! Grad change normalization
                  gradnorm = gradnorm + quick_qm_struct%gradient((Iatm-1)*3+Imomentum)**2.d0
+<<<<<<< HEAD
                  write (ioutfile,'(I5,A1,3x,F16.10,3x,F16.10,3x,F16.10,3x,F16.10)')Iatm,cartsym(imomentum), &
+=======
+                 write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+>>>>>>> Added dl-find and legacy optimizer in same module
                        coordsold((Iatm-1)*3+Imomentum)*0.529177249d0,oldGrad((Iatm-1)*3+Imomentum), &
                        quick_qm_struct%gradient((Iatm-1)*3+Imomentum),xyz(Imomentum,Iatm)*0.529177249d0
               enddo
            enddo
+<<<<<<< HEAD
            write(ioutfile,'(84("-"))')
+=======
+           write(ioutfile,'(76("-"))')
+>>>>>>> Added dl-find and legacy optimizer in same module
            gradnorm = (gradnorm/dble(natom*3))**.5d0
 
            ! geometry RMS
@@ -295,7 +411,11 @@ contains
               EChg = quick_qm_struct%Etot-Elast
               done = quick_method%geoMaxCrt.gt.geomax
               done = done.and.(quick_method%EChange.gt.abs(EChg))
+<<<<<<< HEAD
               done = done.and.(quick_method%gRMSCrt.gt.georms)
+=======
+!              done = done.and.(quick_method%gRMSCrt.gt.georms)
+>>>>>>> Added dl-find and legacy optimizer in same module
               !done = done.and.(quick_method%gradMaxCrt.gt.gradmax * 10 .or. (EChg.gt.0 .and. i.gt.5))
               !done = done.and.quick_method%gNormCrt.gt.gradnorm
            else
@@ -342,8 +462,11 @@ contains
 
      enddo
 
+<<<<<<< HEAD
      if (master) call dlfind_final
 
+=======
+>>>>>>> Added dl-find and legacy optimizer in same module
 
      if (master) then
         if (done) then
@@ -358,7 +481,11 @@ contains
         write (ioutfile,'(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
 
         do I=1,natom
+<<<<<<< HEAD
            Write (ioutfile,'(2x,A2,6x,F9.4,3x,F9.4,3x,F9.4)') &
+=======
+           Write (ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
+>>>>>>> Added dl-find and legacy optimizer in same module
                  symbol(quick_molspec%iattype(I)),xyz(1,I)*0.529177249d0, &
                  xyz(2,I)*0.529177249d0,xyz(3,I)*0.529177249d0
         enddo
@@ -373,14 +500,21 @@ contains
         enddo
 
         write (ioutfile,*)
+<<<<<<< HEAD
         write (ioutfile,'(" MINIMIZED ENERGY=",F20.10)') quick_qm_struct%Etot
+=======
+        write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
+>>>>>>> Added dl-find and legacy optimizer in same module
         Write (ioutfile,'("===============================================================")')
 
 
         call PrtAct(ioutfile,"Finish Optimization Job")
      endif
+<<<<<<< HEAD
 
      call dlfind_interface(ierr)
+=======
+>>>>>>> Added dl-find and legacy optimizer in same module
 
      return
   end subroutine optimize
