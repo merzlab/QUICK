@@ -123,6 +123,9 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
+
+        logical :: usedlfind = .true.
+
 #if defined CUDA || defined CUDA_MPIV
         logical :: bCUDA                ! if CUDA is used here
 #endif
@@ -668,6 +671,9 @@ endif
                 call read(keywd,'BASISZERO', itemp)
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
+
+            ! Legacy Optimizer
+            if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
 
         end subroutine read_quick_method
 
