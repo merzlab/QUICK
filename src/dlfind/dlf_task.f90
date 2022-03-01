@@ -89,7 +89,7 @@ subroutine dlf_task(ierr2 &
 !
 ! 2xxx   input RS + PS
 
-!  glob%task=1001
+!  glob%task=1011
 
   select case (glob%task)
 
