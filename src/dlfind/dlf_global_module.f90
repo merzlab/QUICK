@@ -250,7 +250,7 @@ module dlf_global
 
   ! Variables in the module
   type(glob_type) ,save :: glob
-  integer           :: stdout=6
+  integer           :: stdout=2021
   integer           :: stderr=0
   real(rk)          :: pi     ! 3.1415...
   integer           :: printl ! how verbosely to write info to stdout
