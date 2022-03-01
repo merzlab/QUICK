@@ -195,6 +195,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 !*************END case of isystem checking******************
 
   tolerance=4.5D-5 ! negative: default settings
+  tolerance_e = 1.0D-6
   printl=4
   printf=4
   maxcycle=100 !200
@@ -208,7 +209,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
   distort=0.D0 !0.4 
   tatoms=0
-  icoord=0 !0 cartesian coord !210 Dimer !190 qts search !120 NEB frozen endpoint
+  icoord=3 !0 cartesian coord !210 Dimer !190 qts search !120 NEB frozen endpoint
   massweight=0
 
 ! TO DO (urgent): better dtau for endpoints (interpolate energy) when reading dist
@@ -326,6 +327,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 !  print*, 'DL-Find coordinates:', coords
 !  print*
 !  print*, 'QUICK coordinates:',quick_molspec%xyz
+  
 
   call getEriPrecomputables
   call schwarzoff
@@ -343,6 +345,8 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
   !  get the hessian at a given geometry
   use driver_parameter_module
   use dlf_parameter_module
+!  use allmod
+!  use quick_cshell_gradient_module, only: cshell_gradient
   !use vib_pot
   implicit none
   integer   ,intent(in)    :: nvar
@@ -352,14 +356,69 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
   real(rk) :: acoords(3,nvar/3),r,svar,svar2
   integer  :: posi,posj,iat,jat,m,n
   ! variables for Mueller-Brown potential
-  real(rk) :: x,y
+  !real(rk) :: x,y
   integer  :: icount
   ! variables non-cont. diff. potential
   real(rk) :: t
+  logical :: failed = .false. 
 ! **********************************************************************
   hessian(:,:)=0.D0
-  status = 0
-   
+  status = 1
+
+    acoords=reshape(coords,(/3,nvar/3/))
+    do iat=1,nvar/3
+      do jat=iat+1,nvar/3
+        r=sum((acoords(:,iat)-acoords(:,jat))**2)
+        ! Lennard-Jones Potential
+        svar = 96.D0*epsilon * (7.D0*sigma**12/r**8-2.D0*sigma**6/r**5) ! coeffof x1x2
+        svar2= epsilon * (-2.D0*sigma**12/r**7+sigma**6/r**4) ! for x1x1
+        posi=(iat-1)*3+1
+        posj=(jat-1)*3+1
+        ! off-diag
+        hessian(posi,posi+1)  =hessian(posi,posi+1)  + svar *(acoords(1,iat)-acoords(1,jat)) * (acoords(2,iat)-acoords(2,jat))
+        hessian(posi,posi+2)  =hessian(posi,posi+2)  + svar *(acoords(1,iat)-acoords(1,jat)) * (acoords(3,iat)-acoords(3,jat))
+        hessian(posi+1,posi)  =hessian(posi+1,posi)  + svar *(acoords(2,iat)-acoords(2,jat)) * (acoords(1,iat)-acoords(1,jat))
+        hessian(posi+1,posi+2)=hessian(posi+1,posi+2)+ svar *(acoords(2,iat)-acoords(2,jat)) * (acoords(3,iat)-acoords(3,jat))
+        hessian(posi+2,posi)  =hessian(posi+2,posi)  + svar *(acoords(3,iat)-acoords(3,jat)) * (acoords(1,iat)-acoords(1,jat))
+        hessian(posi+2,posi+1)=hessian(posi+2,posi+1)+ svar *(acoords(3,iat)-acoords(3,jat)) * (acoords(2,iat)-acoords(2,jat))
+
+        do m=0,2
+          do n=0,2
+            if(m==n) cycle
+  hessian(posi+m,posj+n)=hessian(posi+m,posj+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) * (acoords(N+1,iat)-acoords(N+1,jat))
+  hessian(posj+m,posi+n)=hessian(posj+m,posi+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) * (acoords(N+1,iat)-acoords(N+1,jat))
+          end do
+        end do
+        ! Diag for different atoms ...
+        do m=0,2
+          hessian(posi+m,posj+m)=hessian(posi+m,posj+m) -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
+          hessian(posj+m,posi+m)=hessian(posj+m,posi+m) -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
+        end do
+
+        hessian(posj,posj+1)  =hessian(posj,posj+1)  + svar * (acoords(1,iat)-acoords(1,jat)) * (acoords(2,iat)-acoords(2,jat))
+        hessian(posj,posj+2)  =hessian(posj,posj+2)  + svar * (acoords(1,iat)-acoords(1,jat)) * (acoords(3,iat)-acoords(3,jat))
+        hessian(posj+1,posj)  =hessian(posj+1,posj)  + svar * (acoords(2,iat)-acoords(2,jat)) * (acoords(1,iat)-acoords(1,jat))
+        hessian(posj+1,posj+2)=hessian(posj+1,posj+2)+ svar * (acoords(2,iat)-acoords(2,jat)) * (acoords(3,iat)-acoords(3,jat))
+        hessian(posj+2,posj)  =hessian(posj+2,posj)  + svar * (acoords(3,iat)-acoords(3,jat)) * (acoords(1,iat)-acoords(1,jat))
+        hessian(posj+2,posj+1)=hessian(posj+2,posj+1)+ svar * (acoords(3,iat)-acoords(3,jat)) * (acoords(2,iat)-acoords(2,jat))
+        ! diag
+        hessian(posi,posi)    =hessian(posi,posi)    + 24.D0*(svar2+1.D0/24.D0*svar* (acoords(1,iat)-acoords(1,jat))**2)
+        hessian(posi+1,posi+1)=hessian(posi+1,posi+1)+ 24.D0*(svar2+1.D0/24.D0*svar* (acoords(2,iat)-acoords(2,jat))**2)
+        hessian(posi+2,posi+2)=hessian(posi+2,posi+2)+ 24.D0*(svar2+1.D0/24.D0*svar* (acoords(3,iat)-acoords(3,jat))**2)
+
+        hessian(posj,posj)    =hessian(posj,posj)    + 24.D0*(svar2+1.D0/24.D0*svar* (acoords(1,iat)-acoords(1,jat))**2)
+        hessian(posj+1,posj+1)=hessian(posj+1,posj+1)+ 24.D0*(svar2+1.D0/24.D0*svar* (acoords(2,iat)-acoords(2,jat))**2)
+        hessian(posj+2,posj+2)=hessian(posj+2,posj+2)+ 24.D0*(svar2+1.D0/24.D0*svar* (acoords(3,iat)-acoords(3,jat))**2)
+      end do
+    end do
+    status=0
+  
+!  call calcHessian(failed)
+!  if (.not. failed) then
+!    hessian = quick_qm_struct%hessian
+!    status = 0
+!  endif 
+ 
 end subroutine dlf_get_hessian
 
 ! initialize parameters for the test potentials
