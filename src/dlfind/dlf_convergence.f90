@@ -108,7 +108,7 @@ subroutine convergence_test(icycle,tene,tconv)
   texternal=.false.
 
   if(printl>0) write(stdout,'(3a,i5)') &
-      "Testing convergence ",trim(message)," in cycle",icycle
+      " OPTIMIZATION STATISTICS:"
 
 
   if(glob%toldenergy_conv) then
@@ -118,9 +118,9 @@ subroutine convergence_test(icycle,tene,tconv)
     le=(svar < tole)
     if(printl>0) then
       if(le) then
-        write(stdout,1000) "Energy",svar,tole,"yes"
-      else 
-        write(stdout,1000) "Energy",svar,tole,"no"
+        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole
+      else
+        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole 
       end if
     end if
 
@@ -128,9 +128,9 @@ subroutine convergence_test(icycle,tene,tconv)
     ls=(vals < tols)
     if(printl>0) then
       if(ls) then
-        write(stdout,1001) "Max step",vals,tols,"yes",locs(1)
+        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")')vals,tols
       else
-        write(stdout,1001) "Max step",vals,tols,"no",locs(1)
+        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")')vals,tols
       end if
     end if
     
@@ -138,9 +138,9 @@ subroutine convergence_test(icycle,tene,tconv)
     lrmss=(valrmss < tolrmss)
     if(printl>0) then
       if(lrmss) then
-        write(stdout,1000) "RMS step",valrmss,tolrmss,"yes"
+        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")')valrmss,tolrmss
       else
-        write(stdout,1000) "RMS step",valrmss,tolrmss,"no"
+        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")')valrmss,tolrmss
       end if
     end if
     
@@ -158,9 +158,9 @@ subroutine convergence_test(icycle,tene,tconv)
   lg=(valg < tolg)
   if(printl>0) then
     if(lg) then
-      write(stdout,1001) "Max grad",valg,tolg,"yes",locg(1)
+      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5" )")')valg,tolg
     else
-      write(stdout,1001) "Max grad",valg,tolg,"no",locg(1)
+      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5" )")')valg,tolg
     end if
   end if
 
@@ -168,9 +168,9 @@ subroutine convergence_test(icycle,tene,tconv)
   lrmsg=(valrmsg < tolrmsg)
   if(printl>0) then
     if(lrmsg) then
-      write(stdout,1000) "RMS grad",valrmsg,tolrmsg,"yes"
+      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5" )")') valrmsg,tolrmsg
     else
-      write(stdout,1000) "RMS grad",valrmsg,tolrmsg,"no"
+      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5" )")') valrmsg,tolrmsg
     end if
   end if
 
@@ -187,7 +187,7 @@ subroutine convergence_test(icycle,tene,tconv)
     tconv=(lg)
   end if
 
-  if (printl > 0 .and. tconv) write(stdout,'(a)') "Convergence reached"
+  !if (printl > 0 .and. tconv) write(stdout,'(a)') "Convergence reached"
 
   ! send convergence information to task module
   call dlf_task_set_l("CONVERGED",tconv)
