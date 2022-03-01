@@ -116,7 +116,7 @@ subroutine dl_find(nvarin,nvarin2,nspec,ierr2,master&
   call store_delete_all
 
   call clock_stop("TOTAL")
-  call time_report
+!  call time_report
 
   call allocate_report
 
@@ -423,7 +423,6 @@ subroutine dlf_run(ierr2 &
     if (glob%icoord==190) glob%serial_cycle = 0
   end if
 
-!  open(unit=60,file="Water_dlfind.log",position="APPEND")
   ! report at the start
   call dlf_report(trestarted_report)
   
@@ -509,6 +508,17 @@ subroutine dlf_run(ierr2 &
     if(.not.trerun_energy) then
        if (glob%imicroiter < 2) then
           stat%ccycle = stat%ccycle+1
+          write(stdout,*)
+          write(stdout,*) " @ Optimize for New Step"
+          write(stdout,*)
+          write(stdout,*)
+          write(stdout,'(12("="))',advance="no")
+          write(stdout,'(2x,"GEOMETRY FOR OPTIMIZATION STEP",I4,2x)',advance="no")stat%ccycle
+          write(stdout,'(12("="))')
+          write(stdout,*)
+          write(stdout,'("GEOMETRY INPUT")')
+          write(stdout,'("ELEMENT",6x,"X",14x,"Y",14x,"Z")')
+          call write_xyz(stdout,glob%nat,glob%znuc,glob%xcoords)
        else 
           stat%miccycle = stat%miccycle + 1
           stat%tmiccycle = stat%tmiccycle + 1
@@ -575,8 +585,6 @@ subroutine dlf_run(ierr2 &
                if (glob%imicroiter == 1) kiter = 0
                if (glob%imicroiter == 2) kiter = 1
             end if
-!print*, "glob_xcoords"
-!print*, glob%xcoords
 
             call dlf_get_gradient(glob%nvar,glob%xcoords,glob%energy, &
                  glob%xgradient,iimage,kiter,&
@@ -584,11 +592,6 @@ subroutine dlf_run(ierr2 &
                  core,&
 #endif
                  status,ierr2)
-
-!print*, "The gradients are:"
-!do iat=1, glob%nvar
-!print*, glob%xgradient
-!enddo
 
             ! ESP fit corrections
             if (glob%micro_esp_fit .and. status == 0) then
@@ -604,7 +607,6 @@ subroutine dlf_run(ierr2 &
 #endif
                        status,ierr2)
 
-!print*, "check 2"                
 
                   ! e0corr = E0(full) - E0(esp fit)
                   glob%e0corr(iimage) = glob%energy - glob%e0corr(iimage)
@@ -624,7 +626,6 @@ subroutine dlf_run(ierr2 &
                   ! Eq 4 in HDLCOpt paper
                   glob%xgradient = glob%xgradient + glob%g0corr(:,:,iimage)
 
-!print*, "check 3"
 
                else
                   call dlf_fail("ESP fit only appropriate for microiterative opts")
@@ -675,13 +676,13 @@ subroutine dlf_run(ierr2 &
        end if
  
        if(iimage==1) then
-          if(printl>=2) write(stdout,'(1x,a,es16.9)') &
-               "Energy calculation finished, energy: ", &
-               glob%energy
+          !if(printl>=2) !write(stdout,'(1x,a,es16.9)') &
+          !     "Energy calculation finished, energy: ", &
+          !     glob%energy
        else
-          if(printl>=2) write(stdout,'(1x,a,i4,a,es16.9)') &
-               "Energy calculation of image ",iimage,&
-               " finished, energy: ",glob%energy
+          !if(printl>=2) write(stdout,'(1x,a,i4,a,es16.9)') &
+          !     "Energy calculation of image ",iimage,&
+          !     " finished, energy: ",glob%energy
        end if
        
     else ! .not. glob%dotask
@@ -692,7 +693,6 @@ subroutine dlf_run(ierr2 &
        glob%energy = 0.d0
        glob%xgradient = 0.d0
 
-!print*, "check 4"
 
        status = 0       
     end if
@@ -821,8 +821,7 @@ subroutine dlf_run(ierr2 &
     ! write forcetrajectory
     if(printf>=4.and.glob%iam == 0) then
       if (glob%imicroiter < 2) then
-!print*, glob%xgradient
-         call write_xyz(300,glob%nat,glob%znuc,-glob%xgradient)
+         call write_xyz_active(stdout,glob%nat,glob%znuc,glob%spec,glob%xgradient)
       end if
     end if
 
@@ -884,7 +883,6 @@ subroutine dlf_run(ierr2 &
                ! Cycle to perform a new full eandg calculation
                ! TODO refactor to reach normal itox below
                call dlf_coords_itox(iimage)
-!print*,"check itox2"
                cycle
             end if
          end if
@@ -902,7 +900,6 @@ subroutine dlf_run(ierr2 &
        ! Cycle to perform a new full eandg calculation
        ! TODO refactor to reach normal itox below
        call dlf_coords_itox(iimage)
-!print*,"check itox3"
        cycle
     end if
 
@@ -991,24 +988,16 @@ subroutine dlf_run(ierr2 &
     call clock_start("COORDS")
     call dlf_coords_itox(iimage)
     call clock_stop("COORDS")
+    write(stdout,*)
+    write(stdout,*)" @ Finish Optimization for This Step"
 
-    call write_xyz(40,glob%nat,glob%znuc,glob%xcoords)
-
-!print*, 'Optimization Cycle:', stat%ccycle 
  do iat=1,glob%nat
     do jat=1,3
 !      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
        xyz(jat,iat)=glob%xcoords(jat,iat)
     enddo
-!    print*, xyz(1,iat), xyz(2,iat), xyz(3,iat)
  enddo
-!print*, "New coordinates"
-!print*, glob%xcoords*5.2917720810086E-01
 
-!do iat=0, 2
-!print*, (glob%xcoords(iat+jat), jat=1, 3)
-!print*, (glob%xcoords(iat+jat), jat=1, 3) *5.2917720810086E-01
-!enddo
   end do ! main simulation cycle
 
 
