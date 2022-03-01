@@ -87,6 +87,9 @@ module quick_api_module
     ! point charge gradients
     double precision, allocatable, dimension(:,:) :: ptchg_grad
 
+    ! DL-Find opt
+    logical :: usedlfind = .true.
+
   end type quick_api_type
 
 ! save a quick_api_type varible that othe quick modules can access
@@ -463,7 +466,7 @@ subroutine run_quick(self,ierr)
   use quick_cshell_eri_module, only: getEriPrecomputables
   use quick_cshell_gradient_module, only: cshell_gradient
   use quick_oshell_gradient_module, only: oshell_gradient
-  use quick_optimizer_module, only: optimize
+  use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
 #ifdef MPIV
   use quick_mpi_module
@@ -549,7 +552,14 @@ subroutine run_quick(self,ierr)
   endif
 
   ! run optimization
-  if (quick_method%opt)  SAFE_CALL(optimize(ierr))
+  if (quick_method%opt) then
+      if (quick_method%usedlfind) then
+          SAFE_CALL(dlfind(ierr))   ! DLC
+      else
+          SAFE_CALL(lopt(ierr))         ! Cartesian
+      endif
+  endif
+
 
 #if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then
