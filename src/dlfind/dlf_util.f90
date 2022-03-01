@@ -817,12 +817,10 @@ subroutine write_xyz(unit,nat,znuc,coords)
   character(2), external :: get_atom_symbol
 ! **********************************************************************
   call dlf_constants_get("ANG_AU",ang_au)
-  write(unit,*) nat
-  write(unit,*)
 !if (unit==40) print*,"The new coordinates"
   do iat=1,nat
     str2 = get_atom_symbol(znuc(iat))
-    write(unit,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
+    write(unit,'(2x,A2,6x,F12.6,3x,F12.6,3x,F12.6)') str2,coords(1,iat)*ang_au, coords(2,iat)*ang_au, coords(3,iat)*ang_au
 !if (unit==40) then
 !write(*,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
 !endif
@@ -839,24 +837,29 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
   integer,intent(in) :: nat
   integer,intent(in) :: znuc(nat)
   integer,intent(in) :: spec(nat)
-  real(rk),intent(in):: coords(3,nat)
-  integer            :: iat,nact
+  real(rk),intent(in):: coords(3*nat)
+  integer            :: iat,jat
   character(2)       :: str2
+  character(1), dimension(2) :: cartsym
   real(rk)           :: ang_au
   character(2), external :: get_atom_symbol
 ! **********************************************************************
   call dlf_constants_get("ANG_AU",ang_au)
-  nact=0
+  write (unit,'(/," ANALYTICAL GRADIENT: ")')
+  write (unit,'("------------------------")')                                                              
+  write (unit,'(" VARIBLES",4x,"NEW_GRAD")')      
+  write (unit,'("------------------------")')
+
+  cartsym(1) = 'X'
+  cartsym(2) = 'Y'
+  cartsym(3) = 'Z'
+                   
   do iat=1,nat
-    if(spec(iat)/=-1) nact=nact+1
+    do jat=1,3
+      write(unit,'(I5,A1,3x,F14.10)')iat,cartsym(jat),coords((iat-1)*3+jat)
+    enddo
   end do
-  write(unit,*) nact
-  write(unit,*)
-  do iat=1,nat
-    if(spec(iat)==-1) cycle
-    str2 = get_atom_symbol(znuc(iat))
-    write(unit,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
-  end do
+  write (unit,'("------------------------")')
   call flush(unit)
 end subroutine write_xyz_active
 
