@@ -2423,9 +2423,9 @@ CONTAINS
 ! local vars
     INTEGER i,this
 
-    IF (printl>=2) THEN
-      WRITE (stdout,'(a,/)') 'Destroying all HDLC residues'
-    END IF
+    !IF (printl>=2) THEN
+    !  WRITE (stdout,'(a,/)') 'Destroying all HDLC residues'
+    !END IF
     i = 1
     DO WHILE (hdlc%ngroups/=0)
       this=hdlc%first
