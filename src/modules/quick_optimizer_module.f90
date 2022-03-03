@@ -260,21 +260,21 @@ contains
            gradmax = -1.d0
            gradnorm = 0.d0
            write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
-           write (ioutfile,'(76("-"))')
-           write (ioutfile,'(" VARIBLES",4x,"OLD_X",12x,"OLD_GRAD",8x,"NEW_GRAD",10x,"NEW_X")')
-           write (ioutfile,'(76("-"))')
+           write (ioutfile,'(84("-"))')
+           write (ioutfile,'(" VARIBLES",6x,"OLD_X",14x,"OLD_GRAD",10x,"NEW_GRAD",12x,"NEW_X")')
+           write (ioutfile,'(84("-"))')
            do Iatm=1,natom
               do Imomentum=1,3
                  ! Max gradient change
                  gradmax = max(gradmax,dabs(quick_qm_struct%gradient((Iatm-1)*3+Imomentum)))
                  ! Grad change normalization
                  gradnorm = gradnorm + quick_qm_struct%gradient((Iatm-1)*3+Imomentum)**2.d0
-                 write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
+                 write (ioutfile,'(I5,A1,3x,F16.10,3x,F16.10,3x,F16.10,3x,F16.10)')Iatm,cartsym(imomentum), &
                        coordsold((Iatm-1)*3+Imomentum)*0.529177249d0,oldGrad((Iatm-1)*3+Imomentum), &
                        quick_qm_struct%gradient((Iatm-1)*3+Imomentum),xyz(Imomentum,Iatm)*0.529177249d0
               enddo
            enddo
-           write(ioutfile,'(76("-"))')
+           write(ioutfile,'(84("-"))')
            gradnorm = (gradnorm/dble(natom*3))**.5d0
 
            ! geometry RMS
@@ -353,7 +353,7 @@ contains
         write (ioutfile,'(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
 
         do I=1,natom
-           Write (ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
+           Write (ioutfile,'(2x,A2,6x,F9.4,3x,F9.4,3x,F9.4)') &
                  symbol(quick_molspec%iattype(I)),xyz(1,I)*0.529177249d0, &
                  xyz(2,I)*0.529177249d0,xyz(3,I)*0.529177249d0
         enddo
