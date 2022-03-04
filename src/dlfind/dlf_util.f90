@@ -840,7 +840,7 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
   real(rk),intent(in):: coords(3*nat)
   integer            :: iat,jat
   character(2)       :: str2
-  character(1), dimension(2) :: cartsym
+  character(1), dimension(3) :: cartsym
   real(rk)           :: ang_au
   character(2), external :: get_atom_symbol
 ! **********************************************************************
