@@ -70,6 +70,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   use dlf_parameter_module, only: rk
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_constants_module, only: EMASS
+  use quick_method_module,only: quick_method
 
   !use vib_pot
   implicit none
@@ -194,8 +195,8 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
 !*************END case of isystem checking******************
 
-  tolerance=4.5D-5 ! negative: default settings
-  tolerance_e = 1.0D-6
+  tolerance=quick_method%dlfind_tolerance ! negative: default settings
+  tolerance_e =quick_method%dlfind_tolerance_e
   printl=4
   printf=4
   maxcycle=100 !200
@@ -209,14 +210,14 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
   distort=0.D0 !0.4 
   tatoms=0
-  icoord=3 !0 cartesian coord !210 Dimer !190 qts search !120 NEB frozen endpoint
+  icoord=quick_method%dlfind_icoord !0 cartesian coord !210 Dimer !190 qts search !120 NEB frozen endpoint
   massweight=0
 
 ! TO DO (urgent): better dtau for endpoints (interpolate energy) when reading dist
 
   imicroiter=0 ! means: use microiterative optimization
 
-  iopt=3 ! 20 !3 or 20 later change to 12
+  iopt=quick_method%dlfind_iopt ! 20 !3 or 20 later change to 12
   temperature = 2206.66844626D0*0.99D0 ! K ! T_c for the MB-potential for hydrogen is 2206.668 K
   !temperature = 0.8D0*333.40829D0  ! K ! T_c 20102.83815 K
   !temperature = 500.D0
