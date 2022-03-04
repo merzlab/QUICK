@@ -88,7 +88,12 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: ptchg_grad
 
     ! DL-Find opt
-    logical :: usedlfind = .true.
+    logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
+    double precision :: dlfind_tolerance     = .00045d0 ! main convergence criterion (Max grad comp.) 
+    double precision :: dlfind_tolerance_e   = 1.0D-6   ! convergence criterion on energy change
+    integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
+    integer :: dlfind_icoord                 = 3        ! type of internal coordinates
+
 
   end type quick_api_type
 
