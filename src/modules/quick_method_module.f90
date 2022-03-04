@@ -124,7 +124,11 @@ module quick_method_module
         integer :: nof_functionals = 0
 
 
-        logical :: usedlfind = .true.
+        logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
+        double precision :: dlfind_tolerance     = .00045d0 ! main convergence criterion (Max grad comp.) 
+        double precision :: dlfind_tolerance_e   = 1.0D-6   ! convergence criterion on energy change
+        integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
+        integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
 #if defined CUDA || defined CUDA_MPIV
         logical :: bCUDA                ! if CUDA is used here
@@ -674,6 +678,22 @@ endif
 
             ! Legacy Optimizer
             if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
+
+            if (index(keywd,'TOLERANCE=') /= 0) then
+                call read(keywd,'TOLERANCE', self%dlfind_tolerance)
+            endif
+
+            if (index(keywd,'TOLERANCE_E=') /= 0) then
+                call read(keywd,'TOLERANCE_E', self%dlfind_tolerance_e)
+            endif
+
+            if (index(keywd,'IOPT=') /= 0) then
+                call read(keywd,'IOPT', self%dlfind_iopt)
+            endif
+
+            if (index(keywd,'ICOORD=') /= 0) then
+                call read(keywd,'ICOORD', self%dlfind_icoord)
+            endif
 
         end subroutine read_quick_method
 
