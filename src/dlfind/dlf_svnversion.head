@@ -1,3 +1,0 @@
-subroutine dlf_svnversion(iver)
-  character(*) :: iver
-  iver="
