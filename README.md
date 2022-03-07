@@ -53,7 +53,7 @@ Citation
 --------
 Please cite QUICK-22.03 as follows.
 
-Manathunga, M.; Shajan, A.; Cruzeiro, V. W. D.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
+Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V. W. D.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
 Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-22.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022.
 
 If you perform density functional theory calculations please also cite:
