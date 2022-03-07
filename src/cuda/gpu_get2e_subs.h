@@ -669,7 +669,6 @@ __device__ __forceinline__ void iclass_spdf10
      Initial the neccessary element for
      */
     
-#ifdef int_spd
     for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
         for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
             if ( i <= STOREDIM && j <= STOREDIM) {
@@ -677,97 +676,6 @@ __device__ __forceinline__ void iclass_spdf10
             }
         }
     }
-#elif defined int_spdf
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf2
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf3
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf4
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf5
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf6
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf7
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf8
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf9
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#elif defined int_spdf10
-    
-    for (int i = Sumindex[K+1]+1; i<= Sumindex[K+L+2]; i++) {
-        for (int j = Sumindex[I+1]+1; j<= Sumindex[I+J+2]; j++) {
-            if ( i <= STOREDIM && j <= STOREDIM) {
-                LOCSTORE(store, j-1, i-1, STOREDIM, STOREDIM) = 0;
-            }
-        }
-    }
-#endif
     
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
