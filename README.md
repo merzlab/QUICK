@@ -51,10 +51,10 @@ A list of installation and runtime issues can be found [here](https://quick-docs
 
 Citation
 --------
-Please cite QUICK-21.03 as follows.
+Please cite QUICK-22.03 as follows.
 
-Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;He, X.; Ayers,K;
-Brothers, E.; Götz, A.W.; Merz,K. M. QUICK-21.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021.
+Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V. W. D.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
+Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-22.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022.
 
 If you perform density functional theory calculations please also cite:
 
@@ -73,6 +73,18 @@ If you use the GPU version please also cite:
 Miao, Y.; Merz, K. M.
 Acceleration of High Angular Momentum Electron Repulsion Integrals and Integral Derivatives on Graphics Processing Units. 
 [*J. Chem. Theory Comput.* 11, 1449–1462 (2015)](https://pubs.acs.org/doi/10.1021/ct500984t).
+
+and for multi-GPU calculations please also cite:
+
+Manathunga, M.; Jin, C; Cruzeiro, V. W. D.; Miao, Y.; Mu, D.; Arumugam, K.; Keipert, K.; Aktulga, H. M.; Merz, K. M.; Götz, A. W. 
+Harnessing the Power of Multi-GPU Acceleration into the Quantum Interaction Computational Kernel Program.
+[*J. Chem. Theory Comput.* 17, 3955–3966 (2021)](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.1c00145).
+
+If you use QUICK in QM/MM simulations please cite:
+
+Cruzeiro, V. W. D.; Manathunga, M.; Merz,K. M.; Götz, A. W.
+Open-Source Multi-GPU-Accelerated QM/MM Simulations with AMBER and QUICK.
+[*J. Chem. Inf. Model.* 61, 2109–2115 (2021)](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.1c00169).
 
 License
 -------
