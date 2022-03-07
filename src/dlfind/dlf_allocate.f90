@@ -102,7 +102,7 @@ contains
   integer           :: fail
   logical,parameter :: tretry=.true. ! In case of an error, do the (de)allocate again.
         ! This will kill the program, but provide the error message from the compiler
-  integer,save      :: stdout=6
+  integer,save      :: stdout=2021
   integer,save      :: stderr=0
   logical,save      :: verbose=.false.
   integer,save      :: current(4)=0 ! real, integer, logical, complex
