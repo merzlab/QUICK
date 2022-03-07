@@ -659,8 +659,8 @@ subroutine dlf_hdlc_xtoi(nat,nivar,nicore,micspec,xcoords,xgradient,&
 
   IF(hdlc%NGROUPS<1) call dlf_fail("Number of fragements in HDLC must be >0")
 
-  IF (printl>=4) WRITE (stdout,'(/,A)') &
-      'Converting Cartesians to HDLC'
+!  IF (printl>=4) WRITE (stdout,'(/,A)') &
+!      'Converting Cartesians to HDLC'
   ndfcons = 0
 
   ipinner = 1
