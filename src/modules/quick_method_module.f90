@@ -106,11 +106,10 @@ module quick_method_module
         !signif
 
         ! following are some gradient cutoff criteria
-        double precision :: stepMax        = .1d0/0.529177249d0
-                                                      ! max change of one step
+        double precision :: stepMax        = .1d0/0.529177249d0 ! max change of one step
         double precision :: geoMaxCrt      = .0018d0  ! max geometry change
         double precision :: gRMSCrt        = .0012d0  ! geometry rms change
-        double precision :: gradMaxCrt     = .001d0 ! max gradient change
+        double precision :: gradMaxCrt     = .00045d0 ! max gradient change
         double precision :: gNormCrt       = .00030d0 ! gradient normalization
         double precision :: EChange        = 1.0d-6   ! Energy change
 
@@ -125,8 +124,6 @@ module quick_method_module
 
 
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
-        double precision :: dlfind_tolerance     = .00045d0 ! main convergence criterion (Max grad comp.) 
-        double precision :: dlfind_tolerance_e   = 1.0D-6   ! convergence criterion on energy change
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
@@ -679,16 +676,19 @@ endif
             ! Legacy Optimizer
             if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
 
-            if (index(keywd,'TOLERANCE=') /= 0) then
-                call read(keywd,'TOLERANCE', self%dlfind_tolerance)
+            if (index(keywd,'GTOL=') /= 0) then
+                call read(keywd,'GTOL', self%gradMaxCrt)
+                self%gNormCrt  = self%gradMaxCrt / 1.5D0
+                self%geoMaxCrt = self%gradMaxCrt * 4.D0
+                self%gRMSCrt   = self%gradMaxCrt * 8.D0/3.D0
             endif
 
-            if (index(keywd,'TOLERANCE_E=') /= 0) then
-                call read(keywd,'TOLERANCE_E', self%dlfind_tolerance_e)
+            if (index(keywd,'ETOL=') /= 0) then
+                call read(keywd,'ETOL', self%EChange)
             endif
 
-            if (index(keywd,'IOPT=') /= 0) then
-                call read(keywd,'IOPT', self%dlfind_iopt)
+            if (index(keywd,'DLFIND=') /= 0) then
+                call read(keywd,'DLFIND', self%dlfind_iopt)
             endif
 
             if (index(keywd,'ICOORD=') /= 0) then
