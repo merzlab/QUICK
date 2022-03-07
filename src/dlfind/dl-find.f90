@@ -433,9 +433,9 @@ subroutine dlf_run(ierr2 &
     if(printf>=3) then
       if(stat%sene>0) THEN
         if (glob%iam == 0) then
-          open(unit=30,file="path.xyz",position="APPEND")
-          open(unit=40,file="new_coords.xyz",position="APPEND")
-          open(unit=31,file="path_active.xyz",position="APPEND")
+!          open(unit=30,file="path.xyz",position="APPEND")
+!          open(unit=40,file="new_coords.xyz",position="APPEND")
+!          open(unit=31,file="path_active.xyz",position="APPEND")
           ! Only open for TS search methods
           if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
              open(unit=32,file="path_tsmode.xyz",position="APPEND")
@@ -447,9 +447,9 @@ subroutine dlf_run(ierr2 &
         end if
       ELSE
         if (glob%iam == 0) then
-          open(unit=30,file="path.xyz")
-          open(unit=40,file="new_coords.xyz")
-          open(unit=31,file="path_active.xyz")
+!          open(unit=30,file="path.xyz")
+!          open(unit=40,file="new_coords.xyz")
+!          open(unit=31,file="path_active.xyz")
           ! Only open for TS search methods
           if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
              open(unit=32,file="path_tsmode.xyz")
@@ -463,10 +463,10 @@ subroutine dlf_run(ierr2 &
     end if
     if(printf>=4.and.glob%iam == 0) then
       if(stat%sene>0) THEN
-        open(unit=300,file="path_force.xyz",position="APPEND")
+!        open(unit=300,file="path_force.xyz",position="APPEND")
         !open(unit=301,file="paths.xyz",position="APPEND")
       ELSE
-        open(unit=300,file="path_force.xyz")
+!        open(unit=300,file="path_force.xyz")
         !open(unit=301,file="paths.xyz")
       end if
     end if
@@ -509,7 +509,7 @@ subroutine dlf_run(ierr2 &
        if (glob%imicroiter < 2) then
           stat%ccycle = stat%ccycle+1
           write(stdout,*)
-          write(stdout,*) " @ Optimize for New Step"
+          write(stdout,*) "@ Optimize for New Step"
           write(stdout,*)
           write(stdout,*)
           write(stdout,'(12("="))',advance="no")
@@ -698,9 +698,9 @@ subroutine dlf_run(ierr2 &
     end if
 
     ! send coordinates to the calling program
-    if(printf>=1) then
-      call dlf_put_coords(glob%nvar,1,glob%energy,glob%xcoords,glob%iam)
-    end if
+!    if(printf>=1) then
+!      call dlf_put_coords(glob%nvar,1,glob%energy,glob%xcoords,glob%iam)
+!    end if
 
     ! write restart information (serial runs)
     if(stat%sene<=glob%maxdump .and. glob%ntasks == 1) then
@@ -809,8 +809,8 @@ subroutine dlf_run(ierr2 &
       if (glob%imicroiter < 2) then
          ! Write out standard optimisation cycles
          ! and macroiterative steps
-         call write_xyz(30,glob%nat,glob%znuc,glob%xcoords)
-         call write_xyz_active(31,glob%nat,glob%znuc,glob%spec,glob%xcoords)
+!         call write_xyz(30,glob%nat,glob%znuc,glob%xcoords)
+!         call write_xyz_active(31,glob%nat,glob%znuc,glob%spec,glob%xcoords)
       end if
       if (glob%imicroiter > 0) then
          ! Full microiterative opt path including microiterative steps
@@ -869,7 +869,16 @@ subroutine dlf_run(ierr2 &
          if (glob%imicroiter < 2) then
             ! Standard convergence test
             call convergence_test(stat%ccycle,.true.,tconv)
-            if (tconv) exit
+            if (tconv) then
+              write(stdout,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') stat%ccycle
+              call clock_start("COORDS")
+              call dlf_coords_itox(iimage)
+              call clock_stop("COORDS")
+              write(stdout,*)
+              write(stdout,*)"@ Finish Optimization for This Step "
+              write(stdout,*)
+              exit 
+            endif
          else
             ! Test convergence of microiterations
             call dlf_microiter_convergence(tconv)
@@ -982,14 +991,14 @@ subroutine dlf_run(ierr2 &
     if (glob%imicroiter == 1 .and. glob%taccepted) call dlf_microiter_enter
 
     ! ==================================================================
-    ! TRANSFORM INTERNAL COORDINATES TO CARTESIANS (COORDS ONLY)
+    ! write(stdout,*)" @TRANSFORM INTERNAL COORDINATES TO CARTESIANS (COORDS ONLY)
     ! ==================================================================
 
     call clock_start("COORDS")
     call dlf_coords_itox(iimage)
     call clock_stop("COORDS")
     write(stdout,*)
-    write(stdout,*)" @ Finish Optimization for This Step"
+    write(stdout,*)"@ Finish Optimization for This Step"
 
  do iat=1,glob%nat
     do jat=1,3
@@ -1005,25 +1014,44 @@ subroutine dlf_run(ierr2 &
   if (glob%iopt /= 11 .and. glob%iopt /= 12 .and. glob%iopt /= 9 ) then
     if(tconv) then
       if (printl > 0) then
-         write(stdout,'(/,1x,a)') "Optimisation converged"
-         write(stdout,'(1x,a)')   "----------------------"
-         if (glob%imultistate == 0) then
-            call convergence_get("VALE", svar)
-            write(stdout,'(1x,a,f20.12,/)') "Final converged energy: ", svar
-         else
-            write(stdout,'(1x,a,f20.12)') &
-                 "Final lower state energy: ", glob%msenergy(1)
-            write(stdout,'(1x,a,f20.12)') &
-                 "Final upper state energy: ", glob%msenergy(2)
-            write(stdout,'(1x,a,f20.12,/)') "Final energy difference:  ", &
-                 abs(glob%msenergy(1) - glob%msenergy(2))
-         end if
-      end if
+         write(stdout,'("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
+      endif
     else
-      if (printl > 0) then
-         write(stdout,'(/,1x,a)') "WARNING: OPTIMISATION HAS NOT CONVERGED"
-         write(stdout,'(1x,a,/)') "---------------------------------------"
+      if (printl > 0) then                                                  
+         write(stdout,*) "WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED."
+         write(stdout,*) "         PRINTING THE GEOMETRY FROM LAST STEP."
+         write(stdout,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")') 
+      end if                                                                
+    end if
+
+    if (printl > 0) then     
+      write(stdout,*)
+      write(stdout,'(" OPTIMIZED GEOMETRY IN CARTESIAN")')
+      write(stdout,'(" ELEMENT",6x,"X",14x,"Y",14x,"Z")')
+      call write_xyz(stdout,glob%nat,glob%znuc,glob%xcoords)
+
+      write(stdout,*)
+      write(stdout,'(" FORCE")')
+      write(stdout,'(" ELEMENT",6x,"X",14x,"Y",14x,"Z")')
+      call write_xyz(stdout,glob%nat,glob%znuc,-glob%xgradient)      
+
+      if (glob%imultistate == 0) then
+        call convergence_get("VALE", svar)
+        write(stdout,*) 
+        write(stdout,'(" MINIMIZED ENERGY=",F15.10)') svar
+      else
+        write(stdout,*)
+        write(stdout,'(1x,a,f20.12)') &
+             "FINAL LOWER STATE ENERGY= ", glob%msenergy(1)
+        write(stdout,'(1x,a,f20.12)') &
+             "FINAL UPPER STATE ENERGY= ", glob%msenergy(2)
+        write(stdout,'(1x,a,f20.12,/)') "FINAL ENERGY DIFFERENCE=  ", &
+             abs(glob%msenergy(1) - glob%msenergy(2))
       end if
+      write(stdout,'("===============================================================")')
+      write(stdout,*) 
+      write(stdout,*)"@ Finish Optimization Job"
+      write(stdout,*)
     end if
   end if
 
@@ -1038,8 +1066,8 @@ subroutine dlf_run(ierr2 &
 
   ! close trajectory files
   if(printf>=3 .and. glob%iam == 0) then
-    close(30)
-    close(31)
+!    close(30)
+!    close(31)
     if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
        close(32)
     end if
@@ -1047,7 +1075,7 @@ subroutine dlf_run(ierr2 &
   end if
   ! close force trajectory files
   if(printf>=4.and.glob%iam == 0) then
-    close(300)
+!    close(300)
     !close(301)
   end if
   ! again some rubbish for printing ...
@@ -1065,7 +1093,7 @@ subroutine dlf_run(ierr2 &
          end if
        end do
 
-       close(30)
+!       close(30)
     end if
   end if
 
