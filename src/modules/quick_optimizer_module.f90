@@ -39,21 +39,9 @@ contains
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
      use quick_dlfind_module, only: dlfind_interface
-!     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
      use quick_exception_module
      implicit double precision(a-h,o-z)
 
-     logical :: done,diagco
-     character(len=1) cartsym(3)
-     dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
-     dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
-     EXTERNAL LB2
-     COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
-
-     logical lsearch,diis
-     integer IMCSRCH,nstor,ndiis
-     double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
-     double precision EChg
      integer, intent(inout) :: ierr
 
 #ifdef MPIV
@@ -67,25 +55,12 @@ contains
      ! cartesian space for optimization.
      !---------------------------------------------------------
 
-     cartsym(1) = 'X'
-     cartsym(2) = 'Y'
-     cartsym(3) = 'Z'
-     done=.false.      ! flag to show opt is done
-     diagco=.false.
-     iprint(1)=-1
-     iprint(2)=0
-     EPS=1.d-9
-     XTOL=1.d-11
-     EChg=0.0
 
      ! For right now, there is no way to adjust these and only analytical
      ! gradients
      ! are available.  This should be changed later.
      quick_method%analgrad=.true.
 
-     ! Some varibles to determine the geometry optimization
-     IFLAG=0
-     I=0
 
      do j=1,natom
         do k=1,3
@@ -114,10 +89,9 @@ contains
         endif
      endif
 
-!     if (master) call dlfind_init
      !------------- END MPI/MASTER ----------------------------
 
-     call dlfind_interface(ierr)
+     if (master )call dlfind_interface(ierr)
 
      return
   end subroutine dlfindoptimize
@@ -133,8 +107,6 @@ contains
      use quick_cshell_eri_module, only: getEriPrecomputables
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
-     use quick_dlfind_module, only: dlfind_interface
-!     use quick_dlfind_module, only: dlfind_init, dlfind_run, dlfind_final 
      use quick_exception_module
      implicit double precision(a-h,o-z)
 
