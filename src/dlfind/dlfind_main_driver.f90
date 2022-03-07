@@ -195,8 +195,8 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
 !*************END case of isystem checking******************
 
-  tolerance=quick_method%dlfind_tolerance ! negative: default settings
-  tolerance_e =quick_method%dlfind_tolerance_e
+  tolerance=quick_method%gradMaxCrt ! negative: default settings
+  tolerance_e =quick_method%EChange
   printl=4
   printf=4
   maxcycle=100 !200
