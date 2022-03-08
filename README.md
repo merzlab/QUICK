@@ -4,7 +4,7 @@
 <img src='https://readthedocs.org/projects/quick-docs/badge/?version=21.3.0' alt='Documentation Status' />
 </p>
 <p align="left">
-<img width="299" height="107" src="./tools/logo.png">
+<img width="299" height="169" src="./tools/logo.png">
 </p>
 
 An open source, GPU enabled, *ab initio* and density functional

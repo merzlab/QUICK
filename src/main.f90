@@ -1,26 +1,24 @@
 !
-!************************************************************************
-!                              QUICK                                   **
-!                                                                      **
-!                        Copyright (c) 2010                            **
-!                Regents of the University of Florida                  **
-!                       All Rights Reserved.                           **
-!                                                                      **
-!  This software provided pursuant to a license agreement containing   **
-!  restrictions on its disclosure, duplication, and use. This software **
-!  contains confidential and proprietary information, and may not be   **
-!  extracted or distributed, in whole or in part, for any purpose      **
-!  whatsoever, without the express written permission of the authors.  **
-!  This notice, and the associated author list, must be attached to    **
-!  all copies, or extracts, of this software. Any additional           **
-!  restrictions set forth in the license agreement also apply to this  **
-!  software.                                                           **
-!************************************************************************
-!
-!  Cite this work as:
-!  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
-!  University of Florida, Gainesville, FL, 2010
-!************************************************************************
+!---------------------------------------------------------------------!
+!                           QUICK                                     !
+!                                                                     !
+!                      Copyright (c) 2022                             !
+!       Regents of the University of California San Diego             !
+!                  & Michigan State University                        !
+!                      All Rights Reserved.                           !
+!                                                                     ! 
+! Copyright (C) 2022-2023 Merz lab                                    !
+! Copyright (C) 2022-2023 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
+
+!---------------------------------------------------------------------!
+! This module contains all one electron integral (oei) & oei gradient ! 
+! code.                                                               !
+!---------------------------------------------------------------------!
 
 #include "util.fh"
 
