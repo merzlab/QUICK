@@ -89,8 +89,6 @@ module quick_api_module
 
     ! DL-Find opt
     logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
-    double precision :: dlfind_tolerance     = .00045d0 ! main convergence criterion (Max grad comp.) 
-    double precision :: dlfind_tolerance_e   = 1.0D-6   ! convergence criterion on energy change
     integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
     integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
@@ -476,6 +474,7 @@ subroutine run_quick(self,ierr)
   use quick_cshell_gradient_module, only: cshell_gradient
   use quick_oshell_gradient_module, only: oshell_gradient
   use quick_optimizer_module
+!  use dlfind_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
 
 #ifdef CEW 
@@ -578,7 +577,7 @@ subroutine run_quick(self,ierr)
   ! run optimization
   if (quick_method%opt) then
       if (quick_method%usedlfind) then
-          SAFE_CALL(dlfind(ierr))   ! DLC
+          SAFE_CALL(dl_find(ierr))   ! DLC
       else
           SAFE_CALL(lopt(ierr))         ! Cartesian
       endif
