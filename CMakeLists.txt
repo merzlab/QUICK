@@ -35,7 +35,7 @@ if(NOT INSIDE_AMBER)
 
 endif()
 
-option(NOF "Disables the compilation of QUICK's time consuming f functions in the ERI code of cuda version. Not recommended for production." FALSE)
+option(NOF "Disables the compilation of QUICK's time consuming f functions in the ERI code of cuda version. Not recommended for production." TRUE)
 
 # Compiler flags
 # These should really go into cmake/CompilerFlags.cmake but with the
