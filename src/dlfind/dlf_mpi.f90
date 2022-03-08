@@ -1,3 +1,4 @@
+#ifdef MPIV
 !!****h* utilities/dlf_mpi
 !!
 !! NAME
@@ -958,4 +959,4 @@ subroutine dlf_tasks_real_gather(a,n,b,m,iproc)
 
 end subroutine dlf_tasks_real_gather
 !!****
-
+#endif
