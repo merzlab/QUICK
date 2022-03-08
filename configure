@@ -57,8 +57,7 @@ echo  "
                      If unspecified, QUICK will attempt to automatically    
                      detect the number of cores in your system.             
       --nof          Disables the compilation of time consuming f functions 
-                     in the ERI code of cuda version. Not recommended for 
-                     production.
+                     in the ERI code of cuda version.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
       --cew          Compiles source code necessary for CEW QM/MM with AMBER.
@@ -622,7 +621,7 @@ uspec_ncores='no'
 ncores=''
 
 # track if f functions should not be compiled in cuda version
-nof='no'
+nof='yes'
 
 # amber related variables
 aminstall='false'
@@ -1080,9 +1079,7 @@ for buildtype in $buildtypes; do
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include"
 
-    if [ "$nof" = 'yes' ]; then
-      echo "F functions will not be compiled in the $buildtype version."
-    else
+    if [ "$nof" = 'no' ]; then
       cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
     fi
 
