@@ -688,6 +688,7 @@ endif
             endif
 
             if (index(keywd,'DLFIND=') /= 0) then
+                self%usedlfind = .true.
                 call read(keywd,'DLFIND', self%dlfind_iopt)
             endif
 
