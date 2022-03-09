@@ -521,7 +521,7 @@ __global__ void cshell_getxcgrad_kernel()
       devSim_dft.exc[gid] = _tmp;
 #endif
 
-      QUICKDouble sumGradx=0.0, sumGrady=0.0, sumGradz=0.0;
+      //QUICKDouble sumGradx=0.0, sumGrady=0.0, sumGradz=0.0;
 
       for (int i = bfloc_st; i< bfloc_end; i++) {
         int ibas = devSim_dft.basf[i];
@@ -578,6 +578,7 @@ __global__ void cshell_getxcgrad_kernel()
                     + zdotb * (dzdz * phi2 + dphidz * dphidz2));
 #endif
 
+/*
 #ifdef CEW
 
             if(devSim_dft.use_cew){
@@ -591,24 +592,24 @@ __global__ void cshell_getxcgrad_kernel()
 
             }
 #endif
-
+*/
             GRADADD(smemGrad[Istart], Gradx);
             GRADADD(smemGrad[Istart+1], Grady);
             GRADADD(smemGrad[Istart+2], Gradz);
 
-            sumGradx += Gradx;
+/*            sumGradx += Gradx;
             sumGrady += Grady;
             sumGradz += Gradz;
-
+*/
           }
         }
       }
 
-      int Istart = (devSim_dft.gatm[gid]-1) * 3;
+/*      int Istart = (devSim_dft.gatm[gid]-1) * 3;
       GRADADD(smemGrad[Istart], -sumGradx);
       GRADADD(smemGrad[Istart+1], -sumGrady);
       GRADADD(smemGrad[Istart+2], -sumGradz);
-
+*/
     }
     //Set weights for sswder calculation
     if(density < devSim_dft.DMCutoff){
