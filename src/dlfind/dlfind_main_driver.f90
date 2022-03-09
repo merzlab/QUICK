@@ -177,10 +177,9 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   spec(:)    =0
   coords2(:) =-1.D0
 
-!print*,'Intial Coordinates:'
   do iat = 1, nvar2
     do jat = 1, 3
-       coords((iat-1)*3 + jat) = quick_molspec%xyz(jat, iat)
+       coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
 !    print*,coords(iat), coords(iat+1), coords(iat+2)
   enddo
