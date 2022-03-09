@@ -351,6 +351,7 @@ contains
        quick_qm_struct%gradient(:) = tmp_grad(:)
        if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
      endif
+     call MPI_BCAST(quick_qm_struct%gradient, natom*3, mpi_double_precision, 0, MPI_COMM_WORLD, IERROR)
   
      call cpu_time(timer_end%TGradred)
   
