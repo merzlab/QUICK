@@ -833,10 +833,6 @@ for buildtype in $buildtypes; do
     fi
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
 
-    if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
-      mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
-    fi
-    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
   fi
 
   if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
@@ -851,6 +847,12 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
+
+  # create blasobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
+  fi
+  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
 
   # create lapackobj directory
   if [ ! -d "$QUICK_HOME/build/common/cpu/lapackobj" ]; then
@@ -1198,15 +1200,16 @@ for buildtype in $buildtypes; do
 
   # set libxcobj and blasobj folder
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
-    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
     libxcdevobjfolder=""
   elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
-    blasobjfolder=""
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
-  
+ 
+  # set blasobj folder
+  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+ 
   # set dlfindobj folder
   dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
 
