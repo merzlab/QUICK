@@ -56,9 +56,8 @@ echo  "
                      Specify the number of cores to be used in compilation. 
                      If unspecified, QUICK will attempt to automatically    
                      detect the number of cores in your system.             
-      --nof          Disables the compilation of time consuming f functions 
-                     in the ERI code of cuda version. Not recommended for 
-                     production.
+      --enablef      Enables the compilation of time consuming f functions 
+                     in the ERI code of cuda version.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
       --cew          Compiles source code necessary for CEW QM/MM with AMBER.
@@ -622,7 +621,7 @@ uspec_ncores='no'
 ncores=''
 
 # track if f functions should not be compiled in cuda version
-nof='no'
+enablef='no'
 
 # amber related variables
 aminstall='false'
@@ -654,7 +653,7 @@ while [ $# -gt 0 ]; do
     --verbose)     verbose='';;
     --mirp)        mirp='yes';;
     --shared)      shared='yes';;
-    --nof)         nof='yes';;
+    --enablef)     enablef='yes';;
     --amber)       aminstall='true';;
     --cew)         cew='yes';;
     --lapack)      lapack='yes';;
@@ -932,7 +931,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
-    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" -o "$cudaversion" = "11.3" ]; then
+    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" -o "$cudaversion" = "11.3" -o "$cudaversion" = "11.4" -o "$cudaversion" = "11.5" -o "$cudaversion" = "11.6" ]; then
 
       echo "CUDA Version $cudaversion detected"
 
@@ -1080,9 +1079,8 @@ for buildtype in $buildtypes; do
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include"
 
-    if [ "$nof" = 'yes' ]; then
-      echo "F functions will not be compiled in the $buildtype version."
-    else
+    if [ "$enablef" = 'yes' ]; then
+      echo "F functions will be compiled in the $buildtype version."
       cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
     fi
 

@@ -158,7 +158,7 @@ if(CUDA)
     endif()
 
     # SPDF
-    if(NOT NOF)
+    if(ENABLEF)
         list(APPEND CUDA_NVCC_FLAGS -DCUDA_SPDF)
     endif()
 
