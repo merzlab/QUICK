@@ -608,6 +608,7 @@ dlfind_flags=''
 libxcobjfolder=''
 libxcdevobjfolder=''
 blasobjfolder=''
+lapackoobjfolder=''
 dlfindobjfolder=''
 
 # keep track of which build types to clean
@@ -850,6 +851,12 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
+
+  # create lapackobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/lapackobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/lapackobj"
+  fi
+  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
   
   # create dlfindobj directory
   if [ ! -d "$QUICK_HOME/build/common/cpu/dlfindobj" ]; then
@@ -1203,6 +1210,9 @@ for buildtype in $buildtypes; do
   # set dlfindobj folder
   dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
 
+  # set lapack folder
+  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
+
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
 
@@ -1234,6 +1244,7 @@ VB=$verbose
 srcfolder=$QUICK_HOME/src
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
+lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
@@ -1250,6 +1261,7 @@ libxcdevobjfolder=$libxcdevobjfolder
 dlfindobjfolder=$dlfindobjfolder
 mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
 blasobjfolder=$blasobjfolder
+lapackobjfolder=$lapackobjfolder
 libfolder=$QUICK_HOME/build/lib/$buildtype
 inclfolder=$QUICK_HOME/build/include/$buildtype
 
@@ -1338,6 +1350,7 @@ installfolder=$quick_prefix
 # source directories
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
+lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
