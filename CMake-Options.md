@@ -6,7 +6,7 @@ Note that like all CMake options, these options are sticky.  Once passed to CMak
 
 #### General options
 - `-DCOMPILER`: Allows selection of the toolchain to use.  `-DCOMPILER=AUTO` to use CMake default behavior.  Run CMake with no arguments to see the list of options.
-- `-DNOF=TRUE`: Disables the compilation of time consuming f functions in the ERI code of cuda version. Not recommended for production.
+- `-DENABLEF=TRUE`: Enables the compilation of time consuming f functions in the ERI code of cuda version.
 - `-DCMAKE_BUILD_TYPE=<Debug|Release>`: Controls whether to build with debugging symbols (`Debug`) or not (`Release`).
 - `-DOPTIMIZE=<TRUE|FALSE>`: Controls whether to enable compiler optimizations.  On by default.
 - `-DCMAKE_INSTALL_PREFIX=...`: Controls where QUICK will be installed when you run `make install`.
