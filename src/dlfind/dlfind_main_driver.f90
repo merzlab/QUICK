@@ -308,7 +308,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use quick_cutoff_module, only: schwarzoff
   use quick_cshell_eri_module, only: getEriPrecomputables
   use quick_cshell_gradient_module, only: scf_gradient
-
+  use quick_oshell_gradient_module, only: uscf_gradient
+  use quick_method_module,only: quick_method
   !use vib_pot
   implicit none
   integer   ,intent(in)    :: nvar
@@ -328,11 +329,54 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 !  print*
 !  print*, 'QUICK coordinates:',quick_molspec%xyz
   
+#if defined CUDA || defined CUDA_MPIV                                                             
+  call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &                  
+              quick_molspec%molchg, quick_molspec%iAtomType)                                      
+  call gpu_upload_xyz(xyz)                                                                  
+  call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)                    
+#endif                                                                                            
 
   call getEriPrecomputables
   call schwarzoff
+
+#if defined CUDA || defined CUDA_MPIV                                                             
+  call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &                       
+        ncontract, itype, aexp, dcoeff, &                                                   
+        quick_basis%first_basis_function, quick_basis%last_basis_function,&                
+        quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function,&     
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &                       
+        quick_basis%ktype, quick_basis%kprim,quick_basis%kshell,quick_basis%Ksumtype, &    
+        quick_basis%Qnumber, quick_basis%Qstart,quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &                                                                               
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)        
+                                                                                                  
+  call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)                                           
+                                                                                                  
+#ifdef CUDA_MPIV                                                                                  
+  timer_begin%T2elb = timer_end%T2elb                                                         
+  call mgpu_get_2elb_time(timer_end%T2elb)                                                    
+  timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb                     
+#endif                                                                                            
+                                                                                                  
+#endif                                                                                            
+
   call getEnergy(.false., ierr)
-  CALL scf_gradient 
+
+  if (quick_method%analgrad) then
+     if (quick_method%UNRST) then
+print*,'USCF gradient called'
+        CALL uscf_gradient
+     else
+print*,'SCF gradient called'
+        CALL scf_gradient
+     endif
+  endif
+
+#if defined CUDA || defined CUDA_MPIV
+  if (quick_method%bCUDA) then
+     call gpu_cleanup()
+print*,'gpu_cleanup'
+  endif
+#endif  
 
   energy   = quick_qm_struct%Etot
   gradient = quick_qm_struct%gradient
