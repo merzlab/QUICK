@@ -216,7 +216,6 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
   n_po_scaling=0 ! set default value
   coupled_states=1 ! set default value
   micro_esp_fit=0 ! set default value
-print*, 'Before get_params'
   call dlf_get_params(nvarin,max(nvarin2,1),max(nspec,1), &
       tmpcoords,tmpcoords2,spec, ierr, &
       glob%tolerance,printl,glob%maxcycle,glob%maxene,&
@@ -238,8 +237,6 @@ print*, 'Before get_params'
       glob%neb_climb_test, glob%neb_freeze_test, glob%nzero, &
       coupled_states, glob%qtsflag, &
       glob%imicroiter, glob%maxmicrocycle, micro_esp_fit)
-
-print*, 'After get params'
 
   if(ierr/=0) call dlf_fail("Failed to read parameters")
 
