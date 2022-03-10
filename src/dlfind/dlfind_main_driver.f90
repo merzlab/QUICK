@@ -181,16 +181,13 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
     do jat = 1, 3
        coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
-!    print*,coords(iat), coords(iat+1), coords(iat+2)
   enddo
  
   spec(1+nz:nz+nz) = quick_molspec%iattype(:)
-!  print*,spec
 
   do iat = 1, quick_molspec%natom
     coords2(iat) = EMASS(quick_molspec%iattype(iat))
   enddo
-!  print*,coords2
 
 !*************END case of isystem checking******************
 
@@ -325,10 +322,6 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 !  call test_update
   status=1
 
-!  print*, 'DL-Find coordinates:', coords
-!  print*
-!  print*, 'QUICK coordinates:',quick_molspec%xyz
-  
 #if defined CUDA || defined CUDA_MPIV                                                             
   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &                  
               quick_molspec%molchg, quick_molspec%iAtomType)                                      
@@ -363,10 +356,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 
   if (quick_method%analgrad) then
      if (quick_method%UNRST) then
-print*,'USCF gradient called'
         CALL uscf_gradient
      else
-print*,'SCF gradient called'
         CALL scf_gradient
      endif
   endif
@@ -374,7 +365,6 @@ print*,'SCF gradient called'
 #if defined CUDA || defined CUDA_MPIV
   if (quick_method%bCUDA) then
      call gpu_cleanup()
-print*,'gpu_cleanup'
   endif
 #endif  
 
@@ -533,7 +523,6 @@ subroutine dlf_put_coords(nvar,mode,energy,coords,iam)
     end do
     close(20)
   else
-    !print*,"Coords in put_coords: ",coords
   end if
 end subroutine dlf_put_coords
 
