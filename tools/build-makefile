@@ -131,6 +131,7 @@ cpmakein:
 	@cp ./make.in $(modfolder)
 	@cp ./make.in $(blasfolder)
 	@cp ./make.in $(dlfindfolder)
+	@cp ./make.in $(lapackfolder)
 
 #================= common subroutine library ============================
 quick_subs:
@@ -165,6 +166,10 @@ libxc_cuda:libxc_gpu
 #===================== dlfind library =================================
 dlfind:
 	@cd $(dlfindfolder) && make --no-print-directory dlfind
+#================= LAPACK library =====================================
+lapack:
+	@cd $(lapackfolder) && make --no-print-directory all
+
 #=============== targets for CUBLAS =====================================
 
 $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
@@ -197,10 +202,10 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+serial: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
 
 cuda: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
@@ -225,7 +230,7 @@ cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $
 
 clean:
 	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
-	@-rm -f $(libxcobjfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
+	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
 	@cd $(blasfolder) && make --no-print-directory clean
@@ -233,3 +238,4 @@ clean:
 	@cd $(libxcfolder) && make --no-print-directory clean
 	@cd $(libxcfolder)/maple2c_device && make --no-print-directory clean
 	@cd $(dlfindfolder) && make --no-print-directory clean
+	@cd $(lapackfolder) && make --no-print-directory clean
