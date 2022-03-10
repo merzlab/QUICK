@@ -729,7 +729,7 @@ endif
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization
             self%grad =  .false.     ! gradient
-            self%analGrad =  .false. ! Analytical Gradient
+            self%analGrad =  .true. ! Analytical Gradient
             self%analHess =  .false. ! Analytical Hessian Matrix
 
             self%diisOpt =  .false.  ! DIIS Optimization
