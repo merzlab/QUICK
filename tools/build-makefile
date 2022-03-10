@@ -140,8 +140,8 @@ quick_subs:
 quick_modules:
 	@cd $(modfolder) && make --no-print-directory all
 
-quick_opt_modules:
-	@cd $(modfolder) && make --no-print-directory post_dlfind
+#quick_opt_modules:
+#	@cd $(modfolder) && make --no-print-directory post_dlfind
 #================= octree subroutines   =================================
 octree:
 	@cd $(octfolder) && make --no-print-directory all
@@ -197,22 +197,22 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu quick_modules dlfind octree quick_opt_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+serial: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
 
-cuda: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_opt_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+cuda: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -lopenblas $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -lopenblas $(CFLAGS) $(LDFLAGS)
 
-mpi: cpmakein libxc_cpu quick_modules dlfind octree quick_opt_modules quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
+mpi: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -lopenblas $(LDFLAGS)
 
-cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_opt_modules quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
+cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -lopenblas $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -lopenblas $(CFLAGS) $(LDFLAGS)
