@@ -113,7 +113,7 @@ include_directories(util)
 add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
-target_link_libraries(libquick PRIVATE xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
+target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
 install_libraries(libquick EXPORT QUICK)
 
 if(mirp_ENABLED)
@@ -145,7 +145,7 @@ if(CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
+	remove_link_libraries(libquick_cuda xc octree)
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels cublas cusolver)
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
