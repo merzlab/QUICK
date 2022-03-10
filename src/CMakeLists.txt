@@ -62,7 +62,7 @@ set(DLFIND_MODULES_SOURCES
         dlf_hdlc_constraint.f90 dlf_hdlc_hdlclib.f90 
         dlf_hdlc_interface.f90 dlf_hdlc_matrixlib.f90 
         dlf_hdlc_primitive.f90 dl_find.f90 
-        dlfind_main_driver.f90 dlfind_optimizer_module.f90
+        dlfind_main_driver.f90
         dlf_lbfgs.f90 dlf_linalg.f90 
         dlf_microiter.f90
         dlf_neb.f90 dlf_parallel_opt.f90 
