@@ -18,84 +18,13 @@ module quick_optimizer_module
 
   implicit double precision(a-h,o-z)
   private
-  public :: dlfind
   public :: lopt
-
-  interface dlfind
-        module procedure dlfindoptimize
-  end interface dlfind
 
   interface lopt
         module procedure optimize
   end interface lopt
 
 contains
-
-  subroutine dlfindoptimize(ierr)
-     use allmod
-     use quick_gridpoints_module
-     use quick_cutoff_module, only: schwarzoff
-     use quick_cshell_eri_module, only: getEriPrecomputables
-     use quick_cshell_gradient_module, only: scf_gradient
-     use quick_oshell_gradient_module, only: uscf_gradient
-     use quick_dlfind_module, only: dlfind_interface
-     use quick_exception_module
-     implicit double precision(a-h,o-z)
-
-     integer, intent(inout) :: ierr
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
-
-     !---------------------------------------------------------
-     ! This subroutine optimizes the geometry of the molecule. It has a
-     ! variety of options that are enumerated in the text.  Please note
-     ! that all of the methods in this subroutine presuppose the use of
-     ! cartesian space for optimization.
-     !---------------------------------------------------------
-
-
-     ! For right now, there is no way to adjust these and only analytical
-     ! gradients
-     ! are available.  This should be changed later.
-     quick_method%analgrad=.true.
-
-
-     do j=1,natom
-        do k=1,3
-           quick_qm_struct%gradient((j-1)*3+K)=0d0
-        enddo
-     enddo
-
-     !------------- MPI/MASTER --------------------------------
-     if (master) then
-        call PrtAct(ioutfile,"Begin Optimization Job")
-
-        ! At the start of this routine we have a converged density matrix.
-        ! Check to be sure you should be here.
-        if (natom == 1) then
-           write (ioutfile,'(" ONE ATOM = NO OPTIMIZATION ")')
-           return
-        endif
-
-        if (quick_method%iopt < 0) then
-           error=0.d0
-           do I=1,natom*3
-              temp = quick_qm_struct%gradient(I)/5.D-4
-              error = temp*temp+error
-           enddo
-           Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
-        endif
-     endif
-
-     !------------- END MPI/MASTER ----------------------------
-
-     if (master )call dlfind_interface(ierr)
-
-     return
-  end subroutine dlfindoptimize
-
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.
