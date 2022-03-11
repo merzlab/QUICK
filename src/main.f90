@@ -32,7 +32,6 @@
     use quick_cshell_gradient_module, only: cshell_gradient
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module
-!    use dlfind_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
 
     implicit none
