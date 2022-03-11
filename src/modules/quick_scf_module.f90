@@ -21,6 +21,7 @@ module quick_scf_module
 
   public :: allocate_quick_scf, deallocate_quick_scf, scf 
   public :: V2, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+
 !  type quick_scf_type
 
     ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
@@ -711,7 +712,8 @@ contains
               if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &
                     (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
               diisdone=.true.
-  
+
+              quick_method%scf_conv=.true.
   
            endif
            if(jscf >= quick_method%iscf-1) then
