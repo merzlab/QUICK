@@ -1,4 +1,4 @@
-HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPTIMIZE=5 DIPOLE
+HF BASIS=cc-pVDZ cutoff=1.0e-9 denserms=1.0e-6  zmake OPTIMIZE=5 DIPOLE LOPT
 
   O         -0.741530        1.752130        2.896280
   H         -1.111151        0.979769        3.352290
