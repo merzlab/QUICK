@@ -122,6 +122,7 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
+        logical :: uscf_conv     = .false.
         logical :: scf_conv      = .false.
         logical :: badscf        = .false.
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
