@@ -62,6 +62,7 @@ $(OBJ_MAIN):$(dlfindobjfolder)/%.o:%.f90
 
 dlfind:$(OBJ_MOD) $(OBJ) $(OBJ_MAIN)
 	$(VB) $(ARCH) $(ARCHFLAGS) $(libfolder)/libdlfind.$(LIBEXT) $(dlfindobjfolder)/*.o
+	@-rm -f $(dlfindobjfolder)/*.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
