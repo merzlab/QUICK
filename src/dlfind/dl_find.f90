@@ -346,6 +346,7 @@ subroutine dlf_run(ierr2 &
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate,deallocate
   use quick_molspec_module, only: xyz, quick_molspec
+  use quick_method_module,only: quick_method
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -488,7 +489,7 @@ subroutine dlf_run(ierr2 &
   ! ====================================================================
   ! MAIN OPTIMISATION CYCLE
   ! ====================================================================
-  do ! exit conditions implemented via exit statements
+  do WHILE (stat%ccycle.lt.quick_method%iopt)! exit conditions implemented via exit statements
 
     if (glob%iopt/10 == 5) then ! parallel optimisation
        call dlf_parallel_opt(trestarted_report, tconv &
@@ -1024,7 +1025,8 @@ subroutine dlf_run(ierr2 &
          write(stdout,'("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
       endif
     else
-      if (printl > 0) then                                                  
+      if (printl > 0) then
+         write(stdout,*)                                                  
          write(stdout,*) "WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED."
          write(stdout,*) "         PRINTING THE GEOMETRY FROM LAST STEP."
          write(stdout,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")') 
