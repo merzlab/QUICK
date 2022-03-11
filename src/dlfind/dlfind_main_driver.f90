@@ -300,6 +300,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use driver_parameter_module
   use dlf_parameter_module, only: rk
   use allmod
+  use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_cshell_gradient_module, only: scf_gradient
   use quick_cutoff_module, only: schwarzoff
@@ -359,6 +360,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
         CALL uscf_gradient
      else
         CALL scf_gradient
+!print*,'scfconv', quick_method%scf_conv
+!print*,'bad_scf', quick_method%badscf
      endif
   endif
 
@@ -370,6 +373,12 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 
   energy   = quick_qm_struct%Etot
   gradient = quick_qm_struct%gradient
+
+if (quick_method%DFT) then
+     if(0.le.quick_method%iopt) then
+          call deform_dft_grid(quick_dft_grid)
+     endif
+endif
 
   status=0
 end subroutine dlf_get_gradient
