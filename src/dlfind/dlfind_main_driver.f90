@@ -299,6 +299,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   !  taken from JCP 111, 9475 (1999)
   use driver_parameter_module
   use dlf_parameter_module, only: rk
+  use dlf_stat, only: stat
   use allmod
   use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
@@ -358,10 +359,16 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   if (quick_method%analgrad) then
      if (quick_method%UNRST) then
         CALL uscf_gradient
+        if (.not. quick_method%uscf_conv .and. .not. quick_method%badscf) then
+           call dlf_fail(" WARNING: USCF NOT CONVERGED ")
+           stop 
+        endif
      else
         CALL scf_gradient
-!print*,'scfconv', quick_method%scf_conv
-!print*,'bad_scf', quick_method%badscf
+        if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then 
+           call dlf_fail(" WARNING: SCF NOT CONVERGED ")
+           stop 
+        endif
      endif
   endif
 
@@ -375,7 +382,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   gradient = quick_qm_struct%gradient
 
 if (quick_method%DFT) then
-     if(0.le.quick_method%iopt) then
+     if(stat%ccycle .le.quick_method%iopt) then
           call deform_dft_grid(quick_dft_grid)
      endif
 endif
