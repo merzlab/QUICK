@@ -69,13 +69,13 @@ if(CUDA)
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.1) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.2))
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.1) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.6))
 	    message(STATUS "Configuring QUICK for SM3.5, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0 and SM8.6")
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             
 	else()
-	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 11.2.  Please upgrade your CUDA installation or disable building with CUDA.")
+	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 11.6.  Please upgrade your CUDA installation or disable building with CUDA.")
 	endif()
 
     else()
