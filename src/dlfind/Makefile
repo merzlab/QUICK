@@ -25,7 +25,7 @@ FOR=$(FC) $(FFLAGS)
 
 # modules used by more than one file
 OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o $(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
-	$(dlfindobjfolder)/dlf_sort.o 
+	$(dlfindobjfolder)/dlf_sort.o
 
 # Objects that work without numerical libraries (this distinction does not hold any more) 
 OBJ_NOLAPACK = $(dlfindobjfolder)/dl_find.o $(dlfindobjfolder)/dlf_convergence.o $(dlfindobjfolder)/dlf_checkpoint.o $(dlfindobjfolder)/dlf_svnversion.o\
