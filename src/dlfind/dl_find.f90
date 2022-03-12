@@ -236,10 +236,6 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
       glob%neb_climb_test, glob%neb_freeze_test, glob%nzero, &
       coupled_states, glob%qtsflag, &
       glob%imicroiter, glob%maxmicrocycle, micro_esp_fit)
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
   if(ierr/=0) call dlf_fail("Failed to read parameters")
 
   if (glob%ntasks <= 0) then
@@ -518,17 +514,19 @@ subroutine dlf_run(ierr2 &
     if(.not.trerun_energy) then
        if (glob%imicroiter < 2) then
           stat%ccycle = stat%ccycle+1
-          write(stdout,*)
-          write(stdout,*) "@ Optimize for New Step"
-          write(stdout,*)
-          write(stdout,*)
-          write(stdout,'(12("="))',advance="no")
-          write(stdout,'(2x,"GEOMETRY FOR OPTIMIZATION STEP",I4,2x)',advance="no")stat%ccycle
-          write(stdout,'(12("="))')
-          write(stdout,*)
-          write(stdout,'("GEOMETRY INPUT")')
-          write(stdout,'("ELEMENT",6x,"X",14x,"Y",14x,"Z")')
-          call write_xyz(stdout,glob%nat,glob%znuc,glob%xcoords)
+          if (printl > 0) then
+            write(stdout,*)
+            write(stdout,*) "@ Optimize for New Step"
+            write(stdout,*)
+            write(stdout,*)
+            write(stdout,'(12("="))',advance="no")
+            write(stdout,'(2x,"GEOMETRY FOR OPTIMIZATION STEP",I4,2x)',advance="no")stat%ccycle
+            write(stdout,'(12("="))')
+            write(stdout,*)
+            write(stdout,'("GEOMETRY INPUT")')
+            write(stdout,'("ELEMENT",6x,"X",14x,"Y",14x,"Z")')
+            call write_xyz(stdout,glob%nat,glob%znuc,glob%xcoords)
+          endif
        else 
           stat%miccycle = stat%miccycle + 1
           stat%tmiccycle = stat%tmiccycle + 1
@@ -595,20 +593,14 @@ subroutine dlf_run(ierr2 &
                if (glob%imicroiter == 1) kiter = 0
                if (glob%imicroiter == 2) kiter = 1
             end if
-<<<<<<< HEAD
-=======
 
->>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
             call dlf_get_gradient(glob%nvar,glob%xcoords,glob%energy, &
                  glob%xgradient,iimage,kiter,&
 #ifdef GAMESS
                  core,&
 #endif
                  status,ierr2)
-<<<<<<< HEAD
-=======
 
->>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
             ! ESP fit corrections
             if (glob%micro_esp_fit .and. status == 0) then
                if (glob%imicroiter == 1) then
@@ -1013,8 +1005,10 @@ subroutine dlf_run(ierr2 &
     call clock_start("COORDS")
     call dlf_coords_itox(iimage)
     call clock_stop("COORDS")
-    write(stdout,*)
-    write(stdout,*)"@ Finish Optimization for This Step"
+    if (printl > 0) then
+      write(stdout,*)
+      write(stdout,*)"@ Finish Optimization for This Step"
+    endif
 
  do iat=1,glob%nat
     do jat=1,3
