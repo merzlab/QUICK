@@ -122,7 +122,7 @@ subroutine dl_find (ierr2, master &
   call clock_stop("TOTAL")
 !  call time_report
 
-  call allocate_report
+!  call allocate_report
 
 end subroutine dl_find
 
