@@ -66,7 +66,7 @@
 !!   |
 !! return to calling program
 !!
-subroutine dl_find (ierr2 &
+subroutine dl_find (ierr2, master &
 #ifdef GAMESS
     ,core&
 #endif
@@ -76,18 +76,17 @@ subroutine dl_find (ierr2 &
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate_report,allocate,deallocate
   use dlf_store, only: store_delete_all
-  use allmod
   use quick_molspec_module, only: natom, quick_molspec
 
   implicit none
-  integer :: nvarin ! number of variables to read in
-          !  3*nat
-  integer :: nvarin2! number of variables to read in
-          !  in the second array (coords2)
-  integer :: nspec  ! number of values in the integer
+  integer      :: nvarin ! number of variables to read in
+                         !  3*nat
+  integer      :: nvarin2! number of variables to read in
+                         !  in the second array (coords2)
+  integer      :: nspec  ! number of values in the integer
                                      !  array spec
   integer   ,intent(inout) :: ierr2
-!  integer   ,intent(in)   :: master ! 1 if this task is the master of
+  integer   ,intent(in)   :: master ! 1 if this task is the master of
                                      ! a parallel run, 0 otherwise
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -101,8 +100,10 @@ subroutine dl_find (ierr2 &
   nspec = 3*quick_molspec%natom
   nvarin = 3*quick_molspec%natom
   nvarin2 = quick_molspec%natom
+
   ! read input parameters, set defaults
   call dlf_read_in(nvarin,nvarin2,nspec,master)
+
   ! task manager, main optimisation cycle
   call dlf_task(ierr2 &
 #ifdef GAMESS
@@ -235,6 +236,10 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
       glob%neb_climb_test, glob%neb_freeze_test, glob%nzero, &
       coupled_states, glob%qtsflag, &
       glob%imicroiter, glob%maxmicrocycle, micro_esp_fit)
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
   if(ierr/=0) call dlf_fail("Failed to read parameters")
 
   if (glob%ntasks <= 0) then
@@ -486,7 +491,7 @@ subroutine dlf_run(ierr2 &
   ! ====================================================================
   ! MAIN OPTIMISATION CYCLE
   ! ====================================================================
-  do !WHILE (stat%ccycle.lt.quick_method%iopt)! exit conditions implemented via exit statements
+  do WHILE (stat%ccycle.lt.quick_method%iopt)! exit conditions implemented via exit statements
 
     if (glob%iopt/10 == 5) then ! parallel optimisation
        call dlf_parallel_opt(trestarted_report, tconv &
@@ -590,12 +595,20 @@ subroutine dlf_run(ierr2 &
                if (glob%imicroiter == 1) kiter = 0
                if (glob%imicroiter == 2) kiter = 1
             end if
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
             call dlf_get_gradient(glob%nvar,glob%xcoords,glob%energy, &
                  glob%xgradient,iimage,kiter,&
 #ifdef GAMESS
                  core,&
 #endif
                  status,ierr2)
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of d12b715... call for dlfind(ierr,master) changed to dlfind(ierr)
             ! ESP fit corrections
             if (glob%micro_esp_fit .and. status == 0) then
                if (glob%imicroiter == 1) then
