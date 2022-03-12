@@ -194,10 +194,10 @@ contains
 !             endif 
            else
              CALL scf_gradient
-!            if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then
-!               write (ioutfile,'(" WARNING: SCF NOT CONVERGED ")')
-!               return
-!            endif
+!             if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then
+!                write (ioutfile,'(" WARNING: SCF NOT CONVERGED ")')
+!                return
+!             endif
            endif
         endif
 

@@ -122,9 +122,9 @@ module quick_method_module
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
-        logical :: uscf_conv     = .false.
-        logical :: scf_conv      = .false.
-        logical :: badscf        = .false.
+!        logical :: uscf_conv     = .false.
+!        logical :: scf_conv      = .false.
+!        logical :: badscf        = .false.
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
@@ -253,6 +253,7 @@ module quick_method_module
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 
         end subroutine broadcast_quick_method
 
@@ -675,7 +676,7 @@ endif
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
 
-           if (index(keyWD,'BADSCF').ne.0)         self%badscf=.true.
+!           if (index(keyWD,'BADSCF').ne.0)         self%badscf=.true.
 
             ! Legacy Optimizer
             if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
