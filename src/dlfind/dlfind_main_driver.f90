@@ -160,10 +160,9 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   integer   ,intent(inout)   :: micro_esp_fit
   ! local variables
   real(rk)                   :: svar
-  integer                    :: i, iat,jat
+  integer                    :: i, iat,jat,mpierror
   character ::c
 ! **********************************************************************
-
   ierr=0
   tsrel=1
 
@@ -177,9 +176,9 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   spec(:)    =0
   coords2(:) =-1.D0
 
-  do iat = 1, nvar2
-    do jat = 1, 3
-       coords((iat-1)*3 + jat) = xyz(jat, iat)
+   do iat = 1, nvar2
+     do jat = 1, 3
+        coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
   enddo
  
@@ -319,6 +318,10 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   integer   ,intent(in)    :: kiter
   integer   ,intent(out)   :: status
   integer, intent(inout) :: ierr
+
+#ifdef MPIV
+   include "mpif.h"
+#endif
   !
 ! **********************************************************************
 !  call test_update
@@ -359,16 +362,16 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   if (quick_method%analgrad) then
      if (quick_method%UNRST) then
         CALL uscf_gradient
-        if (.not. quick_method%uscf_conv .and. .not. quick_method%badscf) then
-           call dlf_fail(" WARNING: USCF NOT CONVERGED ")
-           stop 
-        endif
+!        if (.not. quick_method%uscf_conv .and. .not. quick_method%badscf) then
+!           call dlf_fail(" WARNING: USCF NOT CONVERGED ")
+!           stop 
+!        endif
      else
         CALL scf_gradient
-        if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then 
-           call dlf_fail(" WARNING: SCF NOT CONVERGED ")
-           stop 
-        endif
+!        if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then 
+!           call dlf_fail(" WARNING: SCF NOT CONVERGED ")
+!           stop 
+!        endif
      endif
   endif
 
