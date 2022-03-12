@@ -474,7 +474,6 @@ subroutine run_quick(self,ierr)
   use quick_cshell_gradient_module, only: cshell_gradient
   use quick_oshell_gradient_module, only: oshell_gradient
   use quick_optimizer_module
-!  use dlfind_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
 
 #ifdef CEW 
@@ -577,7 +576,7 @@ subroutine run_quick(self,ierr)
   ! run optimization
   if (quick_method%opt) then
       if (quick_method%usedlfind) then
-          SAFE_CALL(dl_find(ierr))   ! DLC
+          SAFE_CALL(dl_find(ierr,master))   ! DLC
       else
           SAFE_CALL(lopt(ierr))         ! Cartesian
       endif
