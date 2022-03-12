@@ -244,7 +244,7 @@
     ! internal coordinates, but is under coding.
     if (quick_method%opt) then
         if (quick_method%usedlfind) then
-            SAFE_CALL(dl_find(ierr,master))   ! DLC
+            SAFE_CALL(dl_find(ierr))   ! DLC
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif
