@@ -348,6 +348,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
         quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)        
                                                                                                   
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)                                           
+
+        call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
                                                                                                   
 #ifdef CUDA_MPIV                                                                                  
   timer_begin%T2elb = timer_end%T2elb                                                         
