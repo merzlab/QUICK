@@ -1,4 +1,4 @@
-DFT PBE0 BASIS=def2-svp cutoff=1.0e-9 denserms=1.0e-6 OPTIMIZE=5
+DFT PBE0 BASIS=def2-svp cutoff=1.0e-9 denserms=1.0e-6 OPTIMIZE=4
 
 S 0.000000 0.000000 0.869673
 O 0.823632 0.000000 -0.414970

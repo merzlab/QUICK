@@ -1,4 +1,4 @@
-UHF BASIS=6-31g** cutoff=1.0e-9 denserms=1.0e-6 MULT=2 OPTIMIZE
+UHF BASIS=6-31g** cutoff=1.0e-9 denserms=1.0e-6 MULT=2 OPTIMIZE=4
 
 C           0.000000       0.000000       0.769841
 C           0.000000       0.000000      -0.769841
