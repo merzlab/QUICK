@@ -59,15 +59,9 @@ $(apimodobj):$(objfolder)/%.o:%.f90
 $(opt_modobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
-<<<<<<< HEAD
 
 all:$(modobj) $(opt_modobj) $(apimodobj)
 
-=======
-
-all:$(modobj) $(opt_modobj) $(apimodobj)
-
->>>>>>> 8593647bafcb2277a152f700513d432f2fffddeb
 #post_dlfind:$(opt_modobj) $(apimodobj)
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
