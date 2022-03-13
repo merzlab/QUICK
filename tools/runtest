@@ -303,10 +303,10 @@ print_test_info(){
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
     opt_merad_b3lyp_631gss)               testinfo="Methyl radical: UDFT B3LYP geometry optimization test";;
-    opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT DL-Find geometry test with s, p and d basis functions";;
-    opt_c3h4_rhf_631g)                    testinfo="Allene: RHF DL-Find geometry test with s and p basis functions";;
-    opt_c2h5rad_b3lyp_631gss)             testinfo="Ethyl radical: UDFT B3LYP DL-FIND geometry optimization";;
-    opt_c2hrad_uhf_ccpvdz)                testinfo="Ethynyl radical: UHF DL-Find geometry test with s, p and d basis functions";;
+    opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT DL-Find geometry optimization test with s, p and d basis functions";;
+    opt_c3h4_rhf_631g)                    testinfo="Allene: RHF DL-Find geometry optimization test with s and p basis functions";;
+    opt_c2h5rad_b3lyp_631gss)             testinfo="Ethyl radical: UDFT B3LYP DL-FIND geometry optimization test";;
+    opt_c2hrad_uhf_ccpvdz)                testinfo="Ethynyl radical: UHF DL-Find geometry optimization test with s, p and d basis functions";;
     api_water_rhf_631g)                   testinfo="Water: API test";;
   esac
 
