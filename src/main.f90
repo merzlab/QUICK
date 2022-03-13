@@ -244,6 +244,7 @@
     ! internal coordinates, but is under coding.
     if (quick_method%opt) then
         if (quick_method%usedlfind) then
+
 #ifdef MPIV
             SAFE_CALL(dl_find(ierr, master))   ! DLC
 #else
