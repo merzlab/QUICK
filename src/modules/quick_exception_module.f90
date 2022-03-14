@@ -118,6 +118,9 @@ contains
     case(32)
       msg='Requested LIBXC functional does not exist.'
 
+    case(33)
+      msg='SCF failed to converge.'
+
     case default
       msg='Unknown error.'
 
