@@ -878,14 +878,16 @@ subroutine dlf_run(ierr2 &
             ! Standard convergence test
             call convergence_test(stat%ccycle,.true.,tconv)
             if (tconv) then
-              write(stdout,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') stat%ccycle
-              call clock_start("COORDS")
-              call dlf_coords_itox(iimage)
-              call clock_stop("COORDS")
-              write(stdout,*)
-              write(stdout,*)"@ Finish Optimization for This Step "
-              write(stdout,*)
-              exit 
+              if (printl > 0) then
+                write(stdout,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') stat%ccycle
+                call clock_start("COORDS")
+                call dlf_coords_itox(iimage)
+                call clock_stop("COORDS")
+                write(stdout,*)
+                write(stdout,*)"@ Finish Optimization for This Step "
+                write(stdout,*)
+                exit 
+              endif
             endif
          else
             ! Test convergence of microiterations
