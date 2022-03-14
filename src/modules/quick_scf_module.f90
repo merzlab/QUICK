@@ -749,6 +749,7 @@ contains
               write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
               write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
               diisdone=.true.
+              quick_method%scf_conv=.false.
            endif
            diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
   
