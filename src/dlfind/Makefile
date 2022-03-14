@@ -20,7 +20,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS)
+FOR=$(FC) $(DLFIND_FLAGS)
 #FOR=$(FC) $(FFLAGS) $(DLFIND_FLAGS)
 
 # modules used by more than one file
@@ -62,7 +62,7 @@ $(OBJ_MAIN):$(dlfindobjfolder)/%.o:%.f90
 
 dlfind:$(OBJ_MOD) $(OBJ) $(OBJ_MAIN)
 	$(VB) $(ARCH) $(ARCHFLAGS) $(libfolder)/libdlfind.$(LIBEXT) $(dlfindobjfolder)/*.o
-	@-rm -f $(dlfindobjfolder)/*.o
+	@-rm -f $(dlfindobjfolder)/dlfind_main_driver.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
