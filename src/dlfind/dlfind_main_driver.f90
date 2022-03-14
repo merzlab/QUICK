@@ -308,6 +308,10 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use quick_cshell_gradient_module, only: scf_gradient
   use quick_oshell_gradient_module, only: uscf_gradient
   use quick_method_module,only: quick_method
+  use quick_exception_module, only: RaiseException 
+#ifdef MPIV
+  use quick_mpi_module, only: master
+#endif
   !use vib_pot
   implicit none
   integer   ,intent(in)    :: nvar
@@ -320,8 +324,16 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   integer, intent(inout) :: ierr
 
 #ifdef MPIV
-   include "mpif.h"
+   include "mpif.h" 
 #endif
+
+#ifdef MPIV
+#define CHECK_ERR if(master .and. ierr /= 0)
+#else
+#define CHECK_ERR if(ierr /= 0)
+#endif
+#define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
+
   !
 ! **********************************************************************
 !  call test_update
@@ -365,13 +377,13 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
      if (quick_method%UNRST) then
         if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
            ierr=33
-           return 
+           CHECK_ERROR(ierr)
         endif
         CALL uscf_gradient
      else
         if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then 
            ierr=33
-           return 
+           CHECK_ERROR(ierr)
         endif
         CALL scf_gradient
      endif
