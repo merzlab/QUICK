@@ -257,6 +257,7 @@ module quick_method_module
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 
         end subroutine broadcast_quick_method
 
