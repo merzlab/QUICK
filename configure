@@ -1201,6 +1201,8 @@ for buildtype in $buildtypes; do
       ;;
   esac
 
+  dlfind_flags="$dlfind_flags -I$QUICK_HOME/build/include/$buildtype"
+
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then
