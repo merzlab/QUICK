@@ -189,17 +189,17 @@ contains
         ! 11/19/2010 YIPU MIAO BLOCKED SOME SUBS.
         if (quick_method%analgrad) then
            if (quick_method%UNRST) then
-             CALL uscf_gradient
              if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
-                write (ioutfile,'(" WARNING: USCF NOT CONVERGED ")')
+                ierr=33
                 return
              endif 
+             CALL uscf_gradient
            else
-             CALL scf_gradient
              if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then
-                write (ioutfile,'(" WARNING: SCF NOT CONVERGED ")')
+                ierr=33
                 return
              endif
+             CALL scf_gradient
            endif
         endif
 

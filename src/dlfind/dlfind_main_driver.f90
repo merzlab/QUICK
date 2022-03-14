@@ -363,17 +363,17 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 
   if (quick_method%analgrad) then
      if (quick_method%UNRST) then
-        CALL uscf_gradient
         if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
-           call dlf_fail(" WARNING: USCF NOT CONVERGED ")
+           ierr=33
            return 
         endif
+        CALL uscf_gradient
      else
-        CALL scf_gradient
         if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then 
-           call dlf_fail(" WARNING: SCF NOT CONVERGED ")
+           ierr=33
            return 
         endif
+        CALL scf_gradient
      endif
   endif
 
