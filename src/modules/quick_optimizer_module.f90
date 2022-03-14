@@ -190,16 +190,16 @@ contains
         if (quick_method%analgrad) then
            if (quick_method%UNRST) then
              CALL uscf_gradient
-!             if (.not. quick_method%uscf_conv .and. .not. quick_method%badscf) then
-!                write (ioutfile,'(" WARNING: USCF NOT CONVERGED ")')
-!                return
-!             endif 
+             if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
+                write (ioutfile,'(" WARNING: USCF NOT CONVERGED ")')
+                return
+             endif 
            else
              CALL scf_gradient
-!             if (.not. quick_method%scf_conv .and. .not. quick_method%badscf) then
-!                write (ioutfile,'(" WARNING: SCF NOT CONVERGED ")')
-!                return
-!             endif
+             if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then
+                write (ioutfile,'(" WARNING: SCF NOT CONVERGED ")')
+                return
+             endif
            endif
         endif
 
