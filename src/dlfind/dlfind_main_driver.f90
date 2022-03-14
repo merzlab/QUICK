@@ -324,10 +324,6 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   integer, intent(inout) :: ierr
 
 #ifdef MPIV
-   include "mpif.h" 
-#endif
-
-#ifdef MPIV
 #define CHECK_ERR if(master .and. ierr /= 0)
 #else
 #define CHECK_ERR if(ierr /= 0)
