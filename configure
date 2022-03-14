@@ -1203,6 +1203,14 @@ for buildtype in $buildtypes; do
 
   dlfind_flags="$dlfind_flags -I$QUICK_HOME/build/include/$buildtype"
 
+  if [ "$buildtype" = 'mpi' ]; then
+    dlfind_flags="$dlfind_flags -DMPIV"
+  elif [ "$buildtype" = 'cuda' ]; then
+    dlfind_flags="$dlfind_flags -DCUDA"
+  elif [ "$buildtype" = 'cudampi' ]; then
+    dlfind_flags="$dlfind_flags -DMPIV -DCUDA_MPIV"
+  fi
+
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then
