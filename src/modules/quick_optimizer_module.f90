@@ -18,11 +18,13 @@ module quick_optimizer_module
 
   implicit double precision(a-h,o-z)
   private
+  public :: lopt
 
-  public :: optimize
+  interface lopt
+        module procedure optimize
+  end interface lopt
 
 contains
-
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.
@@ -106,9 +108,8 @@ contains
            Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
         endif
      endif
-
+     
      !------------- END MPI/MASTER ----------------------------
-
 
      do WHILE (I.lt.quick_method%iopt.and..not.done)
         I=I+1
@@ -188,8 +189,16 @@ contains
         ! 11/19/2010 YIPU MIAO BLOCKED SOME SUBS.
         if (quick_method%analgrad) then
            if (quick_method%UNRST) then
+             if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
+                ierr=33
+                return
+             endif 
              CALL uscf_gradient
            else
+             if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then
+                ierr=33
+                return
+             endif
              CALL scf_gradient
            endif
         endif
@@ -260,21 +269,21 @@ contains
            gradmax = -1.d0
            gradnorm = 0.d0
            write (ioutfile,'(/," ANALYTICAL GRADIENT: ")')
-           write (ioutfile,'(84("-"))')
-           write (ioutfile,'(" VARIABLE",6x,"OLD_X",14x,"OLD_GRAD",10x,"NEW_GRAD",12x,"NEW_X")')
-           write (ioutfile,'(84("-"))')
+           write (ioutfile,'(76("-"))')
+           write (ioutfile,'(" VARIBLES",4x,"OLD_X",12x,"OLD_GRAD",8x,"NEW_GRAD",10x,"NEW_X")')
+           write (ioutfile,'(76("-"))')
            do Iatm=1,natom
               do Imomentum=1,3
                  ! Max gradient change
                  gradmax = max(gradmax,dabs(quick_qm_struct%gradient((Iatm-1)*3+Imomentum)))
                  ! Grad change normalization
                  gradnorm = gradnorm + quick_qm_struct%gradient((Iatm-1)*3+Imomentum)**2.d0
-                 write (ioutfile,'(I5,A1,3x,F16.10,3x,F16.10,3x,F16.10,3x,F16.10)')Iatm,cartsym(imomentum), &
+                 write (ioutfile,'(I5,A1,3x,F14.10,3x,F14.10,3x,F14.10,3x,F14.10)')Iatm,cartsym(imomentum), &
                        coordsold((Iatm-1)*3+Imomentum)*0.529177249d0,oldGrad((Iatm-1)*3+Imomentum), &
                        quick_qm_struct%gradient((Iatm-1)*3+Imomentum),xyz(Imomentum,Iatm)*0.529177249d0
               enddo
            enddo
-           write(ioutfile,'(84("-"))')
+           write(ioutfile,'(76("-"))')
            gradnorm = (gradnorm/dble(natom*3))**.5d0
 
            ! geometry RMS
@@ -292,7 +301,7 @@ contains
               EChg = quick_qm_struct%Etot-Elast
               done = quick_method%geoMaxCrt.gt.geomax
               done = done.and.(quick_method%EChange.gt.abs(EChg))
-              done = done.and.(quick_method%gRMSCrt.gt.georms)
+!              done = done.and.(quick_method%gRMSCrt.gt.georms)
               !done = done.and.(quick_method%gradMaxCrt.gt.gradmax * 10 .or. (EChg.gt.0 .and. i.gt.5))
               !done = done.and.quick_method%gNormCrt.gt.gradnorm
            else
@@ -353,7 +362,7 @@ contains
         write (ioutfile,'(" ELEMENT",6x,"X",9x,"Y",9x,"Z")')
 
         do I=1,natom
-           Write (ioutfile,'(2x,A2,6x,F9.4,3x,F9.4,3x,F9.4)') &
+           Write (ioutfile,'(2x,A2,6x,F7.4,3x,F7.4,3x,F7.4)') &
                  symbol(quick_molspec%iattype(I)),xyz(1,I)*0.529177249d0, &
                  xyz(2,I)*0.529177249d0,xyz(3,I)*0.529177249d0
         enddo
@@ -368,7 +377,7 @@ contains
         enddo
 
         write (ioutfile,*)
-        write (ioutfile,'(" MINIMIZED ENERGY=",F20.10)') quick_qm_struct%Etot
+        write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
         Write (ioutfile,'("===============================================================")')
 
 

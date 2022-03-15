@@ -156,4 +156,8 @@ opt_wat_rhf_631g	            #RHF geometry optimization test with s and p basis 
 opt_wat_rhf_ccpvdz	            #RHF geometry test with s, p and d basis functions
 opt_nh4_pbe_def2svp                 #DFT geometry test with s, p and d basis functions
 opt_merad_b3lyp_631gss              #UDFT B3LYP geometry optimization
+opt_hsoh_pbe0_def2svp               #DFT DL-Find geometry test with s, p and d basis functions
+opt_c3h4_rhf_631g                   #RHF DL-Find geometry test with s and p basis functions
+opt_c2h5rad_b3lyp_631gss            #UDFT B3LYP DL-FIND geometry optimization
+opt_c2hrad_uhf_ccpvdz               #UHF DL-Find geometry test with s, p and d basis functions
 api_water_rhf_631g                  #API test

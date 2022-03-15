@@ -38,8 +38,9 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_cew_module.o $(objfolder)/quick_oei_module.o $(objfolder)/quick_dft_module.o \
 		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 		$(objfolder)/oshell_quick_gradient_module.o \
-		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
-		$(objfolder)/quick_optimizer_module.o 
+		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o
+
+opt_modobj=$(objfolder)/quick_optimizer_module.o
 
 apimodobj=$(objfolder)/quick_api_module.o  $(objfolder)/quick_api_test_module.o
 
@@ -55,8 +56,13 @@ $(apimodobj):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	 $(VB)$(FOR) -c $< -o $@
 
-all:$(modobj) $(apimodobj)
+$(opt_modobj):$(objfolder)/%.o:%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FOR) -c $< -o $@
 
+all:$(modobj) $(opt_modobj) $(apimodobj)
+
+#post_dlfind:$(opt_modobj) $(apimodobj)
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!

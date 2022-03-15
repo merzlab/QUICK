@@ -54,6 +54,40 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
 	oshell_denspt.f90 naive_distribute.f90)
 
+set(DLFIND_MODULES_SOURCES
+        dlf_allocate.f90 dlf_checkpoint.f90 
+        dlf_conint.f90 dlf_convergence.f90 
+        dlf_coords.f90 dlf_dimer.f90
+        dlf_formstep.f90 dlf_global_module.f90 
+        dlf_hdlc_constraint.f90 dlf_hdlc_hdlclib.f90 
+        dlf_hdlc_interface.f90 dlf_hdlc_matrixlib.f90 
+        dlf_hdlc_primitive.f90 dl_find.f90 
+        dlfind_main_driver.f90
+        dlf_lbfgs.f90 dlf_linalg.f90 
+        dlf_microiter.f90
+        dlf_neb.f90 dlf_parallel_opt.f90 
+        dlf_qts.f90 dlf_scalestep.f90
+        dlf_serial.f90 dlf_sort.f90 
+        dlf_stat_module.f90 dlf_svnversion.f90 
+        dlf_task.f90 dlf_time.f90 dlf_util.f90)
+
+set(DLFIND_MODULES_SOURCES
+        dlf_allocate.f90 dlf_checkpoint.f90 
+        dlf_conint.f90 dlf_convergence.f90 
+        dlf_coords.f90 dlf_dimer.f90
+        dlf_formstep.f90 dlf_global_module.f90 
+        dlf_hdlc_constraint.f90 dlf_hdlc_hdlclib.f90 
+        dlf_hdlc_interface.f90 dlf_hdlc_matrixlib.f90 
+        dlf_hdlc_primitive.f90 dl_find.f90 
+        dlfind_main_driver.f90
+        dlf_lbfgs.f90 dlf_linalg.f90 
+        dlf_microiter.f90
+        dlf_neb.f90 dlf_parallel_opt.f90 
+        dlf_qts.f90 dlf_scalestep.f90
+        dlf_serial.f90 dlf_sort.f90 
+        dlf_stat_module.f90 dlf_svnversion.f90 
+        dlf_task.f90 dlf_time.f90 dlf_util.f90)
+
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
 endif()
@@ -74,6 +108,7 @@ set(MAIN_SOURCES main.f90)
 
 set(QUICK_MODULES_SOURCES_FULLPATH "")
 set(QUICK_SUBS_SOURCES_FULLPATH "")
+set(DLFIND_MODULES_SOURCES_FULLPATH "")
 
 foreach(MODULES_SOURCE ${QUICK_MODULES_SOURCES})
 	list(APPEND QUICK_MODULES_SOURCES_FULLPATH "modules/${MODULES_SOURCE}")
@@ -83,15 +118,19 @@ foreach(SUBS_SOURCE ${QUICK_SUBS_SOURCES})
 	list(APPEND QUICK_SUBS_SOURCES_FULLPATH "subs/${SUBS_SOURCE}")
 endforeach()
 
+foreach(DLFIND_SOURCE ${DLFIND_MODULES_SOURCES})
+        list(APPEND DLFIND_MODULES_SOURCES_FULLPATH "dlfind/${DLFIND_SOURCE}")
+endforeach()
+
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
 include_directories(util)
 
-add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
+add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
-target_link_libraries(libquick PRIVATE xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
+target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
 install_libraries(libquick EXPORT QUICK)
 
 if(mirp_ENABLED)
@@ -123,7 +162,7 @@ if(CUDA)
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
 	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_cuda xc octree ${QUICK_BLAS} ${QUICK_LAPACK})
+	remove_link_libraries(libquick_cuda xc octree)
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels cublas cusolver)
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 

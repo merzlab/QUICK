@@ -31,7 +31,7 @@
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_cshell_gradient_module, only: cshell_gradient
     use quick_oshell_gradient_module, only: oshell_gradient
-    use quick_optimizer_module, only: optimize
+    use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
 
     implicit none
@@ -242,7 +242,19 @@
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
-    if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
+    if (quick_method%opt) then
+        if (quick_method%usedlfind) then
+
+#ifdef MPIV
+            SAFE_CALL(dl_find(ierr, master))   ! DLC
+#else
+            SAFE_CALL(dl_find(ierr, .true.)) 
+#endif
+
+        else
+            SAFE_CALL(lopt(ierr))         ! Cartesian
+        endif
+    endif
     
     if (.not.quick_method%opt .and. quick_method%grad) then
         if (quick_method%UNRST) then
