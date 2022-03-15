@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:20:43 2022
+| TASK STARTS ON: Tue Mar 15 14:26:12 2022
 | INPUT FILE :    ene_wat2_mp2_631g.in
 | OUTPUT FILE:    ene_wat2_mp2_631g.out
 | DATA FILE  :    ene_wat2_mp2_631g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/6-31G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -137,23 +137,23 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -152.076243979      ------         0.017     1        0.01      0.01      0.01    0.1730E+01  0.7508E-01  0.4283E+00
-|  2   -151.887719954  -.188524E+00       0.013     2        0.01      0.00      0.01    0.2512E+00  0.2222E-01  0.1812E+00
-|  3   -151.960299284  0.725793E-01       0.013     3        0.01      0.00      0.01    0.1175E+00  0.7410E-02  0.6735E-01
-|  4   -151.976008247  0.157090E-01       0.013     4        0.01      0.00      0.01    0.2382E-01  0.2844E-02  0.1766E-01
-|  5   -151.977397106  0.138886E-02       0.014     5        0.01      0.00      0.01    0.3592E-02  0.9519E-03  0.5516E-02
-|  6   -151.977487552  0.904457E-04       0.011     6        0.01      0.00      0.01    0.5214E-03  0.1390E-03  0.9518E-03
-|  7   -151.977489294  0.174256E-05       0.010     7        0.01      0.00      0.01    0.1363E-03  0.4596E-04  0.2600E-03
-|  8   -151.977489452  0.158097E-06       0.010     8        0.01      0.00      0.01    0.7726E-04  0.9327E-05  0.6841E-04
-|  9   -151.977489462  0.100241E-07       0.010     9        0.01      0.00      0.01    0.1029E-04  0.3080E-05  0.1820E-04
-| 10   -151.977489463  0.674611E-09       0.010    10        0.01      0.00      0.01    0.2283E-05  0.6881E-06  0.3540E-05
+|  1   -152.076243979      ------         0.010     1        0.00      0.01      0.00    0.1730E+01  0.7508E-01  0.4283E+00
+|  2   -151.887719954  -.188524E+00       0.006     2        0.00      0.00      0.00    0.2512E+00  0.2222E-01  0.1812E+00
+|  3   -151.960299284  0.725793E-01       0.006     3        0.00      0.00      0.00    0.1175E+00  0.7410E-02  0.6735E-01
+|  4   -151.976008247  0.157090E-01       0.006     4        0.00      0.00      0.00    0.2382E-01  0.2844E-02  0.1766E-01
+|  5   -151.977397106  0.138886E-02       0.006     5        0.00      0.00      0.00    0.3592E-02  0.9519E-03  0.5516E-02
+|  6   -151.977487552  0.904457E-04       0.006     6        0.00      0.00      0.00    0.5214E-03  0.1390E-03  0.9518E-03
+|  7   -151.977489294  0.174253E-05       0.006     7        0.00      0.00      0.00    0.1363E-03  0.4596E-04  0.2600E-03
+|  8   -151.977489452  0.158095E-06       0.006     8        0.00      0.00      0.00    0.7726E-04  0.9327E-05  0.6841E-04
+|  9   -151.977489462  0.100449E-07       0.007     9        0.00      0.00      0.00    0.1029E-04  0.3080E-05  0.1820E-04
+| 10   -151.977489463  0.655398E-09       0.006    10        0.00      0.00      0.00    0.2283E-05  0.6881E-06  0.3540E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYCLES
-| MAX ERROR = 0.228314E-05   RMS CHANGE = 0.688129E-06   MAX CHANGE = 0.354004E-05
+| MAX ERROR = 0.228316E-05   RMS CHANGE = 0.688128E-06   MAX CHANGE = 0.354006E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -188.605970895
- CORE_CORE REPULSION  =    36.628481432
- TOTAL ENERGY         =  -151.977489463
+ ELECTRONIC ENERGY    =   -188.605970895
+ CORE_CORE REPULSION  =     36.628481432
+ TOTAL ENERGY         =   -151.977489463
 
  @ End Energy calculation
 
@@ -195,7 +195,7 @@ EMP2                =  -152.239416232
    H              0.4188             0.3054
    H              0.4212             0.3135
    H              0.3843             0.2874
-   TOTAL        -0.0000            -0.0000
+   TOTAL         0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -207,18 +207,18 @@ EMP2                =  -152.239416232
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.112623000(  4.19%)
-| TOTAL SCF TIME      =     0.119579000(  4.45%)
-|       TOTAL OP TIME      =     0.036376000(  1.35%)
-|             TOTAL 1e TIME      =     0.001181000(  0.04%)
-|             TOTAL 2e TIME      =     0.033535000(  1.25%)
-|       TOTAL DII TIME      =     0.083156000(  3.09%)
-|             TOTAL DIAG TIME    =     0.077433000(  2.88%)
-| TOTAL MP2 TIME     =     0.030859000(  1.15%)
-| TOTAL TIME          =     2.687744000
+| INITIAL GUESS TIME  =     0.217460000(  4.03%)
+| TOTAL SCF TIME      =     0.062718000(  1.16%)
+|       TOTAL OP TIME      =     0.040541000(  0.75%)
+|             TOTAL 1e TIME      =     0.001396000(  0.03%)
+|             TOTAL 2e TIME      =     0.037256000(  0.69%)
+|       TOTAL DII TIME      =     0.022122000(  0.41%)
+|             TOTAL DIAG TIME    =     0.016008000(  0.30%)
+| TOTAL MP2 TIME     =     0.041575000(  0.77%)
+| TOTAL TIME          =     5.401497000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.7 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:20:46 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:26:17 2022

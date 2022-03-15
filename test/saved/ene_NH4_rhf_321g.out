@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:17:44 2022
+| TASK STARTS ON: Tue Mar 15 14:19:59 2022
 | INPUT FILE :    ene_NH4_rhf_321g.in
 | OUTPUT FILE:    ene_NH4_rhf_321g.out
 | DATA FILE  :    ene_NH4_rhf_321g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 3-21G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/3-21G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/3-21G.BAS
 
  @ Finish reading job
 
@@ -133,20 +133,20 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -56.561063532      ------         0.013     1        0.01      0.00      0.01    0.2116E+01  0.9010E-01  0.4580E+00
-|  2    -56.204920230  -.356143E+00       0.009     2        0.01      0.00      0.01    0.8577E-01  0.2120E-01  0.1332E+00
-|  3    -56.225530337  0.206101E-01       0.009     3        0.01      0.00      0.01    0.5070E-01  0.3659E-02  0.2300E-01
-|  4    -56.228660600  0.313026E-02       0.009     4        0.01      0.00      0.01    0.5472E-02  0.1318E-02  0.7389E-02
-|  5    -56.228756776  0.961761E-04       0.009     5        0.01      0.00      0.01    0.4451E-03  0.4106E-04  0.1821E-03
-|  6    -56.228757005  0.228838E-06       0.010     6        0.01      0.00      0.01    0.1306E-04  0.5684E-05  0.6403E-04
-|  7    -56.228757006  0.869347E-09       0.008     7        0.01      0.00      0.01    0.1549E-05  0.1936E-06  0.2149E-05
+|  1    -56.561063532      ------         0.006     1        0.00      0.00      0.00    0.2116E+01  0.9010E-01  0.4580E+00
+|  2    -56.204920230  -.356143E+00       0.002     2        0.00      0.00      0.00    0.8577E-01  0.2120E-01  0.1332E+00
+|  3    -56.225530337  0.206101E-01       0.002     3        0.00      0.00      0.00    0.5070E-01  0.3659E-02  0.2300E-01
+|  4    -56.228660600  0.313026E-02       0.002     4        0.00      0.00      0.00    0.5472E-02  0.1318E-02  0.7389E-02
+|  5    -56.228756776  0.961761E-04       0.002     5        0.00      0.00      0.00    0.4451E-03  0.4106E-04  0.1821E-03
+|  6    -56.228757005  0.228853E-06       0.002     6        0.00      0.00      0.00    0.1306E-04  0.5684E-05  0.6403E-04
+|  7    -56.228757006  0.845473E-09       0.002     7        0.00      0.00      0.00    0.1549E-05  0.1936E-06  0.2148E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   7 CYCLES
-| MAX ERROR = 0.154877E-05   RMS CHANGE = 0.193648E-06   MAX CHANGE = 0.214852E-05
+| MAX ERROR = 0.154877E-05   RMS CHANGE = 0.193637E-06   MAX CHANGE = 0.214834E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =   -72.006812745
- CORE_CORE REPULSION  =    15.778055739
- TOTAL ENERGY         =   -56.228757006
+ ELECTRONIC ENERGY    =    -72.006812745
+ CORE_CORE REPULSION  =     15.778055739
+ TOTAL ENERGY         =    -56.228757006
 
  @ End Energy calculation
 
@@ -190,17 +190,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.105486000(  4.19%)
-| TOTAL SCF TIME      =     0.069649000(  2.77%)
-|       TOTAL OP TIME      =     0.006931000(  0.28%)
-|             TOTAL 1e TIME      =     0.000417000(  0.02%)
-|             TOTAL 2e TIME      =     0.005759000(  0.23%)
-|       TOTAL DII TIME      =     0.062698000(  2.49%)
-|             TOTAL DIAG TIME    =     0.058456000(  2.32%)
-| TOTAL TIME          =     2.517026000
+| INITIAL GUESS TIME  =     0.287768000(  5.43%)
+| TOTAL SCF TIME      =     0.021615000(  0.41%)
+|       TOTAL OP TIME      =     0.006991000(  0.13%)
+|             TOTAL 1e TIME      =     0.000469000(  0.01%)
+|             TOTAL 2e TIME      =     0.005715000(  0.11%)
+|       TOTAL DII TIME      =     0.014586000(  0.28%)
+|             TOTAL DIAG TIME    =     0.010297000(  0.19%)
+| TOTAL TIME          =     5.302516000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.3 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:17:47 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:20:05 2022

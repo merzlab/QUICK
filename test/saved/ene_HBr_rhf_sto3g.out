@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:16:42 2022
+| TASK STARTS ON: Tue Mar 15 14:17:47 2022
 | INPUT FILE :    ene_HBr_rhf_sto3g.in
 | OUTPUT FILE:    ene_HBr_rhf_sto3g.out
 | DATA FILE  :    ene_HBr_rhf_sto3g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = STO-3G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/STO-3G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/STO-3G.BAS
 
  @ Finish reading job
 
@@ -127,20 +127,20 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1  -2546.307513046      ------         0.035     1        0.01      0.03      0.01    0.2051E+01  0.9277E-01  0.6493E+00
-|  2  -2545.982858552  -.324654E+00       0.030     2        0.01      0.02      0.01    0.7853E-01  0.2052E-01  0.2001E+00
-|  3  -2545.994943092  0.120845E-01       0.028     3        0.01      0.02      0.01    0.8500E-02  0.3516E-02  0.2498E-01
-|  4  -2545.995205914  0.262822E-03       0.028     4        0.01      0.02      0.01    0.1242E-02  0.8302E-03  0.7702E-02
-|  5  -2545.995216300  0.103863E-04       0.028     5        0.01      0.02      0.01    0.1274E-03  0.9471E-04  0.8763E-03
-|  6  -2545.995216412  0.112065E-06       0.028     6        0.01      0.02      0.01    0.1840E-05  0.1407E-05  0.9601E-05
-|  7  -2545.995216412  0.118042E-09       0.028     7        0.01      0.02      0.01    0.2007E-06  0.7662E-07  0.4679E-06
+|  1  -2546.307513046      ------         0.049     1        0.00      0.05      0.00    0.2051E+01  0.9277E-01  0.6493E+00
+|  2  -2545.982858552  -.324654E+00       0.027     2        0.00      0.02      0.00    0.7853E-01  0.2052E-01  0.2001E+00
+|  3  -2545.994943092  0.120845E-01       0.025     3        0.00      0.02      0.00    0.8500E-02  0.3516E-02  0.2498E-01
+|  4  -2545.995205914  0.262822E-03       0.025     4        0.00      0.02      0.00    0.1242E-02  0.8302E-03  0.7702E-02
+|  5  -2545.995216300  0.103863E-04       0.024     5        0.00      0.02      0.00    0.1274E-03  0.9471E-04  0.8763E-03
+|  6  -2545.995216412  0.112034E-06       0.023     6        0.00      0.02      0.00    0.1840E-05  0.1407E-05  0.9601E-05
+|  7  -2545.995216412  0.989431E-10       0.023     7        0.00      0.02      0.00    0.2007E-06  0.7662E-07  0.4680E-06
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   7 CYCLES
-| MAX ERROR = 0.200658E-06   RMS CHANGE = 0.766176E-07   MAX CHANGE = 0.467925E-06
+| MAX ERROR = 0.200654E-06   RMS CHANGE = 0.766244E-07   MAX CHANGE = 0.467953E-06
 | -----------------------------------------------
- ELECTRONIC ENERGY    = -2562.832673049
- CORE_CORE REPULSION  =    16.837456637
- TOTAL ENERGY         = -2545.995216412
+ ELECTRONIC ENERGY    =  -2562.832673049
+ CORE_CORE REPULSION  =     16.837456637
+ TOTAL ENERGY         =  -2545.995216412
 
  @ End Energy calculation
 
@@ -166,7 +166,7 @@
    ATOM          MULLIKEN            LOWDIN
    BR             0.0317             0.0481
    H             -0.0317            -0.0481
-   TOTAL         0.0000            -0.0000
+   TOTAL         0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -178,17 +178,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.106299000(  3.99%)
-| TOTAL SCF TIME      =     0.205680000(  7.72%)
-|       TOTAL OP TIME      =     0.156471000(  5.87%)
-|             TOTAL 1e TIME      =     0.001234000(  0.05%)
-|             TOTAL 2e TIME      =     0.153682000(  5.77%)
-|       TOTAL DII TIME      =     0.049185000(  1.85%)
-|             TOTAL DIAG TIME    =     0.044993000(  1.69%)
-| TOTAL TIME          =     2.663558000
+| INITIAL GUESS TIME  =     0.219097000(  4.05%)
+| TOTAL SCF TIME      =     0.198697000(  3.67%)
+|       TOTAL OP TIME      =     0.182777000(  3.38%)
+|             TOTAL 1e TIME      =     0.001507000(  0.03%)
+|             TOTAL 2e TIME      =     0.179431000(  3.32%)
+|       TOTAL DII TIME      =     0.015882000(  0.29%)
+|             TOTAL DIAG TIME    =     0.011515000(  0.21%)
+| TOTAL TIME          =     5.407960000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.7 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:16:44 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:17:53 2022

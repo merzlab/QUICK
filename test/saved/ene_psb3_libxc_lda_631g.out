@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:20:33 2022
+| TASK STARTS ON: Tue Mar 15 14:25:52 2022
 | INPUT FILE :    ene_psb3_libxc_lda_631g.in
 | OUTPUT FILE:    ene_psb3_libxc_lda_631g.out
 | DATA FILE  :    ene_psb3_libxc_lda_631g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -81,7 +81,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/6-31G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -185,27 +185,27 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -248.378092553      ------         0.060     1        0.02      0.04      0.02    0.2193E+01  0.5651E-01  0.5622E+00
-|  2   -247.288567855  -.108952E+01       0.043     2        0.01      0.03      0.01    0.1739E+00  0.3768E-01  0.4513E+00
-|  3   -246.679973313  -.608595E+00       0.039     3        0.01      0.03      0.01    0.3189E+00  0.3422E-01  0.4329E+00
-|  4   -247.361872845  0.681900E+00       0.038     4        0.01      0.03      0.01    0.1835E+00  0.1245E-01  0.1958E+00
-|  5   -247.469720898  0.107848E+00       0.038     5        0.01      0.03      0.01    0.5176E-01  0.4306E-02  0.6931E-01
-|  6   -247.480716487  0.109956E-01       0.037     6        0.01      0.03      0.01    0.2917E-01  0.1658E-02  0.2725E-01
-|  7   -247.484454574  0.373809E-02       0.035     7        0.01      0.03      0.01    0.6131E-02  0.4401E-03  0.8399E-02
-|  8   -247.484562270  0.107696E-03       0.036     8        0.01      0.03      0.01    0.3743E-02  0.2283E-03  0.3407E-02
-|  9   -247.484602364  0.400936E-04       0.035     9        0.01      0.03      0.01    0.7790E-03  0.6252E-04  0.9692E-03
-| 10   -247.484605003  0.263918E-05       0.035    10        0.01      0.03      0.01    0.2736E-03  0.2338E-04  0.2577E-03
-| 11   -247.484605505  0.502085E-06       0.035     1        0.01      0.03      0.01    0.3515E-04  0.4546E-05  0.5115E-04
-| 12   -247.484605517  0.119380E-07       0.035     2        0.01      0.03      0.01    0.1350E-04  0.7919E-06  0.1541E-04
+|  1   -248.378092553      ------         0.069     1        0.01      0.06      0.00    0.2193E+01  0.5651E-01  0.5622E+00
+|  2   -247.288567855  -.108952E+01       0.038     2        0.00      0.03      0.00    0.1739E+00  0.3768E-01  0.4513E+00
+|  3   -246.679973313  -.608595E+00       0.037     3        0.00      0.03      0.00    0.3189E+00  0.3422E-01  0.4329E+00
+|  4   -247.361872845  0.681900E+00       0.037     4        0.00      0.03      0.00    0.1835E+00  0.1245E-01  0.1958E+00
+|  5   -247.469720898  0.107848E+00       0.036     5        0.00      0.03      0.00    0.5176E-01  0.4306E-02  0.6931E-01
+|  6   -247.480716487  0.109956E-01       0.036     6        0.00      0.03      0.00    0.2917E-01  0.1658E-02  0.2725E-01
+|  7   -247.484454574  0.373809E-02       0.036     7        0.00      0.03      0.00    0.6131E-02  0.4401E-03  0.8399E-02
+|  8   -247.484562270  0.107696E-03       0.036     8        0.00      0.03      0.00    0.3743E-02  0.2283E-03  0.3407E-02
+|  9   -247.484602364  0.400937E-04       0.036     9        0.00      0.03      0.00    0.7790E-03  0.6252E-04  0.9692E-03
+| 10   -247.484605003  0.263909E-05       0.036    10        0.00      0.03      0.00    0.2736E-03  0.2338E-04  0.2577E-03
+| 11   -247.484605505  0.502162E-06       0.037     1        0.00      0.03      0.00    0.3515E-04  0.4546E-05  0.5115E-04
+| 12   -247.484605517  0.121007E-07       0.036     2        0.00      0.03      0.00    0.1350E-04  0.7918E-06  0.1541E-04
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  12 CYCLES
-| MAX ERROR = 0.135013E-04   RMS CHANGE = 0.791856E-06   MAX CHANGE = 0.154132E-04
+| MAX ERROR = 0.135013E-04   RMS CHANGE = 0.791842E-06   MAX CHANGE = 0.154132E-04
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =   22.0000134698
- BETA ELECTRON DENSITY     =   22.0000134698
- ELECTRONIC ENERGY    =  -454.669783885
- CORE_CORE REPULSION  =   207.185178368
- TOTAL ENERGY         =  -247.484605517
+ ALPHA ELECTRON DENSITY    =    22.0000134698
+ BETA ELECTRON DENSITY     =    22.0000134698
+ ELECTRONIC ENERGY    =   -454.669783886
+ CORE_CORE REPULSION  =    207.185178368
+ TOTAL ENERGY         =   -247.484605517
 
  @ End Energy calculation
 
@@ -240,19 +240,19 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.155312000(  5.11%)
-| DFT GRID OPERATIONS =     0.038781000(  1.28%)
-| TOTAL SCF TIME      =     0.470844000( 15.50%)
-|       TOTAL OP TIME      =     0.342268000( 11.27%)
-|             TOTAL 1e TIME      =     0.006591000(  0.22%)
-|             TOTAL 2e TIME      =     0.096454000(  3.18%)
-|             TOTAL EXC TIME     =     0.231641000(  7.63%)
-|       TOTAL DII TIME      =     0.128453000(  4.23%)
-|             TOTAL DIAG TIME    =     0.119034000(  3.92%)
-| TOTAL TIME          =     3.036932000
+| INITIAL GUESS TIME  =     0.312785000(  5.42%)
+| DFT GRID OPERATIONS =     0.061140000(  1.06%)
+| TOTAL SCF TIME      =     0.480238000(  8.33%)
+|       TOTAL OP TIME      =     0.430090000(  7.46%)
+|             TOTAL 1e TIME      =     0.008329000(  0.14%)
+|             TOTAL 2e TIME      =     0.173600000(  3.01%)
+|             TOTAL EXC TIME     =     0.238484000(  4.14%)
+|       TOTAL DII TIME      =     0.049915000(  0.87%)
+|             TOTAL DIAG TIME    =     0.036077000(  0.63%)
+| TOTAL TIME          =     5.766887000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  3.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.8 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:20:36 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:25:58 2022
