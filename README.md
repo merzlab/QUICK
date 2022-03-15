@@ -1,7 +1,7 @@
 <p align="right">
 <img src="https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg">
 <img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
-<img src='https://readthedocs.org/projects/quick-docs/badge/?version=21.3.0' alt='Documentation Status' />
+<img src='https://readthedocs.org/projects/quick-docs/badge/?version=22.3.0' alt='Documentation Status' />
 </p>
 <p align="left">
 <img width="299" height="169" src="./tools/logo.png">
@@ -17,7 +17,7 @@ Features
 * Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available).
 * Gradient and geometry optimization calculations 
 * Mulliken charge analysis
-* Supports QM/MM calculations with Amber21
+* Supports QM/MM calculations with Amber22
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
 * Massively parallel GPU implementation via CUDA for Nvidia GPUs
@@ -34,20 +34,20 @@ Installation
 ------------
 Supported platforms: Linux
 
-* [Installation Guide](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#installation-guide)
-   1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#compatible-compilers-and-hardware)
-   2. [Installation](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#installation)
-   3. [Testing](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#environment-variables-and-testing)
-   4. [Uninstallation](https://quick-docs.readthedocs.io/en/21.3.0/installation-guide.html#uninstallation-and-cleaning)
+* [Installation Guide](https://quick-docs.readthedocs.io/en/22.3.0/installation-guide.html#installation-guide)
+   1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/22.3.0/installation-guide.html#compatible-compilers-and-hardware)
+   2. [Installation](https://quick-docs.readthedocs.io/en/22.3.0/installation-guide.html#installation)
+   3. [Testing](https://quick-docs.readthedocs.io/en/22.3.0/installation-guide.html#environment-variables-and-testing)
+   4. [Uninstallation](https://quick-docs.readthedocs.io/en/22.3.0/installation-guide.html#uninstallation-and-cleaning)
 
 Getting Started
 ---------------
-* [Hands-on Tutorials](https://quick-docs.readthedocs.io/en/21.3.0/hands-on-tutorials.html)
-* [User Manual](https://quick-docs.readthedocs.io/en/21.3.0/user-manual.html)
+* [Hands-on Tutorials](https://quick-docs.readthedocs.io/en/22.3.0/hands-on-tutorials.html)
+* [User Manual](https://quick-docs.readthedocs.io/en/22.3.0/user-manual.html)
 
 Known Issues
 ------------
-A list of installation and runtime issues can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/known-issues.html#known-issues-of-current-version).
+A list of installation and runtime issues can be found [here](https://quick-docs.readthedocs.io/en/22.3.0/known-issues.html#known-issues-of-current-version).
 
 Citation
 --------
@@ -88,7 +88,7 @@ Open-Source Multi-GPU-Accelerated QM/MM Simulations with AMBER and QUICK.
 
 License
 -------
-QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/21.3.0/license.html#mozilla-public-license-version-2-0).
+QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/22.3.0/license.html#mozilla-public-license-version-2-0).
 
 Special Note to Users
 ---------------------
