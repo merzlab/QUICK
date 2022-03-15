@@ -22,35 +22,38 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2021                                          **
+  **                                         Copyright (c) 2022                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
   **                                                                                                     **
-  **                   This software provided pursuant to a license agreement containing                 **
-  **                   restrictions on its disclosure, duplication, and use. This software               **
-  **                   contains confidential and proprietary information, and may not be                 **
-  **                   extracted or distributed, in whole or in part, for any purpose                    **
-  **                   whatsoever, without the express written permission of the authors.                **
-  **                   This notice, and the associated author list, must be attached to                  **
-  **                   all copies, or extracts, of this software. Any additional                         **
-  **                   restrictions set forth in the license agreement also apply to this                **
-  **                   software.                                                                         **
+  **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+  **                                                                                                     **
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
-  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
-  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+  Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V.W.D.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;      
+  Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-22.03                                                        
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022             
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Wed Mar 17 12:10:21 2021
+| TASK STARTS ON: Mon Mar 14 23:18:59 2022
 | INPUT FILE :    ene_PO4_3_rhf_631gs.in
 | OUTPUT FILE:    ene_PO4_3_rhf_631gs.out
-| DATE FILE  :    ene_PO4_3_rhf_631gs.dat
-| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+| DATA FILE  :    ene_PO4_3_rhf_631gs.dat
+| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
+| CUDA DEVICE PM              :      108
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
+| CUDA DEVICE MEMORY SIZE (MB):    81251
+| SUPPORTING CUDA VERSION     :      8.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -74,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G*,  TYPE = CARTESIAN
-| BASIS FILE = /scratch/cruzeiro/quick/basis//6-31GD.BAS
+| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/6-31GD.BAS
 
  @ Finish reading job
 
@@ -130,23 +133,23 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -640.993421013      ------         1.104     1        0.03      1.07      0.02    0.1851E+01  0.3598E-01  0.4695E+00
-|  2   -639.446303545  -.154712E+01       1.285     2        0.03      1.25      0.02    0.2748E+00  0.1660E-01  0.2334E+00
-|  3   -639.641632679  0.195329E+00       1.143     3        0.08      1.06      0.01    0.1292E+00  0.5010E-02  0.8359E-01
-|  4   -639.701785258  0.601526E-01       1.095     4        0.04      1.05      0.02    0.1555E-01  0.1916E-02  0.3430E-01
-|  5   -639.704189886  0.240463E-02       1.264     5        0.04      1.23      0.02    0.3747E-02  0.4297E-03  0.4665E-02
-|  6   -639.704342664  0.152779E-03       1.246     6        0.05      1.20      0.02    0.1563E-02  0.1521E-03  0.1857E-02
-|  7   -639.704357480  0.148160E-04       1.083     7        0.03      1.05      0.01    0.2659E-03  0.3045E-04  0.3736E-03
-|  8   -639.704357959  0.478411E-06       1.087     8        0.03      1.06      0.01    0.1562E-03  0.6817E-05  0.1135E-03
-|  9   -639.704358001  0.423982E-07       1.088     9        0.04      1.05      0.02    0.3113E-04  0.3079E-05  0.5410E-04
-| 10   -639.704358005  0.369545E-08       1.080    10        0.03      1.05      0.01    0.4110E-05  0.6774E-06  0.7411E-05
+|  1   -640.993421002      ------         0.051     1        0.01      0.04      0.01    0.1851E+01  0.3598E-01  0.4695E+00
+|  2   -639.446303481  -.154712E+01       0.036     2        0.01      0.03      0.01    0.2748E+00  0.1660E-01  0.2334E+00
+|  3   -639.641632611  0.195329E+00       0.035     3        0.01      0.03      0.01    0.1292E+00  0.5010E-02  0.8359E-01
+|  4   -639.701785188  0.601526E-01       0.033     4        0.01      0.02      0.01    0.1555E-01  0.1916E-02  0.3430E-01
+|  5   -639.704189816  0.240463E-02       0.033     5        0.01      0.02      0.01    0.3747E-02  0.4297E-03  0.4665E-02
+|  6   -639.704342594  0.152779E-03       0.032     6        0.01      0.02      0.01    0.1563E-02  0.1521E-03  0.1857E-02
+|  7   -639.704357410  0.148162E-04       0.035     7        0.01      0.02      0.01    0.2659E-03  0.3045E-04  0.3736E-03
+|  8   -639.704357889  0.478231E-06       0.034     8        0.01      0.02      0.01    0.1562E-03  0.6817E-05  0.1135E-03
+|  9   -639.704357931  0.423169E-07       0.033     9        0.01      0.02      0.01    0.3113E-04  0.3079E-05  0.5410E-04
+| 10   -639.704357935  0.383733E-08       0.032    10        0.01      0.02      0.01    0.4110E-05  0.6774E-06  0.7412E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  10 CYLCES
-| MAX ERROR = 0.410995E-05   RMS CHANGE = 0.677433E-06   MAX CHANGE = 0.741110E-05
+| REACH CONVERGENCE AFTER  10 CYCLES
+| MAX ERROR = 0.410987E-05   RMS CHANGE = 0.677411E-06   MAX CHANGE = 0.741154E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -885.839574975
+ ELECTRONIC ENERGY    =  -885.839574905
  CORE_CORE REPULSION  =   246.135216970
- TOTAL ENERGY         =  -639.704358005
+ TOTAL ENERGY         =  -639.704357935
 
  @ End Energy calculation
 
@@ -190,17 +193,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     1.955363000( 14.20%)
-| TOTAL SCF TIME      =    11.540576000( 83.84%)
-|       TOTAL OP TIME      =    11.137439000( 80.91%)
-|             TOTAL 1e TIME      =     0.066156000(  0.48%)
-|             TOTAL 2e TIME      =    10.996126000( 79.88%)
-|       TOTAL DII TIME      =     0.394845000(  2.87%)
-|             TOTAL DIAG TIME    =     0.170856000(  1.24%)
-| TOTAL TIME          =    13.765493000
+| INITIAL GUESS TIME  =     0.462796000( 14.40%)
+| TOTAL SCF TIME      =     0.361527000( 11.25%)
+|       TOTAL OP TIME      =     0.259542000(  8.08%)
+|             TOTAL 1e TIME      =     0.008610000(  0.27%)
+|             TOTAL 2e TIME      =     0.241473000(  7.51%)
+|       TOTAL DII TIME      =     0.101846000(  3.17%)
+|             TOTAL DIAG TIME    =     0.093674000(  2.91%)
+| TOTAL TIME          =     3.213825000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 13.8 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  3.2 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Wed Mar 17 12:10:34 2021
+| Normal Termination. Task Finished on: Mon Mar 14 23:19:02 2022

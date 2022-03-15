@@ -22,35 +22,38 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2021                                          **
+  **                                         Copyright (c) 2022                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
   **                                                                                                     **
-  **                   This software provided pursuant to a license agreement containing                 **
-  **                   restrictions on its disclosure, duplication, and use. This software               **
-  **                   contains confidential and proprietary information, and may not be                 **
-  **                   extracted or distributed, in whole or in part, for any purpose                    **
-  **                   whatsoever, without the express written permission of the authors.                **
-  **                   This notice, and the associated author list, must be attached to                  **
-  **                   all copies, or extracts, of this software. Any additional                         **
-  **                   restrictions set forth in the license agreement also apply to this                **
-  **                   software.                                                                         **
+  **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+  **                                                                                                     **
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
-  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
-  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+  Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V.W.D.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;      
+  Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-22.03                                                        
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022             
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Wed Mar 17 12:09:34 2021
+| TASK STARTS ON: Mon Mar 14 23:17:18 2022
 | INPUT FILE :    ene_CaCl2_rhf_321g.in
 | OUTPUT FILE:    ene_CaCl2_rhf_321g.out
-| DATE FILE  :    ene_CaCl2_rhf_321g.dat
-| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+| DATA FILE  :    ene_CaCl2_rhf_321g.dat
+| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        4
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
+| CUDA DEVICE PM              :      108
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
+| CUDA DEVICE MEMORY SIZE (MB):    81251
+| SUPPORTING CUDA VERSION     :      8.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -74,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 3-21G,  TYPE = CARTESIAN
-| BASIS FILE = /scratch/cruzeiro/quick/basis//3-21G.BAS
+| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/3-21G.BAS
 
  @ Finish reading job
 
@@ -126,24 +129,24 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1  -1595.493869255      ------         0.193     1        0.01      0.18      0.01    0.9614E+01  0.2788E+00  0.4162E+01
-|  2  -1580.696919312  -.147969E+02       0.173     2        0.01      0.16      0.01    0.1112E+00  0.2132E+00  0.3603E+01
-|  3  -1580.956129004  0.259210E+00       0.175     3        0.01      0.16      0.01    0.9259E-01  0.5450E-01  0.9565E+00
-|  4  -1581.008712543  0.525835E-01       0.175     4        0.01      0.16      0.01    0.9933E-02  0.1429E-01  0.1741E+00
-|  5  -1581.011287781  0.257524E-02       0.175     5        0.01      0.16      0.01    0.5802E-02  0.9704E-02  0.1047E+00
-|  6  -1581.012096272  0.808491E-03       0.155     6        0.01      0.15      0.00    0.1944E-02  0.5799E-02  0.6868E-01
-|  7  -1581.012277468  0.181196E-03       0.142     7        0.01      0.13      0.00    0.6472E-03  0.1946E-02  0.2564E-01
-|  8  -1581.012296603  0.191349E-04       0.143     8        0.01      0.13      0.00    0.1564E-03  0.4562E-03  0.7687E-02
-|  9  -1581.012297404  0.801404E-06       0.143     9        0.01      0.13      0.00    0.1953E-04  0.7429E-04  0.1218E-02
-| 10  -1581.012297418  0.135999E-07       0.143    10        0.01      0.13      0.00    0.1191E-05  0.4393E-05  0.7116E-04
-| 11  -1581.012297418  0.468390E-10       0.143     1        0.01      0.13      0.01    0.1735E-06  0.4812E-06  0.7450E-05
+|  1  -1595.493865371      ------         0.018     1        0.01      0.01      0.01    0.9614E+01  0.2789E+00  0.4162E+01
+|  2  -1580.696931868  -.147969E+02       0.012     2        0.01      0.00      0.01    0.1112E+00  0.2132E+00  0.3603E+01
+|  3  -1580.956149210  0.259217E+00       0.012     3        0.01      0.00      0.01    0.9258E-01  0.5451E-01  0.9565E+00
+|  4  -1581.008729926  0.525807E-01       0.012     4        0.01      0.00      0.01    0.9931E-02  0.1428E-01  0.1741E+00
+|  5  -1581.011304471  0.257455E-02       0.013     5        0.01      0.00      0.01    0.5801E-02  0.9702E-02  0.1047E+00
+|  6  -1581.012112572  0.808101E-03       0.010     6        0.01      0.00      0.01    0.1944E-02  0.5797E-02  0.6865E-01
+|  7  -1581.012293643  0.181071E-03       0.010     7        0.01      0.00      0.01    0.6471E-03  0.1945E-02  0.2563E-01
+|  8  -1581.012312767  0.191247E-04       0.010     8        0.01      0.00      0.01    0.1564E-03  0.4561E-03  0.7686E-02
+|  9  -1581.012313569  0.801354E-06       0.010     9        0.01      0.00      0.01    0.1953E-04  0.7427E-04  0.1218E-02
+| 10  -1581.012313582  0.135410E-07       0.010    10        0.01      0.00      0.01    0.1191E-05  0.4392E-05  0.7116E-04
+| 11  -1581.012313582  -.119371E-09       0.010     1        0.01      0.00      0.01    0.1735E-06  0.4817E-06  0.7462E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  11 CYLCES
-| MAX ERROR = 0.173517E-06   RMS CHANGE = 0.481154E-06   MAX CHANGE = 0.745023E-05
+| REACH CONVERGENCE AFTER  11 CYCLES
+| MAX ERROR = 0.173501E-06   RMS CHANGE = 0.481725E-06   MAX CHANGE = 0.746224E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    = -1977.654668765
+ ELECTRONIC ENERGY    = -1977.654684930
  CORE_CORE REPULSION  =   396.642371348
- TOTAL ENERGY         = -1581.012297418
+ TOTAL ENERGY         = -1581.012313582
 
  @ End Energy calculation
 
@@ -168,14 +171,14 @@
 
     ATOMIC CHARGES
    ATOM          MULLIKEN            LOWDIN
-   CA             0.8761             0.7930
+   CA             0.8762             0.7931
    CL            -0.4381            -0.3965
    CL            -0.4381            -0.3965
    TOTAL        -0.0000            -0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-   -0.0000    0.0000   -0.0000    0.0000
+   -0.0000    0.0000    0.0000    0.0000
 
  @ End Charge and Dipole Calculation
 
@@ -183,17 +186,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.286773000( 13.39%)
-| TOTAL SCF TIME      =     1.816024000( 84.78%)
-|       TOTAL OP TIME      =     1.697748000( 79.26%)
-|             TOTAL 1e TIME      =     0.056288000(  2.63%)
-|             TOTAL 2e TIME      =     1.579998000( 73.76%)
-|       TOTAL DII TIME      =     0.114685000(  5.35%)
-|             TOTAL DIAG TIME    =     0.056096000(  2.62%)
-| TOTAL TIME          =     2.142049000
+| INITIAL GUESS TIME  =     0.103344000(  3.99%)
+| TOTAL SCF TIME      =     0.125362000(  4.84%)
+|       TOTAL OP TIME      =     0.027898000(  1.08%)
+|             TOTAL 1e TIME      =     0.002652000(  0.10%)
+|             TOTAL 2e TIME      =     0.021955000(  0.85%)
+|       TOTAL DII TIME      =     0.097392000(  3.76%)
+|             TOTAL DIAG TIME    =     0.089001000(  3.44%)
+| TOTAL TIME          =     2.588448000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.1 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  2.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Wed Mar 17 12:09:35 2021
+| Normal Termination. Task Finished on: Mon Mar 14 23:17:21 2022
