@@ -1287,7 +1287,7 @@ contains
                     icount=icount+1
                     enddo
 
-#define TOTALDERIV
+!#define TOTALDERIV
 
 #ifdef TOTALDERIV
                     ! new
