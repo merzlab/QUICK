@@ -1,0 +1,68 @@
+#!/bin/bash
+#TEST-PROGRAM sander
+#TEST-DESCRIP TO_BE_DEtermined
+#TEST-PURPOSE regression, basic
+#TEST-STATE   undocumented
+
+# Test suite to run: full or short
+typ="short"
+
+if [ -z "$AMBERHOME" ]; then
+   echo "Error: AMBERHOME is not set!"
+   exit 1
+fi
+
+. ${AMBERHOME}/test/program_error.sh
+
+if [ -z "$TESTsander" ]; then
+   TESTsander="${AMBERHOME}/bin/quick"
+fi
+
+if [ -z "$DO_PARALLEL" ]; then
+   export DO_PARALLEL=" "
+fi
+
+if [ -z "$QUICK_BASIS" ]; then
+  export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
+fi
+
+if [ "`basename $TESTsander`" = "quick.cuda" -o "`basename $TESTsander`" = "quick.cuda.MPI" ]; then
+  tfile="testlist_${typ}_cuda.txt"
+else
+  tfile="testlist_${typ}.txt"
+fi
+
+for i in `awk '{print $1}' $tfile`
+do
+  if [ "${i:0:4}" != "api_" ]; then
+    $DO_PARALLEL $TESTsander $i.in < /dev/null || error
+    if [ "${i:0:4}" != "opt_" ]; then
+      if [ $(grep "Begin Energy Calculation" $i.out | wc -l) -gt 0 ]; then
+        awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' $i.out > $i.out.ene
+        awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' saved/$i.out > $i.ref.out.ene
+        if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+          ${AMBERHOME}/test/dacdif -f -a 4.0e-5 $i.ref.out.ene $i.out.ene
+        else
+          ${AMBERHOME}/test/dacdif -a 4.0e-5 $i.ref.out.ene $i.out.ene
+        fi
+      fi
+      if [ $(grep "Begin Gradient Calculation" $i.out | wc -l) -gt 0 ]; then
+        awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' $i.out > $i.out.grad
+        awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' saved/$i.out > $i.ref.out.grad
+        if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+          ${AMBERHOME}/test/dacdif -f -a 4.0e-3 $i.ref.out.grad $i.out.grad
+        else
+          ${AMBERHOME}/test/dacdif -a 4.0e-3 $i.ref.out.grad $i.out.grad
+        fi
+      fi
+    fi
+    if [ "`basename $TESTsander`" = "quick.cuda.MPI" -a "${i:0:4}" != "ene_" ]; then
+      ${AMBERHOME}/test/dacdif -f -a 4.0e-3 saved/$i.out $i.out
+    else
+      ${AMBERHOME}/test/dacdif -a 4.0e-3 saved/$i.out $i.out
+    fi
+    /bin/rm -f $i.dat
+  fi
+done
+
+exit 0
