@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:16:53 2022
+| TASK STARTS ON: Tue Mar 15 14:18:11 2022
 | INPUT FILE :    ene_MgO_rhf_sto3g.in
 | OUTPUT FILE:    ene_MgO_rhf_sto3g.out
 | DATA FILE  :    ene_MgO_rhf_sto3g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = STO-3G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/STO-3G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/STO-3G.BAS
 
  @ Finish reading job
 
@@ -127,27 +127,27 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -270.502490452      ------         0.015     1        0.01      0.01      0.01    0.8683E+00  0.1916E+00  0.1710E+01
-|  2   -270.555175328  0.526849E-01       0.010     2        0.01      0.00      0.01    0.3848E+00  0.1308E+00  0.1049E+01
-|  3   -270.699835228  0.144660E+00       0.010     3        0.01      0.00      0.01    0.1884E+00  0.4332E-01  0.2578E+00
-|  4   -270.764345369  0.645101E-01       0.011     4        0.01      0.00      0.01    0.2070E-01  0.1090E-01  0.6345E-01
-|  5   -270.766812362  0.246699E-02       0.011     5        0.01      0.00      0.01    0.9669E-02  0.5394E-02  0.3687E-01
-|  6   -270.767298487  0.486124E-03       0.011     6        0.01      0.00      0.01    0.3631E-02  0.3266E-02  0.1405E-01
-|  7   -270.767452307  0.153820E-03       0.008     7        0.01      0.00      0.01    0.3029E-02  0.2105E-02  0.1174E-01
-|  8   -270.767534776  0.824686E-04       0.008     8        0.01      0.00      0.01    0.2508E-02  0.6298E-02  0.3540E-01
-|  9   -270.767683981  0.149205E-03       0.009     9        0.01      0.00      0.01    0.1108E-02  0.3018E-02  0.1696E-01
-| 10   -270.767707951  0.239703E-04       0.008    10        0.01      0.00      0.01    0.3830E-03  0.5246E-03  0.2899E-02
-| 11   -270.767708616  0.664893E-06       0.008     1        0.01      0.00      0.01    0.4068E-04  0.4544E-04  0.2199E-03
-| 12   -270.767708627  0.113537E-07       0.008     2        0.01      0.00      0.01    0.9661E-05  0.5240E-05  0.2452E-04
-| 13   -270.767708627  0.171180E-09       0.008     3        0.01      0.00      0.01    0.1159E-05  0.1229E-05  0.6202E-05
-| 14   -270.767708627  0.951772E-11       0.008     4        0.01      0.00      0.01    0.1702E-06  0.5807E-07  0.4502E-06
+|  1   -270.502490452      ------         0.008     1        0.00      0.01      0.00    0.8683E+00  0.1916E+00  0.1710E+01
+|  2   -270.555175328  0.526849E-01       0.004     2        0.00      0.00      0.00    0.3848E+00  0.1308E+00  0.1049E+01
+|  3   -270.699835228  0.144660E+00       0.004     3        0.00      0.00      0.00    0.1884E+00  0.4332E-01  0.2578E+00
+|  4   -270.764345369  0.645101E-01       0.004     4        0.00      0.00      0.00    0.2070E-01  0.1090E-01  0.6345E-01
+|  5   -270.766812362  0.246699E-02       0.004     5        0.00      0.00      0.00    0.9669E-02  0.5394E-02  0.3687E-01
+|  6   -270.767298487  0.486124E-03       0.004     6        0.00      0.00      0.00    0.3631E-02  0.3266E-02  0.1405E-01
+|  7   -270.767452307  0.153820E-03       0.004     7        0.00      0.00      0.00    0.3029E-02  0.2105E-02  0.1174E-01
+|  8   -270.767534776  0.824686E-04       0.004     8        0.00      0.00      0.00    0.2508E-02  0.6298E-02  0.3540E-01
+|  9   -270.767683981  0.149205E-03       0.004     9        0.00      0.00      0.00    0.1108E-02  0.3018E-02  0.1696E-01
+| 10   -270.767707951  0.239703E-04       0.004    10        0.00      0.00      0.00    0.3830E-03  0.5246E-03  0.2899E-02
+| 11   -270.767708616  0.664884E-06       0.004     1        0.00      0.00      0.00    0.4068E-04  0.4544E-04  0.2199E-03
+| 12   -270.767708627  0.113525E-07       0.005     2        0.00      0.00      0.00    0.9661E-05  0.5240E-05  0.2452E-04
+| 13   -270.767708627  0.163734E-09       0.004     3        0.00      0.00      0.00    0.1159E-05  0.1229E-05  0.6202E-05
+| 14   -270.767708627  0.107683E-10       0.004     4        0.00      0.00      0.00    0.1702E-06  0.5807E-07  0.4502E-06
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  14 CYCLES
-| MAX ERROR = 0.170220E-06   RMS CHANGE = 0.580654E-07   MAX CHANGE = 0.450170E-06
+| MAX ERROR = 0.170227E-06   RMS CHANGE = 0.580676E-07   MAX CHANGE = 0.450186E-06
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -298.826505009
- CORE_CORE REPULSION  =    28.058796382
- TOTAL ENERGY         =  -270.767708627
+ ELECTRONIC ENERGY    =   -298.826505009
+ CORE_CORE REPULSION  =     28.058796382
+ TOTAL ENERGY         =   -270.767708627
 
  @ End Energy calculation
 
@@ -185,17 +185,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.116161000(  4.34%)
-| TOTAL SCF TIME      =     0.132438000(  4.94%)
-|       TOTAL OP TIME      =     0.025329000(  0.95%)
-|             TOTAL 1e TIME      =     0.000735000(  0.03%)
-|             TOTAL 2e TIME      =     0.023236000(  0.87%)
-|       TOTAL DII TIME      =     0.107061000(  4.00%)
-|             TOTAL DIAG TIME    =     0.098830000(  3.69%)
-| TOTAL TIME          =     2.678305000
+| INITIAL GUESS TIME  =     0.213146000(  3.93%)
+| TOTAL SCF TIME      =     0.060650000(  1.12%)
+|       TOTAL OP TIME      =     0.033103000(  0.61%)
+|             TOTAL 1e TIME      =     0.000851000(  0.02%)
+|             TOTAL 2e TIME      =     0.030811000(  0.57%)
+|       TOTAL DII TIME      =     0.027481000(  0.51%)
+|             TOTAL DIAG TIME    =     0.020646000(  0.38%)
+| TOTAL TIME          =     5.419581000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.7 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:16:56 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:18:17 2022

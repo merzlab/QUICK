@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:20:01 2022
+| TASK STARTS ON: Tue Mar 15 14:24:45 2022
 | INPUT FILE :    ene_LiF_rhf_ccpvdz.in
 | OUTPUT FILE:    ene_LiF_rhf_ccpvdz.out
 | DATA FILE  :    ene_LiF_rhf_ccpvdz.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/CC-PVDZ.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/CC-PVDZ.BAS
 
  @ Finish reading job
 
@@ -127,23 +127,23 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -106.613122919      ------         0.032     1        0.01      0.02      0.01    0.6488E+00  0.4470E-01  0.9653E+00
-|  2   -106.864868308  0.251745E+00       0.026     2        0.01      0.02      0.01    0.1944E+00  0.3034E-01  0.2818E+00
-|  3   -106.928807476  0.639392E-01       0.028     3        0.01      0.02      0.01    0.4556E-01  0.1082E-01  0.1059E+00
-|  4   -106.932709578  0.390210E-02       0.023     4        0.01      0.02      0.01    0.1611E-01  0.4730E-02  0.4306E-01
-|  5   -106.933431893  0.722315E-03       0.023     5        0.01      0.02      0.01    0.3049E-02  0.1442E-02  0.1267E-01
-|  6   -106.933508348  0.764550E-04       0.022     6        0.01      0.02      0.01    0.7746E-03  0.3101E-03  0.3819E-02
-|  7   -106.933511877  0.352825E-05       0.022     7        0.01      0.02      0.01    0.1316E-03  0.5778E-04  0.6886E-03
-|  8   -106.933511961  0.843268E-07       0.022     8        0.01      0.01      0.01    0.1912E-04  0.7987E-05  0.8529E-04
-|  9   -106.933511963  0.148608E-08       0.022     9        0.01      0.01      0.01    0.2532E-05  0.1243E-05  0.8498E-05
-| 10   -106.933511963  0.716458E-10       0.022    10        0.01      0.01      0.01    0.6137E-06  0.3191E-06  0.3137E-05
+|  1   -106.613122919      ------         0.031     1        0.00      0.03      0.00    0.6488E+00  0.4470E-01  0.9653E+00
+|  2   -106.864868308  0.251745E+00       0.026     2        0.00      0.02      0.00    0.1944E+00  0.3034E-01  0.2818E+00
+|  3   -106.928807476  0.639392E-01       0.023     3        0.00      0.02      0.00    0.4556E-01  0.1082E-01  0.1059E+00
+|  4   -106.932709578  0.390210E-02       0.023     4        0.00      0.02      0.00    0.1611E-01  0.4730E-02  0.4306E-01
+|  5   -106.933431893  0.722315E-03       0.024     5        0.00      0.02      0.00    0.3049E-02  0.1442E-02  0.1267E-01
+|  6   -106.933508348  0.764550E-04       0.023     6        0.00      0.02      0.00    0.7746E-03  0.3101E-03  0.3819E-02
+|  7   -106.933511877  0.352826E-05       0.023     7        0.00      0.02      0.00    0.1316E-03  0.5778E-04  0.6886E-03
+|  8   -106.933511961  0.843448E-07       0.022     8        0.00      0.02      0.00    0.1912E-04  0.7987E-05  0.8529E-04
+|  9   -106.933511963  0.151950E-08       0.021     9        0.00      0.02      0.00    0.2532E-05  0.1243E-05  0.8498E-05
+| 10   -106.933511963  0.363318E-10       0.021    10        0.00      0.02      0.00    0.6137E-06  0.3191E-06  0.3138E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  10 CYCLES
-| MAX ERROR = 0.613650E-06   RMS CHANGE = 0.319070E-06   MAX CHANGE = 0.313659E-05
+| MAX ERROR = 0.613663E-06   RMS CHANGE = 0.319130E-06   MAX CHANGE = 0.313829E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -114.825048445
- CORE_CORE REPULSION  =     7.891536482
- TOTAL ENERGY         =  -106.933511963
+ ELECTRONIC ENERGY    =   -114.825048445
+ CORE_CORE REPULSION  =      7.891536482
+ TOTAL ENERGY         =   -106.933511963
 
  @ End Energy calculation
 
@@ -169,7 +169,7 @@
    ATOM          MULLIKEN            LOWDIN
    LI             0.6279             0.5978
    F             -0.6279            -0.5978
-   TOTAL        -0.0000             0.0000
+   TOTAL         0.0000            -0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -181,17 +181,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.469575000( 15.20%)
-| TOTAL SCF TIME      =     0.244309000(  7.91%)
-|       TOTAL OP TIME      =     0.167868000(  5.43%)
-|             TOTAL 1e TIME      =     0.002474000(  0.08%)
-|             TOTAL 2e TIME      =     0.162434000(  5.26%)
-|       TOTAL DII TIME      =     0.076394000(  2.47%)
-|             TOTAL DIAG TIME    =     0.070702000(  2.29%)
-| TOTAL TIME          =     3.089814000
+| INITIAL GUESS TIME  =     0.946116000( 15.32%)
+| TOTAL SCF TIME      =     0.240618000(  3.90%)
+|       TOTAL OP TIME      =     0.218078000(  3.53%)
+|             TOTAL 1e TIME      =     0.003072000(  0.05%)
+|             TOTAL 2e TIME      =     0.211432000(  3.42%)
+|       TOTAL DII TIME      =     0.022480000(  0.36%)
+|             TOTAL DIAG TIME    =     0.016123000(  0.26%)
+| TOTAL TIME          =     6.176895000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  3.1 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  6.2 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:20:04 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:24:52 2022

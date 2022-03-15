@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Mon Mar 14 23:18:09 2022
+| TASK STARTS ON: Tue Mar 15 14:20:53 2022
 | INPUT FILE :    ene_LiF_rhf_631g.in
 | OUTPUT FILE:    ene_LiF_rhf_631g.out
 | DATA FILE  :    ene_LiF_rhf_631g.dat
-| BASIS SET PATH: /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        4
+| CUDA ENABLED DEVICE         :        3
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA A100-SXM-80GB
-| CUDA DEVICE PM              :      108
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
-| CUDA DEVICE MEMORY SIZE (MB):    81251
-| SUPPORTING CUDA VERSION     :      8.0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -77,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/gs18/scratch/users/manathun/saved-test-update/install/basis/6-31G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -127,22 +127,22 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -106.603055171      ------         0.017     1        0.01      0.01      0.01    0.6135E+00  0.5196E-01  0.4172E+00
-|  2   -106.839616430  0.236561E+00       0.012     2        0.01      0.00      0.01    0.2862E+00  0.2355E-01  0.1349E+00
-|  3   -106.903115426  0.634990E-01       0.012     3        0.01      0.00      0.01    0.5250E-01  0.8926E-02  0.3991E-01
-|  4   -106.907026634  0.391121E-02       0.012     4        0.01      0.00      0.01    0.1884E-01  0.4351E-02  0.1847E-01
-|  5   -106.907770330  0.743695E-03       0.013     5        0.01      0.00      0.01    0.3231E-02  0.8215E-03  0.3345E-02
-|  6   -106.907813339  0.430091E-04       0.010     6        0.01      0.00      0.01    0.8158E-03  0.2307E-03  0.1299E-02
-|  7   -106.907815907  0.256854E-05       0.010     7        0.01      0.00      0.01    0.7703E-04  0.2660E-04  0.1487E-03
-|  8   -106.907815935  0.272728E-07       0.010     8        0.01      0.00      0.01    0.7892E-05  0.3586E-05  0.2107E-04
-|  9   -106.907815935  0.387326E-09       0.010     9        0.01      0.00      0.01    0.2146E-05  0.7516E-06  0.3794E-05
+|  1   -106.603055171      ------         0.012     1        0.00      0.01      0.00    0.6135E+00  0.5196E-01  0.4172E+00
+|  2   -106.839616430  0.236561E+00       0.006     2        0.00      0.00      0.00    0.2862E+00  0.2355E-01  0.1349E+00
+|  3   -106.903115426  0.634990E-01       0.006     3        0.00      0.00      0.00    0.5250E-01  0.8926E-02  0.3991E-01
+|  4   -106.907026634  0.391121E-02       0.006     4        0.00      0.00      0.00    0.1884E-01  0.4351E-02  0.1847E-01
+|  5   -106.907770330  0.743695E-03       0.006     5        0.00      0.00      0.00    0.3231E-02  0.8215E-03  0.3345E-02
+|  6   -106.907813339  0.430091E-04       0.006     6        0.00      0.00      0.00    0.8158E-03  0.2307E-03  0.1299E-02
+|  7   -106.907815907  0.256855E-05       0.006     7        0.00      0.00      0.00    0.7703E-04  0.2660E-04  0.1487E-03
+|  8   -106.907815935  0.272702E-07       0.008     8        0.00      0.00      0.00    0.7892E-05  0.3586E-05  0.2107E-04
+|  9   -106.907815935  0.401380E-09       0.006     9        0.00      0.00      0.00    0.2146E-05  0.7516E-06  0.3794E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYCLES
-| MAX ERROR = 0.214609E-05   RMS CHANGE = 0.751572E-06   MAX CHANGE = 0.379428E-05
+| MAX ERROR = 0.214609E-05   RMS CHANGE = 0.751571E-06   MAX CHANGE = 0.379426E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -114.799352417
- CORE_CORE REPULSION  =     7.891536482
- TOTAL ENERGY         =  -106.907815935
+ ELECTRONIC ENERGY    =   -114.799352417
+ CORE_CORE REPULSION  =      7.891536482
+ TOTAL ENERGY         =   -106.907815935
 
  @ End Energy calculation
 
@@ -180,17 +180,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.096591000(  3.65%)
-| TOTAL SCF TIME      =     0.103695000(  3.92%)
-|       TOTAL OP TIME      =     0.034055000(  1.29%)
-|             TOTAL 1e TIME      =     0.000854000(  0.03%)
-|             TOTAL 2e TIME      =     0.031911000(  1.20%)
-|       TOTAL DII TIME      =     0.069606000(  2.63%)
-|             TOTAL DIAG TIME    =     0.064176000(  2.42%)
-| TOTAL TIME          =     2.648530000
+| INITIAL GUESS TIME  =     0.276007000(  5.13%)
+| TOTAL SCF TIME      =     0.064612000(  1.20%)
+|       TOTAL OP TIME      =     0.039545000(  0.73%)
+|             TOTAL 1e TIME      =     0.001331000(  0.02%)
+|             TOTAL 2e TIME      =     0.036324000(  0.67%)
+|       TOTAL DII TIME      =     0.025004000(  0.46%)
+|             TOTAL DIAG TIME    =     0.018324000(  0.34%)
+| TOTAL TIME          =     5.385262000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  2.6 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar 14 23:18:12 2022
+| Normal Termination. Task Finished on: Tue Mar 15 14:20:59 2022
