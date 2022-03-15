@@ -735,8 +735,8 @@ contains
                     errormax,prms,pchange
               write (ioutfile,'("| -----------------------------------------------")')
               if (quick_method%DFT .or. quick_method%SEDFT) then
-                 write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
-                 write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
+                 write (ioutfile,'(" ALPHA ELECTRON DENSITY    = ",F16.10)') quick_qm_struct%aelec
+                 write (ioutfile,'(" BETA ELECTRON DENSITY     = ",F16.10)') quick_qm_struct%belec
               endif
   
               if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &

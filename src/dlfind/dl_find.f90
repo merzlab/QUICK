@@ -1051,7 +1051,7 @@ subroutine dlf_run(ierr2 &
       if (glob%imultistate == 0) then
         call convergence_get("VALE", svar)
         write(stdout,*) 
-        write(stdout,'(" MINIMIZED ENERGY=",F15.10)') svar
+        write(stdout,'(" MINIMIZED ENERGY = ",F16.9)') svar
       else
         write(stdout,*)
         write(stdout,'(1x,a,f20.12)') &

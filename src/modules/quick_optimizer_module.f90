@@ -306,7 +306,7 @@ contains
               !done = done.and.quick_method%gNormCrt.gt.gradnorm
            else
               Write (ioutfile,'(" OPTIMZATION STATISTICS:")')
-              Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E20.10" )")') gradmax,quick_method%gradMaxCrt
+              Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT = ",E20.10," (REQUEST = ",E20.10" )")') gradmax,quick_method%gradMaxCrt
               done = quick_method%gradMaxCrt.gt.gradmax
               done = done.and.quick_method%gNormCrt.gt.gradnorm
               if (done) then
@@ -377,7 +377,7 @@ contains
         enddo
 
         write (ioutfile,*)
-        write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
+        write (ioutfile,'(" MINIMIZED ENERGY = ",F16.9)') quick_qm_struct%Etot
         Write (ioutfile,'("===============================================================")')
 
 
