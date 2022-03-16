@@ -14,8 +14,8 @@ lab at Michigan State University.
 Features
 --------
 * Hartree-Fock energy calculations 
-* Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available).
-* Gradient and geometry optimization calculations 
+* Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available)
+* Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
 * Mulliken charge analysis
 * Supports QM/MM calculations with Amber22
 * Fortran API to use QUICK as QM energy and force engine
@@ -85,6 +85,10 @@ If you use QUICK in QM/MM simulations please cite:
 Cruzeiro, V. W. D.; Manathunga, M.; Merz,K. M.; Götz, A. W.
 Open-Source Multi-GPU-Accelerated QM/MM Simulations with AMBER and QUICK.
 [*J. Chem. Inf. Model.* 61, 2109–2115 (2021)](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.1c00169).
+
+If you perform geometry optimization calculations using DL-FIND optimizer please cite:
+
+Kästner, J.; Carr, J. M.; Keal, T. W.; Thiel, W.; Wander, A.; Sherwood, P. DL-FIND: An Open-Source Geometry Optimizer for Atomistic Simulations, [*J. Phys. Chem. A *, 113, 11856-11865 (2009)](https://pubs.acs.org/doi/10.1021/jp9028968).
 
 License
 -------
