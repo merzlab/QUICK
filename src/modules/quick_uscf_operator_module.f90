@@ -51,7 +51,8 @@ contains
 #ifdef MPIV
      integer ierror
      double precision :: Eelsum, Excsum, aelec, belec
-  
+ 
+print*,'Inside USCF' 
      quick_scratch%osum=0.0d0
      quick_scratch%obsum=0.0d0
      Eelsum=0.0d0
