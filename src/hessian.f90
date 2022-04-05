@@ -1904,6 +1904,8 @@ subroutine HFHessian
   ! Since we have to consider spin, set up quick_qm_struct%cob and EB if this is RHF.
 
   if ( .not. quick_method%unrst) then
+if(.not. allocated(quick_qm_struct%Eb)) allocate(quick_qm_struct%Eb(nbasis))
+if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nbasis))
      do I=1,nbasis
         quick_qm_struct%EB(I)=quick_qm_struct%E(I)
         do J=1,nbasis
@@ -2091,19 +2093,22 @@ subroutine HFHessian
 
      call hfdmxderuse(IDX)
 
+print*,'Test 1'
      call Ewtdmxder(IDX)
   enddo
 
   ! At this point some of the elements above the diagonal.  Sum those into
   ! below the diagonal and then set the whol thing to be symmetric.
 
+print*,'Test 2'
   do I=1,natom*3
      do J=I+1,natom*3
         quick_qm_struct%hessian(I,J) = quick_qm_struct%hessian(J,I)
      enddo
   enddo
 
-end subroutine hfhessian
+print*,'HFHessian FINISHED' 
+end subroutine HFHessian
 
 
 ! Ed Brothers. November 5, 2002.
@@ -5283,7 +5288,9 @@ subroutine ewtdmxder(IDX)
   ! First we are going to do something sloppy.  If this is a restricted run
   ! split DENSE into DENSE and quick_qm_struct%denseb.
 
+print*,'Inside Ewtdmxder' 
   if ( .not. quick_method%unrst) then
+if(.not. allocated(quick_qm_struct%denseb)) allocate(quick_qm_struct%denseb(nbasis,nbasis))
      do I=1,nbasis
         do J=1,nbasis
            quick_qm_struct%denseb(J,I) = .5d0*quick_qm_struct%dense(J,I)
@@ -5292,12 +5299,14 @@ subroutine ewtdmxder(IDX)
      enddo
   endif
 
+print*,'1. CALL uscf_operator', deltaO
   ! Now get the alpha operator matrix and start building the first derivative
   ! of the energy weighted density matrix.
 
   !call uhfoperatorA
   call uscf_operator(deltaO)
 
+print*,'After CALL uscf_operator'
   do I=1,nbasis
      do J=1,nbasis
         tempIJ = 0.0D0
