@@ -2107,7 +2107,7 @@ print*,'Test 2'
      enddo
   enddo
 
-print*,'HFHessian FINISHED' 
+print*,'HFHessian FINISHED'
 end subroutine HFHessian
 
 
@@ -5360,7 +5360,7 @@ print*,'After CALL uscf_operator'
      do J=1,nbasis
         tempIJ = 0.0D0
         do K=1,nbasis
-           tempIJ = tempIJ + quick_qm_struct%o(K,I)*quick_scratch%hold2(K,J)
+           tempIJ = tempIJ + quick_qm_struct%ob(K,I)*quick_scratch%hold2(K,J)
         enddo
         temp(I,J) = tempIJ
      enddo
@@ -5384,7 +5384,7 @@ print*,'After CALL uscf_operator'
      do J=1,nbasis
         tempIJ = 0.0D0
         do K=1,nbasis
-           tempIJ = tempIJ + quick_qm_struct%o(K,I)*quick_qm_struct%denseb(K,J)
+           tempIJ = tempIJ + quick_qm_struct%ob(K,I)*quick_qm_struct%denseb(K,J)
         enddo
         temp(I,J) = tempIJ
      enddo
