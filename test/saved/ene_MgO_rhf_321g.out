@@ -22,35 +22,38 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2021                                          **
+  **                                         Copyright (c) 2022                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
   **                                                                                                     **
-  **                   This software provided pursuant to a license agreement containing                 **
-  **                   restrictions on its disclosure, duplication, and use. This software               **
-  **                   contains confidential and proprietary information, and may not be                 **
-  **                   extracted or distributed, in whole or in part, for any purpose                    **
-  **                   whatsoever, without the express written permission of the authors.                **
-  **                   This notice, and the associated author list, must be attached to                  **
-  **                   all copies, or extracts, of this software. Any additional                         **
-  **                   restrictions set forth in the license agreement also apply to this                **
-  **                   software.                                                                         **
+  **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+  **                                                                                                     **
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
-  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
-  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+  Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V.W.D.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;      
+  Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-22.03                                                        
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022             
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Wed Mar 17 12:09:41 2021
+| TASK STARTS ON: Tue Mar 15 14:19:47 2022
 | INPUT FILE :    ene_MgO_rhf_321g.in
 | OUTPUT FILE:    ene_MgO_rhf_321g.out
-| DATE FILE  :    ene_MgO_rhf_321g.dat
-| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+| DATA FILE  :    ene_MgO_rhf_321g.dat
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        3
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -74,7 +77,7 @@
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 3-21G,  TYPE = CARTESIAN
-| BASIS FILE = /scratch/cruzeiro/quick/basis//3-21G.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/3-21G.BAS
 
  @ Finish reading job
 
@@ -124,30 +127,30 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -272.652475657      ------         0.065     1        0.00      0.06      0.00    0.1036E+01  0.7430E-01  0.9373E+00
-|  2   -272.587996135  -.644795E-01       0.063     2        0.00      0.06      0.00    0.3414E+00  0.6351E-01  0.3578E+00
-|  3   -272.432036012  -.155960E+00       0.060     3        0.00      0.06      0.00    0.5273E+00  0.3865E-01  0.2636E+00
-|  4   -272.779654046  0.347618E+00       0.057     4        0.00      0.06      0.00    0.3225E-01  0.4556E-02  0.4373E-01
-|  5   -272.781670919  0.201687E-02       0.056     5        0.00      0.05      0.00    0.2082E-01  0.3064E-02  0.1784E-01
-|  6   -272.782888696  0.121778E-02       0.055     6        0.00      0.05      0.00    0.8332E-02  0.2690E-02  0.1266E-01
-|  7   -272.783402662  0.513966E-03       0.052     7        0.00      0.05      0.00    0.3625E-02  0.2036E-02  0.1185E-01
-|  8   -272.783603404  0.200742E-03       0.052     8        0.00      0.05      0.00    0.3117E-02  0.1912E-02  0.8890E-02
-|  9   -272.783705050  0.101646E-03       0.050     9        0.00      0.05      0.00    0.1203E-02  0.3357E-03  0.1903E-02
-| 10   -272.783717321  0.122707E-04       0.050    10        0.00      0.05      0.00    0.1139E-02  0.1106E-02  0.6842E-02
-| 11   -272.783752412  0.350915E-04       0.049     1        0.00      0.05      0.00    0.8605E-03  0.1772E-02  0.1109E-01
-| 12   -272.783791220  0.388080E-04       0.048     2        0.00      0.05      0.00    0.4317E-03  0.1700E-02  0.1060E-01
-| 13   -272.783803591  0.123713E-04       0.048     3        0.00      0.05      0.00    0.6625E-03  0.1462E-03  0.9656E-03
-| 14   -272.783804313  0.721140E-06       0.047     4        0.00      0.05      0.00    0.8739E-04  0.7173E-04  0.4273E-03
-| 15   -272.783804348  0.348953E-07       0.045     5        0.00      0.04      0.00    0.1328E-04  0.1030E-04  0.6303E-04
-| 16   -272.783804348  0.735351E-09       0.045     6        0.00      0.04      0.00    0.2871E-05  0.2135E-05  0.1094E-04
-| 17   -272.783804348  0.443627E-10       0.045     7        0.00      0.04      0.00    0.1343E-05  0.2273E-06  0.1398E-05
+|  1   -272.652475661      ------         0.008     1        0.00      0.01      0.00    0.1036E+01  0.7430E-01  0.9373E+00
+|  2   -272.587996126  -.644795E-01       0.004     2        0.00      0.00      0.00    0.3414E+00  0.6351E-01  0.3578E+00
+|  3   -272.432036033  -.155960E+00       0.004     3        0.00      0.00      0.00    0.5273E+00  0.3865E-01  0.2636E+00
+|  4   -272.779654040  0.347618E+00       0.004     4        0.00      0.00      0.00    0.3225E-01  0.4556E-02  0.4373E-01
+|  5   -272.781670913  0.201687E-02       0.004     5        0.00      0.00      0.00    0.2082E-01  0.3064E-02  0.1784E-01
+|  6   -272.782888688  0.121778E-02       0.004     6        0.00      0.00      0.00    0.8332E-02  0.2690E-02  0.1266E-01
+|  7   -272.783402653  0.513965E-03       0.004     7        0.00      0.00      0.00    0.3625E-02  0.2036E-02  0.1185E-01
+|  8   -272.783603395  0.200742E-03       0.004     8        0.00      0.00      0.00    0.3117E-02  0.1912E-02  0.8890E-02
+|  9   -272.783705041  0.101646E-03       0.004     9        0.00      0.00      0.00    0.1203E-02  0.3357E-03  0.1903E-02
+| 10   -272.783717312  0.122707E-04       0.004    10        0.00      0.00      0.00    0.1139E-02  0.1106E-02  0.6842E-02
+| 11   -272.783752403  0.350914E-04       0.004     1        0.00      0.00      0.00    0.8605E-03  0.1772E-02  0.1109E-01
+| 12   -272.783791211  0.388080E-04       0.004     2        0.00      0.00      0.00    0.4317E-03  0.1700E-02  0.1060E-01
+| 13   -272.783803582  0.123712E-04       0.005     3        0.00      0.00      0.00    0.6625E-03  0.1462E-03  0.9656E-03
+| 14   -272.783804303  0.721201E-06       0.004     4        0.00      0.00      0.00    0.8739E-04  0.7173E-04  0.4273E-03
+| 15   -272.783804338  0.348856E-07       0.004     5        0.00      0.00      0.00    0.1328E-04  0.1030E-04  0.6303E-04
+| 16   -272.783804339  0.735863E-09       0.004     6        0.00      0.00      0.00    0.2871E-05  0.2135E-05  0.1094E-04
+| 17   -272.783804339  0.161116E-10       0.004     7        0.00      0.00      0.00    0.1343E-05  0.2273E-06  0.1398E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  17 CYLCES
-| MAX ERROR = 0.134318E-05   RMS CHANGE = 0.227256E-06   MAX CHANGE = 0.139803E-05
+| REACH CONVERGENCE AFTER  17 CYCLES
+| MAX ERROR = 0.134315E-05   RMS CHANGE = 0.227251E-06   MAX CHANGE = 0.139801E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =  -300.842600730
- CORE_CORE REPULSION  =    28.058796382
- TOTAL ENERGY         =  -272.783804348
+ ELECTRONIC ENERGY    =   -300.842600720
+ CORE_CORE REPULSION  =     28.058796382
+ TOTAL ENERGY         =   -272.783804339
 
  @ End Energy calculation
 
@@ -177,7 +180,7 @@
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-   -5.4181    0.0000   -0.0000    5.4181
+   -5.4182    0.0000   -0.0000    5.4182
 
  @ End Charge and Dipole Calculation
 
@@ -185,17 +188,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.274654000( 22.12%)
-| TOTAL SCF TIME      =     0.916848000( 73.83%)
-|       TOTAL OP TIME      =     0.884831000( 71.25%)
-|             TOTAL 1e TIME      =     0.029749000(  2.40%)
-|             TOTAL 2e TIME      =     0.818368000( 65.90%)
-|       TOTAL DII TIME      =     0.027608000(  2.22%)
-|             TOTAL DIAG TIME    =     0.022099000(  1.78%)
-| TOTAL TIME          =     1.241784000
+| INITIAL GUESS TIME  =     0.213554000(  4.03%)
+| TOTAL SCF TIME      =     0.067438000(  1.27%)
+|       TOTAL OP TIME      =     0.030504000(  0.58%)
+|             TOTAL 1e TIME      =     0.000819000(  0.02%)
+|             TOTAL 2e TIME      =     0.028110000(  0.53%)
+|       TOTAL DII TIME      =     0.036853000(  0.69%)
+|             TOTAL DIAG TIME    =     0.026728000(  0.50%)
+| TOTAL TIME          =     5.304764000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  1.2 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.3 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Wed Mar 17 12:09:41 2021
+| Normal Termination. Task Finished on: Tue Mar 15 14:19:53 2022

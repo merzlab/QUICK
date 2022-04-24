@@ -168,6 +168,7 @@ fulltest:
 
 clean:$(CLEANTYPES)
 	@-rm -f $(homefolder)/runtest
+	@-rm -f $(homefolder)/build/include/common/*
 	@echo  "Cleaned up successfully."
 
 serialclean:
@@ -212,6 +213,7 @@ uninstall: $(UNINSTALLTYPES)
 	rm -rf $(installfolder)/test; fi
 	@-rm -f $(installfolder)/runtest
 	@-rm -f $(installfolder)/quick.rc
+	@-rm -rf $(installfolder)/include/common
 	@echo  "Uninstallation sucessful."
 
 nouninstall:

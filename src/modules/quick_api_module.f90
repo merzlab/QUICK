@@ -87,6 +87,12 @@ module quick_api_module
     ! point charge gradients
     double precision, allocatable, dimension(:,:) :: ptchg_grad
 
+    ! DL-Find opt
+    logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
+    integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
+    integer :: dlfind_icoord                 = 3        ! type of internal coordinates
+
+
   end type quick_api_type
 
 ! save a quick_api_type varible that othe quick modules can access
@@ -276,6 +282,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
 #endif
 
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_allocate_scratch()
+#endif
+
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
 
@@ -463,8 +473,13 @@ subroutine run_quick(self,ierr)
   use quick_cshell_eri_module, only: getEriPrecomputables
   use quick_cshell_gradient_module, only: cshell_gradient
   use quick_oshell_gradient_module, only: oshell_gradient
-  use quick_optimizer_module, only: optimize
+  use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
+
+#ifdef CEW 
+  use quick_cew_module
+#endif
+
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -489,7 +504,13 @@ subroutine run_quick(self,ierr)
 
   ! if dft is requested, make sure to delete dft grid variables from previous
   ! the md step before proceeding
-  if(( self%step .gt. 1 ) .and. quick_method%DFT) call deform_dft_grid(quick_dft_grid)
+  if(( self%step .gt. 1 ) .and. (quick_method%DFT &
+#ifdef CEW
+  .or. quick_cew%use_cew &
+#endif
+   )) then
+    call deform_dft_grid(quick_dft_grid)
+  endif
 
   ! set molecular information into quick_molspec
   SAFE_CALL(set_quick_molspecs(quick_api,ierr))
@@ -520,6 +541,10 @@ subroutine run_quick(self,ierr)
 #if defined CUDA || defined CUDA_MPIV
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
+
+#ifdef CEW
+  call upload(quick_cew, ierr)
+#endif
 #endif
 
   ! stop the timer for initial guess
@@ -549,7 +574,19 @@ subroutine run_quick(self,ierr)
   endif
 
   ! run optimization
-  if (quick_method%opt)  SAFE_CALL(optimize(ierr))
+  if (quick_method%opt) then
+      if (quick_method%usedlfind) then
+
+#ifdef MPIV
+          SAFE_CALL(dl_find(ierr, master))   ! DLC
+#else 
+          SAFE_CALL(dl_find(ierr, .true.))   ! DLC
+#endif
+      else
+          SAFE_CALL(lopt(ierr))         ! Cartesian
+      endif
+  endif
+
 
 #if defined CUDA || defined CUDA_MPIV
       if (quick_method%bCUDA) then
@@ -636,13 +673,30 @@ end subroutine print_step
 subroutine set_quick_molspecs(self,ierr)
 
   use quick_files_module
-  use quick_constants_module
+  use quick_constants_module, only: BOHRS_TO_A, BOHRS_TO_A_AMBER, symbol
   use quick_molspec_module, only : quick_molspec, xyz
+
+#ifdef CEW
+  use quick_cew_module, only: quick_cew
+#endif
 
   implicit none
   type (quick_api_type) :: self
   integer :: i, j
   integer, intent(inout) :: ierr
+  double precision :: A_TO_BOHRS
+
+  A_TO_BOHRS = 1.0D0 / BOHRS_TO_A
+
+#ifdef CEW
+  if (quick_cew%use_cew) then
+    ! Amber-consistent conversion factors for use with CEw
+    ! Parts of the Ewald are performed by sander, cew, and quick;
+    ! they need to use consistent conversions in order for real
+    ! and reciprocal space interactions to properly cancel.
+    A_TO_BOHRS = 1.0D0 / BOHRS_TO_A_AMBER
+  endif
+#endif
 
   ! pass the step id to quick_files_module
   wrtStep = self%step
@@ -700,6 +754,8 @@ subroutine gpu_upload_molspecs(ierr)
   quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+
+  call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
 end subroutine gpu_upload_molspecs
 
@@ -760,7 +816,11 @@ subroutine delete_quick_job(ierr)
   ierr=0
 
 #if defined CUDA || defined CUDA_MPIV
-    call delete(quick_method,ierr)
+  call delete(quick_method,ierr)
+#endif
+
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_deallocate_scratch()
 #endif
 
 #ifdef CUDA

@@ -1,26 +1,24 @@
 !
-!************************************************************************
-!                              QUICK                                   **
-!                                                                      **
-!                        Copyright (c) 2010                            **
-!                Regents of the University of Florida                  **
-!                       All Rights Reserved.                           **
-!                                                                      **
-!  This software provided pursuant to a license agreement containing   **
-!  restrictions on its disclosure, duplication, and use. This software **
-!  contains confidential and proprietary information, and may not be   **
-!  extracted or distributed, in whole or in part, for any purpose      **
-!  whatsoever, without the express written permission of the authors.  **
-!  This notice, and the associated author list, must be attached to    **
-!  all copies, or extracts, of this software. Any additional           **
-!  restrictions set forth in the license agreement also apply to this  **
-!  software.                                                           **
-!************************************************************************
-!
-!  Cite this work as:
-!  Miao,Y.: He, X.: Ayers,K; Brothers, E.: Merz,K. M. QUICK
-!  University of Florida, Gainesville, FL, 2010
-!************************************************************************
+!---------------------------------------------------------------------!
+!                           QUICK                                     !
+!                                                                     !
+!                      Copyright (c) 2022                             !
+!       Regents of the University of California San Diego             !
+!                  & Michigan State University                        !
+!                      All Rights Reserved.                           !
+!                                                                     ! 
+! Copyright (C) 2022-2023 Merz lab                                    !
+! Copyright (C) 2022-2023 Götz lab                                    !
+!                                                                     !
+! This Source Code Form is subject to the terms of the Mozilla Public !
+! License, v. 2.0. If a copy of the MPL was not distributed with this !
+! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+!_____________________________________________________________________!
+
+!---------------------------------------------------------------------!
+! This module contains all one electron integral (oei) & oei gradient ! 
+! code.                                                               !
+!---------------------------------------------------------------------!
 
 #include "util.fh"
 
@@ -33,7 +31,7 @@
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_cshell_gradient_module, only: cshell_gradient
     use quick_oshell_gradient_module, only: oshell_gradient
-    use quick_optimizer_module, only: optimize
+    use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
 
     implicit none
@@ -133,7 +131,9 @@
 
 #endif
 
-
+#if defined CUDA || defined CUDA_MPIV
+    call gpu_allocate_scratch()
+#endif
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
@@ -214,6 +214,9 @@
       quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
  
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+
+      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
     endif
 #endif
 
@@ -239,7 +242,19 @@
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
-    if (quick_method%opt)  SAFE_CALL(optimize(ierr))     ! Cartesian
+    if (quick_method%opt) then
+        if (quick_method%usedlfind) then
+
+#ifdef MPIV
+            SAFE_CALL(dl_find(ierr, master))   ! DLC
+#else
+            SAFE_CALL(dl_find(ierr, .true.)) 
+#endif
+
+        else
+            SAFE_CALL(lopt(ierr))         ! Cartesian
+        endif
+    endif
     
     if (.not.quick_method%opt .and. quick_method%grad) then
         if (quick_method%UNRST) then
@@ -318,6 +333,11 @@
 #if defined CUDA || defined CUDA_MPIV
     call delete(quick_method,ierr)
 #endif
+
+#if defined CUDA || defined CUDA_MPIV
+  call gpu_deallocate_scratch()
+#endif
+
 
 #ifdef CUDA
     if (master) then

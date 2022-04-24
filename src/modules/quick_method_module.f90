@@ -100,17 +100,16 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         !tol
-        double precision :: pmaxrms        = 1.0d-4   ! density matrix convergence criteria
+        double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: aCutoff        = 1.0d-7   ! 2e cutoff
         double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
         !signif
 
         ! following are some gradient cutoff criteria
-        double precision :: stepMax        = .1d0/0.529177249d0
-                                                      ! max change of one step
+        double precision :: stepMax        = .1d0/0.529177249d0 ! max change of one step
         double precision :: geoMaxCrt      = .0018d0  ! max geometry change
         double precision :: gRMSCrt        = .0012d0  ! geometry rms change
-        double precision :: gradMaxCrt     = .001d0 ! max gradient change
+        double precision :: gradMaxCrt     = .00045d0 ! max gradient change
         double precision :: gNormCrt       = .00030d0 ! gradient normalization
         double precision :: EChange        = 1.0d-6   ! Energy change
 
@@ -122,6 +121,14 @@ module quick_method_module
         integer, dimension(10) :: functional_id
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
+
+        logical :: uscf_conv     = .false.
+        logical :: scf_conv      = .false.
+        logical :: allow_bad_scf        = .false.
+
+        logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
+        integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
+        integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
 #if defined CUDA || defined CUDA_MPIV
         logical :: bCUDA                ! if CUDA is used here
@@ -245,8 +252,12 @@ module quick_method_module
 
             !mpi variables for libxc implementation
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 
         end subroutine broadcast_quick_method
 
@@ -669,6 +680,31 @@ endif
                 self%basisCufoff=10.d0**(-1.d0*itemp)
             endif
 
+           if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
+
+            ! Legacy Optimizer
+            if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
+
+            if (index(keywd,'GTOL=') /= 0) then
+                call read(keywd,'GTOL', self%gradMaxCrt)
+                self%gNormCrt  = self%gradMaxCrt / 1.5D0
+                self%geoMaxCrt = self%gradMaxCrt * 4.D0
+                self%gRMSCrt   = self%gradMaxCrt * 8.D0/3.D0
+            endif
+
+            if (index(keywd,'ETOL=') /= 0) then
+                call read(keywd,'ETOL', self%EChange)
+            endif
+
+            if (index(keywd,'DLFIND=') /= 0) then
+                self%usedlfind = .true.
+                call read(keywd,'DLFIND', self%dlfind_iopt)
+            endif
+
+            if (index(keywd,'ICOORD=') /= 0) then
+                call read(keywd,'ICOORD', self%dlfind_icoord)
+            endif
+
         end subroutine read_quick_method
 
         !------------------------
@@ -702,7 +738,7 @@ endif
             self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
             self%opt =  .false.      ! optimization
             self%grad =  .false.     ! gradient
-            self%analGrad =  .false. ! Analytical Gradient
+            self%analGrad =  .true. ! Analytical Gradient
             self%analHess =  .false. ! Analytical Hessian Matrix
 
             self%diisOpt =  .false.  ! DIIS Optimization
@@ -742,7 +778,7 @@ endif
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
 
-            self%pmaxrms        = 1.0d-4   ! density matrix convergence criteria
+            self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%aCutoff        = 1.0d-7   ! 2e cutoff
             self%basisCufoff    = 1.0d-10  ! basis set cutoff
 

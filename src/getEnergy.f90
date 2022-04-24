@@ -16,6 +16,10 @@ subroutine getEnergy(isGuess, ierr)
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
 
+#ifdef CEW
+   use quick_cew_module, only : quick_cew
+#endif
+
    implicit none
 
    double precision :: distance
@@ -33,7 +37,12 @@ subroutine getEnergy(isGuess, ierr)
    if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.
 
     !Form the exchange-correlation quadrature if DFT is requested
-    if (quick_method%DFT .and. .not. isGuess) then
+    if ( ( quick_method%DFT &
+#ifdef CEW
+        .or. quick_cew%use_cew &
+#endif
+        ) .and. .not. isGuess ) then
+
         if (master) call PrtAct(ioutfile,"Begin XC Quadrature Formation")
 
         call form_dft_grid(quick_dft_grid, quick_xcg_tmp)
@@ -138,16 +147,20 @@ subroutine getEnergy(isGuess, ierr)
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
       if (ioutfile.ne.0 .and. verbose) then
-         write (ioutfile,'(" ELECTRONIC ENERGY    =",F16.9)') quick_qm_struct%Eel
-         write (ioutfile,'(" CORE_CORE REPULSION  =",F16.9)') quick_qm_struct%Ecore
+         write (ioutfile,'(" ELECTRONIC ENERGY    = ",F16.9)') quick_qm_struct%Eel
+         write (ioutfile,'(" CORE_CORE REPULSION  = ",F16.9)') quick_qm_struct%Ecore
          if (quick_method%extcharges) then
-            write (ioutfile,'(" EXT CHARGE REPULSION =",F16.9)') quick_qm_struct%ECharge
+            write (ioutfile,'(" EXT CHARGE REPULSION = ",F16.9)') quick_qm_struct%ECharge
          endif
-         write (ioutfile,'(" TOTAL ENERGY         =",F16.9)') quick_qm_struct%Etot
+         write (ioutfile,'(" TOTAL ENERGY         = ",F16.9)') quick_qm_struct%Etot
          call prtact(ioutfile,"End Energy calculation")
          call flush(ioutfile)
       endif
    endif
    !--------------- END MPI/MASTER ----------------------
+
+#if defined MPIV || defined CUDA_MPIV
+  call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,MPI_COMM_WORLD,mpierror) 
+#endif
 
 end subroutine getenergy

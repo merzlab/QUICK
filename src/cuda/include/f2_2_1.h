@@ -25,22 +25,22 @@ __device__ __inline__  void h2_2_1(QUICKDouble* YVerticalTemp, QUICKDouble* stor
     f_2_1_t f_2_1_0 ( f_2_0_0,  f_2_0_1,  f_1_0_1, ABCDtemp, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz);
 
     // WRITE LAST FOR I =            2  J=           1
-    LOC2(store,  4,  1, STOREDIM, STOREDIM) = f_2_1_0.x_4_1 ;
-    LOC2(store,  4,  2, STOREDIM, STOREDIM) = f_2_1_0.x_4_2 ;
-    LOC2(store,  4,  3, STOREDIM, STOREDIM) = f_2_1_0.x_4_3 ;
-    LOC2(store,  5,  1, STOREDIM, STOREDIM) = f_2_1_0.x_5_1 ;
-    LOC2(store,  5,  2, STOREDIM, STOREDIM) = f_2_1_0.x_5_2 ;
-    LOC2(store,  5,  3, STOREDIM, STOREDIM) = f_2_1_0.x_5_3 ;
-    LOC2(store,  6,  1, STOREDIM, STOREDIM) = f_2_1_0.x_6_1 ;
-    LOC2(store,  6,  2, STOREDIM, STOREDIM) = f_2_1_0.x_6_2 ;
-    LOC2(store,  6,  3, STOREDIM, STOREDIM) = f_2_1_0.x_6_3 ;
-    LOC2(store,  7,  1, STOREDIM, STOREDIM) = f_2_1_0.x_7_1 ;
-    LOC2(store,  7,  2, STOREDIM, STOREDIM) = f_2_1_0.x_7_2 ;
-    LOC2(store,  7,  3, STOREDIM, STOREDIM) = f_2_1_0.x_7_3 ;
-    LOC2(store,  8,  1, STOREDIM, STOREDIM) = f_2_1_0.x_8_1 ;
-    LOC2(store,  8,  2, STOREDIM, STOREDIM) = f_2_1_0.x_8_2 ;
-    LOC2(store,  8,  3, STOREDIM, STOREDIM) = f_2_1_0.x_8_3 ;
-    LOC2(store,  9,  1, STOREDIM, STOREDIM) = f_2_1_0.x_9_1 ;
-    LOC2(store,  9,  2, STOREDIM, STOREDIM) = f_2_1_0.x_9_2 ;
-    LOC2(store,  9,  3, STOREDIM, STOREDIM) = f_2_1_0.x_9_3 ;
+    LOCSTORE(store,  4,  1, STOREDIM, STOREDIM) = f_2_1_0.x_4_1 ;
+    LOCSTORE(store,  4,  2, STOREDIM, STOREDIM) = f_2_1_0.x_4_2 ;
+    LOCSTORE(store,  4,  3, STOREDIM, STOREDIM) = f_2_1_0.x_4_3 ;
+    LOCSTORE(store,  5,  1, STOREDIM, STOREDIM) = f_2_1_0.x_5_1 ;
+    LOCSTORE(store,  5,  2, STOREDIM, STOREDIM) = f_2_1_0.x_5_2 ;
+    LOCSTORE(store,  5,  3, STOREDIM, STOREDIM) = f_2_1_0.x_5_3 ;
+    LOCSTORE(store,  6,  1, STOREDIM, STOREDIM) = f_2_1_0.x_6_1 ;
+    LOCSTORE(store,  6,  2, STOREDIM, STOREDIM) = f_2_1_0.x_6_2 ;
+    LOCSTORE(store,  6,  3, STOREDIM, STOREDIM) = f_2_1_0.x_6_3 ;
+    LOCSTORE(store,  7,  1, STOREDIM, STOREDIM) = f_2_1_0.x_7_1 ;
+    LOCSTORE(store,  7,  2, STOREDIM, STOREDIM) = f_2_1_0.x_7_2 ;
+    LOCSTORE(store,  7,  3, STOREDIM, STOREDIM) = f_2_1_0.x_7_3 ;
+    LOCSTORE(store,  8,  1, STOREDIM, STOREDIM) = f_2_1_0.x_8_1 ;
+    LOCSTORE(store,  8,  2, STOREDIM, STOREDIM) = f_2_1_0.x_8_2 ;
+    LOCSTORE(store,  8,  3, STOREDIM, STOREDIM) = f_2_1_0.x_8_3 ;
+    LOCSTORE(store,  9,  1, STOREDIM, STOREDIM) = f_2_1_0.x_9_1 ;
+    LOCSTORE(store,  9,  2, STOREDIM, STOREDIM) = f_2_1_0.x_9_2 ;
+    LOCSTORE(store,  9,  3, STOREDIM, STOREDIM) = f_2_1_0.x_9_3 ;
 }

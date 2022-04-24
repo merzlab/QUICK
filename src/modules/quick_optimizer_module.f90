@@ -18,11 +18,13 @@ module quick_optimizer_module
 
   implicit double precision(a-h,o-z)
   private
+  public :: lopt
 
-  public :: optimize
+  interface lopt
+        module procedure optimize
+  end interface lopt
 
 contains
-
 
 ! IOPT to control the cycles
 ! Ed Brothers. August 18,2002.
@@ -106,9 +108,8 @@ contains
            Write (ioutfile,'(" GRADIENT BASED ERROR =",F20.10)') error
         endif
      endif
-
+     
      !------------- END MPI/MASTER ----------------------------
-
 
      do WHILE (I.lt.quick_method%iopt.and..not.done)
         I=I+1
@@ -168,6 +169,8 @@ contains
 
         call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
+        call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
 #ifdef CUDA_MPIV
       timer_begin%T2elb = timer_end%T2elb
       call mgpu_get_2elb_time(timer_end%T2elb)
@@ -186,8 +189,16 @@ contains
         ! 11/19/2010 YIPU MIAO BLOCKED SOME SUBS.
         if (quick_method%analgrad) then
            if (quick_method%UNRST) then
+             if (.not. quick_method%uscf_conv .and. .not. quick_method%allow_bad_scf) then
+                ierr=33
+                return
+             endif 
              CALL uscf_gradient
            else
+             if (.not. quick_method%scf_conv .and. .not. quick_method%allow_bad_scf) then
+                ierr=33
+                return
+             endif
              CALL scf_gradient
            endif
         endif
@@ -290,12 +301,12 @@ contains
               EChg = quick_qm_struct%Etot-Elast
               done = quick_method%geoMaxCrt.gt.geomax
               done = done.and.(quick_method%EChange.gt.abs(EChg))
-              done = done.and.(quick_method%gRMSCrt.gt.georms)
+!              done = done.and.(quick_method%gRMSCrt.gt.georms)
               !done = done.and.(quick_method%gradMaxCrt.gt.gradmax * 10 .or. (EChg.gt.0 .and. i.gt.5))
               !done = done.and.quick_method%gNormCrt.gt.gradnorm
            else
               Write (ioutfile,'(" OPTIMZATION STATISTICS:")')
-              Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E20.10" )")') gradmax,quick_method%gradMaxCrt
+              Write (ioutfile,'(" MAXIMUM GRADIENT ELEMENT = ",E20.10," (REQUEST = ",E20.10" )")') gradmax,quick_method%gradMaxCrt
               done = quick_method%gradMaxCrt.gt.gradmax
               done = done.and.quick_method%gNormCrt.gt.gradnorm
               if (done) then
@@ -366,7 +377,7 @@ contains
         enddo
 
         write (ioutfile,*)
-        write (ioutfile,'(" MINIMIZED ENERGY=",F15.10)') quick_qm_struct%Etot
+        write (ioutfile,'(" MINIMIZED ENERGY = ",F16.9)') quick_qm_struct%Etot
         Write (ioutfile,'("===============================================================")')
 
 

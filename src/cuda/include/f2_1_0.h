@@ -10,7 +10,7 @@ __device__ __inline__  void h2_1_0(QUICKDouble* YVerticalTemp, QUICKDouble* stor
     f_1_0_t f_1_0_0 ( VY( 0, 0, 0 ),  VY( 0, 0, 1 ), Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz);
 
     // WRITE LAST FOR I =            1  J=           0
-    LOC2(store,  1,  0, STOREDIM, STOREDIM) = f_1_0_0.x_1_0 ;
-    LOC2(store,  2,  0, STOREDIM, STOREDIM) = f_1_0_0.x_2_0 ;
-    LOC2(store,  3,  0, STOREDIM, STOREDIM) = f_1_0_0.x_3_0 ;
+    LOCSTORE(store,  1,  0, STOREDIM, STOREDIM) = f_1_0_0.x_1_0 ;
+    LOCSTORE(store,  2,  0, STOREDIM, STOREDIM) = f_1_0_0.x_2_0 ;
+    LOCSTORE(store,  3,  0, STOREDIM, STOREDIM) = f_1_0_0.x_3_0 ;
 }

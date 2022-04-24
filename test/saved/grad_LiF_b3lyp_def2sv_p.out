@@ -22,35 +22,38 @@
   **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
   **                                                                                                     **
   **                                                                                                     **
-  **                                         Copyright (c) 2021                                          **
+  **                                         Copyright (c) 2022                                          **
   **                          Regents of the University of California San Diego                          **
   **                                    & Michigan State University                                      **
   **                                        All Rights Reserved.                                         **
   **                                                                                                     **
-  **                   This software provided pursuant to a license agreement containing                 **
-  **                   restrictions on its disclosure, duplication, and use. This software               **
-  **                   contains confidential and proprietary information, and may not be                 **
-  **                   extracted or distributed, in whole or in part, for any purpose                    **
-  **                   whatsoever, without the express written permission of the authors.                **
-  **                   This notice, and the associated author list, must be attached to                  **
-  **                   all copies, or extracts, of this software. Any additional                         **
-  **                   restrictions set forth in the license agreement also apply to this                **
-  **                   software.                                                                         **
+  **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+  **                                                                                                     **
   *********************************************************************************************************
                                                                                                            
   Cite this work as:                                                                                       
-  Manathunga, M.; Jin, C.; Cruzeiro, V.W.D.; Smith, J.; Keipert, K.; Pekurovsky, D.; Mu, D.; Miao, Y.;     
-  He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-21.03                                     
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2021             
+  Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V.W.D.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;      
+  Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-22.03                                                        
+  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022             
                                                                                                            
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Wed Mar 17 12:11:51 2021
+| TASK STARTS ON: Tue Mar 15 14:27:04 2022
 | INPUT FILE :    grad_LiF_b3lyp_def2sv_p.in
 | OUTPUT FILE:    grad_LiF_b3lyp_def2sv_p.out
-| DATE FILE  :    grad_LiF_b3lyp_def2sv_p.dat
-| BASIS SET PATH: /scratch/cruzeiro/quick/basis/
+| DATA FILE  :    grad_LiF_b3lyp_def2sv_p.dat
+| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        3
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE PM              :       80
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
+| CUDA DEVICE MEMORY SIZE (MB):    12066
+| SUPPORTING CUDA VERSION     :      7.0
+|--------------------------------------------
 
  @ Read Job And Atom
 
@@ -78,7 +81,7 @@
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = DEF2-SV(P),  TYPE = CARTESIAN
-| BASIS FILE = /scratch/cruzeiro/quick/basis//DEF2-SV_P.BAS
+| BASIS FILE = /home/madu/saved-test-update/install/basis/DEF2-SV_P.BAS
 
  @ Finish reading job
 
@@ -140,25 +143,25 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -107.112966348      ------         0.103     1        0.00      0.10      0.00    0.5742E+00  0.4367E-01  0.5971E+00
-|  2   -107.220499947  0.107534E+00       0.098     2        0.00      0.10      0.00    0.3236E+00  0.2556E-01  0.1777E+00
-|  3   -107.314125595  0.936256E-01       0.088     3        0.00      0.09      0.00    0.9771E-01  0.6339E-02  0.4121E-01
-|  4   -107.319448363  0.532277E-02       0.087     4        0.00      0.09      0.00    0.3754E-01  0.2939E-02  0.1808E-01
-|  5   -107.320813853  0.136549E-02       0.088     5        0.00      0.09      0.00    0.1783E-02  0.2822E-03  0.2068E-02
-|  6   -107.320819778  0.592483E-05       0.087     6        0.00      0.09      0.00    0.3198E-03  0.2739E-04  0.1901E-03
-|  7   -107.320819889  0.111556E-06       0.087     7        0.00      0.09      0.00    0.2138E-04  0.4718E-05  0.3741E-04
+|  1   -107.112966348      ------         0.033     1        0.00      0.03      0.00    0.5742E+00  0.4367E-01  0.5971E+00
+|  2   -107.220499947  0.107534E+00       0.010     2        0.00      0.01      0.00    0.3236E+00  0.2556E-01  0.1777E+00
+|  3   -107.314125595  0.936256E-01       0.009     3        0.00      0.01      0.00    0.9771E-01  0.6339E-02  0.4121E-01
+|  4   -107.319448363  0.532277E-02       0.009     4        0.00      0.01      0.00    0.3754E-01  0.2939E-02  0.1808E-01
+|  5   -107.320813853  0.136549E-02       0.009     5        0.00      0.01      0.00    0.1783E-02  0.2822E-03  0.2068E-02
+|  6   -107.320819778  0.592489E-05       0.009     6        0.00      0.01      0.00    0.3198E-03  0.2739E-04  0.1901E-03
+|  7   -107.320819889  0.111478E-06       0.009     7        0.00      0.01      0.00    0.2138E-04  0.4718E-05  0.3741E-04
 | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-|  8   -107.320819934  0.443732E-07       0.089     8        0.00      0.09      0.00    0.1174E-04  0.1088E-05  0.7215E-05
-|  9   -107.320819934  0.143595E-09       0.089     9        0.00      0.09      0.00    0.1998E-06  0.3804E-07  0.3048E-06
+|  8   -107.320819934  0.443860E-07       0.009     8        0.00      0.01      0.00    0.1174E-04  0.1088E-05  0.7215E-05
+|  9   -107.320819934  0.144349E-09       0.008     9        0.00      0.01      0.00    0.1998E-06  0.3802E-07  0.3048E-06
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER   9 CYLCES
-| MAX ERROR = 0.199837E-06   RMS CHANGE = 0.380355E-07   MAX CHANGE = 0.304799E-06
+| REACH CONVERGENCE AFTER   9 CYCLES
+| MAX ERROR = 0.199807E-06   RMS CHANGE = 0.380205E-07   MAX CHANGE = 0.304752E-06
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    5.9999228308
- BETA ELECTRON DENSITY     =    5.9999228308
- ELECTRONIC ENERGY    =  -115.212356416
- CORE_CORE REPULSION  =     7.891536482
- TOTAL ENERGY         =  -107.320819934
+ ALPHA ELECTRON DENSITY    =     5.9999228307
+ BETA ELECTRON DENSITY     =     5.9999228307
+ ELECTRONIC ENERGY    =   -115.212356416
+ CORE_CORE REPULSION  =      7.891536482
+ TOTAL ENERGY         =   -107.320819934
 
  @ End Energy calculation
 
@@ -169,10 +172,10 @@
 ----------------------------------------
  COORDINATE    XYZ            GRADIENT
 ----------------------------------------
-    1X    -6.4195304902    -0.0533209572
+    1X    -6.4195304902    -0.0533209478
     1Y     1.5248601164     0.0000000003
-    1Z     0.0000000000     0.0000000000
-    2X    -4.6090103520     0.0527380283
+    1Z     0.0000000000     0.0000000001
+    2X    -4.6090103520     0.0527380189
     2Y     1.5248601164    -0.0000000002
     2Z     0.0000000000     0.0000000001
 ----------------------------------------
@@ -213,23 +216,23 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.272976000( 20.69%)
-| DFT GRID OPERATIONS =     0.021126000(  1.60%)
-| TOTAL SCF TIME      =     0.850623000( 64.47%)
-|       TOTAL OP TIME      =     0.833448000( 63.17%)
-|             TOTAL 1e TIME      =     0.034352000(  2.60%)
-|             TOTAL 2e TIME      =     0.551765000( 41.82%)
-|             TOTAL EXC TIME     =     0.209492000( 15.88%)
-|       TOTAL DII TIME      =     0.015220000(  1.15%)
-|             TOTAL DIAG TIME    =     0.013058000(  0.99%)
-| TOTAL GRADIENT TIME      =     0.161875000( 12.27%)
-|       TOTAL 1e GRADIENT TIME      =     0.057630000( 4.40%)
-|       TOTAL 2e GRADIENT TIME      =     0.057783000( 4.38%)
-|       TOTAL EXC GRADIENT TIME     =     0.045803000(  3.47%)
-| TOTAL TIME          =     1.319394000
+| INITIAL GUESS TIME  =     0.213735000(  4.19%)
+| DFT GRID OPERATIONS =     0.009601000(  0.19%)
+| TOTAL SCF TIME      =     0.107424000(  2.11%)
+|       TOTAL OP TIME      =     0.079070000(  1.55%)
+|             TOTAL 1e TIME      =     0.001044000(  0.02%)
+|             TOTAL 2e TIME      =     0.037704000(  0.74%)
+|             TOTAL EXC TIME     =     0.038585000(  0.76%)
+|       TOTAL DII TIME      =     0.028269000(  0.55%)
+|             TOTAL DIAG TIME    =     0.020525000(  0.40%)
+| TOTAL GRADIENT TIME      =     0.090815000(  1.78%)
+|       TOTAL 1e GRADIENT TIME      =     0.004811000( 0.11%)
+|       TOTAL 2e GRADIENT TIME      =     0.073564000( 1.44%)
+|       TOTAL EXC GRADIENT TIME     =     0.011749000(  0.23%)
+| TOTAL TIME          =     5.100075000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  1.3 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.1 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Wed Mar 17 12:11:51 2021
+| Normal Termination. Task Finished on: Tue Mar 15 14:27:10 2022

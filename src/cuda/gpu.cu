@@ -18,6 +18,10 @@
 #include "mgpu.h"
 #endif
 
+#ifdef CEW
+#include "iface.hpp"
+#endif
+
 #include "gpu_get2e_getxc_drivers.h"
 #define OSHELL
 #include "gpu_get2e_getxc_drivers.h"
@@ -196,6 +200,7 @@ extern "C" void gpu_init_(int* ierr)
         gpu -> twoEThreadsPerBlock      = SM_2X_2E_THREADS_PER_BLOCK;
         gpu -> XCThreadsPerBlock        = SM_2X_XC_THREADS_PER_BLOCK;
         gpu -> gradThreadsPerBlock      = SM_2X_GRAD_THREADS_PER_BLOCK;
+        gpu -> sswGradThreadsPerBlock   = SM_2X_SSW_GRAD_THREADS_PER_BLOCK; 
     }
     
     PRINTDEBUG("FINISH INIT")
@@ -231,8 +236,63 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     
 }
 
+
 //-----------------------------------------------
-// shutdonw gpu and terminate gpu calculation part
+// allocate memory for device scratch 
+//-----------------------------------------------
+extern "C" void gpu_allocate_scratch_(){
+
+    gpu -> scratch           =   new gpu_scratch;
+
+    /* The sizes of these arrays must be (# blocks * # threads per block * store dimension). 
+       Note 1: that store dimension would be 35*35 in OEI code and 84*84 in ERI code when we have F functions. We will choose the max here.
+       Note 2: We may have different threads/block for OEI and ERI. Choose the max of them.
+    */
+    unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
+
+    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size*2);
+    gpu -> scratch -> store -> DeleteCPU();
+
+    gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store2 -> DeleteCPU();
+
+    gpu -> scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeAA -> DeleteCPU();
+
+    gpu -> scratch -> storeBB       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeBB -> DeleteCPU();
+
+    gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> storeCC -> DeleteCPU();
+
+    gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
+    gpu -> scratch -> YVerticalTemp -> DeleteCPU();
+
+    gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;
+    gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
+    gpu -> gpu_sim.storeAA       = gpu -> scratch -> storeAA -> _devData;
+    gpu -> gpu_sim.storeBB       = gpu -> scratch -> storeBB -> _devData;
+    gpu -> gpu_sim.storeCC       = gpu -> scratch -> storeCC -> _devData;
+    gpu -> gpu_sim.YVerticalTemp = gpu -> scratch -> YVerticalTemp -> _devData;
+
+}
+
+//-----------------------------------------------
+// deallocate device scratch 
+//-----------------------------------------------
+extern "C" void gpu_deallocate_scratch_(){
+
+   SAFE_DELETE(gpu -> scratch -> store);
+   SAFE_DELETE(gpu -> scratch -> store2);
+   SAFE_DELETE(gpu -> scratch -> storeAA);
+   SAFE_DELETE(gpu -> scratch -> storeBB);
+   SAFE_DELETE(gpu -> scratch -> storeCC);
+   SAFE_DELETE(gpu -> scratch -> YVerticalTemp);
+
+}
+
+//-----------------------------------------------
+// shutdown gpu and terminate gpu calculation part
 //-----------------------------------------------
 extern "C" void gpu_shutdown_(int* ierr)
 {
@@ -289,7 +349,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu -> gpu_sim.imult            =   *imult;
     gpu -> gpu_sim.molchg           =   *molchg;
     gpu -> gpu_sim.iAtomType        =   *iAtomType;
-    
+    gpu -> gpu_sim.use_cew          =   false;   
+ 
     upload_para_to_const();
 
 #ifdef DEBUG
@@ -305,7 +366,9 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 
     PRINTDEBUG("FINISH SETUP")
 #endif
-    
+
+       
+ 
 }
 
 //Madu Manathunga: 08/31/2019
@@ -329,8 +392,18 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
     }
 
     gpu -> gpu_sim.is_oshell = *is_oshell;
+}
+
+#ifdef CEW
+//-----------------------------------------------
+//  set cew variables
+//-----------------------------------------------
+extern "C" void gpu_set_cew_(bool *use_cew){
+
+    gpu -> gpu_sim.use_cew = *use_cew;
 
 }
+#endif
 
 //-----------------------------------------------
 //  upload libxc information
@@ -427,7 +500,8 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
 //  upload cutoff criteria, will update every
 //  interation
 //-----------------------------------------------
-extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff)
+extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff,\
+                                   QUICKDouble* coreIntegralCutoff)
 {
     
 #ifdef DEBUG
@@ -440,6 +514,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     PRINTDEBUG("BEGIN TO UPLOAD CUTOFF")
     
     gpu -> gpu_cutoff -> integralCutoff = *integralCutoff;
+    gpu -> gpu_cutoff -> coreIntegralCutoff = *coreIntegralCutoff;
     gpu -> gpu_cutoff -> primLimit      = *primLimit;
     gpu -> gpu_cutoff -> DMCutoff       = *DMCutoff;
     
@@ -451,6 +526,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     
     gpu -> gpu_sim.cutMatrix        = gpu -> gpu_cutoff -> cutMatrix -> _devData;
     gpu -> gpu_sim.integralCutoff   = gpu -> gpu_cutoff -> integralCutoff;
+    gpu -> gpu_sim.coreIntegralCutoff   = gpu -> gpu_cutoff -> coreIntegralCutoff;
     gpu -> gpu_sim.primLimit        = gpu -> gpu_cutoff -> primLimit;
     gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
 
@@ -1112,6 +1188,179 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 }
 
+
+//-----------------------------------------------
+//  upload information for OEI calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble* extchg, int *ierr)
+{
+
+    // store coordinates and charges for oei calculation     
+    gpu -> nextatom   = *nextatom;
+    gpu -> allxyz     = new cuda_buffer_type<QUICKDouble>(3, gpu->natom+gpu->nextatom);
+    gpu -> allchg     = new cuda_buffer_type<QUICKDouble>(gpu->natom+gpu->nextatom);
+
+    memcpy(gpu -> allxyz -> _hostData, gpu -> xyz -> _hostData, sizeof(QUICKDouble)*3*gpu->natom);
+    memcpy(gpu -> allchg -> _hostData, gpu -> chg -> _hostData, sizeof(QUICKDouble)*gpu->natom);
+
+    // manually append f90 data
+    unsigned int idxf90data=0;
+    for(unsigned int i=0; i<gpu->nextatom; ++i)
+        for(unsigned int j=0; j<3; ++j)
+            gpu -> allxyz -> _hostData[ (gpu->natom + i) * 3 + j ] = extxyz[idxf90data++];
+
+    idxf90data=0;
+    for(unsigned int i=0; i<gpu->nextatom; ++i)
+        gpu -> allchg -> _hostData[ gpu->natom + i ] = extchg[idxf90data++];
+
+    gpu -> allxyz -> Upload();
+    gpu -> allchg -> Upload();
+
+    gpu -> gpu_sim.nextatom  = *nextatom;
+    gpu -> gpu_sim.allxyz    = gpu -> allxyz -> _devData;
+    gpu -> gpu_sim.allchg    = gpu -> allchg -> _devData;    
+
+  // precompute the product of overlap prefactor and contraction coefficients and store
+  gpu -> gpu_basis -> Xcoeff_oei                   =   new cuda_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
+
+  for (int i = 0; i<gpu->jshell; i++) {
+    for (int j = 0; j<gpu->jshell; j++) {
+      int kAtomI = gpu->gpu_basis->katom->_hostData[i];
+      int kAtomJ = gpu->gpu_basis->katom->_hostData[j];
+      int KsumtypeI = gpu->gpu_basis->Ksumtype->_hostData[i];
+      int KsumtypeJ = gpu->gpu_basis->Ksumtype->_hostData[j];
+      int kstartI = gpu->gpu_basis->kstart->_hostData[i];
+      int kstartJ = gpu->gpu_basis->kstart->_hostData[j];
+
+      QUICKDouble DIJ = 0;
+      for (int k = 0; k<3; k++) {
+        DIJ += pow(LOC2(gpu->xyz->_hostData, k, kAtomI-1, 3, gpu->natom)
+                    -LOC2(gpu->xyz->_hostData, k, kAtomJ-1, 3, gpu->natom),2);
+      }
+
+      for (int ii = 0; ii<gpu->gpu_basis->kprim->_hostData[i]; ii++) {
+        for (int jj = 0; jj<gpu->gpu_basis->kprim->_hostData[j]; jj++) {
+
+          QUICKDouble II = LOC2(gpu->gpu_basis->gcexpo->_hostData, ii , KsumtypeI-1, MAXPRIM, gpu->nbasis);
+          QUICKDouble JJ = LOC2(gpu->gpu_basis->gcexpo->_hostData, jj , KsumtypeJ-1, MAXPRIM, gpu->nbasis);
+
+          QUICKDouble X = 2.0 * PI_TO_3HALF * sqrt((II+JJ)/PI) * pow((II+JJ), -1.5)  * exp((-II*JJ*DIJ)/(II+JJ));          
+
+          for (int itemp = gpu->gpu_basis->Qstart->_hostData[i]; itemp <= gpu->gpu_basis->Qfinal->_hostData[i]; itemp++) {
+            for (int itemp2 = gpu->gpu_basis->Qstart->_hostData[j]; itemp2 <= gpu->gpu_basis->Qfinal->_hostData[j]; itemp2++) {
+              LOC4(gpu->gpu_basis->Xcoeff_oei->_hostData, kstartI+ii-1, kstartJ+jj-1, \
+                  itemp-gpu->gpu_basis->Qstart->_hostData[i], itemp2-gpu->gpu_basis->Qstart->_hostData[j], gpu->jbasis, gpu->jbasis, 2, 2)
+              = X * LOC2(gpu->gpu_basis->gccoeff->_hostData, ii, KsumtypeI+itemp-1, MAXPRIM, gpu->nbasis) *\
+                LOC2(gpu->gpu_basis->gccoeff->_hostData, jj, KsumtypeJ+itemp2-1, MAXPRIM, gpu->nbasis);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  gpu -> gpu_basis ->Xcoeff_oei->Upload();
+  gpu -> gpu_sim.Xcoeff_oei                       =   gpu -> gpu_basis -> Xcoeff_oei -> _devData;
+
+
+  // allocate array for sorted shell pair info
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+
+  unsigned char sort_method = 0;
+  unsigned int a = 0;
+
+  if(sort_method == 0){
+
+      // store Qshell indices, at this point we already have Qshells sorted according to type.
+      for (int qp = 0; qp <= 6 ; ++qp){
+          for (int q = 0; q <= 3; ++q) {
+              for (int p = 0; p <= 3; ++p) {
+                  if (p+q==qp){
+                     unsigned int b = 0;
+                     for(int i=0; i < gpu->gpu_basis->Qshell; ++i){
+                         for(int j=0; j < gpu->gpu_basis->Qshell; ++j){
+                             if(gpu->gpu_basis->sorted_Qnumber->_hostData[i] == q && gpu->gpu_basis->sorted_Qnumber->_hostData[j] == p){
+                                 // check if the product of overlap prefactor and contraction coefficients is greater than the threshold
+                                 // if a given basis function pair has at least one primitive pair that satify this condition, we will add it
+
+                                 /*bool bSignificant=false;
+
+                                 int kPrimI = gpu -> gpu_basis -> kprim -> _hostData[i];
+                                 int kPrimJ = gpu -> gpu_basis -> kprim -> _hostData[j];
+
+                                 int kStartI = gpu -> gpu_basis -> kstart -> _hostData[i]-1;
+                                 int kStartJ = gpu -> gpu_basis -> kstart -> _hostData[j]-1;
+
+                                 for(int iprim=0; iprim < kPrimI * kPrimJ ; ++iprim){
+                                   int JJJ = (int) iprim/kPrimI;
+                                   int III = (int) iprim-kPrimI*JJJ;
+
+                                   QUICKDouble Xcoeff_oei = LOC4(gpu->gpu_basis->Xcoeff_oei->_hostData, kStartI+III, kStartJ+JJJ, q - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[i]], \
+                                                            p - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[j]], gpu->jbasis, gpu->jbasis, 2, 2);
+
+                                   printf("xcoeff_oei: %d %d %d %d %.10e \n", kStartI+III, kStartJ+JJJ, q - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[i]], \
+                                          p - gpu->gpu_basis->Qstart->_hostData[gpu->gpu_basis->sorted_Q->_hostData[j]], Xcoeff_oei);
+
+
+                                   //if(Xcoeff_oei > gpu -> gpu_cutoff -> integralCutoff){
+                                   if(abs(Xcoeff_oei) > 0.0 ){
+                                     bSignificant=true;
+                                     break;
+                                   }
+
+                                 }
+
+                                 if(bSignificant){*/
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].x = i;
+                                   gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[a].y = j;
+                                   ++a;
+                                   ++b;
+                                 //}
+                             }
+                         }
+                     }
+
+                  }
+              }
+          }
+      }
+  }
+
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> Upload();
+  gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
+  gpu -> gpu_sim.Qshell_OEI = a; 
+
+#ifdef CUDA_MPIV
+  mgpu_oei_greedy_distribute();
+#endif
+
+/*  for(int i=0; i<gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell; ++i) {
+
+   int II = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].x;
+   int JJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> _hostData[i].y;
+
+   int ii = gpu->gpu_basis->sorted_Q->_hostData[II];
+   int jj = gpu->gpu_basis->sorted_Q->_hostData[JJ];
+
+    int iii = gpu->gpu_basis->sorted_Qnumber->_hostData[II];
+    int jjj = gpu->gpu_basis->sorted_Qnumber->_hostData[JJ];
+
+    printf("%i II JJ ii jj iii jjj %d %d %d %d %d %d nprim_i: %d nprim_j: %d \n",i, II, JJ, ii, jj, iii, jjj, gpu->gpu_basis->kprim->_hostData[ii], gpu->gpu_basis->kprim->_hostData[jj]);
+  }
+*/
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ -> DeleteCPU();
+  gpu->gpu_basis->Xcoeff_oei-> DeleteCPU();
+  gpu -> gpu_basis -> kstart -> DeleteCPU();
+  gpu -> gpu_basis -> katom -> DeleteCPU();
+  gpu -> gpu_basis -> Ksumtype -> DeleteCPU();
+  gpu -> gpu_basis -> Qstart -> DeleteCPU();
+  gpu -> gpu_basis -> Qfinal -> DeleteCPU();
+  gpu -> gpu_basis -> gccoeff -> DeleteCPU();
+  gpu -> gpu_basis -> gcexpo -> DeleteCPU();
+
+}
+
+
 //-----------------------------------------------
 //  upload calculated information
 //-----------------------------------------------
@@ -1194,7 +1443,6 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> ob        ->  DeleteGPU();
-    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
 
     /*
@@ -1216,13 +1464,13 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
         }
     }*/
     //    gpu -> gpu_calculated -> o        -> Upload();
-    gpu -> gpu_calculated -> denseb    -> Upload();
     gpu -> gpu_calculated -> obULL     -> Upload();
 
     //    gpu -> gpu_sim.o                 =  gpu -> gpu_calculated -> o -> _devData;
-    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
     gpu -> gpu_sim.obULL              =  gpu -> gpu_calculated -> obULL -> _devData;
 
+
+    gpu_upload_beta_density_matrix_(denseb);
 
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -1246,6 +1494,13 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
     gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> dense    -> Upload();
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
+}
+
+extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb)
+{
+    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> denseb    -> Upload();
+    gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
 }
 
 //-----------------------------------------------
@@ -1573,26 +1828,27 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_basis -> ncenter -> DeleteCPU();
     gpu -> gpu_basis -> itype -> DeleteCPU();
     
-    gpu -> gpu_basis -> kstart -> DeleteCPU();
-    gpu -> gpu_basis -> katom -> DeleteCPU();
-    
     //kprim can not be deleted since it will be used later
     //gpu -> gpu_basis -> kprim -> DeleteCPU();
     
-    gpu -> gpu_basis -> Ksumtype -> DeleteCPU();
     gpu -> gpu_basis -> prim_start -> DeleteCPU();
     
     gpu -> gpu_basis -> Qnumber -> DeleteCPU();
-    gpu -> gpu_basis -> Qstart -> DeleteCPU();
-    gpu -> gpu_basis -> Qfinal -> DeleteCPU();
     
     gpu -> gpu_basis -> Qsbasis -> DeleteCPU();
     gpu -> gpu_basis -> Qfbasis -> DeleteCPU();
-    gpu -> gpu_basis -> gccoeff -> DeleteCPU();
     gpu -> gpu_basis -> cons -> DeleteCPU();
-    gpu -> gpu_basis -> gcexpo -> DeleteCPU();
     gpu -> gpu_basis -> KLMN -> DeleteCPU();
-    
+
+    // the following will be deleted inside gpu_upload_oei function
+    //gpu -> gpu_basis -> kstart -> DeleteCPU();
+    //gpu -> gpu_basis -> katom -> DeleteCPU();
+    //gpu -> gpu_basis -> Ksumtype -> DeleteCPU();
+    //gpu -> gpu_basis -> Qstart -> DeleteCPU();
+    //gpu -> gpu_basis -> Qfinal -> DeleteCPU();
+    //gpu -> gpu_basis -> gccoeff -> DeleteCPU();
+    //gpu -> gpu_basis -> gcexpo -> DeleteCPU();   
+ 
     
 #ifdef DEBUG
     cudaEventRecord(end, 0);
@@ -1625,7 +1881,10 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     gpu -> grad = new cuda_buffer_type<QUICKDouble>(3 * gpu->natom);
     gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
 
-    gpu -> grad -> DeleteGPU();
+    //gpu -> grad -> DeleteGPU();
+    gpu -> gpu_sim.grad =  gpu -> grad -> _devData;
+    gpu -> grad -> Upload();
+
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
    
     gpu -> gradULL -> Upload();
@@ -1647,6 +1906,62 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     
 }
 
+
+//-----------------------------------------------
+//  upload information for LRI calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
+{
+
+    gpu -> lri_data = new lri_data_type;
+    
+    gpu -> lri_data -> cc   = new cuda_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
+    gpu -> lri_data -> cc -> Upload();
+    
+    gpu -> gpu_sim.lri_zeta = *zeta;
+
+/*    printf("zeta %f \n", gpu -> gpu_sim.lri_zeta);
+
+    for(int i=0; i < (gpu->natom+gpu->nextatom); i++)
+      printf("cc %d %f \n", i, gpu -> lri_data -> cc -> _hostData[i]);
+
+    for(int iatom=0; iatom < (gpu->natom+gpu->nextatom); iatom++)
+      printf("allxyz %d %f %f %f \n", iatom, LOC2( gpu->allxyz->_hostData, 0, iatom, 3, devSim.natom+devSim.nextatom),\
+      LOC2( gpu->allxyz->_hostData, 1, iatom, 3, devSim.natom+devSim.nextatom), LOC2( gpu->allxyz->_hostData, 2, iatom, 3, devSim.natom+devSim.nextatom));
+*/
+    gpu -> gpu_sim.lri_cc   = gpu -> lri_data -> cc -> _devData;  
+
+}
+
+//-----------------------------------------------
+//  upload information for CEW quad calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_cew_vrecip_(int *ierr){
+
+  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+
+  QUICKDouble *gridpt = new QUICKDouble[3];
+
+  for(int i=0; i<gpu -> gpu_xcq -> npoints; i++){
+
+    gridpt[0] = gpu -> gpu_xcq -> gridx -> _hostData[i];
+    gridpt[1] = gpu -> gpu_xcq -> gridy -> _hostData[i];
+    gridpt[2] = gpu -> gpu_xcq -> gridz -> _hostData[i];
+
+    QUICKDouble vrecip = 0.0;
+
+#ifdef CEW
+    cew_getpotatpt_(gridpt, &vrecip);
+#endif
+
+    gpu -> lri_data -> vrecip -> _hostData[i] = -vrecip;
+
+  }
+
+  gpu -> lri_data -> vrecip -> Upload();
+  gpu -> gpu_sim.cew_vrecip   = gpu -> lri_data -> vrecip -> _devData;
+
+}
 
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
@@ -2371,6 +2686,7 @@ extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_basis->KLMN);
     SAFE_DELETE(gpu->gpu_basis->prim_start);
     SAFE_DELETE(gpu->gpu_basis->Xcoeff);
+    SAFE_DELETE(gpu->gpu_basis->Xcoeff_oei);
     SAFE_DELETE(gpu->gpu_basis->expoSum);
     SAFE_DELETE(gpu->gpu_basis->weightedCenterX);
     SAFE_DELETE(gpu->gpu_basis->weightedCenterY);
@@ -2383,6 +2699,11 @@ extern "C" void gpu_cleanup_(){
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+
+    SAFE_DELETE(gpu->allxyz);
+    SAFE_DELETE(gpu->allchg);
+    SAFE_DELETE(gpu -> gpu_cutoff -> sorted_OEICutoffIJ);
+    
     
 }
 
@@ -3117,4 +3438,21 @@ void delete_pteval(bool devOnly){
 extern "C" void gpu_delete_libxc_(int *ierr)
 {
     libxc_cleanup(gpu -> gpu_sim.glinfo, gpu -> gpu_sim.nauxfunc);
+}
+
+
+//-------------------------------------------------
+//  delete information uploaded for LRI calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_lri_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> cc);
+}
+
+//-------------------------------------------------
+//  delete info uploaded for CEW quad calculation
+//-------------------------------------------------
+extern "C" void gpu_delete_cew_vrecip_(int *ierr)
+{
+    SAFE_DELETE(gpu -> lri_data -> vrecip);
 }

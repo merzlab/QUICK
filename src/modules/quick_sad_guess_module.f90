@@ -39,6 +39,10 @@ contains
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
+
+#ifdef CEW 
+     use quick_cew_module, only : quick_cew
+#endif
   
      implicit double precision(a-h,o-z)
   
@@ -51,6 +55,7 @@ contains
      type(quick_method_type) quick_method_save
      type(quick_molspec_type) quick_molspec_save
      integer, intent(inout) :: ierr
+     logical :: use_cew_save
   
      ! first save some important value
      quick_method_save=quick_method
@@ -144,7 +149,7 @@ contains
            ! this following subroutine is as same as normal basis set normlization
            call normalize_basis()
            if (quick_method%ecp) call store_basis_to_ecp()
-           if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
+           !if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
   
            ! Initialize Density arrays. Create initial density matrix guess.
            present = .false.
@@ -165,6 +170,7 @@ contains
            ! AWG If not present fall back to computing SAD guess
            ! AWG note the whole structure of this routine should be improved
            readSAD = quick_method%readSAD
+           !readSAD = .false.
            if (readSAD) then
               sadfile = trim(sadGuessDir) // '/' // &
                              trim(quick_molspec%atom_type_sym(iitemp))
@@ -185,7 +191,12 @@ contains
               close(212)
   
            else
- 
+
+#ifdef CEW
+              use_cew_save = quick_cew%use_cew
+              quick_cew%use_cew = .false.
+#endif
+              
               ! Compute SAD guess
               call sad_uscf(.true., ierr)
               do i=1,nbasis
@@ -193,7 +204,9 @@ contains
                     atomdens(iitemp,i,j)=quick_qm_struct%dense(i,j)+quick_qm_struct%denseb(i,j)
                  enddo
               enddo
-  
+#ifdef CEW
+              quick_cew%use_cew = use_cew_save
+#endif              
               ! write SAD guess if requested
               if(quick_method%writeSAD) then
                  sadfile = trim(quick_molspec%atom_type_sym(iitemp))
@@ -874,7 +887,7 @@ contains
      use allmod
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_oshell_eri_module, only: getOshellEri, getOshellEriEnergy 
-     use quick_oei_module, only:get1eEnergy, get1e
+     use quick_oei_module, only:get1eEnergy, kineticO, attrashell
   
      implicit none
   
@@ -890,7 +903,19 @@ contains
   !  Step 1. evaluate 1e integrals
   !-----------------------------------------------------------------
   
-     call get1e()
+     ! compute kinetic integrals
+     do I=1,nbasis
+       call kineticO(I)
+     enddo
+
+     ! compute Coulomb attraction integrals
+     do I=1,jshell
+       do J=I,jshell
+         call attrashell(I,J)
+       enddo
+     enddo
+
+     call copySym(quick_qm_struct%o,nbasis)
 
      quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
   

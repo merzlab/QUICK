@@ -56,11 +56,11 @@ echo  "
                      Specify the number of cores to be used in compilation. 
                      If unspecified, QUICK will attempt to automatically    
                      detect the number of cores in your system.             
-      --nof          Disables the compilation of time consuming f functions 
-                     in the ERI code of cuda version. Not recommended for 
-                     production.
+      --enablef      Enables the compilation of time consuming f functions 
+                     in the ERI code of cuda version.
       --amber        Install QUICK executables and libaries into AMBER. 
                      Requires specifying AMBER home directory as prefix. 
+      --cew          Compiles source code necessary for CEW QM/MM with AMBER.
       --verbose      Enable full compilation output
       --lapack       Use matrix diagonalizer from LAPACK. BLASROOT environment
                      variable must be set with the correct blas installation path. 
@@ -601,10 +601,15 @@ cuda_debug_flags=''
 # compiler version specific flags
 fort_vspec_flags=''
 
+# external library specific flags
+dlfind_flags=''
+
 # set common folders
 libxcobjfolder=''
 libxcdevobjfolder=''
 blasobjfolder=''
+lapackoobjfolder=''
+dlfindobjfolder=''
 
 # keep track of which build types to clean
 cleantypes=''
@@ -621,10 +626,11 @@ uspec_ncores='no'
 ncores=''
 
 # track if f functions should not be compiled in cuda version
-nof='no'
+enablef='no'
 
 # amber related variables
 aminstall='false'
+cew='no'
 
 # control compiler output
 verbose='@'
@@ -652,8 +658,9 @@ while [ $# -gt 0 ]; do
     --verbose)     verbose='';;
     --mirp)        mirp='yes';;
     --shared)      shared='yes';;
-    --nof)         nof='yes';;
+    --enablef)     enablef='yes';;
     --amber)       aminstall='true';;
+    --cew)         cew='yes';;
     --lapack)      lapack='yes';;
     --mkl)         mkl='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
@@ -775,6 +782,11 @@ if [ "$useprefix" = "true" ] && [ "$aminstall" = "false" ]; then
     fi
   done
 
+  # create common include folder
+  if [ ! -d "$quick_prefix/include/common" ]; then
+    mkdir -p "$quick_prefix/include/common"
+  fi
+
   # set install and uninstall types
   install_string='install'
   uninstall_string='uninstall'
@@ -823,13 +835,7 @@ for buildtype in $buildtypes; do
     fi
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
 
-    if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
-      mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
-    fi
-    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
   fi
-
-
 
   if [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
     if [ ! -d "$QUICK_HOME/build/common/gpu/libxcobj" ]; then
@@ -844,7 +850,30 @@ for buildtype in $buildtypes; do
 
   fi
 
+  # create blasobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
+  fi
+  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+
+  # create lapackobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/lapackobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/lapackobj"
+  fi
+  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
+  
+  # create dlfindobj directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/dlfindobj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/dlfindobj" 
+  fi
+  dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
+
 done
+
+# create common include folder
+if [ ! -d "$QUICK_HOME/build/include/common" ]; then
+  mkdir -p "$QUICK_HOME/build/include/common"
+fi
 
 #  !---------------------------------------------------------------------!
 #  ! Query system information                                            !
@@ -929,7 +958,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
-    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" ]; then
+    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" -o "$cudaversion" = "11.3" -o "$cudaversion" = "11.4" -o "$cudaversion" = "11.5" -o "$cudaversion" = "11.6" ]; then
 
       echo "CUDA Version $cudaversion detected"
 
@@ -1065,7 +1094,7 @@ for buildtype in $buildtypes; do
       ;;
   esac
 
-  fort_flags="$fort_flags -I$QUICK_HOME/src/util"
+  fort_flags="$fort_flags -I$QUICK_HOME/src/util -I$QUICK_HOME/build/include/common"
   cc_flags="$opt_flags $cc_debug_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype"
   cxx_flags="$opt_flags $cxx_debug_flags $lib_flags -std=c++11 -I$QUICK_HOME/build/include/$buildtype"
 
@@ -1077,11 +1106,16 @@ for buildtype in $buildtypes; do
 
     cuda_incl_flags="-L$CUDA_HOME/lib64 -I$CUDA_HOME/include"
 
-    if [ "$nof" = 'yes' ]; then
-      echo "F functions will not be compiled in the $buildtype version."
-    else
+    if [ "$enablef" = 'yes' ]; then
+      echo "F functions will be compiled in the $buildtype version."
       cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
     fi
+
+    # set cew flag for nvcc
+    if [ "$aminstall" = "true" ]; then
+      cuda_incl_flags="$cuda_incl_flags -I$AMBERHOME/AmberTools/src/cew -DCEW"
+    fi
+
   fi
 
   # set directives based on the build type. These stuff were previously in config.h
@@ -1143,6 +1177,40 @@ for buildtype in $buildtypes; do
 
   fi
 
+  # set amber installation flags
+  if [ "$aminstall" = "true" ]; then
+      ldflags="$ldflags -L$quick_prefix/lib"
+      if [ "$cew" = "yes" ]; then
+          fort_flags="$fort_flags -DCEW"
+
+          if [ "$buildtype" = 'mpi' -o "$buildtype" = 'cudampi' ]; then
+              ldflags="$ldflags -lcew_mpi"
+          else
+              ldflags="$ldflags -lcew"
+          fi
+      fi
+  fi
+  
+  # set dlfind flags
+  case "$compiler" in
+    gnu)
+      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      ;;
+    intel|pgi|nvidia)
+      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
+      ;;
+  esac
+
+  dlfind_flags="$dlfind_flags -I$QUICK_HOME/build/include/$buildtype"
+
+  if [ "$buildtype" = 'mpi' ]; then
+    dlfind_flags="$dlfind_flags -DMPIV"
+  elif [ "$buildtype" = 'cuda' ]; then
+    dlfind_flags="$dlfind_flags -DCUDA"
+  elif [ "$buildtype" = 'cudampi' ]; then
+    dlfind_flags="$dlfind_flags -DMPIV -DCUDA_MPIV"
+  fi
+
   # set the installer
   installer=''
   if [ "$buildtype" = 'serial' ]; then
@@ -1162,15 +1230,21 @@ for buildtype in $buildtypes; do
 
   # set libxcobj and blasobj folder
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
-    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
     libxcdevobjfolder=""
   elif [ "$buildtype" = 'cuda' -o "$buildtype" = 'cudampi' ]; then
-    blasobjfolder=""
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
+ 
+  # set blasobj folder
+  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
+ 
+  # set dlfindobj folder
+  dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
 
+  # set lapack folder
+  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
 
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
@@ -1203,7 +1277,9 @@ VB=$verbose
 srcfolder=$QUICK_HOME/src
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
+lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
+dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
@@ -1215,8 +1291,10 @@ exefolder=$QUICK_HOME/bin
 objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
+dlfindobjfolder=$dlfindobjfolder
 mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
 blasobjfolder=$blasobjfolder
+lapackobjfolder=$lapackobjfolder
 libfolder=$QUICK_HOME/build/lib/$buildtype
 inclfolder=$QUICK_HOME/build/include/$buildtype
 
@@ -1241,6 +1319,7 @@ ARCHFLAGS=$arch_flags
 RANLIB=$ranlib
 LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
+DLFIND_FLAGS=$dlfind_flags
 
 #!---------------------------------------------------------------------!
 #! Common compiler  flags                                              !
@@ -1304,7 +1383,9 @@ installfolder=$quick_prefix
 # source directories
 subfolder=$QUICK_HOME/src/subs
 blasfolder=$QUICK_HOME/src/blas
+lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
+dlfindfolder=$QUICK_HOME/src/dlfind
 cudafolder=$QUICK_HOME/src/cuda
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules

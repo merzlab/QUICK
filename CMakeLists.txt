@@ -35,7 +35,7 @@ if(NOT INSIDE_AMBER)
 
 endif()
 
-option(NOF "Disables the compilation of QUICK's time consuming f functions in the ERI code of cuda version. Not recommended for production." FALSE)
+option(ENABLEF "Enables the compilation of QUICK's time consuming f functions in the ERI code of cuda version." FALSE)
 
 # Compiler flags
 # These should really go into cmake/CompilerFlags.cmake but with the
@@ -275,6 +275,9 @@ if(INSIDE_AMBER)
 
 	# install tests dir
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
+
+        # add flag to compile cew
+        add_definitions(-DCEW)
 
 else()
 	# Standalone install

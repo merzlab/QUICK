@@ -21,6 +21,7 @@ module quick_scf_module
 
   public :: allocate_quick_scf, deallocate_quick_scf, scf 
   public :: V2, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+
 !  type quick_scf_type
 
     ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
@@ -160,6 +161,11 @@ contains
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
+     use quick_lri_module, only: computeLRI
+
+#ifdef CEW 
+     use quick_cew_module, only : quick_cew
+#endif
  
      implicit none
   
@@ -183,7 +189,9 @@ contains
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
-  
+
+     double precision :: c_coords(3),c_zeta,c_chg
+
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
      ! scf convergence as detailed in J. Comp. Chem, Vol 3, #4, pg 566-60, 1982.
@@ -265,7 +273,11 @@ contains
 #if defined CUDA || defined CUDA_MPIV
      if(quick_method%bCUDA) then
   
-        if (quick_method%DFT) then
+        if (quick_method%DFT &
+#ifdef CEW
+        .or. quick_cew%use_cew &
+#endif
+        )then
   
         call gpu_upload_dft_grid(quick_dft_grid%gridxb, quick_dft_grid%gridyb,quick_dft_grid%gridzb, &
         quick_dft_grid%gridb_sswt, quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, &
@@ -280,7 +292,17 @@ contains
         endif
      endif
 #endif
-  
+
+!-----------------------------------------------
+!     c_chg=2.0000000000D+00
+!     c_zeta=7.5000000000D-01
+!     c_coords(1)=1.5000000000D+00
+!     c_coords(2)=2.5000000000D+00
+!     c_coords(3)=3.5000000000D+00  
+!
+!     call computeLRI(c_coords,c_zeta,c_chg)
+!-----------------------------------------------
+
   
      bCalc1e = .true.
      diisdone = .false.
@@ -672,7 +694,16 @@ contains
 #endif
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-  
+
+           ! DELETE ME
+           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
+           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
+
+           !do i=1,10 ! DELETE ME
+           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
+           !end do ! DELETE ME
+           
+           
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
            if(quick_method%printEnergy)then
               write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
@@ -699,25 +730,26 @@ contains
               else
                  write(ioutfile,'("| ",90("-"))')
               endif
-              write (ioutfile,'("| REACH CONVERGENCE AFTER ",i3," CYLCES")') jscf
+              write (ioutfile,'("| REACH CONVERGENCE AFTER ",i3," CYCLES")') jscf
               write (ioutfile,'("| MAX ERROR = ",E12.6,2x," RMS CHANGE = ",E12.6,2x," MAX CHANGE = ",E12.6)') &
                     errormax,prms,pchange
               write (ioutfile,'("| -----------------------------------------------")')
               if (quick_method%DFT .or. quick_method%SEDFT) then
-                 write (ioutfile,'(" ALPHA ELECTRON DENSITY    =",F16.10)') quick_qm_struct%aelec
-                 write (ioutfile,'(" BETA ELECTRON DENSITY     =",F16.10)') quick_qm_struct%belec
+                 write (ioutfile,'(" ALPHA ELECTRON DENSITY    = ",F16.10)') quick_qm_struct%aelec
+                 write (ioutfile,'(" BETA ELECTRON DENSITY     = ",F16.10)') quick_qm_struct%belec
               endif
   
               if (quick_method%prtgap) write (ioutfile,'(" HOMO-LUMO GAP (EV) =",11x,F12.6)') &
                     (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
               diisdone=.true.
-  
+              quick_method%scf_conv=.true.
   
            endif
            if(jscf >= quick_method%iscf-1) then
               write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
               write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
               diisdone=.true.
+              quick_method%scf_conv=.false.
            endif
            diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
   
@@ -732,6 +764,7 @@ contains
 #ifdef MPIV
         if (bMPI) then
            call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
   !         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -752,7 +785,11 @@ contains
 #endif
   
 #if defined CUDA || defined CUDA_MPIV
-    if (quick_method%DFT) then
+    if (quick_method%DFT &
+#ifdef CEW
+       .or. quick_cew%use_cew &
+#endif
+       )then
        if(quick_method%grad) then
          call gpu_delete_dft_dev_grid()
        else

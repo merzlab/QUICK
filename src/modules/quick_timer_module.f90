@@ -53,6 +53,11 @@ module quick_timer_module
         double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
         double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
         double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
+        double precision:: Tcew=0.0d0       !Total time for cew potential contributions
+        double precision:: TcewLri=0.0d0    !Time for computing long range integrals in cew
+        double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
+        double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
+        double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
     end type quick_timer
 
     type quick_timer_cumer
@@ -85,14 +90,18 @@ module quick_timer_module
         double precision:: TDFTGrdOct=0.0d0 !Time to run octree algorithm
         double precision:: TDFTPrscrn=0.0d0 !Time to prescreen basis & primitive funtions
         double precision:: TDFTGrdPck=0.0d0 !Time to pack grid points
-        double precision:: TDip=0.0d0    !Time for calculating dipoles
+        double precision:: TDip=0.0d0       !Time for calculating dipoles
         double precision:: TDFTlb=0.0d0     !Time for xc load balancing in mgpu version
-        double precision:: TDFTrb=0.0d0    !Time for xc load re-balancing in mgpu version
-        double precision:: TDFTpg=0.0d0    !Time for XC grid pruning
+        double precision:: TDFTrb=0.0d0     !Time for xc load re-balancing in mgpu version
+        double precision:: TDFTpg=0.0d0     !Time for XC grid pruning
         double precision:: T2elb=0.0d0      !Time for eri load balancing in mgpu version
         double precision:: TEred=0.0d0      !Time for operator reduction in mpi/mgpu versions 
         double precision:: TGradred=0.0d0   !Time for gradient reductin in mpi/mgpu versions
-
+        double precision:: Tcew=0.0d0       !Total time for cew potential contributions
+        double precision:: TcewLri=0.0d0    !Time for computing long range integrals in cew
+        double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
+        double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
+        double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -252,11 +261,7 @@ module quick_timer_module
                 write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"( ",F5.2,"%)")') &
                 timer_cumer%T1eTGrad,timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 #else
-#if defined CUDA || CUDA_MPIV
-                write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME (OVERLAPPED WITH 2e GRAD TIME) =",F16.9,"(",F5.2,"%)")') &
-#else
                 write (io,'("| ",6x,"TOTAL 1e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
-#endif
                         timer_cumer%T1eTGrad,timer_cumer%T1eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
 
@@ -268,18 +273,9 @@ module quick_timer_module
                         timer_cumer%T1eVGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 
                 write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
-#if defined CUDA || CUDA_MPIV
-                (timer_cumer%T2eGrad-timer_cumer%T1eGrad), &
-                        (timer_cumer%T2eGrad-timer_cumer%T1eGrad)/(timer_end%TTotal-timer_begin%TTotal)*100
-#else
                 timer_cumer%T2eGrad,timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100                
-#endif
-#else
-#if defined CUDA || CUDA_MPIV
-                write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME (OVERLAPPED WITH 1e GRAD TIME) =",F16.9,"(",F5.2,"%)")') &
 #else
                 write (io,'("| ",6x,"TOTAL 2e GRADIENT TIME      =",F16.9,"(",F5.2,"%)")') &
-#endif
                 timer_cumer%T2eGrad,timer_cumer%T2eGrad/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
 

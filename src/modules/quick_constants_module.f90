@@ -75,6 +75,7 @@ module quick_constants_module
     double precision, parameter :: JPKC         = J_PER_CAL * 1000.0d0  !kilocalories per joule
     
     double precision, parameter :: BOHRS_TO_A   = 0.52917720859D0         ! Bohrs to A, same with bohr constant
+    double precision, parameter :: BOHRS_TO_A_AMBER = 0.529177249d0
     double precision, parameter :: A_TO_BOHRS   = 1.0d0 / BOHRS_TO_A
     
     double precision, parameter :: AU_TO_EV     = 27.21138d0               !Conversion from AU to EV 

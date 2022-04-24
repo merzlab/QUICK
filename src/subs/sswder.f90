@@ -9,6 +9,10 @@
 ! dimension UW(maxatm),wtgrad(3*maxatm)
     dimension uw(natom),wtgrad(3*natom)
 
+
+    DO I=1,natom
+       UW(I) = 1.d0
+    ENDDO
 ! Beofre we look at anything else, zero out wtgrad.
 
     DO I=1,natom*3
@@ -64,7 +68,7 @@
                     -5.d0*frctnto7)/16.d0
                     UW(Iatm)=UW(Iatm)*.5d0*(1.d0-gofconfocal)
                 ELSE
-                    continue
+                   continue
                 ENDIF
             ENDIF
         ENDDO
@@ -196,3 +200,163 @@
     ENDDO
     return
     end subroutine sswder
+
+! Following subroutine was implemented by Tim Giese based on Stratmann,
+! Scuseria, and Frisch, Chem. Phys. Lett., v257 1996, pg 213-223 paper.
+
+#define SSW_POLYFAC1 (3.4179687500)
+#define SSW_POLYFAC2 (8.344650268554688)
+#define SSW_POLYFAC3 (12.223608791828156)
+#define SSW_POLYFAC4 (7.105427357601002)
+
+  subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: p
+    
+    double precision,parameter :: a = 0.64
+    integer :: iat,jat
+    double precision :: uw(natom), uw_local
+    double precision :: mu,muoa,g,s,z,muoa3 
+    double precision :: rxg(4,natom)
+    double precision :: rigv(3),rig,rig2
+    double precision :: rjgv(3),rjg,rjg2
+    double precision :: rijv(3),rij,rij2
+    double precision :: sumw
+   
+
+    uw = 0.d0
+    
+    do iat=1,natom
+       rigv(1) = xyz(1,iat)-gridx
+       rigv(2) = xyz(2,iat)-gridy
+       rigv(3) = xyz(3,iat)-gridz
+       rig2 = rigv(1)*rigv(1)+rigv(2)*rigv(2)+rigv(3)*rigv(3)
+       rig = sqrt(rig2)
+       rxg(1:3,iat) = rigv(1:3)
+       rxg(4,iat) = rig
+    end do
+
+
+    ! Calculate wi(rg)
+    do iat=1,natom
+       uw_local = 1.0d0
+
+       rigv(1:3) = rxg(1:3,iat)
+       rig = rxg(4,iat)
+
+       ! wi(rg) = \prod_{j /= i} s(mu_{ij})
+       do jat=1,natom
+          if ( jat == iat ) then
+             cycle
+          end if
+          rjgv(1:3) = rxg(1:3,jat)
+          rjg = rxg(4,jat)
+          
+          rijv(1) = xyz(1,iat)-xyz(1,jat)
+          rijv(2) = xyz(2,iat)-xyz(2,jat)
+          rijv(3) = xyz(3,iat)-xyz(3,jat)
+          rij2 = rijv(1)*rijv(1)+rijv(2)*rijv(2)+rijv(3)*rijv(3)
+          rij = sqrt(rij2)
+
+          mu = (rig-rjg) * (1/rij)
+
+          
+          if ( mu <= -a ) then
+             g = -1.d0
+          else if ( mu >= a ) then
+             g = 1.d0
+          else
+
+             !muoa = mu/a
+             !z = (35.d0*muoa - 35.d0*muoa**3 &
+             !     & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             !g = z
+
+             ! MM optimized above statements as follows. 
+
+             !We can reduce the MUL operations by precomputing polynomial constants in eqn14. 
+             !constant of the first term, 3.4179687500 = 35.0 * (1/0.64) * (1/16) 
+             !constant of the second term, 8.344650268554688 = 35.0 * (1/0.64)^3 * (1/16) 
+             !constant of the third term, 12.223608791828156 = 21.0 * (1/0.64)^5 * (1/16) 
+             !constant of the fourth term, 7.105427357601002 = 5.0 * (1/0.64)^7 * (1/16)
+
+             muoa = mu
+             muoa3 = muoa * muoa * muoa
+
+             g=SSW_POLYFAC1 * muoa - SSW_POLYFAC2 * muoa3 +&
+               SSW_POLYFAC3 * muoa * muoa * muoa3 - &
+               SSW_POLYFAC4 * muoa * muoa3 * muoa3
+
+          end if
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(es20.10)')mu
+          
+          s = 0.50d0 * (1.d0-g)
+          !if ( iat == 1 .and. jat == 3 ) write(6,'(2es20.10)')mu,s
+
+          uw_local=uw_local*s
+       end do
+       uw(iat)=uw_local
+    end do
+
+    
+    sumw = 0.d0
+    do iat=1,natom
+       sumw = sumw + uw(iat)
+    end do
+    p = uw(Iparent) / sumw
+
+    !write(6,'(es20.10)')sumw
+
+    
+  end subroutine getssw
+
+
+
+  subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,dp)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: dp(3,natom)
+    double precision,parameter :: delta = 2.5d-5
+    double precision :: phi,plo
+    double precision :: tmpxyz(3,natom)
+    double precision :: tx,ty,tz
+    integer :: iat,k
+
+    tmpxyz=xyz
+    tx = gridx - xyz(1,Iparent)
+    ty = gridy - xyz(2,Iparent)
+    tz = gridz - xyz(3,Iparent)
+
+    
+    do iat=1,natom
+       do k=1,3
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,phi)
+
+          
+          tmpxyz(k,iat) = tmpxyz(k,iat) - 2.d0*delta
+          
+          call getssw( tx+tmpxyz(1,Iparent), &
+               & ty+tmpxyz(2,Iparent), &
+               & tz+tmpxyz(3,Iparent), &
+               & Iparent,natom,tmpxyz,plo)
+
+          tmpxyz(k,iat) = tmpxyz(k,iat) + delta
+
+          dp(k,iat) = (phi-plo)/(2.d0*delta)
+       end do
+    end do
+    
+  end subroutine getsswnumder
+
+

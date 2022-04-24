@@ -57,7 +57,13 @@ fflush(stdout);\
 #define MAX(A,B)    (A>=B?A:B)
 #define MIN(A,B)    (A<B?A:B)
 
-#define VY(a,b,c) LOC3(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+#define LOCSTORE(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
+#define LOCVY(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*gridDim.x*blockDim.x]
+#define LOCSTOREFULL(A,i1,i2,d1,d2,m) A[((i1+(i2)*(d1))*gridDim.x*blockDim.x)+(m*d1*d2*gridDim.x*blockDim.x)]
+
+//#define VY(a,b,c) LOC3(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+
 
 #define PRINTERROR(err, s) \
 {\
@@ -125,8 +131,6 @@ cudaEventDestroy(end);
 
 #define TEXDENSE(a,b) fetch_texture_double(textureDense, (a-1)*devSim.nbasis+(b-1))
 
-
-
 #define GRADADD(address, val) \
 { \
     QUICKULL val2 = (QUICKULL) (fabs((val)*GRADSCALE) + (QUICKDouble)0.5); \
@@ -134,6 +138,8 @@ cudaEventDestroy(end);
     QUICKADD(address, val2); \
 }
 
+// use intrinsic fp64 atomic add
+#define CUDAADD(address, val) atomicAdd(&(address),(val))
 
 // CUDA safe call
 #if defined DEBUG || defined DEBUGTIME
@@ -200,13 +206,14 @@ static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
+static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;
 //static const QUICKSingle PI_FLOAT           =   (QUICKSingle)3.1415926535897932384626433832795;
 #define PI (3.1415926535897932384626433832795)
 #define X0 (5.9149671727956128778234784350536)//sqrt(2*PI^2.5)
-
+#define PI_TO_3HALF (5.5683279968317079)
 
 // Energy Scale
 static const QUICKDouble OSCALE                  = (QUICKDouble) 1E12;

@@ -25,7 +25,7 @@ set(LAPACK_SOURCES
 	dgeqrf.f dormbr.f dgelqf.f dorglq.f dlas2.f dlasq1.f 
 	dlasv2.f dgelq2.f dorgl2.f dlasq2.f dormlq.f dlasq3.f 
 	dlasq4.f dlasq5.f dorml2.f dlasq6.f 
-	dgesv.f dgetrs.f dlaswp.f dgetrf.f dgerfs.f dgetf2.f 
+	dgesv.f dgetrs.f dlaswp.f dgetri.f dgetrf.f dgerfs.f dgetf2.f 
 	dsysv.f dsytrs.f dsytrf.f dlasyf.f dsytf2.f dgelss.f 
 	dgelsd.f dlalsd.f dlasdq.f dlasda.f dlalsa.f dlasd6.f dlals0.f 
 	dlasdt.f dlasd7.f dlasd8.f dlasd4.f dlasd5.f dlacn2.f 
@@ -38,7 +38,9 @@ set(LAPACK_SOURCES
 	dlaqr0.f dlaqr1.f dlaqr2.f  dlaqr3.f dlaqr4.f dlaqr5.f dlahr2.f 
 	dormhr.f dtrexc.f dlaexc.f dlasy2.f 
 	iparmq.f iladlc.f iladlr.f 
-	dlatrs.f drscl.f dlantr.f dgecon.f dgeequ.f dlaqge.f dgesvx.f 
+	dgemm.f dgemv.f dscal.f dswap.f dtrmm.f dtrmv.f dtrsm.f dtrti2.f
+        dtrtri.f xerbla.f
+        dlatrs.f drscl.f dlantr.f dgecon.f dgeequ.f dlaqge.f dgesvx.f 
 	chla_transtype.f ilatrans.f ilaprec.f 
 	dlascl2.f dgeequb.f ilazlr.f ilazlc.f dtrsen.f dtrsyl.f)
 
