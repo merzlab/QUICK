@@ -97,7 +97,7 @@ contains
      endif
 #endif
  
-     call get1e()
+     call get1e(deltaO)
 
      if(quick_method%printEnergy) call get1eEnergy
  

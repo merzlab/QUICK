@@ -58,7 +58,7 @@ contains
   
   end subroutine get1eEnergy
 
-subroutine get1e()
+subroutine get1e(deltaO)
    use allmod
 
 #ifdef CEW
@@ -67,6 +67,7 @@ subroutine get1e()
    
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
+   logical, intent(in) :: deltaO
 
 #ifdef MPIV
    include "mpif.h"
@@ -145,7 +146,7 @@ subroutine get1e()
          bCalc1e=.false.
 
        else
-         quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
+         if (.not. deltaO) quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
        endif
        call cpu_time(timer_end%t1e)
 
