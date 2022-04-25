@@ -272,7 +272,7 @@ contains
       ! one more thing, DFT
       if (quick_method%DFT) then
          if(.not. allocated(self%oxc)) allocate(self%oxc(nbasis,nbasis))
-         if(quick_method%unrst) if(.not. allocated(self%obxc)) allocate(self%obxc(nbasis,nbasis))
+         if(quick_method%unrst .and. (.not. allocated(self%obxc))) allocate(self%obxc(nbasis,nbasis))
       endif
 
       if (quick_method%grad) then
@@ -429,7 +429,7 @@ contains
       ! one more thing, DFT
       if (quick_method%DFT) then
          if (allocated(self%oxc)) deallocate(self%oxc)
-         if(quick_method%unrst) if (allocated(self%obxc)) deallocate(self%obxc)
+         if(quick_method%unrst .and. allocated(self%obxc)) deallocate(self%obxc)
       endif
 
    end subroutine
