@@ -49,9 +49,15 @@ module quick_calculated_module
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
 
+      ! matrix for saving XC potential, required for incremental KS build
+      double precision,dimension(:,:), allocatable :: oxc      
+
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
       double precision,dimension(:,:), allocatable :: ob
+
+      ! matrix for saving beta XC potential, required for incremental KS build
+      double precision,dimension(:,:), allocatable :: obxc
 
       ! saved operator matrix
       double precision,dimension(:,:), allocatable :: oSave
@@ -269,6 +275,8 @@ contains
       ! one more thing, DFT
       if (quick_method%DFT) then
          if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
+         if(.not. allocated(self%oxc)) allocate(self%oxc(nbasis,nbasis))
+         if(quick_method%unrst) if(.not. allocated(self%obxc)) allocate(self%obxc(nbasis,nbasis))
       endif
 
       if (quick_method%grad) then
@@ -425,6 +433,8 @@ contains
       ! one more thing, DFT
       if (quick_method%DFT) then
          if (allocated(self%oSaveDFT)) deallocate(self%oSaveDFT)
+         if (allocated(self%oxc)) deallocate(self%oxc)
+         if(quick_method%unrst) if (allocated(self%obxc)) deallocate(self%obxc)
       endif
 
    end subroutine
