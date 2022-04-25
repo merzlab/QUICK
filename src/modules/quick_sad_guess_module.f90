@@ -944,7 +944,7 @@ contains
      call copySym(quick_qm_struct%ob,nbasis)
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-     if(quick_method%printEnergy) call getOshellEriEnergy
+     if(quick_method%printEnergy) call getOshellEriEnergy(.false.)
   
   return
   
