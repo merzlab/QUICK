@@ -72,9 +72,7 @@ contains
         quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
         quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
   
-        do I=1,nbasis; do J=1,nbasis
-           quick_qm_struct%dense(J,I)=quick_qm_struct%dense(J,I)-quick_qm_struct%denseOld(J,I)
-        enddo; enddo
+        quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
   
      endif
   
@@ -157,9 +155,9 @@ contains
   
   !  recover density if calculate difference
      if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
-  
+
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-     if(quick_method%printEnergy) call getCshellEriEnergy
+     if(quick_method%printEnergy) call getCshellEriEnergy(deltaO)
 
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
@@ -293,7 +291,8 @@ contains
 #ifdef MPIV
      integer :: i, ii, irad_end, irad_init, jj
 #endif
-  
+ 
+     quick_qm_struct%oxc=0.0d0 
      quick_qm_struct%Exc=0.0d0
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
@@ -480,7 +479,7 @@ contains
                              tempgx = phi*dphi2dx + phi2*dphidx
                              tempgy = phi*dphi2dy + phi2*dphidy
                              tempgz = phi*dphi2dz + phi2*dphidz
-                             quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+(temp*dfdr+&
+                             quick_qm_struct%oxc(Jbas,Ibas)=quick_qm_struct%oxc(Jbas,Ibas)+(temp*dfdr+&
                              xdot*tempgx+ydot*tempgy+zdot*tempgz)*weight
                              jcount=jcount+1
                           enddo
@@ -502,6 +501,9 @@ contains
         enddo
      endif
 #endif
+
+  !  Update KS operators
+     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
   
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
