@@ -105,7 +105,7 @@ contains
        quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
      endif
   
-     if(quick_method%printEnergy) call get1eEnergy()
+     if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA

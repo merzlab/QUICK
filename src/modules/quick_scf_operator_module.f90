@@ -97,8 +97,10 @@ contains
  
      call get1e(deltaO)
 
-     if(quick_method%printEnergy) call get1eEnergy
- 
+     if(quick_method%printEnergy) call get1eEnergy(deltaO)
+
+write(*,*) "1e energy:", quick_qm_struct%Eel 
+
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
 !        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
@@ -158,6 +160,9 @@ contains
 
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getCshellEriEnergy(deltaO)
+
+write(*,*) "2e Energy added", quick_qm_struct%Eel
+
 
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
