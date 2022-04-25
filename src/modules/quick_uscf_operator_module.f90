@@ -72,9 +72,12 @@ contains
      if (deltaO) then
   !     save density matrix
         quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
-        quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+        quick_qm_struct%densebSave(:,:) = quick_qm_struct%denseb(:,:)
   
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
+        quick_qm_struct%denseb=quick_qm_struct%denseb-quick_qm_struct%densebOld
+
+        quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
      endif
 
      call oshell_density_cutoff
@@ -95,8 +98,12 @@ contains
 #endif
 
      call get1e(deltaO)
-
-     quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
+     
+     if (deltaO) then
+       quick_qm_struct%ob(:,:) = quick_qm_struct%obSave(:,:)
+     else
+       quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
+     endif
   
      if(quick_method%printEnergy) call get1eEnergy()
 
@@ -155,6 +162,10 @@ contains
   !  Remember the operator is symmetric
      call copySym(quick_qm_struct%o,nbasis)
      call copySym(quick_qm_struct%ob,nbasis)
+
+  !  recover density if calculate difference
+     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+     if (deltaO) quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy(deltaO)
@@ -164,9 +175,6 @@ contains
      !   enddo; enddo
 
      !write(*,*) "E2e=",quick_qm_struct%Eel
-  
-  !  recover density if calculate difference
-     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
   
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
