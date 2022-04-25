@@ -47,12 +47,10 @@ contains
      call cpu_time(timer_begin%tE)
   
      quick_qm_struct%Eel=0.d0
-     call copySym(quick_qm_struct%o,nbasis)
-     quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+     quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%oneElecO,nbasis)
 
      if (quick_method%unrst) then
-       call copySym(quick_qm_struct%ob,nbasis)
-       quick_qm_struct%Eel = quick_qm_struct%Eel+sum2mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+       quick_qm_struct%Eel = quick_qm_struct%Eel+sum2mat(quick_qm_struct%denseb,quick_qm_struct%oneElecO,nbasis)
      endif
 
      call cpu_time(timer_end%tE)
@@ -138,7 +136,7 @@ subroutine get1e()
          
          call copySym(quick_qm_struct%o,nbasis)
 
-         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
+         quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
@@ -211,7 +209,9 @@ subroutine get1e()
          endif
 #endif
 
-      call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
+      call copySym(quick_qm_struct%o,nbasis)
+
+      quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
