@@ -116,6 +116,9 @@ module quick_calculated_module
       ! hessian matrix and CPHF matrices, the dimension is 3natom*3natom
       double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb
 
+      ! one electron energy
+      double precision :: E1e
+
       ! electron energy
       double precision :: EEl
 
