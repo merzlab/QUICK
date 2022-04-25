@@ -217,7 +217,7 @@ subroutine get1e(deltaO)
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
      else
-       quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
+       if (.not. deltaO) quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
      endif
 
 
