@@ -65,9 +65,6 @@ module quick_calculated_module
       ! saved beta operator matrix
       double precision,dimension(:,:), allocatable :: obSave
 
-      ! saved dft operator matrix
-      double precision,dimension(:,:), allocatable :: oSaveDFT
-
       ! orbital coeffecient, the dimension is nbasis*nbasis. If it's
       ! unrestricted system, CO will represent alpha electron coeffecient
       double precision,dimension(:,:), allocatable :: co
@@ -274,7 +271,6 @@ contains
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
          if(.not. allocated(self%oxc)) allocate(self%oxc(nbasis,nbasis))
          if(quick_method%unrst) if(.not. allocated(self%obxc)) allocate(self%obxc(nbasis,nbasis))
       endif
@@ -432,7 +428,6 @@ contains
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         if (allocated(self%oSaveDFT)) deallocate(self%oSaveDFT)
          if (allocated(self%oxc)) deallocate(self%oxc)
          if(quick_method%unrst) if (allocated(self%obxc)) deallocate(self%obxc)
       endif
@@ -484,9 +479,6 @@ contains
       call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
-
-      if (quick_method%DFT)  call MPI_BCAST(self%oSaveDFT,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
       if (quick_method%PBSOL) then
          call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -583,11 +575,6 @@ contains
          call zeroMatrix(self%cob,nbasis)
          call zeroMatrix(self%denseb,nbasis)
          call zeroVec(self%Eb,nbasis)
-      endif
-
-      ! one more thing, DFT
-      if (quick_method%DFT) then
-         call zeroMatrix(self%oSaveDFT,nbasis)
       endif
 
    end subroutine
