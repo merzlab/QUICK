@@ -1058,19 +1058,33 @@ end subroutine iclass_cshell
 
 
 #ifdef OSHELL
-subroutine get_oshell_eri_energy
+subroutine get_oshell_eri_energy(deltaO)
 #else
-subroutine get_cshell_eri_energy
+subroutine get_cshell_eri_energy(deltaO)
 #endif
    use allmod
    implicit double precision(a-h,o-z)
+   logical, intent(in) :: deltaO
 
    call cpu_time(timer_begin%TE)
 #ifdef OSHELL
    quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)+ &
                        Sum2Mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+
+   ! correct the energy if deltaO and dft is on
+   if(deltaO .and. quick_method%DFT) then
+     quick_qm_struct%Eel=quick_qm_struct%Eel-Sum2Mat(quick_qm_struct%dense,quick_qm_struct%oxc,nbasis)- &
+                       Sum2Mat(quick_qm_struct%denseb,quick_qm_struct%obxc,nbasis)
+   endif
+
 #else
    quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+
+   ! correct the energy if deltaO and dft is on
+   if(deltaO .and. quick_method%DFT) then
+     quick_qm_struct%Eel=quick_qm_struct%Eel-Sum2Mat(quick_qm_struct%dense,quick_qm_struct%oxc,nbasis)
+   endif
+
 #endif
    quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
    call cpu_time(timer_end%TE)
