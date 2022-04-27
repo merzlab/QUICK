@@ -125,7 +125,7 @@ contains
 
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
-           call gpu_get_cshell_eri(quick_qm_struct%o)  
+           call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -300,7 +300,6 @@ contains
      integer :: i, ii, irad_end, irad_init, jj
 #endif
  
-     quick_qm_struct%oxc=0.0d0 
      quick_qm_struct%Exc=0.0d0
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
@@ -308,12 +307,20 @@ contains
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
-  
+
+        if(deltaO) call gpu_upload_density_matrix(quick_qm_struct%dense)
+
+        quick_qm_struct%oxc=quick_qm_struct%o 
+ 
         call gpu_get_cshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
-  
+
+        quick_qm_struct%oxc=quick_qm_struct%o-quick_qm_struct%oxc  
+
      endif
 #else
-  
+
+     quick_qm_struct%oxc=0.0d0 
+ 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
@@ -507,13 +514,14 @@ contains
            call xc_f90_func_end(xc_func(ifunc))
         enddo
      endif
+
+  !  Update KS operators
+     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
+
 #endif
 
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
-
-  !  Update KS operators
-     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
 
      return
   

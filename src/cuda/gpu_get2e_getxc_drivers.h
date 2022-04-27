@@ -22,9 +22,9 @@
 //  core part, compute 2-e integrals
 //-----------------------------------------------
 #ifdef OSHELL
-extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob)
+extern "C" void gpu_get_oshell_eri_(bool *deltaO, QUICKDouble* o, QUICKDouble* ob)
 #else
-extern "C" void gpu_get_cshell_eri_(QUICKDouble* o)
+extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #endif
 {
     PRINTDEBUG("BEGIN TO RUN GET ERI")
@@ -118,6 +118,11 @@ extern "C" void gpu_get_cshell_eri_(QUICKDouble* o)
       delete gpu->gpu_calculated->obULL;
 #endif
 
+    }else if(*deltaO != 0){
+      delete gpu->gpu_calculated->dense;
+#ifdef OSHELL
+      delete gpu->gpu_calculated->denseb;
+#endif
     }
 
     delete gpu->gpu_cutoff->cutMatrix;

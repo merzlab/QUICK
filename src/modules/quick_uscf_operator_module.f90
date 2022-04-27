@@ -133,7 +133,7 @@ contains
 
 #if defined CUDA || defined CUDA_MPIV
         if (quick_method%bCUDA) then          
-           call gpu_get_oshell_eri(quick_qm_struct%o, quick_qm_struct%ob)
+           call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -205,7 +205,7 @@ contains
         call cpu_time(timer_begin%TEx)
   
   !  Calculate exchange correlation contribution & add to operator    
-        call get_oshell_xc
+        call get_oshell_xc(deltaO)
   
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)
@@ -263,7 +263,7 @@ contains
   
   end subroutine uscf_operator
   
-  subroutine get_oshell_xc
+  subroutine get_oshell_xc(deltaO)
   !----------------------------------------------------------------
   !  The purpose of this subroutine is to calculate the exchange
   !  correlation contribution to the Fock operator. 
@@ -300,6 +300,7 @@ contains
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
+     logical, intent(in) :: deltaO
      double precision, dimension(2) :: libxc_rho
      double precision, dimension(3) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
@@ -326,8 +327,6 @@ contains
      integer :: i, ii, irad_end, irad_init, jj
 #endif
   
-     quick_qm_struct%oxc=0.0d0
-     quick_qm_struct%obxc=0.0d0
      quick_qm_struct%Exc=0.0d0
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
@@ -336,11 +335,26 @@ contains
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
+        if(deltaO) then
+          call gpu_upload_density_matrix(quick_qm_struct%dense)
+          call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
+        endif
+
+        quick_qm_struct%oxc=quick_qm_struct%o
+        quick_qm_struct%obxc=quick_qm_struct%ob
+
         call gpu_get_oshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
         quick_qm_struct%ob)
+
+        quick_qm_struct%oxc=quick_qm_struct%o-quick_qm_struct%oxc
+        quick_qm_struct%obxc=quick_qm_struct%ob-quick_qm_struct%obxc
+
      endif
 #else
-  
+ 
+     quick_qm_struct%oxc=0.0d0
+     quick_qm_struct%obxc=0.0d0   
+ 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
@@ -551,11 +565,12 @@ contains
            call xc_f90_func_end(xc_func(ifunc))
         enddo
      endif
-#endif
 
   !  Update KS operators
      quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
-     quick_qm_struct%ob=quick_qm_struct%ob+quick_qm_struct%obxc  
+     quick_qm_struct%ob=quick_qm_struct%ob+quick_qm_struct%obxc
+
+#endif
 
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
