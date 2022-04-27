@@ -50,7 +50,7 @@ module quick_calculated_module
       double precision,dimension(:,:), allocatable :: o
 
       ! matrix for saving XC potential, required for incremental KS build
-      double precision,dimension(:,:), allocatable :: oxc      
+      double precision,dimension(:,:), allocatable :: oxc 
 
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
@@ -554,7 +554,6 @@ contains
       call zeroVec(self%Lowdin,natom)
 
       call zeroMatrix(self%denseOld,nbasis)
-
 
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
