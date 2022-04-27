@@ -44,7 +44,7 @@ contains
      include "mpif.h"
 #endif
   !   double precision oneElecO(nbasis,nbasis)
-     logical :: deltaO
+     logical, intent(in) :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
@@ -77,7 +77,13 @@ contains
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
         quick_qm_struct%denseb=quick_qm_struct%denseb-quick_qm_struct%densebOld
 
-        quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+        if(quick_method%dft)then 
+          quick_qm_struct%o=quick_qm_struct%oSave-quick_qm_struct%oxc
+          quick_qm_struct%ob=quick_qm_struct%obSave-quick_qm_struct%obxc
+        else
+          quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+          quick_qm_struct%ob(:,:) = quick_qm_struct%obSave(:,:)
+        endif
      endif
 
      call oshell_density_cutoff
@@ -99,9 +105,7 @@ contains
 
      call get1e(deltaO)
      
-     if (deltaO) then
-       quick_qm_struct%ob(:,:) = quick_qm_struct%obSave(:,:)
-     else
+     if (.not. deltaO) then
        quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
      endif
   
@@ -168,7 +172,7 @@ contains
      if (deltaO) quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-     if(quick_method%printEnergy) call getOshellEriEnergy(deltaO)
+     if(quick_method%printEnergy) call getOshellEriEnergy
 
      !   do I=1,nbasis; do J=1,nbasis
      !     write(*,*) i,j,quick_qm_struct%o(j,i),quick_qm_struct%ob(j,i)

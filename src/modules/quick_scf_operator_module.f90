@@ -70,10 +70,13 @@ contains
      if (deltaO) then
   !     save density matrix
         quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
-        quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
-  
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
-  
+
+        if(quick_method%dft) then
+          quick_qm_struct%o = quick_qm_struct%oSave-quick_qm_struct%oxc
+        else
+          quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+        endif
      endif
   
   !  Delta density matrix cutoff
@@ -99,7 +102,7 @@ contains
 
      if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-write(*,*) "1e energy:", quick_qm_struct%Eel 
+!write(*,*) "1e energy:", quick_qm_struct%Eel 
 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
@@ -159,9 +162,9 @@ write(*,*) "1e energy:", quick_qm_struct%Eel
      if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-     if(quick_method%printEnergy) call getCshellEriEnergy(deltaO)
+     if(quick_method%printEnergy) call getCshellEriEnergy
 
-write(*,*) "2e Energy added", quick_qm_struct%Eel
+!write(*,*) "2e Energy added", quick_qm_struct%Eel
 
 
 #ifdef MPIV
@@ -187,14 +190,13 @@ write(*,*) "2e Energy added", quick_qm_struct%Eel
   
   !  Start the timer for exchange correlation calculation
         call cpu_time(timer_begin%TEx)
-  
+
   !  Calculate exchange correlation contribution & add to operator    
-        call get_xc
-  
+        call get_xc(deltaO)
+
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)
-  
-  
+ 
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
@@ -242,7 +244,7 @@ write(*,*) "2e Energy added", quick_qm_struct%Eel
   
   end subroutine scf_operator
   
-  subroutine get_xc
+  subroutine get_xc(deltaO)
   !----------------------------------------------------------------
   !  The purpose of this subroutine is to calculate the exchange
   !  correlation contribution to the Fock operator. 
@@ -279,6 +281,7 @@ write(*,*) "2e Energy added", quick_qm_struct%Eel
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
+     logical, intent(in) :: deltaO
      double precision, dimension(1) :: libxc_rho
      double precision, dimension(1) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
@@ -301,8 +304,7 @@ write(*,*) "2e Energy added", quick_qm_struct%Eel
      quick_qm_struct%Exc=0.0d0
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
-  
-  
+
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
@@ -507,12 +509,12 @@ write(*,*) "2e Energy added", quick_qm_struct%Eel
      endif
 #endif
 
-  !  Update KS operators
-     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
-  
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
-  
+
+  !  Update KS operators
+     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
+
      return
   
   end subroutine get_xc
