@@ -97,8 +97,8 @@ contains
   !  Curently, only analytical gradients are available. This should be changed later.
      quick_method%analgrad=.true.
   
-     quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
-     quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
+  !   quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
+  !   quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
   
   !  Set array elements required for printing the gradients
      cartsym(1) = 'X'
