@@ -655,7 +655,7 @@ endif
             if (index(keywd,'CUTOFF') /= 0) then
                 call read(keywd, 'CUTOFF', self%acutoff)
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
-                self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
+                self%primLimit=self%acutoff*1.0d-1 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
             endif
 
