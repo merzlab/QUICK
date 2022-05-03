@@ -207,7 +207,9 @@ contains
   !  Add time total time
         timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
      endif
-  
+
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:) 
+ 
 #ifdef MPIV
   !  MPI reduction operations
   

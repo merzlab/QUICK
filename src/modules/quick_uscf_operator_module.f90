@@ -132,8 +132,10 @@ contains
      call cpu_time(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV
-        if (quick_method%bCUDA) then          
+        if (quick_method%bCUDA) then   
+       
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
+
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -174,12 +176,6 @@ contains
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
 
-     !   do I=1,nbasis; do J=1,nbasis
-     !     write(*,*) i,j,quick_qm_struct%o(j,i),quick_qm_struct%ob(j,i)
-     !   enddo; enddo
-
-     !write(*,*) "E2e=",quick_qm_struct%Eel
-  
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
@@ -221,7 +217,10 @@ contains
   !  Add time total time
         timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
      endif
-  
+
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
+     quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
+
 #ifdef MPIV
   !  MPI reduction operations
   

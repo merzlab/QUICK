@@ -339,7 +339,9 @@ contains
         if (quick_method%debug)  call debug_SCF(jscf)
   
         call scf_operator(deltaO)
-  
+
+        quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
+
         if (quick_method%debug)  call debug_SCF(jscf)
   
         ! Terminate Operator timer
@@ -350,9 +352,6 @@ contains
            ! End of Delta Matrix
            !-----------------------------------------------
            call cpu_time(timer_begin%TDII)
-  
-           quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
-           quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
   
            !if (quick_method%debug)  write(ioutfile,*) "hehe hf"
            !if (quick_method%debug)  call debug_SCF(jscf)
@@ -765,9 +764,7 @@ contains
         if (bMPI) then
            call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-  !         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
