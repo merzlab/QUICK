@@ -39,19 +39,19 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar 15 14:23:51 2022
+| TASK STARTS ON: Tue May  3 18:19:12 2022
 | INPUT FILE :    ene_NH4_rhf_631gss.in
 | OUTPUT FILE:    ene_NH4_rhf_631gss.out
 | DATA FILE  :    ene_NH4_rhf_631gss.dat
-| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+| BASIS SET PATH: /mnt/home/manathun/Work/fix-delta-density-dft/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        3
+| CUDA ENABLED DEVICE         :        4
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE NAME            : Tesla V100S-PCIE-32GB
 | CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.60
+| CUDA DEVICE MEMORY SIZE (MB):    32510
 | SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
@@ -69,15 +69,15 @@
  DIPOLE
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
- DELTA DENSITY START CYCLE = 1000
+ DELTA DENSITY START CYCLE =    5
  COMPUTATIONAL CUTOFF: 
       TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-19
+      BASIS SET PRIME  =  0.100E-09
       MATRIX ELEMENTS  =  0.100E-09
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /home/madu/saved-test-update/install/basis/6-31GDP.BAS
+| BASIS FILE = /mnt/home/manathun/Work/fix-delta-density-dft/basis/6-31GDP.BAS
 
  @ Finish reading job
 
@@ -133,17 +133,17 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -56.853013804      ------         0.012     1        0.00      0.01      0.00    0.2387E+01  0.4333E-01  0.3835E+00
-|  2    -56.510522573  -.342491E+00       0.007     2        0.00      0.00      0.00    0.8320E-01  0.9105E-02  0.5850E-01
-|  3    -56.534324486  0.238019E-01       0.007     3        0.00      0.00      0.00    0.4268E-01  0.2195E-02  0.3190E-01
-|  4    -56.537271976  0.294749E-02       0.007     4        0.00      0.00      0.00    0.1049E-01  0.6713E-03  0.4682E-02
-|  5    -56.537494396  0.222419E-03       0.007     5        0.00      0.00      0.00    0.9249E-03  0.7766E-04  0.7217E-03
-|  6    -56.537497402  0.300640E-05       0.007     6        0.00      0.00      0.00    0.7441E-04  0.2015E-04  0.1910E-03
-|  7    -56.537497444  0.414142E-07       0.008     7        0.00      0.00      0.00    0.1251E-04  0.1290E-05  0.1294E-04
-|  8    -56.537497444  0.242705E-09       0.007     8        0.00      0.00      0.00    0.8963E-06  0.7480E-07  0.1091E-05
+|  1    -56.853013804      ------         0.019     1        0.01      0.01      0.01    0.2387E+01  0.4333E-01  0.3835E+00
+|  2    -56.510522573  -.342491E+00       0.024     2        0.02      0.00      0.02    0.8320E-01  0.9105E-02  0.5850E-01
+|  3    -56.534324486  0.238019E-01       0.016     3        0.01      0.00      0.01    0.4268E-01  0.2195E-02  0.3190E-01
+|  4    -56.537271976  0.294749E-02       0.017     4        0.01      0.00      0.01    0.1049E-01  0.6713E-03  0.4682E-02
+|  5    -56.537494396  0.222419E-03       0.016     5        0.01      0.00      0.01    0.9249E-03  0.7766E-04  0.7217E-03
+|  6    -56.537497402  0.300640E-05       0.014     6        0.01      0.00      0.01    0.7441E-04  0.2015E-04  0.1910E-03
+|  7    -56.537497444  0.414899E-07       0.013     7        0.01      0.00      0.01    0.1251E-04  0.1290E-05  0.1294E-04
+|  8    -56.537497444  0.534213E-09       0.013     8        0.01      0.00      0.01    0.8962E-06  0.7471E-07  0.1092E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   8 CYCLES
-| MAX ERROR = 0.896334E-06   RMS CHANGE = 0.747960E-07   MAX CHANGE = 0.109134E-05
+| MAX ERROR = 0.896240E-06   RMS CHANGE = 0.747114E-07   MAX CHANGE = 0.109153E-05
 | -----------------------------------------------
  ELECTRONIC ENERGY    =    -72.315553183
  CORE_CORE REPULSION  =     15.778055739
@@ -191,17 +191,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.913263000( 15.76%)
-| TOTAL SCF TIME      =     0.062446000(  1.08%)
-|       TOTAL OP TIME      =     0.040156000(  0.69%)
-|             TOTAL 1e TIME      =     0.001680000(  0.03%)
-|             TOTAL 2e TIME      =     0.036342000(  0.63%)
-|       TOTAL DII TIME      =     0.022231000(  0.38%)
-|             TOTAL DIAG TIME    =     0.016577000(  0.29%)
-| TOTAL TIME          =     5.795849000
+| INITIAL GUESS TIME  =     0.841382000( 20.85%)
+| TOTAL SCF TIME      =     0.132917000(  3.29%)
+|       TOTAL OP TIME      =     0.031116000(  0.77%)
+|             TOTAL 1e TIME      =     0.001374000(  0.03%)
+|             TOTAL 2e TIME      =     0.027272000(  0.68%)
+|       TOTAL DII TIME      =     0.101661000(  2.52%)
+|             TOTAL DIAG TIME    =     0.093255000(  2.31%)
+| TOTAL TIME          =     4.035181000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  5.8 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  4.0 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar 15 14:23:57 2022
+| Normal Termination. Task Finished on: Tue May  3 18:19:16 2022
