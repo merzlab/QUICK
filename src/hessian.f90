@@ -184,8 +184,13 @@ subroutine HFHessian
   ! intesting fact is d2Vnn/dXAdXA=d2Vnn/dXBdXB.  We use this
   ! in the next loop.
 
-  do Iatm=1,natom
-     do Jatm=Iatm+1,natom
+  write(ioutfile,*)
+  write(ioutfile,*)'before:'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
+  do Iatm=1,natom+quick_molspec%nextatom
+     do Jatm=Iatm+1,natom+quick_molspec%nextatom
         Istart = (Iatm-1)*3
         Jstart = (Jatm-1)*3
         XAminXB = xyz(1,Iatm)-xyz(1,Jatm)
@@ -196,42 +201,49 @@ subroutine HFHessian
         RAB5 = temp**(-2.5d0)
         ZA = quick_molspec%chg(Iatm)
         ZB = quick_molspec%chg(Jatm)
+        RAB3 = ZA*ZB*RAB3
+        RAB5 = ZA*ZB*RAB5
 
-        temp = ZA*ZB*(3.d0*RAB5*XAminXB**2.d0-RAB3)
-        quick_qm_struct%hessian(Istart+1,Istart+1) = temp
-        quick_qm_struct%hessian(Jstart+1,Jstart+1) = temp
+        temp = (3.d0*RAB5*XAminXB**2.d0-RAB3)
+        quick_qm_struct%hessian(Istart+1,Istart+1) = quick_qm_struct%hessian(Istart+1,Istart+1)-RAB3+(3.d0*RAB5*XAminXB**2.d0)
+        quick_qm_struct%hessian(Jstart+1,Jstart+1) = quick_qm_struct%hessian(Jstart+1,Jstart+1)-RAB3-(3.d0*RAB5*XAminXB**2.d0)
         quick_qm_struct%hessian(Jstart+1,Istart+1) = -temp
 
-        temp = ZA*ZB*(3.d0*RAB5*YAminYB**2.d0-RAB3)
-        quick_qm_struct%hessian(Istart+2,Istart+2) = temp
-        quick_qm_struct%hessian(Jstart+2,Jstart+2) = temp
+        temp = (3.d0*RAB5*YAminYB**2.d0-RAB3)
+        quick_qm_struct%hessian(Istart+2,Istart+2) = quick_qm_struct%hessian(Istart+2,Istart+2)-RAB3+(3.d0*RAB5*XAminXB**2.d0)
+        quick_qm_struct%hessian(Jstart+2,Jstart+2) = quick_qm_struct%hessian(Jstart+2,Jstart+2)-RAB3-(3.d0*RAB5*XAminXB**2.d0)
         quick_qm_struct%hessian(Jstart+2,Istart+2) = -temp
 
-        temp = ZA*ZB*(3.d0*RAB5*ZAminZB**2.d0-RAB3)
-        quick_qm_struct%hessian(Istart+3,Istart+3) = temp
-        quick_qm_struct%hessian(Jstart+3,Jstart+3) = temp
+        temp = (3.d0*RAB5*ZAminZB**2.d0-RAB3)
+        quick_qm_struct%hessian(Istart+3,Istart+3) = quick_qm_struct%hessian(Istart+3,Istart+3)-RAB3+(3.d0*RAB5*XAminXB**2.d0)
+        quick_qm_struct%hessian(Jstart+3,Jstart+3) = quick_qm_struct%hessian(Jstart+3,Jstart+3)-RAB3-(3.d0*RAB5*XAminXB**2.d0)
         quick_qm_struct%hessian(Jstart+3,Istart+3) = -temp
 
-        temp = ZA*ZB*(3.d0*RAB5*XAminXB*YAminYB)
-        quick_qm_struct%hessian(Istart+2,Istart+1) = temp
-        quick_qm_struct%hessian(Jstart+2,Jstart+1) = temp
+        temp = (3.d0*RAB5*XAminXB*YAminYB)
+        quick_qm_struct%hessian(Istart+2,Istart+1) = quick_qm_struct%hessian(Istart+2,Istart+1)+temp
+        quick_qm_struct%hessian(Jstart+2,Jstart+1) = quick_qm_struct%hessian(Jstart+2,Jstart+1)-temp
         quick_qm_struct%hessian(Jstart+1,Istart+2) = -temp
         quick_qm_struct%hessian(Jstart+2,Istart+1) = -temp
 
-        temp = ZA*ZB*(3.d0*RAB5*XAminXB*ZAminZB)
-        quick_qm_struct%hessian(Istart+3,Istart+1) = temp
-        quick_qm_struct%hessian(Jstart+3,Jstart+1) = temp
+        temp = (3.d0*RAB5*XAminXB*ZAminZB)
+        quick_qm_struct%hessian(Istart+3,Istart+1) = quick_qm_struct%hessian(Istart+3,Istart+1)+temp
+        quick_qm_struct%hessian(Jstart+3,Jstart+1) = quick_qm_struct%hessian(Jstart+3,Jstart+1)-temp
         quick_qm_struct%hessian(Jstart+1,Istart+3) = -temp
         quick_qm_struct%hessian(Jstart+3,Istart+1) = -temp
 
-        temp = ZA*ZB*(3.d0*RAB5*YAminYB*ZAminZB)
-        quick_qm_struct%hessian(Istart+3,Istart+2) = temp
-        quick_qm_struct%hessian(Jstart+3,Jstart+2) = temp
+        temp = (3.d0*RAB5*YAminYB*ZAminZB)
+        quick_qm_struct%hessian(Istart+3,Istart+2) = quick_qm_struct%hessian(Istart+3,Istart+2)+temp
+        quick_qm_struct%hessian(Jstart+3,Jstart+2) = quick_qm_struct%hessian(Jstart+3,Jstart+2)-temp
         quick_qm_struct%hessian(Jstart+2,Istart+3) = -temp
         quick_qm_struct%hessian(Jstart+3,Istart+2) = -temp
      enddo
   enddo
 
+  write(ioutfile,*)
+  write(ioutfile,*)'The 2nd derivative of the nuclear repulsion'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
 
   ! 2)  The negative of the energy weighted density matrix element i j
   ! with the second derivative of the ij overlap.
@@ -1153,6 +1165,11 @@ subroutine HFHessian
      enddo
   enddo
 
+  write(ioutfile,*)
+  write(ioutfile,*)'The 2nd derivative of the Overlap integral and KE'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
   ! 4)  The second derivative of the 1 electron nuclear attraction term ij
   ! ij times the density matrix element ij.
 
@@ -1753,6 +1770,11 @@ subroutine HFHessian
      enddo
   enddo
 
+  write(ioutfile,*)
+  write(ioutfile,*)'The 2nd derivative of the 1 electron nuclear attraction term'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
 
   ! 5)  The 2nd derivative of the 4center 2e- terms with respect to X times
   ! the coefficient found in the energy. (i.e. the multiplicative
@@ -1866,6 +1888,11 @@ subroutine HFHessian
      enddo
   enddo
 
+  write(ioutfile,*)
+  write(ioutfile,*)'The 2nd derivative of the 4center 2e- terms'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
   !  do I=1,natom*3
   !     do J=I,natom*3
   !        print *,'INTEGRALS',HESSIAN(J,I)
@@ -2084,7 +2111,7 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
      ! density matrix.  This is done in two subprograms.  The first of these
      ! forms the first derivative of the density matrix and adds the contribution
      ! to the Hessian.  This is fairly simple.
-     
+
      call dmxderiv(IDX,BU)
 
      ! At this point we now have the density matrix derivatives.  Now we need to
@@ -2093,21 +2120,26 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
 
      call hfdmxderuse(IDX)
 
-print*,'Test 1'
      call Ewtdmxder(IDX)
+  write(ioutfile,*)
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
   enddo
 
   ! At this point some of the elements above the diagonal.  Sum those into
   ! below the diagonal and then set the whol thing to be symmetric.
 
-print*,'Test 2'
-  do I=1,natom*3
-     do J=I+1,natom*3
-        quick_qm_struct%hessian(I,J) = quick_qm_struct%hessian(J,I)
-     enddo
-  enddo
+!  do I=1,natom*3
+!     do J=I+1,natom*3
+!        quick_qm_struct%hessian(I,J) = quick_qm_struct%hessian(J,I)
+!     enddo
+!  enddo
 
-print*,'HFHessian FINISHED'
+  write(ioutfile,*)
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
 end subroutine HFHessian
 
 
@@ -3873,6 +3905,7 @@ subroutine hfdmxderuse(IDX)
   enddo
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 1)  The derivative of the 1 electron kinetic energy term ij times
   ! the density matrix derivative element ij.
 
@@ -4273,6 +4306,7 @@ subroutine hfdmxderuse(IDX)
      enddo
   enddo
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
   ! 3)  The derivative of the 4center 2e- terms with respect to X times
