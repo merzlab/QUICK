@@ -131,6 +131,7 @@ cpmakein:
 	@cp ./make.in $(modfolder)
 	@cp ./make.in $(blasfolder)
 	@cp ./make.in $(dlfindfolder)
+	@cp ./make.in $(dftd3folder)
 	@cp ./make.in $(lapackfolder)
 
 #================= common subroutine library ============================
@@ -169,6 +170,9 @@ dlfind:
 #================= LAPACK library =====================================
 lapack:
 	@cd $(lapackfolder) && make --no-print-directory all
+#===================== dftd3 library =================================
+dftd3:
+	@cd $(dftd3folder) && make --no-print-directory all
 
 #=============== targets for CUBLAS =====================================
 
@@ -202,25 +206,25 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 
 .PHONY: serial cuda mpi cudampi
 
-serial: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+serial: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack dftd3 $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 
-cuda: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+cuda: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack dftd3 $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 
-mpi: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+mpi: cpmakein libxc_cpu quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack dftd3 $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -llapack -lblas-quick $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 
-cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack dftd3 $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -230,7 +234,8 @@ cudampi: cpmakein libxc_cuda quick_modules dlfind octree quick_cuda quick_subs $
 
 clean:
 	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
-	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o
+	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o \
+	$(dftd3objfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
 	@cd $(blasfolder) && make --no-print-directory clean
@@ -239,3 +244,4 @@ clean:
 	@cd $(libxcfolder)/maple2c_device && make --no-print-directory clean
 	@cd $(dlfindfolder) && make --no-print-directory clean
 	@cd $(lapackfolder) && make --no-print-directory clean
+	@cd $(dftd3folder) && make --no-print-directory clean
