@@ -24,19 +24,19 @@ include $(MAKEIN)
 
 FOR=$(FC) $(FFLAGS)
 
-DFTD3 = $(dftd3folder)/common.o $(dftd3folder)/sizes.o $(dftd3folder)/pars.o $(dftd3folder)/core.o \
-	$(dftd3folder)/api.o
+DFTD3 = $(dftd3objfolder)/common.o $(dftd3objfolder)/sizes.o $(dftd3objfolder)/pars.o \
+	$(dftd3objfolder)/core.o $(dftd3objfolder)/api.o
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-$(DFTD3):$(dftd3folder)/%.o:%.f90
+$(DFTD3):$(dftd3objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
 all:$(DFTD3)
-        $(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libdftd3.$(LIBEXT) $(dftd3folder)/*.o
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libdftd3.$(LIBEXT) $(dftd3objfolder)/*.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
