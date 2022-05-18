@@ -735,7 +735,6 @@ endif
 
             self%HF =  .false.       ! HF
             self%DFT =  .false.      ! DFT
-            self%DFTD3 = .false.     ! DFT-D3
             self%MP2 =  .false.      ! MP2
             self%B3LYP = .false.     ! B3LYP
             self%BLYP = .false.      ! BLYP
@@ -743,6 +742,13 @@ endif
             self%MPW91LYP = .false.  ! MPW91LYP
             self%MPW91PW91 = .false. ! MPW91PW91
             self%SEDFT = .false.     ! Semi-Empirical DFT
+            self%edisp= .false.      ! Emperical Dispersion   
+            self%DFTD2= .false.      ! DFT-D2 dispersion correction
+            self%DFTD3= .false.      ! D3 correction with zero damping
+            self%DFTD3BJ= .false.    ! D3 correction with BJ damping
+            self%DFTD3M= .false.     ! Modified D3 correction with zero damping
+            self%DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
+
             self%PBSOL = .false.     ! PB Solvent
             self%UNRST =  .false.    ! Unrestricted
 
