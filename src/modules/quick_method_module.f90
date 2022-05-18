@@ -28,6 +28,12 @@ module quick_method_module
         logical :: MPW91LYP = .false.  ! MPW91LYP
         logical :: MPW91PW91 = .false. ! MPW91PW91
         logical :: SEDFT = .false.     ! Semi-Empirical DFT
+        logical :: edisp= .false.      ! Emperical Dispersion
+        logical :: DFTD2= .false.      ! DFT-D2 dispersion correction
+        logical :: DFTD3= .false.      ! D3 correction with zero damping
+        logical :: DFTD3BJ= .false.    ! D3 correction with BJ damping
+        logical :: DFTD3M= .false.     ! Modified D3 correction with zero damping
+        logical :: DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
 
         logical :: PBSOL = .false.     ! PB Solvent
         logical :: UNRST =  .false.    ! Unrestricted
@@ -352,6 +358,7 @@ module quick_method_module
                 elseif(self%MPW91PW91) then
                     write(io,'(" DENSITY FUNCTIONAL = MPW91PW91")')
                 endif
+                
             else if (self%SEDFT) then
                 write(io,'(" METHOD = SEMI-EMPIRICAL DENSTITY FUNCTIONAL THEORY")')
             endif
@@ -567,6 +574,15 @@ endif
 
             if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
+            ! set dispersion correction options
+            if (index(keyWD,'D2').ne.0)         self%DFTD2=.true.
+            if (index(keyWD,'D3').ne.0)         self%DFTD3=.true.
+            if (index(keyWD,'D3BJ').ne.0)         self%DFTD3BJ=.true.
+            if (index(keyWD,'D3M').ne.0)         self%DFTD3M=.true.
+            if (index(keyWD,'D3MBJ').ne.0)         self%DFTD3MBJ=.true.
+            if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M &
+              .or. self%DFTD3MBJ) self%edisp=.true.
+
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
             if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.
@@ -719,6 +735,7 @@ endif
 
             self%HF =  .false.       ! HF
             self%DFT =  .false.      ! DFT
+            self%DFTD3 = .false.     ! DFT-D3
             self%MP2 =  .false.      ! MP2
             self%B3LYP = .false.     ! B3LYP
             self%BLYP = .false.      ! BLYP
