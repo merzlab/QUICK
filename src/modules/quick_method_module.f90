@@ -363,11 +363,22 @@ module quick_method_module
                 write(io,'(" METHOD = SEMI-EMPIRICAL DENSTITY FUNCTIONAL THEORY")')
             endif
 
-if (self%nodirect) then
-write(io,'(" SAVE 2E INT TO DISK ")')
-else
-write(io,'(" DIRECT SCF ")')
-endif
+            if(self%edisp) then
+              if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M .or. self%DFTD3MBJ) then
+                write(io,'(" USING GRIMME DISPERSION CORRECTION: REPACKAGED DFT-D3 LIBRARY v0.9")')
+              endif
+              if(self%DFTD2) write(io,'("   DISPERSION METHOD = D2")')
+              if(self%DFTD3) write(io,'("   DISPERSION METHOD = D3, ZERO DAMPING")')
+              if(self%DFTD3BJ) write(io,'("   DISPERSION METHOD = D3, BJ DAMPING")')
+              if(self%DFTD3M) write(io,'("   DISPERSION METHOD = MODIFIED D3, ZERO DAMPING")')
+              if(self%DFTD3MBJ) write(io,'("   DISPERSION METHOD = MODIFIED D3, BJ DAMPING")')
+            endif
+
+            if (self%nodirect) then
+              write(io,'(" SAVE 2E INT TO DISK ")')
+            else
+              write(io,'(" DIRECT SCF ")')
+            endif
 
             if (self%PDB) write(io,'(" PDB INPUT ")')
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
