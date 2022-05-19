@@ -15,6 +15,7 @@ subroutine getEnergy(isGuess, ierr)
    use quick_scf_module
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
+   use quick_dftd3_module, only: calculateDFTD3 
 
 #ifdef CEW
    use quick_cew_module, only : quick_cew
@@ -90,6 +91,9 @@ subroutine getEnergy(isGuess, ierr)
             enddo
          enddo
       endif
+
+      ! calculate emperical dispersion correction 
+      if(quick_method%edisp) call calculateDFTD3
 
    endif
    ! Converge the density matrix.
