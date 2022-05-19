@@ -234,7 +234,16 @@ contains
      timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
   
 #endif
-  
+
+  ! add dispersion correction
+#ifdef MPIV  
+  if(master) then
+#endif
+    if(quick_method%edisp) quick_qm_struct%Eel=quick_qm_struct%Eel+quick_qm_struct%Edisp
+#ifdef MPIV
+  endif
+#endif
+
   return
   
   end subroutine scf_operator
