@@ -110,6 +110,9 @@ module quick_calculated_module
       ! gradient of the point charges, the dimension is 3 times nextatom
       double precision,dimension(:), allocatable   :: ptchg_gradient
 
+      ! dispersion energy gradient
+      double precision,dimension(:,:), allocatable   :: disp_gradient
+
       ! hessian matrix and CPHF matrices, the dimension is 3natom*3natom
       double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb
 
@@ -118,6 +121,9 @@ module quick_calculated_module
 
       ! exchange correlation energy
       double precision :: Exc
+
+      ! dispersion correction energy
+      double precision :: Edisp
 
       ! core energy
       double precision :: ECore
@@ -238,6 +244,10 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
+
+         if(quick_method%edisp) then
+           if(.not. allocated(self%disp_gradient)) allocate(self%disp_gradient(3,natom))
+         endif
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
@@ -398,6 +408,9 @@ contains
          if (allocated(self%gradient)) deallocate(self%gradient)
          if (quick_method%extCharges) then
             if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
+         endif
+         if(quick_method%edisp) then
+            if (allocated(self%disp_gradient)) deallocate(self%disp_gradient)
          endif
       endif
 
