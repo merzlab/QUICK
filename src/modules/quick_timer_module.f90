@@ -58,6 +58,7 @@ module quick_timer_module
         double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
+        double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
     end type quick_timer
 
     type quick_timer_cumer
@@ -102,6 +103,7 @@ module quick_timer_module
         double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
+        double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -201,6 +203,12 @@ module quick_timer_module
             endif
 #endif
 #endif
+
+            if(quick_method%edisp) then
+                write (io,'("| DISPERSION CORRECTION TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%Tdisp, &
+                timer_cumer%Tdisp/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
             if (quick_method%nodirect) &
             write (io,'("| 2E EVALUATION TIME =",F16.9,"( ",F5.2,"%)")') timer_end%T2eAll-timer_begin%T2eAll, &
                 (timer_end%T2eAll-timer_begin%T2eAll)/(timer_end%TTotal-timer_begin%TTotal)*100

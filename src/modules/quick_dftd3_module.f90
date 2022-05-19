@@ -30,12 +30,15 @@ contains
     use quick_molspec_module
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
+    use quick_timer_module
     implicit none
 
     type(dftd3_input) :: input
     type(dftd3_calc) :: dftd3    
     integer :: version
     character(len=8) :: functional
+
+    call cpu_time(timer_begin%Tdisp)
 
     ! set version
     if(quick_method%DFTD2) then
@@ -88,6 +91,12 @@ contains
   write(*, "(A)") "Gradients [au]:"
   write(*, "(3ES20.12)") quick_qm_struct%disp_gradient
   write(*, *)
+
+    call cpu_time(timer_end%Tdisp)
+
+    timer_cumer%Tdisp=timer_cumer%Tdisp+timer_end%Tdisp-timer_begin%Tdisp  
+
+    return
 
   end subroutine calculate_dispersion_energy
 
