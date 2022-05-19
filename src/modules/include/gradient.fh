@@ -358,6 +358,15 @@ contains
      timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
   
 #endif
+
+  ! add gradient contributions due to dispersion correction 
+#ifdef MPIV
+  if(master) then
+#endif
+    if(quick_method%edisp) quick_qm_struct%gradient=quick_qm_struct%gradient+reshape(quick_qm_struct%disp_gradient, (/3*natom/))
+#ifdef MPIV
+  endif
+#endif
   
   !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
