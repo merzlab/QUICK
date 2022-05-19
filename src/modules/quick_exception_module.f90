@@ -121,6 +121,9 @@ contains
     case(33)
       msg='SCF failed to converge. ALLOW_BAD_SCF keyword must be specified to proceed with geometry optimization.'
 
+    case(34)
+      msg='Dispersion correction unavailable for DFT functional being used.'
+
     case default
       msg='Unknown error.'
 

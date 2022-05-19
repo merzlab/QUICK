@@ -183,13 +183,15 @@ contains
   ! set parameters
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
-  subroutine setfuncpar(func,version,TZ,s6,rs6,s18,rs18,alp)
+  subroutine setfuncpar(func,version,TZ,s6,rs6,s18,rs18,alp, ierr)
     integer version
     real(wp) s6,rs6,s18,alp,rs18
     character*(*) func
     logical TZ
+    integer, intent(inout) :: ierr
     ! double hybrid values revised according to procedure in the GMTKN30 pap
 
+    ierr=0
 
     if(version.eq.6)then
     s6  =1.0d0
@@ -230,7 +232,9 @@ contains
            s18 =0.906564
            rs18=3.593680
       case DEFAULT
-            call stoprun( 'functional name unknown' )
+            !call stoprun( 'functional name unknown' )
+           ierr=34
+           return
     end select
     endif
 
@@ -273,7 +277,9 @@ contains
            s18 =1.280619
            rs18=0.003160
       case DEFAULT
-            call stoprun( 'functional name unknown' )
+            !call stoprun( 'functional name unknown' )
+           ierr=34
+           return
     end select
     endif
 
@@ -512,7 +518,9 @@ contains
         rs18=4.5000d0
 
       case DEFAULT
-        call stoprun( 'functional name unknown' )
+        !call stoprun( 'functional name unknown' )
+           ierr=34
+           return
       end select
     end if
 
@@ -679,7 +687,9 @@ contains
           rs6=1.221
           s18=1.206
         case DEFAULT
-          call stoprun( 'functional name unknown' )
+          !call stoprun( 'functional name unknown' )
+           ierr=34
+           return
         end select
       else
         ! special TZVPP parameter
@@ -719,7 +729,9 @@ contains
           s18=1.109
           s6=0.5
         case DEFAULT
-          call stoprun( 'functional name unknown (TZ case)' )
+          !call stoprun( 'functional name unknown (TZ case)' )
+           ierr=34
+           return
         end select
       end if
     end if
@@ -757,7 +769,9 @@ contains
         s6=0.41
         alp=60.0d0
       case DEFAULT
-        call stoprun( 'functional name unknown' )
+        !call stoprun( 'functional name unknown' )
+        ierr=34
+        return
       end select
 
     end if
