@@ -586,11 +586,18 @@ module quick_method_module
             if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
             ! set dispersion correction options
-            if (index(keyWD,'D2').ne.0)         self%DFTD2=.true.
-            if (index(keyWD,'D3').ne.0)         self%DFTD3=.true.
-            if (index(keyWD,'D3BJ').ne.0)         self%DFTD3BJ=.true.
-            if (index(keyWD,'D3M').ne.0)         self%DFTD3M=.true.
-            if (index(keyWD,'D3MBJ').ne.0)         self%DFTD3MBJ=.true.
+            if (index(keyWD,'D2').ne.0) then
+              self%DFTD2=.true.
+            elseif (index(keyWD,'D3BJ').ne.0) then
+              self%DFTD3BJ=.true.
+            elseif (index(keyWD,'D3MBJ').ne.0) then
+              self%DFTD3MBJ=.true.
+            elseif (index(keyWD,'D3M').ne.0) then
+              self%DFTD3M=.true.
+            elseif (index(keyWD,'D3').ne.0) then
+              self%DFTD3=.true.
+            endif
+
             if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M &
               .or. self%DFTD3MBJ) self%edisp=.true.
 
