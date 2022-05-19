@@ -120,15 +120,16 @@ contains
   !! \param version  Version to use.
   !! \param tz  Whether special TZ-parameters should be used.
   !!
-  subroutine dftd3_set_functional(this, func, version, tz)
+  subroutine dftd3_set_functional(this, func, version, tz, ierr)
     type(dftd3_calc), intent(inout) :: this
     character(*), intent(in) :: func
     integer, intent(in) :: version
     logical, intent(in) :: tz
+    integer, intent(inout) :: ierr 
 
     this%version = version
     call setfuncpar(func, this%version, tz, this%s6, this%rs6, this%s18, &
-        & this%rs18, this%alp)
+        & this%rs18, this%alp, ierr)
     
   end subroutine dftd3_set_functional
 

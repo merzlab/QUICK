@@ -10,6 +10,8 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
+#include "util.fh"
+
 ! Interface for dftd3 libarary
 module quick_dftd3_module
 
@@ -24,19 +26,23 @@ module quick_dftd3_module
 
 contains
 
-  subroutine calculate_dispersion_energy
+  subroutine calculate_dispersion_energy(ierr)
 
     use dftd3_api
     use quick_molspec_module
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
     use quick_timer_module
+    use quick_exception_module
     implicit none
 
+    integer, intent(inout) :: ierr
     type(dftd3_input) :: input
     type(dftd3_calc) :: dftd3    
     integer :: version
     character(len=8) :: functional
+
+    ierr=0
 
     call cpu_time(timer_begin%Tdisp)
 
@@ -80,7 +86,7 @@ contains
     call dftd3_init(dftd3, input)
  
     ! set functional
-    call dftd3_set_functional(dftd3, functional, version, .false.)
+    SAFE_CALL(dftd3_set_functional(dftd3, functional, version, .false., ierr))
 
     ! compute dispersion energy and gradient
     call dftd3_dispersion(dftd3, xyz, quick_molspec%iattype, quick_qm_struct%Edisp, & 
