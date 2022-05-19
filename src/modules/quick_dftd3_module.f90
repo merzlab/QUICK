@@ -97,11 +97,11 @@ contains
     call dftd3_dispersion(dftd3, xyz, quick_molspec%iattype, quick_qm_struct%Edisp, & 
     quick_qm_struct%disp_gradient)
 
-  write(*, "(A)") "*** Dispersion for non-periodic case"
-  write(*, "(A,ES20.12)") "Energy [au]:", quick_qm_struct%Edisp
-  write(*, "(A)") "Gradients [au]:"
-  write(*, "(3ES20.12)") quick_qm_struct%disp_gradient
-  write(*, *)
+    !write(*, "(A)") "*** Dispersion for non-periodic case"
+    !write(*, "(A,ES20.12)") "Energy [au]:", quick_qm_struct%Edisp
+    !write(*, "(A)") "Gradients [au]:"
+    !write(*, "(3ES20.12)") quick_qm_struct%disp_gradient
+    !write(*, *)
 
     call cpu_time(timer_end%Tdisp)
 
