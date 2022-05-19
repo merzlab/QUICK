@@ -267,6 +267,7 @@ print_test_info(){
     ene_wat2_mp2_631gss)                  testinfo="Water-2 MP2 energy test: s, p and d basis functions"; ismp2='yes';;
     grad_psb3_b3lyp_631g)                 testinfo="PSB3: DFT gradient test: s and p basis functions";;
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
+    grad_psb3_b3lyp_d3bj_def2svp)         testinfo="PSB3: DFT gradient test: s and p basis functions, DFT-D3 dispersion correction";; 
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
     grad_ch5nos_b3lyp_6311g)              testinfo="CH5NOS: B3LYP gradient test with 6-311G basis set";;
     grad_ch5nos_b3lyp_6311gd)             testinfo="CH5NOS: B3LYP gradient test with 6-311G(d) basis set";;
