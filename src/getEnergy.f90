@@ -91,10 +91,6 @@ subroutine getEnergy(isGuess, ierr)
             enddo
          enddo
       endif
-
-      ! calculate emperical dispersion correction 
-      if(quick_method%edisp) SAFE_CALL(calculateDFTD3(ierr))
-
    endif
    ! Converge the density matrix.
 #ifdef MPIV
@@ -149,6 +145,12 @@ subroutine getEnergy(isGuess, ierr)
          quick_qm_struct%Etot = quick_qm_struct%Etot + quick_qm_struct%ECharge
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
+
+      ! calculate emperical dispersion correction 
+      if(quick_method%edisp) then
+         SAFE_CALL(calculateDFTD3(ierr))
+         quick_qm_struct%Etot=quick_qm_struct%Etot+quick_qm_struct%Edisp
+      endif
 
       if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    = ",F16.9)') quick_qm_struct%Eel
