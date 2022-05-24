@@ -155,6 +155,9 @@ subroutine getEnergy(isGuess, ierr)
       if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    = ",F16.9)') quick_qm_struct%Eel
          write (ioutfile,'(" CORE_CORE REPULSION  = ",F16.9)') quick_qm_struct%Ecore
+         if(quick_method%edisp) then
+            write (ioutfile,'(" DISPERSION CORRECTION  = ",F16.9)') quick_qm_struct%Edisp
+         endif
          if (quick_method%extcharges) then
             write (ioutfile,'(" EXT CHARGE REPULSION = ",F16.9)') quick_qm_struct%ECharge
          endif
