@@ -1,4 +1,4 @@
- UDFT B3LYP BASIS=6-31G** ncyc=1000 cutoff=1.0e-9 denserms=1.0e-6 MULT=2 gradient
+ UDFT B3LYP BASIS=6-31G** cutoff=1.0e-9 denserms=1.0e-6 MULT=2 gradient
 
  O                 -0.06756756   -0.31531531    0.00000000
  H                  0.89243244   -0.31531531    0.00000000

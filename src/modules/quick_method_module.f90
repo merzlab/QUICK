@@ -89,7 +89,7 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =1000
+        integer :: ncyc =5
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
@@ -655,7 +655,7 @@ endif
             if (index(keywd,'CUTOFF') /= 0) then
                 call read(keywd, 'CUTOFF', self%acutoff)
                 self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
-                self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
+                self%primLimit=self%acutoff*1.0d-1 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
                 self%gradCutoff=self%acutoff
             endif
 
@@ -767,7 +767,7 @@ endif
             self%iscf = 200
             self%maxdiisscf = 10
             self%iopt = 0
-            self%ncyc = 1000
+            self%ncyc = 5
 
             self%integralCutoff = 1.0d-7   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF

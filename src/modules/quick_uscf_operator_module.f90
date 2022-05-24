@@ -44,7 +44,7 @@ contains
      include "mpif.h"
 #endif
   !   double precision oneElecO(nbasis,nbasis)
-     logical :: deltaO
+     logical, intent(in) :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
@@ -69,16 +69,22 @@ contains
   !-----------------------------------------------------------------
   
   !  if only calculate operation difference
-  !   if (deltaO) then
+     if (deltaO) then
   !     save density matrix
-  !      quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
-  !      quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+        quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
+        quick_qm_struct%densebSave(:,:) = quick_qm_struct%denseb(:,:)
   
-  !      do I=1,nbasis; do J=1,nbasis
-  !         quick_qm_struct%dense(J,I)=quick_qm_struct%dense(J,I)-quick_qm_struct%denseOld(J,I)
-  !      enddo; enddo
-  
-  !   endif
+        quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
+        quick_qm_struct%denseb=quick_qm_struct%denseb-quick_qm_struct%densebOld
+
+        if(quick_method%dft)then 
+          quick_qm_struct%o=quick_qm_struct%oSave-quick_qm_struct%oxc
+          quick_qm_struct%ob=quick_qm_struct%obSave-quick_qm_struct%obxc
+        else
+          quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+          quick_qm_struct%ob(:,:) = quick_qm_struct%obSave(:,:)
+        endif
+     endif
 
      call oshell_density_cutoff
    
@@ -97,11 +103,13 @@ contains
      endif
 #endif
 
-     call get1e()
-
-     quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
+     call get1e(deltaO)
+     
+     if (.not. deltaO) then
+       quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
+     endif
   
-     if(quick_method%printEnergy) call get1eEnergy()
+     if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
@@ -124,8 +132,10 @@ contains
      call cpu_time(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV
-        if (quick_method%bCUDA) then          
-           call gpu_get_oshell_eri(quick_qm_struct%o, quick_qm_struct%ob)
+        if (quick_method%bCUDA) then   
+       
+           call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
+
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -158,19 +168,14 @@ contains
   !  Remember the operator is symmetric
      call copySym(quick_qm_struct%o,nbasis)
      call copySym(quick_qm_struct%ob,nbasis)
+
+  !  recover density if calculate difference
+     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+     if (deltaO) quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
 
-     !   do I=1,nbasis; do J=1,nbasis
-     !     write(*,*) i,j,quick_qm_struct%o(j,i),quick_qm_struct%ob(j,i)
-     !   enddo; enddo
-
-     !write(*,*) "E2e=",quick_qm_struct%Eel
-  
-  !  recover density if calculate difference
-  !   if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
-  
 #ifdef MPIV
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
@@ -196,7 +201,7 @@ contains
         call cpu_time(timer_begin%TEx)
   
   !  Calculate exchange correlation contribution & add to operator    
-        call get_oshell_xc
+        call get_oshell_xc(deltaO)
   
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)
@@ -212,7 +217,10 @@ contains
   !  Add time total time
         timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
      endif
-  
+
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
+     quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
+
 #ifdef MPIV
   !  MPI reduction operations
   
@@ -254,7 +262,7 @@ contains
   
   end subroutine uscf_operator
   
-  subroutine get_oshell_xc
+  subroutine get_oshell_xc(deltaO)
   !----------------------------------------------------------------
   !  The purpose of this subroutine is to calculate the exchange
   !  correlation contribution to the Fock operator. 
@@ -291,6 +299,7 @@ contains
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
+     logical, intent(in) :: deltaO
      double precision, dimension(2) :: libxc_rho
      double precision, dimension(3) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
@@ -325,11 +334,26 @@ contains
 #if defined CUDA || defined CUDA_MPIV
   
      if(quick_method%bCUDA) then
+        if(deltaO) then
+          call gpu_upload_density_matrix(quick_qm_struct%dense)
+          call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
+        endif
+
+        quick_qm_struct%oxc=quick_qm_struct%o
+        quick_qm_struct%obxc=quick_qm_struct%ob
+
         call gpu_get_oshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o, &
         quick_qm_struct%ob)
+
+        quick_qm_struct%oxc=quick_qm_struct%o-quick_qm_struct%oxc
+        quick_qm_struct%obxc=quick_qm_struct%ob-quick_qm_struct%obxc
+
      endif
 #else
-  
+ 
+     quick_qm_struct%oxc=0.0d0
+     quick_qm_struct%obxc=0.0d0   
+ 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
         do ifunc=1, quick_method%nof_functionals
@@ -515,10 +539,10 @@ contains
                              tempgx = phi*dphi2dx + phi2*dphidx
                              tempgy = phi*dphi2dy + phi2*dphidy
                              tempgz = phi*dphi2dz + phi2*dphidz
-                             quick_qm_struct%o(Jbas,Ibas)=quick_qm_struct%o(Jbas,Ibas)+(temp*dfdr+&
+                             quick_qm_struct%oxc(Jbas,Ibas)=quick_qm_struct%oxc(Jbas,Ibas)+(temp*dfdr+&
                              xdot*tempgx+ydot*tempgy+zdot*tempgz)*weight
 
-                             quick_qm_struct%ob(Jbas,Ibas)=quick_qm_struct%ob(Jbas,Ibas)+(temp*dfdrb+&
+                             quick_qm_struct%obxc(Jbas,Ibas)=quick_qm_struct%obxc(Jbas,Ibas)+(temp*dfdrb+&
                              xdotb*tempgx+ydotb*tempgy+zdotb*tempgz)*weight
 
                              jcount=jcount+1
@@ -540,8 +564,13 @@ contains
            call xc_f90_func_end(xc_func(ifunc))
         enddo
      endif
+
+  !  Update KS operators
+     quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
+     quick_qm_struct%ob=quick_qm_struct%ob+quick_qm_struct%obxc
+
 #endif
-  
+
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
   

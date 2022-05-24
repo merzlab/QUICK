@@ -49,18 +49,21 @@ module quick_calculated_module
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
 
+      ! matrix for saving XC potential, required for incremental KS build
+      double precision,dimension(:,:), allocatable :: oxc 
+
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
       double precision,dimension(:,:), allocatable :: ob
+
+      ! matrix for saving beta XC potential, required for incremental KS build
+      double precision,dimension(:,:), allocatable :: obxc
 
       ! saved operator matrix
       double precision,dimension(:,:), allocatable :: oSave
 
       ! saved beta operator matrix
       double precision,dimension(:,:), allocatable :: obSave
-
-      ! saved dft operator matrix
-      double precision,dimension(:,:), allocatable :: oSaveDFT
 
       ! orbital coeffecient, the dimension is nbasis*nbasis. If it's
       ! unrestricted system, CO will represent alpha electron coeffecient
@@ -112,6 +115,9 @@ module quick_calculated_module
 
       ! hessian matrix and CPHF matrices, the dimension is 3natom*3natom
       double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb
+
+      ! one electron energy
+      double precision :: E1e
 
       ! electron energy
       double precision :: EEl
@@ -268,7 +274,8 @@ contains
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         if(.not. allocated(self%oSaveDFT)) allocate(self%oSaveDFT(nbasis,nbasis))
+         if(.not. allocated(self%oxc)) allocate(self%oxc(nbasis,nbasis))
+         if(quick_method%unrst .and. (.not. allocated(self%obxc))) allocate(self%obxc(nbasis,nbasis))
       endif
 
       if (quick_method%grad) then
@@ -424,7 +431,8 @@ contains
 
       ! one more thing, DFT
       if (quick_method%DFT) then
-         if (allocated(self%oSaveDFT)) deallocate(self%oSaveDFT)
+         if (allocated(self%oxc)) deallocate(self%oxc)
+         if(quick_method%unrst .and. allocated(self%obxc)) deallocate(self%obxc)
       endif
 
    end subroutine
@@ -474,9 +482,6 @@ contains
       call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
-
-      if (quick_method%DFT)  call MPI_BCAST(self%oSaveDFT,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
       if (quick_method%PBSOL) then
          call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -550,7 +555,6 @@ contains
 
       call zeroMatrix(self%denseOld,nbasis)
 
-
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          call zeroVec(self%gradient,3*natom)
@@ -573,11 +577,6 @@ contains
          call zeroMatrix(self%cob,nbasis)
          call zeroMatrix(self%denseb,nbasis)
          call zeroVec(self%Eb,nbasis)
-      endif
-
-      ! one more thing, DFT
-      if (quick_method%DFT) then
-         call zeroMatrix(self%oSaveDFT,nbasis)
       endif
 
    end subroutine

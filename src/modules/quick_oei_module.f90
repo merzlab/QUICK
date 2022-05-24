@@ -33,7 +33,7 @@ contains
   !------------------------------------------------
   ! get1eEnergy
   !------------------------------------------------
-  subroutine get1eEnergy()
+  subroutine get1eEnergy(deltaO)
      !------------------------------------------------
      ! This subroutine is to get 1e integral
      !------------------------------------------------
@@ -44,23 +44,25 @@ contains
 
      implicit double precision(a-h,o-z)
 
+     logical, intent(in) :: deltaO
+
      call cpu_time(timer_begin%tE)
   
-     quick_qm_struct%Eel=0.d0
-     call copySym(quick_qm_struct%o,nbasis)
-     quick_qm_struct%Eel=quick_qm_struct%Eel+sum2mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
+     if(.not. deltaO) quick_qm_struct%E1e=0.0d0
+     quick_qm_struct%E1e=quick_qm_struct%E1e+sum2mat(quick_qm_struct%dense,quick_qm_struct%oneElecO,nbasis)
 
      if (quick_method%unrst) then
-       call copySym(quick_qm_struct%ob,nbasis)
-       quick_qm_struct%Eel = quick_qm_struct%Eel+sum2mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
+       quick_qm_struct%E1e = quick_qm_struct%E1e+sum2mat(quick_qm_struct%denseb,quick_qm_struct%oneElecO,nbasis)
      endif
+
+     quick_qm_struct%Eel=quick_qm_struct%E1e
 
      call cpu_time(timer_end%tE)
      timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
   
   end subroutine get1eEnergy
 
-subroutine get1e()
+subroutine get1e(deltaO)
    use allmod
 
 #ifdef CEW
@@ -69,6 +71,7 @@ subroutine get1e()
    
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
+   logical, intent(in) :: deltaO
 
 #ifdef MPIV
    include "mpif.h"
@@ -138,7 +141,7 @@ subroutine get1e()
          
          call copySym(quick_qm_struct%o,nbasis)
 
-         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
+         quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
@@ -147,7 +150,7 @@ subroutine get1e()
          bCalc1e=.false.
 
        else
-         quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
+         if (.not. deltaO) quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
        endif
        call cpu_time(timer_end%t1e)
 
@@ -211,12 +214,14 @@ subroutine get1e()
          endif
 #endif
 
-      call copyDMat(quick_qm_struct%o,quick_qm_struct%oneElecO,nbasis)
+      call copySym(quick_qm_struct%o,nbasis)
+
+      quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
      else
-       quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
+       if (.not. deltaO) quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
      endif
 
 
