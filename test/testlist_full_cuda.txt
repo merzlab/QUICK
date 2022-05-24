@@ -125,6 +125,7 @@ ene_wat2_mp2_631g	            #MP2 test with s and p basis functions
 ene_wat2_mp2_631gss	            #MP2 test with s, p and d basis functions
 grad_psb3_b3lyp_631g                #B3LYP gradient test with s and p basis functions
 grad_psb3_b3lyp_631gss              #B3LYP gradient test with s, p and d basis functions
+grad_psb3_b3lyp_d3bj_def2svp        #B3LYP gradient test with s, p basis functions and DFT-D3 dispersion correction
 grad_ch3conhch3_b3lyp_ccpvdz        #B3LYP gradient test with s, p and d basis functions
 grad_ch5nos_b3lyp_6311g             #B3LYP gradient test with 6-311G basis set
 grad_ch5nos_b3lyp_6311gd            #B3LYP gradient test with 6-311G(d) basis set

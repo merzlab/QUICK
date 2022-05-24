@@ -28,6 +28,12 @@ module quick_method_module
         logical :: MPW91LYP = .false.  ! MPW91LYP
         logical :: MPW91PW91 = .false. ! MPW91PW91
         logical :: SEDFT = .false.     ! Semi-Empirical DFT
+        logical :: edisp= .false.      ! Emperical Dispersion
+        logical :: DFTD2= .false.      ! DFT-D2 dispersion correction
+        logical :: DFTD3= .false.      ! D3 correction with zero damping
+        logical :: DFTD3BJ= .false.    ! D3 correction with BJ damping
+        logical :: DFTD3M= .false.     ! Modified D3 correction with zero damping
+        logical :: DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
 
         logical :: PBSOL = .false.     ! PB Solvent
         logical :: UNRST =  .false.    ! Unrestricted
@@ -352,15 +358,27 @@ module quick_method_module
                 elseif(self%MPW91PW91) then
                     write(io,'(" DENSITY FUNCTIONAL = MPW91PW91")')
                 endif
+                
             else if (self%SEDFT) then
                 write(io,'(" METHOD = SEMI-EMPIRICAL DENSTITY FUNCTIONAL THEORY")')
             endif
 
-if (self%nodirect) then
-write(io,'(" SAVE 2E INT TO DISK ")')
-else
-write(io,'(" DIRECT SCF ")')
-endif
+            if(self%edisp) then
+              if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M .or. self%DFTD3MBJ) then
+                write(io,'(" USING GRIMME DISPERSION CORRECTION: REPACKAGED DFT-D3 LIBRARY v0.9")')
+              endif
+              if(self%DFTD2) write(io,'("   DISPERSION METHOD = D2")')
+              if(self%DFTD3) write(io,'("   DISPERSION METHOD = D3, ZERO DAMPING")')
+              if(self%DFTD3BJ) write(io,'("   DISPERSION METHOD = D3, BJ DAMPING")')
+              if(self%DFTD3M) write(io,'("   DISPERSION METHOD = MODIFIED D3, ZERO DAMPING")')
+              if(self%DFTD3MBJ) write(io,'("   DISPERSION METHOD = MODIFIED D3, BJ DAMPING")')
+            endif
+
+            if (self%nodirect) then
+              write(io,'(" SAVE 2E INT TO DISK ")')
+            else
+              write(io,'(" DIRECT SCF ")')
+            endif
 
             if (self%PDB) write(io,'(" PDB INPUT ")')
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
@@ -567,6 +585,22 @@ endif
 
             if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
+            ! set dispersion correction options
+            if (index(keyWD,'D2').ne.0) then
+              self%DFTD2=.true.
+            elseif (index(keyWD,'D3BJ').ne.0) then
+              self%DFTD3BJ=.true.
+            elseif (index(keyWD,'D3MBJ').ne.0) then
+              self%DFTD3MBJ=.true.
+            elseif (index(keyWD,'D3M').ne.0) then
+              self%DFTD3M=.true.
+            elseif (index(keyWD,'D3').ne.0) then
+              self%DFTD3=.true.
+            endif
+
+            if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M &
+              .or. self%DFTD3MBJ) self%edisp=.true.
+
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
             if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.
@@ -726,6 +760,13 @@ endif
             self%MPW91LYP = .false.  ! MPW91LYP
             self%MPW91PW91 = .false. ! MPW91PW91
             self%SEDFT = .false.     ! Semi-Empirical DFT
+            self%edisp= .false.      ! Emperical Dispersion   
+            self%DFTD2= .false.      ! DFT-D2 dispersion correction
+            self%DFTD3= .false.      ! D3 correction with zero damping
+            self%DFTD3BJ= .false.    ! D3 correction with BJ damping
+            self%DFTD3M= .false.     ! Modified D3 correction with zero damping
+            self%DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
+
             self%PBSOL = .false.     ! PB Solvent
             self%UNRST =  .false.    ! Unrestricted
 

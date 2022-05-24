@@ -241,7 +241,7 @@ contains
      timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
   
 #endif
-  
+
   return
   
   end subroutine scf_operator

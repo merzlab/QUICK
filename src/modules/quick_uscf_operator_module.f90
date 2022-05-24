@@ -258,7 +258,7 @@ contains
   
 #endif
   
-  return
+    return
   
   end subroutine uscf_operator
   
