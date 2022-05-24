@@ -76,7 +76,7 @@ contains
         if(quick_method%functional_id(1) == 110 .and. quick_method%functional_id(2) == 131) functional='o-lyp'
         if(quick_method%functional_id(1) == 102 .and. quick_method%functional_id(2) == 130) functional='revpbe'
         if(quick_method%functional_id(1) == 101 .and. quick_method%functional_id(2) == 130) functional='pbe'
-        !if(quick_method%functional_id(1) == 106 .and. quick_method%functional_id(2) == 132) functional='b-p'
+        if(quick_method%functional_id(1) == 106 .and. quick_method%functional_id(2) == 132) functional='b-p'
         !if(quick_method%functional_id(1) == 109 .and. quick_method%functional_id(2) == 134) functional='pw91'
       endif
     else if(quick_method%b3lyp) then    
