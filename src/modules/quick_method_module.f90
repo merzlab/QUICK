@@ -96,7 +96,7 @@ module quick_method_module
         double precision :: integralCutoff = 1.0d-7   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-7   ! prime cutoff
+        double precision :: primLimit      = 1.0d-8   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         !tol
