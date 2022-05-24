@@ -95,19 +95,18 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =5
+        integer :: ncyc =3
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
         double precision :: integralCutoff = 1.0d-7   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-7   ! prime cutoff
+        double precision :: primLimit      = 1.0d-8   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-        double precision :: aCutoff        = 1.0d-7   ! 2e cutoff
         double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
         !signif
 
@@ -248,7 +247,6 @@ module quick_method_module
             call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%aCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%basisCufoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -460,7 +458,7 @@ module quick_method_module
 
             ! cutoff size
             write (io,'(" COMPUTATIONAL CUTOFF: ")')
-            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%acutoff
+            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
             write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
             write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
             write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCufoff
@@ -687,10 +685,9 @@ module quick_method_module
         
             ! 2e-cutoff
             if (index(keywd,'CUTOFF') /= 0) then
-                call read(keywd, 'CUTOFF', self%acutoff)
-                self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
-                self%primLimit=self%acutoff*1.0d-1 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
-                self%gradCutoff=self%acutoff
+                call read(keywd, 'CUTOFF', self%integralCutoff)
+                self%primLimit=self%integralCutoff*1.0d-1 
+                self%gradCutoff=self%integralCutoff
             endif
 
             ! Max DIIS cycles
@@ -815,12 +812,11 @@ module quick_method_module
                                            ! smallest integral cutoff, used in conventional SCF
             self%maxIntegralCutoff = 1.0d-12
                                            ! smallest integral cutoff, used in conventional SCF
-            self%primLimit      = 1.0d-7   ! prime cutoff
+            self%primLimit      = 1.0d-8   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-            self%aCutoff        = 1.0d-7   ! 2e cutoff
             self%basisCufoff    = 1.0d-10  ! basis set cutoff
 
             self%stepMax        = .1d0/0.529177249d0
