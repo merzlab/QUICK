@@ -95,7 +95,7 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =5
+        integer :: ncyc =3
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
@@ -808,7 +808,7 @@ module quick_method_module
             self%iscf = 200
             self%maxdiisscf = 10
             self%iopt = 0
-            self%ncyc = 5
+            self%ncyc = 3
 
             self%integralCutoff = 1.0d-7   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF
