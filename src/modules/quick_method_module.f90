@@ -805,7 +805,7 @@ module quick_method_module
             self%iscf = 200
             self%maxdiisscf = 10
             self%iopt = 0
-            self%ncyc = 5
+            self%ncyc = 3
 
             self%integralCutoff = 1.0d-7   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF

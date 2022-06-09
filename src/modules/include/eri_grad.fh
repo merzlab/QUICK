@@ -116,7 +116,7 @@ subroutine cshell_eri_grad
             do KKK=1,quick_basis%kprim(KK)
                Nprik=quick_basis%kstart(KK)+KKK-1
                cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
-               if(cutoffprim.gt.quick_method%gradCutoff)then
+               if(cutoffprim.gt.quick_method%primLimit)then
                   CD=Apri(Nprik,Npril)
                   ABCD=AB+CD
                   ROU=AB*CD/ABCD
@@ -252,7 +252,7 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
                Nprik=quick_basis%kstart(KK)+KKK-1
                CC=quick_basis%gcexpo(KKK,quick_basis%ksumtype(KK))
                cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
-               if(cutoffprim.gt.quick_method%gradCutoff)then
+               if(cutoffprim.gt.quick_method%primLimit)then
                   ITT=ITT+1
                   quick_scratch%X44(ITT)=X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
                   quick_scratch%X44AA(ITT)=quick_scratch%X44(ITT)*AA*2.0d0
