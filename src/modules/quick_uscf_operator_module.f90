@@ -396,8 +396,8 @@ contains
                  icount=quick_dft_grid%basf_counter(Ibin)+1
                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                  Ibas=quick_dft_grid%basf(icount)+1
-                    call pteval(gridx,gridy,gridz,phi,dphidx,dphidy, &
-                    dphidz,Ibas)
+                    call pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy, &
+                    dphidz,Ibas,icount)
                     phixiao(Ibas)=phi
                     dphidxxiao(Ibas)=dphidx
                     dphidyxiao(Ibas)=dphidy
