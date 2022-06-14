@@ -1061,7 +1061,7 @@ contains
              weight=quick_dft_grid%gridb_weight(Igp)
              Iatm=quick_dft_grid%gridb_atm(Igp)
               
-              if (weight < quick_method%XCCutoff ) then
+              if (weight < quick_method%DMCutoff ) then
                  continue
               else
   
