@@ -105,6 +105,7 @@ module quick_method_module
         double precision :: primLimit      = 1.0d-8   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
+        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
@@ -246,6 +247,7 @@ module quick_method_module
             call MPI_BCAST(self%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%basisCufoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -705,6 +707,10 @@ module quick_method_module
                 call read(keywd,'MATRIXZERO', self%DMCutoff)
             endif
 
+            if (index(keywd,'XCCUTOFF') /= 0) then           
+                call read(keywd,'XCCUTOFF', self%XCCutoff)
+            endif
+
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
                 call read(keywd,'BASISZERO', itemp)
@@ -815,6 +821,7 @@ module quick_method_module
             self%primLimit      = 1.0d-8   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
+            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCufoff    = 1.0d-10  ! basis set cutoff
