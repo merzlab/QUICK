@@ -480,7 +480,7 @@ contains
                        dphidz=dphidzxiao(Ibas)
                        quicktest = DABS(dphidx+dphidy+dphidz+phi)
   
-                       if (quicktest < quick_method%DMCutoff ) then
+                       if (quicktest < quick_method%XCCutoff ) then
                           continue
                        else
                           jcount=icount
