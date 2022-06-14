@@ -64,7 +64,8 @@ struct gpack_type{
    int natoms;   // number of atoms
    int nbasis;   // total number of basis functions
    int maxcontract; // maximum number of contractions
-   double DMCutoff; // Density matrix cut off
+   double DMCutoff; // Zero matrix cut off
+   double XCCutoff; // Exchange correlation cutoff
    gpack_buffer_type<double>* sigrad2; // square of the radius of sigificance
    gpack_buffer_type<int>* ncontract; // number of contraction functions
    gpack_buffer_type<double>* aexp; // alpha values of the gaussian primivite function exponents
