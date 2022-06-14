@@ -79,6 +79,7 @@ struct gpu_cutoff_type {
     QUICKDouble                     coreIntegralCutoff;
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
+    QUICKDouble                     XCCutoff;
     QUICKDouble                     gradCutoff;
 
     // One electron pre-sorting cutoff
@@ -331,6 +332,7 @@ struct gpu_simulation_type {
     QUICKDouble                     coreIntegralCutoff;
     QUICKDouble                     primLimit;
     QUICKDouble                     DMCutoff;
+    QUICKDouble                     XCCutoff;
     QUICKDouble                     gradCutoff;
     int2*                           sorted_OEICutoffIJ;
     
