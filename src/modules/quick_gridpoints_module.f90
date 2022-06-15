@@ -596,7 +596,7 @@ module quick_gridpoints_module
      type(quick_xc_grid_type) self
 
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
-     write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%DMCutoff
+     write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%XCCutoff
      write (ioutfile,'("   INITIAL GRID POINTS  =",I12)') self%init_ngpts
      write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%gridb_count
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
