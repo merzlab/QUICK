@@ -132,6 +132,8 @@ module quick_method_module
         logical :: scf_conv      = .false.
         logical :: allow_bad_scf        = .false.
         logical :: diffuse_basis_funcs = .false.    ! if basis set contains diffuse functions
+        logical :: coarse_cutoff = .false.          ! use coarse cutoffs in SCF and gradient 
+        logical :: tight_cutoff  = .false.          ! use coarse cutoffs in SCF and gradient
 
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
@@ -749,6 +751,9 @@ module quick_method_module
                 if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
             endif
 
+            if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
+            if (index(keyWD,'TIGHTINT').ne.0) self%tight_cutoff=.true.
+
         end subroutine read_quick_method
 
         !------------------------
@@ -850,6 +855,8 @@ module quick_method_module
             self%nof_functionals = 0
 
             self%diffuse_basis_funcs=.false. ! if basis set contains diffuse functions
+            self%coarse_cutoff=.false.
+            self%tight_cutoff=.false.
 
 #if defined CUDA || defined CUDA_MPIV
             self%bCUDA  = .true.
@@ -880,6 +887,22 @@ module quick_method_module
             if(self%pmaxrms.lt.0.0001d0)then
                 !self%integralCutoff=min(1.0d-7,self%integralCutoff)
                 !self%primLimit=min(1.0d-7,self%primLimit)
+            endif
+
+            if(self%coarse_cutoff) then
+                self%pmaxrms=1.0d-5
+                self%integralCutoff=1.0e-6
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-6
+                self%XCCutoff=1.0e-6
+            endif
+
+            if(self%tight_cutoff) then
+                self%pmaxrms=1.0d-7
+                self%integralCutoff=1.0e-8
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-8
+                self%XCCutoff=1.0e-8
             endif
 
             ! OPT not available for MP2
