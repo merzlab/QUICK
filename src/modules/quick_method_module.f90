@@ -744,6 +744,7 @@ module quick_method_module
             endif
 
             if (index(keyWD,'BASIS=').ne.0)  then
+                tempstring=' '
                 call read(keywd, 'BASIS', tempstring)
                 if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
             endif
@@ -892,6 +893,9 @@ module quick_method_module
                 call PrtWrn(io,"GEOMETRY OPTIMIZATION is only available with HF, DFT/BLYP, DFT/B3LYP" )
                 self%OPT = .false.
             endif
+
+            ! tighten XCCutoff if diffuse functions exist
+            if(self%diffuse_basis_funcs .and. self%DFT) self%XCCutoff=self%XCCutoff*0.1d0
 
         end subroutine check_quick_method
 
