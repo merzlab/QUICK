@@ -131,6 +131,7 @@ module quick_method_module
         logical :: uscf_conv     = .false.
         logical :: scf_conv      = .false.
         logical :: allow_bad_scf        = .false.
+        logical :: diffuse_basis_funcs = .false.    ! if basis set contains diffuse functions
 
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
@@ -742,6 +743,11 @@ module quick_method_module
                 call read(keywd,'ICOORD', self%dlfind_icoord)
             endif
 
+            if (index(keyWD,'BASIS=').ne.0)  then
+                call read(keywd, 'BASIS', tempstring)
+                if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
+            endif
+
         end subroutine read_quick_method
 
         !------------------------
@@ -841,6 +847,8 @@ module quick_method_module
             self%uselibxc = .false.
             self%xc_polarization = 0
             self%nof_functionals = 0
+
+            self%diffuse_basis_funcs=.false. ! if basis set contains diffuse functions
 
 #if defined CUDA || defined CUDA_MPIV
             self%bCUDA  = .true.
