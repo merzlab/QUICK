@@ -16,6 +16,8 @@
   !---------------------------------------------------------------------!
 */
 
+#undef FMT_NAME
+#define FMT_NAME FmT
 #include "gpu_fmt.h"
 
 __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ, unsigned int iatom, QUICKDouble* store2){

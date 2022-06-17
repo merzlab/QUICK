@@ -101,7 +101,8 @@ __global__ void getcew_quad_kernel();
 #endif
 
 // global [get2e_kernel]
-__global__ void get2e_kernel();
+__global__ void get2e_kernel_sp();
+__global__ void get2e_kernel_spd();
 __global__ void get2e_kernel_spdf();
 __global__ void get2e_kernel_spdf2();
 __global__ void get2e_kernel_spdf3();
@@ -150,29 +151,31 @@ __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);
 
 
 // kernel [iclass]
-__device__ void iclass(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf3(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf4(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf5(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf6(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf7(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf9(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_spdf10(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_sp(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spd(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf2(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf3(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf4(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf5(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf6(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf7(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf8(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf9(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_spdf10(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
-__device__ void iclass_oshell(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf2(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf3(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf4(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf5(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf6(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf7(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf9(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
-__device__ void iclass_oshell_spdf10(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_sp(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spd(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf2(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf3(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf4(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf5(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf6(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf7(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf8(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf9(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
+__device__ void iclass_oshell_spdf10(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
 __device__ __forceinline__ void iclass_AOInt(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, ERI_entry* aoint_buffer, int streamID, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store);
@@ -278,19 +281,31 @@ void upload_sim_to_constant_lri(_gpu_type gpu);
 void upload_para_to_const();
 char *trim(char *s);
 
+void bind_eri_texture(_gpu_type gpu);
+void unbind_eri_texture();
 
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
-__device__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
-__device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
+__device__ void addint(QUICKULL* oULL, const QUICKDouble Y, const int III, const int JJJ, const int KKK, const int LLL, const QUICKDouble hybrid_coeff,  QUICKDouble* dense, const int nbasis);
+__device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL, const QUICKDouble Y, const int III, const int JJJ, const int KKK, const int LLL, const QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb, const int nbasis);
 __device__ __forceinline__ void addint_lri(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
-__device__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* vals);
+__device__ void FmT_sp(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
+__device__ void FmT_spd(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
+__device__ void FmT(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 
-__device__ QUICKDouble hrrwhole(int I, int J, int K, int L, \
-                                int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
-                                QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
-                                QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
-                                QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+__device__ QUICKDouble hrrwhole_sp( const int I, const int J, const int K, const int L, \
+                                                const int III, const int JJJ, const int KKK, const int LLL, const int IJKLTYPE, QUICKDouble* store, \
+                                                const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz, \
+                                                const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz, \
+                                                const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
+                                                const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz);
+
+__device__ QUICKDouble hrrwhole(const int I, const int J, const int K, const int L, \
+                                                const int III, const int JJJ, const int KKK, const int LLL, const int IJKLTYPE, QUICKDouble* store, \
+                                                const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz, \
+                                                const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz, \
+                                                const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
+                                                const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz);
+
 
 __device__ QUICKDouble hrrwhole2(int I, int J, int K, int L, \
                                 int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
@@ -561,29 +576,29 @@ __device__ int lefthrr_s(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                        int KLMNAx, int KLMNAy, int KLMNAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
-                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL);
 
 __device__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                        int KLMNAx, int KLMNAy, int KLMNAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
-                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL);
 __device__ int lefthrr23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                         int KLMNAx, int KLMNAy, int KLMNAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
-                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+                        int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL);
 
 __device__ int lefthrr_lri(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                        int KLMNAx, int KLMNAy, int KLMNAz,
                        int KLMNBx, int KLMNBy, int KLMNBz,
-                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL);
 __device__ int lefthrr_lri23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                         int KLMNAx, int KLMNAy, int KLMNAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
-                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
+                        int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL);
 
 __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid);
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);

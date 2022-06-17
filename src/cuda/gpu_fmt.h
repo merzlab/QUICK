@@ -1,8 +1,8 @@
 
-__device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp)
-{
+// FMT_NAME should be FmT/FmT_sp/FmT_spd and defined somewhere
 
-    const QUICKDouble PIE4 = (QUICKDouble) PI/4.0 ;
+__device__ __forceinline__ void FMT_NAME(const int MaxM, const QUICKDouble X, QUICKDouble* YVerticalTemp)
+{
 
     const QUICKDouble XINV = (QUICKDouble) 1.0 /X;
     const QUICKDouble E = (QUICKDouble) exp(-X);
@@ -59,16 +59,16 @@ __device__ __forceinline__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* YVerti
 
 
     if (X > 1.0E-1 || (X> 1.0E-4 && MaxM < 4)) {
-        LOCVY(YVerticalTemp, 0, 0, 0, VDIM1, VDIM2, VDIM3) = WW1;
+        VY(0, 0, 0) = WW1;
         for (int m = 1; m<= MaxM; m++) {
-            LOCVY(YVerticalTemp, 0, 0, m, VDIM1, VDIM2, VDIM3) = (((2*m-1)*LOCVY(YVerticalTemp, 0, 0, m-1, VDIM1, VDIM2, VDIM3))- E)*0.5*XINV;
+	    VY(0, 0, m) = (((2*m-1)*VY( 0, 0, m-1))- E)*0.5*XINV;
         }
     }else {
-        LOCVY(YVerticalTemp, 0, 0, MaxM, VDIM1, VDIM2, VDIM3) = WW1;
+        VY(0, 0, MaxM) = WW1;
         for (int m = MaxM-1; m >=0; m--) {
-            LOCVY(YVerticalTemp, 0, 0, m, VDIM1, VDIM2, VDIM3) = (2.0 * X * LOCVY(YVerticalTemp, 0, 0, m+1, VDIM1, VDIM2, VDIM3) + E) / (QUICKDouble)(m*2+1);
+	    VY(0, 0, m) = (2.0 * X * VY(0, 0, m+1) + E) / (QUICKDouble)(m*2+1);
+
         }
     }
     return;
 }
-
