@@ -1181,7 +1181,7 @@ __device__ __forceinline__ void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaa
                                              QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     
     *Yaax = 0.0;
@@ -1530,7 +1530,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                                              QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     
     *Yaax = 0.0;
@@ -1878,7 +1878,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                               QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     
     *Yaax = 0.0;
@@ -1986,7 +1986,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                               QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     
     *Yaax = 0.0;
