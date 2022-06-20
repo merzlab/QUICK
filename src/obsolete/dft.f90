@@ -597,7 +597,7 @@ subroutine get_sigrad
 
       ! Now put it all together to get the target value.
 
-      target = quick_method%basisCufoff* &
+      target = quick_method%basisCutoff* &
 
             (((2.d0*amin)**(dble(L)+1.5))/gamma2pi)**(-.5d0)
 

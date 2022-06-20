@@ -108,7 +108,7 @@ module quick_method_module
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-        double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
+        double precision :: basisCutoff    = 1.0d-10  ! basis set cutoff
         !signif
 
         ! following are some gradient cutoff criteria
@@ -252,7 +252,7 @@ module quick_method_module
             call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%basisCufoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%basisCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -466,7 +466,7 @@ module quick_method_module
             write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
             write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
             write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
-            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCufoff
+            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCutoff
             if (self%grad) then
                 write (io,'("      GRADIENT CUTOFF  = ",E10.3)') self%gradCutoff
             endif
@@ -717,7 +717,7 @@ module quick_method_module
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
                 call read(keywd,'BASISZERO', itemp)
-                self%basisCufoff=10.d0**(-1.d0*itemp)
+                self%basisCutoff=10.d0**(-1.d0*itemp)
             endif
 
            if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
@@ -836,7 +836,7 @@ module quick_method_module
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-            self%basisCufoff    = 1.0d-10  ! basis set cutoff
+            self%basisCutoff    = 1.0d-10  ! basis set cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
