@@ -108,7 +108,7 @@ module quick_method_module
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-        double precision :: basisCutoff    = 1.0d-10  ! basis set cutoff
+        double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
         !signif
 
         ! following are some gradient cutoff criteria
@@ -835,7 +835,7 @@ module quick_method_module
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-            self%basisCutoff    = 1.0d-10  ! basis set cutoff
+            self%basisCutoff    = 1.0d-6  ! basis set cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
@@ -894,6 +894,7 @@ module quick_method_module
                 self%primLimit=self%integralCutoff*0.1d0
                 self%gradCutoff=1.0e-6
                 self%XCCutoff=1.0e-6
+                self%basisCutoff=1.0e-5
             endif
 
             if(self%tight_cutoff) then
@@ -902,6 +903,7 @@ module quick_method_module
                 self%primLimit=self%integralCutoff*0.1d0
                 self%gradCutoff=1.0e-8
                 self%XCCutoff=1.0e-8
+                self%basisCutoff=1.0e-7
             endif
 
             ! OPT not available for MP2
