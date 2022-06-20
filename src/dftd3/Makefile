@@ -22,7 +22,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS)
+FOR=$(FC) $(FORT_EXT_LIB_FLAGS)
 
 DFTD3 = $(dftd3objfolder)/common.o $(dftd3objfolder)/sizes.o $(dftd3objfolder)/pars.o \
 	$(dftd3objfolder)/core.o $(dftd3objfolder)/api.o
