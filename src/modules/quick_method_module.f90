@@ -716,8 +716,7 @@ module quick_method_module
 
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                call read(keywd,'BASISZERO', itemp)
-                self%basisCutoff=10.d0**(-1.d0*itemp)
+                call read(keywd,'BASISZERO', self%basisCutoff)
             endif
 
            if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
