@@ -923,6 +923,7 @@ contains
    double precision :: grdx,grdy,grdz
    double precision :: sumg(3),localsswt
    double precision :: dp(3,natom)
+   double precision :: ap(3,natom)
 
    !allocate( spcder(3*natom) )
    !spcder = 0.d0
@@ -1143,14 +1144,20 @@ contains
                      !call sswder(gridx,gridy,gridz,zkec,weight/sswt,Iatm)
 
                      
-                     call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
+                     !call getsswnumder(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),dp)
+                     call getsswanader(gridx,gridy,gridz,Iatm,natom,xyz(1:3,1:natom),ap)
+
+                     !DO i=1,natom
+                     !   write(6,'(2I4,9ES13.4)')i,Iatm,dp(:,i),ap(:,i),dp(:,i)-ap(:,i)
+                     !END DO
+                     
                      sumg(1) = weight / sswt
                      !write(6,'(3es20.10)')weight,localsswt,sumg(1)
                      DO i=1,natom
                         oi = 3*(i-1)
                         do k=1,3
                            quick_qm_struct%gradient(oi+k)=quick_qm_struct%gradient(oi+k) &
-                                & + dp(k,i)*zkec*sumg(1)
+                                & + ap(k,i)*zkec*sumg(1)
                         end do
                      END DO
 

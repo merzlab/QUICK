@@ -204,10 +204,10 @@
 ! Following subroutine was implemented by Tim Giese based on Stratmann,
 ! Scuseria, and Frisch, Chem. Phys. Lett., v257 1996, pg 213-223 paper.
 
-#define SSW_POLYFAC1 (3.4179687500)
-#define SSW_POLYFAC2 (8.344650268554688)
-#define SSW_POLYFAC3 (12.223608791828156)
-#define SSW_POLYFAC4 (7.105427357601002)
+#define SSW_POLYFAC1 (3.4179687500d0)
+#define SSW_POLYFAC2 (8.344650268554688d0)
+#define SSW_POLYFAC3 (12.223608791828156d0)
+#define SSW_POLYFAC4 (7.105427357601002d0)
 
   subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
     implicit none
@@ -360,3 +360,156 @@
   end subroutine getsswnumder
 
 
+  
+  
+  subroutine getsswanader(gridx,gridy,gridz,Iparent,natom,xyz,grd)
+    implicit none
+    double precision,intent(in) :: gridx,gridy,gridz
+    integer,intent(in) :: Iparent,natom
+    double precision,intent(in) :: xyz(3,natom)
+    double precision,intent(out) :: grd(3,natom)
+    double precision :: p
+
+    double precision,parameter :: a = 0.64
+    integer :: iat,jat
+    double precision :: uw, uw_parent
+    double precision :: duw(3,natom), duw_parent(3,natom)
+    double precision :: mu,g,s,z,mu2,mu3,mu4,mu5,mu6,mu7
+    double precision :: rxg(4,natom)
+    double precision :: rigv(3),rig,rig2
+    double precision :: rjgv(3),rjg,rjg2
+    double precision :: rijv(3),rij,rij2
+    double precision :: sumw,dsdmu
+    double precision :: dmudi(3),dmudj(3),dmudg(3)
+
+
+    !double precision,parameter :: SSW_POLYFAC1 = 3.4179687500d0
+    !double precision,parameter :: SSW_POLYFAC2 = 8.344650268554688d0
+    !double precision,parameter :: SSW_POLYFAC3 = 12.223608791828156d0
+    !double precision,parameter :: SSW_POLYFAC4 = 7.105427357601002d0
+
+    !write(6,*)gridx,gridy,gridz
+    grd = 0.d0
+
+    sumw = 0.d0
+    uw = 0.d0
+    uw_parent = 0.d0
+    duw = 0.d0
+    duw_parent = 0.d0
+    !write(6,*)xyz
+
+    do iat=1,natom
+       rigv(1) = xyz(1,iat)-gridx
+       rigv(2) = xyz(2,iat)-gridy
+       rigv(3) = xyz(3,iat)-gridz
+       rig2 = rigv(1)*rigv(1)+rigv(2)*rigv(2)+rigv(3)*rigv(3)
+       rig = sqrt(rig2)
+       rxg(1:3,iat) = rigv(1:3)
+       rxg(4,iat) = rig
+    end do
+
+
+    ! Calculate wi(rg)
+    do iat=1,natom
+       uw = 1.0d0
+       duw = 0.d0
+
+       rigv(1:3) = rxg(1:3,iat)
+       rig = rxg(4,iat)
+
+       ! wi(rg) = \prod_{j /= i} s(mu_{ij})
+       do jat=1,natom
+          if ( jat == iat ) then
+             cycle
+          end if
+          rjgv(1:3) = rxg(1:3,jat)
+          rjg = rxg(4,jat)
+
+          rijv(1) = xyz(1,iat)-xyz(1,jat)
+          rijv(2) = xyz(2,iat)-xyz(2,jat)
+          rijv(3) = xyz(3,iat)-xyz(3,jat)
+          rij2 = rijv(1)*rijv(1)+rijv(2)*rijv(2)+rijv(3)*rijv(3)
+          rij = sqrt(rij2)
+
+
+          mu = (rig-rjg) * (1.d0/rij)
+          dmudi =  (rigv/rig)/rij - (rig-rjg) * (1.d0/rij**3) * rijv
+          dmudj = -(rjgv/rjg)/rij + (rig-rjg) * (1.d0/rij**3) * rijv
+          dmudg =  (-rigv/rig + rjgv/rjg)/rij
+
+
+
+          if ( mu <= -a ) then
+             !g = -1.d0
+             !s = 0.50d0 * (1.d0-g)
+             !uw(iat) = uw(iat)*s
+             ! s = 1 and uw is unchanged
+          else if ( mu >= a ) then
+             !g = 1.d0
+             !s = 0.50d0 * (1.d0-g)
+             !uw(iat) = uw(iat)*s
+             ! s = 0 and uw = 0
+             uw = 0.d0
+             duw = 0.d0
+          else
+
+             !muoa = mu/a
+             !z = (35.d0*muoa - 35.d0*muoa**3 &
+             !     & + 21.d0*muoa**5 - 5.d0*muoa**7)/16.d0
+             !g = z
+
+             ! MM optimized above statements as follows. 
+
+             !We can reduce the MUL operations by precomputing polynomial constants in eqn14. 
+             !constant of the first term, 3.4179687500 = 35.0 * (1/0.64) * (1/16) 
+             !constant of the second term, 8.344650268554688 = 35.0 * (1/0.64)^3 * (1/16) 
+             !constant of the third term, 12.223608791828156 = 21.0 * (1/0.64)^5 * (1/16) 
+             !constant of the fourth term, 7.105427357601002 = 5.0 * (1/0.64)^7 * (1/16)
+
+             mu2 = mu*mu
+             mu3 = mu*mu2
+             mu4 = mu2*mu2
+             mu5 = mu2*mu3
+             mu6 = mu3*mu3
+             mu7 = mu3*mu4
+
+             g=SSW_POLYFAC1 * mu - SSW_POLYFAC2 * mu3 +&
+                  SSW_POLYFAC3 * mu5 - &
+                  SSW_POLYFAC4 * mu7
+
+             s = 0.50d0 * (1.d0-g)
+
+             dsdmu = -0.50d0 * ( SSW_POLYFAC1 - SSW_POLYFAC2 * 3.d0*mu2 +&
+                  SSW_POLYFAC3 * 5.0d0 * mu4 - &
+                  SSW_POLYFAC4 * 7.0d0 * mu6 )
+
+             uw=uw*s
+             ! We will later multiply these by uw; the division by s
+             ! seen here will remove this term from the product
+             duw(:,iat) = duw(:,iat) + dsdmu*dmudi/s
+             duw(:,jat) = duw(:,jat) + dsdmu*dmudj/s
+             duw(:,Iparent) = duw(:,Iparent) + dsdmu*dmudg/s
+
+             
+          end if
+
+       end do
+
+       if ( abs(uw) > 1.d-13 ) then
+          duw(:,:) = uw * duw(:,:)
+       else
+          duw(:,:) = 0.d0
+       end if
+
+       sumw = sumw + uw
+       grd = grd + duw
+       if ( iat == Iparent ) then
+          duw_parent = duw
+          uw_parent = uw
+       end if
+    end do
+
+    p = uw_parent / sumw
+    grd = (-p/sumw) * grd + duw_parent/sumw
+
+  end subroutine getsswanader
