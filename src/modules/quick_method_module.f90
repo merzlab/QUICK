@@ -106,6 +106,7 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
@@ -712,6 +713,7 @@ module quick_method_module
 
             if (index(keywd,'XCCUTOFF') /= 0) then           
                 call read(keywd,'XCCUTOFF', self%XCCutoff)
+                self%isDefaultXCCutoff = .false.
             endif
 
             ! Basis cutoff
@@ -833,6 +835,7 @@ module quick_method_module
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCutoff    = 1.0d-6  ! basis set cutoff
@@ -919,7 +922,7 @@ module quick_method_module
             endif
 
             ! tighten XCCutoff if diffuse functions exist
-            if(self%diffuse_basis_funcs .and. self%DFT) self%XCCutoff=self%XCCutoff*0.1d0
+            if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
 
         end subroutine check_quick_method
 
