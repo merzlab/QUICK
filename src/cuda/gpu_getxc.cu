@@ -357,8 +357,6 @@ __global__ void get_ssw_kernel(){
 
 }
 
-#define LOCUWSSD(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
-
 __global__ void get_sswgrad_kernel(){
 
 
@@ -385,7 +383,7 @@ __global__ void get_sswgrad_kernel(){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm);
+		sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm, devSim_dft.natom);
 	}
 
         __syncthreads();
@@ -881,22 +879,24 @@ int iatom, int iparent, unsigned int natom)
     return ssw;
 }
 
-__device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, QUICKDouble* const uw_ssd, const int iparent, const int iatm, const bool grad=true){
+#define LOCUWSSD(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
 
-            QUICKDouble xiatm = LOC2(devSim_dft.xyz, 0, iatm, 3, devSim_dft.natom);
-            QUICKDouble yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, devSim_dft.natom);
-            QUICKDouble ziatm = LOC2(devSim_dft.xyz, 2, iatm, 3, devSim_dft.natom);
+__device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, QUICKDouble* const uw_ssd, const int iparent, const int iatm, const int natom, const bool grad=true){
+
+            QUICKDouble xiatm = LOC2(devSim_dft.xyz, 0, iatm, 3, natom);
+            QUICKDouble yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, natom);
+            QUICKDouble ziatm = LOC2(devSim_dft.xyz, 2, iatm, 3, natom);
 
             QUICKDouble rig = sqrt(quick_dsqr(gridx-xiatm) + quick_dsqr(gridy-yiatm) + quick_dsqr(gridz-ziatm));
 
             QUICKDouble uw = 1.0;
 
-            for(int jatm=0;jatm<devSim_dft.natom;jatm++){
+            for(int jatm=0;jatm<natom;jatm++){
 
                 if( jatm != iatm){
-                    QUICKDouble xjatm = LOC2(devSim_dft.xyz, 0, jatm, 3, devSim_dft.natom);
-                    QUICKDouble yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, devSim_dft.natom);
-                    QUICKDouble zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, devSim_dft.natom);
+                    QUICKDouble xjatm = LOC2(devSim_dft.xyz, 0, jatm, 3, natom);
+                    QUICKDouble yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, natom);
+                    QUICKDouble zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, natom);
 
                     QUICKDouble rjg = sqrt(quick_dsqr(gridx-xjatm) + quick_dsqr(gridy-yjatm) + quick_dsqr(gridz-zjatm));
                     QUICKDouble rij = sqrt(quick_dsqr(xiatm-xjatm) + quick_dsqr(yiatm-yjatm) + quick_dsqr(ziatm-zjatm));
@@ -923,25 +923,25 @@ __device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gri
                             QUICKDouble dmudj = -(xjatm - gridx)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(xiatm - xjatm);
                             QUICKDouble dmudg = (-(xiatm - gridx)*(1.0/rig)+(xjatm - gridx)*(1.0/rjg))*(1.0/rij);
 
-                            LOCUWSSD(uw_ssd,0,iatm,3,devSim_dft.natom) += dsdmu * dmudi/s;
-                            LOCUWSSD(uw_ssd,0,jatm,3,devSim_dft.natom) += dsdmu * dmudj/s;
-                            LOCUWSSD(uw_ssd,0,iparent-1,3,devSim_dft.natom) += dsdmu * dmudg/s;
+                            LOCUWSSD(uw_ssd,0,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,0,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,0,iparent-1,3,natom) += dsdmu * dmudg/s;
                           
                             dmudi = (yiatm - gridy)*(1.0/rig)*(1.0/rij) - (rig-rjg) * recip_rij3 *(yiatm - yjatm);
                             dmudj = -(yjatm - gridy)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(yiatm - yjatm);
                             dmudg = (-(yiatm - gridy)*(1.0/rig)+(yjatm - gridy)*(1.0/rjg))*(1.0/rij);
                           
-                            LOCUWSSD(uw_ssd,1,iatm,3,devSim_dft.natom) += dsdmu * dmudi/s;
-                            LOCUWSSD(uw_ssd,1,jatm,3,devSim_dft.natom) += dsdmu * dmudj/s;
-                            LOCUWSSD(uw_ssd,1,iparent-1,3,devSim_dft.natom) += dsdmu * dmudg/s;
+                            LOCUWSSD(uw_ssd,1,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,1,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,1,iparent-1,3,natom) += dsdmu * dmudg/s;
                           
                             dmudi = (ziatm - gridz)*(1.0/rig)*(1.0/rij) - (rig-rjg) * recip_rij3 *(ziatm - zjatm);
                             dmudj = -(zjatm - gridz)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(ziatm - zjatm);
                             dmudg = (-(ziatm - gridz)*(1.0/rig)+(zjatm - gridz)*(1.0/rjg))*(1.0/rij);
 
-                            LOCUWSSD(uw_ssd,2,iatm,3,devSim_dft.natom) += dsdmu * dmudi/s;
-                            LOCUWSSD(uw_ssd,2,jatm,3,devSim_dft.natom) += dsdmu * dmudj/s;
-                            LOCUWSSD(uw_ssd,2,iparent-1,3,devSim_dft.natom) += dsdmu * dmudg/s;
+                            LOCUWSSD(uw_ssd,2,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,2,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,2,iparent-1,3,natom) += dsdmu * dmudg/s;
 
                         }
                     }
@@ -954,47 +954,47 @@ __device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gri
 
 }
 
-__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent){
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom){
 
         QUICKDouble sumUW= 0.0;
         QUICKDouble parent_uw = 0.0;
         
-        for(int iatm=0;iatm<devSim_dft.natom;iatm++){
-            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, false);
+        for(int iatm=0;iatm<natom;iatm++){
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, natom, false);
             sumUW += uw;
             if(iatm == iparent-1) parent_uw=uw;
         }
 
         QUICKDouble p = parent_uw/sumUW;
 
-        for(int iatm=0;iatm<devSim_dft.natom;iatm++){
+        for(int iatm=0;iatm<natom;iatm++){
 
-            for(int i=0; i<devSim_dft.natom; i++) 
+            for(int i=0; i<natom; i++) 
                 for(int j=0; j<3; j++) 
-                    LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)=0.0;
+                    LOCUWSSD(uw_ssd,j,i,3,natom)=0.0;
 
-            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm);
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, natom);
 
-            for(int i=0; i<devSim_dft.natom; i++){
+            for(int i=0; i<natom; i++){
                 for(int j=0; j<3; j++){
                     if(abs(uw) > 1.0e-8 ){
-                        atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)*Exc*quadwt*uw*(-p/sumUW));
+                        atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
                     }
                 }
             }
         }
 
-        for(int i=0; i<devSim_dft.natom; i++) 
+        for(int i=0; i<natom; i++) 
             for(int j=0; j<3; j++)               
-                LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)=0.0;
+                LOCUWSSD(uw_ssd,j,i,3,natom)=0.0;
 
-        get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iparent-1); 
+        get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iparent-1, natom); 
 
 
-        for(int i=0; i<devSim_dft.natom; i++){
+        for(int i=0; i<natom; i++){
             for(int j=0; j<3; j++){
                 if(abs(parent_uw) > 1.0e-8 ){
-                    atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
+                    atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
                 }
             }
         }
