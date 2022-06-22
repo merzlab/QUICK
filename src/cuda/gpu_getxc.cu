@@ -385,7 +385,7 @@ __global__ void get_sswgrad_kernel(){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm, gid);
+		sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm);
 	}
 
         __syncthreads();
@@ -881,7 +881,7 @@ int iatom, int iparent, unsigned int natom)
     return ssw;
 }
 
-__device__ QUICKDouble sswanader_2(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* uw_ssd, int iparent, int gid, int iatm, bool grad=true){
+__device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, QUICKDouble* const uw_ssd, const int iparent, const int iatm, const bool grad=true){
 
             QUICKDouble xiatm = LOC2(devSim_dft.xyz, 0, iatm, 3, devSim_dft.natom);
             QUICKDouble yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, devSim_dft.natom);
@@ -954,13 +954,13 @@ __device__ QUICKDouble sswanader_2(QUICKDouble gridx, QUICKDouble gridy, QUICKDo
 
 }
 
-__device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKDouble* smemGrad, QUICKDouble* uw_ssd, int iparent, int gid){
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent){
 
         QUICKDouble sumUW= 0.0;
         QUICKDouble parent_uw = 0.0;
         
         for(int iatm=0;iatm<devSim_dft.natom;iatm++){
-            QUICKDouble uw = sswanader_2(gridx, gridy, gridz, uw_ssd, iparent, gid, iatm, false);
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, false);
             sumUW += uw;
             if(iatm == iparent-1) parent_uw=uw;
         }
@@ -973,7 +973,7 @@ __device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble grid
                 for(int j=0; j<3; j++) 
                     LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)=0.0;
 
-            QUICKDouble uw = sswanader_2(gridx, gridy, gridz, uw_ssd, iparent, gid, iatm);
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm);
 
             for(int i=0; i<devSim_dft.natom; i++){
                 for(int j=0; j<3; j++){
@@ -988,7 +988,7 @@ __device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble grid
             for(int j=0; j<3; j++)               
                 LOCUWSSD(uw_ssd,j,i,3,devSim_dft.natom)=0.0;
 
-        sswanader_2(gridx, gridy, gridz, uw_ssd, iparent, gid, iparent-1); 
+        get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iparent-1); 
 
 
         for(int i=0; i<devSim_dft.natom; i++){
