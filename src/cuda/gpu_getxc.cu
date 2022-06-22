@@ -362,12 +362,12 @@ __global__ void get_sswgrad_kernel(){
 
 
         //declare smem grad vector
-        extern __shared__ QUICKULL smem_buffer[];
-        QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
         // initialize smem grad
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-          smemGrad[i]=0ull;
+          smemGrad[i]=0.0;
 
         __syncthreads();
 
@@ -391,7 +391,8 @@ __global__ void get_sswgrad_kernel(){
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-          atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          //atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          GRADADD(devSim_dft.gradULL[i], smemGrad[i]);
 
         __syncthreads();
 }
@@ -409,14 +410,14 @@ computing x, y and z gradients separately.
 __global__ void get_sswnumgrad_kernel(){
 
         //declare smem grad vector
-        extern __shared__ QUICKULL smem_buffer[];
-        QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
         unsigned int natom = devSim_dft.natom;
 
         // initialize smem grad
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
-          smemGrad[i]=0ull;
+          smemGrad[i]=0.0;
 
         __syncthreads();
 
@@ -522,10 +523,15 @@ __global__ void get_sswnumgrad_kernel(){
                 zatm += SSW_NUMGRAD_DELTA;
 
                 if(iatom == gatm-1) zparent = zatm;
-
+/*
                 GRADADD(smemGrad[iatom*3], dpx);
                 GRADADD(smemGrad[iatom*3+1], dpy);
                 GRADADD(smemGrad[iatom*3+2], dpz);
+*/
+                atomicAdd(&smemGrad[iatom*3], dpx);
+                atomicAdd(&smemGrad[iatom*3+1], dpy);
+                atomicAdd(&smemGrad[iatom*3+2], dpz);
+
 /*
 printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 1, dpx, devSim_dft.exc_ssd[idx], devSim_dft.quadwt[idx]);
 
@@ -542,7 +548,8 @@ printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 3, dpz
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
-          atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          //atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          GRADADD(devSim_dft.gradULL[i], smemGrad[i]);       
 
         __syncthreads();
 
@@ -945,7 +952,7 @@ __device__ QUICKDouble sswanader_2(QUICKDouble gridx, QUICKDouble gridy, QUICKDo
 
 }
 
-__device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid){
+__device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKDouble* smemGrad, int iparent, int gid){
 
         QUICKDouble sumUW= 0.0;
 
@@ -959,7 +966,8 @@ __device__ void sswanader(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble grid
 
             for(int i=0; i<devSim_dft.natom*3; i++) {
                 if(abs(uw) > 1.0e-8 ){
-                    GRADADD(smemGrad[i], devSim_dft.uw_ssd[gid*devSim_dft.natom*3+i]*Exc*quadwt*uw);
+                    //GRADADD(smemGrad[i], devSim_dft.uw_ssd[gid*devSim_dft.natom*3+i]*Exc*quadwt*uw);
+                    atomicAdd(&smemGrad[i],devSim_dft.uw_ssd[gid*devSim_dft.natom*3+i]*Exc*quadwt*uw);
                 }
             }
             sumUW += uw;                      
