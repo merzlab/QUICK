@@ -886,7 +886,7 @@ __device__ QUICKDouble sswanader_2(QUICKDouble gridx, QUICKDouble gridy, QUICKDo
             QUICKDouble yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, devSim_dft.natom);
             QUICKDouble ziatm = LOC2(devSim_dft.xyz, 2, iatm, 3, devSim_dft.natom);
 
-            QUICKDouble rig = sqrt(pow((gridx-xiatm),2) + pow((gridy-yiatm),2) + pow((gridz-ziatm),2));
+            QUICKDouble rig = sqrt(quick_dsqr(gridx-xiatm) + quick_dsqr(gridy-yiatm) + quick_dsqr(gridz-ziatm));
 
             QUICKDouble uw = 1.0;
 
@@ -897,8 +897,8 @@ __device__ QUICKDouble sswanader_2(QUICKDouble gridx, QUICKDouble gridy, QUICKDo
                     QUICKDouble yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, devSim_dft.natom);
                     QUICKDouble zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, devSim_dft.natom);
 
-                    QUICKDouble rjg = sqrt(pow((gridx-xjatm),2) + pow((gridy-yjatm),2) + pow((gridz-zjatm),2));
-                    QUICKDouble rij = sqrt(pow((xiatm-xjatm),2) + pow((yiatm-yjatm),2) + pow((ziatm-zjatm),2));
+                    QUICKDouble rjg = sqrt(quick_dsqr(gridx-xjatm) + quick_dsqr(gridy-yjatm) + quick_dsqr(gridz-zjatm));
+                    QUICKDouble rij = sqrt(quick_dsqr(xiatm-xjatm) + quick_dsqr(yiatm-yjatm) + quick_dsqr(ziatm-zjatm));
 
                     QUICKDouble mu = (rig-rjg)*(1.0/rij);
 
