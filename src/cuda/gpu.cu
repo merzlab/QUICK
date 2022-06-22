@@ -2141,7 +2141,7 @@ void prune_grid_sswgrad(){
         gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
         
 #endif
-        gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd * gpu->natom*3);
+        gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> blocks * gpu -> xc_threadsPerBlock * gpu->natom*3);
 
         gpu -> gpu_xcq -> gridx_ssd -> Upload();
         gpu -> gpu_xcq -> gridy_ssd -> Upload();
