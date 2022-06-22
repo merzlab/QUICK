@@ -977,7 +977,7 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
 
             for(int i=0; i<natom; i++){
                 for(int j=0; j<3; j++){
-                    if(abs(uw) > 1.0e-8 ){
+                    if(abs(uw) > devSim_dft.DMCutoff ){
                         atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
                     }
                 }
@@ -993,7 +993,7 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
 
         for(int i=0; i<natom; i++){
             for(int j=0; j<3; j++){
-                if(abs(parent_uw) > 1.0e-8 ){
+                if(abs(parent_uw) > devSim_dft.DMCutoff ){
                     atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
                 }
             }
