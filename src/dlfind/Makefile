@@ -20,7 +20,7 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(DLFIND_FLAGS)
+FOR=$(FC) $(FORT_EXT_LIB_FLAGS)
 #FOR=$(FC) $(FFLAGS) $(DLFIND_FLAGS)
 
 # modules used by more than one file

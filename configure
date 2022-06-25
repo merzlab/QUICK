@@ -602,7 +602,7 @@ cuda_debug_flags=''
 fort_vspec_flags=''
 
 # external library specific flags
-dlfind_flags=''
+fort_ext_lib_flags=''
 
 # set common folders
 libxcobjfolder=''
@@ -1201,21 +1201,21 @@ for buildtype in $buildtypes; do
   # set dlfind flags
   case "$compiler" in
     gnu)
-      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
       ;;
     intel|pgi|nvidia)
-      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
       ;;
   esac
 
-  dlfind_flags="$dlfind_flags -I$QUICK_HOME/build/include/$buildtype"
+  fort_ext_lib_flags="$fort_ext_lib_flags -I$QUICK_HOME/build/include/$buildtype"
 
   if [ "$buildtype" = 'mpi' ]; then
-    dlfind_flags="$dlfind_flags -DMPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV"
   elif [ "$buildtype" = 'cuda' ]; then
-    dlfind_flags="$dlfind_flags -DCUDA"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DCUDA"
   elif [ "$buildtype" = 'cudampi' ]; then
-    dlfind_flags="$dlfind_flags -DMPIV -DCUDA_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DCUDA_MPIV"
   fi
 
   # set the installer
@@ -1331,7 +1331,7 @@ ARCHFLAGS=$arch_flags
 RANLIB=$ranlib
 LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
-DLFIND_FLAGS=$dlfind_flags
+FORT_EXT_LIB_FLAGS=$fort_ext_lib_flags
 
 #!---------------------------------------------------------------------!
 #! Common compiler  flags                                              !
