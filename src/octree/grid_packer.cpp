@@ -138,13 +138,14 @@ void get_cpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw
 
 
 /*Fortran accessible method to pack grid points*/
-void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn){
+void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *XCCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn){
 
         gps->arr_size    = *arr_size;
         gps->natoms      = *natoms;
         gps->nbasis      = *nbasis;
         gps->maxcontract = *maxcontract;
         gps->DMCutoff    = *DMCutoff;
+        gps->XCCutoff   = *XCCutoff;
 
         gps->sigrad2     = new gpack_buffer_type<double>(sigrad2, gps->nbasis);
         gps->ncontract   = new gpack_buffer_type<int>(ncontract, gps->nbasis);
@@ -582,7 +583,7 @@ void gpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree, vector<n
 
 	start = clock();
 
-        gpu_get_octree_info(gridx, gridy, gridz, gps->sigrad2->_cppData, gpweight, cfweight, pfweight, bin_locator, init_arr_size, gps->DMCutoff,leaf_count);
+        gpu_get_octree_info(gridx, gridy, gridz, gps->sigrad2->_cppData, gpweight, cfweight, pfweight, bin_locator, init_arr_size, gps->DMCutoff, gps->XCCutoff, leaf_count);
 
 	end = clock();
 
@@ -1275,7 +1276,7 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
                                        dphidz = dphidz + tmpdz;
 
                                        //Check the significance of the primitive
-                                       if(abs(tmp+tmpdx+tmpdy+tmpdz) > gps->DMCutoff){
+                                       if(abs(tmp+tmpdx+tmpdy+tmpdz) > gps->XCCutoff){
                                                pfweight[pfwid] += 1;
                                        }
                                }
@@ -1287,7 +1288,7 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
 
                        }
 
-                       if (abs(phi+dphidx+dphidy+dphidz)> gps->DMCutoff ){
+                       if (abs(phi+dphidx+dphidy+dphidz)> gps->XCCutoff ){
                                cfweight[cfwid] += 1;
                                sigcfcount++;
                        }

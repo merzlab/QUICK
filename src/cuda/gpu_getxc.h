@@ -64,7 +64,7 @@ __global__ void get_cshell_density_kernel()
 
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
-        if (abs(phi+dphidx+dphidy+dphidz) >= devSim_dft.DMCutoff ) {
+        if (abs(phi+dphidx+dphidy+dphidz) >= devSim_dft.XCCutoff ) {
 
           QUICKDouble denseii = LOC2(devSim_dft.dense, ibas, ibas, devSim_dft.nbasis, devSim_dft.nbasis) * phi;
 #ifdef OSHELL
@@ -315,7 +315,7 @@ __global__ void cshell_getxc_kernel()
         QUICKDouble phi, dphidx, dphidy, dphidz;
 
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
-        if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+        if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.XCCutoff ) {
           for (int j = bfloc_st; j < bfloc_end; j++) {
 
             int jbas = devSim_dft.basf[j];
@@ -528,7 +528,7 @@ __global__ void cshell_getxcgrad_kernel()
         QUICKDouble phi, dphidx, dphidy, dphidz;
         pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
-        if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+        if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.XCCutoff ) {
 
           QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
 

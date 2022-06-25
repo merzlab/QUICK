@@ -105,9 +105,11 @@ module quick_method_module
         double precision :: primLimit      = 1.0d-8   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
+        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-        double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
+        double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
         !signif
 
         ! following are some gradient cutoff criteria
@@ -130,6 +132,9 @@ module quick_method_module
         logical :: uscf_conv     = .false.
         logical :: scf_conv      = .false.
         logical :: allow_bad_scf        = .false.
+        logical :: diffuse_basis_funcs = .false.    ! if basis set contains diffuse functions
+        logical :: coarse_cutoff = .false.          ! use coarse cutoffs in SCF and gradient 
+        logical :: tight_cutoff  = .false.          ! use coarse cutoffs in SCF and gradient
 
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
@@ -246,8 +251,9 @@ module quick_method_module
             call MPI_BCAST(self%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%basisCufoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%basisCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -461,7 +467,7 @@ module quick_method_module
             write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
             write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
             write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
-            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCufoff
+            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCutoff
             if (self%grad) then
                 write (io,'("      GRADIENT CUTOFF  = ",E10.3)') self%gradCutoff
             endif
@@ -705,10 +711,14 @@ module quick_method_module
                 call read(keywd,'MATRIXZERO', self%DMCutoff)
             endif
 
+            if (index(keywd,'XCCUTOFF') /= 0) then           
+                call read(keywd,'XCCUTOFF', self%XCCutoff)
+                self%isDefaultXCCutoff = .false.
+            endif
+
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                call read(keywd,'BASISZERO', itemp)
-                self%basisCufoff=10.d0**(-1.d0*itemp)
+                call read(keywd,'BASISZERO', self%basisCutoff)
             endif
 
            if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
@@ -735,6 +745,15 @@ module quick_method_module
             if (index(keywd,'ICOORD=') /= 0) then
                 call read(keywd,'ICOORD', self%dlfind_icoord)
             endif
+
+            if (index(keyWD,'BASIS=').ne.0)  then
+                tempstring=' '
+                call read(keywd, 'BASIS', tempstring)
+                if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
+            endif
+
+            if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
+            if (index(keyWD,'TIGHTINT').ne.0) self%tight_cutoff=.true.
 
         end subroutine read_quick_method
 
@@ -815,9 +834,11 @@ module quick_method_module
             self%primLimit      = 1.0d-8   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
+            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-            self%basisCufoff    = 1.0d-10  ! basis set cutoff
+            self%basisCutoff    = 1.0d-6  ! basis set cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
@@ -834,6 +855,10 @@ module quick_method_module
             self%uselibxc = .false.
             self%xc_polarization = 0
             self%nof_functionals = 0
+
+            self%diffuse_basis_funcs=.false. ! if basis set contains diffuse functions
+            self%coarse_cutoff=.false.
+            self%tight_cutoff=.false.
 
 #if defined CUDA || defined CUDA_MPIV
             self%bCUDA  = .true.
@@ -866,6 +891,24 @@ module quick_method_module
                 !self%primLimit=min(1.0d-7,self%primLimit)
             endif
 
+            if(self%coarse_cutoff) then
+                self%pmaxrms=1.0d-5
+                self%integralCutoff=1.0e-6
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-6
+                self%XCCutoff=1.0e-6
+                self%basisCutoff=1.0e-5
+            endif
+
+            if(self%tight_cutoff) then
+                self%pmaxrms=1.0d-7
+                self%integralCutoff=1.0e-8
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-8
+                self%XCCutoff=1.0e-8
+                self%basisCutoff=1.0e-7
+            endif
+
             ! OPT not available for MP2
             if (self%MP2 .and. self%OPT) then
                 call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLY")
@@ -877,6 +920,9 @@ module quick_method_module
                 call PrtWrn(io,"GEOMETRY OPTIMIZATION is only available with HF, DFT/BLYP, DFT/B3LYP" )
                 self%OPT = .false.
             endif
+
+            ! tighten XCCutoff if diffuse functions exist
+            if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
 
         end subroutine check_quick_method
 
