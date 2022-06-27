@@ -20,7 +20,7 @@
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x] 
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3) 
 
-__device__ __inline__ void SSPS_PSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, QUICKDouble* store, QUICKDouble* YVerticalTemp){
+__device__ __inline__ void SSPS_PSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, QUICKDouble* const  store, QUICKDouble* const  YVerticalTemp){
 
             QUICKDouble VY_0 = VY(0, 0, 0);
             QUICKDouble VY_1 = VY(0, 0, 1);
@@ -31,7 +31,7 @@ __device__ __inline__ void SSPS_PSSS(const int i, const int j, const QUICKDouble
 }
 
 
-__device__ __inline__ void SSDS_DSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* store, QUICKDouble* YVerticalTemp){
+__device__ __inline__ void SSDS_DSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* const store, QUICKDouble* const YVerticalTemp){
 
                 QUICKDouble VY_0 = VY(0, 0, 0);
                 QUICKDouble VY_1 = VY(0, 0, 1);
@@ -52,7 +52,7 @@ __device__ __inline__ void SSDS_DSSS(const int i, const int j, const QUICKDouble
 }
 
 
-__device__ __inline__ void SSFS_FSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* store, QUICKDouble* YVerticalTemp){
+__device__ __inline__ void SSFS_FSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* const store, QUICKDouble* const YVerticalTemp){
 
                     QUICKDouble VY_0 = VY(0, 0, 0);
                     QUICKDouble VY_1 = VY(0, 0, 1);
@@ -95,7 +95,7 @@ __device__ __inline__ void SSFS_FSSS(const int i, const int j, const QUICKDouble
 }
 
 
-__device__ __inline__ void SSGS_GSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* store, QUICKDouble* YVerticalTemp){
+__device__ __inline__ void SSGS_GSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* const store, QUICKDouble* const YVerticalTemp){
 
                         QUICKDouble VY_0 = VY(0, 0, 0);
                         QUICKDouble VY_1 = VY(0, 0, 1);
@@ -173,7 +173,7 @@ __device__ __inline__ void SSGS_GSSS(const int i, const int j, const QUICKDouble
 
 __device__ __inline__ void PSDS_DSPS(const int i, const int j, const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
-                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [PS|DS] integral - Start
@@ -225,7 +225,7 @@ __device__ __inline__ void PSDS_DSPS(const int i, const int j, const QUICKDouble
 
 __device__ __inline__ void PSFS_FSPS(const int i, const int j, const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
-                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [PS|FS] integral - Start
@@ -319,7 +319,7 @@ __device__ __inline__ void PSFS_FSPS(const int i, const int j, const QUICKDouble
 
 __device__ __inline__ void PSGS_GSPS(const int i, const int j, const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
-                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [PS|GS] integral - Start
@@ -480,7 +480,7 @@ __device__ __inline__ void DSFS_FSDS(const int i, const int j,
                                      const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
                                      const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, const QUICKDouble CDcom,
-                                     QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [DS|FS] integral - Start
@@ -704,7 +704,7 @@ __device__ __inline__ void DSGS_GSDS(const int i, const int j,
                                      const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
                                      const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, const QUICKDouble CDcom,
-                                     QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [DS|GS] integral - Start
@@ -1065,7 +1065,7 @@ __device__ __inline__ void FSGS_GSFS(const int i, const int j,
                                      const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
                                      const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
                                      const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, const QUICKDouble CDcom,
-                                     QUICKDouble *store, QUICKDouble *YVerticalTemp)
+                                     QUICKDouble* const store, QUICKDouble* const YVerticalTemp)
 {
 
     // [FS|GS] integral - Start
