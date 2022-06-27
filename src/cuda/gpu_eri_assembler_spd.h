@@ -52,7 +52,6 @@ __device__ __inline__ void SSDS_DSSS(const int i, const int j, const QUICKDouble
 }
 
 
-
 __device__ __inline__ void SSFS_FSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* store, QUICKDouble* YVerticalTemp){
 
                     QUICKDouble VY_0 = VY(0, 0, 0);
@@ -94,6 +93,7 @@ __device__ __inline__ void SSFS_FSSS(const int i, const int j, const QUICKDouble
 
 
 }
+
 
 __device__ __inline__ void SSGS_GSSS(const int i, const int j, const QUICKDouble tempx, const QUICKDouble tempy, const QUICKDouble tempz, const QUICKDouble Wtempx, const QUICKDouble Wtempy, const QUICKDouble Wtempz, const QUICKDouble temp, const QUICKDouble com, QUICKDouble* store, QUICKDouble* YVerticalTemp){
 
@@ -171,6 +171,57 @@ __device__ __inline__ void SSGS_GSSS(const int i, const int j, const QUICKDouble
 
 }
 
+__device__ __inline__ void PSDS_DSPS(const int i, const int j, const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz, 
+const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
+const QUICKDouble ABCDtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, QUICKDouble *store, QUICKDouble *YVerticalTemp)
+{
+
+    // [PS|DS] integral - Start
+    QUICKDouble VY_1 = VY(0, 0, 1);
+    QUICKDouble VY_2 = VY(0, 0, 2);
+    QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
+    QUICKDouble VY_0 = VY(0, 0, 0);
+    QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
+    QUICKDouble VY_3 = VY(0, 0, 3);
+    QUICKDouble x_0_2_2 = Qtempy * VY_2 + WQtempy * VY_3;
+    QUICKDouble x_0_4_0 = Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
+    QUICKDouble x_0_4_1 = Qtempx * x_0_2_1 + WQtempx * x_0_2_2;
+    LOCSTORE(store, (3 + i * 1), (3 + j * 1), STOREDIM, STOREDIM) += Ptempz * x_0_4_0 + WPtempz * x_0_4_1;
+    QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
+    LOCSTORE(store, (2 + i * 2), (2 + j * 2), STOREDIM, STOREDIM) += Ptempy * x_0_4_0 + WPtempy * x_0_4_1 + ABCDtemp * x_0_1_1;
+    LOCSTORE(store, (1 + i * 3), (1 + j * 3), STOREDIM, STOREDIM) += Ptempx * x_0_4_0 + WPtempx * x_0_4_1 + ABCDtemp * x_0_2_1;
+    QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
+    QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
+    QUICKDouble x_0_3_2 = Qtempz * VY_2 + WQtempz * VY_3;
+    QUICKDouble x_0_5_0 = Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
+    QUICKDouble x_0_5_1 = Qtempy * x_0_3_1 + WQtempy * x_0_3_2;
+    LOCSTORE(store, (3 + i * 2), (3 + j * 2), STOREDIM, STOREDIM) += Ptempz * x_0_5_0 + WPtempz * x_0_5_1 + ABCDtemp * x_0_2_1;
+    LOCSTORE(store, (2 + i * 3), (2 + j * 3), STOREDIM, STOREDIM) += Ptempy * x_0_5_0 + WPtempy * x_0_5_1 + ABCDtemp * x_0_3_1;
+    LOCSTORE(store, (1 + i * 4), (1 + j * 4), STOREDIM, STOREDIM) += Ptempx * x_0_5_0 + WPtempx * x_0_5_1;
+    QUICKDouble x_0_6_0 = Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
+    QUICKDouble x_0_6_1 = Qtempx * x_0_3_1 + WQtempx * x_0_3_2;
+    LOCSTORE(store, (3 + i * 3), (3 + j * 3), STOREDIM, STOREDIM) += Ptempz * x_0_6_0 + WPtempz * x_0_6_1 + ABCDtemp * x_0_1_1;
+    LOCSTORE(store, (2 + i * 4), (2 + j * 4), STOREDIM, STOREDIM) += Ptempy * x_0_6_0 + WPtempy * x_0_6_1;
+    LOCSTORE(store, (1 + i * 5), (1 + j * 5), STOREDIM, STOREDIM) += Ptempx * x_0_6_0 + WPtempx * x_0_6_1 + ABCDtemp * x_0_3_1;
+    QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
+    QUICKDouble x_0_1_2 = Qtempx * VY_2 + WQtempx * VY_3;
+    QUICKDouble x_0_7_0 = Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
+    QUICKDouble x_0_7_1 = Qtempx * x_0_1_1 + WQtempx * x_0_1_2 + CDtemp * (VY_1 - ABcom * VY_2);
+    LOCSTORE(store, (3 + i * 4), (3 + j * 4), STOREDIM, STOREDIM) += Ptempz * x_0_7_0 + WPtempz * x_0_7_1;
+    LOCSTORE(store, (2 + i * 5), (2 + j * 5), STOREDIM, STOREDIM) += Ptempy * x_0_7_0 + WPtempy * x_0_7_1;
+    LOCSTORE(store, (1 + i * 6), (1 + j * 6), STOREDIM, STOREDIM) += Ptempx * x_0_7_0 + WPtempx * x_0_7_1 + 2.000000 * ABCDtemp * x_0_1_1;
+    QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
+    QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
+    LOCSTORE(store, (3 + i * 5), (3 + j * 5), STOREDIM, STOREDIM) += Ptempz * x_0_8_0 + WPtempz * x_0_8_1;
+    LOCSTORE(store, (2 + i * 6), (2 + j * 6), STOREDIM, STOREDIM) += Ptempy * x_0_8_0 + WPtempy * x_0_8_1 + 2.000000 * ABCDtemp * x_0_2_1;
+    LOCSTORE(store, (1 + i * 7), (1 + j * 7), STOREDIM, STOREDIM) += Ptempx * x_0_8_0 + WPtempx * x_0_8_1;
+    QUICKDouble x_0_9_0 = Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
+    QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
+    LOCSTORE(store, (3 + i * 6), (3 + j * 6), STOREDIM, STOREDIM) += Ptempz * x_0_9_0 + WPtempz * x_0_9_1 + 2.000000 * ABCDtemp * x_0_3_1;
+    LOCSTORE(store, (2 + i * 7), (2 + j * 7), STOREDIM, STOREDIM) += Ptempy * x_0_9_0 + WPtempy * x_0_9_1;
+    LOCSTORE(store, (1 + i * 8), (1 + j * 8), STOREDIM, STOREDIM) += Ptempx * x_0_9_0 + WPtempx * x_0_9_1;
+    // [PS|DS] integral - End
+}
 
 __device__ __inline__ void FSGS_GSFS(const int i, const int j, 
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble
@@ -1202,7 +1253,7 @@ __device__ __inline__ void ERint_vertical_spd(const int I, const int J, const in
                 if (K <= 2 && I <= 1)
                 {
 
-                    // [PS|DS] integral - Start
+/*                    // [PS|DS] integral - Start
                     QUICKDouble VY_1 = VY(0, 0, 1);
                     QUICKDouble VY_2 = VY(0, 0, 2);
                     QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
@@ -1247,6 +1298,9 @@ __device__ __inline__ void ERint_vertical_spd(const int I, const int J, const in
                     LOCSTORE(store, 2, 9, STOREDIM, STOREDIM) += Ptempy * x_0_9_0 + WPtempy * x_0_9_1;
                     LOCSTORE(store, 1, 9, STOREDIM, STOREDIM) += Ptempx * x_0_9_0 + WPtempx * x_0_9_1;
                     // [PS|DS] integral - End 
+*/
+
+                    PSDS_DSPS(0, 1, Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz, ABCDtemp, CDtemp, ABcom, store, YVerticalTemp);
 
                 }
                 if ((I + J) >= 1 && (K + L) >= 3)
@@ -1510,7 +1564,7 @@ __device__ __inline__ void ERint_vertical_spd(const int I, const int J, const in
                 if (K <= 1 && I <= 2)
                 {
 
-                    // [DS|PS] integral - Start
+/*                    // [DS|PS] integral - Start
                     QUICKDouble VY_1 = VY(0, 0, 1);
                     QUICKDouble VY_2 = VY(0, 0, 2);
                     QUICKDouble x_2_0_1 = Ptempy * VY_1 + WPtempy * VY_2;
@@ -1555,6 +1609,9 @@ __device__ __inline__ void ERint_vertical_spd(const int I, const int J, const in
                     LOCSTORE(store, 9, 2, STOREDIM, STOREDIM) += Qtempy * x_9_0_0 + WQtempy * x_9_0_1;
                     LOCSTORE(store, 9, 1, STOREDIM, STOREDIM) += Qtempx * x_9_0_0 + WQtempx * x_9_0_1;
                     // [DS|PS] integral - End 
+*/
+
+                    PSDS_DSPS(1, 0, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz, Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, ABCDtemp, ABtemp, CDcom, store, YVerticalTemp);
 
                 }
                 if ((I + J) >= 2 && (K + L) >= 2)
