@@ -602,7 +602,7 @@ cuda_debug_flags=''
 fort_vspec_flags=''
 
 # external library specific flags
-dlfind_flags=''
+fort_ext_lib_flags=''
 
 # set common folders
 libxcobjfolder=''
@@ -610,6 +610,7 @@ libxcdevobjfolder=''
 blasobjfolder=''
 lapackoobjfolder=''
 dlfindobjfolder=''
+dftd3objfolder=''
 
 # keep track of which build types to clean
 cleantypes=''
@@ -867,6 +868,12 @@ for buildtype in $buildtypes; do
     mkdir -p "$QUICK_HOME/build/common/cpu/dlfindobj" 
   fi
   dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
+
+  # create dftd3objfolder directory
+  if [ ! -d "$QUICK_HOME/build/common/cpu/dftd3obj" ]; then
+    mkdir -p "$QUICK_HOME/build/common/cpu/dftd3obj"
+  fi
+  dftd3objfolder="$QUICK_HOME/build/common/cpu/dftd3obj"
 
 done
 
@@ -1194,21 +1201,21 @@ for buildtype in $buildtypes; do
   # set dlfind flags
   case "$compiler" in
     gnu)
-      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
       ;;
     intel|pgi|nvidia)
-      dlfind_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
       ;;
   esac
 
-  dlfind_flags="$dlfind_flags -I$QUICK_HOME/build/include/$buildtype"
+  fort_ext_lib_flags="$fort_ext_lib_flags -I$QUICK_HOME/build/include/$buildtype"
 
   if [ "$buildtype" = 'mpi' ]; then
-    dlfind_flags="$dlfind_flags -DMPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV"
   elif [ "$buildtype" = 'cuda' ]; then
-    dlfind_flags="$dlfind_flags -DCUDA"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DCUDA"
   elif [ "$buildtype" = 'cudampi' ]; then
-    dlfind_flags="$dlfind_flags -DMPIV -DCUDA_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DCUDA_MPIV"
   fi
 
   # set the installer
@@ -1246,6 +1253,9 @@ for buildtype in $buildtypes; do
   # set lapack folder
   lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
 
+  #set dftd3obj folder
+  dftd3objfolder="$QUICK_HOME/build/common/cpu/dftd3obj"
+
   # copy template Makefile into each buildtype directory
   cp -f "$QUICK_HOME/tools/build-makefile" "$QUICK_HOME/build/Makefile"
 
@@ -1280,6 +1290,7 @@ blasfolder=$QUICK_HOME/src/blas
 lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
+dftd3folder=$QUICK_HOME/src/dftd3
 cudafolder=$QUICK_HOME/src/cuda
 cublasfolder=$QUICK_HOME/src/cuda/cublas
 cusolverfolder=$QUICK_HOME/src/cuda/cusolver
@@ -1292,6 +1303,7 @@ objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
 dlfindobjfolder=$dlfindobjfolder
+dftd3objfolder=$dftd3objfolder
 mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
 blasobjfolder=$blasobjfolder
 lapackobjfolder=$lapackobjfolder
@@ -1319,7 +1331,7 @@ ARCHFLAGS=$arch_flags
 RANLIB=$ranlib
 LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
-DLFIND_FLAGS=$dlfind_flags
+FORT_EXT_LIB_FLAGS=$fort_ext_lib_flags
 
 #!---------------------------------------------------------------------!
 #! Common compiler  flags                                              !
@@ -1386,6 +1398,7 @@ blasfolder=$QUICK_HOME/src/blas
 lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
+dftd3folder=$QUICK_HOME/src/dftd3
 cudafolder=$QUICK_HOME/src/cuda
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules

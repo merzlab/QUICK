@@ -234,7 +234,8 @@ contains
         quick_dft_grid%gridb_sswt, quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, &
         quick_dft_grid%bin_locator, quick_dft_grid%basf, quick_dft_grid%primf, quick_dft_grid%basf_counter, &
         quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins, &
-        quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff)
+        quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff, &
+        quick_method%XCCutoff)
   
 #ifdef CUDA_MPIV
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
@@ -281,6 +282,9 @@ contains
   
         call uscf_operator(deltaO)
   
+        quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
+        quick_qm_struct%densebOld(:,:) = quick_qm_struct%denseb(:,:)
+
         !if (quick_method%debug)  call debug_SCF(jscf)
   
         ! Terminate Operator timer
@@ -291,9 +295,6 @@ contains
            ! End of Delta Matrix
            !-----------------------------------------------
            call cpu_time(timer_begin%TDII)
-  
-           quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
-           quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
   
            !if (quick_method%debug)  write(ioutfile,*) "hehe hf"
            !if (quick_method%debug)  call debug_SCF(jscf)
@@ -352,8 +353,6 @@ contains
            enddo
 
            ! 3)  Form the beta operator matrix for step i, O(i).  (Store in alloperatorb array.)
-           quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
-           quick_qm_struct%densebOld(:,:) = quick_qm_struct%denseb(:,:)
            
            ! 4)  Form beta error matrix for step i.
            ! e(i) = e(i,alpha part)+Ob Db S - S Db Ob
@@ -603,7 +602,7 @@ contains
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
 #if defined(CUDA) || defined(CUDA_MPIV)
-  
+ 
           call cpu_time(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
                 quick_qm_struct%E, quick_qm_struct%idegen, &
@@ -856,8 +855,6 @@ contains
            call MPI_BCAST(quick_method%uscf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%densebOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%cob,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

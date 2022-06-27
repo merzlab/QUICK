@@ -39,20 +39,20 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar 15 14:37:27 2022
+| TASK STARTS ON: Wed Jun 15 13:18:47 2022
 | INPUT FILE :    opt_c2hrad_uhf_ccpvdz.in
 | OUTPUT FILE:    opt_c2hrad_uhf_ccpvdz.out
 | DATA FILE  :    opt_c2hrad_uhf_ccpvdz.dat
-| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+| BASIS SET PATH: /mnt/home/manathun/Work/delta-dft/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        3
+| CUDA ENABLED DEVICE         :        4
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA TITAN V
-| CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
-| SUPPORTING CUDA VERSION     :      7.0
+| CUDA DEVICE NAME            : NVIDIA A100-PCIE-40GB
+| CUDA DEVICE PM              :      108
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.41
+| CUDA DEVICE MEMORY SIZE (MB):    40536
+| SUPPORTING CUDA VERSION     :      8.0
 |--------------------------------------------
 
  @ Read Job And Atom
@@ -80,16 +80,16 @@
  GRADIENT CALCULATION
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
- DELTA DENSITY START CYCLE = 1000
+ DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
       TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-19
+      BASIS SET PRIME  =  0.100E-09
       MATRIX ELEMENTS  =  0.100E-09
       BASIS FUNCTION   =  0.100E-09
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = CC-PVDZ,  TYPE = CARTESIAN
-| BASIS FILE = /home/madu/saved-test-update/install/basis/CC-PVDZ.BAS
+| BASIS FILE = /mnt/home/manathun/Work/delta-dft/basis/CC-PVDZ.BAS
 
  @ Finish reading job
 
@@ -223,11 +223,11 @@ ELEMENT      X              Y              Z
  @ Begin XC Quadrature Formation
 
  OCTAGO: OCTree Algorithm for Grid Operations 
-   PRUNING CUTOFF       = 0.100E-09
+   PRUNING CUTOFF       = 0.100E-06
    INITIAL GRID POINTS  =       11384
-|   FINAL GRID POINTS    =        7897
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        6204
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        9628
+|   FINAL GRID POINTS    =        7807
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5925
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        8764
 
  @ End XC Quadrature Formation
 
@@ -238,31 +238,31 @@ ELEMENT      X              Y              Z
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.909616799      ------         0.062     1        0.01      0.05      0.00    0.1779E+01  0.6196E-01  0.4754E+00
-|  2    -76.554513888  -.355103E+00       0.032     2        0.01      0.02      0.00    0.1171E+00  0.2206E-01  0.2823E+00
-|  3    -76.489641726  -.648722E-01       0.030     3        0.01      0.02      0.00    0.2726E+00  0.1503E-01  0.2064E+00
-|  4    -76.593271630  0.103630E+00       0.029     4        0.01      0.02      0.00    0.1013E+00  0.5044E-02  0.6979E-01
-|  5    -76.606937267  0.136656E-01       0.029     5        0.01      0.02      0.00    0.5481E-02  0.1365E-02  0.1210E-01
-|  6    -76.607370192  0.432925E-03       0.029     6        0.01      0.02      0.00    0.1497E-02  0.1020E-02  0.8701E-02
-|  7    -76.607584843  0.214650E-03       0.029     7        0.01      0.02      0.00    0.1702E-02  0.2272E-02  0.2028E-01
-|  8    -76.607957265  0.372422E-03       0.029     8        0.01      0.02      0.00    0.1178E-02  0.3958E-02  0.3794E-01
-|  9    -76.608217531  0.260267E-03       0.029     9        0.01      0.02      0.00    0.3782E-02  0.2246E-03  0.3478E-02
-| 10    -76.608242627  0.250959E-04       0.029    10        0.01      0.02      0.00    0.1604E-02  0.1182E-02  0.1165E-01
-| 11    -76.608263890  0.212624E-04       0.028     1        0.01      0.02      0.00    0.1284E-02  0.3284E-03  0.5236E-02
-| 12    -76.608273878  0.998789E-05       0.029     2        0.01      0.02      0.00    0.9909E-03  0.1316E-03  0.1297E-02
-| 13    -76.608275385  0.150731E-05       0.029     3        0.01      0.02      0.00    0.4840E-03  0.6695E-04  0.8133E-03
-| 14    -76.608275937  0.552467E-06       0.029     4        0.01      0.02      0.00    0.1332E-03  0.1846E-04  0.1807E-03
-| 15    -76.608275966  0.285863E-07       0.029     5        0.01      0.02      0.00    0.9423E-05  0.1150E-05  0.1120E-04
-| 16    -76.608275966  0.167464E-09       0.029     6        0.01      0.02      0.00    0.3969E-06  0.1615E-06  0.1959E-05
+|  1    -76.909616797      ------         0.067     1        0.02      0.05      0.01    0.1779E+01  0.6196E-01  0.4754E+00
+|  2    -76.554514028  -.355103E+00       0.054     2        0.02      0.04      0.01    0.1171E+00  0.2206E-01  0.2823E+00
+|  3    -76.489641809  -.648722E-01       0.053     3        0.02      0.04      0.01    0.2726E+00  0.1503E-01  0.2064E+00
+|  4    -76.593271699  0.103630E+00       0.050     4        0.01      0.04      0.00    0.1013E+00  0.5044E-02  0.6979E-01
+|  5    -76.606937351  0.136657E-01       0.025     5        0.01      0.02      0.00    0.5481E-02  0.1365E-02  0.1210E-01
+|  6    -76.607370277  0.432926E-03       0.024     6        0.01      0.02      0.00    0.1497E-02  0.1020E-02  0.8701E-02
+|  7    -76.607584929  0.214652E-03       0.024     7        0.01      0.02      0.00    0.1702E-02  0.2272E-02  0.2028E-01
+|  8    -76.607957354  0.372425E-03       0.024     8        0.01      0.02      0.00    0.1178E-02  0.3958E-02  0.3795E-01
+|  9    -76.608217625  0.260271E-03       0.024     9        0.01      0.02      0.00    0.3782E-02  0.2246E-03  0.3478E-02
+| 10    -76.608242722  0.250966E-04       0.023    10        0.01      0.02      0.00    0.1604E-02  0.1182E-02  0.1166E-01
+| 11    -76.608263985  0.212628E-04       0.023     1        0.01      0.02      0.00    0.1284E-02  0.3284E-03  0.5236E-02
+| 12    -76.608273973  0.998842E-05       0.024     2        0.01      0.02      0.00    0.9909E-03  0.1316E-03  0.1297E-02
+| 13    -76.608275480  0.150715E-05       0.023     3        0.01      0.02      0.00    0.4840E-03  0.6695E-04  0.8133E-03
+| 14    -76.608276033  0.552220E-06       0.023     4        0.01      0.02      0.00    0.1332E-03  0.1847E-04  0.1808E-03
+| 15    -76.608276061  0.281950E-07       0.022     5        0.01      0.02      0.00    0.9424E-05  0.1152E-05  0.1121E-04
+| 16    -76.608276061  0.263288E-09       0.020     6        0.01      0.01      0.00    0.3956E-06  0.1613E-06  0.1957E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  16 CYCLES
-| MAX ERROR = 0.396860E-06   RMS CHANGE = 0.161476E-06   MAX CHANGE = 0.195914E-05
+| MAX ERROR = 0.395596E-06   RMS CHANGE = 0.161337E-06   MAX CHANGE = 0.195701E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    7.0000051190
- BETA ELECTRON DENSITY     =    6.0000180657
- ELECTRONIC ENERGY    =    -97.101862213
+ ALPHA ELECTRON DENSITY    =    7.0000058353
+ BETA ELECTRON DENSITY     =    6.0000182703
+ ELECTRONIC ENERGY    =    -97.101862308
  CORE_CORE REPULSION  =     20.493586247
- TOTAL ENERGY         =    -76.608275966
+ TOTAL ENERGY         =    -76.608276061
 
  @ End Energy calculation
 
@@ -271,19 +271,19 @@ ELEMENT      X              Y              Z
 ------------------------
  VARIBLES    NEW_GRAD
 ------------------------
-    1X    -0.0000005843
-    1Y     0.0000003689
-    1Z     0.0426799611
-    2X     0.0000001817
-    2Y    -0.0000001161
-    2Z     0.0272406805
-    3X     0.0000003970
-    3Y    -0.0000002493
-    3Z    -0.0698557413
+    1X    -0.0000005495
+    1Y     0.0000004037
+    1Z     0.0426799662
+    2X     0.0000002151
+    2Y    -0.0000000826
+    2Z     0.0272404052
+    3X     0.0000004120
+    3Y    -0.0000002343
+    3Z    -0.0698556848
 ------------------------
  OPTIMIZATION STATISTICS:
- MAXIMUM GRADIENT ELEMENT=     0.3016399275E-01 (REQUEST=  0.10000E-02 )
- GRADIENT NORM           =     0.1741518934E-01 (REQUEST=  0.66667E-03 )
+ MAXIMUM GRADIENT ELEMENT=     0.3016404673E-01 (REQUEST=  0.10000E-02 )
+ GRADIENT NORM           =     0.1741522050E-01 (REQUEST=  0.66667E-03 )
 
  @ Finish Optimization for This Step
 
@@ -301,11 +301,11 @@ ELEMENT      X              Y              Z
  @ Begin XC Quadrature Formation
 
  OCTAGO: OCTree Algorithm for Grid Operations 
-   PRUNING CUTOFF       = 0.100E-09
+   PRUNING CUTOFF       = 0.100E-06
    INITIAL GRID POINTS  =       11384
-|   FINAL GRID POINTS    =        7913
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5964
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        9199
+|   FINAL GRID POINTS    =        7823
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5679
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        8349
 
  @ End XC Quadrature Formation
 
@@ -316,24 +316,24 @@ ELEMENT      X              Y              Z
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.610464698      ------         0.032     1        0.01      0.03      0.00    0.3448E-01  0.6705E-03  0.6653E-02
-|  2    -76.608670374  -.179432E-02       0.028     2        0.01      0.02      0.00    0.4180E-02  0.5430E-03  0.8080E-02
-|  3    -76.608601492  -.688821E-04       0.028     3        0.01      0.02      0.00    0.9004E-02  0.3721E-03  0.5623E-02
-|  4    -76.608696609  0.951163E-04       0.027     4        0.01      0.02      0.00    0.5267E-03  0.5694E-04  0.7062E-03
-|  5    -76.608697708  0.109944E-05       0.028     5        0.01      0.02      0.00    0.6040E-04  0.8303E-05  0.1258E-03
-|  6    -76.608697733  0.247346E-07       0.028     6        0.01      0.02      0.00    0.6334E-05  0.4225E-05  0.7367E-04
-|  7    -76.608697741  0.841016E-08       0.028     7        0.01      0.02      0.00    0.3975E-05  0.3611E-05  0.5999E-04
-|  8    -76.608697745  0.419735E-08       0.027     8        0.01      0.02      0.00    0.2218E-05  0.3236E-05  0.5337E-04
-|  9    -76.608697747  0.120229E-08       0.029     9        0.01      0.02      0.00    0.3831E-06  0.8523E-07  0.1338E-05
+|  1    -76.610464789      ------         0.028     1        0.01      0.02      0.00    0.3448E-01  0.6705E-03  0.6653E-02
+|  2    -76.608670476  -.179431E-02       0.025     2        0.01      0.02      0.00    0.4180E-02  0.5430E-03  0.8080E-02
+|  3    -76.608601594  -.688823E-04       0.024     3        0.01      0.02      0.00    0.9004E-02  0.3721E-03  0.5624E-02
+|  4    -76.608696710  0.951166E-04       0.024     4        0.01      0.02      0.00    0.5267E-03  0.5694E-04  0.7062E-03
+|  5    -76.608697810  0.109963E-05       0.023     5        0.01      0.02      0.00    0.6040E-04  0.8303E-05  0.1258E-03
+|  6    -76.608697835  0.246320E-07       0.022     6        0.01      0.02      0.00    0.6334E-05  0.4225E-05  0.7367E-04
+|  7    -76.608697843  0.862014E-08       0.021     7        0.01      0.01      0.00    0.3975E-05  0.3611E-05  0.5999E-04
+|  8    -76.608697847  0.407103E-08       0.021     8        0.01      0.02      0.00    0.2218E-05  0.3236E-05  0.5335E-04
+|  9    -76.608697848  0.107020E-08       0.021     9        0.01      0.01      0.00    0.3832E-06  0.8522E-07  0.1341E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYCLES
-| MAX ERROR = 0.383149E-06   RMS CHANGE = 0.852270E-07   MAX CHANGE = 0.133821E-05
+| MAX ERROR = 0.383210E-06   RMS CHANGE = 0.852217E-07   MAX CHANGE = 0.134135E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    7.0000082087
- BETA ELECTRON DENSITY     =    6.0000204475
- ELECTRONIC ENERGY    =    -97.178325677
+ ALPHA ELECTRON DENSITY    =    7.0000089701
+ BETA ELECTRON DENSITY     =    6.0000206672
+ ELECTRONIC ENERGY    =    -97.178325778
  CORE_CORE REPULSION  =     20.569627930
- TOTAL ENERGY         =    -76.608697747
+ TOTAL ENERGY         =    -76.608697848
 
  @ End Energy calculation
 
@@ -342,22 +342,22 @@ ELEMENT      X              Y              Z
 ------------------------
  VARIBLES    NEW_GRAD
 ------------------------
-    1X    -0.0000001235
-    1Y     0.0000000779
-    1Z     0.0170306743
-    2X     0.0000000382
-    2Y    -0.0000000241
-    2Z     0.0441556259
-    3X     0.0000000841
-    3Y    -0.0000000530
-    3Z    -0.0611507172
+    1X    -0.0000001218
+    1Y     0.0000000811
+    1Z     0.0170307404
+    2X     0.0000000697
+    2Y     0.0000000029
+    2Z     0.0441553488
+    3X     0.0000000950
+    3Y    -0.0000000368
+    3Z    -0.0611506627
 ------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =     0.4217804310E-03 (REQUEST=  0.10000E-05 )
+ ENERGY CHANGE           =     0.4217873263E-03 (REQUEST=  0.10000E-05 )
  MAXIMUM GEOMETRY CHANGE =     0.2000000000E-01 (REQUEST=  0.40000E-02 )
  GEOMETRY CHANGE RMS     =     0.1154700538E-01 (REQUEST=  0.26667E-02 )
- MAXIMUM GRADIENT ELEMENT=     0.1203411830E-01 (REQUEST=  0.10000E-02 )
- GRADIENT NORM           =     0.6947901443E-02 (REQUEST=  0.66667E-03 )
+ MAXIMUM GRADIENT ELEMENT=     0.1203420192E-01 (REQUEST=  0.10000E-02 )
+ GRADIENT NORM           =     0.6947949716E-02 (REQUEST=  0.66667E-03 )
 
  @ Finish Optimization for This Step
 
@@ -375,11 +375,11 @@ ELEMENT      X              Y              Z
  @ Begin XC Quadrature Formation
 
  OCTAGO: OCTree Algorithm for Grid Operations 
-   PRUNING CUTOFF       = 0.100E-09
+   PRUNING CUTOFF       = 0.100E-06
    INITIAL GRID POINTS  =       11384
-|   FINAL GRID POINTS    =        7914
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5964
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        9198
+|   FINAL GRID POINTS    =        7824
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5679
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        8345
 
  @ End XC Quadrature Formation
 
@@ -390,23 +390,23 @@ ELEMENT      X              Y              Z
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.609919456      ------         0.032     1        0.01      0.03      0.00    0.2295E-01  0.4528E-03  0.4521E-02
-|  2    -76.608764349  -.115511E-02       0.028     2        0.01      0.02      0.00    0.2766E-02  0.3587E-03  0.5315E-02
-|  3    -76.608734790  -.295592E-04       0.029     3        0.01      0.02      0.00    0.5910E-02  0.2451E-03  0.3690E-02
-|  4    -76.608775844  0.410539E-04       0.028     4        0.01      0.02      0.00    0.3439E-03  0.3732E-04  0.4625E-03
-|  5    -76.608776312  0.468480E-06       0.028     5        0.01      0.02      0.00    0.4024E-04  0.5470E-05  0.8216E-04
-|  6    -76.608776323  0.105419E-07       0.028     6        0.01      0.02      0.00    0.4146E-05  0.2705E-05  0.4703E-04
-|  7    -76.608776326  0.337538E-08       0.029     7        0.01      0.02      0.00    0.2537E-05  0.2297E-05  0.3805E-04
-|  8    -76.608776328  0.177994E-08       0.028     8        0.01      0.02      0.00    0.1405E-05  0.7673E-06  0.1252E-04
+|  1    -76.609936392      ------         0.027     1        0.01      0.02      0.00    0.2295E-01  0.4434E-03  0.4000E-02
+|  2    -76.608781231  -.115516E-02       0.025     2        0.01      0.02      0.00    0.2756E-02  0.3591E-03  0.5313E-02
+|  3    -76.608751934  -.292969E-04       0.024     3        0.01      0.02      0.00    0.5888E-02  0.2447E-03  0.3685E-02
+|  4    -76.608792701  0.407673E-04       0.024     4        0.01      0.02      0.00    0.3485E-03  0.3760E-04  0.4671E-03
+|  5    -76.608793182  0.480709E-06       0.024     5        0.01      0.02      0.00    0.4024E-04  0.5428E-05  0.8193E-04
+|  6    -76.608793192  0.103711E-07       0.023     6        0.01      0.02      0.00    0.4112E-05  0.2684E-05  0.4674E-04
+|  7    -76.608793195  0.339003E-08       0.022     7        0.01      0.02      0.00    0.2520E-05  0.2288E-05  0.3792E-04
+|  8    -76.608793197  0.168644E-08       0.022     8        0.01      0.02      0.00    0.1399E-05  0.7645E-06  0.1247E-04
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   8 CYCLES
-| MAX ERROR = 0.140455E-05   RMS CHANGE = 0.767347E-06   MAX CHANGE = 0.125172E-04
+| MAX ERROR = 0.139929E-05   RMS CHANGE = 0.764519E-06   MAX CHANGE = 0.124691E-04
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    7.0000103911
- BETA ELECTRON DENSITY     =    6.0000221979
- ELECTRONIC ENERGY    =    -97.229764536
- CORE_CORE REPULSION  =     20.620988208
- TOTAL ENERGY         =    -76.608776328
+ ALPHA ELECTRON DENSITY    =    7.0000873678
+ BETA ELECTRON DENSITY     =    6.0000850896
+ ELECTRONIC ENERGY    =    -97.229781849
+ CORE_CORE REPULSION  =     20.620988652
+ TOTAL ENERGY         =    -76.608793197
 
  @ End Energy calculation
 
@@ -415,22 +415,22 @@ ELEMENT      X              Y              Z
 ------------------------
  VARIBLES    NEW_GRAD
 ------------------------
-    1X    -0.0000000454
-    1Y     0.0000000286
-    1Z    -0.0002199371
-    2X     0.0000000174
-    2Y    -0.0000000110
-    2Z     0.0557922424
-    3X     0.0000000276
-    3Y    -0.0000000174
-    3Z    -0.0555594528
+    1X    -0.0000130542
+    1Y    -0.0000129784
+    1Z    -0.0002652036
+    2X    -0.0000006489
+    2Y    -0.0000006817
+    2Z     0.0557889933
+    3X    -0.0000014845
+    3Y    -0.0000015241
+    3Z    -0.0555379995
 ------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =     0.7858141419E-04 (REQUEST=  0.10000E-05 )
- MAXIMUM GEOMETRY CHANGE =     0.1327545685E-01 (REQUEST=  0.40000E-02 )
- GEOMETRY CHANGE RMS     =     0.7664588589E-02 (REQUEST=  0.26667E-02 )
- MAXIMUM GRADIENT ELEMENT=     0.1585483778E-03 (REQUEST=  0.10000E-02 )
- GRADIENT NORM           =     0.9153795243E-04 (REQUEST=  0.66667E-03 )
+ ENERGY CHANGE           =     0.9534884586E-04 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.1327557079E-01 (REQUEST=  0.40000E-02 )
+ GEOMETRY CHANGE RMS     =     0.7664654372E-02 (REQUEST=  0.26667E-02 )
+ MAXIMUM GRADIENT ELEMENT=     0.1841779856E-03 (REQUEST=  0.10000E-02 )
+ GRADIENT NORM           =     0.1066876058E-03 (REQUEST=  0.66667E-03 )
 
  @ Finish Optimization for This Step
 
@@ -441,18 +441,18 @@ ELEMENT      X              Y              Z
 
 GEOMETRY INPUT
 ELEMENT      X              Y              Z
-  C           0.000000      -0.000000       0.591742
-  C          -0.000000       0.000000      -0.595871
-  H          -0.000000       0.000000       1.604130
+  C           0.000006       0.000006       0.591749
+  C          -0.000003      -0.000003      -0.595875
+  H          -0.000000       0.000000       1.604126
 
  @ Begin XC Quadrature Formation
 
  OCTAGO: OCTree Algorithm for Grid Operations 
-   PRUNING CUTOFF       = 0.100E-09
+   PRUNING CUTOFF       = 0.100E-06
    INITIAL GRID POINTS  =       11384
-|   FINAL GRID POINTS    =        7914
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5964
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        9198
+|   FINAL GRID POINTS    =        7824
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =        5679
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =        8350
 
  @ End XC Quadrature Formation
 
@@ -463,19 +463,20 @@ ELEMENT      X              Y              Z
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -76.608762106      ------         0.031     1        0.01      0.03      0.00    0.2990E-03  0.5757E-05  0.5807E-04
-|  2    -76.608776346  0.142399E-04       0.029     2        0.01      0.02      0.00    0.3592E-04  0.4871E-05  0.7355E-04
-|  3    -76.608776341  -.498184E-08       0.028     3        0.01      0.02      0.00    0.7679E-04  0.3117E-05  0.4663E-04
-|  4    -76.608776348  0.693917E-08       0.028     4        0.01      0.02      0.00    0.4434E-05  0.5019E-06  0.6254E-05
+|  1    -76.608759938      ------         0.027     1        0.01      0.02      0.00    0.3469E-03  0.1177E-03  0.1140E-02
+|  2    -76.608776454  0.165163E-04       0.025     2        0.01      0.02      0.00    0.3399E-04  0.9592E-05  0.8595E-04
+|  3    -76.608776450  -.353855E-08       0.023     3        0.01      0.02      0.00    0.7226E-04  0.3772E-05  0.5711E-04
+|  4    -76.608776457  0.659558E-08       0.023     4        0.01      0.02      0.00    0.1840E-04  0.1047E-05  0.1420E-04
+|  5    -76.608776457  0.528100E-09       0.022     5        0.01      0.02      0.00    0.1433E-05  0.1790E-06  0.2327E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER   4 CYCLES
-| MAX ERROR = 0.443378E-05   RMS CHANGE = 0.501885E-06   MAX CHANGE = 0.625434E-05
+| REACH CONVERGENCE AFTER   5 CYCLES
+| MAX ERROR = 0.143314E-05   RMS CHANGE = 0.178975E-06   MAX CHANGE = 0.232699E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    7.0000103637
- BETA ELECTRON DENSITY     =    6.0000221731
- ELECTRONIC ENERGY    =    -97.229092127
- CORE_CORE REPULSION  =     20.620315779
- TOTAL ENERGY         =    -76.608776348
+ ALPHA ELECTRON DENSITY    =    7.0000111295
+ BETA ELECTRON DENSITY     =    6.0000224048
+ ELECTRONIC ENERGY    =    -97.228985706
+ CORE_CORE REPULSION  =     20.620209248
+ TOTAL ENERGY         =    -76.608776457
 
  @ End Energy calculation
 
@@ -484,42 +485,42 @@ ELEMENT      X              Y              Z
 ------------------------
  VARIBLES    NEW_GRAD
 ------------------------
-    1X    -0.0000000339
-    1Y     0.0000000214
-    1Z     0.0000068562
-    2X     0.0000000146
-    2Y    -0.0000000093
-    2Z     0.0556378471
-    3X     0.0000000190
-    3Y    -0.0000000120
-    3Z    -0.0556315414
+    1X    -0.0000001391
+    1Y    -0.0000000882
+    1Z     0.0000423398
+    2X     0.0000002061
+    2Y     0.0000001832
+    2Z     0.0556131822
+    3X    -0.0000000171
+    3Y    -0.0000000447
+    3Z    -0.0556424821
 ------------------------
  OPTIMIZATION STATISTICS:
- ENERGY CHANGE           =     0.1971798724E-07 (REQUEST=  0.10000E-05 )
- MAXIMUM GEOMETRY CHANGE =     0.1726285320E-03 (REQUEST=  0.40000E-02 )
- GEOMETRY CHANGE RMS     =     0.9966713370E-04 (REQUEST=  0.26667E-02 )
- MAXIMUM GRADIENT ELEMENT=     0.1745759703E-05 (REQUEST=  0.10000E-02 )
- GRADIENT NORM           =     0.1008091482E-05 (REQUEST=  0.66667E-03 )
+ ENERGY CHANGE           =     0.1673978348E-04 (REQUEST=  0.10000E-05 )
+ MAXIMUM GEOMETRY CHANGE =     0.2000941984E-03 (REQUEST=  0.40000E-02 )
+ GEOMETRY CHANGE RMS     =     0.1158959268E-03 (REQUEST=  0.26667E-02 )
+ MAXIMUM GRADIENT ELEMENT=     0.2686521893E-04 (REQUEST=  0.10000E-02 )
+ GRADIENT NORM           =     0.1551065509E-04 (REQUEST=  0.66667E-03 )
 
- GEOMETRY OPTIMIZED AFTER    4 CYCLES
+ @ Finish Optimization for This Step
 
- @ Finish Optimization for This Step 
-
-================ OPTIMIZED GEOMETRY INFORMATION ==============
+ WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED.
+          PRINTING THE GEOMETRY FROM LAST STEP.
+============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========
 
  OPTIMIZED GEOMETRY IN CARTESIAN
  ELEMENT      X              Y              Z
-  C           0.000000      -0.000000       0.591742
-  C          -0.000000       0.000000      -0.595871
+  C           0.000006       0.000006       0.591743
+  C          -0.000003      -0.000003      -0.595871
   H          -0.000000       0.000000       1.604130
 
  FORCE
  ELEMENT      X              Y              Z
-  C           0.000000      -0.000000      -0.000004
-  C          -0.000000       0.000000      -0.029442
-  H          -0.000000       0.000000       0.029439
+  C           0.000000       0.000000      -0.000022
+  C          -0.000000      -0.000000      -0.029429
+  H           0.000000       0.000000       0.029445
 
- MINIMIZED ENERGY =    -76.608776348
+ MINIMIZED ENERGY =    -76.608776457
 ===============================================================
 
  @ Finish Optimization Job
@@ -549,23 +550,23 @@ Number of accepted steps / line searches .......          4
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.945941000( 11.21%)
-| DFT GRID OPERATIONS =     0.053299000(  0.63%)
-| TOTAL SCF TIME      =     1.112677000( 13.19%)
-|       TOTAL OP TIME      =     0.912636000( 10.82%)
-|             TOTAL 1e TIME      =     0.014462000(  0.17%)
-|             TOTAL 2e TIME      =     0.679868000(  8.06%)
-|             TOTAL EXC TIME     =     0.200364000(  2.38%)
-|       TOTAL DII TIME      =     0.199928000(  2.37%)
-|             TOTAL DIAG TIME    =     0.003925000(  0.05%)
-| TOTAL GRADIENT TIME      =     1.250396000( 14.82%)
-|       TOTAL 1e GRADIENT TIME      =     0.074431000( 0.92%)
-|       TOTAL 2e GRADIENT TIME      =     1.080171000(12.80%)
-|       TOTAL EXC GRADIENT TIME     =     0.092429000(  1.10%)
-| TOTAL TIME          =     8.436215000
+| INITIAL GUESS TIME  =     0.694450000( 12.89%)
+| DFT GRID OPERATIONS =     0.038643000(  0.72%)
+| TOTAL SCF TIME      =     1.035492000( 19.22%)
+|       TOTAL OP TIME      =     0.761631000( 14.14%)
+|             TOTAL 1e TIME      =     0.011227000(  0.21%)
+|             TOTAL 2e TIME      =     0.552485000( 10.25%)
+|             TOTAL EXC TIME     =     0.183633000(  3.41%)
+|       TOTAL DII TIME      =     0.273791000(  5.08%)
+|             TOTAL DIAG TIME    =     0.005119000(  0.10%)
+| TOTAL GRADIENT TIME      =     1.011984000( 18.78%)
+|       TOTAL 1e GRADIENT TIME      =     0.056800000( 1.11%)
+|       TOTAL 2e GRADIENT TIME      =     0.857286000(15.91%)
+|       TOTAL EXC GRADIENT TIME     =     0.094734000(  1.76%)
+| TOTAL TIME          =     5.387644000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  8.4 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  5.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar 15 14:37:36 2022
+| Normal Termination. Task Finished on: Wed Jun 15 13:18:53 2022

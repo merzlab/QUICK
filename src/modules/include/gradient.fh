@@ -97,8 +97,8 @@ contains
   !  Curently, only analytical gradients are available. This should be changed later.
      quick_method%analgrad=.true.
   
-     quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
-     quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
+  !   quick_method%integralCutoff=1.0d0/(10.0d0**6.0d0)
+  !   quick_method%Primlimit=1.0d0/(10.0d0**6.0d0)
   
   !  Set array elements required for printing the gradients
      cartsym(1) = 'X'
@@ -358,6 +358,15 @@ contains
      timer_cumer%TGradred = timer_cumer%TGradred + timer_end%TGradred-timer_begin%TGradred
   
 #endif
+
+  ! add gradient contributions due to dispersion correction 
+#ifdef MPIV
+  if(master) then
+#endif
+    if(quick_method%edisp) quick_qm_struct%gradient=quick_qm_struct%gradient+reshape(quick_qm_struct%disp_gradient, (/3*natom/))
+#ifdef MPIV
+  endif
+#endif
   
   !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
@@ -508,6 +517,11 @@ contains
 
     use allmod
     use quick_oei_module, only:attrashellopt
+#ifdef OSHELL
+    use quick_cutoff_module, only: oshell_density_cutoff
+#else
+    use quick_cutoff_module, only: cshell_density_cutoff
+#endif
     implicit none
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
   
@@ -558,7 +572,13 @@ contains
   !---------------------------------------------------------------------
   
      call cpu_time(timer_begin%T1eVGrad)
- 
+
+#ifdef OSHELL
+     call oshell_density_cutoff
+#else
+     call cshell_density_cutoff
+#endif 
+
 #if defined CUDA || defined CUDA_MPIV
 
         call gpu_upload_density_matrix(quick_qm_struct%dense)
@@ -1202,7 +1222,7 @@ contains
   
                        quicktest = DABS(dphidx+dphidy+dphidz+phi)
                        
-                       if (quicktest < quick_method%DMCutoff ) then
+                       if (quicktest < quick_method%XCCutoff ) then
                           continue
                        else
                           call pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz, &

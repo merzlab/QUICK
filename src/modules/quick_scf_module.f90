@@ -283,7 +283,8 @@ contains
         quick_dft_grid%gridb_sswt, quick_dft_grid%gridb_weight, quick_dft_grid%gridb_atm, &
         quick_dft_grid%bin_locator, quick_dft_grid%basf, quick_dft_grid%primf, quick_dft_grid%basf_counter, &
         quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, quick_dft_grid%nbins, &
-        quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff)
+        quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff, &
+        quick_method%XCCutoff)
   
 #ifdef CUDA_MPIV
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
@@ -339,7 +340,9 @@ contains
         if (quick_method%debug)  call debug_SCF(jscf)
   
         call scf_operator(deltaO)
-  
+
+        quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
+
         if (quick_method%debug)  call debug_SCF(jscf)
   
         ! Terminate Operator timer
@@ -350,9 +353,6 @@ contains
            ! End of Delta Matrix
            !-----------------------------------------------
            call cpu_time(timer_begin%TDII)
-  
-           quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
-           quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
   
            !if (quick_method%debug)  write(ioutfile,*) "hehe hf"
            !if (quick_method%debug)  call debug_SCF(jscf)
@@ -765,9 +765,7 @@ contains
         if (bMPI) then
            call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-  !         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
            call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

@@ -919,7 +919,7 @@ contains
 
      quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
   
-     if(quick_method%printEnergy) call get1eEnergy()
+     if(quick_method%printEnergy) call get1eEnergy(.false.)
   
   !  Delta density matrix cutoff
      call oshell_density_cutoff

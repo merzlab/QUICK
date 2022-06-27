@@ -28,6 +28,12 @@ module quick_method_module
         logical :: MPW91LYP = .false.  ! MPW91LYP
         logical :: MPW91PW91 = .false. ! MPW91PW91
         logical :: SEDFT = .false.     ! Semi-Empirical DFT
+        logical :: edisp= .false.      ! Emperical Dispersion
+        logical :: DFTD2= .false.      ! DFT-D2 dispersion correction
+        logical :: DFTD3= .false.      ! D3 correction with zero damping
+        logical :: DFTD3BJ= .false.    ! D3 correction with BJ damping
+        logical :: DFTD3M= .false.     ! Modified D3 correction with zero damping
+        logical :: DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
 
         logical :: PBSOL = .false.     ! PB Solvent
         logical :: UNRST =  .false.    ! Unrestricted
@@ -89,20 +95,21 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =1000
+        integer :: ncyc =3
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
         double precision :: integralCutoff = 1.0d-7   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-7   ! prime cutoff
+        double precision :: primLimit      = 1.0d-8   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
+        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-        double precision :: aCutoff        = 1.0d-7   ! 2e cutoff
-        double precision :: basisCufoff    = 1.0d-10  ! basis set cutoff
+        double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
         !signif
 
         ! following are some gradient cutoff criteria
@@ -125,6 +132,9 @@ module quick_method_module
         logical :: uscf_conv     = .false.
         logical :: scf_conv      = .false.
         logical :: allow_bad_scf        = .false.
+        logical :: diffuse_basis_funcs = .false.    ! if basis set contains diffuse functions
+        logical :: coarse_cutoff = .false.          ! use coarse cutoffs in SCF and gradient 
+        logical :: tight_cutoff  = .false.          ! use coarse cutoffs in SCF and gradient
 
         logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
@@ -241,9 +251,9 @@ module quick_method_module
             call MPI_BCAST(self%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%aCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%basisCufoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%basisCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -352,15 +362,27 @@ module quick_method_module
                 elseif(self%MPW91PW91) then
                     write(io,'(" DENSITY FUNCTIONAL = MPW91PW91")')
                 endif
+                
             else if (self%SEDFT) then
                 write(io,'(" METHOD = SEMI-EMPIRICAL DENSTITY FUNCTIONAL THEORY")')
             endif
 
-if (self%nodirect) then
-write(io,'(" SAVE 2E INT TO DISK ")')
-else
-write(io,'(" DIRECT SCF ")')
-endif
+            if(self%edisp) then
+              if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M .or. self%DFTD3MBJ) then
+                write(io,'(" USING GRIMME DISPERSION CORRECTION: REPACKAGED DFT-D3 LIBRARY v0.9")')
+              endif
+              if(self%DFTD2) write(io,'("   DISPERSION METHOD = D2")')
+              if(self%DFTD3) write(io,'("   DISPERSION METHOD = D3, ZERO DAMPING")')
+              if(self%DFTD3BJ) write(io,'("   DISPERSION METHOD = D3, BJ DAMPING")')
+              if(self%DFTD3M) write(io,'("   DISPERSION METHOD = MODIFIED D3, ZERO DAMPING")')
+              if(self%DFTD3MBJ) write(io,'("   DISPERSION METHOD = MODIFIED D3, BJ DAMPING")')
+            endif
+
+            if (self%nodirect) then
+              write(io,'(" SAVE 2E INT TO DISK ")')
+            else
+              write(io,'(" DIRECT SCF ")')
+            endif
 
             if (self%PDB) write(io,'(" PDB INPUT ")')
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
@@ -442,10 +464,10 @@ endif
 
             ! cutoff size
             write (io,'(" COMPUTATIONAL CUTOFF: ")')
-            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%acutoff
+            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
             write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
             write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
-            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCufoff
+            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCutoff
             if (self%grad) then
                 write (io,'("      GRADIENT CUTOFF  = ",E10.3)') self%gradCutoff
             endif
@@ -567,6 +589,22 @@ endif
 
             if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
+            ! set dispersion correction options
+            if (index(keyWD,'D2').ne.0) then
+              self%DFTD2=.true.
+            elseif (index(keyWD,'D3BJ').ne.0) then
+              self%DFTD3BJ=.true.
+            elseif (index(keyWD,'D3MBJ').ne.0) then
+              self%DFTD3MBJ=.true.
+            elseif (index(keyWD,'D3M').ne.0) then
+              self%DFTD3M=.true.
+            elseif (index(keyWD,'D3').ne.0) then
+              self%DFTD3=.true.
+            endif
+
+            if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M &
+              .or. self%DFTD3MBJ) self%edisp=.true.
+
             if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
             if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
             if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.
@@ -653,10 +691,9 @@ endif
         
             ! 2e-cutoff
             if (index(keywd,'CUTOFF') /= 0) then
-                call read(keywd, 'CUTOFF', self%acutoff)
-                self%integralCutoff=self%acutoff !min(self%integralCutoff,self%acutoff)
-                self%primLimit=1E-20 !self%acutoff*0.001 !min(self%integralCutoff,self%acutoff)
-                self%gradCutoff=self%acutoff
+                call read(keywd, 'CUTOFF', self%integralCutoff)
+                self%primLimit=self%integralCutoff*1.0d-1 
+                self%gradCutoff=self%integralCutoff
             endif
 
             ! Max DIIS cycles
@@ -674,10 +711,14 @@ endif
                 call read(keywd,'MATRIXZERO', self%DMCutoff)
             endif
 
+            if (index(keywd,'XCCUTOFF') /= 0) then           
+                call read(keywd,'XCCUTOFF', self%XCCutoff)
+                self%isDefaultXCCutoff = .false.
+            endif
+
             ! Basis cutoff
             if (index(keywd,'BASISZERO=') /= 0) then
-                call read(keywd,'BASISZERO', itemp)
-                self%basisCufoff=10.d0**(-1.d0*itemp)
+                call read(keywd,'BASISZERO', self%basisCutoff)
             endif
 
            if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
@@ -705,6 +746,15 @@ endif
                 call read(keywd,'ICOORD', self%dlfind_icoord)
             endif
 
+            if (index(keyWD,'BASIS=').ne.0)  then
+                tempstring=' '
+                call read(keywd, 'BASIS', tempstring)
+                if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
+            endif
+
+            if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
+            if (index(keyWD,'TIGHTINT').ne.0) self%tight_cutoff=.true.
+
         end subroutine read_quick_method
 
         !------------------------
@@ -726,6 +776,13 @@ endif
             self%MPW91LYP = .false.  ! MPW91LYP
             self%MPW91PW91 = .false. ! MPW91PW91
             self%SEDFT = .false.     ! Semi-Empirical DFT
+            self%edisp= .false.      ! Emperical Dispersion   
+            self%DFTD2= .false.      ! DFT-D2 dispersion correction
+            self%DFTD3= .false.      ! D3 correction with zero damping
+            self%DFTD3BJ= .false.    ! D3 correction with BJ damping
+            self%DFTD3M= .false.     ! Modified D3 correction with zero damping
+            self%DFTD3MBJ= .false.   ! Modified D3 correction with BJ damping
+
             self%PBSOL = .false.     ! PB Solvent
             self%UNRST =  .false.    ! Unrestricted
 
@@ -767,20 +824,21 @@ endif
             self%iscf = 200
             self%maxdiisscf = 10
             self%iopt = 0
-            self%ncyc = 1000
+            self%ncyc = 3
 
             self%integralCutoff = 1.0d-7   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF
                                            ! smallest integral cutoff, used in conventional SCF
             self%maxIntegralCutoff = 1.0d-12
                                            ! smallest integral cutoff, used in conventional SCF
-            self%primLimit      = 1.0d-7   ! prime cutoff
+            self%primLimit      = 1.0d-8   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
+            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
-            self%aCutoff        = 1.0d-7   ! 2e cutoff
-            self%basisCufoff    = 1.0d-10  ! basis set cutoff
+            self%basisCutoff    = 1.0d-6  ! basis set cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
@@ -797,6 +855,10 @@ endif
             self%uselibxc = .false.
             self%xc_polarization = 0
             self%nof_functionals = 0
+
+            self%diffuse_basis_funcs=.false. ! if basis set contains diffuse functions
+            self%coarse_cutoff=.false.
+            self%tight_cutoff=.false.
 
 #if defined CUDA || defined CUDA_MPIV
             self%bCUDA  = .true.
@@ -829,6 +891,24 @@ endif
                 !self%primLimit=min(1.0d-7,self%primLimit)
             endif
 
+            if(self%coarse_cutoff) then
+                self%pmaxrms=1.0d-5
+                self%integralCutoff=1.0e-6
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-6
+                self%XCCutoff=1.0e-6
+                self%basisCutoff=1.0e-5
+            endif
+
+            if(self%tight_cutoff) then
+                self%pmaxrms=1.0d-7
+                self%integralCutoff=1.0e-8
+                self%primLimit=self%integralCutoff*0.1d0
+                self%gradCutoff=1.0e-8
+                self%XCCutoff=1.0e-8
+                self%basisCutoff=1.0e-7
+            endif
+
             ! OPT not available for MP2
             if (self%MP2 .and. self%OPT) then
                 call PrtWrn(io,"GEOMETRY OPTIMIZAION IS NOT AVAILABLE WITH MP2, WILL DO MP2 SINGLE POINT ONLY")
@@ -840,6 +920,9 @@ endif
                 call PrtWrn(io,"GEOMETRY OPTIMIZATION is only available with HF, DFT/BLYP, DFT/B3LYP" )
                 self%OPT = .false.
             endif
+
+            ! tighten XCCutoff if diffuse functions exist
+            if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
 
         end subroutine check_quick_method
 

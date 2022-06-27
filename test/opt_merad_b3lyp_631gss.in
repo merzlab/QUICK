@@ -1,4 +1,4 @@
- udft b3lyp BASIS=6-31g** ncyc=1000 cutoff=1.0e-9 denserms=1.0e-6  MULT=2 optimize LOPT
+ udft b3lyp BASIS=6-31g** cutoff=1.0e-9 denserms=1.0e-6  MULT=2 optimize LOPT
 
  C -0.00475919 -0.00238150 -0.07480734
  H -0.90637524  0.51824702 -0.44966396

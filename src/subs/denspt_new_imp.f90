@@ -56,7 +56,7 @@ subroutine denspt_new_imp(gridx, gridy, gridz, densitya, densityb, &
          dphidz=dphidzxiao(Ibas)
 
 
-         if (DABS(dphidx+dphidy+dphidz+phi) < quick_method%DMCutoff ) then
+         if (DABS(dphidx+dphidy+dphidz+phi) < quick_method%XCCutoff ) then
             continue
          else
 

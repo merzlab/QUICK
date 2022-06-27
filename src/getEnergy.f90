@@ -15,7 +15,8 @@ subroutine getEnergy(isGuess, ierr)
    use quick_scf_module
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
-
+   use quick_dftd3_module, only: calculateDFTD3 
+   use quick_exception_module
 #ifdef CEW
    use quick_cew_module, only : quick_cew
 #endif
@@ -90,7 +91,6 @@ subroutine getEnergy(isGuess, ierr)
             enddo
          enddo
       endif
-
    endif
    ! Converge the density matrix.
 #ifdef MPIV
@@ -146,9 +146,18 @@ subroutine getEnergy(isGuess, ierr)
       endif
       quick_qm_struct%Etot = quick_qm_struct%Eel + quick_qm_struct%Ecore
 
+      ! calculate emperical dispersion correction 
+      if(quick_method%edisp) then
+         SAFE_CALL(calculateDFTD3(ierr))
+         quick_qm_struct%Etot=quick_qm_struct%Etot+quick_qm_struct%Edisp
+      endif
+
       if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    = ",F16.9)') quick_qm_struct%Eel
          write (ioutfile,'(" CORE_CORE REPULSION  = ",F16.9)') quick_qm_struct%Ecore
+         if(quick_method%edisp) then
+            write (ioutfile,'(" DISPERSION CORRECTION  = ",F16.9)') quick_qm_struct%Edisp
+         endif
          if (quick_method%extcharges) then
             write (ioutfile,'(" EXT CHARGE REPULSION = ",F16.9)') quick_qm_struct%ECharge
          endif

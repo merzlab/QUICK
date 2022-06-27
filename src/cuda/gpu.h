@@ -64,8 +64,8 @@ void upload_para_to_const_oei();
 // c interface [gpu_get2e]
 extern "C" void get1e_();
 extern "C" void get_oneen_grad_();
-extern "C" void gpu_get_cshell_eri_(QUICKDouble* o);
-extern "C" void gpu_get_oshell_eri_(QUICKDouble* o, QUICKDouble* ob);
+extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o);
+extern "C" void gpu_get_oshell_eri_(bool *deltaO, QUICKDouble* o, QUICKDouble* ob);
 extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o);
 extern "C" void gpu_get_oshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, QUICKDouble *ob);
 extern "C" void gpu_get_oshell_eri_grad_(QUICKDouble* grad);

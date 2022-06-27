@@ -39,19 +39,19 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar 15 14:20:59 2022
+| TASK STARTS ON: Tue May  3 18:17:13 2022
 | INPUT FILE :    ene_MgO_rhf_631g.in
 | OUTPUT FILE:    ene_MgO_rhf_631g.out
 | DATA FILE  :    ene_MgO_rhf_631g.dat
-| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+| BASIS SET PATH: /mnt/home/manathun/Work/fix-delta-density-dft/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        3
+| CUDA ENABLED DEVICE         :        4
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE NAME            : Tesla V100S-PCIE-32GB
 | CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.60
+| CUDA DEVICE MEMORY SIZE (MB):    32510
 | SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
@@ -69,15 +69,15 @@
  DIPOLE
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
- DELTA DENSITY START CYCLE = 1000
+ DELTA DENSITY START CYCLE =    5
  COMPUTATIONAL CUTOFF: 
       TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-19
+      BASIS SET PRIME  =  0.100E-09
       MATRIX ELEMENTS  =  0.100E-09
       BASIS FUNCTION   =  0.100E-09
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
-| BASIS FILE = /home/madu/saved-test-update/install/basis/6-31G.BAS
+| BASIS FILE = /mnt/home/manathun/Work/fix-delta-density-dft/basis/6-31G.BAS
 
  @ Finish reading job
 
@@ -127,28 +127,28 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -274.178390925      ------         0.025     1        0.00      0.02      0.00    0.1152E+01  0.6892E-01  0.5901E+00
-|  2   -274.116899094  -.614918E-01       0.020     2        0.00      0.02      0.00    0.3532E+00  0.6213E-01  0.4579E+00
-|  3   -273.978062295  -.138837E+00       0.021     3        0.00      0.02      0.00    0.4708E+00  0.3648E-01  0.2298E+00
-|  4   -274.300307707  0.322245E+00       0.020     4        0.00      0.02      0.00    0.3174E-01  0.5100E-02  0.6862E-01
-|  5   -274.302137387  0.182968E-02       0.019     5        0.00      0.02      0.00    0.1869E-01  0.3042E-02  0.3001E-01
-|  6   -274.303058874  0.921488E-03       0.019     6        0.00      0.02      0.00    0.7790E-02  0.2256E-02  0.1372E-01
-|  7   -274.303401974  0.343100E-03       0.019     7        0.00      0.02      0.00    0.3162E-02  0.1495E-02  0.8994E-02
-|  8   -274.303504027  0.102053E-03       0.019     8        0.00      0.02      0.00    0.2313E-02  0.9895E-03  0.5747E-02
-|  9   -274.303534910  0.308831E-04       0.020     9        0.00      0.02      0.00    0.5352E-03  0.1736E-03  0.9844E-03
-| 10   -274.303537774  0.286410E-05       0.019    10        0.00      0.02      0.00    0.4890E-03  0.3940E-03  0.2542E-02
-| 11   -274.303543296  0.552210E-05       0.019     1        0.00      0.02      0.00    0.3540E-03  0.7655E-03  0.4955E-02
-| 12   -274.303549401  0.610481E-05       0.021     2        0.00      0.02      0.00    0.1082E-03  0.3153E-03  0.2029E-02
-| 13   -274.303550007  0.605864E-06       0.019     3        0.00      0.02      0.00    0.6852E-04  0.2528E-04  0.1600E-03
-| 14   -274.303550019  0.118949E-07       0.019     4        0.00      0.02      0.00    0.1422E-04  0.2905E-05  0.2880E-04
-| 15   -274.303550019  0.271736E-09       0.020     5        0.00      0.02      0.00    0.8297E-06  0.6036E-06  0.5028E-05
+|  1   -274.178390925      ------         0.026     1        0.01      0.02      0.01    0.1152E+01  0.6892E-01  0.5901E+00
+|  2   -274.116899094  -.614918E-01       0.019     2        0.01      0.01      0.01    0.3532E+00  0.6213E-01  0.4579E+00
+|  3   -273.978062295  -.138837E+00       0.018     3        0.00      0.01      0.00    0.4708E+00  0.3648E-01  0.2298E+00
+|  4   -274.300307707  0.322245E+00       0.017     4        0.00      0.01      0.00    0.3174E-01  0.5100E-02  0.6862E-01
+|  5   -274.302137387  0.182968E-02       0.017     5        0.00      0.01      0.00    0.1869E-01  0.3042E-02  0.3001E-01
+|  6   -274.303058874  0.921487E-03       0.017     6        0.00      0.01      0.00    0.7790E-02  0.2256E-02  0.1372E-01
+|  7   -274.303401974  0.343100E-03       0.018     7        0.01      0.01      0.00    0.3162E-02  0.1495E-02  0.8994E-02
+|  8   -274.303504027  0.102053E-03       0.017     8        0.00      0.01      0.00    0.2313E-02  0.9895E-03  0.5747E-02
+|  9   -274.303534910  0.308834E-04       0.017     9        0.00      0.01      0.00    0.5352E-03  0.1736E-03  0.9844E-03
+| 10   -274.303537775  0.286421E-05       0.017    10        0.00      0.01      0.00    0.4890E-03  0.3940E-03  0.2542E-02
+| 11   -274.303543297  0.552208E-05       0.017     1        0.00      0.01      0.00    0.3540E-03  0.7655E-03  0.4955E-02
+| 12   -274.303549402  0.610481E-05       0.017     2        0.00      0.01      0.00    0.1082E-03  0.3153E-03  0.2029E-02
+| 13   -274.303550007  0.605946E-06       0.017     3        0.00      0.01      0.00    0.6852E-04  0.2528E-04  0.1600E-03
+| 14   -274.303550020  0.121729E-07       0.017     4        0.00      0.01      0.00    0.1422E-04  0.2905E-05  0.2880E-04
+| 15   -274.303550020  0.191474E-09       0.017     5        0.00      0.01      0.00    0.8297E-06  0.6036E-06  0.5029E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  15 CYCLES
-| MAX ERROR = 0.829668E-06   RMS CHANGE = 0.603567E-06   MAX CHANGE = 0.502833E-05
+| MAX ERROR = 0.829722E-06   RMS CHANGE = 0.603593E-06   MAX CHANGE = 0.502888E-05
 | -----------------------------------------------
  ELECTRONIC ENERGY    =   -302.362346401
  CORE_CORE REPULSION  =     28.058796382
- TOTAL ENERGY         =   -274.303550019
+ TOTAL ENERGY         =   -274.303550020
 
  @ End Energy calculation
 
@@ -174,7 +174,7 @@
    ATOM          MULLIKEN            LOWDIN
    MG             0.7893             0.6592
    O             -0.7893            -0.6592
-   TOTAL         0.0000             0.0000
+   TOTAL        -0.0000            -0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -186,17 +186,17 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.215665000(  3.91%)
-| TOTAL SCF TIME      =     0.302880000(  5.50%)
-|       TOTAL OP TIME      =     0.263524000(  4.78%)
-|             TOTAL 1e TIME      =     0.001862000(  0.03%)
-|             TOTAL 2e TIME      =     0.258950000(  4.70%)
-|       TOTAL DII TIME      =     0.039261000(  0.71%)
-|             TOTAL DIAG TIME    =     0.028459000(  0.52%)
-| TOTAL TIME          =     5.509297000
+| INITIAL GUESS TIME  =     0.188950000(  5.36%)
+| TOTAL SCF TIME      =     0.270166000(  7.66%)
+|       TOTAL OP TIME      =     0.192695000(  5.46%)
+|             TOTAL 1e TIME      =     0.001541000(  0.04%)
+|             TOTAL 2e TIME      =     0.187980000(  5.33%)
+|       TOTAL DII TIME      =     0.077360000(  2.19%)
+|             TOTAL DIAG TIME    =     0.069621000(  1.97%)
+| TOTAL TIME          =     3.526931000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  5.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  3.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar 15 14:21:05 2022
+| Normal Termination. Task Finished on: Tue May  3 18:17:17 2022

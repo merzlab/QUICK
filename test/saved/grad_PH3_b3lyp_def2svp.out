@@ -39,19 +39,19 @@
   If you have any comments or queries, please send us an email for technical support:                      
   quick.merzlab@gmail.com                                                                                  
                                                                                                            
-| TASK STARTS ON: Tue Mar 15 14:29:10 2022
+| TASK STARTS ON: Tue May  3 18:22:55 2022
 | INPUT FILE :    grad_PH3_b3lyp_def2svp.in
 | OUTPUT FILE:    grad_PH3_b3lyp_def2svp.out
 | DATA FILE  :    grad_PH3_b3lyp_def2svp.dat
-| BASIS SET PATH: /home/madu/saved-test-update/install/basis
+| BASIS SET PATH: /mnt/home/manathun/Work/fix-delta-density-dft/basis
 
 |------------ GPU INFORMATION ---------------
-| CUDA ENABLED DEVICE         :        3
+| CUDA ENABLED DEVICE         :        4
 | CUDA DEVICE IN USE          :        0
-| CUDA DEVICE NAME            : NVIDIA TITAN V
+| CUDA DEVICE NAME            : Tesla V100S-PCIE-32GB
 | CUDA DEVICE PM              :       80
-| CUDA DEVICE CORE FREQ(GHZ)  :     1.46
-| CUDA DEVICE MEMORY SIZE (MB):    12066
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.60
+| CUDA DEVICE MEMORY SIZE (MB):    32510
 | SUPPORTING CUDA VERSION     :      7.0
 |--------------------------------------------
 
@@ -72,16 +72,16 @@
  GRADIENT CALCULATION
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
- DELTA DENSITY START CYCLE = 1000
+ DELTA DENSITY START CYCLE =    5
  COMPUTATIONAL CUTOFF: 
       TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-19
+      BASIS SET PRIME  =  0.100E-09
       MATRIX ELEMENTS  =  0.100E-09
       BASIS FUNCTION   =  0.100E-09
       GRADIENT CUTOFF  =  0.100E-08
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = DEF2-SVP,  TYPE = CARTESIAN
-| BASIS FILE = /home/madu/saved-test-update/install/basis/DEF2-SVP.BAS
+| BASIS FILE = /mnt/home/manathun/Work/fix-delta-density-dft/basis/DEF2-SVP.BAS
 
  @ Finish reading job
 
@@ -147,17 +147,16 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -343.006623866      ------         0.039     1        0.00      0.03      0.00    0.1246E+01  0.4767E-01  0.2899E+00
-|  2   -343.055389997  0.487661E-01       0.015     2        0.00      0.01      0.00    0.2741E-01  0.1177E-01  0.1668E+00
-|  3   -343.057127013  0.173702E-02       0.014     3        0.00      0.01      0.00    0.1816E-01  0.3934E-02  0.5909E-01
-|  4   -343.058476066  0.134905E-02       0.014     4        0.00      0.01      0.00    0.1285E-02  0.1973E-03  0.1472E-02
-|  5   -343.058481577  0.551097E-05       0.013     5        0.00      0.01      0.00    0.4860E-03  0.6010E-04  0.5315E-03
-|  6   -343.058482393  0.816319E-06       0.013     6        0.00      0.01      0.00    0.6130E-04  0.7110E-05  0.5450E-04
-| -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-08 ------------
-|  7   -343.058482771  0.378209E-06       0.013     7        0.00      0.01      0.00    0.1565E-05  0.1844E-06  0.1557E-05
+|  1   -343.006624074      ------         0.034     1        0.01      0.02      0.01    0.1246E+01  0.4767E-01  0.2899E+00
+|  2   -343.055390355  0.487663E-01       0.022     2        0.01      0.01      0.01    0.2741E-01  0.1177E-01  0.1668E+00
+|  3   -343.057127368  0.173701E-02       0.021     3        0.01      0.01      0.01    0.1816E-01  0.3934E-02  0.5909E-01
+|  4   -343.058476434  0.134907E-02       0.024     4        0.01      0.01      0.01    0.1285E-02  0.1973E-03  0.1472E-02
+|  5   -343.058481945  0.551071E-05       0.018     5        0.01      0.01      0.01    0.4860E-03  0.6010E-04  0.5315E-03
+|  6   -343.058482761  0.816182E-06       0.018     6        0.01      0.01      0.01    0.6130E-04  0.7111E-05  0.5452E-04
+|  7   -343.058482771  0.104077E-07       0.017     7        0.01      0.01      0.01    0.1575E-05  0.2298E-06  0.2273E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   7 CYCLES
-| MAX ERROR = 0.156503E-05   RMS CHANGE = 0.184406E-06   MAX CHANGE = 0.155657E-05
+| MAX ERROR = 0.157459E-05   RMS CHANGE = 0.229791E-06   MAX CHANGE = 0.227349E-05
 | -----------------------------------------------
  ALPHA ELECTRON DENSITY    =     8.9999761287
  BETA ELECTRON DENSITY     =     8.9999761287
@@ -174,18 +173,18 @@
 ----------------------------------------
  COORDINATE    XYZ            GRADIENT
 ----------------------------------------
-    1X    -1.3784101053     0.0075589629
-    1Y    -0.6786700518     0.0192332983
-    1Z    -0.6593600504    -0.0069198717
-    2X     0.0008900001    -0.0084099519
-    2Y    -0.4063000310    -0.0043697173
-    2Z    -0.7521600574     0.0015954753
-    3X    -1.7025301300     0.0006605431
-    3Y    -0.1726700132    -0.0056012426
-    3Z    -1.9338001477     0.0077420776
-    4X    -1.7025301300     0.0004673651
-    4Y     0.5002100382    -0.0090707053
-    4Z     0.0409700031    -0.0025705009
+    1X    -1.3784101053     0.0075589609
+    1Y    -0.6786700518     0.0192332911
+    1Z    -0.6593600504    -0.0069198694
+    2X     0.0008900001    -0.0084099523
+    2Y    -0.4063000310    -0.0043697149
+    2Z    -0.7521600574     0.0015954744
+    3X    -1.7025301300     0.0006605443
+    3Y    -0.1726700132    -0.0056012400
+    3Z    -1.9338001477     0.0077420773
+    4X    -1.7025301300     0.0004673662
+    4Y     0.5002100382    -0.0090707031
+    4Z     0.0409700031    -0.0025705022
 ----------------------------------------
 
  @ End Gradient Calculation
@@ -216,7 +215,7 @@
    H             -0.0325            -0.0291
    H             -0.0325            -0.0257
    H             -0.0325            -0.0241
-   TOTAL        -0.0000             0.0000
+   TOTAL         0.0000             0.0000
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
@@ -228,23 +227,23 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.914971000( 15.13%)
-| DFT GRID OPERATIONS =     0.015386000(  0.25%)
-| TOTAL SCF TIME      =     0.122996000(  2.03%)
-|       TOTAL OP TIME      =     0.098139000(  1.62%)
-|             TOTAL 1e TIME      =     0.001644000(  0.03%)
-|             TOTAL 2e TIME      =     0.046382000(  0.77%)
-|             TOTAL EXC TIME     =     0.047867000(  0.79%)
-|       TOTAL DII TIME      =     0.024779000(  0.41%)
-|             TOTAL DIAG TIME    =     0.018548000(  0.31%)
-| TOTAL GRADIENT TIME      =     0.115940000(  1.92%)
-|       TOTAL 1e GRADIENT TIME      =     0.008036000( 0.14%)
-|       TOTAL 2e GRADIENT TIME      =     0.084203000( 1.39%)
-|       TOTAL EXC GRADIENT TIME     =     0.023110000(  0.38%)
-| TOTAL TIME          =     6.048828000
+| INITIAL GUESS TIME  =     0.979527000( 21.91%)
+| DFT GRID OPERATIONS =     0.014783000(  0.33%)
+| TOTAL SCF TIME      =     0.156123000(  3.49%)
+|       TOTAL OP TIME      =     0.089898000(  2.01%)
+|             TOTAL 1e TIME      =     0.001442000(  0.03%)
+|             TOTAL 2e TIME      =     0.047967000(  1.07%)
+|             TOTAL EXC TIME     =     0.038367000(  0.86%)
+|       TOTAL DII TIME      =     0.066160000(  1.48%)
+|             TOTAL DIAG TIME    =     0.061103000(  1.37%)
+| TOTAL GRADIENT TIME      =     0.101928000(  2.28%)
+|       TOTAL 1e GRADIENT TIME      =     0.008446000( 0.20%)
+|       TOTAL 2e GRADIENT TIME      =     0.057101000( 1.28%)
+|       TOTAL EXC GRADIENT TIME     =     0.035758000(  0.80%)
+| TOTAL TIME          =     4.471168000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  6.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  4.5 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar 15 14:29:17 2022
+| Normal Termination. Task Finished on: Tue May  3 18:23:00 2022

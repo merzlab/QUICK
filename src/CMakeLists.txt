@@ -33,7 +33,7 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90
-	oshell_quick_gradient_module.f90)
+	oshell_quick_gradient_module.f90 quick_dftd3_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90
@@ -88,6 +88,9 @@ set(DLFIND_MODULES_SOURCES
         dlf_stat_module.f90 dlf_svnversion.f90 
         dlf_task.f90 dlf_time.f90 dlf_util.f90)
 
+set(DFTD3_SOURCES
+	api.f90  common.f90  core.f90  pars.f90  sizes.f90)
+
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
 endif()
@@ -109,6 +112,7 @@ set(MAIN_SOURCES main.f90)
 set(QUICK_MODULES_SOURCES_FULLPATH "")
 set(QUICK_SUBS_SOURCES_FULLPATH "")
 set(DLFIND_MODULES_SOURCES_FULLPATH "")
+set(DFTD3_SOURCES_FULLPATH "")
 
 foreach(MODULES_SOURCE ${QUICK_MODULES_SOURCES})
 	list(APPEND QUICK_MODULES_SOURCES_FULLPATH "modules/${MODULES_SOURCE}")
@@ -122,12 +126,16 @@ foreach(DLFIND_SOURCE ${DLFIND_MODULES_SOURCES})
         list(APPEND DLFIND_MODULES_SOURCES_FULLPATH "dlfind/${DLFIND_SOURCE}")
 endforeach()
 
+foreach(DFTD3_SOURCE ${DFTD3_SOURCES})
+        list(APPEND DFTD3_SOURCES_FULLPATH "dftd3/${DFTD3_SOURCE}")
+endforeach()
+
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
 include_directories(util)
 
-add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
+add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
