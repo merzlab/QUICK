@@ -170,12 +170,12 @@ __global__ void cshell_getcew_quad_grad_kernel()
 {
 
   //declare smem grad vector
-  extern __shared__ QUICKULL smem_buffer[];
-  QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+  extern __shared__ QUICKDouble smem_buffer[];
+  QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
   // initialize smem grad
   for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-    smemGrad[i]=0ull;
+    smemGrad[i]=0.0;
 
   __syncthreads();
 
@@ -242,9 +242,9 @@ __global__ void cshell_getcew_quad_grad_kernel()
             QUICKDouble Gradz = - 2.0 * denseij * weight * (dfdr * dphidz * phi2);
 //printf("test quad grad %f %f %f %f %f %f %f %f %f %f\n", gridx, gridy, gridz, denseij, weight, dfdr, dphidx, dphidy, dphidz, phi2);
 
-            GRADADD(smemGrad[Istart], Gradx);
-            GRADADD(smemGrad[Istart+1], Grady);
-            GRADADD(smemGrad[Istart+2], Gradz);
+            atomicAdd(&smemGrad[Istart], Gradx);
+            atomicAdd(&smemGrad[Istart+1], Grady);
+            atomicAdd(&smemGrad[Istart+2], Gradz);
 
             sumGradx += Gradx;
             sumGrady += Grady;
@@ -256,9 +256,9 @@ __global__ void cshell_getcew_quad_grad_kernel()
 
       int Istart = (devSim_dft.gatm[gid]-1)*3;      
 
-      GRADADD(smemGrad[Istart], -sumGradx);
-      GRADADD(smemGrad[Istart+1], -sumGrady);
-      GRADADD(smemGrad[Istart+2], -sumGradz);
+      atomicAdd(&smemGrad[Istart], -sumGradx);
+      atomicAdd(&smemGrad[Istart+1], -sumGrady);
+      atomicAdd(&smemGrad[Istart+2], -sumGradz);
 
     }
 
@@ -277,7 +277,7 @@ __global__ void cshell_getcew_quad_grad_kernel()
 
   // update gmem grad vector
   for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-    atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+    GRADADD(devSim_dft.gradULL[i],smemGrad[i]);
 
   __syncthreads();
 
