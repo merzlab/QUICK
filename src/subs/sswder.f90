@@ -363,6 +363,8 @@
   
   
   subroutine getsswanader(gridx,gridy,gridz,Iparent,natom,xyz,grd)
+
+    use quick_method_module, only: quick_method
     implicit none
     double precision,intent(in) :: gridx,gridy,gridz
     integer,intent(in) :: Iparent,natom
@@ -495,7 +497,7 @@
 
        end do
 
-       if ( abs(uw) > 1.d-13 ) then
+       if ( abs(uw) > quick_method%DMCutoff ) then
           duw(:,:) = uw * duw(:,:)
        else
           duw(:,:) = 0.d0
