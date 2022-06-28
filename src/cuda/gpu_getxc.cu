@@ -305,7 +305,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
                                         	dphidz = dphidz + tmpdz;
 
                                         	//Check the significance of the primitive
-						if(abs(tmp+tmpdx+tmpdy+tmpdz) > devSim_dft.DMCutoff){
+						if(abs(tmp+tmpdx+tmpdy+tmpdz) > devSim_dft.XCCutoff){
 							atomicAdd(&pfweight[pfwid], 1);
                                         	}
                                 	}
@@ -317,7 +317,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
                         	}
 
-                        	if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ){
+                        	if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.XCCutoff){
 					atomicAdd(&cfweight[cfwid], 1);
 					sigcfcount++;
                         	}

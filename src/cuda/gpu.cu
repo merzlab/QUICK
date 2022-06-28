@@ -2185,7 +2185,8 @@ void prune_grid_sswgrad(){
 }	
 
 
-void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, double DMCutoff, int nbins){
+void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight,
+unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, double DMCutoff, double XCCutoff, int nbins){
 
         PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
 
@@ -2213,6 +2214,8 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
 
 	gpu -> gpu_cutoff -> DMCutoff   = DMCutoff;
         gpu -> gpu_sim.DMCutoff         = gpu -> gpu_cutoff -> DMCutoff;
+        gpu -> gpu_cutoff -> XCCutoff   = XCCutoff;
+        gpu -> gpu_sim.XCCutoff         = gpu -> gpu_cutoff -> XCCutoff;
 
 	//Define cfweight and pfweight arrays seperately and uplaod to gpu until we solve the problem with atomicAdd
 	unsigned char *d_gpweight;
@@ -2352,7 +2355,10 @@ void print_uploaded_dft_info(){
 }
 #endif
 
-extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt, QUICKDouble *gridb_weight, int *gridb_atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter, int *bin_counter,int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2, QUICKDouble *DMCutoff){
+extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, QUICKDouble *gridzb, QUICKDouble *gridb_sswt,
+QUICKDouble *gridb_weight, int *gridb_atm, int *bin_locator, int *basf, int *primf, int *basf_counter, int *primf_counter, int
+*bin_counter,int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2, QUICKDouble *DMCutoff,
+QUICKDouble *XCCutoff){
 
 	PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
 
@@ -2362,6 +2368,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu -> gpu_xcq -> ntotpf	= *nbtotpf;
 //	gpu -> gpu_xcq -> bin_size	= (int) (*gridb_count / *nbins);
 	gpu -> gpu_cutoff -> DMCutoff   = *DMCutoff;
+        gpu -> gpu_cutoff -> XCCutoff   = *XCCutoff;
 
 	gpu -> gpu_xcq -> gridx	= new cuda_buffer_type<QUICKDouble>(gridxb, gpu -> gpu_xcq -> npoints);
 	gpu -> gpu_xcq -> gridy	= new cuda_buffer_type<QUICKDouble>(gridyb, gpu -> gpu_xcq -> npoints);
@@ -2471,6 +2478,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 	gpu ->gpu_sim.sigrad2 = gpu->gpu_basis->sigrad2->_devData;
 	gpu ->gpu_sim.isg = *isg;
         gpu ->gpu_sim.DMCutoff     = gpu -> gpu_cutoff -> DMCutoff;
+        gpu ->gpu_sim.XCCutoff     = gpu -> gpu_cutoff -> XCCutoff;
 
 //        upload_xc_smem();
         upload_pteval();

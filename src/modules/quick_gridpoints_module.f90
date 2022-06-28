@@ -303,7 +303,8 @@ module quick_gridpoints_module
     ! run octree, pack grid points and get the array sizes for f90 memory allocation
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%init_grid_atm, xcg_tmp%sswt, xcg_tmp%weight, self%init_ngpts, natom, &
-    nbasis, maxcontract, quick_method%DMCutoff, sigrad2, ncontract, aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
+    nbasis, maxcontract, quick_method%DMCutoff, quick_method%XCCutoff, sigrad2, ncontract, &
+    aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
     self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
 
 
@@ -595,7 +596,7 @@ module quick_gridpoints_module
      type(quick_xc_grid_type) self
 
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
-     write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%DMCutoff
+     write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%XCCutoff
      write (ioutfile,'("   INITIAL GRID POINTS  =",I12)') self%init_ngpts
      write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%gridb_count
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
@@ -666,7 +667,7 @@ module quick_gridpoints_module
    
          ! Now put it all together to get the target value.
    
-         target = quick_method%basisCufoff* &
+         target = quick_method%basisCutoff* &
    
                (((2.d0*amin)**(dble(L)+1.5))/gamma2pi)**(-.5d0)
    
