@@ -323,12 +323,16 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   integer   ,intent(out)   :: status
   integer, intent(inout) :: ierr
 
+#if defined DEBUG || defined DEBUGTIME
+#define CHECK_ERROR(ierr)
+#else
 #ifdef MPIV
 #define CHECK_ERR if(master .and. ierr /= 0)
 #else
 #define CHECK_ERR if(ierr /= 0)
 #endif
-#define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
+#define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr)
+#endif
 
   !
 ! **********************************************************************
