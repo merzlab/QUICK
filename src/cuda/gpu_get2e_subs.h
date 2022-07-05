@@ -1165,11 +1165,7 @@ __device__ __forceinline__ void iclass_spdf10
                                                                III, JJJ, KKK, LLL, IJKLTYPE, store, \
                                                                RAx, RAy, RAz, RBx, RBy, RBz, \
                                                                RCx, RCy, RCz, RDx, RDy, RDz);
-#if defined int_sp || defined int_spd
-                        if (abs(Y) > 0.0e0)
-#else
                         if (abs(Y) > devSim.integralCutoff)
-#endif
                         {
 #ifdef OSHELL
                             addint_oshell(devSim.oULL,devSim.obULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.denseb, devSim.nbasis);
