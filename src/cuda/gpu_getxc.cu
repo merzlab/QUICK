@@ -166,6 +166,8 @@ void getxc_grad(_gpu_type gpu){
 
     QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
+//get_sswgrad_kernel<<<1,1, gpu -> gpu_xcq -> smem_size>>>();
+
     //QUICK_SAFE_CALL((get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
     cudaDeviceSynchronize();
@@ -355,17 +357,16 @@ __global__ void get_ssw_kernel(){
 
 }
 
-
 __global__ void get_sswgrad_kernel(){
 
 
         //declare smem grad vector
-        extern __shared__ QUICKULL smem_buffer[];
-        QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
         // initialize smem grad
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-          smemGrad[i]=0ull;
+          smemGrad[i]=0.0;
 
         __syncthreads();
 
@@ -382,14 +383,15 @@ __global__ void get_sswgrad_kernel(){
 		QUICKDouble quadwt = devSim_dft.quadwt[gid];
                 int gatm = devSim_dft.gatm_ssd[gid];
 
-		sswder(gridx, gridy, gridz, exc, quadwt, smemGrad, gatm, gid);
+		sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm, devSim_dft.natom);
 	}
 
         __syncthreads();
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-          atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          //atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          GRADADD(devSim_dft.gradULL[i], smemGrad[i]);
 
         __syncthreads();
 }
@@ -407,14 +409,14 @@ computing x, y and z gradients separately.
 __global__ void get_sswnumgrad_kernel(){
 
         //declare smem grad vector
-        extern __shared__ QUICKULL smem_buffer[];
-        QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
         unsigned int natom = devSim_dft.natom;
 
         // initialize smem grad
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
-          smemGrad[i]=0ull;
+          smemGrad[i]=0.0;
 
         __syncthreads();
 
@@ -520,10 +522,15 @@ __global__ void get_sswnumgrad_kernel(){
                 zatm += SSW_NUMGRAD_DELTA;
 
                 if(iatom == gatm-1) zparent = zatm;
-
+/*
                 GRADADD(smemGrad[iatom*3], dpx);
                 GRADADD(smemGrad[iatom*3+1], dpy);
                 GRADADD(smemGrad[iatom*3+2], dpz);
+*/
+                atomicAdd(&smemGrad[iatom*3], dpx);
+                atomicAdd(&smemGrad[iatom*3+1], dpy);
+                atomicAdd(&smemGrad[iatom*3+2], dpz);
+
 /*
 printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 1, dpx, devSim_dft.exc_ssd[idx], devSim_dft.quadwt[idx]);
 
@@ -540,7 +547,8 @@ printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 3, dpz
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
-          atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          //atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
+          GRADADD(devSim_dft.gradULL[i], smemGrad[i]);       
 
         __syncthreads();
 
@@ -871,7 +879,127 @@ int iatom, int iparent, unsigned int natom)
     return ssw;
 }
 
+#define LOCUWSSD(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
 
+__device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, QUICKDouble* const uw_ssd, const int iparent, const int iatm, const int natom, const bool grad=true){
+
+            QUICKDouble xiatm = LOC2(devSim_dft.xyz, 0, iatm, 3, natom);
+            QUICKDouble yiatm = LOC2(devSim_dft.xyz, 1, iatm, 3, natom);
+            QUICKDouble ziatm = LOC2(devSim_dft.xyz, 2, iatm, 3, natom);
+
+            QUICKDouble rig = sqrt(quick_dsqr(gridx-xiatm) + quick_dsqr(gridy-yiatm) + quick_dsqr(gridz-ziatm));
+
+            QUICKDouble uw = 1.0;
+
+            for(int jatm=0;jatm<natom;jatm++){
+
+                if( jatm != iatm){
+                    QUICKDouble xjatm = LOC2(devSim_dft.xyz, 0, jatm, 3, natom);
+                    QUICKDouble yjatm = LOC2(devSim_dft.xyz, 1, jatm, 3, natom);
+                    QUICKDouble zjatm = LOC2(devSim_dft.xyz, 2, jatm, 3, natom);
+
+                    QUICKDouble rjg = sqrt(quick_dsqr(gridx-xjatm) + quick_dsqr(gridy-yjatm) + quick_dsqr(gridz-zjatm));
+                    QUICKDouble rij = sqrt(quick_dsqr(xiatm-xjatm) + quick_dsqr(yiatm-yjatm) + quick_dsqr(ziatm-zjatm));
+
+                    QUICKDouble mu = (rig-rjg)*(1.0/rij);
+
+
+                    if( mu <= -0.64){
+
+                    }else if(mu >= 0.64){
+                        uw=0.0;
+                    }else{
+
+                        QUICKDouble mu3 = mu*mu*mu;
+                        QUICKDouble g = SSW_POLYFAC1 * mu - SSW_POLYFAC2 * mu3 + SSW_POLYFAC3 * mu3*mu*mu - SSW_POLYFAC4 * mu3*mu3*mu;
+                        QUICKDouble s = 0.5*(1.0-g);
+                        uw=uw*s;
+
+                        if(grad){
+                            QUICKDouble dsdmu = -0.5*(SSW_POLYFAC1 - 3.0*SSW_POLYFAC2 * mu *mu + 5.0 * SSW_POLYFAC3 * mu3*mu - 7.0 * SSW_POLYFAC4 * mu3*mu3);
+                          
+                            QUICKDouble recip_rij3 = 1.0/(rij*rij*rij);
+                            QUICKDouble dmudi = (xiatm - gridx)*(1.0/rig)*(1.0/rij) - (rig-rjg) * recip_rij3 *(xiatm - xjatm);
+                            QUICKDouble dmudj = -(xjatm - gridx)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(xiatm - xjatm);
+                            QUICKDouble dmudg = (-(xiatm - gridx)*(1.0/rig)+(xjatm - gridx)*(1.0/rjg))*(1.0/rij);
+
+                            LOCUWSSD(uw_ssd,0,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,0,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,0,iparent-1,3,natom) += dsdmu * dmudg/s;
+                          
+                            dmudi = (yiatm - gridy)*(1.0/rig)*(1.0/rij) - (rig-rjg) * recip_rij3 *(yiatm - yjatm);
+                            dmudj = -(yjatm - gridy)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(yiatm - yjatm);
+                            dmudg = (-(yiatm - gridy)*(1.0/rig)+(yjatm - gridy)*(1.0/rjg))*(1.0/rij);
+                          
+                            LOCUWSSD(uw_ssd,1,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,1,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,1,iparent-1,3,natom) += dsdmu * dmudg/s;
+                          
+                            dmudi = (ziatm - gridz)*(1.0/rig)*(1.0/rij) - (rig-rjg) * recip_rij3 *(ziatm - zjatm);
+                            dmudj = -(zjatm - gridz)*(1.0/rjg)*(1.0/rij) + (rig-rjg) * recip_rij3 *(ziatm - zjatm);
+                            dmudg = (-(ziatm - gridz)*(1.0/rig)+(zjatm - gridz)*(1.0/rjg))*(1.0/rij);
+
+                            LOCUWSSD(uw_ssd,2,iatm,3,natom) += dsdmu * dmudi/s;
+                            LOCUWSSD(uw_ssd,2,jatm,3,natom) += dsdmu * dmudj/s;
+                            LOCUWSSD(uw_ssd,2,iparent-1,3,natom) += dsdmu * dmudg/s;
+
+                        }
+                    }
+
+                }
+
+            }
+
+            return uw;
+
+}
+
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom){
+
+        QUICKDouble sumUW= 0.0;
+        QUICKDouble parent_uw = 0.0;
+        
+        for(int iatm=0;iatm<natom;iatm++){
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, natom, false);
+            sumUW += uw;
+            if(iatm == iparent-1) parent_uw=uw;
+        }
+
+        QUICKDouble p = parent_uw/sumUW;
+
+        for(int iatm=0;iatm<natom;iatm++){
+
+            for(int i=0; i<natom; i++) 
+                for(int j=0; j<3; j++) 
+                    LOCUWSSD(uw_ssd,j,i,3,natom)=0.0;
+
+            QUICKDouble uw = get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iatm, natom);
+
+            for(int i=0; i<natom; i++){
+                for(int j=0; j<3; j++){
+                    if(abs(uw) > devSim_dft.DMCutoff ){
+                        atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
+                    }
+                }
+            }
+        }
+
+        for(int i=0; i<natom; i++) 
+            for(int j=0; j<3; j++)               
+                LOCUWSSD(uw_ssd,j,i,3,natom)=0.0;
+
+        get_uw_ssd(gridx, gridy, gridz, uw_ssd, iparent, iparent-1, natom); 
+
+
+        for(int i=0; i<natom; i++){
+            for(int j=0; j<3; j++){
+                if(abs(parent_uw) > devSim_dft.DMCutoff ){
+                    atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
+                }
+            }
+        }
+
+}
 
 
 __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid){
