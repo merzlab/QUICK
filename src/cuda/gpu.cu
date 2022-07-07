@@ -1575,8 +1575,17 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     
     gpu -> gpu_basis -> cons                        =   new cuda_buffer_type<QUICKDouble>(cons, gpu->nbasis);
     gpu -> gpu_basis -> gcexpo                      =   new cuda_buffer_type<QUICKDouble>(gcexpo, MAXPRIM, gpu->nbasis);
-    gpu -> gpu_basis -> KLMN                        =   new cuda_buffer_type<int>(KLMN, 3, gpu->nbasis);
-    
+    gpu -> gpu_basis -> KLMN                        =   new cuda_buffer_type<unsigned char>(3, gpu->nbasis);
+
+    size_t index_c = 0;
+    size_t index_f = 0;
+    for (size_t j=0; j<gpu->nbasis; j++) {
+        for (size_t i=0; i<3; i++) {
+            index_c = j * 3 + i;
+            gpu -> gpu_basis -> KLMN  -> _hostData[index_c] = (unsigned char) KLMN[index_f++];
+        }
+    }
+
     gpu -> gpu_basis -> prim_start                  =   new cuda_buffer_type<int>(gpu->gpu_basis->nshell);
     gpu -> gpu_basis -> prim_total = 0;
     
