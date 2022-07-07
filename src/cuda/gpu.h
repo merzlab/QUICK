@@ -296,6 +296,7 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 __device__ void FmT_sp(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT_spd(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
+__device__ __forceinline__ bool call_iclass(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL);
 
 __device__ QUICKDouble hrrwhole_sp( const int I, const int J, const int K, const int L, \
                                                 const int III, const int JJJ, const int KKK, const int LLL, const int IJKLTYPE, QUICKDouble* store, \

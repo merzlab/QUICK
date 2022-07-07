@@ -568,9 +568,10 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 #endif
 #else          
 #ifdef int_sp
-                    iclass_sp(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
+                if(call_iclass(iii, jjj, kkk, lll, ii, jj, kk, ll)) iclass_sp(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
 #elif defined int_spd
-                    iclass_spd(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
+
+                if(call_iclass(iii, jjj, kkk, lll, ii, jj, kk, ll)) iclass_spd(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
 #elif defined int_spdf
                 if ( (kkk + lll) <= 6 && (kkk + lll) > 4) {
                     iclass_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside);
@@ -1118,7 +1119,6 @@ __device__ __forceinline__ void iclass_spdf10
         hybrid_coeff = devSim.hyb_coeff;                        
     }*/
     
-    
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
             for (int KKK = MAX(III,KKK1); KKK <= KKK2; KKK++) {
@@ -1131,7 +1131,6 @@ __device__ __forceinline__ void iclass_spdf10
                         ((III == KKK) && (III  < JJJ)  && (JJJ < LLL))) {
                         
 #ifdef int_sp
-//printf("subs II %d JJ %d KK %d LL %d \n", II, JJ, KK, LL);
                         QUICKDouble Y = (QUICKDouble) hrrwhole_sp
 #elif defined int_spd
                         QUICKDouble Y = (QUICKDouble) hrrwhole
@@ -2008,6 +2007,34 @@ __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
 }
 
 //#endif
+
+__device__ __forceinline__ bool call_iclass(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL){
+
+    int III1 = LOC2(devSim.Qsbasis, II, I, devSim.nshell, 4);
+    int III2 = LOC2(devSim.Qfbasis, II, I, devSim.nshell, 4);
+    int JJJ1 = LOC2(devSim.Qsbasis, JJ, J, devSim.nshell, 4);
+    int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
+    int KKK1 = LOC2(devSim.Qsbasis, KK, K, devSim.nshell, 4);
+    int KKK2 = LOC2(devSim.Qfbasis, KK, K, devSim.nshell, 4);
+    int LLL1 = LOC2(devSim.Qsbasis, LL, L, devSim.nshell, 4);
+    int LLL2 = LOC2(devSim.Qfbasis, LL, L, devSim.nshell, 4);
+
+    for (int III = III1; III <= III2; III++) {
+        for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
+            for (int KKK = MAX(III,KKK1); KKK <= KKK2; KKK++) {
+                for (int LLL = MAX(KKK,LLL1); LLL <= LLL2; LLL++) {
+                    if( (III < JJJ && III < KKK && KKK < LLL) ||
+                       (III < KKK || JJJ <= LLL)){
+                       return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 #endif
 #endif
 
