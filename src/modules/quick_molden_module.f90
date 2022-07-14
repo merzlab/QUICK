@@ -62,12 +62,12 @@ end subroutine write_coordinates
 
 subroutine write_basis_info(self, ierr)
 
-    use quick_basis_module
-    use quick_molspec_module
+    use quick_basis_module, only: quick_basis, nshell, nbasis, aexp
+    use quick_molspec_module, only: natom
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: iatom, ishell, j
+    integer :: iatom, ishell, ibas, iprim, nprim, ibasInit, ibasEnd
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
@@ -76,17 +76,27 @@ subroutine write_basis_info(self, ierr)
 
         do ishell=1, nshell
             if(quick_basis%katom(ishell) .eq. iatom) then
+                nprim = quick_basis%kprim(ishell)
                 if(quick_basis%ktype(ishell) .eq. 1) then
-                    write(self%iMoldenFile, '(2x, "s", 4x, I2)') quick_basis%kprim(ishell)
+                    write(self%iMoldenFile, '(2x, "s", 4x, I2)') nprim
                 elseif(quick_basis%ktype(ishell) .eq. 3) then
-                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') quick_basis%kprim(ishell)
+                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
                 elseif(quick_basis%ktype(ishell) .eq. 4) then
-                    write(self%iMoldenFile, '(2x, "sp", 4x, I2)') quick_basis%kprim(ishell)
+                    write(self%iMoldenFile, '(2x, "sp", 4x, I2)') nprim
                 elseif(quick_basis%ktype(ishell) .eq. 6) then
-                    write(self%iMoldenFile, '(2x, "d", 4x, I2)') quick_basis%kprim(ishell)
+                    write(self%iMoldenFile, '(2x, "d", 4x, I2)') nprim
                 elseif(quick_basis%ktype(ishell) .eq. 10) then
-                    write(self%iMoldenFile, '(2x, "f", 4x, I2)') quick_basis%kprim(ishell)
+                    write(self%iMoldenFile, '(2x, "f", 4x, I2)') nprim
                 endif
+
+                ibasInit = quick_basis%kstart(ishell)
+                ibasEnd  = nbasis
+                if(ishell .ne. nshell) ibasEnd = quick_basis%kstart(ishell+1)-1
+                do ibas=ibasInit, ibasEnd
+                    do iprim=1, nprim
+                        write(self%iMoldenFile, '(2x, E12.6, 2x, E12.6)') quick_basis%gcexpo(iprim, ibas), aexp(iprim, ibas)
+                    enddo
+                enddo
             endif
         enddo
     enddo
