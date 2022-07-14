@@ -10,3 +10,30 @@
 !_____________________________________________________________________!
 
 #include "util.fh"
+
+module quick_molden_module
+    implicit none
+    
+contains
+
+subroutine write_molden(iMoldenFile, moldenFileName, ierr)
+    
+    implicit none
+    integer, intent(in) :: iMoldenFile
+    character(len=*) ::  moldenFileName
+    integer, intent(out) :: ierr
+
+    ! open file
+    call quick_open(iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
+    CHECK_ERROR(ierr)
+
+    
+
+    ! close file
+    close(moldenFileName)
+end subroutine write_molden
+
+
+
+
+end module quick_molden_module
