@@ -12,20 +12,37 @@
 #include "util.fh"
 
 module quick_molden_module
+
     implicit none
-   
+    private
+
+    public :: quick_molden
+    public :: initialize, finalize, exportCoordinates
+
     type quick_molden_type
         integer :: iMoldenFile
     end type quick_molden_type
 
     type (quick_molden_type),save:: quick_molden
 
+    interface initialize
+        module procedure initialize_molden
+    end interface initialize
+
+    interface finalize
+        module procedure finalize_molden
+    end interface finalize 
+
+    interface exportCoordinates
+        module procedure write_coordinates
+    end interface exportCoordinates
+
 contains
 
 subroutine write_coordinates(self, ierr)
 
     use quick_molspec_module, only: quick_molspec, xyz, natom
-    use quick_constants_module, only :: symbol, BOHRS_TO_A
+    use quick_constants_module, only : symbol, BOHRS_TO_A
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer :: i, j
