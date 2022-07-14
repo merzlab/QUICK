@@ -71,7 +71,7 @@ subroutine write_basis_info(self, ierr)
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
     do ishell=1, nshell
-        write(self%iMoldenFile, '(2x, I5)') quick_basis%ncenter(ishell)
+        write(self%iMoldenFile, '(2x, I5)') quick_basis%katom(ishell)
     enddo
 
 end subroutine write_basis_info
