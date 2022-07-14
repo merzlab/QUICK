@@ -17,7 +17,7 @@ module quick_molden_module
     private
 
     public :: quick_molden
-    public :: initializeExport, finalizeExport, exportCoordinates
+    public :: initializeExport, finalizeExport, exportCoordinates, exportBasis
 
     type quick_molden_type
         integer :: iMoldenFile
@@ -37,6 +37,9 @@ module quick_molden_module
         module procedure write_coordinates
     end interface exportCoordinates
 
+    interface exportBasis
+        module procedure write_basis_info
+    end interface exportBasis
 contains
 
 subroutine write_coordinates(self, ierr)
@@ -51,11 +54,27 @@ subroutine write_coordinates(self, ierr)
     ! write atomic labels and coordinates
     write(self%iMoldenFile, '("[Atoms] (Ang)")')
     do i=1,natom
-        write(self%iMoldenFile,'(A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
+        write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
         symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i)*BOHRS_TO_A,j=1,3)
     enddo
 
 end subroutine write_coordinates
+
+subroutine write_basis_info(self, ierr)
+
+    use quick_basis_module
+    implicit none
+    type (quick_molden_type), intent(in) :: self
+    integer, intent(out) :: ierr
+    integer :: ishell, j
+
+    ! write basis function information
+    write(self%iMoldenFile, '("[GTO] (AU)")')
+    do ishell=1, nshell
+        write(self%iMoldenFile, '(2x, I5)') quick_basis%ncenter(ishell)
+    enddo
+
+end subroutine write_basis_info
 
 subroutine initialize_molden(self, ierr)
     
