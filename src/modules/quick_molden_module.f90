@@ -13,52 +13,59 @@
 
 module quick_molden_module
     implicit none
-    
+   
+    type quick_molden_type
+        integer :: iMoldenFile
+    end type quick_molden_type
+
+    type (quick_molden_type),save:: quick_molden
+
 contains
 
-subroutine write_coordinates(iMoldenFile, ierr)
+subroutine write_coordinates(self, ierr)
 
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_constants_module, only :: symbol, BOHRS_TO_A
     implicit none
-    integer, intent(in) :: iMoldenFile
+    type (quick_molden_type), intent(in) :: self
     integer :: i, j
 
     ! write atomic labels and coordinates
-    write(iMoldenFile, '("[Atoms] (Ang)")')
+    write(self%iMoldenFile, '("[Atoms] (Ang)")')
     do i=1,natom
-        write(iMoldenFile,'("A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4")') &
+        write(self%iMoldenFile,'("A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4")') &
         symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i)*BOHRS_TO_A,j=1,3)
     enddo
 
 end subroutine write_coordinates
 
-subroutine initialize_molden(iMoldenFile, moldenFileName, ierr)
+subroutine initialize_molden(self, ierr)
     
-    use quick_molspec_module, only: quick_molspec, xyz, natom
-    use quick_constants_module, only :: symbol
+    use quick_files_module, only : iMoldenFile, moldenFileName
+
     implicit none
-    integer, intent(in) :: iMoldenFile
-    character(len=*) ::  moldenFileName
+    type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
     integer :: i, j
 
+    self%iMoldenFile = iMoldenFile
+
     ! open file
-    call quick_open(iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
+    call quick_open(self%iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
     CHECK_ERROR(ierr)
 
-    write(iMoldenFile, '("[Molden Format]")')
+    write(self%iMoldenFile, '("[Molden Format]")')
 
 end subroutine initialize_molden
 
-subroutine finalize_molden(iMoldenFile, ierr)
+subroutine finalize_molden(self, ierr)
 
     implicit none
-    integer, intent(in) :: iMoldenFile
+    type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
 
     ! close file
-    call close(iMoldenFile)
+    call close(self%iMoldenFile)
 
 end subroutine finalize_molden
 
