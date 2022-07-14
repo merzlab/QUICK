@@ -17,7 +17,7 @@ module quick_molden_module
     private
 
     public :: quick_molden
-    public :: initialize, finalize, exportCoordinates
+    public :: initializeExport, finalizeExport, exportCoordinates
 
     type quick_molden_type
         integer :: iMoldenFile
@@ -25,13 +25,13 @@ module quick_molden_module
 
     type (quick_molden_type),save:: quick_molden
 
-    interface initialize
+    interface initializeExport
         module procedure initialize_molden
-    end interface initialize
+    end interface initializeExport
 
-    interface finalize
+    interface finalizeExport
         module procedure finalize_molden
-    end interface finalize 
+    end interface finalizeExport
 
     interface exportCoordinates
         module procedure write_coordinates
@@ -45,12 +45,13 @@ subroutine write_coordinates(self, ierr)
     use quick_constants_module, only : symbol, BOHRS_TO_A
     implicit none
     type (quick_molden_type), intent(in) :: self
+    integer, intent(out) :: ierr
     integer :: i, j
 
     ! write atomic labels and coordinates
     write(self%iMoldenFile, '("[Atoms] (Ang)")')
     do i=1,natom
-        write(self%iMoldenFile,'("A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4")') &
+        write(self%iMoldenFile,'(A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
         symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i)*BOHRS_TO_A,j=1,3)
     enddo
 
@@ -69,7 +70,6 @@ subroutine initialize_molden(self, ierr)
 
     ! open file
     call quick_open(self%iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
-    CHECK_ERROR(ierr)
 
     write(self%iMoldenFile, '("[Molden Format]")')
 
@@ -82,7 +82,7 @@ subroutine finalize_molden(self, ierr)
     integer, intent(out) :: ierr
 
     ! close file
-    call close(self%iMoldenFile)
+    close(self%iMoldenFile)
 
 end subroutine finalize_molden
 

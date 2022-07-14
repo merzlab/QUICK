@@ -77,7 +77,7 @@ end subroutine deallocateall
 subroutine finalize(io,ierr,option)
     use allmod
     use quick_exception_module
-    use quick_molden_module, only: finalize, quick_molden
+    use quick_molden_module, only: finalizeExport, quick_molden
     implicit none
     integer io      !output final info and close this unit
     integer option  ! 0 if called from Quick and 1 if called from the API
@@ -94,7 +94,7 @@ subroutine finalize(io,ierr,option)
     if (master) then
 
         ! finalize data exporting
-        if(write_molden) call finalize(quick_molden, ierr)
+        if(write_molden) call finalizeExport(quick_molden, ierr)
 
         if (ierr /=0) then
              call PrtDate(io,'Error Termination. Task Failed on:',ierr)

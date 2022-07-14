@@ -489,7 +489,7 @@ module quick_method_module
         subroutine read_quick_method(self,keywd,ierr)
             use quick_exception_module
             use quick_mpi_module
-            use quick_files_module, only :: write_molden
+            use quick_files_module, only : write_molden
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring

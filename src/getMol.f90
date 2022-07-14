@@ -15,7 +15,7 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-   use quick_molden_module, only : initialize, quick_molden
+   use quick_molden_module, only : initializeExport, quick_molden, exportCoordinates
 
    implicit none
 
@@ -108,7 +108,7 @@ subroutine getMol(ierr)
 
       ! initialize exporting and write molecular information
       if(write_molden) then
-         call initialize(quick_molden, ierr)
+         call initializeExport(quick_molden, ierr)
          call exportCoordinates(quick_molden, ierr)
       endif
 
