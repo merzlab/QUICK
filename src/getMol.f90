@@ -15,7 +15,7 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-   use quick_molden_module, only : initializeExport, quick_molden, exportCoordinates
+   use quick_molden_module, only : initializeExport, quick_molden, exportCoordinates, exportBasis
 
    implicit none
 
@@ -110,6 +110,7 @@ subroutine getMol(ierr)
       if(write_molden) then
          call initializeExport(quick_molden, ierr)
          call exportCoordinates(quick_molden, ierr)
+         call exportBasis(quick_molden, ierr)
       endif
 
    endif
