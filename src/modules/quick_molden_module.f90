@@ -63,15 +63,32 @@ end subroutine write_coordinates
 subroutine write_basis_info(self, ierr)
 
     use quick_basis_module
+    use quick_molspec_module
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: ishell, j
+    integer :: iatom, ishell, j
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
-    do ishell=1, nshell
-        write(self%iMoldenFile, '(2x, I5)') quick_basis%katom(ishell)
+    do iatom=1, natom
+        write(self%iMoldenFile, '(2x, I5)') iatom
+
+        do ishell=1, nshell
+            if(quick_basis%katom(ishell) .eq. iatom) then
+                if(quick_basis%ktype(ishell) .eq. 1) then
+                    write(self%iMoldenFile, '(2x, "s", 4x, I2)') quick_basis%kprim(ishell)
+                elseif(quick_basis%ktype(ishell) .eq. 3) then
+                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') quick_basis%kprim(ishell)
+                elseif(quick_basis%ktype(ishell) .eq. 4) then
+                    write(self%iMoldenFile, '(2x, "sp", 4x, I2)') quick_basis%kprim(ishell)
+                elseif(quick_basis%ktype(ishell) .eq. 6) then
+                    write(self%iMoldenFile, '(2x, "d", 4x, I2)') quick_basis%kprim(ishell)
+                elseif(quick_basis%ktype(ishell) .eq. 10) then
+                    write(self%iMoldenFile, '(2x, "f", 4x, I2)') quick_basis%kprim(ishell)
+                endif
+            endif
+        enddo
     enddo
 
 end subroutine write_basis_info
