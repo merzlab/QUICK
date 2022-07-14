@@ -35,7 +35,7 @@ module quick_files_module
     character(len=80) :: CPHFFileName   = ''
     character(len=80) :: dataFileName   = ''
     character(len=80) :: intFileName    = ''
-
+    character(len=80) :: moldenFileName = ''
 
     ! Basis set and directory
     character(len=240) :: basisDir       = ''
@@ -62,6 +62,7 @@ module quick_files_module
     integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
     integer :: iIntFile       = INTFILEHANDLE    ! integral file
+    integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
 
     logical :: fexist = .false.         ! Check if file exists
 
@@ -118,6 +119,7 @@ module quick_files_module
         pdbFileName=inFileName(1:i-1)//'.pdb'
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
+        moldenFileName=inFileName(1:i-1)//'.molden'
 
         return
 
