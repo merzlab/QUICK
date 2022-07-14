@@ -30,7 +30,7 @@ subroutine write_molden(iMoldenFile, moldenFileName, ierr)
     
 
     ! close file
-    close(moldenFileName)
+    call close(moldenFileName)
 end subroutine write_molden
 
 
