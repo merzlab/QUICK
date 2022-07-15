@@ -90,8 +90,13 @@ subroutine write_basis_info(self, ierr)
                 endif
 
                 ibasInit = quick_basis%kstart(ishell)
-                ibasEnd  = nbasis
-                if(ishell .ne. nshell) ibasEnd = quick_basis%kstart(ishell+1)-1
+                
+                if(ishell .eq. nshell) then
+                    ibasEnd  = nbasis
+                else
+                    ibasEnd = quick_basis%kstart(ishell+1)-1
+                endif
+                
                 do ibas=ibasInit, ibasEnd
                     do iprim=1, nprim
                         write(self%iMoldenFile, '(2x, E12.6, 2x, E12.6)') quick_basis%gcexpo(iprim, ibas), aexp(iprim, ibas)
