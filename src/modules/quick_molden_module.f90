@@ -62,12 +62,12 @@ end subroutine write_coordinates
 
 subroutine write_basis_info(self, ierr)
 
-    use quick_basis_module, only: quick_basis, nshell, nbasis, aexp
+    use quick_basis_module, only: quick_basis, nshell, nbasis, aexp, dcoeff, ncontract
     use quick_molspec_module, only: natom
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: iatom, ishell, ibas, iprim, nprim, ibasInit, ibasEnd
+    integer :: iatom, ishell, ibas, iprim, nprim, j
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
@@ -88,20 +88,19 @@ subroutine write_basis_info(self, ierr)
                 elseif(quick_basis%ktype(ishell) .eq. 10) then
                     write(self%iMoldenFile, '(2x, "f", 4x, I2)') nprim
                 endif
-
-                ibasInit = quick_basis%kstart(ishell)
-                
-                if(ishell .eq. nshell) then
-                    ibasEnd  = nbasis
-                else
-                    ibasEnd = quick_basis%kstart(ishell+1)-1
-                endif
-                
-                do ibas=ibasInit, ibasEnd
+                 
+                if(quick_basis%ktype(ishell) .eq. 4) then
                     do iprim=1, nprim
-                        write(self%iMoldenFile, '(2x, E12.6, 2x, E12.6)') quick_basis%gcexpo(iprim, ibas), aexp(iprim, ibas)
+                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8, 2x, E14.8)') &
+                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)+j), j=0,1)
+                    enddo                    
+
+                else
+                    do iprim=1, nprim
+                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
+                        aexp(iprim, quick_basis%ksumtype(ishell)), dcoeff(iprim,quick_basis%ksumtype(ishell))
                     enddo
-                enddo
+                endif
             endif
         enddo
     enddo
