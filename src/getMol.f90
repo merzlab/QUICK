@@ -82,6 +82,13 @@ subroutine getMol(ierr)
       call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
 
+      ! initialize exporting and write molecular information
+      if(write_molden) then
+         call initializeExport(quick_molden, ierr)
+         call exportCoordinates(quick_molden, ierr)
+         call exportBasis(quick_molden, ierr)
+      endif
+
       ! the following some step are setup for basis and for ECP or DFT calculation
       ! and see comments for details
       ! Include the normalization constant in the coefficient.
@@ -105,14 +112,6 @@ subroutine getMol(ierr)
       SAFE_CALL(initialGuess(ierr))
 
       call PrtAct(iOutfile,"End Reading Molecular Information ")
-
-      ! initialize exporting and write molecular information
-      if(write_molden) then
-         call initializeExport(quick_molden, ierr)
-         call exportCoordinates(quick_molden, ierr)
-         call exportBasis(quick_molden, ierr)
-      endif
-
    endif
    !-----------END MPI/MASTER------------------------
 
