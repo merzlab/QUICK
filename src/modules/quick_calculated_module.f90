@@ -582,7 +582,7 @@ contains
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
          call zeroMatrix(self%CPHFA,idimA)
-         call zeroMatrix2(self%CPHFA,idimA,natom*3)
+         call zeroMatrix2(self%CPHFB,idimA,natom*3)
       endif
 
       ! if unrestricted, some more varibles is required to be allocated
