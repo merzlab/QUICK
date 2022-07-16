@@ -108,6 +108,7 @@ contains
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
      use allmod
+     use quick_molden_module, only: quick_molden, exportMO
      implicit none
   
      logical :: done
@@ -148,6 +149,9 @@ contains
   
      if (quick_method%debug)  call debug_SCF(jscf)
   
+
+     if(write_molden) call exportMO(quick_molden, ierr)
+
      return
   
   end subroutine scf

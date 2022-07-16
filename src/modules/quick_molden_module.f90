@@ -17,7 +17,7 @@ module quick_molden_module
     private
 
     public :: quick_molden
-    public :: initializeExport, finalizeExport, exportCoordinates, exportBasis
+    public :: initializeExport, finalizeExport, exportCoordinates, exportBasis, exportMO
 
     type quick_molden_type
         integer :: iMoldenFile
@@ -40,6 +40,10 @@ module quick_molden_module
     interface exportBasis
         module procedure write_basis_info
     end interface exportBasis
+
+    interface exportMO
+        module procedure write_mo
+    end interface exportMO
 contains
 
 subroutine write_coordinates(self, ierr)
@@ -106,6 +110,29 @@ subroutine write_basis_info(self, ierr)
     enddo
 
 end subroutine write_basis_info
+
+subroutine write_mo(self, ierr)
+
+    use quick_basis_module, only: quick_basis, nbasis
+    use quick_calculated_module, only: quick_qm_struct
+    implicit none
+    type (quick_molden_type), intent(in) :: self
+    integer, intent(out) :: ierr    
+    integer :: i, j
+
+    write(self%iMoldenFile, '("[MO]")')
+
+    do i=1, nbasis
+        write(self%iMoldenFile, '(2x, "Sym= a", I5)') i
+        write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%E(i)
+        write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
+
+        do j=1, nbasis
+            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(i,j)
+        enddo 
+    enddo
+
+end subroutine write_mo
 
 subroutine initialize_molden(self, ierr)
     
