@@ -128,7 +128,7 @@ subroutine write_mo(self, ierr)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
         do j=1, nbasis
-            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(i,j)
+            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(j,i)
         enddo 
     enddo
 
