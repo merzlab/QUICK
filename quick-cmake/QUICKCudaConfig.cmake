@@ -27,22 +27,25 @@ if(CUDA)
     set(SM61FLAGS -gencode arch=compute_61,code=sm_61)
     #SM6.0 = GP100 / P100 = DGX-1
     set(SM60FLAGS -gencode arch=compute_60,code=sm_60)
-    #SM5.3 = GM200 [Grid] = M60, M40?
-    set(SM53FLAGS -gencode arch=compute_53,code=sm_53)
-    #SM5.2 = GM200 = GTX-Titan-X, M6000 etc.
-    set(SM52FLAGS -gencode arch=compute_52,code=sm_52)
-    #SM5.0 = GM204 = GTX980, 970 etc
-    set(SM50FLAGS -gencode arch=compute_50,code=sm_50)
-    #SM3.7 = GK210 = K80 -- not currently used, since SM3.0 may be better
-    set(SM37FLAGS -gencode arch=compute_37,code=sm_37)
-    #SM3.5 = GK110 + 110B = K20, K20X, K40, GTX780, GTX-Titan, GTX-Titan-Black, GTX-Titan-Z
-    set(SM35FLAGS -gencode arch=compute_35,code=sm_35)
-    #SM3.0 = GK104 = K10, GTX680, 690 etc.
-    set(SM30FLAGS -gencode arch=compute_30,code=sm_30)
+
+    # Maxwell and older architectures not supported any more
+    # double precision atomic add requires Pascal architecture
+    # #SM5.3 = GM200 [Grid] = M60, M40?
+    # set(SM53FLAGS -gencode arch=compute_53,code=sm_53)
+    # #SM5.2 = GM200 = GTX-Titan-X, M6000 etc.
+    # set(SM52FLAGS -gencode arch=compute_52,code=sm_52)
+    # #SM5.0 = GM204 = GTX980, 970 etc
+    # set(SM50FLAGS -gencode arch=compute_50,code=sm_50)
+    # #SM3.7 = GK210 = K80 -- not currently used, since SM3.0 may be better
+    # set(SM37FLAGS -gencode arch=compute_37,code=sm_37)
+    # #SM3.5 = GK110 + 110B = K20, K20X, K40, GTX780, GTX-Titan, GTX-Titan-Black, GTX-Titan-Z
+    # set(SM35FLAGS -gencode arch=compute_35,code=sm_35)
+    # #SM3.0 = GK104 = K10, GTX680, 690 etc.
+    # set(SM30FLAGS -gencode arch=compute_30,code=sm_30)
 
     message(STATUS "CUDA version ${CUDA_VERSION} detected")
 
-    set(QUICK_USER_ARCH "" CACHE STRING "Specify QUICK gpu architecture. Applicable for cuda and cudampi versions only. If empty, QUICK will be compiled for several architectures based on the CUDA toolkit version.")
+    set(QUICK_USER_ARCH "" CACHE STRING "Specify QUICK gpu architecture (Pascal or later). Applicable for cuda and cudampi versions only. If empty, QUICK will be compiled for several architectures based on the CUDA toolkit version.")
 
     # note: need -disable-optimizer-constants for sm <= 7.0
 
@@ -50,28 +53,28 @@ if(CUDA)
         
         # build for all supported CUDA versions
 	if(${CUDA_VERSION} VERSION_EQUAL 8.0)
-            message(STATUS "Configuring QUICK for SM3.0, SM5.0, and SM6.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM50FLAGS} ${SM60FLAGS})
+            message(STATUS "Configuring QUICK for SM6.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             
         elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 9.0) AND (${CUDA_VERSION} VERSION_LESS 10.0)) 
-            message(STATUS "Configuring QUICK for SM3.0, SM5.0, SM6.0 and SM7.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS})
+            message(STATUS "Configuring QUICK for SM6.0 and SM7.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
         elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 10.0) AND (${CUDA_VERSION} VERSION_LESS 11.0))
-            message(STATUS "Configuring QUICK for SM3.0, SM5.0, SM6.0, SM7.0 and SM7.5")
-            list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS})
+            message(STATUS "Configuring QUICK for SM7.0 and SM7.5")
+            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_EQUAL 11.0))
-	    message(STATUS "Configuring QUICK for SM3.5, SM5.0, SM6.0, SM7.0, SM7.5 and SM8.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
+	    message(STATUS "Configuring QUICK for SM6.0, SM7.0, SM7.5 and SM8.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.1) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.6))
-	    message(STATUS "Configuring QUICK for SM3.5, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0 and SM8.6")
-            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
+	    message(STATUS "Configuring QUICK for SM6.0, SM7.0, SM7.5, SM8.0 and SM8.6")
+            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             
 	else()
@@ -82,20 +85,6 @@ if(CUDA)
 
         set(FOUND "FALSE")
         
-        if("${QUICK_USER_ARCH}" MATCHES "kepler")
-            message(STATUS "Configuring QUICK for SM3.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            set(FOUND "TRUE")
-        endif()
-            
-        if("${QUICK_USER_ARCH}" MATCHES "maxwell")
-	    message(STATUS "Configuring QUICK for SM5.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            set(FOUND "TRUE")
-        endif()
-
         if("${QUICK_USER_ARCH}" MATCHES "pascal")
             message(STATUS "Configuring QUICK for SM6.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
