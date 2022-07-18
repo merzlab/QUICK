@@ -191,11 +191,11 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
                 // assign values to dummy variables, to be cleaned up eventually
                 //for(int iatom=0; iatom < devSim.natom+devSim.nextatom; iatom++ ){ 
 #ifdef int_spd
-                    iclass_lri(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
+                    iclass_lri(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
                 
 #elif defined int_spdf2
                 if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
-                    iclass_lri_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store);
+                    iclass_lri_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
                 }
                 
 #endif

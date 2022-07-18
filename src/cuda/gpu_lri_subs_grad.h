@@ -101,10 +101,10 @@ get_lri_grad_kernel_spdf2()
                     int iii = devSim.sorted_Qnumber[II];
                     int jjj = devSim.sorted_Qnumber[JJ];
 #ifdef int_spd
-                    iclass_lri_grad(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB);
+                    iclass_lri_grad(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside);
 #elif defined int_spdf2
                     if ( (iii + jjj) >= 4 ) {
-                        iclass_lri_grad_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp, devSim.store, devSim.store2, devSim.storeAA, devSim.storeBB);
+                        iclass_lri_grad_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA, devSim.storeBB+offside);
                     }
 #endif
                        
