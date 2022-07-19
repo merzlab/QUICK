@@ -1489,7 +1489,10 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     if ( DENSELJA*Y < (QUICKDouble)0.0) val3a = 0ull - val3a;
     QUICKADD(LOC2(oULL, KKK-1, III-1, nbasis, nbasis), 0ull-val3a);
 #else
-    atomicAdd(&LOC2(o, KKK-1, III-1, nbasis, nbasis), val3da);
+    if (((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        val3da *= 2.0;
+    }
+    atomicAdd(&LOC2(o, KKK-1, III-1, nbasis, nbasis), -val3da);
 #endif
 
     QUICKDouble val3db = hybrid_coeff*DENSELJB*Y;
@@ -1502,7 +1505,10 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     if ( DENSELJB*Y < (QUICKDouble)0.0) val3b = 0ull - val3b;
     QUICKADD(LOC2(obULL, KKK-1, III-1, nbasis, nbasis), 0ull-val3b);
 #else
-    atomicAdd(&LOC2(ob, KKK-1, III-1, nbasis, nbasis), val3db);
+    if (((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        val3db *= 2.0;
+    }
+    atomicAdd(&LOC2(ob, KKK-1, III-1, nbasis, nbasis), -val3db);
 #endif
     // ATOMIC ADD VALUE 4
     if (KKK != LLL) {
@@ -1513,7 +1519,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
         if ( val4da < (QUICKDouble)0.0) val4a = 0ull - val4a;
         QUICKADD(LOC2(oULL, LLL-1, III-1, nbasis, nbasis), 0ull-val4a);
 #else
-        atomicAdd(&LOC2(o, LLL-1, III-1, nbasis, nbasis), val4da);
+        atomicAdd(&LOC2(o, LLL-1, III-1, nbasis, nbasis), -val4da);
 #endif
 
     }
@@ -1527,7 +1533,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
         if ( val4db < (QUICKDouble)0.0) val4b = 0ull - val4b;
         QUICKADD(LOC2(obULL, LLL-1, III-1, nbasis, nbasis), 0ull-val4b);
 #else
-        atomicAdd(&LOC2(ob, LLL-1, III-1, nbasis, nbasis), val4db);
+        atomicAdd(&LOC2(ob, LLL-1, III-1, nbasis, nbasis), -val4db);
 #endif
     }
 
@@ -1547,11 +1553,11 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     }
 #else
     if ((III != JJJ && III<KKK) || ((III == JJJ) && (III == KKK) && (III < LLL)) || ((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
-        atomicAdd(&LOC2(o, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), val5da);
+        atomicAdd(&LOC2(o, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), -val5da);
     }
     // ATOMIC ADD VALUE 5 - 2
     if ( III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(o, JJJ-1, KKK-1, nbasis, nbasis), val5da);
+        atomicAdd(&LOC2(o, JJJ-1, KKK-1, nbasis, nbasis), -val5da);
     }
 #endif
 
@@ -1570,11 +1576,11 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     }
 #else
     if ((III != JJJ && III<KKK) || ((III == JJJ) && (III == KKK) && (III < LLL)) || ((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
-        atomicAdd(&LOC2(ob, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), val5db);
+        atomicAdd(&LOC2(ob, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), -val5db);
     }
     // ATOMIC ADD VALUE 5 - 2
     if ( III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(ob, JJJ-1, KKK-1, nbasis, nbasis), val5db);
+        atomicAdd(&LOC2(ob, JJJ-1, KKK-1, nbasis, nbasis), -val5db);
     }
 #endif
 
@@ -1594,11 +1600,11 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
                 QUICKADD(LOC2(oULL, LLL-1, JJJ-1, nbasis, nbasis), 0ull-val6a);
             }
 #else
-            atomicAdd(&LOC2(o, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), val6da);
+            atomicAdd(&LOC2(o, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), -val6da);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III!= KKK) {
-                atomicAdd(&LOC2(o, LLL-1, JJJ-1, nbasis, nbasis), val6da);
+                atomicAdd(&LOC2(o, LLL-1, JJJ-1, nbasis, nbasis), -val6da);
             }
 #endif
         }
@@ -1619,11 +1625,11 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
                 QUICKADD(LOC2(obULL, LLL-1, JJJ-1, nbasis, nbasis), 0ull-val6b);
             }
 #else
-            atomicAdd(&LOC2(ob, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), val6db);
+            atomicAdd(&LOC2(ob, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), -val6db);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III!= KKK) {
-                atomicAdd(&LOC2(ob, LLL-1, JJJ-1, nbasis, nbasis), val6db);
+                atomicAdd(&LOC2(ob, LLL-1, JJJ-1, nbasis, nbasis), -val6db);
             }
 #endif
         }
@@ -1684,7 +1690,11 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     if ( DENSELJ*Y < (QUICKDouble)0.0) val3 = 0ull - val3;
     QUICKADD(LOC2(oULL, KKK-1, III-1, nbasis, nbasis), 0ull-val3);
 #else    
-    atomicAdd(&LOC2(o, KKK-1, III-1, nbasis, nbasis), val3d);
+    if (((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
+        val3d *= 2.0;
+    }
+    atomicAdd(&LOC2(o, KKK-1, III-1, nbasis, nbasis), -val3d);
+
 #endif
     // ATOMIC ADD VALUE 4
     if (KKK != LLL) {
@@ -1695,7 +1705,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
         if ( val4d < (QUICKDouble)0.0) val4 = 0ull - val4;
         QUICKADD(LOC2(oULL, LLL-1, III-1, nbasis, nbasis), 0ull-val4);
 #else
-        atomicAdd(&LOC2(o, LLL-1, III-1, nbasis, nbasis), val4d);
+        atomicAdd(&LOC2(o, LLL-1, III-1, nbasis, nbasis), -val4d);
 #endif
     }
     
@@ -1718,13 +1728,14 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
     }
 #else    
     if ((III != JJJ && III<KKK) || ((III == JJJ) && (III == KKK) && (III < LLL)) || ((III == KKK) && (III <  JJJ) && (JJJ < LLL))) {
-        atomicAdd(&LOC2(o, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), val5d);
+        atomicAdd(&LOC2(o, MAX(JJJ,KKK)-1, MIN(JJJ,KKK)-1, nbasis, nbasis), -val5d);
     }
     
     // ATOMIC ADD VALUE 5 - 2
     if ( III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(o, JJJ-1, KKK-1, nbasis, nbasis), val5d);
+        atomicAdd(&LOC2(o, JJJ-1, KKK-1, nbasis, nbasis), -val5d);
     }
+
 #endif
     // ATOMIC ADD VALUE 6
     if (III != JJJ) {
@@ -1742,12 +1753,13 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
                 QUICKADD(LOC2(oULL, LLL-1, JJJ-1, nbasis, nbasis), 0ull-val6);
             }
 #else
-            atomicAdd(&LOC2(o, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), val6d);
+            atomicAdd(&LOC2(o, MAX(JJJ,LLL)-1, MIN(JJJ,LLL)-1, devSim.nbasis, devSim.nbasis), -val6d);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III!= KKK) {
-                atomicAdd(&LOC2(o, LLL-1, JJJ-1, nbasis, nbasis), val6d);
+                atomicAdd(&LOC2(o, LLL-1, JJJ-1, nbasis, nbasis), -val6d);
             }
+
 #endif
         }
     }
