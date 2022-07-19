@@ -361,13 +361,21 @@ __global__ void get_sswgrad_kernel(){
 
 
         //declare smem grad vector
+#ifdef USE_LEGACY_ATOMICS
         extern __shared__ QUICKULL smem_buffer[];
         QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
 
         // initialize smem grad
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
           smemGrad[i]=0ull;
+#else
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
+        // initialize smem grad
+        for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+          smemGrad[i]=0.0;
+#endif
         __syncthreads();
 
 
@@ -390,8 +398,11 @@ __global__ void get_sswgrad_kernel(){
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+#ifdef USE_LEGACY_ATOMICS
           atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
-          //GRADADD(devSim_dft.gradULL[i], smemGrad[i]);
+#else
+          atomicAdd(&devSim_dft.grad[i],smemGrad[i]);
+#endif
 
         __syncthreads();
 }
@@ -408,15 +419,25 @@ computing x, y and z gradients separately.
 */
 __global__ void get_sswnumgrad_kernel(){
 
+        unsigned int natom = devSim_dft.natom;
+
+#ifdef USE_LEGACY_ATOMICS
         //declare smem grad vector
         extern __shared__ QUICKULL smem_buffer[];
         QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
 
-        unsigned int natom = devSim_dft.natom;
-
         // initialize smem grad
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
           smemGrad[i]=0ull;
+#else
+        //declare smem grad vector
+        extern __shared__ QUICKDouble smem_buffer[];
+        QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
+
+        // initialize smem grad
+        for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
+          smemGrad[i]=0.0;
+#endif
 
         __syncthreads();
 
@@ -523,14 +544,15 @@ __global__ void get_sswnumgrad_kernel(){
 
                 if(iatom == gatm-1) zparent = zatm;
 
+#ifdef USE_LEGACY_ATOMICS
                 GRADADD(smemGrad[iatom*3], dpx);
                 GRADADD(smemGrad[iatom*3+1], dpy);
                 GRADADD(smemGrad[iatom*3+2], dpz);
-
-/*                atomicAdd(&smemGrad[iatom*3], dpx);
+#else
+                atomicAdd(&smemGrad[iatom*3], dpx);
                 atomicAdd(&smemGrad[iatom*3+1], dpy);
                 atomicAdd(&smemGrad[iatom*3+2], dpz);
-*/
+#endif
 /*
 printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 1, dpx, devSim_dft.exc_ssd[idx], devSim_dft.quadwt[idx]);
 
@@ -547,8 +569,11 @@ printf("sswgrad  %f %f %f %d %d %f %f %f \n", gridx, gridy, gridz, iatom, 3, dpz
 
         // update gmem grad vector
         for(int i = threadIdx.x; i< natom * 3; i+=blockDim.x)
+#ifdef USE_LEGACY_ATOMICS
           atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
-          //GRADADD(devSim_dft.gradULL[i], smemGrad[i]);       
+#else
+          atomicAdd(&devSim_dft.grad[i],smemGrad[i]);
+#endif
 
         __syncthreads();
 
@@ -954,8 +979,12 @@ __device__ QUICKDouble get_uw_ssd(const QUICKDouble gridx, const QUICKDouble gri
 
 }
 
-__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKULL* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom){
-
+#ifdef USE_LEGACY_ATOMICS
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKULL* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom)
+#else
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom)
+#endif
+{
         QUICKDouble sumUW= 0.0;
         QUICKDouble parent_uw = 0.0;
         
@@ -978,8 +1007,11 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
             for(int i=0; i<natom; i++){
                 for(int j=0; j<3; j++){
                     if(abs(uw) > devSim_dft.DMCutoff ){
-                        //atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
+#ifdef USE_LEGACY_ATOMICS
 			GRADADD(smemGrad[i*3+j], LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
+#else
+                        atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*Exc*quadwt*uw*(-p/sumUW));
+#endif
                     }
                 }
             }
@@ -995,8 +1027,11 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
         for(int i=0; i<natom; i++){
             for(int j=0; j<3; j++){
                 if(abs(parent_uw) > devSim_dft.DMCutoff ){
-                    //atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
+#ifdef USE_LEGACY_ATOMICS
 		    GRADADD(smemGrad[i*3+j], LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
+#else
+                    atomicAdd(&smemGrad[i*3+j],LOCUWSSD(uw_ssd,j,i,3,natom)*(1.0/sumUW)*Exc*quadwt*parent_uw);
+#endif
                 }
             }
         }
@@ -1004,7 +1039,12 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
 }
 
 
-__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid){
+#ifdef USE_LEGACY_ATOMICS
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid)
+#else
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKDouble* smemGrad, int iparent, int gid)
+#endif
+{
 
 /*
         This subroutine calculates the derivatives of weight found in
@@ -1158,9 +1198,15 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 
 //      We should now have the derivatives of the SS weights.  Now just add it to the temporary gradient vector in shared memory.
 
+#ifdef USE_LEGACY_ATOMICS
                 GRADADD(smemGrad[jstart], wtgradjx*Exc*quadwt);
                 GRADADD(smemGrad[jstart+1], wtgradjy*Exc*quadwt);
                 GRADADD(smemGrad[jstart+2], wtgradjz*Exc*quadwt);
+#else
+                atomicAdd(&smemGrad[jstart], wtgradjx*Exc*quadwt);
+                atomicAdd(&smemGrad[jstart+1], wtgradjy*Exc*quadwt);
+                atomicAdd(&smemGrad[jstart+2], wtgradjz*Exc*quadwt);
+#endif
                 }
 
         }
@@ -1170,9 +1216,15 @@ __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, 
 #endif
 
 	// update the temporary gradient vector
+#ifdef USE_LEGACY_ATOMICS
         GRADADD(smemGrad[istart], wtgradix*Exc*quadwt);
         GRADADD(smemGrad[istart+1], wtgradiy*Exc*quadwt);
         GRADADD(smemGrad[istart+2], wtgradiz*Exc*quadwt);
+#else
+        atomicAdd(&smemGrad[istart], wtgradix*Exc*quadwt);
+        atomicAdd(&smemGrad[istart+1], wtgradiy*Exc*quadwt);
+        atomicAdd(&smemGrad[istart+2], wtgradiz*Exc*quadwt);
+#endif
 
 }
 

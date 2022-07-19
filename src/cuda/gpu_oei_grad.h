@@ -154,7 +154,7 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     int BStart = (devSim.katom[JJ]-1) * 3;
     int CStart = iatom * 3;
 
-//#ifdef LEGACY_ATOMIC_ADD
+#ifdef USE_LEGACY_ATOMICS
     GRADADD(devSim.gradULL[AStart], AGradx);
     GRADADD(devSim.gradULL[AStart + 1], AGrady);
     GRADADD(devSim.gradULL[AStart + 2], AGradz);
@@ -174,29 +174,29 @@ if(iatom < devSim.natom){
     GRADADD(devSim.ptchg_gradULL[CStart + 2], (-AGradz-BGradz));
 }
 
-/*#else
+#else
 
-    QUICKADD(devSim.grad[AStart], AGradx);
-    QUICKADD(devSim.grad[AStart + 1], AGrady);
-    QUICKADD(devSim.grad[AStart + 2], AGradz);
+    atomicAdd(&devSim.grad[AStart], AGradx);
+    atomicAdd(&devSim.grad[AStart + 1], AGrady);
+    atomicAdd(&devSim.grad[AStart + 2], AGradz);
 
-    QUICKADD(devSim.grad[BStart], BGradx);
-    QUICKADD(devSim.grad[BStart + 1], BGrady);
-    QUICKADD(devSim.grad[BStart + 2], BGradz);
+    atomicAdd(&devSim.grad[BStart], BGradx);
+    atomicAdd(&devSim.grad[BStart + 1], BGrady);
+    atomicAdd(&devSim.grad[BStart + 2], BGradz);
 
 if(iatom < devSim.natom){
-    QUICKADD(devSim.grad[CStart], (-AGradx-BGradx));
-    QUICKADD(devSim.grad[CStart + 1], (-AGrady-BGrady));
-    QUICKADD(devSim.grad[CStart + 2], (-AGradz-BGradz));
+    atomicAdd(&devSim.grad[CStart], (-AGradx-BGradx));
+    atomicAdd(&devSim.grad[CStart + 1], (-AGrady-BGrady));
+    atomicAdd(&devSim.grad[CStart + 2], (-AGradz-BGradz));
 }else{
     CStart = (iatom-devSim.natom) * 3;
-    QUICKADD(devSim.ptchg_grad[CStart], (-AGradx-BGradx));
-    QUICKADD(devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
-    QUICKADD(devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
+    atomicAdd(&devSim.ptchg_grad[CStart], (-AGradx-BGradx));
+    atomicAdd(&devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
+    atomicAdd(&devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
 }
 
 #endif
-*/
+
 }
 
 

@@ -34,8 +34,10 @@ struct gpu_calculated_type {
     cuda_buffer_type<QUICKDouble>*  ob;     // beta O matrix
     cuda_buffer_type<QUICKDouble>*  dense;  // Density Matrix
     cuda_buffer_type<QUICKDouble>*  denseb; // Beta Density Matrix
+#ifdef USE_LEGACY_ATOMICS
     cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
     cuda_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
+#endif
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
@@ -88,9 +90,15 @@ struct gpu_cutoff_type {
 };
 
 struct DFT_calculated_type {
+#ifdef USE_LEGACY_ATOMICS
     QUICKULL                     Eelxc;      // exchange correction energy
     QUICKULL                     aelec;      // alpha electron
     QUICKULL                     belec;      // beta electron
+#else
+    QUICKDouble                     Eelxc;      // exchange correction energy
+    QUICKDouble                     aelec;      // alpha electron
+    QUICKDouble                     belec;      // beta electron
+#endif
 };
 
 /*Madu Manathunga 11/21/2019*/
@@ -308,10 +316,10 @@ struct gpu_simulation_type {
 
     // Some more infos about pre-calculated values
     QUICKDouble*                    o;
-    QUICKULL*                       oULL;
-    QUICKDouble*                    dense;
     QUICKDouble*                    ob;
+    QUICKULL*                       oULL;
     QUICKULL*                       obULL;
+    QUICKDouble*                    dense;
     QUICKDouble*                    denseb;
     
     QUICKDouble*                    distance;

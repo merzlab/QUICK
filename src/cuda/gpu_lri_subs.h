@@ -501,11 +501,14 @@ __device__ __forceinline__ void iclass_lri_spdf2
 
 __device__ __forceinline__ void addint_lri(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis)
 {
-    
+
+#ifdef USE_LEGACY_ATOMICS    
     QUICKULL val1 = (QUICKULL) (fabs(Y*OSCALE) + (QUICKDouble)0.5);
     if ( Y < (QUICKDouble)0.0) val1 = 0ull - val1;
     QUICKADD(LOC2(oULL, JJJ-1, III-1, nbasis, nbasis), val1);    
-
+#else
+    atomicAdd(&LOC2(o, JJJ-1, III-1, nbasis, nbasis), Y);
+#endif
 }
 
 #include "gpu_fmt.h"

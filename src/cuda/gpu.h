@@ -280,8 +280,13 @@ char *trim(char *s);
 
 
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
+#ifdef USE_LEGACY_ATOMICS
 __device__ void addint(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
+#else
+__device__ void addint(QUICKDouble* o, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
+__device__ __forceinline__ void addint_oshell(QUICKDouble* o, QUICKDouble* ob,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
+#endif
 __device__ __forceinline__ void addint_lri(QUICKULL* oULL, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ void FmT(int MaxM, QUICKDouble X, QUICKDouble* vals);
 
@@ -584,9 +589,14 @@ __device__ int lefthrr_lri23(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
                         int KLMNAx, int KLMNAy, int KLMNAz,
                         int KLMNBx, int KLMNBy, int KLMNBz,
                         int IJTYPE,QUICKDouble* coefAngularL, int* angularL);
-
+#ifdef USE_LEGACY_ATOMICS
 __device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKULL* smemGrad, int iparent, int gid);
 __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKULL* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom);
+#else
+__device__ void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble Exc, QUICKDouble quadwt, QUICKDouble* smemGrad, int iparent, int gid);
+__device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, const QUICKDouble gridz, const QUICKDouble Exc, const QUICKDouble quadwt, QUICKDouble* const smemGrad, QUICKDouble* const uw_ssd, const int iparent, const int natom);
+#endif
+
 __device__ QUICKDouble get_unnormalized_weight(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int iatm);
 __device__ QUICKDouble SSW( QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, int atm);
 

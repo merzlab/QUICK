@@ -291,6 +291,8 @@ __global__ void cshell_getxc_kernel()
 #ifndef OSHELL
       }
 #endif
+
+#ifdef USE_LEGACY_ATOMICS
       QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
       if ( _tmp * weight < (QUICKDouble)0.0)
           val1 = 0ull - val1;
@@ -308,6 +310,11 @@ __global__ void cshell_getxc_kernel()
       if ( _tmp * weight < (QUICKDouble)0.0)
           val1 = 0ull - val1;
       QUICKADD(devSim_dft.DFT_calculated[0].belec, val1);
+#else
+      atomicAdd(&devSim_dft.DFT_calculated[0].Eelxc, _tmp);
+      atomicAdd(&devSim_dft.DFT_calculated[0].aelec, weight*density);
+      atomicAdd(&devSim_dft.DFT_calculated[0].belec, weight*densityb);
+#endif
 
       for (int i = bfloc_st; i< bfloc_end; ++i) {
 
@@ -326,17 +333,25 @@ __global__ void cshell_getxc_kernel()
             QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
             + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
 
+#ifdef USE_LEGACY_ATOMICS
             QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
             if ( _tmp * weight < (QUICKDouble)0.0) val1 = 0ull - val1;
             QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
+#else
+            atomicAdd(&LOC2(devSim_dft.o, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp);
+#endif
 
 #ifdef OSHELL
             QUICKDouble _tmpb = (phi * phi2 * dfdrb + xdotb * (phi*dphidx2 + phi2*dphidx)
               + ydotb * (phi*dphidy2 + phi2*dphidy) + zdotb * (phi*dphidz2 + phi2*dphidz))*weight;
 
+#ifdef USE_LEGACY_ATOMICS
             QUICKULL val2 = (QUICKULL) (fabs( _tmpb * OSCALE) + (QUICKDouble)0.5);
               if ( _tmpb * weight < (QUICKDouble)0.0) val2 = 0ull - val2;
             QUICKADD(LOC2(devSim_dft.obULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val2);
+#else
+            atomicAdd(&LOC2(devSim_dft.ob, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmpb);
+#endif
 #endif
           }
         }
@@ -353,6 +368,7 @@ __global__ void cshell_getxcgrad_kernel()
 #endif
 {
 
+#ifdef USE_LEGACY_ATOMICS
   //declare smem grad vector
   extern __shared__ QUICKULL smem_buffer[];
   QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
@@ -360,7 +376,15 @@ __global__ void cshell_getxcgrad_kernel()
   // initialize smem grad
   for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
     smemGrad[i]=0ull;
+#else
+  //declare smem grad vector
+  extern __shared__ QUICKDouble smem_buffer[];
+  QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
 
+  // initialize smem grad
+  for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+    smemGrad[i]=0.0;
+#endif
   __syncthreads();
 
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -592,15 +616,15 @@ __global__ void cshell_getxcgrad_kernel()
             }
 #endif
 
-
+#ifdef USE_LEGACY_ATOMICS
             GRADADD(smemGrad[Istart], Gradx);
             GRADADD(smemGrad[Istart+1], Grady);
             GRADADD(smemGrad[Istart+2], Gradz);
-
-/*            atomicAdd(&smemGrad[Istart], Gradx);          
+#else
+            atomicAdd(&smemGrad[Istart], Gradx);          
             atomicAdd(&smemGrad[Istart+1], Grady);
             atomicAdd(&smemGrad[Istart+2], Gradz);
-*/
+#endif
             sumGradx += Gradx;
             sumGrady += Grady;
             sumGradz += Gradz;
@@ -610,14 +634,16 @@ __global__ void cshell_getxcgrad_kernel()
       }
 
       int Istart = (devSim_dft.gatm[gid]-1) * 3;
+
+#ifdef USE_LEGACY_ATOMICS
       GRADADD(smemGrad[Istart], -sumGradx);
       GRADADD(smemGrad[Istart+1], -sumGrady);
       GRADADD(smemGrad[Istart+2], -sumGradz);
-
-/*      atomicAdd(&smemGrad[Istart], -sumGradx);   
+#else
+      atomicAdd(&smemGrad[Istart], -sumGradx);   
       atomicAdd(&smemGrad[Istart+1], -sumGrady);
       atomicAdd(&smemGrad[Istart+2], -sumGradz);
-*/
+#endif
     }
     //Set weights for sswder calculation
     if(density < devSim_dft.DMCutoff){
@@ -634,8 +660,11 @@ __global__ void cshell_getxcgrad_kernel()
 
   // update gmem grad vector
   for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
+#ifdef USE_LEGACY_ATOMICS
     atomicAdd(&devSim_dft.gradULL[i],smemGrad[i]);
-    //GRADADD(devSim_dft.gradULL[i], smemGrad[i]);   
+#else
+    atomicAdd(&devSim_dft.grad[i],smemGrad[i]);
+#endif
 
   __syncthreads();
 
