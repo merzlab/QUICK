@@ -421,7 +421,9 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
         gpu -> grad -> DownloadSum(grad);
 
         delete gpu -> grad;
+#ifdef USE_LEGACY_ATOMICS
         delete gpu -> gradULL;
+#endif
         delete gpu->gpu_calculated->dense;
 
 #ifdef OSHELL
