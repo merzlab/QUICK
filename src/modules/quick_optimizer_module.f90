@@ -37,6 +37,7 @@ contains
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
      use quick_exception_module
+     use quick_molden_module, only: quick_molden
      implicit double precision(a-h,o-z)
 
      logical :: done,diagco
@@ -322,6 +323,11 @@ contains
            if (done)  Write (ioutfile,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') i
            call PrtAct(ioutfile,"Finish Optimization for This Step")
            Elast = quick_qm_struct%Etot
+
+           if(write_molden) then
+               quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot)=xyz(:,:)
+               quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
+           endif
 
            ! If read is on, write out a restart file.
            if (quick_method%readdmx) call wrtrestart

@@ -166,6 +166,7 @@ contains
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
+     use quick_molden_module, only: quick_molden
 
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
@@ -760,7 +761,10 @@ contains
            if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
               write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
            endif
-  
+ 
+           if(write_molden) quick_molden%e_snapshots(jscf, quick_molden%iexport_snapshot) &
+                            = quick_qm_struct%Eel+quick_qm_struct%Ecore 
+ 
            flush(ioutfile)
   
         endif
@@ -779,7 +783,11 @@ contains
 #endif
         if (quick_method%debug)  call debug_SCF(jscf)
      enddo
-  
+
+     if(master .and. write_molden) then 
+         quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
+     endif
+
 #if defined CUDA || defined CUDA_MPIV
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.

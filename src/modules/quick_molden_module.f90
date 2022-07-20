@@ -183,7 +183,7 @@ subroutine initialize_molden(self, ierr)
     integer :: dimy
 
     self%iMoldenFile = iMoldenFile
-    self%iexport_snapshot=0
+    self%iexport_snapshot=1
     dimy = 1
     if(quick_method%opt) dimy = quick_method%iopt
 
