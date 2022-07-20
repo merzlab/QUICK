@@ -20,7 +20,20 @@ module quick_molden_module
     public :: initializeExport, finalizeExport, exportCoordinates, exportBasis, exportMO
 
     type quick_molden_type
-        integer :: iMoldenFile
+      integer :: iMoldenFile
+
+      ! number of scf iterations to converge
+      integer, dimension(:), allocatable :: nscf_snapshots
+
+      ! scf energy during each iteration
+      double precision,dimension(:,:),allocatable :: e_snapshots
+
+      ! geometry during optimization
+      double precision,dimension(:,:,:),allocatable :: xyz_snapshots
+
+      ! counter to keep track of number of snapshots
+      integer :: iexport_snapshot
+
     end type quick_molden_type
 
     type (quick_molden_type),save:: quick_molden
@@ -162,13 +175,22 @@ end subroutine write_mo
 subroutine initialize_molden(self, ierr)
     
     use quick_files_module, only : iMoldenFile, moldenFileName
-
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: natom
     implicit none
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
-    integer :: i, j
+    integer :: dimy
 
     self%iMoldenFile = iMoldenFile
+    self%iexport_snapshot=0
+    dimy = 1
+    if(quick_method%opt) dimy = quick_method%iopt
+
+    ! allocate memory
+    if(.not. allocated(self%nscf_snapshots)) allocate(self%nscf_snapshots(quick_method%iscf))
+    if(.not. allocated(self%e_snapshots)) allocate(self%e_snapshots(quick_method%iscf, dimy))
+    if(.not. allocated(self%xyz_snapshots)) allocate(self%xyz_snapshots(3, natom, dimy))
 
     ! open file
     call quick_open(self%iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
@@ -182,6 +204,11 @@ subroutine finalize_molden(self, ierr)
     implicit none
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
+
+    ! deallocate memory
+    if(allocated(self%nscf_snapshots)) deallocate(self%nscf_snapshots)
+    if(allocated(self%e_snapshots)) deallocate(self%e_snapshots)
+    if(allocated(self%xyz_snapshots)) deallocate(self%xyz_snapshots)
 
     ! close file
     close(self%iMoldenFile)
