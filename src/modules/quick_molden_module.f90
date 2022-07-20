@@ -115,10 +115,31 @@ subroutine write_mo(self, ierr)
 
     use quick_basis_module, only: quick_basis, nbasis
     use quick_calculated_module, only: quick_qm_struct
+    use quick_scratch_module
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr    
-    integer :: i, j
+    integer :: i, j, k
+    double precision :: holdij
+
+    ! calculate occupation numbers
+    do i=1,nbasis
+        do j=1,nbasis
+            holdij = 0.0d0
+            do k=1,nbasis
+                holdij = holdij + quick_qm_struct%dense(k,i)*quick_qm_struct%s(k,j)
+            enddo
+            quick_scratch%hold(i,j) = holdij
+        enddo
+    enddo
+
+#if defined(CUDA) || defined(CUDA_MPIV)
+           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+#else
+           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+#endif
 
     write(self%iMoldenFile, '("[MO]")')
 
@@ -127,9 +148,13 @@ subroutine write_mo(self, ierr)
         write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%E(i)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
+        ! write orbital occupation numbers
+        write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') quick_scratch%hold(i,i) 
+
+        ! write molecular orbital coefficients        
         do j=1, nbasis
             write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(j,i)
-        enddo 
+        enddo
     enddo
 
 end subroutine write_mo
