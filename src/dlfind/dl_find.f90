@@ -345,6 +345,8 @@ subroutine dlf_run(ierr2 &
   use dlf_allocate, only: allocate,deallocate
   use quick_molspec_module, only: xyz, quick_molspec
   use quick_method_module,only: quick_method
+  use quick_files_module, only: write_molden
+  use quick_molden_module, only: quick_molden, exportSCF, exportOPT
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -1017,6 +1019,12 @@ subroutine dlf_run(ierr2 &
 !      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
        xyz(jat,iat)=glob%xcoords(jat,iat)
     enddo
+
+  if(write_molden) then
+      quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot)=xyz(:,:)
+      quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
+  endif
+
  enddo
 
   end do ! main simulation cycle
@@ -1067,6 +1075,12 @@ subroutine dlf_run(ierr2 &
       write(stdout,*)
     end if
   end if
+
+  if(write_molden) then
+      call exportSCF(quick_molden, ierr2)
+      call exportOPT(quick_molden, ierr2)
+  endif
+
 
   ! calculate the qts rate if converged
   if(glob%icoord==190.and.tconv.and.glob%iopt/=12.and.glob%havehessian) then

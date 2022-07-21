@@ -37,7 +37,7 @@ contains
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
      use quick_exception_module
-     use quick_molden_module, only: quick_molden
+     use quick_molden_module, only: quick_molden, exportSCF, exportOPT
      implicit double precision(a-h,o-z)
 
      logical :: done,diagco
@@ -388,6 +388,12 @@ contains
 
 
         call PrtAct(ioutfile,"Finish Optimization Job")
+
+        if(write_molden) then
+            call exportSCF(quick_molden, ierr)
+            call exportOPT(quick_molden, ierr)
+        endif
+
      endif
 
      return
