@@ -143,20 +143,9 @@ subroutine write_mo(self, ierr)
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr    
     integer :: i, j, k
-    double precision :: holdij
     character(len=5) :: lbl1
 
     ! calculate occupation numbers
-    do i=1,nbasis
-        do j=1,nbasis
-            holdij = 0.0d0
-            do k=1,nbasis
-                holdij = holdij + quick_qm_struct%dense(k,i)*quick_qm_struct%s(k,j)
-            enddo
-            quick_scratch%hold(i,j) = holdij
-        enddo
-    enddo
-
 #if defined(CUDA) || defined(CUDA_MPIV)
            call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
