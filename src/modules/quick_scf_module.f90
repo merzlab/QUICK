@@ -152,7 +152,10 @@ contains
 
      if(write_molden) then
          call exportMO(quick_molden, ierr)
-         if(.not.quick_method%opt) call exportSCF(quick_molden, ierr)
+         if(.not.quick_method%opt) then
+             quick_molden%iexport_snapshot=quick_molden%iexport_snapshot+1
+             call exportSCF(quick_molden, ierr)
+         endif
      endif
 
      return
