@@ -41,3 +41,6 @@ cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
 		${CUDA_DEVICE_CODE_FLAGS} 
 		-I${CMAKE_CURRENT_SOURCE_DIR}/..
 		-DCUDA)
+if(INSIDE_AMBER)
+	target_link_libraries(xc_cuda libcew)
+endif()

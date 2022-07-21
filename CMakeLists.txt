@@ -228,6 +228,11 @@ if(QUICK_DEBUG OR QUICK_DEBUG_TIME)
 	add_definitions(-DDEBUGTIME)
 endif()
 
+# extra compiling flags
+if(INSIDE_AMBER)
+  add_definitions(-DCEW)
+endif()
+
 # CUDA compiler flags
 # --------------------------------------------------------------------
 include(QUICKCudaConfig)
@@ -275,9 +280,6 @@ if(INSIDE_AMBER)
 
 	# install tests dir
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
-
-        # add flag to compile cew
-        add_definitions(-DCEW)
 
 else()
 	# Standalone install

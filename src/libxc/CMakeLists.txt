@@ -131,6 +131,9 @@ add_library(xc STATIC ${LIBXC_C_SOURCES} ${LIBXC_FORTRAN_SOURCES})
 set_property(TARGET xc PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 target_include_directories(xc PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(xc PUBLIC USE_CMAKE_MANGLING)
+if(INSIDE_AMBER)
+    target_link_libraries(xc libcew)
+endif()
 config_module_dirs(xc libxc/serial)
 
 # supress maybe uninitialized warnings
@@ -143,6 +146,9 @@ if(CUDA)
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
 	target_compile_definitions(xc_gpu PRIVATE CUDA)
+	if(INSIDE_AMBER)
+		target_link_libraries(xc_gpu libcew)
+	endif()
 	config_module_dirs(xc_gpu libxc/gpu)
 endif()
 
