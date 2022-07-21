@@ -34,17 +34,17 @@ else()
 		#SM6.0 = GP100 / P100 = DGX-1
 		set(SM60FLAGS -gencode arch=compute_60,code=sm_60)
 		#SM5.3 = GM200 [Grid] = M60, M40?
-		set(SM53FLAGS -gencode arch=compute_53,code=sm_53)
+		set(SM53FLAGS -gencode arch=compute_53,code=sm_53 -DUSE_LEGACY_ATOMICS)
 		#SM5.2 = GM200 = GTX-Titan-X, M6000 etc.
-		set(SM52FLAGS -gencode arch=compute_52,code=sm_52)
+		set(SM52FLAGS -gencode arch=compute_52,code=sm_52 -DUSE_LEGACY_ATOMICS)
 		#SM5.0 = GM204 = GTX980, 970 etc
-		set(SM50FLAGS -gencode arch=compute_50,code=sm_50)
+		set(SM50FLAGS -gencode arch=compute_50,code=sm_50 -DUSE_LEGACY_ATOMICS)
 		#SM3.7 = GK210 = K80
-		set(SM37FLAGS -gencode arch=compute_37,code=sm_37)
+		set(SM37FLAGS -gencode arch=compute_37,code=sm_37 -DUSE_LEGACY_ATOMICS)
 		#SM3.5 = GK110 + 110B = K20, K20X, K40, GTX780, GTX-Titan, GTX-Titan-Black, GTX-Titan-Z
-		set(SM35FLAGS -gencode arch=compute_35,code=sm_35)
+		set(SM35FLAGS -gencode arch=compute_35,code=sm_35 -DUSE_LEGACY_ATOMICS)
 		#SM3.0 = GK104 = K10, GTX680, 690 etc.
-		set(SM30FLAGS -gencode arch=compute_30,code=sm_30)
+		set(SM30FLAGS -gencode arch=compute_30,code=sm_30 -DUSE_LEGACY_ATOMICS)
 	
 		message(STATUS "CUDA version ${CUDA_VERSION} detected")
 		
