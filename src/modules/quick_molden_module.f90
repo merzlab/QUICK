@@ -17,7 +17,8 @@ module quick_molden_module
     private
 
     public :: quick_molden
-    public :: initializeExport, finalizeExport, exportCoordinates, exportBasis, exportMO
+    public :: initializeExport, finalizeExport, exportCoordinates, exportBasis, exportMO, &
+              exportSCF, exportOPT
 
     type quick_molden_type
       integer :: iMoldenFile
@@ -57,6 +58,15 @@ module quick_molden_module
     interface exportMO
         module procedure write_mo
     end interface exportMO
+
+    interface exportSCF
+        module procedure write_scf
+    end interface exportSCF
+
+    interface exportOPT
+        module procedure write_opt
+    end interface exportOpt
+
 contains
 
 subroutine write_coordinates(self, ierr)
@@ -134,6 +144,7 @@ subroutine write_mo(self, ierr)
     integer, intent(out) :: ierr    
     integer :: i, j, k
     double precision :: holdij
+    character(len=5) :: lbl1
 
     ! calculate occupation numbers
     do i=1,nbasis
@@ -155,9 +166,10 @@ subroutine write_mo(self, ierr)
 #endif
 
     write(self%iMoldenFile, '("[MO]")')
-
+    
     do i=1, nbasis
-        write(self%iMoldenFile, '(2x, "Sym= a", I5)') i
+        write(lbl1,'(I5)') i
+        write(self%iMoldenFile, '(2x, A10)') "Sym= a"//trim(adjustl(lbl1))
         write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%E(i)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
@@ -171,6 +183,59 @@ subroutine write_mo(self, ierr)
     enddo
 
 end subroutine write_mo
+
+subroutine write_scf(self, ierr)
+
+    implicit none
+    type (quick_molden_type), intent(inout) :: self
+    integer, intent(out) :: ierr
+    integer :: i, j
+
+    write(self%iMoldenFile, '("[SCFCONV]")')
+
+    do i=1, self%iexport_snapshot-1
+        write(self%iMoldenFile, '(2x, "scf-cycle", 2x, I3, 2x, "THROUGH", 2x, I3)') 1, self%nscf_snapshots(i)
+        do j=1, self%nscf_snapshots(i)
+            write(self%iMoldenFile, '(2x, E16.10)') self%e_snapshots(j,i)
+        enddo
+    enddo
+
+end subroutine write_scf
+
+subroutine write_opt(self, ierr)
+
+    use quick_molspec_module, only: quick_molspec, natom
+    use quick_constants_module, only : symbol, BOHRS_TO_A
+    implicit none
+    type (quick_molden_type), intent(inout) :: self
+    integer, intent(out) :: ierr
+    integer :: i, j, k, isum
+    character(len=8) :: lbl1
+    character(len=2) :: lbl2
+
+    write(self%iMoldenFile, '("[GEOCONV]")')
+
+    write(self%iMoldenFile, '("energy")')
+    do i=1, self%iexport_snapshot-1
+        write(self%iMoldenFile, '(2x, E16.10)') self%e_snapshots(self%nscf_snapshots(i),i)
+    enddo
+
+    write(self%iMoldenFile, '("[GEOMETRIES] (XYZ)")')
+    write(self%iMoldenFile, '(2x, I5)') natom*(self%iexport_snapshot-1)
+    write(self%iMoldenFile, '("")')
+    
+    isum=0
+    do k=1, self%iexport_snapshot-1
+        do i=1,natom
+            isum=isum+1
+            write(lbl1,'(I8)') isum
+            write(lbl2,'(A2)') symbol(quick_molspec%iattype(i))
+            write(self%iMoldenFile,*) "atom_"//trim(adjustl(lbl1))//"_"//trim(adjustl(lbl2)),&
+            (self%xyz_snapshots(j,i,k)*BOHRS_TO_A,j=1,3)
+        enddo    
+    enddo
+
+end subroutine write_opt
 
 subroutine initialize_molden(self, ierr)
     
