@@ -1019,13 +1019,12 @@ subroutine dlf_run(ierr2 &
 !      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
        xyz(jat,iat)=glob%xcoords(jat,iat)
     enddo
+ enddo
 
   if(write_molden) then
       quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot)=xyz(:,:)
       quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
   endif
-
- enddo
 
   end do ! main simulation cycle
 
