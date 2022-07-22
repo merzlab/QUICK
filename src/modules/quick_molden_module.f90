@@ -140,37 +140,71 @@ subroutine write_mo(self, ierr)
     use quick_basis_module, only: quick_basis, nbasis
     use quick_calculated_module, only: quick_qm_struct
     use quick_scratch_module
+    use quick_molspec_module, only: quick_molspec
+    use quick_method_module, only: quick_method
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr    
-    integer :: i, j, k
+    integer :: i, j, k, neleca, nelecb
     character(len=5) :: lbl1
-
-    ! calculate occupation numbers
-#if defined(CUDA) || defined(CUDA_MPIV)
-           call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-#endif
+    double precision :: occnum, occval
 
     write(self%iMoldenFile, '("[MO]")')
-    
+
+    if(.not.quick_method%unrst) then
+        neleca = quick_molspec%nElec/2
+        occval = 2.0d0
+    else
+        neleca = quick_molspec%nElec
+        nelecb = quick_molspec%nElecb
+        occval = 1.0d0
+    endif
+
     do i=1, nbasis
+        if(neleca .gt. 0 ) then
+            occnum=occval
+            neleca=neleca-1
+        else
+            occnum=0.0d0
+        endif
+
         write(lbl1,'(I5)') i
-        write(self%iMoldenFile, '(2x, A10)') "Sym= a"//trim(adjustl(lbl1))
+        write(self%iMoldenFile, '(A11)') "Sym= a"//trim(adjustl(lbl1))
         write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%E(i)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
         ! write orbital occupation numbers
-        write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') quick_scratch%hold(i,i) 
+        write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum 
 
         ! write molecular orbital coefficients        
         do j=1, nbasis
             write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(j,i)
         enddo
     enddo
+
+    if(quick_method%unrst) then
+        do i=1, nbasis
+            if(nelecb .gt. 0 ) then
+                occnum=occval
+                nelecb=nelecb-1
+            else
+                occnum=0.0d0
+            endif
+    
+            write(lbl1,'(I5)') i
+            write(self%iMoldenFile, '(A11)') "Sym= b"//trim(adjustl(lbl1))
+            write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%Eb(i)
+            write(self%iMoldenFile, '(2x, "Spin= Beta" )')
+    
+            ! write orbital occupation numbers
+            write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum
+    
+            ! write molecular orbital coefficients        
+            do j=1, nbasis
+                write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%cob(j,i)
+            enddo
+        enddo
+    endif
 
 end subroutine write_mo
 
