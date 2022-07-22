@@ -130,6 +130,7 @@ subroutine write_basis_info(self, ierr)
                 endif
             endif
         enddo
+        write(self%iMoldenFile, '("")')
     enddo
 
 end subroutine write_basis_info
