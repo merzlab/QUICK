@@ -1077,7 +1077,7 @@ subroutine dlf_run(ierr2 &
 
   if(write_molden) then
       call exportSCF(quick_molden, ierr2)
-      call exportOPT(quick_molden, ierr2)
+!      call exportOPT(quick_molden, ierr2)
   endif
 
 

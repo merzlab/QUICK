@@ -391,7 +391,7 @@ contains
 
         if(write_molden) then
             call exportSCF(quick_molden, ierr)
-            call exportOPT(quick_molden, ierr)
+!            call exportOPT(quick_molden, ierr)
         endif
 
      endif
