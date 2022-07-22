@@ -79,10 +79,10 @@ subroutine write_coordinates(self, ierr)
     integer :: i, j
 
     ! write atomic labels and coordinates
-    write(self%iMoldenFile, '("[Atoms] (Ang)")')
+    write(self%iMoldenFile, '("[Atoms] (AU)")')
     do i=1,natom
         write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
-        symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i)*BOHRS_TO_A,j=1,3)
+        symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i),j=1,3)
     enddo
 
 end subroutine write_coordinates
