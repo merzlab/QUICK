@@ -168,19 +168,19 @@ subroutine HFHessian
 
 
   !---------------------------------------------------------------------
-  !  1) The derivative of the nuclear repulsion.
+  !  1) The second derivative of the nuclear repulsion.
   !---------------------------------------------------------------------
 
   call get_nuclear_repulsion_hessian
 
   !---------------------------------------------------------------------
-  !  2) One electron gradients
+  !  2) The second derivative of one electron term
   !---------------------------------------------------------------------
 
   call get_oneen_hessian
 
   !---------------------------------------------------------------------
-  !  3) The derivative of the electron repulsion term
+  !  3) The second derivative of the electron repulsion term
   !---------------------------------------------------------------------
 
   call get_eri_hessian
@@ -384,8 +384,6 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
      idimA = 2*(nbasis-(quick_molspec%nelec/2))*(quick_molspec%nelec/2)
   endif
 
-print*,nbasis,quick_molspec%nelec,idimA
-
 !  allocate(CPHFA(idimA,idimA))
 !  allocate(CPHFB(idimA,natom*3))
   allocate(W(idimA,idimA))
@@ -516,7 +514,6 @@ print*,nbasis,quick_molspec%nelec,idimA
         ! (A^iBUform transposed)
         ! by A and storing it in the CPHFfile, then transposing the file onto W.
 
-
         if (change > 1.D-10) then
            open(iCPHFfile,file=CPHFfilename,status='unknown')
            do I=1,idimA
@@ -553,15 +550,34 @@ print*,nbasis,quick_molspec%nelec,idimA
      ! use them with the first derivatives of the integrals to form another
      ! part of the hessian.
 
-     call hfdmxderuse(IDX)
+  !---------------------------------------------------------------------
+  !  4.1: The derivative of one electron term
+  !---------------------------------------------------------------------
+ 
+     call get_cphf_oneen_hessian(IDX)
+
+  !---------------------------------------------------------------------
+  !  4.2: The derivative of the electron repulsion term
+  !---------------------------------------------------------------------
+
+!     call get_cphf_eri_hessian
+
+  !---------------------------------------------------------------------
+  !  4.3: The negative of the derivative of energy weighted density
+  !       matrix element i j with the  derivative of the ij overlap 
+  !---------------------------------------------------------------------
+
+!     call get_cphf_ovp_hessian
+
+!     call hfdmxderuse(IDX)
 
      call Ewtdmxder(IDX)
 
-!  write(ioutfile,*)
-!  write(ioutfile,*)'Inside CPHF:', IdX
-!  do Iatm=1,natom*3
-!     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
-!  enddo
+  write(ioutfile,*)
+  write(ioutfile,*)'After CPHF:', IdX
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
 
   enddo
 
@@ -625,6 +641,12 @@ subroutine get_ke_ovp_hessian
     enddo
   enddo
 #endif
+
+  write(ioutfile,*)
+  write(ioutfile,*)'Energy Weighted Density Matrix', IdX
+  do I=1,nbasis
+    write(ioutfile,*)(quick_scratch%hold(J,I),J=1,nbasis)
+  enddo
 
   ! Before we begin this, a quick note on the second derivative of Gaussian
   ! orbitals.  If there is only one center, the second derivative is zero.
@@ -3632,6 +3654,342 @@ end subroutine hess2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 
+subroutine get_cphf_oneen_hessian(IDX)
+  use allmod
+  use quick_overlap_module, only: gpt
+  use quick_oei_module, only: ekinetic
+  implicit double precision(a-h,o-z)
+  dimension GRADIENT2(natom*3)
+  double precision g_table(200),a,b
+  integer :: Iatm, Imomentum, IIsh, JJsh, i, j
+
+  do Iatm=1,natom*3
+     GRADIENT2(iatm)=0.d0
+  enddo
+
+  do Iatm=1,natom*3
+     quick_qm_struct%gradient2(iatm)=0.d0
+  enddo
+
+  !---------------------------------------------------------------------
+  !  4.1.1: The derivative of the kinetic term times the derivative
+  !         of density matrix element ij
+  !---------------------------------------------------------------------
+
+  call get_cphf_kinetic_hessian
+
+  !---------------------------------------------------------------------
+  !  4.1.2: The derivative of the 1 electron nuclear attraction term ij
+  !         times the derivative of density matrix element ij
+  !---------------------------------------------------------------------
+
+  do IIsh=1,jshell
+     do JJsh=IIsh,jshell
+        call attrashellhess(IIsh,JJsh)
+     enddo
+  enddo
+
+  ! START HERE
+  do I=1,nbasis
+     ! Neglect all the (ii|ii) integrals, as they move with the core.
+
+     do J=I+1,nbasis
+
+        ! Find  all the (ii|jj) integrals.
+        call graddmx2elec(I,I,J,J,GRADIENT2)
+
+        ! Find  all the (ij|jj) integrals.
+        call graddmx2elec(I,J,J,J,GRADIENT2)
+
+        ! Find  all the (ii|ij) integrals.
+        call graddmx2elec(I,I,I,J,GRADIENT2)
+
+        ! Find all the (ij|ij) integrals
+        call graddmx2elec(I,J,I,J,GRADIENT2)
+
+        do K=J+1,nbasis
+
+           ! Find all the (ij|ik) integrals where j>i,k>j
+           call graddmx2elec(I,J,I,K,GRADIENT2)
+
+           ! Find all the (ij|kk) integrals where j>i, k>j.
+           call graddmx2elec(I,J,K,K,GRADIENT2)
+
+           ! Find all the (ik|jj) integrals where j>i, k>j.
+           call graddmx2elec(I,K,J,J,GRADIENT2)
+
+           ! Find all the (ii|jk) integrals where j>i, k>j.
+           call graddmx2elec(I,I,J,K,GRADIENT2)
+
+        enddo
+
+        do K=I+1,nbasis-1
+
+           do L=K+1,nbasis
+
+              ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
+              ! can be equal.
+
+              call graddmx2elec(I,J,K,L,GRADIENT2)
+
+           enddo
+        enddo
+     enddo
+  enddo
+
+  do I=1,natom*3
+     quick_qm_struct%gradient2(I) = quick_qm_struct%gradient2(I) + GRADIENT2(I)
+  enddo
+
+  do I=1,natom*3
+     quick_qm_struct%hessian(I,idX) = quick_qm_struct%hessian(I,idX) + quick_qm_struct%gradient2(I)
+  enddo
+
+  return
+
+end subroutine get_cphf_oneen_hessian
+
+subroutine get_cphf_kinetic_hessian
+  use allmod
+  use quick_overlap_module, only: gpt
+  use quick_oei_module, only: ekinetic
+  implicit double precision(a-h,o-z)
+  double precision g_table(200),a,b
+  integer i,j,k,ii,jj,kk,g_count
+  logical :: ijcon
+
+  do Ibas=1,nbasis
+     ISTART = (quick_basis%ncenter(Ibas)-1) *3
+     do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
+        JSTART = (quick_basis%ncenter(Jbas)-1) *3
+        DENSEJI = quick_scratch%hold(Jbas,Ibas)+quick_scratch%hold2(Jbas,Ibas)
+        
+        do Imomentum=1,3
+
+           ijcon = .true.
+           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+  
+           ijcon = .true.
+           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+
+        enddo
+     enddo
+  enddo 
+
+return
+
+end subroutine get_cphf_kinetic_hessian
+
+subroutine attrashellhess(IIsh,JJsh)
+  use allmod
+  use quick_overlap_module, only: opf, overlap
+  implicit double precision(a-h,o-z)
+  dimension aux(0:20)
+  double precision AA(3),BB(3),CC(3),PP(3)
+  common /xiaoattra/attra,aux,AA,BB,CC,PP,g
+
+  double precision RA(3),RB(3),RP(3), valopf, g_table(200)
+
+  Ax=xyz(1,quick_basis%katom(IIsh))
+  Ay=xyz(2,quick_basis%katom(IIsh))
+  Az=xyz(3,quick_basis%katom(IIsh))
+
+  Bx=xyz(1,quick_basis%katom(JJsh))
+  By=xyz(2,quick_basis%katom(JJsh))
+  Bz=xyz(3,quick_basis%katom(JJsh))
+
+  ! The purpose of this subroutine is to calculate the nuclear attraction
+  ! of an electron  distributed between gtfs with orbital exponents a
+  ! and b on A and B with angular momentums defined by i,j,k (a's x, y
+  ! and z exponents, respectively) and ii,jj,k and kk on B with the core at
+  ! (Cx,Cy,Cz) with charge Z. m is the "order" of the integral which
+  ! arises from the recusion relationship.
+
+  ! The this is taken from the recursive relation found in Obara and Saika,
+  ! J. Chem. Phys. 84 (7) 1986, 3963.
+
+  ! The first step is generating all the necessary auxillary integrals.
+  ! These are (0|1/rc|0)^(m) = 2 Sqrt (g/Pi) (0||0) Fm(g(Rpc)^2)
+  ! The values of m range from 0 to i+j+k+ii+jj+kk.
+
+  NII2=quick_basis%Qfinal(IIsh)
+  NJJ2=quick_basis%Qfinal(JJsh)
+  Maxm=NII2+NJJ2+1+1
+
+  do ips=1,quick_basis%kprim(IIsh)
+     a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
+     do jps=1,quick_basis%kprim(JJsh)
+        b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
+
+        valopf = opf(a, b, quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)),&
+        quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)), Ax, Ay, Az, Bx, By, Bz)
+
+        if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+          g = a+b
+          Px = (a*Ax + b*Bx)/g
+          Py = (a*Ay + b*By)/g
+          Pz = (a*Az + b*Bz)/g
+          g_table = g**(-1.5)
+
+          constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
+                * 2.d0 * sqrt(g/Pi)
+
+          do iatom=1,natom+quick_molspec%nextatom
+             if(quick_basis%katom(IIsh).eq.iatom.and.quick_basis%katom(JJsh).eq.iatom)then
+                 continue
+              else
+                if(iatom<=natom)then
+                 Cx=xyz(1,iatom)
+                 Cy=xyz(2,iatom)
+                 Cz=xyz(3,iatom)
+                 Z=-1.0d0*quick_molspec%chg(iatom)
+                else
+                 Cx=quick_molspec%extxyz(1,iatom-natom)
+                 Cy=quick_molspec%extxyz(2,iatom-natom)
+                 Cz=quick_molspec%extxyz(3,iatom-natom)
+                 Z=-1.0d0*quick_molspec%extchg(iatom-natom)
+                endif
+
+                PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
+
+                U = g* PCsquare
+                !    Maxm = i+j+k+ii+jj+kk
+                call FmT(Maxm,U,aux)
+                do L = 0,maxm
+                   aux(L) = aux(L)*constant*Z
+                   attraxiao(1,1,L)=aux(L)
+                enddo
+
+                do L = 0,maxm-1
+                   attraxiaoopt(1,1,1,L)=2.0d0*g*(Px-Cx)*aux(L+1)
+                   attraxiaoopt(2,1,1,L)=2.0d0*g*(Py-Cy)*aux(L+1)
+                   attraxiaoopt(3,1,1,L)=2.0d0*g*(Pz-Cz)*aux(L+1)
+                enddo
+
+                ! At this point all the auxillary integrals have been
+                ! calculated.
+                ! It is now time to decompase the attraction integral to it's
+                ! auxillary integrals through the recursion scheme.  To do
+                ! this we use
+                ! a recursive function.
+
+                !    attraction =
+                !    attrecurse(i,j,k,ii,jj,kk,0,aux,Ax,Ay,Az,Bx,By,Bz, &
+
+                      !    Cx,Cy,Cz,Px,Py,Pz,g)
+                NIJ1=10*NII2+NJJ2
+
+                call nuclearattrahess(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
+
+                      Cx,Cy,Cz,Px,Py,Pz,iatom)
+
+             endif
+
+          enddo
+        endif
+     enddo
+  enddo
+
+  ! Xiao HE remember to multiply Z   01/12/2008
+  !    attraction = attraction*(-1.d0)* Z
+  return
+
+end subroutine attrashellhess
+
+subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
+  use allmod
+  use quick_overlap_module, only: gpt, opf, overlap
+  use quick_oei_module, only: ekinetic
+  implicit double precision(a-h,o-z)
+  logical :: ijcon
+  double precision g_table(200), valopf
+  integer i,j,k,ii,jj,kk,g_count
+
+  dKEM = 0.0d0
+
+  Ax = xyz(1,quick_basis%ncenter(Jbas))
+  Bx = xyz(1,quick_basis%ncenter(Ibas))
+  Ay = xyz(2,quick_basis%ncenter(Jbas))
+  By = xyz(2,quick_basis%ncenter(Ibas))
+  Az = xyz(3,quick_basis%ncenter(Jbas))
+  Bz = xyz(3,quick_basis%ncenter(Ibas))
+
+  itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+
+  ii = itype(1,Ibas)
+  jj = itype(2,Ibas)
+  kk = itype(3,Ibas)
+  i = itype(1,Jbas)
+  j = itype(2,Jbas)
+  k = itype(3,Jbas)
+  g_count = i+ii+j+jj+k+kk+2
+
+  do Icon=1,ncontract(Ibas)
+     b = aexp(Icon,Ibas)
+     do Jcon=1,ncontract(Jbas)
+        a = aexp(Jcon,Jbas)
+
+        valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                 Ay, Az, Bx, By, Bz)
+
+        if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+          call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
+          if(ijcon) then
+             mcon = Icon
+          else
+             mcon = Jcon
+          endif
+          dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
+          dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+          *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+        endif
+     enddo
+  enddo
+
+  itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+  if (itype(Imomentum,mbas) /= 0) then
+     itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+     ii = itype(1,Ibas)
+     jj = itype(2,Ibas)
+     kk = itype(3,Ibas)
+     i = itype(1,Jbas)
+     j = itype(2,Jbas)
+     k = itype(3,Jbas)
+     g_count = i+ii+j+jj+k+kk+2
+
+     do Icon=1,ncontract(Ibas)
+        b = aexp(Icon,Ibas)
+        do Jcon=1,ncontract(Jbas)
+          a = aexp(Jcon,Jbas)
+
+          valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                   Ay, Az, Bx, By, Bz)
+
+          if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+            call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
+            dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
+            dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+            *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+          endif
+        enddo
+     enddo
+
+     itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+  endif
+
+  quick_qm_struct%gradient2(mstart+Imomentum) = quick_qm_struct%gradient2(mstart+Imomentum) &
+  +dKEM*DENSEJI*2.d0
+
+  return
+
+end subroutine get_hess_ijbas_deriv
 
 subroutine hfdmxderuse(IDX)
   use allmod
@@ -3811,8 +4169,7 @@ subroutine hfdmxderuse(IDX)
                 +dKEJ*DENSEJI*2.d0
         enddo
      enddo
-  enddo
-
+  enddo 
 
   ! 2)  The derivative of the 1 electron nuclear attraction term ij times
   ! the density matrix element ij.
@@ -4978,6 +5335,17 @@ subroutine dmxderiv(IDX,BU)
      enddo
   enddo
 
+write(ioutfile,*)
+write(ioutfile,*)'scratch%hold'
+do Ibas=1,nbasis
+   write(ioutfile,'(9(F7.4,7X))')(quick_scratch%hold(Jbas,Ibas),Jbas=1,nbasis)
+enddo
+
+write(ioutfile,*)
+write(ioutfile,*)'scratch%hold2'
+do Ibas=1,nbasis
+   write(ioutfile,'(9(F7.4,7X))')(quick_scratch%hold2(Jbas,Ibas),Jbas=1,nbasis)
+enddo
   return
 end subroutine dmxderiv
 
