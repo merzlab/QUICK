@@ -150,10 +150,13 @@ __global__ void getcew_quad_kernel()
 
           QUICKDouble _tmp = phi * phi2 * dfdr * weight;
 
+#ifdef USE_LEGACY_ATOMICS
           QUICKULL val1 = (QUICKULL) (fabs( _tmp * OSCALE) + (QUICKDouble)0.5);
           if ( _tmp * weight < (QUICKDouble)0.0) val1 = 0ull - val1;
           QUICKADD(LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), val1);
-
+#else
+          atomicAdd(&LOC2(devSim_dft.o, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp);
+#endif
         }
       }
     }
