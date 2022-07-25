@@ -171,7 +171,7 @@ __global__ void cshell_getcew_quad_grad_kernel()
 
   //declare smem grad vector
   extern __shared__ QUICKULL smem_buffer[];
-  QUICKULL* smemGrad=(QUICKDouble*)smem_buffer;
+  QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
 
   // initialize smem grad
   for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
