@@ -514,6 +514,8 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
         ! (A^iBUform transposed)
         ! by A and storing it in the CPHFfile, then transposing the file onto W.
 
+print*, BU
+
         if (change > 1.D-10) then
            open(iCPHFfile,file=CPHFfilename,status='unknown')
            do I=1,idimA
@@ -554,7 +556,7 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
   !  4.1: The derivative of one electron term
   !---------------------------------------------------------------------
  
-     call get_cphf_oneen_hessian(IDX)
+     call get_cphf_oneen_hessian(IDX,BU)
 
   !---------------------------------------------------------------------
   !  4.2: The derivative of the electron repulsion term
@@ -571,7 +573,7 @@ if(.not. allocated(quick_qm_struct%cob)) allocate(quick_qm_struct%cob(nbasis,nba
 
 !     call hfdmxderuse(IDX)
 
-     call Ewtdmxder(IDX)
+!     call Ewtdmxder(IDX)
 
   write(ioutfile,*)
   write(ioutfile,*)'After CPHF:', IdX
@@ -643,7 +645,7 @@ subroutine get_ke_ovp_hessian
 #endif
 
   write(ioutfile,*)
-  write(ioutfile,*)'Energy Weighted Density Matrix', IdX
+  write(ioutfile,*)'Energy Weighted Density Matrix'
   do I=1,nbasis
     write(ioutfile,*)(quick_scratch%hold(J,I),J=1,nbasis)
   enddo
@@ -3654,14 +3656,15 @@ end subroutine hess2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 
-subroutine get_cphf_oneen_hessian(IDX)
+subroutine get_cphf_oneen_hessian(IDX,BU)
   use allmod
-  use quick_overlap_module, only: gpt
+  use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
+  use quick_cutoff_module, only: cshell_density_cutoff
   implicit double precision(a-h,o-z)
-  dimension GRADIENT2(natom*3)
-  double precision g_table(200),a,b
-  integer :: Iatm, Imomentum, IIsh, JJsh, i, j
+  dimension GRADIENT2(natom*3), temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
+  double precision g_table(200),a,b, BU(*)
+  integer :: Iatm, Imomentum, IIsh, JJsh, i, j,k,ii,jj,kk,g_count
 
   do Iatm=1,natom*3
      GRADIENT2(iatm)=0.d0
@@ -3670,6 +3673,286 @@ subroutine get_cphf_oneen_hessian(IDX)
   do Iatm=1,natom*3
      quick_qm_struct%gradient2(iatm)=0.d0
   enddo
+
+  do Ibas=1,nbasis
+     do Jbas=1,nbasis
+        quick_qm_struct%ewdmx(Jbas,Ibas)=0.d0
+     enddo
+  enddo
+  do Ibas=1,nbasis
+     do Jbas=1,nbasis
+        quick_qm_struct%ewdmx2(Jbas,Ibas)=0.d0
+     enddo
+  enddo
+
+  ! We also need to find out from IDX which atom we are moving and in
+  ! which direction.
+
+  Imomentum=mod(idx,3)
+  if (Imomentum == 0) then
+     Iatom=IDX/3
+     Imomentum = 3
+  else
+     Iatom = (IDX-Imomentum)/3 + 1
+  endif
+
+  ! Now we need to find out where the alpha and beta occupied/virtual
+  ! lines are.
+
+  if (quick_method%unrst) then
+     lastAocc = quick_molspec%nelec
+     lastBocc = quick_molspec%nelecb
+  else
+     lastAocc = quick_molspec%nelec/2
+     lastBocc = lastAocc
+  endif
+  iBetastart = lastAocc*(nbasis-lastAocc)
+
+  call duhfoperatorA(IDX)
+
+  do iAocc = 1,lastAocc
+     do iAocc2 = 1,lastAocc
+
+        ! K and L are selected.  IDX gave us atom and direction of perturbation.
+
+
+        ! Now we loop over basis functions.  Note that Kbas functions are always
+        ! on center Katom, and the Lbas functions are always not on that center.
+        ! This actually calculates the Skl
+
+        Skl  = 0.d0
+        Fkl  = 0.d0
+        do Kbas = quick_basis%first_basis_function(Iatom),quick_basis%last_basis_function(Iatom)
+           do Lbas = 1,nbasis
+              if (Lbas < quick_basis%first_basis_function(Iatom) .OR. Lbas > quick_basis%last_basis_function(Iatom)) then
+                 Ax = xyz(1,quick_basis%ncenter(Lbas))
+                 Bx = xyz(1,quick_basis%ncenter(Kbas))
+                 Ay = xyz(2,quick_basis%ncenter(Lbas))
+                 By = xyz(2,quick_basis%ncenter(Kbas))
+                 Az = xyz(3,quick_basis%ncenter(Lbas))
+                 Bz = xyz(3,quick_basis%ncenter(Kbas))
+
+                 dSK=0.d0
+                 itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 i = itype(1,Lbas)
+                 j = itype(2,Lbas)
+                 k = itype(3,Lbas)
+                 ii = itype(1,Kbas)
+                 jj = itype(2,Kbas)
+                 kk = itype(3,Kbas)
+                 g_count = i+ii+j+jj+k+kk
+
+                 do Kcon=1,ncontract(Kbas)
+                    do Lcon=1,ncontract(Lbas)
+                       b = aexp(Lcon,Lbas)
+                       a = aexp(Kcon,Kbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+                       dSK = dSK + 2.d0*aexp(Kcon,Kbas)* &
+                            dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
+                      *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+                    enddo
+                 enddo
+                 itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                 if (itype(Imomentum,Kbas) /= 0) then
+                    itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                    i = itype(1,Lbas)
+                    j = itype(2,Lbas)
+                    k = itype(3,Lbas)
+                    ii = itype(1,Kbas)
+                    jj = itype(2,Kbas)
+                    kk = itype(3,Kbas)
+                    g_count = i+ii+j+jj+k+kk
+
+                    do Kcon=1,ncontract(Kbas)
+                       do Lcon=1,ncontract(Lbas)
+                          b = aexp(Lcon,Lbas)
+                          a = aexp(Kcon,Kbas)
+
+                          call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
+                          dSK = dSK - dble(itype(Imomentum,Kbas)+1)* &
+                               dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
+                      *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+
+                       enddo
+                    enddo
+                    itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 endif
+                 Skl=Skl+dSK*(quick_qm_struct%co(Kbas,iAocc)*quick_qm_struct%co(Lbas,iAocc2) + &
+                      quick_qm_struct%co(Lbas,iAocc)*quick_qm_struct%co(Kbas,iAocc2))
+                 Fkl=Fkl+quick_qm_struct%o(Kbas,Lbas)* &
+                 (quick_qm_struct%co(Kbas,iAocc)*quick_qm_struct%co(Lbas,iAocc2) + &
+                 quick_qm_struct%co(Lbas,iAocc)*quick_qm_struct%co(Kbas,iAocc2))
+              endif
+           enddo
+        enddo
+
+        ! Now that we have Skl, we need to add it into the HOLD array, i.e.`
+        ! the density matrix derivative.
+
+        do Ibas=1,nbasis
+           do Jbas=Ibas,nbasis
+              quick_qm_struct%ewdmx(Jbas,Ibas)= quick_qm_struct%ewdmx(Jbas,Ibas)+0.50d0*Fkl* &
+                   (quick_qm_struct%co(Jbas,iAocc)*quick_qm_struct%co(Ibas,iAocc2) + &
+                   quick_qm_struct%co(Jbas,iAocc2)*quick_qm_struct%co(Ibas,iAocc)) - &
+                   0.50d0*(quick_qm_struct%E(Jbas)+quick_qm_struct%E(Ibas))*Skl* &
+                   (quick_qm_struct%co(Jbas,iAocc)*quick_qm_struct%co(Ibas,iAocc2) + &
+                   quick_qm_struct%co(Jbas,iAocc2)*quick_qm_struct%co(Ibas,iAocc))
+           enddo
+        enddo
+     enddo
+  enddo
+
+  ! Now we need to repeat the whole process for the beta kl pairs.
+
+  call duhfoperatorB(IDX)
+
+  do iBocc = 1,lastBocc
+     do iBocc2 = 1,lastBocc
+        ! Now we loop over basis functions.  Note that Ibas functions are always
+        ! on center Iatom, and the Jbas functions are always not on that center.
+        ! This actually calculates the Skl
+
+        Skl  = 0.d0
+        Fkl  = 0.d0
+        do Kbas = quick_basis%first_basis_function(Iatom),quick_basis%last_basis_function(Iatom)
+           do Lbas = 1,nbasis
+              if (Lbas < quick_basis%first_basis_function(Iatom) .OR. Lbas > quick_basis%last_basis_function(Iatom)) then
+                 Ax = xyz(1,quick_basis%ncenter(Lbas))
+                 Bx = xyz(1,quick_basis%ncenter(Kbas))
+                 Ay = xyz(2,quick_basis%ncenter(Lbas))
+                 By = xyz(2,quick_basis%ncenter(Kbas))
+                 Az = xyz(3,quick_basis%ncenter(Lbas))
+                 Bz = xyz(3,quick_basis%ncenter(Kbas))
+
+                 dSK=0.d0
+                 itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 i = itype(1,Lbas)
+                 j = itype(2,Lbas)
+                 k = itype(3,Lbas)
+                 ii = itype(1,Kbas)
+                 jj = itype(2,Kbas)
+                 kk = itype(3,Kbas)
+                 g_count = i+ii+j+jj+k+kk
+
+                 do Kcon=1,ncontract(Kbas)
+                    do Lcon=1,ncontract(Lbas)
+
+                       b = aexp(Lcon,Lbas)
+                       a = aexp(Kcon,Kbas)
+
+                       call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
+                       dSK = dSK + 2.d0*aexp(Kcon,Kbas)* &
+                            dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
+                      *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+                    enddo
+                 enddo
+                 itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                 if (itype(Imomentum,Kbas) /= 0) then
+                    itype(Imomentum,Kbas) = itype(Imomentum,Kbas)-1
+                    i = itype(1,Lbas)
+                    j = itype(2,Lbas)
+                    k = itype(3,Lbas)
+                    ii = itype(1,Kbas)
+                    jj = itype(2,Kbas)
+                    kk = itype(3,Kbas)
+                    g_count = i+ii+j+jj+k+kk
+
+                    do Kcon=1,ncontract(Kbas)
+                       do Lcon=1,ncontract(Lbas)
+                          b = aexp(Lcon,Lbas)
+                          a = aexp(Kcon,Kbas)
+
+                          call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+                          dSK = dSK - dble(itype(Imomentum,Kbas)+1)* &
+                               dcoeff(Lcon,Lbas)*dcoeff(Kcon,Kbas) &
+                      *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+                       enddo
+                    enddo
+                    itype(Imomentum,Kbas) = itype(Imomentum,Kbas)+1
+                 endif
+                 Skl=Skl+dSK*(quick_qm_struct%cob(Kbas,iBocc)*quick_qm_struct%cob(Lbas,iBocc2) + &
+                      quick_qm_struct%cob(Lbas,iBocc)*quick_qm_struct%cob(Kbas,iBocc2))
+                 Fkl=Fkl+quick_qm_struct%o(Kbas,Lbas)* &
+                 (quick_qm_struct%cob(Kbas,iBocc)*quick_qm_struct%cob(Lbas,iBocc2) + &
+                 quick_qm_struct%cob(Lbas,iBocc)*quick_qm_struct%cob(Kbas,iBocc2))
+              endif
+           enddo
+        enddo
+
+        ! Now that we have Skl, we need to add it into the HOLD2 array, i.e.
+        ! the Beta density matrix derivative.
+
+        do Ibas=1,nbasis
+           do Jbas=Ibas,nbasis
+              quick_qm_struct%ewdmx2(Jbas,Ibas)= quick_qm_struct%ewdmx2(Jbas,Ibas)+0.50d0*Fkl* &
+                   (quick_qm_struct%cob(Jbas,iBocc)*quick_qm_struct%cob(Ibas,iBocc2) + &
+                   quick_qm_struct%cob(Jbas,iBocc2)*quick_qm_struct%cob(Ibas,iBocc)) - &
+                   0.50d0*(quick_qm_struct%E(Jbas)+quick_qm_struct%E(Ibas))*Skl* &
+                   (quick_qm_struct%cob(Jbas,iBocc)*quick_qm_struct%cob(Ibas,iBocc2) + &
+                   quick_qm_struct%cob(Jbas,iBocc2)*quick_qm_struct%cob(Ibas,iBocc))
+           enddo
+        enddo
+
+     enddo
+  enddo
+
+
+  ! At this point we have done the occupied-occupied section.  Now do the
+  ! virtual occupied section.  Note that this gives us the completed
+  ! derivative of the density matrix.
+
+
+  ! Alpha first.
+
+  do iAvirt = lastAocc+1,nbasis
+     do iAocc = 1,lastAocc
+
+        ! iAvirt and iAocc form an ai pair.  Find it's location.
+
+        iaCPHF = (iAvirt-lastAocc-1)*lastAocc + iAocc
+
+        ! Now add this into the dmx derivative.
+
+        do Ibas=1,nbasis
+           do Jbas=Ibas,nbasis
+              quick_qm_struct%ewdmx(Jbas,Ibas)= quick_qm_struct%ewdmx(Jbas,Ibas)+BU(iaCPHF)* &
+                   (quick_qm_struct%co(Ibas,iAocc)*quick_qm_struct%co(Jbas,iAvirt)+ &
+                   quick_qm_struct%co(Ibas,iAvirt)*quick_qm_struct%co(Jbas,iAocc))
+           enddo
+        enddo
+     enddo
+  enddo
+
+  ! Now Beta.
+  do iBvirt = lastBocc+1,nbasis
+     do iBocc = 1,lastBocc
+
+        ! iBvirt and iBocc form an ai pair.  Find it's location.
+
+        iaCPHF = (iBvirt-lastBocc-1)*lastBocc + iBocc + ibetastart
+
+        ! Now add this into the dmx derivative.
+
+        do Ibas=1,nbasis
+           do Jbas=Ibas,nbasis
+              quick_qm_struct%ewdmx2(Jbas,Ibas)= quick_qm_struct%ewdmx2(Jbas,Ibas)+BU(iaCPHF)* &
+                   (quick_qm_struct%cob(Ibas,iBocc)*quick_qm_struct%cob(Jbas,iBvirt)+ &
+                   quick_qm_struct%cob(Ibas,iBvirt)*quick_qm_struct%cob(Jbas,iBocc))
+           enddo
+        enddo
+     enddo
+  enddo
+
+  do I=1,nbasis
+     do J=I+1,nbasis
+        quick_qm_struct%ewdmx(I,J) =  quick_qm_struct%ewdmx(J,I)
+        quick_qm_struct%ewdmx2(I,J) =  quick_qm_struct%ewdmx2(J,I)
+     enddo
+  enddo
+
 
   !---------------------------------------------------------------------
   !  4.1.1: The derivative of the kinetic term times the derivative
@@ -3683,11 +3966,13 @@ subroutine get_cphf_oneen_hessian(IDX)
   !         times the derivative of density matrix element ij
   !---------------------------------------------------------------------
 
+  call cshell_density_cutoff
   do IIsh=1,jshell
      do JJsh=IIsh,jshell
         call attrashellhess(IIsh,JJsh)
      enddo
   enddo
+
 
   ! START HERE
   do I=1,nbasis
@@ -3763,14 +4048,14 @@ subroutine get_cphf_kinetic_hessian
      do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
         JSTART = (quick_basis%ncenter(Jbas)-1) *3
         DENSEJI = quick_scratch%hold(Jbas,Ibas)+quick_scratch%hold2(Jbas,Ibas)
-        
+        HOLDJI = quick_qm_struct%ewdmx(Jbas,Ibas)+quick_qm_struct%ewdmx2(Jbas,Ibas)        
         do Imomentum=1,3
 
            ijcon = .true.
-           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI, HOLDJI)
   
-           ijcon = .true.
-           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+           ijcon = .false.
+           call get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI, HOLDJI)
 
         enddo
      enddo
@@ -3897,7 +4182,7 @@ subroutine attrashellhess(IIsh,JJsh)
 
 end subroutine attrashellhess
 
-subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
+subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI, HOLDJI)
   use allmod
   use quick_overlap_module, only: gpt, opf, overlap
   use quick_oei_module, only: ekinetic
@@ -3906,6 +4191,7 @@ subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
   double precision g_table(200), valopf
   integer i,j,k,ii,jj,kk,g_count
 
+  dSM = 0.0d0
   dKEM = 0.0d0
 
   Ax = xyz(1,quick_basis%ncenter(Jbas))
@@ -3930,10 +4216,10 @@ subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
      do Jcon=1,ncontract(Jbas)
         a = aexp(Jcon,Jbas)
 
-        valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
-                 Ay, Az, Bx, By, Bz)
+!        valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+!                 Ay, Az, Bx, By, Bz)
 
-        if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+!        if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
 
           call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
 
@@ -3942,10 +4228,13 @@ subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
           else
              mcon = Jcon
           endif
+             dSM= dSM + 2.d0*aexp(mcon,mbas)* &
+             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+             *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
           dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
           dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
           *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-        endif
+!        endif
      enddo
   enddo
 
@@ -3967,25 +4256,29 @@ subroutine get_hess_ijbas_deriv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENS
         do Jcon=1,ncontract(Jbas)
           a = aexp(Jcon,Jbas)
 
-          valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
-                   Ay, Az, Bx, By, Bz)
+!          valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+!                   Ay, Az, Bx, By, Bz)
 
-          if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+!          if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
 
             call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
 
+               dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
+               dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+               *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
             dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
             *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
-          endif
+!          endif
         enddo
      enddo
 
      itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
   endif
 
-  quick_qm_struct%gradient2(mstart+Imomentum) = quick_qm_struct%gradient2(mstart+Imomentum) &
-  +dKEM*DENSEJI*2.d0
+    quick_qm_struct%gradient2(mstart+Imomentum) = quick_qm_struct%gradient2(mstart+Imomentum) &
+    -dSM*HOLDJI*2.d0 &
+    +dKEM*DENSEJI*2.d0
 
   return
 
@@ -4170,6 +4463,9 @@ subroutine hfdmxderuse(IDX)
         enddo
      enddo
   enddo 
+
+  write(ioutfile,*)
+  write(ioutfile,*)(GRADIENT2(I),I=1,natom*3)
 
   ! 2)  The derivative of the 1 electron nuclear attraction term ij times
   ! the density matrix element ij.
@@ -4418,6 +4714,9 @@ subroutine hfdmxderuse(IDX)
         enddo
      enddo
   enddo
+
+  write(ioutfile,*)
+  write(ioutfile,*)(GRADIENT2(I),I=1,natom*3)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
