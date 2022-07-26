@@ -518,6 +518,7 @@ struct gpu_type {
     cuda_buffer_type<QUICKDouble>*  ptchg_grad;
     cuda_buffer_type<QUICKULL>*     gradULL;
     cuda_buffer_type<QUICKULL>*     ptchg_gradULL;
+    cuda_buffer_type<QUICKDouble>*  cew_grad;
 
     gpu_calculated_type*            gpu_calculated;
     gpu_basis_type*                 gpu_basis;

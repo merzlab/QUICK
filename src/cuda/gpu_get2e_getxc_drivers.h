@@ -388,6 +388,11 @@ extern "C" void gpu_get_oshell_xcgrad_(QUICKDouble *grad)
 extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 {
+
+#if (defined CEW) && !(defined USE_LEGACY_ATOMICS)
+    gpu -> cew_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+#endif
+
         // calculate smem size
         gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
 
@@ -419,6 +424,11 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 
         gpu -> grad -> DownloadSum(grad);
+
+#if (defined CEW) && !(defined USE_LEGACY_ATOMICS)
+        gpu -> cew_grad->DownloadSum(grad);
+        delete gpu -> cew_grad;
+#endif
 
         delete gpu -> grad;
 #ifdef USE_LEGACY_ATOMICS
@@ -585,6 +595,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 #else
 
       gpu->ptchg_grad->Download();
+      cudaMemsetAsync(gpu -> ptchg_grad -> _devData, 0, sizeof(QUICKDouble)*3*gpu->nextatom);
 
 #endif
 
@@ -774,7 +785,11 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
 {
 
+#ifndef USE_LEGACY_ATOMICS
+    gpu -> cew_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+#else
     memset(gpu -> grad -> _hostData, 0, sizeof(QUICKDouble)*3*gpu->natom);
+#endif
 
     // calculate smem size
     gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
@@ -811,6 +826,11 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
 #endif
 
     gpu->grad->DownloadSum(grad);
+
+#ifndef USE_LEGACY_ATOMICS
+    gpu -> cew_grad ->DownloadSum(grad);
+    SAFE_DELETE(gpu -> cew_grad);
+#endif
 
 }
 #endif

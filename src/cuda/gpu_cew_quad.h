@@ -103,7 +103,11 @@ void get_cew_accdens(_gpu_type gpu){
         int Istart = (gpu -> gpu_xcq -> gatm -> _hostData[i]-1) * 3;
 
         for(int j=0; j<3; j++)
+#ifdef USE_LEGACY_ATOMICS
             gpu->grad->_hostData[Istart+j] += cewGrad[j];
+#else
+            gpu -> cew_grad->_hostData[Istart+j] += cewGrad[j];
+#endif
 
     }
 
