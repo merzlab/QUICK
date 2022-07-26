@@ -613,7 +613,8 @@ __device__ __forceinline__ void iclass_grad
     }
     
     
-    
+   
+#ifdef USE_LEGACY_ATOMICS 
     GRADADD(devSim.gradULL[AStart], AGradx);
     GRADADD(devSim.gradULL[AStart + 1], AGrady);
     GRADADD(devSim.gradULL[AStart + 2], AGradz);
@@ -632,7 +633,26 @@ __device__ __forceinline__ void iclass_grad
     GRADADD(devSim.gradULL[DStart], (-AGradx-BGradx-CGradx));
     GRADADD(devSim.gradULL[DStart + 1], (-AGrady-BGrady-CGrady));
     GRADADD(devSim.gradULL[DStart + 2], (-AGradz-BGradz-CGradz));
-    
+#else    
+    atomicAdd(&devSim.grad[AStart], AGradx);
+    atomicAdd(&devSim.grad[AStart + 1], AGrady);
+    atomicAdd(&devSim.grad[AStart + 2], AGradz);
+
+
+    atomicAdd(&devSim.grad[BStart], BGradx);
+    atomicAdd(&devSim.grad[BStart + 1], BGrady);
+    atomicAdd(&devSim.grad[BStart + 2], BGradz);
+
+
+    atomicAdd(&devSim.grad[CStart], CGradx);
+    atomicAdd(&devSim.grad[CStart + 1], CGrady);
+    atomicAdd(&devSim.grad[CStart + 2], CGradz);
+
+
+    atomicAdd(&devSim.grad[DStart], (-AGradx-BGradx-CGradx));
+    atomicAdd(&devSim.grad[DStart + 1], (-AGrady-BGrady-CGrady));
+    atomicAdd(&devSim.grad[DStart + 2], (-AGradz-BGradz-CGradz));
+#endif
     return;
 }
 #else
@@ -1096,7 +1116,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 #ifdef DEBUG
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
 #endif    
-    
+   
+#ifdef USE_LEGACY_ATOMICS 
     GRADADD(devSim.gradULL[AStart], AGradx);
     GRADADD(devSim.gradULL[AStart + 1], AGrady);
     GRADADD(devSim.gradULL[AStart + 2], AGradz);
@@ -1115,7 +1136,27 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     GRADADD(devSim.gradULL[DStart], (-AGradx-BGradx-CGradx));
     GRADADD(devSim.gradULL[DStart + 1], (-AGrady-BGrady-CGrady));
     GRADADD(devSim.gradULL[DStart + 2], (-AGradz-BGradz-CGradz));
-    
+#else 
+    atomicAdd(&devSim.grad[AStart], AGradx);
+    atomicAdd(&devSim.grad[AStart + 1], AGrady);
+    atomicAdd(&devSim.grad[AStart + 2], AGradz);
+
+
+    atomicAdd(&devSim.grad[BStart], BGradx);
+    atomicAdd(&devSim.grad[BStart + 1], BGrady);
+    atomicAdd(&devSim.grad[BStart + 2], BGradz);
+
+
+    atomicAdd(&devSim.grad[CStart], CGradx);
+    atomicAdd(&devSim.grad[CStart + 1], CGrady);
+    atomicAdd(&devSim.grad[CStart + 2], CGradz);
+
+
+    atomicAdd(&devSim.grad[DStart], (-AGradx-BGradx-CGradx));
+    atomicAdd(&devSim.grad[DStart + 1], (-AGrady-BGrady-CGrady));
+    atomicAdd(&devSim.grad[DStart + 2], (-AGradz-BGradz-CGradz));   
+#endif
+
     return;
 }
 
