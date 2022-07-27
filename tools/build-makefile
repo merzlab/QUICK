@@ -163,11 +163,11 @@ blas-quick:
 libxc_cpu:
 	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_cpu
 #==================== libxc cuda library =================================
-libxc_gpu:
+libxc_device:
 	@cd $(libxcfolder) && make --no-print-directory -j$(ncores) libxc_gpu
 
-libxc_cuda:libxc_gpu
-	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) all
+libxc_gpu:libxc_device
+	@cd $(libxcfolder)/maple2c_device && make --no-print-directory -j$(ncores) libxc_device
 #===================== dlfind library =================================
 dlfind:
 	@cd $(dlfindfolder) && make --no-print-directory dlfind
@@ -233,7 +233,7 @@ serial: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $
 	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 
-cuda: cpmakein libxc_cuda dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+cuda: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
@@ -243,7 +243,7 @@ mpi: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MA
 	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
 
-cudampi: cpmakein libxc_cuda dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+cudampi: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
