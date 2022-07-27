@@ -22,31 +22,31 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-LIBXC_CUDA_FLAGS = -I$(libxcfolder)
+LIBXC_HIP_FLAGS = -I$(libxcfolder)
 
 CXXOBJ=$(objfolder)/xc_redistribute.o
 
-CUDACOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_lri.o $(objfolder)/gpu_oei.o 
+HIPCOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_lri.o $(objfolder)/gpu_oei.o 
 
-CUDAXCOBJ=$(objfolder)/gpu_getxc.o
+HIPXCOBJ=$(objfolder)/gpu_getxc.o
 
-CUDAFOBJ= $(objfolder)/gpu_write_info.o
+HIPFOBJ= $(objfolder)/gpu_write_info.o
 
 $(CXXOBJ):$(objfolder)/%.o:%.cpp
 	@echo "[QUICK]  CXX $@"
 	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(CUDACOBJ):$(objfolder)/%.o:%.cu
-	@echo "[QUICK]  NVCC $@"
-	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+$(HIPCOBJ):$(objfolder)/%.o:%.cu
+	@echo "[QUICK]  HIPCC $@"
+	$(VB)$(HIPCC) $(HIP_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_HIP_FLAGS) -c $< -o $@
 
-$(CUDAXCOBJ):$(objfolder)/%.o:%.cu
-	@echo "[QUICK]  NVCC $@"
-	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) -dc $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+$(HIPXCOBJ):$(objfolder)/%.o:%.cu
+	@echo "[QUICK]  HIPCC $@"
+	$(VB)$(HIPCC) $(HIP_FLAGS) -fgpu-rdc $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_HIP_FLAGS) -c $< -o $@
 
 FOR=$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS)
 
-$(CUDAFOBJ):$(objfolder)/%.o:%.f90
+$(HIPFOBJ):$(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
@@ -102,10 +102,9 @@ endif
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-allbutxc: $(CXXOBJ) $(CUDACOBJ) $(CUDAFOBJ)
+allbutxc: $(CXXOBJ) $(HIPCOBJ) $(HIPFOBJ)
 
-xc: $(CUDAXCOBJ)
-	$(VB)$(CUDAC) $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
+xc: $(HIPXCOBJ)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -115,5 +114,5 @@ xc: $(CUDAXCOBJ)
 
 clean: 
 	@-rm -f *.o 
-	@-rm -f ./cublas/*.o
-	@-rm -f ./cusolver/*.o
+	@-rm -f ./rocblas/*.o
+	@-rm -f ./rocsolver/*.o
