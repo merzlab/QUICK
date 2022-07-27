@@ -312,6 +312,7 @@ __device__ QUICKDouble hrrwhole(const int I, const int J, const int K, const int
                                                 const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
                                                 const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz);
 
+
 __device__ QUICKDouble hrrwhole2(int I, int J, int K, int L, \
                                 int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
                                 QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
