@@ -10,7 +10,7 @@
 #include "util.h"
 
 static void 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
 work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma,
            double *zk, double *vrho, double *vsigma,
            double *v2rho2, double *v2rhosigma, double *v2sigma2,
@@ -41,7 +41,7 @@ work_gga_c(const xc_func_type *p, int np, const double *rho, const double *sigma
 
   if(r.order < 0) return;
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
 #define GET_XSTR(fval) GET_STR(fval)
 #define GET_STR(fval) #fval
