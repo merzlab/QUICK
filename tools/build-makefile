@@ -126,6 +126,7 @@ cpmakein:
 	@cp ./make.in $(libxcfolder)
 	@cp ./make.in $(libxcfolder)/maple2c_device
 	@cp ./make.in $(cudafolder)
+	@cp ./make.in $(hipfolder)
 	@cp ./make.in $(octfolder)
 	@cp ./make.in $(subfolder)
 	@cp ./make.in $(modfolder)
@@ -151,7 +152,10 @@ octree:
 quick_cuda:
 	@cd $(cudafolder) && make --no-print-directory allbutxc
 	@cd $(cudafolder) && make --no-print-directory xc
-
+#============= targets for hip =========================================
+quick_hip:
+	@cd $(hipfolder) && make --no-print-directory allbutxc
+	@cd $(hipfolder) && make --no-print-directory xc
 #================= targets for BLAS =====================================
 blas-quick:
 	@cd $(blasfolder) && make --no-print-directory -j$(ncores) all
@@ -180,11 +184,29 @@ $(cublasobj):$(objfolder)/%.o:$(cublasfolder)/%.c
 	@echo "[QUICK]  CC $@"
 	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
 
+#=============== targets for HIPBLAS =====================================
+$(rocblasobj):$(objfolder)/%.o:$(rocblasfolder)/%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+
+$(rocblasmod):$(objfolder)/%.o:$(ROCBLAS_PATH)/include/%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+
+rocblas: $(rocblasmod) $(rocblasobj)
+
 #=============== targets for CUSOLVER ===================================
 
 $(cusolverobj):$(objfolder)/%.o:$(cusolverfolder)/%.c
 	@echo "[QUICK]  CC $@"
 	$(VB)$(CC) $(CPP_FLAG) -c $< -o $@
+
+#=============== targets for ROCSOLVER ===================================
+$(rocsolverobj):$(objfolder)/%.o:$(rocsolverfolder)/%.f90
+	@echo "[QUICK]  FC $@"
+	$(VB)$(FC) $(CPPDEFS) $(CPPFLAGS) $(FFLAGS) -I$(objfolder) -c $< -o $@
+
+rocsolver: $(rocsolverobj)
 
 #===================== target for general src files =====================
 
@@ -226,6 +248,22 @@ cudampi: cpmakein libxc_cuda dftd3 quick_modules dlfind octree quick_cuda quick_
 	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 
+hip: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) $(TESTAPI)
+	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
+	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack\
+	$(cudaxcobj) $(TESTAPI) -fgpu-rdc -o $(exefolder)/test-api.hip -lgfortran $(HIP_LD_FLAGS)       
+	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack\
+	$(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip -lgfortran $(HIP_LD_FLAGS)
+
+hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) $(TESTAPI)
+	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hipmpi.$(LIBEXT) $(libxcdevobjfolder)/*.o 
+	$(VB)$(ARCH) cr $(libfolder)/libquick-hipmpi.$(LIBEXT) $(objfolder)/*.o
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack\
+	$(cudaxcobj) $(TESTAPI) -fgpu-rdc -o $(exefolder)/test-api.hip.MPI -lgfortran $(HIP_LD_FLAGS)       
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack\
+	$(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip.MPI -lgfortran $(HIP_LD_FLAGS)
+
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
@@ -237,6 +275,7 @@ clean:
 	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o \
 	$(dftd3objfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
+	@cd $(hipfolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
 	@cd $(blasfolder) && make --no-print-directory clean
 	@cd $(modfolder) && make --no-print-directory clean
