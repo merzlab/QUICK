@@ -235,8 +235,8 @@ serial: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $
 
 cuda: cpmakein libxc_cuda dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 
 mpi: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
@@ -245,8 +245,8 @@ mpi: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MA
 
 cudampi: cpmakein libxc_cuda dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-cuda -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
 
 hip: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) $(TESTAPI)
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
