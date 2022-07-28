@@ -98,7 +98,7 @@ typedef struct{
 
   void (*init)(struct xc_func_type *p);
   void (*end) (struct xc_func_type *p);
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   void (*lda) (const struct xc_func_type *p, int np,
                const double *rho,
                double *zk, double *vrho, double *v2rho2, double *v3rho3, void *gpu_work_params);
@@ -183,7 +183,7 @@ struct xc_func_type{
 
   void *params;                         /* this allows us to fix parameters in the functional */
   double dens_threshold;
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   int params_byte_size; //To allocate GPU memory without worrying about the param type
 #endif
 };
@@ -211,7 +211,7 @@ void  xc_func_set_ext_params(xc_func_type *p, double *ext_params);
 #include "xc_funcs.h"
 #include "xc_funcs_removed.h"
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_lda        (const xc_func_type *p, int np, const double *rho, double *zk, double *vrho, double *v2rho2, double *v3rho3,void *gpu_work_params);
 void xc_lda_exc    (const xc_func_type *p, int np, const double *rho, double *zk, void *gpu_work_params);
 void xc_lda_exc_vxc(const xc_func_type *p, int np, const double *rho, double *zk, double *vrho, void *gpu_work_params);
@@ -268,7 +268,7 @@ void  xc_hyb_cam_coef(const xc_func_type *p, double *omega, double *alpha, doubl
 void  xc_nlc_coef(const xc_func_type *p, double *nlc_b, double *nlc_C);
 
 /* the meta-GGAs */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_mgga        (const xc_func_type *p, int np,
                       const double *rho, const double *sigma, const double *lapl, const double *tau,
                       double *zk, double *vrho, double *vsigma, double *vlapl, double *vtau,
@@ -312,7 +312,7 @@ void xc_mgga_fxc    (const xc_func_type *p, int np,
 		      double *v2sigmalapl, double *v2sigmatau, double *v2lapltau);
 #endif
 /* Functionals that are defined as mixtures of others */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_mix_func
   (const xc_func_type *func, int np,
    const double *rho, const double *sigma, const double *lapl, const double *tau,
