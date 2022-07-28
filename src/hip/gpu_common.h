@@ -39,7 +39,7 @@ fflush(stdout);\
 #define STOREDIM_T 10
 #define STOREDIM_S 35
 
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
 #define STOREDIM_L 84
 #else
 #define STOREDIM_L 84

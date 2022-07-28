@@ -13,7 +13,7 @@
 #include "gpu.h"
 #include <hip/hip_runtime.h>
 
-//#ifdef CUDA_SPDF
+//#ifdef HIP_SPDF
 //#endif
 
 
@@ -127,7 +127,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 
 
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
 //===================================
 
 #undef int_spd
@@ -357,7 +357,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
 
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
 //===================================
 
 #undef int_spd
@@ -526,7 +526,7 @@ static float totTime;
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI, intStart, intEnd, aoint_buffer, streamID))
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
     // Part f-1
     QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
     // Part f-2
@@ -566,7 +566,7 @@ void get2e(_gpu_type gpu)
 
     QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spd, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
  
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
@@ -616,7 +616,7 @@ void get_oshell_eri(_gpu_type gpu)
 
     QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spd, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
 
-#ifdef CUDA_SPDF
+#ifdef HIP_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
@@ -670,7 +670,7 @@ void getGrad(_gpu_type gpu)
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef CUDA_SPDF
+        //#ifdef HIP_SPDF
         // Part f-1
         QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
         // Part f-2
@@ -699,7 +699,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef CUDA_SPDF
+        //#ifdef HIP_SPDF
         // Part f-1
         QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
         // Part f-2
