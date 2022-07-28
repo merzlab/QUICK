@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include "nvToolsExt.h"
 #include "../octree/gpack_common.h"
 
 #if defined DEBUG || defined DEBUGTIME
