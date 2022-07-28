@@ -108,7 +108,7 @@ module quick_calculated_module
       double precision,dimension(:), allocatable   :: E, Eb
 
       ! gradient with respect to atomic motion, the dimension is 3natom
-      double precision,dimension(:), allocatable   :: gradient
+      double precision,dimension(:), allocatable   :: gradient, gradient2
 
       ! gradient of the point charges, the dimension is 3 times nextatom
       double precision,dimension(:), allocatable   :: ptchg_gradient
@@ -117,7 +117,7 @@ module quick_calculated_module
       double precision,dimension(:,:), allocatable   :: disp_gradient
 
       ! hessian matrix and CPHF matrices, the dimension is 3natom*3natom
-      double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb
+      double precision,dimension(:,:), allocatable :: hessian,cphfa,cphfb,ewdmx,ewdmx2
 
       ! one electron energy
       double precision :: E1e
@@ -259,6 +259,9 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if(.not. allocated(self%hessian)) allocate(self%hessian(3*natom,3*natom))
+         if(.not. allocated(self%ewdmx)) allocate(self%ewdmx(nbasis,nbasis))
+         if(.not. allocated(self%ewdmx2)) allocate(self%ewdmx2(nbasis,nbasis))
+         if(.not. allocated(self%gradient2)) allocate(self%gradient2(3*natom))
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
@@ -424,6 +427,9 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if (allocated(self%hessian)) deallocate(self%hessian)
+         if (allocated(self%ewdmx)) deallocate(self%ewdmx)
+         if (allocated(self%ewdmx2)) deallocate(self%ewdmx2)
+         if (allocated(self%gradient2)) deallocate(self%gradient2)
          if (allocated(self%CPHFA)) deallocate(self%CPHFA)
          if (allocated(self%CPHFB)) deallocate(self%CPHFB)
       endif
@@ -521,6 +527,9 @@ contains
 
       if (quick_method%analHess) then
          call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%ewdmx,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%ewdmx2,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient2,3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
@@ -576,6 +585,9 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          call zeroMatrix(self%hessian,3*natom)
+         call zeroMatrix(self%ewdmx,nbasis)
+         call zeroMatrix(self%ewdmx2,nbasis)
+         call zeroVec(self%gradient2,3*natom)
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
