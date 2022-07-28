@@ -41,7 +41,7 @@ void get_ssw(_gpu_type gpu){
     hipEventRecord(start, 0);
 #endif
 
-	QUICK_SAFE_CALL((hipLaunchKernelGGL(get_ssw_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0)));
+	QUICK_SAFE_CALL(hipLaunchKernelGGL(get_ssw_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0))
 
 #ifdef DEBUG
     hipEventRecord(end, 0);
@@ -66,7 +66,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
     hipEventRecord(start, 0);
 #endif
 
-    QUICK_SAFE_CALL((hipLaunchKernelGGL(get_primf_contraf_lists_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0, gpweight, cfweight, pfweight)));
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_primf_contraf_lists_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0, gpweight, cfweight, pfweight))
 
 #ifdef DEBUG
     hipEventRecord(end, 0);
@@ -83,7 +83,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
 
 void getpteval(_gpu_type gpu){
 
-    QUICK_SAFE_CALL((hipLaunchKernelGGL(get_pteval_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0)));
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_pteval_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0))
     hipDeviceSynchronize();
 }
 
@@ -98,19 +98,19 @@ void getxc(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
     }else{
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(cshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
     }
 
     hipDeviceSynchronize();
@@ -142,19 +142,19 @@ void getxc_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(oshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size , 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size , 0))
 
     }else{
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(cshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
     }
 
     hipDeviceSynchronize();
@@ -165,11 +165,11 @@ void getxc_grad(_gpu_type gpu){
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL((hipLaunchKernelGGL(get_sswgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0)));
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_sswgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
 
 //hipLaunchKernelGGL(get_sswgrad_kernel, 1, 1, gpu -> gpu_xcq -> smem_size, 0);
 
-    //QUICK_SAFE_CALL((hipLaunchKernelGGL(get_sswnumgrad_kernel, gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size, 0)));
+    //QUICK_SAFE_CALL(hipLaunchKernelGGL(get_sswnumgrad_kernel, gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
 
     hipDeviceSynchronize();
 
