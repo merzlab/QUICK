@@ -122,6 +122,11 @@ contains
      use quick_scf_module  
      use quick_oei_module, only: bCalc1e
 
+#if defined HIP || defined HIP_MPIV
+     use quick_rocblas_module, only: rocDGEMM
+     use quick_rocsolver_module, only: rocDIAG
+#endif
+
      implicit none
   
 #ifdef MPIV
@@ -625,7 +630,7 @@ contains
   
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-  #endif
+#endif
            ! Now diagonalize the operator matrix.
            call cpu_time(timer_begin%TDiag)
   

@@ -174,6 +174,11 @@ subroutine fullx
    !   matrix X.  The first step is forming the overlap matrix (Smatrix).
    !
    use allmod
+#if defined HIP || defined HIP_MPIV
+     use quick_rocblas_module, only: rocDGEMM
+     use quick_rocsolver_module, only: rocDIAG
+#endif
+
    implicit none
 
    double precision :: SJI,sum, SJI_temp

@@ -166,6 +166,11 @@ contains
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
+
+#if defined HIP || defined HIP_MPIV
+     use quick_rocblas_module, only: rocDGEMM
+     use quick_rocsolver_module, only: rocDIAG
+#endif
  
      implicit none
   
