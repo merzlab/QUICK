@@ -139,6 +139,9 @@ add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FU
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
+if(INSIDE_AMBER)
+    target_link_libraries(libquick PRIVATE libcew)
+endif()
 install_libraries(libquick EXPORT QUICK)
 
 if(mirp_ENABLED)
@@ -158,6 +161,9 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
+	if(INSIDE_AMBER)
+        target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
+    endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
 
 
@@ -172,6 +178,9 @@ if(CUDA)
 	# change link libraries and mod dirs for CUDA
 	remove_link_libraries(libquick_cuda xc octree)
 	target_link_libraries(libquick_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels cublas cusolver)
+	if(INSIDE_AMBER)
+        target_link_libraries(libquick_cuda PRIVATE libcew)
+    endif()
 	config_module_dirs(libquick_cuda quick/cuda libxc/gpu)
 
 	install_libraries(libquick_cuda EXPORT QUICK)
@@ -184,6 +193,9 @@ if(MPI AND CUDA)
 
 	remove_link_libraries(libquick_mpi_cuda octree_mpi xc)
 	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels_mpi cublas cusolver)
+	if(INSIDE_AMBER)
+        target_link_libraries(libquick_mpi_cuda PRIVATE libcew_mpi)
+    endif()
 	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 
 	install_libraries(libquick_mpi_cuda EXPORT QUICK)

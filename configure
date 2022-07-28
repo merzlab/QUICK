@@ -909,11 +909,11 @@ set_uspec_arch(){
     case "$carch" in
       kepler)
 	echo "Configuring for SM3.0"
-	cuda_arch_flags="$cuda_arch_flags $sm30flags"
+	cuda_arch_flags="$cuda_arch_flags $sm30flags -DUSE_LEGACY_ATOMICS"
 	cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       maxwell)
         echo "Configuring for SM5.0"
-        cuda_arch_flags="$cuda_arch_flags $sm50flags"
+        cuda_arch_flags="$cuda_arch_flags $sm50flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants';;
       pascal)
         echo "Configuring for SM6.0"
@@ -974,7 +974,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
       else
 
         echo "Configuring for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm50flags $sm60flags $sm70flags $sm75flags $sm80flags"
+        cuda_arch_flags="$sm50flags $sm60flags $sm70flags $sm75flags $sm80flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
@@ -984,7 +984,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
         echo "Configuring for SM3.0, SM5.0, SM6.0, SM7.0 and SM7.5"
-        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags $sm75flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "9.0" -o "$cudaversion" = "9.1" -o "$cudaversion" = "9.2" ]; then
@@ -994,7 +994,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
         echo "Configuring for SM3.0, SM5.0, SM6.0 and SM7.0"
-        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags $sm70flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "8.0" ]; then
@@ -1004,7 +1004,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
         echo "Configuring for SM3.0, SM5.0, SM6.0"
-        cuda_arch_flags="$sm30flags $sm50flags $sm60flags"
+        cuda_arch_flags="$sm30flags $sm50flags $sm60flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     else
