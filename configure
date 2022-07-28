@@ -1094,7 +1094,7 @@ if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
     hipversion_minor=`echo $hipversion_str | cut -d '.' -f2`
     hipversion="$hipversion_major.$hipversion_minor"
 
-    if [ "$hipversion_major" -ge "4" ] && [ "$hipversion_minor" -ge "4" ]; then
+    if [ "$hipversion_major" -ge "4" ] && [ "$hipversion_minor" -ge "0" ]; then
       echo "HIP version $hipversion detected"
     else
       echo "Error: HIP version must be greater thant 4.4."
