@@ -146,7 +146,7 @@ contains
            enddo
         endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
               quick_molspec%molchg, quick_molspec%iAtomType)
         call gpu_upload_xyz(xyz)
@@ -157,7 +157,7 @@ contains
         call getEriPrecomputables
         call schwarzoff
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
               ncontract, itype, aexp, dcoeff, &
               quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -171,7 +171,7 @@ contains
 
         call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
-#ifdef CUDA_MPIV
+#if defined CUDA_MPIV || defined HIP_MPIV
       timer_begin%T2elb = timer_end%T2elb
       call mgpu_get_2elb_time(timer_end%T2elb)
       timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -203,7 +203,7 @@ contains
            endif
         endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
         if (quick_method%bCUDA) then
           call gpu_cleanup()
         endif

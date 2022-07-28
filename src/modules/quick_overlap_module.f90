@@ -233,7 +233,7 @@ subroutine fullx
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    call cpu_time(timer_begin%T1eSD)
 
-#if defined CUDA || defined CUDA_MPIV
+#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
 
    call cuda_diag(quick_scratch%hold, quick_scratch%tmpx,quick_scratch%tmphold,&
    quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2,quick_scratch%tmpco, quick_scratch%V, nbasis)
@@ -287,12 +287,12 @@ subroutine fullx
       endif
    enddo
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
-   call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%hold2, &
+   call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%hold2, &
    nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
 
-   call cublas_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%tmpco, &
+   call GPU_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%tmpco, &
    nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
 #else
    call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &

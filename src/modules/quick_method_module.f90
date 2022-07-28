@@ -140,7 +140,7 @@ module quick_method_module
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         logical :: bCUDA                ! if CUDA is used here
 #endif
 
@@ -170,7 +170,7 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
     interface upload
         module procedure upload_method
     end interface upload
@@ -860,7 +860,7 @@ module quick_method_module
             self%coarse_cutoff=.false.
             self%tight_cutoff=.false.
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
             self%bCUDA  = .true.
 #endif
 
@@ -1053,7 +1053,7 @@ module quick_method_module
         end subroutine set_libxc_func_info
 
         ! subroutine to upload method and libxc info in to gpu
-#if defined CUDA || defined CUDA_MPIV        
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         subroutine upload_method(self, ierr)
           
           implicit none
