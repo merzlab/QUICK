@@ -1,7 +1,7 @@
 
 #ifndef XC_REDISTRIBUTE
 #define XC_REDISTRIBUTE
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -15,7 +15,7 @@
   ! implementation.                                                     !
   !---------------------------------------------------------------------!
 */
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 #include <iostream>
 #include <cmath>
 #include <cstring>

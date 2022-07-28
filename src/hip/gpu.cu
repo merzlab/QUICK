@@ -15,7 +15,7 @@
 #include <time.h>
 #include "gpu_libxc.h"
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 #include "mgpu.h"
 #endif
 
@@ -325,7 +325,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     hipEventRecord(start, 0);
     PRINTDEBUG("BEGIN TO SETUP")
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
     fprintf(gpu->debugFile,"mpirank %i natoms %i \n", gpu -> mpirank, *natom );    
 #endif
 #endif
@@ -1151,7 +1151,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_sim.cutPrim          = gpu -> gpu_cutoff -> cutPrim -> _devData;
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 
    hipEvent_t t_start, t_end;
    float t_time;
@@ -1332,7 +1332,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
   gpu -> gpu_sim.Qshell_OEI = a; 
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
   mgpu_oei_greedy_distribute();
 #endif
 
@@ -2049,7 +2049,7 @@ void prune_grid_sswgrad(){
 
 
         PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         hipEvent_t t_startp, t_endp;
         float t_timep;
         hipEventCreate(&t_startp);
@@ -2096,7 +2096,7 @@ void prune_grid_sswgrad(){
 
 	gpu_delete_dft_grid_();
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         hipEvent_t t_start, t_end;
         float t_time;
         hipEventCreate(&t_start);
@@ -2121,7 +2121,7 @@ void prune_grid_sswgrad(){
          gpu -> gpu_xcq -> npoints_ssd = count;
 
         //Upload data using templates
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 
         gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
         gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
@@ -2188,7 +2188,7 @@ void prune_grid_sswgrad(){
         free(tmp_quadwt);
         free(tmp_gatm);
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         hipEventRecord(t_endp, 0);
         hipEventSynchronize(t_endp);
         hipEventElapsedTime(&t_timep, t_startp, t_endp);
@@ -2404,7 +2404,7 @@ QUICKDouble *XCCutoff){
 
         for(int i=0; i< gpu -> gpu_xcq -> npoints; ++i) gpu -> gpu_xcq -> dweight_ssd -> _hostData[i] =1;
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 
         hipEvent_t t_start, t_end;
         float t_time;
@@ -2663,7 +2663,7 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
 	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
 //        SAFE_DELETE(gpu -> gpu_xcq -> primfpbin);
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
         delete_pteval(false);
@@ -2681,7 +2681,7 @@ void gpu_delete_sswgrad_vars(){
         SAFE_DELETE(gpu -> gpu_xcq -> quadwt);
 	SAFE_DELETE(gpu -> gpu_xcq -> uw_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> gatm_ssd);
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
 

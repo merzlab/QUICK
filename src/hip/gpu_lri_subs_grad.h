@@ -71,7 +71,7 @@ get_lri_grad_kernel_spdf2()
         QUICKULL iatom = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - iatom*jshell);
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         if(devSim.mpi_bcompute[b] > 0){
 #endif
                 
@@ -112,7 +112,7 @@ get_lri_grad_kernel_spdf2()
                 //}
 //          }
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         }
 #endif
 

@@ -18,9 +18,9 @@
   !---------------------------------------------------------------------!
 */
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
 
-#define CUDA_MPIV_MINBASIS 100
+#define HIP_MPIV_MINBASIS 100
 
 #include "string.h"
 
@@ -235,7 +235,7 @@ void mgpu_oei_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > CUDA_MPIV_MINBASIS){
+    if(nitems > HIP_MPIV_MINBASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core
@@ -392,7 +392,7 @@ void mgpu_eri_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > CUDA_MPIV_MINBASIS){
+    if(nitems > HIP_MPIV_MINBASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core

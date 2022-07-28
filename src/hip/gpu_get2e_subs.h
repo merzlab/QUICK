@@ -414,7 +414,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
 #endif
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         if(devSim.mpi_bcompute[a] > 0){
 #endif 
 
@@ -647,7 +647,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
         }
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         }      
 #endif        
     }

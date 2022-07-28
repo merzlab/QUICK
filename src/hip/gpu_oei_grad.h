@@ -400,7 +400,7 @@ __global__ void get_oei_grad_kernel(){
     unsigned int iatom = (int) i/(jshell * jshell);
     unsigned int idx   = i - iatom * jshell * jshell;
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
       if(devSim.mpi_boeicompute[idx] > 0){
 #endif
 
@@ -421,7 +421,7 @@ __global__ void get_oei_grad_kernel(){
         iclass_oei_grad(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset,\
         devSim.storeAA+offset, devSim.storeBB+offset);
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
       }
 #endif
 

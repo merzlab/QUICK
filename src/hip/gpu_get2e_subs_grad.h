@@ -112,7 +112,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         if(devSim.mpi_bcompute[a] > 0){
 #endif
                 
@@ -204,7 +204,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
             }
         }
 
-#ifdef CUDA_MPIV
+#ifdef HIP_MPIV
         }
 #endif
 
