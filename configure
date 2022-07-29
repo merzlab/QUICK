@@ -1072,6 +1072,9 @@ set_uspec_hip_arch(){
         hip_arch_flags="$hip_arch_flags -offload-arch=gfx908";;
     esac
   done
+
+  hip_arch_flags="$hip_arch_flags -DUSE_LEGACY_ATOMICS"
+
 }
 
 if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
