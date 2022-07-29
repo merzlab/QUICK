@@ -1062,7 +1062,7 @@ fi
 
 # this function sets the user defined cuda architecture flags, if specified
 set_uspec_hip_arch(){
-  for carch in $gpu_arch; do
+  for carch in $cuda_arch; do
     case "$carch" in
       gfx906)
         echo "Configuring for gfx906"
