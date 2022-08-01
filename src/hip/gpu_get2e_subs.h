@@ -91,10 +91,10 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
 #ifdef OSHELL
 #ifdef int_sp
 __global__ void 
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_sp()
+__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_sp()
 #elif defined int_spd
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spd()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf()
@@ -129,10 +129,10 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf10()
 #else
 #ifdef int_sp
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp()
+__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp()
 #elif defined int_spd
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spd()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf()

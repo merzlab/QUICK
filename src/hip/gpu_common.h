@@ -197,6 +197,9 @@ static const int SM_2X_THREADS_PER_BLOCK    =   256;
 static const int SM_13_2E_THREADS_PER_BLOCK =   256;
 static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
 
+static const int HIP_SP_2E_THREADS_PER_BLOCK =   512;
+static const int HIP_SPD_2E_THREADS_PER_BLOCK =   768;
+
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;

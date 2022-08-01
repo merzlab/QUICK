@@ -560,11 +560,11 @@ void get2e(_gpu_type gpu)
     bind_eri_texture(gpu);
 #endif
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_sp, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
 
     //hipLaunchKernelGGL(get2e_kernel_sp, 1, 1, 0, 0);
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spd, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
  
 #ifdef HIP_SPDF
     if (gpu->maxL >= 3) {
@@ -612,9 +612,9 @@ void get_oshell_eri(_gpu_type gpu)
     bind_eri_texture(gpu);
 #endif
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_sp, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spd, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
 #ifdef HIP_SPDF
     if (gpu->maxL >= 3) {
