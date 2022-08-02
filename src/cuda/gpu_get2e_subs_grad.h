@@ -393,12 +393,27 @@ __device__ __forceinline__ void iclass_grad
                 
                 //QUICKDouble store2[STOREDIM*STOREDIM];
                 
-                
+/*                
                 vertical2(I, J + 1, K, L + 1, YVerticalTemp, store2, \
                           Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                           Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                           0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+*/
+
+#ifdef USE_ERI_GRAD_STOREADD
+                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+                        }
+                    }
+                }
+#endif
                 
+                ERint_grad_vertical_spd(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
                 
                 
                 for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
@@ -424,10 +439,11 @@ __device__ __forceinline__ void iclass_grad
                     for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
+
                         }
                     }
                 }
-                
+
                 
             }
         }
