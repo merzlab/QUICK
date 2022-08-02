@@ -47,6 +47,12 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_YCutoff;
 texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #endif
 
+#ifdef USE_ERI_GRAD_STOREADD
+#define STORE_OPERATOR +=
+#else
+#define STORE_OPERATOR =  
+#endif
+
 #include "gpu_get2e_subs_hrr.h"
 #include "int.h"
 
@@ -80,6 +86,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_spd.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_spd.h"
 #include "gpu_get2e_subs_grad.h"
 
 
