@@ -47,6 +47,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_YCutoff;
 texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #endif
 
+//#define USE_ERI_GRAD_STOREADD
+
 #ifdef USE_ERI_GRAD_STOREADD
 #define STORE_OPERATOR +=
 #else
