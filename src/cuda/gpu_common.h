@@ -36,9 +36,12 @@ fflush(stdout);\
 #define VDIM3_L 16
 #define VDIM3 16
 
+#define VDIM3_GRAD_T 5
 
 #define STOREDIM_T 10
 #define STOREDIM_S 35
+
+#define STOREDIM_GRAD_T 20
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84

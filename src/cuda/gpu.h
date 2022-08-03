@@ -202,7 +202,9 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
 
 
-__device__ void iclass_grad(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
+__device__ void iclass_grad_sp(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
+__device__ void iclass_grad_spd(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 __device__ void iclass_grad_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
@@ -221,7 +223,9 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 __device__ void iclass_grad_spdf8(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 
-__device__ void iclass_oshell_grad(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
+__device__ void iclass_oshell_grad_sp(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
+QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
+__device__ void iclass_oshell_grad_spd(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
 __device__ void iclass_oshell_grad_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC);
@@ -296,6 +300,7 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 __device__ void FmT_sp(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT_spd(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
+__device__ void FmT_grad_sp(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ __forceinline__ bool call_iclass(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL);
 
 __device__ QUICKDouble hrrwhole_sp( const int I, const int J, const int K, const int L, \
@@ -376,6 +381,16 @@ __device__ QUICKDouble hrrwhole2_10(int I, int J, int K, int L, \
                                    QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                    QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
 
+__device__ __forceinline__ void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
+                                             QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
+                                             QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
+                                             int I, int J, int K, int L, \
+                                             int III, int JJJ, int KKK, int LLL, int IJKLTYPE, \
+                                             QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,\
+                                             QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
+                                             QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
+                                             QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
+                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
 
 __device__ __forceinline__ void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \

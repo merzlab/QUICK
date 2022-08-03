@@ -47,6 +47,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_YCutoff;
 texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #endif
 
+//#define USE_ERI_GRAD_STOREADD
+
 #ifdef USE_ERI_GRAD_STOREADD
 #define STORE_OPERATOR +=
 #else
@@ -70,6 +72,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_sp.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_sp.h"
+#include "gpu_get2e_subs_grad.h"
 
 
 #undef int_sp
@@ -306,6 +310,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #undef new_quick_2_gpu_get2e_subs_h
 #include "gpu_get2e_subs.h"
+#include "gpu_get2e_subs_grad.h"
 
 #undef int_sp
 #define int_spd
@@ -670,7 +675,9 @@ void getGrad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+    QUICK_SAFE_CALL((getGrad_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -699,7 +706,9 @@ void get_oshell_eri_grad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-   QUICK_SAFE_CALL((getGrad_oshell_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
