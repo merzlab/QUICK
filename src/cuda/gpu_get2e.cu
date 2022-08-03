@@ -123,6 +123,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -135,7 +136,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
-
+*/
 
 #ifdef CUDA_SPDF
 //===================================
@@ -355,6 +356,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -367,6 +369,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
+*/
 
 #ifdef CUDA_SPDF
 //===================================
