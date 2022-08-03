@@ -1190,7 +1190,7 @@ __device__ __forceinline__ void iclass_spdf10
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 #if !(defined OSHELL) && !(defined int_sp)
 #ifdef int_spd
 __global__ void 
@@ -1635,6 +1635,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store)
         }
     }
 }
+#endif
 #endif
 
 

@@ -535,6 +535,7 @@ void upload_sim_to_constant(_gpu_type gpu){
 static float totTime;
 #endif
 
+#ifdef COMPILE_CUDA_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
@@ -563,6 +564,7 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
     QUICK_SAFE_CALL((getAOInt_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
 #endif
 }
+#endif
 
 // interface to call Kernel subroutine
 void get2e(_gpu_type gpu)
@@ -665,12 +667,13 @@ void get_oshell_eri(_gpu_type gpu)
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL((getAddInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(bufferSize, aoint_buffer)));
 }
+#endif
 
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
@@ -733,7 +736,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // =======   KERNEL SECTION ===========================
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
@@ -784,7 +787,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize
     }
     
 }
-
+#endif
 
 void upload_para_to_const(){
     
