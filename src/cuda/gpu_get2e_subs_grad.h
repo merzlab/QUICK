@@ -1251,13 +1251,13 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 __device__ __forceinline__ void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                              QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
-                                             int I, int J, int K, int L, \
-                                             int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
+                                             const int I, const int J, const int K, const int L, \
+                                             const int III, int JJJ, const int KKK, const int LLL, const int IJKLTYPE,
                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
-                                             QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
-                                             QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
-                                             QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
+                                             const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz, \
+                                             const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz, \
+                                             const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
+                                             const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz)
 {
     unsigned char angularL[4], angularR[4];
     QUICKDouble coefAngularL[4], coefAngularR[4];
@@ -1603,16 +1603,16 @@ __device__ __forceinline__ void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* 
 __device__ __forceinline__ void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                              QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
-                                             int I, int J, int K, int L, \
-                                             int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
+                                             const int I, const int J, const int K, const int L, \
+                                             const int III, int JJJ, const int KKK, const int LLL, const int IJKLTYPE,
                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
-                                             QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
-                                             QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
-                                             QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
+                                             const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz, \
+                                             const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz, \
+                                             const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
+                                             const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz)
 {
-    unsigned char angularL[12], angularR[12];
-    QUICKDouble coefAngularL[12], coefAngularR[12];
+    unsigned char angularL[8], angularR[8];
+    QUICKDouble coefAngularL[8], coefAngularR[8];
     
     *Yaax = 0.0;
     *Yaay = 0.0;

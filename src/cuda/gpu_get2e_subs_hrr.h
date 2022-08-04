@@ -1118,11 +1118,11 @@ __device__ __forceinline__ int lefthrr_r(QUICKDouble RAx, QUICKDouble RAy, QUICK
     
 }
 
-__device__ __forceinline__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
-                                       QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
-                                       int KLMNAx, int KLMNAy, int KLMNAz,
-                                       int KLMNBx, int KLMNBy, int KLMNBz,
-                                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
+__device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
+                                       const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
+                                       const int KLMNAx, const int KLMNAy, const int KLMNAz,
+                                       const int KLMNBx, const int KLMNBy, const int KLMNBz,
+                                       const int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     
     
