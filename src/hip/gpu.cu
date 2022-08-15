@@ -2732,7 +2732,7 @@ extern "C" void gpu_cleanup_(){
     
 }
 
-
+#ifdef COMPILE_CUDA_AOINT
 static bool debut = true;
 static bool incoreInt = true;
 static ERI_entry* intERIEntry;
@@ -3005,7 +3005,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
     PRINTDEBUG("COMPLETE RUNNING ADDINT")
     
 }
-
+#endif
 
 char *trim(char *s) {
     char *ptr;
@@ -3018,7 +3018,7 @@ char *trim(char *s) {
     return s;
 }
 
-
+#ifdef COMPILE_CUDA_AOINT
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName)
 {
     PRINTDEBUG("BEGIN TO RUN AOINT")
@@ -3274,6 +3274,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #endif
     
 }
+#endif
 
 //-----------------------------------------------
 // calculate the size of shared memory for XC code

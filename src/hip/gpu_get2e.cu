@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /*
  *  gpu_get2e.cpp
  *  new_quick
@@ -48,6 +47,14 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_YCutoff;
 texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #endif
 
+//#define USE_ERI_GRAD_STOREADD
+
+#ifdef USE_ERI_GRAD_STOREADD
+#define STORE_OPERATOR +=
+#else
+#define STORE_OPERATOR =  
+#endif
+
 #include "gpu_get2e_subs_hrr.h"
 #include "int.h"
 
@@ -65,6 +72,8 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_sp.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_sp.h"
+#include "gpu_get2e_subs_grad.h"
 
 
 #undef int_sp
@@ -81,6 +90,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_spd.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_spd.h"
 #include "gpu_get2e_subs_grad.h"
 
 
@@ -112,7 +122,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
 
-
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -125,7 +135,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
-
+*/
 
 #ifdef HIP_SPDF
 //===================================
@@ -300,6 +310,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #undef new_quick_2_gpu_get2e_subs_h
 #include "gpu_get2e_subs.h"
+#include "gpu_get2e_subs_grad.h"
 
 #undef int_sp
 #define int_spd
@@ -344,6 +355,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -356,6 +368,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
+*/
 
 #ifdef HIP_SPDF
 //===================================
@@ -521,6 +534,7 @@ void upload_sim_to_constant(_gpu_type gpu){
 static float totTime;
 #endif
 
+#ifdef COMPILE_CUDA_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
@@ -549,6 +563,7 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t str
     QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf10, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
 #endif
 }
+#endif
 
 // interface to call Kernel subroutine
 void get2e(_gpu_type gpu)
@@ -651,20 +666,22 @@ void get_oshell_eri(_gpu_type gpu)
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL(hipLaunchKernelGGL(getAddInt_kernel, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0, bufferSize, aoint_buffer))
 }
+#endif
 
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
 {
 
 //   nvtxRangePushA("Gradient 2e");
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -692,8 +709,9 @@ void get_oshell_eri_grad(_gpu_type gpu)
 {
 
 //   nvtxRangePushA("Gradient 2e");
+   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
 
-   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -715,7 +733,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // =======   KERNEL SECTION ===========================
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
@@ -766,7 +784,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize
     }
     
 }
-
+#endif
 
 void upload_para_to_const(){
     

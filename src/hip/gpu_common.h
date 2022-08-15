@@ -35,9 +35,12 @@ fflush(stdout);\
 #define VDIM3_L 16
 #define VDIM3 16
 
+#define VDIM3_GRAD_T 5
 
 #define STOREDIM_T 10
 #define STOREDIM_S 35
+
+#define STOREDIM_GRAD_T 20
 
 #ifdef HIP_SPDF
 #define STOREDIM_L 84
@@ -203,7 +206,7 @@ static const int HIP_SPD_2E_THREADS_PER_BLOCK =   768;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   64;
 
 
 // constant for grad
