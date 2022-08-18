@@ -33,16 +33,16 @@
 #ifdef OSHELL
 #ifdef int_sp
 __global__ void
-__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_sp()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_sp()
 #elif defined int_spd
 __global__ void
 __launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spd()
 #elif defined int_spdf
 __global__ void
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf()
 #elif defined int_spdf2
 __global__ void
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf2()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf2()
 #elif defined int_spdf3
 __global__ void
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf3()
@@ -65,16 +65,16 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf8()
 #else
 #ifdef int_sp
 __global__ void
-__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) getGrad_kernel_sp()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_kernel_sp()
 #elif defined int_spd
 __global__ void 
 __launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_kernel_spd()
 #elif defined int_spdf
 __global__ void 
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf()
 #elif defined int_spdf2
 __global__ void 
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf2()
+__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf2()
 #elif defined int_spdf3
 __global__ void 
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf3()

@@ -679,7 +679,7 @@ void getGrad(_gpu_type gpu)
 {
 
 //   nvtxRangePushA("Gradient 2e");
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_sp, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
     QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
@@ -689,9 +689,9 @@ void getGrad(_gpu_type gpu)
     if (gpu->maxL >= 2) {
         //#ifdef HIP_SPDF
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf2, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf2, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
         // Part f-3
         //    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf3, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0)))
         //#endif
@@ -709,7 +709,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
 {
 
 //   nvtxRangePushA("Gradient 2e");
-   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
+   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_sp, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
 
@@ -719,9 +719,9 @@ void get_oshell_eri_grad(_gpu_type gpu)
     if (gpu->maxL >= 2) {
         //#ifdef HIP_SPDF
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf2, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf2, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
         // Part f-3
         //    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf3, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0)))
         //#endif
