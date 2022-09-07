@@ -191,7 +191,8 @@ void getxc_grad(_gpu_type gpu){
 }
 
 
-__global__ void get_pteval_kernel(){
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_pteval_kernel(){
 
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -224,7 +225,8 @@ __global__ void get_pteval_kernel(){
 
 
 //device kernel to compute significant grid pts, contracted and primitive functions for octree
-__global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
+__global__ void 
+__launch_bounds__(SM_2X_XCGRAD_THREADS_PER_BLOCK, 1) get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -333,7 +335,8 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 
 }
 
-__global__ void get_ssw_kernel(){
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_ssw_kernel(){
 
 	unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
 	int totalThreads = blockDim.x*gridDim.x;
@@ -358,7 +361,8 @@ __global__ void get_ssw_kernel(){
 
 }
 
-__global__ void get_sswgrad_kernel(){
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_sswgrad_kernel(){
 
 
         //declare smem grad vector

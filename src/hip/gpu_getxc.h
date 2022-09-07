@@ -28,9 +28,11 @@
 // each grid point.
 //-----------------------------------------------
 #ifdef OSHELL
-__global__ void get_oshell_density_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_oshell_density_kernel()
 #else
-__global__ void get_cshell_density_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_cshell_density_kernel()
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -140,9 +142,11 @@ __global__ void get_cshell_density_kernel()
 }
 
 #ifdef OSHELL
-__global__ void oshell_getxc_kernel()
+__global__ void
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) oshell_getxc_kernel()
 #else
-__global__ void cshell_getxc_kernel()
+__global__ void
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -363,9 +367,11 @@ __global__ void cshell_getxc_kernel()
 }
 
 #ifdef OSHELL
-__global__ void oshell_getxcgrad_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) oshell_getxcgrad_kernel()
 #else
-__global__ void cshell_getxcgrad_kernel()
+__global__ void 
+__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 #endif
 {
 
