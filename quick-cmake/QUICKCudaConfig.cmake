@@ -183,3 +183,40 @@ if(CUDA)
     endif()
 
 endif()
+
+option(HIP "Build ${PROJECT_NAME} with HIP GPU acceleration support." FALSE)
+option(HIP_RDC "Build relocatable device code, also known as separate compilation mode." FALSE)
+option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
+
+if(HIP)
+    find_package(HipCUDA REQUIRED)
+    set(CUDA ON)
+
+    set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+    list(APPEND CUDA_NVCC_FLAGS
+        -fPIC
+    )
+
+    #add_compile_definitions(AMBER_PLATFORM_AMD)
+    if(HIP_WARP64)
+            add_compile_definitions(AMBER_PLATFORM_AMD_WARP64)
+    endif()
+
+    #set(CUDA_PROPAGATE_HOST_FLAGS FALSE)
+
+    #the same CUDA file is used for multiple targets in PMEMD, so turn this off
+    #set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE FALSE)
+
+    if(HIP_RDC)
+            # Only hipcc can link a library compiled using RDC mode
+            # -Wl,--unresolved-symbols=ignore-in-object-files is added after <LINK_FLAGS>
+            # because CMAKE_SHARED_LINKER_FLAGS contains -Wl,--no-undefined, but we link
+            # the whole program with all external shared libs later.
+            set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files -Wl,-soname,<TARGET> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+            # set(CMAKE_CXX_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    endif()
+
+    import_library(cublas "${CUDA_cublas_LIBRARY}")
+    import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+endif()
+
