@@ -185,26 +185,19 @@ endif()
 if(CUDA)
 
         if(HIP)
-#                copy_target(libquick libquick_hip SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_HIP_FORTRAN_SOURCE})
-#                target_compile_definitions(libquick_hip PRIVATE HIP)
 
-#        set_property(TARGET libquick_hip PROPERTY OUTPUT_NAME quick_hip)
+        set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
 
-#        config_module_dirs(libquick_hip quick/cuda libxc/gpu)
-
-        # change link libraries and mod dirs for CUDA
-#        remove_link_libraries(libquick_hip xc octree)
-
-add_library(libquick_hip STATIC $<TARGET_OBJECTS:xc_gpu> ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES} ${QUICK_HIP_FORTRAN_SOURCE})
-target_compile_options(libquick_hip PRIVATE ${OPT_FFLAGS})
-target_compile_definitions(libquick_hip PRIVATE HIP)
-config_module_dirs(libquick_hip quick/cuda libxc/gpu)
-
-        add_library(libquick_cuda STATIC $<TARGET_OBJECTS:xc_cuda> $<TARGET_OBJECTS:octree_gpu> $<TARGET_OBJECTS:quick_cuda_kernels>  $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:libquick_hip> )
+        copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_HIP_FORTRAN_SOURCE})
+        target_compile_definitions(libquick_cuda PRIVATE HIP)
+        target_link_options(libquick_cuda PRIVATE ${HIPCC_LD_FLAGS})
 
         set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
-        target_compile_definitions(libquick_cuda PRIVATE HIP)
+        # change link libraries and mod dirs for CUDA
+        remove_link_libraries(libquick_cuda xc octree)
+
+        target_link_libraries(libquick_cuda PRIVATE xc_gpu octree_gpu quick_cuda_kernels cublas cusolver lapack)
 
         if(INSIDE_AMBER)
                 target_link_libraries(libquick_cuda PRIVATE libcew)
@@ -302,37 +295,27 @@ endif()
 if(CUDA)
         if(HIP)
 
-                set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
+                copy_target(quick quick.hip)
+                target_compile_definitions(quick.hip PRIVATE HIP)
 
-                add_library(quick_hip_main STATIC ${MAIN_SOURCES} )
-                target_compile_definitions(quick_hip_main PRIVATE HIP)
-                target_compile_options(quick_hip_main PRIVATE ${OPT_FFLAGS})
-                config_module_dirs(quick_hip_main quick/cuda libxc/gpu)
-                add_dependencies(quick_hip_main libquick_cuda)
+                copy_target(test-api test-api.hip)
+                target_compile_definitions(test-api.hip PRIVATE HIP)
 
-                file(WRITE .null.cpp "#include \"hip/hip_runtime.h\"")
-                add_executable(quick.hip .null.cpp)
-                add_executable(test-api.hip .null.cpp)
-
-                target_link_libraries(quick.hip quick_hip_main libquick_cuda cublas cusolver xc_gpu octree_gpu quick_cuda_kernels lapack)
+                remove_link_libraries(quick.hip libquick)
+                target_link_libraries(quick.hip libquick_cuda)
                 config_module_dirs(quick.hip quick/cuda libxc/gpu)
-                target_link_options(quick.hip PRIVATE ${HIPCC_LD_FLAGS})
 
-                add_library(quick_hip_api STATIC ${TEST_API_SOURCES} )
-                target_compile_definitions(quick_hip_api PRIVATE HIP)
-                target_compile_options(quick_hip_api PRIVATE ${OPT_FFLAGS})
-                config_module_dirs(quick_hip_api quick/cuda libxc/gpu)
-                add_dependencies(quick_hip_api libquick_cuda)
-
-                target_link_libraries(test-api.hip quick_hip_api libquick_cuda cublas cusolver xc_gpu octree_gpu quick_cuda_kernels lapack)
+                remove_link_libraries(test-api.hip libquick)
+                target_link_libraries(test-api.hip libquick_cuda)
                 config_module_dirs(test-api.hip quick/cuda libxc/gpu)
-
-                target_link_options(test-api.hip PRIVATE ${HIPCC_LD_FLAGS})
 
                 install(TARGETS quick.hip DESTINATION ${BINDIR} EXPORT QUICK)
                 install(TARGETS test-api.hip DESTINATION ${BINDIR} EXPORT QUICK)
 
+
         else()
+
+
 	        copy_target(quick quick.cuda)
 	        target_compile_definitions(quick.cuda PRIVATE CUDA)
 
