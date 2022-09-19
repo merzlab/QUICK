@@ -51,7 +51,7 @@
 #define GPU_DGEMM rocDGEMM
 #endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if (defined CUDA && !defined HIP) || (defined CUDA_MPIV && !defined HIP_MPIV)
 #define GPU_DGEMM CUBLAS_DGEMM
 #endif
 
