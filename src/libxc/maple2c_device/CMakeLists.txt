@@ -1,3 +1,7 @@
+
+
+#set(CUDA_SEPARABLE_COMPILATION TRUE)
+
 set(LIBXC_CUDA_SOURCES
 	gga_c_am05.cu gga_c_bcgp.cu gga_c_bmk.cu gga_c_cs1.cu 
 	gga_c_ft97.cu gga_c_gapc.cu gga_c_gaploc.cu gga_c_hcth_a.cu 
@@ -30,17 +34,34 @@ set(LIBXC_CUDA_SOURCES
 	lda_c_vwn_rpa.cu lda_c_wigner.cu lda_k_tf.cu lda_k_zlp.cu 
 	lda_x_2d.cu lda_xc_1d_ehwlrg.cu lda_xc_ksdt.cu lda_xc_teter93.cu 
 	lda_x.cu lda_xc_zlp.cu lda_x_rel.cu
-
+        )
 	# gpu_getxc.cu references functions inside libxc_cuda, so with how CMake separable
 	# compilation linking works it's a lot simpler to add it as a source file here.
-	../../cuda/gpu_getxc.cu)
+	
 
-set(CUDA_SEPARABLE_COMPILATION TRUE)
-cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
-	OPTIONS 
-		${CUDA_DEVICE_CODE_FLAGS} 
-		-I${CMAKE_CURRENT_SOURCE_DIR}/..
-		-DCUDA)
+if(HIP)
+        list(APPEND LIBXC_CUDA_SOURCES ../../hip/gpu_getxc.cu)
+        cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
+                OPTIONS
+                -fgpu-rdc
+                -c
+                ${CUDA_DEVICE_CODE_FLAGS}
+                -I${CMAKE_CURRENT_SOURCE_DIR}/..
+                )
+        target_compile_definitions(xc_cuda PRIVATE HIP)
+else()
+
+        set(CUDA_SEPARABLE_COMPILATION TRUE)
+        list(APPEND LIBXC_CUDA_SOURCES ../../cuda/gpu_getxc.cu)
+        cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
+                OPTIONS
+                ${CUDA_DEVICE_CODE_FLAGS}
+                -I${CMAKE_CURRENT_SOURCE_DIR}/..
+                )
+        target_compile_definitions(xc_cuda PRIVATE CUDA)
+endif()
+
+
 if(INSIDE_AMBER)
 	target_link_libraries(xc_cuda libcew)
 endif()

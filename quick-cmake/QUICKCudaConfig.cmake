@@ -1,13 +1,13 @@
 # first, find CUDA.
-find_package(CUDA)
 option(CUDA "Build ${PROJECT_NAME} with CUDA GPU acceleration support." FALSE)
-
-if(CUDA AND NOT CUDA_FOUND)
-    message(FATAL_ERROR "You turned on CUDA, but it was not found.  Please set the CUDA_TOOLKIT_ROOT_DIR option to your CUDA install directory.")
-endif()
 
 if(CUDA)
 
+    find_package(CUDA REQUIRED)
+
+    if(NOT CUDA_FOUND)
+        message(FATAL_ERROR "You turned on CUDA, but it was not found.  Please set the CUDA_TOOLKIT_ROOT_DIR option to your CUDA install directory.")
+    endif()
     # cancel Amber arch flags, because quick supports different shader models
     set(CUDA_NVCC_FLAGS "")
 
@@ -190,6 +190,7 @@ option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)
 
 if(HIP)
     find_package(HipCUDA REQUIRED)
+
     set(CUDA ON)
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
@@ -197,10 +198,25 @@ if(HIP)
         -fPIC
     )
 
-    #add_compile_definitions(AMBER_PLATFORM_AMD)
-    if(HIP_WARP64)
-            add_compile_definitions(AMBER_PLATFORM_AMD_WARP64)
+    # optimization level
+    if(OPTIMIZE)
+        list(APPEND CUDA_NVCC_FLAGS -O3)
+
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-O3")
+
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-mtune=native")
+
+    else()
+        list(APPEND CUDA_NVCC_FLAGS -O0)
+
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-O0")
+
     endif()
+
+    list(APPEND CUDA_DEVICE_CODE_FLAGS -DUSE_LEGACY_ATOMICS)
+
+    # extra CUDA flags
+    list(APPEND CUDA_NVCC_FLAGS -use_fast_math)
 
     #set(CUDA_PROPAGATE_HOST_FLAGS FALSE)
 

@@ -1,7 +1,7 @@
 set(QUICK_CUDA_SOURCE gpu.cu gpu_type.cu gpu_get2e.cu gpu_oei.cu gpu_lri.cu xc_redistribute.cpp)
      
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
-cuda_add_library(quick_cuda_kernels STATIC ${QUICK_CUDA_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DCUDA) 
+cuda_add_library(quick_cuda_kernels STATIC ${QUICK_CUDA_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DHIP)
 target_link_libraries(quick_cuda_kernels xc_gpu xc_cuda)
 
 if(MPI)
@@ -19,22 +19,27 @@ endif()
 # CUBLAS fortran thunking
 #------------------------------------------------------------------------------------------
 
-set(CUBLAS_FORTRAN_SOURCE cublas/fortran_thunking.c)
+include_directories(../util)
+
+set(CUBLAS_FORTRAN_SOURCE ${HIP_TOOLKIT_ROOT_DIR}/rocblas/include/rocblas_module.f90 rocblas/rocblas_extra_module.f90 rocblas/quick_rocblas_module.f90)
 
 add_library(cublas_fortran_obj OBJECT ${CUBLAS_FORTRAN_SOURCE})
-set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS}) 
+set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
 set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_DEFINITIONS CUBLAS_USE_THUNKING)
 set_property(TARGET cublas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 target_include_directories(cublas_fortran_obj PUBLIC ${CUDA_INCLUDE_DIRS})
+config_module_dirs(cublas_fortran_obj quick/cuda)
 
 # cusolver
 #------------------------------------------------------------------------------------------
-
-set(CUSOLVER_SOURCE cusolver/quick_cusolver.c)
+set(CUSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
 
 add_library(cusolver_obj OBJECT ${CUSOLVER_SOURCE})
-set_property(TARGET cusolver_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS}) 
+set_property(TARGET cusolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
 set_property(TARGET cusolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
+add_dependencies(cusolver_obj cublas_fortran_obj)
 target_include_directories(cusolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
+config_module_dirs(cusolver_obj quick/cuda)
+#target_include_directories(cusolver_obj PUBLIC rocblas)

@@ -911,7 +911,7 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
   endif()
 
   # If HIP wrappers exist, append those
-  if(NOT _name MATCHES "(solver)")
+  #if(NOT _name MATCHES "(solver)")
     string(REGEX REPLACE "^(cu)" "hip" _hipname ${_name})
     if(_name MATCHES "(fft|rand)")
       set(_hipnamespace "hip")
@@ -929,7 +929,7 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
         list(PREPEND CUDA_INCLUDE_DIRS ${HIPFFT_INCLUDE_DIR})
       endif()
     endif()
-  endif()
+  #endif()
 
   # Add legacy uppercase variables
   if(_name MATCHES "(fft|blas)")

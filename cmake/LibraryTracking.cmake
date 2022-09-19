@@ -135,8 +135,24 @@ endfunction(using_library_targets)
 function(import_library NAME PATH) #3rd arg: INCLUDE_DIRS
 
 	if("${PATH}" STREQUAL "" OR NOT EXISTS "${PATH}")
-		message(FATAL_ERROR "Attempt to import library ${NAME} from nonexistant path \"${PATH}\"")
-	endif()
+		# if PATH isn't valid, check if it's a list of already imported targets (FindHipCUDA for eg.). If yes, just alias under desired NAME.
+		set(TARGETS ${PATH})
+		list(GET TARGETS 0 TARGET_0)
+		if(TARGET ${TARGET_0})
+			add_library(${NAME} INTERFACE IMPORTED GLOBAL)
+
+			list(LENGTH TARGETS TARGETS_LENGTH)
+			if(TARGETS_LENGTH GREATER 1)
+				#list(REMOVE_ITEM TARGETS ${TARGET_0})
+
+				target_link_libraries(${NAME} INTERFACE ${TARGETS})
+
+			endif()
+			#TODO: handle using external_library() for release packages
+		else()
+			message(FATAL_ERROR "Attempt to import library ${NAME} from nonexistant path \"${PATH}\"")
+		endif()
+	else()
 	
 	#Try to figure out whether it is shared or static.
 	get_lib_type(${PATH} LIB_TYPE)
@@ -151,6 +167,8 @@ function(import_library NAME PATH) #3rd arg: INCLUDE_DIRS
 	set_property(TARGET ${NAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ARGN})
 	
 	using_external_library("${PATH}")
+
+	endif()
 	
 endfunction(import_library)
 

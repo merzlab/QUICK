@@ -1,8 +1,16 @@
-cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
+cmake_minimum_required(VERSION 3.13.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
 project(quick LANGUAGES NONE VERSION 22.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
+
+#if(HIP)
+#list(APPEND CMAKE_MODULE_PATH "${HIP_TOOLKIT_ROOT_DIR}/hip/cmake")
+#find_package(HIP QUIET)
+#endif()
+
+message("${CMAKE_MODULE_PATH}")
+
 if(NOT INSIDE_AMBER)
 
 	# initialization and include paths
@@ -173,14 +181,16 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 endif()
 
 
+
+
 # PGI, CRAY, CLANG: NOT SUPPORTED
 # --------------------------------------------------------------------
 if(${COMPILER} STREQUAL PGI)
     message(FATAL_ERROR "PGI compiler not supported by QUICK.")
 elseif(${COMPILER} STREQUAL CRAY)
     message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
-elseif(${COMPILER} STREQUAL CLANG)
-    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
+#elseif(${COMPILER} STREQUAL CLANG)
+#    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
 endif()
 
 
@@ -232,6 +242,8 @@ endif()
 if(INSIDE_AMBER)
   add_definitions(-DCEW)
 endif()
+
+message("Calling QUICKCudaConfig")
 
 # CUDA compiler flags
 # --------------------------------------------------------------------
