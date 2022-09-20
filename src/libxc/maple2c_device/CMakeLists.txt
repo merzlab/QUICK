@@ -40,28 +40,28 @@ set(LIBXC_CUDA_SOURCES
 	
 
 if(HIP)
-        list(APPEND LIBXC_CUDA_SOURCES ../../hip/gpu_getxc.cu)
-        cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
+        list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)
+        cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
                 OPTIONS
                 -fgpu-rdc
                 -c
                 ${CUDA_DEVICE_CODE_FLAGS}
                 -I${CMAKE_CURRENT_SOURCE_DIR}/..
                 )
-        target_compile_definitions(xc_cuda PRIVATE HIP)
+        target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 else()
 
         set(CUDA_SEPARABLE_COMPILATION TRUE)
-        list(APPEND LIBXC_CUDA_SOURCES ../../cuda/gpu_getxc.cu)
-        cuda_add_library(xc_cuda STATIC ${LIBXC_CUDA_SOURCES}
+        list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)
+        cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
                 OPTIONS
                 ${CUDA_DEVICE_CODE_FLAGS}
                 -I${CMAKE_CURRENT_SOURCE_DIR}/..
                 )
-        target_compile_definitions(xc_cuda PRIVATE CUDA)
+        target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 endif()
 
 
 if(INSIDE_AMBER)
-	target_link_libraries(xc_cuda libcew)
+	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)
 endif()

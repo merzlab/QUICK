@@ -214,9 +214,7 @@ if(HIP)
     if(OPTIMIZE)
         list(APPEND CUDA_NVCC_FLAGS -O3)
 
-        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-O3")
-
-        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-mtune=native")
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} -O3 -mtune=native)
 
     else()
         list(APPEND CUDA_NVCC_FLAGS -O0)

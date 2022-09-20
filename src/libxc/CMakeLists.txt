@@ -145,11 +145,8 @@ if(CUDA)
 	# note: this is not a GPU implementation of libxc, it's just
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
-        if(HIP)
-                target_compile_definitions(xc_gpu PRIVATE HIP)
-        else()
-	        target_compile_definitions(xc_gpu PRIVATE CUDA)
-        endif()
+	target_compile_definitions(xc_gpu PRIVATE ${QUICK_GPU_PLATFORM})
+
 	if(INSIDE_AMBER)
 		target_link_libraries(xc_gpu libcew)
 	endif()
