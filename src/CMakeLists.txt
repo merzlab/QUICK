@@ -12,7 +12,6 @@ if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 endif()
 
 if(HIP)
-        message("added hip files")
         add_subdirectory(hip)
 else()
 if(CUDA)
@@ -229,6 +228,27 @@ if(CUDA)
 endif()
 
 if(MPI AND CUDA)
+
+        if(HIP)
+
+        set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
+
+        copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_HIP_FORTRAN_SOURCE})
+        target_compile_definitions(libquick_mpi_cuda PRIVATE HIP_MPIV)
+        target_link_options(libquick_mpi_cuda PRIVATE ${HIPCC_LD_FLAGS})
+        set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
+
+        remove_link_libraries(libquick_mpi_cuda octree_mpi xc)
+        target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu octree_gpu quick_cuda_kernels_mpi cublas cusolver lapack)
+        if(INSIDE_AMBER)
+        target_link_libraries(libquick_mpi_cuda PRIVATE libcew_mpi)
+        endif()
+
+        config_module_dirs(libquick_mpi_cuda quick/cuda quick/mpi_cuda libxc/gpu)
+
+        install_libraries(libquick_mpi_cuda EXPORT QUICK)
+
+        else()
 	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
 	target_compile_definitions(libquick_mpi_cuda PRIVATE CUDA_MPIV)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
@@ -237,10 +257,12 @@ if(MPI AND CUDA)
 	target_link_libraries(libquick_mpi_cuda PRIVATE xc_gpu xc_cuda octree_gpu quick_cuda_kernels_mpi cublas cusolver)
 	if(INSIDE_AMBER)
         target_link_libraries(libquick_mpi_cuda PRIVATE libcew_mpi)
-    endif()
+        endif()
+
 	config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 
 	install_libraries(libquick_mpi_cuda EXPORT QUICK)
+        endif()
 endif()
 
 # Enable -DLAPACK or -DMKL for non-CUDA versions
@@ -336,6 +358,26 @@ if(CUDA)
 endif()
 
 if(CUDA AND MPI)
+
+        if(HIP)
+        copy_target(quick.MPI quick.hip.MPI)
+        target_compile_definitions(quick.hip.MPI PRIVATE HIP_MPIV)
+
+        copy_target(test-api.MPI test-api.hip.MPI)
+        target_compile_definitions(test-api.hip.MPI PRIVATE HIP_MPIV)
+
+        remove_link_libraries(quick.hip.MPI libquick_mpi)
+        target_link_libraries(quick.hip.MPI libquick_mpi_cuda)
+        config_module_dirs(quick.hip.MPI quick/mpi_cuda libxc/gpu)
+
+        remove_link_libraries(test-api.hip.MPI libquick_mpi)
+        target_link_libraries(test-api.hip.MPI libquick_mpi_cuda)
+        config_module_dirs(test-api.hip.MPI quick/mpi_cuda libxc/gpu)
+
+        install(TARGETS quick.hip.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+        install(TARGETS test-api.hip.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+
+        else()
 	copy_target(quick.MPI quick.cuda.MPI)
 	target_compile_definitions(quick.cuda.MPI PRIVATE CUDA_MPIV)
 
@@ -352,4 +394,5 @@ if(CUDA AND MPI)
 
 	install(TARGETS quick.cuda.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.cuda.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+        endif()
 endif()

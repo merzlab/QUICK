@@ -6,8 +6,8 @@ target_link_libraries(quick_cuda_kernels xc_gpu xc_cuda)
 
 if(MPI)
 	cuda_add_library(quick_cuda_kernels_mpi STATIC ${QUICK_CUDA_SOURCE} 
-	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DCUDA_MPIV) 
-	target_compile_definitions(quick_cuda_kernels_mpi PRIVATE CUDA_MPIV)
+	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DHIP_MPIV) 
+	target_compile_definitions(quick_cuda_kernels_mpi PRIVATE HIP_MPIV)
 	set_property(TARGET quick_cuda_kernels_mpi PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 	target_link_libraries(quick_cuda_kernels_mpi xc_gpu xc_cuda)
 
