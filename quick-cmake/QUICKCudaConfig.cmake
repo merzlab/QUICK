@@ -139,7 +139,8 @@ if(CUDA)
         endif()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing and
+ampere.")
         endif()
 
     endif()
@@ -228,11 +229,6 @@ if(HIP)
 
     # extra CUDA flags
     list(APPEND CUDA_NVCC_FLAGS -ffast-math)
-
-    #set(CUDA_PROPAGATE_HOST_FLAGS FALSE)
-
-    #the same CUDA file is used for multiple targets in PMEMD, so turn this off
-    #set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE FALSE)
 
     if(HIP_RDC)
             # Only hipcc can link a library compiled using RDC mode
