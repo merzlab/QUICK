@@ -1,6 +1,11 @@
 # first, find CUDA.
 option(CUDA "Build ${PROJECT_NAME} with CUDA GPU acceleration support." FALSE)
 
+# set these variables to minimize code duplication of hip and cuda builds
+set(QUICK_GPU_PLATFORM "CUDA")
+set(QUICK_GPU_TARGET_NAME "cuda")
+set(GPU_LD_FLAGS "") # hipcc requires special flags for linking (see below)
+
 if(CUDA)
 
     find_package(CUDA REQUIRED)
@@ -189,6 +194,12 @@ option(HIP_RDC "Build relocatable device code, also known as separate compilatio
 option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
 
 if(HIP)
+
+    set(QUICK_GPU_PLATFORM "HIP")
+    set(QUICK_GPU_TARGET_NAME "hip")
+    set(GPU_LD_FLAGS -O2 -fgpu-rdc --hip-link)
+
+
     find_package(HipCUDA REQUIRED)
 
     set(CUDA ON)
@@ -216,7 +227,7 @@ if(HIP)
     list(APPEND CUDA_DEVICE_CODE_FLAGS -DUSE_LEGACY_ATOMICS)
 
     # extra CUDA flags
-    list(APPEND CUDA_NVCC_FLAGS -use_fast_math)
+    list(APPEND CUDA_NVCC_FLAGS -ffast-math)
 
     #set(CUDA_PROPAGATE_HOST_FLAGS FALSE)
 

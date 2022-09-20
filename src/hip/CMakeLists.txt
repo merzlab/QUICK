@@ -30,7 +30,6 @@ set_property(TARGET cublas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 target_include_directories(cublas_fortran_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 config_module_dirs(cublas_fortran_obj quick/cuda)
-
 # cusolver
 #------------------------------------------------------------------------------------------
 set(CUSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
@@ -42,4 +41,16 @@ set_property(TARGET cusolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 add_dependencies(cusolver_obj cublas_fortran_obj)
 target_include_directories(cusolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 config_module_dirs(cusolver_obj quick/cuda)
-#target_include_directories(cusolver_obj PUBLIC rocblas)
+
+# rocblas and rocsolver results in fortran modules. Copy the targets into mpi_cuda folder. 
+if(MPI)
+copy_target(cublas_fortran_obj cublas_fortran_obj_mpi SWAP_SOURCES TO)
+config_module_dirs(cublas_fortran_obj_mpi quick/mpi_cuda)
+set_property(TARGET cublas_fortran_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
+
+copy_target(cusolver_obj cusolver_obj_mpi SWAP_SOURCES TO)
+config_module_dirs(cusolver_obj_mpi quick/mpi_cuda)
+set_property(TARGET cusolver_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
+add_dependencies(cusolver_obj_mpi cublas_fortran_obj_mpi)
+endif()
+

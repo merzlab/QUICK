@@ -11,13 +11,7 @@ if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 	add_subdirectory(lapack)
 endif()
 
-if(HIP)
-        add_subdirectory(hip)
-else()
-if(CUDA)
-	add_subdirectory(cuda)
-endif()
-endif()
+add_subdirectory(${QUICK_GPU_TARGET_NAME})
 
 # quick source lists
 # --------------------------------------------------------------------
@@ -104,9 +98,7 @@ set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90
     ecp.f90 nuclear.f90 finalize.f90 mpi_setup.f90 quick_debug.f90
     calMP2.f90 hessian.f90 CPHF.f90 frequency.f90 basis.f90)
 
-set(QUICK_CUDA_FORTRAN_SOURCE cuda/gpu_write_info.f90)
-
-set(QUICK_HIP_FORTRAN_SOURCE hip/gpu_write_info.f90)
+set(QUICK_GPU_FORTRAN_SOURCE ${QUICK_GPU_TARGET_NAME}/gpu_write_info.f90)
 
 set(TEST_API_SOURCES quick_api_test.f90)
 set(MAIN_SOURCES main.f90)
@@ -144,10 +136,6 @@ include_directories(util)
 add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
-#if(HIP)
-#add_dependencies(libquick cublas_fortran_obj)
-#config_module_dirs(libquick quick/cuda)
-#endif()
 
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
 if(INSIDE_AMBER)
@@ -187,7 +175,7 @@ if(CUDA)
 
         set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
 
-        copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_HIP_FORTRAN_SOURCE})
+        copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
         target_compile_definitions(libquick_cuda PRIVATE HIP)
         target_link_options(libquick_cuda PRIVATE ${HIPCC_LD_FLAGS})
 
@@ -207,8 +195,8 @@ if(CUDA)
         install_libraries(libquick_cuda EXPORT QUICK)
 
         else()
-                copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
-	        target_compile_definitions(libquick_cuda PRIVATE CUDA)
+        copy_target(libquick libquick_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+	target_compile_definitions(libquick_cuda PRIVATE CUDA)
 
 	set_property(TARGET libquick_cuda PROPERTY OUTPUT_NAME quick_cuda)
 
@@ -233,7 +221,7 @@ if(MPI AND CUDA)
 
         set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
 
-        copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_HIP_FORTRAN_SOURCE})
+        copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj_mpi> $<TARGET_OBJECTS:cusolver_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
         target_compile_definitions(libquick_mpi_cuda PRIVATE HIP_MPIV)
         target_link_options(libquick_mpi_cuda PRIVATE ${HIPCC_LD_FLAGS})
         set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
@@ -244,12 +232,12 @@ if(MPI AND CUDA)
         target_link_libraries(libquick_mpi_cuda PRIVATE libcew_mpi)
         endif()
 
-        config_module_dirs(libquick_mpi_cuda quick/cuda quick/mpi_cuda libxc/gpu)
+        config_module_dirs(libquick_mpi_cuda quick/mpi_cuda libxc/gpu)
 
         install_libraries(libquick_mpi_cuda EXPORT QUICK)
 
         else()
-	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_CUDA_FORTRAN_SOURCE})
+	copy_target(libquick_mpi libquick_mpi_cuda SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 	target_compile_definitions(libquick_mpi_cuda PRIVATE CUDA_MPIV)
 	set_property(TARGET libquick_mpi_cuda PROPERTY OUTPUT_NAME quick_mpi_cuda)
 
