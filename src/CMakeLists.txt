@@ -176,51 +176,49 @@ if(CUDA)
         if(HIP)
 
 
-        copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
-        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
-        target_link_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
-
-        set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
-
-        # change link libraries and mod dirs for CUDA
-        remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
-
-        target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver lapack)
-
-        if(INSIDE_AMBER)
-                target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-        endif()
-
-        config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-        install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
+                copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+                target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
+                target_link_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
+        
+                set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
+        
+                # change link libraries and mod dirs for CUDA
+                remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
+        
+                target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver lapack)
+        
+                if(INSIDE_AMBER)
+                        target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
+                endif()
+        
+                config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
+        
+                install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 
         else()
-        copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
-	target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
-
-	set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
-
-	# change link libraries and mod dirs for CUDA
-	remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
-
-        target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
-
-	if(INSIDE_AMBER)
-                target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-        endif()
-
-	config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-	install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
+                copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+   	        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
+ 
+ 	        set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
+ 
+  	        # change link libraries and mod dirs for CUDA
+ 	        remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
+ 
+                target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
+ 
+ 	        if(INSIDE_AMBER)
+                        target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
+                endif()
+ 
+ 	        config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
+ 
+ 	        install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
         endif()
 endif()
 
 if(MPI AND CUDA)
 
         if(HIP)
-
-#        set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
 
         copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj_mpi> $<TARGET_OBJECTS:cusolver_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
         target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE HIP_MPIV)
@@ -304,73 +302,26 @@ if(MPI)
 endif()
 
 if(CUDA)
-#        if(HIP)
 
-#                copy_target(quick quick.hip)
-#                target_compile_definitions(quick.hip PRIVATE HIP)
+        copy_target(quick quick.${QUICK_GPU_TARGET_NAME})
+        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 
-#                copy_target(test-api test-api.hip)
-#                target_compile_definitions(test-api.hip PRIVATE HIP)
+        copy_target(test-api test-api.${QUICK_GPU_TARGET_NAME})
+        target_compile_definitions(test-api.${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 
-#                remove_link_libraries(quick.hip libquick)
-#                target_link_libraries(quick.hip libquick_${QUICK_GPU_TARGET_NAME})
-#                config_module_dirs(quick.hip quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
+        remove_link_libraries(quick.${QUICK_GPU_TARGET_NAME} libquick)
+        target_link_libraries(quick.${QUICK_GPU_TARGET_NAME} libquick_${QUICK_GPU_TARGET_NAME})
+        config_module_dirs(quick.${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
-#                remove_link_libraries(test-api.hip libquick)
-#                target_link_libraries(test-api.hip libquick_${QUICK_GPU_TARGET_NAME})
-#                config_module_dirs(test-api.hip quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
+        remove_link_libraries(test-api.${QUICK_GPU_TARGET_NAME} libquick)
+        target_link_libraries(test-api.${QUICK_GPU_TARGET_NAME} libquick_${QUICK_GPU_TARGET_NAME})
+        config_module_dirs(test-api.${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
-#                install(TARGETS quick.hip DESTINATION ${BINDIR} EXPORT QUICK)
-#                install(TARGETS test-api.hip DESTINATION ${BINDIR} EXPORT QUICK)
-
-
-#        else()
-
-
-	        copy_target(quick quick.${QUICK_GPU_TARGET_NAME})
-	        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
-
-	        copy_target(test-api test-api.${QUICK_GPU_TARGET_NAME})
-	        target_compile_definitions(test-api.${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
-
-	        remove_link_libraries(quick.${QUICK_GPU_TARGET_NAME} libquick)
-	        target_link_libraries(quick.${QUICK_GPU_TARGET_NAME} libquick_${QUICK_GPU_TARGET_NAME})
-	        config_module_dirs(quick.${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-	        remove_link_libraries(test-api.${QUICK_GPU_TARGET_NAME} libquick)
-	        target_link_libraries(test-api.${QUICK_GPU_TARGET_NAME} libquick_${QUICK_GPU_TARGET_NAME})
-	        config_module_dirs(test-api.${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-	        install(TARGETS quick.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
-	        install(TARGETS test-api.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
-#        endif()
+        install(TARGETS quick.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
+        install(TARGETS test-api.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
 
 if(CUDA AND MPI)
-
-#        if(HIP)
-#        copy_target(quick.MPI quick.hip.MPI)
-#        target_compile_definitions(quick.hip.MPI PRIVATE HIP_MPIV)
-
-#        copy_target(test-api.MPI test-api.hip.MPI)
-#        target_compile_definitions(test-api.hip.MPI PRIVATE HIP_MPIV)
-
-#        remove_link_libraries(quick.hip.MPI libquick_mpi)
-#        target_link_libraries(quick.hip.MPI libquick_mpi_${QUICK_GPU_TARGET_NAME})
-#        config_module_dirs(quick.hip.MPI quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-#        remove_link_libraries(test-api.hip.MPI libquick_mpi)
-#        target_link_libraries(test-api.hip.MPI libquick_mpi_${QUICK_GPU_TARGET_NAME})
-#        config_module_dirs(test-api.hip.MPI quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
-
-#        install(TARGETS quick.hip.MPI DESTINATION ${BINDIR} EXPORT QUICK)
-#        install(TARGETS test-api.hip.MPI DESTINATION ${BINDIR} EXPORT QUICK)
-
-#        else()
-
-message(quick.${QUICK_GPU_TARGET_NAME}.MPI)
-message(${QUICK_GPU_PLATFORM}_MPIV)
-
 	copy_target(quick.MPI quick.${QUICK_GPU_TARGET_NAME}.MPI)
 	target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME}.MPI PRIVATE ${QUICK_GPU_PLATFORM}_MPIV)
 
@@ -387,5 +338,4 @@ message(${QUICK_GPU_PLATFORM}_MPIV)
 
 	install(TARGETS quick.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
-#        endif()
 endif()
