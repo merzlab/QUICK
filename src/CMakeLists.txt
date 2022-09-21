@@ -173,10 +173,9 @@ if(CUDA)
 
         if(HIP)
 
-#        set(HIPCC_LD_FLAGS -O2 -fgpu-rdc --hip-link)
 
         copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
-        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE HIP)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
         target_link_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
 
         set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})

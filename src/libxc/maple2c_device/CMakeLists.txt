@@ -1,7 +1,3 @@
-
-
-#set(CUDA_SEPARABLE_COMPILATION TRUE)
-
 set(LIBXC_CUDA_SOURCES
 	gga_c_am05.cu gga_c_bcgp.cu gga_c_bmk.cu gga_c_cs1.cu 
 	gga_c_ft97.cu gga_c_gapc.cu gga_c_gaploc.cu gga_c_hcth_a.cu 
@@ -37,30 +33,25 @@ set(LIBXC_CUDA_SOURCES
         )
 	# gpu_getxc.cu references functions inside libxc_cuda, so with how CMake separable
 	# compilation linking works it's a lot simpler to add it as a source file here.
-	
+
+set(GPU_RDC_FLAGS "")
+
+list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)	
 
 if(HIP)
-        list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)
-        cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
-                OPTIONS
-                -fgpu-rdc
-                -c
-                ${CUDA_DEVICE_CODE_FLAGS}
-                -I${CMAKE_CURRENT_SOURCE_DIR}/..
-                )
-        target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
+        set(GPU_RDC_FLAGS -fgpu-rdc -c)
 else()
 
         set(CUDA_SEPARABLE_COMPILATION TRUE)
-        list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)
-        cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
-                OPTIONS
-                ${CUDA_DEVICE_CODE_FLAGS}
-                -I${CMAKE_CURRENT_SOURCE_DIR}/..
-                )
-        target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 endif()
 
+cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
+        OPTIONS
+        ${GPU_RDC_FLAGS}
+        ${CUDA_DEVICE_CODE_FLAGS}
+        -I${CMAKE_CURRENT_SOURCE_DIR}/..
+        )
+target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 
 if(INSIDE_AMBER)
 	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)
