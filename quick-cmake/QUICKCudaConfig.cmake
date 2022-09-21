@@ -190,34 +190,24 @@ ampere.")
 
 endif()
 
-option(HIP "Build ${PROJECT_NAME} with HIP GPU acceleration support." FALSE)
-option(HIP_RDC "Build relocatable device code, also known as separate compilation mode." FALSE)
-option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
-
 if(HIP)
 
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
-    set(GPU_LD_FLAGS -O2 -fgpu-rdc --hip-link)
-
+    set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
 
     find_package(HipCUDA REQUIRED)
 
     set(CUDA ON)
 
-set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
-set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
-
-#    set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-    list(APPEND CUDA_NVCC_FLAGS
-        -fPIC
-    )
+    set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
+    set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
 
     # optimization level
     if(OPTIMIZE)
-        list(APPEND CUDA_NVCC_FLAGS -O3)
+        list(APPEND CUDA_NVCC_FLAGS -O2 -ffast-math)
 
-        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} -O3 -mtune=native)
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} -O2 -mtune=native)
 
     else()
         list(APPEND CUDA_NVCC_FLAGS -O0)
@@ -226,19 +216,9 @@ set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
 
     endif()
 
+    list(APPEND CUDA_NVCC_FLAGS -fPIC)
+
     list(APPEND CUDA_DEVICE_CODE_FLAGS -DUSE_LEGACY_ATOMICS)
-
-    # extra CUDA flags
-    list(APPEND CUDA_NVCC_FLAGS -ffast-math)
-
-    if(HIP_RDC)
-            # Only hipcc can link a library compiled using RDC mode
-            # -Wl,--unresolved-symbols=ignore-in-object-files is added after <LINK_FLAGS>
-            # because CMAKE_SHARED_LINKER_FLAGS contains -Wl,--no-undefined, but we link
-            # the whole program with all external shared libs later.
-            set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files -Wl,-soname,<TARGET> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-            # set(CMAKE_CXX_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-    endif()
 
     import_library(cublas "${CUDA_cublas_LIBRARY}")
     import_library(cusolver "${CUDA_cusolver_LIBRARY}")
