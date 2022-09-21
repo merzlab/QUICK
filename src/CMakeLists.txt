@@ -11,7 +11,9 @@ if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 	add_subdirectory(lapack)
 endif()
 
+if(CUDA OR HIP)
 add_subdirectory(${QUICK_GPU_TARGET_NAME})
+endif()
 
 # quick source lists
 # --------------------------------------------------------------------
