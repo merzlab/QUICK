@@ -195,6 +195,8 @@ if(HIP)
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
     set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
+    set(HIP_TOOLKIT_ROOT_DIR "/opt/rocm" CACHE STRING "Location of the HIP toolkit")
+    set(HIPCUDA_EMULATE_VERSION "10.1" CACHE STRING "CUDA emulate version")
 
     find_package(HipCUDA REQUIRED)
 
