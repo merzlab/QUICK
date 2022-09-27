@@ -233,7 +233,7 @@ endif()
 
 # extra compiling flags
 if(INSIDE_AMBER)
-  add_definitions(-DCEW)
+#  add_definitions(-DCEW)
 endif()
 
 # CUDA compiler flags

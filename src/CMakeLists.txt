@@ -140,7 +140,7 @@ target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
-if(INSIDE_AMBER)
+if(INSIDE_AMBER AND CEW)
     target_link_libraries(libquick PRIVATE libcew)
 endif()
 install_libraries(libquick EXPORT QUICK)
@@ -162,7 +162,7 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
-	if(INSIDE_AMBER)
+	if(INSIDE_AMBER AND CEW)
         target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
     endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
@@ -187,7 +187,7 @@ if(CUDA)
         
                 target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver lapack)
         
-                if(INSIDE_AMBER)
+                if(INSIDE_AMBER AND CEW)
                         target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
                 endif()
         
@@ -206,7 +206,7 @@ if(CUDA)
  
                 target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
  
- 	        if(INSIDE_AMBER)
+ 	        if(INSIDE_AMBER AND CEW)
                         target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
                 endif()
  
@@ -227,7 +227,7 @@ if(MPI AND CUDA)
 
         remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
         target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver lapack)
-        if(INSIDE_AMBER)
+        if(INSIDE_AMBER AND CEW)
         target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
         endif()
 
@@ -242,7 +242,7 @@ if(MPI AND CUDA)
 
 	remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
 	target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
-	if(INSIDE_AMBER)
+	if(INSIDE_AMBER AND CEW)
         target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
         endif()
 
