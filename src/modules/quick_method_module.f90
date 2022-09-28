@@ -760,9 +760,14 @@ module quick_method_module
             if (index(KeyWD,'EXPORT=') .ne. 0) then
                 tempstring=' '
                 call read(keyWD, 'EXPORT', tempstring)
-                if(index(tempstring,'MOLDEN') /= 0) write_molden=.true.
-
+                if(index(tempstring,'MOLDEN') /= 0) then
+                    write_molden=.true.
+                else
+                    ierr=35
+                endif
             endif
+            CHECK_ERROR(ierr)
+
         end subroutine read_quick_method
 
         !------------------------

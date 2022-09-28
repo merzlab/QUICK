@@ -124,6 +124,9 @@ contains
     case(34)
       msg='Dispersion correction unavailable for DFT functional being used.'
 
+    case(35)
+      msg='Requested export file format is not available.'
+
     case default
       msg='Unknown error.'
 
