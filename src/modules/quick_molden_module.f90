@@ -234,11 +234,19 @@ subroutine write_scf(self, ierr)
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
     integer :: i, j
+    character(len=9) :: label
 
     write(self%iMoldenFile, '("[SCFCONV]")')
 
     do i=1, self%iexport_snapshot-1
-        write(self%iMoldenFile, '(2x, "scf-cycle", 2x, I3, 2x, "THROUGH", 2x, I3)') 1, self%nscf_snapshots(i)
+       if (i == 1) then
+          label = "scf-first"
+       else if (i == (self%iexport_snapshot - 1) ) then
+          label = "scf-last"
+       else
+          label = "scf"
+       end if
+       write(self%iMoldenFile, '(2x, a, 2x, I3, 2x, "THROUGH", 2x, I3)') trim(label), 1, self%nscf_snapshots(i)
         do j=1, self%nscf_snapshots(i)
             write(self%iMoldenFile, '(2x, E16.10)') self%e_snapshots(j,i)
         enddo

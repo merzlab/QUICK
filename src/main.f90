@@ -281,8 +281,10 @@
        call exportCoordinates(quick_molden, ierr)
        call exportBasis(quick_molden, ierr)
        call exportMO(quick_molden, ierr)
-       call exportSCF(quick_molden, ierr)
-       call exportOPT(quick_molden, ierr)
+       if (quick_method%opt) then
+          call exportSCF(quick_molden, ierr)
+          call exportOPT(quick_molden, ierr)
+       end if
     endif
 
 
