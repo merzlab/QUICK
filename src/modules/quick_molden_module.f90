@@ -312,6 +312,7 @@ subroutine finalize_molden(self, ierr)
     integer, intent(out) :: ierr
 
     ! deallocate memory
+    if(allocated(self%atom_symbol)) deallocate(self%atom_symbol(natom))
     if(allocated(self%nscf_snapshots)) deallocate(self%nscf_snapshots)
     if(allocated(self%e_snapshots)) deallocate(self%e_snapshots)
     if(allocated(self%xyz_snapshots)) deallocate(self%xyz_snapshots)
