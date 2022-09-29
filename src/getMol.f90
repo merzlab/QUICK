@@ -15,7 +15,6 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-   use quick_molden_module, only : initializeExport, quick_molden, exportCoordinates, exportBasis
 
    implicit none
 
@@ -81,13 +80,6 @@ subroutine getMol(ierr)
       ! now print molecule specification to output file
       call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
-
-      ! initialize exporting and write molecular information
-      if(write_molden) then
-         call initializeExport(quick_molden, ierr)
-         call exportCoordinates(quick_molden, ierr)
-         call exportBasis(quick_molden, ierr)
-      endif
 
       ! the following some step are setup for basis and for ECP or DFT calculation
       ! and see comments for details

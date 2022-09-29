@@ -346,7 +346,7 @@ subroutine dlf_run(ierr2 &
   use quick_molspec_module, only: xyz, quick_molspec
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
-  use quick_molden_module, only: quick_molden, exportSCF, exportOPT
+  use quick_molden_module, only: quick_molden
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -835,6 +835,13 @@ subroutine dlf_run(ierr2 &
       end if
     end if
 
+    ! store geometry for Molden trajectory
+    if(write_molden) then
+       quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot) = glob%xcoords
+       quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
+    endif
+
+
     ! if trust-radius, test for step acceptance. 
     ! If rejected, do not form a new step and keep old energy.
     if (glob%imicroiter == 2) then
@@ -1014,17 +1021,13 @@ subroutine dlf_run(ierr2 &
       write(stdout,*)"@ Finish Optimization for This Step"
     endif
 
- do iat=1,glob%nat
-    do jat=1,3
-!      xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
-       xyz(jat,iat)=glob%xcoords(jat,iat)
+    ! store new coordinates for next step in QUICK data structure
+    do iat=1,glob%nat
+       do jat=1,3
+          ! xyz(jat,iat)=glob%xcoords((iat-1)*3+jat)
+          xyz(jat,iat)=glob%xcoords(jat,iat)
+       enddo
     enddo
- enddo
-
-  if(write_molden) then
-      quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot)=xyz(:,:)
-      quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
-  endif
 
   end do ! main simulation cycle
 
@@ -1074,12 +1077,6 @@ subroutine dlf_run(ierr2 &
       write(stdout,*)
     end if
   end if
-
-  if(write_molden) then
-      call exportSCF(quick_molden, ierr2)
-!      call exportOPT(quick_molden, ierr2)
-  endif
-
 
   ! calculate the qts rate if converged
   if(glob%icoord==190.and.tconv.and.glob%iopt/=12.and.glob%havehessian) then

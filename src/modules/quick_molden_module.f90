@@ -23,6 +23,15 @@ module quick_molden_module
     type quick_molden_type
       integer :: iMoldenFile
 
+      ! true if this a geometry optimization
+      logical :: opt
+      
+      ! number of atoms in molecule
+      integer :: natom
+
+      ! atom symbols
+      character(len=2), allocatable :: atom_symbol(:)
+
       ! number of scf iterations to converge
       integer, dimension(:), allocatable :: nscf_snapshots
 
@@ -76,13 +85,24 @@ subroutine write_coordinates(self, ierr)
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: i, j
+    integer :: i, j, k
 
     ! write atomic labels and coordinates
     write(self%iMoldenFile, '("[Atoms] (AU)")')
     do i=1,natom
-        write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
-        symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i),j=1,3)
+        write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3)',advance='no') &
+             symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i)
+        if (self%opt) then
+           ! in case of geometry optimization write last stored geometry
+           ! we need to do this because optimizers may return the geometry
+           ! for the next step which may be stored in xyz
+           k = self%iexport_snapshot - 1
+           write(self%iMoldenFile, '(3(4x,F10.4))') (self%xyz_snapshots(j,i,k),j=1,3)
+         else
+           ! if it's a single point calculation we can use xyz
+           ! we can't use xyz_snapshots because they have not been populated
+           write(self%iMoldenFile, '(3(4x,F10.4))') (xyz(j,i),j=1,3)
+        endif
     enddo
 
 end subroutine write_coordinates
@@ -214,11 +234,19 @@ subroutine write_scf(self, ierr)
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
     integer :: i, j
+    character(len=9) :: label
 
     write(self%iMoldenFile, '("[SCFCONV]")')
 
     do i=1, self%iexport_snapshot-1
-        write(self%iMoldenFile, '(2x, "scf-cycle", 2x, I3, 2x, "THROUGH", 2x, I3)') 1, self%nscf_snapshots(i)
+       if (i == 1) then
+          label = "scf-first"
+       else if (i == (self%iexport_snapshot - 1) ) then
+          label = "scf-last"
+       else
+          label = "scf"
+       end if
+       write(self%iMoldenFile, '(2x, a, 2x, I3, 2x, "THROUGH", 2x, I3)') trim(label), 1, self%nscf_snapshots(i)
         do j=1, self%nscf_snapshots(i)
             write(self%iMoldenFile, '(2x, E16.10)') self%e_snapshots(j,i)
         enddo
@@ -228,12 +256,11 @@ end subroutine write_scf
 
 subroutine write_opt(self, ierr)
 
-    use quick_molspec_module, only: quick_molspec, natom
-    use quick_constants_module, only : symbol, BOHRS_TO_A
+    use quick_constants_module, only : BOHRS_TO_A
     implicit none
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
-    integer :: i, j, k, isum
+    integer :: i, j, k
     character(len=8) :: lbl1
     character(len=2) :: lbl2
 
@@ -245,17 +272,13 @@ subroutine write_opt(self, ierr)
     enddo
 
     write(self%iMoldenFile, '("[GEOMETRIES] (XYZ)")')
-    write(self%iMoldenFile, '(2x, I5)') natom*(self%iexport_snapshot-1)
-    write(self%iMoldenFile, '("")')
-    
-    isum=0
+
     do k=1, self%iexport_snapshot-1
-        do i=1,natom
-            isum=isum+1
-            write(lbl1,'(I8)') isum
-            write(lbl2,'(A2)') symbol(quick_molspec%iattype(i))
-            write(self%iMoldenFile,*) "atom_"//trim(adjustl(lbl1))//"_"//trim(adjustl(lbl2)),&
-            (self%xyz_snapshots(j,i,k)*BOHRS_TO_A,j=1,3)
+       write(self%iMoldenFile, '(2x, I5)') self%natom
+       write(self%iMoldenFile, '("")')
+        do i=1,self%natom
+           write(self%iMoldenFile,'(A2, 2x, 3F14.6)') &
+                self%atom_symbol(i), (self%xyz_snapshots(j,i,k)*BOHRS_TO_A,j=1,3)
         enddo    
     enddo
 
@@ -265,21 +288,34 @@ subroutine initialize_molden(self, ierr)
     
     use quick_files_module, only : iMoldenFile, moldenFileName
     use quick_method_module, only: quick_method
-    use quick_molspec_module, only: natom
+    use quick_molspec_module, only: natom, quick_molspec
+    use quick_constants_module, only : symbol
     implicit none
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
-    integer :: dimy
+    integer :: i, dimy
 
     self%iMoldenFile = iMoldenFile
     self%iexport_snapshot=1
+    self%natom = natom
     dimy = 1
-    if(quick_method%opt) dimy = quick_method%iopt
+    if (quick_method%opt) then
+       self%opt = .true.
+       dimy = quick_method%iopt
+    else
+       self%opt = .false.
+    end if
 
     ! allocate memory
+    if(.not. allocated(self%atom_symbol)) allocate(self%atom_symbol(natom))
     if(.not. allocated(self%nscf_snapshots)) allocate(self%nscf_snapshots(quick_method%iscf))
     if(.not. allocated(self%e_snapshots)) allocate(self%e_snapshots(quick_method%iscf, dimy))
     if(.not. allocated(self%xyz_snapshots)) allocate(self%xyz_snapshots(3, natom, dimy))
+
+    ! store atom symbols
+    do i = 1, natom
+       self%atom_symbol(i) = symbol(quick_molspec%iattype(i))
+    end do
 
     ! open file
     call quick_open(self%iMoldenFile,moldenFileName,'U','F','R',.false.,ierr)
@@ -295,6 +331,7 @@ subroutine finalize_molden(self, ierr)
     integer, intent(out) :: ierr
 
     ! deallocate memory
+    if(allocated(self%atom_symbol)) deallocate(self%atom_symbol)
     if(allocated(self%nscf_snapshots)) deallocate(self%nscf_snapshots)
     if(allocated(self%e_snapshots)) deallocate(self%e_snapshots)
     if(allocated(self%xyz_snapshots)) deallocate(self%xyz_snapshots)
