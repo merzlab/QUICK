@@ -33,6 +33,8 @@
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
+    use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+         exportMO, exportSCF, exportOPT
 
     implicit none
 
@@ -178,7 +180,14 @@
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
 #endif
+    
+    ! Molden export
+    ! initialize exporting
+    if(write_molden .and. master) then
+       call initializeExport(quick_molden, ierr)
+    endif
 
+    
     !------------------------------------------------------------------
     ! 4. SCF single point calculation. DFT if wanted. If it is OPT job
     !    ignore this part and go to opt part. We will get variationally determined Energy.
@@ -266,6 +275,16 @@
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
+
+    ! Molden output
+    if(write_molden .and. master) then
+       call exportCoordinates(quick_molden, ierr)
+       call exportBasis(quick_molden, ierr)
+       call exportMO(quick_molden, ierr)
+       call exportSCF(quick_molden, ierr)
+       call exportOPT(quick_molden, ierr)
+    endif
+
 
 
     !------------------------------------------------------------------

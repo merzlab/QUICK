@@ -85,13 +85,24 @@ subroutine write_coordinates(self, ierr)
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: i, j
+    integer :: i, j, k
 
     ! write atomic labels and coordinates
     write(self%iMoldenFile, '("[Atoms] (AU)")')
     do i=1,natom
-        write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3,4x,F10.4,4x,F10.4,4x,F10.4)') &
-        symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i), (xyz(j,i),j=1,3)
+        write(self%iMoldenFile,'(2x,A2,4x,I5,4x,I3)',advance='no') &
+             symbol(quick_molspec%iattype(i)), i, quick_molspec%iattype(i)
+        if (self%opt) then
+           ! in case of geometry optimization write last stored geometry
+           ! we need to do this because optimizers may return the geometry
+           ! for the next step which may be stored in xyz
+           k = self%iexport_snapshot - 1
+           write(self%iMoldenFile, '(3(4x,F10.4))') (self%xyz_snapshots(j,i,k),j=1,3)
+         else
+           ! if it's a single point calculation we can use xyz
+           ! we can't use xyz_snapshots because they have not been populated
+           write(self%iMoldenFile, '(3(4x,F10.4))') (xyz(j,i),j=1,3)
+        endif
     enddo
 
 end subroutine write_coordinates
@@ -312,7 +323,7 @@ subroutine finalize_molden(self, ierr)
     integer, intent(out) :: ierr
 
     ! deallocate memory
-    if(allocated(self%atom_symbol)) deallocate(self%atom_symbol(natom))
+    if(allocated(self%atom_symbol)) deallocate(self%atom_symbol)
     if(allocated(self%nscf_snapshots)) deallocate(self%nscf_snapshots)
     if(allocated(self%e_snapshots)) deallocate(self%e_snapshots)
     if(allocated(self%xyz_snapshots)) deallocate(self%xyz_snapshots)
