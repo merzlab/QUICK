@@ -30,7 +30,7 @@ module quick_molden_module
       integer :: natom
 
       ! atom symbols
-      character(len=2), allocatable :: atom_symbols(:)
+      character(len=2), allocatable :: atom_symbol(:)
 
       ! number of scf iterations to converge
       integer, dimension(:), allocatable :: nscf_snapshots
@@ -288,7 +288,7 @@ subroutine initialize_molden(self, ierr)
     end if
 
     ! allocate memory
-    if(.not. allocated(self%atom_symbols)) allocate(self%atom_symbols(natom))
+    if(.not. allocated(self%atom_symbol)) allocate(self%atom_symbol(natom))
     if(.not. allocated(self%nscf_snapshots)) allocate(self%nscf_snapshots(quick_method%iscf))
     if(.not. allocated(self%e_snapshots)) allocate(self%e_snapshots(quick_method%iscf, dimy))
     if(.not. allocated(self%xyz_snapshots)) allocate(self%xyz_snapshots(3, natom, dimy))
