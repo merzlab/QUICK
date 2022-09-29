@@ -17,6 +17,7 @@ Features
 * Density functional theory calculations (LDA, GGA and Hybrid-GGA functionals available)
 * Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
 * Mulliken charge analysis
+* Exports Molden format for visualization of geometry and orbital data
 * Supports QM/MM calculations with Amber22
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
