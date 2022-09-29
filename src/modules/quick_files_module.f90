@@ -35,7 +35,7 @@ module quick_files_module
     character(len=80) :: CPHFFileName   = ''
     character(len=80) :: dataFileName   = ''
     character(len=80) :: intFileName    = ''
-
+    character(len=80) :: moldenFileName = ''
 
     ! Basis set and directory
     character(len=240) :: basisDir       = ''
@@ -62,11 +62,13 @@ module quick_files_module
     integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
     integer :: iIntFile       = INTFILEHANDLE    ! integral file
+    integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
 
     logical :: fexist = .false.         ! Check if file exists
 
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file.
+    logical :: write_molden = .false. ! flag to export data into molden format
 
     contains
 
@@ -118,6 +120,7 @@ module quick_files_module
         pdbFileName=inFileName(1:i-1)//'.pdb'
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
+        moldenFileName=inFileName(1:i-1)//'.molden'
 
         return
 

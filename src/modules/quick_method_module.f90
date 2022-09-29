@@ -489,6 +489,7 @@ module quick_method_module
         subroutine read_quick_method(self,keywd,ierr)
             use quick_exception_module
             use quick_mpi_module
+            use quick_files_module, only : write_molden
             implicit none
             character(len=200) :: keyWD
             character(len=200) :: tempstring
@@ -754,6 +755,18 @@ module quick_method_module
 
             if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
             if (index(keyWD,'TIGHTINT').ne.0) self%tight_cutoff=.true.
+
+            ! read and enable exporting
+            if (index(KeyWD,'EXPORT=') .ne. 0) then
+                tempstring=' '
+                call read(keyWD, 'EXPORT', tempstring)
+                if(index(tempstring,'MOLDEN') /= 0) then
+                    write_molden=.true.
+                else
+                    ierr=35
+                endif
+            endif
+            CHECK_ERROR(ierr)
 
         end subroutine read_quick_method
 
