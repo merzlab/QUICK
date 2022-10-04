@@ -52,7 +52,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
-	oshell_denspt.f90 naive_distribute.f90)
+	oshell_denspt.f90 naive_distribute.f90 time.cpp)
 
 set(DLFIND_MODULES_SOURCES
         dlf_allocate.f90 dlf_checkpoint.f90 
