@@ -46,7 +46,7 @@ contains
 
      logical, intent(in) :: deltaO
 
-     call cpu_time(timer_begin%tE)
+     RECORD_TIME(timer_begin%tE)
   
      if(.not. deltaO) quick_qm_struct%E1e=0.0d0
      quick_qm_struct%E1e=quick_qm_struct%E1e+sum2mat(quick_qm_struct%dense,quick_qm_struct%oneElecO,nbasis)
@@ -57,7 +57,7 @@ contains
 
      quick_qm_struct%Eel=quick_qm_struct%E1e
 
-     call cpu_time(timer_end%tE)
+     RECORD_TIME(timer_end%tE)
      timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
   
   end subroutine get1eEnergy
@@ -89,7 +89,7 @@ subroutine get1e(deltaO)
 #endif
 
      if (master) then
-       call cpu_time(timer_begin%T1e)
+       RECORD_TIME(timer_begin%T1e)
        if(bCalc1e) then
 
          !=================================================================
@@ -98,17 +98,17 @@ subroutine get1e(deltaO)
          ! The first part is kinetic part
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
-         call cpu_time(timer_begin%T1eT)
+         RECORD_TIME(timer_begin%T1eT)
          do Ibas=1,nbasis
             call kineticO(Ibas)
          enddo
-         call cpu_time(timer_end%T1eT)
+         RECORD_TIME(timer_end%T1eT)
 
 
          !-----------------------------------------------------------------
          ! The second part is attraction part
          !-----------------------------------------------------------------
-         call cpu_time(timer_begin%T1eV)
+         RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA || defined HIP
          call gpu_get_oei(quick_qm_struct%o)
@@ -120,7 +120,7 @@ subroutine get1e(deltaO)
          enddo
 #endif
 
-         call cpu_time(timer_end%T1eV)
+         RECORD_TIME(timer_end%T1eV)
 
          timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
          timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV
@@ -128,11 +128,11 @@ subroutine get1e(deltaO)
 #ifdef CEW
          if ( quick_cew%use_cew ) then
             
-            call cpu_time(timer_begin%Tcew)
+            RECORD_TIME(timer_begin%Tcew)
 
             call quick_cew_prescf()
 
-            call cpu_time(timer_end%Tcew)
+            RECORD_TIME(timer_end%Tcew)
 
             timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
 
@@ -152,7 +152,7 @@ subroutine get1e(deltaO)
        else
          if (.not. deltaO) quick_qm_struct%o(:,:)=quick_qm_struct%oneElecO(:,:)
        endif
-       call cpu_time(timer_end%t1e)
+       RECORD_TIME(timer_end%t1e)
 
        timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
        timer_cumer%TOp = timer_cumer%TOp+timer_end%T1e-timer_begin%T1e
@@ -161,7 +161,7 @@ subroutine get1e(deltaO)
      endif
 #ifdef MPIV
    else
-    call cpu_time(timer_begin%t1e)
+    RECORD_TIME(timer_begin%t1e)
     if(bCalc1e) then
 
       !------- MPI/ ALL NODES -------------------
@@ -174,18 +174,18 @@ subroutine get1e(deltaO)
       ! The first part is kinetic part
       ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
       !-----------------------------------------------------------------
-      call cpu_time(timer_begin%T1eT)
+      RECORD_TIME(timer_begin%T1eT)
 
       do i=1,mpi_nbasisn(mpirank)
          Ibas=mpi_nbasis(mpirank,i)
          call kineticO(Ibas)
       enddo
-      call cpu_time(timer_end%T1eT)
+      RECORD_TIME(timer_end%T1eT)
 
       !-----------------------------------------------------------------
       ! The second part is attraction part
       !-----------------------------------------------------------------
-      call cpu_time(timer_begin%T1eV)
+      RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA_MPIV || defined HIP_MPIV
       call gpu_get_oei(quick_qm_struct%o)
@@ -197,17 +197,17 @@ subroutine get1e(deltaO)
          enddo
       enddo
 #endif
-      call cpu_time(timer_end%T1eV)
+      RECORD_TIME(timer_end%T1eV)
 
 #ifdef CEW
 
          if ( quick_cew%use_cew ) then
 
-            call cpu_time(timer_begin%Tcew)
+            RECORD_TIME(timer_begin%Tcew)
 
             call quick_cew_prescf()
 
-            call cpu_time(timer_end%Tcew)
+            RECORD_TIME(timer_end%Tcew)
 
             timer_cumer%Tcew=timer_cumer%Tcew+timer_end%Tcew-timer_begin%Tcew
 
@@ -225,7 +225,7 @@ subroutine get1e(deltaO)
      endif
 
 
-     call cpu_time(timer_end%t1e)
+     RECORD_TIME(timer_end%t1e)
      timer_cumer%T1e=timer_cumer%T1e+timer_end%T1e-timer_begin%T1e
      timer_cumer%T1eT=timer_cumer%T1eT+timer_end%T1eT-timer_begin%T1eT
      timer_cumer%T1eV=timer_cumer%T1eV+timer_end%T1eV-timer_begin%T1eV

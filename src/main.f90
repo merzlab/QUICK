@@ -147,11 +147,11 @@
     call alloc(quick_molspec,ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
    
-    call cpu_time(timer_end%TInitialize)
+    RECORD_TIME(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
   
     ! Then do inital guess
-    call cpu_time(timer_begin%TIniGuess)
+    RECORD_TIME(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
     if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
@@ -235,7 +235,7 @@
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
 #endif
 
-    call cpu_time(timer_end%TIniGuess)
+    RECORD_TIME(timer_end%TIniGuess)
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                           -(timer_end%T2elb-timer_begin%T2elb)
 

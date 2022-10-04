@@ -476,7 +476,7 @@ subroutine get2edc
    double precision testtmp,cutoffTest
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
-   call cpu_time(timer_begin%t2e) !Trigger the timer for 2e-integrals
+   RECORD_TIME(timer_begin%t2e) !Trigger the timer for 2e-integrals
 
    do JJ=II,jshell
       Testtmp=Ycutoff(II,JJ)
@@ -504,6 +504,6 @@ subroutine get2edc
    enddo
 
 
-   call cpu_time(timer_end%T2e)  ! Terminate the timer for 2e-integrals
+   RECORD_TIME(timer_end%T2e)  ! Terminate the timer for 2e-integrals
    timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e ! add the time to cumer
 end subroutine get2edc

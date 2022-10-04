@@ -15,7 +15,7 @@
 !-------------------------------------------------------
 
     call prtact(ioutfile,"Begin Charge and Dipole Calculation")
-    call cpu_time(timer_begin%TDip)
+    RECORD_TIME(timer_begin%TDip)
     !-------------------------------------------------------
     ! Part 1. Mulliken and Lowdin charge
     !-------------------------------------------------------
@@ -203,7 +203,7 @@
     write (ioutfile,'(6x,"X",9x,"Y",9x,"Z",8x,"TOTAL")')
     write (ioutfile,'(4f10.4)') xdip*2.541765d0,ydip*2.541765d0,zdip*2.541765d0,totdip
 
-    call cpu_time(timer_end%TDip)
+    RECORD_TIME(timer_end%TDip)
     timer_cumer%TDip=timer_cumer%TDip+(timer_end%TDip-timer_begin%TDip)
 
     call prtact(ioutfile,"End Charge and Dipole Calculation")

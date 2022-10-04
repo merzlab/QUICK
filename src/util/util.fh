@@ -56,4 +56,8 @@
 #define GPU_DGEMM CUBLAS_DGEMM
 #endif
 
+#ifdef REPORT_CPU_TIME
+#define RECORD_TIME(t) call cpu_time(t)
+#else
+#endif
 #endif
