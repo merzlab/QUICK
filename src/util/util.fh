@@ -58,5 +58,6 @@
 #ifdef REPORT_CPU_TIME
 #define RECORD_TIME(t) call cpu_time(t)
 #else
+#define RECORD_TIME(t) call walltime(t)
 #endif
 #endif
