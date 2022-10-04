@@ -175,7 +175,7 @@ module quick_gridpoints_module
 
    if(master) then
 #endif
-    call cpu_time(timer_begin%TDFTGrdGen)
+    RECORD_TIME(timer_begin%TDFTGrdGen)
 
     ! form SG1 grid
     !if(quick_method%iSG.eq.1) call gridformSG1()
@@ -216,12 +216,12 @@ module quick_gridpoints_module
 
     self%init_ngpts  = idx_grid
 
-    call cpu_time(timer_end%TDFTGrdGen)
+    RECORD_TIME(timer_end%TDFTGrdGen)
 
     timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
 
     !Measure time to compute grid weights
-    call cpu_time(timer_begin%TDFTGrdWt)
+    RECORD_TIME(timer_begin%TDFTGrdWt)
 
 #ifdef MPIV
    endif
@@ -278,12 +278,12 @@ module quick_gridpoints_module
    if(master) then
 #endif
 
-    call cpu_time(timer_end%TDFTGrdWt)
+    RECORD_TIME(timer_end%TDFTGrdWt)
 
     timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
 
     !Measure time to pack grid points
-    call cpu_time(timer_begin%TDFTGrdPck)
+    RECORD_TIME(timer_begin%TDFTGrdPck)
 
 #ifdef MPIV
    endif
@@ -414,7 +414,7 @@ module quick_gridpoints_module
     if(master) then
 #endif
 
-    call cpu_time(timer_end%TDFTGrdPck)
+    RECORD_TIME(timer_end%TDFTGrdPck)
 
     timer_cumer%TDFTGrdPck = timer_cumer%TDFTGrdPck + timer_end%TDFTGrdPck - timer_begin%TDFTGrdPck - t_octree &
                            - t_prscrn
