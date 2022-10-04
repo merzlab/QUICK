@@ -34,6 +34,10 @@ subroutine initialize1(ierr)
    ! Parameter list
    integer, intent(inout) :: ierr    ! Error Flag
 
+#ifndef REPORT_CPU_TIME
+   call init_ref_time()
+#endif
+
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
