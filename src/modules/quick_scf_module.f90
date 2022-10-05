@@ -169,9 +169,13 @@ contains
 
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
+#if defined WITH_MAGMA
+     use quick_magma_module, only: magmaDIAG
+#else
      use quick_rocsolver_module, only: rocDIAG
 #endif
- 
+#endif
+
      implicit none
   
 #ifdef MPIV
@@ -638,12 +642,21 @@ contains
 #endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-  
+#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+           call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#else
 #if defined LAPACK || defined MKL
            call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
 #else
            call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#endif
+!        do i = 1,nbasis
+!          do j=1,nbasis
+!            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
+!          enddo
+!        end do
+
 #endif
            RECORD_TIME(timer_end%TDiag)
   
