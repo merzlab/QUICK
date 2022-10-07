@@ -21,7 +21,7 @@ endif()
 set(QUICK_MODULES_SOURCES
 	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90
 	quick_molspec_module.f90 quick_gaussian_class_module.f90 quick_size_module.f90
-	quick_basis_module.f90 quick_calculated_module.f90 quick_overlap_module.f90
+	quick_basis_module.f90 quick_calculated_module.f90 quick_magma_module.f90 quick_overlap_module.f90
 	quick_divcon_module.f90 quick_ecp_module.f90 quick_electrondensity_module.f90
 	quick_files_module.f90 quick_timer_module.f90 quick_gridpoints_module.f90
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90
@@ -178,6 +178,9 @@ if(CUDA)
 
                 copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
                 target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
+		if(MAGMA)
+			target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_MAGMA)
+		endif()
                 target_link_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
         
                 set_property(TARGET libquick_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
@@ -186,7 +189,11 @@ if(CUDA)
                 remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
         
                 target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver lapack)
-        
+
+        	if(MAGMA)
+                	target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE magma)
+        	endif()        
+
                 if(INSIDE_AMBER AND CEW)
                         target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
                 endif()
@@ -222,11 +229,17 @@ if(MPI AND CUDA)
 
         copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj_mpi> $<TARGET_OBJECTS:cusolver_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
         target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE HIP_MPIV)
+        if(MAGMA)
+        	target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_MAGMA)
+        endif()
         target_link_options(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
         set_property(TARGET libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTY OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
 
         remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
         target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver lapack)
+	if(MAGMA)
+		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE magma)
+	endif()
         if(INSIDE_AMBER AND CEW)
         target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
         endif()
