@@ -224,5 +224,11 @@ if(HIP)
 
     import_library(cublas "${CUDA_cublas_LIBRARY}")
     import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+
+    if(MAGMA)
+        find_package(Magma REQUIRED)
+	
+    endif()
+
 endif()
 
