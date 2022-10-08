@@ -210,8 +210,9 @@ extern "C" void gpu_init_(int* ierr)
     return;
 }
 
-extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv, int* ierr)
+extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id, int* gpu_dev_mem,
+                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name, int* name_len, char* gpu_arch_name,
+                                     int* arch_name_len, int* majorv, int* minorv, int* ierr)
 {
     hipError_t cuda_error;
     hipDeviceProp_t prop;
@@ -233,6 +234,8 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
     strcpy(gpu_dev_name,prop.name);
     *name_len = strlen(gpu_dev_name);
+    strcpy(gpu_arch_name,prop.gcnArchName);
+    *arch_name_len = strlen(gpu_arch_name);
     *majorv = prop.major;
     *minorv = prop.minor;
     

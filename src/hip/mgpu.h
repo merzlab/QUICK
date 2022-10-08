@@ -1086,7 +1086,8 @@ SAFE_DELETE(mgpu_xcq -> bin_locator);
 //--------------------------------------------------------
 
 extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
+                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, char*
+				     gpu_arch_name,int* arch_name_len,int* majorv, int* minorv)
 {
     hipDeviceProp_t prop;
     size_t device_mem;
@@ -1098,6 +1099,8 @@ extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
     *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
     strcpy(gpu_dev_name,prop.name);
     *name_len = strlen(gpu_dev_name);
+    strcpy(gpu_arch_name,prop.gcnArchName);
+    *arch_name_len = strlen(gpu_arch_name);
     *majorv = prop.major;
     *minorv = prop.minor;
 
