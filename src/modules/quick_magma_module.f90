@@ -22,11 +22,15 @@ module quick_magma_module
     implicit none
 
     private
-    public :: magmaDIAG
+    public :: magmaDIAG, magmaPrintInfo
 
     interface magmaDIAG
         module procedure quick_magma_dsyevd
     end interface magmaDIAG
+
+    interface magmaPrintInfo
+        module procedure print_magma_info
+    end interface magmaPrintInfo
 
 contains
 
@@ -83,6 +87,22 @@ contains
         !end do   
 
     end subroutine quick_magma_dsyevd
+
+    subroutine print_magma_info(io, ierr)
+
+        use magma, only: magmaf_version
+        implicit none
+        integer, intent(in) :: io
+        integer, intent(out) :: ierr
+        integer :: major, minor, micro
+        ierr=0
+
+        call magmaf_version(major, minor, micro)
+
+        write(io,'(" USING MAGMA VERSION: ",I1,".",I1,".",I1)') major, &
+        minor, micro
+
+    end subroutine print_magma_info
 
 end module quick_magma_module
 
