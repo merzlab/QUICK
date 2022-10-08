@@ -21,8 +21,9 @@ extern "C" void gpu_startup_(int* ierr);
 extern "C" void gpu_init_(int* ierr);
 extern "C" void gpu_shutdown_(int* ierr);
 
-extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv, int* ierr);
+extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id, int* gpu_dev_mem,
+                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name, int* name_len, char* gpu_arch_name,
+                                     int* arch_name_len, int* majorv, int* minorv, int* ierr);
 
 
 // molecule, basis sets, and some other information
