@@ -12,10 +12,10 @@ __constant__ gpu_simulation_type devSim_dft;
 static float totTime;
 #endif
 
-#include "gpu_getxc.h"
+#include "gpu_getxc_subs_generic.h"
 #include "gpu_cew_quad.h"
 #define OSHELL
-#include "gpu_getxc.h"
+#include "gpu_getxc_subs_generic.h"
 #include "gpu_cew_quad.h"
 #undef OSHELL
 
