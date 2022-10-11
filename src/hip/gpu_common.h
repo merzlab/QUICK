@@ -206,12 +206,15 @@ static const int HIP_SPD_2E_THREADS_PER_BLOCK =   768;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   64;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
 
 
 // constant for grad
 static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
 static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
+static const int HIP_SP_2E_GRAD_THREADS_PER_BLOCK = 512;
+static const int HIP_SPD_2E_GRAD_THREADS_PER_BLOCK = 512;
+static const int HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK = 768;
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
