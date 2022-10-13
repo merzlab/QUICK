@@ -196,6 +196,10 @@ unsigned long long int
 static const int SM_13_THREADS_PER_BLOCK    =   256;
 static const int SM_2X_THREADS_PER_BLOCK    =   256;
 
+// constant for 1e-integral
+static const int HIP_1E_THREADS_PER_BLOCK =   512;
+static const int HIP_1E_GRAD_THREADS_PER_BLOCK = 512;
+
 // constant for 2e-integral
 static const int SM_13_2E_THREADS_PER_BLOCK =   256;
 static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
