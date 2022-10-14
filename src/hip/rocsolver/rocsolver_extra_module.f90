@@ -25,11 +25,10 @@
 ! This module contains some extra subroutines and wrappers useful for rocSolver. 
 ! AMD guys should bundle rocSolver wrapper into a rocsolver_module.f90 or something. 
 ! Then this module can be totally eliminated
-
 module rocsolver_extra
 
     use iso_c_binding
-
+#if defined WITH_ROCSOLVER
     implicit none
 
     interface
@@ -97,9 +96,10 @@ module rocsolver_extra
             type(c_ptr), value :: info
         end function rocsolver_dsyevd
     end interface
-
+#endif
 contains
 
+#if defined WITH_ROCSOLVER
     subroutine ROCSOLVER_CHECK(stat)
         use iso_c_binding
     
@@ -112,5 +112,5 @@ contains
             stop
         endif
     end subroutine ROCSOLVER_CHECK
-
+#endif
 end module rocsolver_extra

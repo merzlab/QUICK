@@ -172,7 +172,9 @@ contains
 #if defined WITH_MAGMA
      use quick_magma_module, only: magmaDIAG
 #else
+#if defined WITH_ROCSOLVER
      use quick_rocsolver_module, only: rocDIAG
+#endif
 #endif
 #endif
 
