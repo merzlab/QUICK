@@ -179,6 +179,9 @@ ampere.")
         set(CUDA_DEVICE_CODE_FLAGS -Xptxas --disable-optimizer-constants)
     endif()
 
+    if(USE_LEGACY_ATOMICS)
+        list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+    endif()
 	
     if(NOT INSIDE_AMBER)
 	# --------------------------------------------------------------------
@@ -220,7 +223,11 @@ if(HIP)
 
     list(APPEND CUDA_NVCC_FLAGS -fPIC)
 
-    list(APPEND CUDA_DEVICE_CODE_FLAGS -DUSE_LEGACY_ATOMICS)
+    if(USE_LEGACY_ATOMICS)
+        list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+    else()
+        list(APPEND CUDA_NVCC_FLAGS -fdenormal-fp-math=ieee -fcuda-flush-denormals-to-zero -munsafe-fp-atomics)
+    endif()
 
     import_library(cublas "${CUDA_cublas_LIBRARY}")
     import_library(cusolver "${CUDA_cusolver_LIBRARY}")
