@@ -1066,14 +1066,15 @@ set_uspec_hip_arch(){
     case "$carch" in
       gfx906)
         echo "Configuring for gfx906"
-        hip_arch_flags="$hip_arch_flags -offload-arch=gfx906";;
+        hip_arch_flags="$hip_arch_flags -offload-arch=gfx906 -DUSE_LEGACY_ATOMICS";;
       gfx908)
         echo "Configuring for gfx908"
-        hip_arch_flags="$hip_arch_flags -offload-arch=gfx908";;
+        hip_arch_flags="$hip_arch_flags -offload-arch=gfx908 -DUSE_LEGACY_ATOMICS";;
+      gfx90a)
+        echo "Configuring for gfx90a"
+        hip_arch_flags="$hip_arch_flags -offload-arch=gfx90a -munsafe-fp-atomics -DAMD_ARCH_GFX90a";;
     esac
   done
-
-  hip_arch_flags="$hip_arch_flags -DUSE_LEGACY_ATOMICS"
 
 }
 
