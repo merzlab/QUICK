@@ -192,6 +192,54 @@ unsigned long long int
  *  constant define
  ****************************************************************
  */
+
+#ifdef AMD_ARCH_GFX90a
+// constant for general purpose
+static const int SM_13_THREADS_PER_BLOCK    =   256;
+static const int SM_2X_THREADS_PER_BLOCK    =   256;
+
+// constant for 1e-integral
+static const int HIP_1E_THREADS_PER_BLOCK =   512;
+static const int HIP_1E_GRAD_THREADS_PER_BLOCK = 512;
+
+// constant for 2e-integral
+static const int SM_13_2E_THREADS_PER_BLOCK =   256;
+static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
+
+static const int HIP_SP_2E_THREADS_PER_BLOCK =   256;
+static const int HIP_SPD_2E_THREADS_PER_BLOCK =   256;
+
+static const int HIP_SP_2E_WAVES_PER_CU = 1;
+static const int HIP_SPD_2E_WAVES_PER_CU = 1;
+
+
+// constant for DFT Exchange-Correlation part
+static const int MAX_GRID                   =   194;
+static const int SM_13_XC_THREADS_PER_BLOCK =   256;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+
+static const int HIP_XC_WAVES_PER_CU = 1;
+static const int HIP_XC_DENSE_WAVES_PER_CU = 1;
+static const int HIP_XC_THREADS_PER_BLOCK = 512;
+static const int HIP_XC_DENSE_THREADS_PER_BLOCK = 512;
+
+//static const int HIP_XC_GRAD_THREADS_PER_BLOCK = 384;
+
+// constant for grad
+static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
+static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
+static const int HIP_SP_2E_GRAD_THREADS_PER_BLOCK = 256;
+static const int HIP_SPD_2E_GRAD_THREADS_PER_BLOCK = 512;
+static const int HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK = 256;
+static const int HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK = 256;
+
+static const int HIP_SP_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPD_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPDF_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPDF2_2E_GRAD_WAVES_PER_CU = 1;
+
+#else
+
 // constant for general purpose
 static const int SM_13_THREADS_PER_BLOCK    =   256;
 static const int SM_2X_THREADS_PER_BLOCK    =   256;
@@ -207,11 +255,19 @@ static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
 static const int HIP_SP_2E_THREADS_PER_BLOCK =   512;
 static const int HIP_SPD_2E_THREADS_PER_BLOCK =   768;
 
+static const int HIP_SP_2E_WAVES_PER_CU = 1;
+static const int HIP_SPD_2E_WAVES_PER_CU = 1;
+
+
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
 static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
 
+static const int HIP_XC_WAVES_PER_CU = 1;
+static const int HIP_XC_DENSE_WAVES_PER_CU = 1;
+static const int HIP_XC_THREADS_PER_BLOCK = 512;
+static const int HIP_XC_DENSE_THREADS_PER_BLOCK = 512;
 
 // constant for grad
 static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
@@ -219,6 +275,14 @@ static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
 static const int HIP_SP_2E_GRAD_THREADS_PER_BLOCK = 512;
 static const int HIP_SPD_2E_GRAD_THREADS_PER_BLOCK = 512;
 static const int HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK = 768;
+static const int HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK = 768;
+
+static const int HIP_SP_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPD_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPDF_2E_GRAD_WAVES_PER_CU = 1;
+static const int HIP_SPDF2_2E_GRAD_WAVES_PER_CU = 1;
+
+#endif
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;

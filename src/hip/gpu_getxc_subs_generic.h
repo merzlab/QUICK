@@ -31,8 +31,11 @@
 __global__ void 
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_oshell_density_kernel()
 #else
-__global__ void 
-__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_cshell_density_kernel()
+__global__ void
+__attribute__((amdgpu_waves_per_eu(HIP_XC_DENSE_WAVES_PER_CU,HIP_XC_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_XC_DENSE_THREADS_PER_BLOCK, HIP_XC_DENSE_THREADS_PER_BLOCK)))
+get_cshell_density_kernel()
+
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -146,7 +149,10 @@ __global__ void
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) oshell_getxc_kernel()
 #else
 __global__ void
-__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
+__attribute__((amdgpu_waves_per_eu(HIP_XC_WAVES_PER_CU,HIP_XC_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_XC_THREADS_PER_BLOCK, HIP_XC_THREADS_PER_BLOCK)))
+cshell_getxc_kernel()
+
 #endif
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -193,10 +199,10 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma) * weight;
-      }else if(devSim_dft.method == BLYP){
+      }/*else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
          + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
-      }
+      }*/
 
 
       if (devSim_dft.method == B3LYP) {
@@ -204,7 +210,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
          xdot = dot * gax;
          ydot = dot * gay;
          zdot = dot * gaz;
-      }else if(devSim_dft.method == BLYP){
+      }/*else if(devSim_dft.method == BLYP){
          QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
          QUICKDouble dfdr2;
 
@@ -294,7 +300,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
 #endif
 
 #ifndef OSHELL
-      }
+      }*/
 #endif
 
 #ifdef USE_LEGACY_ATOMICS
@@ -370,7 +376,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxc_kernel()
 __global__ void 
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) oshell_getxcgrad_kernel()
 #else
-__global__ void 
+__global__ void
 __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 #endif
 {
@@ -441,10 +447,10 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma);
-      }else if(devSim_dft.method == BLYP){
+      }/*else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
               + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz));
-      }
+      }*/
 
 
       if (devSim_dft.method == B3LYP) {
@@ -452,7 +458,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
         xdot = dot * gax;
         ydot = dot * gay;
         zdot = dot * gaz;
-      }else if(devSim_dft.method == BLYP){
+      }/*else if(devSim_dft.method == BLYP){
         QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
         QUICKDouble dfdr2;
         
@@ -543,7 +549,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 #endif
 
 #ifndef OSHELL
-      }
+      }*/
 #endif
 
 #ifdef CEW
