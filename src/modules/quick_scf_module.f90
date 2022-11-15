@@ -180,7 +180,7 @@ contains
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
      integer :: idiis = 0           ! diis iteration
-     integer :: IDIISfinal,iidiis,current_diis
+     integer :: IDIISfinal,iidiis,current_diis, MAX_DII_CYCLE
      integer :: lsolerr = 0
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
@@ -234,6 +234,8 @@ contains
      call allocate_quick_scf(ierr)
   
      if(master) then
+        ! precompute the MAX_DII_CYCLE 
+        MAX_DII_CYCLE = MAX_DII_CYCLE_TIME*quick_method%maxdiisscf
         write(ioutfile,'(40x," SCF ENERGY")')
         if (quick_method%printEnergy) then
            write(ioutfile,'("| ",120("-"))')
@@ -751,7 +753,11 @@ contains
               diisdone=.true.
               quick_method%scf_conv=.false.
            endif
-           diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
+
+           ! assess whether to leave the SCF convergence due to the limit on MAX_DII_CYCLE
+           if(MAX_DII_CYCLE > quick_method%iscf-1) then
+              diisdone = idiis.gt.MAX_DII_CYCLE .or. diisdone
+           endif 
   
            if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
               write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
