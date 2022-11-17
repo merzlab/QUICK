@@ -204,10 +204,10 @@ cshell_getxc_kernel()
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma) * weight;
-      }/*else if(devSim_dft.method == BLYP){
+      }else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
          + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)) * weight;
-      }*/
+      }
 
 
       if (devSim_dft.method == B3LYP) {
@@ -215,7 +215,7 @@ cshell_getxc_kernel()
          xdot = dot * gax;
          ydot = dot * gay;
          zdot = dot * gaz;
-      }/*else if(devSim_dft.method == BLYP){
+      }else if(devSim_dft.method == BLYP){
          QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
          QUICKDouble dfdr2;
 
@@ -305,7 +305,7 @@ cshell_getxc_kernel()
 #endif
 
 #ifndef OSHELL
-      }*/
+      }
 #endif
 
 #ifdef USE_LEGACY_ATOMICS
@@ -452,10 +452,10 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 
       if (devSim_dft.method == B3LYP) {
         _tmp = b3lyp_e(2.0*density, sigma);
-      }/*else if(devSim_dft.method == BLYP){
+      }else if(devSim_dft.method == BLYP){
          _tmp = (becke_e(density, densityb, gax, gay, gaz, gbx, gby, gbz)
               + lyp_e(density, densityb, gax, gay, gaz, gbx, gby, gbz));
-      }*/
+      }
 
 
       if (devSim_dft.method == B3LYP) {
@@ -463,7 +463,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
         xdot = dot * gax;
         ydot = dot * gay;
         zdot = dot * gaz;
-      }/*else if(devSim_dft.method == BLYP){
+      }else if(devSim_dft.method == BLYP){
         QUICKDouble dfdgaa, dfdgab, dfdgaa2, dfdgab2;
         QUICKDouble dfdr2;
         
@@ -554,7 +554,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) cshell_getxcgrad_kernel()
 #endif
 
 #ifndef OSHELL
-      }*/
+      }
 #endif
 
 #ifdef CEW
