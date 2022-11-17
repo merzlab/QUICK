@@ -98,11 +98,11 @@ void getxc(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, HIP_XC_THREADS_PER_BLOCK, 0, 0))
 
     }else{
 
@@ -142,7 +142,7 @@ void getxc_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 

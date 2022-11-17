@@ -254,9 +254,10 @@ extern "C" void gpu_allocate_scratch_(){
        Note 2: We may have different threads/block for OEI and ERI. Choose the max of them.
     */
 
-    unsigned int MAX_THREADS_PER_BLOCK = MAX(HIP_SPD_2E_THREADS_PER_BLOCK, MAX(HIP_SP_2E_THREADS_PER_BLOCK, 
+    unsigned int MAX_THREADS_PER_BLOCK = MAX(HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK, 
+                                        MAX(HIP_SPD_2E_THREADS_PER_BLOCK, MAX(HIP_SP_2E_THREADS_PER_BLOCK, 
 					MAX(HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, MAX(HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, 
-					MAX(HIP_SP_2E_GRAD_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK))))); 
+					MAX(HIP_SP_2E_GRAD_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))))); 
 
     unsigned int store_size = gpu->blocks * MAX_THREADS_PER_BLOCK * STOREDIM_L * STOREDIM_L;
 

@@ -33,19 +33,24 @@
 #ifdef OSHELL
 #ifdef int_sp
 __global__ void
-__launch_bounds__(HIP_SP_2E_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_sp()
+__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_GRAD_WAVES_PER_CU,HIP_SP_2E_GRAD_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_GRAD_THREADS_PER_BLOCK, HIP_SP_2E_GRAD_THREADS_PER_BLOCK)))
+getGrad_oshell_kernel_sp()
 #elif defined int_spd
 __global__ void
-__launch_bounds__(HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spd()
+__attribute__((amdgpu_waves_per_eu(HIP_SPD_2E_GRAD_WAVES_PER_CU,HIP_SPD_2E_GRAD_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, HIP_SPD_2E_GRAD_THREADS_PER_BLOCK)))
+getGrad_oshell_kernel_spd()
 #elif defined int_spdf
 __global__ void
-__launch_bounds__(HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf()
+__attribute__((amdgpu_waves_per_eu(HIP_SPDF_2E_GRAD_WAVES_PER_CU,HIP_SPDF_2E_GRAD_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK)))
+getGrad_oshell_kernel_spdf()
 #elif defined int_spdf2
 __global__ void
-__attribute__((amdgpu_waves_per_eu(2,2)))
-__attribute__((amdgpu_flat_work_group_size(HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK))) 
+__attribute__((amdgpu_waves_per_eu(HIP_SPDF2_2E_GRAD_WAVES_PER_CU,HIP_SPDF2_2E_GRAD_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK, HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK)))
 getGrad_oshell_kernel_spdf2()
-
 #elif defined int_spdf3
 __global__ void
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_spdf3()
