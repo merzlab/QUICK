@@ -22,7 +22,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri(int I, int J, int K, int L, 
 {
     QUICKDouble Y;
     
-    int angularL[12];
+    unsigned char angularL[12];
     QUICKDouble coefAngularL[12];
     Y = (QUICKDouble) 0.0;
     
@@ -52,7 +52,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2(int I, int J, int K, int L
 {
     QUICKDouble Y;
     
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
@@ -87,7 +87,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_1(int I, int J, int K, int
 {
     QUICKDouble Y;
     
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
@@ -139,7 +139,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_2(int I, int J, int K, int
 {
     QUICKDouble Y;
     
-    int angularL[12], angularR[12];
+    unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
     Y = (QUICKDouble) 0.0;
     
@@ -215,7 +215,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_5(int I, int J, int K, int
     
     
     // else case, j can be 2 or 3, and k = 3 and l = 3
-    int angularL[12];
+    unsigned char angularL[12];
     QUICKDouble coefAngularL[12];
     QUICKDouble Y = 0.0;
     
@@ -266,7 +266,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_6(int I, int J, int K, int
         
     }
     
-    int angularR[12];
+    unsigned char angularR[12];
     QUICKDouble coefAngularR[12];
     QUICKDouble Y = 0.0;
     
@@ -326,7 +326,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int
     if ((K+L)== 5 && (I+J)==6) // k+l = 5, and i = 3, j = 3
     {
         
-        int angularL[12];
+        unsigned char angularL[12];
         QUICKDouble coefAngularL[12];
         QUICKDouble Y = 0.0;
         
@@ -351,7 +351,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int
     }
     
     if ((I+J) == 5 && (K+L) == 6) {  // i+j = 5 and k=3 and l = 3
-        int angularR[12];
+        unsigned char angularR[12];
         QUICKDouble coefAngularR[12];
         
         QUICKDouble Y = 0.0;
@@ -377,7 +377,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int
     
     if ((I+J) == 6 && (K+L) == 6) { // i,j,k,l = 3
         
-        int angularL[12], angularR[12];
+        unsigned char angularL[12], angularR[12];
         QUICKDouble coefAngularL[12], coefAngularR[12];
         QUICKDouble Y = (QUICKDouble) 0.0;
         
@@ -436,7 +436,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_4(int I, int J, int K, int
         return Y;
         
     }else{ //k=3 and l = 3, for i and j , i = 3 and j = 3
-        int angularR[12];
+        unsigned char angularR[12];
         QUICKDouble coefAngularR[12];
         
         
@@ -484,7 +484,7 @@ __device__ __forceinline__ QUICKDouble hrrwhole_lri_2_7(int I, int J, int K, int
         return Y;
     }else{
         
-        int angularL[12];
+        unsigned char angularL[12];
         QUICKDouble coefAngularL[12];
         
         int numAngularL = lefthrr_lri(RAx, RAy, RAz, RBx, RBy, RBz,
@@ -573,7 +573,7 @@ __device__ __forceinline__ int lefthrr_lri1(QUICKDouble RAx, QUICKDouble RAy, QU
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
-                                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                        int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     int numAngularL = 2;
     
@@ -597,7 +597,7 @@ __device__ __forceinline__ int lefthrr_lri2(QUICKDouble RAx, QUICKDouble RAy, QU
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
-                                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                        int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     int numAngularL;
     
@@ -666,7 +666,7 @@ __device__ __forceinline__ int lefthrr_lri3(QUICKDouble RAx, QUICKDouble RAy, QU
                                         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                         int KLMNAx, int KLMNAy, int KLMNAz,
                                         int KLMNBx, int KLMNBy, int KLMNBz,
-                                        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                        int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     int numAngularL;
     
@@ -832,7 +832,7 @@ __device__ __forceinline__ int lefthrr_lri_r(QUICKDouble RAx, QUICKDouble RAy, Q
                                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                        int KLMNAx, int KLMNAy, int KLMNAz,
                                        int KLMNBx, int KLMNBy, int KLMNBz,
-                                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     
     coefAngularL[0] = 1.0;
@@ -940,7 +940,7 @@ __device__ __forceinline__ int lefthrr_lri(QUICKDouble RAx, QUICKDouble RAy, QUI
                                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                        int KLMNAx, int KLMNAy, int KLMNAz,
                                        int KLMNBx, int KLMNBy, int KLMNBz,
-                                       int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     
     
@@ -1492,7 +1492,7 @@ __device__ __forceinline__ int lefthrr_lri23(QUICKDouble RAx, QUICKDouble RAy, Q
                                     QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                     int KLMNAx, int KLMNAy, int KLMNAz,
                                     int KLMNBx, int KLMNBy, int KLMNBz,
-                                    int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                    int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     int numAngularL;
     
@@ -1625,7 +1625,7 @@ __device__ __forceinline__ int lefthrr_lri23_new(QUICKDouble RAx, QUICKDouble RA
                                          QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                                          int KLMNAx, int KLMNAy, int KLMNAz,
                                          int KLMNBx, int KLMNBy, int KLMNBz,
-                                         int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+                                         int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     
     coefAngularL[0] = 1.0;

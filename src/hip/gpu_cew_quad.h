@@ -20,10 +20,11 @@
 #ifdef CEW
 #include "iface.hpp"
 
+
 #ifndef OSHELL
 void getcew_quad(_gpu_type gpu){
 
-    QUICK_SAFE_CALL((hipLaunchKernelGGL(getcew_quad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0)));
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(getcew_quad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0))
 
     hipDeviceSynchronize();
 }
@@ -33,19 +34,19 @@ void getcew_quad_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(oshell_getcew_quad_grad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getcew_quad_grad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
 
     }else{
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL((hipLaunchKernelGGL(cshell_getcew_quad_grad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0)));
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getcew_quad_grad_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
         //QUICK_SAFE_CALL((hipLaunchKernelGGL(cshell_getcew_quad_grad_kernel, 1, 1, gpu -> gpu_xcq -> smem_size, 0)));
 
     }
