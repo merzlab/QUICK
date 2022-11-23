@@ -511,7 +511,18 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 #endif
 }
 
+#ifndef old_fmt
+#define old_fmt
+
+#undef VDIM3
+#undef VY
+#define VDIM3 VDIM3_L
+#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+
+#undef FMT_NAME
+#define FMT_NAME FmT
 #include "gpu_fmt.h"
+#endif
 
 /*
  sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
