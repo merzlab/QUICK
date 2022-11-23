@@ -28,12 +28,14 @@
 #endif
 
 #ifdef int_spd
-__global__ void 
-//__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) get_lri_grad_kernel()
+__global__ void
+__attribute__((amdgpu_waves_per_eu(HIP_LRI_GRAD_WAVES_PER_CU,HIP_LRI_GRAD_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_LRI_GRAD_THREADS_PER_BLOCK, HIP_LRI_GRAD_THREADS_PER_BLOCK)))
 get_lri_grad_kernel()
 #elif defined int_spdf2
-__global__ void 
-//__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) get_lri_grad_kernel_spdf2()
+__global__ void
+__attribute__((amdgpu_waves_per_eu(HIP_LRI_GRAD_SPDF2_WAVES_PER_CU,HIP_LRI_GRAD_SPDF2_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK, HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK)))
 get_lri_grad_kernel_spdf2()
 #endif
 {

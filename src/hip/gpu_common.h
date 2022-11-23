@@ -238,6 +238,24 @@ static const int HIP_SPD_2E_GRAD_WAVES_PER_CU = 1;
 static const int HIP_SPDF_2E_GRAD_WAVES_PER_CU = 1;
 static const int HIP_SPDF2_2E_GRAD_WAVES_PER_CU = 1;
 
+// constants for LRI
+static const int HIP_LRI_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_SPDF2_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_GRAD_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK = 256;
+
+static const int HIP_LRI_WAVES_PER_CU = 1;
+static const int HIP_LRI_SPDF2_WAVES_PER_CU = 1;
+static const int HIP_LRI_GRAD_WAVES_PER_CU = 1;
+static const int HIP_LRI_GRAD_SPDF2_WAVES_PER_CU = 1;
+
+// constants for cew quad kernels
+static const int HIP_CEW_QUAD_THREADS_PER_BLOCK = 512;
+static const int HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK = 512;
+
+static const int HIP_CEW_QUAD_WAVES_PER_CU = 1;
+static const int HIP_CEW_QUAD_GRAD_WAVES_PER_CU = 1;
+
 #else
 
 // constant for general purpose
@@ -281,6 +299,24 @@ static const int HIP_SP_2E_GRAD_WAVES_PER_CU = 1;
 static const int HIP_SPD_2E_GRAD_WAVES_PER_CU = 1;
 static const int HIP_SPDF_2E_GRAD_WAVES_PER_CU = 1;
 static const int HIP_SPDF2_2E_GRAD_WAVES_PER_CU = 1;
+
+// constants for LRI
+static const int HIP_LRI_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_SPDF2_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_GRAD_THREADS_PER_BLOCK = 256;
+static const int HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK = 256;
+
+static const int HIP_LRI_WAVES_PER_CU = 1;
+static const int HIP_LRI_SPDF2_WAVES_PER_CU = 1;
+static const int HIP_LRI_GRAD_WAVES_PER_CU = 1;
+static const int HIP_LRI_GRAD_SPDF2_WAVES_PER_CU = 1;
+
+// constants for cew quad kernels
+static const int HIP_CEW_QUAD_THREADS_PER_BLOCK = 512;
+static const int HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK = 512;
+
+static const int HIP_CEW_QUAD_WAVES_PER_CU = 1;
+static const int HIP_CEW_QUAD_GRAD_WAVES_PER_CU = 1;
 
 #endif
 

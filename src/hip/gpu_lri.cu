@@ -119,14 +119,14 @@ void get_lri(_gpu_type gpu)
     // Part spd
 //    nvtxRangePushA("SCF lri");
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel, gpu->blocks, HIP_LRI_THREADS_PER_BLOCK, 0, 0))
  
 #ifdef HIP_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         //QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel_spdf2, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel_spdf2, gpu->blocks, HIP_LRI_SPDF2_THREADS_PER_BLOCK, 0, 0))
         // Part f-3
         //QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_kernel_spdf3, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
         // Part f-4
@@ -159,14 +159,14 @@ void get_lri_grad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient lri");
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel, gpu->blocks, HIP_LRI_GRAD_THREADS_PER_BLOCK, 0, 0))
 
     if (gpu->maxL >= 2) {
         //#ifdef HIP_SPDF
         // Part f-1
         //QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel_spdf, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel_spdf2, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel_spdf2, gpu->blocks, HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK, 0, 0))
         // Part f-3
         //    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_lri_grad_kernel_spdf3, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0)))
         //#endif
