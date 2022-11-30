@@ -34,6 +34,7 @@
 | #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
 | #6-311++G(2d,2p)                  | 6-311PLPLG2D2P.BAS                  |
 | #cc-pVDZ                          | CC-PVDZ.BAS                         |
+| #cc-pVTZ                          | CC-PVTZ.BAS                         |
 | #def2-svp                         | DEF2-SVP.BAS                        |
 | #def2-sv(p)                       | DEF2-SV_P.BAS                       |
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
