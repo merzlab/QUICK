@@ -1319,6 +1319,7 @@ ARCHFLAGS=$arch_flags
 RANLIB=$ranlib
 LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
+LAPACK_FLAGS=$blas_opt_flags $lib_flags
 DLFIND_FLAGS=$dlfind_flags
 
 #!---------------------------------------------------------------------!
