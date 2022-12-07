@@ -104,7 +104,6 @@ subroutine getMol(ierr)
       SAFE_CALL(initialGuess(ierr))
 
       call PrtAct(iOutfile,"End Reading Molecular Information ")
-
    endif
    !-----------END MPI/MASTER------------------------
 

@@ -37,6 +37,7 @@ contains
      use quick_cshell_gradient_module, only: scf_gradient
      use quick_oshell_gradient_module, only: uscf_gradient
      use quick_exception_module
+     use quick_molden_module, only: quick_molden
      implicit double precision(a-h,o-z)
 
      logical :: done,diagco
@@ -242,6 +243,12 @@ contains
            ! Also, assemble some of the test criterion.
            !-----------------------------------------------------------------------
 
+           ! First store coordinates for Molden so we don't store coordinates of next step
+           if(write_molden) then
+               quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot)=xyz(:,:)
+               quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
+           endif
+
            geomax = -1.d0
            georms = 0.d0
            do J=1,natom
@@ -382,6 +389,7 @@ contains
 
 
         call PrtAct(ioutfile,"Finish Optimization Job")
+
      endif
 
      return
