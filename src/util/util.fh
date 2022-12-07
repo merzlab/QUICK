@@ -28,6 +28,7 @@
 #define PDBFILEHANDLE    2028
 #define DATAFILEHANDLE   2029
 #define INTFILEHANDLE    2030
+#define MOLDENFILEHANDLE 2031
 
 ! For the following definitions to work, one must use quick_exception_module
 ! in a subroutine. For MPI/CUDAMPI versions, quick_mpi_module must be used. 
