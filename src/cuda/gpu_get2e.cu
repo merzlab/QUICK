@@ -75,7 +75,6 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_eri_grad_assembler_sp.h"
 #include "gpu_get2e_subs_grad.h"
 
-
 #undef int_sp
 #define int_spd
 #undef int_spdf
@@ -152,6 +151,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_1.h"
 #include "gpu_get2e_subs.h"
 
 #undef int_spd
@@ -165,8 +165,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_2.h"
 #include "gpu_get2e_subs.h"
-
 
 #undef int_spd
 #undef int_spdf
@@ -179,8 +179,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_3.h"
 #include "gpu_get2e_subs.h"
-
 
 #undef int_spd
 #undef int_spdf
@@ -193,8 +193,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_4.h"
 #include "gpu_get2e_subs.h"
-
 
 #undef int_spd
 #undef int_spdf
@@ -207,8 +207,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_5.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -222,8 +222,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_6.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -237,8 +237,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_7.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -252,8 +252,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_8.h"
 #include "gpu_get2e_subs.h"
-
 
 #undef int_spd
 #undef int_spdf
