@@ -60,7 +60,6 @@ contains
      belec=0.0d0
 #endif
   
-print*,'Inside USCF' 
      if(.not. allocated(quick_qm_struct%ob)) allocate(quick_qm_struct%ob(nbasis,nbasis)) 
      quick_qm_struct%o  = 0.0d0
      quick_qm_struct%ob = 0.0d0
