@@ -48,6 +48,8 @@ module quick_calculated_module
 
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
+      double precision,dimension(:,:), allocatable :: od, fd
+      integer, dimension(:,:), allocatable :: iarray      
 
       ! matrix for saving XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: oxc 
@@ -55,6 +57,7 @@ module quick_calculated_module
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
       double precision,dimension(:,:), allocatable :: ob
+      double precision,dimension(:,:), allocatable :: obd, fbd
 
       ! matrix for saving beta XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: obxc
@@ -222,6 +225,8 @@ contains
       integer nelec
       integer idimA
       integer nelecb
+      integer i,j,ij     
+      integer ntri
 
       type (quick_qm_struct_type) self
 
@@ -259,7 +264,21 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if(.not. allocated(self%hessian)) allocate(self%hessian(3*natom,3*natom))
+         if(.not. allocated(self%iarray)) allocate(self%iarray(nbasis,nbasis))
+         ij = 0
+         do i=1,nbasis
+             do j=1,i
+                 ij=ij+1
+                 self%iarray(i,j)=ij
+                 self%iarray(j,i)=ij
+             end do
+         end do
+         ntri =  (nbasis*(nbasis+1))/2
+         if(.not. allocated(self%fd)) allocate(self%fd(3*natom,ntri))
+         if(.not. allocated(self%od)) allocate(self%od(3*natom,ntri))
          if (quick_method%unrst) then
+            if(.not. allocated(self%obd)) allocate(self%obd(3*natom,ntri))
+            if(.not. allocated(self%fbd)) allocate(self%fbd(3*natom,ntri))
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
@@ -424,8 +443,15 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if (allocated(self%hessian)) deallocate(self%hessian)
+         if (allocated(self%iarray)) deallocate(self%iarray)
+         if (allocated(self%od)) deallocate(self%od)
+         if (allocated(self%fd)) deallocate(self%fd)
          if (allocated(self%CPHFA)) deallocate(self%CPHFA)
          if (allocated(self%CPHFB)) deallocate(self%CPHFB)
+         if (quick_method%unrst) then
+            if (allocated(self%fbd)) deallocate(self%fbd)
+            if (allocated(self%obd)) deallocate(self%obd)
+         endif
       endif
 
       ! if unrestricted, some more varibles is required to be allocated
@@ -543,6 +569,7 @@ contains
       integer nelec
       integer idimA
       integer nelecb
+      integer ntri
 
       type (quick_qm_struct_type) self
 
@@ -576,10 +603,18 @@ contains
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          call zeroMatrix(self%hessian,3*natom)
+         ntri =  (nbasis*(nbasis+1))/2
+         call zeroMatrix2(self%od,3*natom,ntri)
+         call zeroMatrix2(self%fd,3*natom,ntri)
          if (quick_method%unrst) then
+            call zeroMatrix2(self%fbd,3*natom,ntri)
+            call zeroMatrix2(self%obd,3*natom,ntri)
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
+         endif
+         if (quick_method%unrst) then
+             call zeroMatrix2(self%obd,3*natom,ntri)
          endif
          call zeroMatrix(self%CPHFA,idimA)
          call zeroMatrix2(self%CPHFB,idimA,natom*3)
