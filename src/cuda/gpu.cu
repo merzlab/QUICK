@@ -571,7 +571,11 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_cutoff -> sorted_YCutoffIJ           = new cuda_buffer_type<int2>(gpu->gpu_cutoff->sqrQshell);
     
 
+#ifdef CUDA_SPDF
+    int sort_method = 1;
+#else
     int sort_method = 0;
+#endif
     int a = 0;
     bool flag = true;
     int2 temp;
