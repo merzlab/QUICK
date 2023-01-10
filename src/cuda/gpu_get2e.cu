@@ -255,6 +255,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_eri_assembler_spdf_8.h"
 #include "gpu_get2e_subs.h"
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -280,6 +281,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
+*/
 #endif
 
 #undef int_spd
@@ -478,6 +480,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs.h"
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -503,6 +506,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
+*/
 #endif
 
 #undef int_spd
@@ -601,9 +605,9 @@ void get2e(_gpu_type gpu)
         // Part f-8
         QUICK_SAFE_CALL((get2e_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        QUICK_SAFE_CALL((get2e_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get2e_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        QUICK_SAFE_CALL((get2e_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get2e_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
 
@@ -651,9 +655,9 @@ void get_oshell_eri(_gpu_type gpu)
         // Part f-8
         QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        //QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif
 
