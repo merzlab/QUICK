@@ -255,7 +255,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_eri_assembler_spdf_8.h"
 #include "gpu_get2e_subs.h"
 
-/*
+
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -281,7 +281,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
-*/
+
 #endif
 
 #undef int_spd
@@ -480,7 +480,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs.h"
 
-/*
+
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -506,10 +506,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
-<<<<<<< HEAD
 
-=======
-*/
 #endif
 
 #undef int_spd
