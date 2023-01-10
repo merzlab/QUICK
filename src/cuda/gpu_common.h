@@ -44,13 +44,12 @@ fflush(stdout);\
 #define STOREDIM_GRAD_T 20
 
 #ifdef CUDA_SPDF
-#define MAXPRIM 20
 #define STOREDIM_L 84
 #else
-#define MAXPRIM 10
 #define STOREDIM_L 84
 #endif
 
+#define MAXPRIM 20
 #define TRANSDIM 8
 #define MCALDIM 120
 
