@@ -36,5 +36,5 @@ module quick_size_module
     ! notice the difference between this and ISCF
     integer,parameter :: MAX_DII_CYCLE_TIME = 30
 
-    integer,parameter :: MAXPRIM = 10
+    integer,parameter :: MAXPRIM = 20
 end module quick_size_module
