@@ -89,6 +89,7 @@ module quick_method_module
 
         ! max cycles for scf or opt
         integer :: iscf = 200          ! max scf cycles
+        integer :: iscf_sad = 200      ! max scf cycles for sad guess
         integer :: iopt = 0            ! max opt cycles
 
         ! Maximum number of DIIS error vectors for scf convergence.
@@ -242,6 +243,7 @@ module quick_method_module
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%maxdiisscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ncyc,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -845,6 +847,7 @@ module quick_method_module
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200
+            self%iscf_sad = 200
             self%maxdiisscf = 10
             self%iopt = 0
             self%ncyc = 3
