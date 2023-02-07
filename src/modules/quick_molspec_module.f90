@@ -46,6 +46,10 @@ module quick_molspec_module
       ! number of atom types
       integer :: iAtomType = 0
 
+      ! number of constraints
+      integer :: nConsAtom = 0
+      integer :: nFreezeAtom = 0
+
       ! symbol for respective atom type
       character(len=2), dimension(1:10) :: atom_type_sym
 
@@ -64,6 +68,9 @@ module quick_molspec_module
 
       ! atom charge and external atom charge
       double precision, dimension(:), allocatable ::chg,extchg
+
+      ! constrain degrees of freedom
+      integer, dimension(:), allocatable ::dlfind_freezeatm, dlfind_constr
 
       ! basis set number
       integer,pointer:: nbasis
@@ -137,10 +144,12 @@ contains
       if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
+      if (.not. allocated(self%dlfind_freezeatm)) allocate(self%dlfind_freezeatm(natom))
       do i=1,natom
          self%distnbor(i)=0
          self%iattype(i)=0
          self%chg(i)=0d0
+         self%dlfind_freezeatm = 0
          do j=1,3
             xyz(j,i)=0d0
          enddo
@@ -159,6 +168,16 @@ contains
             self%extchg(i)=0d0
          enddo
       endif
+
+      if (self%nconsatom .gt. 0) then
+         if (.not. allocated(self%dlfind_constr)) allocate(self%nconstr(5,self%ncons)) 
+         do i=1,self%ncons
+            do j=1,5
+               self%dlfind_constr(j,i)=0
+            enddo
+         enddo
+      endif
+
 
    end subroutine allocate_quick_molspec
 
@@ -209,7 +228,8 @@ contains
       self%nNonHAtom = 0
       self%nHAtom = 0
       self%iAtomType = 0
-
+      self%nConsAtom = 0
+      self%nFreezeAtom = 0
 
    end subroutine init_quick_molspec
 
@@ -228,11 +248,16 @@ contains
 !      deallocate(self%xyz)
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%chg)) deallocate(self%chg)
+      if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
 
       ! if exist external charge
       if (self%nextatom.gt.0) then
         if (allocated(self%extxyz)) deallocate(self%extxyz)
         if (allocated(self%extchg)) deallocate(self%extchg)
+      endif
+
+      if (self%nconsatom.gt.0) then
+         if (allocated(self%dlfind_constr)) deallocate(self%dlfind_constr)
       endif
 
    end subroutine deallocate_quick_molspec
