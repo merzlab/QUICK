@@ -20,9 +20,9 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-LIBXC_CUDA_FLAGS = -I$(libxcfolder)
+LIBXC_GPU_FLAGS = -I$(libxcfolder)
 
-CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
+GPULIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
 	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
 	$(libxcdevobjfolder)/gga_c_op_pbe.o $(libxcdevobjfolder)/gga_c_op_pw91.o $(libxcdevobjfolder)/gga_c_optc.o $(libxcdevobjfolder)/gga_c_op_xalpha.o \
@@ -67,18 +67,26 @@ CUDALIBXCOBJ=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o
 	$(libxcdevobjfolder)/mgga_x_tpss.o $(libxcdevobjfolder)/mgga_x_vt84.o
 
 ifdef COMPILE_PK09
-CUDALIBXCOBJ += $(libxcdevobjfolder)/lda_c_pk09.o 
+GPULIBXCOBJ += $(libxcdevobjfolder)/lda_c_pk09.o 
 endif
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-$(CUDALIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
-	@echo "[QUICK]  NVCC $@"
-	$(VB)$(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_CUDA_FLAGS) -c $< -o $@
+GPULIBXC_FLAGS=
 
-all: $(CUDALIBXCOBJ)
+ifeq "$(HIPCC)" 'no'
+GPULIBXC_FLAGS= $(CUDAC) -dc $(CUDA_FLAGS) $(CUDA_DC_FLAGS) $(CUDA_INCL_FLAGS) $(LIBXC_GPU_FLAGS)
+else
+GPULIBXC_FLAGS= $(HIPCC) -fgpu-rdc -fPIC $(HIP_FLAGS) $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_GPU_FLAGS)
+endif
+
+$(GPULIBXCOBJ):$(libxcdevobjfolder)/%.o:%.cu
+	@echo "[QUICK]  NVCC $@"
+	$(VB) $(GPULIBXC_FLAGS) -c $< -o $@
+
+libxc_device: $(GPULIBXCOBJ)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

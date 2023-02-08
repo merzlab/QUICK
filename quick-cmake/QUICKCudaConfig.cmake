@@ -1,13 +1,18 @@
 # first, find CUDA.
-find_package(CUDA)
 option(CUDA "Build ${PROJECT_NAME} with CUDA GPU acceleration support." FALSE)
 
-if(CUDA AND NOT CUDA_FOUND)
-    message(FATAL_ERROR "You turned on CUDA, but it was not found.  Please set the CUDA_TOOLKIT_ROOT_DIR option to your CUDA install directory.")
-endif()
+# set these variables to minimize code duplication of hip and cuda builds
+set(QUICK_GPU_PLATFORM "CUDA")
+set(QUICK_GPU_TARGET_NAME "cuda")
+set(GPU_LD_FLAGS "") # hipcc requires special flags for linking (see below)
 
 if(CUDA)
 
+    find_package(CUDA REQUIRED)
+
+    if(NOT CUDA_FOUND)
+        message(FATAL_ERROR "You turned on CUDA, but it was not found.  Please set the CUDA_TOOLKIT_ROOT_DIR option to your CUDA install directory.")
+    endif()
     # cancel Amber arch flags, because quick supports different shader models
     set(CUDA_NVCC_FLAGS "")
 
@@ -134,7 +139,8 @@ if(CUDA)
         endif()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing and
+ampere.")
         endif()
 
     endif()
@@ -183,3 +189,40 @@ if(CUDA)
     endif()
 
 endif()
+
+if(HIP)
+
+    set(QUICK_GPU_PLATFORM "HIP")
+    set(QUICK_GPU_TARGET_NAME "hip")
+    set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
+    set(HIP_TOOLKIT_ROOT_DIR "/opt/rocm" CACHE STRING "Location of the HIP toolkit")
+    set(HIPCUDA_EMULATE_VERSION "10.1" CACHE STRING "CUDA emulate version")
+
+    find_package(HipCUDA REQUIRED)
+
+    set(CUDA ON)
+
+    set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
+    set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
+
+    # optimization level
+    if(OPTIMIZE)
+        list(APPEND CUDA_NVCC_FLAGS -O2 -ffast-math)
+
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} -O2 -mtune=native)
+
+    else()
+        list(APPEND CUDA_NVCC_FLAGS -O0)
+
+        set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-O0")
+
+    endif()
+
+    list(APPEND CUDA_NVCC_FLAGS -fPIC)
+
+    list(APPEND CUDA_DEVICE_CODE_FLAGS -DUSE_LEGACY_ATOMICS)
+
+    import_library(cublas "${CUDA_cublas_LIBRARY}")
+    import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+endif()
+

@@ -20,7 +20,7 @@ gga_x_ityh_init(xc_func_type *p)
 { 
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_x_ityh_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   p->params_byte_size = sizeof(gga_x_ityh_params); 
 #endif 
  
@@ -131,7 +131,7 @@ func(const xc_func_type *p, xc_gga_work_c_t *r)
   } 
 } 
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 #define kernel_id -1
 #endif 
 #include "work_gga_c.c" 

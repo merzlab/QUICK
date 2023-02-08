@@ -28,7 +28,7 @@ mgga_x_tb09_init(xc_func_type *p)
   mgga_x_tb09_params *params; 
  
   p->params = malloc(sizeof(mgga_x_tb09_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
   p->params_byte_size = sizeof(mgga_x_tb09_params); 
 #endif 
   params = (mgga_x_tb09_params *)p->params; 

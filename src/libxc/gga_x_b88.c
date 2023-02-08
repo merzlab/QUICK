@@ -26,7 +26,7 @@ gga_x_b88_init(xc_func_type *p)
 {
   assert(p!=NULL && p->params == NULL);
   p->params = malloc(sizeof(gga_x_b88_params));
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   p->params_byte_size = sizeof(gga_x_b88_params); //Assign the value for param size
 #endif
   /* value of beta in standard Becke 88 functional */
