@@ -417,7 +417,7 @@ contains
           read(input,'(A80)',end=113,err=113) keywd
           if (is_blank(keywd,1,80)) exit
           call upcase(keywd,80)
-          if ((index(keywd,'BOND') /=0) .or. (index(keywd,'ANGLE') /=0) &
+          if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
              .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
           if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
        enddo
@@ -616,7 +616,7 @@ contains
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-1
 
-            elseif (index(keywd,'BOND') /=0) then
+            elseif (index(keywd,'DISTANCE') /=0) then
                istart=ifinal+1
                incons=incons+1
                self%dlfind_constr(1,incons)=1
