@@ -45,6 +45,8 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 
 MIRP = $(objfolder)/mirp_fmt.o
 
+CPPFUNCS = $(objfolder)/time.o
+
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
@@ -57,7 +59,11 @@ $(MIRP):$(objfolder)/%.o:%.cpp
 	@echo "[QUICK]  CXX $@"
 	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
 
-all: $(SUBS) $(MIRP)
+$(CPPFUNCS):$(objfolder)/%.o:%.cpp
+	@echo "[QUICK]  CXX $@"
+	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
+
+all: $(SUBS) $(CPPFUNCS) $(MIRP)
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

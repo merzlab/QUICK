@@ -1937,7 +1937,7 @@ subroutine HFHessian
   ! Note that this series of calls is not well commented, but is exactly the
   ! same order as is found in hfenergy or hfgrad.
 
-  call cpu_time(t1)
+  RECORD_TIME(t1)
   do I=1,nbasis
      call formCPHFA(I,I,I,I)
      do J=I+1,nbasis
@@ -1988,7 +1988,7 @@ subroutine HFHessian
         enddo
      enddo
   enddo
-  call cpu_time(t2)
+  RECORD_TIME(t2)
   !  print *,'FORM1',T2-T1
 
   ! APPEARS PERFECT TO HERE. DEBUGGED.
@@ -2003,7 +2003,7 @@ subroutine HFHessian
   enddo
 
   call formCPHFB
-  call cpu_time(t3)
+  RECORD_TIME(t3)
 !    print *,'FORM2',T3-T2
 
   ! NOTE:  THERE ARE BETTER CONVERGERS.  USE THEM LATER.  I WANT TO GRADUATE.

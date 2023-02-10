@@ -516,7 +516,7 @@ subroutine run_quick(self,ierr)
   SAFE_CALL(set_quick_molspecs(quick_api,ierr))
 
   ! start the timer for initial guess
-  call cpu_time(timer_begin%TIniGuess)
+  RECORD_TIME(timer_begin%TIniGuess)
 
   ! we will reuse density matrix for steps above 1. For the 1st step, we should
   ! read basis file and run SAD guess.
@@ -548,7 +548,7 @@ subroutine run_quick(self,ierr)
 #endif
 
   ! stop the timer for initial guess
-  call cpu_time(timer_end%TIniGuess)
+  RECORD_TIME(timer_end%TIniGuess)
 
 #if defined CUDA_MPIV || defined HIP_MPIV
     timer_begin%T2elb = timer_end%T2elb

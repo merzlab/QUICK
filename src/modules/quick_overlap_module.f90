@@ -187,7 +187,7 @@ subroutine fullx
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 
-   call cpu_time(timer_begin%T1eS)
+   RECORD_TIME(timer_begin%T1eS)
 
    call allocfullx(quick_scratch,nbasis)
 
@@ -227,7 +227,7 @@ subroutine fullx
       enddo
    enddo
 
-   call cpu_time(timer_end%T1eS)
+   RECORD_TIME(timer_end%T1eS)
    timer_cumer%T1eS=timer_cumer%T1eS+timer_end%T1eS-timer_begin%T1eS
 
    call copySym(quick_qm_struct%s,nbasis)
@@ -236,7 +236,7 @@ subroutine fullx
    call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
-   call cpu_time(timer_begin%T1eSD)
+   RECORD_TIME(timer_begin%T1eSD)
 
 #if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
 
@@ -252,7 +252,7 @@ subroutine fullx
 #endif
 #endif
 
-   call cpu_time(timer_end%T1eSD)
+   RECORD_TIME(timer_end%T1eSD)
    timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
 
    ! Consider the following:
