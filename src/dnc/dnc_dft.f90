@@ -21,7 +21,7 @@ subroutine dftoperatordelta
 
    ! Note that the KS operator matrix is symmetric.
 
-   call cpu_time(t1)
+   RECORD_TIME(t1)
 
    Eelxc=0.0d0
 
@@ -153,7 +153,7 @@ subroutine dftoperatordelta
 
    endif
 
-   call cpu_time(t2)
+   RECORD_TIME(t2)
 
 
    do I=1,nbasis
@@ -173,7 +173,7 @@ subroutine dftoperatordelta
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next term defines the electron repulsion_prim.
 
-   call cpu_time(T1)
+   RECORD_TIME(T1)
 
    ! Delta density matrix cutoff
 
@@ -265,7 +265,7 @@ subroutine dftoperatordelta
       enddo
    enddo
 
-   call cpu_time(t2)
+   RECORD_TIME(t2)
 
    write (ioutfile,'(" TIME of evaluation integral = ",F12.2)') &
          T2-T1
@@ -1039,7 +1039,7 @@ subroutine dftoperatordelta
       enddo
    enddo
 
-   call cpu_time(t3)
+   RECORD_TIME(t3)
 
    write (ioutfile,'(" TIME of evaluation numerical integral = ",F12.2)') &
          T3-T2

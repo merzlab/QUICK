@@ -68,7 +68,7 @@ subroutine calmp2
 
   do i3new=1,nstepmp2               ! Step counter
 
-     call cpu_time(timer_begin%TMP2)
+     RECORD_TIME(timer_begin%TMP2)
      ntemp=0    ! integer counter
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
      nstepmp2f=i3new*nstep          ! Step end n
@@ -233,7 +233,7 @@ subroutine calmp2
         enddo
      enddo
 
-     call cpu_time(timer_end%TMP2)
+     RECORD_TIME(timer_end%TMP2)
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
   enddo
@@ -329,7 +329,7 @@ subroutine MPI_calmp2
   ttt=MAXVAL(Ycutoff) ! Max Value of Ycutoff
 
   do i3new=1,nstepmp2               ! Step counter
-     call cpu_time(timer_begin%TMP2)
+     RECORD_TIME(timer_begin%TMP2)
      ntemp=0    ! integer counter
      total_ntemp=0
      nstepmp2s=(i3new-1)*nstep+1    ! Step start n
@@ -462,7 +462,7 @@ subroutine MPI_calmp2
         enddo
      enddo
 
-     call cpu_time(timer_end%TMP2)
+     RECORD_TIME(timer_end%TMP2)
      timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
      ! Send the integral package after folding to master node

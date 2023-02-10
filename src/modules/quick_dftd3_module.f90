@@ -49,7 +49,7 @@ contains
 
     ierr=0
 
-    call cpu_time(timer_begin%Tdisp)
+    RECORD_TIME(timer_begin%Tdisp)
 
     ! set version
     if(quick_method%DFTD2) then
@@ -103,7 +103,7 @@ contains
     !write(*, "(3ES20.12)") quick_qm_struct%disp_gradient
     !write(*, *)
 
-    call cpu_time(timer_end%Tdisp)
+    RECORD_TIME(timer_end%Tdisp)
 
     timer_cumer%Tdisp=timer_cumer%Tdisp+timer_end%Tdisp-timer_begin%Tdisp  
 

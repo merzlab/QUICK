@@ -310,7 +310,7 @@ struct gpu_simulation_type {
     QUICKDouble*                    gccoeff;
     QUICKDouble*                    cons;
     QUICKDouble*                    gcexpo;
-    int*                            KLMN;
+    unsigned char*                  KLMN;
     int                             prim_total;
     int*                            prim_start;
 
@@ -442,7 +442,7 @@ struct gpu_basis_type {
     cuda_buffer_type<QUICKDouble>*  weightedCenterZ;            // 4-dimension one
     cuda_buffer_type<QUICKDouble>*  cons;
     cuda_buffer_type<QUICKDouble>*  gcexpo;
-    cuda_buffer_type<int>*          KLMN;
+    cuda_buffer_type<unsigned char>* KLMN;
     cuda_buffer_type<QUICKDouble>*  Apri;
     cuda_buffer_type<QUICKDouble>*  Kpri;
     cuda_buffer_type<QUICKDouble>*  PpriX;
@@ -755,7 +755,7 @@ void cuda_buffer_type<T> :: ReallocateGPU()
         }
     }else{
 #ifndef CUDART_VERSION
-       status=cudaErrorInvalidValue
+       status=cudaErrorInvalidValue;
 #elif (CUDART_VERSION < 10010)
        status=cudaErrorInvalidDevicePointer;
 #else

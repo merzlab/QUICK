@@ -3,7 +3,7 @@
 #endif
 #include <stdio.h>
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 int dryrun;
 
 void get_gpu_work_params(xc_func_type* p, void *gpu_work_params){

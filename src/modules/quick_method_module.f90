@@ -140,7 +140,7 @@ module quick_method_module
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         logical :: bCUDA                ! if CUDA is used here
 #endif
 
@@ -170,7 +170,7 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
     interface upload
         module procedure upload_method
     end interface upload
@@ -280,7 +280,9 @@ module quick_method_module
             use xc_f90_types_m
             use xc_f90_lib_m
             use quick_exception_module
-
+#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+            use quick_magma_module, only: magmaPrintInfo
+#endif
             implicit none
             integer io
             type(quick_method_type) self
@@ -383,6 +385,10 @@ module quick_method_module
             else
               write(io,'(" DIRECT SCF ")')
             endif
+
+#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+            call magmaPrintInfo(io, ierr)
+#endif
 
             if (self%PDB) write(io,'(" PDB INPUT ")')
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
@@ -873,7 +879,7 @@ module quick_method_module
             self%coarse_cutoff=.false.
             self%tight_cutoff=.false.
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
             self%bCUDA  = .true.
 #endif
 
@@ -1066,7 +1072,7 @@ module quick_method_module
         end subroutine set_libxc_func_info
 
         ! subroutine to upload method and libxc info in to gpu
-#if defined CUDA || defined CUDA_MPIV        
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         subroutine upload_method(self, ierr)
           
           implicit none
