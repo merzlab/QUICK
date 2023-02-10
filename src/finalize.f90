@@ -87,7 +87,7 @@ subroutine finalize(io,ierr,option)
     call deallocateall(ierr)
 
     ! stop timer and output them
-    call cpu_time(timer_end%TTotal)
+    RECORD_TIME(timer_end%TTotal)
 !    call timer_output(io)
 
     !-------------------MPI/MASTER---------------------------------------

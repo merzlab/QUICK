@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and Fin
 project(quick LANGUAGES NONE VERSION 22.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
+
 if(NOT INSIDE_AMBER)
 
 	# initialization and include paths
@@ -173,14 +174,16 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 endif()
 
 
+
+
 # PGI, CRAY, CLANG: NOT SUPPORTED
 # --------------------------------------------------------------------
 if(${COMPILER} STREQUAL PGI)
     message(FATAL_ERROR "PGI compiler not supported by QUICK.")
 elseif(${COMPILER} STREQUAL CRAY)
     message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
-elseif(${COMPILER} STREQUAL CLANG)
-    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
+#elseif(${COMPILER} STREQUAL CLANG)
+#    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
 endif()
 
 
@@ -230,7 +233,7 @@ endif()
 
 # extra compiling flags
 if(INSIDE_AMBER)
-  add_definitions(-DCEW)
+#  add_definitions(-DCEW)
 endif()
 
 # CUDA compiler flags

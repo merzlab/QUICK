@@ -178,7 +178,7 @@ void FC_FUNC(xc_f90_func_set_ext_params, XC_F90_FUNC_SET_EXT_PARAMS)
 
 
 /* LDAs */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void FC_FUNC(xc_f90_lda, XC_F90_LDA)
      (void **p, CC_FORTRAN_INT *np, double *rho, 
       double *zk, double *vrho, double *v2rho2, double *v3rho3, void *gpu_work_params)
@@ -539,7 +539,7 @@ void FC_FUNC(xc_f90_nlc_coef, XC_F90_NLC_COEF)
 }
 
 /* meta-GGAs */
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void FC_FUNC(xc_f90_mgga, XC_F90_MGGA)
      (void **p, CC_FORTRAN_INT *np, double *rho, double *sigma, double *lapl, double *tau,
       double *zk, double *vrho, double *vsigma, double *vlapl, double *vtau,

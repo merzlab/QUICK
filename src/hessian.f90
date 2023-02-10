@@ -2011,6 +2011,258 @@ subroutine get_eri_hessian
 
            constant= (2.d0*DENSEKI*DENSEJJ-DENSEKJ*DENSEJI)
            call hess2elec(I,K,J,J,constant)
+<<<<<<< HEAD
+=======
+
+           ! Find all the (ii|jk) integrals where j>i, k>j.
+
+           constant = (2.d0*DENSEKJ*DENSEII-DENSEJI*DENSEKI)
+           call hess2elec(I,I,J,K,constant)
+        enddo
+
+        do K=I+1,nbasis-1
+           DENSEKI=quick_qm_struct%dense(K,I)
+           DENSEKJ=quick_qm_struct%dense(K,J)
+           DENSEKK=quick_qm_struct%dense(K,K)
+           if (quick_method%unrst) then
+              DENSEKI=DENSEKI+quick_qm_struct%denseb(K,I)
+              DENSEKJ=DENSEKJ+quick_qm_struct%denseb(K,J)
+              DENSEKK=DENSEKK+quick_qm_struct%denseb(K,K)
+           endif
+
+           do L=K+1,nbasis
+              DENSELJ=quick_qm_struct%dense(L,J)
+              DENSELI=quick_qm_struct%dense(L,I)
+              DENSELK=quick_qm_struct%dense(L,K)
+              if (quick_method%unrst) then
+                 DENSELJ=DENSELJ+quick_qm_struct%denseb(L,J)
+                 DENSELI=DENSELI+quick_qm_struct%denseb(L,I)
+                 DENSELK=DENSELK+quick_qm_struct%denseb(L,K)
+              endif
+
+              ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
+              ! can be equal.
+
+              constant = (4.d0*DENSEJI*DENSELK-DENSEKI*DENSELJ &
+                   -DENSELI*DENSEKJ)
+              call hess2elec(I,J,K,L,constant)
+
+           enddo
+        enddo
+     enddo
+  enddo
+
+  !  do I=1,natom*3
+  !     do J=I,natom*3
+  !        print *,'INTEGRALS',HESSIAN(J,I)
+  !     enddo
+  !  enddo
+
+
+  ! At this point we have all the second derivatives of the energy
+  ! in terms of guassian basis integrals.
+  ! Now we need to form the first derivative of the energy
+  ! weighted density matrix and the bond order density matrix.  We will
+  ! be following the procedure detailed in Pople et. al., Int. J. Quant.
+  ! Chem. 13, 225-241, 1979.
+
+  ! Basically we need to find some array that produces the derivatives of
+  ! the MO coefficients.  This array is called B, and is calculated from
+  ! the set of linear equations (I-A)B=B0.  Thus we are going to form A
+  ! and all the B0, and then find B thus finding the the derivatives of
+  ! the density matrix and the energy weighted density matrix.
+
+  ! First we need to form the CPHFA array.  Before we define it, a note
+  ! about notation.  a and b will be used to denote virtual orbitals,
+  ! and i and j will denote occupied orbitals.  The subscript ai is one
+  ! subscript referring to the pairing of a and i.  If there are 4 occ
+  ! and 3 virtual orbitals, and we want to find location a=2 i=3, it would
+  ! be the location 7.  (a=1 is 1-4, a=2 i=1 is 5, a=2 i=2 is 6, etc.)
+
+  ! The CPHFA is:
+
+  ! A(ai,bj) = (E(i)-E(a))^-1 (2 (ai|bj) ) - (aj|bi) - (ab|ij)
+
+  ! The first step is building up the molecular orbitals from atomic orbitals
+  ! and putting them in the right location.  We'll then go through and
+  ! divide by the energies.
+
+  ! Since we have to consider spin, set up quick_qm_struct%cob and EB if this is RHF.
+
+  if ( .not. quick_method%unrst) then
+     do I=1,nbasis
+        quick_qm_struct%EB(I)=quick_qm_struct%E(I)
+        do J=1,nbasis
+           quick_qm_struct%cob(J,I)=quick_qm_struct%co(J,I)
+        enddo
+     enddo
+  endif
+
+  ! Blank out the CPHFA array.
+
+  if (quick_method%unrst) then
+     idimA = (nbasis-quick_molspec%nelec)*quick_molspec%nelec + (nbasis-quick_molspec%nelecB)*quick_molspec%nelecB
+  else
+     idimA = 2*(nbasis-(quick_molspec%nelec/2))*(quick_molspec%nelec/2)
+  endif
+  
+!  allocate(CPHFA(idimA,idimA))
+!  allocate(CPHFB(idimA,natom*3))
+  allocate(W(idimA,idimA))
+  allocate(B0(idimA))
+  allocate(BU(idimA))
+
+
+  do I=1,idimA
+     do J=1,idimA
+        quick_qm_struct%cphfa(J,I)=0.d0
+     enddo
+  enddo
+
+  ! We now pass all the nonredundant AO repulsion integrals to a subroutine.
+  ! Note that this series of calls is not well commented, but is exactly the
+  ! same order as is found in hfenergy or hfgrad.
+
+  RECORD_TIME(t1)
+  do I=1,nbasis
+     call formCPHFA(I,I,I,I)
+     do J=I+1,nbasis
+        call formCPHFA(I,I,J,J)
+        call formCPHFA(I,J,J,J)
+        call formCPHFA(I,I,I,J)
+        call formCPHFA(I,J,I,J)
+        do K=J+1,nbasis
+           call formCPHFA(I,J,I,K)
+           call formCPHFA(I,J,K,K)
+           call formCPHFA(I,K,J,J)
+           call formCPHFA(I,I,J,K)
+        enddo
+        do K=I+1,nbasis-1
+           do L=K+1,nbasis
+              call formCPHFA(I,J,K,L)
+         enddo
+        enddo
+     enddo
+  enddo
+  ! At this point, CPHFA(ai,bj) = 2(ai|bj)-(aj|bi)-(ab|ij)
+  ! We need to go through and divide by E(I)-E(A) (or EB(I)-EB(A))
+
+  if (quick_method%unrst) then
+     lastAocc = quick_molspec%nelec
+     lastBocc = quick_molspec%nelecb
+  else
+     lastAocc = quick_molspec%nelec/2
+     lastBocc = lastAocc
+  endif
+  iBetastart = lastAocc*(nbasis-lastAocc)
+
+  do iAvirt = lastAocc+1,nbasis
+     do iAocc = 1,lastAocc
+        iaCPHFA = (iAvirt-lastAocc-1)*lastAocc + iAocc
+        denom = quick_qm_struct%E(iAocc)-quick_qm_struct%E(iAvirt)
+        do jbCPHFA = 1,idimA
+           quick_qm_struct%cphfa(iaCPHFA,jbCPHFA) = quick_qm_struct%cphfa(iaCPHFA,jbCPHFA)/denom
+        enddo
+     enddo
+  enddo
+  do iBvirt = lastBocc+1,nbasis
+     do iBocc = 1,lastBocc
+        iaCPHFA = (iBvirt-lastBocc-1)*lastBocc + iBocc+iBetastart
+        denom = quick_qm_struct%EB(iBocc)-quick_qm_struct%EB(iBvirt)
+        do jbCPHFA = 1,idimA
+           quick_qm_struct%cphfa(iaCPHFA,jbCPHFA) = quick_qm_struct%cphfa(iaCPHFA,jbCPHFA)/denom
+        enddo
+     enddo
+  enddo
+  RECORD_TIME(t2)
+  !  print *,'FORM1',T2-T1
+
+  ! APPEARS PERFECT TO HERE. DEBUGGED.
+  ! Now we are going to form all of the B0 in an array.  There is one B0 for
+  ! each possible nuclear perturbation.  Thus the array is organized with
+  ! CPHFB(occ-virtual pair, dX)  This is done in a subroutine.
+
+  do I=1,natom*3
+     do J=1,idimA
+        quick_qm_struct%cphfb(J,I)=0.d0
+     enddo
+  enddo
+
+  call formCPHFB
+  RECORD_TIME(t3)
+!    print *,'FORM2',T3-T2
+
+  ! NOTE:  THERE ARE BETTER CONVERGERS.  USE THEM LATER.  I WANT TO GRADUATE.
+
+
+  ! Now we are going to solve the CPHF  equation.
+
+
+  do IdX=1,natom*3
+
+     ! To solve the CPHF equations we are going to need the transpose of A many
+     ! times.  Place it  in array W.
+
+     do I=1,idimA
+        do J=1,idimA
+           W(J,I) = quick_qm_struct%cphfa(I,J)
+        enddo
+     enddo
+     
+     ! Place the correct column of CPHFB in B0.  Also, set BU to BO.
+
+     do J=1,idimA
+        B0(J) = quick_qm_struct%cphfb(J,IDX)
+        BU(J) = quick_qm_struct%cphfb(J,IDX)
+     enddo
+
+     ! Solve the equation. BU = (Sum over i=0,N) A^i BO.  This section assumes
+     ! on first pass that CPHFA contains the actual A Array, W contain
+     ! Transpose[CPHFA].
+     change=1.D10
+     iBUform=0
+     do WHILE (change.gt.1.D-10)
+        iBUform=iBUform+1
+        change=-1.d0
+        do I=1,idimA
+           element = 0.0D0
+           do K=1,idimA
+              element = element + W(K,I)*B0(K)
+           enddo
+           change=max(change,dabs(element))
+           BU(I)=BU(I)+element
+        enddo
+
+        ! At this point the have formed the iBUformth BU array.
+        ! If it hasn't converged,
+        ! we need to form A^iBUform+1.  We do this by multiplying W
+        ! (A^iBUform transposed)
+        ! by A and storing it in the CPHFfile, then transposing the file onto W.
+
+
+        if (change > 1.D-10) then
+           open(iCPHFfile,file=CPHFfilename,status='unknown')
+           do I=1,idimA
+              do J=1,idimA
+                 W2IJ = 0.0D0
+                 do K=1,idimA
+                    W2IJ = W2IJ + W(K,I)*quick_qm_struct%cphfa(K,J)
+                 enddo
+                 write (iCPHFfile,'(E30.20)') W2IJ
+              enddo
+           enddo
+           close  (iCPHFfile)
+           open(iCPHFfile,file=CPHFfilename,status='unknown')
+           do I=1,idimA
+              do J=1,idimA
+                 read (iCPHFfile,'(E30.20)') W(J,I)
+              enddo
+           enddo
+           close(iCPHFfile)
+        endif
+        
+     enddo
+>>>>>>> e03bb293db471d02723615be3ef8e6aa75f9fb7c
 
            ! Find all the (ii|jk) integrals where j>i, k>j.
 

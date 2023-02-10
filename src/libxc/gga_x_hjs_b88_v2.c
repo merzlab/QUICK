@@ -19,7 +19,7 @@ gga_x_hjs_init(xc_func_type *p)
 { 
   assert(p->params == NULL); 
   p->params = malloc(sizeof(gga_x_hjs_b88_v2_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
   p->params_byte_size = sizeof(gga_x_hjs_b88_v2_params); 
 #endif 
  

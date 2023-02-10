@@ -34,6 +34,10 @@ subroutine initialize1(ierr)
    ! Parameter list
    integer, intent(inout) :: ierr    ! Error Flag
 
+#ifndef REPORT_CPU_TIME
+   call init_ref_time()
+#endif
+
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
@@ -44,9 +48,9 @@ subroutine initialize1(ierr)
    call init(quick_method, ierr)     !initialize quick_method namelist
    call init(quick_molspec, ierr)    !initialize quick_molspec namelist
 
-   call cpu_time(timer_begin%TTotal) !Trigger time counter
+   RECORD_TIME(timer_begin%TTotal) !Trigger time counter
 
-   call cpu_time(timer_begin%Tinitialize) !Trigger time counter
+   RECORD_TIME(timer_begin%Tinitialize) !Trigger time counter
 
    return
 

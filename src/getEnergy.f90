@@ -168,7 +168,7 @@ subroutine getEnergy(isGuess, ierr)
    endif
    !--------------- END MPI/MASTER ----------------------
 
-#if defined MPIV || defined CUDA_MPIV
+#if defined MPIV || defined CUDA_MPIV || defined HIP_MPIV
   call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,MPI_COMM_WORLD,mpierror) 
 #endif
 

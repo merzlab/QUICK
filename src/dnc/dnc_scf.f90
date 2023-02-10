@@ -85,10 +85,10 @@ subroutine electdiisdc(jscf,PRMS)
    do while (.not.diisdone)
 
       ! Tragger timer
-      call cpu_time(timer_begin%TSCF)
+      RECORD_TIME(timer_begin%TSCF)
       ! Now Get the Operator
 
-      call cpu_time(timer_begin%TOp)
+      RECORD_TIME(timer_begin%TOp)
       if (quick_method%HF) then
 #ifdef MPIV
          if (bMPI) then
@@ -102,7 +102,7 @@ subroutine electdiisdc(jscf,PRMS)
       endif
       if (quick_method%DFT)   call dftoperator
       if (quick_method%SEDFT) call sedftoperator
-      call cpu_time(timer_end%TOp)
+      RECORD_TIME(timer_end%TOp)
 
       jscf=jscf+1            ! Cycle time
       idiis=idiis+1          ! DIIS time
@@ -120,7 +120,7 @@ subroutine electdiisdc(jscf,PRMS)
          !--------------------------------------------
          if(jscf.ge.quick_method%ncyc)then
 
-            call cpu_time(timer_begin%TDII)
+            RECORD_TIME(timer_begin%TDII)
             !--------------------------------------------
             ! Before doing everything, we may save Density Matrix and Operator matrix first.
             ! Note try not to modify Osave and DENSAVE unless you know what you are doing
@@ -145,7 +145,7 @@ subroutine electdiisdc(jscf,PRMS)
             ! recover density matrix
             !--------------------------------------------
             call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
-            call cpu_time(timer_end%TDII)
+            RECORD_TIME(timer_end%TDII)
          endif
 
          !--------------------------------------------
@@ -245,11 +245,11 @@ subroutine electdiisdc(jscf,PRMS)
          ! evaldcsub:            energy for subsystems
          ! codcsub:              cooefficient for subsystem
          !--------------------------------------------
-         call cpu_time(timer_begin%TDiag) ! Trigger the dc timer for subsytem
+         RECORD_TIME(timer_begin%TDiag) ! Trigger the dc timer for subsytem
 
          call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
 
-         call cpu_time(timer_end%TDiag)  ! Stop the timer
+         RECORD_TIME(timer_end%TDiag)  ! Stop the timer
 
          Ttmp=timer_end%TDiag-timer_begin%TDiag
          timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag   ! Global dc diag time
@@ -368,7 +368,7 @@ subroutine electdiisdc(jscf,PRMS)
       !------ END MPI/MASTER ----------------------
 
       !------ MPI/ALL NODES ------------------------
-      call cpu_time(timer_end%TSCF)
+      RECORD_TIME(timer_end%TSCF)
       timer_cumer%TSCF=timer_cumer%TSCF+timer_end%TSCF-timer_begin%TSCF
       timer_cumer%TDII=timer_cumer%TDII+timer_end%TDII-timer_begin%TDII
       timer_cumer%TOp=timer_cumer%TOp+timer_end%TOp-timer_begin%TOp

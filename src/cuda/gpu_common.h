@@ -31,10 +31,17 @@ fflush(stdout);\
 
 #define VDIM1 1
 #define VDIM2 1
-//#define VDIM3 10
+#define VDIM3_T 4
+#define VDIM3_S 9
+#define VDIM3_L 16
 #define VDIM3 16
 
+#define VDIM3_GRAD_T 5
+
+#define STOREDIM_T 10
 #define STOREDIM_S 35
+
+#define STOREDIM_GRAD_T 20
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84
@@ -214,6 +221,7 @@ static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
 #define PI (3.1415926535897932384626433832795)
 #define X0 (5.9149671727956128778234784350536)//sqrt(2*PI^2.5)
 #define PI_TO_3HALF (5.5683279968317079)
+#define PIE4 (0.78539816339744827900)
 
 // Energy Scale
 static const QUICKDouble OSCALE                  = (QUICKDouble) 1E12;

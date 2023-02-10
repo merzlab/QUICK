@@ -14,7 +14,7 @@
 #define is_lda(id)    ((id) == XC_FAMILY_LDA  || is_gga(is))
 #define safe_free(pt) if(pt != NULL) free(pt)
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 void xc_mix_func
   (const xc_func_type *func, int np,
    const double *rho, const double *sigma, const double *lapl, const double *tau,
@@ -82,7 +82,7 @@ void xc_mix_func
   /* we now add the different components */
   for(ii=0; ii<func->n_func_aux; ii++){
     aux = func->func_aux[ii];
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     switch(aux->info->family){
     case XC_FAMILY_LDA:
       xc_lda(aux, np, rho, zk_, vrho_, v2rho2_, NULL, gpu_work_params);
