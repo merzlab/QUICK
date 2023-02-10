@@ -64,9 +64,13 @@ function(print_build_report)
 	color_print_bool("OpenMP:                 " "${OPENMP}")
 	endif()
 	
-	if(DEFINED CUDA)
+	if(DEFINED CUDA AND NOT DEFINED HIP)
 	color_print_bool("CUDA:                   " "${CUDA}")
 	endif()
+
+        if(DEFINED HIP)
+        color_print_bool("HIP:                    " "${HIP}")
+        endif()
 
 	if(DEFINED NCCL)
 	color_print_bool("NCCL:                   " "${NCCL}")

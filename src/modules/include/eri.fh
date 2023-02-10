@@ -1065,7 +1065,7 @@ subroutine get_cshell_eri_energy
    use allmod
    implicit double precision(a-h,o-z)
 
-   call cpu_time(timer_begin%TE)
+   RECORD_TIME(timer_begin%TE)
 #ifdef OSHELL
    quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)+ &
                        Sum2Mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)
@@ -1073,7 +1073,7 @@ subroutine get_cshell_eri_energy
    quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)
 #endif
    quick_qm_struct%Eel=quick_qm_struct%Eel/2.0d0
-   call cpu_time(timer_end%TE)
+   RECORD_TIME(timer_end%TE)
    timer_cumer%TE=timer_cumer%TE+timer_end%TE-timer_begin%TE
 #ifdef OSHELL
 end subroutine get_oshell_eri_energy
@@ -1124,11 +1124,11 @@ subroutine aoint(ierr)
    write(ioutfile, '("  2-ELECTRON INTEGRAL")')
    write(ioutfile, '("-----------------------------")')
 
-   call cpu_time(timer_begin%T2eAll)  ! Terminate the timer for 2e-integrals
+   RECORD_TIME(timer_begin%T2eAll)  ! Terminate the timer for 2e-integrals
 
    call obtain_leastIntCutoff(quick_method,ierr)
 
-#ifdef CUDA
+#if defined CUDA || defined HIP
    write(ioutfile, '("  GPU-BASED 2-ELECTRON INTEGRAL GENERATOR")')
    write(ioutfile, '("  WRITTEN BY YIPU MIAO(FLORIDA)")')
    write(ioutfile, '("  THIS PROGRAM IS UNDER TEST PHASE")')
@@ -1188,7 +1188,7 @@ subroutine aoint(ierr)
 #endif
 
 
-   call cpu_time(timer_end%T2eAll)  ! Terminate the timer for 2e-integrals
+   RECORD_TIME(timer_end%T2eAll)  ! Terminate the timer for 2e-integrals
    timer_cumer%T2eAll=timer_cumer%T2eAll+timer_end%T2eAll-timer_begin%T2eAll ! add the time to cumer
 
 

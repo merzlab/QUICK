@@ -135,7 +135,7 @@ contains
     use quick_basis_module
     use quick_lri_module, only: compute_c0c0 
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     use quick_mpi_module
 #endif
     
@@ -144,7 +144,7 @@ contains
     integer, intent(in) :: c_idx
     double precision :: c0c0
     integer :: II, JJ         ! shell pairs
-#if defined MPIV && !defined CUDA_MPIV
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
     integer :: i
 #endif
 
@@ -157,7 +157,7 @@ contains
 
     call compute_c0c0(RC, Zc, Cc, c0c0)
 
-#if defined MPIV && !defined CUDA_MPIV 
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
   !  which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.

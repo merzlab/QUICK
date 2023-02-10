@@ -20,7 +20,7 @@ lda_x_1d_init(xc_func_type *p)
 { 
   assert(p->params == NULL); 
   p->params = malloc(sizeof(lda_x_1d_params)); 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
   p->params_byte_size = sizeof(lda_x_1d_params); 
 #endif 
 } 
@@ -122,7 +122,7 @@ func(const xc_func_type *p, xc_lda_work_t *r)
   /* TODO : third derivatives */ 
 } 
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 #define kernel_id -1 
 #endif
 

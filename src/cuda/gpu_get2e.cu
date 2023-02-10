@@ -26,14 +26,57 @@
  Sumindex: a array to store refect how many temp variable needed in VRR. can be elimited by hand writing code.
  */
 static __constant__ gpu_simulation_type devSim;
-static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
+static __constant__ unsigned char devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
 static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 
+//#define USE_TEXTURE
+
+#ifdef USE_TEXTURE
+#define USE_TEXTURE_CUTMATRIX
+#define USE_TEXTURE_YCUTOFF
+#define USE_TEXTURE_XCOEFF
+#endif
+
+#ifdef USE_TEXTURE_CUTMATRIX
+texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_cutMatrix;
+#endif
+#ifdef USE_TEXTURE_YCUTOFF
+texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_YCutoff;
+#endif
+#ifdef USE_TEXTURE_XCOEFF
+texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
+#endif
+
+//#define USE_ERI_GRAD_STOREADD
+
+#ifdef USE_ERI_GRAD_STOREADD
+#define STORE_OPERATOR +=
+#else
+#define STORE_OPERATOR =  
+#endif
 
 #include "gpu_get2e_subs_hrr.h"
 #include "int.h"
 
+#define int_sp
+#undef int_spd
+#undef int_spdf
+#undef int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
+#include "gpu_eri_assembler_sp.h"
+#include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_sp.h"
+#include "gpu_get2e_subs_grad.h"
 
+
+#undef int_sp
 #define int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -45,7 +88,9 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spd.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_spd.h"
 #include "gpu_get2e_subs_grad.h"
 
 
@@ -78,6 +123,7 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #include "gpu_get2e_subs_grad.h"
 
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -90,7 +136,7 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
-
+*/
 
 #ifdef CUDA_SPDF
 //===================================
@@ -250,7 +296,9 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 
 //Include the kernels for open shell eri calculations
 #define OSHELL
-#define int_spd
+
+#define int_sp
+#undef int_spd
 #undef int_spdf
 #undef int_spdf2
 #undef int_spdf3
@@ -262,6 +310,21 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #undef int_spdf9
 #undef int_spdf10
 #undef new_quick_2_gpu_get2e_subs_h
+#include "gpu_get2e_subs.h"
+#include "gpu_get2e_subs_grad.h"
+
+#undef int_sp
+#define int_spd
+#undef int_spdf
+#undef int_spdf2
+#undef int_spdf3
+#undef int_spdf4
+#undef int_spdf5
+#undef int_spdf6
+#undef int_spdf7
+#undef int_spdf8
+#undef int_spdf9
+#undef int_spdf10
 #include "gpu_get2e_subs.h"
 #include "gpu_get2e_subs_grad.h"
 
@@ -293,6 +356,7 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
 
+/*
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -305,6 +369,7 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_get2e_subs_grad.h"
+*/
 
 #ifdef CUDA_SPDF
 //===================================
@@ -470,6 +535,7 @@ void upload_sim_to_constant(_gpu_type gpu){
 static float totTime;
 #endif
 
+#ifdef COMPILE_CUDA_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
@@ -498,6 +564,7 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t st
     QUICK_SAFE_CALL((getAOInt_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
 #endif
 }
+#endif
 
 // interface to call Kernel subroutine
 void get2e(_gpu_type gpu)
@@ -505,7 +572,15 @@ void get2e(_gpu_type gpu)
     // Part spd
 //    nvtxRangePushA("SCF 2e");
 
-    QUICK_SAFE_CALL((get2e_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+#ifdef USE_TEXTURE
+    bind_eri_texture(gpu);
+#endif
+
+    QUICK_SAFE_CALL((get2e_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+
+    //get2e_kernel_sp<<<1,1>>>();
+
+    QUICK_SAFE_CALL((get2e_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
@@ -537,6 +612,10 @@ void get2e(_gpu_type gpu)
     cudaDeviceSynchronize();
 //    nvtxRangePop();
 
+#ifdef USE_TEXTURE
+    unbind_eri_texture();
+#endif
+
 }
 
 // interface to call Kernel subroutine for uscf
@@ -545,7 +624,13 @@ void get_oshell_eri(_gpu_type gpu)
     // Part spd
 //    nvtxRangePushA("SCF 2e");
 
-    QUICK_SAFE_CALL((get_oshell_eri_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+#ifdef USE_TEXTURE
+    bind_eri_texture(gpu);
+#endif
+
+    QUICK_SAFE_CALL((get_oshell_eri_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+
+    QUICK_SAFE_CALL((get_oshell_eri_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
 #ifdef CUDA_SPDF
     if (gpu->maxL >= 3) {
@@ -575,15 +660,20 @@ void get_oshell_eri(_gpu_type gpu)
 //    cudaDeviceSynchronize();
 //    nvtxRangePop();
 
+#ifdef USE_TEXTURE
+    unbind_eri_texture();
+#endif
+
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL((getAddInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(bufferSize, aoint_buffer)));
 }
+#endif
 
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
@@ -591,7 +681,9 @@ void getGrad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-    QUICK_SAFE_CALL((getGrad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+    QUICK_SAFE_CALL((getGrad_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -620,7 +712,9 @@ void get_oshell_eri_grad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-   QUICK_SAFE_CALL((getGrad_oshell_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -642,7 +736,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
 }
 
 
-
+#ifdef COMPILE_CUDA_AOINT
 // =======   KERNEL SECTION ===========================
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
@@ -693,11 +787,11 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize
     }
     
 }
-
+#endif
 
 void upload_para_to_const(){
     
-    int trans[TRANSDIM*TRANSDIM*TRANSDIM];
+    unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
     // Data to trans
     {
         LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
@@ -824,8 +918,39 @@ void upload_para_to_const(){
     // upload to trans device location
     cudaError_t status;
 
-    status = cudaMemcpyToSymbol(devTrans, trans, sizeof(int)*TRANSDIM*TRANSDIM*TRANSDIM);
+    status = cudaMemcpyToSymbol(devTrans, trans, sizeof(unsigned char)*TRANSDIM*TRANSDIM*TRANSDIM);
     PRINTERROR(status, " cudaMemcpyToSymbol, Trans copy to constants failed")
 
 }
 
+void bind_eri_texture(_gpu_type gpu){
+
+#ifdef USE_TEXTURE_CUTMATRIX
+    cudaBindTexture(NULL, tex_cutMatrix, gpu->gpu_sim.cutMatrix, gpu->nshell*gpu->nshell*sizeof(QUICKDouble));
+#endif
+
+#ifdef USE_TEXTURE_YCUTOFF
+    cudaBindTexture(NULL, tex_YCutoff, gpu->gpu_sim.YCutoff, gpu->nshell*gpu->nshell*sizeof(QUICKDouble));
+#endif
+
+#ifdef USE_TEXTURE_XCOEFF
+    cudaBindTexture(NULL, tex_Xcoeff, gpu->gpu_sim.Xcoeff, gpu->jbasis*gpu->jbasis*2*2*sizeof(QUICKDouble));
+#endif
+
+}
+
+void unbind_eri_texture(){
+
+#ifdef USE_TEXTURE_CUTMATRIX
+    cudaUnbindTexture(tex_cutMatrix);
+#endif
+
+#ifdef USE_TEXTURE_YCUTOFF
+    cudaUnbindTexture(tex_YCutoff);
+#endif
+
+#ifdef USE_TEXTURE_XCOEFF
+    cudaUnbindTexture(tex_Xcoeff);    
+#endif
+
+}
