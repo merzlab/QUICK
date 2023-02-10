@@ -3,6 +3,239 @@
 ! Ed Brothers. November 14, 2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
+subroutine formCPHF
+  use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic, attrashellfock1
+  use quick_cutoff_module, only: cshell_density_cutoff
+
+  implicit double precision(a-h,o-z)
+  dimension itype2(3,2),ielecfld(3)
+  logical :: ijcon
+  double precision g_table(200),a,b,fxd(nbasis, nbasis)
+  integer i,j,k,ii,jj,kk,g_count, IIsh, JJsh, nocc
+
+     do Ibas=1,nbasis
+        ISTART = (quick_basis%ncenter(Ibas)-1) *3
+           do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
+
+              JSTART = (quick_basis%ncenter(Jbas)-1) *3
+
+              DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
+
+  !  We have selected our two basis functions, now loop over angular momentum.
+              do Imomentum=1,3
+
+  !  do the Ibas derivatives first. In order to prevent code duplication,
+  !  this has been implemented in a seperate subroutine. 
+                 ijcon = .true.
+                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+
+  !  do the Jbas derivatives.
+                 ijcon = .false.
+                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI)
+
+              enddo
+           enddo
+     enddo
+
+     ntri =  (nbasis*(nbasis+1))/2
+
+     write(ioutfile,*)"  Derivative Fock after 1st-order Kinetic  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ",(I+2)/3
+        do J = 1, ntri
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J),quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+        enddo
+     enddo
+
+!     call cshell_density_cutoff
+
+     do IIsh = 1, jshell
+        do JJsh = IIsh, jshell
+           call attrashellfock1(IIsh,JJsh)
+        enddo
+     enddo
+    
+     call calcFD(nbasis, ntri, quick_qm_struct%o, quick_qm_struct%dense, fxd)
+
+     nocc = quick_molspec%nelec/2
+     nat3 = natom*3
+
+     call d1_const(nat3, nbasis, ntri, nocc, fxd, quick_qm_struct%fd, quick_qm_struct%od, quick_qm_struct%dense, d1c, fds)
+
+end subroutine formCPHF
+
+  subroutine get_ijbas_fockderiv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
+
+  !-------------------------------------------------------------------------
+  !  The purpose of this subroutine is to compute the I and J basis function
+  !  derivatives required for get_kinetic_grad subroutine. The input variables
+  !  mbas, mstart and ijcon are used to differentiate between I and J
+  !  basis functions. For I basis functions, ijcon should be  true and should
+  !  be false for J.  
+  !-------------------------------------------------------------------------   
+     use allmod
+     use quick_overlap_module, only: gpt, opf, overlap
+     use quick_oei_module, only: ekinetic
+     implicit double precision(a-h,o-z)
+     logical :: ijcon
+     double precision g_table(200), valopf
+     integer i,j,k,ii,jj,kk,g_count
+
+     dSM = 0.0d0
+     dKEM = 0.0d0
+
+     Ax = xyz(1,quick_basis%ncenter(Jbas))
+     Bx = xyz(1,quick_basis%ncenter(Ibas))
+     Ay = xyz(2,quick_basis%ncenter(Jbas))
+     By = xyz(2,quick_basis%ncenter(Ibas))
+     Az = xyz(3,quick_basis%ncenter(Jbas))
+     Bz = xyz(3,quick_basis%ncenter(Ibas))
+
+     itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+
+     ii = itype(1,Ibas)
+     jj = itype(2,Ibas)
+     kk = itype(3,Ibas)
+     i = itype(1,Jbas)
+     j = itype(2,Jbas)
+     k = itype(3,Jbas)
+     g_count = i+ii+j+jj+k+kk+2
+
+     do Icon=1,ncontract(Ibas)
+        b = aexp(Icon,Ibas)
+        do Jcon=1,ncontract(Jbas)
+           a = aexp(Jcon,Jbas)
+
+           valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                    Ay, Az, Bx, By, Bz)
+
+           if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+             call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+
+             if(ijcon) then
+                mcon = Icon
+             else
+                mcon = Jcon
+             endif
+             dSM= dSM + 2.d0*aexp(mcon,mbas)* &
+             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+             *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+             dKEM = dKEM + 2.d0*aexp(mcon,mbas)* &
+             dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+             *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+           endif
+        enddo
+     enddo
+
+     itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+     if (itype(Imomentum,mbas) /= 0) then
+        itype(Imomentum,mbas) = itype(Imomentum,mbas)-1
+
+        ii = itype(1,Ibas)
+        jj = itype(2,Ibas)
+        kk = itype(3,Ibas)
+        i = itype(1,Jbas)
+        j = itype(2,Jbas)
+        k = itype(3,Jbas)
+        g_count = i+ii+j+jj+k+kk+2
+
+        do Icon=1,ncontract(Ibas)
+           b = aexp(Icon,Ibas)
+           do Jcon=1,ncontract(Jbas)
+             a = aexp(Jcon,Jbas)
+
+             valopf = opf(a, b, dcoeff(Jcon,Jbas), dcoeff(Icon,Ibas), Ax,&
+                      Ay, Az, Bx, By, Bz)
+
+             if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
+
+               call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
+               dSM = dSM - dble(itype(Imomentum,mbas)+1)* &
+               dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+               *overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+               dKEM = dKEM - dble(itype(Imomentum,mbas)+1)* &
+               dcoeff(Jcon,Jbas)*dcoeff(Icon,Ibas) &
+               *ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
+             endif
+           enddo
+        enddo
+
+        itype(Imomentum,mbas) = itype(Imomentum,mbas)+1
+     endif
+
+     JID = quick_qm_struct%iarray(Jbas,Ibas)
+
+     quick_qm_struct%od(mstart+Imomentum,JID) = quick_qm_struct%od(mstart+Imomentum,JID) &
+     +dSM
+
+     quick_qm_struct%fd(mstart+Imomentum,JID) = quick_qm_struct%fd(mstart+Imomentum,JID) &
+     +dKEM!*DENSEJI*2.d0
+
+     return
+
+  end subroutine get_ijbas_fockderiv
+
+      subroutine calcFD(ncf,ntri,f0,d0,fd)
+      use quick_scf_operator_module, only: scf_operator
+      implicit real*8 (a-h,o-z)
+      double precision f0(ncf,ncf),d0(ncf,ncf),fd(ncf,ncf)
+      logical :: deltaO   = .false.  ! delta Operator
+
+      call scf_operator(deltaO)
+
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            jj=j*(j-1)/2
+            sum1=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               if(i.ge.k) then
+                  ik=ii+k
+               else
+                  ik=kk+i
+               endif
+               if(k.ge.j) then
+                  kj=kk+j
+               else
+                  kj=jj+k
+               endif
+               sum1=sum1+f0(i,k)*d0(k,j)
+            enddo
+            fd(i,j)=sum1
+         enddo ! j=1,ncf
+      enddo    ! i=1,ncf
+
+!   write fd and df on a disk ; unit=60
+
+!      ncf2=ncf*ncf
+!      call save1mat(60,lrec,ncf2,fd)
+
+
+       write(*,*)' fd  matrix'
+       do i=1,ncf
+       do j=1,ncf
+          write(*,66) i,j,fd(i,j),f0(i,j),d0(i,j)
+       enddo
+       enddo
+
+  66    format(2(i2,1x),3(f10.5,1x))
+
+      end
+
+      subroutine d1_const(nat3, ncf, ntri, nocc, fxd, f1, s1, dense0, d1c, fds)
+      implicit double precision(a-h,o-z)
+      double precision fxd(ncf,ncf), f1(nat3,ntri), s1(nat3,ntri), dense0(ncf,ncf), d1c, fds
+
+
+
+      end subroutine d1_const
+
 subroutine formCPHFA(Ibas,Jbas,IIbas,JJbas)
   use allmod
   implicit double precision(a-h,o-z)
