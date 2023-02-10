@@ -27,7 +27,7 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     PRINTERROR(cuda_error,"hipGetDeviceCount gpu_get_device_info failed!");
     if (*gpu_dev_count == 0) 
     {
-        printf("NO CUDA DEVICE FOUNDED \n");
+        printf("NO AMD DEVICE FOUNDED \n");
         hipDeviceReset();
         exit(-1);
     }
