@@ -57,7 +57,7 @@ module quick_calculated_module
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
       double precision,dimension(:,:), allocatable :: ob
-      double precision,dimension(:,:), allocatable :: obd, fbd
+      double precision,dimension(:,:), allocatable :: obd, fbd, ewdmx
 
       ! matrix for saving beta XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: obxc
@@ -261,10 +261,16 @@ contains
          endif
       endif
 
+      if (quick_method%freq) then
+         if(.not. allocated(self%gradient)) allocate(self%gradient(3*natom))
+         if(.not. allocated(self%hessian))allocate(self%hessian(3*natom,3*natom))
+      endif
+
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if(.not. allocated(self%hessian)) allocate(self%hessian(3*natom,3*natom))
          if(.not. allocated(self%iarray)) allocate(self%iarray(nbasis,nbasis))
+         if(.not. allocated(self%ewdmx)) allocate(self%ewdmx(nbasis,nbasis))
          ij = 0
          do i=1,nbasis
              do j=1,i
@@ -440,10 +446,16 @@ contains
          endif
       endif
 
+      if (quick_method%freq) then
+         if (allocated(self%gradient)) deallocate(self%gradient)
+        if (allocated(self%hessian)) deallocate(self%hessian)
+      endif
+
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
       if (quick_method%analHess) then
          if (allocated(self%hessian)) deallocate(self%hessian)
          if (allocated(self%iarray)) deallocate(self%iarray)
+         if (allocated(self%ewdmx)) deallocate(self%ewdmx)
          if (allocated(self%od)) deallocate(self%od)
          if (allocated(self%fd)) deallocate(self%fd)
          if (allocated(self%CPHFA)) deallocate(self%CPHFA)
@@ -598,6 +610,11 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          call zeroVec(self%gradient,3*natom)
+      endif
+      
+      if (quick_method%freq) then
+      call zeroVec(self%gradient,3*natom)
+      call zeroMatrix(self%hessian,3*natom)
       endif
 
       ! if 2nd order derivation, which is Hessian matrix calculation is requested
