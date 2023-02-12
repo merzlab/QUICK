@@ -337,7 +337,7 @@ contains
         else
            IDIISfinal=quick_method%maxdiisscf; iidiis=1
         endif
-        write(ioutfile,'(a,i3,3x,a,i3,3x,a,i3)') 'idiis =', idiis, 'jscf =', jscf, 'iidiis =', iidiis
+
         !-----------------------------------------------
         ! Before Delta Densitry Matrix, normal operator is implemented here
         !-----------------------------------------------
@@ -723,7 +723,6 @@ contains
 #endif
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-           write(ioutfile,'(a,i3)') 'current_diis =', current_diis
 
            ! DELETE ME
            !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
