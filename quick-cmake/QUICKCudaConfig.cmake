@@ -17,7 +17,8 @@ if(CUDA)
     set(CUDA_NVCC_FLAGS "")
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-
+    #SM9.0 = H100
+    set(SM90FLAGS -gencode arch=compute_90,code=sm_90)
     #SM8.6 -- not currently used, but should be tested on Cuda 11.1
     set(SM86FLAGS -gencode arch=compute_86,code=sm_86)
     #SM8.0 = A100
@@ -83,7 +84,11 @@ if(CUDA)
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            
+        elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.0))
+            message(STATUS "Configuring QUICK for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0, SM8.6, SM9.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM90FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 	else()
 	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 11.6.  Please upgrade your CUDA installation or disable building with CUDA.")
 	endif()
@@ -134,6 +139,13 @@ if(CUDA)
         if("${QUICK_USER_ARCH}" MATCHES "ampere")
             message(STATUS "Configuring QUICK for SM8.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM80FLAGS})
+            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+            set(FOUND "TRUE")
+        endif()
+
+        if("${QUICK_USER_ARCH}" MATCHES "hopper")
+            message(STATUS "Configuring QUICK for SM9.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM90FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
