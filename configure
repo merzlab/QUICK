@@ -49,7 +49,7 @@ echo  "
       --debug-time   Compiles a debug version that reports more information
                      on timing
       --shared       Build shared object libraries                          
-      --arch <kepler|maxwell|pascal|volta|turing|ampere>                                           
+      --arch <kepler|maxwell|pascal|volta|turing|ampere|hopper>                                           
                      Specify gpu architecture. Applicable for cuda and      
                      cudampi versions only. If unspecified, QUICK will be   
                      compiled for several architectures based on the CUDA   
@@ -969,6 +969,9 @@ set_uspec_arch(){
       ampere)
         echo "Configuring for SM8.0"
         cuda_arch_flags="$cuda_arch_flags $sm80flags";;
+      hopper)
+        echo "Configuring for SM9.0"
+        cuda_arch_flags="$cuda_arch_flags $sm90flags";;
     esac
   done
 }
@@ -986,7 +989,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
   fi
 
   if [ -z "$NVCC" ]; then nvcc="$CUDA_HOME/bin/nvcc"; else nvcc="$NVCC"; fi
-
+    #SM9.0 = H100
+    sm90flags='-gencode arch=compute_90,code=sm_90'
     #SM8.0 = A100
     sm80flags='-gencode arch=compute_80,code=sm_80'
     #SM7.5 = RTX20xx, Tesla T4, Quadro RTX, RTX Titan
@@ -1002,7 +1006,7 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
-    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" -o "$cudaversion" = "11.3" -o "$cudaversion" = "11.4" -o "$cudaversion" = "11.5" -o "$cudaversion" = "11.6" -o "$cudaversion" = "11.7" ]; then
+    if [ "$cudaversion" = "11.0" -o "$cudaversion" = "11.1" -o "$cudaversion" = "11.2" -o "$cudaversion" = "11.3" -o "$cudaversion" = "11.4" -o "$cudaversion" = "11.5" -o "$cudaversion" = "11.6" -o "$cudaversion" = "11.7" -o "$cudaversion" = "11.8" -o "$cudaversion" = "12.0" ]; then
 
       echo "CUDA Version $cudaversion detected"
 
@@ -1010,8 +1014,8 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         set_uspec_arch
       else
 
-        echo "Configuring for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0"
-        cuda_arch_flags="$sm50flags $sm60flags $sm70flags $sm75flags $sm80flags -DUSE_LEGACY_ATOMICS"
+        echo "Configuring for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0, SM9.0"
+        cuda_arch_flags="$sm50flags $sm60flags $sm70flags $sm75flags $sm80flags $sm90flags -DUSE_LEGACY_ATOMICS"
         cuda_dc_flags='-Xptxas --disable-optimizer-constants'
       fi
     elif [ "$cudaversion" = "10.0" -o "$cudaversion" = "10.1" -o "$cudaversion" = "10.2" ]; then
