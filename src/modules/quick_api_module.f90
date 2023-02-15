@@ -180,7 +180,7 @@ end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -197,6 +197,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
   character(len=200), intent(in) :: keywd
   integer, intent(in) :: natoms
   integer, intent(in) :: atomic_numbers(natoms)
+  logical, intent(in) :: reusedmx
   integer, intent(out) :: ierr
   integer :: flen
   ierr=0
@@ -204,6 +205,8 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, ierr)
 
   ! allocate memory for quick_api_type
   call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
+
+  quick_api%reuse_dmx=reusedmx
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
@@ -520,7 +523,7 @@ subroutine run_quick(self,ierr)
 
   ! we will reuse density matrix for steps above 1. For the 1st step, we should
   ! read basis file and run SAD guess.
-  if(self%firstStep .and. self%reuse_dmx) then
+  if(self%firstStep .or. (.not. self%reuse_dmx)) then
 
     ! perform the initial guess
     if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))

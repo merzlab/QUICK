@@ -12,10 +12,10 @@ __constant__ gpu_simulation_type devSim_dft;
 static float totTime;
 #endif
 
-#include "gpu_getxc.h"
+#include "gpu_getxc_subs_generic.h"
 #include "gpu_cew_quad.h"
 #define OSHELL
-#include "gpu_getxc.h"
+#include "gpu_getxc_subs_generic.h"
 #include "gpu_cew_quad.h"
 #undef OSHELL
 
@@ -98,19 +98,19 @@ void getxc(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, HIP_XC_THREADS_PER_BLOCK, 0, 0))
 
     }else{
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxc_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxc_kernel, gpu->blocks, HIP_XC_THREADS_PER_BLOCK, 0, 0))
     }
 
     hipDeviceSynchronize();
@@ -142,7 +142,7 @@ void getxc_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 
@@ -150,7 +150,7 @@ void getxc_grad(_gpu_type gpu){
 
     }else{
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, gpu->xc_threadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
 
         hipDeviceSynchronize();
 
