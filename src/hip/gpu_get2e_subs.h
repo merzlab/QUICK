@@ -133,7 +133,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf10()
 #else
 #ifdef int_sp
 __global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
+__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SP_2E_WAVES_PER_CU)))
 __attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_THREADS_PER_BLOCK, HIP_SP_2E_THREADS_PER_BLOCK)))
 get2e_kernel_sp()
 #elif defined int_spd
