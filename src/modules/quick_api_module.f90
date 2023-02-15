@@ -523,7 +523,7 @@ subroutine run_quick(self,ierr)
 
   ! we will reuse density matrix for steps above 1. For the 1st step, we should
   ! read basis file and run SAD guess.
-  if((self%firstStep .and. self%reuse_dmx) .or. .not. self%reuse_dmx) then
+  if(self%firstStep .or. (.not. self%reuse_dmx)) then
 
     ! perform the initial guess
     if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
