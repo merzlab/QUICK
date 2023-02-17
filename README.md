@@ -15,6 +15,7 @@ Features
 --------
 * Hartree-Fock
 * Density functional theory (LDA, GGA and Hybrid-GGA functionals)
+* Grimme type dispersion corrections
 * Restricted closed-shell and unrestricted open-shell wavefunctions
 * Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
 * Includes a wide range of popular Gaussian basis sets
