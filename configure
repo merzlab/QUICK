@@ -1489,6 +1489,7 @@ ARCHFLAGS=$arch_flags
 RANLIB=$ranlib
 LIBEXT=$libext
 BLAS_FLAGS=$blas_opt_flags $lib_flags
+LAPACK_FLAGS=$blas_opt_flags $lib_flags
 FORT_EXT_LIB_FLAGS=$fort_ext_lib_flags
 
 #!---------------------------------------------------------------------!

@@ -88,7 +88,7 @@ LAPACKOBJ = $(lapackobjfolder)/dbdsqr.o $(lapackobjfolder)/dgebak.o \
         $(lapackobjfolder)/ieeeck.o $(lapackobjfolder)/iladlc.o $(lapackobjfolder)/iladlr.o \
         $(lapackobjfolder)/ilaenv.o $(lapackobjfolder)/ilaprec.o $(lapackobjfolder)/ilatrans.o \
         $(lapackobjfolder)/ilazlc.o $(lapackobjfolder)/ilazlr.o $(lapackobjfolder)/iparmq.o \
-        $(lapackobjfolder)/lsame.o $(lapackobjfolder)/ssyevx.o $(lapackobjfolder)/xerbla.o \
+        $(lapackobjfolder)/lsame.o $(lapackobjfolder)/xerbla.o \
         $(lapackobjfolder)/zheev.o $(lapackobjfolder)/zhetd2.o $(lapackobjfolder)/zhetrd.o \
         $(lapackobjfolder)/zlacgv.o $(lapackobjfolder)/zladiv.o $(lapackobjfolder)/zlanhe.o \
         $(lapackobjfolder)/zlarfb.o $(lapackobjfolder)/zlarf.o $(lapackobjfolder)/zlarfg.o \
