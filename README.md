@@ -15,7 +15,9 @@ Features
 --------
 * Hartree-Fock
 * Density functional theory (LDA, GGA and Hybrid-GGA functionals)
+* Restricted closed-shell and unrestricted open-shell wavefunctions
 * Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
+* Includes a wide range of popular Gaussian basis sets
 * Mulliken charge analysis
 * Exports Molden format for visualization of geometry and orbital data
 * Supports QM/MM calculations with Amber22 and later
@@ -34,7 +36,7 @@ Limitations
 
 Installation
 ------------
-Supported platforms: Linux, macOS (only Intel based tested)
+Supported platforms: Linux (x86 and ARM), macOS (only Intel x86 tested)
 
 * [Installation Guide](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#installation-guide)
    1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#compatible-compilers-and-hardware)
