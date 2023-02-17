@@ -18,7 +18,7 @@ Features
 * Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
 * Mulliken charge analysis
 * Exports Molden format for visualization of geometry and orbital data
-* Supports QM/MM calculations with Amber22
+* Supports QM/MM calculations with Amber22 and later
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
 * Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs
