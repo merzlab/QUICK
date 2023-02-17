@@ -75,15 +75,13 @@ Recent developments in Libxc - A comprehensive library of functionals for densit
 
 If you use the GPU version please also cite:
 
-Miao, Y.; Merz, K. M.
-Acceleration of High Angular Momentum Electron Repulsion Integrals and Integral Derivatives on Graphics Processing Units. 
-[*J. Chem. Theory Comput.* 11, 1449–1462 (2015)](https://pubs.acs.org/doi/10.1021/ct500984t).
-
-and for calculations on AMD GPUs please also cite:
-
 Manathunga, M.; Aktulga, H. M.; Götz, A. W.; Merz, K. M.
 Quantum Mechanics/Molecular Mechanics Simulations on NVIDIA and AMD Graphics Processing Units.
 [*J. Chem. Inf. Model.* 63, 711-717 (2023)](https://pubs.acs.org/doi/10.1021/acs.jcim.2c01505).
+
+Miao, Y.; Merz, K. M.
+Acceleration of High Angular Momentum Electron Repulsion Integrals and Integral Derivatives on Graphics Processing Units. 
+[*J. Chem. Theory Comput.* 11, 1449–1462 (2015)](https://pubs.acs.org/doi/10.1021/ct500984t).
 
 and for multi-GPU calculations please also cite:
 
