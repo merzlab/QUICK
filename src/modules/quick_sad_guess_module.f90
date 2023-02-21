@@ -855,7 +855,6 @@ contains
            if(verbose) write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
            diisdone=.true.
         endif
-        diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
   
         if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
            if(verbose) write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') &

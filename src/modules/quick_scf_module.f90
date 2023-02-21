@@ -339,6 +339,7 @@ contains
         else
            IDIISfinal=quick_method%maxdiisscf; iidiis=1
         endif
+
         !-----------------------------------------------
         ! Before Delta Densitry Matrix, normal operator is implemented here
         !-----------------------------------------------
@@ -781,7 +782,6 @@ contains
               diisdone=.true.
               quick_method%scf_conv=.false.
            endif
-           diisdone = idiis.gt.MAX_DII_CYCLE_TIME*quick_method%maxdiisscf .or. diisdone
   
            if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
               write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff

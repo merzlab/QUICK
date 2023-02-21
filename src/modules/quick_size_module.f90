@@ -32,9 +32,5 @@ module quick_size_module
     ! Minimal iteration for SCF
     integer, parameter :: MIN_SCF = 3
     
-    ! MAX DIIS CYCLE= MAX_DII_CYCLE_TIME* MAXDIICYC
-    ! notice the difference between this and ISCF
-    integer,parameter :: MAX_DII_CYCLE_TIME = 30
-
     integer,parameter :: MAXPRIM = 10
 end module quick_size_module

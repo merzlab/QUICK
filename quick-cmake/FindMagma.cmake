@@ -1,4 +1,4 @@
-# Checks environment for magma library installation. Usres can specify 
+# Checks environment for magma library installation. Users can specify 
 # the installation location by using MAGMA_ROOT variable. 
 
 find_library(LIB_MAGMA NAMES magma PATHS ${MAGMA_ROOT} $ENV{MAGMA_ROOT} ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH 
@@ -17,5 +17,5 @@ if(LIB_MAGMA AND MAGMA_INCLUDE_DIR)
 	message(STATUS "Found MAGMA: ${LIB_MAGMA}")
 	message(STATUS "Found magma.mod: ${MAGMA_INCLUDE_DIR}/magma.mod")
 else()
-	message(FATAL_ERROR "MAGMA is requested but couldnt find. Make sure to set MAGMA_ROOT.")
+	message(FATAL_ERROR "MAGMA is requested but was not found. Make sure to set MAGMA_ROOT.")
 endif()
