@@ -446,6 +446,7 @@ module quick_method_module
                 write (io,'("      GEOMETRY CHANGE RMS     = ",E10.3)') self%gRMSCrt
                 write (io,'("      MAX GRADIENT CHANGE     = ",E10.3)') self%gradMaxCrt
                 write (io,'("      GRADIENT NORMALIZATION  = ",E10.3)') self%gNormCrt
+                write (io,'("      MAX OPTIMIZATION CYCLE  = ",I5') self%iopt
             endif
 
             if (self%grad)      write(io,'(" GRADIENT CALCULATION")')
