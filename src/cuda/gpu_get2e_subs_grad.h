@@ -26,10 +26,14 @@
 #define VDIM3 VDIM3_S
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
-#elif defined int_spdf || defined int_spdf2
-#define STOREDIM STOREDIM_L
-#else
+#elif defined int_spdf3
+#undef VDIM3
+#define VDIM3 VDIM3_L
 #define STOREDIM STOREDIM_XL
+#else
+#undef VDIM3
+#define VDIM3 VDIM3_L
+#define STOREDIM STOREDIM_L
 #endif
 
 #ifdef OSHELL
