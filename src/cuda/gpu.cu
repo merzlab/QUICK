@@ -245,10 +245,10 @@ extern "C" void gpu_allocate_scratch_(){
     gpu -> scratch           =   new gpu_scratch;
 
     /* The sizes of these arrays must be (# blocks * # threads per block * store dimension). 
-       Note 1: that store dimension would be 35*35 in OEI code and 84*84 in ERI code when we have F functions. We will choose the max here.
+       Note 1: that store dimension would be 35*35 in OEI code and 120*120 in ERI code when we have F functions. We will choose the max here.
        Note 2: We may have different threads/block for OEI and ERI. Choose the max of them.
     */
-    unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_L * STOREDIM_L;
+    unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_XL * STOREDIM_XL;
 
     gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size*2);
     gpu -> scratch -> store -> DeleteCPU();
