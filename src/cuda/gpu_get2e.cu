@@ -181,6 +181,14 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_spdf_3.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_spdf_1.h" 
+#include "gpu_eri_grad_assembler_spdf_2.h"
+#include "gpu_eri_grad_assembler_spdf_3.h"
+#include "gpu_eri_grad_assembler_spdf_4.h"
+#include "gpu_eri_grad_assembler_spdf_5.h"
+#include "gpu_eri_grad_assembler_spdf_6.h"
+#include "gpu_eri_grad_assembler_spdf_7.h"
+#include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
 #undef int_spdf
@@ -698,9 +706,11 @@ void getGrad(_gpu_type gpu)
         QUICK_SAFE_CALL((getGrad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        if (gpu->maxL >= 3) {
         // Part f-3
-        //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+            QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
+        }
     }
 
     cudaDeviceSynchronize();   
@@ -729,9 +739,12 @@ void get_oshell_eri_grad(_gpu_type gpu)
         QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+	if (gpu->maxL >= 3) {
         // Part f-3
-        //    QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+        //    QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
+	}
     }
 
     cudaDeviceSynchronize();
