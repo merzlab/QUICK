@@ -45,8 +45,10 @@ fflush(stdout);\
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84
+#define STOREDIM_XL 120
 #else
 #define STOREDIM_L 84
+#define STOREDIM_XL 84
 #endif
 
 #define MAXPRIM 20
