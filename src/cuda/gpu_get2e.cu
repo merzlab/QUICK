@@ -701,15 +701,15 @@ void getGrad(_gpu_type gpu)
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef CUDA_SPDF
         // Part f-1
         QUICK_SAFE_CALL((getGrad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         if (gpu->maxL >= 3) {
         // Part f-3
+#ifdef CUDA_SPDF
             QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
-        //#endif
+#endif
         }
     }
 
