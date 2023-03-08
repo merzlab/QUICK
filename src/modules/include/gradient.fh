@@ -580,7 +580,7 @@ contains
      call cshell_density_cutoff
 #endif 
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+!#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,&
@@ -591,9 +591,9 @@ contains
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
-        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+!        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
-#else 
+!#else 
 #ifdef MPIV
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
@@ -614,7 +614,7 @@ contains
            call attrashellopt(IIsh,JJsh)
         enddo
      enddo
-#endif
+!#endif
   
      RECORD_TIME(timer_end%T1eVGrad)
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
