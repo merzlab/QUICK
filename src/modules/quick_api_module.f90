@@ -62,8 +62,8 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: ptchg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
-    ! default length is 200 characters
-    character(len=200) :: keywd
+    ! default length is 256 characters
+    character(len=256) :: keywd
 
     ! Is the job card provided by passing a string? default is false
     logical :: hasKeywd = .false.
@@ -164,10 +164,10 @@ subroutine check_fqin(fqin, keywd, ierr)
   implicit none
 
   character(len=80), intent(in)  :: fqin
-  character(len=200), intent(in) :: keywd
+  character(len=256), intent(in) :: keywd
   integer, intent(inout) :: ierr
 
-  call upcase(keywd, 200)
+  call upcase(keywd, 256)
 
   if ((index(keywd, 'HF') .ne. 0) .or. (index(keywd, 'DFT') .ne. 0) .and. (index(keywd, 'BASIS=') .ne. 0 )) then
     quick_api%hasKeywd = .true.
@@ -194,7 +194,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   implicit none
 
   character(len=80), intent(in)  :: fqin
-  character(len=200), intent(in) :: keywd
+  character(len=256), intent(in) :: keywd
   integer, intent(in) :: natoms
   integer, intent(in) :: atomic_numbers(natoms)
   logical, intent(in) :: reusedmx

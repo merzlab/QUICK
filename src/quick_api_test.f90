@@ -47,7 +47,7 @@
     character(len=80) :: fname
 
     ! job card
-    character(len=200) :: keywd
+    character(len=256) :: keywd
 
     ! total qm energy, mulliken charges, gradients and point charge gradients
     double precision :: totEne
