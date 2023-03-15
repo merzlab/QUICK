@@ -253,7 +253,17 @@ extern "C" void gpu_allocate_scratch_(){
        Note 1: that store dimension would be 35*35 in OEI code and 84*84 in ERI code when we have F functions. We will choose the max here.
        Note 2: We may have different threads/block for OEI and ERI. Choose the max of them.
     */
-    unsigned int store_size = gpu->blocks * HIP_SPD_2E_THREADS_PER_BLOCK * STOREDIM_L * STOREDIM_L;
+
+    unsigned int MAX_THREADS_PER_BLOCK = MAX(HIP_1E_GRAD_THREADS_PER_BLOCK,MAX(HIP_1E_THREADS_PER_BLOCK, MAX(HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK, 
+                                        MAX(HIP_SPD_2E_THREADS_PER_BLOCK, MAX(HIP_SP_2E_THREADS_PER_BLOCK, 
+					MAX(HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, MAX(HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, 
+					MAX(HIP_SP_2E_GRAD_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))))))); 
+#ifdef CEW
+    MAX_THREADS_PER_BLOCK = MAX(HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK,MAX(HIP_LRI_GRAD_THREADS_PER_BLOCK,
+                            MAX(HIP_LRI_SPDF2_THREADS_PER_BLOCK,MAX(HIP_LRI_THREADS_PER_BLOCK,MAX_THREADS_PER_BLOCK))));
+#endif
+
+    unsigned int store_size = gpu->blocks * MAX_THREADS_PER_BLOCK * STOREDIM_L * STOREDIM_L;
 
     gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
     gpu -> scratch -> store -> DeleteCPU();
@@ -270,7 +280,7 @@ extern "C" void gpu_allocate_scratch_(){
     gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
     gpu -> scratch -> storeCC -> DeleteCPU();
 
-    gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * HIP_SPD_2E_THREADS_PER_BLOCK * VDIM1 * VDIM2 * VDIM3);
+    gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * MAX_THREADS_PER_BLOCK * VDIM1 * VDIM2 * VDIM3);
     gpu -> scratch -> YVerticalTemp -> DeleteCPU();
 
     gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;

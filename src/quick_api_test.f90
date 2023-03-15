@@ -34,6 +34,9 @@
     ! number of atoms, number of atom types, number of external point charges
     integer :: natoms, nxt_charges
 
+    ! whether to reuse density matrix during MD
+    logical :: reuse_dmx
+
     ! atom type ids, atomic numbers, atomic coordinates, point charges and
     !  coordinates
     integer, allocatable, dimension(:)            :: atomic_numbers 
@@ -44,7 +47,7 @@
     character(len=80) :: fname
 
     ! job card
-    character(len=200) :: keywd
+    character(len=256) :: keywd
 
     ! total qm energy, mulliken charges, gradients and point charge gradients
     double precision :: totEne
@@ -99,9 +102,12 @@
     ! set result vectors and matrices to zero
     gradients    = 0.0d0
 
+    ! reuse density matrix during MD
+    reuse_dmx=.true.
+
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, ierr)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, reuse_dmx, ierr)
     CHECK_ERROR(ierr)
 
     do i=1, frames

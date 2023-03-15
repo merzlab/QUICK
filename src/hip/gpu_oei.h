@@ -207,7 +207,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 }
 
 __global__ void 
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getOEI_kernel(){
+__launch_bounds__(HIP_1E_THREADS_PER_BLOCK, 1) getOEI_kernel(){
 
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   unsigned int totalThreads = blockDim.x*gridDim.x;
