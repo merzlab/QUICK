@@ -196,7 +196,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   tolerance_e =quick_method%EChange
   printl=4
   printf=4
-  maxcycle=100 !200
+  maxcycle=quick_method%iopt !200
   maxene=100000
 
   tolrot=1.D2

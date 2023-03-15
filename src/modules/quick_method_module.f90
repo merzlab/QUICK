@@ -446,6 +446,7 @@ module quick_method_module
                 write (io,'("      GEOMETRY CHANGE RMS     = ",E10.3)') self%gRMSCrt
                 write (io,'("      MAX GRADIENT CHANGE     = ",E10.3)') self%gradMaxCrt
                 write (io,'("      GRADIENT NORMALIZATION  = ",E10.3)') self%gNormCrt
+                write (io,'("      MAX OPTIMIZATION CYCLE  = ",I5)') self%iopt
             endif
 
             if (self%grad)      write(io,'(" GRADIENT CALCULATION")')
@@ -695,14 +696,18 @@ module quick_method_module
             if (index(keywd,'DENSERMS') /= 0) then
                 call read(keywd, 'DENSERMS', self%pmaxrms)
             endif
-        
+
             ! 2e-cutoff
             if (index(keywd,'CUTOFF') /= 0) then
                 call read(keywd, 'CUTOFF', self%integralCutoff)
-                self%primLimit=self%integralCutoff*1.0d-1 
-                self%gradCutoff=self%integralCutoff
+                self%primLimit=self%integralCutoff*1.0d-1
             endif
 
+            ! Grad cutoff
+            if (index(keywd,'GRADCUTOFF') /= 0) then
+                call read(keywd, 'GRADCUTOFF', self%gradCutoff)
+            endif
+        
             ! Max DIIS cycles
             if (index(keywd,'MAXDIIS') /= 0) then
                 call read(keywd, 'MAXDIIS', self%maxdiisscf)
@@ -724,8 +729,8 @@ module quick_method_module
             endif
 
             ! Basis cutoff
-            if (index(keywd,'BASISZERO=') /= 0) then
-                call read(keywd,'BASISZERO', self%basisCutoff)
+            if (index(keywd,'BASISCUTOFF=') /= 0) then
+                call read(keywd,'BASISCUTOFF', self%basisCutoff)
             endif
 
            if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.

@@ -26,7 +26,7 @@ if [ -z "$QUICK_BASIS" ]; then
   export QUICK_BASIS="${AMBERHOME}/AmberTools/src/quick/basis"
 fi
 
-if [ "`basename $TESTsander`" = "quick.cuda" -o "`basename $TESTsander`" = "quick.cuda.MPI" ]; then
+if [ "`basename $TESTsander`" = "quick.cuda" -o "`basename $TESTsander`" = "quick.cuda.MPI" -o "`basename $TESTsander`" = "quick.hip" -o "`basename $TESTsander`" = "quick.hip.MPI" ]; then
   tfile="testlist_${typ}_cuda.txt"
 else
   tfile="testlist_${typ}.txt"
