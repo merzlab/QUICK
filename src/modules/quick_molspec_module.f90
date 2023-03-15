@@ -150,7 +150,7 @@ contains
          self%distnbor(i)=0
          self%iattype(i)=0
          self%chg(i)=0d0
-         self%dlfind_freezeatm = 0
+         self%dlfind_freezeatm(i) = 0
          do j=1,3
             xyz(j,i)=0d0
          enddo
@@ -576,78 +576,87 @@ contains
             
             if (index(keywd,'FREEZEXY') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-23 
 
             elseif (index(keywd,'FREEZEXZ') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-24
 
             elseif (index(keywd,'FREEZEYZ') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-34
 
             elseif (index(keywd,'FREEZEX') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-2
 
             elseif (index(keywd,'FREEZEY') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-3
 
             elseif (index(keywd,'FREEZEZ') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-4
 
             elseif (index(keywd,'FREEZE') /=0) then
                istart=ifinal+1
+               ifinal=80
                call rdword(keywd,istart,ifinal)
                call rdinum(keywd,istart,itemp,ierror)
                self%dlfind_freezeatm(itemp)=-1
 
             elseif (index(keywd,'DISTANCE') /=0) then
-               istart=ifinal+1
                incons=incons+1
                self%dlfind_constr(1,incons)=1
                do j=2,self%dlfind_constr(1,incons)+2
+                   istart=ifinal+1
+                   ifinal=80
                    call rdword(keywd,istart,ifinal)
                    call rdinum(keywd,istart,itemp,ierror)               
                    self%dlfind_constr(j,incons)= itemp
                enddo
 
             elseif (index(keywd,'ANGLE') /=0) then
-               istart=ifinal+1
                incons=incons+1
                self%dlfind_constr(1,incons)=2
                do j=2,self%dlfind_constr(1,incons)+2
+                   istart=ifinal+1
+                   ifinal=80
                    call rdword(keywd,istart,ifinal)
                    call rdinum(keywd,istart,itemp,ierror)
                    self%dlfind_constr(j,incons)= itemp
                enddo
 
             elseif (index(keywd,'DIHEDRAL') /=0) then
-               istart=ifinal+1
                incons=incons+1
                self%dlfind_constr(1,incons)=3
                do j=2,self%dlfind_constr(1,incons)+2
+                   istart=ifinal+1
+                   ifinal=80
                    call rdword(keywd,istart,ifinal)
                    call rdinum(keywd,istart,itemp,ierror)
                    self%dlfind_constr(j,incons)= itemp
                enddo
 
             endif
-
         enddo
 
     end subroutine read_quick_molespec_constrain
