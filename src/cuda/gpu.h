@@ -415,7 +415,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint);
 
 __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                               QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
@@ -426,7 +426,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint);
 
 __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                               QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
@@ -437,7 +437,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint);
 
 
 __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a);
