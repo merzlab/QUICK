@@ -181,13 +181,19 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_spdf_3.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_assembler_spdf_1_2.h"
+#include "gpu_eri_assembler_spdf_2_2.h"
+#include "gpu_eri_assembler_spdf_3_2.h"
+#include "gpu_eri_assembler_spdf_4_2.h"
+#include "gpu_eri_assembler_spdf_5_2.h"
+#include "gpu_eri_assembler_spdf_6_2.h"
+#include "gpu_eri_assembler_spdf_7_2.h"
 #include "gpu_eri_grad_assembler_spdf_1.h" 
 #include "gpu_eri_grad_assembler_spdf_2.h"
 #include "gpu_eri_grad_assembler_spdf_3.h"
 #include "gpu_eri_grad_assembler_spdf_4.h"
 #include "gpu_eri_grad_assembler_spdf_5.h"
 #include "gpu_eri_grad_assembler_spdf_6.h"
-#include "gpu_eri_grad_assembler_spdf_7.h"
 #include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
@@ -203,6 +209,10 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_eri_assembler_spdf_4.h"
 #include "gpu_get2e_subs.h"
+#include "gpu_eri_grad_assembler_spdf_7_1.h"
+#include "gpu_eri_grad_assembler_spdf_7_2.h"
+#include "gpu_eri_grad_assembler_spdf_7_3.h"
+#include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
 #undef int_spdf
@@ -693,22 +703,28 @@ void getGrad(_gpu_type gpu)
 
 //   nvtxRangePushA("Gradient 2e");
 
-    QUICK_SAFE_CALL((getGrad_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_kernel_sp<<<1,1>>>()));
 
-    QUICK_SAFE_CALL((getGrad_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_kernel_spd<<<1,1>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
         // Part f-1
-        QUICK_SAFE_CALL((getGrad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        QUICK_SAFE_CALL((getGrad_kernel_spdf<<<1,1>>>()));
         // Part f-2
-        QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+        QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<1,1>>>()));
         if (gpu->maxL >= 3) {
         // Part f-3
 #ifdef CUDA_SPDF
-            QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+
+            printf("calling getGrad_kernel_spdf3 \n");
+            QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<1,1>>>()))
+
+            printf("calling getGrad_kernel_spdf4 \n");
+            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<1,1>>>()))
+
 #endif
         }
     }
