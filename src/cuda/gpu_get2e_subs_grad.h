@@ -83,10 +83,10 @@ __global__ void
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf2()
 #elif defined int_spdf3
 __global__ void 
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf3()
+__launch_bounds__(1, 1) getGrad_kernel_spdf3()
 #elif defined int_spdf4
 __global__ void 
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf4()
+__launch_bounds__(1, 1) getGrad_kernel_spdf4()
 #elif defined int_spdf5
 __global__ void 
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf5()
@@ -133,7 +133,11 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
             b = 2*t-k;
         }
         */
-        
+ 
+#ifdef int_spdf3
+//printf("getGrad_kernel_spdf3 working.. \n");       
+#endif
+
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
 
@@ -167,7 +171,12 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
            
             int jj = devSim.sorted_Q[JJ];
             int ll = devSim.sorted_Q[LL];
-            
+
+#ifdef int_spdf3
+if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
+printf("Calling iclass_grad_spdf3: Before cutoff test \n");
+}            
+#endif
             
             if ( !((devSim.katom[ii] == devSim.katom[jj]) &&
                    (devSim.katom[ii] == devSim.katom[kk]) &&
@@ -199,7 +208,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
                         iclass_oshell_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
-                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+//                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf4
                     iclass_oshell_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf5
@@ -221,10 +230,16 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
                         iclass_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf2
+if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
+printf("Calling iclass_grad_spdf2 %d %d %d %d \n", iii, jjj, kkk, lll);
+}
                     if ( (iii + jjj) >= 4 ) {
                         iclass_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
+if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
+printf("Calling iclass_grad_spdf3 \n");
+}
                     iclass_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf4
                     iclass_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
@@ -513,8 +528,17 @@ __device__ __forceinline__ void iclass_grad_spd
         }
     }
     
-    
-    
+/*
+
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            printf("STORE   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f \n",II, JJ, KK, LL, I, J, K, L, j, i, LOCSTORE(store, j, i , STOREDIM, STOREDIM));
+                        }
+                    }
+                }
+   
+*/ 
     QUICKDouble AGradx = 0.0;
     QUICKDouble AGrady = 0.0;
     QUICKDouble AGradz = 0.0;
@@ -585,7 +609,9 @@ __device__ __forceinline__ void iclass_grad_spd
                                      store, storeAA, storeBB, storeCC, \
                                      RAx, RAy, RAz, RBx, RBy, RBz, \
                                      RCx, RCy, RCz, RDx, RDy, RDz);
-                        
+  
+//printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
+                      
                         QUICKDouble constant = 0.0 ;
                         
 #ifdef OSHELL
@@ -842,21 +868,21 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
 
-    for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
-        for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
+    for (int i = 0; i< 120; i++) {
+        for (int j = 0; j< 120; j++) {
             if (i < STOREDIM && j < STOREDIM) {
-                if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
+                //if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
-                }
+                //}
 
-                if (j >= Sumindex[I+1]) {
+                //if (j >= Sumindex[I+1]) {
                     LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) = 0;
                     LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) = 0;
-                }
+                //}
 
-                if (i >= Sumindex[K+1]) {
+                //if (i >= Sumindex[K+1]) {
                     LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) = 0;
-                }
+                //}
             }
         }
     }    
@@ -964,9 +990,9 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 //QUICKDouble store2[STOREDIM*STOREDIM];
                 
                 
-                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
-                    for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
-                        if (i < STOREDIM && j < STOREDIM && !(i >= Sumindex[I+J+2] && j >= Sumindex[K+L+2])) {
+                for (int i = 0; i< 120; i++) {
+                    for (int j = 0; j< 120; j++) {
+                        if (i < STOREDIM && j < STOREDIM ) {
                             LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
@@ -984,6 +1010,44 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                                 0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf3
+
+                ERint_vertical_spdf_1_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+         
+                ERint_vertical_spdf_2_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_3_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_4_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_5_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_6_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+/*
+                ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+*/
+
 
                 ERint_grad_vertical_spdf_1(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
@@ -1015,16 +1079,35 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vertical_spdf_7(I, J+1, K, L+1, II, JJ, KK, LL, \
+/*                vertical2_spdf3(I, J + 1, K, L + 1, YVerticalTemp, store2, \
+                                Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                                Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+
+                                0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+*/
+#elif defined int_spdf4
+
+                ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-/*                vertical2_spdf3(I, J + 1, K, L + 1, YVerticalTemp, store2, \
-                                Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                                Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                                0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
-#elif defined int_spdf4
+                ERint_grad_vertical_spdf_7_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+/*
                 vertical2_spdf4(I, J + 1, K, L + 1, YVerticalTemp, store2, \
                                 Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
@@ -1053,8 +1136,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 #endif
   
 
-                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
-                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                for (int i = 0; i< 120; i++) {
+                    for (int j = 0; j< 120; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(store, j, i , STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM);
                         }
@@ -1062,8 +1145,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 }
 
 
-                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
-                    for (int j = Sumindex[I+1]; j< Sumindex[I+J+3]; j++) {
+                for (int i = 0; i< 120; i++) {
+                    for (int j = 0; j< 120; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
                             LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
@@ -1072,8 +1155,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                     }
                 }
 
-                for (int i = Sumindex[K+1]; i< Sumindex[K+L+3]; i++) {
-                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                for (int i = 0; i< 120; i++) {
+                    for (int j = 0; j< 120; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
 
@@ -1085,8 +1168,16 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
             }
         }
     }
-     
-
+ 
+/*
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            printf("STORE   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f \n",II, JJ, KK, LL, I, J, K, L, j, i, LOCSTORE(store, j, i , STOREDIM, STOREDIM));
+                        }
+                    }
+                }    
+*/
     QUICKDouble AGradx = 0.0;
     QUICKDouble AGrady = 0.0;
     QUICKDouble AGradz = 0.0;
@@ -1142,11 +1233,37 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                     QUICKDouble Yaax, Yaay, Yaaz;
                                     QUICKDouble Ybbx, Ybby, Ybbz;
                                     QUICKDouble Yccx, Yccy, Yccz;
+
+bool bprint=false;
+
+if(II == 0 && JJ ==0 && KK == 0 && LL == 1 && III == 1 && JJJ == 1 && KKK == 1 && LLL == 11) bprint=true;
+
 #ifdef  int_spdf
+if(bprint) printf("int_spdf bprint \n");
                                     hrrwholegrad2_1
 #elif defined int_spdf2
+
+if(bprint) printf("int_spdf2 bprint \n");
                                     hrrwholegrad2_2
 #else
+
+/*
+if(bprint){
+
+                for (int i = 0; i< 120; i++) {
+                    for (int j = 0; j< 120; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            printf("STOREAA   %d %d %d %d   %d   %d   %.9f \n",Sumindex[K], Sumindex[K+L+2],
+Sumindex[I], Sumindex[I+J+2], j, i, LOCSTORE(storeAA, j, i , STOREDIM, STOREDIM));
+                        }
+                    }
+                } 
+
+}
+*/
+
+if(bprint) printf("calling hrrwholegrad2 bprint \n");
+
                                     hrrwholegrad2
 #endif
                                     (&Yaax, &Yaay, &Yaaz, \
@@ -1156,7 +1273,10 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                                   III, JJJ, KKK, LLL, IJKLTYPE, \
                                                   store, storeAA, storeBB, storeCC, \
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
-                                                  RCx, RCy, RCz, RDx, RDy, RDz);
+                                                  RCx, RCy, RCz, RDx, RDy, RDz, bprint);
+
+//if(bprint) 
+printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
                                     
                                     QUICKDouble constant = 0.0 ;
                                     
@@ -2066,7 +2186,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                              QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
+                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
@@ -2096,14 +2216,21 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                           LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + 1, LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), \
                           LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), \
                           J, coefAngularL, angularL);
+
+
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
+
+if(bprint) printf("Yaax: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+
             }
         }
     }
-    
+   
+if(bprint) printf("Yaax: %.9f \n", *Yaax );
+ 
     numAngularL = lefthrr(RAx, RAy, RAz, RBx, RBy, RBz, \
                           LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + 1, LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), \
                           LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), \
@@ -2416,7 +2543,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
@@ -2524,7 +2651,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];

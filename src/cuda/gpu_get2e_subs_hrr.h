@@ -1500,7 +1500,7 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
         }
     }    
     
-    /*    else if (IJTYPE == 4)
+        else if (IJTYPE == 4)
      {
      if (KLMNBx == 4) {
      numAngularL = 5;
@@ -1809,8 +1809,8 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      }
      }
      
-     */
-    //angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     
+    angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
 
     return numAngularL;
 }
