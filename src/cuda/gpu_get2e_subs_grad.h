@@ -863,21 +863,21 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
 
-    for (int i = 0; i< 120; i++) {
-        for (int j = 0; j< 120; j++) {
+    for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+        for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
-                //if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
+                if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
-                //}
+                }
 
-                //if (j >= Sumindex[I+1]) {
+                if (j >= Sumindex[I+1]) {
                     LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) = 0;
                     LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) = 0;
-                //}
+                }
 
-                //if (i >= Sumindex[K+1]) {
+                if (i >= Sumindex[K+1]) {
                     LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) = 0;
-                //}
+                }
             }
         }
     }    
@@ -985,8 +985,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 //QUICKDouble store2[STOREDIM*STOREDIM];
                 
                 
-                for (int i = 0; i< 120; i++) {
-                    for (int j = 0; j< 120; j++) {
+                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM ) {
                             LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
@@ -1164,8 +1164,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 #endif
   
 
-                for (int i = 0; i< 120; i++) {
-                    for (int j = 0; j< 120; j++) {
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(store, j, i , STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM);
                         }
@@ -1173,8 +1173,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 }
 
 
-                for (int i = 0; i< 120; i++) {
-                    for (int j = 0; j< 120; j++) {
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I+1]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
                             LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
@@ -1183,8 +1183,8 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                     }
                 }
 
-                for (int i = 0; i< 120; i++) {
-                    for (int j = 0; j< 120; j++) {
+                for (int i = Sumindex[K+1]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
 
@@ -1278,8 +1278,8 @@ bool bprint=false;
 
 if(bprint){
 
-                for (int i = 0; i< 120; i++) {
-                    for (int j = 0; j< 120; j++) {
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I+1]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                             printf("STOREAA   %d %d %d %d   %d   %d   %.9f \n",Sumindex[K], Sumindex[K+L+2],
 Sumindex[I], Sumindex[I+J+2], j, i, LOCSTORE(storeAA, j, i , STOREDIM, STOREDIM));
