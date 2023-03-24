@@ -26,6 +26,10 @@
 #define VDIM3 VDIM3_S
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
+#elif defined int_spdf || defined int_spdf2
+#undef VDIM3
+#define VDIM3 VDIM3_L
+#define STOREDIM STOREDIM_GRAD_S
 #elif defined int_spdf3 || defined int_spdf4
 #undef VDIM3
 #define VDIM3 VDIM3_L
@@ -995,15 +999,15 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 
                 
 #ifdef int_spdf
-                vertical2_spdf(I, J + 1, K, L + 1, YVerticalTemp, store2, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+                ERint_grad_vertical_spdf_0_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf2
-                vertical2_spdf2(I, J + 1, K, L + 1, YVerticalTemp, store2, \
-                                Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                                Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                                0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+                ERint_grad_vertical_spdf_0_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf3
 
 
@@ -2563,7 +2567,7 @@ if(bprint) printf("Yaax: %.9f \n", *Yaax );
 }
 
 #undef STOREDIM
-#define STOREDIM STOREDIM_L
+#define STOREDIM STOREDIM_GRAD_S
 
 __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                               QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
