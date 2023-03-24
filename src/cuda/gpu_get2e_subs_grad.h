@@ -26,7 +26,7 @@
 #define VDIM3 VDIM3_S
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
-#elif defined int_spdf3
+#elif defined int_spdf3 || defined int_spdf4
 #undef VDIM3
 #define VDIM3 VDIM3_L
 #define STOREDIM STOREDIM_XL
@@ -83,10 +83,10 @@ __global__ void
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf2()
 #elif defined int_spdf3
 __global__ void 
-__launch_bounds__(1, 1) getGrad_kernel_spdf3()
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf3()
 #elif defined int_spdf4
 __global__ void 
-__launch_bounds__(1, 1) getGrad_kernel_spdf4()
+__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf4()
 #elif defined int_spdf5
 __global__ void 
 __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf5()
@@ -172,11 +172,6 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
             int jj = devSim.sorted_Q[JJ];
             int ll = devSim.sorted_Q[LL];
 
-#ifdef int_spdf3
-if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
-printf("Calling iclass_grad_spdf3: Before cutoff test \n");
-}            
-#endif
             
             if ( !((devSim.katom[ii] == devSim.katom[jj]) &&
                    (devSim.katom[ii] == devSim.katom[kk]) &&
@@ -222,25 +217,25 @@ printf("Calling iclass_grad_spdf3: Before cutoff test \n");
 #endif
 #else
 #ifdef int_sp
+                    if( iii != 3 && jjj != 3 && kkk != 3 && lll !=3){
                     iclass_grad_sp(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+		    }
 #elif defined int_spd
+                    if( iii != 3 && jjj != 3 && kkk != 3 && lll !=3){
                     iclass_grad_spd(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+		    }
 #elif defined int_spdf
-                    if ( (kkk + lll) >= 4 ) {
+                    if ( (kkk + lll) >= 4 && iii != 3 && jjj != 3 && kkk != 3 && lll != 3) {
                         iclass_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf2
-if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
-printf("Calling iclass_grad_spdf2 %d %d %d %d \n", iii, jjj, kkk, lll);
-}
-                    if ( (iii + jjj) >= 4 ) {
+                    if ( (iii + jjj) >= 4 && iii != 3 && jjj != 3 && kkk != 3 && lll != 3) {
                         iclass_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
-if(ii == 0 && jj ==0 && kk == 0 && ll == 1 ){
-printf("Calling iclass_grad_spdf3 \n");
-}
+                    if( iii == 3 || jjj == 3 || kkk == 3 || lll ==3){
                     iclass_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+                    }
 #elif defined int_spdf4
                     iclass_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf5
@@ -1011,6 +1006,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                 0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf3
 
+
                 ERint_vertical_spdf_1_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
@@ -1041,13 +1037,20 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-/*
                 ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
-*/
 
+                ERint_vertical_spdf_8_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spd_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
                 ERint_grad_vertical_spdf_1(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
@@ -1079,6 +1082,21 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
+                ERint_grad_vertical_spdf_7_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
 /*                vertical2_spdf3(I, J + 1, K, L + 1, YVerticalTemp, store2, \
                                 Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
@@ -1086,6 +1104,16 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                 0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 */
 #elif defined int_spdf4
+
+                ERint_grad_vertical_spdf_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_5(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
                 ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
@@ -1236,18 +1264,18 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 
 bool bprint=false;
 
-if(II == 0 && JJ ==0 && KK == 0 && LL == 1 && III == 1 && JJJ == 1 && KKK == 1 && LLL == 11) bprint=true;
+//if(II == 9 && JJ == 21 && KK == 9 && LL == 9 && III == 33 && JJJ == 60 && KKK == 34 && LLL == 35) bprint=true;
 
 #ifdef  int_spdf
-if(bprint) printf("int_spdf bprint \n");
+//if(bprint) printf("int_spdf bprint \n");
                                     hrrwholegrad2_1
 #elif defined int_spdf2
 
-if(bprint) printf("int_spdf2 bprint \n");
+//if(bprint) printf("int_spdf2 bprint \n");
                                     hrrwholegrad2_2
 #else
 
-/*
+
 if(bprint){
 
                 for (int i = 0; i< 120; i++) {
@@ -1260,7 +1288,7 @@ Sumindex[I], Sumindex[I+J+2], j, i, LOCSTORE(storeAA, j, i , STOREDIM, STOREDIM)
                 } 
 
 }
-*/
+
 
 if(bprint) printf("calling hrrwholegrad2 bprint \n");
 
@@ -1275,9 +1303,12 @@ if(bprint) printf("calling hrrwholegrad2 bprint \n");
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
                                                   RCx, RCy, RCz, RDx, RDy, RDz, bprint);
 
-//if(bprint) 
+#ifdef int_spdf3
+if(bprint){ 
+//if( I == 3 && J == 3 && K == 3 && L == 3){
 printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
-                                    
+}
+#endif                                    
                                     QUICKDouble constant = 0.0 ;
                                     
 #ifdef OSHELL
