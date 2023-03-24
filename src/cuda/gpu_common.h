@@ -42,6 +42,7 @@ fflush(stdout);\
 #define STOREDIM_S 35
 
 #define STOREDIM_GRAD_T 20
+#define STOREDIM_GRAD_S 56
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84
