@@ -472,7 +472,7 @@ __device__ __forceinline__ void iclass_grad_spd
                           0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 */
 
-#ifdef USE_ERI_GRAD_STOREADD
+//#ifdef USE_ERI_GRAD_STOREADD
                 for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
@@ -480,7 +480,7 @@ __device__ __forceinline__ void iclass_grad_spd
                         }
                     }
                 }
-#endif
+//#endif
       
 #ifdef int_sp 
                 ERint_grad_vertical_sp(I, J+1, K, L+1, II, JJ, KK, LL, \
@@ -999,12 +999,12 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 
                 
 #ifdef int_spdf
-                ERint_grad_vertical_spdf_0_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                ERint_grad_vertical_dddd_1(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf2
-                ERint_grad_vertical_spdf_0_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                ERint_grad_vertical_dddd_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
