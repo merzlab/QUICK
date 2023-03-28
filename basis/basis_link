@@ -25,6 +25,7 @@
 | #6-311G(d)                        | 6-311GD.BAS                         |
 | #6-311G**                         | 6-311GDP.BAS                        |
 | #6-311G(d,p)                      | 6-311GDP.BAS                        |
+| #6-311G(2df,2pd)                  | 6-311G2DF2PD.BAS                    |
 | #6-31+G*                          | 6-31PLGD.BAS                        |
 | #6-31+G(d)                        | 6-31PLGD.BAS                        |
 | #6-31+G**                         | 6-31PLGDP.BAS                       |
