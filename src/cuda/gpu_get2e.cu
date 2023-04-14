@@ -200,9 +200,9 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_eri_grad_assembler_spdf_4.h"
 #include "gpu_eri_grad_assembler_spdf_5.h"
 #include "gpu_eri_grad_assembler_spdf_6.h"
-#include "gpu_eri_grad_assembler_spdf_7_1.h"
-#include "gpu_eri_grad_assembler_spdf_7_2.h"
-#include "gpu_eri_grad_assembler_spdf_7_3.h"
+//#include "gpu_eri_grad_assembler_spdf_7_1.h"
+//#include "gpu_eri_grad_assembler_spdf_7_2.h"
+//#include "gpu_eri_grad_assembler_spdf_7_3.h"
 #include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
@@ -217,6 +217,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #undef int_spdf10
 #include "gpu_eri_assembler_spdf_4.h"
+#include "gpu_eri_grad_vrr_ffff.h"
 #include "gpu_get2e_subs.h"
 #include "gpu_get2e_subs_grad.h"
 
@@ -729,7 +730,7 @@ void getGrad(_gpu_type gpu)
             QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
 
             //printf("calling getGrad_kernel_spdf4 \n");
-            //QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<1,1>>>()))
+            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
 
 #endif
         }
