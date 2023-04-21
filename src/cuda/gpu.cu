@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string>
 #include "gpu.h"
+#include "gpu_get2e_grad_ffff.h"
 #include <ctime>
 #include <time.h>
 #include "gpu_libxc.h"
