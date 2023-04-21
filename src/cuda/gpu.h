@@ -92,6 +92,7 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
 
+
 #ifdef CEW
 void get_lri(_gpu_type gpu);
 void get_lri_grad(_gpu_type gpu);

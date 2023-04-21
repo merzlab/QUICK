@@ -160,6 +160,14 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
         getGrad(gpu);
     }
 
+    upload_sim_to_constant_ffff(gpu);
+
+    if(gpu -> gpu_sim.is_oshell == true){
+        get_oshell_eri_grad_ffff(gpu);
+    }else{
+        getGrad_ffff(gpu);
+    }
+
     PRINTDEBUG("COMPLETE KERNEL")
 
     if(gpu -> gpu_sim.method == HF){

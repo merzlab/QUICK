@@ -730,7 +730,7 @@ void getGrad(_gpu_type gpu)
             QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
 
             //printf("calling getGrad_kernel_spdf4 \n");
-            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
+//            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
 
 #endif
         }
