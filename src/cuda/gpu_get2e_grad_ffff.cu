@@ -60,7 +60,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define ERI_GRAD_FFFF_TPB 32
 #define ERI_GRAD_FFFF_BPSM 8
 
-#define ERI_GRAD_FFFF_SMEM_INT_SIZE 6
+#define ERI_GRAD_FFFF_SMEM_INT_SIZE 7
 #define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE 10
 #define ERI_GRAD_FFFF_SMEM_DBL_SIZE 3
 #define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE 20
@@ -110,6 +110,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define DEV_SIM_INT_JBASIS smem_int[ERI_GRAD_FFFF_TPB*3+threadIdx.x]
 #define DEV_SIM_INT_SQRQSHELL smem_int[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
 #define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
+#define DEV_SIM_INT_FFSTART smem_int[ERI_GRAD_FFFF_TPB*6+threadIdx.x]
 
 #define LOCTRANS(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*ERI_GRAD_FFFF_TPB+threadIdx.x]
 #define DEV_SIM_CHAR_TRANS smem_char
@@ -226,9 +227,10 @@ printf("Allocating ffff memory \n");
        QUICKDouble **dbl_ptr_buffer = (QUICKDouble**) malloc(ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
        int2 **int2_ptr_buffer = (int2**) malloc(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        unsigned char **char_ptr_buffer = (unsigned char**) malloc(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
-       unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM*ERI_GRAD_FFFF_TPB];
+       unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
 
 printf("Storing data \n");
+printf("ffStart: %d \n", gpu->gpu_sim.ffStart);
 
        for(int i=0; i<ERI_GRAD_FFFF_TPB; i++){
        int_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.natom;
@@ -237,6 +239,7 @@ printf("Storing data \n");
        int_buffer[ERI_GRAD_FFFF_TPB*3+i] = gpu->gpu_sim.jbasis;
        int_buffer[ERI_GRAD_FFFF_TPB*4+i] = gpu->gpu_sim.sqrQshell;
        int_buffer[ERI_GRAD_FFFF_TPB*5+i] = gpu->gpu_sim.prim_total;
+       int_buffer[ERI_GRAD_FFFF_TPB*6+i] = gpu->gpu_sim.ffStart;
        int_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.katom;
        int_ptr_buffer[ERI_GRAD_FFFF_TPB*1+i] = gpu->gpu_sim.kprim;
        int_ptr_buffer[ERI_GRAD_FFFF_TPB*2+i] = gpu->gpu_sim.kstart;
@@ -397,13 +400,14 @@ printf("Storing data \n");
         LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
         LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
 
+/*
        unsigned char *trans_buffer = (unsigned char*) malloc(ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
 char));
 
        for(int j=0;j<ERI_GRAD_FFFF_SMEM_CHAR_SIZE;j++)
            for(int i=0;i<ERI_GRAD_FFFF_TPB;i++)
                trans_buffer[j*ERI_GRAD_FFFF_TPB+i]=trans[j];
-
+*/
 printf("Allocating device memory \n");
 
        int *dev_int_buffer;
@@ -423,7 +427,7 @@ printf("Allocating dbl device memory \n");
        cudaMalloc((void **)&dev_dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
        cudaMalloc((void **)&dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        cudaMalloc((void **)&dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
-       cudaMalloc((void **)&dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char));
+       cudaMalloc((void **)&dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char));
 
 printf("Uploading data \n");
 
@@ -434,7 +438,7 @@ printf("Uploading data \n");
        cudaMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*), cudaMemcpyHostToDevice);
        cudaMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
 char*), cudaMemcpyHostToDevice);
-       cudaMemcpy(dev_char_buffer, trans_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char), cudaMemcpyHostToDevice);
+       cudaMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char), cudaMemcpyHostToDevice);
 
 /*
        int_buffer -> Upload();
@@ -456,14 +460,14 @@ printf("smem required: %d \n", (int)(sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI
             sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
 char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
-char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB)/1024);
+char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE)/1024);
 
             //printf("calling getGrad_kernel_spdf4 \n");
             QUICK_SAFE_CALL((getGrad_kernel_ffff<<<gpu->blocks*ERI_GRAD_FFFF_BPSM, ERI_GRAD_FFFF_TPB,
 sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
-char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB>>>(dev_int_buffer,
+char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE>>>(dev_int_buffer,
 dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer)))
 
 #endif  
@@ -481,7 +485,7 @@ printf("Deleting data \n");
    free(dbl_ptr_buffer);
    free(int2_ptr_buffer);
    free(char_ptr_buffer);
-   free(trans_buffer);
+//   free(trans_buffer);
 
    cudaFree(dev_int_buffer);
    cudaFree(dev_int_ptr_buffer);
