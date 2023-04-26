@@ -48,7 +48,7 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
     int numAngularL;
     
     coefAngularL[0] = 1.0;
-    angularL[0] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
+    angularL[0] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
     
     if (IJTYPE == 0) {
         numAngularL = 1;
@@ -66,7 +66,7 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             coefAngularL[1] = RAz-RBz;
         }
         
-        angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+        angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
         
         return numAngularL;
     }
@@ -81,20 +81,20 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             
             if (KLMNBx == 2) {
                 tmp = RAx - RBx;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }else if(KLMNBy == 2) {
                 tmp = RAy - RBy;
-                angularL[1] =  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] =  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }else if (KLMNBz == 2 ){
                 tmp = RAz - RBz;
-                angularL[1] =  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] =  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             coefAngularL[1] = 2 * tmp;
             coefAngularL[2]= tmp * tmp;
             
             
-            angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             
             return numAngularL;
             
@@ -106,19 +106,19 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             if(KLMNBx == 1 && KLMNBy == 1){
                 tmp = RAx - RBx;
                 tmp2 = RAy - RBy;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
                 
             }else if (KLMNBx == 1 && KLMNBz == 1) {
                 tmp = RAx - RBx;
                 tmp2 = RAz - RBz;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }else if (KLMNBy == 1 && KLMNBz == 1) {
                 tmp = RAy - RBy;
                 tmp2 = RAz - RBz;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             
@@ -127,7 +127,7 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             coefAngularL[3] = tmp * tmp2;
             
             
-            angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             
             return numAngularL;
         }
@@ -141,16 +141,16 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             
             if (KLMNBx == 3) {
                 tmp = RAx - RBx;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }else if (KLMNBy == 3) {
                 tmp = RAy - RBy;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }else if (KLMNBz == 3) {
                 tmp = RAz - RBz;
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             
@@ -159,7 +159,7 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             coefAngularL[3] = tmp * tmp * tmp;
             
             
-            angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             
             return numAngularL;
         }else if (KLMNBx == 1 && KLMNBy == 1) {
@@ -176,14 +176,14 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             coefAngularL[6] = tmp2 * tmp3;
             coefAngularL[7] = tmp * tmp2 * tmp3;
             
-            angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-            angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-            angularL[3] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-            angularL[4] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-            angularL[5] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-            angularL[6] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[3] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[4] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[5] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[6] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
             
-            angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             
             return numAngularL;
         }else{
@@ -216,58 +216,58 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
             
             
             if (KLMNBx == 2) {
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[3] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             if (KLMNBy == 2) {
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[3] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             if (KLMNBz == 2) {
-                angularL[1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[3] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             if (KLMNBx == 1) {
                 if (KLMNBy == 2) {  //120
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
                 }else{              //102
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
                 }
             }
             
             if (KLMNBy == 1) {
                 if (KLMNBx == 2) {  // 210
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
                 }else{              // 012
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
                 }
             }
             
             if (KLMNBz == 1) {
                 if (KLMNBx == 2) {  // 201
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
                 }else{              // 021
-                    angularL[2] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
                 }
             }
             
             
             if (KLMNBx == 1) {
-                angularL[4] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[4] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             if (KLMNBy == 1) {
-                angularL[4] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[4] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
             if (KLMNBz == 1) {
-                angularL[4] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[4] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
             }
             
-            angularL[numAngularL - 1] = LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[numAngularL - 1] = LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
             
             return numAngularL;
             
@@ -287,9 +287,9 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[3] = 4 * tmp * tmp * tmp;
      coefAngularL[4] = tmp * tmp * tmp * tmp;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBy == 4) {
      numAngularL = 5;
      QUICKDouble tmp = RAy - RBy;
@@ -298,9 +298,9 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[3] = 4 * tmp * tmp * tmp;
      coefAngularL[4] = tmp * tmp * tmp * tmp;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+3, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+3, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBz == 4) {
      numAngularL = 5;
@@ -311,9 +311,9 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[3] = 4 * tmp * tmp * tmp;
      coefAngularL[4] = tmp * tmp * tmp * tmp;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBx == 1 && KLMNBy == 3) {
      numAngularL = 8;
@@ -328,12 +328,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+3, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+3, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBx == 3 && KLMNBy == 1) {
      numAngularL = 8;
      QUICKDouble tmp = RAy - RBy;
@@ -347,12 +347,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
      }
      
      else if (KLMNBx == 1 && KLMNBz ==3) {
@@ -368,12 +368,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBx == 3 && KLMNBz == 1) {
      numAngularL = 8;
@@ -388,12 +388,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+3, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBy == 1 && KLMNBz == 3) {
      numAngularL = 8;
@@ -408,12 +408,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+3, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBy == 3 && KLMNBz == 1) {
      numAngularL = 8;
@@ -428,12 +428,12 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[6] = tmp2 * tmp2 * tmp2;
      coefAngularL[7] = tmp * tmp2 * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+3, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+3, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
      
      }else if (KLMNBx == 2 && KLMNBy == 2) {
      numAngularL = 9;
@@ -449,13 +449,13 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[7] = 2 * tmp * tmp * tmp2;
      coefAngularL[8] = tmp * tmp * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBx == 2 && KLMNBz == 2) {
      numAngularL = 9;
      QUICKDouble tmp = RAx - RBx;
@@ -470,13 +470,13 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[7] = 2 * tmp * tmp * tmp2;
      coefAngularL[8] = tmp * tmp * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBy == 2 && KLMNBz == 2) {
      numAngularL = 9;
      QUICKDouble tmp = RAy - RBy;
@@ -491,13 +491,13 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[7] = 2 * tmp * tmp * tmp2;
      coefAngularL[8] = tmp * tmp * tmp2 * tmp2;
      
-     angularL[1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBx == 1 && KLMNBy == 1 && KLMNBz == 2) {
      numAngularL = 12;
      QUICKDouble tmp = RAx - RBx;
@@ -516,16 +516,16 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[10] = tmp2 * tmp3 * tmp3;
      coefAngularL[11] = tmp * tmp2 * tmp3 * tmp3;
      
-     angularL[1] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[8] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[9] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[10] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[8] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[9] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[10] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBx == 1 && KLMNBz == 1 && KLMNBy == 2) {
      numAngularL = 12;
      QUICKDouble tmp = RAx - RBx;
@@ -544,16 +544,16 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[10] = tmp2 * tmp3 * tmp3;
      coefAngularL[11] = tmp * tmp2 * tmp3 * tmp3;
      
-     angularL[1] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[8] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[9] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[10] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[8] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[9] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[10] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
      }else if (KLMNBy == 1 && KLMNBz == 1 && KLMNBx == 2) {
      numAngularL = 12;
      QUICKDouble tmp = RAy - RBy;
@@ -572,21 +572,21 @@ __device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble 
      coefAngularL[10] = tmp2 * tmp3 * tmp3;
      coefAngularL[11] = tmp * tmp2 * tmp3 * tmp3;
      
-     angularL[1] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[2] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[3] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[4] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[5] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[6] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[7] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[8] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[9] = (int)  LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-     angularL[10] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[1] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[2] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[3] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[4] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+2, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[5] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[6] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[7] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[8] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[9] = (int)  LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+     angularL[10] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
      }
      }
      
      
-    angularL[numAngularL - 1] = (int) LOC3(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+    angularL[numAngularL - 1] = (int) LOCTRANS(DEV_SIM_CHAR_TRANS, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
 
     return numAngularL;
 }
@@ -1703,12 +1703,12 @@ if(bprint){
 #ifdef OSHELL
 #if defined int_spdf4
 __global__ void
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_oshell_kernel_ffff()
+__launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_oshell_kernel_ffff()
 #endif
 #else
 #if defined int_spdf4
 __global__ void 
-__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_ffff(int *dev_int_data, 
+__launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_kernel_ffff(int *dev_int_data, 
 int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_data, int2 **dev_int2_ptr_data,
 unsigned char **dev_char_ptr_data, unsigned char *dev_char_data)
 #endif
@@ -1718,12 +1718,12 @@ unsigned char **dev_char_ptr_data, unsigned char *dev_char_data)
     extern __shared__ QUICKDouble smem_buffer[];
 
     QUICKDouble *smem_dbl = smem_buffer; 
-    QUICKDouble **smem_dbl_ptr = (QUICKDouble**) &smem_dbl[ERI_GRAD_FFFF_SMEM_DBL_SIZE];
-    int **smem_int_ptr = (int**) &smem_dbl_ptr[ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE];     
-    int2 **smem_int2_ptr = (int2**) &smem_int_ptr[ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE];
-    unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE];
-    int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE];
-    unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE];
+    QUICKDouble **smem_dbl_ptr = (QUICKDouble**) &smem_dbl[ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB];
+    int **smem_int_ptr = (int**) &smem_dbl_ptr[ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB];     
+    int2 **smem_int2_ptr = (int2**) &smem_int_ptr[ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB];
+    unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB];
+    int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB];
+    unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB];
 
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_DBL_SIZE ; i+=blockDim.x)
