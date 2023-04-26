@@ -57,7 +57,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define STORE_OPERATOR =  
 #endif
 
-#define ERI_GRAD_FFFF_TPB 1
+#define ERI_GRAD_FFFF_TPB 32
+#define ERI_GRAD_FFFF_BPSM 8
 
 #define ERI_GRAD_FFFF_SMEM_INT_SIZE 6
 #define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE 10
@@ -67,48 +68,50 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE 2
 #define ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE 1
 
-#define DEV_SIM_INT_PTR_KATOM smem_int_ptr[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_INT_PTR_KPRIM smem_int_ptr[ERI_GRAD_FFFF_TPB*1]
-#define DEV_SIM_INT_PTR_KSTART smem_int_ptr[ERI_GRAD_FFFF_TPB*2]
-#define DEV_SIM_INT_PTR_KSUMTYPE smem_int_ptr[ERI_GRAD_FFFF_TPB*3]
-#define DEV_SIM_INT_PTR_PRIM_START smem_int_ptr[ERI_GRAD_FFFF_TPB*4]
-#define DEV_SIM_INT_PTR_QFBASIS smem_int_ptr[ERI_GRAD_FFFF_TPB*5]
-#define DEV_SIM_INT_PTR_QSBASIS smem_int_ptr[ERI_GRAD_FFFF_TPB*6]
-#define DEV_SIM_INT_PTR_QSTART smem_int_ptr[ERI_GRAD_FFFF_TPB*7]
-#define DEV_SIM_INT_PTR_SORTED_Q smem_int_ptr[ERI_GRAD_FFFF_TPB*8]
-#define DEV_SIM_INT_PTR_SORTED_QNUMBER smem_int_ptr[ERI_GRAD_FFFF_TPB*9]
-#define DEV_SIM_INT2_PTR_SORTED_YCUTOFFIJ smem_int2_ptr[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_CHAR_PTR_MPI_BCOMPUTE smem_char_ptr[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_CHAR_PTR_KLMN smem_char_ptr[ERI_GRAD_FFFF_TPB*1]
-#define DEV_SIM_DBL_PTR_CONS smem_dbl_ptr[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_DBL_PTR_CUTMATRIX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*1]
-#define DEV_SIM_DBL_PTR_CUTPRIM smem_dbl_ptr[ERI_GRAD_FFFF_TPB*2]
-#define DEV_SIM_DBL_PTR_DENSE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*3]
-#define DEV_SIM_DBL_PTR_DENSEB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*4]
-#define DEV_SIM_DBL_PTR_EXPOSUM smem_dbl_ptr[ERI_GRAD_FFFF_TPB*5]
-#define DEV_SIM_DBL_PTR_GCEXPO smem_dbl_ptr[ERI_GRAD_FFFF_TPB*6]
-#define DEV_SIM_DBL_PTR_GRAD smem_dbl_ptr[ERI_GRAD_FFFF_TPB*7]
-#define DEV_SIM_DBL_PTR_STORE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*8]
-#define DEV_SIM_DBL_PTR_STORE2 smem_dbl_ptr[ERI_GRAD_FFFF_TPB*9]
-#define DEV_SIM_DBL_PTR_STOREAA smem_dbl_ptr[ERI_GRAD_FFFF_TPB*10]
-#define DEV_SIM_DBL_PTR_STOREBB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*11]
-#define DEV_SIM_DBL_PTR_STORECC smem_dbl_ptr[ERI_GRAD_FFFF_TPB*12]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*13]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERY smem_dbl_ptr[ERI_GRAD_FFFF_TPB*14]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*15]
-#define DEV_SIM_DBL_PTR_XCOEFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*16]
-#define DEV_SIM_DBL_PTR_XYZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*17]
-#define DEV_SIM_DBL_PTR_YCUTOFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*18]
-#define DEV_SIM_DBL_PTR_YVERTICALTEMP smem_dbl_ptr[ERI_GRAD_FFFF_TPB*19]
-#define DEV_SIM_DBL_PRIMLIMIT smem_dbl[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_DBL_GRADCUTOFF smem_dbl[ERI_GRAD_FFFF_TPB*1]
-#define DEV_SIM_DBL_HYB_COEFF smem_dbl[ERI_GRAD_FFFF_TPB*2]
-#define DEV_SIM_INT_NATOM smem_int[ERI_GRAD_FFFF_TPB*0]
-#define DEV_SIM_INT_NBASIS smem_int[ERI_GRAD_FFFF_TPB*1]
-#define DEV_SIM_INT_NSHELL smem_int[ERI_GRAD_FFFF_TPB*2]
-#define DEV_SIM_INT_JBASIS smem_int[ERI_GRAD_FFFF_TPB*3]
-#define DEV_SIM_INT_SQRQSHELL smem_int[ERI_GRAD_FFFF_TPB*4]
-#define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB*5]
+#define DEV_SIM_INT_PTR_KATOM smem_int_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_INT_PTR_KPRIM smem_int_ptr[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
+#define DEV_SIM_INT_PTR_KSTART smem_int_ptr[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
+#define DEV_SIM_INT_PTR_KSUMTYPE smem_int_ptr[ERI_GRAD_FFFF_TPB*3+threadIdx.x]
+#define DEV_SIM_INT_PTR_PRIM_START smem_int_ptr[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
+#define DEV_SIM_INT_PTR_QFBASIS smem_int_ptr[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
+#define DEV_SIM_INT_PTR_QSBASIS smem_int_ptr[ERI_GRAD_FFFF_TPB*6+threadIdx.x]
+#define DEV_SIM_INT_PTR_QSTART smem_int_ptr[ERI_GRAD_FFFF_TPB*7+threadIdx.x]
+#define DEV_SIM_INT_PTR_SORTED_Q smem_int_ptr[ERI_GRAD_FFFF_TPB*8+threadIdx.x]
+#define DEV_SIM_INT_PTR_SORTED_QNUMBER smem_int_ptr[ERI_GRAD_FFFF_TPB*9+threadIdx.x]
+#define DEV_SIM_INT2_PTR_SORTED_YCUTOFFIJ smem_int2_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_CHAR_PTR_MPI_BCOMPUTE smem_char_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_CHAR_PTR_KLMN smem_char_ptr[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
+#define DEV_SIM_DBL_PTR_CONS smem_dbl_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_DBL_PTR_CUTMATRIX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
+#define DEV_SIM_DBL_PTR_CUTPRIM smem_dbl_ptr[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
+#define DEV_SIM_DBL_PTR_DENSE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*3+threadIdx.x]
+#define DEV_SIM_DBL_PTR_DENSEB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
+#define DEV_SIM_DBL_PTR_EXPOSUM smem_dbl_ptr[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
+#define DEV_SIM_DBL_PTR_GCEXPO smem_dbl_ptr[ERI_GRAD_FFFF_TPB*6+threadIdx.x]
+#define DEV_SIM_DBL_PTR_GRAD smem_dbl_ptr[ERI_GRAD_FFFF_TPB*7+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*8+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORE2 smem_dbl_ptr[ERI_GRAD_FFFF_TPB*9+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STOREAA smem_dbl_ptr[ERI_GRAD_FFFF_TPB*10+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STOREBB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*11+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORECC smem_dbl_ptr[ERI_GRAD_FFFF_TPB*12+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*13+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERY smem_dbl_ptr[ERI_GRAD_FFFF_TPB*14+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*15+threadIdx.x]
+#define DEV_SIM_DBL_PTR_XCOEFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*16+threadIdx.x]
+#define DEV_SIM_DBL_PTR_XYZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*17+threadIdx.x]
+#define DEV_SIM_DBL_PTR_YCUTOFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*18+threadIdx.x]
+#define DEV_SIM_DBL_PTR_YVERTICALTEMP smem_dbl_ptr[ERI_GRAD_FFFF_TPB*19+threadIdx.x]
+#define DEV_SIM_DBL_PRIMLIMIT smem_dbl[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_DBL_GRADCUTOFF smem_dbl[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
+#define DEV_SIM_DBL_HYB_COEFF smem_dbl[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
+#define DEV_SIM_INT_NATOM smem_int[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
+#define DEV_SIM_INT_NBASIS smem_int[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
+#define DEV_SIM_INT_NSHELL smem_int[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
+#define DEV_SIM_INT_JBASIS smem_int[ERI_GRAD_FFFF_TPB*3+threadIdx.x]
+#define DEV_SIM_INT_SQRQSHELL smem_int[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
+#define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
+
+#define LOCTRANS(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*ERI_GRAD_FFFF_TPB+threadIdx.x]
 #define DEV_SIM_CHAR_TRANS smem_char
 
 #ifdef CUDA_SPDF
@@ -223,7 +226,7 @@ printf("Allocating ffff memory \n");
        QUICKDouble **dbl_ptr_buffer = (QUICKDouble**) malloc(ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
        int2 **int2_ptr_buffer = (int2**) malloc(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        unsigned char **char_ptr_buffer = (unsigned char**) malloc(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
-       unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
+       unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM*ERI_GRAD_FFFF_TPB];
 
 printf("Storing data \n");
 
@@ -394,6 +397,13 @@ printf("Storing data \n");
         LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
         LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
 
+       unsigned char *trans_buffer = (unsigned char*) malloc(ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
+char));
+
+       for(int j=0;j<ERI_GRAD_FFFF_SMEM_CHAR_SIZE;j++)
+           for(int i=0;i<ERI_GRAD_FFFF_TPB;i++)
+               trans_buffer[j*ERI_GRAD_FFFF_TPB+i]=trans[j];
+
 printf("Allocating device memory \n");
 
        int *dev_int_buffer;
@@ -424,7 +434,7 @@ printf("Uploading data \n");
        cudaMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*), cudaMemcpyHostToDevice);
        cudaMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
 char*), cudaMemcpyHostToDevice);
-       cudaMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char), cudaMemcpyHostToDevice);
+       cudaMemcpy(dev_char_buffer, trans_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char), cudaMemcpyHostToDevice);
 
 /*
        int_buffer -> Upload();
@@ -442,10 +452,18 @@ printf("Launching ffff \n");
         // Part f-3
 #ifdef CUDA_SPDF
 
+printf("smem required: %d \n", (int)(sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
+            sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
+            sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
+char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
+char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB)/1024);
+
             //printf("calling getGrad_kernel_spdf4 \n");
-            QUICK_SAFE_CALL((getGrad_kernel_ffff<<<gpu->blocks, gpu->twoEThreadsPerBlock, sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE+
-            sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE+
-            sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE+sizeof(unsigned char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE>>>(dev_int_buffer,
+            QUICK_SAFE_CALL((getGrad_kernel_ffff<<<gpu->blocks*ERI_GRAD_FFFF_BPSM, ERI_GRAD_FFFF_TPB,
+sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
+            sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
+            sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
+char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE*ERI_GRAD_FFFF_TPB>>>(dev_int_buffer,
 dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer)))
 
 #endif  
@@ -463,6 +481,7 @@ printf("Deleting data \n");
    free(dbl_ptr_buffer);
    free(int2_ptr_buffer);
    free(char_ptr_buffer);
+   free(trans_buffer);
 
    cudaFree(dev_int_buffer);
    cudaFree(dev_int_ptr_buffer);
