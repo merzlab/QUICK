@@ -1126,13 +1126,14 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 #ifdef DEBUG    
     fprintf(gpu->debugFile,"a = %i, total = %i, pect= %f\n", a, gpu->gpu_basis->Qshell * (gpu->gpu_basis->Qshell+1)/2, (float) 2*a/(gpu->gpu_basis->Qshell*(gpu->gpu_basis->Qshell)));
 #endif
-    
+   
+ 
     gpu->gpu_cutoff->sqrQshell  = a;
 
-#ifdef DEBUG    
-    fprintf(gpu->debugFile,"SS = %i\n",a);
+//#ifdef DEBUG    
+    printf("SS = %i\n",a);
     for (int i = 0; i<a; i++) {
-        fprintf(gpu->debugFile,"%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n",i, \
+        printf("%8i %4i %4i %18.13f Q=%4i %4i %4i %4i prim = %4i %4i\n",i, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x, \
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y, \
         LOC2(YCutoff, gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y], gpu->nshell, gpu->nshell),\
@@ -1143,7 +1144,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
         gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]], \
         gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]]);
     }
-#endif
+//#endif
     
     gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> Upload();
     gpu -> gpu_sim.sqrQshell        = gpu -> gpu_cutoff -> sqrQshell;
@@ -1172,9 +1173,9 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 #endif   
  
-    gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
-    gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
-    gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
+//    gpu -> gpu_cutoff -> YCutoff -> DeleteCPU();
+//    gpu -> gpu_cutoff -> cutPrim -> DeleteCPU();
+//    gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteCPU();
  
 #ifdef DEBUG
     cudaEventRecord(end, 0);

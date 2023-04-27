@@ -1754,14 +1754,14 @@ __syncthreads();
     int totalThreads = blockDim.x*gridDim.x;
     
     
-//    QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
-//    QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
+    QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
+    QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
 
-    QUICKULL jshell0 = (QUICKULL) DEV_SIM_INT_FFSTART;
+/*    QUICKULL jshell0 = (QUICKULL) DEV_SIM_INT_FFSTART;
     QUICKULL jshell00 = (QUICKULL) DEV_SIM_INT_FFSTART;
     QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL - jshell00;
     QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL - jshell0;
-    
+*/    
     for (QUICKULL i = offside; i<jshell2*jshell; i+= totalThreads) {
         
         /*

@@ -13,6 +13,9 @@
 #include "gpu_common.h"
 #include "gpu_type.h"
 #include "gpu_get2e_grad_ffff.h"
+#include <iostream>
+#include <algorithm>
+using namespace std;
 
 //#ifdef CUDA_SPDF
 //#endif
@@ -208,6 +211,53 @@ void uploadDevSimToSmem_ffff(_gpu_type gpu ){
 }
 */
 
+void ResortERIs(_gpu_type gpu){
+
+    //cuda_buffer_type<int2>* resorted_YCutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_cutoff->sqrQshell);
+    //cuda_buffer_type<int> *resorted_Qnumber = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell);
+    //cuda_buffer_type<int> *resorted_Q = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell);
+    int2 *resorted_YCutoffIJ=(int2*) malloc(sizeof(int2)*gpu->gpu_cutoff->sqrQshell);
+    bool ffset= false;
+
+    int idx=0;
+    int ffStart = 0;
+    for(int ij_sum=0;ij_sum<=6; ij_sum++){
+/*        if(ffset == false && ij_sum == 6){
+            ffStart = idx;
+            ffStart = true;
+        }
+*/
+        for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+            if((gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]+gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]) == ij_sum){
+                resorted_YCutoffIJ[idx].x = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x;
+                resorted_YCutoffIJ[idx].y = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y;
+                idx++;
+            }            
+
+        }
+    }
+
+    printf("ffStart %d \n", ffStart);
+    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+        printf("i j q1 q2 %d %d %d %d \n", resorted_YCutoffIJ[i].x, resorted_YCutoffIJ[i].y, gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x], gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y]);
+
+        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x=resorted_YCutoffIJ[i].x;
+        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y=resorted_YCutoffIJ[i].y;
+        
+        if(ffset == false && (gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x]+gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y]) == 6){
+             ffStart = i;
+             ffset = true;
+        }
+    }
+    printf("ffStart %d \n", ffStart);
+
+//    gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteGPU();
+    gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> Upload();    
+    gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
+    gpu -> gpu_sim.ffStart = ffStart;
+
+}
+
 void getGrad_ffff(_gpu_type gpu)
 {
 
@@ -220,6 +270,8 @@ printf("Allocating ffff memory \n");
        cuda_buffer_type<int2*>* int2_ptr_buffer = new cuda_buffer_type<int2*>(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB);
        cuda_buffer_type<unsigned char*>* char_ptr_buffer = new cuda_buffer_type<unsigned char*>(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB);
 */
+
+       ResortERIs(gpu);
 
        int *int_buffer = (int*) malloc(ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int));
        int **int_ptr_buffer = (int**) malloc(ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int*));
