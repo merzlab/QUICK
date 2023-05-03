@@ -13,6 +13,17 @@
 #undef VDIM3
 #define VDIM3 VDIM3_L
 #define STOREDIM STOREDIM_XL
+#define STORE_INIT 4
+#define STORE_DIM  80
+#define STORE_INIT_I_AA 4
+#define STORE_INIT_J_AA 10
+#define STORE_DIM_I_AA 80
+#define STORE_DIM_J_AA 110
+
+#define STORE_INIT_I_CC 10
+#define STORE_INIT_J_CC 4
+#define STORE_DIM_I_CC 110
+#define STORE_DIM_J_CC 80
 #endif
 
 
@@ -729,8 +740,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yaax = *Yaax - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yaax = *Yaax - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -747,8 +760,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yaay = *Yaay - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yaay = *Yaay - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -764,8 +779,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yaaz = *Yaaz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yaaz = *Yaaz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -784,8 +801,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Ybbx = *Ybbx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Ybbx = *Ybbx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -803,8 +822,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Ybby = *Ybby - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Ybby = *Ybby - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -821,8 +842,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Ybbz = *Ybbz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Ybbz = *Ybbz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                     
                 }
             }
@@ -867,8 +890,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int i = 0; i<numAngularL; i++) {
             for (int j = 0; j<numAngularR; j++) {
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yccx = *Yccx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yccx = *Yccx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -904,8 +929,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yccy = *Yccy - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yccy = *Yccy - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -940,8 +967,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                    *Yccz = *Yccz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                    *Yccz = *Yccz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
+LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
+angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                 }
             }
         }
@@ -1044,12 +1073,39 @@ unsigned char *smem_char){
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
 
+    for (int i = 4; i< 84; i++) {
+        for (int j = 4; j< 84; j++) {
+//            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(store, j-STORE_INIT, i-STORE_INIT , STORE_DIM, STORE_DIM) = 0;
+//            }
+        }
+    }
+/*
+    for (int i = 0; i< 80; i++) {
+        for (int j = 0; j< 110; j++) {
+//            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(storeAA, j, i, STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
+                LOCSTORE(storeBB, j, i STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
+//            }
+
+        }
+    }
+
+    for (int i = 0; i< 110; i++) {
+        for (int j = 0; j< 80; j++) {
+//            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(storeCC, j, i, STORE_DIM_J_CC, STORE_DIM_I_CC) = 0 ;
+
+//            }
+        }
+    }
+*/
     for (int i = 4; i< 120; i++) {
         for (int j = 4; j< 120; j++) {
             if (i < STOREDIM && j < STOREDIM) {
-                if (j < 84 && i < 84) {
-                    LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
-                }
+                //if (j < 84 && i < 84) {
+                //    LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
+                //}
 
                 if (j >= 10) {
                     LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) = 0;
@@ -1375,29 +1431,29 @@ unsigned char *smem_char){
 
                 for (int i = 4; i< 84; i++) {
                     for (int j = 4; j< 84; j++) {
-                        if (i < STOREDIM && j < STOREDIM) {
-                            LOCSTORE(store, j, i , STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM);
-                        }
+//                        if (i < STOREDIM && j < STOREDIM) {
+                            LOCSTORE(store, j-STORE_INIT, i-STORE_INIT , STORE_DIM, STORE_DIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM);
+//                        }
                     }
                 }
 
 
                 for (int i = 4; i< 84; i++) {
                     for (int j = 10; j< 120; j++) {
-                        if (i < STOREDIM && j < STOREDIM) {
+//                        if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
                             LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
-                        }
+//                        }
 
                     }
                 }
 
                 for (int i = 10; i< 120; i++) {
                     for (int j = 4; j< 84; j++) {
-                        if (i < STOREDIM && j < STOREDIM) {
+//                        if (i < STOREDIM && j < STOREDIM) {
                             LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
 
-                        }
+//                        }
                     }
                 }              
                 
@@ -1750,19 +1806,19 @@ unsigned char **dev_char_ptr_data, unsigned char *dev_char_data)
 __syncthreads();
 
 
-    unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
+    unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
     int totalThreads = blockDim.x*gridDim.x;
     
     
-    QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
-    QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
+//    QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
+//    QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL;
 
-/*    QUICKULL jshell0 = (QUICKULL) DEV_SIM_INT_FFSTART;
+    QUICKULL jshell0 = (QUICKULL) DEV_SIM_INT_FFSTART;
     QUICKULL jshell00 = (QUICKULL) DEV_SIM_INT_FFSTART;
     QUICKULL jshell = (QUICKULL) DEV_SIM_INT_SQRQSHELL - jshell00;
     QUICKULL jshell2 = (QUICKULL) DEV_SIM_INT_SQRQSHELL - jshell0;
-*/    
-    for (QUICKULL i = offside; i<jshell2*jshell; i+= totalThreads) {
+   
+    for (QUICKULL i = offset; i<jshell2*jshell; i+= totalThreads) {
         
         /*
         QUICKULL a, b;
@@ -1786,8 +1842,19 @@ __syncthreads();
         }
         */
  
-        QUICKULL a = (QUICKULL) i/jshell;
-        QUICKULL b = (QUICKULL) (i - a*jshell);
+//        QUICKULL a = (QUICKULL) i/jshell;
+//        QUICKULL b = (QUICKULL) (i - a*jshell);
+
+        QUICKULL a, b;
+        if (jshell2 != 0 ) {
+            a = (QUICKULL) i/jshell2;
+            b = (QUICKULL) (i - a*jshell2);
+            a = a + jshell00;
+            b = b + jshell0;
+        }else{
+            a = 0;
+            b = 0;
+        }
 
 #ifdef CUDA_MPIV
         if(DEV_SIM_CHAR_PTR_MPI_BCOMPUTE[a] > 0){
@@ -1833,17 +1900,17 @@ DNMax) > DEV_SIM_DBL_GRADCUTOFF) {
 #ifdef OSHELL
 #if defined int_spdf4
                     if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
-                    iclass_oshell_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offside,
-DEV_SIM_DBL_PTR_STORE+offside, DEV_SIM_DBL_PTR_STORE2+offside, DEV_SIM_DBL_PTR_STOREAA+offside, DEV_SIM_DBL_PTR_STOREBB+offside,
-DEV_SIM_DBL_PTR_STORECC+offside, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
+                    iclass_oshell_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
+DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
                     }
 #endif
 #else
 #if defined int_spdf4
 		    if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
-                    iclass_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offside,
-DEV_SIM_DBL_PTR_STORE+offside, DEV_SIM_DBL_PTR_STORE2+offside, DEV_SIM_DBL_PTR_STOREAA+offside, DEV_SIM_DBL_PTR_STOREBB+offside,
-DEV_SIM_DBL_PTR_STORECC+offside, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char);
+                    iclass_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
+DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char);
 		    }
 #endif
 #endif
