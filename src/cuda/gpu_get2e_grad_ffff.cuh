@@ -652,9 +652,11 @@ int **smem_int_ptr, QUICKDouble **smem_dbl_ptr, unsigned char **smem_char_ptr, u
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
+                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
 
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
 
             }
         }
@@ -669,8 +671,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
             }
         }
     }
@@ -682,8 +686,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
             }
         }
     }
@@ -695,8 +701,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
             }
         }
     }
@@ -708,8 +716,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
             }
         }
     }
@@ -721,8 +731,10 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_I_AA,
+angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
+angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA) );
             }
         }
     }
@@ -874,8 +886,10 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_I_CC,
+angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
+angularL[i]-1-STORE_INIT_I_CC, angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC) );
             }
         }
     }
@@ -912,8 +926,10 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_I_CC,
+angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
+angularL[i]-1-STORE_INIT_I_CC, angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC) );
             }
         }
     }
@@ -950,8 +966,10 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
+                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_I_CC,
+angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC);
+if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
+angularL[i]-1-STORE_INIT_I_CC, angularR[j]-1-STORE_INIT_J_CC, STORE_DIM_I_CC, STORE_DIM_J_CC) );
             }
         }
     }
@@ -1080,26 +1098,27 @@ unsigned char *smem_char){
 //            }
         }
     }
+
+    for (int i = 4; i< 84; i++) {
+        for (int j = 10; j< 120; j++) {
+//            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(storeAA, j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
+                LOCSTORE(storeBB, j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
+//            }
+
+        }
+    }
+
+    for (int i = 10; i< 120; i++) {
+        for (int j = 4; j< 84; j++) {
+//            if (i < STOREDIM && j < STOREDIM) {
+                LOCSTORE(storeCC, j-STORE_INIT_J_CC, i-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC) = 0 ;
+
+//            }
+        }
+    }
+
 /*
-    for (int i = 0; i< 80; i++) {
-        for (int j = 0; j< 110; j++) {
-//            if (i < STOREDIM && j < STOREDIM) {
-                LOCSTORE(storeAA, j, i, STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
-                LOCSTORE(storeBB, j, i STORE_DIM_J_AA, STORE_DIM_I_AA) = 0 ;
-//            }
-
-        }
-    }
-
-    for (int i = 0; i< 110; i++) {
-        for (int j = 0; j< 80; j++) {
-//            if (i < STOREDIM && j < STOREDIM) {
-                LOCSTORE(storeCC, j, i, STORE_DIM_J_CC, STORE_DIM_I_CC) = 0 ;
-
-//            }
-        }
-    }
-*/
     for (int i = 4; i< 120; i++) {
         for (int j = 4; j< 120; j++) {
             if (i < STOREDIM && j < STOREDIM) {
@@ -1118,6 +1137,7 @@ unsigned char *smem_char){
             }
         }
     }    
+*/
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
@@ -1441,8 +1461,8 @@ unsigned char *smem_char){
                 for (int i = 4; i< 84; i++) {
                     for (int j = 10; j< 120; j++) {
 //                        if (i < STOREDIM && j < STOREDIM) {
-                            LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
-                            LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
+                            LOCSTORE(storeAA, j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
+                            LOCSTORE(storeBB, j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
 //                        }
 
                     }
@@ -1451,7 +1471,7 @@ unsigned char *smem_char){
                 for (int i = 10; i< 120; i++) {
                     for (int j = 4; j< 84; j++) {
 //                        if (i < STOREDIM && j < STOREDIM) {
-                            LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
+                            LOCSTORE(storeCC, j-STORE_INIT_J_CC, i-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
 
 //                        }
                     }
