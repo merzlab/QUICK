@@ -15,7 +15,6 @@
 #include "gpu_get2e_grad_ffff.h"
 #include <iostream>
 #include <algorithm>
-using namespace std;
 
 //#ifdef CUDA_SPDF
 //#endif
@@ -211,35 +210,71 @@ void uploadDevSimToSmem_ffff(_gpu_type gpu ){
 }
 */
 
+struct Partial_ERI{
+    int YCutoffIJ_x;
+    int YCutoffIJ_y;
+    int Qnumber_x;
+    int Qnumber_y;
+    int kprim_x;
+    int kprim_y;
+    int Q_x;
+    int Q_y;
+    int kprim_score;
+};
+
+bool ComparePrimNum(Partial_ERI p1, Partial_ERI p2){
+        return p1.kprim_score > p2.kprim_score;
+}
+
 void ResortERIs(_gpu_type gpu){
 
     //cuda_buffer_type<int2>* resorted_YCutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_cutoff->sqrQshell);
     //cuda_buffer_type<int> *resorted_Qnumber = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell);
     //cuda_buffer_type<int> *resorted_Q = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell);
+    int2 eri_type_order[]={{0,0},{0,1},{1,0},{1,1},{0,2},{2,0},{1,2},{2,1},{0,3},{3,0},{2,2},{1,3},{3,1},
+                          {2,3},{3,2},{3,3}};
+    unsigned char eri_type_order_map[]={0,1,3,6,10,13,15,16};
+    int eri_type_block_map[17];
     int2 *resorted_YCutoffIJ=(int2*) malloc(sizeof(int2)*gpu->gpu_cutoff->sqrQshell);
     bool ffset= false;
 
-    int idx=0;
-    int ffStart = 0;
-    for(int ij_sum=0;ij_sum<=6; ij_sum++){
-/*        if(ffset == false && ij_sum == 6){
-            ffStart = idx;
-            ffStart = true;
-        }
-*/
-        for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-            if((gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]+gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]) == ij_sum){
-                resorted_YCutoffIJ[idx].x = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x;
-                resorted_YCutoffIJ[idx].y = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y;
-                idx++;
-            }            
+    // Step 1: sort according sum of angular momentum of a partial ERI. (ie. i+j of <ij| ). 
 
+
+    // Step 2: sort according to type order specified in eri_type_order array. This ensures that eri vector follows the order we
+    // want. 
+     
+
+    int idx1=0;
+    int idx2=0;
+    int ffStart = 0;
+
+    for(int ij_sum=0;ij_sum<=6; ij_sum++){
+        for(int ieto=eri_type_order_map[ij_sum];ieto<eri_type_order_map[ij_sum+1];ieto++){
+           int2 lbl_t=eri_type_order[ieto];
+           eri_type_block_map[idx2]=idx1;
+           for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+                if(gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
+->_hostData[i].x] == lbl_t.x && gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y] ==
+lbl_t.y){
+                resorted_YCutoffIJ[idx1].x = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x;
+                resorted_YCutoffIJ[idx1].y = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y;
+                idx1++;
+                }
+
+            }
+            idx2++;
         }
     }
 
-    printf("ffStart %d \n", ffStart);
+    eri_type_block_map[idx2]=idx1;
+    
+    //memcpy(gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData,resorted_YCutoffIJ,gpu->gpu_cutoff->sqrQshell*sizeof(int2));
+
+
+//    printf("ffStart %d \n", ffStart);
     for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-        printf("i j q1 q2 %d %d %d %d \n", resorted_YCutoffIJ[i].x, resorted_YCutoffIJ[i].y, gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x], gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y]);
+//        printf("i j q1 q2 %d %d %d %d \n", resorted_YCutoffIJ[i].x, resorted_YCutoffIJ[i].y, gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x], gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y]);
 
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x=resorted_YCutoffIJ[i].x;
         gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y=resorted_YCutoffIJ[i].y;
@@ -249,7 +284,64 @@ void ResortERIs(_gpu_type gpu){
              ffset = true;
         }
     }
-    printf("ffStart %d \n", ffStart);
+
+
+    // create an array of structs
+    Partial_ERI *partial_eris = (Partial_ERI*) malloc(sizeof(Partial_ERI)*gpu->gpu_cutoff->sqrQshell);
+
+    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+        int kprim1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
+->_hostData[i].x]];
+        int kprim2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
+->_hostData[i].y]];
+        int kprim_score = 10*std::max(kprim1,kprim2)+std::min(kprim1,kprim2)+(kprim1+kprim2);
+        partial_eris[i] = {gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x, gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y,
+                          gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], \
+                          gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y], \
+                          gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
+->_hostData[i].x]], \
+                          gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
+->_hostData[i].y]], \
+                          gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], \
+                          gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y],
+                          kprim_score};
+    }
+
+/*
+    for(int i=0; i<17;i++)
+        printf("eri_type_block_map[%d] \n", eri_type_block_map[i]);
+*/
+/*
+    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+        printf("Test i j q1 q2 %d %d %d %d %d %d \n", partial_eris[i].YCutoffIJ_x, partial_eris[i].YCutoffIJ_y,
+
+partial_eris[i].Qnumber_x,\
+        partial_eris[i].Qnumber_y, partial_eris[i].kprim_x, partial_eris[i].kprim_y);
+    }
+*/
+
+//fflush(stdout);
+
+//        std::sort(partial_eris,partial_eris+100,ComparePrimNum);
+
+    for(int i=0; i<16;i++){
+        printf("Sorting: %d %d \n",eri_type_block_map[i], eri_type_block_map[i+1]);
+fflush(stdout);
+        std::sort(partial_eris+eri_type_block_map[i],partial_eris+eri_type_block_map[i+1],ComparePrimNum);
+    }
+
+    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
+        printf("i j q1 q2 %d %d %d %d %d %d \n", partial_eris[i].YCutoffIJ_x, partial_eris[i].YCutoffIJ_y, partial_eris[i].Qnumber_x,\
+        partial_eris[i].Qnumber_y, partial_eris[i].kprim_x, partial_eris[i].kprim_y);
+        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x = partial_eris[i].YCutoffIJ_x;
+        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y = partial_eris[i].YCutoffIJ_y;
+
+    }
+
+//    for(int i=0; i<17;i++)
+//        printf("eri_type_block_map[%d] \n", eri_type_block_map[i]);
+
+//    printf("ffStart %d \n", ffStart);
 
 //    gpu -> gpu_cutoff -> sorted_YCutoffIJ -> DeleteGPU();
     gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> Upload();    
