@@ -338,6 +338,7 @@ fflush(stdout);
 
     }
 
+
 //    for(int i=0; i<17;i++)
 //        printf("eri_type_block_map[%d] \n", eri_type_block_map[i]);
 
@@ -612,7 +613,8 @@ sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
 char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE>>>(dev_int_buffer,
-dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer)))
+dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer,
+gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
 
 #endif  
         }
