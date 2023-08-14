@@ -107,7 +107,7 @@ subroutine outputCopyright(io,ierr)
    write(io,'(A107)') " University of California San Diego, CA and Michigan State University, East Lansing, MI, 2023             "
    write(io,'(A107)') "                                                                                                          "
    write(io,'(A107)') " If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     "
-   write(io,'(A107)') " https://github.com/merzlab/QUICK.                                                                                  "
+   write(io,'(A107)') " https://github.com/merzlab/QUICK.                                                                        "
    write(io,'(A107)') "                                                                                                          "
 
    return
