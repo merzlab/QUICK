@@ -88,10 +88,14 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
  */
 #ifdef int_spd
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel()
+__attribute__((amdgpu_waves_per_eu(HIP_LRI_WAVES_PER_CU,HIP_LRI_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_LRI_THREADS_PER_BLOCK, HIP_LRI_THREADS_PER_BLOCK)))
+get_lri_kernel()
 #elif defined int_spdf2
 __global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
+__attribute__((amdgpu_waves_per_eu(HIP_LRI_SPDF2_WAVES_PER_CU,HIP_LRI_SPDF2_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_LRI_SPDF2_THREADS_PER_BLOCK, HIP_LRI_SPDF2_THREADS_PER_BLOCK)))
+get_lri_kernel_spdf2()
 #endif
 {
     unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
@@ -512,7 +516,19 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 #endif
 }
 
+
+#ifndef old_fmt
+#define old_fmt
+
+#undef VDIM3
+#undef VY
+#define VDIM3 VDIM3_L
+#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+
+#undef FMT_NAME
+#define FMT_NAME FmT
 #include "gpu_fmt.h"
+#endif
 
 /*
  sqr for double precision. there no internal function to do that in fast-math-lib of CUDA

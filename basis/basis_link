@@ -39,6 +39,7 @@
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
 | #PC-0                             | PC0.BAS                             |
 | #PC-1                             | PC1.BAS                             |
+| #aug-cc-pVDZ                      | AUG-CC-PVDZ.BAS                     |
 | #CUSTOM                           | CUSTOM.BAS                          |
 | #CUSTOM2                          | CUSTOM2.BAS                         |
 |_________________________________________________________________________|

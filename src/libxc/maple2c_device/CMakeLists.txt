@@ -53,6 +53,6 @@ cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
         )
 target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
 
-if(INSIDE_AMBER AND CEW)
+if(INSIDE_AMBER)
 	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)
 endif()
