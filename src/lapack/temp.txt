@@ -1,0 +1,30 @@
+$(lapackobjfolder)/dasum.o $(lapackobjfolder)/daxpy.o
+$(lapackobjfolder)/dbdsdc.o $(lapackobjfolder)/dcopy.o $(lapackobjfolder)/ddot.o
+$(lapackobjfolder)/dgbsv.o $(lapackobjfolder)/dgbtf2.o $(lapackobjfolder)/dgbtrf.o
+$(lapackobjfolder)/dgbtrs.o $(lapackobjfolder)/dgeevx.o $(lapackobjfolder)/dger.o
+$(lapackobjfolder)/dgesdd.o $(lapackobjfolder)/dgtsv.o $(lapackobjfolder)/dlaqtr.o
+$(lapackobjfolder)/dlasd0.o $(lapackobjfolder)/dlasd1.o $(lapackobjfolder)/dlasd2.o
+$(lapackobjfolder)/dlasd3.o $(lapackobjfolder)/dlauu2.o $(lapackobjfolder)/dlauum.o
+$(lapackobjfolder)/dpotri.o $(lapackobjfolder)/drot.o $(lapackobjfolder)/droundup_lwork.o
+$(lapackobjfolder)/dsyrk.o $(lapackobjfolder)/dtbsv.o $(lapackobjfolder)/dtrevc3.o
+$(lapackobjfolder)/dtrsna.o $(lapackobjfolder)/idamax.o $(lapackobjfolder)/ilaslc.o
+$(lapackobjfolder)/ilaslr.o $(lapackobjfolder)/isamax.o $(lapackobjfolder)/saxpy.o
+$(lapackobjfolder)/scopy.o $(lapackobjfolder)/sdot.o $(lapackobjfolder)/sgemm.o
+$(lapackobjfolder)/sgemv.o $(lapackobjfolder)/sger.o $(lapackobjfolder)/sisnan.o
+$(lapackobjfolder)/slacpy.o $(lapackobjfolder)/slae2.o $(lapackobjfolder)/slaebz.o
+$(lapackobjfolder)/slaev2.o $(lapackobjfolder)/slagtf.o $(lapackobjfolder)/slagts.o
+$(lapackobjfolder)/slaisnan.o $(lapackobjfolder)/slamch.o $(lapackobjfolder)/slanst.o
+$(lapackobjfolder)/slansy.o $(lapackobjfolder)/slapy2.o $(lapackobjfolder)/slarf.o
+$(lapackobjfolder)/slarfb.o $(lapackobjfolder)/slarfg.o $(lapackobjfolder)/slarft.o
+$(lapackobjfolder)/slarnv.o $(lapackobjfolder)/slartg.o90 $(lapackobjfolder)/slaruv.o
+$(lapackobjfolder)/slascl.o $(lapackobjfolder)/slaset.o $(lapackobjfolder)/slasr.o
+$(lapackobjfolder)/slasrt.o $(lapackobjfolder)/slassq.o $(lapackobjfolder)/slatrd.o
+$(lapackobjfolder)/sorg2l.o $(lapackobjfolder)/sorg2r.o $(lapackobjfolder)/sorgql.o
+$(lapackobjfolder)/sorgqr.o $(lapackobjfolder)/sorgtr.o $(lapackobjfolder)/sorm2l.o
+$(lapackobjfolder)/sorm2r.o $(lapackobjfolder)/sormql.o $(lapackobjfolder)/sormqr.o
+$(lapackobjfolder)/sormtr.o $(lapackobjfolder)/sscal.o $(lapackobjfolder)/sstebz.o
+$(lapackobjfolder)/sstein.o $(lapackobjfolder)/ssteqr.o $(lapackobjfolder)/ssterf.o
+$(lapackobjfolder)/sswap.o $(lapackobjfolder)/ssymv.o $(lapackobjfolder)/ssyr2.o
+$(lapackobjfolder)/ssyr2k.o $(lapackobjfolder)/ssytd2.o $(lapackobjfolder)/ssytrd.o
+$(lapackobjfolder)/strmm.o $(lapackobjfolder)/strmv.o
+

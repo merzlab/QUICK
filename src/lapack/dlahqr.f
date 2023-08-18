@@ -1,9 +1,214 @@
+*> \brief \b DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix, using the double-shift/single-shift QR algorithm.
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DLAHQR + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlahqr.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlahqr.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlahqr.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DLAHQR( WANTT, WANTZ, N, ILO, IHI, H, LDH, WR, WI,
+*                          ILOZ, IHIZ, Z, LDZ, INFO )
+*
+*       .. Scalar Arguments ..
+*       INTEGER            IHI, IHIZ, ILO, ILOZ, INFO, LDH, LDZ, N
+*       LOGICAL            WANTT, WANTZ
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   H( LDH, * ), WI( * ), WR( * ), Z( LDZ, * )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*>    DLAHQR is an auxiliary routine called by DHSEQR to update the
+*>    eigenvalues and Schur decomposition already computed by DHSEQR, by
+*>    dealing with the Hessenberg submatrix in rows and columns ILO to
+*>    IHI.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] WANTT
+*> \verbatim
+*>          WANTT is LOGICAL
+*>          = .TRUE. : the full Schur form T is required;
+*>          = .FALSE.: only eigenvalues are required.
+*> \endverbatim
+*>
+*> \param[in] WANTZ
+*> \verbatim
+*>          WANTZ is LOGICAL
+*>          = .TRUE. : the matrix of Schur vectors Z is required;
+*>          = .FALSE.: Schur vectors are not required.
+*> \endverbatim
+*>
+*> \param[in] N
+*> \verbatim
+*>          N is INTEGER
+*>          The order of the matrix H.  N >= 0.
+*> \endverbatim
+*>
+*> \param[in] ILO
+*> \verbatim
+*>          ILO is INTEGER
+*> \endverbatim
+*>
+*> \param[in] IHI
+*> \verbatim
+*>          IHI is INTEGER
+*>          It is assumed that H is already upper quasi-triangular in
+*>          rows and columns IHI+1:N, and that H(ILO,ILO-1) = 0 (unless
+*>          ILO = 1). DLAHQR works primarily with the Hessenberg
+*>          submatrix in rows and columns ILO to IHI, but applies
+*>          transformations to all of H if WANTT is .TRUE..
+*>          1 <= ILO <= max(1,IHI); IHI <= N.
+*> \endverbatim
+*>
+*> \param[in,out] H
+*> \verbatim
+*>          H is DOUBLE PRECISION array, dimension (LDH,N)
+*>          On entry, the upper Hessenberg matrix H.
+*>          On exit, if INFO is zero and if WANTT is .TRUE., H is upper
+*>          quasi-triangular in rows and columns ILO:IHI, with any
+*>          2-by-2 diagonal blocks in standard form. If INFO is zero
+*>          and WANTT is .FALSE., the contents of H are unspecified on
+*>          exit.  The output state of H if INFO is nonzero is given
+*>          below under the description of INFO.
+*> \endverbatim
+*>
+*> \param[in] LDH
+*> \verbatim
+*>          LDH is INTEGER
+*>          The leading dimension of the array H. LDH >= max(1,N).
+*> \endverbatim
+*>
+*> \param[out] WR
+*> \verbatim
+*>          WR is DOUBLE PRECISION array, dimension (N)
+*> \endverbatim
+*>
+*> \param[out] WI
+*> \verbatim
+*>          WI is DOUBLE PRECISION array, dimension (N)
+*>          The real and imaginary parts, respectively, of the computed
+*>          eigenvalues ILO to IHI are stored in the corresponding
+*>          elements of WR and WI. If two eigenvalues are computed as a
+*>          complex conjugate pair, they are stored in consecutive
+*>          elements of WR and WI, say the i-th and (i+1)th, with
+*>          WI(i) > 0 and WI(i+1) < 0. If WANTT is .TRUE., the
+*>          eigenvalues are stored in the same order as on the diagonal
+*>          of the Schur form returned in H, with WR(i) = H(i,i), and, if
+*>          H(i:i+1,i:i+1) is a 2-by-2 diagonal block,
+*>          WI(i) = sqrt(H(i+1,i)*H(i,i+1)) and WI(i+1) = -WI(i).
+*> \endverbatim
+*>
+*> \param[in] ILOZ
+*> \verbatim
+*>          ILOZ is INTEGER
+*> \endverbatim
+*>
+*> \param[in] IHIZ
+*> \verbatim
+*>          IHIZ is INTEGER
+*>          Specify the rows of Z to which transformations must be
+*>          applied if WANTZ is .TRUE..
+*>          1 <= ILOZ <= ILO; IHI <= IHIZ <= N.
+*> \endverbatim
+*>
+*> \param[in,out] Z
+*> \verbatim
+*>          Z is DOUBLE PRECISION array, dimension (LDZ,N)
+*>          If WANTZ is .TRUE., on entry Z must contain the current
+*>          matrix Z of transformations accumulated by DHSEQR, and on
+*>          exit Z has been updated; transformations are applied only to
+*>          the submatrix Z(ILOZ:IHIZ,ILO:IHI).
+*>          If WANTZ is .FALSE., Z is not referenced.
+*> \endverbatim
+*>
+*> \param[in] LDZ
+*> \verbatim
+*>          LDZ is INTEGER
+*>          The leading dimension of the array Z. LDZ >= max(1,N).
+*> \endverbatim
+*>
+*> \param[out] INFO
+*> \verbatim
+*>          INFO is INTEGER
+*>           = 0:  successful exit
+*>           > 0:  If INFO = i, DLAHQR failed to compute all the
+*>                  eigenvalues ILO to IHI in a total of 30 iterations
+*>                  per eigenvalue; elements i+1:ihi of WR and WI
+*>                  contain those eigenvalues which have been
+*>                  successfully computed.
+*>
+*>                  If INFO > 0 and WANTT is .FALSE., then on exit,
+*>                  the remaining unconverged eigenvalues are the
+*>                  eigenvalues of the upper Hessenberg matrix rows
+*>                  and columns ILO through INFO of the final, output
+*>                  value of H.
+*>
+*>                  If INFO > 0 and WANTT is .TRUE., then on exit
+*>          (*)       (initial value of H)*U  = U*(final value of H)
+*>                  where U is an orthogonal matrix.    The final
+*>                  value of H is upper Hessenberg and triangular in
+*>                  rows and columns INFO+1 through IHI.
+*>
+*>                  If INFO > 0 and WANTZ is .TRUE., then on exit
+*>                      (final value of Z)  = (initial value of Z)*U
+*>                  where U is the orthogonal matrix in (*)
+*>                  (regardless of the value of WANTT.)
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup doubleOTHERauxiliary
+*
+*> \par Further Details:
+*  =====================
+*>
+*> \verbatim
+*>
+*>     02-96 Based on modifications by
+*>     David Day, Sandia National Laboratory, USA
+*>
+*>     12-04 Further modifications by
+*>     Ralph Byers, University of Kansas, USA
+*>     This is a modified version of DLAHQR from LAPACK version 3.0.
+*>     It is (1) more robust against overflow and underflow and
+*>     (2) adopts the more conservative Ahues & Tisseur stopping
+*>     criterion (LAWN 122, 1997).
+*> \endverbatim
+*>
+*  =====================================================================
       SUBROUTINE DLAHQR( WANTT, WANTZ, N, ILO, IHI, H, LDH, WR, WI,
      $                   ILOZ, IHIZ, Z, LDZ, INFO )
+      IMPLICIT NONE
 *
-*  -- LAPACK auxiliary routine (version 3.2) --
-*     Univ. of Tennessee, Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..
-*     November 2006
+*  -- LAPACK auxiliary routine --
+*  -- LAPACK is a software package provided by Univ. of Tennessee,    --
+*  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 *
 *     .. Scalar Arguments ..
       INTEGER            IHI, IHIZ, ILO, ILOZ, INFO, LDH, LDZ, N
@@ -13,132 +218,23 @@
       DOUBLE PRECISION   H( LDH, * ), WI( * ), WR( * ), Z( LDZ, * )
 *     ..
 *
-*     Purpose
-*     =======
-*
-*     DLAHQR is an auxiliary routine called by DHSEQR to update the
-*     eigenvalues and Schur decomposition already computed by DHSEQR, by
-*     dealing with the Hessenberg submatrix in rows and columns ILO to
-*     IHI.
-*
-*     Arguments
-*     =========
-*
-*     WANTT   (input) LOGICAL
-*          = .TRUE. : the full Schur form T is required;
-*          = .FALSE.: only eigenvalues are required.
-*
-*     WANTZ   (input) LOGICAL
-*          = .TRUE. : the matrix of Schur vectors Z is required;
-*          = .FALSE.: Schur vectors are not required.
-*
-*     N       (input) INTEGER
-*          The order of the matrix H.  N >= 0.
-*
-*     ILO     (input) INTEGER
-*     IHI     (input) INTEGER
-*          It is assumed that H is already upper quasi-triangular in
-*          rows and columns IHI+1:N, and that H(ILO,ILO-1) = 0 (unless
-*          ILO = 1). DLAHQR works primarily with the Hessenberg
-*          submatrix in rows and columns ILO to IHI, but applies
-*          transformations to all of H if WANTT is .TRUE..
-*          1 <= ILO <= max(1,IHI); IHI <= N.
-*
-*     H       (input/output) DOUBLE PRECISION array, dimension (LDH,N)
-*          On entry, the upper Hessenberg matrix H.
-*          On exit, if INFO is zero and if WANTT is .TRUE., H is upper
-*          quasi-triangular in rows and columns ILO:IHI, with any
-*          2-by-2 diagonal blocks in standard form. If INFO is zero
-*          and WANTT is .FALSE., the contents of H are unspecified on
-*          exit.  The output state of H if INFO is nonzero is given
-*          below under the description of INFO.
-*
-*     LDH     (input) INTEGER
-*          The leading dimension of the array H. LDH >= max(1,N).
-*
-*     WR      (output) DOUBLE PRECISION array, dimension (N)
-*     WI      (output) DOUBLE PRECISION array, dimension (N)
-*          The real and imaginary parts, respectively, of the computed
-*          eigenvalues ILO to IHI are stored in the corresponding
-*          elements of WR and WI. If two eigenvalues are computed as a
-*          complex conjugate pair, they are stored in consecutive
-*          elements of WR and WI, say the i-th and (i+1)th, with
-*          WI(i) > 0 and WI(i+1) < 0. If WANTT is .TRUE., the
-*          eigenvalues are stored in the same order as on the diagonal
-*          of the Schur form returned in H, with WR(i) = H(i,i), and, if
-*          H(i:i+1,i:i+1) is a 2-by-2 diagonal block,
-*          WI(i) = sqrt(H(i+1,i)*H(i,i+1)) and WI(i+1) = -WI(i).
-*
-*     ILOZ    (input) INTEGER
-*     IHIZ    (input) INTEGER
-*          Specify the rows of Z to which transformations must be
-*          applied if WANTZ is .TRUE..
-*          1 <= ILOZ <= ILO; IHI <= IHIZ <= N.
-*
-*     Z       (input/output) DOUBLE PRECISION array, dimension (LDZ,N)
-*          If WANTZ is .TRUE., on entry Z must contain the current
-*          matrix Z of transformations accumulated by DHSEQR, and on
-*          exit Z has been updated; transformations are applied only to
-*          the submatrix Z(ILOZ:IHIZ,ILO:IHI).
-*          If WANTZ is .FALSE., Z is not referenced.
-*
-*     LDZ     (input) INTEGER
-*          The leading dimension of the array Z. LDZ >= max(1,N).
-*
-*     INFO    (output) INTEGER
-*           =   0: successful exit
-*          .GT. 0: If INFO = i, DLAHQR failed to compute all the
-*                  eigenvalues ILO to IHI in a total of 30 iterations
-*                  per eigenvalue; elements i+1:ihi of WR and WI
-*                  contain those eigenvalues which have been
-*                  successfully computed.
-*
-*                  If INFO .GT. 0 and WANTT is .FALSE., then on exit,
-*                  the remaining unconverged eigenvalues are the
-*                  eigenvalues of the upper Hessenberg matrix rows
-*                  and columns ILO thorugh INFO of the final, output
-*                  value of H.
-*
-*                  If INFO .GT. 0 and WANTT is .TRUE., then on exit
-*          (*)       (initial value of H)*U  = U*(final value of H)
-*                  where U is an orthognal matrix.    The final
-*                  value of H is upper Hessenberg and triangular in
-*                  rows and columns INFO+1 through IHI.
-*
-*                  If INFO .GT. 0 and WANTZ is .TRUE., then on exit
-*                      (final value of Z)  = (initial value of Z)*U
-*                  where U is the orthogonal matrix in (*)
-*                  (regardless of the value of WANTT.)
-*
-*     Further Details
-*     ===============
-*
-*     02-96 Based on modifications by
-*     David Day, Sandia National Laboratory, USA
-*
-*     12-04 Further modifications by
-*     Ralph Byers, University of Kansas, USA
-*     This is a modified version of DLAHQR from LAPACK version 3.0.
-*     It is (1) more robust against overflow and underflow and
-*     (2) adopts the more conservative Ahues & Tisseur stopping
-*     criterion (LAWN 122, 1997).
-*
-*     =========================================================
+*  =========================================================
 *
 *     .. Parameters ..
-      INTEGER            ITMAX
-      PARAMETER          ( ITMAX = 30 )
       DOUBLE PRECISION   ZERO, ONE, TWO
       PARAMETER          ( ZERO = 0.0d0, ONE = 1.0d0, TWO = 2.0d0 )
       DOUBLE PRECISION   DAT1, DAT2
       PARAMETER          ( DAT1 = 3.0d0 / 4.0d0, DAT2 = -0.4375d0 )
+      INTEGER            KEXSH
+      PARAMETER          ( KEXSH = 10 )
 *     ..
 *     .. Local Scalars ..
       DOUBLE PRECISION   AA, AB, BA, BB, CS, DET, H11, H12, H21, H21S,
      $                   H22, RT1I, RT1R, RT2I, RT2R, RTDISC, S, SAFMAX,
      $                   SAFMIN, SMLNUM, SN, SUM, T1, T2, T3, TR, TST,
      $                   ULP, V2, V3
-      INTEGER            I, I1, I2, ITS, J, K, L, M, NH, NR, NZ
+      INTEGER            I, I1, I2, ITS, ITMAX, J, K, L, M, NH, NR, NZ,
+     $                   KDEFL 
 *     ..
 *     .. Local Arrays ..
       DOUBLE PRECISION   V( 3 )
@@ -194,6 +290,14 @@
          I1 = 1
          I2 = N
       END IF
+*
+*     ITMAX is the total number of QR iterations allowed.
+*
+      ITMAX = 30 * MAX( 10, NH )
+*
+*     KDEFL counts the number of iterations since a deflation
+*
+      KDEFL = 0
 *
 *     The main loop begins here. I is the loop index and decreases from
 *     IHI to ILO in steps of 1 or 2. Each iteration of the loop works
@@ -254,6 +358,7 @@
 *
          IF( L.GE.I-1 )
      $      GO TO 150
+         KDEFL = KDEFL + 1
 *
 *        Now the active submatrix is in rows and columns L to I. If
 *        eigenvalues only are being computed, only the active submatrix
@@ -264,21 +369,21 @@
             I2 = I
          END IF
 *
-         IF( ITS.EQ.10 ) THEN
-*
-*           Exceptional shift.
-*
-            S = ABS( H( L+1, L ) ) + ABS( H( L+2, L+1 ) )
-            H11 = DAT1*S + H( L, L )
-            H12 = DAT2*S
-            H21 = S
-            H22 = H11
-         ELSE IF( ITS.EQ.20 ) THEN
+         IF( MOD(KDEFL,2*KEXSH).EQ.0 ) THEN
 *
 *           Exceptional shift.
 *
             S = ABS( H( I, I-1 ) ) + ABS( H( I-1, I-2 ) )
             H11 = DAT1*S + H( I, I )
+            H12 = DAT2*S
+            H21 = S
+            H22 = H11
+         ELSE IF( MOD(KDEFL,KEXSH).EQ.0 ) THEN
+*
+*           Exceptional shift.
+*
+            S = ABS( H( L+1, L ) ) + ABS( H( L+2, L+1 ) )
+            H11 = DAT1*S + H( L, L )
             H12 = DAT2*S
             H21 = S
             H22 = H11
@@ -500,6 +605,8 @@
             CALL DROT( NZ, Z( ILOZ, I-1 ), 1, Z( ILOZ, I ), 1, CS, SN )
          END IF
       END IF
+*     reset deflation counter
+      KDEFL = 0
 *
 *     return to start of the main loop with new value of I.
 *

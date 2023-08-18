@@ -1,13 +1,155 @@
+*> \brief \b DLASQ4 computes an approximation to the smallest eigenvalue using values of d from the previous transform. Used by sbdsqr.
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DLASQ4 + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlasq4.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlasq4.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlasq4.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DLASQ4( I0, N0, Z, PP, N0IN, DMIN, DMIN1, DMIN2, DN,
+*                          DN1, DN2, TAU, TTYPE, G )
+*
+*       .. Scalar Arguments ..
+*       INTEGER            I0, N0, N0IN, PP, TTYPE
+*       DOUBLE PRECISION   DMIN, DMIN1, DMIN2, DN, DN1, DN2, G, TAU
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   Z( * )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> DLASQ4 computes an approximation TAU to the smallest eigenvalue
+*> using values of d from the previous transform.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] I0
+*> \verbatim
+*>          I0 is INTEGER
+*>        First index.
+*> \endverbatim
+*>
+*> \param[in] N0
+*> \verbatim
+*>          N0 is INTEGER
+*>        Last index.
+*> \endverbatim
+*>
+*> \param[in] Z
+*> \verbatim
+*>          Z is DOUBLE PRECISION array, dimension ( 4*N0 )
+*>        Z holds the qd array.
+*> \endverbatim
+*>
+*> \param[in] PP
+*> \verbatim
+*>          PP is INTEGER
+*>        PP=0 for ping, PP=1 for pong.
+*> \endverbatim
+*>
+*> \param[in] N0IN
+*> \verbatim
+*>          N0IN is INTEGER
+*>        The value of N0 at start of EIGTEST.
+*> \endverbatim
+*>
+*> \param[in] DMIN
+*> \verbatim
+*>          DMIN is DOUBLE PRECISION
+*>        Minimum value of d.
+*> \endverbatim
+*>
+*> \param[in] DMIN1
+*> \verbatim
+*>          DMIN1 is DOUBLE PRECISION
+*>        Minimum value of d, excluding D( N0 ).
+*> \endverbatim
+*>
+*> \param[in] DMIN2
+*> \verbatim
+*>          DMIN2 is DOUBLE PRECISION
+*>        Minimum value of d, excluding D( N0 ) and D( N0-1 ).
+*> \endverbatim
+*>
+*> \param[in] DN
+*> \verbatim
+*>          DN is DOUBLE PRECISION
+*>        d(N)
+*> \endverbatim
+*>
+*> \param[in] DN1
+*> \verbatim
+*>          DN1 is DOUBLE PRECISION
+*>        d(N-1)
+*> \endverbatim
+*>
+*> \param[in] DN2
+*> \verbatim
+*>          DN2 is DOUBLE PRECISION
+*>        d(N-2)
+*> \endverbatim
+*>
+*> \param[out] TAU
+*> \verbatim
+*>          TAU is DOUBLE PRECISION
+*>        This is the shift.
+*> \endverbatim
+*>
+*> \param[out] TTYPE
+*> \verbatim
+*>          TTYPE is INTEGER
+*>        Shift type.
+*> \endverbatim
+*>
+*> \param[in,out] G
+*> \verbatim
+*>          G is DOUBLE PRECISION
+*>        G is passed as an argument in order to save its value between
+*>        calls to DLASQ4.
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup auxOTHERcomputational
+*
+*> \par Further Details:
+*  =====================
+*>
+*> \verbatim
+*>
+*>  CNST1 = 9/16
+*> \endverbatim
+*>
+*  =====================================================================
       SUBROUTINE DLASQ4( I0, N0, Z, PP, N0IN, DMIN, DMIN1, DMIN2, DN,
      $                   DN1, DN2, TAU, TTYPE, G )
 *
-*  -- LAPACK routine (version 3.2)                                    --
-*
-*  -- Contributed by Osni Marques of the Lawrence Berkeley National   --
-*  -- Laboratory and Beresford Parlett of the Univ. of California at  --
-*  -- Berkeley                                                        --
-*  -- November 2008                                                   --
-*
+*  -- LAPACK computational routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 *
@@ -18,59 +160,6 @@
 *     .. Array Arguments ..
       DOUBLE PRECISION   Z( * )
 *     ..
-*
-*  Purpose
-*  =======
-*
-*  DLASQ4 computes an approximation TAU to the smallest eigenvalue
-*  using values of d from the previous transform.
-*
-*  I0    (input) INTEGER
-*        First index.
-*
-*  N0    (input) INTEGER
-*        Last index.
-*
-*  Z     (input) DOUBLE PRECISION array, dimension ( 4*N )
-*        Z holds the qd array.
-*
-*  PP    (input) INTEGER
-*        PP=0 for ping, PP=1 for pong.
-*
-*  NOIN  (input) INTEGER
-*        The value of N0 at start of EIGTEST.
-*
-*  DMIN  (input) DOUBLE PRECISION
-*        Minimum value of d.
-*
-*  DMIN1 (input) DOUBLE PRECISION
-*        Minimum value of d, excluding D( N0 ).
-*
-*  DMIN2 (input) DOUBLE PRECISION
-*        Minimum value of d, excluding D( N0 ) and D( N0-1 ).
-*
-*  DN    (input) DOUBLE PRECISION
-*        d(N)
-*
-*  DN1   (input) DOUBLE PRECISION
-*        d(N-1)
-*
-*  DN2   (input) DOUBLE PRECISION
-*        d(N-2)
-*
-*  TAU   (output) DOUBLE PRECISION
-*        This is the shift.
-*
-*  TTYPE (output) INTEGER
-*        Shift type.
-*
-*  G     (input/output) REAL
-*        G is passed as an argument in order to save its value between
-*        calls to DLASQ4.
-*
-*  Further Details
-*  ===============
-*  CNST1 = 9/16
 *
 *  =====================================================================
 *
@@ -100,7 +189,7 @@
          TTYPE = -1
          RETURN
       END IF
-*       
+*
       NN = 4*N0 + PP
       IF( N0IN.EQ.N0 ) THEN
 *
@@ -148,7 +237,6 @@
                   NP = NN - 9
                ELSE
                   NP = NN - 2*PP
-                  B2 = Z( NP-2 )
                   GAM = DN1
                   IF( Z( NP-4 ) .GT. Z( NP-2 ) )
      $               RETURN
@@ -170,7 +258,7 @@
      $               RETURN
                   B2 = B2*( Z( I4 ) / Z( I4-2 ) )
                   A2 = A2 + B2
-                  IF( HUNDRD*MAX( B2, B1 ).LT.A2 .OR. CNST1.LT.A2 ) 
+                  IF( HUNDRD*MAX( B2, B1 ).LT.A2 .OR. CNST1.LT.A2 )
      $               GO TO 20
    10          CONTINUE
    20          CONTINUE
@@ -211,7 +299,7 @@
      $               RETURN
                   B2 = B2*( Z( I4 ) / Z( I4-2 ) )
                   A2 = A2 + B2
-                  IF( HUNDRD*MAX( B2, B1 ).LT.A2 .OR. CNST1.LT.A2 ) 
+                  IF( HUNDRD*MAX( B2, B1 ).LT.A2 .OR. CNST1.LT.A2 )
      $               GO TO 40
    30          CONTINUE
    40          CONTINUE
@@ -239,7 +327,7 @@
 *
 *        One eigenvalue just deflated. Use DMIN1, DN1 for DMIN and DN.
 *
-         IF( DMIN1.EQ.DN1 .AND. DMIN2.EQ.DN2 ) THEN 
+         IF( DMIN1.EQ.DN1 .AND. DMIN2.EQ.DN2 ) THEN
 *
 *           Cases 7 and 8.
 *
@@ -257,7 +345,7 @@
      $            RETURN
                B1 = B1*( Z( I4 ) / Z( I4-2 ) )
                B2 = B2 + B1
-               IF( HUNDRD*MAX( B1, A2 ).LT.B2 ) 
+               IF( HUNDRD*MAX( B1, A2 ).LT.B2 )
      $            GO TO 60
    50       CONTINUE
    60       CONTINUE
@@ -266,7 +354,7 @@
             GAP2 = HALF*DMIN2 - A2
             IF( GAP2.GT.ZERO .AND. GAP2.GT.B2*A2 ) THEN
                S = MAX( S, A2*( ONE-CNST2*A2*( B2 / GAP2 )*B2 ) )
-            ELSE 
+            ELSE
                S = MAX( S, A2*( ONE-CNST2*B2 ) )
                TTYPE = -8
             END IF
@@ -286,7 +374,7 @@
 *
 *        Cases 10 and 11.
 *
-         IF( DMIN2.EQ.DN2 .AND. TWO*Z( NN-5 ).LT.Z( NN-7 ) ) THEN 
+         IF( DMIN2.EQ.DN2 .AND. TWO*Z( NN-5 ).LT.Z( NN-7 ) ) THEN
             TTYPE = -10
             S = THIRD*DMIN2
             IF( Z( NN-5 ).GT.Z( NN-7 ) )
@@ -310,7 +398,7 @@
      $             SQRT( Z( NN-11 ) )*SQRT( Z( NN-9 ) ) - A2
             IF( GAP2.GT.ZERO .AND. GAP2.GT.B2*A2 ) THEN
                S = MAX( S, A2*( ONE-CNST2*A2*( B2 / GAP2 )*B2 ) )
-            ELSE 
+            ELSE
                S = MAX( S, A2*( ONE-CNST2*B2 ) )
             END IF
          ELSE
@@ -321,7 +409,7 @@
 *
 *        Case 12, more than two eigenvalues deflated. No information.
 *
-         S = ZERO 
+         S = ZERO
          TTYPE = -12
       END IF
 *

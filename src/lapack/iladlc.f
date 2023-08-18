@@ -1,10 +1,82 @@
-      INTEGER FUNCTION ILADLC(M, N, A, LDA)
-      IMPLICIT NONE
+*> \brief \b ILADLC scans a matrix for its last non-zero column.
 *
-*  -- LAPACK auxiliary routine (version 3.2.1)                        --
+*  =========== DOCUMENTATION ===========
 *
-*  -- April 2009                                                      --
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
+*> \htmlonly
+*> Download ILADLC + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/iladlc.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/iladlc.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/iladlc.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       INTEGER FUNCTION ILADLC( M, N, A, LDA )
+*
+*       .. Scalar Arguments ..
+*       INTEGER            M, N, LDA
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   A( LDA, * )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> ILADLC scans A for its last non-zero column.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] M
+*> \verbatim
+*>          M is INTEGER
+*>          The number of rows of the matrix A.
+*> \endverbatim
+*>
+*> \param[in] N
+*> \verbatim
+*>          N is INTEGER
+*>          The number of columns of the matrix A.
+*> \endverbatim
+*>
+*> \param[in] A
+*> \verbatim
+*>          A is DOUBLE PRECISION array, dimension (LDA,N)
+*>          The m by n matrix A.
+*> \endverbatim
+*>
+*> \param[in] LDA
+*> \verbatim
+*>          LDA is INTEGER
+*>          The leading dimension of the array A. LDA >= max(1,M).
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup OTHERauxiliary
+*
+*  =====================================================================
+      INTEGER FUNCTION ILADLC( M, N, A, LDA )
+*
+*  -- LAPACK auxiliary routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 *
@@ -14,26 +86,6 @@
 *     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * )
 *     ..
-*
-*  Purpose
-*  =======
-*
-*  ILADLC scans A for its last non-zero column.
-*
-*  Arguments
-*  =========
-*
-*  M       (input) INTEGER
-*          The number of rows of the matrix A.
-*
-*  N       (input) INTEGER
-*          The number of columns of the matrix A.
-*
-*  A       (input) DOUBLE PRECISION array, dimension (LDA,N)
-*          The m by n matrix A.
-*
-*  LDA     (input) INTEGER
-*          The leading dimension of the array A. LDA >= max(1,M).
 *
 *  =====================================================================
 *
@@ -60,4 +112,4 @@
          END DO
       END IF
       RETURN
-      END FUNCTION
+      END

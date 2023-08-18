@@ -1,9 +1,146 @@
+*> \brief \b DLAED6 used by DSTEDC. Computes one Newton step in solution of the secular equation.
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DLAED6 + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlaed6.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlaed6.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlaed6.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DLAED6( KNITER, ORGATI, RHO, D, Z, FINIT, TAU, INFO )
+*
+*       .. Scalar Arguments ..
+*       LOGICAL            ORGATI
+*       INTEGER            INFO, KNITER
+*       DOUBLE PRECISION   FINIT, RHO, TAU
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   D( 3 ), Z( 3 )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> DLAED6 computes the positive or negative root (closest to the origin)
+*> of
+*>                  z(1)        z(2)        z(3)
+*> f(x) =   rho + --------- + ---------- + ---------
+*>                 d(1)-x      d(2)-x      d(3)-x
+*>
+*> It is assumed that
+*>
+*>       if ORGATI = .true. the root is between d(2) and d(3);
+*>       otherwise it is between d(1) and d(2)
+*>
+*> This routine will be called by DLAED4 when necessary. In most cases,
+*> the root sought is the smallest in magnitude, though it might not be
+*> in some extremely rare situations.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] KNITER
+*> \verbatim
+*>          KNITER is INTEGER
+*>               Refer to DLAED4 for its significance.
+*> \endverbatim
+*>
+*> \param[in] ORGATI
+*> \verbatim
+*>          ORGATI is LOGICAL
+*>               If ORGATI is true, the needed root is between d(2) and
+*>               d(3); otherwise it is between d(1) and d(2).  See
+*>               DLAED4 for further details.
+*> \endverbatim
+*>
+*> \param[in] RHO
+*> \verbatim
+*>          RHO is DOUBLE PRECISION
+*>               Refer to the equation f(x) above.
+*> \endverbatim
+*>
+*> \param[in] D
+*> \verbatim
+*>          D is DOUBLE PRECISION array, dimension (3)
+*>               D satisfies d(1) < d(2) < d(3).
+*> \endverbatim
+*>
+*> \param[in] Z
+*> \verbatim
+*>          Z is DOUBLE PRECISION array, dimension (3)
+*>               Each of the elements in z must be positive.
+*> \endverbatim
+*>
+*> \param[in] FINIT
+*> \verbatim
+*>          FINIT is DOUBLE PRECISION
+*>               The value of f at 0. It is more accurate than the one
+*>               evaluated inside this routine (if someone wants to do
+*>               so).
+*> \endverbatim
+*>
+*> \param[out] TAU
+*> \verbatim
+*>          TAU is DOUBLE PRECISION
+*>               The root of the equation f(x).
+*> \endverbatim
+*>
+*> \param[out] INFO
+*> \verbatim
+*>          INFO is INTEGER
+*>               = 0: successful exit
+*>               > 0: if INFO = 1, failure to converge
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup auxOTHERcomputational
+*
+*> \par Further Details:
+*  =====================
+*>
+*> \verbatim
+*>
+*>  10/02/03: This version has a few statements commented out for thread
+*>  safety (machine parameters are computed on each entry). SJH.
+*>
+*>  05/10/06: Modified from a new version of Ren-Cang Li, use
+*>     Gragg-Thornton-Warner cubic convergent scheme for better stability.
+*> \endverbatim
+*
+*> \par Contributors:
+*  ==================
+*>
+*>     Ren-Cang Li, Computer Science Division, University of California
+*>     at Berkeley, USA
+*>
+*  =====================================================================
       SUBROUTINE DLAED6( KNITER, ORGATI, RHO, D, Z, FINIT, TAU, INFO )
 *
-*  -- LAPACK routine (version 3.2) --
+*  -- LAPACK computational routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     February 2007
 *
 *     .. Scalar Arguments ..
       LOGICAL            ORGATI
@@ -13,69 +150,6 @@
 *     .. Array Arguments ..
       DOUBLE PRECISION   D( 3 ), Z( 3 )
 *     ..
-*
-*  Purpose
-*  =======
-*
-*  DLAED6 computes the positive or negative root (closest to the origin)
-*  of
-*                   z(1)        z(2)        z(3)
-*  f(x) =   rho + --------- + ---------- + ---------
-*                  d(1)-x      d(2)-x      d(3)-x
-*
-*  It is assumed that
-*
-*        if ORGATI = .true. the root is between d(2) and d(3);
-*        otherwise it is between d(1) and d(2)
-*
-*  This routine will be called by DLAED4 when necessary. In most cases,
-*  the root sought is the smallest in magnitude, though it might not be
-*  in some extremely rare situations.
-*
-*  Arguments
-*  =========
-*
-*  KNITER       (input) INTEGER
-*               Refer to DLAED4 for its significance.
-*
-*  ORGATI       (input) LOGICAL
-*               If ORGATI is true, the needed root is between d(2) and
-*               d(3); otherwise it is between d(1) and d(2).  See
-*               DLAED4 for further details.
-*
-*  RHO          (input) DOUBLE PRECISION
-*               Refer to the equation f(x) above.
-*
-*  D            (input) DOUBLE PRECISION array, dimension (3)
-*               D satisfies d(1) < d(2) < d(3).
-*
-*  Z            (input) DOUBLE PRECISION array, dimension (3)
-*               Each of the elements in z must be positive.
-*
-*  FINIT        (input) DOUBLE PRECISION
-*               The value of f at 0. It is more accurate than the one
-*               evaluated inside this routine (if someone wants to do
-*               so).
-*
-*  TAU          (output) DOUBLE PRECISION
-*               The root of the equation f(x).
-*
-*  INFO         (output) INTEGER
-*               = 0: successful exit
-*               > 0: if INFO = 1, failure to converge
-*
-*  Further Details
-*  ===============
-*
-*  30/06/99: Based on contributions by
-*     Ren-Cang Li, Computer Science Division, University of California
-*     at Berkeley, USA
-*
-*  10/02/03: This version has a few statements commented out for thread
-*  safety (machine parameters are computed on each entry). SJH.
-*
-*  05/10/06: Modified from a new version of Ren-Cang Li, use
-*     Gragg-Thornton-Warner cubic convergent scheme for better stability.
 *
 *  =====================================================================
 *
@@ -98,7 +172,7 @@
       INTEGER            I, ITER, NITER
       DOUBLE PRECISION   A, B, BASE, C, DDF, DF, EPS, ERRETM, ETA, F,
      $                   FC, SCLFAC, SCLINV, SMALL1, SMALL2, SMINV1,
-     $                   SMINV2, TEMP, TEMP1, TEMP2, TEMP3, TEMP4, 
+     $                   SMINV2, TEMP, TEMP1, TEMP2, TEMP3, TEMP4,
      $                   LBD, UBD
 *     ..
 *     .. Intrinsic Functions ..
@@ -118,7 +192,7 @@
       IF( FINIT .LT. ZERO )THEN
          LBD = ZERO
       ELSE
-         UBD = ZERO 
+         UBD = ZERO
       END IF
 *
       NITER = 1
@@ -286,27 +360,32 @@
 *
          TAU = TAU + ETA
          IF( TAU .LT. LBD .OR. TAU .GT. UBD )
-     $      TAU = ( LBD + UBD )/TWO 
+     $      TAU = ( LBD + UBD )/TWO
 *
          FC = ZERO
          ERRETM = ZERO
          DF = ZERO
          DDF = ZERO
          DO 40 I = 1, 3
-            TEMP = ONE / ( DSCALE( I )-TAU )
-            TEMP1 = ZSCALE( I )*TEMP
-            TEMP2 = TEMP1*TEMP
-            TEMP3 = TEMP2*TEMP
-            TEMP4 = TEMP1 / DSCALE( I )
-            FC = FC + TEMP4
-            ERRETM = ERRETM + ABS( TEMP4 )
-            DF = DF + TEMP2
-            DDF = DDF + TEMP3
+            IF ( ( DSCALE( I )-TAU ).NE.ZERO ) THEN
+               TEMP = ONE / ( DSCALE( I )-TAU )
+               TEMP1 = ZSCALE( I )*TEMP
+               TEMP2 = TEMP1*TEMP
+               TEMP3 = TEMP2*TEMP
+               TEMP4 = TEMP1 / DSCALE( I )
+               FC = FC + TEMP4
+               ERRETM = ERRETM + ABS( TEMP4 )
+               DF = DF + TEMP2
+               DDF = DDF + TEMP3
+            ELSE
+               GO TO 60
+            END IF
    40    CONTINUE
          F = FINIT + TAU*FC
          ERRETM = EIGHT*( ABS( FINIT )+ABS( TAU )*ERRETM ) +
      $            ABS( TAU )*DF
-         IF( ABS( F ).LE.EPS*ERRETM )
+         IF( ( ABS( F ).LE.FOUR*EPS*ERRETM ) .OR.
+     $      ( (UBD-LBD).LE.FOUR*EPS*ABS(TAU) )  )
      $      GO TO 60
          IF( F .LE. ZERO )THEN
             LBD = TAU

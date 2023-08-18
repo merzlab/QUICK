@@ -1,9 +1,166 @@
+*> \brief \b DGEBAL
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DGEBAL + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dgebal.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dgebal.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dgebal.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DGEBAL( JOB, N, A, LDA, ILO, IHI, SCALE, INFO )
+*
+*       .. Scalar Arguments ..
+*       CHARACTER          JOB
+*       INTEGER            IHI, ILO, INFO, LDA, N
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   A( LDA, * ), SCALE( * )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> DGEBAL balances a general real matrix A.  This involves, first,
+*> permuting A by a similarity transformation to isolate eigenvalues
+*> in the first 1 to ILO-1 and last IHI+1 to N elements on the
+*> diagonal; and second, applying a diagonal similarity transformation
+*> to rows and columns ILO to IHI to make the rows and columns as
+*> close in norm as possible.  Both steps are optional.
+*>
+*> Balancing may reduce the 1-norm of the matrix, and improve the
+*> accuracy of the computed eigenvalues and/or eigenvectors.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] JOB
+*> \verbatim
+*>          JOB is CHARACTER*1
+*>          Specifies the operations to be performed on A:
+*>          = 'N':  none:  simply set ILO = 1, IHI = N, SCALE(I) = 1.0
+*>                  for i = 1,...,N;
+*>          = 'P':  permute only;
+*>          = 'S':  scale only;
+*>          = 'B':  both permute and scale.
+*> \endverbatim
+*>
+*> \param[in] N
+*> \verbatim
+*>          N is INTEGER
+*>          The order of the matrix A.  N >= 0.
+*> \endverbatim
+*>
+*> \param[in,out] A
+*> \verbatim
+*>          A is DOUBLE PRECISION array, dimension (LDA,N)
+*>          On entry, the input matrix A.
+*>          On exit,  A is overwritten by the balanced matrix.
+*>          If JOB = 'N', A is not referenced.
+*>          See Further Details.
+*> \endverbatim
+*>
+*> \param[in] LDA
+*> \verbatim
+*>          LDA is INTEGER
+*>          The leading dimension of the array A.  LDA >= max(1,N).
+*> \endverbatim
+*>
+*> \param[out] ILO
+*> \verbatim
+*>          ILO is INTEGER
+*> \endverbatim
+*> \param[out] IHI
+*> \verbatim
+*>          IHI is INTEGER
+*>          ILO and IHI are set to integers such that on exit
+*>          A(i,j) = 0 if i > j and j = 1,...,ILO-1 or I = IHI+1,...,N.
+*>          If JOB = 'N' or 'S', ILO = 1 and IHI = N.
+*> \endverbatim
+*>
+*> \param[out] SCALE
+*> \verbatim
+*>          SCALE is DOUBLE PRECISION array, dimension (N)
+*>          Details of the permutations and scaling factors applied to
+*>          A.  If P(j) is the index of the row and column interchanged
+*>          with row and column j and D(j) is the scaling factor
+*>          applied to row and column j, then
+*>          SCALE(j) = P(j)    for j = 1,...,ILO-1
+*>                   = D(j)    for j = ILO,...,IHI
+*>                   = P(j)    for j = IHI+1,...,N.
+*>          The order in which the interchanges are made is N to IHI+1,
+*>          then 1 to ILO-1.
+*> \endverbatim
+*>
+*> \param[out] INFO
+*> \verbatim
+*>          INFO is INTEGER
+*>          = 0:  successful exit.
+*>          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup doubleGEcomputational
+*
+*> \par Further Details:
+*  =====================
+*>
+*> \verbatim
+*>
+*>  The permutations consist of row and column interchanges which put
+*>  the matrix in the form
+*>
+*>             ( T1   X   Y  )
+*>     P A P = (  0   B   Z  )
+*>             (  0   0   T2 )
+*>
+*>  where T1 and T2 are upper triangular matrices whose eigenvalues lie
+*>  along the diagonal.  The column indices ILO and IHI mark the starting
+*>  and ending columns of the submatrix B. Balancing consists of applying
+*>  a diagonal similarity transformation inv(D) * B * D to make the
+*>  1-norms of each row of B and its corresponding column nearly equal.
+*>  The output matrix is
+*>
+*>     ( T1     X*D          Y    )
+*>     (  0  inv(D)*B*D  inv(D)*Z ).
+*>     (  0      0           T2   )
+*>
+*>  Information about the permutations P and the diagonal matrix D is
+*>  returned in the vector SCALE.
+*>
+*>  This subroutine is based on the EISPACK routine BALANC.
+*>
+*>  Modified by Tzu-Yi Chen, Computer Science Division, University of
+*>    California at Berkeley, USA
+*> \endverbatim
+*>
+*  =====================================================================
       SUBROUTINE DGEBAL( JOB, N, A, LDA, ILO, IHI, SCALE, INFO )
 *
-*  -- LAPACK routine (version 3.2) --
+*  -- LAPACK computational routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2006
 *
 *     .. Scalar Arguments ..
       CHARACTER          JOB
@@ -12,92 +169,6 @@
 *     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), SCALE( * )
 *     ..
-*
-*  Purpose
-*  =======
-*
-*  DGEBAL balances a general real matrix A.  This involves, first,
-*  permuting A by a similarity transformation to isolate eigenvalues
-*  in the first 1 to ILO-1 and last IHI+1 to N elements on the
-*  diagonal; and second, applying a diagonal similarity transformation
-*  to rows and columns ILO to IHI to make the rows and columns as
-*  close in norm as possible.  Both steps are optional.
-*
-*  Balancing may reduce the 1-norm of the matrix, and improve the
-*  accuracy of the computed eigenvalues and/or eigenvectors.
-*
-*  Arguments
-*  =========
-*
-*  JOB     (input) CHARACTER*1
-*          Specifies the operations to be performed on A:
-*          = 'N':  none:  simply set ILO = 1, IHI = N, SCALE(I) = 1.0
-*                  for i = 1,...,N;
-*          = 'P':  permute only;
-*          = 'S':  scale only;
-*          = 'B':  both permute and scale.
-*
-*  N       (input) INTEGER
-*          The order of the matrix A.  N >= 0.
-*
-*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
-*          On entry, the input matrix A.
-*          On exit,  A is overwritten by the balanced matrix.
-*          If JOB = 'N', A is not referenced.
-*          See Further Details.
-*
-*  LDA     (input) INTEGER
-*          The leading dimension of the array A.  LDA >= max(1,N).
-*
-*  ILO     (output) INTEGER
-*  IHI     (output) INTEGER
-*          ILO and IHI are set to integers such that on exit
-*          A(i,j) = 0 if i > j and j = 1,...,ILO-1 or I = IHI+1,...,N.
-*          If JOB = 'N' or 'S', ILO = 1 and IHI = N.
-*
-*  SCALE   (output) DOUBLE PRECISION array, dimension (N)
-*          Details of the permutations and scaling factors applied to
-*          A.  If P(j) is the index of the row and column interchanged
-*          with row and column j and D(j) is the scaling factor
-*          applied to row and column j, then
-*          SCALE(j) = P(j)    for j = 1,...,ILO-1
-*                   = D(j)    for j = ILO,...,IHI
-*                   = P(j)    for j = IHI+1,...,N.
-*          The order in which the interchanges are made is N to IHI+1,
-*          then 1 to ILO-1.
-*
-*  INFO    (output) INTEGER
-*          = 0:  successful exit.
-*          < 0:  if INFO = -i, the i-th argument had an illegal value.
-*
-*  Further Details
-*  ===============
-*
-*  The permutations consist of row and column interchanges which put
-*  the matrix in the form
-*
-*             ( T1   X   Y  )
-*     P A P = (  0   B   Z  )
-*             (  0   0   T2 )
-*
-*  where T1 and T2 are upper triangular matrices whose eigenvalues lie
-*  along the diagonal.  The column indices ILO and IHI mark the starting
-*  and ending columns of the submatrix B. Balancing consists of applying
-*  a diagonal similarity transformation inv(D) * B * D to make the
-*  1-norms of each row of B and its corresponding column nearly equal.
-*  The output matrix is
-*
-*     ( T1     X*D          Y    )
-*     (  0  inv(D)*B*D  inv(D)*Z ).
-*     (  0      0           T2   )
-*
-*  Information about the permutations P and the diagonal matrix D is
-*  returned in the vector SCALE.
-*
-*  This subroutine is based on the EISPACK routine BALANC.
-*
-*  Modified by Tzu-Yi Chen, Computer Science Division, University of
-*    California at Berkeley, USA
 *
 *  =====================================================================
 *
@@ -116,10 +187,10 @@
      $                   SFMIN2
 *     ..
 *     .. External Functions ..
-      LOGICAL            LSAME
+      LOGICAL            DISNAN, LSAME
       INTEGER            IDAMAX
-      DOUBLE PRECISION   DLAMCH
-      EXTERNAL           LSAME, IDAMAX, DLAMCH
+      DOUBLE PRECISION   DLAMCH, DNRM2
+      EXTERNAL           DISNAN, LSAME, IDAMAX, DLAMCH, DNRM2
 *     ..
 *     .. External Subroutines ..
       EXTERNAL           DSCAL, DSWAP, XERBLA
@@ -127,8 +198,6 @@
 *     .. Intrinsic Functions ..
       INTRINSIC          ABS, MAX, MIN
 *     ..
-*     .. Executable Statements ..
-*
 *     Test the input parameters
 *
       INFO = 0
@@ -238,19 +307,14 @@
       SFMAX1 = ONE / SFMIN1
       SFMIN2 = SFMIN1*SCLFAC
       SFMAX2 = ONE / SFMIN2
+*
   140 CONTINUE
       NOCONV = .FALSE.
 *
       DO 200 I = K, L
-         C = ZERO
-         R = ZERO
 *
-         DO 150 J = K, L
-            IF( J.EQ.I )
-     $         GO TO 150
-            C = C + ABS( A( J, I ) )
-            R = R + ABS( A( I, J ) )
-  150    CONTINUE
+         C = DNRM2( L-K+1, A( K, I ), 1 )
+         R = DNRM2( L-K+1, A( I, K ), LDA )
          ICA = IDAMAX( L, A( 1, I ), 1 )
          CA = ABS( A( ICA, I ) )
          IRA = IDAMAX( N-K+1, A( I, K ), LDA )
@@ -266,6 +330,14 @@
   160    CONTINUE
          IF( C.GE.G .OR. MAX( F, C, CA ).GE.SFMAX2 .OR.
      $       MIN( R, G, RA ).LE.SFMIN2 )GO TO 170
+            IF( DISNAN( C+F+CA+R+G+RA ) ) THEN
+*
+*           Exit if NaN to avoid infinite loop
+*
+            INFO = -3
+            CALL XERBLA( 'DGEBAL', -INFO )
+            RETURN
+         END IF
          F = F*SCLFAC
          C = C*SCLFAC
          CA = CA*SCLFAC

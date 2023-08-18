@@ -1,9 +1,159 @@
+*> \brief \b DLASD4 computes the square root of the i-th updated eigenvalue of a positive symmetric rank-one modification to a positive diagonal matrix. Used by dbdsdc.
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DLASD4 + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlasd4.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlasd4.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlasd4.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DLASD4( N, I, D, Z, DELTA, RHO, SIGMA, WORK, INFO )
+*
+*       .. Scalar Arguments ..
+*       INTEGER            I, INFO, N
+*       DOUBLE PRECISION   RHO, SIGMA
+*       ..
+*       .. Array Arguments ..
+*       DOUBLE PRECISION   D( * ), DELTA( * ), WORK( * ), Z( * )
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> This subroutine computes the square root of the I-th updated
+*> eigenvalue of a positive symmetric rank-one modification to
+*> a positive diagonal matrix whose entries are given as the squares
+*> of the corresponding entries in the array d, and that
+*>
+*>        0 <= D(i) < D(j)  for  i < j
+*>
+*> and that RHO > 0. This is arranged by the calling routine, and is
+*> no loss in generality.  The rank-one modified system is thus
+*>
+*>        diag( D ) * diag( D ) +  RHO * Z * Z_transpose.
+*>
+*> where we assume the Euclidean norm of Z is 1.
+*>
+*> The method consists of approximating the rational functions in the
+*> secular equation by simpler interpolating rational functions.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in] N
+*> \verbatim
+*>          N is INTEGER
+*>         The length of all arrays.
+*> \endverbatim
+*>
+*> \param[in] I
+*> \verbatim
+*>          I is INTEGER
+*>         The index of the eigenvalue to be computed.  1 <= I <= N.
+*> \endverbatim
+*>
+*> \param[in] D
+*> \verbatim
+*>          D is DOUBLE PRECISION array, dimension ( N )
+*>         The original eigenvalues.  It is assumed that they are in
+*>         order, 0 <= D(I) < D(J)  for I < J.
+*> \endverbatim
+*>
+*> \param[in] Z
+*> \verbatim
+*>          Z is DOUBLE PRECISION array, dimension ( N )
+*>         The components of the updating vector.
+*> \endverbatim
+*>
+*> \param[out] DELTA
+*> \verbatim
+*>          DELTA is DOUBLE PRECISION array, dimension ( N )
+*>         If N .ne. 1, DELTA contains (D(j) - sigma_I) in its  j-th
+*>         component.  If N = 1, then DELTA(1) = 1.  The vector DELTA
+*>         contains the information necessary to construct the
+*>         (singular) eigenvectors.
+*> \endverbatim
+*>
+*> \param[in] RHO
+*> \verbatim
+*>          RHO is DOUBLE PRECISION
+*>         The scalar in the symmetric updating formula.
+*> \endverbatim
+*>
+*> \param[out] SIGMA
+*> \verbatim
+*>          SIGMA is DOUBLE PRECISION
+*>         The computed sigma_I, the I-th updated eigenvalue.
+*> \endverbatim
+*>
+*> \param[out] WORK
+*> \verbatim
+*>          WORK is DOUBLE PRECISION array, dimension ( N )
+*>         If N .ne. 1, WORK contains (D(j) + sigma_I) in its  j-th
+*>         component.  If N = 1, then WORK( 1 ) = 1.
+*> \endverbatim
+*>
+*> \param[out] INFO
+*> \verbatim
+*>          INFO is INTEGER
+*>         = 0:  successful exit
+*>         > 0:  if INFO = 1, the updating process failed.
+*> \endverbatim
+*
+*> \par Internal Parameters:
+*  =========================
+*>
+*> \verbatim
+*>  Logical variable ORGATI (origin-at-i?) is used for distinguishing
+*>  whether D(i) or D(i+1) is treated as the origin.
+*>
+*>            ORGATI = .true.    origin at i
+*>            ORGATI = .false.   origin at i+1
+*>
+*>  Logical variable SWTCH3 (switch-for-3-poles?) is for noting
+*>  if we are working with THREE poles!
+*>
+*>  MAXIT is the maximum number of iterations allowed for each
+*>  eigenvalue.
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup OTHERauxiliary
+*
+*> \par Contributors:
+*  ==================
+*>
+*>     Ren-Cang Li, Computer Science Division, University of California
+*>     at Berkeley, USA
+*>
+*  =====================================================================
       SUBROUTINE DLASD4( N, I, D, Z, DELTA, RHO, SIGMA, WORK, INFO )
 *
-*  -- LAPACK auxiliary routine (version 3.2) --
+*  -- LAPACK auxiliary routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2006
 *
 *     .. Scalar Arguments ..
       INTEGER            I, INFO, N
@@ -13,101 +163,23 @@
       DOUBLE PRECISION   D( * ), DELTA( * ), WORK( * ), Z( * )
 *     ..
 *
-*  Purpose
-*  =======
-*
-*  This subroutine computes the square root of the I-th updated
-*  eigenvalue of a positive symmetric rank-one modification to
-*  a positive diagonal matrix whose entries are given as the squares
-*  of the corresponding entries in the array d, and that
-*
-*         0 <= D(i) < D(j)  for  i < j
-*
-*  and that RHO > 0. This is arranged by the calling routine, and is
-*  no loss in generality.  The rank-one modified system is thus
-*
-*         diag( D ) * diag( D ) +  RHO *  Z * Z_transpose.
-*
-*  where we assume the Euclidean norm of Z is 1.
-*
-*  The method consists of approximating the rational functions in the
-*  secular equation by simpler interpolating rational functions.
-*
-*  Arguments
-*  =========
-*
-*  N      (input) INTEGER
-*         The length of all arrays.
-*
-*  I      (input) INTEGER
-*         The index of the eigenvalue to be computed.  1 <= I <= N.
-*
-*  D      (input) DOUBLE PRECISION array, dimension ( N )
-*         The original eigenvalues.  It is assumed that they are in
-*         order, 0 <= D(I) < D(J)  for I < J.
-*
-*  Z      (input) DOUBLE PRECISION array, dimension ( N )
-*         The components of the updating vector.
-*
-*  DELTA  (output) DOUBLE PRECISION array, dimension ( N )
-*         If N .ne. 1, DELTA contains (D(j) - sigma_I) in its  j-th
-*         component.  If N = 1, then DELTA(1) = 1.  The vector DELTA
-*         contains the information necessary to construct the
-*         (singular) eigenvectors.
-*
-*  RHO    (input) DOUBLE PRECISION
-*         The scalar in the symmetric updating formula.
-*
-*  SIGMA  (output) DOUBLE PRECISION
-*         The computed sigma_I, the I-th updated eigenvalue.
-*
-*  WORK   (workspace) DOUBLE PRECISION array, dimension ( N )
-*         If N .ne. 1, WORK contains (D(j) + sigma_I) in its  j-th
-*         component.  If N = 1, then WORK( 1 ) = 1.
-*
-*  INFO   (output) INTEGER
-*         = 0:  successful exit
-*         > 0:  if INFO = 1, the updating process failed.
-*
-*  Internal Parameters
-*  ===================
-*
-*  Logical variable ORGATI (origin-at-i?) is used for distinguishing
-*  whether D(i) or D(i+1) is treated as the origin.
-*
-*            ORGATI = .true.    origin at i
-*            ORGATI = .false.   origin at i+1
-*
-*  Logical variable SWTCH3 (switch-for-3-poles?) is for noting
-*  if we are working with THREE poles!
-*
-*  MAXIT is the maximum number of iterations allowed for each
-*  eigenvalue.
-*
-*  Further Details
-*  ===============
-*
-*  Based on contributions by
-*     Ren-Cang Li, Computer Science Division, University of California
-*     at Berkeley, USA
-*
 *  =====================================================================
 *
 *     .. Parameters ..
       INTEGER            MAXIT
-      PARAMETER          ( MAXIT = 20 )
+      PARAMETER          ( MAXIT = 400 )
       DOUBLE PRECISION   ZERO, ONE, TWO, THREE, FOUR, EIGHT, TEN
       PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0, TWO = 2.0D+0,
      $                   THREE = 3.0D+0, FOUR = 4.0D+0, EIGHT = 8.0D+0,
      $                   TEN = 10.0D+0 )
 *     ..
 *     .. Local Scalars ..
-      LOGICAL            ORGATI, SWTCH, SWTCH3
+      LOGICAL            ORGATI, SWTCH, SWTCH3, GEOMAVG
       INTEGER            II, IIM1, IIP1, IP1, ITER, J, NITER
-      DOUBLE PRECISION   A, B, C, DELSQ, DELSQ2, DPHI, DPSI, DTIIM,
+      DOUBLE PRECISION   A, B, C, DELSQ, DELSQ2, SQ2, DPHI, DPSI, DTIIM,
      $                   DTIIP, DTIPSQ, DTISQ, DTNSQ, DTNSQ1, DW, EPS,
-     $                   ERRETM, ETA, PHI, PREW, PSI, RHOINV, SG2LB,
-     $                   SG2UB, TAU, TEMP, TEMP1, TEMP2, W
+     $                   ERRETM, ETA, PHI, PREW, PSI, RHOINV, SGLB,
+     $                   SGUB, TAU, TAU2, TEMP, TEMP1, TEMP2, W
 *     ..
 *     .. Local Arrays ..
       DOUBLE PRECISION   DD( 3 ), ZZ( 3 )
@@ -148,6 +220,7 @@
 *
       EPS = DLAMCH( 'Epsilon' )
       RHOINV = ONE / RHO
+      TAU2= ZERO
 *
 *     The case I = N
 *
@@ -186,7 +259,7 @@
      $             ( D( N )-D( N-1 )+RHO / ( D( N )+TEMP1 ) ) ) +
      $             Z( N )*Z( N ) / RHO
 *
-*           The following TAU is to approximate
+*           The following TAU2 is to approximate
 *           SIGMA_n^2 - D( N )*D( N )
 *
             IF( C.LE.TEMP ) THEN
@@ -196,42 +269,45 @@
                A = -C*DELSQ + Z( N-1 )*Z( N-1 ) + Z( N )*Z( N )
                B = Z( N )*Z( N )*DELSQ
                IF( A.LT.ZERO ) THEN
-                  TAU = TWO*B / ( SQRT( A*A+FOUR*B*C )-A )
+                  TAU2 = TWO*B / ( SQRT( A*A+FOUR*B*C )-A )
                ELSE
-                  TAU = ( A+SQRT( A*A+FOUR*B*C ) ) / ( TWO*C )
+                  TAU2 = ( A+SQRT( A*A+FOUR*B*C ) ) / ( TWO*C )
                END IF
+               TAU = TAU2 / ( D( N )+SQRT( D( N )*D( N )+TAU2 ) )
             END IF
 *
 *           It can be proved that
-*               D(N)^2+RHO/2 <= SIGMA_n^2 < D(N)^2+TAU <= D(N)^2+RHO
+*               D(N)^2+RHO/2 <= SIGMA_n^2 < D(N)^2+TAU2 <= D(N)^2+RHO
 *
          ELSE
             DELSQ = ( D( N )-D( N-1 ) )*( D( N )+D( N-1 ) )
             A = -C*DELSQ + Z( N-1 )*Z( N-1 ) + Z( N )*Z( N )
             B = Z( N )*Z( N )*DELSQ
 *
-*           The following TAU is to approximate
+*           The following TAU2 is to approximate
 *           SIGMA_n^2 - D( N )*D( N )
 *
             IF( A.LT.ZERO ) THEN
-               TAU = TWO*B / ( SQRT( A*A+FOUR*B*C )-A )
+               TAU2 = TWO*B / ( SQRT( A*A+FOUR*B*C )-A )
             ELSE
-               TAU = ( A+SQRT( A*A+FOUR*B*C ) ) / ( TWO*C )
+               TAU2 = ( A+SQRT( A*A+FOUR*B*C ) ) / ( TWO*C )
             END IF
+            TAU = TAU2 / ( D( N )+SQRT( D( N )*D( N )+TAU2 ) )
+
 *
 *           It can be proved that
-*           D(N)^2 < D(N)^2+TAU < SIGMA(N)^2 < D(N)^2+RHO/2
+*           D(N)^2 < D(N)^2+TAU2 < SIGMA(N)^2 < D(N)^2+RHO/2
 *
          END IF
 *
-*        The following ETA is to approximate SIGMA_n - D( N )
+*        The following TAU is to approximate SIGMA_n - D( N )
 *
-         ETA = TAU / ( D( N )+SQRT( D( N )*D( N )+TAU ) )
+*         TAU = TAU2 / ( D( N )+SQRT( D( N )*D( N )+TAU2 ) )
 *
-         SIGMA = D( N ) + ETA
+         SIGMA = D( N ) + TAU
          DO 30 J = 1, N
-            DELTA( J ) = ( D( J )-D( I ) ) - ETA
-            WORK( J ) = D( J ) + D( I ) + ETA
+            DELTA( J ) = ( D( J )-D( N ) ) - TAU
+            WORK( J ) = D( J ) + D( N ) + TAU
    30    CONTINUE
 *
 *        Evaluate PSI and the derivative DPSI
@@ -252,8 +328,8 @@
          TEMP = Z( N ) / ( DELTA( N )*WORK( N ) )
          PHI = Z( N )*TEMP
          DPHI = TEMP*TEMP
-         ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV +
-     $            ABS( TAU )*( DPSI+DPHI )
+         ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV
+*    $          + ABS( TAU2 )*( DPSI+DPHI )
 *
          W = RHOINV + PHI + PSI
 *
@@ -293,14 +369,14 @@
          IF( TEMP.GT.RHO )
      $      ETA = RHO + DTNSQ
 *
-         TAU = TAU + ETA
          ETA = ETA / ( SIGMA+SQRT( ETA+SIGMA*SIGMA ) )
+         TAU = TAU + ETA
+         SIGMA = SIGMA + ETA
+*
          DO 50 J = 1, N
             DELTA( J ) = DELTA( J ) - ETA
             WORK( J ) = WORK( J ) + ETA
    50    CONTINUE
-*
-         SIGMA = SIGMA + ETA
 *
 *        Evaluate PSI and the derivative DPSI
 *
@@ -317,11 +393,12 @@
 *
 *        Evaluate PHI and the derivative DPHI
 *
-         TEMP = Z( N ) / ( WORK( N )*DELTA( N ) )
+         TAU2 = WORK( N )*DELTA( N )
+         TEMP = Z( N ) / TAU2
          PHI = Z( N )*TEMP
          DPHI = TEMP*TEMP
-         ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV +
-     $            ABS( TAU )*( DPSI+DPHI )
+         ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV
+*    $          + ABS( TAU2 )*( DPSI+DPHI )
 *
          W = RHOINV + PHI + PSI
 *
@@ -362,14 +439,14 @@
             IF( TEMP.LE.ZERO )
      $         ETA = ETA / TWO
 *
-            TAU = TAU + ETA
             ETA = ETA / ( SIGMA+SQRT( ETA+SIGMA*SIGMA ) )
+            TAU = TAU + ETA
+            SIGMA = SIGMA + ETA
+*
             DO 70 J = 1, N
                DELTA( J ) = DELTA( J ) - ETA
                WORK( J ) = WORK( J ) + ETA
    70       CONTINUE
-*
-            SIGMA = SIGMA + ETA
 *
 *           Evaluate PSI and the derivative DPSI
 *
@@ -386,11 +463,12 @@
 *
 *           Evaluate PHI and the derivative DPHI
 *
-            TEMP = Z( N ) / ( WORK( N )*DELTA( N ) )
+            TAU2 = WORK( N )*DELTA( N )
+            TEMP = Z( N ) / TAU2
             PHI = Z( N )*TEMP
             DPHI = TEMP*TEMP
-            ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV +
-     $               ABS( TAU )*( DPSI+DPHI )
+            ERRETM = EIGHT*( -PHI-PSI ) + ERRETM - PHI + RHOINV
+*    $             + ABS( TAU2 )*( DPSI+DPHI )
 *
             W = RHOINV + PHI + PSI
    90    CONTINUE
@@ -413,7 +491,8 @@
 *
          DELSQ = ( D( IP1 )-D( I ) )*( D( IP1 )+D( I ) )
          DELSQ2 = DELSQ / TWO
-         TEMP = DELSQ2 / ( D( I )+SQRT( D( I )*D( I )+DELSQ2 ) )
+         SQ2=SQRT( ( D( I )*D( I )+D( IP1 )*D( IP1 ) ) / TWO )
+         TEMP = DELSQ2 / ( D( I )+SQ2 )
          DO 100 J = 1, N
             WORK( J ) = D( J ) + D( I ) + TEMP
             DELTA( J ) = ( D( J )-D( I ) ) - TEMP
@@ -432,6 +511,7 @@
          W = C + Z( I )*Z( I ) / ( WORK( I )*DELTA( I ) ) +
      $       Z( IP1 )*Z( IP1 ) / ( WORK( IP1 )*DELTA( IP1 ) )
 *
+         GEOMAVG = .FALSE.
          IF( W.GT.ZERO ) THEN
 *
 *           d(i)^2 < the ith sigma^2 < (d(i)^2+d(i+1)^2)/2
@@ -439,21 +519,28 @@
 *           We choose d(i) as origin.
 *
             ORGATI = .TRUE.
-            SG2LB = ZERO
-            SG2UB = DELSQ2
+            II = I
+            SGLB = ZERO
+            SGUB = DELSQ2  / ( D( I )+SQ2 )
             A = C*DELSQ + Z( I )*Z( I ) + Z( IP1 )*Z( IP1 )
             B = Z( I )*Z( I )*DELSQ
             IF( A.GT.ZERO ) THEN
-               TAU = TWO*B / ( A+SQRT( ABS( A*A-FOUR*B*C ) ) )
+               TAU2 = TWO*B / ( A+SQRT( ABS( A*A-FOUR*B*C ) ) )
             ELSE
-               TAU = ( A-SQRT( ABS( A*A-FOUR*B*C ) ) ) / ( TWO*C )
+               TAU2 = ( A-SQRT( ABS( A*A-FOUR*B*C ) ) ) / ( TWO*C )
             END IF
 *
-*           TAU now is an estimation of SIGMA^2 - D( I )^2. The
+*           TAU2 now is an estimation of SIGMA^2 - D( I )^2. The
 *           following, however, is the corresponding estimation of
 *           SIGMA - D( I ).
 *
-            ETA = TAU / ( D( I )+SQRT( D( I )*D( I )+TAU ) )
+            TAU = TAU2 / ( D( I )+SQRT( D( I )*D( I )+TAU2 ) )
+            TEMP = SQRT(EPS)
+            IF( (D(I).LE.TEMP*D(IP1)).AND.(ABS(Z(I)).LE.TEMP)
+     $                               .AND.(D(I).GT.ZERO) ) THEN
+               TAU = MIN( TEN*D(I), SGUB )
+               GEOMAVG = .TRUE.
+            END IF
          ELSE
 *
 *           (d(i)^2+d(i+1)^2)/2 <= the ith sigma^2 < d(i+1)^2/2
@@ -461,39 +548,30 @@
 *           We choose d(i+1) as origin.
 *
             ORGATI = .FALSE.
-            SG2LB = -DELSQ2
-            SG2UB = ZERO
+            II = IP1
+            SGLB = -DELSQ2  / ( D( II )+SQ2 )
+            SGUB = ZERO
             A = C*DELSQ - Z( I )*Z( I ) - Z( IP1 )*Z( IP1 )
             B = Z( IP1 )*Z( IP1 )*DELSQ
             IF( A.LT.ZERO ) THEN
-               TAU = TWO*B / ( A-SQRT( ABS( A*A+FOUR*B*C ) ) )
+               TAU2 = TWO*B / ( A-SQRT( ABS( A*A+FOUR*B*C ) ) )
             ELSE
-               TAU = -( A+SQRT( ABS( A*A+FOUR*B*C ) ) ) / ( TWO*C )
+               TAU2 = -( A+SQRT( ABS( A*A+FOUR*B*C ) ) ) / ( TWO*C )
             END IF
 *
-*           TAU now is an estimation of SIGMA^2 - D( IP1 )^2. The
+*           TAU2 now is an estimation of SIGMA^2 - D( IP1 )^2. The
 *           following, however, is the corresponding estimation of
 *           SIGMA - D( IP1 ).
 *
-            ETA = TAU / ( D( IP1 )+SQRT( ABS( D( IP1 )*D( IP1 )+
-     $            TAU ) ) )
+            TAU = TAU2 / ( D( IP1 )+SQRT( ABS( D( IP1 )*D( IP1 )+
+     $            TAU2 ) ) )
          END IF
 *
-         IF( ORGATI ) THEN
-            II = I
-            SIGMA = D( I ) + ETA
-            DO 130 J = 1, N
-               WORK( J ) = D( J ) + D( I ) + ETA
-               DELTA( J ) = ( D( J )-D( I ) ) - ETA
-  130       CONTINUE
-         ELSE
-            II = I + 1
-            SIGMA = D( IP1 ) + ETA
-            DO 140 J = 1, N
-               WORK( J ) = D( J ) + D( IP1 ) + ETA
-               DELTA( J ) = ( D( J )-D( IP1 ) ) - ETA
-  140       CONTINUE
-         END IF
+         SIGMA = D( II ) + TAU
+         DO 130 J = 1, N
+            WORK( J ) = D( J ) + D( II ) + TAU
+            DELTA( J ) = ( D( J )-D( II ) ) - TAU
+  130    CONTINUE
          IIM1 = II - 1
          IIP1 = II + 1
 *
@@ -541,8 +619,9 @@
          DW = DPSI + DPHI + TEMP*TEMP
          TEMP = Z( II )*TEMP
          W = W + TEMP
-         ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV +
-     $            THREE*ABS( TEMP ) + ABS( TAU )*DW
+         ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV
+     $          + THREE*ABS( TEMP )
+*    $          + ABS( TAU2 )*DW
 *
 *        Test for convergence
 *
@@ -551,9 +630,9 @@
          END IF
 *
          IF( W.LE.ZERO ) THEN
-            SG2LB = MAX( SG2LB, TAU )
+            SGLB = MAX( SGLB, TAU )
          ELSE
-            SG2UB = MIN( SG2UB, TAU )
+            SGUB = MIN( SGUB, TAU )
          END IF
 *
 *        Calculate the new step
@@ -618,8 +697,38 @@
             DD( 2 ) = DELTA( II )*WORK( II )
             DD( 3 ) = DTIIP
             CALL DLAED6( NITER, ORGATI, C, DD, ZZ, W, ETA, INFO )
-            IF( INFO.NE.0 )
-     $         GO TO 240
+*
+            IF( INFO.NE.0 ) THEN
+*
+*              If INFO is not 0, i.e., DLAED6 failed, switch back
+*              to 2 pole interpolation.
+*
+               SWTCH3 = .FALSE.
+               INFO = 0
+               DTIPSQ = WORK( IP1 )*DELTA( IP1 )
+               DTISQ = WORK( I )*DELTA( I )
+               IF( ORGATI ) THEN
+                  C = W - DTIPSQ*DW + DELSQ*( Z( I ) / DTISQ )**2
+               ELSE
+                  C = W - DTISQ*DW - DELSQ*( Z( IP1 ) / DTIPSQ )**2
+               END IF
+               A = ( DTIPSQ+DTISQ )*W - DTIPSQ*DTISQ*DW
+               B = DTIPSQ*DTISQ*W
+               IF( C.EQ.ZERO ) THEN
+                  IF( A.EQ.ZERO ) THEN
+                     IF( ORGATI ) THEN
+                        A = Z( I )*Z( I ) + DTIPSQ*DTIPSQ*( DPSI+DPHI )
+                     ELSE
+                        A = Z( IP1 )*Z( IP1 ) + DTISQ*DTISQ*( DPSI+DPHI)
+                     END IF
+                  END IF
+                  ETA = B / A
+               ELSE IF( A.LE.ZERO ) THEN
+                  ETA = ( A-SQRT( ABS( A*A-FOUR*B*C ) ) ) / ( TWO*C )
+               ELSE
+                  ETA = TWO*B / ( A+SQRT( ABS( A*A-FOUR*B*C ) ) )
+               END IF
+            END IF
          END IF
 *
 *        Note, eta should be positive if w is negative, and
@@ -630,27 +739,33 @@
 *
          IF( W*ETA.GE.ZERO )
      $      ETA = -W / DW
-         IF( ORGATI ) THEN
-            TEMP1 = WORK( I )*DELTA( I )
-            TEMP = ETA - TEMP1
-         ELSE
-            TEMP1 = WORK( IP1 )*DELTA( IP1 )
-            TEMP = ETA - TEMP1
-         END IF
-         IF( TEMP.GT.SG2UB .OR. TEMP.LT.SG2LB ) THEN
+*
+         ETA = ETA / ( SIGMA+SQRT( SIGMA*SIGMA+ETA ) )
+         TEMP = TAU + ETA
+         IF( TEMP.GT.SGUB .OR. TEMP.LT.SGLB ) THEN
             IF( W.LT.ZERO ) THEN
-               ETA = ( SG2UB-TAU ) / TWO
+               ETA = ( SGUB-TAU ) / TWO
             ELSE
-               ETA = ( SG2LB-TAU ) / TWO
+               ETA = ( SGLB-TAU ) / TWO
+            END IF
+            IF( GEOMAVG ) THEN
+               IF( W .LT. ZERO ) THEN
+                  IF( TAU .GT. ZERO ) THEN
+                     ETA = SQRT(SGUB*TAU)-TAU
+                  END IF
+               ELSE
+                  IF( SGLB .GT. ZERO ) THEN
+                     ETA = SQRT(SGLB*TAU)-TAU
+                  END IF
+               END IF
             END IF
          END IF
 *
-         TAU = TAU + ETA
-         ETA = ETA / ( SIGMA+SQRT( SIGMA*SIGMA+ETA ) )
-*
          PREW = W
 *
+         TAU = TAU + ETA
          SIGMA = SIGMA + ETA
+*
          DO 170 J = 1, N
             WORK( J ) = WORK( J ) + ETA
             DELTA( J ) = DELTA( J ) - ETA
@@ -680,18 +795,14 @@
             ERRETM = ERRETM + PHI
   190    CONTINUE
 *
-         TEMP = Z( II ) / ( WORK( II )*DELTA( II ) )
+         TAU2 = WORK( II )*DELTA( II )
+         TEMP = Z( II ) / TAU2
          DW = DPSI + DPHI + TEMP*TEMP
          TEMP = Z( II )*TEMP
          W = RHOINV + PHI + PSI + TEMP
-         ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV +
-     $            THREE*ABS( TEMP ) + ABS( TAU )*DW
-*
-         IF( W.LE.ZERO ) THEN
-            SG2LB = MAX( SG2LB, TAU )
-         ELSE
-            SG2UB = MIN( SG2UB, TAU )
-         END IF
+         ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV
+     $          + THREE*ABS( TEMP )
+*    $          + ABS( TAU2 )*DW
 *
          SWTCH = .FALSE.
          IF( ORGATI ) THEN
@@ -711,7 +822,14 @@
 *           Test for convergence
 *
             IF( ABS( W ).LE.EPS*ERRETM ) THEN
+*     $          .OR. (SGUB-SGLB).LE.EIGHT*ABS(SGUB+SGLB) ) THEN
                GO TO 240
+            END IF
+*
+            IF( W.LE.ZERO ) THEN
+               SGLB = MAX( SGLB, TAU )
+            ELSE
+               SGUB = MIN( SGUB, TAU )
             END IF
 *
 *           Calculate the new step
@@ -798,8 +916,54 @@
                DD( 2 ) = DELTA( II )*WORK( II )
                DD( 3 ) = DTIIP
                CALL DLAED6( NITER, ORGATI, C, DD, ZZ, W, ETA, INFO )
-               IF( INFO.NE.0 )
-     $            GO TO 240
+*
+               IF( INFO.NE.0 ) THEN
+*
+*                 If INFO is not 0, i.e., DLAED6 failed, switch
+*                 back to two pole interpolation
+*
+                  SWTCH3 = .FALSE.
+                  INFO = 0
+                  DTIPSQ = WORK( IP1 )*DELTA( IP1 )
+                  DTISQ = WORK( I )*DELTA( I )
+                  IF( .NOT.SWTCH ) THEN
+                     IF( ORGATI ) THEN
+                        C = W - DTIPSQ*DW + DELSQ*( Z( I )/DTISQ )**2
+                     ELSE
+                        C = W - DTISQ*DW - DELSQ*( Z( IP1 )/DTIPSQ )**2
+                     END IF
+                  ELSE
+                     TEMP = Z( II ) / ( WORK( II )*DELTA( II ) )
+                     IF( ORGATI ) THEN
+                        DPSI = DPSI + TEMP*TEMP
+                     ELSE
+                        DPHI = DPHI + TEMP*TEMP
+                     END IF
+                     C = W - DTISQ*DPSI - DTIPSQ*DPHI
+                  END IF
+                  A = ( DTIPSQ+DTISQ )*W - DTIPSQ*DTISQ*DW
+                  B = DTIPSQ*DTISQ*W
+                  IF( C.EQ.ZERO ) THEN
+                     IF( A.EQ.ZERO ) THEN
+                        IF( .NOT.SWTCH ) THEN
+                           IF( ORGATI ) THEN
+                              A = Z( I )*Z( I ) + DTIPSQ*DTIPSQ*
+     $                            ( DPSI+DPHI )
+                           ELSE
+                              A = Z( IP1 )*Z( IP1 ) +
+     $                            DTISQ*DTISQ*( DPSI+DPHI )
+                           END IF
+                        ELSE
+                           A = DTISQ*DTISQ*DPSI + DTIPSQ*DTIPSQ*DPHI
+                        END IF
+                     END IF
+                     ETA = B / A
+                  ELSE IF( A.LE.ZERO ) THEN
+                     ETA = ( A-SQRT( ABS( A*A-FOUR*B*C ) ) ) / ( TWO*C )
+                  ELSE
+                     ETA = TWO*B / ( A+SQRT( ABS( A*A-FOUR*B*C ) ) )
+                  END IF
+               END IF
             END IF
 *
 *           Note, eta should be positive if w is negative, and
@@ -810,31 +974,37 @@
 *
             IF( W*ETA.GE.ZERO )
      $         ETA = -W / DW
-            IF( ORGATI ) THEN
-               TEMP1 = WORK( I )*DELTA( I )
-               TEMP = ETA - TEMP1
-            ELSE
-               TEMP1 = WORK( IP1 )*DELTA( IP1 )
-               TEMP = ETA - TEMP1
-            END IF
-            IF( TEMP.GT.SG2UB .OR. TEMP.LT.SG2LB ) THEN
+*
+            ETA = ETA / ( SIGMA+SQRT( SIGMA*SIGMA+ETA ) )
+            TEMP=TAU+ETA
+            IF( TEMP.GT.SGUB .OR. TEMP.LT.SGLB ) THEN
                IF( W.LT.ZERO ) THEN
-                  ETA = ( SG2UB-TAU ) / TWO
+                  ETA = ( SGUB-TAU ) / TWO
                ELSE
-                  ETA = ( SG2LB-TAU ) / TWO
+                  ETA = ( SGLB-TAU ) / TWO
+               END IF
+               IF( GEOMAVG ) THEN
+                  IF( W .LT. ZERO ) THEN
+                     IF( TAU .GT. ZERO ) THEN
+                        ETA = SQRT(SGUB*TAU)-TAU
+                     END IF
+                  ELSE
+                     IF( SGLB .GT. ZERO ) THEN
+                        ETA = SQRT(SGLB*TAU)-TAU
+                     END IF
+                  END IF
                END IF
             END IF
 *
-            TAU = TAU + ETA
-            ETA = ETA / ( SIGMA+SQRT( SIGMA*SIGMA+ETA ) )
+            PREW = W
 *
+            TAU = TAU + ETA
             SIGMA = SIGMA + ETA
+*
             DO 200 J = 1, N
                WORK( J ) = WORK( J ) + ETA
                DELTA( J ) = DELTA( J ) - ETA
   200       CONTINUE
-*
-            PREW = W
 *
 *           Evaluate PSI and the derivative DPSI
 *
@@ -860,20 +1030,17 @@
                ERRETM = ERRETM + PHI
   220       CONTINUE
 *
-            TEMP = Z( II ) / ( WORK( II )*DELTA( II ) )
+            TAU2 = WORK( II )*DELTA( II )
+            TEMP = Z( II ) / TAU2
             DW = DPSI + DPHI + TEMP*TEMP
             TEMP = Z( II )*TEMP
             W = RHOINV + PHI + PSI + TEMP
-            ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV +
-     $               THREE*ABS( TEMP ) + ABS( TAU )*DW
+            ERRETM = EIGHT*( PHI-PSI ) + ERRETM + TWO*RHOINV
+     $             + THREE*ABS( TEMP )
+*    $             + ABS( TAU2 )*DW
+*
             IF( W*PREW.GT.ZERO .AND. ABS( W ).GT.ABS( PREW ) / TEN )
      $         SWTCH = .NOT.SWTCH
-*
-            IF( W.LE.ZERO ) THEN
-               SG2LB = MAX( SG2LB, TAU )
-            ELSE
-               SG2UB = MIN( SG2UB, TAU )
-            END IF
 *
   230    CONTINUE
 *
