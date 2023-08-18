@@ -140,6 +140,8 @@ module quick_method_module
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
+        logical :: CalcFock_d1g0  = .false. 
+
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         logical :: bCUDA                ! if CUDA is used here
 #endif
