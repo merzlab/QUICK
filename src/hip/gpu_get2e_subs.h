@@ -90,11 +90,15 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
  */
 #ifdef OSHELL
 #ifdef int_sp
-__global__ void 
-__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_sp()
+__global__ void
+__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_THREADS_PER_BLOCK, HIP_SP_2E_THREADS_PER_BLOCK)))
+get_oshell_eri_kernel_sp()
 #elif defined int_spd
 __global__ void
-__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spd()
+__attribute__((amdgpu_waves_per_eu(HIP_SPD_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SPD_2E_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))
+get_oshell_eri_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf()
@@ -129,10 +133,14 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf10()
 #else
 #ifdef int_sp
 __global__ void
-__launch_bounds__(HIP_SP_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp()
+__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SP_2E_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_THREADS_PER_BLOCK, HIP_SP_2E_THREADS_PER_BLOCK)))
+get2e_kernel_sp()
 #elif defined int_spd
 __global__ void
-__launch_bounds__(HIP_SPD_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spd()
+__attribute__((amdgpu_waves_per_eu(HIP_SPD_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
+__attribute__((amdgpu_flat_work_group_size(HIP_SPD_2E_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))
+get2e_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf()
