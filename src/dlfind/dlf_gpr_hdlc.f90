@@ -1,68 +1,10 @@
-!! COPYRIGHT
-!!
-!!  Copyright 2007 Johannes Kaestner (kaestner@theochem.uni-stuttgart.de),
-!!  Tom Keal (thomas.keal@stfc.ac.uk), Alex Turner, Salomon Billeter,
-!!  Stephan Thiel, Max-Planck Institut fuer Kohlenforshung, Muelheim, 
-!!  Germany.
-!!
-!!  This file is part of DL-FIND.
-!!
-!!  DL-FIND is free software: you can redistribute it and/or modify
-!!  it under the terms of the GNU Lesser General Public License as 
-!!  published by the Free Software Foundation, either version 3 of the 
-!!  License, or (at your option) any later version.
-!!
-!!  DL-FIND is distributed in the hope that it will be useful,
-!!  but WITHOUT ANY WARRANTY; without even the implied warranty of
-!!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!!  GNU Lesser General Public License for more details.
-!!
-!!  You should have received a copy of the GNU Lesser General Public 
-!!  License along with DL-FIND.  If not, see 
-!!  <http://www.gnu.org/licenses/>.
-!!
-
-MODULE dlfhdlc_hdlclib
-!  USE global
+module oop_hdlc
   use dlf_parameter_module, only: rk
   use dlf_global, only: printl,stdout!,pi
-
-  USE dlfhdlc_matrixlib
-  USE dlfhdlc_primitive
-  USE dlfhdlc_constraint
-  IMPLICIT NONE
-
-!------------------------------------------------------------------------------
-! Type definitions for HDLC objects and initialisation
-! Dimensions of integer matrices: (value, entry)
-! Dimensions of Cartesians matrix: (component, atom), unlike old HDLCopt
-!
-! Fields of an HDLC object:
-!
-! name                    identification as in resn()
-! natom                   number of atoms
-! lgmatok                 .true. if G not linear dependent
-! x       (natom)         X coordinates
-! y       (natom)         Y coordinates
-! z       (natom)         Z coordinates
-! ut      matrix(ndlc,np) U transposed
-! np                      number of primitives
-! nconn                   number of connections
-! nbend                   number of bends, linears, impropers
-! nrots                   number of torsions
-! ncons                   number of constraints
-! iconn   (2,nconn)       connectivity
-! ibend   (4,nbend)       bends, linears, impropers
-! irots   (4,nrots)       torsions
-! icons   (6,ncons)       constraints
-! vcons   (ncons)         values of constraints
-! oldxyz  matrix(3*natom,1) old xyz values (used for cartesian fitting)
-! biasv                   bias vector
-! err_cnt                 counter of HDLC breakdowns
-! next    hdlc_obj        next HDLC object
-! prev    hdlc_obj        previous HDLC object
-!------------------------------------------------------------------------------
-
+  use dlfhdlc_matrixlib
+  use dlfhdlc_primitive
+  use dlfhdlc_constraint
+  implicit none
   TYPE residue_type
     ! scalars
     INTEGER :: name ! number of the this residue
@@ -93,18 +35,7 @@ MODULE dlfhdlc_hdlclib
     TYPE (matrix) :: oldxyz  ! (3*residue%natom,1,'old XYZ')
     TYPE (matrix) :: iweight ! (matrix_dimension(bhdlc,1)-residue%ncons ,1,'i weight')
   END TYPE residue_type
-
-!------------------------------------------------------------------------------
-! Module variables
-! - checkpointing of hdlc and all residues: hdlc_wr_hdlc / hdlc_rd_hdlc
-!
-! lhdlc    .true. if there are internal (HDLC or DLC) coordinates
-! internal .true. if 3N-6 DLC instead of 3N HDLC (internals only)
-! ngroups  number of active (i.e. non-deleted) HDLC residues
-! first    pointer to the first HDLC object
-! last     pointer to the last HDLC object
-!------------------------------------------------------------------------------
-
+  
   TYPE hdlc_ctrl
     ! all allcatables are allocated in dlf_hdlc_init, and dallocated in dlf_hdlc_destroy
     LOGICAL              :: tinit ! is this instance initialised?
@@ -126,34 +57,1075 @@ MODULE dlfhdlc_hdlclib
     logical              :: interror ! internal permanent error ocurred
     integer              :: ngroupsdrop ! number of groups to drop when restarted
     integer              :: nfrozen ! number of frozen atoms
-  END TYPE hdlc_ctrl
+    real(rk),allocatable :: bhdlc_matrix(:,:)
+    contains
+      procedure, pass(this) ::  dlf_hdlc_init
+      procedure, pass(this) ::  dlf_hdlc_create
+      procedure, pass(this) ::  dlf_hdlc_destroy
+      procedure, pass(this) ::  dlf_hdlc_get_nivar
+      procedure, pass(this) ::  dlf_hdlc_getweight
+      procedure, pass(this) ::  dlf_hdlc_itox
+      procedure, pass(this) ::  dlf_hdlc_reset
+      procedure, pass(this) ::  dlf_hdlc_xtoi
+      procedure, pass(this) ::  hdlc_create
+      procedure, pass(this) ::  coord_cart_to_hdlc
+      procedure, pass(this) ::  grad_cart_to_hdlc
+      procedure, pass(this) ::  hdlc_split_cons
+      procedure, pass(this) ::  hdlc_rest_cons
+      procedure, pass(this) ::  coord_hdlc_to_cart
+      procedure, pass(this) ::  hdlc_destroy_all
+      procedure, pass(this) ::  hdlc_make_bprim
+      procedure, pass(this) ::  hdlc_make_ut
+      procedure, pass(this) ::  hdlc_make_bhdlc
+      procedure, pass(this) ::  hdlc_make_ighdlc
+      procedure, pass(this) ::  hdlc_report_failure
+      procedure, pass(this) ::  hdlc_destroy
+  END TYPE hdlc_ctrl    
+interface hdlc_ctrl
+  module procedure hdlcConstructor
+end interface 
 
-  TYPE (hdlc_ctrl),save :: hdlc
+contains 
 
-CONTAINS
+type(hdlc_ctrl) function hdlcConstructor()
+  implicit none
+  hdlcConstructor%tinit = .false.
+  hdlcConstructor%lhdlc = .false.
+  hdlcConstructor%ngroups = 0
+end function hdlcConstructor
 
-!==============================================================================
-! routines formerly known as method routines of HDLC objects
-!==============================================================================
 
-!------------------------------------------------------------------------------
-! subroutine hdlc_create
-!
-! method: create
-!
-! Creates a new HDLC residue from cartesian coordinates and (optionally)
-! connectivity and constraints.
-!------------------------------------------------------------------------------
+subroutine dlf_hdlc_init(this,nat,spec,icoord,nconstr,iconstr,nincon,incon)
+!! SOURCE
+  use dlf_parameter_module, only: ik
+  use dlf_global
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer ,intent(in) :: nat
+  integer ,intent(in) :: spec(nat)
+  integer ,intent(in) :: icoord
+  integer ,intent(in) :: nconstr
+  integer ,intent(in) :: iconstr(5,max(nconstr,1)) 
+  integer ,intent(in) :: nincon
+  integer ,intent(in) :: incon(2,max(nincon,1)) 
+  ! local vars
+  integer             :: ngroups,i,j,first,length,ires,iat,ndel,ii,count
+  logical, parameter :: dbg=.false.
+  integer, allocatable :: rlength(:)
+! **********************************************************************
+  this%tinit=.true.
+  this%lhdlc=.false. ! no hdlcs created yet
 
-  SUBROUTINE hdlc_create(residue,xyz,con,cns,name)
+  if(nat<1) then
+    call dlf_fail("Number of atoms in HDLC must be >0!")
+  end if
+
+  if(printl>=6) then
+    write(stdout,"('Residue member list:')")
+    do iat=1,nat,10
+      write(stdout,"(i5,' : ',10i5)") iat-1,(spec(iat+i),i=0,min(9,nat-iat))
+    end do
+  end if
+
+  ! allocate and set residue numbers
+  call allocate(this%resn,nat)
+  allocate(this%bhdlc_matrix(glob%nivar,3*glob%nat))
+  !  hdlc%resn(:)=spec(:)
+  if(dbg) print*,"spec",spec
+  this%resn=0
+  ! attention: ngoups is calculated here as well as in dlf_hdlc_create.
+  ! it may be smaller there, as residues may have been deleted
+  ! ires makes sure that residues are sorted and consecutively numbered
+  ngroups = 0
+  j = 0
+  first=1
+  this%nfrozen=0
+  ires=0
+  !determine maximum number of residues
+  DO i = 1, nat
+    IF (spec(i)<=0) THEN
+      IF (spec(i)<0) then
+        this%nfrozen=this%nfrozen+1
+        this%resn(i)=spec(i)
+      end IF
+    ELSE 
+      ! see if this spec has been handled before
+      j=0
+      do ii=i-1,1,-1
+        if(spec(ii)==spec(i)) then
+          j=this%resn(ii)
+          exit
+        end if
+      end do
+      if(j/=0) then
+        this%resn(i)=j
+      else
+        ! new residue starts here
+        ires=ires+1
+        this%resn(i)=ires
+      end if
+    end IF
+  end DO
+  ! now hdlc%resn(i) contains residue numbers in ascending order, not necessarily 
+  !continous
+  ! Determine length of the residues
+  ngroups=ires
+  call allocate(rlength,ngroups)
+  rlength(:)=0
+  DO i = 1, nat
+    ! this should never happen
+    if(this%resn(i)>ngroups) call dlf_fail("Inconsistent residue list")
+    if(this%resn(i)>0) rlength(this%resn(i))=rlength(this%resn(i))+1
+  end DO
+  !delete residues with only one atom
+  ndel=0
+  do ires=1,ngroups
+    ! this should never happen
+    if(rlength(ires)==0) call dlf_fail("Inconsistent residue size")
+    if(rlength(ires)==1) ndel=ndel+1
+  end do
+  if(ndel>0 .and. printl>=6 ) then
+    print*,ndel," groups will be deleted as they only contain one atom"
+  end if
+  ngroups=ngroups-ndel
+
+  if(dbg) print*,"this%resn",this%resn
+  if(dbg) PRINT*,"ngroups",ngroups
+
+  IF(ngroups==0) then
+    call dlf_fail("No residues present in dfl_hdlc_init")
+  end IF
+
+  call allocate(this%err_cnt,ngroups)
+  this%err_cnt(:)=0
+
+  !=====================================================================
+  ! allocate residues
+  !=====================================================================
+  this%first=1
+  this%last=ngroups
+  allocate(this%res(1:ngroups))
+  ! storage is a bit difficut to monitor here ...
+  ! initialise the name (number of residue)
+  do i=this%first,this%last
+    this%res(i)%name=i
+  end do
+  ! get the list of atoms participating in the corresponding residue (res%at)
+  ires=0
+  do i=1,ngroups+ndel
+    if(rlength(i)==1) then
+      ! delete this residue
+      DO iat = 1, nat
+        if(this%resn(iat)==i) this%resn(iat)=0
+      end DO
+    else
+      ires=ires+1
+      this%res(ires)%natom=rlength(i)
+      allocate(this%res(ires)%at(rlength(i))) ! pointer
+      allocate(this%res(ires)%xweight(rlength(i))) ! pointer
+      count=1
+      do iat = 1, nat
+        if(this%resn(iat)==i) then
+          ! this works at resn is in ascending order
+          this%resn(iat)=ires ! may be different as to removed residues
+          this%res(ires)%at(count)=iat
+          count=count+1
+        end if
+      end do
+    end if
+  end do
+  call deallocate(rlength)
+!!$  ! debug:
+!!$  do ires=1,ngroups
+!!$    print*,"JK Group",ires,":",hdlc%res(ires)%at(:)
+!!$  end do
+
+  !=====================================================================
+  ! handle constraints
+  !=====================================================================
+  this%nconstr=nconstr
+  call allocate(this%iconstr,5,max(nconstr,1))
+  if(nconstr>0) this%iconstr(:,:)=iconstr(:,:)
+
+  !=====================================================================
+  ! handle user input connections
+  !=====================================================================
+  this%nincon=nincon
+  call allocate(this%incon,2,max(nincon,1))
+  if(nincon>0) this%incon(:,:)=incon(:,:)
+
+  !=====================================================================
+  ! handle contyp (0 internals, 1 Total connection)
+  !=====================================================================
+  if(icoord==1) then
+    this%contyp=0
+  else if(icoord==2) then
+    this%contyp=1
+  else if(icoord==3) then
+    this%contyp=0
+  else if(icoord==4) then
+    this%contyp=1
+  else
+    Write(stdout,"('icoord=',i4,'is not supported in HDLC')")
+    call dlf_fail("Wrong icoord setting in HDLC")
+  end if
+  this%internal=(icoord>=3)
+  if(this%internal) then
+    if(maxval(spec)/=minval(spec)) then
+      call dlf_fail("All atoms have to belong to the same residue if icoord > 2")
+    end if
+    this%nmin=6
+  else
+    this%nmin=0
+  end if
+
+end subroutine dlf_hdlc_init
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_get_nivar
+!!
+!! FUNCTION
+!!
+!! return number of internal coordinates
+!!
+!! note that global data is used in these calculations
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_get_nivar(this,region, nivar)
+!! SOURCE
+  use dlf_global, only: glob, stdout
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer, intent(in) :: region
+  integer  ,intent(out) :: nivar
+  integer :: i, iat, ninner, nouter, nfull
+  integer :: nincons, noutcons
+! **********************************************************************
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_get_nivar")
+  ! nat should prbably be replaced ...
+  nfull = glob%nat * 3 - this%nconstr - this%nmin - this%nfrozen * 3
+
+  ninner = 0
+  nouter = 0
+  ! Total inner and outer coordinates
+  do i = 1, glob%nat
+     if (glob%spec(i) < 0) cycle ! frozen
+     if (glob%micspec(i) == 1) then
+        ninner = ninner + 3
+     else
+        nouter = nouter + 3
+     end if
+  end do
+  ! Subtract no. of constraints from the correct region 
+  call get_cons_regions(this%nconstr, this%iconstr, glob%nat, glob%spec, &
+       glob%micspec, nincons, noutcons)
+  ninner = ninner - nincons
+  nouter = nouter - noutcons
+
+  ! nmin only applies to a single (inner) residue setup, i.e. DLC or TC
+  ninner = ninner - this%nmin
+
+  if (nfull /= ninner + nouter) then
+     write(stdout,*) "nfull, ninner, nouter = ", nfull, ninner, nouter
+     call dlf_fail("Inconsistent nivar values in dlf_hdlc_get_nivar")
+  end if
+
+  select case (region)
+  case (0)
+     nivar = nfull
+  case (1)
+     nivar = ninner
+  case (2)
+     nivar = nouter
+  case default
+     call dlf_fail("Unknown region number in dlf_hdlc_get_nivar")
+  end select
+  
+end subroutine dlf_hdlc_get_nivar
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_create
+!!
+!! FUNCTION
+!!
+!! create all hdlcs (i.e. the Ut matrix) 
+!!
+!! more than one image may be provided. In this case, the union of the
+!! connections of all image are used. The Ut matrix is calculated for 
+!! the first image provided.
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_create(this,nat,nicore,spec,micspec,attypes,nimage,xcoords,xweight,mass,spur)
+!! SOURCE
+  use dlf_global, only: printl,stdout
+  use dlf_allocate, only: allocate, deallocate
+  use dlf_parameter_module, only: rk
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer ,intent(in) :: nat
+  integer, intent(in) :: nicore
+  integer ,intent(in) :: spec(nat)
+  integer, intent(in) :: micspec(nat)
+  integer ,intent(in) :: attypes(nat)
+  integer ,intent(in) :: nimage
+  real(rk),intent(in) :: xcoords(3,nimage*nat)
+  real(rk),intent(in) :: xweight(nat)
+  real(rk),intent(in) :: mass(nat)
+  real(rk),intent(out),optional :: spur
+  !
+  integer             :: ngroups
+  real(rk),allocatable:: vconstr(:) !max(1,nconstr) ! value of the constraint??
+  TYPE (matrix)       :: cns, xyz
+  INTEGER, pointer    :: iconn(:,:)
+  TYPE (int_matrix)   :: con
+  integer             :: iatom, group, ifin,idum,length, istart,nconn
+  integer             :: i,j,fail,ncart,maxcon,iimage,iphdlc,ipinner,ipouter
+  integer             :: ires, iat,irun
+  real(rk),allocatable:: atmp(:)
+  integer, allocatable:: atmpi(:)
+  integer             :: nconst_here,nconst_sum
+  integer             :: iregion
+! **********************************************************************
+
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_create")
+
+  this%lhdlc=.true. ! this does not seem to have any effect ...
+
+! ngroups: number of HDLC residues in hdlc%resn
+! the variable hdlc%ngroups has to denote the number of actually allocated
+!   residues
+  j = 0
+  ncart = 0
+  ngroups = 0
+  DO i = 1, nat
+    IF (this%resn(i)==0) THEN
+      ncart = ncart + 1
+    else if (this%resn(i)<0) then
+      cycle
+    ELSE IF (this%resn(i)>j) THEN
+      ngroups = ngroups + 1
+      j = this%resn(i)
+    END IF
+  END DO
+
+  call allocate(vconstr,max(1,this%nconstr))
+  vconstr(:)=0.D0
+  
+  IF (printl>=6) WRITE (stdout,'(/,a,i4,a)') &
+      'Generating new HDLC for ', ngroups, ' residues'
+
+! loop over all groups
+! icoords is ordered with inner region coords followed by
+! outer region coords. ip (icoords position) must be set 
+! accordingly.
+  ipinner = 1
+  ipouter = nicore + 1
+  this%first=1
+  nconst_sum=0
+  do ires=1,ngroups
+    ! Determine which region the residue is in by the 
+    ! micspec value of the first atom in it
+    ! NB: for standard (non-microiterative) optimisations, 
+    ! all residues are considered to be 'inner'
+    iregion = micspec(this%res(ires)%at(1))
+    if (iregion == 1) then
+       iphdlc = ipinner
+    else
+       iphdlc = ipouter
+    end if
+    ! Residues must not contain a mix of inner and outer atoms
+    do i = 1, this%res(ires)%natom
+       if (micspec(this%res(ires)%at(i)) /= iregion) then
+          write (stdout,'(3x,a,i4,a)') 'Residue number ', ires, &
+               ' crosses inner/outer boundary.'
+          write (stdout,'("   Atoms: ",10i6)') this%res(ires)%at(:)
+          call dlf_fail("HDLC residue crosses inner/outer boundary")
+       end if
+    end do
+    this%res(ires)%ip=iphdlc
+    iphdlc=iphdlc+this%res(ires)%natom * 3
+
+    length=this%res(ires)%natom
+! now we have group, istart, ifin
+    istart=1
+    ifin=1 !dummies to be removed - IMPROVE!
+    IF (printl>=6) THEN
+      WRITE (stdout,'(/,a)') 'Located a new residue for HDLC'
+      WRITE (stdout,'(3x,a,i4)') 'Residue number is ', ires
+      WRITE (stdout,'(3x,a,i5)') 'Number of atoms it contains ',length
+      WRITE (stdout,'("   Atoms: ",10i6)') this%res(ires)%at(:)
+    END IF
+    IF (length<2) THEN
+      CALL hdlc_errflag('No residue can contain less than two atoms', &
+          'stop')
+    END IF
+    xyz = matrix_create(3*length,1,'XYZ')
+
+    ! define res%xweight
+    do iat=1,length
+      this%res(ires)%xweight(iat)=xweight(this%res(ires)%at(iat))
+    end do
+
+    ! get connections for primitive internals
+    IF (this%contyp==0) THEN
+
+      nconn=0
+      maxcon=length
+      allocate (iconn(2,maxcon)) ! pointer
+
+      ! get connections from the images, using image 1 as last one,
+      !  because these xyz coordinates should remain
+      do iimage=nimage,1,-1
+        !check in atom coordinates
+        call allocate(atmp,3*length)
+        do iat=1,length
+          atmp((iat-1)*3+1:(iat-1)*3+3)= &
+              xcoords(:, (iimage-1)*nat + this%res(ires)%at(iat))
+        end do
+        !CALL dummyarg_checkin(reshape(xcoords(:,(iimage-1)*nat+1:iimage*nat),&
+        !    (/3*nat/)),3*(istart-1)+1,3*length)
+        idum = matrix_set(xyz,size(atmp),atmp)
+        !CALL dummyarg_clear
+        call deallocate(atmp)
+
+        !CALL dummyarg_checkin(attypes,istart,length)
+        call allocate(atmpi,length)
+        do iat=1,length
+          atmpi(iat)=attypes(this%res(ires)%at(iat))
+        end do
+        CALL connect_prim(length,maxcon,atmpi,nconn,iconn,xyz)
+        call deallocate(atmpi)
+        !CALL dummyarg_clear
+      end do
+
+      ! check in user connections and create connections matrix
+      CALL ci_conn(con,nconn,iconn,this%nincon,this%incon,length,&
+          this%res(ires)%at)
+      DEALLOCATE (iconn) ! pointer
+
+      ! check in constraints
+      CALL assign_cons(cns,this%iconstr,this%nconstr,vconstr, &
+          1,length,this%res(ires)%at,this%internal,nconst_here)
+      iphdlc=iphdlc-nconst_here
+
+      ! create the HDLC - primitives
+      if(present(spur))then
+        CALL this%hdlc_create(this%res(ires),xyz,con,cns,ires,spur)
+      else
+        CALL this%hdlc_create(this%res(ires),xyz,con,cns,ires)
+      endif
+      idum = int_matrix_destroy(con)
+      idum = matrix_destroy(cns)
+
+      ! create the HDLC - total connection scheme - no check if only stretch constr.
+    ELSE ! (ctrl%contyp.eq.0 ...)
+
+      !check in atom coordinates
+      call allocate(atmp,3*length)
+      do iat=1,length
+        atmp((iat-1)*3+1:(iat-1)*3+3)=xcoords(:,this%res(ires)%at(iat))
+      end do
+      idum = matrix_set(xyz,size(atmp),atmp)
+      call deallocate(atmp)
+
+      !CALL dummyarg_checkin(reshape(xcoords,(/3*nat/)),3*(istart-1)+1,3*length)
+      !idum = matrix_set(xyz,dummyarg)
+      !CALL dummyarg_clear
+
+      CALL assign_cons(cns,this%iconstr,this%nconstr,vconstr, &
+          1,length,this%res(ires)%at,this%internal,nconst_here)
+      iphdlc=iphdlc-nconst_here
+      if(present(spur)) then
+        CALL this%hdlc_create(this%res(ires),xyz,con,cns,ires,spur)
+      else
+        CALL this%hdlc_create(this%res(ires),xyz,con,cns,ires)
+      endif
+      idum = matrix_destroy(cns)
+    END IF ! (ctrl%contyp.eq.0 ...)
+
+! restore the error counter
+    this%res(ires)%err_cnt = this%err_cnt(ires)
+    idum = matrix_destroy(xyz)
+    nconst_sum=nconst_sum+nconst_here
+
+    ! Write out mapping of HDLCs to internal coordinates
+    ! Useful for identifying which HDLC the max grad component 
+    ! corresponds to during an optimisation
+    if (printl >= 6) then
+       write(stdout, '("   Residue ", i6, " has internal coords ", i6, &
+            " to ", i6)') ires, this%res(ires)%ip, iphdlc-1
+    end if
+
+    ! update inner or outer coords position marker
+    if (iregion == 1) then
+       ipinner = iphdlc
+    else
+       ipouter = iphdlc
+    end if
+
+  END DO ! ires=1,ngroups
+  call deallocate(vconstr)
+
+  this%nconstr=nconst_sum
+  
+end subroutine dlf_hdlc_create
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_getweight
+!!
+!! FUNCTION
+!!
+!! return weights on internal coordinates
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_getweight(this,nat,nivar,nicore,micspec,xweight,iweight)
+!! SOURCE
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: printl,stdout  
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer ,intent(in) :: nat
+  integer ,intent(in) :: nivar
+  integer ,intent(in) :: nicore
+  integer ,intent(in) :: micspec(nat)
+  real(rk),intent(in) :: xweight(nat)   ! only used for cartesians
+  real(rk),intent(out):: iweight(nivar)
+  integer             :: iphdlc,group,iat,length,ndfhdlc,inta2(2)
+  integer             :: ipinner, ipouter
+  TYPE (residue_type) :: residue
+! **********************************************************************
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_getweight")
+
+  iweight(:)=0.D0
+  ipinner = 1
+  ipouter = nicore + 1
+  DO group = 1, this%ngroups
+ 
+    ! ignore deleted residues
+    if(this%res(group)%name==-1) cycle
+    residue=this%res(group)
+    iphdlc = residue%ip 
+    length = residue%natom
+
+    if(.not.allocated(this%res(group)%iweight%data)) then
+      call dlf_fail("No weights present in dlf_hdlc_getweight")
+    end if
+
+    !ndfhdlc = 3*length - residue%ncons ! orig
+    inta2=shape(this%res(group)%iweight%data)
+    ndfhdlc=inta2(1)
+
+    iweight(iphdlc:iphdlc+ndfhdlc-1)=reshape(  &
+        this%res(group)%iweight%data(:,:),(/ndfhdlc/))
+    ! for correct start of cartesians
+    if (iphdlc <= nicore) then
+       ipinner = ipinner + ndfhdlc-this%nmin
+    else 
+       ipouter = ipouter + ndfhdlc-this%nmin
+    end if
+
+  end DO
+
+  DO iat = 1, nat
+    IF (this%resn(iat)==0) THEN
+       if (micspec(iat) == 1) then
+          iweight(ipinner:ipinner+2) = xweight(iat)
+          ipinner = ipinner + 3
+       else
+          iweight(ipouter:ipouter+2) = xweight(iat)
+          ipouter = ipouter + 3
+       end if
+    end IF
+  end DO
+
+end subroutine dlf_hdlc_getweight
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_xtoi
+!!
+!! FUNCTION
+!!
+!! convert Cartesian -> HDLC
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_xtoi(this,nat,nivar,nicore,micspec,xcoords,xgradient,&
+     icoords,igradient,spur)
+!! SOURCE
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: printl,stdout  
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer ,intent(in) :: nat
+  integer ,intent(in) :: nivar
+  integer, intent(in) :: nicore
+  integer ,intent(in) :: micspec(nat)  
+  real(rk),intent(in) :: xcoords(3,nat)
+  real(rk),intent(in) :: xgradient(3,nat)
+  real(rk),intent(out):: icoords(nivar)
+  real(rk),intent(out):: igradient(nivar)
+  real(rk),optional,intent(out) :: spur
+
+  TYPE (residue_type) :: residue
+  TYPE (matrix)       :: cns, xyz, cxyz, chdlc, gxyz, ghdlc
+  integer             :: ndfcons,group,iphdlc,length,ndfhdlc
+  integer             :: idum,j,iat,m,ndfopt
+  integer             :: ipinner, ipouter
+  real(rk),pointer    :: prim_tmp(:) 
+  real(rk),allocatable:: atmp(:)
+! **********************************************************************
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_xtoi")
+
+  IF(this%NGROUPS<1) call dlf_fail("Number of fragements in HDLC must be >0")
+
+  IF (printl>=6) WRITE (stdout,'(/,A)') &
+      'Converting Cartesians to HDLC'
+  ndfcons = 0
+
+  ipinner = 1
+  ipouter = nicore + 1
+
+  DO group = 1, this%ngroups
+ 
+    ! ignore deleted residues
+    if(this%res(group)%name==-1) cycle
+    residue=this%res(group)
+
+    iphdlc = residue%ip 
+    ndfcons = ndfcons + residue%ncons
+    length = residue%natom
+    ndfhdlc = 3*length - residue%ncons
+
+! now we have group, istart, ifin, iphdlc, ndfhdlc; convert coords to HDLC
+    cxyz = matrix_create(3*length,1,'CXYZ')
+    chdlc = matrix_create(3*length-this%nmin,1,'CHDLC')
+    call allocate(atmp,3*length)
+    do iat=1,length
+      atmp((iat-1)*3+1:(iat-1)*3+3)= xcoords(:,residue%at(iat))
+    end do
+    idum = matrix_set(cxyz,size(atmp),atmp)
+
+    CALL this%coord_cart_to_hdlc(residue,cxyz,chdlc,prim_tmp,.FALSE.)
+
+! convert gradient to HDLC
+    gxyz = matrix_create(3*length,1,'GXYZ')
+    ghdlc = matrix_create(3*length-this%nmin,1,'GHDLC')
+    do iat=1,length
+      atmp((iat-1)*3+1:(iat-1)*3+3)= xgradient(:,residue%at(iat))
+    end do
+    !CALL dummyarg_checkin(reshape(xgradient,(/3*nat/)),3*(istart-1)+1,3*length)
+    idum = matrix_set(gxyz,size(atmp),atmp)
+    call deallocate(atmp)
+    !CALL dummyarg_clear
+    if(present(spur)) then
+      CALL this%grad_cart_to_hdlc(residue,cxyz,gxyz,ghdlc,spur)
+    else
+      CALL this%grad_cart_to_hdlc(residue,cxyz,gxyz,ghdlc)
+    endif
+
+! separate between active space and constraints - resize CHDLC and GHDLC
+    IF (residue%ncons/=0) THEN
+      CALL this%hdlc_split_cons(residue,chdlc,.true.)
+      CALL this%hdlc_split_cons(residue,ghdlc,.FALSE.)
+    END IF
+
+! set icoords and igradient, size of chdlc/ghdlc now: ndfhdlc
+    idum = matrix_get(chdlc,ndfhdlc-this%nmin,&
+        icoords(iphdlc:iphdlc+ndfhdlc-this%nmin-1))
+    idum = matrix_get(ghdlc,ndfhdlc-this%nmin,&
+        igradient(iphdlc:iphdlc+ndfhdlc-this%nmin-1))
+
+! prepare for the next group
+    idum = matrix_destroy(cxyz)
+    idum = matrix_destroy(gxyz)
+    idum = matrix_destroy(chdlc)
+    idum = matrix_destroy(ghdlc)
+
+    ! for correct start of cartesians
+    if (iphdlc <= nicore) then
+       ipinner = ipinner + ndfhdlc-this%nmin
+    else
+       ipouter = ipouter + ndfhdlc-this%nmin
+    end if
+
+  END DO ! group = 1,hdlc%ngroups
+
+! check in Cartesians - no cartesian constraints implemented!
+  j = 0
+  DO iat = 1, nat
+    IF (this%resn(iat)==0) THEN
+       if (micspec(iat) == 1) then
+          iphdlc = ipinner
+       else
+          iphdlc = ipouter
+       end if
+       DO m = 0, 2
+          icoords(iphdlc+m) =   xcoords(m+1,iat)
+          igradient(iphdlc+m) = xgradient(m+1,iat)
+       END DO
+       iphdlc = iphdlc + 3
+       if (micspec(iat) == 1) then
+          ipinner = iphdlc
+       else
+          ipouter = iphdlc
+       end if
+    END IF
+  END DO ! iat = 1,nat
+
+  if (ipinner /= nicore + 1) then
+     write(stdout,*) "ipinner, nicore=", ipinner, nicore
+     call dlf_fail("Error in the transformation hdlc_xtoi (inner)")
+  end if
+  if (ipouter /= nivar + 1) then
+     write(stdout,*) "ipouter, nivar=", ipouter, nivar
+     call dlf_fail("Error in the transformation hdlc_xtoi (outer)")
+  end if
+
+end subroutine dlf_hdlc_xtoi
+!!****
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_itox
+!!
+!! FUNCTION
+!!
+!!  convert HDLC -> Cartesian
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_itox(this,nat,nivar,nicore,micspec,icoords,xcoords,tok)
+!! SOURCE
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: printl,stdout  
+  use dlf_allocate, only: allocate, deallocate
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer ,intent(in)   :: nat
+  integer ,intent(in)   :: nivar
+  integer, intent(in)   :: nicore
+  integer ,intent(in)   :: micspec(nat) 
+  real(rk),intent(in)   :: icoords(nivar)
+  real(rk),intent(inout):: xcoords(3,nat)
+  logical ,intent(out)  :: tok
+  !
+  TYPE (residue_type)   :: residue
+  TYPE (matrix)         :: cns, xyz, cxyz, chdlc, gxyz, ghdlc
+  integer               :: ndfcons,group,iphdlc,length,ndfhdlc
+  integer               :: idum,j,iatom,m,ndfopt,i,iat
+  integer               :: ipinner, ipouter
+  real(rk),allocatable  :: atmp(:)
+! **********************************************************************
+
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_itox")
+
+  IF(this%NGROUPS<1) call dlf_fail("Number of fragemnts in HDLC must be >0")
+
+  tok=.true.
+  this%interror=.false.
+  IF (printl>=6) WRITE (stdout,'(/,A)') &
+      'Converting HDLC to Cartesians'
+
+  ipinner = 1
+  ipouter = nicore + 1
+
+! loop over all residues
+  this%ngroupsdrop = 0
+  ndfcons = 0
+  DO group = 1, this%ngroups
+    residue = this%res(group)
+    ! ignore deleted residues
+    if(this%res(group)%name==-1) cycle
+
+    iphdlc = residue%ip 
+    ndfcons = ndfcons + residue%ncons
+    length = residue%natom
+    ndfhdlc = 3*length - residue%ncons
+
+! now we have group, istart, ifin, iphdlc, ndfhdlc; check out HDLC coordinates
+    chdlc = matrix_create(ndfhdlc-this%nmin,1,'CHDLC')
+    cxyz = matrix_create(3*length,1,'CXYZ')
+    !CALL dummyarg_checkin(icoords,iphdlc,ndfhdlc-hdlc%nmin)
+    idum = matrix_set(chdlc,ndfhdlc-this%nmin,icoords(iphdlc:iphdlc+ndfhdlc-this%nmin-1))
+    call allocate(atmp,3*residue%natom)
+    do iat=1,length
+      atmp((iat-1)*3+1:(iat-1)*3+3)= xcoords(:,residue%at(iat))
+    end do
+    idum = matrix_set(cxyz,size(atmp),atmp) !xcoords(:,istart:istart+residue%natom-1))
+
+! restore values of constrained variables if required
+    IF (residue%ncons/=0) THEN
+      CALL this%hdlc_rest_cons(residue,chdlc)
+    END IF
+
+! fit Cartesian coordinates to HDLC coordinates; size of chdlc now: 3*length
+    CALL this%coord_hdlc_to_cart(residue,cxyz,chdlc)
+
+! conversion HDLC -> Cartesian failed due to singular G matrix
+    IF ( .NOT. residue%lgmatok) THEN
+      tok=.false.
+      residue%err_cnt = residue%err_cnt + 1000
+
+      IF (printl>=6) WRITE (stdout,'(3X,A,I4,A,I4,/)') &
+          'Conversion of residue ', residue%name, &
+          ' failed , HDLC failure gauge: ', residue%err_cnt
+
+! persistent HDLC failure - remove residue if there are no constraints
+      IF (residue%err_cnt>=1990) THEN
+        ! the removal of a residue is broken since the introduction of residue%at and
+        ! residue %xweight. Thus stop.
+        WRITE (stdout,'(A,I4,A)') &
+              'Cyclic failure at residue ', residue%name, &
+              ', stopping'
+        call dlf_fail("Residue conversion error")
+
+        IF (residue%ncons>0) THEN
+          this%interror = .TRUE.
+          IF (printl>=6) WRITE (stdout,'(A,I4,A,I4)') &
+              'Warning: could not remove residue', residue%name, &
+              ', number of constraints: ', residue%ncons
+        ELSE
+          this%ngroupsdrop = this%ngroupsdrop + 1
+          IF (printl>=6) WRITE (stdout,'(A,I4,A)') &
+              'Cyclic failure - removing residue ', residue%name, &
+              ' from list'
+          DO i = 1,length
+            this%resn(residue%at(i)) = -10 ! changed from -2 to -10
+          END DO
+        END IF
+      END IF
+
+      ! leave xcoords for this residue unchanged if failes
+
+! conversion HDLC -> Cartesian was successful
+    ELSE
+      residue%err_cnt = residue%err_cnt/2
+      IF (printl>=6) WRITE (stdout,'(5X,A,I5,A,I3,/)') 'Residue ', &
+          residue%name, ', HDLC failure gauge: ', residue%err_cnt
+
+      ! check in coordinates
+      idum=matrix_get(cxyz,3*residue%natom,atmp)
+      do iat=1,length
+        xcoords(:,residue%at(iat))=atmp((iat-1)*3+1:(iat-1)*3+3)
+      end do
+      !idum=matrix_get(cxyz,xcoords(:,istart:istart+length-1))
+
+    END IF
+
+! prepare for the next group
+    ! for correct start of cartesians
+    if (iphdlc <= nicore) then
+       ipinner = ipinner + ndfhdlc-this%nmin
+    else
+       ipouter = ipouter + ndfhdlc-this%nmin
+    end if
+    idum = matrix_destroy(cxyz)
+    idum = matrix_destroy(chdlc)
+    call deallocate(atmp)
+    this%res(group) = residue 
+  END DO ! (group = 1,ngroups)
+
+! check in Cartesians
+  DO iatom = 1, nat
+    IF (this%resn(iatom)==0) THEN
+       if (micspec(iatom) == 1) then
+          iphdlc = ipinner
+       else
+          iphdlc = ipouter
+       end if
+       DO m = 0, 2
+          xcoords(m+1,iatom) = icoords(iphdlc+m)
+       END DO
+       iphdlc = iphdlc + 3
+       if (micspec(iatom) == 1) then
+          ipinner = iphdlc
+       else
+          ipouter = iphdlc
+       end if
+    END IF
+  END DO 
+
+  if (ipinner /= nicore + 1) then
+     write(stdout,*) "ipinner, nicore=", ipinner, nicore
+     call dlf_fail("Error in the transformation hdlc_itox (inner)")
+  end if
+  if (ipouter /= nivar + 1) then
+     write(stdout,*) "ipouter, nivar=", ipouter, nivar
+     call dlf_fail("Error in the transformation hdlc_itox (outer)")
+  end if
+
+! if geometry died, save err_cnt and destroy all HDLC residues and restart
+! tok is returned. It is the responsibility of the calling routine to call
+! dlf_hdlc_reset if the HDLCs should really be destroyed.
+!!$  IF ( .NOT. tok) THEN
+!!$    CALL hdlc_destroy_all(.TRUE.,hdlc%err_cnt)
+!!$    hdlc%ngroups = hdlc%ngroups - ngroupsdrop
+!!$
+!!$! if a residue has been removed, its number is set to -10 to prevent checkin
+!!$    DO iatom = 1, nat
+!!$      IF (hdlc%resn(iatom)==-10) hdlc%resn(iatom) = -1 ! this has to be checked ...
+!!$    END DO
+!!$    IF (interror) THEN
+!!$      call dlf_fail("Giving up on HDLC due to a residue that does not &
+!!$          &converge and contains constraints")
+!!$    END IF
+!!$  END IF
+end subroutine dlf_hdlc_itox
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_reset
+!!
+!! FUNCTION
+!!
+!! Reset the internal coordinate definition. Possibly remove one or more
+!! residues. Should be called after a hdlc coordinate breakdown.
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_reset(this)
+!! SOURCE
+  use dlf_global, only:glob
+
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer       :: iatom
+! **********************************************************************
+  if(.not.this%tinit) &
+      call dlf_fail("HDLC not initialised in dlf_hdlc_reset")
+  CALL this%hdlc_destroy_all(.TRUE.,size(this%err_cnt),this%err_cnt)
+! if a residue has been removed, its number is set to -10 to prevent checkin
+  DO iatom = 1, glob%nat ! <--- this is dangerous - improve!
+    IF (this%resn(iatom)==-10) this%resn(iatom) = 0 ! this has to be checked ...
+  END DO
+  this%ngroups = this%ngroups - this%ngroupsdrop
+  this%ngroupsdrop=0
+
+  ! commented out as it leads to termination after the first breakdown
+  !if (hdlc%ngroups==0.and.hdlc%internal) then
+  !  call dlf_fail("Internal coordinates can not be restored. Use cartesians instead")
+  !end if
+
+  IF (this%interror) THEN
+    call dlf_fail("Giving up on HDLC due to a residue that does not &
+        &converge and contains constraints")
+  END IF
+end subroutine dlf_hdlc_reset
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* hdlc/dlf_hdlc_destroy
+!!
+!! FUNCTION
+!!
+!! Destroy the HDLC object and deallocate all arrays
+!!
+!! SYNOPSIS
+subroutine dlf_hdlc_destroy(this)
+!! SOURCE
+  use dlf_parameter_module, only: ik
+  use dlf_global, only: stdout
+  use dlf_allocate, only: deallocate
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  integer             :: fail,igroup
+! **********************************************************************
+  if(.not.this%tinit) return ! nothing to do 
+
+  this%tinit=.false.
+
+  if(this%lhdlc) then
+    CALL this%hdlc_destroy_all(.TRUE.,size(this%err_cnt),this%err_cnt)
+  end if
+
+  ! deallocate arrays of individual residues
+  do igroup=1,size(this%err_cnt)
+    deallocate(this%res(igroup)%xweight) ! pointer
+    deallocate(this%res(igroup)%at)      ! pointer
+  end do
+
+  ! deallocate hdlc arrays
+  call deallocate(this%resn)
+  call deallocate(this%err_cnt)
+  call deallocate(this%iconstr)
+  call deallocate(this%incon)
+  call deallocate(this%bhdlc_matrix)
+  ! deallocate residues - no storage check available
+  ! this was previously commented out because of a bug in pgf90
+  ! however not deallocating it causes problems with ifort, giving an
+  ! error of array already allocated if an (h)dlc job is run twice in the
+  ! same chemshell script. This code doesn't seem to cause pgf90 any 
+  ! problems any more anyway (as of v9.0)
+  deallocate(this%res,stat=fail)
+  if(fail>0) then
+    call dlf_fail("Deallocation error at residues")
+  end if
+  
+end subroutine dlf_hdlc_destroy
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_checkpoint_hdlc_write(this)
+  ! Write HDLC data to checkpoint file
+  use dlf_checkpoint, only: tchkform
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  logical :: lerr
+! **********************************************************************
+  if(tchkform) then
+    open(unit=100,file="dlf_hdlc.chk",form="formatted")
+  else
+    open(unit=100,file="dlf_hdlc.chk",form="unformatted")
+  end if
+
+  call hdlc_wr_hdlc(100,this,tchkform,lerr)
+
+  close(100)
+
+end subroutine dlf_checkpoint_hdlc_write
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_checkpoint_hdlc_read(this,lerr)
+  ! Read HDLC data from checkpoint file
+
+  use dlf_checkpoint, only: tchkform
+  implicit none
+  class(hdlc_ctrl), intent(inout) :: this
+  logical ,intent(out) :: lerr
+! **********************************************************************
+  if(tchkform) then
+    open(unit=100,file="dlf_hdlc.chk",form="formatted")
+  else
+    open(unit=100,file="dlf_hdlc.chk",form="unformatted")
+  end if
+
+  call hdlc_rd_hdlc(100,this,tchkform,lerr)
+
+  close(100)
+
+end subroutine dlf_checkpoint_hdlc_read
+  
+  
+
+  SUBROUTINE hdlc_create(this,residue,xyz,con,cns,name,spur)
     use dlf_global
     ! create residue hdlc%res(name) 
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     INTEGER name
     TYPE (residue_type), intent(inout) :: residue
     TYPE (matrix) :: xyz, cns
     TYPE (int_matrix) :: con
+    real(rk),intent(out),optional :: spur
 
 ! local vars
     LOGICAL failed
@@ -164,20 +1136,20 @@ CONTAINS
     TYPE (matrix) :: chdlc, primweight
 
 ! begin, do linked list stuff
-    IF (printl>=2) THEN
+    IF (printl>=6) THEN
       WRITE (stdout,'(3x,a,i4)') 'Generating HDLC for residue ', name
     END IF
 
     residue%name=name
     residue%next=-1
-    IF (hdlc%ngroups==0) THEN
+    IF (this%ngroups==0) THEN
       ! this is the first residue
       residue%prev=-1
     ELSE
       residue%prev=name-1
-      hdlc%res(name-1)%next=name
+      this%res(name-1)%next=name
     END IF
-    hdlc%ngroups = hdlc%ngroups + 1
+    this%ngroups = this%ngroups + 1
 
 ! clear pointers of the new residue and other values
     NULLIFY (residue%x)
@@ -256,13 +1228,12 @@ CONTAINS
       residue%natom)
 
 ! generate the primitive B matrix
-    CALL hdlc_make_bprim(residue%natom,residue%x,residue%y,residue%z, &
+    CALL this%hdlc_make_bprim(residue%natom,residue%x,residue%y,residue%z, &
       residue%nconn,residue%iconn,residue%nbend,residue%ibend,residue%nrots, &
       residue%irots,residue%np,bprim,ni,residue%xweight,primweight)
 
 ! generate the Ut matrix
-
-    CALL hdlc_make_ut(residue%ut,bprim)
+    CALL this%hdlc_make_ut(residue%ut,bprim)
 
 ! orthogonalise against constrained space
     IF (residue%ncons>0) THEN
@@ -270,10 +1241,9 @@ CONTAINS
     END IF
 
 ! generate HDLC B matrix
-    CALL hdlc_make_bhdlc(bprim,bhdlc,residue%ut)
-    if(glob%iopt == 100 .or. glob%iopt ==101) then
-      glob%b_hdlc(:,:) = bhdlc%data(:,:)
-    endif
+    CALL this%hdlc_make_bhdlc(bprim,bhdlc,residue%ut)
+    !this%bhdlc_matrix(:,:) = bhdlc%data(:,:)
+
     ! iweight_i = (%ut_ij)**2 * primweight_j
     residue%iweight = matrix_create( &
         matrix_dimension(bhdlc,1)-residue%ncons ,1,'i weight')
@@ -289,8 +1259,12 @@ CONTAINS
     idum=matrix_destroy(primweight)
 
 ! generate HDLC inverse G matrix - only as check - set residue%lgmatok
-    CALL hdlc_make_ighdlc(bhdlc,ighdlc,failed)
-    CALL hdlc_report_failure(residue,failed,'create')
+    if(present(spur)) then
+      CALL this%hdlc_make_ighdlc(bhdlc,ighdlc,failed,spur)
+    else
+      CALL this%hdlc_make_ighdlc(bhdlc,ighdlc,failed)
+    endif
+    CALL this%hdlc_report_failure(residue,failed,'create')
 
 ! here would be the initialisation of the internal biasing vector
     allocate (residue%biasv(residue%np))
@@ -305,8 +1279,8 @@ CONTAINS
 
     residue%tbias=.false.
     ! transform coordinates to hdlc once to set bias
-    chdlc = matrix_create(3*residue%natom-hdlc%nmin,1,'CHDLC tmp')
-    call coord_cart_to_hdlc(residue,xyz,chdlc,prim_tmp,.false.)
+    chdlc = matrix_create(3*residue%natom-this%nmin,1,'CHDLC tmp')
+    call this%coord_cart_to_hdlc(residue,xyz,chdlc,prim_tmp,.false.)
     idum = matrix_destroy(chdlc)
 
 ! clean up
@@ -325,9 +1299,10 @@ CONTAINS
 ! Destroys a HDLC residue
 !------------------------------------------------------------------------------
 
-  SUBROUTINE hdlc_destroy(residue)
+  SUBROUTINE hdlc_destroy(this,residue)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (residue_type),intent(inout) :: residue !, first, last
 
 ! local vars
@@ -341,19 +1316,19 @@ CONTAINS
     ! care about linked list
     IF (residue%next/=-1) THEN
       IF (residue%prev/=-1) THEN ! not first, not last
-        hdlc%res(residue%prev)%next=residue%next
-        hdlc%res(residue%next)%prev=residue%prev
+        this%res(residue%prev)%next=residue%next
+        this%res(residue%next)%prev=residue%prev
       ELSE ! first, not last
-        hdlc%first=residue%next
-        hdlc%res(residue%next)%prev=-1
+        this%first=residue%next
+        this%res(residue%next)%prev=-1
       END IF
     ELSE ! not first, last
       IF (residue%prev/=-1) THEN
-        hdlc%last = residue%prev
-        hdlc%res(residue%prev)%next=-1
+        this%last = residue%prev
+        this%res(residue%prev)%next=-1
       ELSE ! first, last
-        hdlc%first=-1
-        hdlc%last=-1
+        this%first=-1
+        this%last=-1
       END IF
     END IF
     ! destroy storage
@@ -378,7 +1353,7 @@ CONTAINS
     idum=matrix_destroy(residue%iweight)
     !idum=matrix_destroy(hdlc%res(residue%name)%iweight)
 
-    hdlc%ngroups = hdlc%ngroups - 1
+    this%ngroups = this%ngroups - 1
     residue%name=-1
 
     ! residue%at and residue%xweight are deallocated in dlf_hdlc_destroy
@@ -398,9 +1373,10 @@ CONTAINS
 ! - the Cartesians are not stored to res%oldxyz
 !------------------------------------------------------------------------------
 
-  SUBROUTINE coord_cart_to_hdlc(res,xyz,chdlc,prim,lback)
+  SUBROUTINE coord_cart_to_hdlc(this,res,xyz,chdlc,prim,lback)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     LOGICAL lback
     REAL (rk), DIMENSION (:), POINTER :: prim
     TYPE (residue_type) :: res
@@ -433,7 +1409,7 @@ CONTAINS
     IF ( .NOT. lback) allocate (prim(res%np))
     call allocate (iut,res%np)
     nip = 0
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       n6 = 3*res%natom - 6
     ELSE
       n6 = 3*res%natom
@@ -497,7 +1473,7 @@ CONTAINS
               print*,prim(nip)
               call dlf_fail("HDLC Bias problem")
             end if
-            if(printl >= 4 .and. abs(prim(nip)-res%biasv(nip)) > 3.D0) then
+            if(printl >= 6 .and. abs(prim(nip)-res%biasv(nip)) > 3.D0) then
               write(stdout,"('Warning, Torsion or improper number ',i4,&
                   &' differs by more than 3.0 from bias. Troubles likely')") nip
               write(stdout,"('Improper=',es15.7,' Bias=',es15.7)") &
@@ -567,7 +1543,7 @@ CONTAINS
           print*,prim(nip)
           call dlf_fail("HDLC Bias problem")
         end if
-        if(printl >= 4 .and. abs(prim(nip)-res%biasv(nip)) > 3.D0) then
+        if(printl >= 6 .and. abs(prim(nip)-res%biasv(nip)) > 3.D0) then
           write(stdout,"('Warning, Torsion or improper number ',i4,&
               &' differs by more than 3.0 from bias. Troubles likely')") nip
               write(stdout,"('Improper=',es15.7,' Bias=',es15.7)") &
@@ -578,10 +1554,10 @@ CONTAINS
 
     res%tbias=.true. ! now, bias is set - this does not seem to work!
     ! to set a residue variable, we have to adress it via hdlc%res(res%name)
-    hdlc%res(res%name)%tbias=.true. 
+    this%res(res%name)%tbias=.true. 
 
 ! Cartesians if required
-    IF ( .NOT. hdlc%internal) THEN
+    IF ( .NOT. this%internal) THEN
       DO i = 1, res%natom
         nip = nip + 1
         prim(nip) = x(i)*fact
@@ -620,7 +1596,7 @@ CONTAINS
     END DO
 
 ! if in internals, set last 6 to zero
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       DO i = n6 + 1, n6 + 6
         p(i) = 0.0D0
       END DO
@@ -650,11 +1626,13 @@ CONTAINS
 ! Convert Cartesian gradient to HDLC
 !------------------------------------------------------------------------------
 
-  SUBROUTINE grad_cart_to_hdlc(res,xyz,gxyz,ghdlc)
+  SUBROUTINE grad_cart_to_hdlc(this,res,xyz,gxyz,ghdlc,spur)
 	use dlf_global
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (residue_type) :: res
     TYPE (matrix) :: xyz, gxyz, ghdlc
+    real(rk),optional,intent(out) :: spur
 
 ! local vars
     LOGICAL failed
@@ -678,7 +1656,7 @@ CONTAINS
 
 ! number of HDLC internals: n6, number of Cartesians: n 
     n = res%natom*3
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       n6 = n - 6
     ELSE
       n6 = n
@@ -686,7 +1664,7 @@ CONTAINS
 
 ! generate a primitive B matrix (force generation of a new matrix)
     idum = matrix_destroy(bprim)
-    CALL hdlc_make_bprim(res%natom,x,y,z,res%nconn,res%iconn,res%nbend, &
+    CALL this%hdlc_make_bprim(res%natom,x,y,z,res%nconn,res%iconn,res%nbend, &
       res%ibend,res%nrots,res%irots,res%np,bprim,ni,res%xweight,primweight)
 
     ! we don't need the weights here, so destroy primweight
@@ -694,12 +1672,17 @@ CONTAINS
 
 ! generate delocalised B matrix (force again)
     idum = matrix_destroy(bhdlc)
-    CALL hdlc_make_bhdlc(bprim,bhdlc,res%ut)
-	glob%b_hdlc = bhdlc%data
+    CALL this%hdlc_make_bhdlc(bprim,bhdlc,res%ut)
+    this%bhdlc_matrix(:,:) = bhdlc%data(:,:)    
+	!glob%b_hdlc = bhdlc%data
 ! generate HDLC inverse G matrix
     idum = matrix_destroy(ighdlc)
-    CALL hdlc_make_ighdlc(bhdlc,ighdlc,failed)
-    CALL hdlc_report_failure(res,failed,'intgrd')
+    if(present(spur)) then
+      CALL this%hdlc_make_ighdlc(bhdlc,ighdlc,failed,spur)
+    else
+      CALL this%hdlc_make_ighdlc(bhdlc,ighdlc,failed)
+    endif
+    CALL this%hdlc_report_failure(res,failed,'intgrd')
 
 ! make HDLC Bt**-1
     bthdlc = matrix_create(n6,n,'HDLC_BT')
@@ -720,92 +1703,6 @@ CONTAINS
 
   END SUBROUTINE grad_cart_to_hdlc
 
-!------------------------------------------------------------------------------
-! subroutine hess_cart_to_hdlc
-!
-! method: intgrd
-!
-! Convert Cartesian hessian to HDLC
-!
-! Johannes Kaestner, 2006
-!------------------------------------------------------------------------------
-
- SUBROUTINE hess_cart_to_hdlc(res,xyz,hxyz,hhdlc)
-
-    IMPLICIT NONE
-! args
-    TYPE (residue_type) :: res
-    TYPE (matrix) :: xyz, hxyz, hhdlc
-
-! local vars
-    LOGICAL failed
-    INTEGER i, idum, n, n6, ni
-    REAL (rk), DIMENSION (:), ALLOCATABLE :: x, y, z
-    REAL (rk), DIMENSION (:,:), POINTER :: ghdlc_dat
-    TYPE (matrix) :: bprim, bhdlc, bthdlc, ighdlc, htmp,primweight
-    real (rk) :: det
-
-! begin, the following exception should never occur
-    IF (res%natom/=matrix_dimension(hxyz,1)/3) THEN
-      WRITE (stdout,'(A,I4,A,I4,A,I4)') 'Residue ', res%name, ', natom: ', &
-        res%natom, '; coordinates, natom: ', matrix_dimension(hxyz,1)/3
-      CALL hdlc_errflag('Size mismatch','abort')
-    END IF
-
-! allocate temporary space and separate Cartesian components
-    call allocate (x,res%natom)
-    call allocate (y,res%natom)
-    call allocate (z,res%natom)
-    CALL hdlc_linear_checkin(xyz,res%natom,x,y,z)
-
-! number of HDLC internals: n6, number of Cartesians: n 
-    n = res%natom*3
-    IF (hdlc%internal) THEN
-      n6 = n - 6
-    ELSE
-      n6 = n
-    END IF
-
-! generate a primitive B matrix (force generation of a new matrix)
-    idum = matrix_destroy(bprim)
-    CALL hdlc_make_bprim(res%natom,x,y,z,res%nconn,res%iconn,res%nbend, &
-      res%ibend,res%nrots,res%irots,res%np,bprim,ni,res%xweight,primweight)
-
-    ! we don't need the weights here, so destroy primweight
-    idum=matrix_destroy(primweight)
-
-
-! generate delocalised B matrix (force again)
-    idum = matrix_destroy(bhdlc)
-    CALL hdlc_make_bhdlc(bprim,bhdlc,res%ut)
-
-! generate HDLC inverse G matrix
-    idum = matrix_destroy(ighdlc)
-    CALL hdlc_make_ighdlc(bhdlc,ighdlc,failed)
-    CALL hdlc_report_failure(res,failed,'intgrd')
-
-! make HDLC Bt**-1
-    bthdlc = matrix_create(n6,n,'HDLC_BT')
-    idum = matrix_multiply(1.0D0,ighdlc,bhdlc,0.0D0,bthdlc)
-
-! set HDLC hessian  = (Bt**-1) * Cartesian hessian * (Bt**-1)T
-    htmp = matrix_create(n6,n,'Bt**-1 x hxyz')
-    idum = matrix_multiply(1.0D0,bthdlc,hxyz,0.0D0,htmp)
-    idum = matrix_transpose(bthdlc)
-    idum = matrix_multiply(1.0D0,htmp,bthdlc,0.0D0,hhdlc)
-
-! clean up
-    idum = matrix_destroy(htmp)
-    idum = matrix_destroy(bprim)
-    idum = matrix_destroy(bhdlc)
-    idum = matrix_destroy(bthdlc)
-    idum = matrix_destroy(ighdlc)
-
-    call deallocate (z)
-    call deallocate (y)
-    call deallocate (x)
-
-  END SUBROUTINE hess_cart_to_hdlc
 
 !------------------------------------------------------------------------------
 ! subroutine coord_hdlc_to_cart
@@ -820,9 +1717,10 @@ CONTAINS
 ! res%x, res%y, res%z: Cartesians used to generate UT (by hdlc_create)
 !------------------------------------------------------------------------------
 
-  SUBROUTINE coord_hdlc_to_cart(res,xyz,chdlc)
+  SUBROUTINE coord_hdlc_to_cart(this,res,xyz,chdlc)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (residue_type) :: res
     TYPE (matrix) :: xyz, chdlc
 
@@ -862,7 +1760,7 @@ CONTAINS
 
 ! n6 is the number of HDLC in the residue
     n = 3*res%natom
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       n6 = n - 6
     ELSE
       n6 = n
@@ -906,7 +1804,7 @@ CONTAINS
     ! This is to start from zero bias. I am not sure if this is good!
     !CALL vector_initialise(res%biasv,res%np,0.0D0)
 
-    if(printl>=6.and..not.hdlc%internal) then
+    if(printl>=6.and..not.this%internal) then
       write(stdout,"('Fitting to non-redundant internals:')")
       idum=matrix_print(chdlc)
       write(stdout,"('Starting fit from cartesians:')")
@@ -979,9 +1877,9 @@ CONTAINS
       flipped = .FALSE.
 
 ! get HDLC from current Cartesians xyz
-      CALL coord_cart_to_hdlc(res,xyz,olhdlc,prim,.TRUE.)
+      CALL this%coord_cart_to_hdlc(res,xyz,olhdlc,prim,.TRUE.)
       IF (iter>0) THEN
-        IF ( .NOT. hdlc%internal) THEN
+        IF ( .NOT. this%internal) THEN
           j = res%np - res%natom*3
         ELSE
           j = res%np
@@ -1005,18 +1903,18 @@ CONTAINS
     prim => tmp_prim
 
 ! generate a primitive B matrix from current cartesians
-    CALL hdlc_make_bprim(res%natom,x,y,z,res%nconn,res%iconn,res%nbend, &
+    CALL this%hdlc_make_bprim(res%natom,x,y,z,res%nconn,res%iconn,res%nbend, &
       res%ibend,res%nrots,res%irots,res%np,bprim,ni,res%xweight,primweight)
 
     ! we don't need the weights here, so destroy primweight
     idum=matrix_destroy(primweight)
 
 ! generate HDLC B matrix
-    CALL hdlc_make_bhdlc(bprim,bhdlc,res%ut)
+    CALL this%hdlc_make_bhdlc(bprim,bhdlc,res%ut)
 
 ! generate HDLC inverse G matrix
-    CALL hdlc_make_ighdlc(bhdlc,ighdlc,failed)
-    CALL hdlc_report_failure(res,failed,'getcrt')
+    CALL this%hdlc_make_ighdlc(bhdlc,ighdlc,failed)
+    CALL this%hdlc_report_failure(res,failed,'getcrt')
 
 ! make HDLC Bt**-1
     idum = matrix_multiply(1.0D0,ighdlc,bhdlc,0.0D0,bthdlc)
@@ -1100,7 +1998,7 @@ CONTAINS
 
 ! set xyz = oldxyz + [Bt**-1] * trust * [HDLC-HDLC(xyz(i))]
 ! if internal, create a scratch copy of dif with the last six elements missing
-      IF (hdlc%internal) THEN
+      IF (this%internal) THEN
         scrdif = matrix_create(n6,1,'scrdif')
         call allocate (tmp_dif,n)
         idum = matrix_get(dif,n,tmp_dif)
@@ -1173,12 +2071,13 @@ CONTAINS
 ! lstore: constrained HDLC coordinates are stored to vcons if (lstore) (in)
 !------------------------------------------------------------------------------
 
-  SUBROUTINE hdlc_split_cons(residue,hdlc_mat,lstore)
+  SUBROUTINE hdlc_split_cons(this,residue,hdlc_mat,lstore)
+    class(hdlc_ctrl), intent(inout) :: this
     LOGICAL lstore
     TYPE (residue_type) :: residue
     TYPE (matrix) :: hdlc_mat
 
-    CALL split_cons(hdlc_mat,lstore,hdlc%internal,residue%natom, &
+    CALL split_cons(hdlc_mat,lstore,this%internal,residue%natom, &
         residue%ncons,residue%vcons)
   END SUBROUTINE hdlc_split_cons
 
@@ -1194,11 +2093,12 @@ CONTAINS
 !           matrix of all HDLC coordinates (out)
 !------------------------------------------------------------------------------
 
-  SUBROUTINE hdlc_rest_cons(residue,hdlc_mat)
+  SUBROUTINE hdlc_rest_cons(this,residue,hdlc_mat)
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (residue_type) :: residue
     TYPE (matrix) :: hdlc_mat
 
-    CALL rest_cons(hdlc_mat,hdlc%internal,residue%natom,residue%ncons,residue%vcons)
+    CALL rest_cons(hdlc_mat,this%internal,residue%natom,residue%ncons,residue%vcons)
   END SUBROUTINE hdlc_rest_cons
 
 !==============================================================================
@@ -1242,10 +2142,11 @@ CONTAINS
 ! bprim        = pointer to primitive redundant B matrix
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_make_bprim(natom,x,y,z,nconn,iconn,nbend,ibend,nrots,irots, &
+  SUBROUTINE hdlc_make_bprim(this,natom,x,y,z,nconn,iconn,nbend,ibend,nrots,irots, &
       np,bprim,ni,xweight,primweight)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     INTEGER,intent(in) ::  natom
     INTEGER            :: nconn, nbend, nrots, np, ni
     INTEGER            :: iconn(2,nconn), ibend(4,nbend), irots(4,nrots)
@@ -1271,7 +2172,7 @@ CONTAINS
     IF (printl>=6) WRITE (stdout,'(5X,A)') 'Entering B matrix generator'
 
 ! count the number of primitives
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       ni = nconn + nbend + nrots
     ELSE
       ni = 3*natom + nconn + nbend + nrots
@@ -1288,7 +2189,7 @@ CONTAINS
 
 ! report
     IF (printl>=6) THEN
-      IF (hdlc%internal) THEN
+      IF (this%internal) THEN
         WRITE (stdout,'(5X,A,I5,/)') 'Number of internal coordinates = ', ni
       ELSE
         WRITE (stdout,'(5X,A,I5)') 'Number of primitives = ', ni
@@ -1601,7 +2502,7 @@ CONTAINS
     END DO
 
 ! put in cartesians
-    IF ( .NOT. hdlc%internal) THEN
+    IF ( .NOT. this%internal) THEN
       DO i = 1, natom
         DO j = 1, 3
           noint = noint + 1
@@ -1652,6 +2553,9 @@ CONTAINS
         rij(m) = c(m+jaind) - c(m+iaind)
         dijsq = dijsq + rij(m)**2
       END DO
+      if (dijsq <= 1d-23) then
+        call dlf_error("verkackt")
+      endif
       DO m = 1, 3
         b(m,1,noint) = -rij(m)/sqrt(dijsq)
         b(m,2,noint) = -b(m,1,noint)
@@ -1781,7 +2685,7 @@ CONTAINS
 !//////////////////////////////////////////////////////////////////////////////
 
   END SUBROUTINE hdlc_make_bprim
-
+  
 
 !//////////////////////////////////////////////////////////////////////////////
 ! subroutine hdlc_make_ut
@@ -1812,9 +2716,10 @@ CONTAINS
 !
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_make_ut(ut,bprim)
+  SUBROUTINE hdlc_make_ut(this,ut,bprim)
     IMPLICIT NONE
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (matrix) :: bprim, ut
 
 ! local params
@@ -1832,7 +2737,7 @@ CONTAINS
     n = matrix_dimension(bprim,2)
 
 ! n6: number of delocalised internal coordinates
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       n6 = n - 6
     ELSE
       n6 = n
@@ -1891,7 +2796,7 @@ CONTAINS
       WRITE (stdout,'(/,5x,a,i5,a,i5,a,/)') &
           'The system has ', n6, ' degrees of freedom, and ', j, &
           ' non-zero eigenvalues'
-      IF (hdlc%ngroups==1 .AND. hdlc%internal .AND. hdlc%contyp==1) THEN
+      IF (this%ngroups==1 .AND. this%internal .AND. this%contyp==1) THEN
         CALL hdlc_errflag( &
           'DLC based on total connection cannot be used for a planar system', &
           'stop')
@@ -1938,9 +2843,10 @@ CONTAINS
 !
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_make_bhdlc(bprim,bhdlc,ut)
+  SUBROUTINE hdlc_make_bhdlc(this,bprim,bhdlc,ut)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     TYPE (matrix) :: bhdlc, bprim, ut
 
 ! local vars
@@ -1949,7 +2855,7 @@ CONTAINS
 ! begin, get dimensions of B matrix
     np = matrix_dimension(bprim,1)
     n = matrix_dimension(bprim,2)
-    IF (hdlc%internal) THEN
+    IF (this%internal) THEN
       n6 = n - 6
     ELSE
       n6 = n
@@ -1966,6 +2872,7 @@ CONTAINS
     IF (printl>=6) idum = matrix_print(bhdlc)
 
   END SUBROUTINE hdlc_make_bhdlc
+  
 
 !//////////////////////////////////////////////////////////////////////////////
 ! subroutine hdlc_make_ighdlc
@@ -1985,11 +2892,13 @@ CONTAINS
 !
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_make_ighdlc(bhdlc,ighdlc,failed)
+  SUBROUTINE hdlc_make_ighdlc(this,bhdlc,ighdlc,failed,spur)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     LOGICAL failed
     TYPE (matrix) :: bhdlc, ighdlc
+    real(rk),intent(out),optional :: spur
 
 ! local params
     REAL (rk) :: cutoff
@@ -1999,8 +2908,8 @@ CONTAINS
     INTEGER i, idum, n, n6
     REAL (rk) :: det
     TYPE (matrix) :: bthdlc
-    integer  ::  j
-    character  :: dateiname
+    integer       ::  j
+
 ! begin, get number of HDLC (n6) and number of cartesians (n)
     n6 = matrix_dimension(bhdlc,1)
     n = matrix_dimension(bhdlc,2)
@@ -2022,19 +2931,30 @@ CONTAINS
         'Matrix printed is G HDLC (= B HDLC * BT HDLC) before inversion'
       idum = matrix_print(ighdlc)
     END IF
-
+    if(present(spur)) then
+      spur = 0d0
+      do j=1,n6
+        spur = spur + ighdlc%data(j,j)
+      enddo
+    endif
     idum = matrix_invert(ighdlc,det,.TRUE.)
+    
 
 ! clean up
     idum = matrix_destroy(bthdlc)
 
 ! check for linear dependency in iG, scale det to be size-independent
     i = matrix_dimension(ighdlc,1)
+   ! print *,det,det**(1.0D0/real(i,rk)),1d0/det,1d0/(det**(1.0D0/real(i,rk)))
     IF (printl>=6) THEN
       WRITE (stdout,'(7X,A,E13.5,/)') 'The HDLC G matrix determinant is ', det
     END IF
+    if(det<0d0) then
+      write(stdout,'(7X,A,E13.5,/)') 'HDLC determinant was',det
+      call dlf_fail("deteminate of HDLC G- matrix is negative!")
+    endif
     det = det**(1.0D0/real(i,rk))
-    failed = (det<cutoff)
+    failed = (det<cutoff)    
   END SUBROUTINE hdlc_make_ighdlc
 
 !==============================================================================
@@ -2189,13 +3109,13 @@ CONTAINS
     end IF
 
     if(igroup/=s_hdlc%ngroups) then
-      if(printl>=4) &
+      if(printl>=6) &
           write(stdout,"('Number of residues in checkpoint file inconsistent')")
       return
     end if
 
     if(contyp/=s_hdlc%contyp) then
-      if(printl>=4) &
+      if(printl>=6) &
           write(stdout,"('Connection type in checkpoint file inconsistent')")
       return
     end if
@@ -2235,7 +3155,7 @@ CONTAINS
       recoverable=.false.
       ! Somtimes, a bond moves to a rotation or vice versa. This may be recoverable
       if(nbend/=res%nbend) then
-        if(printl>=4) then
+        if(printl>=6) then
           write(stdout,"('Number of bends in residue',i4,' inconsistent&
               & in checkpoint file')") igroup
           write(stdout,"('Number of bends created',i4)") res%nbend
@@ -2246,7 +3166,7 @@ CONTAINS
         recoverable=.true.
       end if
       if(nrots/=res%nrots) then
-        if(printl>=4) then
+        if(printl>=6) then
           write(stdout,"('Number of rotations in residue',i4,' inconsistent&
               & in checkpoint file')") igroup
           write(stdout,"('Number of rotations created',i4)") res%nrots
@@ -2257,7 +3177,7 @@ CONTAINS
         recoverable=.true.
       end if
       if(natom/=res%natom) then
-        if(printl>=4) then
+        if(printl>=6) then
           write(stdout,"('Number of atoms in residue',i4,' inconsistent&
               & in checkpoint file')") igroup
           write(stdout,"('This will NOT allow recovery')")
@@ -2266,7 +3186,7 @@ CONTAINS
         recoverable=.false.
       end if
       if(nconn/=res%nconn) then
-        if(printl>=4) then
+        if(printl>=6) then
           write(stdout,"('Number of connections in residue',i4,' inconsistent&
               & in checkpoint file')") igroup
           write(stdout,"('Number of connections created',i4)") res%nconn
@@ -2277,7 +3197,7 @@ CONTAINS
         recoverable=.true.
       end if
       if(ncons/=res%ncons) then
-        if(printl>=4) then
+        if(printl>=6) then
           write(stdout,"('Number of constraints in residue',i4,' inconsistent&
               & in checkpoint file')") igroup
           write(stdout,"('This will NOT allow recovery')")
@@ -2288,9 +3208,9 @@ CONTAINS
 
       ! error check
       if(tchk) then
-        if(printl>=4) write(stdout,"('Problem in reading checkpoint')")
+        if(printl>=6) write(stdout,"('Problem in reading checkpoint')")
         if(recoverable) then
-          if(printl>=4) write(stdout,"('Trying to recover')")
+          if(printl>=6) write(stdout,"('Trying to recover')")
           ! only recover if original arrays are large enough, do 
           ! not reallocate
           ar2=shape(res%ibend)
@@ -2302,21 +3222,21 @@ CONTAINS
                 res%nbend= nbend
                 res%nrots= nrots
                 res%nconn= nconn
-                if(printl>=4) write(stdout,"('Aiming at recovery')")
+                if(printl>=6) write(stdout,"('Aiming at recovery')")
               else
-                if(printl>=4) write(stdout,"('Failed to recover due to number of connections')")
+                if(printl>=6) write(stdout,"('Failed to recover due to number of connections')")
                 return
               end if
             else
-              if(printl>=4) write(stdout,"('Failed to recover due to number of rotations')")
+              if(printl>=6) write(stdout,"('Failed to recover due to number of rotations')")
               return
             end if
           else
-            if(printl>=4) write(stdout,"('Failed to recover due to number of bends')")
+            if(printl>=6) write(stdout,"('Failed to recover due to number of bends')")
             return
           end if
         else
-          if(printl>=4) write(stdout,"('Not trying to recover')")
+          if(printl>=6) write(stdout,"('Not trying to recover')")
           return
         end if
       end if
@@ -2405,7 +3325,7 @@ CONTAINS
 98  tok = .false.
 !    s_hdlc%lhdlc = .FALSE.
 !    IF (igroup>0) CALL hdlc_destroy_all(.FALSE.,idum)
-    IF (printl>=4) WRITE (stdout,'(/,a,i5,a,/)') &
+    IF (printl>=6) WRITE (stdout,'(/,a,i5,a,/)') &
       '*** Problem reading residue ', igroup, ' ***'
   END SUBROUTINE hdlc_rd_hdlc
 
@@ -2420,27 +3340,28 @@ CONTAINS
 ! err_cnt if lsave is set
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_destroy_all(lsave,ngroups,err_cnt)
+  SUBROUTINE hdlc_destroy_all(this,lsave,ngroups,err_cnt)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     LOGICAL lsave
     integer, intent(in)  :: ngroups
     INTEGER, intent(out) :: err_cnt(ngroups)
 
 ! local vars
-    INTEGER i,this
+    INTEGER i,j
 
-    IF (printl>=2) THEN
+    IF (printl>=6) THEN
       WRITE (stdout,'(a,/)') 'Destroying all HDLC residues'
     END IF
     i = 1
-    DO WHILE (hdlc%ngroups/=0)
-      this=hdlc%first
-      IF (lsave .AND. (hdlc%res(this)%err_cnt<2000 .OR. hdlc%res(this)%ncons>0)) THEN
-        err_cnt(i) = hdlc%res(this)%err_cnt
+    DO WHILE (this%ngroups/=0)
+      j=this%first
+      IF (lsave .AND. (this%res(j)%err_cnt<2000 .OR. this%res(j)%ncons>0)) THEN
+        err_cnt(i) = this%res(j)%err_cnt
         i = i + 1
       END IF
-      CALL hdlc_destroy(hdlc%res(this))
+      CALL this%hdlc_destroy(this%res(j))
       
     END DO
   END SUBROUTINE hdlc_destroy_all
@@ -2520,9 +3441,10 @@ CONTAINS
 ! subroutine hdlc_report_failure
 !//////////////////////////////////////////////////////////////////////////////
 
-  SUBROUTINE hdlc_report_failure(residue,failed,location)
+  SUBROUTINE hdlc_report_failure(this,residue,failed,location)
 
 ! args
+    class(hdlc_ctrl), intent(inout) :: this
     LOGICAL failed
     CHARACTER(*) location
     TYPE (residue_type) :: residue
@@ -2530,7 +3452,7 @@ CONTAINS
 ! begin
     residue%lgmatok = ( .NOT. failed)
     IF (failed) THEN
-      IF (printl>=2) WRITE (stdout,'(/,A,I3,A,A,/)') &
+      IF (printl>=6) WRITE (stdout,'(/,A,I3,A,A,/)') &
         'G matrix linear dependent in residue ', residue%name, ', routine: ', &
         location
     END IF
@@ -2556,14 +3478,17 @@ CONTAINS
     END DO
   END SUBROUTINE vector_initialise
 
-END MODULE dlfhdlc_hdlclib
 
-subroutine hdlc_errflag(msg,action)
+
+
+end module oop_hdlc
+
+subroutine hdlc_gpr_errflag(msg,action)
   implicit none
   character(*),intent(in) :: msg,action
   write(*,'("HDLC-errflag, action: ",a)') action
   call dlf_fail(msg)
-end subroutine hdlc_errflag
+end subroutine hdlc_gpr_errflag
 
 #ifndef GAMESS
 !------------------------------------------------------------------------------
@@ -2571,13 +3496,13 @@ end subroutine hdlc_errflag
 !
 ! Flush the I/O buffers of standard output
 !------------------------------------------------------------------------------
-SUBROUTINE dlf_flushout()
+SUBROUTINE dlf_gpr_flushout()
   use dlf_global, only: stdout
   CALL flush(stdout)
-END SUBROUTINE dlf_flushout
+END SUBROUTINE dlf_gpr_flushout
 #else
-SUBROUTINE dlf_flushout()
+SUBROUTINE dlf_gpr_flushout()
   CALL flushout
-END SUBROUTINE dlf_flushout
-#endif
-
+END SUBROUTINE dlf_gpr_flushout
+#endif  
+  

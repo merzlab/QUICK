@@ -15,14 +15,7 @@
 !! Support routines for microiterative optimisation
 !!
 !! COMMENTS
-!! Implemented under the HECToR dCSE project
-!! "Microiterative QM/MM Optimisation for Materials Chemistry"
-!! T.W. Keal, P. Sherwood, A. Walsh, A.A. Sokol and C.R.A. Catlow
-!!
-!! www.hector.ac.uk/cse/distributedcse/reports/chemshell02
-!!
-!! The microiterative minimisation algorithm is based on the original 
-!! implementation for HDLCOpt:
+!! Microiterative minimisation based on HDLCOpt implementation:
 !!
 !! Johannes Kaestner, Stephan Thiel, Hans Martin Senn, Paul Sherwood
 !! and Walter Thiel, J. Chem. Theory Comput. v3 p1064 (2007)

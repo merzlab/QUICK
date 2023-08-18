@@ -60,6 +60,7 @@ module dlf_dimer
       ! 0: all rotations covered by the optimiser
       ! 1: rotations by linesearch here. No extrapolation of gradient
       ! 2: rotations by linesearch here. Extrapolation of gradient
+      ! 3: lanczos rotation
     real(rk)              :: delta
     real(rk)              :: emid   ! energy of the dimer midpoint
     real(rk)              :: curve  ! curvature
@@ -83,6 +84,7 @@ module dlf_dimer
     integer               :: nrot ! current number of rotations at fixed midpoint
     integer               :: maxrot ! max number of rotations at fixed midpoint
     real(rk)              :: phi,dcurvedphi
+    real(rk)              :: eigval !smallest eigvenvalue of the hessian at the dimer midpoint (lanczos only)
     ! test               
     logical               :: cdelta
   end type dimer_type
@@ -90,6 +92,16 @@ module dlf_dimer
   ! hard-coded at the moment:
   logical,parameter :: rot_lbfgs=.true.
 end module dlf_dimer
+
+module lanczos_module
+  use dlf_parameter_module, only: rk
+  implicit none
+  real(rk),allocatable,save             ::  Tridiagmtrx(:,:)
+  real(rk),allocatable,save             ::  Orthobasis(:,:)
+  real(rk),allocatable,save             ::  direction(:)
+  real(rk),allocatable,save             ::  newdirection(:)
+  real(rk),allocatable,save             ::  Direc2(:)
+end module
 !!****
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,12 +137,13 @@ subroutine dlf_dimer_init(icoord)
   use dlf_allocate, only: allocate,deallocate
   implicit none
   integer, intent(in)   :: icoord ! choice of dimer details 
-  integer               :: ivar,iat
+  integer               :: ivar,iat,nsample
   real(rk)              :: svar
   real(RK) ,external    :: ddot
-  logical               :: trandom,tplanar
+  logical               :: trandom,tplanar,tlinear
   real(rk)              :: vnormal(3),v1(3),v2(3)
   real(rk) ,parameter   :: tolplanar=1.D-4
+  real(rk) ,allocatable :: tmpcoords(:,:,:) ! 3,nat,1
 ! **********************************************************************
   dimer%cdelta=.false. !<- this does not seem to make a difference
 
@@ -141,6 +154,7 @@ subroutine dlf_dimer_init(icoord)
   dimer%delta=glob%delta
   dimer%status=1
   dimer%nrot=0
+  dimer%eigval=0
   dimer%mode=mod(icoord/10,10)
   dimer%extrapolate_grad=(dimer%mode==2)
   dimer%tolrot=glob%tolrot/180.D0*pi
@@ -154,16 +168,55 @@ subroutine dlf_dimer_init(icoord)
     glob%tcoords2=.true.
     if(glob%tatoms) then
       call allocate(glob%xcoords2,3,glob%nat,1)
+      call allocate(tmpcoords,3,glob%nat,1) 
     else
       call allocate(glob%xcoords2,1,glob%nvar,1)
+      call allocate(tmpcoords,1,glob%nvar,1) 
     end if
 
-    call random_number(glob%xcoords2)
+    ! point on the surface of a 3*nat-dimensional unit sphere: each
+    ! coordinate is drawn from a normal distribution around 0
+    ! (doi:10.1214/aoms/1177692644). Normal distribution is
+    ! approximated by the average over several uniform distributions.
+    nsample=20
+    glob%xcoords2=0.D0
+    do ivar=1,nsample
+      call random_number(tmpcoords)
+      glob%xcoords2=glob%xcoords2+tmpcoords
+    end do
+    call deallocate(tmpcoords)
     ! center coordinates
-    glob%xcoords2=glob%xcoords2-0.5D0
+    glob%xcoords2=glob%xcoords2-0.5D0*dble(nsample)
 
+    !check if system is linear
+    tlinear=.false.
+    if(glob%tatoms.and.glob%nat>=3) then
+      v1=glob%xcoords(:,1)-glob%xcoords(:,2)
+      tlinear=.true.
+      do iat=3,glob%nat
+        v2=glob%xcoords(:,1)-glob%xcoords(:,iat)
+        vnormal(1)=v1(2)*v2(3)-v1(3)*v2(2)
+        vnormal(2)=v1(3)*v2(1)-v1(1)*v2(3)
+        vnormal(3)=v1(1)*v2(2)-v1(2)*v2(1)
+        if(sum(vnormal**2) >= tolplanar ) then
+          tlinear=.false.
+          exit
+        end if
+      end do
+      if(tlinear)then
+        if(printl>=2) write(stdout,*) "System linear, taking care of &
+            &that when randomising dimer direction"
+        svar=sqrt(sum(v1**2))
+        v1=v1/svar
+        do iat=1,glob%nat
+          svar=sum(v1*glob%xcoords2(:,iat,1))
+          glob%xcoords2(:,iat,1)=v1*svar
+        end do
+      end if
+    end if
+    
     !check if system is planar
-    if(glob%tatoms.and.glob%nat>=4) then
+    if(glob%tatoms.and.glob%nat>=4.and..not.tlinear) then
       v1=glob%xcoords(:,1)-glob%xcoords(:,2)
       v2=glob%xcoords(:,1)-glob%xcoords(:,3)
       vnormal(1)=v1(2)*v2(3)-v1(3)*v2(2)
@@ -186,8 +239,8 @@ subroutine dlf_dimer_init(icoord)
           svar=sum(vnormal*glob%xcoords2(:,iat,1))
           glob%xcoords2(:,iat,1)=glob%xcoords2(:,iat,1)-svar*vnormal
         end do
-        print*,"Random direction after planarising:"
-        write(*,'(3f10.5)') glob%xcoords2
+        !print*,"Random direction after planarising:"
+        !write(*,'(3f10.5)') glob%xcoords2
       end if
     end if
 
@@ -452,6 +505,11 @@ subroutine dlf_dimer_xtoi(trerun_energy,testconv)
     ! check overall convergence, set xcoords to x1
     call dlf_dimer_was_midpoint(trerun_energy,testconv)
     if(.not.trerun_energy) return ! converged
+    
+    if (dimer%mode==3) then ! if lanczos method is chosen, initialize
+      call initialize_lanczos(dimer%varperimage)
+    end if
+
     ! now calculate endpoint: g1
     ! dimer%status = 2 is set in dlf_dimer_was_midpoint
   else if (dimer%status == 2) then
@@ -481,6 +539,10 @@ subroutine dlf_dimer_xtoi(trerun_energy,testconv)
       ! now calculate endpoint: g1
       dimer%status = 2
     end if
+  else if (dimer%status == 4) then ! This is only the case for Lanczos
+    ! it can be ignored, if using only dimer rotation
+    call dlf_lanczos(.false.,stoprot)
+    
   else
     call dlf_fail("Wrong dimer%status")
   end if
@@ -489,6 +551,9 @@ subroutine dlf_dimer_xtoi(trerun_energy,testconv)
   ! If the rotations are converged, transform the gradient
   ! ====================================================================
   if(stoprot) then
+    if (dimer%mode==3) then ! if lanczos method is chosen destroy it
+      call destroy_lanczos
+    end if
     ! rotation has converged, transform gradient and return
     if(printl>=2) then
       if(abs(dimer%phi) <= dimer%tolrot) then
@@ -536,11 +601,22 @@ subroutine dlf_dimer_xtoi(trerun_energy,testconv)
     
     ! translational gradient:
     svar=sum(dimer%vector(:) * glob%igradient(1:dimer%varperimage))
-    if(dimer%curve > 0.D0) then
-      glob%igradient(1:dimer%varperimage)=-svar*dimer%vector(:)
-    else
-      glob%igradient(1:dimer%varperimage)=glob%igradient(1:dimer%varperimage) - &
+    if (dimer%mode==3) then
+      ! if using lanczos the condition for the minimum is on the smallest eigenval
+      if(dimer%eigval > 0.D0) then
+        glob%igradient(1:dimer%varperimage)=-svar*dimer%vector(:)
+      else
+        glob%igradient(1:dimer%varperimage)=glob%igradient(1:dimer%varperimage) - &
           2.D0 * svar * dimer%vector(:)
+      end if
+    else
+    ! if using dimer rotation the condition is on the curvature
+      if(dimer%curve > 0.D0) then
+        glob%igradient(1:dimer%varperimage)=-svar*dimer%vector(:)
+      else
+        glob%igradient(1:dimer%varperimage)=glob%igradient(1:dimer%varperimage) - &
+          2.D0 * svar * dimer%vector(:)
+      end if
     end if
 
     dimer%nrot=0
@@ -582,6 +658,7 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   real(rk)              :: dlength,svar
   logical               :: tok,tconv
   real(rk),external     :: ddot
+  real(rk)              :: tmp(1) ! needed for gfortran 10
 ! **********************************************************************
   testconv=.true.
   ! ==================================================================
@@ -589,7 +666,8 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   ! ==================================================================
 
   ! send information to set_tsmode
-  call dlf_formstep_set_tsmode(1,-1,glob%energy) ! send energy
+  tmp(1) = glob%energy
+  call dlf_formstep_set_tsmode(1,-1,tmp(1)) ! send energy
   call dlf_formstep_set_tsmode(glob%nvar,0,glob%xcoords) ! TS-geometry
 
   call dlf_direct_xtoi(glob%nvar,dimer%varperimage,dimer%coreperimage, &
@@ -690,7 +768,13 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   if(printl>=4) write(stdout,"('Next calculation will be the dimer &
       &endpoint before rotation')")
   trerun_energy=.true.
-  dimer%status=2
+  if (dimer%mode==3) then
+    ! For Lanczos rotation
+    dimer%status=4
+  else
+    ! For dimer rotation (every other case)
+    dimer%status=2
+  end if
 end subroutine dlf_dimer_was_midpoint
 !!****
 
@@ -969,7 +1053,296 @@ end subroutine dlf_dimer_was_g1prime
 !!****
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* dimer/dlf_dimer_extrapolate_gradient
+!!****f* dimer/eigVec_to_smallestEigVal
+!!
+!! FUNCTION
+!! * Called at each rotation
+!! * takes a matrix
+!! * return the smallest eigenvalue and the associated eigenvector
+!! 
+!! SYNOPSIS
+subroutine eigVec_to_smallestEigVal(n,A,v,e)
+!! SOURCE
+    use dlf_parameter_module, only: rk
+    implicit none
+    integer, intent(in)     ::  n
+    real(rk), intent(in)    ::  A(n,n)
+    real(rk), intent(out)   ::  v(n)
+    real(rk)                ::  eigvals(n)
+    real(rk), intent(out)   ::  e
+    real(rk)                ::  work(3*n-1)
+    integer                 ::  info = 0
+    call DSYEV('V','U',n,A,n,eigvals,work,3*n-1, info)
+    if (info/=0) STOP "DSYEV did not stop successfully." 
+    e=eigvals(1)
+    v(:) = A(:,1)
+end subroutine eigVec_to_smallestEigVal
+
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dimer/initialize_lanczos
+!!
+!! FUNCTION
+!! * Called before the first rotation before endpoint was calculated
+!! * initialize the variables used in dlf_dimer_was_g1_lanczos
+!! 
+!! SYNOPSIS
+subroutine initialize_lanczos(sdgf)
+  !! SOURCE
+  use dlf_parameter_module, only: rk
+  use lanczos_module
+  use dlf_dimer
+  use dlf_global, only: glob
+  implicit none
+  integer, intent(in)      :: sdgf
+  dimer%nrot=0
+  dimer%maxrot=MIN(glob%maxrot,dimer%varperimage)
+  allocate(Tridiagmtrx(dimer%varperimage,dimer%varperimage))
+  allocate(Orthobasis(dimer%varperimage,dimer%varperimage))
+  allocate(direction(dimer%varperimage))
+  allocate(Direc2(dimer%varperimage))
+  allocate(newdirection(dimer%varperimage))
+  Tridiagmtrx=0
+  Orthobasis=0
+  direction=0     
+end subroutine initialize_lanczos
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dimer/destroy_lanczos
+!!
+!! FUNCTION
+!! * Called when the rotation has converged before the translation
+!! * destroy the arrays used in lanczos
+!! 
+!! SYNOPSIS
+subroutine destroy_lanczos()
+!! SOURCE
+  use lanczos_module
+  use dlf_dimer
+  deallocate(Tridiagmtrx)
+  deallocate(Orthobasis)
+  deallocate(direction)
+  deallocate(Direc2)
+  deallocate(newdirection)
+end subroutine destroy_lanczos
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dimer/dlf_lanczos
+!!
+!! FUNCTION
+!! * Called after the dimer endpoint before rotation was calculated
+!! * calculate new point according to lanczos
+!!
+!! SYNOPSIS
+subroutine dlf_lanczos(internal,stoprot)
+!! SOURCE
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,stderr,stdout,printl,pi
+  use dlf_stat, only: stat
+  use dlf_dimer
+  use dlf_allocate, only: allocate,deallocate
+  use lanczos_module
+  implicit none
+  logical,   intent(in)  :: internal ! internal gradient is already known
+  logical,   intent(out) :: stoprot
+  real(rk)               :: svar,gamma
+  real(rk),  external    :: ddot
+  logical                :: tok
+  
+	integer                :: k
+	real(rk),allocatable   :: testtridiag(:,:)
+	real(rk),allocatable   :: eigvectridiagtest(:)
+ 
+! **********************************************************************
+
+  ! ==================================================================
+  ! This was one endpoint calculation, xcoords contains endpoint 1
+  ! ==================================================================
+  
+  ! increment the current number of rotation 
+  ! (important because it is also the size of the Krylov subspace)
+  dimer%nrot=dimer%nrot+1
+  if(.not.internal) then 
+    call dlf_direct_xtoi(glob%nvar,dimer%varperimage,dimer%coreperimage, &
+        glob%xcoords,glob%xgradient,glob%icoords(dimer%varperimage+1:), &
+        glob%igradient(dimer%varperimage+1:))
+    ! transform coords:
+    
+    dimer%vector(:)=glob%icoords(dimer%varperimage+1:)-glob%icoords(1:dimer%varperimage)
+    glob%icoords(dimer%varperimage+1:)=dimer%vector(:)
+    
+    ! normalise dimer%vector:
+    svar=dsqrt(ddot(dimer%varperimage,dimer%vector,1,dimer%vector,1))
+    if(dimer%cdelta.and.abs(svar-dimer%delta) > 1.D-6 ) then
+      print*,"Error: dimer distance wrong:"
+      print*,"Distance after step:",svar
+      print*,"Required distance:",dimer%delta
+      call dlf_fail("Wrong dimer distance!")
+    end if
+    dimer%vector=dimer%vector/svar
+  end if
+  
+  !   initialize/define the arrays used in lanczos method
+  !   these are the arrays that have to be allocated every time
+  newdirection=0
+  call allocate(testtridiag,dimer%nrot,dimer%nrot)
+  call allocate(eigvectridiagtest,dimer%nrot)
+    
+  ! define the first vector of the orthogonal basis (either the random vector if it's the first cycle, or the dimer direction)
+  if(dimer%nrot==1) then
+    Orthobasis(1,:)=dimer%vector 
+  end if
+  ! put the difference between the dimer's gradients in a vector wi 
+  ! the dimer needs to be oriented in the direction of the ith orthogonal vector
+  Direc2=(glob%igradient(dimer%varperimage+1:)-glob%igradient(1:dimer%varperimage))/dimer%delta
+   
+  ! calculate the ith element (alpha) of the middle diagonal of the tridiagonal matrix 
+  ! (dotproduct between the ith vector of the orthogonal basis and the vector calculated in the last instruction wi)
+  Tridiagmtrx(dimer%nrot,dimer%nrot)=ddot(dimer%varperimage,Direc2,1,Orthobasis(dimer%nrot,:),1)
+   
+  if(dimer%nrot>1) then
+    
+    !  calculate the eigenvector corresponding to the smallest eigenvalue of the tridiagonal matrix
+    !  the eigenvalue is stored in a dimer object parameter because it is used in the subroutine dlf_dimer_xtoi,
+    !  its sign determine whether the midpoint is in a minimum or not
+    testtridiag=Tridiagmtrx(1:dimer%nrot,1:dimer%nrot) 
+	call eigVec_to_smallestEigVal(dimer%nrot,testtridiag,eigvectridiagtest,dimer%eigval)
+	!  calculate the approximated eigenvector corresponding to the smallest eigenvalue of the hessian at midpoint (eigenmode)
+	!  (project the eigenvector of the tridiagonal matrix in the dimer space using the orthogonal basis)
+    do k=1,dimer%varperimage
+      newdirection(k)= ddot(dimer%nrot,Orthobasis(1:dimer%nrot,k),1,eigvectridiagtest,1)
+    end do
+     
+    ! normalise the new direction found (eigenmode)
+    svar=dsqrt(ddot(dimer%varperimage,newdirection,1,newdirection,1))
+	newdirection(:)=newdirection(:)/svar
+	  
+	! calculate a new vector wi perpendicular to the ith vector of the orthogonal basis
+    Direc2(:)=Direc2(:)-Tridiagmtrx(dimer%nrot,dimer%nrot)*Orthobasis(dimer%nrot,:)&
+              -Tridiagmtrx(dimer%nrot-1,dimer%nrot)*Orthobasis(dimer%nrot-1,:)
+    dimer%curve=dimer%eigval
+  else
+    ! if it is the first rotation the element beta(i-1) of the tridiagonal matrix doesn't exist
+    Direc2(:)=Direc2(:)-Tridiagmtrx(dimer%nrot,dimer%nrot)*Orthobasis(dimer%nrot,:)
+    ! *****************************************
+    ! Make the same approximation for the first rotation as in the dimer method
+    ! if the estimated angle is below the tolerance, no rotation is performed
+    dimer%curve=(ddot(dimer%varperimage,glob%igradient(dimer%varperimage+1:),1,&
+        dimer%vector,1)-&
+        ddot(dimer%varperimage,glob%igradient(1:dimer%varperimage),1,&
+        dimer%vector,1))/dimer%delta
+    ! direction for rotation:
+    dimer%rotgrad(:)=glob%igradient(dimer%varperimage+1:)- &
+        glob%igradient(1:dimer%varperimage)
+    ! weight direction for rotation
+    dimer%rotgrad(:)=dimer%rotgrad(:) * glob%iweight(1:dimer%varperimage)
+    ! orthogonalise to vector
+    svar=ddot(dimer%varperimage,dimer%vector,1, dimer%rotgrad,1)
+    dimer%rotgrad(:)=dimer%rotgrad(:) - svar * dimer%vector(:)
+    dimer%rotdir = - dimer%rotgrad/dsqrt(ddot(dimer%varperimage,dimer%rotgrad,1&
+                                         ,dimer%rotgrad,1))
+    dimer%theta(:)=dimer%rotdir(:)
+    ! estimate the rotation angle:
+    dimer%dcurvedphi=2.D0 * sum((glob%igradient(dimer%varperimage+1:) &
+        -glob%igradient(1:dimer%varperimage)) &
+        * dimer%theta(:))/dimer%delta
+    ! estimate the angle from curve and dcurvedphi. c0 and ca are ignored
+    ! at the moment
+    !call guess_phimin(dimer%curve,dimer%dcurvedphi,dimer%c0,dimer%ca,dimer%phi)
+    dimer%phi=abs(0.5D0*atan(1.d0/( 2.d0*dimer%curve/dimer%dcurvedphi)))
+    ! *****************************************
+  end if
+  if(printl>=2.and..not.internal) then
+    write(stdout,"('Lanczos curvature at dimer midpoint       ',f12.5)") dimer%curve
+  end if
+
+  ! if the number of rotation is equal to the number of internal variables then rotation is stopped and the next orthogonal basis vector isn't calculated
+   if(dimer%nrot<dimer%varperimage) then
+     ! calculate the ith element beta of the tridiagonal matrix which is the norm of the vector wi
+     Tridiagmtrx(dimer%nrot,dimer%nrot+1)=dsqrt(ddot(dimer%varperimage,Direc2,1,Direc2,1))
+  
+     ! define the (i+1)th vector of the orthogonal basis which is the normalized vector wi 
+     if (Tridiagmtrx(dimer%nrot,dimer%nrot+1)/=0) then 
+       Orthobasis(dimer%nrot+1,:)=(1/Tridiagmtrx(dimer%nrot,dimer%nrot+1))*Direc2(:)    
+     end if 
+     ! the tridiagonal matrix is symmetric
+     Tridiagmtrx(dimer%nrot+1,dimer%nrot)=Tridiagmtrx(dimer%nrot,dimer%nrot+1)
+  end if 
+  stoprot =.true.
+   
+  ! calculate the angle of rotation 
+  ! before the first rotation the angle doesn't exist so it's set to 1
+  ! in the second rotation it's the angle between the initial dimer direction and the calculated eignmode
+  ! in all other cases it is the angle between the eigenmodes (the one calculated in the (i-1)th iteration and in the ith) 
+  ! this angle is the angle needed to tell whether the direction has converged or not
+  select case(dimer%nrot)
+  case(1) 
+   ! dimer%phi was calculated above as an estimate
+  case(2)
+   dimer%phi=acos(abs(ddot(dimer%varperimage,Orthobasis(1,:),1,newdirection,1)))
+  case default
+   dimer%phi=acos(abs(ddot(dimer%varperimage,direction,1,newdirection,1)))
+  end select
+  
+  if(printl>=4) then
+    write(stdout,"('Lanczos dimer rotation angle:      ',f7.3,' deg')") &
+        dimer%phi*180.D0/pi
+  end if
+
+  !  store the approximated eigenmode to compare it in the next rotation
+  direction=newdirection
+  
+  ! Abort if 
+  if (dimer%nrot==1 .and. dimer%phi<=dimer%tolrot) then
+    ! The estimate suggests not to do rotational optimization
+    return
+  else if(dimer%phi>dimer%tolrot .and. dimer%nrot<dimer%maxrot .and. dimer%nrot<dimer%varperimage) then
+    ! if the rotation is not converged
+    ! then rotate the dimer in the direction of the new calculated vector of the orthogonal basis (the (i+1)th )
+    glob%icoords(dimer%varperimage+1:)=glob%icoords(1:dimer%varperimage)+&
+                                       dimer%delta*Orthobasis(dimer%nrot+1,:)
+    ! send to external
+    call dlf_direct_itox(glob%nvar,dimer%varperimage,dimer%coreperimage, &
+                       glob%icoords(dimer%varperimage+1:),glob%xcoords(:,:),tok)
+    if(.not.tok) call dlf_fail("Dimer internal->x conversion failed C")
+    dimer%xtangent=glob%xcoords-dimer%xmidpoint
+    dimer%status=4
+    if(printl>=2) write(stdout,"('Next calculation will be the dimer &
+                                      &endpoint after rotation')")
+    stoprot=.false. 
+
+  else
+    ! if the rotation is converged   
+    !  then rotate the dimer in the direction of the eigenmode
+    glob%icoords(dimer%varperimage+1:)=glob%icoords(1:dimer%varperimage)+&
+                                       dimer%delta*direction
+    ! send to external
+    call dlf_direct_itox(glob%nvar,dimer%varperimage,dimer%coreperimage, &
+                         glob%icoords(dimer%varperimage+1:),&
+                         glob%xcoords(:,:),tok)
+    if(.not.tok) call dlf_fail("Dimer internal->x conversion failed C")
+    dimer%xtangent=glob%xcoords-dimer%xmidpoint
+    ! transform coords:
+    dimer%vector(:)=glob%icoords(dimer%varperimage+1:)-&
+                    glob%icoords(1:dimer%varperimage)
+    ! normalise dimer%vector:
+    svar=dsqrt(ddot(dimer%varperimage,dimer%vector,1,dimer%vector,1))
+    dimer%vector=dimer%vector/svar
+    glob%icoords(dimer%varperimage+1:)= dimer%delta*direction
+    if(printl>=2) write(stdout,"('Next calculation will be the dimer &
+                                      &midpoint before rotation')")
+  end if
+  
+  call deallocate(testtridiag)
+  call deallocate(eigvectridiagtest)  
+end subroutine dlf_lanczos
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dimer/dlf_dimer_extrapolate_gradient 
 !!
 !! FUNCTION
 !! * Extrapolate the i-gradient at the new dimer endpoint g1
@@ -1208,7 +1581,7 @@ subroutine dlf_checkpoint_dimer_write
     write(100,*) dimer%status, dimer%mode, dimer%delta, dimer%emid, &
         dimer%curve, dimer%tolrot, dimer%toldrot, dimer%toptdir, &
         dimer%cgstep, dimer%extrapolate_grad, dimer%nrot, dimer%maxrot, &
-        dimer%phi, dimer%dcurvedphi, dimer%cdelta
+        dimer%phi, dimer%dcurvedphi, dimer%cdelta, dimer%eigval
     call write_separator(100,"Dimer Arrays")
     write(100,*) dimer%xtangent, dimer%xmidpoint, dimer%rotgrad, &
         dimer%rotdir, dimer%oldrotgrad, dimer%oldrotdir, dimer%vector, &
@@ -1226,7 +1599,7 @@ subroutine dlf_checkpoint_dimer_write
     write(100) dimer%status, dimer%mode, dimer%delta, dimer%emid, &
         dimer%curve, dimer%tolrot, dimer%toldrot, dimer%toptdir, &
         dimer%cgstep, dimer%extrapolate_grad, dimer%nrot, dimer%maxrot, &
-        dimer%phi, dimer%dcurvedphi, dimer%cdelta
+        dimer%phi, dimer%dcurvedphi, dimer%cdelta, dimer%eigval
     call write_separator(100,"Dimer Arrays")
     write(100) dimer%xtangent, dimer%xmidpoint, dimer%rotgrad, &
         dimer%rotdir, dimer%oldrotgrad, dimer%oldrotdir, dimer%vector, &
@@ -1297,13 +1670,13 @@ subroutine dlf_checkpoint_dimer_read(tok)
         dimer%status, dimer%mode, dimer%delta, dimer%emid, &
         dimer%curve, dimer%tolrot, dimer%toldrot, dimer%toptdir, &
         dimer%cgstep, dimer%extrapolate_grad, dimer%nrot, dimer%maxrot, &
-        dimer%phi, dimer%dcurvedphi, dimer%cdelta
+        dimer%phi, dimer%dcurvedphi, dimer%cdelta, dimer%eigval
   else
     read(100,end=201,err=200) &
         dimer%status, dimer%mode, dimer%delta, dimer%emid, &
         dimer%curve, dimer%tolrot, dimer%toldrot, dimer%toptdir, &
         dimer%cgstep, dimer%extrapolate_grad, dimer%nrot, dimer%maxrot, &
-        dimer%phi, dimer%dcurvedphi, dimer%cdelta
+        dimer%phi, dimer%dcurvedphi, dimer%cdelta, dimer%eigval
   end if
 
   call read_separator(100,"Dimer Arrays",tchk)

@@ -10,11 +10,11 @@
 !! Line search or trust radius
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2017-03-31 12:15:26 +0200 (Fri, 31 Mar 2017) $
+!! $Rev: 546 $
+!! $Author: twk $
+!! $URL: https://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_scalestep.f90 $
+!! $Id: dlf_scalestep.f90 546 2017-03-31 10:15:26Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -80,6 +80,7 @@ subroutine dlf_scalestep
   use dlf_global, only: glob,stderr,printl,stdout
   use dlf_linesearch, only: oldgradient
   use dlf_scalestep_module, only: tr
+  use gpr_in_dl_find_mod
   implicit none
   !
   real(rk)  :: svar
@@ -94,10 +95,14 @@ subroutine dlf_scalestep
      ! scaling calculations, as otherwise the optimisation will grind to
      ! a halt.
      geomCoords = glob%nivar - 2
+  else if(glob%gpr_internal == 2) then
+     geomCoords = glob%nivar+6  
   else
      geomCoords = glob%nivar 
   endif
-
+  if (glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15) then !gprmep
+    return
+  end if
   select case (glob%iline)
 
 ! ======================================================================
@@ -108,11 +113,14 @@ subroutine dlf_scalestep
     if(glob%icoord<200 .or. glob%icoord>=300) then
       glob%step(:)= glob%scalestep * glob%step(:)
       svar=maxval(abs(glob%step(1:geomCoords)))
-      
-      if(svar > glob%maxstep) then
+      if(svar > glob%maxstep.and.&
+        (.not.glob%iopt==101.or.gpr_opt%limitStepExternally).and.&
+        (.not.glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15)) then
         svar= glob%maxstep/svar
         if(printl>=4) write(stdout,'("Scaling step back by ",f10.5)') svar
-        glob%step(:)= glob%step(:) * svar
+        if(.not. glob%iopt==100) then
+          glob%step(:)= glob%step(:) * svar
+        endif
       end if
     else
       ! Dimer: scale only first half of step (dimer midpoint)
@@ -133,8 +141,8 @@ subroutine dlf_scalestep
 
     svar=dsqrt(sum(glob%step(1:geomCoords)**2))
     if(printl >= 2) then
-      write(*,"(' Predicted step length ',es10.4)") svar
-      write(*,"(' Trust radius          ',es10.4)") tr%radius
+      write(stdout,"(' Predicted step length ',es10.3)") svar
+      write(stdout,"(' Trust radius          ',es10.3)") tr%radius
     end if
     if(svar > tr%radius) then
       svar= tr%radius/svar
@@ -192,8 +200,8 @@ subroutine dlf_scalestep_microiter(nvar, step)
 
   svar=dsqrt(sum(step(1:nvar)**2.0d0))
   if(printl >= 2) then
-     write(*,"(' Predicted step length ',es10.4)") svar
-     write(*,"(' Trust radius          ',es10.4)") trmic%radius
+     write(*,"(' Predicted step length ',es10.3)") svar
+     write(*,"(' Trust radius          ',es10.3)") trmic%radius
   end if
   if(svar > trmic%radius) then
      svar= trmic%radius/svar
@@ -220,6 +228,7 @@ subroutine test_acceptance
   use dlf_global, only: glob,stderr,stdout,printl
   use dlf_scalestep_module, only: tr
   use dlf_linesearch, only: oldgradient
+  use gpr_opt_module, only: gpr_searchglobal_flag  
   implicit none
   !
   real(rk)  :: svar,grad1,grad2
@@ -234,8 +243,11 @@ subroutine test_acceptance
     glob%taccepted=.true.
     return
   end if
-
-  if(glob%energy < glob%oldenergy) then
+  if (glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15) then !gprmep
+    glob%taccepted=.true.
+    return
+  end if
+  if(glob%energy < glob%oldenergy.or.((glob%iopt>=100).and.(glob%iopt<=103))) then
     ! accept step
     if(printl >=6) write(stdout,"(' Accepting step...')")
     if(printl >=6) write(stdout,"(' Energy ',es10.3,&
@@ -257,9 +269,8 @@ subroutine test_acceptance
         tr%radius= min(tr%radius * 2.D0,tr%maxrad)
       end if
     end if
-
-    glob%taccepted=.true.
-
+    if (glob%energy.GE.glob%oldenergy) gpr_searchglobal_flag=.true.
+    glob%taccepted=.true.    
   else
     ! reject step
 
@@ -270,7 +281,7 @@ subroutine test_acceptance
 
     svar=dsqrt(dot_product(glob%step(:),glob%step(:)))
     tr%radius= min(svar,tr%radius) * 0.5D0
-    if(printl >=4) write(*,"(' Trust radius          ',es10.4)") tr%radius
+    if(printl >=4) write(*,"(' Trust radius          ',es10.3)") tr%radius
 
     if (glob%imicroiter == 1) then
        call dlf_microiter_reset_macrostep
@@ -355,7 +366,12 @@ subroutine test_acceptance_microiter(nvar, energy, igradient, &
     return
   end if
 
-  if(energy < oldenergy) then
+  if (glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15) then ! gprmep
+    taccepted = .true.
+    return
+  end if
+  
+  if(energy < oldenergy.or.((glob%iopt>=100).and.(glob%iopt<=103))) then
     ! accept step
     if(printl >=6) write(stdout,"(' Accepting step...')")
     if(printl >=6) write(stdout,"(' Energy ',es10.3,&
@@ -390,7 +406,7 @@ subroutine test_acceptance_microiter(nvar, energy, igradient, &
 
     svar=dsqrt(dot_product(step(:), step(:)))
     trmic%radius= min(svar,trmic%radius) * 0.5D0
-    if(printl >=4) write(*,"(' Trust radius          ',es10.4)") trmic%radius
+    if(printl >=4) write(*,"(' Trust radius          ',es10.3)") trmic%radius
 
 
     step(:) = step(:) * 0.5D0
@@ -455,7 +471,10 @@ subroutine test_acceptance_g
 ! **********************************************************************
   if (glob%iline.ne.2) call &
       dlf_fail("test_acceptance_g should only be called for iline=2")
-
+  if (glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15) then !gprmep
+    glob%taccepted=.true.
+    return
+  end if
   if(.not.glob%toldenergy) then
     ! first step
     tr%radius=tr%startrad
@@ -469,8 +488,11 @@ subroutine test_acceptance_g
   oldproj=-dot_product(oldgradient(:),glob%step(:))
   ! scaling
   svar=oldproj/(oldproj-proj)
-
-  if(proj > 0.D0 .or. svar>0.9D0 ) then 
+  if(glob%iopt==102.or.glob%iopt==103.or.glob%iopt==15) then ! gprmep
+    glob%taccepted=.true.
+  end if
+  if(proj > 0.D0 .or. svar>0.9D0 .or. &
+                                ((glob%iopt>=100).and.(glob%iopt<=103))) then 
     ! accept step
     if(printl >=6) write(stdout,"(' Accepting step...')")
     if(printl >=6) write(stdout,"(' Projection of gradient on step: ',es10.3,&
@@ -617,8 +639,10 @@ subroutine linesearch
   ! calculate projection of the new gradient on the old search direction
   proj=-dot_product(glob%igradient(:),glob%step(:))
   oldproj=-dot_product(oldgradient(:),glob%step(:))
-
-  if(abs(proj) < 1.D-8 ) then ! hardcoded line search convergence criterion
+  if ((glob%iopt>=100).and.(glob%iopt<=103)) then
+    if(printl >=6) write(stdout,"(' New step for GPR optimization.')")
+    glob%taccepted=.true.
+  else if(abs(proj) < 1.D-8 ) then ! hardcoded line search convergence criterion
     ! ==================================================================
     ! accept step
     ! ==================================================================

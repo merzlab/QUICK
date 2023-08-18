@@ -29,11 +29,11 @@
 !! to make it impossible to allocate more memory than the watermark.
 !!
 !! DATA
-!!  $Date$
-!!  $Rev$
-!!  $Author$
-!!  $URL$
-!!  $Id$
+!!  $Date: 2011-01-20 14:43:17 +0100 (Thu, 20 Jan 2011) $
+!!  $Rev: 465 $
+!!  $Author: twk $
+!!  $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/branches/instanton/dlf_allocate.f90 $
+!!  $Id: dlf_allocate.f90 465 2011-01-20 13:43:17Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -85,6 +85,7 @@ contains
     module procedure allocate_r2
     module procedure allocate_r3
     module procedure allocate_i1
+    module procedure allocate_8i1
     module procedure allocate_i2
     module procedure allocate_l1
   end interface
@@ -94,6 +95,7 @@ contains
     module procedure deallocate_r2
     module procedure deallocate_r3
     module procedure deallocate_i1
+    module procedure deallocate_8i1
     module procedure deallocate_i2
     module procedure deallocate_l1
   end interface
@@ -300,6 +302,26 @@ contains
   end subroutine allocate_i1
 
 ! ----------------------------------------------------------------------
+  subroutine allocate_8i1(array,ubound)
+    integer(8) ,allocatable :: array(:)
+    integer ,intent(in)  :: ubound
+
+    if(verbose) write(stdout,"('Allocating integer-8(:) array. Size:',i8)")&
+        ubound
+
+    allocate(array(ubound),stat=fail)
+
+    if(fail/=0) then
+      write(stderr,"('Allocation error in allocate_i1')")
+      if(tretry) allocate(array(ubound))
+      call allocate_error(fail)
+    end if
+
+    call allocate_add(2,ubound)
+
+  end subroutine allocate_8i1
+
+! ----------------------------------------------------------------------
   subroutine allocate_i2(array,ubound1,ubound2)
     integer ,allocatable :: array(:,:)
     integer ,intent(in)  :: ubound1,ubound2
@@ -339,6 +361,27 @@ contains
     call allocate_sub(2,ubound)
 
   end subroutine deallocate_i1
+
+! ----------------------------------------------------------------------
+  subroutine deallocate_8i1(array)
+    integer(8) ,allocatable :: array(:)
+    integer              :: ubound
+
+    ubound=size(array)
+    if(verbose) write(stdout,"('Deallocating integer(:) array. Size:',i8)")&
+        ubound
+
+    deallocate(array,stat=fail)
+
+    if(fail/=0) then
+      write(stderr,"('Deallocation error in deallocate_i1')")
+      if(tretry) deallocate(array)
+      call allocate_error(fail)
+    end if
+
+    call allocate_sub(2,ubound)
+
+  end subroutine deallocate_8i1
 
 ! ----------------------------------------------------------------------
   subroutine deallocate_i2(array)

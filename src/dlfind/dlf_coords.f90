@@ -20,11 +20,11 @@
 !! Weight transformation is calculated at coordinate initialisation
 !!
 !! DATA
-!! $Date$                   
-!! $Rev$                                                              
-!! $Author$                                                         
-!! $URL$   
-!! $Id$                      
+!! $Date: 2010-11-29 17:09:49 +0100 (Mon, 29 Nov 2010) $                   
+!! $Rev: 451 $                                                              
+!! $Author: twk $                                                         
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_coords.f90 $   
+!! $Id: dlf_coords.f90 451 2010-11-29 16:09:49Z twk $                      
 !!
 !! COPYRIGHT
 !!
@@ -143,7 +143,7 @@ subroutine dlf_coords_init
     ! set weight
     ivar=1
     do iat=1,glob%nat
-      if(glob%spec(iat)>=0) then
+      if(glob%spec(iat)>=0.or.(glob%iopt>=102.and.glob%iopt<=103) ) then
         glob%iweight(ivar:ivar+2)=glob%weight(iat)
         ivar=ivar+3
       else if(glob%spec(iat)==-1) then
@@ -172,23 +172,38 @@ subroutine dlf_coords_init
 ! ======================================================================
   case (1:4, 11:14)
 
-    call dlf_hdlc_init(glob%nat,glob%spec,mod(glob%icoord,10),glob%ncons, &
+		call dlf_hdlc_init(glob%nat,glob%spec,mod(glob%icoord,10),glob%ncons, &
         glob%icons,glob%nconn,glob%iconn)
 
-    call dlf_hdlc_get_nivar(0, glob%nivar)
-    call dlf_hdlc_get_nivar(1, glob%nicore)
-
+		call dlf_hdlc_get_nivar(0, glob%nivar)
+		call dlf_hdlc_get_nivar(1, glob%nicore)
+        if((glob%iopt ==100) .AND. (glob%icoord == 3 .OR. glob%icoord == 4)) then
+          allocate(glob%b_hdlc(glob%nivar,3*glob%nat))
+        endif
+        if((glob%iopt ==101) .AND. (glob%icoord == 3 .OR. glob%icoord == 4)) then
+          call dlf_fail("Ts search with GPR in internal coordiantes not yet implemented!")
+        endif
     ! calculate weights here
-    call dlf_hdlc_create(glob%nat,glob%nicore,glob%spec,glob%micspec, &
+		call dlf_hdlc_create(glob%nat,glob%nicore,glob%spec,glob%micspec, &
         glob%znuc,1,glob%xcoords,glob%weight,glob%mass)
 
     ! Extra coordinates for Lagrange-Newton
     if ((glob%icoord / 10) == 1) glob%nivar = glob%nivar + 2
 
     !allocate arrays
-    call allocate( glob%icoords,glob%nivar)
-    call allocate( glob%igradient,glob%nivar)
-    call allocate( glob%step,glob%nivar)
+    
+    if (glob%gpr_internal == 2) then
+      call allocate( glob%igradient,glob%nvar)
+      call allocate( glob%step,glob%nvar)
+      call allocate(glob%icoords2,glob%nivar)
+      call allocate( glob%icoords,glob%nvar)
+      glob%icoords2(:)=0.0d0
+    else
+      call allocate( glob%igradient,glob%nivar)
+      call allocate( glob%step,glob%nivar)
+      call allocate( glob%icoords,glob%nivar)
+    endif
+
     glob%icoords(:)=0.D0
     glob%igradient(:)=0.D0
     glob%step(:)=0.D0
@@ -253,7 +268,9 @@ subroutine dlf_coords_init
     tmp_icoords=tmp_icoords-glob%icoords
     svar=dsqrt(ddot(glob%nivar,tmp_icoords,1,tmp_icoords,1))
     ! now distort icoords
-    glob%icoords=glob%icoords+tmp_icoords/svar*abs(glob%distort)
+    if (.not.(glob%iopt/10==6)) then ! do not distort for IRC
+      glob%icoords=glob%icoords+tmp_icoords/svar*abs(glob%distort)
+    end if
     call deallocate(tmp_icoords)
     ! transform icoords back to xcoords 
     call dlf_direct_itox(glob%nvar,glob%nivar,glob%nicore, &
@@ -308,7 +325,8 @@ subroutine dlf_coords_destroy
     if (allocated(glob%igradient)) call deallocate( glob%igradient)
     if (allocated(glob%step)) call deallocate( glob%step)
     if (allocated(glob%iweight)) call deallocate( glob%iweight)
-
+    if (allocated(glob%b_hdlc)) call deallocate(glob%b_hdlc)
+    if(allocated(glob%icoords2)) call deallocate(glob%icoords2)
     call dlf_hdlc_destroy
 
 ! ======================================================================
@@ -367,7 +385,7 @@ subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage)
   testconv=.false.
   iimage=1
   
-  if(printl>=6) print*,"Transforming X to I"
+  if(printl>=6) write(stdout,*) "Transforming X to I"
   trerun_energy=.false.
 
   select case (glob%icoord/10)
@@ -376,9 +394,13 @@ subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage)
 ! Direct coordinate transform
 ! ======================================================================
   case (0)
-
-    call dlf_direct_xtoi(glob%nvar,glob%nivar,glob%nicore,glob%xcoords, &
+    if ((glob%iopt ==100) .and. glob%icoord==3) then
+      call dlf_gpr_xtoi(glob%nvar,glob%nivar,glob%nicore,glob%xcoords, &
+          glob%xgradient,glob%icoords,glob%igradient,glob%icoords2)
+    else
+      call dlf_direct_xtoi(glob%nvar,glob%nivar,glob%nicore,glob%xcoords, &
           glob%xgradient,glob%icoords,glob%igradient)
+    endif
 
 ! ======================================================================
 ! Lagrange-Newton coordinates
@@ -393,7 +415,13 @@ subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage)
   case (10:19) ! 100-199
 
     if(glob%iopt==12) then
-      call dlf_qts_get_hessian(trerun_energy)
+      if(glob%inithessian==7) then
+        call dlf_neb_xtoi(trerun_energy,iimage)
+        ! read QTS hessian after all images have been re-calculated:
+        if(iimage==1) call dlf_qts_get_hessian(trerun_energy)
+      else
+        call dlf_qts_get_hessian(trerun_energy)
+      end if
     else
       call dlf_neb_xtoi(trerun_energy,iimage)
     end if
@@ -451,7 +479,7 @@ subroutine dlf_coords_itox(iimage)
 ! **********************************************************************
   iimage=1
 
-  if(printl>=6) print*,"Transforming I to X"
+  if(printl>=6) write(stdout,'("Transforming I to X")')
 
   select case (glob%icoord/10)
 
@@ -460,7 +488,13 @@ subroutine dlf_coords_itox(iimage)
 ! ======================================================================
   case (0)
 
-    call dlf_direct_itox(glob%nvar,glob%nivar,glob%nicore,glob%icoords,glob%xcoords,tok)
+    
+    if(glob%gpr_internal ==2) then
+
+     call dlf_gpr_itox(glob%nvar,glob%nivar,glob%nicore,glob%icoords,glob%xcoords,tok)
+   else 
+      call dlf_direct_itox(glob%nvar,glob%nivar,glob%nicore,glob%icoords,glob%xcoords,tok)
+    
     if(.not.tok.and. mod(glob%icoord,10)>0 .and. mod(glob%icoord,10)<=4 ) then
       if(printl>=4) write(stdout, &
           "('HDLC coordinate breakdown. Recalculating HDLCs and &
@@ -476,6 +510,7 @@ subroutine dlf_coords_itox(iimage)
       call dlf_formstep_restart
       glob%havehessian=.false.
     end if
+    endif
 
 ! ======================================================================
 ! Lagrange-Newton coordinates
@@ -573,8 +608,14 @@ subroutine dlf_direct_xtoi(nvar,nivar,nicore,xcoords,xgradient,icoords,&
 ! HDLC/DLC
 ! ======================================================================
   case (1:4)
+
     call dlf_hdlc_xtoi(nvar/3,nivar,nicore,glob%micspec, &
          xcoords,xgradient,icoords,igradient)
+    
+    
+    if (glob%iopt == 100) then
+		igradient(:) = xgradient(:)
+	endif
 
 ! ======================================================================
 ! Wrong coordinate setting
@@ -586,6 +627,32 @@ subroutine dlf_direct_xtoi(nvar,nivar,nicore,xcoords,xgradient,icoords,&
   end select
 end subroutine dlf_direct_xtoi
 !!****
+
+subroutine dlf_gpr_xtoi(nvar,nivar,nicore,xcoords,xgradient,icoords,&
+    igradient,icoords2)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,stderr
+  implicit none
+  integer ,intent(in)  :: nvar,nivar,nicore
+  real(rk),intent(in)  :: xcoords(nvar)
+  real(rk),intent(in)  :: xgradient(nvar)
+  real(rk),intent(out) :: icoords(nvar)
+  real(rk),intent(out) :: igradient(nvar)
+  real(rk),intent(out)  :: icoords2(nivar)
+
+  if(glob%gpr_internal == 2) then
+  call dlf_hdlc_xtoi(nvar/3,nivar,nicore,glob%micspec, &
+         xcoords,xgradient,icoords2,igradient)      
+  call dlf_cartesian_xtoi(nvar/3,nvar,nicore,glob%massweight, &
+          xcoords,xgradient,icoords,igradient)  
+  elseif(glob%gpr_internal == 1) then
+    call dlf_hdlc_xtoi(nvar/3,nivar,nicore,glob%micspec, &
+         xcoords,xgradient,icoords,igradient)
+  else
+    call dlf_error("This method for GPR internal is not implented")
+  endif
+  !igradient(:) = xgradient(:)
+end subroutine dlf_gpr_xtoi
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !!****f* coords/dlf_direct_itox
@@ -630,8 +697,12 @@ subroutine dlf_direct_itox(nvar,nivar,nicore,icoords,xcoords,tok)
 ! HDLC/DLC
 ! ======================================================================
   case (1:4)
-    call dlf_hdlc_itox(nvar/3,nivar,nicore,glob%micspec,icoords,xcoords,tok)
-
+    if(glob%gpr_internal == 2 ) then
+      call dlf_cartesian_itox(nvar/3,nvar,nicore,glob%massweight,glob%step,xcoords)
+    else
+      call dlf_hdlc_itox(nvar/3,nivar,nicore,glob%micspec,icoords,xcoords,tok)
+    endif
+	
 ! ======================================================================
 ! Wrong coordinate setting
 ! ======================================================================
@@ -642,6 +713,17 @@ subroutine dlf_direct_itox(nvar,nivar,nicore,icoords,xcoords,tok)
   end select
 end subroutine dlf_direct_itox
 !!****
+
+subroutine dlf_gpr_itox(nvar,nivar,nicore,icoords,xcoords)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,stderr,stdout
+  implicit none
+  integer ,intent(in)   :: nvar,nivar,nicore
+  real(rk),intent(in)   :: icoords(nvar)
+  real(rk),intent(inout):: xcoords(nvar)
+  call dlf_cartesian_itox(nvar/3,nvar,nicore,glob%massweight,icoords,xcoords)
+  !xcoords(:)=icoords(:)
+end subroutine dlf_gpr_itox
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !!****f* coords/dlf_direct_get_nivar
@@ -742,7 +824,7 @@ subroutine dlf_cartesian_get_nivar(region, nivar)
         warned=.true.
       end if
       nivar=nivar+3
-    else if(glob%spec(iat)==0) then
+    else if(glob%spec(iat)==0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       nivar=nivar+3
     else if(glob%spec(iat)==-1) then
@@ -785,7 +867,7 @@ subroutine dlf_cartesian_xtoi(nat,nivar,nicore,massweight,xcoords,xgradient,&
     icoords,igradient)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,stderr
+  use dlf_global, only: glob,stderr,stdout,printl  
   implicit none
   integer ,intent(in)  :: nat,nivar,nicore
   logical ,intent(in)  :: massweight
@@ -823,7 +905,7 @@ subroutine dlf_cartesian_xtoi(nat,nivar,nicore,massweight,xcoords,xgradient,&
       icoords(iivar:iivar+2)=massf*xcoords(:,iat)
       igradient(iivar:iivar+2)=xgradient(:,iat)/massf
       iivar=iivar+3
-    else if(glob%spec(iat)==0) then
+    else if(glob%spec(iat)==0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       icoords(iivar:iivar+2)=massf*xcoords(:,iat)
       igradient(iivar:iivar+2)=xgradient(:,iat)/massf
@@ -864,14 +946,16 @@ subroutine dlf_cartesian_xtoi(nat,nivar,nicore,massweight,xcoords,xgradient,&
        iouter = iivar
     end if    
   end do
+  if(glob%icoord /= 3 .AND. glob%icoord /=4) then
   if(iinner /= nicore + 1) then
-    print*,iinner-1,nicore
+    if (printl>=4) write(stdout,'(I10, I10)') iinner-1,nicore
     call dlf_fail("Error in the transformation cartesian_xtoi (inner)")
   end if
   if(iouter /= nivar + 1) then
-    print*,iouter-1,nivar
+    if (printl>=4) write(stdout,'(I10, I10)') iouter-1,nivar
     call dlf_fail("Error in the transformation cartesian_xtoi (outer)")
   end if
+  endif
 end subroutine dlf_cartesian_xtoi
 !!****
 
@@ -897,7 +981,7 @@ end subroutine dlf_cartesian_xtoi
 subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,stderr
+  use dlf_global, only: glob,stderr,stdout,printl
   use quick_molspec_module, only: xyz, quick_molspec
   implicit none
   integer ,intent(in)   :: nat,nivar,nicore
@@ -933,7 +1017,7 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
       end if
       xcoords(:,iat)=icoords(iivar:iivar+2)/massf
       iivar=iivar+3
-    else if(glob%spec(iat)==0) then
+    else if(glob%spec(iat)==0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       xcoords(:,iat)=icoords(iivar:iivar+2)/massf
       iivar=iivar+3
@@ -967,14 +1051,16 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
        iouter = iivar
     end if
   end do
+  if(glob%icoord /=4 .AND. glob%icoord /=3) then
   if(iinner /= nicore + 1) then
-    print*,iinner-1,nicore
+    if (printl>=4) write(stdout,'(I10, I10)') iinner-1,nicore
     call dlf_fail("Error in the transformation cartesian_itox (inner)")
   end if
   if(iouter /= nivar + 1) then
-    print*,iouter-1,nivar
+    if (printl>=4) write(stdout,'(I10, I10)') iouter-1,nivar
     call dlf_fail("Error in the transformation cartesian_itox (outer)")
   end if
+  endif
 end subroutine dlf_cartesian_itox
 !!****
 
@@ -999,7 +1085,7 @@ end subroutine dlf_cartesian_itox
 subroutine dlf_cartesian_gradient_itox(nat,nivar,nicore,massweight,igradient,xgradient)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,stderr
+  use dlf_global, only: glob,stderr,stdout,printl
   implicit none
   integer ,intent(in)   :: nat,nivar,nicore
   logical ,intent(in)   :: massweight
@@ -1037,7 +1123,7 @@ subroutine dlf_cartesian_gradient_itox(nat,nivar,nicore,massweight,igradient,xgr
       end if
       xgradient(:,iat)=igradient(iivar:iivar+2)/massf
       iivar=iivar+3
-    else if(glob%spec(iat)==0) then
+    else if(glob%spec(iat)==0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       xgradient(:,iat)=igradient(iivar:iivar+2)/massf
       iivar=iivar+3
@@ -1072,11 +1158,11 @@ subroutine dlf_cartesian_gradient_itox(nat,nivar,nicore,massweight,igradient,xgr
     end if
   end do
   if(iinner /= nicore + 1) then
-    print*,iinner-1,nicore
+    if (printl>=4) write(stdout,'(I10, I10)') iinner-1,nicore
     call dlf_fail("Error in the transformation cartesian_gradient_itox (inner)")
   end if
   if(iouter /= nivar + 1) then
-    print*,iouter-1,nivar
+    if (printl>=4) write(stdout,'(I10, I10)') iouter-1,nivar
     call dlf_fail("Error in the transformation cartesian_gradient_itox (outer)")
   end if
 end subroutine dlf_cartesian_gradient_itox
@@ -1104,13 +1190,13 @@ subroutine dlf_coords_hessian_xtoi(nvar,xhessian)
   implicit none
   integer, intent(in) :: nvar
   real(rk),intent(in) :: xhessian(nvar,nvar)
+  integer :: i
 ! **********************************************************************
   select case (glob%icoord)
   ! Cartesians
   case (0)
     call dlf_cartesian_hessian_xtoi(glob%nat,nvar,glob%nivar,glob%massweight,xhessian,&
         glob%spec,glob%mass,glob%ihessian)
-
   ! HDLC/DLC
   case (1:4)
     call dlf_hdlc_hessian_xtoi(nvar/3,glob%nivar,glob%xcoords,xhessian,glob%ihessian)
@@ -1147,7 +1233,7 @@ subroutine dlf_cartesian_hessian_xtoi(nat,nvar,nivar,massweight,xhessian,&
     spec,mass,ihessian)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,stderr
+  use dlf_global, only: glob,stderr,stdout,printl
   implicit none
   integer ,intent(in)  :: nat,nvar,nivar
   logical ,intent(in)  :: massweight
@@ -1176,7 +1262,7 @@ subroutine dlf_cartesian_hessian_xtoi(nat,nvar,nivar,massweight,xhessian,&
       massf=1.D0
     end if
     ivar=(iat-1)*3+1
-    if(spec(iat)>=0) then
+    if(spec(iat)>=0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       umat(ivar  ,iivar  )=massf
       umat(ivar+1,iivar+1)=massf
@@ -1211,7 +1297,7 @@ subroutine dlf_cartesian_hessian_xtoi(nat,nvar,nivar,massweight,xhessian,&
     end if
   end do
   if(iivar/=nivar+1) then
-    print*,iivar-1,nivar
+    if (printl>=4) write(stdout,'(I10, I10)') iivar-1,nivar
     call dlf_fail("Error in the transformation cartesian_xtoi")
   end if
   ! now transform the hessian
@@ -1243,7 +1329,7 @@ subroutine dlf_cartesian_hessian_itox(nat,nvar,nivar,massweight,ihessian,&
     spec,mass,xhessian)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: stderr
+  use dlf_global, only: stderr, glob,stdout,printl
   implicit none
   integer ,intent(in)  :: nat,nvar,nivar
   logical ,intent(in)  :: massweight
@@ -1257,7 +1343,6 @@ subroutine dlf_cartesian_hessian_itox(nat,nvar,nivar,massweight,ihessian,&
   real(rk)             :: tmpmat(nivar,nvar)
   real(rk)             :: massf
 ! **********************************************************************
-
   ! set up umat
   umat=0.D0
   iivar=1
@@ -1268,7 +1353,7 @@ subroutine dlf_cartesian_hessian_itox(nat,nvar,nivar,massweight,ihessian,&
       massf=1.D0
     end if
     ivar=(iat-1)*3+1
-    if(spec(iat)>=0) then
+    if(spec(iat)>=0.or.(glob%iopt>=102.and.glob%iopt<=103)) then
       ! not frozen
       umat(ivar  ,iivar  )=massf
       umat(ivar+1,iivar+1)=massf
@@ -1303,7 +1388,7 @@ subroutine dlf_cartesian_hessian_itox(nat,nvar,nivar,massweight,ihessian,&
     end if
   end do
   if(iivar/=nivar+1) then
-    print*,iivar-1,nivar
+    if (printl>=4) write(stdout,'(I10, I10)') iivar-1,nivar
     call dlf_fail("Error in the transformation cartesian_itox")
   end if
   ! now transform the hessian
@@ -1353,8 +1438,8 @@ subroutine dlf_coords_tranrot(nvar,vector)
   if(glob%massweight) return
   if(.not.glob%tatoms) return
   if(minval(glob%spec(:)) < 0) then
-    print*,"Warning: removal of rotation and translation not possible&
-        & for frozen atoms"
+    if (printl>=4) write(stdout,'("Warning: removal of rotation and translation not possible&
+        & for frozen atoms")')
     return
   end if
   nat=nvar/3
@@ -1492,6 +1577,7 @@ subroutine dlf_cartesian_align(nat,coords1,coords2)
       if(eigval(i)<1.D-8) then
         if(i>1) then
           ! the system is linear - no rotation necessay.
+          ! WHY ?! There should still be one necessary!
           return
           !print*,"Eigenval. zero",i,eigval(i)
           !call dlf_fail("Error in dlf_cartesian_align")
@@ -1622,6 +1708,11 @@ subroutine dlf_re_mass_weight_hessian(nat,nivar,mass_in,mass_out,ihessian)
             write(stdout,'(a,i5,a,f10.6,a,f10.6)') "Mass change atom",iat,": old mass ",mass_in(iat), &
                 " new mass ",mass_out(iat)
           end if
+        else
+          if(printl>=0) then
+            write(stdout,'(a,i5,a,f10.6,a,f10.6,a)') "Warning: Mass of atom",iat,": old mass ",mass_in(iat), &
+                " new mass ",mass_out(iat)," NOT CHANGED (unrealistic difference)"
+          end if
         end if
       end if
     end if
@@ -1637,6 +1728,320 @@ subroutine dlf_re_mass_weight_hessian(nat,nivar,mass_in,mass_out,ihessian)
   call deallocate(mapfrozen)
 
 end subroutine dlf_re_mass_weight_hessian
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* coords/dlf_hessian_project
+!!
+!! FUNCTION
+!! Project out rotation and translation from a hessian
+!!
+!! Projection of the translation works perfect. However, the rotation
+!! apparently is a problem. Even with an analytic hessian
+!! (LJ-particles) the rotational eigenvalues are not zero by
+!! far. Using either of the impelemented rotation methods does not
+!! work perfectly. Also using the projcted hessian for NR in qTS makes
+!! things worse than ignoring soft modes
+!!
+!! SYNOPSIS
+subroutine dlf_hessian_project(nvar,coords,hess)
+!! SOURCE
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,stderr,printl,stdout
+  implicit none
+  integer,  intent(in)   :: nvar
+  real(rk), intent(in)   :: coords(nvar) !mass-weighted coordinates
+  real(rk), intent(inout):: hess(nvar,nvar) ! hessian with respect to MW-coordinates
+  !
+  integer, parameter :: nzero=6
+  integer   :: ivar,jvar,nimage
+  integer   :: iat(nvar) ! iat(ivar)
+  real(rk)  :: com(3) ! center of mass
+  real(rk)  :: ccoords(nvar) ! coords centered with respect to com
+  real(rk)  :: inert(3,3)
+  real(rk)  :: minert(3),inertdir(3,3)
+  real(rk)  :: zeromode(nvar,nzero) ! 3 translational modes and 3 rotational modes
+  real(rk)  :: bmode(nvar,nzero) ! breathing mode
+  real(rk)  :: tmpvec(nvar)
+  real(rk)  :: svar
+  real(rk)  :: eigvec(nvar,nvar)
+  real(rk)  :: eigval(nvar)
+  real(rk)  :: vibspace(nvar,nvar-nzero)
+  real(rk)  :: testmode(nvar)
+  real(rk)  :: evzero,evbreath,frac,offdiag,sumsvar
+  ! new hessian
+  real(rk)  :: vhess(nvar-nzero,nvar-nzero)
+  real(rk)  :: veigval(nvar-nzero)
+  real(rk)  :: veigvec(nvar-nzero,nvar-nzero)
+  ! ********************************************************************
+  nimage=nvar/3/glob%nat ! this may be dangerous
+
+  if(nvar /= 3*glob%nat*nimage) call dlf_fail("Size of Hessian inconsistent in &
+      &dlf_hessian_project")
+  if(glob%nzero /= 6) call dlf_fail("dlf_hessian_project works only for &
+      &free molecules (nzero=6)")
+
+  ! set iat
+  do ivar=1,nvar
+    iat(ivar)=mod(int(dble(ivar-1)/3.D0),glob%nat)+1
+  end do
+
+  ! create the zero translational modes
+  zeromode(:,:)=0.D0
+  do ivar=1,nvar,3
+    zeromode(ivar  ,1)=sqrt(glob%mass(iat(ivar)))
+    zeromode(ivar+1,2)=sqrt(glob%mass(iat(ivar)))
+    zeromode(ivar+2,3)=sqrt(glob%mass(iat(ivar)))
+  end do
+  ! normalize translational modes
+  do ivar=1,3
+    svar=sqrt(dot_product(zeromode(:,ivar),zeromode(:,ivar)))
+    zeromode(:,ivar)=zeromode(:,ivar)/svar
+    ! print for test
+    tmpvec=matmul(hess,zeromode(:,ivar))
+    svar=dot_product(zeromode(:,ivar),tmpvec)
+    write(*,"('Expectation value of mode',i3,es15.7)") ivar,svar
+  end do
+
+!!$  ! expectation value of a random mode
+!!$  call random_number(zeromode(:,nzero))
+!!$  zeromode(:,nzero)=zeromode(:,nzero)-0.5D0
+!!$  do ivar=nzero,nzero
+!!$    svar=sqrt(dot_product(zeromode(:,ivar),zeromode(:,ivar)))
+!!$    zeromode(:,ivar)=zeromode(:,ivar)/svar
+!!$    ! print for test
+!!$    tmpvec=matmul(hess,zeromode(:,ivar))
+!!$    svar=dot_product(zeromode(:,ivar),tmpvec)
+!!$    write(*,"('Expectation value of random mode',i3,es15.7)") ivar,svar
+!!$  end do
+!!$  zeromode(:,nzero)=0.D0
+
+  ! calculate COM
+  com=0.D0
+  do ivar=1,nvar
+    com(mod(ivar-1,3)+1)=com(mod(ivar-1,3)+1) + sqrt(glob%mass(iat(ivar)))*coords(ivar)
+  end do
+  com=com/sum(glob%mass(1:glob%nat))/dble(nimage) ! com in cartesians
+  !print*,"center of mass",com
+
+  ! calculate centered coords (MW)
+  do ivar=1,nvar
+    ccoords(ivar)=coords(ivar) - com(mod(ivar-1,3)+1)*sqrt(glob%mass(iat(ivar)))
+  end do
+
+  ! calculate inertia tensor
+  inert=0.D0
+  do ivar=1,nvar,3
+    inert(1,1)=inert(1,1) + ccoords(ivar+1)**2+ccoords(ivar+2)**2 
+    inert(1,2)=inert(1,2) - ccoords(ivar)*ccoords(ivar+1)
+    inert(1,3)=inert(1,3) - ccoords(ivar)*ccoords(ivar+2)
+    inert(2,2)=inert(2,2) + ccoords(ivar)**2 + ccoords(ivar+2)**2
+    inert(2,3)=inert(2,3) - ccoords(ivar+1)*ccoords(ivar+2)
+    inert(3,3)=inert(3,3) + ccoords(ivar)**2 + ccoords(ivar+1)**2
+  end do
+  inert(2,1)=inert(1,2)
+  inert(3,1)=inert(1,3)
+  inert(3,2)=inert(2,3)
+
+!!$  write(*,'(3es15.7)') inert
+
+  call dlf_matrix_diagonalise(3,inert,minert,inertdir)
+
+!!$  print*,"Moments of inertia"
+!!$  do ivar=1,3
+!!$    write(stdout,"(es15.7,3x,3f10.5)") minert(ivar),inertdir(:,ivar)
+!!$  end do
+
+  testmode=0.D0
+  bmode=0.D0
+  ! create the zero translational modes
+  if(nzero==6) then
+  do ivar=1,nvar,3
+    ! using just cartesian coordinates - should lead to the same space of rotations
+    zeromode(ivar  ,4)=0.D0
+    zeromode(ivar+1,4)=-ccoords(ivar+2)
+    zeromode(ivar+2,4)=ccoords(ivar+1) 
+
+    ! testmode: breathing mode orthogonal to x
+    bmode(ivar  ,4)=0.D0
+    bmode(ivar+1,4)=ccoords(ivar+1)
+    bmode(ivar+2,4)=ccoords(ivar+2) 
+    
+    zeromode(ivar  ,5)=-ccoords(ivar+2)
+    zeromode(ivar+1,5)=0.D0
+    zeromode(ivar+2,5)=ccoords(ivar)
+    !breathing mode orthogonal to y
+    bmode(ivar  ,5)=ccoords(ivar)
+    bmode(ivar+1,5)=0.D0
+    bmode(ivar+2,5)=ccoords(ivar+2) 
+    
+    zeromode(ivar  ,6)=-ccoords(ivar+1)
+    zeromode(ivar+1,6)=ccoords(ivar)
+    zeromode(ivar+2,6)=0.D0
+    !breathing mode orthogonal to z
+    bmode(ivar  ,6)=ccoords(ivar)
+    bmode(ivar+1,6)=ccoords(ivar+1)
+    bmode(ivar+2,6)= 0.D0
+
+!!$    ! using the principle directions of inertia
+!!$    zeromode(ivar  ,4)=ccoords(ivar+1)*inertdir(3,1)-ccoords(ivar+2)*inertdir(2,1)
+!!$    zeromode(ivar+1,4)=ccoords(ivar+2)*inertdir(1,1)-ccoords(ivar)*inertdir(3,1)
+!!$    zeromode(ivar+2,4)=ccoords(ivar)*inertdir(2,1)-ccoords(ivar+1)*inertdir(1,1)
+!!$
+!!$    zeromode(ivar  ,5)=ccoords(ivar+1)*inertdir(3,2)-ccoords(ivar+2)*inertdir(2,2)
+!!$    zeromode(ivar+1,5)=ccoords(ivar+2)*inertdir(1,2)-ccoords(ivar)*inertdir(3,2)
+!!$    zeromode(ivar+2,5)=ccoords(ivar)*inertdir(2,2)-ccoords(ivar+1)*inertdir(1,2)
+!!$
+!!$    zeromode(ivar  ,6)=ccoords(ivar+1)*inertdir(3,3)-ccoords(ivar+2)*inertdir(2,3)
+!!$    zeromode(ivar+1,6)=ccoords(ivar+2)*inertdir(1,3)-ccoords(ivar)*inertdir(3,3)
+!!$    zeromode(ivar+2,6)=ccoords(ivar)*inertdir(2,3)-ccoords(ivar+1)*inertdir(1,3)
+  end do
+  end if
+
+  ! check mode 4
+  do jvar=4,nzero
+    svar=sqrt(dot_product(zeromode(:,jvar),zeromode(:,jvar)))
+    zeromode(:,jvar)=zeromode(:,jvar)/svar
+    ! print for test
+    tmpvec=matmul(hess,zeromode(:,jvar))
+    evzero=dot_product(zeromode(:,jvar),tmpvec)
+    write(*,"('Expectation value of mode    ',i3,es15.7)") jvar,evzero
+    ! normalize bmode
+    svar=sqrt(dot_product(bmode(:,jvar),bmode(:,jvar)))
+    bmode(:,jvar)=bmode(:,jvar)/svar
+    ! print for test
+    tmpvec=matmul(hess,bmode(:,jvar))
+    evbreath=dot_product(bmode(:,jvar),tmpvec)
+    offdiag=dot_product(zeromode(:,jvar),tmpvec)
+    write(*,"('Expectation value of br mode ',i3,es15.7)") jvar,evbreath
+    write(*,"('br H zero                    ',i3,es15.7)") jvar,offdiag
+    !write(*,"('scalar procuct rotate breathe',es15.7)") sum(bmode(:,jvar)*zeromode(:,jvar))
+    !frac=sqrt(1.D0-evbreath/(evbreath-evzero))
+    if(evzero/(evzero-evbreath) > 0.D0 ) then
+      frac=sqrt(evzero/(evzero-evbreath))
+      !print*,"frac 1",frac
+      !print*,"diskriminate",(offdiag/evbreath)**2 - evzero/evbreath
+      !frac=-offdiag/evbreath + sqrt( (offdiag/evbreath)**2 - evzero/evbreath)
+      !print*,"frac 2",frac
+      !print*,"supposed to be zero",evzero+2.D0*frac*offdiag+frac**2*evbreath
+      if(frac>0.D0.and.frac<1.D0) then
+        !frac=0.168D0
+        !print*,"frac",frac
+        zeromode(:,jvar)=sqrt(1.D0-frac**2)*zeromode(:,jvar)+frac*bmode(:,jvar)
+        !! normalize bmode
+        !svar=sqrt(dot_product(zeromode(:,jvar),zeromode(:,jvar)))
+        !print*,"is normalization necessary?",svar
+        !zeromode(:,jvar)=zeromode(:,jvar)/svar
+        ! print for test
+        tmpvec=matmul(hess,zeromode(:,jvar))
+        evbreath=dot_product(zeromode(:,jvar),tmpvec)
+        write(*,"('Expectation value of te mode ',i3,es15.7)") jvar,evbreath
+      end if
+    else
+      write(*,"('No mixing of rotation and breathing mode possible for mode ',i2)"),jvar
+    end if
+  end do
+  ! Observations: for an exact analytic hessian of a stationary point
+   ! (vdW spheres), the projection works perfect. However, in this
+  ! case, the rotational eigenvalues of the exact Hessian are also
+  ! very close to zero but still distinct from the translational ones.
+
+  ! z = zero vector, b=breathing vector, n=new most zero vector
+  ! n=az+cb
+  ! nHn=0
+  ! (az+cb) H (az+cb) = 0
+  ! a^2 zHz + 2ac zHb + c^1 bHb = 0
+  ! a^2+c^2=1
+  ! a^2 zHz + 2a sqrt(1-a^2) zHb + (1-a^2) bHb = 0
+  ! cos^2 phi zHz + 2 sin(phi) cos(phi) zHb + sin^2 phi bHb = 0
+  ! small phi: zHz + 2 phi zHb + phi^2 bHb = 0
+  ! phi= -zHb/bHb +- sqrt( (zHb/bHb)^2 - 4*zHz*bHb )
+  ! transzendent ...
+  ! Annahme: xHb=0
+  ! a^2 (zHz-bHb) = - bHb
+  ! a= sqrt( bHb/(bHb-zHz) )
+  ! c= sqrt(1- bHb/(bHb-zHz) ) = frac
+  ! c= sqrt(-zHz/(bHb-zHz) ) = frac
+  ! c= sqrt( zHz/(zHz-bHb) ) = frac
+
+!!$  ! normalize rotational modes
+!!$  do ivar=4,nzero
+!!$    svar=sqrt(dot_product(zeromode(:,ivar),zeromode(:,ivar)))
+!!$    !print*,"norm of mode",svar
+!!$    zeromode(:,ivar)=zeromode(:,ivar)/svar
+!!$    ! print for test
+!!$    tmpvec=matmul(hess,zeromode(:,ivar))
+!!$    svar=dot_product(zeromode(:,ivar),tmpvec)
+!!$    write(*,"('Expectation value of mode',i3,es15.7)") ivar,svar
+!!$    !print*,"Expectation value of mode",ivar,svar
+!!$  end do
+
+  ! now define the vector space of the remaining nvar-nzero modes
+  ! randomize them and make them orthogonal to the zero modes
+  call random_number(vibspace)
+  vibspace=vibspace-0.5D0
+  do ivar=1,nvar-nzero
+    ! Gram-Schmidt orthogonalization
+    do jvar=1,nzero
+      svar=sum(zeromode(:,jvar)*vibspace(:,ivar))
+      !print*,"overlap",svar
+      vibspace(:,ivar)=vibspace(:,ivar)-svar*zeromode(:,jvar)
+      !print*,"overlap after orthog",sum(zeromode(:,jvar)*vibspace(:,ivar))
+    end do
+    do jvar=1,ivar-1
+      svar=sum(vibspace(:,jvar)*vibspace(:,ivar))
+      !print*,"overlap",svar
+      vibspace(:,ivar)=vibspace(:,ivar)-svar*vibspace(:,jvar)
+      !print*,"overlap after orthog",sum(zeromode(:,jvar)*vibspace(:,ivar))
+    end do
+    ! normalize new vector
+    svar=sum(vibspace(:,ivar)*vibspace(:,ivar))
+    if(svar<1.D-10) call dlf_fail("Hessian projection not possible")
+    vibspace(:,ivar)=vibspace(:,ivar)/sqrt(svar)
+  end do
+
+  vhess=matmul(transpose(vibspace),matmul(hess,vibspace))
+
+  ! do diagonalization of vibrational hessian
+  call dlf_matrix_diagonalise(nvar-nzero,vhess,veigval,veigvec)
+  do ivar=1,10
+    write(*,"('Eigenvalue no',i3,es15.7)") ivar+nzero,veigval(ivar)
+  end do
+  open(file='veigval',unit=10)
+  do ivar=1,nvar-nzero
+    write(10,"(i3,es15.7)") ivar+nzero,veigval(ivar)
+  end do
+  close(10)
+  
+  ! do full diagonalization for comparison
+  call dlf_matrix_diagonalise(nvar,hess,eigval,eigvec)
+  if (printl>=4) write(stdout,'("full hess")')
+  sumsvar=0.D0
+  do ivar=1,min(21,nvar)
+    svar=0.D0
+    do jvar=1,nzero
+      svar=svar+sum(eigvec(:,ivar)*zeromode(:,jvar))**2
+    end do
+    sumsvar=sumsvar+svar
+    if (printl>=4) write(*,"('Eigenvalue no',i3,es15.7,f10.5)") ivar,eigval(ivar),svar
+  end do
+  if (printl>=4) write(stdout,'("sum of projections", ES11.4)') sumsvar
+  open(file='eigval',unit=10)
+  do ivar=1,nvar
+    if (printl>=4) write(10,"(i3,es15.7)") ivar,eigval(ivar)
+  end do
+  close(10)
+
+!!$  ! try to reconstruct the Newton-raphson step
+!!$  call dlf_matrix_invert(nvar-nzero,.false.,vhess,svar)
+!!$  !if(printl>=4) write(stdout,"('Determinant of v-H in NR step: ',es10.3)") svar
+!!$  hess=matmul(vibspace,matmul(vhess,transpose(vibspace)))
+
+  !print*,"hessinv",hess(1:3,1)
+
+  !call dlf_fail("JK stop")
+
+end subroutine dlf_hessian_project
 !!****
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

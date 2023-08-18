@@ -14,11 +14,11 @@
 !! * and others, depending on the change
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2013-08-07 15:08:09 +0200 (Wed, 07 Aug 2013) $
+!! $Rev: 529 $
+!! $Author: twk $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_global_module.f90 $
+!! $Id: dlf_global_module.f90 529 2013-08-07 13:08:09Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -88,12 +88,17 @@ module dlf_global
     ! Optimiser parameters
     integer  :: lbfgs_mem   ! number of steps in LBFGS memory
     real(rk) :: temperature ! temperature for thermal analysis
+    real(rk) :: minwavenumber ! minimum wave number for thermal analysis
 
     ! qTS parameters
     integer  :: nzero       ! number of zero vibrational modes in system 
     integer  :: qtsflag     ! additional info, like if tunnelig splittings are
                             ! to be calculated (see dlf_qts.f90)
-
+    integer  :: irot        ! irot=0: default, use rotation if no frozen atoms are presnet
+                            ! irot=1: mimic surface: no rotational partition function, except 
+                            !    for rs2 (considered to be incomming). Use mass of rs2 for reduced mass.
+                            
+    
     ! Damped dynamics
     real(rk) :: timestep 
     real(rk) :: fric0       ! start friction
@@ -123,7 +128,7 @@ module dlf_global
     integer  :: carthessian ! Hessian update in cartesians?
     logical  :: tsrelative  ! Transition vector I/O absolute or relative?
     real(rk) :: minstep     ! Hessian is not updated if step < minstep
-
+    logical  :: buildmodel
     ! internal coordinates
     integer  :: icoord      ! type of internal coordinates
     integer  :: icoordinner ! type of internal coordinates for inner region
@@ -135,7 +140,7 @@ module dlf_global
     real(rk) :: neb_freeze_test ! threshold scale factor for freezing NEB images
     integer  :: maxrot      ! maximum number of rotations in each DIMER step
     real(rk) :: tolrot      ! angle tolerance for rotation (deg) in DIMER
-
+    
     integer  :: ncons       ! number of constraints
     integer  :: nconn       ! number of user provided connections
 
@@ -192,6 +197,8 @@ module dlf_global
                                  ! the first cycle
     logical  :: dotask=.true.    ! Flag set if this processor should do the
                                  ! task in question
+    integer  :: eonly=0          ! Flag set if calling code can provide
+                                 ! energies, but no gradient (0=false)
 
    ! ARRAYS
     real(rk),allocatable :: xcoords(:,:) ! xyz coordinates 
@@ -209,6 +216,7 @@ module dlf_global
 
     ! arrays concerning internals
     real(rk),allocatable :: icoords(:)   ! internal coords (nivar)
+    real(rk),allocatable :: icoords2(:)  ! used for gpr in internal coordinates
     real(rk),allocatable :: igradient(:) ! gradient in internals (nivar)
     real(rk),allocatable :: ihessian(:,:)! Hessian in internals (nivar,nivar)
                                          !  allocation handled in formstep
@@ -220,6 +228,7 @@ module dlf_global
     integer ,allocatable :: iconn(:,:)   ! (2,ncons) user provided 
                                          !  connections
 
+	real(rk),allocatable :: b_hdlc(:,:)
     ! multiple state arrays for conical intersection searches
     real(rk),allocatable :: msenergy(:)       ! multistate energy
     real(rk),allocatable :: msgradient(:,:,:) ! xyz multistate gradients
@@ -246,6 +255,53 @@ module dlf_global
     real(rk),allocatable :: g0corr(:,:,:)      ! xyz gradient correction for ESP fit
     real(rk),allocatable :: e0corr(:)                      ! E0 - E0(esp)
 
+    integer :: initialpathneb ! 1 for NEB-preoptimization with the idpp approach
+    ! IRC
+    real(rk)             :: ircstep ! IRC step length, sign: direction
+    integer              :: minircsteps ! minimum number of steps in an IRC run
+    integer              :: irchessian ! type of Hessian calculation in IRC
+    integer              :: sct_in_IRC ! is 1 if small curvature tunneling should
+                                       ! be prepared during IRC, 0 otherwise
+    logical              :: sctRate=.false.
+    logical              :: bimol_sct=.false.
+    logical              :: usePath=.false.
+    ! GPR internal coordinates
+    integer              :: gpr_internal
+    ! GPRMEP
+    logical              :: useGeodesic
+    integer              :: gprmep_pathNameLength
+    character,allocatable:: gprmep_initPathName(:)
+    integer              :: gprmep_mode
+    ! For GPRMEP and geodesic: recalc energies when path is converged
+    logical              :: calc_final_energies=.false.
+                                                ! should energies be calculated 
+                                                ! after, e.g., a GPRMEP search
+    logical              :: onlyRecalcEnergy=.false. ! is gprmep in the mode of
+                                                     ! only calculating energies
+    ! VPT2 parameters
+    integer              :: vpt2_resonance_treatment ! Switch how to treat Fermi resonances (default: 1, deperturbation)
+    integer              :: vpt2_resonance_criterion ! Switch defining how resonances are detected (default: 1, Martin criterion)
+    real(rk)             :: vpt2_res_tol_deltae      ! 
+    real(rk)             :: vpt2_res_tol_deltae_hard ! 
+    real(rk)             :: vpt2_res_tol_martin      ! 
+    real(rk)             :: vpt2_res_tol_isaacson    ! 
+    real(rk)             :: vpt2_hdcpt2_alpha        ! 
+    real(rk)             :: vpt2_hdcpt2_beta         ! 
+    real(rk)             :: vpt2_deriv_deltaq        ! Step size for numerical derivatives of Hessians (default: 0.5)
+    real(rk)             :: vpt2_asym_tol            ! Threshold for the detection of symmtric tops (which are currently unsupported) (default: 1e-3)
+    real(rk)             :: vpt2_Tmin                ! Minimal temperature (in K) for partition function calculation (default: 200.)
+    real(rk)             :: vpt2_Tmax                ! Maximum temperature (in K) for partition function calculation (default: 600.)
+    integer              :: vpt2_nT                  ! Number of temperatures for which to calculate partition function (default: 5)
+    logical              :: vpt2_do_part_func        ! Do partition function calculation? (currently direct count, slow) (default: .false.)
+    logical              :: vpt2_grad_only           ! Does the QM method have only analytical gradients, no Hessians? (default: .false.)
+    logical              :: vpt2_force_doscf         ! Do an energy calculation before calling the Hessian/gradient routine. 
+                                                     ! This is essential for some QM interfaces (e.g.Turbomole!), otherwise garbage Hessians/gradients
+                                                     ! are produced. For other interfaces, a little time can be saved by turning this off, 
+                                                     ! because for instance, Gaussian automatically handles this by itself (default: .true.)
+    real(rk)             :: vpt2_dq_factor_4hess     ! In case of the gradient-only routine (when vpt2_grad_only==true), it makes sense to choose
+                                                     ! a smaller step size dQ for the initial finite-difference Hessian step, compared to the 
+                                                     ! finite-difference 3rd/4th derivatives. This variable controls by what factor dQ is reduced 
+                                                     ! for the Hessian (default: 10).
   end type glob_type
 
   ! Variables in the module
@@ -255,6 +311,9 @@ module dlf_global
   real(rk)          :: pi     ! 3.1415...
   integer           :: printl ! how verbosely to write info to stdout
   integer           :: printf ! how verbosely files should be written
+  logical           :: tstore ! store recently calculated gradients and
+  ! hessians in a sub-directory store_pes for a possible future calculation of
+  ! a PES
   logical           :: keep_alloutput=.true. ! Can be used to provide some 
   ! control over I/O in a parallel run, in conjunction with the interface 
   ! routine dlf_output.  For example: if true, write the output from 

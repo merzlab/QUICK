@@ -1,7 +1,8 @@
 ! **********************************************************************
 ! **                         Reaction Rate Module                     **
 ! **   Instanton theory and classical transition state theory with    **
-! **           several approximations for tunneling rates             **
+! **      several approximations for tunnelling rate constants        **
+! **           additional related routines in dlf_rateaux.f90         **
 ! **********************************************************************
 !!****h* neb/qts
 !!
@@ -37,7 +38,7 @@
 !!
 !! COPYRIGHT
 !!
-!!  Copyright 2010-2012 Johannes Kaestner (kaestner@theochem.uni-stuttgart.de),
+!!  Copyright 2010-2020 Johannes Kaestner (kaestner@theochem.uni-stuttgart.de),
 !!  Judith B. Rommel (rommel@theochem.uni-stuttgart.de)
 !!
 !!  This file is part of DL-FIND.
@@ -73,6 +74,13 @@ module dlf_qts
     !S_ins (Instanton action) = 0.5*S_0 + S_pot
     real(rk)  :: S_ins ! Potential part of S_ins 
     real(rk)  :: S_0 ! 2*Kinetic part of S_ins 
+!************************ADDED BY SEAN SEP 2015*************************
+    real(rk)  :: tcross
+    complex(rk)  :: S_sigma !Correction to the action: Kryvohuz
+    complex(rk)  :: S_dsigma
+    complex(rk)  :: S_ddsigma
+    complex(rk)  :: S_dsigma_star
+!************************ADDED BY SEAN SEP 2015*************************
     real(rk)  :: S_pot ! Potential part of S_ins 
     real(rk)  :: etunnel
     real(rk)  :: ers ! Energy of a minimum next to one end of the instanton path
@@ -94,13 +102,37 @@ module dlf_qts
     real(rk), allocatable :: igradhess(:,:)  ! (varperimage,nimage) gradient at the position of the Hessian in vhessian
     real(rk), allocatable :: icoordhess(:,:) ! (varperimage,nimage) coordinates of the position of the Hessian in vhessian
     logical   :: tsplit
+    real(rk) :: dEbdbeta ! d E_b / d beta_hbar
+    real(rk) :: dEbdbeta_prod ! d E_b / d beta_hbar from product of eigenvalues
+    real(rk) :: sigma ! Kryvohuz sigma from product of eigenvalues
+    real(rk), allocatable :: stabpar_diffeq(:)
+    real(rk), allocatable :: stabpar_trace(:)
   end type qts_type
   type(qts_type),save :: qts
   logical, parameter:: hess_dtau=.false. ! if true, the Potential-Hessian is
+  logical :: dbg_rot=.false.
   integer :: taskfarm_mode=1 ! default, especially if QTS is not used ...
+  logical, parameter :: time=.false. ! print timing information
   ! there is a global variable, glob%qtsflag. Meaning:
   ! 0: normal calculation
   ! 1: calculate tunnelling splittings (only valid for symmetric cases)
+  !
+  ! a derived-type variable for partition functions:
+  type pf_type
+    logical   :: tused
+    logical   :: tfrozen ! do frozen atoms exist in that fragment?
+    real(rk)  :: mass
+    real(rk)  :: ene
+    integer   :: nat
+    real(rk)  :: moi(3) ! moments of inertia (diagonal)
+    integer   :: nmoi ! number of used moments of inertia
+    integer   :: nvib ! number of vibrational modes
+    real(rk)  :: omega_imag ! absolute value of imaginary frequency (TS)
+    real(rk)  :: omega2zero(6) ! hessian-eigenvalues which are supposed to be zero
+    real(rk), allocatable :: omega(:) ! (nvib)
+    real(rk)  :: coeff(2) ! coefficients of even and odd angular momentum quantum numbers (ortho/para)  
+  end type pf_type
+  real(rk) :: minfreq
 end module dlf_qts
 !!****
 
@@ -290,15 +322,18 @@ subroutine dlf_qts_init()
   ! 31  calculate only the hessian of the middle image at the start, update all others based on that 
 
   ! This may become an input parameter in the future
-  qts%hessian_mode=33 ! generally: 33
+  qts%hessian_mode=33 ! generally: 33, hessian_mode=0 is broken. If
+                      ! you want recalculation at each step, see below
+                      ! at "hack to recalculate rather than update:"
   qts%first_hessian=.true.
 
   if(glob%iopt==12) qts%hessian_mode=0 ! make sure the whole Hessian is calculated for Rate calculations
 
   ! allocate storage for hessian update in case any update is requested
   qts%tupdate=qts%needhessian.and.(mod(qts%hessian_mode,10)==3 .or. qts%hessian_mode/10==3)
+  call allocate (qts%igradient, neb%varperimage*neb%nimage) 
+  qts%igradient=0.D0
   if(qts%tupdate) then
-    call allocate (qts%igradient, neb%varperimage*neb%nimage)
 ! call allocate (qts%igradient_old, neb%varperimage*neb%nimage) ! delete ...
 ! call allocate (qts%icoords_old, neb%varperimage*neb%nimage)
     call allocate (qts%igradhess, neb%varperimage,neb%nimage)
@@ -329,6 +364,8 @@ subroutine dlf_qts_init()
       if(taskfarm_mode==2) write(stdout,"('Parallelisation of FD-Hessians over images')")
     end if
   end if
+  
+  minfreq=-1.D0
 
 end subroutine dlf_qts_init
 !!****
@@ -346,7 +383,7 @@ subroutine dlf_qts_destroy()
   use dlf_parameter_module, only: rk
   use dlf_qts
   use dlf_global, only: glob
- use dlf_allocate, only: allocate, deallocate
+  use dlf_allocate, only: allocate, deallocate
   use dlf_neb, only: neb,unitp,xyzall
   implicit none
 
@@ -374,8 +411,8 @@ subroutine dlf_qts_destroy()
   endif
 
   ! deallocate storage for hessian update in case any update is requested
+  if (allocated(qts%igradient)) call deallocate (qts%igradient) 
   if(qts%tupdate) then
-    if (allocated(qts%igradient)) call deallocate (qts%igradient) 
 !      call deallocate (qts%igradient_old)
 !      call deallocate (qts%icoords_old)
     if (allocated(qts%igradhess)) call deallocate (qts%igradhess)
@@ -650,6 +687,7 @@ subroutine dlf_qts_trans_force(trerun,tok_back)
 
       qts%status=1
     else
+      ! Newton-Raphson update
       if(qts%tupdate) qts%igradient=glob%igradient ! store for update
       glob%igradient=qts%d_actionS
     end if
@@ -1541,7 +1579,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_neb, only: neb,unitp,xyzall
-  use dlf_global, only: glob,stdout,printl
+  use dlf_global, only: glob,stdout,printl,tstore
   use dlf_hessian, only: fd_hess_running
   use dlf_allocate, only: allocate,deallocate
   use dlf_constants, only : dlf_constants_get
@@ -1562,18 +1600,27 @@ subroutine dlf_qts_get_hessian(trerun_energy)
   integer                :: fromimg,startimg,endimg,iat
   real(rk)               :: svar,arr2(2)
   character(64)          :: label
+  real(rk),allocatable   :: ene_store(:)
+  real(rk)               :: tmp(1) !needed to compile with gfortran10
   !**********************************************************************
   fracrecalc=.false.
 
   ! catch the case of inithessian==5 (Hessian to be read from
   ! qts_hessian.txt)
-  if (glob%inithessian==5) then
+  if (glob%inithessian==5.or.glob%inithessian==7) then
     ! read hessian from disk
     nimage_read=neb%nimage
     call allocate(mass,glob%nat)
+    if(glob%inithessian==7) then
+      call allocate(ene_store,neb%nimage)
+      ene_store=neb%ene
+    end if
     call read_qts_hessian(glob%nat,nimage_read,neb%varperimage,glob%temperature,&
-        neb%ene,neb%xcoords,qts%vhessian,qts%etunnel,qts%dist,mass,"",tok)
-
+         neb%ene,neb%xcoords,qts%igradient,qts%vhessian,qts%etunnel,qts%dist,mass,"",tok,arr2)
+    if(glob%inithessian==7) then
+      neb%ene=ene_store
+      call deallocate(ene_store)
+    end if
     ! vhessian was set here, but the corresponding coordinates will be set
     ! here we should do a mass-re-weighting if necessary.
     if(minval(mass) > 0.D0) then
@@ -1705,10 +1752,12 @@ subroutine dlf_qts_get_hessian(trerun_energy)
       label="image"//trim(adjustl(label))
       iat=1 ! number of images (inout)
       call allocate(mass,glob%nat)
+      cstart=neb%cstart(qts%image_status)
+      cend=neb%cend(qts%image_status)
       ! read the Hessian of one image:
       call read_qts_hessian(glob%nat,iat,neb%varperimage,glob%temperature,&
-          neb%ene(qts%image_status),neb%xcoords(:,qts%image_status),qts%ihessian_image,&
-          qts%etunnel,arr2,mass,label,tok)
+          neb%ene(qts%image_status),neb%xcoords(:,qts%image_status),qts%igradient(cstart:cend),qts%ihessian_image,&
+          qts%etunnel,arr2,mass,label,tok,arr2)
       call deallocate(mass)
       if(tok) status=1
     end if
@@ -1755,13 +1804,33 @@ subroutine dlf_qts_get_hessian(trerun_energy)
     ! call to an external routine ...
     if(qts%try_analytic_hessian.and.glob%dotask) then
       call allocate(xhessian,glob%nvar,glob%nvar)
-      if(printl>=4) write(stdout,"('Calculating analytic Hessian for image ',i4)") qts%image_status 
-      call dlf_get_hessian(glob%nvar,neb%xcoords(:,qts%image_status),xhessian,status)
+      if(glob%eonly>0) then
+        if(mod(glob%eonly,2)==1) then
+          call dlf_fd_energy_hessian2(glob%nvar,neb%xcoords(:,qts%image_status),&
+              xhessian,status)
+        else 
+          call dlf_fd_energy_hessian4(glob%nvar,neb%xcoords(:,qts%image_status),&
+              xhessian,status)
+        end if
+      else
+        if(printl>=4) write(stdout,"('Calculating analytic Hessian for image ',i4)") &
+            qts%image_status 
+        call dlf_get_hessian(glob%nvar,neb%xcoords(:,qts%image_status),xhessian,status)
+      end if
     else
       status=1
     end if
 
     if(status==0) then
+      
+      ! quite likely, the gradient is wrong here. (does seem to be right ...)
+      if (tstore) call dlf_store_egh(glob%nvar,xhessian) 
+      ! store gradient after Hessian calculation
+      iimage=qts%image_status 
+      call dlf_direct_xtoi(glob%nvar,neb%varperimage,neb%coreperimage,&
+            neb%xcoords(:,iimage),glob%xgradient,&
+            glob%icoords(neb%cstart(iimage):neb%cend(iimage)), &
+            qts%igradient(neb%cstart(iimage):neb%cend(iimage)))
 
       call dlf_cartesian_hessian_xtoi(glob%nat,glob%nvar,neb%varperimage,glob%massweight,&
           xhessian,glob%spec,glob%mass,&
@@ -1781,6 +1850,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
     end if
   end if ! (.not. glob%havehessian .and. glob%inithessian == 0...)
 
+  if(allocated(xhessian)) call deallocate(xhessian)
 
   cstart=neb%cstart(qts%image_status)
   cend=neb%cend(qts%image_status)
@@ -1793,7 +1863,8 @@ subroutine dlf_qts_get_hessian(trerun_energy)
       ! to be communicated to the tasks:
       if(.not.fd_hess_running.and.glob%ntasks>0.and.taskfarm_mode==1) then
         call dlf_tasks_real_sum(glob%xgradient, glob%nvar)
-        call dlf_tasks_real_sum(glob%energy, 1)
+        tmp(1) = glob%energy
+        call dlf_tasks_real_sum(tmp(1), 1)
       end if
 
       ! reduce print level in dlf_fdhessian
@@ -1805,6 +1876,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
       call dlf_direct_xtoi(glob%nvar,neb%varperimage,neb%coreperimage,&
            glob%xcoords,glob%xgradient, &
           glob%icoords(cstart:cend),glob%igradient(cstart:cend))
+      if(.not.fd_hess_running) qts%igradient(cstart:cend)=glob%igradient(cstart:cend)
       call dlf_fdhessian(neb%varperimage,.false.,glob%energy,&
           glob%icoords(cstart:cend), &
           glob%igradient(cstart:cend),qts%ihessian_image,glob%havehessian)
@@ -1813,6 +1885,26 @@ subroutine dlf_qts_get_hessian(trerun_energy)
 !!$      call dlf_fdhessian(glob%nvar,.false.,glob%energy,&
 !!$          glob%xcoords, &
 !!$          glob%xgradient,qts%xhessian_image,glob%havehessian)
+
+      ! if Hessian is finished, store it
+      if(tstore.and.(.not.fd_hess_running)) then
+        ! hessian can only be written if it is calculated in the full
+        ! coordinate set 
+        ! we have to remove mass-weighting from hessian and have to use
+        ! glob%igradient to get the midpoint gradient (from which
+        ! mass-weighting has to be removed as well)
+        call allocate(xhessian,glob%nvar,glob%nvar)
+        call dlf_cartesian_hessian_itox(glob%nat,glob%nvar,neb%varperimage,glob%massweight,&
+            qts%ihessian_image,glob%spec,glob%mass,xhessian)
+        call dlf_cartesian_itox(glob%nat,neb%varperimage,neb%varperimage,glob%massweight,&
+            glob%icoords(cstart:cend),glob%xcoords)
+        call dlf_cartesian_gradient_itox(glob%nat,neb%varperimage,neb%varperimage,glob%massweight,&
+            glob%igradient(cstart:cend),glob%xgradient)
+        call dlf_store_egh(glob%nvar,xhessian)
+        call deallocate(xhessian)
+        
+      end if
+
 
       ! print here rather than in dlf_fdhessian
       if(printl_store>=4.and.glob%dotask) then
@@ -1829,14 +1921,13 @@ subroutine dlf_qts_get_hessian(trerun_energy)
 !!$         call dlf_fdhessian(glob%nivar,fracrec,glob%energy,glob%icoords, &
 !!$              glob%igradient,glob%ihessian,glob%havehessian)
     else
-      call dlf_fail("QTS rate calculation only possible for&
-          & inithessian 0, 2, or 6")
+      call dlf_fail("Instanton rate calculation only possible for&
+          & inithessian 0, 2, 6, or 7")
     end if ! (glob%inithessian==0.or.glob%inithessian==2) 
 
 
     ! check if FD-Hessian calculation currently running
     trerun_energy=(fd_hess_running) 
-
     if(trerun_energy) then
       !       call clock_start("COORDS")
 
@@ -1871,8 +1962,10 @@ subroutine dlf_qts_get_hessian(trerun_energy)
   if(taskfarm_mode==1.or.glob%dotask) then
     write(label,'(i6)') qts%image_status
     label="image"//trim(adjustl(label))
+    cstart=neb%cstart(qts%image_status)
+    cend=neb%cend(qts%image_status)
     call write_qts_hessian(glob%nat,1,neb%varperimage,glob%temperature,&
-        neb%ene(qts%image_status),neb%xcoords(:,qts%image_status),qts%vhessian(:,:,qts%image_status),&
+        neb%ene(qts%image_status),neb%xcoords(:,qts%image_status),qts%igradient(cstart:cend),qts%vhessian(:,:,qts%image_status),&
         qts%etunnel,qts%dist(1:2),label)
   end if
 
@@ -1949,7 +2042,8 @@ subroutine dlf_qts_update_hessian
   !real(rk)  :: hess_image(neb%varperimage,neb%varperimage)
 !  real(rk),allocatable  :: hess_image(:,:) ! (neb%varperimage,neb%varperimage)
   logical   :: havehessian,fracrecalc,was_updated
-  integer   :: nvar
+  integer   :: nvar,status
+  real(rk),allocatable :: xhessian(:,:) 
   fracrecalc=.false.
 
   nvar=neb%nimage*neb%varperimage*2
@@ -1987,12 +2081,26 @@ subroutine dlf_qts_update_hessian
 !!$      print*,"hess before",qts%vhessian(:,:,iimage)
 !!$    end if
     
-    call dlf_hessian_update(neb%varperimage, &
-        glob%icoords(cstart:cend),&
-        qts%icoordhess(:,iimage),&
-        qts%igradient(cstart:cend), &
-        qts%igradhess(:,iimage), &
-        qts%vhessian(:,:,iimage), havehessian, fracrecalc,was_updated)
+    ! hack to recalculate rather than update:
+    if(1==2) then ! 1==2 means: not not use, 1==1 means: always use
+      if(printl>=4) write(stdout,"('Calculating analytic Hessian for image ',i4)") &
+          iimage
+      call allocate(xhessian,glob%nvar,glob%nvar)
+      call dlf_get_hessian(glob%nvar,neb%xcoords(:,iimage),xhessian,status)
+      if(status/=0) call dlf_fail("Analytic Hessian not available, but required here")
+      call dlf_cartesian_hessian_xtoi(glob%nat,glob%nvar,neb%varperimage,glob%massweight,&
+          xhessian,glob%spec,glob%mass,&
+          qts%vhessian(:,:,iimage))
+      call deallocate(xhessian)
+    else
+      ! this is the default
+      call dlf_hessian_update(neb%varperimage, &
+          glob%icoords(cstart:cend),&
+          qts%icoordhess(:,iimage),&
+          qts%igradient(cstart:cend), &
+          qts%igradhess(:,iimage), &
+          qts%vhessian(:,:,iimage), havehessian, fracrecalc,was_updated)
+    end if
 
 !!$    if(iimage==2) then
 !!$      print*,"hess after",qts%vhessian(:,:,iimage)
@@ -2109,7 +2217,7 @@ subroutine qts_hessian_etos_halfpath
 
   ! write that Hessian to a file
   call write_qts_hessian(glob%nat,neb%nimage,neb%varperimage,glob%temperature,&
-      neb%ene,neb%xcoords,qts%vhessian,qts%etunnel,qts%dist,"intermediate")
+      neb%ene,neb%xcoords,qts%igradient,qts%vhessian,qts%etunnel,qts%dist,"intermediate")
 
 end subroutine qts_hessian_etos_halfpath
 !!****
@@ -2249,8 +2357,9 @@ subroutine qts_det_tsplitting(nimage,varperimage,dtau_,total_hessian,det_tsplit)
   !
   integer    :: ivar,nvar,iimage,jvar,posi,posj,ival
   real(rk) :: dtau(nimage+1)
+  real(rk) :: grad_rs(neb%varperimage)
   real(rk) :: hess_rs(neb%varperimage,neb%varperimage)
-  real(rk) :: arr2(2),svar,mass(glob%nat) ! scratch
+  real(rk) :: arr2(2),svar,mass(glob%nat), svar_tmp(1) ! scratch
 !  real(rk) :: evals_rs( neb%varperimage * neb%nimage )
   logical :: tok
 
@@ -2366,7 +2475,8 @@ subroutine qts_det_tsplitting(nimage,varperimage,dtau_,total_hessian,det_tsplit)
   ! get the whole hessian of the reactant
   ivar=1 ! nimage
   call read_qts_hessian(glob%nat,ivar,neb%varperimage,svar,&
-      svar,glob%xcoords,hess_rs,svar,arr2,mass,"rs",tok)
+      svar_tmp,glob%xcoords,grad_rs,hess_rs,svar,arr2,mass,"rs",tok,arr2)
+  svar=svar_tmp(1)
   if(.not.tok) then
     if(printl>=2) write(stdout,*) "Warning: full reactant state Hessian not available (qts_hessian_rs.txt)"
     det_tsplit=0.D0
@@ -2519,7 +2629,7 @@ end subroutine report_qts_pathlength
 !!
 !! FUNCTION
 !!
-!! Calculate the tunnelling rate using the instanton method. Calls
+!! Calculate the instanton rate constant. Calls
 !! write_qts_hessian to write qts_hessian.txt.
 !!
 !! INPUTS
@@ -2546,21 +2656,39 @@ subroutine dlf_qts_rate()
   real(rk),allocatable :: evecs_hess(:,:) ! (neb%varperimage*neb%nimage*2,neb%varperimage*neb%nimage*2)
   real(rk),allocatable :: xmode(:,:) ! (3,glob%nat)
   real(rk),allocatable :: vec0(:) ! (neb%varperimage*neb%nimage*2)
+  real(rk),allocatable :: zpe(:) ! (neb%nimage)
+  real(rk),allocatable :: evals_image(:) ! (neb%varperimage)
+  real(rk),allocatable :: evecs_image(:,:) ! (neb%varperimage,neb%varperimage)
   real(rk)   :: prod_evals_hess_prime,ers,qrs
+  real(rk)   :: prod_sigma
   integer    :: ivar,ival,nvar,iimage,nimage,jvar,cstart,cend
   logical    :: tok
   real(rk)   :: second_au
   character(2) :: chr2
   character(50) :: filename
-  real(rk)   :: cm_inv_for_amu,amu,svar,svar2
+  real(rk)   :: cm_inv_for_amu,amu,svar,svar2,svar3
   logical    :: tbimol
   integer    :: primage,neimage
   real(rk)   :: det_tsplit
   character(20) :: label
   real(rk)   :: vb,alpha,kappa_eck
   real(rk)   :: eff_mass,norm,norm_total,eff_mass_total
-  integer    :: icomp,iat
-  real(rk)   :: qrot,qrot_part
+  integer    :: icomp,iat,nzero
+  real(rk)   :: qrot,qrot_part,zpers,moi(3)
+  logical    :: tflux=.false.
+  real(rk)   :: corrfac,qrot_quant,qrot_quant_part,coeff(2)
+  real(rk)  :: qrot_store,projtr
+  real(rk),allocatable :: mass_all(:) ! nat*nimage
+  real(rk),allocatable :: trmodes(:,:),trmodes2(:,:)
+  integer :: jimage,info
+  ! variables for Andreas' alternative way to calculate the rate
+  real(rk) :: fluc_rs_ana,fluc_rs,mass_bimol,pe
+  real(rk) :: fluc_inst,phi_rel,q_rot_trans,rate_const
+  complex(rk), allocatable :: u_param(:), u_param2(:)
+  integer :: varperimage_read,nvib
+  character(5000) :: line
+  real :: time2,time3
+  real(rk),allocatable :: omega2(:) ! RS hessian eigenvalues
   !**********************************************************************
   !write(*,*) 'Total hessian', qts%total_hessian
 
@@ -2580,7 +2708,6 @@ subroutine dlf_qts_rate()
   nvar=neb%varperimage*neb%nimage*2
   nimage=neb%nimage
   prod_evals_hess_prime=1.D0
-
   ! write the hessian to disk
   if (glob%inithessian/=5) then
     if(glob%iopt==12) then
@@ -2589,7 +2716,7 @@ subroutine dlf_qts_rate()
       label="upd"
     end if
     call write_qts_hessian(glob%nat,neb%nimage,neb%varperimage,glob%temperature,&
-        neb%ene,neb%xcoords,qts%vhessian,qts%etunnel,qts%dist,label)
+        neb%ene,neb%xcoords,qts%igradient,qts%vhessian,qts%etunnel,qts%dist,label)
   end if
 
   if(printl>=4) then
@@ -2597,6 +2724,15 @@ subroutine dlf_qts_rate()
   end if
 
   !print*,"jk total hessian",qts%total_hessian
+  call allocate(omega2,neb%varperimage)
+
+  call qts_reactant(qrs,ers,zpers,qrot_part,qrot_quant,tbimol,tok, phi_rel,&
+      neb%varperimage,omega2,nvib)
+  qrot=-qrot_part
+  qrot_quant=-qrot_quant
+  if(.not.tok) then
+    ers=0.D0
+  end if
 
 !!$  !check if Hessian is duplicated correctly:
 !!$        !print*,"Hessian update ok?",havehessian
@@ -2615,15 +2751,47 @@ subroutine dlf_qts_rate()
 !!$  end do
 !!$  print*,"duplication checked"
 
-  ! calculate the rotational partition function 
-  qrot=0.D0 ! we calculate the logarithm here
-  svar=sum(qts%dtau(1:nimage+1))-0.5D0*(qts%dtau(1)+qts%dtau(nimage+1))
-  do iimage=1,nimage
-    call rotational_partition_function(glob%nat,glob%nzero,neb%xcoords(:,iimage),qrot_part)
-    qrot=qrot + (qts%dtau(iimage)+qts%dtau(iimage+1))*0.5D0/svar * log(qrot_part)
-  end do
+  ! calculate the rotational partition function of the instanton 
+  if(glob%irot==0) then
+    qrot_store=qrot
 
+!!$    ! calculate the rotational partition function as geometric average of those of the individual images:
+!!$    svar=sum(qts%dtau(1:nimage+1))-0.5D0*(qts%dtau(1)+qts%dtau(nimage+1))
+!!$    do iimage=1,nimage
+!!$      nzero=glob%nzero
+!!$      call rotational_partition_function(glob%nat,glob%mass,nzero,neb%xcoords(:,iimage),beta_hbar,qrot_part,moi)
+!!$      if(nzero/=glob%nzero) print*,"Warning: nzero is likely to be wrong!"
+!!$      qrot=qrot + (qts%dtau(iimage)+qts%dtau(iimage+1))*0.5D0/svar * log(qrot_part)
+!!$    end do
+!!$    if(dbg_rot) print*,"ln(Rotational partition function) instanton:",qrot 
+!!$    print*,"ln(Rotational partition function) instanton: (prod of Q, not used)",qrot 
+
+    ! calculate the rotational partition function from a supermolecule
+    if(printl>=4) write(stdout,"('Rotational partition function of the instanton is calculated as supermolecule.')")
+    call allocate(mass_all,glob%nat*nimage)
+    do iimage=1,nimage
+       mass_all((iimage-1)*glob%nat+1:iimage*glob%nat)=glob%mass/dble(nimage) ! this should include dtau for variable dtau
+    end do
+    nzero=glob%nzero
+    coeff=1.D0 ! odd/even J in rotation (no possibility to set by user yet)
+    call rotational_partition_function(glob%nat*nimage,mass_all,nzero,neb%xcoords(:,:),beta_hbar,coeff,&
+         qrot_part,qrot_quant_part,moi)
+    if(nzero/=glob%nzero.and.printl>=2) write(stdout,"('Warning: nzero is likely to be wrong!')")
+    call deallocate(mass_all)
+    qrot=qrot_store+log(qrot_part)
+    qrot_quant=qrot_quant+log(qrot_quant_part)
+    !print*,"ln(Rotational partition function) instanton: (supermolecule, used)",qrot 
+  end if
   
+  ! re-calculate S_pot in case of inithessian=7
+  if(glob%inithessian==7.or.glob%inithessian==5) then
+    ! JK: 5 was added along with 7: it should not hurt in general, but makes it possible to re-calculate dual-level
+    ! rate constants with inithessian=5
+    qts%S_pot=0.D0
+    do iimage=1,nimage
+      qts%S_pot=qts%S_pot+neb%ene(iimage)*(qts%dtau(iimage)+qts%dtau(iimage+1))
+    end do
+  end if
 
   call allocate(total_hessian,neb%varperimage*neb%nimage*2,neb%varperimage*neb%nimage*2)
   total_hessian(:,:)=0.D0
@@ -2683,33 +2851,217 @@ subroutine dlf_qts_rate()
         -vec0(neb%cstart(iimage):neb%cend(iimage)) 
   end do
   vec0=vec0/sqrt(sum(vec0**2))
-  write(*,'("Expectation value of vec0:",es18.9)') sum(vec0*matmul(total_hessian,vec0))
+  write(*,'("Expectation value of the image rotation:",es18.9)') sum(vec0*matmul(total_hessian,vec0))
 
+  ! calculate d E_b / d beta_hba
+  if(sum(abs(qts%igradient))>0.D0) then ! meaning: if it was set
+    call calc_dEdbeta(neb%nimage, glob%icoords, qts%vhessian, qts%igradient, &
+        neb%varperimage, beta_hbar, info, qts%dEbdbeta)
+  else
+    if(printl>=4) write(stdout,'("No gradient information, dEb/dbeta is calculated from product of eigenvalues.")')
+    qts%dEbdbeta=1.D0 ! positive is flagged as useless
+  end if ! gradient was set
+
+  call allocate(qts%stabpar_diffeq,neb%varperimage-glob%nzero-1)
+  call allocate(qts%stabpar_trace,neb%varperimage-glob%nzero-1)
+  
+  ! calculate stability parameters by solving the stability matrix
+  ! differential equation numerically
+  ! this call sets qts%stabpar_diffeq
+  call stability_parameters_monodromy
+  
   if(printl>=4) write(stdout,"('Diagonalising the Hessian matrix ...')")
   call allocate(evals_hess, neb%varperimage*neb%nimage*2)
   call allocate(evecs_hess, neb%varperimage*neb%nimage*2,neb%varperimage*neb%nimage*2)
-  if(hess_dtau) then
-    call dlf_matrix_diagonalise(neb%varperimage*neb%nimage*2,total_hessian,evals_hess,evecs_hess)
-  else
+  !if(hess_dtau) then
+  if(time) call CPU_TIME (time2)
+  call dlf_matrix_diagonalise(neb%varperimage*neb%nimage*2,total_hessian,evals_hess,evecs_hess)
+  if(time) call CPU_TIME (time3)
+  if(time) print*,"time full diagonalisation:", time3-time2
+  !else
     ! Asymmetric:
     ! using MKL, the eigenvalues (singular values) are returned sorted. However,
     ! only their absolute value is returned in any case
     ! call dlf_matrix_asymm_diagonalise(neb%varperimage*neb%nimage*2,total_hessian,evals_hess)
 
     ! Symmetric
-    call dlf_matrix_diagonalise(neb%varperimage*neb%nimage*2,total_hessian,evals_hess,evecs_hess)
-  end if
+  !  call dlf_matrix_diagonalise(neb%varperimage*neb%nimage*2,total_hessian,evals_hess,evecs_hess)
+  !end if
 
   call deallocate(total_hessian)
 
+  !
+  ! write information files (qtsene)
+  !
+  if(qts%status==1.and.printl>=2.and.printf>=2) then
+    ! list of energies 
+    if (glob%ntasks > 1) then
+      open(unit=501,file="../qtsene")
+    else
+      open(unit=501,file="qtsene")
+    end if
+    write(501,"('# E_RS:   ',f20.10)") ers
+    write(501,"('# ZPE(RS):',f20.10)") zpers
+    write(501,"('# S_0:    ',f20.10)") qts%S_0
+    write(501,"('# S_pot:  ',f20.10)") qts%S_pot - ers*beta_hbar
+    write(501,"('# S_ins:  ',f20.10)") qts%S_ins- ers*beta_hbar
+    svar=(qts%S_pot - 0.5D0 * qts%S_0 )/beta_hbar
+    write(501,"('# Etunnel from those (rel to RS)',f18.10)") svar-ers
+    write(501,"('# Etunnel energy conservation:  ',f18.10)") qts%etunnel-ers
+    write(501,"('# Unit of path length: mass-weighted Cartesians (sqrt(m_e)*Bohr)')")
+    write(501,*)
+    write(501,"('# Path length   Energy-E_RS      VAE-RS           Energy           VAE              rel. ZPE')")
+    call allocate(zpe,neb%nimage)
+    zpe=0.D0
+    call allocate(evals_image,neb%varperimage)
+    call allocate(evecs_image,neb%varperimage,neb%varperimage)
+    do iimage=1,neb%nimage
+      ! calculate ZPE for that image
+      call dlf_matrix_diagonalise(neb%varperimage,qts%vhessian(:,:,iimage),evals_image,evecs_image)
+      icomp=glob%nzero
+      if(abs(evals_image(1))>abs(evals_image(glob%nzero+1))) icomp=icomp+1
+      do ivar=icomp+1,neb%varperimage
+        ! it would be better to project out R&T
+        ! now we have the total ZPE. Do we want it perpendicular to the path, or along the path?
+        if(evals_image(ivar)>0.D0) then
+          zpe(iimage)=zpe(iimage)+0.5D0*sqrt(evals_image(ivar))
+        end if
+      end do
+      write(501,"(f10.5,5f17.10)") qts%dist(iimage),neb%ene(iimage)-ers,&
+          neb%ene(iimage)+zpe(iimage)-ers-zpers,neb%ene(iimage),&
+          neb%ene(iimage)+zpe(iimage),zpe(iimage)-zpers
+    end do
+    call deallocate(zpe)
+    call deallocate(evals_image)
+    call deallocate(evecs_image)
+    
+    write(501,*)
+    write(501,"(f10.5,f17.10)") 0.D0,qts%etunnel-ers
+    write(501,"(f10.5,f17.10)") qts%dist(neb%nimage+1),qts%etunnel-ers
+    close(501)
+ end if
+  ! normalise each image of first eigenvector
+  jvar=2
+  do ivar=1,19
+    if((sum(vec0*evecs_hess(:,ivar)))**2>0.8D0) then
+      jvar=ivar
+      exit
+    end if
+  end do
+  !print*,"Rotation eigenvector",jvar
+  call allocate(trmodes,2*neb%varperimage*glob%nimage,1)
+  trmodes=reshape(evecs_hess(:,jvar),(/2*neb%varperimage*glob%nimage,1/)) ! image rotation mode
+
+  ! now we could run the averaged eigenvalue method:
+  call sigma_frequency_average(trmodes)
+
+  ! Another way to calculate stability parameters:
+  if(nzero==6) then
+    ! this routine sets qts%stabpar_trace
+    call stability_parameters_trace(trmodes)
+  end if
+
+  ! Hessian average
+  !call stapar_avg_hessian(evecs_hess(:,jvar))
+
+  ! analysis of eigenvalues of the full Hessian
+  do iimage=1,2*neb%nimage
+    cstart=iimage*neb%varperimage-neb%varperimage+1
+    cend=iimage*neb%varperimage
+    svar=sum(trmodes(cstart:cend,1)**2)
+    trmodes(cstart:cend,1)=trmodes(cstart:cend,1)/sqrt(svar)
+  end do
+  icomp=0
+  svar2=0.D0
+  prod_evals_hess_prime=0.D0
+  prod_sigma=0.D0
+  do ival=1,2*neb%nimage*neb%varperimage
+    svar=0.D0
+    do iimage=1,2*neb%nimage
+      cstart=iimage*neb%varperimage-neb%varperimage+1
+      cend=iimage*neb%varperimage
+      svar=svar+(sum(trmodes(cstart:cend,1)*evecs_hess(cstart:cend,ival)))**2
+    end do
+    if(ival/=jvar) svar2=svar2+svar
+    ! use all eigenvalues, but only a fraction of them
+    if(ival/=jvar.and.(ival==1.or.ival>glob%nzero+2)) then
+      prod_evals_hess_prime=prod_evals_hess_prime&
+          +svar*0.5D0*log(abs(evals_hess(ival)))
+      prod_sigma=prod_sigma &
+          +(1.D0-svar)*0.5D0*log(abs(evals_hess(ival)))
+!!$      print*,"projection",ival,svar,evals_hess(ival), "using"
+!!$    else
+!!$      print*,"projection",ival,svar,evals_hess(ival), "NOT using"
+    end if
+    icomp=2*neb%nimage ! needed below
+    !
+  end do
+  call deallocate(trmodes)
+  !print*,"prod_evals_hess_prime",prod_evals_hess_prime
+  !print*,"dtau^P               ",icomp,dble(icomp)*log(beta_hbar/dble(2*neb%nimage))
+  !print*,"sum proj",svar2," number with proj > 0.5:",icomp
+  if(printl>=4.and.abs(svar2+1.D0-dble(2*neb%nimage))>1.D-6) then
+     write(stdout,'("Warning: projection of eigenvectors problematic! ",f10.5)') &
+          svar2+1.D0-dble(2*neb%nimage)
+  end if
+  !print*,"test1=ln  ",prod_evals_hess_prime+dble(2*neb%nimage)*log(beta_hbar/dble(2*neb%nimage))
+  !print*,"test2=108 ",exp(prod_evals_hess_prime+dble(2*neb%nimage)*log(beta_hbar/dble(2*neb%nimage)))
+  svar=exp(prod_evals_hess_prime+dble(icomp)*log(beta_hbar/dble(2*neb%nimage)))
+  svar=-qts%S_0/svar**2
+  qts%dEbdbeta_prod=svar
+  print*,"dE_b/dbh from product",qts%dEbdbeta_prod
+  if(qts%dEbdbeta>0.99D0) qts%dEbdbeta=qts%dEbdbeta_prod
+
+  ! now get sigma
+  svar2=0.D0
+  do iimage=1,2*neb%nimage-1
+    svar2=svar2+0.5D0*log(4.D0/(beta_hbar/dble(2*neb%nimage))**2*(sin(pi*dble(iimage)/dble(2*neb%nimage)))**2)
+  end do
+  svar=prod_sigma-svar2*glob%nzero+dble(2*neb%nimage*(neb%varperimage-1-glob%nzero))*&
+      log(beta_hbar/dble(2*neb%nimage))
+  qts%sigma=svar
+  if(printl>=2) write(stdout,'("Sigma from product of eigenvalues of full Hessian:",es15.7)') qts%sigma
+
+  ! translation and rotation modes of the whole path
+  call allocate(mass_all,glob%nat*nimage)
+  do iimage=1,nimage
+     mass_all((iimage-1)*glob%nat+1:iimage*glob%nat)=glob%mass/dble(nimage) ! this should include dtau for variable dtau
+  end do
+  !call allocate(longxcoords,3,glob%nat*glob%nimage)
+  call allocate(trmodes,neb%varperimage*glob%nimage,6)
+  call allocate(trmodes2,2*neb%varperimage*glob%nimage,6)
+  if(neb%varperimage==3*glob%nat) then
+     call dlf_trmodes(glob%nat*glob%nimage,mass_all,neb%xcoords(:,:),ival,trmodes)
+     ! set useful entries in trmodes2
+     ! double entries in trmodes
+     trmodes2(1:neb%varperimage*glob%nimage,:)=trmodes
+     ivar=neb%varperimage*glob%nimage
+     do iimage=1,nimage
+        jimage=nimage-iimage+1
+        trmodes2(ivar+jimage*neb%varperimage-neb%varperimage+1:ivar+jimage*neb%varperimage,:)=&
+             trmodes(iimage*neb%varperimage-neb%varperimage+1:iimage*neb%varperimage,:)
+     end do
+  else
+     trmodes2=0.D0 ! must not be used anyway
+  end if
+  call deallocate(trmodes)
+  call deallocate(mass_all)
+  trmodes2=trmodes2/sqrt(2.D0)
+  
   ! Print Eigenvalues (not all...)
   if(printl>=4) then
     call dlf_constants_get("CM_INV_FOR_AMU",CM_INV_FOR_AMu)
     call dlf_constants_get("AMU",amu)
     write(stdout,"('Eigenvalues of the qTS Hessian')")
-    write(stdout,"('Number    Eigenvalue      Wave Number        Projection onto tangent')")
+   !write(stdout,"('Number    Eigenvalue      Wave Number       Projection onto tangent')")
+    write(stdout,"('Number    Eigenvalue      Wave Number       <tan> <T&R>')")
 
-    do ival=1,min(15,nvar)
+    do ival=1,min(15,nvar) ! was 15
+      projtr=0.D0
+      do icomp=1,6
+        projtr=projtr+(sum(evecs_hess(:,ival)*trmodes2(:,icomp)))**2
+      end do
+      
       if(hess_dtau) then
         svar=evals_hess(ival)*dble(2*neb%nimage)/beta_hbar*amu ! transformed EV - for E" multiplied by dtau in Hessian
       else
@@ -2718,14 +3070,52 @@ subroutine dlf_qts_rate()
       svar=sqrt(abs(svar))*CM_INV_FOR_AMU
       if(evals_hess(ival)<0.D0) svar=-svar
       if(ival>1.and.ival<glob%nzero+3) then
-        write(stdout,"(i6,1x,es18.9,2x,f10.3,' cm^-1 ',f5.3,', treated as zero')") &
-            ival,evals_hess(ival),svar,(sum(vec0*evecs_hess(:,ival)))**2
+        write(stdout,"(i6,1x,es18.9,2x,f10.3,' cm^-1',2f6.3,', treated as zero')") &
+            ival,evals_hess(ival),svar,(sum(vec0*evecs_hess(:,ival)))**2,projtr
       else
-        write(stdout,"(i6,1x,es18.9,2x,f10.3,' cm^-1 ',f5.3)") ival,evals_hess(ival),&
-            svar,(sum(vec0*evecs_hess(:,ival)))**2
+        write(stdout,"(i6,1x,es18.9,2x,f10.3,' cm^-1',2f6.3)") ival,evals_hess(ival),&
+            svar,(sum(vec0*evecs_hess(:,ival)))**2,projtr
       end if
     end do
-  end if 
+  end if
+
+  ! check if the correct modes were omitted (needs to be done outside
+  ! of the above print loop, because that is only executed at high
+  ! enough printl)
+  projtr=0.D0
+  do ival=2,glob%nzero+2
+    do icomp=1,6
+      projtr=projtr+(sum(evecs_hess(:,ival)*trmodes2(:,icomp)))**2
+    end do
+    projtr=(sum(vec0*evecs_hess(:,ival)))**2+projtr
+  end do
+  if(projtr<dble(glob%nzero+1)-0.1D0-10.D0) then ! -10: switch that check OFF
+    if(printl>=4) then
+      write(stdout,'("Part of the small eigenvalues include vibrations. &
+          &Taking that into account in the product.")')
+      write(stdout,'("sum of projections",f10.5)') projtr
+    end if
+    prod_evals_hess_prime=0.D0
+    do ival=1,nvar
+      projtr=0.D0
+      do icomp=1,6
+        projtr=projtr+(sum(evecs_hess(:,ival)*trmodes2(:,icomp)))**2
+      end do
+      svar=(sum(vec0*evecs_hess(:,ival)))**2
+      if(projtr+svar<=0.1D0) prod_evals_hess_prime=prod_evals_hess_prime+&
+          log(abs(evals_hess(ival)))
+      ! include a fraction of the eigenvalue is projection is in between 0.1 and 0.9
+      if(projtr+svar>0.1D0.and.projtr+svar<0.9D0) &
+          prod_evals_hess_prime=prod_evals_hess_prime+&
+          log(abs(evals_hess(ival)))*(1.D0-(projtr+svar))
+    end do
+    prod_evals_hess_prime=0.5D0*prod_evals_hess_prime
+  else
+    ! calculate the log of the product rather than the product - to avoid overflow
+    prod_evals_hess_prime=0.5D0* (log(abs(evals_hess(1))) + sum(log(abs(evals_hess(glob%nzero+3:nvar)))) )
+  end if
+  
+  call deallocate(trmodes2)
   ! print warnings
   if(printl>=2) then
     if(abs(evals_hess(1)/evals_hess(2)) < 10.D0) then
@@ -2781,15 +3171,12 @@ subroutine dlf_qts_rate()
   !Calculate Rate (hbar=1) (see Messina/Schenter, J. Chem. Phys. 1995)
   !---------------------------------------------------------------------------------
 
-  ! calculate the log of the product rather than the product - to avoid overflow
-  prod_evals_hess_prime=0.5D0* (log(abs(evals_hess(1))) + sum(log(abs(evals_hess(glob%nzero+3:nvar)))) )
 
   ! check if mode of image rotation is within the zero modes
   svar=0.D0
   do ival=2,glob%nzero+2
     svar=max(svar,(sum(vec0*evecs_hess(:,ival)))**2)
   end do
-!!$PRINT*,"Warning: cyclic mode checker deactivated!"
   if(svar<0.1D0) then
     ! search for image rotation mode among all modes and exchange eigenvalues
     do ival=glob%nzero+3,nvar
@@ -2808,7 +3195,7 @@ subroutine dlf_qts_rate()
 
   ! calculate a reduced mass of the instanton
   ! transform the transition mode to xcoords
-  if(printl>=2) then
+  if(printl>=6) then
     call allocate(xmode,3,glob%nat)
     xmode(:,:)=0.D0
     call dlf_constants_get("AMU",amu)
@@ -2858,21 +3245,18 @@ subroutine dlf_qts_rate()
 !  call deallocate(evals_hess)
   call deallocate(vec0)
 
+  qts%S_ins=0.5D0 * qts%S_0 + qts%S_pot - ers*beta_hbar
+
   call dlf_constants_get("SECOND_AU",second_au)
-  call qts_reactant(qrs,ers,qrot_part,tbimol,tok)
-  qrot=qrot-qrot_part
-  if(.not.tok) then
-    ers=0.D0
-  end if
   if(printl>=2) then
     write(stdout,"('S_0                                ',es17.10,' hbar')") &
         qts%S_0
     write(stdout,"('S_pot                              ',es17.10,' hbar')") &
         qts%S_pot - ers*beta_hbar
     write(stdout,"('S_ins                              ',es17.10,' hbar')") &
-        qts%S_ins - ers*beta_hbar
+        qts%S_ins 
     write(stdout,"('E_eff                              ',es17.10)") &
-        qts%S_ins/beta_hbar - ers
+        qts%S_ins/beta_hbar
     write(stdout,"('beta*hbar                          ',es17.10)") &
         beta_hbar
     write(stdout,"('ln SQRT(S_0/2pi)                   ',es17.10)") &
@@ -2890,18 +3274,17 @@ subroutine dlf_qts_rate()
     else
       write(stdout,"('-ln Prod( SQRT( eigvals))          ',es17.10)") &
           -prod_evals_hess_prime!-log(beta_hbar/dble(2*neb%nimage))*dble(glob%nzero+1)
+      !print*,"test1=ln  ",prod_evals_hess_prime+dble(2*neb%nimage*neb%varperimage)*log(beta_hbar/dble(2*neb%nimage))
+      !print*,"test2=108 ",exp(prod_evals_hess_prime+dble(2*neb%nimage*neb%varperimage)*log(beta_hbar/dble(2*neb%nimage)))
+      !svar=exp(prod_evals_hess_prime+dble(2*neb%nimage*neb%varperimage)*log(beta_hbar/dble(2*neb%nimage)))
+      !svar=-qts%S_0/svar**2
+      !print*,"test dE_b/dbh",svar
+      
       write(stdout,"('ln dtau                            ',es17.10)") &
           log(beta_hbar/dble(2*neb%nimage))
     end if
-    !write(stdout,"('  1 / (dTau*Prod( SQRT( eigvals))) ',es17.10)") &
-    !    exp(-prod_evals_hess_prime)*dble(2*neb%nimage)/beta_hbar
-    svar=0.5D0 * qts%S_0 + qts%S_pot
-    if(tok) then
-      svar=qts%S_pot - ers*beta_hbar
-      svar=0.5D0 * qts%S_0 + svar
-    end if
-    write(stdout,"('-S_ins/hbar                        ',es17.10)") -svar !qts%S_ins
-    !write(stdout,"('  exp(-S_ins/hbar)                 ',es17.10)") exp(-qts%S_ins)
+    
+    write(stdout,"('-S_ins/hbar                        ',es17.10)") -qts%S_ins
   end if
 
   !qts%rate=sqrt(qts%S_0/(2.D0*pi*qts%const_hess))*exp(-qts%S_ins)/prod_evals_hess_prime
@@ -2910,15 +3293,21 @@ subroutine dlf_qts_rate()
     !  qts%rate=0.5D0*log(qts%S_0/2.D0/pi) -svar &
     !      -prod_evals_hess_prime-log(beta_hbar/dble(2*neb%nimage))*&
     !      (dble(glob%nzero+1)*0.5D0+dble(neb%varperimage*neb%nimage))
-    qts%rate=0.5D0*log(qts%S_0/2.D0/pi) -svar &
+    qts%rate=0.5D0*log(qts%S_0/2.D0/pi) -qts%S_ins &
         -prod_evals_hess_prime-0.5D0*log(beta_hbar/dble(2*neb%nimage))
   else
-    qts%rate=0.5D0*log(qts%S_0/2.D0/pi) -svar &
+    qts%rate=0.5D0*log(qts%S_0/2.D0/pi) -qts%S_ins &
         -prod_evals_hess_prime!-log(beta_hbar/dble(2*neb%nimage))*dble(glob%nzero+1)
   end if
 
-  if(printl>=2) write(stdout,"('ln(RATE * Q(RS))                   ',es18.9)") qts%rate
-  if(printl>=2) write(stdout,"('   RATE * Q(RS)                    ',es18.9)") exp(qts%rate)
+  if(printl>=2) write(stdout,"('ln(RATE * Q(RS)) = ln(Flux)        ',es17.10)") &
+       qts%rate-log(beta_hbar/dble(2*neb%nimage))*dble(2*neb%nimage*neb%varperimage)
+  if(printl>=2) write(stdout,"('   RATE * Q(RS) = Flux             ',es17.10)") &
+       exp(qts%rate-log(beta_hbar/dble(2*neb%nimage))*dble(2*neb%nimage*neb%varperimage))
+  if(tflux) then
+    write(stdout,"('Calculating a flux rather than a rate constant!')")
+    qrs=log(beta_hbar/dble(2*neb%nimage))*dble(2*neb%nimage)
+  end if
 
 !!$  ! Flux, tested for the Eckart potential
 !!$  if(printl>=2) write(stdout,"('ln(FLUX)                           ',es18.9)") &
@@ -2949,21 +3338,31 @@ subroutine dlf_qts_rate()
 !!$      log(beta_hbar*0.5D0/dble(neb%nimage))*dble(2*neb%nimage))
 !!$  print*,"beta hbar",beta_hbar
 !!$  print*,"log10(dtau)*2P",log(beta_hbar*0.5D0/dble(neb%nimage))*dble(2*neb%nimage)/log(10.D0)
-
+ 
   if(tok) then
+    ! make sure the tunneling energy is sensible (relevant mainly for dual-level):
+    if(qts%etunnel-ers < 0.D0) then
+      qts%etunnel=(qts%S_pot - 0.5D0 * qts%S_0 )/beta_hbar
+      if(printl>=2) write(stdout,"('Tunneling energy re-calculated from S_pot')")
+    end if
     if(printl>=2) then
-      write(stdout,"('Energy of the Reactant             ',es17.10,' Hartree')") &
+      write(stdout,"('Energy of the RS                   ',es17.10,' Hartree')") &
           ers
-      write(stdout,"('ln(Q(RS))                          ',es18.9)") qrs
-      write(stdout,"('ln Qrot_rel                        ',es18.9)") qrot
+      write(stdout,"('Tunneling energy (rel. to RS)      ',es17.10,' Hartree')") &
+          qts%etunnel-ers
+      write(stdout,"('d E_b / d beta_hbar                ',es17.10)") qts%dEbdbeta
+      write(stdout,"('ln(Q(RS))                          ',es17.10)") qrs
+      write(stdout,"('ln Qrot_rel                        ',es17.10)") qrot
+      write(stdout,"('Quantum rigid rotors change k by a factor',es17.10)") exp(qrot_quant-qrot)
       write(stdout,"(' The following should be as independent of nimage as possible:')") 
       if(hess_dtau) then
-        write(stdout,"('ln(Q_TS/Q_RS)_vib                  ',es18.9)") -prod_evals_hess_prime &
+         write(stdout,"('ln(Q_TS/Q_RS)_vib                  ',es17.10)") -prod_evals_hess_prime &
             -log(beta_hbar/dble(2*neb%nimage))*(dble(glob%nzero+1)*0.5D0+dble(2*neb%nimage))-qrs
       else
-        write(stdout,"('ln(Q_TS/Q_RS)_vib                  ',es18.9)") -prod_evals_hess_prime -qrs
+        write(stdout,"('ln(Q_TS/Q_RS)_vib                  ',es17.10)") -prod_evals_hess_prime -qrs
       end if
-      write(stdout,"('Q(RS)                              ',es18.9)") exp(qrs)
+      ! commented out due to floating overflows:
+!      write(stdout,"('Q(RS)                              ',es17.10)") exp(qrs)
 
       if(qts%tsplit.and.printl>=2) then
         ! Tunnelling splitting stuff
@@ -2987,27 +3386,26 @@ subroutine dlf_qts_rate()
 
         ! Tunnelling splitting from linear (open) path:
         write(stdout,*) "Tunnelling splitting with S_0 calculated from the path length"
-        write(stdout,"('S_0/2 from the path length         ',es18.9)") qts%S_0/2.D0
+        write(stdout,"('S_0/2 from the path length         ',es17.10)") qts%S_0/2.D0
         svar=2.D0*sqrt(qts%S_0/4.D0/pi)* &
             exp(-0.5D0*qts%S_0 -det_tsplit) 
-        write(stdout,"('Tunnelling splitting linear path S0 ',es18.9,' Hartree')") svar
+        write(stdout,"('Tunnelling splitting linear path S0 ',es17.10,' Hartree')") svar
         call dlf_constants_get("CM_INV_FROM_HARTREE",svar2)
-        write(stdout,"('Tunnelling splitting linear path S0 ',es18.9,' cm^-1')") svar*svar2
+        write(stdout,"('Tunnelling splitting linear path S0 ',es17.10,' cm^-1')") svar*svar2
         
         ! calculate S_0 from potential: 
         write(stdout,'(a)') " Tunnelling splitting with S_0 calculated from S_pot and E_RS (recommended)"
         ! S_0= 2*sqrt(2) * int sqrt(E-E_b) dy
         ! S_0= 2 ( S_pot - beta_hbar E_b)
-        write(stdout,"('S_0/2 from S_pot and E_RS          ',es18.9)") qts%S_pot - ers*beta_hbar
+        write(stdout,"('S_0/2 from S_pot and E_RS          ',es17.10)") qts%S_pot - ers*beta_hbar
         svar2=2.D0*(qts%S_pot - ers*beta_hbar)
         ! Tunnelling splitting from linear (open) path:
         svar=2.D0*sqrt(svar2/4.D0/pi)* &
             exp(-0.5D0*svar2 -det_tsplit) 
-        write(stdout,"('Tunnelling splitting linear path p  ',es18.9,' Hartree')") svar
+        write(stdout,"('Tunnelling splitting linear path p  ',es17.10,' Hartree')") svar
         call dlf_constants_get("CM_INV_FROM_HARTREE",svar2)
-        write(stdout,"('Tunnelling splitting linear path p  ',es18.9,' cm^-1')") svar*svar2
-
-
+        write(stdout,"('Tunnelling splitting linear path p  ',es17.10,' cm^-1')") svar*svar2
+        write(stdout,"('ln(resonant rate constant)          ',es17.10)") log(svar/2.D0/pi)
         write(stdout,*)
       end if
 !!!!!!!! end of tunnelling splittings !!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -3015,28 +3413,85 @@ subroutine dlf_qts_rate()
       ! add rotational partition function to ln rate
       qts%rate=qts%rate+qrot
 
-      write(stdout,"('ln(Rate)                           ',es18.9)") qts%rate-qrs
-      write(stdout,"('Rate                               ',es18.9)") exp(qts%rate-qrs)
-      write(stdout,"('Effective free-energy barrier      ',es18.9)") &
+      write(stdout,"('ln(rate constant)                  ',es17.10)") qts%rate-qrs
+      write(stdout,"('Rate constant                      ',es17.10)") exp(qts%rate-qrs)
+      write(stdout,"('Effective free-energy barrier      ',es17.10)") &
           -(log(beta_hbar*2.D0*pi)+qts%rate-qrs)/beta_hbar
-      write(stdout,"('log10(second_au)                   ',es18.9)")log(second_au)/log(10.D0)
+      write(stdout,"('log10(second_au)                   ',es17.10)")log(second_au)/log(10.D0)
       if(tbimol) then
         call dlf_constants_get("ANG_AU",svar)
         svar=log(svar*1.D-10) ! ln of bohr in meters
         ! the factor of 1.D6 converts from m^3 to cm^3
-        write(stdout,"('ln(Rate)                           ',es18.9,' cm^3 per second')") &
+        write(stdout,"('ln(rate constant)                  ',es17.10,' cm^3 per second')") &
             qts%rate-qrs+log(second_au)+log(1.D6)+3.D0*svar
-        write(stdout,"('log10(Rate in cm^3 per second)     ',es18.9, ' at ', f10.5, ' K')") &
+        write(stdout,"('log10(rate constant in cm^3/s)     ',es17.10, ' at ', f10.5, ' K')") &
             (qts%rate-qrs+log(second_au)+log(1.D6)+3.D0*svar)/log(10.D0),&
             glob%temperature
       else
-        write(stdout,"('ln(Rate)                           ',es18.9,' per second')") qts%rate-qrs+log(second_au) 
-        write(stdout,"('log10(Rate per second)             ',es18.9, ' at ', f10.5, ' K')") &
+        write(stdout,"('ln(rate constant)                  ',es17.10,' per second')") qts%rate-qrs+log(second_au) 
+        write(stdout,"('log10(rate constant per second)    ',es17.10, ' at ', f10.5, ' K')") &
             (qts%rate-qrs+log(second_au))/log(10.D0), glob%temperature
      end if
+
+     ! Kryvohuz correction stuff
+     svar=maxval(neb%ene)-qts%etunnel!-qts%sigma/beta_hbar
+     !print*,"V_max-E_b ",maxval(neb%ene)-qts%etunnel
+     !print*,"sigma'    ",qts%sigma/beta_hbar
+     !if(svar<0.D0) then
+     !  print*,"Warning, V_max-E_b-sigma' < 0, ignoring sigma'!"
+     !  svar=maxval(neb%ene)-qts%etunnel
+     !end if
+     svar=svar/sqrt(abs(qts%dEbdbeta)) ! andreas' version
+     !print*,"arg of erf",svar/sqrt(2.D0)
+     svar=erf(svar/sqrt(2.d0))
+     corrfac=0.5D0+0.5D0*svar
+     write(stdout,"('Kryvohuz correction factor         ',es17.10)") corrfac
+     if(tbimol) then
+       call dlf_constants_get("ANG_AU",svar)
+       svar=log(svar*1.D-10) ! ln of bohr in meters
+       ! the factor of 1.D6 converts from m^3 to cm^3
+       !write(stdout,"('log10(rate constant in cm^3/s) coAL',es17.10, ' at ', f10.5, ' K')") &
+       write(stdout,"('log10(cor. rate constant in cm^3/s)',es17.10, ' at ', f10.5, ' K')") &
+           (qts%rate-qrs+log(second_au)+log(1.D6)+3.D0*svar+log(corrfac))/log(10.D0),&
+           glob%temperature
+     else
+       !write(stdout,"('log10(rate constant per second)coAL',es17.10, ' at ', f10.5, ' K')") &
+       write(stdout,"('log10(corr. rate constant / second)',es17.10, ' at ', f10.5, ' K')") &
+            (qts%rate-qrs+log(second_au)+log(corrfac))/log(10.D0), glob%temperature
+     end if
+
+     write(stdout,"('The rate constant still needs to be multiplied &
+          &by the symmetry factor sigma')")
+
+!!$     ! again Kryvohuz correction factor - this time my version:
+!!$     svar=maxval(neb%ene)-qts%etunnel!-qts%sigma/beta_hbar
+!!$     print*,"V_max-E_b ",maxval(neb%ene)-qts%etunnel
+!!$     print*,"sigma'    ",qts%sigma/beta_hbar
+!!$     if(svar<0.D0) then
+!!$       print*,"Warning, V_max-E_b-sigma' < 0, ignoring sigma'!"
+!!$       svar=maxval(neb%ene)-qts%etunnel
+!!$     end if
+!!$     svar=svar/sqrt(abs(qts%dEbdbeta_prod))
+!!$     print*,"arg of erf",svar/sqrt(2.D0)
+!!$     svar=erf(svar/sqrt(2.d0))
+!!$     corrfac=0.5D0+0.5D0*svar
+!!$     write(stdout,"('Kryvohuz correction factor JK      ',es17.10)") corrfac
+!!$     if(tbimol) then
+!!$       call dlf_constants_get("ANG_AU",svar)
+!!$       svar=log(svar*1.D-10) ! ln of bohr in meters
+!!$       ! the factor of 1.D6 converts from m^3 to cm^3
+!!$       write(stdout,"('log10(rate constant in cm^3/s) coJK',es17.10, ' at ', f10.5, ' K')") &
+!!$           (qts%rate-qrs+log(second_au)+log(1.D6)+3.D0*svar+log(corrfac))/log(10.D0),&
+!!$           glob%temperature
+!!$     else
+!!$       write(stdout,"('log10(rate constant per second)coJK',es17.10, ' at ', f10.5, ' K')") &
+!!$            (qts%rate-qrs+log(second_au)+log(corrfac))/log(10.D0), glob%temperature
+!!$     end if
+
+
       !write(stdout,"('log10(Rate per second) ',es18.9)") (qts%rate-qrs+log(second_au))/log(10.D0)
-      ! print Arrhenius info as log to the base 10
-      write(stdout,"('Arrhenius (log10)',2f12.6)") 1.D3/glob%temperature,(qts%rate-qrs)/log(10.D0)
+     ! print Arrhenius info as log to the base 10
+     !write(stdout,"('Arrhenius (log10)',2f12.6)") 1.D3/glob%temperature,(qts%rate-qrs)/log(10.D0)
 !!$      write(stdout,"('Data as they were before fixing the reactant state bug:')")
 !!$      qrs=qrs+dble(glob%nzero)*log(dble(2*neb%nimage))
 !!$      print*,"log(dble(2*neb%nimage))",log(dble(2*neb%nimage))
@@ -3055,6 +3510,134 @@ subroutine dlf_qts_rate()
   ! moved here temporarily - should be between dealloc of evecs_hess and vec0
   call deallocate(evals_hess)
 
+  ! Alternative approach to calculate the rate constant by Andreas Loehle
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! New Method!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  print*
+  if(glob%nzero/=6.or.(abs(minval(qts%igradient))<1.D-15.and.abs(maxval(qts%igradient))<1.D-15)) then
+     print*,"=== Gradient not available, Andreas' analysis not possible. ==="
+     print*,"nzero=",glob%nzero
+     print*,"abs(maxval(qts%igradient))",abs(maxval(qts%igradient))
+  else
+
+    print*,"Loehle method:"
+    
+    ! reactant
+    call calc_QRS(neb%nimage, beta_hbar, omega2(1:nvib), &
+        nvib, fluc_rs, fluc_rs_ana)  
+    
+    call deallocate(omega2)
+
+    allocate(u_param(2*neb%varperimage))  
+
+    tok=.false.
+    if(qts%dist(2)-qts%dist(1) > qts%dist(neb%nimage)-qts%dist(neb%nimage-1)) then
+       print*,"The end at nimage is the smoother end"
+       tok=.true.
+    end if
+    
+    ! Calculating stability parameters
+    call calc_ui_param(neb%nimage, beta_hbar, qts%vhessian, &
+        neb%varperimage, tok, u_param)
+
+    ! print stability parameters:
+    write(stdout,*) "U-parameters (real,imag, log(real), log(real)/beta) for first image:"
+    do ivar=1,2*neb%varperimage
+      if(real(u_param(ivar))>0.D0) then
+        write(*,'(i4,2es15.6,2x,2es16.8)') ivar,real(u_param(ivar)),imag(u_param(ivar)), &
+            log(real(u_param(ivar))),log(real(u_param(ivar)))/beta_hbar
+      else
+        write(*,'(i4,2es15.6)') ivar,real(u_param(ivar)),imag(u_param(ivar))
+      end if
+      if(ivar==neb%varperimage-glob%nzero-1) write(*,*)
+      if(ivar==neb%varperimage+glob%nzero+1) write(*,*)
+    end do
+    
+    IF (tbimol) THEN
+      print*,"Bimolecular rate constant"
+      q_rot_trans = exp(qrot)/phi_rel
+      print*,"phi_rel",phi_rel
+    ELSE
+      print*,"Unimolecular rate constant"
+      q_rot_trans = exp(qrot)
+      print*,"q_rot_trans",q_rot_trans
+    END IF
+    
+    ! calculate sigma (fluc_inst) from u_param
+    ! do not sort, use the first neb%varperimage-glob%nzero-1 of u_param
+    fluc_inst=0.D0
+    do ivar=1,neb%varperimage-glob%nzero-1
+      !u_i:
+      svar=log(dble(u_param(ivar)))
+      fluc_inst=fluc_inst+log(2.D0*sinh(0.5D0*svar))
+    end do
+
+    print*, "#############################Method Loehle################ "
+    write(stdout,"('d E_b / d beta_hbar                ',es17.10,1x,a)") qts%dEbdbeta,"Loehle method"
+    write(stdout,"('d E_b / d beta_hbar                ',es17.10,1x,a)") qts%dEbdbeta_prod,"From product"
+    write(stdout,"('ln(rate constant) is the sum of:')")
+    write(stdout,"('ln sqrt(-dE/beta /2pi)             ',es17.10)") 0.5D0*log(-qts%dEbdbeta/2.D0/pi)
+    write(stdout,"('ln Qrot_trans                      ',es17.10)") log(q_rot_trans)
+    write(stdout,"('-ln Q_RS                           ',es17.10)") -log(fluc_rs)
+    write(stdout,"('ln Q_inst = -sigma                 ',es17.10)") -fluc_inst
+    write(stdout,"('-S_inst+S_RS                       ',es17.10)") -qts%S_ins
+    rate_const=0.5D0*log(-qts%dEbdbeta/2.D0/pi)+log(q_rot_trans)-log(fluc_rs)-fluc_inst-qts%S_ins
+    write(stdout,"('ln(rate constant)                  ',es17.10)") rate_const
+    write(stdout,"('rate constant                      ',es17.10)") exp(rate_const)
+    write(stdout,*)
+    write(stdout,"('Comparison:')")
+    if(tbimol) then
+      call dlf_constants_get("ANG_AU",svar)
+      svar=log(svar*1.D-10)
+      svar=log(second_au)+log(1.D6)+3.D0*svar
+      write(stdout,"('      ln(k)     log10(k in cm^3 per second) description')")
+    else
+      svar=log(second_au)
+      write(stdout,"('      ln(k)             log10(k per second) description')")
+    end if
+    write(stdout,'(es17.5,9x,es17.5,1x,a)') qts%rate-qrs,(qts%rate-qrs+svar)/log(10.D0),&
+        "Determinant method"
+    write(stdout,'(es17.5,9x,es17.5,1x,a)') rate_const,(rate_const+svar)/log(10.D0),"Loehle Method"
+
+    rate_const=0.5D0*log(-qts%dEbdbeta_prod/2.D0/pi)+log(q_rot_trans)-log(fluc_rs)-fluc_inst-qts%S_ins
+    write(stdout,'(es17.5,9x,es17.5,1x,a)') rate_const,(rate_const+svar)/log(10.D0),&
+        "dE/db Product, sigma: Loehle Method"
+
+    ! fluc_inst from qts%stabpar_diffeq
+    fluc_inst=0.D0
+    do ivar=1,neb%varperimage-glob%nzero-1
+      !u_i:
+      fluc_inst=fluc_inst+log(2.D0*sinh(0.5D0*beta_hbar*qts%stabpar_diffeq(ivar)))
+    end do
+    rate_const=0.5D0*log(-qts%dEbdbeta/2.D0/pi)+log(q_rot_trans)-log(fluc_rs)-fluc_inst-qts%S_ins
+    write(stdout,'(es17.5,9x,es17.5,1x,a)') rate_const,(rate_const+svar)/log(10.D0),&
+        "dE/db Loehle, sigma: stability matrix diff. eq."
+
+    ! fluc_inst from qts%stabpar_trace
+    fluc_inst=0.D0
+    do ivar=1,neb%varperimage-glob%nzero-1
+      !u_i:
+      fluc_inst=fluc_inst+log(2.D0*sinh(0.5D0*beta_hbar*qts%stabpar_trace(ivar)))
+    end do
+    rate_const=0.5D0*log(-qts%dEbdbeta/2.D0/pi)+log(q_rot_trans)-log(fluc_rs)-fluc_inst-qts%S_ins
+    write(stdout,'(es17.5,9x,es17.5,1x,a)') rate_const,(rate_const+svar)/log(10.D0),&
+        "dE/db Loehle, sigma: eigenvalue tracing"
+
+    write(stdout,*)
+    
+    !print*, dlog(dreal(u_param))
+    line=""
+    do ivar=neb%varperimage-glob%nzero-1,1,-1
+      write(line,'(a,es15.8)') trim(line),log(real(u_param(ivar)))/beta_hbar
+      !     print*,"out",trim(line)
+    end do
+    write(*,'("Stability parameters Loehle method: ",a)') trim(line)
+    print*, "#################P(E)######################################'"
+    deallocate(u_param)
+  end if ! min/max grad
+
+  call deallocate(qts%stabpar_diffeq)
+  call deallocate(qts%stabpar_trace)
+  
   call clock_stop("COORDS")
 
 end subroutine dlf_qts_rate
@@ -3073,7 +3656,9 @@ end subroutine dlf_qts_rate
 !! translational and rotational partition functions of the incoming molecule)
 !!
 !! SYNOPSIS
-subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
+subroutine qts_reactant(qrs,ers,zpers,qrot,qrot_quant,tbimol, tok, phi_rel,&
+    ! variables for Andreas Loehle's routines
+    varperimage,omega2,nvib    )
   use dlf_parameter_module, only: rk
   use dlf_neb, only: neb,unitp,xyzall,beta_hbar
   use dlf_global, only: printl,stdout,glob,pi
@@ -3083,397 +3668,260 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
   implicit none
   real(rk), intent(out) :: qrs ! ln of the partition function (no potential part)
   real(rk), intent(out) :: ers ! energy of the reactant
-  real(rk), intent(out) :: qrot ! relative rotational partition function of the reactant
+  real(rk), intent(out) :: zpers ! vibrational zero point energy of the reactant
+  real(rk), intent(out) :: qrot ! log relative rotational partition function of the reactant
+  real(rk), intent(out) :: qrot_quant ! quantum rigid rotor
+  real(rk), intent(out) :: phi_rel ! translational partition function
   logical , intent(out) :: tbimol
   logical , intent(out) :: tok
-  real(rk) :: eigvals(neb%varperimage)
-  integer :: ivar,iimage,varperimage_read,icount
-  real(rk) :: svar,mass_bimol
+  integer , intent(in)  :: varperimage
+  real(rk), intent(out) :: omega2(varperimage) ! Hessian eigenvalues
+  integer , intent(out) :: nvib ! number of actual vibrational modes in omega2
+  integer  :: ivar,iimage,varperimage_read
+  real(rk) :: svar
   real(rk) :: qrsi,dtau
-  !real(rk) :: arr2(2) ! scratch
-  !real(rk) :: evals_rs( 2 * neb%varperimage * neb%nimage )
-  !real(rk) :: hess_rs(neb%varperimage,neb%varperimage) 
-  real(rk) :: phi_rel
 
   ! get eigenvalues
-  real(rk) :: hess_sp(neb%nimage*2,neb%nimage*2)
-  real(rk) :: eval_sp(neb%nimage*2)
-  real(rk) :: evec_sp(neb%nimage*2,neb%nimage*2)
+  real(rk),allocatable :: hess_sp(:,:) !neb%nimage*2,neb%nimage*2
+  real(rk),allocatable :: eval_sp(:) !neb%nimage*2
+  real(rk),allocatable :: evec_sp(:,:) !neb%nimage*2,neb%nimage*2
   logical  :: tconst_dtau
 
-  ! for reweighting
-  integer  :: nimage_read,iat
-  real(rk) :: etunnel,temperature,dist(2)
-  logical  :: tokmass
-  real(rk), allocatable :: xcoords(:)
-  real(rk), allocatable :: ihessian(:,:)
-  real(rk), allocatable :: evecs(:,:)
-  real(rk), allocatable :: mass_file(:)
-
-  ! real bimolecular
-  integer :: bimol,natr2,nimage_read2,varperimager2,natr,varperimager
-  real(rk), allocatable :: eigvals2(:)
-  real(rk) :: ers2
+  real(rk) :: mu_bim,qrot_part,qrot_quant_part
+  type(pf_type) :: rs1,rs2
+  logical :: toneat
   
-
   tok=.false.
   tbimol=.false.
-  bimol=0
   qrot=0.D0
+  qrot_quant=0.D0
   dtau=beta_hbar/dble(2*neb%nimage) ! only for constant dtau
 
   ! define if dtau is constant or variable
   tconst_dtau=(abs(maxval(qts%dtau)-minval(qts%dtau)) < 1.D-14*abs(minval(qts%dtau)))
 
-  !tconst_dtau=.false.
+  ! initialise
+  rs1%tused=.false.
+  rs2%tused=.false.
+  rs2%ene=0.D0
+  rs2%nvib=0
+  rs2%nat=0
+  rs2%mass=0.D0
 
-  call allocate(xcoords,3*glob%nat)
-  call allocate(mass_file,glob%nat)
-  call read_qts_reactant(glob%nat,neb%varperimage,&
-      ers,varperimage_read,xcoords,eigvals,mass_bimol,"",mass_file,tok)
-  call deallocate(mass_file)
-  !if(.not.tok) return
+  toneat=.false.
+  ! read first reactant
+  call read_qts_txt(1,0,rs1,toneat)
+  if(rs1%nat==-1) return ! no reactant files present.
+  
+  if(rs1%nat<glob%nat) then
+    ! read second reactant
+    call read_qts_txt(2,rs1%nat,rs2,toneat)
+  end if
 
-  if(.not.tok) then
-    ! now we have to try and read qts_hessian_rs.txt
-    if(printl>=6) write(stdout,*) "Attempting to read from file qts_hessian_rs.txt"
-    
-    varperimage_read=neb%varperimage ! bimolecular+reweighting not possible
-    call allocate(ihessian,varperimage_read,varperimage_read)
-    call allocate(evecs,varperimage_read,varperimage_read)
-    call allocate(mass_file,glob%nat)
-    
-    nimage_read=1
-    call read_qts_hessian(glob%nat,nimage_read,varperimage_read,temperature,&
-        ers,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
-    
-    if(.not.tok.and.nimage_read==1) then
-      ! check for bimolecular case
-      call head_qts_hessian(natr,nimage_read,varperimager,"rs",tok)
-      if(tok) then
-        call head_qts_hessian(natr2,nimage_read2,varperimager2,"rs2",tok)
-        tok=(tok.and.nimage_read2==1)
-      end if
-      tok=(tok.and.nimage_read==1)
-      if(tok) then
-        ! we seem to have two molecules reacting
-        if(printl>=4) write(stdout,*) "Bimolecular case with more than one atom in each molecule."
-        
-        bimol=natr2
-
-        call deallocate(xcoords)
-        call deallocate(ihessian)
-        call deallocate(evecs)
-        call deallocate(mass_file)
-
-        call allocate(ihessian,varperimager,varperimager)
-        call allocate(evecs,varperimager,varperimager)
-        call allocate(mass_file,natr)
-        call allocate(xcoords,3*natr)
-
-        call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-            ers,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
-        ! check for tok
-
-        mass_bimol=sum(mass_file)
-        call dlf_matrix_diagonalise(varperimager,ihessian,eigvals(1:varperimager),evecs)
-
-        ! rotational partition function (relative)
-        call rotational_partition_function(natr,glob%nzero,xcoords,qrot)
-
-        call deallocate(xcoords)
-        call deallocate(ihessian)
-        call deallocate(evecs)
-        call deallocate(mass_file)
-
-        ! now deal with RS2
-
-        call allocate(ihessian,varperimager2,varperimager2)
-        call allocate(evecs,varperimager2,varperimager2)
-        call allocate(eigvals2,varperimager2)
-        call allocate(mass_file,natr2)
-        call allocate(xcoords,3*natr2)
-
-        call read_qts_hessian(natr2,nimage_read,varperimager2,temperature,&
-            ers2,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
-        ! check for tok
-
-        svar=sum(mass_file)
-        mass_bimol=(mass_bimol*svar)/(mass_bimol+svar)
-        call dlf_constants_get("AMU",svar)
-        mass_bimol=mass_bimol/svar
-        if(printl>=4) write(stdout,'(a,f20.10,a)') " Using a reduced mass of ",&
-            mass_bimol," amu calculated from the two fragments"
-
-        call dlf_matrix_diagonalise(varperimager2,ihessian,eigvals2,evecs)
-
-        if(natr2==2) then
-          ivar=5
-        else
-          ivar=6
-        end if
-        
-        !print*,"sizes",neb%varperimage,varperimager,varperimager2,ivar
-
-        if(varperimager+varperimager2-ivar>neb%varperimage) then
-          if(printl>=4) write(stdout,*) "Variables per image in bimolecular&
-              & rates not consistent"
-          tok=.false.
-          return
-        end if
-
-        eigvals(varperimager+1:varperimager+varperimager2-ivar)=eigvals2(ivar+1:varperimager2)
-        varperimage_read=varperimager+varperimager2-ivar
-        if(printl>=4) write(stdout,'(a,i5)') "Number of vibrational modes from reactants ", &
-            varperimage_read-glob%nzero
-
-        ! rotational partition function (relative)
-        call rotational_partition_function(natr2,ivar,xcoords,svar)
-        qrot=qrot*svar
-        if(bimol==2) qrot=qrot*2.D0/beta_hbar
-        if(bimol>2) qrot=qrot*sqrt(8.D0*pi)/sqrt(beta_hbar**3)
-
-        call deallocate(eigvals2)
-        !call deallocate(xcoords)
-        call deallocate(ihessian)
-        call deallocate(evecs)
-        !call deallocate(mass_file)
-        mass_file=-1.D0 ! avoid re-weighting below
-
-        !print*,"BIMOL STUFF FINISHED"
-
-      end if ! real bimolecular (more than one atom)
+  ers=rs1%ene+rs2%ene
+  
+  if(rs2%tused) then
+    call dlf_constants_get("AMU",svar)
+    ! define the reduced mass
+    mu_bim=rs1%mass*rs2%mass/(rs1%mass+rs2%mass)
+    if(rs2%tfrozen) mu_bim=rs1%mass
+    if(rs1%tfrozen) mu_bim=rs2%mass
+    if(rs1%tfrozen.and.rs2%tfrozen) mu_bim=rs1%mass*rs2%mass/(rs1%mass+rs2%mass)
+    !if(rs2%nat==1) mu_bim=rs2%mass ! mass (and not reduced mass) is read from file
+    if(glob%irot==1) mu_bim=rs2%mass ! mimic a surface
+    if(printl>=4) then
+!!$       if(rs2%nat==1) then
+!!$          write(stdout,'(a,f20.10,a)') " Using a reduced mass of ",&
+!!$               mu_bim," amu read from file"
+!!$       else
+          write(stdout,'(a,f20.10,a)') " Using a reduced mass of ",&
+               mu_bim," amu calculated from the two fragments"
+!!$       end if
     end if
+ end if
 
-    if(.not.tok.or.nimage_read/=1) then
-      call deallocate(xcoords)
-      call deallocate(ihessian)
-      call deallocate(evecs)
-      call deallocate(mass_file)
-      return
-    end if
+ if(rs1%nat+rs2%nat/=glob%nat) then
+    write(stdout,'("Number of atoms: ",3i6)') rs1%nat,rs2%nat,glob%nat
+    print*,"JK: there is a good chance that this check will fail for frozen atoms..., but we need some check."
+    call dlf_fail("Number of atoms of reactants and instanton not equal!")
+ end if
+ 
+ !
+ ! calculate the rotational partition function (same code as in dlf_htst_rate)
+ !
+ qrot=1.D0
+ qrot_quant=1.D0
+ ! do nothing for atoms (their rotational partition function is unity)
+ if(glob%irot==0) then
+   if(rs1%nmoi>1) then
+     !print*,"rotpart rs1",rs1%coeff
+     call rotational_partition_function_calc(rs1%moi,beta_hbar,rs1%coeff,qrot_part,qrot_quant_part)
+     qrot=qrot*qrot_part
+     qrot_quant=qrot_quant*qrot_quant_part
+   end if
+ else
+   if(rs2%tused) then
+     write(stdout,'("Mimicking a surface: only rotation of &
+         &RS2 considered, reduced mass = mass of RS2")')
+   else
+     if(printl>=2) write(stdout,'("Mimicking a surface: rotational partition function kept constant.")')
+   end if
+ end if
+ if(rs2%tused.and.rs2%nmoi>1) then
+   !print*,"rotpart rs2",rs2%coeff
+   call rotational_partition_function_calc(rs2%moi,beta_hbar,rs2%coeff,qrot_part,qrot_quant_part)
+   qrot=qrot*qrot_part
+   qrot_quant=qrot_quant*qrot_quant_part
+ end if
+ qrot= log(qrot) 
+ qrot_quant= log(qrot_quant) 
 
-    if(bimol==0) then
+ ! communicate omega^2 to outside
+ nvib=rs1%nvib
+ if(rs2%tused) nvib=nvib+rs2%nvib
+ omega2(1:rs1%nvib)=rs1%omega(1:rs1%nvib)**2
+ if(rs2%tused) omega2(rs1%nvib+1:nvib)=rs2%omega(1:rs2%nvib)**2
 
-      ! If masses are not read in (returned negative), do no mass-weighting and
-      ! assume glob%mass is correct
-      if(minval(mass_file) > 0.D0) then
-        call dlf_constants_get("AMU",svar)
-        
-        tokmass=.true.
-        do iat=1,glob%nat
-          if(abs(mass_file(iat)-glob%mass(iat))>1.D-7) then
-            tokmass=.false.
-            if(printl>=6) &
-                write(stdout,*) "Mass of atom ",iat," differs from Hessian file. File:",&
-                mass_file(iat)/svar," input",glob%mass(iat)/svar
-          end if
-        end do
-        
-        ! Re-mass-weight
-        if(.not.tokmass) then
-          call dlf_re_mass_weight_hessian(glob%nat,varperimage_read,mass_file/svar,glob%mass/svar,ihessian)
-        end if
-      end if
-      
-      call dlf_matrix_diagonalise(varperimage_read,ihessian,eigvals,evecs)
-      
-      call deallocate(ihessian)
-      call deallocate(evecs)
-    end if
-    call deallocate(mass_file)
-
-  end if ! if(.not.tok) after read_qts_reactant
-
-  ! calculate rotational partition function (the logarithm is used in instanton rates)
-  if (bimol==0) call rotational_partition_function(glob%nat,glob%nzero,xcoords,qrot)
-  qrot=log(qrot)
-
-  call deallocate(xcoords)
-
-  ! partition function with an infinite number of images
+ ! partition function with an infinite number of images
   qrsi=0.D0
-  do ivar=glob%nzero+1,varperimage_read
+  zpers=0.D0
+  do ivar=1,rs1%nvib
     ! the following is the limit for nimage->infinity
     ! for error compensation, however, we should use the same number of images as in the TS
-    qrsi=qrsi-log(2.D0*sinh(sqrt(abs(eigvals(ivar)))*beta_hbar*0.5D0))
+    qrsi=qrsi-log(2.D0*sinh(rs1%omega(ivar)*beta_hbar*0.5D0))
+    ! for the ZPE, we could do a projection rather than ignoring a few eigenvalues
+    zpers=zpers+rs1%omega(ivar)*0.5D0
+  end do
+  ! now the same for rs2
+  do ivar=1,rs2%nvib
+    qrsi=qrsi-log(2.D0*sinh(rs2%omega(ivar)*beta_hbar*0.5D0))
+    zpers=zpers+rs2%omega(ivar)*0.5D0
   end do
   if(printl>=4.and.hess_dtau) write(stdout,"('Ln Vibrational part of the RS partition &
       &function (infinite images) ',es18.9)") &
-      qrsi+log(dtau)*dble(neb%nimage*neb%varperimage)!-dble(glob%nzero)*log(beta_hbar)
-
-  !print*,"Rotational part of the RS partition function (infinite images)",qrs
+      qrsi+log(dtau)*dble(neb%nimage*neb%varperimage)
 
   ! partition function with nimage images (but equi-spaced tau)
   qrs=0.D0
   do iimage=1,2*neb%nimage
-    do ivar=glob%nzero+1,varperimage_read!neb%varperimage
+    do ivar=1,rs1%nvib
       qrs=qrs+log(4.D0*(sin(pi*dble(iimage)/dble(2*neb%nimage)))**2/dtau+&
-          dtau*eigvals(ivar))
+          dtau*rs1%omega(ivar)**2)
+    end do
+    do ivar=1,rs2%nvib
+      qrs=qrs+log(4.D0*(sin(pi*dble(iimage)/dble(2*neb%nimage)))**2/dtau+&
+          dtau*rs2%omega(ivar)**2)
     end do
   end do
-  !qrs=1.D0/sqrt(qrs)
-  qrs=-0.5D0*qrs-log(dble(2*neb%nimage))*dble(glob%nzero) + &
-      log(dtau)*0.5D0*dble(glob%nzero*(2*neb%nimage-1))
+
+!!$  ! add zero modes of RS1 including their noise explicitly:
+!!$  do iimage=1,2*neb%nimage-1 ! -1 because 6 eigenvalues must be left out!
+!!$    do ivar=1,3+rs1%nmoi
+!!$      qrs=qrs+log(4.D0*(sin(pi*dble(iimage)/dble(2*neb%nimage)))**2/dtau+&
+!!$          dtau*rs1%omega2zero(ivar))
+!!$    end do
+!!$    ! RS2 is not included here because the instanton also has at most 6 zero modes.
+!!$  end do
+!!$  if(printl>=4) write(stdout,"('Zero-eigenvalues of RS1 are used in the product over zero modes')")
+!!$
+  ! alternatively: add contribution of zero modes
+  qrs=qrs+2.D0*(log(dble(2*neb%nimage))*dble(glob%nzero) - &
+      log(dtau)*0.5D0*dble(glob%nzero*(2*neb%nimage-1)))
+  
+  qrs=-0.5D0*qrs
+  
+  if(rs1%nmoi==2.and.glob%nzero==6.and..not.rs2%tused) then
+    ! one more DOF in the TS than in the RS. The product of eigenvalues needs to account for that.
+    ! product of all dtau
+    svar=sum(log(qts%dtau(2:neb%nimage)))*2.D0
+    svar=svar+log(qts%dtau(1))+log(qts%dtau(neb%nimage+1))
+    qrs=qrs- svar
+  end if
+  
   if(printl>=4.and.hess_dtau) write(stdout,"('Ln Vibrational part of the RS partition &
       &function (nimage images)   ',es18.9)") qrs
   if(printl>=4.and.hess_dtau) write(stdout,"(' The latter is used')")
 
-  ! Reactant state partition function for non-equal spaced dtau
   if(.not.hess_dtau) then
-
-    qrsi=qrsi+log(dtau)*dble(2*neb%nimage*varperimage_read)
+    qrsi=qrsi+log(dtau)*dble(2*neb%nimage*(glob%nzero+rs1%nvib+rs2%nvib))
     if(printl>=4) write(stdout,"('Ln Vibrational part of the RS partition &
         &function (infinite images)                  ',es18.9)") qrsi
 
     ! transform the above value to what we would expect with the asymmetric dtau notation
-    qrs=qrs+log(dtau)*dble(2*neb%nimage*varperimage_read-glob%nzero)*0.5D0
+    qrs=qrs+log(dtau)*dble(2*neb%nimage*(glob%nzero+rs1%nvib+rs2%nvib)-glob%nzero)*0.5D0
+
     if(printl>=4) write(stdout,"('Ln Vibrational part of the RS partition &
-        &function (nimage images, equi-spaced tau)   ',es18.9)") qrs
+         &function (nimage images, equi-spaced tau)   ',es18.9)") qrs
     ! it turns out that the value obtained above is (slightly) different from
     ! the one obtained by diagonalising the Spring-matrix (for constant
     ! dtau). I guess, the analytic value is better. Maybe I should use that
     ! one?
-
     if(tconst_dtau) then
-
-      write(stdout,"(' The latter is used')")
-
+      if(printl>=4) write(stdout,"(' The latter is used')")
     else
-
       ! calculate the partition function for non-constant dtau
-
-!!$    !
-!!$    ! calculate the partition function from a full diagonalisation of the whole Hessian
-!!$    ! this is not needed, but the code stays in here for possible future tests
-!!$    !
-!!$    ! get the whole hessian of the reactant
-!!$    ivar=1 ! nimage
-!!$    call read_qts_hessian(glob%nat,ivar,neb%varperimage,svar,&
-!!$        svar,glob%xcoords,hess_rs,svar,arr2,"rs",tok)
-!!$    if(.not.tok) then
-!!$      print*,"Warning: full reactant state Hessian not available (qts_hessian_rs.txt)"
-!!$      return
-!!$    end if
-!!$    ! write it repeatedly into qts%total_hessian
-!!$    qts%total_hessian=0.D0
-!!$    ivar=neb%nimage*neb%varperimage
-!!$    do iimage=1,neb%nimage
-!!$      qts%total_hessian(neb%cstart(iimage):neb%cend(iimage),neb%cstart(iimage):neb%cend(iimage)) = &
-!!$          hess_rs
-!!$      qts%total_hessian(ivar+neb%cstart(iimage):ivar+neb%cend(iimage),ivar+neb%cstart(iimage):ivar+neb%cend(iimage)) = &
-!!$          hess_rs
-!!$    end do
-!!$    
-!!$    ! convert the hessian of potential energies to one of action (modify
-!!$    ! diagonal, add spring contributions)
-!!$    call qts_hessian_etos(2,neb%nimage,neb%varperimage,qts%dtau,qts%total_hessian)
-!!$
-!!$    ! diagonalise qts%total_hessian asymmetrically 
-!!$    call dlf_matrix_asymm_diagonalise(neb%varperimage*neb%nimage*2,qts%total_hessian,evals_rs)
-!!$
-!!$    ! get the product of its (non-zero) eigenvalues (which are all for
-!!$    ! nzero=0) qrs=0.D0
-!!$    do ivar=1,2*neb%nimage*neb%varperimage
-!!$      if(ivar<=glob%nzero) then
-!!$        !print*,"RS-EV",ivar,evals_rs(ivar)," skipped"
-!!$      else
-!!$        !if(ivar<=12) print*,"RS-EV",ivar,evals_rs(ivar)
-!!$        qrs=qrs+log(evals_rs(ivar))
-!!$      end if
-!!$    end do
-!!$    qrs=-0.5D0*qrs
-!!$
-!!$    ! <<<< end of full diagonalisation of the whole Hessian
-
-
-      ! construct hessian of only spring forces:
-      hess_sp(:,:)=0.D0
+       ! construct hessian of only spring forces:
+       call allocate(hess_sp,neb%nimage*2,neb%nimage*2)
+      hess_sp(:,:)=0.D0 ! <-- todo: make that allocatable!
       ! convert the hessian of potential energies to one of action (modify
       ! diagonal, add spring contributions)
       call qts_hessian_etos(2,neb%nimage,1,qts%dtau,hess_sp)
+      call allocate(eval_sp,neb%nimage*2)
+      call allocate(evec_sp,neb%nimage*2,neb%nimage*2)
       call dlf_matrix_diagonalise(neb%nimage*2,hess_sp,eval_sp,evec_sp)
-
-      ! tests
-!!$    print*,"Evec_sp:",eval_sp
-!!$    print*,"eigval",eigvals
-!!$    
-!!$    !now check if every eigenvalue has its counterpart:
-!!$    do iimage=1,neb%nimage*2
-!!$      do ivar=1,neb%varperimage
-!!$        svar=huge(1.D0)
-!!$        do icount=1,neb%varperimage*neb%nimage*2
-!!$          svar=min(svar,abs(eval_sp(iimage)+eigvals(ivar)-evals_rs(icount)))
-!!$        end do
-!!$        print*,svar,iimage,ivar
-!!$      end do
-!!$    end do
-
-!!$    svar=1.D0
-!!$    do iimage=2,2*neb%nimage
-!!$      svar=svar*eval_sp(iimage)
-!!$    end do
-!!$    print*,"prod",svar,1.D0/svar
-
+      call deallocate(evec_sp)
+      call deallocate(hess_sp)
       !calculate qrs from eval_sp and eigvals
       qrs=0.D0
       do iimage=1,neb%nimage*2
-        do ivar=1,varperimage_read!neb%varperimage
-          if(iimage==1.and.ivar<=glob%nzero) cycle
-          qrs=qrs+log(abs(eval_sp(iimage)+eigvals(ivar)))
-        end do
-      end do
-      qrs=-0.5D0*qrs
+        do ivar=1,rs1%nvib
+          qrs=qrs+log(abs(eval_sp(iimage)+rs1%omega(ivar)**2))
+       end do
+        if(iimage>1) then
+           do ivar=1,glob%nzero
+              qrs=qrs+log(abs(eval_sp(iimage)))
+           end do
+        end if
+        call deallocate(eval_sp)
+        if(rs2%tused) call dlf_fail("Variable step size and bimolecular not implemented.")
+        ! in that case one would have to deal withe the additional zero modes.
+     end do
+     qrs=-0.5D0*qrs
 
     end if ! (tconst_dtau) 
 
-    ! correct for bimolecular rates (less degrees of freedom in the RS
+    ! correct for bimolecular rates (fewer degrees of freedom in the RS
     ! partition function than in the TS partition function)
-    if(varperimage_read/=neb%varperimage) then
+    if(rs2%tused) then
       if(printl>=4) write(stdout,*) "Calculating a bimolecular rate."
 
       ! product of all dtau
       svar=sum(log(qts%dtau(2:neb%nimage)))*2.D0
       svar=svar+log(qts%dtau(1))+log(qts%dtau(neb%nimage+1))
-!      qrs=qrs+ log(beta_hbar/dble(2*neb%nimage)) * &
-!          dble(2*neb%nimage*(neb%varperimage-varperimage_read))
+      varperimage_read=glob%nzero+rs1%nvib+rs2%nvib
+      qrs=qrs+ svar*(neb%varperimage-varperimage_read)  
 
-!      print*,"correcting ln(Q(RS)) by 1",log(beta_hbar/dble(2*neb%nimage)) * &
-!          dble(2*neb%nimage*(neb%varperimage-varperimage_read))
-!      print*,"correcting ln(Q(RS)) by 2",svar*(neb%varperimage-varperimage_read)
+      call dlf_constants_get("AMU",svar)
+      phi_rel=mu_bim*svar/2.D0/pi/beta_hbar
+      phi_rel=phi_rel*sqrt(phi_rel)
+      if(printl>=4) write(stdout,"('ln translational partition function of incoming &
+           &fragment                            ',es18.9)") -log(phi_rel)
+      qrs=qrs+log(phi_rel)
+      tbimol=.true.
+   end if
 
-      qrs=qrs+ svar*(neb%varperimage-varperimage_read)
-      
-      if(mass_bimol>0.D0) then
-        ! trans partition function:
-        call dlf_constants_get("AMU",svar)
-        !print*,"mass_bimol",mass_bimol
-        !print*,"mass_bimol in au",mass_bimol*svar,svar
-        phi_rel=mass_bimol*svar/2.D0/pi/beta_hbar
-        phi_rel=phi_rel*sqrt(phi_rel)
-        !print*,"translational partition function of incoming atom",phi_rel
-        if(printl>=4) write(stdout,*) "ln(translational partition function &
-            &of incoming atom)",log(phi_rel)
-        !print*,"log10(translational partition function of incoming atom)",log(phi_rel)/log(10.D0)
-        
-        qrs=qrs+log(phi_rel)
-
-        tbimol=.true.
-
+   if(printl>=4) then
+      if(tbimol) then
+         write(stdout,"('ln vibrational and translational part of the RS partition &
+              &function (nimage images)  ',es18.9)") qrs
       else
-        if(printl>=2) write(stdout,*) "Less DOF in the reactant than in&
-            & the TS indicates a bimolecular reaction."        
-        if(printl>=2) write(stdout,*) "However, no mass for the incoming &
-            &particle is given, thus the translational partition function is ignored."        
+         write(stdout,"('ln vibrational part of the RS partition &
+            &function (nimage images)                    ',es18.9)") qrs
       end if
-    end if !(varperimage_read/=neb%varperimage)  = bimolecular
+    end if
 
-    if(printl>=4) write(stdout,"('Ln Vibrational part of the RS partition &
-        &function (nimage images)                    ',es18.9)") qrs
-
-  end if ! (.not.hess_dtau)
-
-  tok=.true.
+ end if ! (.not.hess_dtau)
+ tok=.true.
 
 end subroutine qts_reactant
 !!****
@@ -3544,664 +3992,6 @@ subroutine dlf_qts_get_int(label,val)
 
 end subroutine dlf_qts_get_int
 
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/write_qts_coords
-!!
-!! FUNCTION
-!!
-!! Write coordinates, dtau, etunnel, and dist to qts_coords.txt
-!!
-!! SYNOPSIS
-subroutine write_qts_coords(nat,nimage,varperimage,temperature,&
-    S_0,S_pot,S_ins,ene,xcoords,dtau,etunnel,dist)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: glob
-  implicit none
-  integer, intent(in) :: nat,nimage,varperimage
-  real(rk),intent(in) :: temperature,S_0,S_pot,S_ins
-  real(rk),intent(in) :: ene(nimage)
-  real(rk),intent(in) :: xcoords(3*nat,nimage)
-  real(rk),intent(in) :: dtau(nimage+1)
-  real(rk),intent(in) :: etunnel
-  real(rk),intent(in) :: dist(nimage+1)
-  character(128) :: filename
-
-  if(glob%iam > 0 ) return ! only task zero should write
-
-  filename="qts_coords.txt"
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  open(unit=555,file=filename, action='write')
-  write(555,*) "Coordinates of the qTS path written by dl-find"
-  write(555,*) nat,nimage,varperimage
-  write(555,*) temperature
-  write(555,*) S_0,S_pot
-  write(555,*) S_ins
-  write(555,*) ene
-  write(555,*) xcoords
-  write(555,*) "Delta Tau"
-  write(555,*) dtau
-  write(555,*) etunnel
-  write(555,*) dist
-  close(555)
-
-end subroutine write_qts_coords
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/read_qts_coords
-!!
-!! FUNCTION
-!!
-!! Read coordinates, dtau, etunnel, and dist from qts_coords.txt
-!!
-!! SYNOPSIS
-subroutine read_qts_coords(nat,nimage,varperimage,temperature,&
-    S_0,S_pot,S_ins,ene,xcoords,dtau,etunnel,dist)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: stdout,printl,glob
-  implicit none
-  integer, intent(in)    :: nat
-  integer, intent(inout) :: nimage
-  integer, intent(in)    :: varperimage
-  real(rk),intent(inout) :: temperature
-  real(rk),intent(out)   :: S_0,S_pot,S_ins
-  real(rk),intent(out)   :: ene(nimage)
-  real(rk),intent(out)   :: xcoords(3*nat,nimage)
-  real(rk),intent(out)   :: dtau(nimage+1)
-  real(rk),intent(out)   :: etunnel
-  real(rk),intent(out)   :: dist(nimage+1)
-  !
-  logical :: there
-  integer :: nat_,nimage_,varperimage_,ios
-  character(128) :: line,filename
-
-  ene=0.D0
-  xcoords=0.D0
-
-  filename='qts_coords.txt'
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  inquire(file=filename,exist=there)
-  if(.not.there) call dlf_fail("qts_coords.txt does not exist! Start structure&
-      & for qts hessian is missing.")
-
-  open(unit=555,file=filename, action='read')
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) nat_,nimage_,varperimage_
-  if(nat/=nat_) call dlf_fail("Error reading qts_coords.txt file: Number of &
-      &atoms not consistent")
-  
-  ! test of varperimage commented out. I don't think it should be a problem if that changes
-  !if(varperimage/=varperimage_) call dlf_fail("Error reading qts_coords.txt file: Variables &
-  !    &per image not consistent")
-
-  read(555,*,end=201,err=200) temperature
-  !read(555,*,end=201,err=200) S_0 
-  read(555,fmt="(a)") line
-  read(line,*,iostat=ios) S_0,S_pot
-  if(ios/=0) then
-    read(line,*) S_0
-  end if
-  read(555,*,end=201,err=200) S_ins
-  if(ios/=0) then
-    S_pot=S_ins-0.5D0*S_0
-    if(printl>=2) write(stdout,*) "Warning: could not read S_pot from qts_coords.txt"
-  end if
-  read(555,*,end=201,err=200) ene(1:min(nimage,nimage_))
-  read(555,*,end=201,err=200) xcoords(1:3*nat,1:min(nimage,nimage_))
-  ! try and read dtau (not here in old version, and we have to stay consistent)
-  read(555,fmt="(a)",iostat=ios) line
-  if(ios==0) then
-    read(555,*,end=201,err=200) dtau(1:1+min(nimage,nimage_))
-    read(555,*,end=201,err=200) etunnel
-    read(555,*,end=201,err=200) dist(1:1+min(nimage,nimage_))
-  else
-    if(printl>=2) write(stdout,*) "Warning, dtau not read from qts_coords.txt, using constant dtau"
-    dtau=-1.D0
-    etunnel=-1.D0  
-    dist(:)=-1.D0 ! set to useless value to flag that it was not read
-  end if
-
-  close(555)
-  nimage=nimage_
-
-  if(printl >= 4) write(stdout,"('qts_coords.txt file successfully read')")
-
-  return
-
-  ! return on error
-  close(100)
-200 continue
-  call dlf_fail("Error reading qts_coords.txt file")
-  write(stdout,10) "Error reading file"
-  return
-201 continue
-  call dlf_fail("Error (EOF) reading qts_coords.txt file")
-  write(stdout,10) "Error (EOF) reading file"
-  return
-
-10 format("Checkpoint reading WARNING: ",a) 
-end subroutine read_qts_coords
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/write_qts_hessian
-!!
-!! FUNCTION
-!!
-!! Write Hessians of individual images to disk (qts_hessian.txt)
-!!
-!! SYNOPSIS
-subroutine write_qts_hessian(nat,nimage,varperimage,temperature,&
-    ene,xcoords,hessian,etunnel,dist,label)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,printl,stdout
-  use dlf_constants, only: dlf_constants_get
-  use dlf_qts, only: taskfarm_mode
-  implicit none
-  integer, intent(in) :: nat,nimage,varperimage
-  real(rk),intent(in) :: temperature
-  real(rk),intent(in) :: ene(nimage)
-  real(rk),intent(in) :: xcoords(3*nat,nimage)
-  real(rk),intent(in) :: hessian(varperimage,varperimage,nimage)
-  real(rk),intent(in) :: etunnel
-  real(rk),intent(in) :: dist(nimage+1)
-  character(*),intent(in):: label
-  integer             :: iimage
-  character(128)      :: filename
-  real(rk)            :: svar
-
-  if(glob%iam > 0 ) then
-    ! only task zero should write
-    if(taskfarm_mode==1) return
-    ! image-Hessians should be written for taskfarm_mode=2 by their respective
-    ! tasks. The caller must make sure in this case that the routine is only
-    ! called if there are valid data in hessian.
-    if(glob%iam_in_task>0) return
-    if(label(1:5)/="image") return
-  end if
-
-  if(trim(label)/="") then
-    filename='qts_hessian_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Writing Hessian file ",trim(filename)
-  else
-    filename='qts_hessian.txt'
-  end if
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-  
-  open(unit=555,file=filename, action='write')
-  write(555,*) "Coordinates and Hessian of the qTS path written by dl-find"
-  write(555,*) nat,nimage,varperimage
-  write(555,*) temperature
-  write(555,*) ene
-  write(555,*) "Coordinates"
-  write(555,*) xcoords
-  write(555,*) "Hessian per image"
-  do iimage=1,nimage
-    write(555,*) hessian(:,:,iimage)
-  end do
-  write(555,*) "Etunnel"
-  write(555,*) etunnel
-  write(555,*) dist
-  write(555,*) "Masses in au"
-  if((glob%icoord==190.or.glob%icoord==390).and.glob%iopt/=11.and.glob%iopt/=13) then
-    svar=1.D0
-  else
-    call dlf_constants_get("AMU",svar)
-  end if
-  write(555,*) glob%mass*svar
-  close(555)
-
-end subroutine write_qts_hessian
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/read_qts_hessian
-!!
-!! FUNCTION
-!!
-!! Read V-Hessians of individual images from disk (qts_hessian.txt)
-!!
-!! On output, the hessian may be only partially filled (depending of
-!! nimage read). It is returned as read from the file.
-!!
-!! SYNOPSIS
-subroutine read_qts_hessian(nat,nimage,varperimage,temperature_,&
-    ene,xcoords,hessian,etunnel,dist,mass,label,tok)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout,glob
-  implicit none
-  integer, intent(in)    :: nat
-  integer, intent(inout) :: nimage
-  integer, intent(in)    :: varperimage
-  real(rk),intent(in)    :: temperature_ ! not used at the moment
-  real(rk),intent(out)   :: ene(nimage)
-  real(rk),intent(out)   :: xcoords(3*nat,nimage)
-  real(rk),intent(out)   :: hessian(varperimage,varperimage,nimage)
-  real(rk),intent(out)   :: etunnel
-  real(rk),intent(out)   :: dist(nimage+1)
-  real(rk),intent(out)   :: mass(nat)
-  character(*),intent(in):: label
-  logical ,intent(out)   :: tok
-  !
-  integer :: iimage,ios
-  logical :: there
-  integer :: nat_,nimage_,varperimage_
-  real(rk):: temperature
-  character(128) :: filename
-
-  tok=.false.
-  if(trim(label)/="") then
-    filename='qts_hessian_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Searching for hessian file ",trim(filename)
-  else
-    filename='qts_hessian.txt'
-  end if
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  inquire(file=filename,exist=there)
-  if(.not.there) return
-
-  open(unit=555,file=filename, action='read')
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) nat_,nimage_,varperimage_
-  if(nat/=nat_) then
-    if(printl>=4) write(*,*) "Error reading ",trim(filename)," file: Number of &
-        &atoms not consistent"
-    if(printl>=4) write(*,*) "Number of atoms expected",nat
-    if(printl>=4) write(*,*) "Number of atoms got     ",nat_
-    close(555)
-    return
-  end if
-  if(varperimage/=varperimage_) then
-    if(printl>=4) write(*,*) "Error reading ",trim(filename)," file: Variables &
-        &per image not consistent"
-    close(555)
-    return
-  end if
-
-  read(555,*,end=201,err=200) temperature
-  if(printl>=4) then
-    if(temperature>0.D0) then
-      write(stdout,'("Reading qTS hessian of temperature ",f10.5," K")') temperature
-    else
-      write(stdout,'("Reading classical Hessian")')
-    end if
-  end if
-  read(555,*,end=201,err=200) ene(1:min(nimage,nimage_))
-
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) xcoords(1:3*nat,1:min(nimage,nimage_))
-
-  read(555,FMT='(a)',end=201,err=200) 
-  hessian=0.D0
-  do iimage=1,min(nimage,nimage_)
-    read(555,*,end=201,err=200) hessian(:,:,iimage)
-  end do
-  ! read etunnel
-  read(555,FMT='(a)',iostat=ios)
-  if(ios==0) then
-    read(555,*,end=201,err=200) etunnel
-    read(555,*,end=201,err=200) dist(1:1+min(nimage,nimage_))
-  else
-    etunnel=-1.D0 ! tag as unread...
-    dist=-1.D0
-  end if
-  ! read mass
-  read(555,FMT='(a)',iostat=ios)
-  if(ios==0) then
-    read(555,*,end=201,err=200) mass
-  else
-    mass(:)=-1.D0 ! tag as unread
-  end if
-
-  close(555)
-
-  nimage=nimage_
-
-  if(printl >= 6) write(stdout,"(a,' file successfully read')") trim(filename)
-
-  tok=.true.
-  return
-
-  ! return on error
-  close(500)
-200 continue
-  call dlf_fail("Error reading "//trim(filename)//" file")
-  !write(stdout,10) "Error reading file"
-  !return
-201 continue
-  call dlf_fail("Error (EOF) reading qts_hessian.txt file")
-  !write(stdout,10) "Error (EOF) reading file"
-  !return
-
-end subroutine read_qts_hessian
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/head_qts_hessian
-!!
-!! FUNCTION
-!!
-!! Read V-Hessians of individual images from disk (qts_hessian.txt)
-!!
-!! On output, the hessian may be only partially filled (depending of
-!! nimage read). It is returned as read from the file.
-!!
-!! SYNOPSIS
-subroutine head_qts_hessian(nat,nimage,varperimage,label,tok)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout,glob
-  implicit none
-  integer, intent(out)    :: nat
-  integer, intent(out) :: nimage
-  integer, intent(out)    :: varperimage
-  character(*),intent(in):: label
-  logical ,intent(out)   :: tok
-  !
-  integer :: iimage,ios
-  logical :: there
-  real(rk):: temperature
-  character(128) :: filename
-
-  tok=.false.
-  if(trim(label)/="") then
-    filename='qts_hessian_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Searching for hessian file ",trim(filename)
-  else
-    filename='qts_hessian.txt'
-  end if
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  inquire(file=filename,exist=there)
-  if(.not.there) return
-
-  open(unit=555,file=filename, action='read')
-  read(555,FMT='(a)',end=2010,err=2000) 
-  read(555,*,end=2010,err=2000) nat,nimage,varperimage
-  close(555)
-
-  tok=.true.
-  return
-
-  ! return on error
-2000 continue
-  call dlf_fail("Error reading "//trim(filename)//" file in head_qts_hessian")
-  return
-2010 continue
-  call dlf_fail("Error (EOF) reading qts_hessian.txt file")
-  return
-
-end subroutine head_qts_hessian
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/write_qts_reactant
-!!
-!! FUNCTION
-!!
-!! Write energy and Hessian Eigenvalues of the reactant to disk
-!! (qts_reactant.txt). Called in dlf_thermo. Eigval are in mass-weighted
-!! cartesians.
-!!
-!! SYNOPSIS
-subroutine write_qts_reactant(nat,varperimage,&
-    ene,xcoords,eigvals,label)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,printl,stdout ! for masses
-!  use dlf_neb, only: neb ! cstart and cend
-  implicit none
-  integer, intent(in) :: nat,varperimage
-  real(rk),intent(in) :: ene
-  real(rk),intent(in) :: xcoords(3*nat)
-  real(rk),intent(in) :: eigvals(varperimage)
-  character(*),intent(in):: label
-  character(128) :: filename
-
-  if(glob%iam > 0 ) return ! only task zero should write
-
-  if(trim(label)=="ts") then
-    filename='qts_ts.txt'
-    if(printl>=4) write(stdout,*) "Writing file qts_ts.txt"
-  else if(trim(label)/="") then
-    filename='qts_reactant_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Writing file ",trim(filename)
-  else
-    filename='qts_reactant.txt'
-  end if
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  open(unit=555,file=filename, action='write')
-  write(555,'(a)') "Energy and Hessian eigenvalues of the reactant for qTS written by dl-find &
-      &(for bimolecular reactions: add energy of incoming atom and include mass (in amu) after the energy)"
-  write(555,*) nat,varperimage
-  write(555,*) ene
-  write(555,*) "Coordinates"
-  write(555,*) xcoords
-  write(555,*) "Hessian Eigenvalues"
-  write(555,*) eigvals
-  write(555,*) "Masses in amu (M(12C)=12)"
-  write(555,*) glob%mass
-  close(555)
-
-end subroutine write_qts_reactant
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/read_qts_reactant
-!!
-!! FUNCTION
-!!
-!! Read energy and Hessian Eigenvalues of the reactant from disk
-!! (qts_reactant.txt). Eigval are in mass-weighted cartesians.
-!!
-!! In case of bimolecular reactions, the file has to be hand-edited:
-!! the (electronic) energy of the incoming atom should be added to the
-!! energy (third line), and after the energy, the mass of the incoming
-!! atom in amu should be put (with a space as separator)
-!!
-!! SYNOPSIS
-subroutine read_qts_reactant(nat,varperimage,&
-    ene,varperimage_read,xcoords,eigvals,mass_bimol,label,mass,tok)
-!! SOURCE
-  use dlf_parameter_module, only: rk
-  use dlf_neb, only: neb ! cstart and cend
-  use dlf_global, only: glob,printl,stdout
-  use dlf_constants, only: dlf_constants_get
-  implicit none
-  integer, intent(in)  :: nat,varperimage
-  real(rk),intent(out) :: ene
-  integer ,intent(out) :: varperimage_read
-  real(rk),intent(out) :: xcoords(3*nat)
-  real(rk),intent(out) :: eigvals(varperimage)
-  real(rk),intent(out) :: mass_bimol ! reduced mass of the incoming
-                                     ! part of a bimolecular reaction
-                                     ! set to -1 if not read
-  character(*),intent(in):: label
-  real(rk),intent(out) :: mass(nat)
-  logical ,intent(out) :: tok
-  !
-  logical  :: there,tokmass
-  integer  :: nat_,varperimage_,ios,iat
-  character(128) :: line
-  real(8)  :: svar
-  character(128) :: filename
-
-  ene=huge(1.D0)
-  tok=.false.
-
-  ! find file name
-  if(trim(label)=="ts") then
-    filename='qts_ts.txt'
-    !if(printl>=4) write(stdout,*) "Reading file qts_ts.txt"
-  else if(trim(label)/="") then
-    filename='qts_reactant_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Searching for file ",trim(filename)
-  else
-    filename='qts_reactant.txt'
-  end if
-  if (glob%ntasks > 1) filename="../"//trim(filename)
-
-  inquire(file=filename,exist=there)
-  if(.not.there) return
-
-  open(unit=555,file=filename, action='read')
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) nat_,varperimage_
-  ! allow for bimolecular reactions
-  if(nat<nat_) then
-    if(printl>=2) write(*,*) "Error reading ",trim(filename)," file: Number of &
-        &atoms not consistent"
-    return
-  end if
-  if(varperimage<varperimage_) then
-    if(printl>=2) write(*,*) "Error reading qts_reactant.txt file: Variables &
-        &per image not consistent"
-    return
-  end if
-
-  !read(555,*,end=201,err=200) ene
-  read(555,fmt="(a)",end=201,err=200) line
-  read(line,*,iostat=ios) ene,mass_bimol
-  if(ios/=0) then
-    read(line,*) ene
-    mass_bimol=-1.D0
-  end if
-
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) xcoords(1:3*nat_)
-
-  eigvals=0.D0
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) eigvals(1:varperimage_)
-
-  ! read mass
-  read(555,FMT='(a)',iostat=ios)
-  if(ios==0) then
-    read(555,*,end=201,err=200) mass(1:nat_)
-    ! check consistency of masses
-    if(nat==nat_) then
-      tokmass=.true.
-      if((glob%icoord==190.or.glob%icoord==390).and.&
-          glob%iopt/=11.and.glob%iopt/=13) then
-        call dlf_constants_get("AMU",svar)
-      else
-        svar=1.D0
-      end if
-      do iat=1,nat
-        if(abs(mass(iat)-glob%mass(iat)/svar)>1.D-7) then
-          tokmass=.false.
-          if(printl>=2) &
-              write(stdout,*) "Mass of atom ",iat," inconsistent. File:",mass(iat)," input",glob%mass(iat)/svar
-        end if
-      end do
-      if(.not.tokmass) then
-        if(printl>=2) &
-            write(stdout,*) "Masses inconsistent, this file ",trim(filename)," can not be used"
-        return
-      end if
-    else
-      if(printl>=4) then
-        write(stdout,*) "Masses can not be checked for bimolecular reactions. "
-        write(stdout,*) " Make sure manually that the correct masses were used in ",trim(filename)
-      end if
-    end if
-  else
-    if(printl>=4) write(stdout,*) "Masses not read from ",trim(filename)
-  end if
-  
-  close(555)
-
-  if(printl >= 6) write(stdout,"(a,' file successfully read')") trim(filename)
-
-  varperimage_read=varperimage_
-
-  tok=.true.
-  return
-
-  ! return on error
-  close(100)
-200 continue
-  !call dlf_fail("Error reading qts_reactant.txt file")
-  write(stdout,10) "Error reading file"
-  return
-201 continue
-  !call dlf_fail("Error (EOF) reading qts_reactant.txt file")
-  write(stdout,10) "Error (EOF) reading file"
-  return
-
-10 format("Checkpoint reading WARNING: ",a) 
-
-end subroutine read_qts_reactant
-!!****
-
-! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!****f* qts/head_qts_reactant
-!!
-!! FUNCTION
-!!
-!! Read read only nat and varperimage from qts_reactant.txt for allocation
-!!
-!! SYNOPSIS
-subroutine head_qts_reactant(nat,varperimage,label,tok)
-  use dlf_parameter_module, only: rk
-  use dlf_global, only: stdout,printl
-  implicit none
-  integer, intent(out) :: nat,varperimage
-  character(*),intent(in):: label
-  logical ,intent(out) :: tok
-  !
-  logical  :: there
-  character(128) :: filename
-
-  tok=.false.
-
-  ! find file name
-  if(trim(label)=="ts") then
-    filename='qts_ts.txt'
-    !if(printl>=4) write(stdout,*) "Reading file qts_ts.txt"
-  else if(trim(label)/="") then
-    filename='qts_reactant_'//trim(label)//'.txt'
-    if(printl>=4) write(stdout,*) "Searching for file ",trim(filename)
-  else
-    filename='qts_reactant.txt'
-  end if
-
-  inquire(file=filename,exist=there)
-  if(.not.there) return
-
-  open(unit=555,file=filename, action='read')
-  read(555,FMT='(a)',end=201,err=200) 
-  read(555,*,end=201,err=200) nat,varperimage
-
-  close(555)
-  tok=.true.
-  return
-
-  ! return on error
-  close(100)
-200 continue
-  call dlf_fail("Error reading qts_reactant.txt file")
-  write(stdout,10) "Error reading file"
-  close(555)
-  return
-201 continue
-  call dlf_fail("Error (EOF) reading qts_reactant.txt file")
-  write(stdout,10) "Error (EOF) reading file"
-  close(555)
-  return
-
-10 format("Checkpoint reading WARNING: ",a) 
-
-end subroutine head_qts_reactant
-!!****
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !!****f* qts/dlf_htst_rate
@@ -4216,8 +4006,7 @@ end subroutine head_qts_reactant
 !! The reaction rate is calculated in the following ways:
 !! * Classical
 !! * Classical with quantised vibrations (includes ZPE)
-!! *  The latter + the simplified Wigner correction
-!! *  The latter + the full Wigner correction (for T>Tc)
+!! *  The latter + Bell correction
 !! * A symmetric Eckart barrier fitted to the hight of the barrier and
 !!   the curvature. The analytic quantum mechanical solution for the
 !!   flux is used in the reaction coordinate. The harmonic
@@ -4229,511 +4018,344 @@ subroutine dlf_htst_rate
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl,pi
 !  use dlf_allocate, only: allocate,deallocate
-!  use dlf_neb, only: neb,unitp,beta_hbar
-!  use dlf_qts
+  use dlf_qts, only: qts,dbg_rot,pf_type,minfreq
   use dlf_allocate, only: allocate,deallocate
   use dlf_constants, only: dlf_constants_init,dlf_constants_get
   implicit none
-  ! user parameters
-  integer   :: nat !  number of atoms TS
-  integer   :: natr ! number of atoms R
-  integer   :: varperimager ! number of degrees of freedom R
-  integer   :: varperimage ! number of degrees of freedom TS
-  integer   :: nzero_r  ! number of zeroes R
-  integer   :: nzero_ts  ! number of zeroes TS
-  logical   :: bimolat  ! bimolecular with only one atom for the second molecule
-  integer   :: bimol    ! truely bimolecular: number of atoms for the second molecule (0 for unimol)
   real(rk)  :: tstart ! lower end of the temperature range
   real(rk)  :: tend  ! upper end of the temperature range
   integer   :: tsteps ! number of temperatures at which to calculate the rates
   real(rk)  :: mu_bim  ! reduced mass (amu) for calculating phi_rel
-  real(rk)  :: twopimuktoverh2  ! part of relative translational p.fu. per unit volume
   real(rk)  :: phi_rel  ! relative translational p.fu. per unit volume
 
-  real(rk)  :: zpene_rs
-  real(rk)  :: zpene_ts
   real(rk)  :: ZPE,VAD
-  real(rk)  :: ene_rs
-  real(rk)  :: ene_ts
-  real(rk),allocatable  :: eigvals_rs(:)
-  real(rk),allocatable  :: eigvals_ts(:)
   logical   :: tok
   real(rk)  :: lrate_cl ! log of rate
   real(rk)  :: lrate_qvib! log of qq-rate (HJ-notation) multiplied by (2pi)**3
                         ! to make it consistent with the classical rate
-  real(rk)  :: tfact,temp,beta_hbar,KBOLTZ_AU,svar
+  real(rk)  :: kryv_lrate,qrsi
+  real(rk)  :: temp,beta_hbar,KBOLTZ_AU,svar
   real(rk)  :: tdel
-  real(rk)  :: wigner,wigner_simple
-  real(rk)  :: tcross
-  integer   :: itemp,ivar
-  integer   :: varperimage_read,varperimage_readr
-  real(rk),allocatable  :: rate_wigner(:)
+  integer   :: itemp,ivar,iter
   real(rk)  :: second_au
   real(rk)  :: log10,timeunit
 
   logical   :: tkie
   logical   :: chkfilepresent
-  real(rk)  :: hcl,hqq,hwig
-  character(128) :: sline
+  real(rk)  :: hcl,hqq,hbell
+  character(256) :: sline,line
+  integer   :: linlen
   real(rk)  :: avogadro,hartree,kjmol,echarge,ev,amc,planck,kboltz
   real(rk)  :: zpe_rs,zpe_ts
-  real(rk), allocatable :: xcoords(:) ! 3*nat
-  real(rk), allocatable :: ihessian(:,:) ! varperimage,varperimage
-  real(rk), allocatable :: evecs(:,:) ! varperimage,varperimage
-  real(rk), allocatable :: mass_file(:) ! nat
-  integer   :: nimage_read,iat
-  real(rk)  :: temperature,etunnel,dist(2)
-  logical   :: tokmass
-  ! Rotational partition function
-  real(rk)  :: qrot_red,qrot_rs,qrot_ts
-  ! Eckart for the transition mode
+  integer   :: nimage_read,iat,ios
+  real(rk)  :: temperature!,etunnel,dist(2)
   logical   :: teck=.true.
   real(rk)  :: Vb,alpha
-  real(rk)  :: kappa_eck,heck
+  real(rk)  :: kappa_eck,heck,kappa_aeck,va
   real(rk)  :: wavenumber,frequency_factor,amu,wavenumberts
   real(rk)  :: bvar
-  integer   :: varperimager2,natr2
-  real(rk)  :: ene_rs2
-  real(rk), allocatable :: eigvals_rs2(:)
   character(128) :: filename
+  real(rk)  :: l_qrot,beta,alpha_bell,kappa0,wkbbell,kappa_bell,prod_sinh
+  logical   :: taeck=.true.
+  real(rk)  :: vb_aeck,alpha_aeck,vmax,xvar,yvar,eharm,esym,easym
+  type(pf_type) :: rs1,rs2,ts
+  logical   :: toneat
+  real(rk)  :: qrot,qrot_quant,qrot_part,qrot_quant_part
+  real(rk)  :: sigrs,dsigrs,beta_crit
+  ! print one or more rates versions for T>Tc
+  real(rk),allocatable :: rate_data(:,:)
+  real(rk),allocatable :: SCT_kappas(:)
 
   if(glob%iam > 0 ) return ! only task zero should do this (task farming does
                            ! not make sense for such fast calculations. No
                            ! energies and gradients are ever calculated).
 
+  if(glob%icoord==190) then ! for now: iopt=13 and icoord=190 -> micro, not classical
+     call dlf_microcanonical_rate
+     return
+  end if
+  
   ! some small header/Info
   if(printl>=2) then
-    write(stdout,*) "Calculating the reaction rate based on harmonic transition state theory"
+    write(stdout,'(a)') "Calculating the reaction rate based on harmonic &
+        &transition state theory and one-dimensional tunnelling corrections."
   end if
 
-! now read this from class.in
-! this is structured as
-! line 1: nat_r, nat_ts ! <-- not used any more
-! line 2: n0_r, n0_ts
-! line 3: tstart, tend, tsteps
-! line 4: bimolecular (T/F)
-  bimolat=.false.
-  bimol=0
+  ! initialise
+  rs1%tused=.false.
+  rs2%tused=.false.
+  rs2%ene=0.D0
+  rs2%nvib=0
+  rs2%nat=0
+  rs2%mass=0.D0
+  ts%tused=.false.
+  
+  !
+  ! read class.in or class.auto (if class.in does not exist)
+  !
+
+  ! the file is structured as
+  ! line 1: minfreq in cm^-1
+  ! line 2: dEb/dbeta at TS ! was: n0_r, n0_ts ! <-- not used any more
+  ! line 3: tstart, tend, tsteps
+  ! line 4: bimolecular (T/F) ! <-- not used any more
+  ! line 5: exothermicity for asymmetric Eckart approximation (in Hartree)
   filename="class.in"
   if (glob%ntasks > 1) filename="../"//trim(filename)
   INQUIRE(FILE=filename,EXIST=chkfilepresent)
+  if (.not.chkfilepresent) THEN
+    filename="class.auto" ! if class.in exists, it is used, otherwise
+                          ! class.auto, written by the ChemShell
+                          ! interface, is used
+    if (glob%ntasks > 1) filename="../"//trim(filename)
+    INQUIRE(FILE=filename,EXIST=chkfilepresent)
+  end if
   IF (chkfilepresent) THEN
     OPEN(28,FILE=filename,STATUS='old',ACTION='read')
-    READ (28,'(a)') sline 
-    !READ (28,*), natr, nat
+    READ (28,'(a)') sline ! line 1
+    READ (sline,iostat=ios,fmt=*) minfreq
+    if(ios/=0) then
+       minfreq=-1.D0 ! switch it off
+    end if
 !    varperimager=natr*3
 !   varperimage=nat*3
-    READ (28,*) nzero_r, nzero_ts
+    READ (28,'(a)') sline  ! line 2
+    READ (sline,iostat=ios,fmt=*) qts%debdbeta
+    if(ios/=0) then
+       qts%debdbeta=1.D0 ! switch it off
+    end if
+    
+!    READ (28,*) nzero_r, nzero_ts
     READ (28,*) tstart,tend,tsteps
-    bimolat=.false.
+    taeck=.false.
     READ (28,'(a)',err=201,end=201) sline
-    bimolat=(sline(1:1)=="T")
+    READ (28,'(a)',err=201,end=201) sline
+    read(sline,fmt=*,err=201,end=201) va
+    va=-va
+    taeck=.true.
 201 continue
-    !IF (bimolat) then 
-     ! READ (28,*), mu_bim
-     ! print *, '# Read a reduced mass of ', mu_bim, ' amu for calculating bimolecular rates'
-    !end IF
     REWIND(28)
     CLOSE(28)
   ELSE
     if(printl>=0) then
       write(stdout,*) " Read Error: file class.in not found"
       write(stdout,*) " The file provides input for rate calculations and should contain the lines:"
-      write(stdout,*) " Line 1: ignored"
-      write(stdout,*) " Line 2: N_zero(RS) N_zero(TS) ! Number of zero modes in RS and TS"
+      write(stdout,*) " Line 1: Minimum wave number (in cm^-1, smaller wave numbers will be raised to that)"
+      write(stdout,*) " Line 2: dEb/dbeta at TS"
       write(stdout,*) " Line 3: T_start T_end Number_of_steps ! Temperature"
-      write(stdout,*) " Line 4: T ! if a bimolecular reaction should be considered"
+      write(stdout,*) " Line 4: not used"
+      write(stdout,*) " Line 5: the exothermicity in Hartree if asymmetric Eckart is requested"
     end if
     call dlf_fail("File class.in missing")
   END IF
-  call allocate(rate_wigner,tsteps)
   
-  if(printl>=4) write(stdout,'(" Number of zero modes in RS and TS:",2i5)') nzero_r,nzero_ts
-
-  rate_wigner(:)=0.D0
-
-  ! read data of reactant
-  if(printl>=6) write(stdout,*) "reading qts_reactant.txt"
-
-  ! first get natr and varperimager. This is done also if Hessian should be
-  ! re-mass-weighted, because we need these from the file
-  call head_qts_reactant(natr,varperimager,"",tok)
-  if(.not.tok) call dlf_fail("Error reading reactant")
-  call allocate(eigvals_rs,varperimager)
-  call allocate(xcoords,3*natr)
-
-  ! Now read the full reactant data
-  call allocate(mass_file,natr)
-  call read_qts_reactant(natr,varperimager,&
-      ene_rs,varperimage_readr,xcoords,eigvals_rs,mu_bim,"",mass_file,tok)
-  call deallocate(mass_file)
-
-  if(bimolat.and.mu_bim<0.D0) then
-    ! bimolecular case with more than one atom, read in complete RS data below
-    tok=.true.
-    print*,"Bimolecular case"
+  if(minfreq>0.D0) then
+    call dlf_constants_get("CM_INV_FOR_AMU",svar)
+    if(printl>=2) write(stdout,'("Vibrational frequencies are raised &
+        &to a minimum of ",f8.3," cm^-1")') minfreq
+    minfreq=minfreq/svar ! now it should be in atomic units
+  end if
+  
+  toneat=.false.
+  ! read first reactant
+  call read_qts_txt(1,0,rs1,toneat)
+  
+  if(rs1%nat<glob%nat) then
+    ! read second reactant
+    call read_qts_txt(2,rs1%nat,rs2,toneat)
+  end if
+  
+  ! read transition state
+  toneat=.false.
+  call read_qts_txt(3,0,ts,toneat)
+  
+  ! sanity checks
+  if(abs(rs1%mass+rs2%mass-ts%mass)>1.D-4) then
+    write(stdout,'("Masses: ",3f10.5)') rs1%mass,rs2%mass,ts%mass
+    call dlf_fail("Masses of reactants and transition state not equal!")
+  end if
+  if(rs1%nat+rs2%nat/=ts%nat) then
+    write(stdout,'("Number of atoms: ",3i6)') rs1%nat,rs2%nat,ts%nat
+    call dlf_fail("Number of atoms of reactants and transition state not equal!")
   end if
 
-  if(.not.tok.and.(.not.bimolat)) then ! the same is done for the TS below ...
-    ! now we have to try and read qts_hessian_rs.txt
-    if(printl>=6) write(stdout,*) "Attempting to read from file qts_hessian_rs.txt"
+  !
+  ! now calculate rate constants for each temperature
+  !
 
-    call allocate(ihessian,varperimager,varperimager)
-    call allocate(evecs,varperimager,varperimager)
-    call allocate(mass_file,natr)
-
-    nimage_read=1
-    call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-        ene_rs,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
-    
-    if(.not.tok) call dlf_fail("Error reading reactant from Hessian file.")
-    if(nimage_read/=1) call dlf_fail("Wrong number of images for RS.")
-    varperimage_readr=varperimager ! bimolecular+reweighting not possible
-
-    ! If masses are not read in (returned negative), do no mass-weighting and
-    ! assume glob%mass is correct
-    if(minval(mass_file) > 0.D0) then
-      call dlf_constants_get("AMU",svar)
-      mass_file=mass_file/svar
-
-      tokmass=.true.
-      do iat=1,natr
-        if(abs(mass_file(iat)-glob%mass(iat))>1.D-7) then
-          tokmass=.false.
-          if(printl>=6) &
-              write(stdout,*) "Mass of atom ",iat," differs from Hessian file. File:",mass_file(iat)," input",glob%mass(iat)
-        end if
-      end do
-      
-      ! Re-mass-weight
-      if(.not.tokmass) then
-        call dlf_re_mass_weight_hessian(glob%nat,varperimager,mass_file,glob%mass,ihessian)
-      end if
-    end if
-
-    call dlf_matrix_diagonalise(varperimager,ihessian,eigvals_rs,evecs)
-
-    ! write hessian and qts_reactant file for later use?
-    call write_qts_hessian(natr,nimage_read,varperimager,-1.D0,&
-        ene_rs,xcoords,ihessian,etunnel,dist,"rs_mass")
-
-    call deallocate(ihessian)
-    call deallocate(evecs)
-    call deallocate(mass_file)
-
-
-  end if
-
-  ! rotational partition function (relative)
-  call rotational_partition_function(natr,glob%nzero,xcoords,qrot_rs)
-
-  call deallocate(xcoords)
-
-  ! handle bimolecular cases
-  if(bimolat.and.mu_bim<0.D0) then
-    if(printl>2) then
-      write(stdout,*) "Bimolecular rate with each molecule larger than one atom"
-      write(stdout,*) "Attempting to read qts_hessian_rs2.txt"
-    end if
-
-    ! RS (first one)
-    call head_qts_hessian(natr,nimage_read,varperimager,"rs",tok)
-    if(.not.tok) then
-      if(printl>0) then
-        write(stdout,*) "File qts_hessian_rs.txt required for bimolecular &
-            &rates with each molecule larger than one atom"
-      end if
-      call dlf_fail("Error reading qts_hessian_rs.txt")
-    end if
-    if(varperimager/=3*natr)  call dlf_fail("Frozen atoms are not possible with bimolecular rates")
-
-    call allocate(ihessian,varperimager,varperimager)
-    call allocate(evecs,varperimager,varperimager)
-    call deallocate(eigvals_rs)
-    call allocate(eigvals_rs,varperimager)
-    call allocate(mass_file,natr)
-    call allocate(xcoords,3*natr)
-
-    nimage_read=1
-    call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-        ene_rs,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
-
-    mu_bim=sum(mass_file)
-    
-    if(.not.tok) call dlf_fail("Error reading reactant from Hessian rs file.")
-    if(nimage_read/=1) call dlf_fail("Wrong number of images for RS.")
-
-    call dlf_matrix_diagonalise(varperimager,ihessian,eigvals_rs,evecs)
-
-    !print*,"Eigenvalues RS", eigvals_rs
-
-    ! rotational partition function (relative)
-    call rotational_partition_function(natr,nzero_r,xcoords,qrot_rs)
-
-    call deallocate(ihessian)
-    call deallocate(evecs)
-    call deallocate(mass_file)
-    call deallocate(xcoords)
-
-    ! RS2
-    call head_qts_hessian(natr2,nimage_read,varperimager2,"rs2",tok)
-    if(.not.tok) then
-      if(printl>0) then
-        write(stdout,*) "File qts_hessian_rs2.txt required for bimolecular &
-            &rates with each molecule larger than one atom"
-      end if
-      call dlf_fail("Error reading qts_hessian_rs2.txt")
-    end if
-    bimol=natr2
-    if(varperimager2/=3*natr2)  call dlf_fail("Frozen atoms are not possible with bimolecular rates")
-
-    call allocate(ihessian,varperimager2,varperimager2)
-    call allocate(evecs,varperimager2,varperimager2)
-    call allocate(eigvals_rs2,varperimager2+varperimager)
-    call allocate(mass_file,natr2)
-    call allocate(xcoords,3*natr2)
-
-    nimage_read=1
-    call read_qts_hessian(natr2,nimage_read,varperimager2,temperature,&
-        ene_rs2,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
-    
-    if(.not.tok) call dlf_fail("Error reading reactant from Hessian rs2 file.")
-    if(nimage_read/=1) call dlf_fail("Wrong number of images for RS2.")
-
-    ! calculate reduced mass
-    svar=sum(mass_file)
-    mu_bim=(mu_bim*svar)/(mu_bim+svar)
-    call dlf_constants_get("AMU",svar)
-    mu_bim=mu_bim/svar
-
-    call dlf_matrix_diagonalise(varperimager2,ihessian,eigvals_rs2(1:varperimager2),evecs)
-
-    !print*,"Eigenvalues RS2", eigvals_rs2(1:varperimager2)
-
-    ! copy all eigenvalues to eigvals_rs2
-    eigvals_rs2(varperimager2+1:)=eigvals_rs
-    call deallocate(eigvals_rs)
-    if(natr2==2) then
-      ivar=5
-    else
-      ivar=6
-    end if
-    varperimage_readr=varperimager+varperimager2-ivar
-
-    call allocate (eigvals_rs,varperimager2+varperimager)
-
-    ! now the eigenvalues (vib. frequencies) have to be arranged to eigvals_rs:
-    ! the first eigenvalues of eigvals_rs
-    ! then all but the first 6 (5) eigenvalues of eigvals_rs2
-    !print*,"varperimager,varperimager2,ivar,varperimage_readr",varperimager,varperimager2,ivar,varperimage_readr
-    eigvals_rs(1:varperimager)=eigvals_rs2(varperimager2+1:)
-    eigvals_rs(varperimager+1:)=eigvals_rs2(ivar+1:varperimager2)
-    nzero_r=nzero_r
-    varperimager=varperimage_readr
-
-    ene_rs=ene_rs+ene_rs2
-
-    ! rotational partition function (relative)
-    call rotational_partition_function(natr2,ivar,xcoords,svar)
-    qrot_rs=qrot_rs*svar
-
-    if(printl>=2) write(stdout,'(a,f20.10,a)') " Using a reduced mass of ",&
-        mu_bim, " amu calculated from the two fragments"
-
-    call deallocate(xcoords)
-    call deallocate(ihessian)
-    call deallocate(evecs)
-    call deallocate(mass_file)
-
-  end if
-
-  if(bimolat.and.bimol<2) then
-    if(printl>=2) write(stdout,'(a,f20.10,a)') " Read a reduced mass of ",&
-        mu_bim, " amu for calculating bimolecular rates"
-  end if
-
-  ! read data of TS
-  if(printl>=6) write(stdout,*) "# reading qts_ts.txt"
-  call head_qts_reactant(nat,varperimage,"ts",tok)
-  if(.not.tok) then
-    call dlf_fail("Error: need at least first two lines of qts_ts.txt")
-  end if
-  call allocate(eigvals_ts,varperimage)
-  call allocate(xcoords,3*nat)
-  call allocate(mass_file,nat)
-  call read_qts_reactant(nat,varperimage,&
-      ene_ts,ivar,xcoords,eigvals_ts,svar,"ts",mass_file,tok)
-  call deallocate(mass_file)
-
-  if(.not.tok) then ! the same is done for the RS above ...
-    ! now we have to try and read qts_hessian_ts.txt
-    if(printl>=6) write(stdout,*) "Attempting to read from file qts_hessian_ts.txt"
-
-    call allocate(ihessian,varperimage,varperimage)
-    call allocate(evecs,varperimage,varperimage)
-    call allocate(mass_file,nat)
-
-    nimage_read=1
-    call read_qts_hessian(nat,nimage_read,varperimage,temperature,&
-        ene_ts,xcoords,ihessian,etunnel,dist,mass_file,"ts",tok)
-    
-    if(.not.tok) call dlf_fail("Error reading TS from Hessian file.")
-    if(nimage_read/=1) call dlf_fail("Wrong number of images for TS.")
-    varperimage_read=varperimage ! bimolecular+reweighting not possible
-
-    ! If masses are not read in (returned negative), do no mass-weighting and
-    ! assume glob%mass is correct
-    if(minval(mass_file) > 0.D0) then
-      call dlf_constants_get("AMU",svar)
-      mass_file=mass_file/svar
-      
-      tokmass=.true.
-      do iat=1,natr
-        if(abs(mass_file(iat)-glob%mass(iat))>1.D-7) then
-          tokmass=.false.
-          if(printl>=6) &
-              write(stdout,*) "Mass of atom ",iat," differs from Hessian file. File:",mass_file(iat)," input",glob%mass(iat)
-        end if
-      end do
-      
-      ! Re-Mass-Weighting...
-      if(.not.tokmass) then
-        call dlf_re_mass_weight_hessian(glob%nat,varperimage,mass_file,glob%mass,ihessian)
-      end if
-    end if
-
-    call dlf_matrix_diagonalise(varperimage,ihessian,eigvals_ts,evecs)
-
-    ! write hessian and qts_reactant file for later use?
-    call write_qts_hessian(nat,nimage_read,varperimage,-1.D0,&
-        ene_ts,xcoords,ihessian,etunnel,dist,"ts_mass")
-
-    call deallocate(ihessian)
-    call deallocate(evecs)
-    call deallocate(mass_file)
-
-  end if
-
-  ! rotational partition function (relative)
-  call rotational_partition_function(nat,glob%nzero,xcoords,qrot_ts)
-  qrot_red=qrot_ts/qrot_rs
-
-  call deallocate(xcoords)
-
-  if(printl>=3) then
-    if(bimol==0) then
-      write(stdout,*)          "                    Reactant        TS"
-      write(stdout,'(a,2i10)') " Number of atoms   ",natr,nat
-      write(stdout,'(a,2i10)') " Degrees of freedom",varperimager,varperimage
-    else
-      write(stdout,*)          "                   Reactant1 Reactant2        TS"
-      write(stdout,'(a,3i10)') " Number of atoms   ",natr,natr2,nat
-      write(stdout,'(a,i10,10x,i10)') " Degrees of freedom",varperimager,varperimage
-    endif
-  end if
-
-  if(.not.tok) call dlf_fail("Error reading TS")
-
-  ! print *,"eigvals_rs", eigvals_rs
-  ! print *,"eigvals_ts", eigvals_ts
-  call dlf_constants_get("KBOLTZ_AU",KBOLTZ_AU)
   call dlf_constants_get("SECOND_AU",second_au)
   call dlf_constants_get("HARTREE",HARTREE)
   call dlf_constants_get("AVOGADRO",avogadro)
   call dlf_constants_get("ECHARGE",echarge)
   call dlf_constants_get("CM_INV_FOR_AMU",frequency_factor)
   call dlf_constants_get("AMU",amu)
+  call dlf_constants_get("KBOLTZ_AU",KBOLTZ_AU)
   kjmol=avogadro*hartree*1.D-3
   ev=hartree/echarge
-  !print*,"KBOLTZ_AU",KBOLTZ_AU
-
-  ! print all the frequencies (in case of high print level)
-  if(printl>=6) then
-    write(stdout,"(a)") "Vibrational Frequencies (wave numbers in cm^-1) of the reactant and the TS"
-    write(stdout,"(' Mode     Eigenvalue Frequency     Eigenvalue Frequency ')")
-    do ivar=1,max(varperimager,varperimage)
-      wavenumber = sqrt(abs(amu*eigvals_rs(ivar))) * frequency_factor
-      if(eigvals_rs(ivar)<0.D0) wavenumber=-wavenumber
-      wavenumberts = sqrt(abs(amu*eigvals_ts(ivar))) * frequency_factor
-      if(eigvals_ts(ivar)<0.D0) wavenumberts=-wavenumberts
-      if(ivar<=varperimager.and.ivar<=varperimage) then
-        write(stdout,"(i5,f15.10,f10.3,f15.10,f10.3)") ivar,eigvals_rs(ivar),wavenumber, &
-            eigvals_ts(ivar),wavenumberts
-      else
-        if(ivar<=varperimager) then
-          write(stdout,"(i5,f15.10,f10.3)") ivar,eigvals_rs(ivar),wavenumber
-        end if
-        if(ivar<=varperimage) then
-          write(stdout,"(i5,25x,f15.10,f10.3)") ivar, &
-              eigvals_ts(ivar),wavenumberts
-        end if
-      end if
-    end do
-  end if
 
   temp=tstart
-  tfact=(tend/tstart)**(1.D0/dble(tsteps-1))
   tdel=(tstart-tend)/(tend*tstart*dble(tsteps-1))
   !print*,"tdel",tdel
   
+  ! calculate the transmission coefficients for SCT
+  if (glob%sctRate) then
+    allocate(SCT_kappas(tsteps))
+    call dlf_sct_main(tstart,tdel,tsteps,SCT_kappas)
+  end if
+  
+  call allocate(rate_data,tsteps,2)
+
   zpe_rs=0.D0
   zpe_ts=0.D0
-  do ivar=1,varperimager
-   if (ivar>nzero_r) zpe_rs = zpe_rs + (0.5D0*SQRT(abs(eigvals_rs(ivar))))
+  do ivar=1,rs1%nvib
+    zpe_rs = zpe_rs + 0.5D0*rs1%omega(ivar)
   end do
-  do ivar=1,varperimage
-   if (ivar>nzero_ts+1) zpe_ts = zpe_ts + (0.5D0*SQRT(abs(eigvals_ts(ivar))))
+  if(rs2%tused) then
+    do ivar=1,rs2%nvib
+      zpe_rs = zpe_rs + 0.5D0*rs2%omega(ivar)
+    end do
+  end if
+  do ivar=1,ts%nvib
+    zpe_ts = zpe_ts + 0.5D0*ts%omega(ivar)
   end do
+  
+  if(printl>=4) then
+    write(stdout,"('Zero-point energy',3x,f10.5,15x,f10.5)") zpe_rs,zpe_ts
+  end if
 
+  
   ZPE=zpe_ts-zpe_rs 
-  VAD=ene_ts-ene_rs+ZPE
+  VAD=ts%ene-rs1%ene-rs2%ene+ZPE
 
   ! crossover temperature
-  tcross=sqrt(abs(eigvals_ts(1)))*0.5D0/pi/KBOLTZ_AU
+  qts%tcross=ts%omega_imag*0.5D0/pi/KBOLTZ_AU
 
+  ! Eckart stuff
+  !Vb=4.D0*(ene_ts-ene_rs)
+  Vb=4.D0*(vad)
+  alpha=ts%omega_imag*sqrt(8.D0/vb)
+
+  ! Asymmetric Eckart barrier
+  vmax=vad
+
+  if(taeck.and.printl>=4) then
+    vb_aeck=2.D0*vmax-va+sqrt((2.D0*vmax-va)**2-va**2)
+    alpha_aeck=ts%omega_imag*sqrt(8.D0*vb_aeck**3/(va**2-vb_aeck**2)**2)
+    ! plot curve
+    open(unit=125,file='ene_profile')
+    write(125,'(a)') "# Reaction coordinate in mass-weighted coordinates."
+    write(125,'(a)') "# Reaction coord.      E_harm       symm. Eckart   asymm. Eckart"
+    do itemp=1,101
+      xvar=10.D0*(-1.D0+dble(itemp-1)/50.D0)/alpha_aeck
+      eharm=vmax-ts%omega_imag**2*0.5D0*xvar**2
+      ! symm
+      yvar=exp(alpha*xvar)
+      esym=vb*yvar/(1.D0+yvar)**2
+      ! asym
+      yvar=(va+vb_aeck)/(vb_aeck-va)*exp(alpha_aeck*xvar)
+      easym=va*yvar/(1.d0+yvar)+vb_aeck*yvar/(1.d0+yvar)**2
+      write(125,'(4f15.7)') xvar,eharm,esym,easym
+    end do
+    close(125)
+  end if
+  
+  
   if(printl>=3) then
     write(stdout,'(a)') "                                      Hartree           kJ/mol            eV                K"
     write(stdout,'(a,4f18.8)') "Potential energy Barrier     ", &
-         ene_ts-ene_rs,(ene_ts-ene_rs)*kjmol,  (ene_ts-ene_rs)*ev,(ene_ts-ene_rs)/KBOLTZ_AU
+        ts%ene-rs1%ene-rs2%ene,(ts%ene-rs1%ene-rs2%ene)*kjmol,  &
+        (ts%ene-rs1%ene-rs2%ene)*ev,(ts%ene-rs1%ene-rs2%ene)/KBOLTZ_AU
     write(stdout,'(a,4f18.8)') "ZPE Correction               ", &
         ZPE, ZPE*kjmol,ZPE*ev,ZPE/KBOLTZ_AU
     write(stdout,'(a,4f18.8)') "Vibrational adiabatic barrier", &
         VAD,VAD*kjmol,VAD*ev,VAD/KBOLTZ_AU
-    svar=KBOLTZ_AU*temp*log(qrot_red)
-    write(stdout,'(a,4f18.8)') "Rotational contr. at start T ", &
+    ! qrot = qrot_red * beta_hbar**rot_beta_exp
+    ! todo:
+!    svar=-(KBOLTZ_AU*temp)* (log(qrot_red) - rot_beta_exp*log(KBOLTZ_AU*temp) )
+!    write(stdout,'(a,4f18.8)') "Rotational contr. at start T ", &
+!        svar,svar*kjmol,svar*ev,svar/KBOLTZ_AU
+
+
+    write(stdout,'(a,f18.8,1x,a)') "Crossover Temperature        ",qts%tcross,"K"
+    beta_crit=1.d0/qts%tcross/kboltz_au
+    write(stdout,'(a,f18.8,1x,a)') "beta_c                       ",beta_crit,"1/Hartree"
+  end if
+
+  if(printl>=2.and.glob%irot==1) then
+    if(rs2%tused) then
+      write(stdout,'("Implicit surface approach: only rotation of &
+          &RS2 considered, reduced mass = mass of RS2")')
+    else
+      if(printl>=2) write(stdout,'("Implicit surface approach: rotational partition function kept constant.")')
+    end if
+  end if
+
+  if(rs2%tused) then
+    call dlf_constants_get("AMU",svar)
+    ! define the reduced mass
+    mu_bim=rs1%mass*rs2%mass/(rs1%mass+rs2%mass)
+    if(rs2%tfrozen) mu_bim=rs1%mass
+    if(rs1%tfrozen) mu_bim=rs2%mass
+    if(rs1%tfrozen.and.rs2%tfrozen) mu_bim=rs1%mass*rs2%mass/(rs1%mass+rs2%mass)
+    !if(rs2%nat==1) mu_bim=rs2%mass ! needs to be removed: rs2%mass is the real mass of the additional atom
+    if(glob%irot==1) mu_bim=rs2%mass ! mimic a surface
+    svar=mu_bim*svar/2.D0/pi*(KBOLTZ_AU*temp)
+    svar=-(KBOLTZ_AU*temp)* (-1.5D0*log(svar))
+    if(printl>=3) write(stdout,'(a,4f18.8)') "Transl. contr. at start T    ", &
         svar,svar*kjmol,svar*ev,svar/KBOLTZ_AU
-    write(stdout,'(a,f18.8,1x,a)') "Crossover Temperature        ",tcross,"K"
+    if(printl>=4) write(stdout,'("Reduced mass =",f10.5," amu")') mu_bim
   end if
   
-  ! Eckart stuff
-  !Vb=4.D0*(ene_ts-ene_rs)
-  Vb=4.D0*(vad)
-  alpha=sqrt(abs(eigvals_ts(1))*8.D0/vb)
+  if(taeck.and.printl>=2) write(stdout,'("Asymmetric Eckart Approximation is used &
+      &with an exothermicity of ",f15.8," Hartree")') -va 
   ! Parameters for the Eckart approximation (commented out)
   !print*,"Eckart: V'',Emax",abs(eigvals_ts(1)),(ene_ts-ene_rs)
   !print*,"Eckart: Vb, alpha",Vb,alpha
 
-
+  if(printl>=4) then
+     if(qts%dEbdbeta>=0.D0) then
+        call dlf_kryvohuz_supercrit_jk(ts%nvib,-1,rs1%ene+rs2%ene,ts%ene,&
+             qrsi,ts%omega**2,beta_hbar,kryv_lrate,.true.)
+        write(stdout,'("Using dE_b / dbeta from an inverted Morse potential= ",es10.3)') kryv_lrate
+     else
+        write(stdout,'("Using dE_b / dbeta from input= ",es10.3)') qts%debdbeta
+     end if
+  end if
+  
   ! Set the unit and the base of the logarithm
   log10=log(10.D0)        ! for log to the base of 10
   timeunit=log(second_au) ! for printout in s^-1
+  if(rs2%tused) then
+    call dlf_constants_get("ANG_AU",svar)
+    svar=log(svar*1.D-10) ! ln of bohr in meters
+    ! the factor of 1.D6 converts from m^3 to cm^3
+    timeunit=log(second_au)+log(1.D6)+3.D0*svar ! for printout in cm^3 s^-1
+  end if
   !log10=1.D0              ! for natural log
   !timeunit=0.D0           ! for printout in at. u.
 
   ! Adjust the printout to the settings above!
   if(printl>=3) then
-    if (bimolat) then
-      write(stdout,*) "log_10 of rates in cm^3 sec^-1"
+    if (rs2%tused) then
+      write(stdout,'("The following list contains the log_10 of rate &
+          &constants in cm^3 sec^-1.")')
       !write(stdout,*) "log_10 of rates in cm^3/at.u."
       !write(stdout,*) "ln of rates in cm^3 sec^-1"
       !write(stdout,*) "ln of rates in cm^3/at.u."
     else
-      write(stdout,*) "log_10 of rates in second^-1"
+      write(stdout,'("The following list contains the log_10 of rate &
+          &constants in second^-1.")')
       !write(stdout,*) "ln of rates in second^-1"
       !write(stdout,*) "log_10 of rates in at.u."
       !write(stdout,*) "ln of rates in at.u."
     end if
-    write(stdout,'(a,f18.8)') "Change of log(rate) by the rotational partition function",log(qrot_red)/log10
+    write(stdout,'("All rate constants still need to be multiplied &
+        &by the symmetry factor sigma.")')
+    write(stdout,'("Rotational partition functions were calculated for&
+        & the classical rigid rotor.")')
+    write(stdout,'("To obtain results for the quantum rigid rotor, add &
+        & values from the column `Q_rot class/quant` in the file arrhenius.")')
+    !write(stdout,'(a,f18.8)') "Change of log(rate) by the rotational partition function (start T)",(log(qrot_red)- rot_beta_exp*log(KBOLTZ_AU*temp))/log10
 
   end if
   
@@ -4750,9 +4372,9 @@ subroutine dlf_htst_rate
 1002 tkie=.false.
 1003 continue
     if(tkie) then
-      if(printl>=4) write(stdout,*) "File rate_H found, calculating KIE and writing to file kie."
+      if(printl>=4) write(stdout,'("File rate_H found, calculating KIE and writing to file kie.")')
       open(file="kie",unit=13)
-      write(13,'(a)') "#       T[K]              KIE  classical   KIE w. quant. vib   KIE simpl. Wigner   KIE Eckart"
+      write(13,'(a)') "#       T[K]              KIE  classical   KIE w. quant. vib   KIE Bell            KIE Eckart"
     else
       if(printl>0) write(stdout,*) "File rate_H found, but not readable, no KIE calculated."
     end if
@@ -4763,100 +4385,322 @@ subroutine dlf_htst_rate
   call dlf_constants_get("KBOLTZ",kboltz)
 
   open(file="arrhenius",unit=15)
-  open(file="arrhenius_polywigner",unit=17)
-  open(file="free_energy_barrier",unit=16)
-  if(printl>=2) write(stdout,'(a)') &
-      "       1000/T           rate classical       quantised vib.      simpl. Wigner       Eckart"
-  write(15,'(a)') &
-      "#      1000/T           rate classical       quantised vib.      simpl. Wigner       Eckart"
-  write(16,'(a)') &
-      "#     T           free-energy barrier from rate with quantised vib."
-  write(17,'(a)') &
-      "#      1000/T              s-Wig 2             s-Wig 4             s-Wig 6             s-Wig 8"
+  !open(file="free_energy_barrier",unit=16)
+  open(file="arrhenius_components",unit=17)
+  line="       1000/T           rate classical       quantised vib.      Bell                Eckart           "
+  linlen=100
+  if (glob%sctRate) then
+    line=line(1:linlen)//"     SCT rate     "
+    linlen=linlen+20
+  end if
+  if (taeck) then
+    line=line(1:linlen)//"     asymm. Eckart"
+    linlen=linlen+20
+  end if
+  !line=line(1:linlen)//"   Q_rot class/quant"
+  !linlen=linlen+20
+  write(15,'(a)') "#"//line(2:linlen)//"   Q_rot class/quant"
+  line=line(1:linlen)//"   reduced instanton"
+  if(printl>=2) write(stdout,'(a)') trim(line)
+  !write(16,'(a)') &
+  !    "#     T           free-energy barrier from rate with quantised vib."
 
+  if(.not.taeck) then
+    if (glob%sctRate) then
+      write(17,'(a)') &
+        "#      1000/T         1/(2 pi beta hbar)   prod sinh(...)     rotation           translation       exp(-beta dE)   &
+        &    kappa_bell         kappa_WKBbell      kappa_Eckart       kappa_SCT          timeunit"
+    else
+      write(17,'(a)') &
+        "#      1000/T           1/(2 pi beta hbar)    prod sinh(...)       rotation            translation       exp(-beta dE)   &
+        &     kappa_bell          kappa_WKBbell       kappa_Eckart        timeunit"
+    end if
+  else
+    ! output with asymmetric Eckart rates
+    if (glob%sctRate) then
+      write(17,'(a)') &
+        "#      1000/T         1/(2 pi beta hbar)   prod sinh(...)     rotation           translation       exp(-beta dE)   &
+        &    kappa_bell         kappa_WKBbell      kappa_sEckart      kappa_aEckart      kappa_SCT          timeunit"
+    else
+      write(17,'(a)') &
+        "#      1000/T           1/(2 pi beta hbar)    prod sinh(...)       rotation            translation       exp(-beta dE)   &
+        &     kappa_bell          kappa_WKBbell       kappa_sEckart       kappa_aEckart       timeunit"
+    end if
+  end if
   do itemp=1,tsteps
 
     !print*,"Temperature",itemp,temp
     beta_hbar=1.D0/(temp*KBOLTZ_AU)  ! beta * hbar = hbar / (kB*T)
     !print*,"beta_hbar",beta_hbar
 
-    if(bimolat) then
-      twopimuktoverh2= 2.D0 * pi * mu_bim * amc !amc=1.66053886E-027
-      twopimuktoverh2= twopimuktoverh2 / planck !planck=6.626068E-034
-      twopimuktoverh2= twopimuktoverh2 * kboltz * temp ! kboltz=1.3806503E-023
-      twopimuktoverh2= twopimuktoverh2 / planck ! planck=6.626068E-034
-      twopimuktoverh2= twopimuktoverh2 * SQRT(twopimuktoverh2)
-      twopimuktoverh2= 1.D-6 * twopimuktoverh2
-      phi_rel=log(twopimuktoverh2)
-      !print *, 'log10(phi_rel)', phi_rel/log10, 'at T', temp
-      if(bimol==2) qrot_rs=qrot_rs*2.D0/beta_hbar
-      if(bimol>2) qrot_rs=qrot_rs*sqrt(8.D0*pi)/sqrt(beta_hbar**3)
+    !
+    ! calculate the rotational partition function
+    !
+    qrot=1.D0
+    qrot_quant=1.D0
+    ! do nothing for atoms (their rotational partition function is unity)
+    if(glob%irot==0) then
+      if(rs1%nmoi>1) then
+        !print*,"rotpart rs1",rs1%coeff
+        call rotational_partition_function_calc(rs1%moi,beta_hbar,rs1%coeff,qrot_part,qrot_quant_part)
+        qrot=qrot*qrot_part
+        qrot_quant=qrot_quant*qrot_quant_part
+      end if
+      if(ts%nmoi>1) then
+        !print*,"rotpart TS",ts%coeff
+        call rotational_partition_function_calc(ts%moi,beta_hbar,ts%coeff,qrot_part,qrot_quant_part)
+        qrot=qrot/qrot_part
+        qrot_quant=qrot_quant/qrot_quant_part
+      end if
+      
+!!$      if(rs1%nmoi==3) then
+!!$        qrot=qrot*sqrt(rs1%moi(1)*rs1%moi(2)*rs1%moi(3))*sqrt(8.D0*pi/beta_hbar**3)
+!!$      else if (rs1%nmoi==2) then
+!!$        qrot=qrot*maxval(rs1%moi)*2.D0/beta_hbar ! the two moi must be equal
+!!$      end if
+!!$      if(ts%nmoi==3) then
+!!$        qrot=qrot/(sqrt(ts%moi(1)*ts%moi(2)*ts%moi(3))*sqrt(8.D0*pi/beta_hbar**3))
+!!$      else if (ts%nmoi==2) then
+!!$        qrot=qrot/(maxval(ts%moi)*2.D0/beta_hbar) ! the two moi must be equal
+!!$      end if
+    end if
+    !print*,"rotpart rs2"
+    if(rs2%tused.and.rs2%nmoi>1) then
+      !print*,"rotpart rs2",rs2%coeff
+      call rotational_partition_function_calc(rs2%moi,beta_hbar,rs2%coeff,qrot_part,qrot_quant_part)
+      qrot=qrot*qrot_part
+      qrot_quant=qrot_quant*qrot_quant_part
+    end if
+!!$      if(rs2%nmoi==3) then
+!!$        qrot=qrot*sqrt(rs2%moi(1)*rs2%moi(2)*rs2%moi(3))*sqrt(8.D0*pi/beta_hbar**3)
+!!$      else if (rs2%nmoi==2) then
+!!$        qrot=qrot*maxval(rs2%moi)*2.D0/beta_hbar ! the two moi must be equal
+!!$      end if
+!!$    end if
+    l_qrot= -log(qrot) ! minus because of Q_TS/Q_RS
+
+    ! translational partition function
+    phi_rel=0.D0
+    if(rs2%tused) then
+      call dlf_constants_get("AMU",svar)
+      phi_rel=mu_bim*svar/2.D0/pi/beta_hbar
+      phi_rel=1.5D0 * log(phi_rel)
     end if
 
     lrate_cl=0.D0
     lrate_qvib=0.D0
-    do ivar=1,varperimage
-      if(ivar<=varperimage_readr.and.ivar>nzero_r) then 
-        lrate_cl=lrate_cl+log(abs(eigvals_rs(ivar)))
-        lrate_qvib=lrate_qvib+log(2.D0*sinh(0.5D0*sqrt(abs(eigvals_rs(ivar)))*beta_hbar))
-      end if
-      if(ivar>1+nzero_ts) then
-        lrate_cl=lrate_cl-log(abs(eigvals_ts(ivar)))
-        lrate_qvib=lrate_qvib-log(2.D0*sinh(0.5D0*sqrt(abs(eigvals_ts(ivar)))*beta_hbar))
-      end if
-
+    do ivar=1,rs1%nvib
+      lrate_cl=lrate_cl+log(rs1%omega(ivar))
+      lrate_qvib=lrate_qvib+log(2.D0*sinh(0.5D0*rs1%omega(ivar)*beta_hbar))
     end do
-    ! orig:
-    lrate_cl= 0.5D0*lrate_cl -log(2.D0*pi) + ( -beta_hbar * (ene_ts-ene_rs) )
-!!$    ! modified for flux:
-!!$    if(itemp==1) print*,"Classical rate modified for flux"
-!!$    lrate_cl= 0.5D0*lrate_cl -log(2.D0*pi*beta_hbar) + ( -beta_hbar * (ene_ts-ene_rs) )
-  
+    if(rs2%tused) then
+      do ivar=1,rs2%nvib
+        lrate_cl=lrate_cl+log(rs2%omega(ivar))
+        lrate_qvib=lrate_qvib+log(2.D0*sinh(0.5D0*rs2%omega(ivar)*beta_hbar))
+      end do
+    end if
+    do ivar=1,ts%nvib
+      lrate_cl=lrate_cl-log(ts%omega(ivar))
+      lrate_qvib=lrate_qvib-log(2.D0*sinh(0.5D0*ts%omega(ivar)*beta_hbar))
+    end do
+    prod_sinh=lrate_qvib
+
+    ! pre-factors for the rate
+    lrate_cl= lrate_cl -log(2.D0*pi) + ( -beta_hbar * (ts%ene-rs1%ene-rs2%ene) )
+    lrate_qvib= lrate_qvib -log(2.D0*pi*beta_hbar) + ( -beta_hbar * (ts%ene-rs1%ene-rs2%ene) )
+
     ! rotational part:
-    lrate_cl=lrate_cl+log(qrot_red)
-    lrate_qvib=lrate_qvib+log(qrot_red)
+    lrate_cl=lrate_cl+l_qrot
+    lrate_qvib=lrate_qvib+l_qrot
+    if(dbg_rot) print*,"ln(Quotient of Rotational partition functions):",l_qrot
 
-    if (bimolat) lrate_cl=lrate_cl-phi_rel 
-    lrate_qvib= lrate_qvib -log(2.D0*pi*beta_hbar) + ( -beta_hbar * (ene_ts-ene_rs) )
-    if (bimolat) lrate_qvib=lrate_qvib-phi_rel 
-
-    wigner_simple=1.D0+1.D0/24.D0*beta_hbar**2*abs(eigvals_ts(1))
+    ! translational part:
+    if (rs2%tused) then
+      lrate_cl=lrate_cl-phi_rel 
+      lrate_qvib=lrate_qvib-phi_rel 
+    end if
+ 
+    !wigner_simple=1.D0+1.D0/24.D0*beta_hbar**2*abs(eigvals_ts(1))
     
     call kappa_eckart(beta_hbar,Vb,alpha,kappa_eck)
+    if(taeck) call kappa_eckart_asymm(beta_hbar,vmax,va,alpha_aeck,kappa_aeck)
+    
+    !
+    ! full Bell
+    !
+    bvar=ts%omega_imag*0.5D0/pi*beta_hbar ! mu
+  !  alpha_bell=(ts%ene-rs1%ene-rs2%ene)*beta_hbar
+  !  beta=(ts%ene-rs1%ene-rs2%ene)/ (sqrt(abs(eigvals_ts(1)))*0.5D0/pi)
+    alpha_bell=(vad)*beta_hbar
+    beta=(vad)/ (ts%omega_imag*0.5D0/pi)
+    kappa0=pi*bvar/sin(pi*bvar)
 
-    if(temp>tcross) then
-      svar=sqrt(abs(eigvals_ts(1)))*0.5D0*beta_hbar
-      wigner=svar/sin(svar)
-      rate_wigner(itemp)=(lrate_qvib+log(wigner)+timeunit)/log10
+    svar=0.D0
+    do iter=0,20 ! 20 iterations should be enough, unless one goes to _very_ low T
+
+      ! lift poles at T = T_c / n (with n integer > 0)
+      if(abs(1.D0+dble(iter)-bvar)< 1.D-5) then
+        kappa0=0.D0
+        svar=svar + (-1.D0)**(1+iter)*(alpha_bell ) / (bvar*exp(alpha_bell-beta))
+      else
+        svar=svar + dble((-1)**iter) /(1.D0+dble(iter)-bvar) * exp(-dble(iter)*beta)
+      end if
+    end do
+    kappa_bell=kappa0-bvar*exp(alpha_bell-beta)*svar
+    ! calculate log(kappa_bell) for low temperature (to make it more stable)
+    if( (alpha_bell-beta)>700.D0 ) then
+      ! neglect kappa0
+      kappa_bell=log(abs(bvar))+(alpha_bell-beta)+log(abs(svar))
     else
-      rate_wigner(itemp)=0.D0
+      kappa_bell=log(kappa_bell)
     end if
 
-    if(printl>=2) write(stdout,'(5f20.12)') &
-        1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
-        (lrate_qvib+log(wigner_simple)+timeunit)/log10, (lrate_qvib+log(kappa_eck)+timeunit)/log10
-!    write(15,'(5f20.12)') beta_hbar,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
-    write(15,'(5f20.12)') 1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
-        (lrate_qvib+log(wigner_simple)+timeunit)/log10, (lrate_qvib+log(kappa_eck)+timeunit)/log10
-    write(16,'(2f20.12)') temp,-(lrate_qvib+log(beta_hbar*2.D0*pi))/beta_hbar!, &
-        !-(lrate_qvib+log(wigner_simple)+log(beta_hbar*2.D0*pi))/beta_hbar
+    ! calculate reduced instanton rate > Tc
+    sigrs=0.D0
+    dsigrs=0.D0
+    do ivar=1,rs1%nvib
+      sigrs=sigrs-log(2.D0*sinh(0.5D0*rs1%omega(ivar)*beta_hbar))
+      dsigrs=dsigrs-rs1%omega(ivar)*0.5D0
+    end do
+    if(rs2%tused) then
+      do ivar=1,rs2%nvib
+        sigrs=sigrs-log(2.D0*sinh(0.5D0*rs2%omega(ivar)*beta_hbar))
+        dsigrs=dsigrs-rs2%omega(ivar)*0.5D0
+      end do
+    end if
+    dsigrs=dsigrs*beta_hbar
+    beta_crit=1.d0/qts%tcross/kboltz_au
+    qrsi=sigrs ! purely sinh-expression
+    ! comment out the next expression if you want the standard partition
+    ! function of the reactant!
+!!$    qrsi=((beta_crit-beta_hbar)**0.5D0/beta_crit**0.5D0) * sigrs + &
+!!$        (1.d0-(beta_crit-beta_hbar)**0.5D0/beta_crit**0.5D0) * dsigrs
+    call dlf_kryvohuz_supercrit_jk(ts%nvib,-1,rs1%ene+rs2%ene,ts%ene,&
+        qrsi,ts%omega**2,beta_hbar,kryv_lrate,.false.)
+    kryv_lrate=kryv_lrate+l_qrot
+    if (rs2%tused) then
+       kryv_lrate=kryv_lrate-phi_rel
+    end if
+    
+    ! print result
+    line=""
+    linlen=0
+    ! this is written in all cases (file arrhenius):
+    write(line,'(5f20.12)') 1000.D0/temp,(lrate_cl+timeunit)/log10,&
+        (lrate_qvib+timeunit)/log10, &
+        (lrate_qvib+kappa_bell+timeunit)/log10, (lrate_qvib+kappa_eck+timeunit)/log10
+    linlen=100
+    ! add asymmetric Eckart if available
+    if(taeck) then
+      write(line,'(a,f20.12)') line(1:linlen), (lrate_qvib+kappa_aeck+timeunit)/log10
+      linlen=120
+    end if
+    
+    ! Add SCT rate, if requested
+    if (glob%sctRate) then
+      write(line,'(a,f20.12)') line(1:linlen), (lrate_qvib+log(SCT_kappas(itemp))+timeunit)/log10
+      linlen=linlen+20
+    end if
 
-    !polywigner
-    bvar=beta_hbar*sqrt(abs(eigvals_ts(1)))*0.5D0
-!    write(17,'(5f20.12)') beta_hbar, &
-    write(17,'(5f20.12)') 1000.D0/temp, &
-        (lrate_qvib+log(1.D0+bvar**2/6.D0)+timeunit)/log10, &
-        (lrate_qvib+log(1.D0+bvar**2/6.D0+bvar**4*7.D0/15.D0/24.D0)+timeunit)/log10, &
-        (lrate_qvib+log(1.D0+bvar**2/6.D0+bvar**4*7.D0/15.D0/24.D0 + bvar**6*31.D0/21.D0/720.D0)+timeunit)/log10, &
-        (lrate_qvib+log(1.D0+bvar**2/6.D0+bvar**4*7.D0/15.D0/24.D0 + bvar**6*31.D0/21.D0/720.D0 &
-            + bvar**8*127.D0/15.D0/40320.D0)+timeunit)/log10
-     !   (lrate_qvib+log(1.D0-1.d0/avar+cosh(bvar*sqrt(avar/3.D0))/avar)+timeunit)/log10
+    write(15,'(a,f20.12)') trim(line),log(qrot/qrot_quant)/log10 ! file arrhenius
+
+    ! add reduced instanton above Tc
+    if(temp>qts%tcross) then
+      write(line,'(a,f20.12)') line(1:linlen), (kryv_lrate+timeunit)/log10
+    end if
+
+    if(printl>=2) write(stdout,'(a)') trim(line)
+    rate_data(itemp,1)=1000.D0/temp
+    rate_data(itemp,2)=(kryv_lrate+timeunit)/log10
+!!$    if(.not.taeck) then
+!!$      if(printl>=2) write(stdout,'(6f20.12)') &
+!!$          1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$          (lrate_qvib+kappa_bell+timeunit)/log10, (lrate_qvib+kappa_eck+timeunit)/log10,&
+!!$          (kryv_lrate+timeunit)/log10
+!!$      !    write(15,'(5f20.12)') beta_hbar,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$      ! should be that:
+!!$   !        write(15,'(6f20.12)') 1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$   !        (lrate_qvib+kappa_bell+timeunit)/log10, (lrate_qvib+kappa_eck+timeunit)/log10,&
+!!$   !        (kryv_lrate+timeunit)/log10
+!!$      write(15,'(2f20.12)') 1000.D0/temp,          (kryv_lrate+timeunit)/log10
+!!$    else
+!!$      ! printout with asymmetric Eckart
+!!$      if(printl>=2) write(stdout,'(6f20.12)') &
+!!$          1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$          (lrate_qvib+kappa_bell+timeunit)/log10, (lrate_qvib+kappa_eck+timeunit)/log10,&
+!!$          (lrate_qvib+kappa_aeck+timeunit)/log10
+!!$      !    write(15,'(5f20.12)') beta_hbar,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$      write(15,'(6f20.12)') 1000.D0/temp,(lrate_cl+timeunit)/log10,(lrate_qvib+timeunit)/log10, &
+!!$          (lrate_qvib+kappa_bell+timeunit)/log10, (lrate_qvib+kappa_eck+timeunit)/log10,&
+!!$          (lrate_qvib+kappa_aeck+timeunit)/log10
+!!$    end if
+    !write(16,'(2f20.12)') temp,-(lrate_qvib+log(beta_hbar*2.D0*pi))/beta_hbar ! was the file free_energy_barrier
+    
+    ! tcross=ts%omega_imag*0.5D0/pi/KBOLTZ_AU
+    ! beta_hbar=1.D0/(temp*KBOLTZ_AU)  ! beta * hbar = hbar / (kB*T)
+    !wkbbell=(temp-tcross * exp( (ts%ene-rs1%ene-rs2%ene)*(beta_hbar-2.D0*pi/ts%omega_imag )))/(temp-tcross)
+    wkbbell=(temp-qts%tcross * exp( vad*(beta_hbar-2.D0*pi/ts%omega_imag )))/(temp-qts%tcross)
+
+    ! write components of rate expressions (file arrhenius_components)
+    if(.not.taeck) then
+      if (glob%sctRate) then
+        write(17,'(11f19.12)') 1000.D0/temp, &
+          (-log(2.D0*pi*beta_hbar))/log10,&
+          prod_sinh/log10,&
+          (l_qrot)/log10,&
+          (-phi_rel)/log10,&
+          (-beta_hbar * (ts%ene-rs1%ene-rs2%ene))/log10,&
+          (kappa_bell)/log10,&
+          (log(wkbbell))/log10,&
+          kappa_eck/log10,&
+          log(SCT_kappas(itemp))/log10,&
+          timeunit/log10
+      else
+        write(17,'(10f20.12)') 1000.D0/temp, &
+          (-log(2.D0*pi*beta_hbar))/log10,&
+          prod_sinh/log10,&
+          (l_qrot)/log10,&
+          (-phi_rel)/log10,&
+          (-beta_hbar * (ts%ene-rs1%ene-rs2%ene))/log10,&
+          (kappa_bell)/log10,&
+          (log(wkbbell))/log10,&
+          kappa_eck/log10,&
+          timeunit/log10
+      end if
+    else
+      if (glob%sctRate) then
+        write(17,'(12f19.12)') 1000.D0/temp, &
+          (-log(2.D0*pi*beta_hbar))/log10,&
+          prod_sinh/log10,&
+          (l_qrot)/log10,&
+          (-phi_rel)/log10,&
+          (-beta_hbar * (ts%ene-rs1%ene-rs2%ene))/log10,&
+          (kappa_bell)/log10,&
+          (log(wkbbell))/log10,&
+          kappa_eck/log10,&
+          kappa_aeck/log10,&
+          log(SCT_kappas(itemp))/log10,&
+          timeunit/log10
+      else
+        write(17,'(11f20.12)') 1000.D0/temp, &
+          (-log(2.D0*pi*beta_hbar))/log10,&
+          prod_sinh/log10,&
+          (l_qrot)/log10,&
+          (-phi_rel)/log10,&
+          (-beta_hbar * (ts%ene-rs1%ene-rs2%ene))/log10,&
+          (kappa_bell)/log10,&
+          (log(wkbbell))/log10,&
+          kappa_eck/log10,&
+          kappa_aeck/log10,&
+          timeunit/log10
+      end if
+    end if
         
     if(tkie) then
-      read(sline,'(5f20.12)') svar,hcl,hqq,hwig,heck
-      write(13,'(5f20.12)') temp,exp(hcl*log10-(lrate_cl+timeunit)), &
-          exp(hqq*log10-(lrate_qvib+timeunit)),exp(hwig*log10-(lrate_qvib+log(wigner_simple)+timeunit)),&
-          exp(heck*log10-(lrate_qvib+log(kappa_eck)+timeunit))
+      read(sline,'(5f20.12)') svar,hcl,hqq,hbell,heck
+      write(13,'(5g20.12)') temp,exp(hcl*log10-(lrate_cl+timeunit)), &
+          exp(hqq*log10-(lrate_qvib+timeunit)),exp(hbell*log10-(lrate_qvib+kappa_bell+timeunit)),&
+          exp(heck*log10-(lrate_qvib+kappa_eck+timeunit))
       if(abs(svar-1000.D0/temp) > 1.D-6) then
         write(13,*) "#Error: temperatures don't match. Here: ",temp,", rate_H:",1000.D0/svar
         close(13)
@@ -4866,39 +4710,42 @@ subroutine dlf_htst_rate
       if(tkie.and.itemp<tsteps) read(12,FMT="(a)") sline
     end if
 
-    !temp=temp*tfact
     temp=temp/(1.D0+temp*tdel)
+  end do
+
+  ! now write reduces instanton data above Tc
+  write(15,*)
+  write(15,'(a)') "#      1000/T          reduced instanton"
+  do itemp=1,tsteps
+    if(1000.D0/rate_data(itemp,1) > qts%tcross) then
+      write(15,'(2f20.12)') rate_data(itemp,:)
+    end if
   end do
 
   if(tkie) then
     close(13)
     close(12)
   end if
- 
-  ! now print wigner results where defined
-  temp=tstart
-  if(tend>tcross.or.tstart>tcross) then
-    if(printl>=2) write(stdout,*)
-    if(printl>=2) write(stdout,*) "#       1000/T           full wigner"
-    write(15,*)
-    write(15,*) "#       1000/T           full wigner"
-    do itemp=1,tsteps
-      if(temp>tcross) then
-        if(printl>=2) write(stdout,'(2f20.12)') 1000.D0/temp,rate_wigner(itemp)
-         write(15,'(2f20.12)') 1000.D0/temp,rate_wigner(itemp)
-      end if
-      temp=temp/(1.D0+temp*tdel)
-    end do
-  end if
+
   close(15)
-  close(16)
+  !close(16)
   close(17)
-  call deallocate(rate_wigner)
-  call deallocate(eigvals_rs)
-  call deallocate(eigvals_ts)
+
+  ! reset variables (just in case ...)
+  if(rs1%tused) call deallocate(rs1%omega)
+  if(rs2%tused) call deallocate(rs2%omega)
+  if(ts%tused) call deallocate(ts%omega)
+  rs1%tused=.false.
+  rs2%tused=.false.
+  ts%tused=.false.
+  call deallocate (rate_data)
+  if (glob%sctRate) then
+    deallocate(SCT_kappas)
+  end if
 
 end subroutine dlf_htst_rate
 !!****
+
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !!****f* qts/rotational_partition_function
@@ -4906,92 +4753,290 @@ end subroutine dlf_htst_rate
 !! FUNCTION
 !!
 !! Calculate the relative rotational partition function for one
-!! geometry (actually, this is just the square root of the product of
-!! eigenvalues of the moment of inertia). Return 1 for any frozen atoms.
+!! geometry. Return 1 for any frozen atoms.
 !!
 !! INPUTS
 !!
-!! nzero, xcoords, glob%mass
+!! nzero, xcoords, mass, beta_hbar
 !!
 !! OUTPUTS
 !! 
-!! qrot
+!! qrot,qrot_quant,moi 
 !!
 !! SYNOPSIS
 ! rotational partition function
-subroutine rotational_partition_function(nat,nzero,xcoords,qrot)
+subroutine rotational_partition_function(nat,mass,nzero,xcoords,beta_hbar,coeff,qrot,qrot_quant,eigval)
   !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob
+  use dlf_global, only: pi,printl,stdout
+  use dlf_qts, only: dbg_rot
   implicit none
   integer, intent(in)  :: nat
-  integer, intent(in)  :: nzero
+  real(rk), intent(in) :: mass(nat)
+  integer, intent(inout) :: nzero
   real(rk), intent(in) :: xcoords(3*nat)
-  real(rk), intent(out):: qrot
+  real(rk), intent(in) :: beta_hbar
+  real(rk), intent(in) :: coeff(2)
+  real(rk), intent(out):: qrot,qrot_quant
+  real(rk),intent(out) :: eigval(3) ! eigenvalues of the moment of inertia
   real(rk) :: com(3)
-  real(rk) :: xcoords_rel(3*nat) ! relative to the center of mass
-  integer  :: iat,icor,jcor
-  real(rk) :: inert(3,3),eigval(3),eigvec(3,3)
+  real(rk) :: xcoords_rel(3*nat) ! relative to the centre of mass
+  integer  :: iat,icor,jcor,jval
+  real(rk) :: inert(3,3),eigvec(3,3),ene
 
   qrot=1.D0
+  qrot_quant=1.D0 
+  
+  if(dbg_rot) then
+    write(stdout,'("coords ",3f15.10)') xcoords
+    write(stdout,'("masses ",3f15.7)') mass
+  end if
 
+!!$  print*,"rotpart"
+!!$  print*,'nat,nzero',nat,nzero
+!!$  print*,'mass',mass
+  
   ! ignore frozen atoms
   if(nzero/=5.and.nzero/=6) return
-  if(nzero==5.and.nat>2) return
+  !if(nzero==5.and.nat>2) return
 
-  ! get the center of mass
+!!$  ! check for the correct unit of mass
+!!$  ! had to comment that out if the rotational partition function of the instanton is calculated as supermolecule.
+!!$  if(minval(mass)<100.D0) then
+!!$    print*,mass
+!!$    call dlf_fail("Too small masses in rotational_partition_function. Wrong Unit?")
+!!$  end if
+  if(minval(mass)>2.D5) call dlf_fail("Too large masses in rotational_partition_function. Wrong Unit?")
+  
+  ! get the centre of mass
   com=0.D0
   do iat=1,nat
-    com = com + glob%mass(iat)* xcoords(3*iat-2:3*iat)
+    com = com + mass(iat)* xcoords(3*iat-2:3*iat)
   end do
-  com=com/sum(glob%mass)
-
+  com=com/sum(mass)
+  
   do iat=1,nat
     xcoords_rel(3*iat-2:3*iat)=xcoords(3*iat-2:3*iat) - com
   end do
-
-  if(nzero==5) then
-    qrot=glob%mass(1)*sum(xcoords_rel(1:3)**2) + glob%mass(2)*sum(xcoords_rel(4:6)**2)
-    !
-    return
-    !
-  end if
-
+  
+  if(nat>2) then
   ! now a larger molecule
   inert(:,:)=0.D0
   do iat=1,nat
     ! off-diagonal part
     do icor=1,3
       do jcor=icor+1,3
-        inert(icor,jcor)=inert(icor,jcor) - glob%mass(iat) * &
+        inert(icor,jcor)=inert(icor,jcor) - mass(iat) * &
             xcoords_rel(3*iat-3+icor)*xcoords_rel(3*iat-3+jcor)
       end do
     end do
     ! diagonal elements
-    inert(1,1)=inert(1,1)+ glob%mass(iat) * &
+    inert(1,1)=inert(1,1)+ mass(iat) * &
         (xcoords_rel(3*iat-1)**2+xcoords_rel(3*iat-0)**2)
-    inert(2,2)=inert(2,2)+ glob%mass(iat) * &
+    inert(2,2)=inert(2,2)+ mass(iat) * &
         (xcoords_rel(3*iat-2)**2+xcoords_rel(3*iat-0)**2)
-    inert(3,3)=inert(3,3)+ glob%mass(iat) * &
+    inert(3,3)=inert(3,3)+ mass(iat) * &
         (xcoords_rel(3*iat-2)**2+xcoords_rel(3*iat-1)**2)
   end do
-
-  !symmetrize
+  
+  !symmetrise
   do icor=1,3
     do jcor=1,icor-1
       inert(icor,jcor)=inert(jcor,icor)
     end do
   end do
-
+  
   call dlf_matrix_diagonalise(3,inert,eigval,eigvec)
+  
+  if(dbg_rot) print*,"Eigenvalues of inertia",eigval
+  end if ! nat>2
 
-  qrot=sqrt(eigval(1)*eigval(2)*eigval(3))
+  if(nat==2) then
+     qrot=mass(1)*sum(xcoords_rel(1:3)**2) + mass(2)*sum(xcoords_rel(4:6)**2)
+     eigval(1)=qrot
+     eigval(2)=qrot
+     eigval(3)=0.D0
+     nzero=5
+  end if
 
+  if(minval(abs(eigval))<10.D0) then
+    nzero=5
+    ! make sure that the last eigenvalue is smallest
+    if(minloc(abs(eigval),dim=1)==1) then
+      eigval(1)=eigval(3)
+      eigval(3)=0.D0
+    end if
+    if(minloc(abs(eigval),dim=1)==2) then
+      eigval(2)=eigval(3)
+      eigval(3)=0.D0
+    end if
+  end if
+  
+  call rotational_partition_function_calc(eigval,beta_hbar,coeff,qrot,qrot_quant)
+  
 end subroutine rotational_partition_function
 !!****
 
+subroutine rotational_partition_function_calc(moi,beta_hbar,coeff,qrot,qrot_quant)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: pi
+  implicit none
+  real(rk), intent(in) :: moi(3)
+  real(rk), intent(in) :: beta_hbar
+  real(rk), intent(in) :: coeff(2)
+  real(rk), intent(out) :: qrot
+  real(rk), intent(out) :: qrot_quant
+  integer :: jval,kval,comp
+  real(rk) :: ene
+  
+  ! linear molecule
+  if(minval(abs(moi))<10.D0) then
+     ! the two remaining eigenvalues must be equal
+     qrot=maxval(abs(moi))*2.D0/beta_hbar
+
+     !print*,"lin q/c",beta_hbar/(0.25D0*2.D0*maxval(moi))
+     if(beta_hbar<0.1D0*2.D0*maxval(moi)) then
+        qrot_quant=qrot
+     else
+        !print*,"JK: calculation qrot_quant via sum"
+        qrot_quant=0.D0
+        do jval=0,200 ! maximum of 200 levels
+           ene=dble(jval*(jval+1))*0.5D0/maxval(moi)
+           qrot_quant=qrot_quant+coeff(mod(jval,2)+1)*dble(2*jval+1)*exp(-beta_hbar*ene)
+           if(dble(2*jval+1)*exp(-beta_hbar*ene)<1.D-7*qrot_quant) exit ! stop summing if contributions too small
+        end do
+        !print*,"iterated to",jval
+     end if
+     
+     !print*,"lin Q/Q_class=",qrot_quant/qrot
+     return
+    
+  end if ! linear molecule
+  
+  qrot=sqrt(moi(1)*moi(2)*moi(3))
+  qrot=qrot*sqrt(8.D0*pi/beta_hbar**3)
+  !print*,"non-lin q/c",beta_hbar/(0.25D0*2.D0*(pi*product(moi))**(1.D0/3.D0))
+  if(beta_hbar <  0.1D0*2.D0*(pi*product(moi))**(1.D0/3.D0)) then
+    qrot_quant=qrot
+  else
+    ! check for symmetric top:
+    comp=0
+    if(abs(moi(2)-moi(1))<10.D0) comp=1
+    if(abs(moi(2)-moi(3))<10.D0) comp=3
+    if(comp/=0) then
+      print*,"JK: calculation qrot_quant for symmetric top"
+      do jval=0,200
+        do kval=-jval,jval
+          ene=dble(jval*(jval+1))/2.D0/moi(2)+dble(kval**2)*&
+              (0.5D0/moi(comp)-0.5D0/moi(2))
+          qrot_quant=qrot_quant+coeff(mod(jval,2)+1)*dble(2*jval+1)*exp(-beta_hbar*ene)
+        end do
+        if(dble(2*jval+1)*exp(-beta_hbar*ene)<1.D-7*qrot_quant) exit 
+      end do
+    else
+      !print*,"JK: calculation qrot_quant via sum. not yet ..."
+      call qr_asym(moi,qrot_quant,1.D0/beta_hbar,coeff)
+      !qrot_quant=qrot
+    end if
+    !print*,"nonlin Q/Q_class=",qrot_quant/qrot
+  end if !beta<...
+
+
+end subroutine rotational_partition_function_calc
+
+! rotational partition function for an asymmetric top. Written by Sean
+! R. McConnell
+subroutine qr_asym(moi,pfout,kbt,coeff)
+  use dlf_parameter_module, only: rk
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  real(rk), intent(in) :: moi(3),kbt,coeff(2)
+  real(rk), intent(out):: pfout
+  integer j,k,k_1,m_j,i
+  real(8) en,pfstore,energy,convtarget
+  real(8), allocatable :: Ham_mat(:,:),eignum_r(:),eignum_i(:),eigvectr(:,:),store(:,:)
+  j=1
+  m_j=2*j+1
+  allocate(Ham_mat(-j:j,-j:j))
+  Ham_mat=0.d0
+  do k_1=-j,j
+    Ham_mat(k_1,k_1)=(1.d0/4.d0/moi(1)+1.d0/4.d0/moi(2))*&
+        dble(j*(j+1))+dble(k_1)**2*(1.d0/2.d0/moi(3)-1.d0/4.d0/moi(1)-&
+        1.d0/4.d0/moi(2))
+    if(k_1+2.le.j)then
+      Ham_mat(k_1,k_1+2)=(1.d0/8.d0)*(1.d0/moi(1)-1.d0/moi(2))*&
+          sqrt(dble((j-k_1)*(j-k_1-1)*(j+k_1+1)*(j+k_1+2)))
+    endif
+    if(k_1-2.ge.-j)then
+      Ham_mat(k_1,k_1-2)=(1.d0/8.d0)*(1.d0/moi(1)-1.d0/moi(2))*&
+          sqrt(dble((j+k_1)*(j+k_1-1)*(j-k_1+1)*(j-k_1+2)))
+    endif
+  enddo
+  call allocate(store,m_j,m_j)
+  store(:,:)=Ham_mat(-j:j,-j:j)
+  deallocate(Ham_mat)
+  call allocate(eignum_r,m_j)
+  call allocate(eignum_i,m_j)
+  call allocate(eigvectr,m_j,m_j)
+  ! how can store be non-symmetric? If it is symmetric, dlf_matrix_diagonalise
+  ! should be called instead.
+  call dlf_matrix_diagonalise_general(m_j,store,eignum_r,eignum_i,eigvectr)
+  call deallocate(eigvectr)
+  call deallocate(eignum_i)
+  call deallocate(store)
+  convtarget=1.d-7
+  pfout=1.d0*coeff(1) ! for J=0
+  pfstore=pfout
+  do i=1,m_j
+    en=eignum_r(i)
+    pfstore=pfstore+coeff(mod(j,2)+1)*exp(-en/kbt)*dble(m_j)
+  enddo
+  call deallocate(eignum_r)
+
+  !print*,'          ITER ',' CONV. TARGET:',convtarget
+  do while(abs(pfstore-pfout)/pfout.gt.convtarget)
+    pfout=pfstore
+    j=j+1
+    m_j=2*j+1
+    allocate(Ham_mat(-j:j,-j:j))
+    Ham_mat=0.d0
+    do k_1=-j,j
+      Ham_mat(k_1,k_1)=(1.d0/4.d0/moi(1)+1.d0/4.d0/moi(2))*dble(j*(j+1))+&
+          dble(k_1)**2*(1.d0/2.d0/moi(3)-1.d0/4.d0/moi(1)-1.d0/4.d0/moi(2))
+      if(k_1+2.le.j)then
+        Ham_mat(k_1,k_1+2)=(1.d0/8.d0)*(1.d0/moi(1)-1.d0/moi(2))*&
+            sqrt(dble((j-k_1)*(j-k_1-1)*(j+k_1+1)*(j+k_1+2)))
+      endif
+      if(k_1-2.ge.-j)then
+        Ham_mat(k_1,k_1-2)=(1.d0/8.d0)*(1.d0/moi(1)-1.d0/moi(2))*&
+            sqrt(dble((j+k_1)*(j+k_1-1)*(j-k_1+1)*(j-k_1+2)))
+      endif
+    enddo
+    call allocate(store,m_j,m_j)
+    store(:,:)=Ham_mat(-j:j,-j:j)
+    deallocate(Ham_mat)
+    call allocate(eignum_r,m_j)
+    call allocate(eignum_i,m_j)
+    call allocate(eigvectr,m_j,m_j)
+    call dlf_matrix_diagonalise_general(m_j,store,eignum_r,eignum_i,eigvectr)
+    call deallocate(eigvectr)
+    call deallocate(eignum_i)
+    call deallocate(store)
+    do i=1,m_j
+      en=eignum_r(i)
+      pfstore=pfstore+coeff(mod(j,2)+1)*exp(-en/kbt)*dble(m_j)
+    enddo
+    call deallocate(eignum_r)
+    !print*,"asym loop",j,' ',abs(pfstore-pfout)
+  enddo
+  pfout=pfstore
+
+end subroutine qr_asym
+
+
 ! kappa_eck is the tunnelling enhancement by the symmetric Eckart barrier. The
 ! mass is to be ignored, since we have mass-weighted coordinates
+! we return the log of kappa for improved numerical stability
 subroutine kappa_eckart(beta_hbar,Vb,alpha,kappa_eck)
   use dlf_parameter_module, only: rk
   implicit none
@@ -5007,9 +5052,14 @@ subroutine kappa_eckart(beta_hbar,Vb,alpha,kappa_eck)
   npoint=100000
   pi=4.D0*atan(1.D0)
   ! Vmax = Vb/4
-  
-  dpar=2.D0*pi*sqrt( 2.D0*Vb - alpha**2 * 0.25D0 ) / alpha
-  
+
+!  if(2.D0*Vb - alpha**2 * 0.25D0 > 0.D0) then
+     dpar=2.D0*pi*sqrt( 2.D0*Vb - alpha**2 * 0.25D0 ) / alpha
+!  else
+!     ! cosh(ix)=cos(x) for real-valued x
+!     dpar=2.D0*pi*sqrt( -2.D0*Vb + alpha**2 * 0.25D0 ) / alpha     
+!     print*,"dpar",dpar,cos(dpar),cosh(dpar)
+!  end if
   ! integrate
   kappa_eck=0.D0
   do ipoint=1,npoint
@@ -5019,7 +5069,13 @@ subroutine kappa_eckart(beta_hbar,Vb,alpha,kappa_eck)
       ! catch a inf/inf case
       trans=(1.D0-exp(-2.D0*apar))/(1.D0+exp(dpar-2.D0*apar))
     else
-      trans=(cosh(2.D0*apar)-1.D0)/(cosh(2.D0*apar)+cosh(dpar)) 
+      if(2.D0*Vb - alpha**2 * 0.25D0 > 0.D0) then
+        trans=(cosh(2.D0*apar)-1.D0)/(cosh(2.D0*apar)+cosh(dpar))
+      else
+        ! cosh(ix)=cos(x) for real-valued x
+        dpar=2.D0*pi*sqrt( -2.D0*Vb + alpha**2 * 0.25D0 ) / alpha     
+        trans=(cosh(2.D0*apar)-1.D0)/(cosh(2.D0*apar)+cos(dpar))
+      end if
     end if
     ! weights for endpoints (last is removed outside of loop)
     if(ipoint==1) trans=trans*0.5D0
@@ -5040,9 +5096,101 @@ subroutine kappa_eckart(beta_hbar,Vb,alpha,kappa_eck)
   ! add the rest of the integral to infty
   kappa_eck=kappa_eck + exp(-beta_hbar*ene)/beta_hbar
 
-  ! now divide by classical flux
-  kappa_eck=kappa_eck * beta_hbar * exp(beta_hbar*0.25D0*Vb)
+  ! now divide by classical flux (and transform to log for better stability)
+  !kappa_eck=kappa_eck * beta_hbar * exp(beta_hbar*0.25D0*Vb)
+  kappa_eck=log(kappa_eck) + log(beta_hbar) +beta_hbar*0.25D0*Vb
 end subroutine kappa_eckart
+
+!!****
+
+! kappa_eck is the tunnelling enhancement by the asymmetric Eckart barrier. The
+! mass is to be ignored, since we have mass-weighted coordinates
+! we return the log of kappa for improved numerical stability
+!
+! For consistency with the routine for the symmetric barrier, vb in the input is 4*Vmax,
+! alpha=sqrt(abs(eigvals_ts(1))*8.D0/vb)
+! Va is the asymmetry, the energy of the product channel
+subroutine kappa_eckart_asymm(beta_hbar,vmax,Va,alpha,kappa_eck)
+  use dlf_parameter_module, only: rk
+  implicit none
+  real(rk), intent(in) :: beta_hbar
+  real(rk), intent(in) :: vmax,va,alpha
+  real(rk), intent(out):: kappa_eck
+  real(rk) :: ene,enemax,trans,apar,dpar,pi,curv,vb,bpar
+  integer  :: npoint,ipoint
+  real(rk) :: trans_tol=1.D-10 ! parameter
+
+  ! for a very wide variety of parameters, this should be fine:
+  enemax=max(1.D0/beta_hbar*30.D0,vmax*10.D0) 
+  npoint=100000
+  pi=4.D0*atan(1.D0)
+  ! Vmax = Vb/4
+
+!!$! asymmetric Eckart
+!!$    apar=2.D0*pi*sqrt(2.D0*mass*ene)/alpha
+!!$    bpar=2.D0*pi*sqrt(2.D0*mass*(ene-va))/alpha
+!!$    dpar=2.D0*pi*sqrt(2.D0*mass*(sqrt(barrier)+sqrt(barrier-va))**2 - alpha**2 * 0.25D0 ) / alpha
+!!$    trans_eck=(cosh(apar+bpar)-cosh(apar-bpar))/(cosh(apar+bpar)+cosh(dpar))
+  
+  !dpar=2.D0*pi*sqrt( 2.D0*Vb - alpha**2 * 0.25D0 ) / alpha
+!!$  vmax=vb_/4.D0
+!!$  curv=-alpha_**2*vb_/8.D0
+!!$  vb=2.D0*vmax-va+sqrt((2.D0*vmax-va)**2-va**2)
+!!$  alpha=sqrt(-curv*8.D0*vb**3/(va**2-vb**2)**2)
+  
+  dpar=2.D0*pi*sqrt(2.D0*(sqrt(vmax)+sqrt(vmax-va))**2 - alpha**2 * 0.25D0 ) / alpha
+  
+  ! integrate
+  kappa_eck=0.D0
+  do ipoint=1,npoint
+    ene=enemax*dble(ipoint-1)/dble(npoint-1)
+    apar=2.D0*pi*sqrt(2.D0*ene)/alpha
+    bpar=2.D0*pi*sqrt(2.D0*(ene-va))/alpha
+    !if(dpar>500.D0.and.2.D0*apar>500.D0) then
+    !  ! catch a inf/inf case
+    !  trans=(1.D0-exp(-2.D0*apar))/(1.D0+exp(dpar-2.D0*apar))
+       
+    !else
+    if(ene<va) then
+      trans=0.D0
+    else
+      if(2.D0*(sqrt(vmax)+sqrt(vmax-va))**2 - alpha**2 * 0.25D0 > 0.D0) then
+        trans=(cosh(apar+bpar)-cosh(apar-bpar))/(cosh(apar+bpar)+cosh(dpar))
+      else
+        dpar=2.D0*pi*sqrt(-2.D0*(sqrt(vmax)+sqrt(vmax-va))**2 + alpha**2 * 0.25D0 ) / alpha
+        trans=(cosh(apar+bpar)-cosh(apar-bpar))/(cosh(apar+bpar)+cos(dpar))
+      end if
+    end if
+    if(isnan(trans)) then
+      print*,"Error: trans in Asymmetric Eckart is NaN"
+      print*,"apar",apar
+      print*,"bpar",bpar
+      print*,"dpar",dpar
+    end if
+    !end if
+    ! weights for endpoints (last is removed outside of loop)
+    if(ipoint==1) trans=trans*0.5D0
+    kappa_eck=kappa_eck+trans*exp(-beta_hbar*ene)
+    !print*,ene,kappa_eck,trans*exp(-beta_hbar*ene)
+    
+    ! terminate if trans is very close to 1
+    if(trans > 1.D0-trans_tol) then
+      exit
+    end if
+  end do
+  ! half weight for last point
+  kappa_eck=kappa_eck-0.5D0*trans*exp(-beta_hbar*ene)
+  npoint=ipoint-1
+  ! step size
+  kappa_eck=kappa_eck*ene/dble(npoint-1)
+
+  ! add the rest of the integral to infty
+  kappa_eck=kappa_eck + exp(-beta_hbar*ene)/beta_hbar
+
+  ! now divide by classical flux (and transform to log for better stability)
+  !kappa_eck=kappa_eck * beta_hbar * exp(beta_hbar*0.25D0*Vb)
+  kappa_eck=log(kappa_eck) + log(beta_hbar) +beta_hbar*vmax
+end subroutine kappa_eckart_asymm
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !!****f* qts/dlf_qts_definepath
@@ -5104,7 +5252,7 @@ subroutine dlf_qts_definepath(nimage,useimage)
   real(rk),allocatable  :: eigval(:),eigvec(:,:) ! varperimage(*varperimage)
   real(rk),allocatable  :: xcoords(:) ! 3*nat
   integer               :: varperimage_read
-  real(rk)              :: mass_bimol,dene,ddene
+  real(rk)              :: mass_bimol,dene,ddene,arr2(2)
   real(rk),allocatable  :: mass(:)
   real(rk)              :: newcoords(3*glob%nat,neb%nimage)
   logical,parameter     :: tkeep=.false. ! tau adjusted to keep image positions (exactly equally spaced in y)
@@ -5140,7 +5288,7 @@ subroutine dlf_qts_definepath(nimage,useimage)
     if(.not.qts%needhessian) call allocate(qts%vhessian,neb%varperimage,neb%varperimage,neb%nimage)
 
     call read_qts_hessian(glob%nat,nimage_read,neb%varperimage,temperature,&
-        neb%ene,neb%xcoords,qts%vhessian,etunnel,dist,mass,"",tok)
+        neb%ene,neb%xcoords,qts%igradient,qts%vhessian,etunnel,dist,mass,"",tok,arr2)
     ! vhessian was set here, but the corresponding coordinates will be set
     ! here we should do a mass-re-weighting if necessary.
     if(minval(mass) > 0.D0) then
@@ -5276,6 +5424,10 @@ subroutine dlf_qts_definepath(nimage,useimage)
   ! define variable dtau 
   !
   if(glob%nebk>1.D-20) then
+    !
+    ! switch off!
+    call dlf_fail("Variable step size is not supported any more.")
+    !
     if(printl>=2) write(stdout,*) "Calculating dtau"
     ! dist(iimage) is a cumulative distance from the first image
 
@@ -5712,3 +5864,220 @@ subroutine dlf_qts_definepath(nimage,useimage)
 
 end subroutine dlf_qts_definepath
 !!****
+
+
+subroutine dlf_kryvohuz_supercrit_jk(nvpi,nimage,ers,ets,&
+    qrsi2,expansion_freq,beta_hbar,lograte,tprint)
+  use dlf_parameter_module, only: rk
+  use dlf_allocate, only: allocate,deallocate
+  use dlf_qts
+  use dlf_constants, only : dlf_constants_get
+  use dlf_global, only: pi!, stdout
+  !      use dlf_neb, only: beta_hbar
+  implicit none
+  integer, intent(in) :: nvpi,nimage
+  real(rk), intent(in):: ers,expansion_freq(nvpi),qrsi2,ets,&
+      beta_hbar
+  real(rk), intent(out) :: lograte
+  logical, intent(in) :: tprint ! if set, only calculate ddS_wrt_beta
+                                ! and return it as lograte
+  real(rk) omega_crit,rs_to_inst_vec(nvpi),&
+      V_tilde0,second_au,kboltz_au,beta_crit,A,g,c,omega_bar2
+  real(rk) dE_tilde,lnrate,rpc,rpc2,&
+      ddS_wrt_beta,delta
+  real(rk) :: inp_hessian(nvpi,nvpi),expo
+
+  inp_hessian=0.D0 ! apparently not needed
+
+  call dlf_constants_get("SECOND_AU",second_au)
+  call dlf_constants_get("KBOLTZ_AU",kboltz_au)
+  beta_crit=1.d0/qts%tcross/kboltz_au
+
+  omega_crit=2.d0*pi/beta_crit
+  V_tilde0=ets-ers
+
+  !     IN THE SUPERCRITICAL CASE, dE_b/dBeta DEPENDS ON A FOURTH ORDER 
+  !     EXPANSION OF THE POTENTIAL FITTED IN A SMALL REGION NEAR THE TS. 
+  !     I USE A MORSE POTENTIAL TO GET AN APPROXIMATION TO THE 3RD AND 4TH
+  !     ORDER TERMS, THIS IS MORE THAN SUFFICIENT IN SUCH A SMALL REGION
+  omega_bar2=16.d0*pi**2/beta_crit**2-omega_crit**2
+  g=-(7.d0/2.d0)*omega_crit**4/(V_tilde0)
+  c=(3.d0/dsqrt(2.d0))*omega_crit**3/dsqrt(V_tilde0)
+  A=g/2.d0+c**2/omega_crit**2-c**2/2.d0/omega_bar2
+  if(qts%dEbdbeta>=0.D0) then
+     ddS_wrt_beta=(-4.d0/A/beta_crit)*(2.d0*pi/beta_crit)**4
+  else
+     ddS_wrt_beta=qts%dEbdbeta
+  end if
+  if(tprint) then
+     lograte=ddS_wrt_beta
+     !
+     return
+     !
+  end if
+  !      ddS_wrt_beta=-dabs((ets-ers)**3*omega_crit/&
+  !      (omega_crit**3-2.d0*(ets-ers)**2))
+  !      ddS_wrt_beta=-(ets-ers)*omega_crit/2.d0
+
+  !      rp=minval(expansion_freq,dim=1)
+  !print*,"nvpi",nvpi
+  if(nvpi>=1)then
+    rs_to_inst_vec=1.d0 ! not used
+    call kryvohuz_sigma_high(nimage,nvpi,inp_hessian,expansion_freq,-1,&
+        rs_to_inst_vec,beta_hbar)
+  else
+    qts%S_sigma=0.d0
+    qts%S_dsigma=0.d0
+    qts%S_ddsigma=0.d0
+  endif
+
+  !      write(stdout,"('LOG10 Rate (Kryvohuz)              ',es15.8)")&
+  !      dble(-ddS_wrt_beta)
+  !      write(stdout,"('LOG10 Rate (Kryvohuz)              ',es15.6)")&
+  !      dble(qts%S_sigma)
+  !      write(stdout,"('LOG10 Rate (Kryvohuz)              ',es15.6)")&
+  !      qrsi2
+  !      if(nvpi.eq.1)then
+  !print*,"ddS_wrt_beta,qts%S_ddsigma",ddS_wrt_beta,qts%S_ddsigma
+!  ddS_wrt_beta=-0.0002196734D0 !ddS_wrt_beta/2.0D0
+   !ddS_wrt_beta=-6.D-3
+  !  print*,"ddS_wrt_beta",ddS_wrt_beta
+  dE_tilde=ddS_wrt_beta+real(qts%S_ddsigma)
+  !      else
+  !        dE_tilde=-min(abs(ddS_wrt_beta),abs(qts%S_ddsigma))
+  !      endif      
+  delta=(sqrt(beta_hbar*beta_crit)/2.d0)*((beta_crit/beta_hbar)**2-1.d0)*&
+      sqrt(-dE_tilde) ! cdsqrt replace by modern sqrt
+!print*,"delta",delta
+
+ !   rpc=erf(-delta/dsqrt(2.d0))*0.5D0+0.5D0
+!print*,"delta,rpc2",delta,rpc2,rpc,erf(-real(delta)/dsqrt(2.d0))*0.5D0+0.5D0
+ !   print*,"appr beta",beta_hbar,beta_crit
+ !   print*,"approach",-log(sin(pi*beta_hbar/beta_crit)),+0.5d0*delta**2+log(delta*sqrt(2.d0*pi))&
+ !         +log(rpc),log(1.d0-1.d0/delta**2)
+  if(beta_hbar>beta_crit) then
+     lograte=0.D0
+     !
+     return
+     !
+  end if
+
+  expo=0.5D0! 0.5D0
+  
+!!$  ! original expression by Sean
+!!$  lnrate=-log(2.d0*beta_crit*sin(pi*beta_hbar/beta_crit)) &
+!!$       -dble(beta_hbar*(V_tilde0+&
+!!$       ((beta_crit-beta_hbar)**expo/beta_crit**expo) * real(qts%S_sigma)/beta_hbar+&
+!!$       (1.d0-(beta_crit-beta_hbar)**expo/beta_crit**expo) * real(qts%S_dsigma))) &
+!!$       -qrsi2
+!!$  ! sin(x) replaced by x
+!!$  lnrate=-log(2.d0*beta_crit*(pi*beta_hbar/beta_crit)) &
+!!$       -dble(beta_hbar*(V_tilde0+&
+!!$       ((beta_crit-beta_hbar)**expo/beta_crit**expo) * real(qts%S_sigma)/beta_hbar+&
+!!$       (1.d0-(beta_crit-beta_hbar)**expo/beta_crit**expo) * real(qts%S_dsigma))) &
+!!$       -qrsi2
+
+  ! sigma/beta_hbar
+  lnrate=-log(2.d0*beta_crit*sin(pi*beta_hbar/beta_crit)) &
+       -beta_hbar*(V_tilde0+&
+       dble(qts%S_sigma)/beta_hbar) &       
+       -qrsi2
+!!$  ! dsigma
+!!$  lnrate=-log(2.d0*beta_crit*sin(pi*beta_hbar/beta_crit)) &
+!!$       -beta_hbar*(V_tilde0+&
+!!$       dble(qts%S_dsigma)) &       
+!!$       -qrsi2
+
+!  print*,"qts",real(qts%S_sigma),real(qts%S_sigma)/beta_hbar,real(qts%S_dsigma)
+!  print*,"sig,sig'",((beta_crit-beta_hbar)**0.5d0/beta_crit**0.5d0) * real(qts%S_sigma)/beta_hbar,&
+!       (1.d0-(beta_crit-beta_hbar)**0.5d0/beta_crit**0.5d0) * real(qts%S_dsigma)
+!  print*,"delta",delta,log(1.d0-1.d0/delta**2)
+  
+  if(dble(delta).lt.7.d0)then!THE ERROR FUNCTION BECOMES VERY SMALL 
+    !     AND INACCURATE WHEN DELTA BECOMES LARGE, HENCE THE APPROXIMATION
+    !call cerror(-delta/dsqrt(2.d0),rpc2)
+    !rpc=(0.5d0+0.5d0*rpc2)
+    rpc=erf(-delta/dsqrt(2.d0))*0.5D0+0.5D0
+!print*,"delta,rpc2",delta,rpc2,rpc,erf(-real(delta)/dsqrt(2.d0))*0.5D0+0.5D0
+          !          -qts%S_sigma&
+    lnrate=lnrate + 0.5d0*delta**2 + log(delta*sqrt(2.d0*pi)) + log(rpc)
+          
+    ! loprod X_i 
+    !lograte=real(lnrate/log(10.d0))
+  else
+      lnrate=lnrate + log(1.d0-1.d0/delta**2)
+  endif
+
+  lograte=lnrate
+
+end subroutine dlf_kryvohuz_supercrit_jk
+
+subroutine kryvohuz_sigma_high(nimage,nvpi,inp_hessian,inp_eigvals,&
+    instanton_pointer,rs_to_inst_vec,beta_hbar) 
+  use dlf_parameter_module, only: rk     
+  use dlf_qts
+  use dlf_constants, only : dlf_constants_get
+  use dlf_allocate, only: allocate,deallocate 
+  use dlf_neb, only: neb!,beta_hbar
+  use dlf_global, only: glob
+  implicit none        
+  integer, intent(in) :: nimage,nvpi,instanton_pointer
+  real(rk), intent(in):: inp_eigvals(nvpi),inp_hessian(nvpi,nvpi),&
+      beta_hbar
+  integer i,j,k,l,iimage,im_start,im_end,im_direction,imagenum,&
+      n_zeroevals,i_dim,tau_step,n_zerotest,imagenum_reverse
+  real(rk) rp,kboltz_au,RS_proj,rs_to_inst_vec(nvpi),RS_proj2,&
+      beta_crit
+  complex(rk) rpc,rpc_reduce,sig(0:1),dsig(0:1),ddsig(0:1),rpc2,&
+      rpc3,rpc4
+  integer, dimension(:), allocatable :: projection
+  real(rk), dimension(:), allocatable:: vec_inc,c_storage0,&
+      c_storage,c_storage4,c_storage4_0,storage4
+  real(rk), dimension(:,:), allocatable:: storage1,ev_perimage,&
+      storage7,c_storage2,c_storage3,c_storage6,R_stabmat,ev_perimage2,&
+      commutator,commutator2,commutator3,vec_array,storage3,storage2,&
+      rotated_hess
+  complex(rk), dimension(:,:), allocatable:: z_stor,z_stor2,z_stor3
+  real(rk), dimension(:,:,:), allocatable :: F_stabmat,&
+      GSbasis_array
+
+  call dlf_constants_get("KBOLTZ_AU",kboltz_au)
+  !     IF WE ARE IN THE SUPERCRITICAL REGION THEN ONLY THE NON-NEGATIVE
+  !     EVALS OF THE TS HESSIAN ARE NEEDED TO CALCULATE TRANSVERSE CONTRI-
+  !     BUTION TO THE ACTION
+  if(instanton_pointer.eq.-1)then
+    beta_crit=1.d0/qts%tcross/kboltz_au
+    rp=0.d0
+    do i=1,nvpi
+      if(inp_eigvals(i).gt.1.d-16)then
+        rp=rp+&
+            log(2.d0*sinh(beta_hbar*0.5d0*&
+            sqrt(inp_eigvals(i))))
+      endif
+    enddo
+    qts%S_sigma=rp
+    rp=0.d0
+    do i=1,nvpi
+      if(inp_eigvals(i).gt.1.d-16)then
+        rp=rp+0.5d0*dsqrt(inp_eigvals(i))!/&
+        !            dtanh(beta_crit*0.5d0*dsqrt(inp_eigvals(i)))
+      endif
+    enddo
+    qts%S_dsigma=rp
+    rp=0.d0
+    do i=1,nvpi
+      if(inp_eigvals(i).gt.1.d-16)then
+        rp=rp-0.25d0*inp_eigvals(i)/&
+            sinh(beta_crit*0.5d0*sqrt(inp_eigvals(i)))**2
+      endif
+    enddo
+    qts%S_ddsigma=rp
+    !
+    return
+    !
+  endif
+
+  ! routine truncated here, because we only need instanton_pointer==-1 for T>Tc
+
+end subroutine kryvohuz_sigma_high
+

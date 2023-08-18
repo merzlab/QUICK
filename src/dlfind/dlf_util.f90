@@ -17,11 +17,11 @@
 !! Utility functions to DL-FIND
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2008-05-14 11:59:15 +0200 (Wed, 14 May 2008) $
+!! $Rev: 325 $
+!! $Author: jk37 $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_util.f90 $
+!! $Id: dlf_util.f90 325 2008-05-14 09:59:15Z jk37 $
 !!
 !! COPYRIGHT
 !!
@@ -71,6 +71,33 @@ character(2) function get_atom_symbol(atomic_number)
      get_atom_symbol = 'XX'
   endif
 end function get_atom_symbol 
+
+integer function get_atom_number(symbol)
+  implicit none
+  character(2), intent(in) :: symbol
+  integer                  :: i
+  character(2), parameter  :: elements(111) = &
+       (/ 'H ','He', &
+          'Li','Be','B ','C ','N ','O ','F ','Ne', &
+          'Na','Mg','Al','Si','P ','S ','Cl','Ar', &
+          'K ','Ca','Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu', &
+          'Zn','Ga','Ge','As','Se','Br','Kr', &
+          'Rb','Sr','Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag', &
+          'Cd','In','Sn','Sb','Te','I ','Xe', &
+          'Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy', &
+          'Ho','Er','Tm','Yb','Lu','Hf','Ta','W ','Re','Os','Ir','Pt', &
+          'Au','Hg','Tl','Pb','Bi','Po','At','Rn', &
+          'Fr','Ra','Ac','Th','Pa','U ','Np','Pu','Am','Cm','Bk','Cf', &
+          'Es','Fm','Md','No','Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds', &
+          'Rg' /)
+  do i = 1, size(elements)
+    if (trim(elements(i))==trim(symbol)) then
+      get_atom_number = i
+      return
+    end if
+  end do
+  STOP "This atom symbol is not known to dl-find."
+end function get_atom_number 
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 module dlf_bspline
@@ -376,6 +403,325 @@ contains
 
 end module dlf_bspline
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+module fit_g3
+
+  ! creates a set of third order polynomials that fit input data of
+  ! values and gradients.
+  ! a number of input functions can be given
+  !
+  ! Calling-Sequence:
+  !   call g3_init
+  !   call g3_create once for each function (each ifunc)
+  !   call g3_get for each interpolated value
+  !   call g3_destroy
+
+  use dlf_parameter_module, only: rk
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+
+  public :: g3_init, g3_create, g3_get, g3_destroy
+
+  interface g3_init
+    module procedure g3_init
+  end interface
+
+  interface g3_create
+    module procedure g3_create
+  end interface
+
+  interface g3_get
+    module procedure g3_get
+  end interface
+
+  interface g3_destroy
+    module procedure g3_destroy
+  end interface
+
+  private
+  logical :: tinit
+  integer :: nfunc ! number of functions to be interpolated
+  integer :: length ! number of values to be interpolated between
+  logical, allocatable, save :: created(:) ! (nfunc)
+  real(rk),allocatable, save :: gridx(:,:) ! (length,nfunc) !x values of grid
+  real(rk),allocatable, save :: gridy(:,:) ! (length,nfunc) !y values of grid
+  real(rk),allocatable, save :: grid_dydx(:,:) ! (length,nfunc)
+contains
+
+  subroutine g3_init(nfunc_in,length_in)
+    integer, intent(in) :: nfunc_in 
+    integer, intent(in) :: length_in 
+    ! ******************************************************************
+
+    ! re-initialise if necessary
+    if(allocated(created)) call g3_destroy
+
+    nfunc=nfunc_in
+    length=length_in
+    if(nfunc*length<=0) call dlf_fail("wrong parameters to g3_init")
+
+    tinit=.true.
+    call allocate(created,nfunc)
+    call allocate(gridx,length,nfunc)
+    call allocate(gridy,length,nfunc)
+    call allocate(grid_dydx,length,nfunc)
+
+    created(:)=.false.
+
+  end subroutine g3_init
+
+  subroutine g3_destroy
+    ! ******************************************************************
+    tinit=.false.
+    call deallocate(created)
+    call deallocate(gridx)
+    call deallocate(gridy)
+    call deallocate(grid_dydx)
+
+  end subroutine g3_destroy
+
+  SUBROUTINE g3_create(ifunc,x_in,y_in,dy_in)
+    ! creates the g3 function number ifunc, i.e. calculates its 
+    ! second derivatives at the grid points
+    ! x_in must be monotonically increasing
+    ! using natural boundary conditions
+    ! ******************************************************************
+    integer , intent(in) :: ifunc
+    real(rk), intent(in) :: x_in(length),y_in(length),dy_in(length)
+    !
+    real(rk) :: store(length)! u
+    real(rk) :: svar, svar2  ! sig, p
+    integer  :: ival
+    ! ******************************************************************
+
+    ! check integrity
+    if(.not.tinit) call dlf_fail("g3_create must not be called &
+        &before g3_init!")
+    if(ifunc<1) call dlf_fail("ifunc < 1 in g3_create")
+    if(ifunc>nfunc) call dlf_fail("ifunc > nfunc in g3_create")
+    
+    gridx(:,ifunc)=x_in(:)
+    gridy(:,ifunc)=y_in(:)
+
+    !print*,"x",gridx
+    !print*,"y",gridy
+
+    ! natural boundaries
+    grid_dydx(:,ifunc)=dy_in(:)
+    store(1)=0.D0
+
+    created(ifunc)=.true.
+
+  END SUBROUTINE g3_create
+
+  SUBROUTINE g3_get(ifunc,xval,yval,dyval,d2yval)
+    ! calculates a cubic-g3 interpolated value (yval) and its 
+    ! derivative (dyval) at a position xval
+    ! this is done for the interpolation ifunc
+    ! ******************************************************************
+    integer ,intent(in) :: ifunc
+    real(rk),intent(in) :: xval
+    real(rk),intent(out):: yval
+    real(rk),intent(out):: dyval
+    real(rk),intent(out):: d2yval
+    ! 
+    integer  :: low,high,ivar
+    real(rk) :: aval,bval,delta,xrel
+    ! ******************************************************************
+
+    ! check integrity
+    if(.not.tinit) call dlf_fail("g3_get must not be called before &
+        &g3_init!")
+    if(ifunc<1) call dlf_fail("ifunc < 1 in g3_get")
+    if(ifunc>nfunc) call dlf_fail("ifunc > nfunc in g3_get")
+    if(.not.created(ifunc)) call dlf_fail("g3_get must not be called&
+        & before g3_create!")
+    
+    low=1 
+    ! bisection on the grid
+    high=length
+    do while (high-low>1) 
+      ivar=(high+low)/2
+      if(gridx(ivar,ifunc).gt.xval)then
+        high=ivar
+      else
+        low=ivar
+      endif
+    end do
+    !low and high now bracket the input value of xval.
+
+    delta=gridx(high,ifunc)-gridx(low,ifunc)
+
+    if (delta<=0.D0) call dlf_fail("grid points for g3 not distinct")
+
+    ! polynomial y= ax^3 + bx^2 + cx + d
+    ! c=grid_dydx(low,ifunc)
+    ! d=gridy(low,ifunc)
+
+    aval=(2.D0 * (gridy(low,ifunc)-gridy(high,ifunc))/delta + &
+         grid_dydx(low,ifunc) &
+         + grid_dydx(high,ifunc) )/delta**2
+    bval=(grid_dydx(high,ifunc)-grid_dydx(low,ifunc)- &
+         3.D0*aval*delta**2)*0.5D0/delta
+
+    xrel=xval-gridx(low,ifunc)
+    !print*,low,high
+    yval= xrel**3*aval + xrel**2*bval + xrel*grid_dydx(low,ifunc) &
+         + gridy(low,ifunc)
+    dyval= 3.D0*xrel**2*aval + 2.D0*xrel*bval + grid_dydx(low,ifunc) 
+    d2yval= 6.D0*xrel*aval + 2.D0*bval 
+ 
+  END SUBROUTINE g3_get
+
+end module fit_g3
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+! wrapper to bspline (and probably other interpolation methods in the 
+! future)
+module dlf_interpolate
+  use dlf_bspline
+  use dlf_parameter_module, only: rk
+  implicit none
+  public :: intp_init,intp_set,intp_get,intp_get2,intp_destroy
+  integer :: length ! number of values to be interpolated between
+contains
+  
+  subroutine intp_init(nfunc_in,length_in)
+    implicit none
+    integer, intent(in) :: nfunc_in ! number of functions to be interpolated
+                                    ! with the same number of grid points
+                                    ! their x-values may be different
+    integer, intent(in) :: length_in ! length of the "x" grid
+    length=length_in
+    call spline_init(length_in,nfunc_in)
+
+  end subroutine intp_init
+ 
+
+  SUBROUTINE intp_set(ifunc,x_in,y_in)
+    ! creates the spline function number ifunc, i.e. calculates its 
+    ! second derivatives at the grid points
+    ! x_in must be monotonically increasing
+    ! using natural boundary conditions
+    ! ******************************************************************
+    implicit none
+    integer , intent(in) :: ifunc
+    real(rk), intent(in) :: x_in(length),y_in(length)
+    call spline_create(ifunc,x_in,y_in)
+  end SUBROUTINE intp_set
+
+  SUBROUTINE intp_set_fundamental(ifunc,x_in,y_in)
+    ! creates the spline function number ifunc, i.e. calculates its 
+    ! second derivatives at the grid points
+    ! x_in must be monotonically increasing
+    ! does not use natrual boundary conditions, but extrapolates the second
+    ! derivative of the function at the boundary from the inner points
+    ! So this is not truely a fundamental spline (which would require the 
+    ! first or second derivative at the boundary) but something close
+    ! undamped extrapolation diverges in some cases. So I try a damping factor
+    ! ******************************************************************
+    implicit none
+    integer , intent(in) :: ifunc
+    real(rk), intent(in) :: x_in(length),y_in(length)
+    real(rk)             :: svar,curv1,curv2,yval,dyval
+    integer              :: icount,ncount=20 ! could be made variable (maybe check for convergence?)
+    real(rk)             :: damp1=0.3_rk ! 1 is undamped, 0 is no movement
+    real(rk)             :: damp2=0.3_rk ! 1 is undamped, 0 is no movement
+    real(rk)             :: curv1_old,curv2_old
+    real(rk)             :: dcurv1,dcurv2
+    logical              :: twarn1,twarn2
+    logical,parameter    :: dbg=.false.
+
+    call spline_create(ifunc,x_in,y_in) !natural boundaries
+    curv1_old=0._rk
+    curv2_old=0._rk
+
+    do icount=1,ncount
+      call spline_get(ifunc,x_in(2),yval,dyval,curv1)
+      call spline_get(ifunc,x_in(3),yval,dyval,svar)
+      svar=(svar-curv1)/(x_in(3)-x_in(2))
+      curv1=curv1+svar*(x_in(1)-x_in(2))
+      curv1=damp1*curv1+(1._rk-damp1)*curv1_old
+
+      call spline_get(ifunc,x_in(length-1),yval,dyval,curv2)
+      call spline_get(ifunc,x_in(length-2),yval,dyval,svar)
+      svar=(svar-curv2)/(x_in(length-2)-x_in(length-1))
+      curv2=curv2+svar*(x_in(length)-x_in(length-1))
+      curv2=damp2*curv2+(1._rk-damp2)*curv2_old
+
+      twarn1=.false.
+      twarn2=.false.
+      if(icount>11) then
+        if(dabs(curv1-curv1_old)>dcurv1) then
+          if (dbg) print*,"Convergence warning curv1",&
+              dabs(curv1-curv1_old),dcurv1,icount
+          damp1=damp1*0.8_rk
+          twarn1=.true.
+          exit
+        end if
+        if(dabs(curv2-curv2_old)>dcurv2) then
+          if (dbg) print*,"Convergence warning curv2",&
+              dabs(curv2-curv2_old),dcurv2,icount
+          damp2=damp2*0.8_rk
+          twarn2=.true.
+          exit
+        end if
+      end if
+  
+      call spline_create(ifunc,x_in,y_in,curv1,curv2) 
+      if (dbg) print*,ifunc,icount,curv1,curv2
+      dcurv1=dabs(curv1-curv1_old)
+      dcurv2=dabs(curv2-curv2_old)
+      curv1_old=curv1
+      curv2_old=curv2
+    end do
+    
+    ! if not converged, fall back to natural boundaries
+    if(twarn1.or.twarn2) then
+      if(twarn1) curv1=0._rk
+      if(twarn2) curv2=0._rk
+      !call spline_create(ifunc,x_in,y_in,curv1,curv2) 
+      call spline_create(ifunc,x_in,y_in) ! use natural bounds at first warning ...
+      if (dbg) print*,"Falling back to natural boundary conditions",twarn1,twarn2
+    end if
+
+  end SUBROUTINE intp_set_fundamental
+
+  SUBROUTINE intp_get(ifunc,xval,yval,dyval)
+    ! calculates a cubic-spline interpolated value (yval) and its 
+    ! derivative (dyval) at a position xval
+    ! this is done for the interpolation ifunc
+    ! ******************************************************************
+    integer ,intent(in) :: ifunc
+    real(rk),intent(in) :: xval
+    real(rk),intent(out):: yval
+    real(rk),intent(out):: dyval
+    real(rk) :: svar
+    call spline_get(ifunc,xval,yval,dyval,svar)
+  end SUBROUTINE intp_get
+
+  ! this could be  made nicer in an interface
+  SUBROUTINE intp_get2(ifunc,xval,yval,dyval,d2yval)
+    ! calculates a cubic-spline interpolated value (yval) and its 
+    ! derivative (dyval) at a position xval
+    ! this is done for the interpolation ifunc
+    ! ******************************************************************
+    integer ,intent(in) :: ifunc
+    real(rk),intent(in) :: xval
+    real(rk),intent(out):: yval
+    real(rk),intent(out):: dyval
+    real(rk),intent(out):: d2yval
+    call spline_get(ifunc,xval,yval,dyval,d2yval)
+  end SUBROUTINE intp_get2
+
+  subroutine intp_destroy
+    call spline_destroy
+  end subroutine intp_destroy
+
+end module dlf_interpolate
 
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -699,6 +1045,7 @@ module dlf_constants
   real(rk),parameter :: amc = 1.660538782E-27_rk ! atomic mass constant (kg)
   real(rk),parameter :: kboltz = 1.3806504e-23_rk  ! J/K
   real(rk),parameter :: avogadro = 6.02214179e23_rk ! 1/mol
+  real(rk),parameter :: cal = 4.184_rk ! calorie in J, thermochemical calorie according to NIST
 
   ! other numbers
   real(rk) :: pi
@@ -748,7 +1095,7 @@ contains
     case ("CM_INV_FOR_AMU") ! conversion between the square root of the second
                             ! derivative of the energy in Hartree with respect
                             ! to mass-weighted coordinates in AMU^1/2*A_0 and cm^-1
-      val=sqrt(hartree/amc) / ( 2.E0_rk * pi * bohr * speed_of_light) / 100.E0_rk
+      val=sqrt(hartree/amc) / ( 2.E0_rk * pi * bohr * speed_of_light) / 100.E0_rk ! 5140.4871520152346
     case("HBAR")
       val=hbar   ! 1.0545716280000E-34
     case("PLANCK")
@@ -759,11 +1106,15 @@ contains
       val=AVOGADRO ! 6.0221417900000E+23
     case("KBOLTZ_AU")
       val=kboltz/hartree ! 3.1668153407262E-06 
+    case("KBOLTZ_CM_INV")
+      val=kboltz/(planck*speed_of_light*100._rk)
     case("SECOND_AU")
       val=second_au  ! 4.1341373379861E+16
     case("CM_INV_FROM_HARTREE")
       ! converts hartree to wave numbers (cm^-1)
       val=(hartree/planck)/speed_of_light*1.D-2  ! 219474.63160039327
+    case("CAL")
+      val=cal ! 4.184
     case default
       print*,"Tag not recognized:",tag
       print*,"Available tags (and their values):"
@@ -817,16 +1168,39 @@ subroutine write_xyz(unit,nat,znuc,coords)
   character(2), external :: get_atom_symbol
 ! **********************************************************************
   call dlf_constants_get("ANG_AU",ang_au)
-!if (unit==40) print*,"The new coordinates"
+  write(unit,*) nat
+  write(unit,*)
   do iat=1,nat
     str2 = get_atom_symbol(znuc(iat))
-    write(unit,'(2x,A2,6x,F12.6,3x,F12.6,3x,F12.6)') str2,coords(1,iat)*ang_au, coords(2,iat)*ang_au, coords(3,iat)*ang_au
-!if (unit==40) then
-!write(*,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
-!endif
+    write(unit,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
+ ! temporary: commented out cartesian conversion
+ !   write(unit,'(a2,3f12.7)') str2,coords(:,iat)
   end do
   call flush(unit)
 end subroutine write_xyz
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine write_xyz_noConv(unit,nat,znuc,coords)
+  use dlf_parameter_module, only: rk
+  implicit none
+  integer,intent(in) :: unit
+  integer,intent(in) :: nat
+  integer,intent(in) :: znuc(nat)
+  real(rk),intent(in):: coords(3,nat)
+  integer            :: iat
+  character(2)       :: str2
+  character(2), external :: get_atom_symbol
+! **********************************************************************
+  write(unit,*) nat
+  write(unit,*)
+  do iat=1,nat
+    str2 = get_atom_symbol(znuc(iat))
+    write(unit,'(a2,3f12.7)') str2,coords(:,iat)
+ ! temporary: commented out cartesian conversion
+ !   write(unit,'(a2,3f12.7)') str2,coords(:,iat)
+  end do
+  call flush(unit)
+end subroutine write_xyz_noConv
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine write_xyz_active(unit,nat,znuc,spec,coords)
@@ -837,31 +1211,247 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
   integer,intent(in) :: nat
   integer,intent(in) :: znuc(nat)
   integer,intent(in) :: spec(nat)
-  real(rk),intent(in):: coords(3*nat)
-  integer            :: iat,jat
+  real(rk),intent(in):: coords(3,nat)
+  integer            :: iat,nact
   character(2)       :: str2
-  character(1), dimension(3) :: cartsym
   real(rk)           :: ang_au
   character(2), external :: get_atom_symbol
 ! **********************************************************************
   call dlf_constants_get("ANG_AU",ang_au)
-  write (unit,'(/," ANALYTICAL GRADIENT: ")')
-  write (unit,'("------------------------")')                                                              
-  write (unit,'(" VARIBLES",4x,"NEW_GRAD")')      
-  write (unit,'("------------------------")')
-
-  cartsym(1) = 'X'
-  cartsym(2) = 'Y'
-  cartsym(3) = 'Z'
-                   
+  nact=0
   do iat=1,nat
-    do jat=1,3
-      write(unit,'(I5,A1,3x,F14.10)')iat,cartsym(jat),coords((iat-1)*3+jat)
-    enddo
+    if(spec(iat)/=-1) nact=nact+1
   end do
-  write (unit,'("------------------------")')
+  write(unit,*) nact
+  write(unit,*)
+  do iat=1,nat
+    if(spec(iat)==-1) cycle
+    str2 = get_atom_symbol(znuc(iat))
+    write(unit,'(a2,3f15.7)') str2,coords(:,iat)*ang_au
+  end do
   call flush(unit)
 end subroutine write_xyz_active
+
+subroutine write_path_xyz(nat,znuc,filename,nPts,points, multFiles)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: stdout, printl
+  implicit none
+  
+  character(*), intent(in)  ::  filename
+  integer, intent(in)       ::  nat
+  integer, intent(in)       ::  znuc(nat)
+  integer, intent(in)       ::  nPts
+  real(rk), intent(in)      ::  points(3*nat, nPts)
+  logical, intent(in)       ::  multFiles
+  integer                   ::  iimage
+  integer                   ::  maxxyzfile=100
+  character(30)             ::  filename_ext
+  integer                   ::  unitp
+  logical                   ::  itsopen
+  unitp = 4741 
+  if(printl>=4) write(stdout,'("Writing path xyz file with filename ", A, ".xyz")') &
+    filename
+  if (multFiles) then
+    do iimage=1,nPts
+      if(iimage>maxxyzfile) exit
+      if(iimage<10) then
+        write(filename_ext,'("000",i1)') iimage
+      else if(iimage<100) then
+        write(filename_ext,'("00",i2)') iimage
+      else if(iimage<1000) then
+        write(filename_ext,'("0",i3)') iimage
+      else
+        write(filename_ext,'(i4)') iimage
+      end if
+!       if (glob%iam == 0) &
+      inquire(unit=3, opened=itsopen)
+      if (itsopen) call dlf_fail("Writing to same unit as other part of dl-find (write_path_xyz)!")
+      open(unit=unitp+iimage,file=trim(adjustl(filename))//trim(adjustl(filename_ext))//".xyz")
+    end do
+
+    do iimage=1,nPts
+      if(iimage>maxxyzfile) exit
+      call write_xyz(unitp+iimage,nat,znuc,points(:,iimage))
+    end do    
+    do iimage=1,nPts
+      close(unit=unitp+iimage)
+    end do  
+  else
+    open(unit=unitp,file=trim(adjustl(filename))//".xyz")      
+    do iimage=1,nPts
+      call write_xyz(unitp,nat,znuc,points(:,iimage))
+    end do
+    close(unitp)
+  end if
+end subroutine write_path_xyz
+
+subroutine get_path_properties(filename,nat,nPts)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: stdout, stderr, printl
+  implicit none
+  character(*), intent(in)               ::  filename
+  integer, intent(out)                   ::  nat
+  integer, intent(out)                   ::  nPts
+  integer                                ::  unitp
+  logical                                ::  file_exists
+  integer                                ::  io
+  integer                                ::  nLines
+  unitp = 4741
+  INQUIRE(FILE=filename, EXIST=file_exists)
+  if(.not.file_exists) then
+    if(printl>=4) write(stdout,'("file ", A, " does not exist.")') filename
+    call dlf_fail("File not present")
+  end if
+  if(printl>=4) write(stdout,'("Reading file with filename ", A)') filename
+  open(unit=unitp,file=filename)
+  ! count number of lines
+  io = 0
+  nLines = 0
+  read(unitp,*,iostat=io) nat
+  do while (io==0)
+    nLines = nLines + 1
+    read(unitp,*, iostat=io)
+  end do
+  if (io>0) call dlf_fail("Error, but not end of file (get_path_properties).")
+  ! calc number of points
+  if (MOD(nLines,(nat+2))==0) then
+    nPts = nLines/(nat+2)
+  else if (MOD(nLines-1,(nat+2))==0) then
+    nPts = (nLines-1)/(nat+2)
+  else
+    if(printl>=4) write(stdout,'("nLines", I10)') nLines
+    call dlf_fail("Number of lines not valid. Extra empty line?")
+  end if
+  close(unitp)
+end subroutine get_path_properties
+
+subroutine read_path_xyz(filename,nat,nPts,znuc,points)
+  use dlf_parameter_module, only: rk
+  use dlf_constants, only: dlf_constants_get
+  use dlf_global
+  implicit none
+  character(*), intent(in)  ::  filename
+  integer, intent(in)       ::  nat
+  integer, intent(in)       ::  nPts
+  integer, intent(inout)    ::  znuc(nat)
+  real(rk), intent(inout)   ::  points(3*nat,nPts)
+  integer                   ::  iimage
+  integer                   ::  nat_dummy
+  integer                   ::  maxxyzfile=100
+  character(30)             ::  filename_ext
+  integer                   ::  unitp
+  logical                   ::  itsopen
+  character(2)              ::  str2
+  real(rk)                  ::  ang_au
+  integer                   ::  io, iat
+  integer                   ::  nLines
+  logical                   ::  file_exists
+  integer, external         ::  get_atom_number
+  character(len=256)       ::  line
+  call dlf_constants_get("ANG_AU",ang_au)
+!   STOP "ALLOCATING HERE DOES NOT WORK FOR SOME REASON"
+  ! rewind to beginning
+  open(unit=unitp,file=filename, action='read')
+  do iimage=1,nPts
+    read(unitp,*) nat_dummy
+    read(unitp,*)
+    do iat=1,nat
+!       read(unitp,'(a2,3f12.7)',iostat=io) str2,points((iat-1)*3+1:iat*3,iimage)
+      read(unitp,'(A)',iostat=io) line
+      line = adjustl(line)
+      read(line,*) str2, points((iat-1)*3+1:iat*3,iimage)
+      znuc(iat) = get_atom_number(str2)
+    end do
+  end do
+  points(:,:) = points(:,:) / ang_au
+  close(unitp)
+end subroutine read_path_xyz
+
+subroutine write_energies(nImages, nDims, energies, points, filename)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: stdout, printl
+  implicit none
+  
+  character(*), intent(in)  ::  filename
+  integer, intent(in)       ::  nImages, nDims
+  real(rk), intent(in)      ::  energies(nImages)
+  real(rk), intent(in)      ::  points(nDims, nImages)
+  real(rk)                  ::  lin_length
+  integer                   ::  unitp, iimage
+  
+  unitp = 4741 
+  if(printl>=4) write(stdout,&
+    '("Writing all energies in file with filename ", A, ".ene")') filename
+  open(unit=unitp,file=trim(adjustl(filename))//".ene")      
+  write(unitp,'(a)') "# linear length          energy"
+  do iimage=1,nImages
+    if (iimage==1) then
+      lin_length = 0d0
+    else
+      lin_length = lin_length + dsqrt(dot_product(points(:,iimage)-points(:,iimage-1),&
+                                     points(:,iimage)-points(:,iimage-1)))
+    end if
+    write(unitp,'(4X,ES11.4,5X,ES11.4)') lin_length, energies(iimage)-energies(1)
+  end do
+  close(unitp)
+end subroutine write_energies
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine read_xyz(filename,nat,znuc,coords)
+  use dlf_parameter_module, only: rk
+  use dlf_constants, only: dlf_constants_get
+  implicit none
+  character(*), intent(in)  :: filename
+  integer, intent(in)       :: nat
+  integer, intent(out)      :: znuc(nat)
+  real(rk), intent(out)     :: coords(3,nat)
+  integer                   :: unitp=4242
+  integer                   :: iat
+  character(2)              :: str2
+  real(rk)                  :: ang_au
+  integer, external         :: get_atom_number
+  integer                   :: io
+  logical                   :: tck
+! **********************************************************************
+  znuc=0
+  coords=0.D0 ! default in case of error in reading
+  inquire(file=filename,exist=tck)
+  if(.not.tck) then
+    print*,"Error: file ",trim(filename)," not found."
+    return
+  end if
+  open(unit=unitp,file=filename)
+  call dlf_constants_get("ANG_AU",ang_au)
+  read(unitp,*)
+  read(unitp,*)
+  do iat=1,nat
+!    read(unitp,'(a2,3f12.7)',iostat=io) str2, coords(:,iat)
+    read(unitp,fmt=*,iostat=io) str2, coords(:,iat)
+    if (io/=0) then
+      print*,"Error reading xyz file ",trim(filename)
+      exit
+    end if
+    znuc(iat) = get_atom_number(str2)
+ ! temporary: commented out cartesian conversion
+ !   write(unitp,'(a2,3f12.7)') str2,coords(:,iat)
+  end do
+  coords(:,:) = coords(:,:) / ang_au
+  close(unitp)
+end subroutine read_xyz
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine read_nat(filename,nat)
+  use dlf_parameter_module, only: rk
+  use dlf_constants, only: dlf_constants_get
+  implicit none
+  character(*), intent(in)  :: filename
+  integer, intent(out)      :: nat
+  integer                   :: unitp=4242
+! **********************************************************************
+  open(unit=unitp,file=filename)
+  read(unitp,*) nat
+  close(unitp)
+end subroutine read_nat
 
 subroutine dlf_print_wavenumber(h_eigval,twavenum)
   ! get the eigenvalue of the hessian in mass-weighted coordinates 
@@ -916,3 +1506,36 @@ subroutine median(size,array_,med)
     med=0.5D0*(med+minval(array))
   end if
 end subroutine median
+
+function get_cov_radius(atomic_number) result (cov_rad)
+use dlf_parameter_module, only: rk
+use dlf_global, only: stdout, stderr, printl
+use dlf_constants, only: dlf_constants_get
+implicit none
+  integer, intent(in)       ::  atomic_number
+  real(rk)                  ::  cov_rad
+  real(rk)                  ::  pmToAU
+  real(rk)                  ::  cov_radii(96) = &
+    (/ 31d0,28d0,&
+       128d0,96d0,85d0,76d0,71d0,66d0,57d0,58d0,&
+       166d0,141d0,121d0,111d0,107d0,105d0,102d0,106d0,&
+       203d0,176d0,170d0,160d0,153d0,139d0,139d0,132d0,126d0,124d0,132d0,&
+       122d0,122d0,120d0,119d0,120d0,120d0,116d0,&
+       220d0,195d0,190d0,175d0,164d0,154d0,147d0,146d0,142d0,139d0,145d0,&
+       144d0,142d0,139d0,139d0,138d0,139d0,140d0,&
+       244d0,215d0,207d0,204d0,203d0,201d0,199d0,198d0,198d0,196d0,194d0,192d0,&
+       192d0,189d0,190d0,187d0,187d0,175d0,170d0,162d0,151d0,144d0,141d0,136d0,&
+       136d0,132d0,145d0,146d0,148d0,140d0,150d0,150d0,&
+       260d0,221d0,215d0,206d0,200d0,196d0,190d0,187d0,180d0,169d0/)
+    if (atomic_number>96) then
+      if(printl>=4) write(stdout,'(&
+              "Warning! The covalent radius for this type of element is not",&
+              " available. Therefore, simply 200 pm will be used!")')
+      cov_rad = 200d0
+    else
+      cov_rad = cov_radii(atomic_number)
+    end if
+    call dlf_constants_get("ANG_AU", pmToAU)
+    pmToAU=1d-2/pmToAU
+    cov_rad = cov_rad * pmToAU
+end function get_cov_radius

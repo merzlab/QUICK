@@ -57,11 +57,11 @@
 !!**********************************************************************
 
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2013-08-07 15:08:09 +0200 (Wed, 07 Aug 2013) $
+!! $Rev: 529 $
+!! $Author: twk $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_lbfgs.f90 $
+!! $Id: dlf_lbfgs.f90 529 2013-08-07 13:08:09Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -144,8 +144,6 @@ SUBROUTINE dlf_lbfgs_step(x,g,step_)
   INTEGER  :: oldpoint,ivar
   real(RK) ,external :: ddot
 ! **********************************************************************
-
-
   if(.not.tinit) call dlf_fail("LBFGS not initialised!")
   if(.not.lbfgs%tinit) then
     print*,"Instance of L-BFGS:",trim(lbfgs%tag)

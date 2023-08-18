@@ -36,6 +36,7 @@ module dlf_sort_module
   private
 
   public :: dlf_sort
+  public :: dlf_sort_shell_ind, dlf_sort_shell
 
   interface dlf_sort
     module procedure dlf_sort_1
@@ -168,6 +169,270 @@ subroutine dlf_sort_2(a,b,values,index_1,index_2,index_3,index_4)
   end do
 
 end subroutine dlf_sort_2
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dlf_sort/dlf_sort_si
+!!
+!! FUNCTION
+!! Simple in-place straight insertion sorting algorithm for 1D real array
+!!
+!! INPUTS
+!!
+!! real array arr, arbitrary size
+!!
+!! OUTPUTS
+!!
+!! arr is overwritten with sorted array (ascending order)
+!!
+!! SYNOPSIS
+subroutine dlf_sort_si(arr)
+  implicit none
+  real(rk), intent(inout), dimension(:) :: arr
+!! SOURCE
+  integer :: N,i,j,k
+  real(rk) :: y
+  N=size(arr)
+  
+  outer: do i=2,N
+    y=arr(i)
+    k=i
+    inner: do j=i-1,1,-1
+      if (y.ge.arr(j)) exit inner
+      k=j
+    enddo inner 
+    if (k.eq.i) cycle outer
+    arr(k+1:i)=arr(k:i-1)
+    arr(k)=y
+  enddo outer
+  
+  return
+end subroutine dlf_sort_si
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dlf_sort/dlf_sort_si_ri
+!!
+!! FUNCTION
+!! Auxiliar routine for dlf_sort_shell_ind. Does a simple straight 
+!! insertion sort on the real array 'arr' while the integer array
+!! 'pasv_int' is sorted along with 'arr' for bookkeeping purposes.
+!!
+!! INPUTS
+!!
+!! real 1D array 'arr', arbitrary size
+!! integer 1D array 'pasv_int', must have the same size as arr 
+!!   (no checks performed within the routine)
+!!
+!! OUTPUTS
+!!
+!! arr is overwritten with sorted array (ascending order)
+!! pasv_int is overwritten as well 
+!!
+!! SYNOPSIS
+subroutine dlf_sort_si_ri(arr,pasv_int)
+  implicit none
+  real(rk), intent(inout), dimension(:) :: arr
+  integer, intent(inout), dimension(:) :: pasv_int
+!! SOURCE
+  integer :: N,i,j,k,iy
+  real(rk) :: y
+  N=size(arr)
+  
+  outer: do i=2,N
+    y=arr(i)
+    iy=pasv_int(i)
+    k=i
+    inner: do j=i-1,1,-1
+      if (y.ge.arr(j)) exit inner
+      k=j
+    enddo inner 
+    if (k.eq.i) cycle outer
+    arr(k+1:i)=arr(k:i-1)
+    arr(k)=y
+    pasv_int(k+1:i)=pasv_int(k:i-1)
+    pasv_int(k)=iy
+  enddo outer
+  
+  return
+end subroutine dlf_sort_si_ri
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dlf_sort/dlf_sort_si_ind
+!!
+!! FUNCTION
+!! Sort index generating routine for 1D real array via straight insertion
+!! algorithm.
+!!
+!! INPUTS
+!!
+!! real 1D array 'arr', arbitrary size
+!!
+!! OUTPUTS
+!!
+!! Sort index (integer 1D array) 'ind', such that (arr(ind(i)), i=1,...,N)
+!! is sorted in ascending order. Must have same size as 'arr'.
+!!
+!! SYNOPSIS
+subroutine dlf_sort_si_ind(arr,ind)
+  implicit none
+  real(rk), intent(in), dimension(:) :: arr
+  integer, intent(out), dimension(:) :: ind
+!! SOURCE
+  integer :: N,i,j,k,iy
+  real(rk) :: y
+  N=size(arr)
+  
+  if (size(ind).ne.N) then
+    write(*,'(A)') 'Error in dlf_sort_si_ind: size mismatch!'
+    call dlf_error()
+  endif
+  
+  do i=1,N
+   ind(i)=i
+  enddo
+  
+  outer: do i=2,N
+    y=arr(ind(i))
+    iy=ind(i)
+    k=i
+    inner: do j=i-1,1,-1
+      if (y.ge.arr(ind(j))) exit inner
+      k=j
+    enddo inner 
+    if (k.eq.i) cycle outer
+    ind(k+1:i)=ind(k:i-1)
+    ind(k)=iy
+  enddo outer
+  
+  return
+end subroutine dlf_sort_si_ind
+!!****
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dlf_sort/dlf_sort_shell
+!!
+!! FUNCTION
+!! In-place Shell-sort algorithm for 1D real array
+!!
+!! INPUTS
+!!
+!! real array arr, arbitrary size
+!!
+!! OUTPUTS
+!!
+!! arr is overwritten with sorted array (ascending order)
+!!
+!! SYNOPSIS
+subroutine dlf_sort_shell(arr)
+  use dlf_allocate, only: allocate, deallocate
+  implicit none
+  real(rk), intent(inout), dimension(:), target :: arr
+!! SOURCE
+  logical, dimension(size(arr)) :: mask
+  integer :: N,i,j,k,del,maxinc,nel
+  integer, allocatable, dimension(:) :: incr
+  real(rk), pointer :: tmparr(:)
+  nullify(tmparr)
+  N=size(arr)
+  
+  ! build increment table
+  maxinc=floor(log(2*real(N)+1._rk)/log(3._rk))
+  call allocate(incr,maxinc)
+  
+  incr(1)=1
+  do k=2,maxinc
+    incr(k)=3*incr(k-1)+1
+  enddo
+  
+  do k=maxinc,1,-1
+    del=incr(k)
+    do i=1,del
+      nullify(tmparr)
+      tmparr => arr(i:N:del)
+      call dlf_sort_si(tmparr)
+    enddo
+  enddo
+  
+  call deallocate(incr)
+  nullify(tmparr)
+  
+  return
+end subroutine dlf_sort_shell
+!!****
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!****f* dlf_sort/dlf_sort_shell_ind
+!!
+!! FUNCTION
+!! Sort index generating routine for 1D real array via shell-sort
+!! algorithm.
+!!
+!! INPUTS
+!!
+!! real 1D array 'arr', arbitrary size
+!!
+!! OUTPUTS
+!!
+!! Sort index (integer 1D array) 'ind', such that (arr(ind(i)), i=1,...,N)
+!! is sorted in ascending order. Must have same size as 'arr'.
+!!
+!! SYNOPSIS
+subroutine dlf_sort_shell_ind(arr,ind)
+  use dlf_allocate, only: allocate, deallocate
+  implicit none
+  real(rk), intent(in), dimension(:) :: arr
+  integer, intent(out), dimension(:),target :: ind
+!! SOURCE
+  real(rk), dimension(size(arr)), target :: arrc
+  integer,dimension(:),pointer :: tmpind
+  logical, dimension(size(arr)) :: mask
+  integer :: N,i,j,k,del,maxinc,nel
+  integer, allocatable, dimension(:) :: incr
+  real(rk), pointer :: tmparr(:)
+  
+  nullify(tmparr,tmpind)
+  N=size(arr)
+  
+  arrc=arr
+  
+  if (size(ind).ne.N) then
+    write(*,'(A)') 'Error in dlf_sort_shell_ind: size mismatch!'
+    call dlf_error()
+  endif
+  
+  do i=1,N
+    ind(i)=i
+  enddo
+  
+  ! build increment table
+  maxinc=floor(log(2*real(N)+1._rk)/log(3._rk))
+  call allocate(incr,maxinc)
+  
+  incr(1)=1
+  do k=2,maxinc
+    incr(k)=3*incr(k-1)+1
+    !write(*,*) incr(k)
+  enddo
+  
+  do k=maxinc,1,-1
+    del=incr(k)
+    do i=1,del
+      nullify(tmparr)
+      nullify(tmpind)
+      tmparr => arrc(i:N:del)
+      tmpind => ind(i:N:del)
+      call dlf_sort_si_ri(tmparr,tmpind)
+    enddo
+  enddo
+  
+  call deallocate(incr)
+  nullify(tmparr,tmpind)
+  
+  return
+end subroutine dlf_sort_shell_ind
 !!****
 
 end module dlf_sort_module

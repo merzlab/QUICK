@@ -27,41 +27,34 @@ FOR=$(FC) $(FORT_EXT_LIB_FLAGS)
 OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o \
 	$(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
 	$(dlfindobjfolder)/dlf_sort.o \
-	$(dlfindobjfolder)/gpr_types.o $(dlfindobjfolder)/gpr_kernels.o \
-	$(dlfindobjfolder)/dlf_oop_lbfgs.o $(dlfindobjfolder)/oop_clock.o \
-	$(dlfindobjfolder)/dlf_hdlc_matrixlib.o $(dlfindobjfolder)/dlf_hdlc_primitive.o \
-	$(dlfindobjfolder)/dlf_hdlc_constraint.o \
-	$(dlfindobjfolder)/dlf_checkpoint.o \
-	$(dlfindobjfolder)/dlf_geodesic.o $(dlfindobjfolder)/dlf_gpr_hdlc.o $(dlfindobjfolder)/gpr.o \
+	$(dlfindobjfolder)/gpr_types.o $(dlfindobjfolder)/gpr_kernels.o $(dlfindobjfolder)/gpr.o \
 	$(dlfindobjfolder)/gpr_opt.o $(dlfindobjfolder)/dlf_sct.o \
-	$(dlfindobjfolder)/dlf_cinter.o $(dlfindobjfolder)/gpr_extensions.o
+	$(dlfindobjfolder)/dlf_cinter.o
 
 # Objects that work without numerical libraries (this distinction does not hold any more) 
-OBJ_NOLAPACK = $(dlfindobjfolder)/dl_find.o \
-	$(dlfindobjfolder)/dlf_time.o $(dlfindobjfolder)/dlf_gprmep.o \
-	$(dlfindobjfolder)/dlf_convergence.o \
-	$(dlfindobjfolder)/dlf_svnversion.o\
-	$(dlfindobjfolder)/dlf_linalg_interface_mod.o $(dlfindobjfolder)/dlf_vpt2_utility.mod.o \
-	$(dlfindobjfolder)/dlf_vpt2_project.mod.o $(dlfindobjfolder)/dlf_vpt2_freq.mod.o \
-        $(dlfindobjfolder)/dlf_vpt2_intcoord.mod.o \
-	$(dlfindobjfolder)/dlf_vpt2_hess_deriv.mod.o \
-	$(dlfindobjfolder)/nr_gamma.mod.o \
-	$(dlfindobjfolder)/dlf_vpt2_terms.mod.o $(dlfindobjfolder)/dlf_vpt2_part_func.mod.o \
-	$(dlfindobjfolder)/dlf_vpt2_main.mod.o \
+OBJ_NOLAPACK = $(dlfindobjfolder)/dl_find.o $(dlfindobjfolder)/dlf_convergence.o \
+	$(dlfindobjfolder)/dlf_checkpoint.o $(dlfindobjfolder)/dlf_svnversion.o\
 	$(dlfindobjfolder)/dlf_formstep.o $(dlfindobjfolder)/dlf_scalestep.o \
-	$(dlfindobjfolder)/dlf_lbfgs.o \
-	$(dlfindobjfolder)/dlf_task.o $(dlfindobjfolder)/dlf_neb.o \
+	$(dlfindobjfolder)/dlf_lbfgs.o $(dlfindobjfolder)/dlf_time.o \
+	$(dlfindobjfolder)/dlf_task.o $(dlfindobjfolder)/dlf_neb.o $(dlfindobjfolder)/dlf_geodesic.o \
 	$(dlfindobjfolder)/dlf_qts.o \
 	$(dlfindobjfolder)/dlf_rateaux.o \
 	$(dlfindobjfolder)/dlf_dimer.o $(dlfindobjfolder)/dlf_conint.o $(dlfindobjfolder)/dlf_coords.o\
 	$(dlfindobjfolder)/dlf_parallel_opt.o $(dlfindobjfolder)/dlf_microiter.o \
 	$(dlfindobjfolder)/dlf_pes.o \
+	$(dlfindobjfolder)/gpr_extensions.o $(dlfindobjfolder)/dlf_oop_lbfgs.o \
+	$(dlfindobjfolder)/oop_clock.o $(dlfindobjfolder)/dlf_gprmep.o \
 	$(dlfindobjfolder)/fftpack5-1d.o $(dlfindobjfolder)/kronrod.o \
-	$(dlfindobjfolder)/dlf_vpt2_test_routines.mod.o
+	$(dlfindobjfolder)/dlf_vpt2_main.mod.o \
+	$(dlfindobjfolder)/dlf_vpt2_part_func.mod.o $(dlfindobjfolder)/dlf_vpt2_terms.mod.o \
+	$(dlfindobjfolder)/dlf_vpt2_freq.mod.o \
+	$(dlfindobjfolder)/dlf_vpt2_hess_deriv.mod.o $(dlfindobjfolder)/dlf_vpt2_utility.mod.o \
+	$(dlfindobjfolder)/dlf_vpt2_test_routines.mod.o $(dlfindobjfolder)/nr_gamma.mod.o
 
 # Objects that need LAPACK linked in
-OBJ_LAPACK = $(dlfindobjfolder)/dlf_hdlc_hdlclib.o $(dlfindobjfolder)/dlf_hdlc_interface.o \
-	$(dlfindobjfolder)/dlf_linalg.o
+OBJ_LAPACK = $(dlfindobjfolder)/dlf_hdlc_matrixlib.o $(dlfindobjfolder)/dlf_hdlc_primitive.o $(dlfindobjfolder)/dlf_hdlc_constraint.o \
+	$(dlfindobjfolder)/dlf_hdlc_hdlclib.o $(dlfindobjfolder)/dlf_hdlc_interface.o $(dlfindobjfolder)/dlf_linalg.o \
+	$(dlfindobjfolder)/dlf_vpt2_project.mod.o $(dlfindobjfolder)/dlf_vpt2_intcoord.mod.o $(dlfindobjfolder)/dlf_gpr_hdlc.o
 
 OBJ =  $(OBJ_NOLAPACK) $(OBJ_LAPACK) 
 

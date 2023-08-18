@@ -404,7 +404,7 @@ CONTAINS
 ! Array entry:           array_invert  (a, det, lcdet, n)
 !
 ! Leading dimension assumed equal the order of the matrix to be inverted
-! Calculate the determinant of lcdet is set
+! Calculate the determinant if lcdet is set
 !//////////////////////////////////////////////////////////////////////////////
 
   INTEGER FUNCTION matrix_invert(a,det,lcdet)
