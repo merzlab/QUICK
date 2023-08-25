@@ -259,14 +259,23 @@ contains
   ! Note that we will call this subroutine asynchronously with ERI
   ! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
   
-!#if !defined CUDA && !defined CUDA_MPIV
+#if !defined CUDA && !defined CUDA_MPIV
 #ifdef OSHELL
     call get_oshell_oneen_grad
 #else
     call get_cshell_oneen_grad
-!    call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
 #endif
-!#endif
+#else
+#ifdef OSHELL
+    call get_oshell_oneen_grad
+#else
+!    if(.not.quick_method%hasF) then
+!      call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
+!    else
+      call get_cshell_oneen_grad
+!    endif
+#endif
+#endif
 
   !---------------------------------------------------------------------
   !  2.1) CEW gradients
@@ -580,7 +589,7 @@ contains
      call cshell_density_cutoff
 #endif 
 
-!#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,&
@@ -591,9 +600,34 @@ contains
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
-!        call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+write(*,*) "xxxx",quick_method%hasF
+call flush()
 
-!#else 
+        if(.not.quick_method%hasF) then
+          call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
+        else
+#ifdef MPIV
+     if (bMPI) then
+        nshell_mpi = mpi_jshelln(mpirank)
+     else
+        nshell_mpi = jshell
+     endif
+
+     do i=1,nshell_mpi
+        if (bMPI) then
+           IIsh = mpi_jshell(mpirank,i)
+        else
+           IIsh = i
+        endif
+#else
+     do IIsh=1,jshell
+#endif
+        do JJsh=IIsh,jshell
+           call attrashellopt(IIsh,JJsh)
+        enddo
+     enddo
+        endif
+#else 
 #ifdef MPIV
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
@@ -614,7 +648,7 @@ contains
            call attrashellopt(IIsh,JJsh)
         enddo
      enddo
-!#endif
+#endif
   
      RECORD_TIME(timer_end%T1eVGrad)
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
