@@ -58,7 +58,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       atmbs=.true.
       atmbs2=.true.
       icont=0
-      quick_method%hasF=.true.
+      quick_method%ffunxiao=.true.
 
       ! parse the file and find the sizes of things to allocate them in memory
       do while (iofile  == 0 )
@@ -96,7 +96,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                      kbasis(iat) = kbasis(iat) + 6
                      kcontract(iat) = kcontract(iat) + iprim * 6
                      elseif (shell == 'F') then
-                     quick_method%hasF=.false.
+                     quick_method%ffunxiao=.false.
                      kbasis(iat) = kbasis(iat) + 10
                      kcontract(iat) = kcontract(iat) + iprim * 10
                   end if
@@ -158,7 +158,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                  kbasis(iat) = kbasis(iat) + 6
                                  kcontract(iat) = kcontract(iat) + iprim*6
                                  elseif (shell == 'F') then
-                                 quick_method%hasF=.false.
+                                 quick_method%ffunxiao=.false.
                                  kbasis(iat) = kbasis(iat) + 10
                                  kcontract(iat) = kcontract(iat) + iprim*10
                               end if
@@ -270,7 +270,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       call MPI_BCAST(nshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(nprim,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%ffunxiao,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif
 #endif
@@ -279,7 +279,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
    ! Allocate the arrays now that we know the sizes
 
-   if(quick_method%hasF)then
+   if(quick_method%ffunxiao)then
       if(.not. allocated(Yxiao))        allocate(Yxiao(10000,56,56))
       if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(56,56,0:10))
       if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
