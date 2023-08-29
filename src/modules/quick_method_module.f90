@@ -58,7 +58,7 @@ module quick_method_module
         logical :: zmat = .false.      ! Z-matrix
         logical :: dipole = .false.    ! Dipole Momenta
         logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
-        logical :: hasF = .false.      ! If f the calculation has F orbitals
+        logical :: fFunXiao            ! If f orbitial is contained
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false.
                                        ! calculate density lap
@@ -228,7 +228,7 @@ module quick_method_module
             call MPI_BCAST(self%ecp,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%custECP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%printEnergy,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%fFunXiao,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDens,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -833,7 +833,7 @@ module quick_method_module
             self%ecp = .false.       ! ECP
             self%custECP = .false.   ! Custom ECP
             self%printEnergy = .true.! Print Energy each cycle
-            self%hasF = .false.            ! If f orbitial is contained
+            self%fFunXiao = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
             self%writePMat = .false.   ! Output density matrix
@@ -842,6 +842,7 @@ module quick_method_module
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
             self%DIVCON = .false.      ! Div&Con
+
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
             self%MFCC = .false.        ! MFCC

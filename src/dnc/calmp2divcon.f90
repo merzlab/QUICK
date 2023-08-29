@@ -87,7 +87,7 @@ do itt=1,np
  allocate(mp2shell(nbasisdc(itt)))
  allocate(orbmp2(iocc,ivir,ivir))
  allocate(orbmp2dcsub(iocc,ivir,ivir))
- if(hasF)then
+ if(ffunxiao)then
   nbasistemp=6
   allocate(orbmp2i331(nbasisdc(itt),6,6,2))
   allocate(orbmp2j331(ivir,6,6,2))
