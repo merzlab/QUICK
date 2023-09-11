@@ -846,20 +846,14 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
 ! **********************************************************************
   call dlf_constants_get("ANG_AU",ang_au)
   write (unit,'(/," ANALYTICAL GRADIENT: ")')
-  write (unit,'("------------------------")')                                                              
-  write (unit,'(" VARIBLES",4x,"NEW_GRAD")')      
-  write (unit,'("------------------------")')
+  write (unit,'("---------------------------------------------------------")')
+  write (unit,'("   ATOM",9x,"X",16X,"Y",16X,"Z")')      
+  write (unit,'("---------------------------------------------------------")')
 
-  cartsym(1) = 'X'
-  cartsym(2) = 'Y'
-  cartsym(3) = 'Z'
-                   
   do iat=1,nat
-    do jat=1,3
-      write(unit,'(I5,A1,3x,F14.10)')iat,cartsym(jat),coords((iat-1)*3+jat)
-    enddo
+     write(unit,'(I5,3x,F14.10,3x,F14.10,3x,F14.10)')iat,coords((iat-1)*3+1),coords((iat-1)*3+2),coords((iat-1)*3+3)
   end do
-  write (unit,'("------------------------")')
+  write (unit,'("---------------------------------------------------------")')
   call flush(unit)
 end subroutine write_xyz_active
 
