@@ -543,22 +543,44 @@ quick_method%x_hybrid_coeff*0.5D0*DENSEKJ*Ycc(icr)
 quick_method%x_hybrid_coeff*0.5D0*DENSEKJ*(Yaa(icr)+Ybb(icr)+Ycc(icr))
 
                       quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)!*2.0D0
                       quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)!*2.0D0
                       quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)!*2.0D0
                       quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + & 
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+
+                      if (KKK .eq. JJJ) then
+                      quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)!*2.0D0
+                      quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)!*2.0D0
+                      quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)!*2.0D0
+                      quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+                      endif
 
                       quick_qm_struct%fd(iAstart+icr,ljd) = quick_qm_struct%fd(iAstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)!*2.0D0
                       quick_qm_struct%fd(iBstart+icr,ljd) = quick_qm_struct%fd(iBstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)!*2.0D0
                       quick_qm_struct%fd(iCstart+icr,ljd) = quick_qm_struct%fd(iCstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)!*2.0D0
                       quick_qm_struct%fd(iDstart+icr,ljd) = quick_qm_struct%fd(iDstart+icr,ljd) + & 
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+
+                      if (LLL .eq. JJJ) then
+                      quick_qm_struct%fd(iAstart+icr,ljd) = quick_qm_struct%fd(iAstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)!*2.0D0
+                      quick_qm_struct%fd(iBstart+icr,ljd) = quick_qm_struct%fd(iBstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)!*2.0D0
+                      quick_qm_struct%fd(iCstart+icr,ljd) = quick_qm_struct%fd(iCstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)!*2.0D0
+                      quick_qm_struct%fd(iDstart+icr,ljd) = quick_qm_struct%fd(iDstart+icr,ljd) + &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+                      endif
             
                  enddo
   
@@ -701,22 +723,22 @@ quick_method%x_hybrid_coeff*DENSEKJB*Ycc(icr)
 quick_method%x_hybrid_coeff*DENSEKJB*(Yaa(icr)+Ybb(icr)+Ycc(icr))
 
                       quick_qm_struct%fbd(iAstart+icr,kjd) = quick_qm_struct%fbd(iAstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*DENSELIB*Yaa(icr)
+quick_method%x_hybrid_coeff*DENSELIB*Yaa(icr)*2.0D0
                       quick_qm_struct%fbd(iBstart+icr,kjd) = quick_qm_struct%fbd(iBstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*DENSELIB*Ybb(icr)
+quick_method%x_hybrid_coeff*DENSELIB*Ybb(icr)*2.0D0
                       quick_qm_struct%fbd(iCstart+icr,kjd) = quick_qm_struct%fbd(iCstart+icr,kjd) - & 
-quick_method%x_hybrid_coeff*DENSELIB*Ycc(icr)
+quick_method%x_hybrid_coeff*DENSELIB*Ycc(icr)*2.0D0
                       quick_qm_struct%fbd(iDstart+icr,kjd) = quick_qm_struct%fbd(iDstart+icr,kjd) + & 
-quick_method%x_hybrid_coeff*DENSELIB*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*DENSELIB*(Yaa(icr)+Ybb(icr)+Ycc(icr))*2.0D0
 
                       quick_qm_struct%fbd(iAstart+icr,ljd) = quick_qm_struct%fbd(iAstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*DENSEKIB*Yaa(icr)
+quick_method%x_hybrid_coeff*DENSEKIB*Yaa(icr)*2.0D0
                       quick_qm_struct%fbd(iBstart+icr,ljd) = quick_qm_struct%fbd(iBstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*DENSEKIB*Ybb(icr)
+quick_method%x_hybrid_coeff*DENSEKIB*Ybb(icr)*2.0D0
                       quick_qm_struct%fbd(iCstart+icr,ljd) = quick_qm_struct%fbd(iCstart+icr,ljd) - & 
-quick_method%x_hybrid_coeff*DENSEKIB*Ycc(icr)
+quick_method%x_hybrid_coeff*DENSEKIB*Ycc(icr)*2.0D0
                       quick_qm_struct%fbd(iDstart+icr,ljd) = quick_qm_struct%fbd(iDstart+icr,ljd) + & 
-quick_method%x_hybrid_coeff*DENSEKIB*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*DENSEKIB*(Yaa(icr)+Ybb(icr)+Ycc(icr))*2.0D0
 
                  enddo
 
@@ -775,22 +797,44 @@ quick_method%x_hybrid_coeff*0.5D0*DENSEKJ*Ycc(icr)
 quick_method%x_hybrid_coeff*0.5D0*DENSEKJ*(Yaa(icr)+Ybb(icr)+Ycc(icr))
 
                       quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)!*2.0D0
                       quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)!*2.0D0
                       quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)!*2.0D0
                       quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + &
-quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+
+                      if(KKK .eq. JJJ) then
+                      quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Yaa(icr)!*2.0D0
+                      quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ybb(icr)!*2.0D0
+                      quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*Ycc(icr)!*2.0D0
+                      quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + &
+quick_method%x_hybrid_coeff*0.5D0*DENSELI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0                      
+                      endif
 
                       quick_qm_struct%fd(iAstart+icr,ljd) = quick_qm_struct%fd(iAstart+icr,ljd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)!*2.0D0
                       quick_qm_struct%fd(iBstart+icr,ljd) = quick_qm_struct%fd(iBstart+icr,ljd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)!*2.0D0
                       quick_qm_struct%fd(iCstart+icr,ljd) = quick_qm_struct%fd(iCstart+icr,ljd) - &
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)!*2.0D0
                       quick_qm_struct%fd(iDstart+icr,ljd) = quick_qm_struct%fd(iDstart+icr,ljd) + &
-quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+
+                      if(LLL .eq. JJJ) then
+                      quick_qm_struct%fd(iAstart+icr,ljd) = quick_qm_struct%fd(iAstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Yaa(icr)!*2.0D0
+                      quick_qm_struct%fd(iBstart+icr,ljd) = quick_qm_struct%fd(iBstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ybb(icr)!*2.0D0
+                      quick_qm_struct%fd(iCstart+icr,ljd) = quick_qm_struct%fd(iCstart+icr,ljd) - &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*Ycc(icr)!*2.0D0
+                      quick_qm_struct%fd(iDstart+icr,ljd) = quick_qm_struct%fd(iDstart+icr,ljd) + &
+quick_method%x_hybrid_coeff*0.5D0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0 
+                      endif
 
                  enddo
 
@@ -1133,13 +1177,25 @@ quick_method%x_hybrid_coeff*0.5d0*DENSEKJ*Ycc(icr)
 quick_method%x_hybrid_coeff*0.5d0*DENSEKJ*(Yaa(icr)+Ybb(icr)+Ycc(icr))
 
                           quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Yaa(icr)
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Yaa(icr)!*2.0D0
                           quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ybb(icr)
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ybb(icr)!*2.0D0
                           quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - &
-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ycc(icr)
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ycc(icr)!*2.0D0
                           quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + &
-quick_method%x_hybrid_coeff*0.5d0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+
+                          if (KKK .eq. JJJ) then
+                          quick_qm_struct%fd(iAstart+icr,kjd) = quick_qm_struct%fd(iAstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Yaa(icr)!*2.0D0
+                          quick_qm_struct%fd(iBstart+icr,kjd) = quick_qm_struct%fd(iBstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ybb(icr)!*2.0D0
+                          quick_qm_struct%fd(iCstart+icr,kjd) = quick_qm_struct%fd(iCstart+icr,kjd) - &
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Ycc(icr)!*2.0D0
+                          quick_qm_struct%fd(iDstart+icr,kjd) = quick_qm_struct%fd(iDstart+icr,kjd) + &
+quick_method%x_hybrid_coeff*0.5d0*DENSEKI*(Yaa(icr)+Ybb(icr)+Ycc(icr))!*2.0D0
+                          endif
+
                         enddo
 
 #endif

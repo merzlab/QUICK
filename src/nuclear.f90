@@ -3348,13 +3348,6 @@ subroutine nuclearattrafock1(Ips,Jps,IIsh,JJsh,NIJ1, &
                quick_qm_struct%fd(iBstart+3,JID)= quick_qm_struct%fd(iBstart+3,JID)+ Bgrad3
                quick_qm_struct%fd(iCstart+3,JID)= quick_qm_struct%fd(iCstart+3,JID)+ Cgrad3
 
-
-print*
-print*,JID, iAstart, iBstart, iCstart
-write(*,'(9(F10.7,7X))') Agrad1, Agrad2, Agrad3
-write(*,'(9(F10.7,7X))') Bgrad1, Bgrad2, Bgrad3
-write(*,'(9(F10.7,7X))') Cgrad1, Cgrad2, Cgrad3
-
             enddo
          enddo
       enddo
