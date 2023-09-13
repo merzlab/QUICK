@@ -46,8 +46,14 @@ subroutine cshell_dnscreen(II,JJ,DNmax1)
         DENSEMAX=max(DENSEJI,DENSEJIA,DENSEJIB)
         if(DENSEMAX.gt.DNmax1)DNmax1=DENSEMAX
 #else
-        DENSEJI=dabs(quick_qm_struct%dense(JJJ,III))
-        if(DENSEJI.gt.DNmax1)DNmax1=DENSEJI
+
+        if (quick_method%CalcFock_d1g0) then
+           DENSEJI=dabs(quick_qm_struct%psdense(JJJ,III))
+           if(DENSEJI.gt.DNmax1)DNmax1=DENSEJI
+        else 
+           DENSEJI=dabs(quick_qm_struct%dense(JJJ,III))
+           if(DENSEJI.gt.DNmax1)DNmax1=DENSEJI
+        endif
 #endif
      enddo
   enddo
