@@ -47,17 +47,18 @@ module quick_calculated_module
       double precision, allocatable, dimension(:,:)   :: oneElecO
 
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
-      double precision,dimension(:,:), allocatable :: o
-      double precision,dimension(:,:), allocatable :: od, fd
+      double precision,dimension(:,:), allocatable :: o, psf,fd1g0
+      double precision,dimension(:,:), allocatable :: od, fd,fxd
       integer, dimension(:,:), allocatable :: iarray      
+      double precision, dimension(:,:,:), allocatable :: fds1
 
       ! matrix for saving XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: oxc 
 
       ! Beta operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock
       ! Matrix
-      double precision,dimension(:,:), allocatable :: ob
-      double precision,dimension(:,:), allocatable :: obd, fbd, ewdmx
+      double precision,dimension(:,:), allocatable :: ob, ewdmx
+      double precision,dimension(:,:), allocatable :: obd, fbd
 
       ! matrix for saving beta XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: obxc
@@ -82,8 +83,8 @@ module quick_calculated_module
 
       ! Density matrix, when it's unrestricted system, it presents alpha density
       ! the dimension is nbasis*nbasis.
-      double precision,dimension(:,:), allocatable :: dense
-
+      double precision,dimension(:,:), allocatable :: dense,psdense
+      double precision,dimension(:,:), allocatable :: dense1,d1con,wdens1
       ! when it's unrestricted system, it presents beta density
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseb
@@ -281,7 +282,15 @@ contains
          end do
          ntri =  (nbasis*(nbasis+1))/2
          if(.not. allocated(self%fd)) allocate(self%fd(3*natom,ntri))
+         if(.not. allocated(self%psf)) allocate(self%psf(nbasis,nbasis))
+         if(.not. allocated(self%fd1g0)) allocate(self%fd1g0(3*natom,ntri))
          if(.not. allocated(self%od)) allocate(self%od(3*natom,ntri))
+         if(.not. allocated(self%dense1)) allocate(self%dense1(3*natom,ntri))
+         if(.not. allocated(self%wdens1)) allocate(self%wdens1(3*natom,ntri))
+         if(.not. allocated(self%d1con)) allocate(self%d1con(3*natom,ntri))
+         if(.not. allocated(self%psdense)) allocate(self%psdense(nbasis,nbasis))
+         if(.not. allocated(self%fds1)) allocate(self%fds1(nbasis,nbasis,3*natom))
+         if(.not. allocated(self%fxd)) allocate(self%fxd(nbasis,nbasis))
          if (quick_method%unrst) then
             if(.not. allocated(self%obd)) allocate(self%obd(3*natom,ntri))
             if(.not. allocated(self%fbd)) allocate(self%fbd(3*natom,ntri))
@@ -291,6 +300,8 @@ contains
          endif
          if(.not. allocated(self%CPHFA)) allocate(self%CPHFA(idimA,idimA))
          if(.not. allocated(self%CPHFB)) allocate(self%CPHFB(idimA,natom*3))
+         if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
+         if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
       endif
 
       ! if unrestricted, some more varibles is required to be allocated
@@ -458,6 +469,14 @@ contains
          if (allocated(self%ewdmx)) deallocate(self%ewdmx)
          if (allocated(self%od)) deallocate(self%od)
          if (allocated(self%fd)) deallocate(self%fd)
+         if (allocated(self%psf)) deallocate(self%psf)
+         if (allocated(self%fd1g0)) deallocate(self%fd1g0)
+         if (allocated(self%dense1)) deallocate(self%dense1)
+         if (allocated(self%wdens1)) deallocate(self%wdens1)
+         if (allocated(self%d1con)) deallocate(self%d1con)
+         if (allocated(self%psdense)) deallocate(self%psdense)
+         if (allocated(self%fds1)) deallocate(self%fds1)
+         if (allocated(self%fxd)) deallocate(self%fxd)
          if (allocated(self%CPHFA)) deallocate(self%CPHFA)
          if (allocated(self%CPHFB)) deallocate(self%CPHFB)
          if (quick_method%unrst) then
@@ -621,17 +640,22 @@ contains
       if (quick_method%analHess) then
          call zeroMatrix(self%hessian,3*natom)
          ntri =  (nbasis*(nbasis+1))/2
-         call zeroMatrix2(self%od,3*natom,ntri)
-         call zeroMatrix2(self%fd,3*natom,ntri)
+         self%od=0.0d0
+         self%fd=0.0d0
+         call zeroMatrix(self%psf,nbasis)
+         call zeroMatrix(self%fxd,nbasis)
+         call zeroMatrix2(self%fd1g0,3*natom,ntri)
+         call zeroMatrix2(self%dense1,3*natom,ntri)
+         call zeroMatrix2(self%wdens1,3*natom,ntri)
+         call zeroMatrix2(self%d1con,3*natom,ntri)
+         call zeroMatrix(self%psdense,nbasis)
+         self%fds1=0.0d0
          if (quick_method%unrst) then
-            call zeroMatrix2(self%fbd,3*natom,ntri)
-            call zeroMatrix2(self%obd,3*natom,ntri)
+            self%fbd=0.0d0
+            self%obd=0.0d0
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
-         endif
-         if (quick_method%unrst) then
-             call zeroMatrix2(self%obd,3*natom,ntri)
          endif
          call zeroMatrix(self%CPHFA,idimA)
          call zeroMatrix2(self%CPHFB,idimA,natom*3)
