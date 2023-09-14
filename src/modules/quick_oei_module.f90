@@ -114,7 +114,6 @@ subroutine get1e(deltaO)
          if(quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
          else
-           call gpu_get_oei_dummy(quick_qm_struct%o)
 
            do IIsh=1,jshell
               do JJsh=IIsh,jshell
