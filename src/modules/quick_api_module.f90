@@ -286,7 +286,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_allocate_scratch()
+  call gpu_allocate_scratch(.true.)
 #endif
 
   ! read job specifications
@@ -823,7 +823,7 @@ subroutine delete_quick_job(ierr)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_deallocate_scratch()
+  call gpu_deallocate_scratch(.true.)
 #endif
 
 #if defined CUDA || defined HIP
