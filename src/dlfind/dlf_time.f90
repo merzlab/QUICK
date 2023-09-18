@@ -2,11 +2,11 @@
 ! **               Utility unit: run-time bookkeeping                 **
 ! **********************************************************************
 
-! $Date$
-! $Rev$
-! $Author$
-! $URL$
-! $Id$
+! $Date: 2010-11-30 17:26:05 +0100 (Tue, 30 Nov 2010) $
+! $Rev: 454 $
+! $Author: twk $
+! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_time.f90 $
+! $Id: dlf_time.f90 454 2010-11-30 16:26:05Z twk $
 
 !! COPYRIGHT
 !!

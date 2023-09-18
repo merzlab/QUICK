@@ -16,11 +16,11 @@
 !!
 !!
 !! DATA
-!! $Date$
-!! $Revision$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2008-06-26 12:07:01 +0200 (Thu, 26 Jun 2008) $
+!! $Revision: 341 $
+!! $Author: jk37 $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dl-find.f90 $
+!! $Id: dl-find.f90 341 2008-06-26 10:07:01Z jk37 $
 !!
 !! COPYRIGHT
 !!
@@ -66,7 +66,7 @@
 !!   |
 !! return to calling program
 !!
-subroutine dl_find (ierr2, master &
+subroutine dl_find (ierr2, master&
 #ifdef GAMESS
     ,core&
 #endif
@@ -77,16 +77,15 @@ subroutine dl_find (ierr2, master &
   use dlf_allocate, only: allocate_report,allocate,deallocate
   use dlf_store, only: store_delete_all
   use quick_molspec_module, only: natom, quick_molspec
-
   implicit none
-  integer      :: nvarin ! number of variables to read in
-                         !  3*nat
-  integer      :: nvarin2! number of variables to read in
-                         !  in the second array (coords2)
-  integer      :: nspec  ! number of values in the integer
-                                     !  array spec
+  integer       :: nvarin ! number of variables to read in
+                          !  3*nat
+  integer       :: nvarin2! number of variables to read in
+                          !  in the second array (coords2)
+  integer       :: nspec  ! number of values in the integer
+                          !  array spec
   integer   ,intent(inout) :: ierr2
-  integer   ,intent(in)   :: master ! 1 if this task is the master of
+  integer   ,intent(in)    :: master ! 1 if this task is the master of
                                      ! a parallel run, 0 otherwise
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -110,11 +109,14 @@ subroutine dl_find (ierr2, master &
     ,core&
 #endif
     )
+
   ! shut down finally
   call dlf_deallocate_glob()
 
+  if(glob%initialpathneb>0) call dlf_idpp_destroy
+
   ! deallocate arrays in formstep_set_tsmode
-  call dlf_formstep_set_tsmode(1,-2,1.d0)
+  call dlf_formstep_set_tsmode(1,-2,(/1.d0/))
 
   ! delete dlf_store
   call store_delete_all
@@ -140,7 +142,7 @@ end subroutine dl_find
 subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,pi,stdout,printl,printf
+  use dlf_global, only: glob,pi,stdout,printl,printf,tstore
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate,deallocate
   use dlf_store, only: store_initialise
@@ -156,16 +158,20 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
                                      ! a parallel run, 0 otherwise
   real(rk),allocatable :: tmpcoords(:),tmpcoords2(:)
   integer, allocatable :: spec(:)
-  integer              :: ivar,nat,nframe,nmass,nweight,nz,tsrel,iat, jat
+  integer              :: ivar,nat,nframe,nmass,nweight,nz,tsrel,iat,jat
   integer              :: massweight,ierr
   real(rk)             :: svar
   integer              :: tdlf_farm
   integer              :: n_po_scaling
   integer              :: coupled_states
-  integer              :: micro_esp_fit
+  integer              :: micro_esp_fit,tstore_int
+  integer              :: bimol_int, usePath
+  integer              :: useGeodesic, pathNameLength, &
+                          calc_final_energies
+  character(4096)      :: initPathName
+  integer              :: vpt2_do_part_func_int, vpt2_grad_only_int
+  integer              :: vpt2_force_doscf_int
 ! **********************************************************************
-
-
 
   pi=4.D0*datan(1.D0)
 
@@ -203,7 +209,7 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
   ! spec(nspec) : integer specification array
   !    nat     entries of freezing/residue number
   !    nz      entries of nuclear charges (same order as coords)
-  !    5*ncons entries of constraints (typ, atom1,atom2, atom3, atom4)
+  !    5*ncons entries of constraints (type, atom1,atom2, atom3, atom4)
   !    2*nconn entries of connections (atom1 atom2)
   !    nat     entries of microiterative region specification
   !    i.e. nspec= nat + nz + 5*ncons + 2*nconn + nat
@@ -215,6 +221,11 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
   n_po_scaling=0 ! set default value
   coupled_states=1 ! set default value
   micro_esp_fit=0 ! set default value
+  tstore_int=0  ! set default value
+  bimol_int=0 ! set default value
+  vpt2_do_part_func_int=0 ! set default value
+  vpt2_grad_only_int=0 ! set default value
+  vpt2_force_doscf_int=1 ! set default value
   call dlf_get_params(nvarin,max(nvarin2,1),max(nspec,1), &
       tmpcoords,tmpcoords2,spec, ierr, &
       glob%tolerance,printl,glob%maxcycle,glob%maxene,&
@@ -235,9 +246,24 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
       glob%po_nsave,glob%ntasks,tdlf_farm,n_po_scaling, &
       glob%neb_climb_test, glob%neb_freeze_test, glob%nzero, &
       coupled_states, glob%qtsflag, &
-      glob%imicroiter, glob%maxmicrocycle, micro_esp_fit)
-  if(ierr/=0) call dlf_fail("Failed to read parameters")
+      glob%imicroiter, glob%maxmicrocycle, micro_esp_fit,tstore_int,&
+      glob%initialpathneb,glob%eonly,&
+      glob%ircstep, glob%minircsteps, glob%irot,&
+      glob%sct_in_IRC,bimol_int,usePath,glob%minwavenumber, &
+      useGeodesic,glob%gprmep_mode,calc_final_energies,&
+      initPathName, pathNameLength, &
+      glob%vpt2_resonance_treatment,&
+      glob%vpt2_resonance_criterion,glob%vpt2_res_tol_deltae,&
+      glob%vpt2_res_tol_deltae_hard,glob%vpt2_res_tol_martin,&
+      glob%vpt2_res_tol_isaacson,glob%vpt2_hdcpt2_alpha,&
+      glob%vpt2_hdcpt2_beta,glob%vpt2_deriv_deltaq,glob%vpt2_asym_tol,&
+      glob%vpt2_Tmin,glob%vpt2_Tmax,glob%vpt2_nT,vpt2_do_part_func_int,&
+      vpt2_grad_only_int,vpt2_force_doscf_int,glob%vpt2_dq_factor_4hess,glob%gpr_internal)
 
+  if(ierr/=0) call dlf_fail("Failed to read parameters")
+  if(glob%iopt /= 100 .and.(glob%gpr_internal ==1 .or. glob%gpr_internal == 2)) then
+    glob%gpr_internal = 0
+  endif
   if (glob%ntasks <= 0) then
     write(stdout,'("glob%ntasks = ",i6)') glob%ntasks
     call dlf_fail("Number of task farms must be positive")
@@ -252,6 +278,14 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
   glob%tsrelative=(tsrel==1)
   glob%massweight=(massweight==1)
   glob%micro_esp_fit = (micro_esp_fit == 1)
+  tstore = (tstore_int == 1)
+  glob%bimol_sct = (bimol_int == 1)
+  glob%usePath = (usePath == 1)
+  glob%useGeodesic = (useGeodesic == 1)
+  glob%calc_final_energies = (calc_final_energies == 1)
+  glob%vpt2_do_part_func = (vpt2_do_part_func_int == 1)
+  glob%vpt2_grad_only = (vpt2_grad_only_int == 1)
+  glob%vpt2_force_doscf = (vpt2_force_doscf_int == 1)
 
   ! Do we need to calculate the interstate coupling gradient?
   ! If coupled_states is false, coupling = zero.
@@ -270,6 +304,8 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
     write(stdout,'("ncons ",i6)') glob%ncons
     write(stdout,'("nconn ",i6)') glob%nconn
     write(stdout,'("nspec should be: nat + nz + 5*ncons + 2*nconn + nat")')
+    write(stdout,'("nat + nz + 5*ncons + 2*nconn + nat",i6)') &
+        nat + nz + 5*glob%ncons + 2*glob%nconn + nat
     call dlf_fail("Inconsistent size of array spec - interface error")
   end if
 
@@ -284,6 +320,8 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
     write(stdout,'("nmass        ",i6)') nmass
     write(stdout,'("n_po_scaling ",i6)') n_po_scaling
     write(stdout,'("varin2 should be: nframe*nat*3 + nweight + nmass + n_po_scaling")')
+    write(stdout,'("nframe*nat*3 + nweight + nmass + n_po_scaling",i6)') &
+        nframe*nat*3 + nweight + nmass + n_po_scaling
     write(stdout,'("nweight should be either 0 or nat")')
     write(stdout,'("nmass should be either 0 or nat")')
     call dlf_fail("Inconsistent size of array coords2 - interface error")
@@ -307,7 +345,11 @@ subroutine dlf_read_in(nvarin,nvarin2,nspec,master)
 
   ! allocate storage
   call dlf_allocate_glob(nvarin,nvarin2,nspec,tmpcoords,tmpcoords2,spec,&
-      nz,nframe,nmass,nweight,n_po_scaling)
+      nz,nframe,nmass,nweight,n_po_scaling,initPathName, pathNameLength)
+
+  if(glob%initialpathneb>0) call dlf_idpp_get_distances(glob%nvar,glob%nat,nframe,glob%xcoords,&
+      glob%xcoords2,glob%spec,glob%nimage)
+
   call deallocate(tmpcoords)
   call deallocate(tmpcoords2)
   call deallocate(spec)
@@ -340,9 +382,10 @@ subroutine dlf_run(ierr2 &
     )
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,stdout,printl,printf
+  use dlf_global, only: glob,stdout,printl,printf,tstore
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate,deallocate
+  use gpr_in_dl_find_mod, only:gpr_opt
   use quick_molspec_module, only: xyz, quick_molspec
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
@@ -352,7 +395,7 @@ subroutine dlf_run(ierr2 &
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
 #endif
   integer  :: iimage,ivar,status,image_status,taskfarm_mode
-  integer  :: icount, kiter, iat, jat
+  integer  :: icount, kiter,iat,jat
   real(rk) :: svar
   logical  :: tconv,trestarted,trerun_energy
   logical  :: needhessian ! do we need a Hessian?
@@ -363,7 +406,13 @@ subroutine dlf_run(ierr2 &
 ! **********************************************************************
   
   ! classical rate (i.e. rate w/o tunneling) should be calculated
-  if(glob%iopt == 13) then
+  if(glob%iopt == 13.or.glob%iopt == 14) then
+    ! if iopt==14 we can calculate a SCT rate
+    if (glob%iopt == 14) then
+      glob%sctRate=.true.
+    else 
+      glob%sctRate=.false.
+    end if
     call dlf_htst_rate()
     return ! nothing else to do
   end if
@@ -392,7 +441,14 @@ subroutine dlf_run(ierr2 &
   
   ! initialise search algorithm
   call dlf_formstep_init(needhessian)
-
+  
+  ! reading the first point on the IDPP path
+  if (glob%usePath.or.glob%iopt==102) then
+    call dlf_formstep (tconv)
+    glob%icoords = glob%step
+    call dlf_coords_itox(iimage)    
+  end if
+  
   ! initialise line search
   call linesearch_init
 
@@ -406,8 +462,9 @@ subroutine dlf_run(ierr2 &
 
   ! define, if Energy and gradient calculations are to be performed
   noeandg=.false.
-  if(glob%inithessian==5) noeandg=.true.
+  if(glob%inithessian==5.and.glob%icoord==190) noeandg=.true.
   if(glob%iopt==13) noeandg=.true.
+  if(glob%iopt==15) noeandg=.true. ! to be able to use restart files
 
   ! read checkpoint file 
   if(glob%restart==1) then
@@ -442,11 +499,14 @@ subroutine dlf_run(ierr2 &
       if(stat%sene>0) THEN
         if (glob%iam == 0) then
 !          open(unit=30,file="path.xyz",position="APPEND")
-!          open(unit=40,file="new_coords.xyz",position="APPEND")
 !          open(unit=31,file="path_active.xyz",position="APPEND")
           ! Only open for TS search methods
           if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
              open(unit=32,file="path_tsmode.xyz",position="APPEND")
+          end if
+          ! Only open for special IRC
+          if (glob%iopt/10==6) then
+             open(unit=63,file="path_irc.xyz")
           end if
           ! Only for microiterative optimisations
           if (glob%imicroiter > 0) then
@@ -456,11 +516,14 @@ subroutine dlf_run(ierr2 &
       ELSE
         if (glob%iam == 0) then
 !          open(unit=30,file="path.xyz")
-!          open(unit=40,file="new_coords.xyz")
 !          open(unit=31,file="path_active.xyz")
           ! Only open for TS search methods
           if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
              open(unit=32,file="path_tsmode.xyz")
+          end if
+          ! Only open for special IRC
+          if (glob%iopt/10==6) then
+             open(unit=63,file="path_irc.xyz")
           end if
           ! Only for microiterative optimisations
           if (glob%imicroiter > 0) then
@@ -546,7 +609,10 @@ subroutine dlf_run(ierr2 &
     ! ==================================================================
     ! EVALUATE THE ENERGY
     ! ==================================================================
-
+    if(glob%iopt==103) then
+      call dlf_formstep(tconv)
+      if (.not.glob%calc_final_energies) exit
+    end if
     ! get out of main cycle if energy evaluated more often than glob%maxene
     if(stat%sene > glob%maxene) then
       stat%ccycle= stat%ccycle-1
@@ -579,51 +645,78 @@ subroutine dlf_run(ierr2 &
        if(printl>=6) write(stdout,"('Calculating the energy',i5)") stat%sene
        stat%pene = stat%pene + 1
        call clock_start("EANDG")
-
-       if (glob%imultistate == 0) then
-         ! An ordinary single state gradient
-
-         ! don't do any optimizations or energy evaluations in case only
-         ! the rate has to be calculated from an existing qts hessian
-         if(.not.noeandg) then
-
-            ! ESP fit setting
-            kiter = -1
-            if (glob%micro_esp_fit) then
+       if(glob%initialpathneb>0) then
+         call dlf_get_idpp_gradient(glob%nvar,glob%xcoords,&
+             glob%energy,glob%xgradient,iimage,status)
+       else
+         if (glob%imultistate == 0) then
+           ! An ordinary single state gradient
+           
+           ! don't do any optimizations or energy evaluations in case only
+           ! the rate has to be calculated from an existing qts hessian
+           if(.not.noeandg) then
+             
+             ! ESP fit setting
+             kiter = -1
+             if (glob%micro_esp_fit) then
                ! TODO - at certain times kiter should still be -1, e.g.
                ! during initial Hessian calc in P-RFO
                if (glob%imicroiter == 1) kiter = 0
                if (glob%imicroiter == 2) kiter = 1
-            end if
-
-            call dlf_get_gradient(glob%nvar,glob%xcoords,glob%energy, &
-                 glob%xgradient,iimage,kiter,&
+             end if
+             
+             if(glob%eonly==0) then
+               if(glob%inithessian==7.or.glob%iopt==15.or.&
+                  (glob%iopt==102.and.glob%onlyRecalcEnergy)) then
+                 ! meaning: inithessian=7, calculate energies but no gradient:
+                 call dlf_get_energy(glob%nvar,glob%xcoords,glob%energy, &
+                     iimage,kiter,status)
+               else
+                 call dlf_get_gradient(glob%nvar,glob%xcoords,glob%energy, &
+                     glob%xgradient,iimage,kiter,&
 #ifdef GAMESS
-                 core,&
+                     core,&
 #endif
-                 status,ierr2)
+                     status,ierr2)
+               end if
+             else
+               ! FD gradient from energies
+               ! no gradient required for FD-Hessian
+               ! no core for Gamess at present
+               if(glob%iopt/=11) then
+                  if(mod(glob%eonly,2)==1) then
+                     call dlf_fd_gradient2(glob%nvar,glob%xcoords,glob%energy, &
+                          glob%xgradient,iimage,kiter,status)
+                  else
+                     call dlf_fd_gradient4(glob%nvar,glob%xcoords,glob%energy, &
+                          glob%xgradient,iimage,kiter,status)
+                  end if
+               else
+                  ! set gradient and energy to zero for Hessian calculation
+                  glob%energy=0.D0
+                  glob%xgradient=0.D0
+               end if
+             end if
 
             ! ESP fit corrections
             if (glob%micro_esp_fit .and. status == 0) then
                if (glob%imicroiter == 1) then
-                  ! Macro step - calculate corrections to energy/gradient
-                  ! Get ESP eandg
-                  glob%macrocoords(:,:,iimage) = glob%xcoords
-                  kiter = 1
-                  call dlf_get_gradient(glob%nvar,glob%xcoords,glob%e0corr(iimage), &
-                       glob%g0corr(:,:,iimage),iimage,kiter,&
+                 ! Macro step - calculate corrections to energy/gradient
+                 ! Get ESP eandg
+                 glob%macrocoords(:,:,iimage) = glob%xcoords
+                 kiter = 1
+                 call dlf_get_gradient(glob%nvar,glob%xcoords,glob%e0corr(iimage), &
+                     glob%g0corr(:,:,iimage),iimage,kiter,&
 #ifdef GAMESS
-                       core,&
+                     core,&
 #endif
-                       status,ierr2)
-
-
-                  ! e0corr = E0(full) - E0(esp fit)
-                  glob%e0corr(iimage) = glob%energy - glob%e0corr(iimage)
-                  ! g0corr = G0(full) - G0(esp fit)
-                  ! Eq 5 in HDLCOpt paper
-                  ! External program should ensure that g0corr for inner regions = 0
-                  glob%g0corr(:,:,iimage) = glob%xgradient - glob%g0corr(:,:,iimage)
+                     status, ierr2)
+                 ! e0corr = E0(full) - E0(esp fit)
+                 glob%e0corr(iimage) = glob%energy - glob%e0corr(iimage)
+                 ! g0corr = G0(full) - G0(esp fit)
+                 ! Eq 5 in HDLCOpt paper
+                 ! External program should ensure that g0corr for inner regions = 0
+                 glob%g0corr(:,:,iimage) = glob%xgradient - glob%g0corr(:,:,iimage)
                else if (glob%imicroiter == 2) then
                   ! Micro step - apply corrections
                   ! Eq 6 in HDLCOpt paper
@@ -635,33 +728,33 @@ subroutine dlf_run(ierr2 &
                        "Microiterative energy correction: ", svar
                   ! Eq 4 in HDLCOpt paper
                   glob%xgradient = glob%xgradient + glob%g0corr(:,:,iimage)
-
-
                else
-                  call dlf_fail("ESP fit only appropriate for microiterative opts")
+                 call dlf_fail("ESP fit only appropriate for microiterative opts")
                end if
-            end if
-
-         end if
-       else
-          ! Multiple state gradient calculation
-          if (printl >= 6) write(stdout, '(a)') "Calculating multistate energies"
-          call dlf_get_multistate_gradients(glob%nvar,glob%xcoords,glob%msenergy, &
+             end if
+             
+           end if
+         else
+           ! Multiple state gradient calculation
+           if (printl >= 6) write(stdout, '(a)') "Calculating multistate energies"
+           call dlf_get_multistate_gradients(glob%nvar,glob%xcoords,glob%msenergy, &
                glob%msgradient,glob%mscoupling,glob%needcoupling,iimage,status)
-          ! Make sure coupling is zero if it is required by algorithm but 
-          ! coupled_states was false
-          if (glob%needcoupling == 0) glob%mscoupling = 0.0d0
-          ! Form the objective function and gradient from the individual
-          ! state gradients
-          if (printl >= 4) then
+           ! Make sure coupling is zero if it is required by algorithm but 
+           ! coupled_states was false
+           if (glob%needcoupling == 0) glob%mscoupling = 0.0d0
+           ! Form the objective function and gradient from the individual
+           ! state gradients
+           if (printl >= 4) then
              write(stdout, '(a, f20.10)') "Lower state energy: ", glob%msenergy(1)
              write(stdout, '(a, f20.10)') "Upper state energy: ", glob%msenergy(2)
              write(stdout, '(a, f20.10)') "Energy difference:  ", &
-                  abs(glob%msenergy(1) - glob%msenergy(2))
-          endif
-          if (printl >= 6) write(stdout, '(a)') "Forming objective function"
-          call dlf_make_conint_gradient
-       endif
+                 abs(glob%msenergy(1) - glob%msenergy(2))
+           endif
+           if (printl >= 6) write(stdout, '(a)') "Forming objective function"
+           call dlf_make_conint_gradient
+         endif
+
+       end if ! if(glob%initialpathneb>0) then
 
        call clock_stop("EANDG")
 
@@ -686,15 +779,17 @@ subroutine dlf_run(ierr2 &
        end if
  
        if(iimage==1) then
-          !if(printl>=2) !write(stdout,'(1x,a,es16.9)') &
-          !     "Energy calculation finished, energy: ", &
-          !     glob%energy
+!          if(printl>=2) write(stdout,'(1x,a,es16.9)') &
+!               "Energy calculation finished, energy: ", &
+!               glob%energy
        else
-          !if(printl>=2) write(stdout,'(1x,a,i4,a,es16.9)') &
-          !     "Energy calculation of image ",iimage,&
-          !     " finished, energy: ",glob%energy
+!          if(printl>=2) write(stdout,'(1x,a,i4,a,es16.9)') &
+!               "Energy calculation of image ",iimage,&
+!               " finished, energy: ",glob%energy
        end if
        
+       if(tstore) call dlf_store_eandg 
+
     else ! .not. glob%dotask
        ! Multistate calculations should not reach this point
        if (glob%imultistate /= 0) then
@@ -702,8 +797,6 @@ subroutine dlf_run(ierr2 &
        end if
        glob%energy = 0.d0
        glob%xgradient = 0.d0
-
-
        status = 0       
     end if
 
@@ -798,6 +891,7 @@ subroutine dlf_run(ierr2 &
 
     ! exit if only the hessian and thermal analysis should be calculated
     if(glob%iopt == 11) then
+      call convergence_test(stat%ccycle,.false.,tconv)
       call dlf_thermal
       exit ! no optimisation cycles
     end if
@@ -805,6 +899,13 @@ subroutine dlf_run(ierr2 &
     ! exit if only the instanton rate should be calculated
     if(glob%iopt == 12) then
       call dlf_qts_rate()
+      exit ! no optimisation cycles
+    end if
+
+    ! VPT2 calculation - and nothing else
+    if(glob%iopt == 15) then
+      write(stdout,'(A)') "Starting VPT2 calculation..."
+      call dlf_vpt2_wrap()
       exit ! no optimisation cycles
     end if
 
@@ -817,10 +918,13 @@ subroutine dlf_run(ierr2 &
     ! write trajectory
     if(printf>=3 .and. glob%iam == 0) then
       if (glob%imicroiter < 2) then
-         ! Write out standard optimisation cycles
-         ! and macroiterative steps
-!         call write_xyz(30,glob%nat,glob%znuc,glob%xcoords)
-!         call write_xyz_active(31,glob%nat,glob%znuc,glob%spec,glob%xcoords)
+        ! Write out standard optimisation cycles
+        ! and macroiterative steps
+        if (.not.(glob%iopt==100.or.glob%iopt==101).or.&
+            (.not.gpr_opt%posIsResultOfRot)) then
+!          call write_xyz(30,glob%nat,glob%znuc,glob%xcoords)
+!          call write_xyz_active(31,glob%nat,glob%znuc,glob%spec,glob%xcoords)
+        end if
       end if
       if (glob%imicroiter > 0) then
          ! Full microiterative opt path including microiterative steps
@@ -831,7 +935,9 @@ subroutine dlf_run(ierr2 &
     ! write forcetrajectory
     if(printf>=4.and.glob%iam == 0) then
       if (glob%imicroiter < 2) then
-         call write_xyz_active(stdout,glob%nat,glob%znuc,glob%spec,glob%xgradient)
+        if (.not.(glob%iopt==100.or.glob%iopt==101)) then
+          call write_xyz(300,glob%nat,glob%znuc,-glob%xgradient)
+        end if
       end if
     end if
 
@@ -840,7 +946,6 @@ subroutine dlf_run(ierr2 &
        quick_molden%xyz_snapshots(:,:,quick_molden%iexport_snapshot) = glob%xcoords
        quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
     endif
-
 
     ! if trust-radius, test for step acceptance. 
     ! If rejected, do not form a new step and keep old energy.
@@ -896,7 +1001,7 @@ subroutine dlf_run(ierr2 &
               call clock_start("COORDS")
               call dlf_coords_itox(iimage)
               call clock_stop("COORDS")
-              exit 
+              exit
             endif
          else
             ! Test convergence of microiterations
@@ -936,7 +1041,8 @@ subroutine dlf_run(ierr2 &
     ! ==================================================================
     if(glob%taccepted .and. glob%imicroiter < 2) then
       call clock_start("FORMSTEP")
-      call dlf_formstep
+      call dlf_formstep(tconv)
+      if(tconv) exit ! only IRC algorithms deal with convergence
       call clock_stop("FORMSTEP")
     end if
 
@@ -1010,15 +1116,15 @@ subroutine dlf_run(ierr2 &
     if (glob%imicroiter == 1 .and. glob%taccepted) call dlf_microiter_enter
 
     ! ==================================================================
-    ! write(stdout,*)" @TRANSFORM INTERNAL COORDINATES TO CARTESIANS (COORDS ONLY)
+    ! TRANSFORM INTERNAL COORDINATES TO CARTESIANS (COORDS ONLY)
     ! ==================================================================
 
     call clock_start("COORDS")
     call dlf_coords_itox(iimage)
     call clock_stop("COORDS")
-    if (printl > 0) then
-      write(stdout,*)
-      write(stdout,*)"@ Finish Optimization for This Step"
+    if (printl > 0) then                                    
+      write(stdout,*)                                       
+      write(stdout,*)"@ Finish Optimization for This Step"  
     endif
 
     ! store new coordinates for next step in QUICK data structure
@@ -1031,23 +1137,22 @@ subroutine dlf_run(ierr2 &
 
   end do ! main simulation cycle
 
-
   ! Job finished, prepare for shutdown
-  if (glob%iopt /= 11 .and. glob%iopt /= 12 .and. glob%iopt /= 9 ) then
+  if(glob%iopt /= 15 .and. glob%iopt /= 11 .and. glob%iopt /=12 .and. glob%iopt /=9 ) then
     if(tconv) then
       if (printl > 0) then
          write(stdout,'("================ OPTIMIZED GEOMETRY INFORMATION ==============")')
       endif
     else
       if (printl > 0) then
-         write(stdout,*)                                                  
+         write(stdout,*)
          write(stdout,*) "WARNING: REACHED MAX OPT CYCLES. THE GEOMETRY IS NOT OPTIMIZED."
          write(stdout,*) "         PRINTING THE GEOMETRY FROM LAST STEP."
-         write(stdout,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")') 
-      end if                                                                
+         write(stdout,'("============= GEOMETRY INFORMATION (NOT OPTIMIZED) ===========")')
+      end if
     end if
 
-    if (printl > 0) then     
+    if (printl > 0) then
       write(stdout,*)
       write(stdout,'(" OPTIMIZED GEOMETRY IN CARTESIAN")')
       write(stdout,'(" ELEMENT",6x,"X",14x,"Y",14x,"Z")')
@@ -1056,11 +1161,11 @@ subroutine dlf_run(ierr2 &
       write(stdout,*)
       write(stdout,'(" FORCE")')
       write(stdout,'(" ELEMENT",6x,"X",14x,"Y",14x,"Z")')
-      call write_xyz(stdout,glob%nat,glob%znuc,-glob%xgradient)      
+      call write_xyz(stdout,glob%nat,glob%znuc,-glob%xgradient)
 
       if (glob%imultistate == 0) then
         call convergence_get("VALE", svar)
-        write(stdout,*) 
+        write(stdout,*)
         write(stdout,'(" MINIMIZED ENERGY = ",F16.9)') svar
       else
         write(stdout,*)
@@ -1072,7 +1177,7 @@ subroutine dlf_run(ierr2 &
              abs(glob%msenergy(1) - glob%msenergy(2))
       end if
       write(stdout,'("===============================================================")')
-      write(stdout,*) 
+      write(stdout,*)
       write(stdout,*)"@ Finish Optimization Job"
       write(stdout,*)
     end if
@@ -1082,7 +1187,7 @@ subroutine dlf_run(ierr2 &
   if(glob%icoord==190.and.tconv.and.glob%iopt/=12.and.glob%havehessian) then
     if(printl>=2) then
       write(stdout,'(a)') "Calculating the Rate. WARNING: the rate information below was obtained"
-      write(stdout,'(a)') " from updated Hessians. It is less accurate than a full rate calculation"
+      write(stdout,'(a)') " from updated Hessians. It is less accurate than a full rate calculation."
     end if
     call dlf_qts_rate()
   end if
@@ -1094,6 +1199,9 @@ subroutine dlf_run(ierr2 &
     if (glob%iopt == 10 .or. (glob%icoord >= 100 .and. glob%icoord < 300)) then
        close(32)
     end if
+    ! Only for IRC
+    if (glob%iopt/10==6) close(63)
+
     if (glob%imicroiter > 0) close(33)
   end if
   ! close force trajectory files
@@ -1149,7 +1257,8 @@ end subroutine dlf_run
 !!
 !! SYNOPSIS
 subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
-    tmpcoords,tmpcoords2,spec,nz,nframe,nmass,nweight,n_po_scaling)
+    tmpcoords,tmpcoords2,spec,nz,nframe,nmass,nweight,n_po_scaling,&
+    initPathName, pathNameLength)
 !! SOURCE
   use dlf_parameter_module, only: rk,ik
   use dlf_global, only: glob,stdout,printl
@@ -1167,6 +1276,8 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
   integer, intent(in) :: nmass
   integer, intent(in) :: nweight
   integer, intent(in) :: n_po_scaling
+  character(4096),intent(in) :: initPathName
+  integer, intent(in) :: pathNameLength
   integer :: nat,ivar
   real(rk):: svar
 ! **********************************************************************
@@ -1324,8 +1435,16 @@ subroutine dlf_allocate_glob(nvarin,nvarin2,nvarspec, &
     call allocate( glob%weight,1)
     call allocate( glob%mass,1)
 
-  !  glob%xcoords = reshape(tmpcoords,(/1,nvarin/))
+!    glob%xcoords = reshape(tmpcoords,(/1,nvarin/))
 
+  end if
+  if (glob%usePath) then
+print*,initPathName,pathNameLength
+    glob%gprmep_pathNameLength = pathNameLength
+    allocate(glob%gprmep_initPathName(pathNameLength))
+    glob%gprmep_initPathName(1:pathNameLength) = &
+        transfer(initPathName(1:pathNameLength), &
+        glob%gprmep_initPathName(1:pathNameLength))
   end if
   glob%toldenergy=.false.
   glob%tinit=.true.
@@ -1379,6 +1498,8 @@ subroutine dlf_deallocate_glob
   call deallocate(glob%macrocoords)
   call deallocate(glob%g0corr)
   call deallocate(glob%e0corr)
+  
+  if(allocated(glob%gprmep_initPathName)) deallocate(glob%gprmep_initPathName)
 
 end subroutine dlf_deallocate_glob
 !!****
@@ -1415,7 +1536,7 @@ subroutine dlf_fail(msg)
      call dlf_formstep_destroy
      call dlf_coords_destroy
      call dlf_deallocate_glob
-     call dlf_formstep_set_tsmode(1,-2,1.0d0)
+     call dlf_formstep_set_tsmode(1,-2,(/1.0d0/))
      call store_delete_all
   else
      call flush(stdout)
@@ -1443,7 +1564,7 @@ end subroutine dlf_fail
 !! SYNOPSIS
 subroutine dlf_report(trestarted)
 !! SOURCE
-  use dlf_global, only: glob,stdout,printl
+  use dlf_global, only: glob,stdout,printl,tstore
   use dlf_stat, only: stat
   implicit none
   logical ,intent(in) :: trestarted
@@ -1495,6 +1616,11 @@ subroutine dlf_report(trestarted)
           glob%state_j
   end if
 
+  if(glob%initialpathneb==1) then
+    write(stdout,'(a)') &
+        "No energy calculations, just initial optimisation of NEB path based on distances."
+  end if
+  
   ! ====================================================================
   ! Optimiser
   ! ====================================================================
@@ -1508,6 +1634,18 @@ subroutine dlf_report(trestarted)
     write(stdout,'(a)') "Optimisation algorithm: L-BFGS"
     write(stdout,2000) "Number of steps in L-BFGS memory", &
          glob%lbfgs_mem
+  end if
+  if(glob%iopt==5) write(stdout,'(a)') &
+      "Optimisation algorithm: RFO"
+  if(glob%iopt==100) then
+    write(stdout,'(a)') "Optimisation algorithm: GPR"
+  end if
+  if(glob%iopt==101) then
+    if (glob%usePath) then
+      write(stdout,'(a)') "Optimisation algorithm: GPRTS, init via given path"
+    else
+      write(stdout,'(a)') "Optimisation algorithm: GPRTS"
+    end if
   end if
   if(glob%iopt==9) then 
     write(stdout,'(a)') &
@@ -1529,18 +1667,32 @@ subroutine dlf_report(trestarted)
         "Initial Hessian read from file"
     write(stdout,2000) "Modes assumed to have zero vibrational frequency",glob%nzero
     write(stdout,1000) "Temperature",glob%temperature,"K"
+    if(glob%minwavenumber>0.D0) then
+      write(stdout,1000) "Minimum wave number",glob%minwavenumber,"cm^-1"
+    end if
   end if
   if(glob%iopt==12) then 
     write(stdout,'(a)') &
         "Optimisation algorithm: no optimisation, just calculate the"
     write(stdout,'(a)') "    instanton reaction rate"
-    write(stdout,2000) "Number of modes assumed to have zero vibrational frequency",glob%nzero
+    write(stdout,'(a)') "Number of modes assumed to have zero vibrational"
+    write(stdout,2000) "   frequency",glob%nzero
     if (glob%inithessian == 5) write(stdout,'(a)') &
         "Initial Hessian read from file"
+    if (glob%inithessian == 6) write(stdout,'(a)') &
+        "Rate calculation restarted from Hessians of individual images &
+        &read from files."
+    if (glob%inithessian == 7) write(stdout,'(a)') &
+        "Hessians read from files, energies re-calculated &
+        &in a dual-level approach."
   end if
   if(glob%iopt==13) then 
     write(stdout,'(a)') &
         "Calculation of the reaction rate (no tunnelling)"
+  end if
+  if(glob%iopt==15) then 
+    write(stdout,'(a)') &
+        "Calculation of vibrational perturbation theory (VPT2)"
   end if
   if(glob%iopt==20) write(stdout,'(a)') &
       "Optimisation algorithm: Newton-Raphson"
@@ -1549,8 +1701,15 @@ subroutine dlf_report(trestarted)
   if(glob%iopt==40) write(stdout,'(a)') &
       "Optimisation algorithm: Lagrange-Newton"
 
+  if(glob%eonly>0) then
+    write(stdout,'(a)') &
+      "Gradients and Hessians obtained by finite-difference of energies."
+    write(stdout,1000) "Finite difference elongation", &
+        glob%delta
+  end if
+
   ! Hessian options
-  if(glob%iopt==10.or.glob%iopt==20.or.glob%iopt==40) then
+  if(glob%iopt==5.or.glob%iopt==10.or.glob%iopt==20.or.glob%iopt==40) then
     if (glob%inithessian == 0) write(stdout,'(a)') &
          "Initial Hessian from external program"
     if (glob%inithessian == 1) write(stdout,'(a)') &
@@ -1561,7 +1720,7 @@ subroutine dlf_report(trestarted)
          "Initial Hessian by diagonal one-point finite difference"
     if (glob%inithessian == 4) write(stdout,'(a)') &
          "Initial Hessian is identity matrix"
-     if (glob%inithessian == 5) write(stdout,'(a)') &
+    if (glob%inithessian == 5) write(stdout,'(a)') &
          "Initial Hessian read from file"
     if(glob%update==0) write(stdout,'(a)') &
       "No Hessian updates"
@@ -1571,11 +1730,14 @@ subroutine dlf_report(trestarted)
       "Hessian update mechanism: Bofill"
     if(glob%update==3) write(stdout,'(a)') &
       "Hessian update mechanism: BFGS"
+    if(glob%update==4) write(stdout,'(a)') &
+      "Hessian update mechanism: GPR"
     if(glob%icoord/=190) &
         write(stdout,2000) "Maximum Number of Hessian updates before recalc.", &
         glob%maxupd
-    write(stdout,1000) "Finite difference for Hessian calculation", &
-         glob%delta
+    if(glob%eonly==0) &
+        write(stdout,1000) "Finite difference for Hessian calculation", &
+        glob%delta
     if(glob%soft>0.D0) then
       write(stdout,1000) "Eigenmodes below this value are considered soft", &
           glob%soft
@@ -1587,8 +1749,9 @@ subroutine dlf_report(trestarted)
      
   end if
   if(glob%iopt==11 .or. glob%iopt==12) then
-    write(stdout,1000) "Finite difference for Hessian calculation", &
-         glob%delta
+    if(glob%eonly==0) &
+        write(stdout,1000) "Finite difference for Hessian calculation", &
+        glob%delta
   end if
 
   ! Damped dynamics options
@@ -1647,12 +1810,33 @@ subroutine dlf_report(trestarted)
     end if
   end if
 
+  ! IRC algorithms
+  if(glob%iopt/10==6) then
+    if (glob%iopt==60) then
+       write(stdout,'(a)') "IRC search with steepest descent algorithm"
+    end if
+    if (glob%iopt==61) then
+       write(stdout,'(a)') "IRC search with Heuns's methods"
+    end if
+    if (glob%iopt==62) then
+       write(stdout,'(a)') "IRC search using Euler method within local quadratic approximation (LQA)"
+    end if
+    if (glob%iopt==63) then
+       write(stdout,'(a)') "IRC search using Hessian predictor-corrector"
+    end if
+    if (glob%iopt==64) then
+       write(stdout,'(a)') "IRC search using Hessian predictor-corrector"
+       write(stdout,'(a)') "with additional energy calculation on the corrector point"
+    end if
+    write(stdout,1000) "IRC stepsize and direction: ", glob%ircstep
+  end if
+
   write(stdout,*)
 
   ! ====================================================================
   ! Line search / trust radius
   ! ====================================================================
-  if (glob%iopt/10 /= 5) then ! we're not running a parallel optimisation 
+  if ((glob%iopt/10 /= 5).and.(glob%iopt/10 /= 6)) then ! we're not running a parallel optimisation 
      if(glob%iline==0) write(stdout,'(a)') &
          "Step length: simple scaled"
      if(glob%iline==1) write(stdout,'(a)') &
@@ -1684,8 +1868,19 @@ subroutine dlf_report(trestarted)
       "Coordinate system: Hybrid delocalised internal coordinates (HDLC)"
   if(mod(glob%icoord,10)==2) write(stdout,'(a)') &
       "Coordinate system: Hybrid delocalised total connection scheme (HDLC-TC)"
-  if(mod(glob%icoord,10)==3) write(stdout,'(a)') &
-      "Coordinate system: Delocalised internal coordinates (DLC)"
+  if(mod(glob%icoord,10)==3) then 
+    if(glob%iopt == 100) then
+      write(stdout,'(a)') &
+       "Coordinate system: Delocalised internal coordinates (DLC)"  
+      if(glob%gpr_internal == 1) write(stdout,'(a)') &
+       "GPR internal method: 1" 
+      if(glob%gpr_internal == 2) write(stdout,'(a)') &
+       "GPR internal method: 2" 
+    else
+      write(stdout,'(a)') &
+       "Coordinate system: Delocalised internal coordinates (DLC)"
+    endif
+  endif
   if(mod(glob%icoord,10)==4) write(stdout,'(a)') &
       "Coordinate system: Delocalised total connection scheme (DLC-TC)"
 
@@ -1747,7 +1942,14 @@ subroutine dlf_report(trestarted)
         "Dimer method, rotation by line search without extrapolation"
     if(glob%icoord/10==22) write(stdout,'(a)') &
         "Dimer method, rotation by line search with extrapolation"
-    write(stdout,1000) "Dimer distance (mid- to endpoint)",glob%delta
+    ! LANCZOS
+    if(glob%icoord/10==23) then
+      write(stdout,'(a)') &
+        "Minimum mode following, rotation by Lanczos algorithm"
+      write(stdout,1000) "Delta for Hessian approximation",glob%delta
+    else
+      write(stdout,1000) "Dimer distance (mid- to endpoint)",glob%delta    
+    end if
     write(stdout,2000) "Maximum number of dimer rotations",glob%maxrot
     write(stdout,1000) "Tolerance in rotation",glob%tolrot,"degrees"
     if(.not.glob%tcoords2) write(stdout,'(a)') &
@@ -1781,15 +1983,18 @@ subroutine dlf_report(trestarted)
   end if
   ! input geometries are coords and coords2
   write(stdout,2000) "Number of input geometries",ia3(3)+1
-  if(glob%tcoords2.and.abs(glob%distort)>0.D0) then
-    write(stdout,1000) "Distorting start coordinates along coords2 by",&
-        glob%distort
+  if(glob%tcoords2.and.abs(glob%distort)>0.D0.and.(glob%iopt/10/=6)) then
+    write(stdout,1000) "Distorting start coordinates along coords2 by", glob%distort
   end if
 
   write(stdout,2000) "Variables to be optimised",glob%nivar
   if (glob%imicroiter /= 0) then
      write(stdout, 2000) "Variables in inner (macroiterative) region",glob%nicore
   end if
+  ! IRC
+  if (glob%iopt/10==6) then
+    write(stdout,2000) "Minimal number of steps in the IRC", glob%minircsteps
+  end if 
   if(glob%dump>0) then
     write(stdout,2000) "Restart information is written every", &
         glob%dump,"steps"
@@ -1800,6 +2005,10 @@ subroutine dlf_report(trestarted)
     write(stdout,'(a)') "This run has been restarted from files."
   else
     write(stdout,'(a)') "This run has not been restarted."
+  end if
+
+  if(tstore) then
+    write(stdout,'(a)') "Gradient and Hessian data are stored in the directory store_pes."
   end if
 
   if(stat%ccycle > 0) then
@@ -1854,7 +2063,7 @@ subroutine dlf_printheader
   call dlf_svnversion(svn_v)
   if(svn_v=="") then
     ! svn not available, use the revision number of this file
-    svn_v="$Revision$"
+    svn_v="$Revision: 341 $"
     svn_v= svn_v(11:)
   end if
 
@@ -1888,9 +2097,11 @@ subroutine dlf_printheader
       "**                                                                   **" 
   write(stdout,'(a)') &
       "**               Copyright:  STFC Daresbury Laboratory               **"      
+  write(stdout,'(a)') &
+      "**                  and the University of Stuttgart                  **"      
 !                    g  f  e  d  c  b  a  C  a  b  c  d  e  f  g
 !  write(stdout,'(a)') &
-!      "**                          $Revision$                         **"      
+!      "**                          $Revision: 341 $                         **"      
   write(stdout,'("**",27x,"Revision: ",a30,"**")') svn_v
   write(stdout,'(a)') &
       "**                                                                   **"      
@@ -1912,13 +2123,14 @@ end subroutine dlf_printheader
 subroutine dlf_default_init(nspec,spec)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: glob,printl,printf
+  use dlf_global, only: glob,printl,printf,tstore
   implicit none
   integer,intent(in) :: nspec
   integer,intent(out):: spec(nspec)
 ! **********************************************************************
   printl=-1
   printf=-1
+  tstore=.false.
   glob%maxcycle=-1
   glob%maxene=-1
   glob%tolerance=-1.D0
@@ -1974,10 +2186,12 @@ subroutine dlf_default_init(nspec,spec)
   glob%ln_t2 = 1.0d0
 
   glob%distort = 0.D0 ! default given here
+  glob%eonly = 0
 
   glob%task = -1
   
   glob%temperature = -1.D0
+  glob%minwavenumber = 2.D5
 
   glob%po_pop_size= -1
   glob%po_radius_base= -1.0D0
@@ -1998,10 +2212,31 @@ subroutine dlf_default_init(nspec,spec)
   glob%nzero=-1
 
   glob%qtsflag=-1
-
+  glob%irot=0
+  
   glob%maxmicrocycle = -1
   glob%micro_esp_fit = .false.
 
+  glob%initialpathneb=0
+
+  glob%ircstep=0.D0
+  glob%minircsteps=0
+  
+  glob%vpt2_resonance_treatment=-1
+  glob%vpt2_resonance_criterion=-1
+  glob%vpt2_res_tol_deltae=-1._rk
+  glob%vpt2_res_tol_deltae_hard=-1._rk
+  glob%vpt2_res_tol_martin=-1._rk
+  glob%vpt2_res_tol_isaacson=-1._rk
+  glob%vpt2_hdcpt2_alpha=-1._rk
+  glob%vpt2_hdcpt2_beta=-1._rk
+  glob%vpt2_deriv_deltaq=-1._rk
+  glob%vpt2_asym_tol=-1._rk
+  glob%vpt2_Tmin=-1._rk
+  glob%vpt2_Tmax=-1._rk
+  glob%vpt2_nT=-1
+  glob%vpt2_dq_factor_4hess=-1._rk
+  
 end subroutine dlf_default_init
 !!****
 
@@ -2020,11 +2255,59 @@ subroutine dlf_default_set(nvarin)
   use dlf_global, only: glob,printl,printf,stdout
   implicit none
   integer,   intent(in)  :: nvarin
+  integer :: printf_orig
 ! **********************************************************************
   if(printl < 0) printl=2
+  printf_orig=printf
   if(printf<0) printf=2
-  if(glob%maxcycle < 0) glob%maxcycle=100
   if(glob%maxene < 0) glob%maxene=100000
+
+  if(glob%initialpathneb==1) then
+    ! initial path optimized based on distances
+    !if(glob%update<0) glob%update=0
+    if(glob%iopt<0) glob%iopt=3
+    if(glob%tolerance<0.D0) glob%tolerance=3.D-4
+    if(glob%nebk<0) glob%nebk=1.D-1
+    if (glob%inithessian < 0 ) glob%inithessian=0
+    if(glob%neb_climb_test < 0.D0) glob%neb_climb_test = 0.D0
+    if(glob%neb_freeze_test < 0.D0) glob%neb_freeze_test = 0.0D0
+  end if
+
+  ! IRC-Parameters
+  if (glob%iopt/10==6) then
+    glob%massweight=.true. 
+    if(glob%maxcycle < 0) glob%maxcycle=10000
+    if(glob%scalestep < 0.D0) glob%scalestep=1.d0
+    if (abs(glob%ircstep) < 1.d-20) glob%ircstep=0.04D0 ! default
+    glob%maxstep=2.D0*abs(glob%ircstep) ! it was previously: glob%delta
+    glob%distort=glob%ircstep
+    if(glob%tolerance < 0.D0) glob%tolerance=1.D-10
+    if (abs(glob%ircstep) < 1.d-5) call dlf_fail ("IRC stepsize is too small!")
+    if(glob%maxupd < 0) glob%maxupd=100000
+    if(printf_orig == 0 .and. glob%iam == 0) printf=4 ! IRC without printout does not make much sense
+  end if
+
+  ! Just for SD-IRC !
+  if (glob%iopt==60) glob%iline=0 
+
+  ! For the different initial Hessians in IRC methods:
+  if (glob%iopt==62.or.glob%iopt==63.or.glob%iopt==64) then
+    if(glob%inithessian==-1) glob%inithessian=5
+    glob%irchessian=glob%inithessian
+    glob%inithessian=5
+    if(glob%irchessian==0) glob%inithessian=glob%irchessian
+    if(glob%irchessian==4) then 
+      glob%maxupd=100000
+      glob%inithessian=glob%irchessian
+    end if
+  end if
+  ! This is to make sure(er) that the IRC paths of 63 and 64 do not deviate 
+  if (glob%iopt==64) then
+    glob%maxupd=2*glob%maxupd
+    glob%minircsteps=2*glob%minircsteps
+  end if
+
+  if(glob%maxcycle < 0) glob%maxcycle=100
 
   if(glob%tolerance < 0.D0) glob%tolerance=4.5D-4
   if(glob%tolerance_e < 0.D0) glob%tolerance_e= glob%tolerance/ 450.D0
@@ -2058,7 +2341,7 @@ subroutine dlf_default_set(nvarin)
       glob%delta=0.4D0
     end if
   end if
-  if(glob%inithessian == -1) glob%inithessian = 0
+  if(glob%inithessian == -1.and.glob%iopt/=62.and.glob%iopt/=63.and.glob%iopt/=64) glob%inithessian = 0
   if(glob%carthessian==-1) glob%carthessian=0
   if(glob%minstep < 0.D0) glob%minstep = 1.D-5
   if(glob%maxdump < 0 ) glob%maxdump=100000
@@ -2122,7 +2405,8 @@ subroutine dlf_default_set(nvarin)
 
   if (glob%task < 0) glob%task = 0
 
-  if(glob%temperature < 0.D0) glob%temperature=300.D0
+  if(glob%temperature < 0.D0) glob%temperature=298.15D0 ! standard temperature
+  if(glob%minwavenumber > 1.D5) glob%minwavenumber=100.D0 
 
   if (glob%po_pop_size < 1) glob%po_pop_size = 25
   if (glob%po_radius_base <= 0.0D0) glob%po_radius_base = 1.0D0
@@ -2139,7 +2423,7 @@ subroutine dlf_default_set(nvarin)
   if (glob%po_nsave < 0) glob%po_nsave = 10
 
   if (glob%ntasks <= 0) glob%ntasks = 1
-
+  
   ! Change any parameters that are incompatible with parallel optimisation
   if (glob%iopt/10==5) then
      !if (glob%icoord/=0) then ! change this in future!!!
@@ -2154,14 +2438,667 @@ subroutine dlf_default_set(nvarin)
      end if
   end if
 
-  ! In principle could calculate the correct value for nzero
-  ! based on molecular geometry and frozen atom information.
-  ! For now safest to let the user switch it on manually.
-  if(glob%nzero<0) glob%nzero = 0
+  if(glob%nzero<0) then
+    if(allocated(glob%spec)) then
+      if(minval(glob%spec)<0) then
+        glob%nzero=0
+      else
+        glob%nzero=6
+      end if
+    else
+      glob%nzero=6
+    end if
+  end if
 
   if(glob%qtsflag==-1) glob%qtsflag=0
 
   if(glob%maxmicrocycle < 0) glob%maxmicrocycle = 100
-
+  
+  if(glob%vpt2_resonance_treatment < 0)     glob%vpt2_resonance_treatment=1
+  if(glob%vpt2_resonance_criterion < 0)     glob%vpt2_resonance_criterion=1
+  if(glob%vpt2_res_tol_deltae < 0._rk)      glob%vpt2_res_tol_deltae=100._rk
+  if(glob%vpt2_res_tol_deltae_hard < 0._rk) glob%vpt2_res_tol_deltae_hard=200._rk
+  if(glob%vpt2_res_tol_martin < 0._rk)      glob%vpt2_res_tol_martin=1._rk
+  if(glob%vpt2_res_tol_isaacson < 0._rk)    glob%vpt2_res_tol_isaacson=0.4_rk
+  if(glob%vpt2_hdcpt2_alpha < 0._rk)        glob%vpt2_hdcpt2_alpha=1.0_rk
+  if(glob%vpt2_hdcpt2_beta < 0._rk)         glob%vpt2_hdcpt2_beta =5.0e5_rk
+  if(glob%vpt2_deriv_deltaq < 0._rk)        glob%vpt2_deriv_deltaq=0.5_rk
+  if(glob%vpt2_asym_tol < 0._rk)            glob%vpt2_asym_tol=1.e-5_rk
+  if(glob%vpt2_Tmin < 0._rk)                glob%vpt2_Tmin=200._rk
+  if(glob%vpt2_Tmax < 0._rk)                glob%vpt2_Tmax=600._rk
+  if(glob%vpt2_nT < 0)                      glob%vpt2_nT=5
+  if(glob%vpt2_dq_factor_4hess < 0._rk)     glob%vpt2_dq_factor_4hess=10._rk
+  
 end subroutine dlf_default_set
 !!****
+
+! gradient from finite-difference of energies
+! two-point formula (second order)
+! TODO: stat%sene and stat%pene are not correct at present
+!       parallelize...
+subroutine dlf_fd_gradient2(nvar,coords_in,energy,xgradient,iimage,kiter,status)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,printl,stdout
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  integer, intent(in) :: nvar
+  real(rk),intent(in) :: coords_in(nvar)
+  real(rk),intent(out):: energy
+  real(rk),intent(out):: xgradient(nvar)
+  integer ,intent(in) :: iimage,kiter
+  integer ,intent(out):: status
+  integer  :: ivar,nzero,iat
+  real(rk) :: coords(nvar),gradcomp,svar
+  real(rk) :: coordsmw(nvar)
+  real(rk) :: modes(nvar,nvar)
+  integer :: icount,ncount
+  logical :: tok
+  
+  energy=0.D0
+  xgradient=0.D0
+  status=1 ! 1=failed
+
+  !if(printl>=4) write(stdout,"('Calculating FD-gradient from energies.')")
+
+  coordsmw=coords_in
+  ! elongations have to be done in mass-weighted coordinates
+  ! transform to mw-coordinates:
+  do iat=1,nvar/3
+    coordsmw(iat*3-2:iat*3)=coords_in(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+
+  if(glob%eonly==3) then
+    ! full fd
+    modes=0.D0
+    do ivar=1,nvar
+      modes(ivar,ivar)=1.D0
+    end do
+    nzero=0
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (2nd order, Cartesians).')")
+  else if (glob%eonly==5) then
+
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (2nd order, normal modes+rotation).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    nzero=3
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  else    
+
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (2nd order, normal modes).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  end if
+
+!!$  print*,"modes"
+!!$  do ivar=1,nvar
+!!$    write(*,'(i4,12f8.5)') ivar,modes(:,ivar)
+!!$  end do
+
+  icount=nvar-nzero ! number of non-zero modes
+  ncount=1+2*icount
+  icount=1
+
+  if(printl>=6) write(stdout,"('FD-gradient, energy calculation',i5,' of',i5)") &
+      icount,ncount ; icount=icount+1
+  call dlf_get_energy(nvar,coords_in,energy,iimage,kiter,status)
+  if(status/=0) return
+!!$  print*,"Energy unperturbed",energy
+
+  do ivar=nzero+1,nvar
+!  do ivar=1,nvar
+
+    gradcomp=0.D0
+
+    coords=coordsmw+glob%delta*modes(:,ivar)
+    do iat=1,nvar/3
+      coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+    end do
+    if(printl>=6) write(stdout,"('FD-gradient, energy calculation',i5,' of',i5)") &
+        icount,ncount ; icount=icount+1
+    call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+    if(status/=0) return
+    if(printl>=6) write(stdout,"('Energy difference to midpoint:        '&
+        &,es10.2,' Hartree')") svar-energy
+    gradcomp=gradcomp+svar
+
+    coords=coordsmw-glob%delta*modes(:,ivar)
+    do iat=1,nvar/3
+      coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+    end do
+    if(printl>=6) write(stdout,"('FD-gradient, energy calculation',i5,' of',i5)") &
+        icount,ncount ; icount=icount+1
+    call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+    if(status/=0) return
+    if(printl>=6) write(stdout,"('Energy difference to midpoint:        '&
+        &,es10.2,' Hartree')") svar-energy
+    gradcomp=gradcomp-svar
+
+    gradcomp=gradcomp/glob%delta/2.D0
+    !print*,"mode, grad",ivar,gradcomp
+
+    xgradient=xgradient+gradcomp*modes(:,ivar)
+  end do
+
+  ! transform gradient back to non-mass-weighted
+  do iat=1,nvar/3
+    xgradient(iat*3-2:iat*3)=xgradient(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+  
+  status=0
+
+  !print*,"gradient",xgradient
+  !call dlf_fail("grad")
+
+end subroutine dlf_fd_gradient2
+
+! gradient from finite-difference of energies
+! four-point formula (4th order)
+! TODO: stat%sene and stat%pene are not correct at present
+subroutine dlf_fd_gradient4(nvar,coords_in,energy,xgradient,iimage,kiter,status)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,printl,stdout
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  integer, intent(in) :: nvar
+  real(rk),intent(in) :: coords_in(nvar)
+  real(rk),intent(out):: energy
+  real(rk),intent(out):: xgradient(nvar)
+  integer ,intent(in) :: iimage,kiter
+  integer ,intent(out):: status
+  integer  :: ivar,nzero,iat
+  real(rk) :: coords(nvar),gradcomp,svar
+  real(rk) :: coordsmw(nvar)
+  real(rk) :: modes(nvar,nvar)
+  integer :: icount,ncount,divar
+  logical :: tok
+  real(rk) :: dfac(4),emov(4)
+  
+  energy=0.D0
+  xgradient=0.D0
+  status=1 ! 1=failed
+
+  !if(printl>=4) write(stdout,"('Calculating FD-gradient from energies.')")
+
+  coordsmw=coords_in
+  ! elongations have to be done in mass-weighted coordinates
+  ! transform to mw-coordinates:
+  do iat=1,nvar/3
+    coordsmw(iat*3-2:iat*3)=coords_in(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+
+  if(glob%eonly==4) then
+    ! full fd
+    modes=0.D0
+    do ivar=1,nvar
+      modes(ivar,ivar)=1.D0
+    end do
+    nzero=0
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (4th order, Cartesians).')")
+  else if (glob%eonly==6) then
+
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (4th order, normal modes+rotation).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    nzero=3
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  else    
+
+    if(printl>=4) write(stdout,"('Calculating FD-gradient from energies (4th order, normal modes).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  end if
+
+!!$  print*,"modes"
+!!$  do ivar=1,nvar
+!!$    write(*,'(i4,12f8.5)') ivar,modes(:,ivar)
+!!$  end do
+
+  ! coefficients of delta
+  dfac(1)=-2.D0
+  dfac(2)=-1.D0
+  dfac(3)= 1.D0
+  dfac(4)= 2.D0
+
+  
+  icount=nvar-nzero ! number of non-zero modes
+  ncount=1+4*icount
+  icount=1
+
+  if(printl>=6) write(stdout,"('FD-gradient, energy calculation',i5,' of',i5)") &
+      icount,ncount ; icount=icount+1
+  call dlf_get_energy(nvar,coords_in,energy,iimage,kiter,status)
+  if(status/=0) return
+!!$  print*,"Energy unperturbed",energy
+
+  do ivar=nzero+1,nvar
+!  do ivar=1,nvar
+
+    gradcomp=0.D0
+
+    do divar=1,4
+       coords=coordsmw + dfac(divar)*glob%delta*modes(:,ivar)
+       do iat=1,nvar/3
+          coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+       end do
+       if(printl>=6) write(stdout,"('FD-gradient, energy calculation',i5,' of',i5)") &
+            icount,ncount ; icount=icount+1
+       call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+       if(status/=0) return
+       emov(divar)=svar
+    end do
+    
+    xgradient=xgradient+modes(:,ivar)*&
+        (emov(1)/4.D0-2.D0*emov(2)+2.D0*emov(3)-emov(4)/4.D0)&
+        /3.D0/glob%delta
+
+  end do
+
+  ! transform gradient back to non-mass-weighted
+  do iat=1,nvar/3
+    xgradient(iat*3-2:iat*3)=xgradient(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+  
+  status=0
+
+end subroutine dlf_fd_gradient4
+
+! cartesian Hessian from finite-difference of energies
+! 2nd order formula (two energies per off-diagonal element)
+! Elongations along normal modes or cartesians, depending on eonly.
+!
+! This routine also sets glob%energy and glob%xgradient, in the hope that this
+! does not mess up anything else. These quantities are needed in dlf_store_egh.
+!
+! TODO: this routine should be parallelized!
+! TODO: stat%sene and stat%pene are not correct at present
+!
+subroutine dlf_fd_energy_hessian2(nvar,coords_in,hessian,status)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,printl,stdout
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  integer, intent(in) :: nvar
+  real(rk),intent(in) :: coords_in(nvar)
+  real(rk),intent(out):: hessian(nvar,nvar)
+  integer ,intent(out):: status
+  integer  :: ivar,jvar,nzero,iat,jat,kiter,iimage
+  real(rk) :: coords(nvar),hesscomp,svar,energy
+  real(rk) :: coordsmw(nvar)
+  real(rk) :: modes(nvar,nvar)
+  real(rk) :: eplus(nvar),eminus(nvar),xgradient(nvar)
+  real(rk), allocatable :: tmpmat(:,:)
+  integer :: icount,ncount
+  logical :: tok
+  character(1000) :: line
+  
+  hessian=0.D0
+  status=1 ! 1=failed
+  iimage=1
+  kiter=-1
+
+  coordsmw=coords_in
+  ! elongations have to be done in mass-weighted coordinates
+  ! transform to mw-coordinates:
+  do iat=1,nvar/3
+    coordsmw(iat*3-2:iat*3)=coords_in(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+
+  if(glob%eonly==3) then
+    ! full fd
+    modes=0.D0
+    do ivar=1,nvar
+      modes(ivar,ivar)=1.D0
+    end do
+    nzero=0
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (2nd order, Cartesians).')")
+  else if (glob%eonly==5) then
+
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (2nd order, normal modes+rotation).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    nzero=3
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  else    
+
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (2nd order, normal modes).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  end if
+
+!!$  print*,"modes"
+!!$  do ivar=1,nvar
+!!$    write(*,'(i4,12f8.5)') ivar,modes(:,ivar)
+!!$  end do
+
+!!$  !check orthogonality of modes:
+!!$  print*,"Overlap between modes" ! was found OK
+!!$  do ivar=1,nvar
+!!$    line=""
+!!$    do jvar=1,10
+!!$      svar=sum(modes(:,ivar)*modes(:,jvar))
+!!$      write(line,'(a,f12.8)') trim(line),svar
+!!$    end do
+!!$    write(*,'(i3,a)') ivar,trim(line)
+!!$  end do
+!!$  call dlf_fail("tmp")
+
+  icount=nvar-nzero ! number of non-zero modes
+  ncount=1+icount+icount**2 ! number of required energy calculations
+  icount=1
+
+  if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+      icount,ncount ; icount=icount+1
+  call dlf_get_energy(nvar,coords_in,energy,iimage,kiter,status)
+  if(status/=0) return
+!!$  print*,"Energy unperturbed",energy
+  
+  eplus=0.D0
+  eminus=0.D0
+
+  ! first the diagonal elements
+  do ivar=nzero+1,nvar
+
+    hesscomp=0.D0
+
+    coords=coordsmw + glob%delta*modes(:,ivar)
+    do iat=1,nvar/3
+      coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+    end do
+      if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+          icount,ncount ; icount=icount+1
+    call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+    if(status/=0) return
+    hesscomp=hesscomp + svar - 2.D0*energy ! add/use this component and
+                                          ! subtract midpoint
+    eplus(ivar)=svar
+
+    coords=coordsmw - glob%delta*modes(:,ivar)
+    do iat=1,nvar/3
+      coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+    end do
+      if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+          icount,ncount ; icount=icount+1
+    call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+    if(status/=0) return
+    hesscomp=hesscomp + svar 
+    eminus(ivar)=svar
+
+    hessian(ivar,ivar)=hesscomp / glob%delta**2 
+  end do
+
+  ! now we can set the gradient
+  xgradient=0.D0
+  !print*,"shape(glob%xgradient)",shape(glob%xgradient)
+  do ivar=nzero+1,nvar
+    xgradient=xgradient+modes(:,ivar)*(eplus(ivar)-eminus(ivar))/2.D0/glob%delta
+  end do
+    ! transform gradient back to non-mass-weighted
+  do iat=1,nvar/3
+    xgradient(iat*3-2:iat*3)=xgradient(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+  glob%xgradient=reshape(xgradient,(/3,nvar/3/))
+
+  do ivar=nzero+1,nvar
+    ! now the off-diagonal elements
+    do jvar=ivar+1,nvar
+
+      hesscomp=0.D0
+      
+      coords=coordsmw + glob%delta*modes(:,ivar) + glob%delta*modes(:,jvar)
+      do iat=1,nvar/3
+        coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+      end do
+      if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+          icount,ncount ; icount=icount+1
+      call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+      if(status/=0) return
+      hesscomp=hesscomp + svar
+
+      coords=coordsmw - glob%delta*modes(:,ivar) - glob%delta*modes(:,jvar)
+      do iat=1,nvar/3
+        coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+      end do
+      if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+          icount,ncount ; icount=icount+1
+      call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+      if(status/=0) return
+
+      ! collect all, see Wikipedia page Finite_difference
+      hesscomp=hesscomp + svar - eminus(ivar)-eminus(jvar)-eplus(ivar)-eplus(jvar)+2.D0*energy
+
+      hessian(ivar,jvar)=hesscomp / glob%delta**2 / 2.D0
+      hessian(jvar,ivar)=hessian(ivar,jvar)
+
+      !print*,"mode, hess",ivar,hesscomp
+
+    end do
+
+  end do
+
+  ! now we have the Hessian in the coordinate system of
+  ! "modes". Transform back to mass-weighted coordinates.
+  call allocate(tmpmat,nvar-nzero,nvar)
+  tmpmat=matmul(hessian(nzero+1:nvar,nzero+1:nvar),transpose(modes(1:nvar,nzero+1:nvar)))
+  hessian=matmul(modes(:,nzero+1:),tmpmat)
+  call deallocate(tmpmat)
+
+  ! transform hessian back to non-mass-weighted
+  do iat=1,nvar/3
+    do jat=1,nvar/3
+      hessian(iat*3-2:iat*3,jat*3-2:jat*3)=hessian(iat*3-2:iat*3,jat*3-2:jat*3) * &
+          sqrt(glob%mass(iat)*glob%mass(jat))
+    end do
+  end do
+
+  glob%energy=energy
+  status=0
+
+  !call dlf_fail("dlf_fd_energy_hessian")
+
+end subroutine dlf_fd_energy_hessian2
+
+! cartesian Hessian from finite-difference of energies
+! 4th order formula (four energies per off-diagonal element)
+! Elongations along normal modes or cartesians, depending on the setting of eonly
+!
+! This routine also sets glob%energy and glob%xgradient, in the hope that this
+! does not mess up anything else. These quantities are needed in dlf_store_egh.
+!
+! TODO: this routine should be parallelized!
+! TODO: stat%sene and stat%pene are not correct at present
+!
+subroutine dlf_fd_energy_hessian4(nvar,coords_in,hessian,status)
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob,printl,stdout
+  use dlf_allocate, only: allocate,deallocate
+  implicit none
+  integer, intent(in) :: nvar
+  real(rk),intent(in) :: coords_in(nvar)
+  real(rk),intent(out):: hessian(nvar,nvar)
+  integer ,intent(out):: status
+  integer  :: ivar,jvar,nzero,iat,jat,kiter,iimage
+  real(rk) :: coords(nvar),hesscomp,svar
+  real(rk) :: coordsmw(nvar)
+  real(rk) :: modes(nvar,nvar)
+  real(rk) :: xgradient(nvar)
+  real(rk), allocatable :: tmpmat(:,:)
+  integer :: icount,ncount,divar
+  logical :: tok
+  real(rk) :: coeff(4),dfac(4)
+  real(rk) :: ecenter,emov(4,nvar),eoff(4) 
+
+  hessian=0.D0
+  status=1 ! 1=failed
+  iimage=1
+  kiter=-1
+
+  coordsmw=coords_in
+  ! elongations have to be done in mass-weighted coordinates
+  ! transform to mw-coordinates:
+  do iat=1,nvar/3
+    coordsmw(iat*3-2:iat*3)=coords_in(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+
+  if(glob%eonly==4) then
+    ! full fd
+    modes=0.D0
+    do ivar=1,nvar
+      modes(ivar,ivar)=1.D0
+    end do
+    nzero=0
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (4th order, Cartesians).')")
+  else if(glob%eonly==6) then
+
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (4th order, normal modes+rotation).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    nzero=3 ! calculate distortions along rotational modes.
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  else    
+
+    if(printl>=4) write(stdout,"('Calculating FD-Hessian from energies (4th order, normal modes).')")
+    ! calculate modes which do not relate to translation and rotation,
+    ! modes are mass-weighted
+    call dlf_vibmodes(nvar/3,glob%mass,coords_in,nzero,modes,tok)
+    if(.not.tok) then
+      ! one could fall back to full fd
+      call dlf_fail("vibmodes failed, do not use EONLY")
+    end if
+  end if
+
+!!$  print*,"modes"
+!!$  do ivar=1,nvar
+!!$    write(*,'(i4,12f8.5)') ivar,modes(:,ivar)
+!!$  end do
+
+  icount=nvar-nzero ! number of non-zero modes
+  ncount=1+2*icount*(icount+1) ! number of required energy calculations
+  icount=1
+
+  if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+      icount,ncount ; icount=icount+1
+  call dlf_get_energy(nvar,coords_in,ecenter,iimage,kiter,status)
+  if(status/=0) return
+!!$  print*,"Energy unperturbed",energy
+  
+   ! coefficients of delta
+  dfac(1)=-2.D0
+  dfac(2)=-1.D0
+  dfac(3)= 1.D0
+  dfac(4)= 2.D0
+
+  ! coefficent of the function value
+  coeff(1)=-1.D0/12.D0
+  coeff(2)=4.D0/3.D0
+  coeff(3)=4.D0/3.D0
+  coeff(4)=-1.D0/12.D0
+
+  hessian=0.D0
+
+  ! first the diagonal elements
+  do ivar=nzero+1,nvar
+
+    do divar=1,4
+      coords=coordsmw + dfac(divar)*glob%delta*modes(:,ivar)
+      do iat=1,nvar/3
+        coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+      end do
+      if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+          icount,ncount ; icount=icount+1
+      call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+      if(status/=0) return
+      emov(divar,ivar)=svar
+    end do
+    hesscomp=sum(coeff(:)*emov(:,ivar))-2.5D0*ecenter
+    hessian(ivar,ivar)=hesscomp / glob%delta**2 
+  end do
+
+  ! now we can set the gradient
+  xgradient=0.D0
+  do ivar=nzero+1,nvar
+    xgradient=xgradient+modes(:,ivar)*&
+        (emov(1,ivar)/4.D0-2.D0*emov(2,ivar)+2.D0*emov(3,ivar)-emov(4,ivar)/4.D0)&
+        /3.D0/glob%delta
+  end do
+  ! transform gradient back to non-mass-weighted
+  do iat=1,nvar/3
+    xgradient(iat*3-2:iat*3)=xgradient(iat*3-2:iat*3)*sqrt(glob%mass(iat))
+  end do
+  glob%xgradient=reshape(xgradient,(/3,nvar/3/))
+
+  do ivar=nzero+1,nvar
+    ! now the off-diagonal elements
+    do jvar=ivar+1,nvar
+
+      do divar=1,4
+        coords=coordsmw + dfac(divar)*glob%delta*modes(:,ivar) &
+            + dfac(divar)*glob%delta*modes(:,jvar)
+        do iat=1,nvar/3
+          coords(iat*3-2:iat*3)=coords(iat*3-2:iat*3)/sqrt(glob%mass(iat))
+        end do
+        if(printl>=4) write(stdout,"('FD-Hessian, energy calculation',i5,' of',i5)") &
+            icount,ncount ; icount=icount+1
+        call dlf_get_energy(nvar,coords,svar,iimage,kiter,status)
+        if(status/=0) return
+        eoff(divar)=svar
+      end do
+
+      hesscomp=sum(coeff(:)*eoff(:))-2.5D0*ecenter
+      hesscomp=hesscomp*0.5D0/glob%delta**2-(hessian(ivar,ivar)+hessian(jvar,jvar))*0.5D0
+      hessian(ivar,jvar)=hesscomp
+      hessian(jvar,ivar)=hesscomp
+
+    end do
+    
+  end do
+
+  ! now we have the Hessian in the coordinate system of
+  ! "modes". Transform back to mass-weighted coordinates.
+  call allocate(tmpmat,nvar-nzero,nvar)
+  tmpmat=matmul(hessian(nzero+1:nvar,nzero+1:nvar),transpose(modes(1:nvar,nzero+1:nvar)))
+  hessian=matmul(modes(:,nzero+1:),tmpmat)
+  call deallocate(tmpmat)
+
+  ! transform hessian back to non-mass-weighted
+  do iat=1,nvar/3
+    do jat=1,nvar/3
+      hessian(iat*3-2:iat*3,jat*3-2:jat*3)=hessian(iat*3-2:iat*3,jat*3-2:jat*3) * &
+          sqrt(glob%mass(iat)*glob%mass(jat))
+    end do
+  end do
+
+  glob%energy=ecenter
+  status=0
+
+end subroutine dlf_fd_energy_hessian4

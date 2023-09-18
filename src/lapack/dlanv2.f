@@ -1,69 +1,152 @@
+*> \brief \b DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
+*
+*  =========== DOCUMENTATION ===========
+*
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
+*
+*> \htmlonly
+*> Download DLANV2 + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlanv2.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlanv2.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlanv2.f">
+*> [TXT]</a>
+*> \endhtmlonly
+*
+*  Definition:
+*  ===========
+*
+*       SUBROUTINE DLANV2( A, B, C, D, RT1R, RT1I, RT2R, RT2I, CS, SN )
+*
+*       .. Scalar Arguments ..
+*       DOUBLE PRECISION   A, B, C, CS, D, RT1I, RT1R, RT2I, RT2R, SN
+*       ..
+*
+*
+*> \par Purpose:
+*  =============
+*>
+*> \verbatim
+*>
+*> DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric
+*> matrix in standard form:
+*>
+*>      [ A  B ] = [ CS -SN ] [ AA  BB ] [ CS  SN ]
+*>      [ C  D ]   [ SN  CS ] [ CC  DD ] [-SN  CS ]
+*>
+*> where either
+*> 1) CC = 0 so that AA and DD are real eigenvalues of the matrix, or
+*> 2) AA = DD and BB*CC < 0, so that AA + or - sqrt(BB*CC) are complex
+*> conjugate eigenvalues.
+*> \endverbatim
+*
+*  Arguments:
+*  ==========
+*
+*> \param[in,out] A
+*> \verbatim
+*>          A is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[in,out] B
+*> \verbatim
+*>          B is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[in,out] C
+*> \verbatim
+*>          C is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[in,out] D
+*> \verbatim
+*>          D is DOUBLE PRECISION
+*>          On entry, the elements of the input matrix.
+*>          On exit, they are overwritten by the elements of the
+*>          standardised Schur form.
+*> \endverbatim
+*>
+*> \param[out] RT1R
+*> \verbatim
+*>          RT1R is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[out] RT1I
+*> \verbatim
+*>          RT1I is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[out] RT2R
+*> \verbatim
+*>          RT2R is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[out] RT2I
+*> \verbatim
+*>          RT2I is DOUBLE PRECISION
+*>          The real and imaginary parts of the eigenvalues. If the
+*>          eigenvalues are a complex conjugate pair, RT1I > 0.
+*> \endverbatim
+*>
+*> \param[out] CS
+*> \verbatim
+*>          CS is DOUBLE PRECISION
+*> \endverbatim
+*>
+*> \param[out] SN
+*> \verbatim
+*>          SN is DOUBLE PRECISION
+*>          Parameters of the rotation matrix.
+*> \endverbatim
+*
+*  Authors:
+*  ========
+*
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
+*
+*> \ingroup doubleOTHERauxiliary
+*
+*> \par Further Details:
+*  =====================
+*>
+*> \verbatim
+*>
+*>  Modified by V. Sima, Research Institute for Informatics, Bucharest,
+*>  Romania, to reduce the risk of cancellation errors,
+*>  when computing real eigenvalues, and to ensure, if possible, that
+*>  abs(RT1R) >= abs(RT2R).
+*> \endverbatim
+*>
+*  =====================================================================
       SUBROUTINE DLANV2( A, B, C, D, RT1R, RT1I, RT2R, RT2I, CS, SN )
 *
-*  -- LAPACK driver routine (version 3.2) --
+*  -- LAPACK auxiliary routine --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2006
 *
 *     .. Scalar Arguments ..
       DOUBLE PRECISION   A, B, C, CS, D, RT1I, RT1R, RT2I, RT2R, SN
 *     ..
 *
-*  Purpose
-*  =======
-*
-*  DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric
-*  matrix in standard form:
-*
-*       [ A  B ] = [ CS -SN ] [ AA  BB ] [ CS  SN ]
-*       [ C  D ]   [ SN  CS ] [ CC  DD ] [-SN  CS ]
-*
-*  where either
-*  1) CC = 0 so that AA and DD are real eigenvalues of the matrix, or
-*  2) AA = DD and BB*CC < 0, so that AA + or - sqrt(BB*CC) are complex
-*  conjugate eigenvalues.
-*
-*  Arguments
-*  =========
-*
-*  A       (input/output) DOUBLE PRECISION
-*  B       (input/output) DOUBLE PRECISION
-*  C       (input/output) DOUBLE PRECISION
-*  D       (input/output) DOUBLE PRECISION
-*          On entry, the elements of the input matrix.
-*          On exit, they are overwritten by the elements of the
-*          standardised Schur form.
-*
-*  RT1R    (output) DOUBLE PRECISION
-*  RT1I    (output) DOUBLE PRECISION
-*  RT2R    (output) DOUBLE PRECISION
-*  RT2I    (output) DOUBLE PRECISION
-*          The real and imaginary parts of the eigenvalues. If the
-*          eigenvalues are a complex conjugate pair, RT1I > 0.
-*
-*  CS      (output) DOUBLE PRECISION
-*  SN      (output) DOUBLE PRECISION
-*          Parameters of the rotation matrix.
-*
-*  Further Details
-*  ===============
-*
-*  Modified by V. Sima, Research Institute for Informatics, Bucharest,
-*  Romania, to reduce the risk of cancellation errors,
-*  when computing real eigenvalues, and to ensure, if possible, that
-*  abs(RT1R) >= abs(RT2R).
-*
 *  =====================================================================
 *
 *     .. Parameters ..
-      DOUBLE PRECISION   ZERO, HALF, ONE
-      PARAMETER          ( ZERO = 0.0D+0, HALF = 0.5D+0, ONE = 1.0D+0 )
+      DOUBLE PRECISION   ZERO, HALF, ONE, TWO
+      PARAMETER          ( ZERO = 0.0D+0, HALF = 0.5D+0, ONE = 1.0D+0,
+     $                     TWO = 2.0D0 )
       DOUBLE PRECISION   MULTPL
       PARAMETER          ( MULTPL = 4.0D+0 )
 *     ..
 *     .. Local Scalars ..
       DOUBLE PRECISION   AA, BB, BCMAX, BCMIS, CC, CS1, DD, EPS, P, SAB,
-     $                   SAC, SCALE, SIGMA, SN1, TAU, TEMP, Z
+     $                   SAC, SCALE, SIGMA, SN1, TAU, TEMP, Z, SAFMIN, 
+     $                   SAFMN2, SAFMX2
+      INTEGER            COUNT
 *     ..
 *     .. External Functions ..
       DOUBLE PRECISION   DLAMCH, DLAPY2
@@ -74,11 +157,14 @@
 *     ..
 *     .. Executable Statements ..
 *
+      SAFMIN = DLAMCH( 'S' )
       EPS = DLAMCH( 'P' )
+      SAFMN2 = DLAMCH( 'B' )**INT( LOG( SAFMIN / EPS ) /
+     $            LOG( DLAMCH( 'B' ) ) / TWO )
+      SAFMX2 = ONE / SAFMN2
       IF( C.EQ.ZERO ) THEN
          CS = ONE
          SN = ZERO
-         GO TO 10
 *
       ELSE IF( B.EQ.ZERO ) THEN
 *
@@ -91,12 +177,12 @@
          A = TEMP
          B = -C
          C = ZERO
-         GO TO 10
+*
       ELSE IF( ( A-D ).EQ.ZERO .AND. SIGN( ONE, B ).NE.SIGN( ONE, C ) )
      $          THEN
          CS = ONE
          SN = ZERO
-         GO TO 10
+*
       ELSE
 *
          TEMP = A - D
@@ -124,12 +210,30 @@
             SN = C / TAU
             B = B - C
             C = ZERO
+*
          ELSE
 *
 *           Complex eigenvalues, or real (almost) equal eigenvalues.
 *           Make diagonal elements equal.
 *
+            COUNT = 0
             SIGMA = B + C
+   10       CONTINUE
+            COUNT = COUNT + 1
+            SCALE = MAX( ABS(TEMP), ABS(SIGMA) )
+            IF( SCALE.GE.SAFMX2 ) THEN
+               SIGMA = SIGMA * SAFMN2
+               TEMP = TEMP * SAFMN2
+               IF (COUNT .LE. 20)
+     $            GOTO 10
+            END IF
+            IF( SCALE.LE.SAFMN2 ) THEN
+               SIGMA = SIGMA * SAFMX2
+               TEMP = TEMP * SAFMX2
+               IF (COUNT .LE. 20)
+     $            GOTO 10
+            END IF
+            P = HALF*TEMP
             TAU = DLAPY2( SIGMA, TEMP )
             CS = SQRT( HALF*( ONE+ABS( SIGMA ) / TAU ) )
             SN = -( P / ( TAU*CS ) )*SIGN( ONE, SIGMA )
@@ -185,8 +289,6 @@
          END IF
 *
       END IF
-*
-   10 CONTINUE
 *
 *     Store eigenvalues in (RT1R,RT1I) and (RT2R,RT2I).
 *

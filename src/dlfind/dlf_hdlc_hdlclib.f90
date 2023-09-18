@@ -146,6 +146,7 @@ CONTAINS
 !------------------------------------------------------------------------------
 
   SUBROUTINE hdlc_create(residue,xyz,con,cns,name)
+    use dlf_global
     ! create residue hdlc%res(name) 
 
 ! args
@@ -260,6 +261,7 @@ CONTAINS
       residue%irots,residue%np,bprim,ni,residue%xweight,primweight)
 
 ! generate the Ut matrix
+
     CALL hdlc_make_ut(residue%ut,bprim)
 
 ! orthogonalise against constrained space
@@ -269,7 +271,9 @@ CONTAINS
 
 ! generate HDLC B matrix
     CALL hdlc_make_bhdlc(bprim,bhdlc,residue%ut)
-
+    if(glob%iopt == 100 .or. glob%iopt ==101) then
+      glob%b_hdlc(:,:) = bhdlc%data(:,:)
+    endif
     ! iweight_i = (%ut_ij)**2 * primweight_j
     residue%iweight = matrix_create( &
         matrix_dimension(bhdlc,1)-residue%ncons ,1,'i weight')
@@ -647,7 +651,7 @@ CONTAINS
 !------------------------------------------------------------------------------
 
   SUBROUTINE grad_cart_to_hdlc(res,xyz,gxyz,ghdlc)
-
+	use dlf_global
 ! args
     TYPE (residue_type) :: res
     TYPE (matrix) :: xyz, gxyz, ghdlc
@@ -691,7 +695,7 @@ CONTAINS
 ! generate delocalised B matrix (force again)
     idum = matrix_destroy(bhdlc)
     CALL hdlc_make_bhdlc(bprim,bhdlc,res%ut)
-
+	glob%b_hdlc = bhdlc%data
 ! generate HDLC inverse G matrix
     idum = matrix_destroy(ighdlc)
     CALL hdlc_make_ighdlc(bhdlc,ighdlc,failed)
@@ -726,7 +730,7 @@ CONTAINS
 ! Johannes Kaestner, 2006
 !------------------------------------------------------------------------------
 
-  SUBROUTINE hess_cart_to_hdlc(res,xyz,hxyz,hhdlc)
+ SUBROUTINE hess_cart_to_hdlc(res,xyz,hxyz,hhdlc)
 
     IMPLICIT NONE
 ! args
@@ -1036,7 +1040,7 @@ CONTAINS
     END IF
 
 ! report convergence info if requested
-    IF (printl>=6) WRITE (stdout,'(5x,a,i3,a,g9.3,a,g9.3,a,f6.3)') &
+    IF (printl>=6) WRITE (stdout,'(5x,a,i3,a,g10.3,a,g10.3,a,f6.3)') &
       'Step ', iter, ', max error= ', dx, ', length of error= ', dy, &
       ', step scaling factor= ', trust
     CALL dlf_flushout
@@ -1129,7 +1133,7 @@ CONTAINS
     if(.not.res%lgmatok) idum = matrix_copy(xyzback,xyz)
 
 ! if print level>=5, convergence has already been reported
-    IF (printl==5) WRITE (stdout,'(5x,a,i3,a,/,5x,g9.3,a,/)') &
+    IF (printl==5) WRITE (stdout,'(5x,a,i3,a,/,5x,g10.3,a,/)') &
       'Converged Cartesians in ', iter, ' steps to ', dx, &
       ' maximum component of error vector'
 
@@ -1778,6 +1782,7 @@ CONTAINS
 
   END SUBROUTINE hdlc_make_bprim
 
+
 !//////////////////////////////////////////////////////////////////////////////
 ! subroutine hdlc_make_ut
 !
@@ -1994,7 +1999,8 @@ CONTAINS
     INTEGER i, idum, n, n6
     REAL (rk) :: det
     TYPE (matrix) :: bthdlc
-
+    integer  ::  j
+    character  :: dateiname
 ! begin, get number of HDLC (n6) and number of cartesians (n)
     n6 = matrix_dimension(bhdlc,1)
     n = matrix_dimension(bhdlc,2)
@@ -2016,6 +2022,7 @@ CONTAINS
         'Matrix printed is G HDLC (= B HDLC * BT HDLC) before inversion'
       idum = matrix_print(ighdlc)
     END IF
+
     idum = matrix_invert(ighdlc,det,.TRUE.)
 
 ! clean up
@@ -2423,9 +2430,9 @@ CONTAINS
 ! local vars
     INTEGER i,this
 
-    !IF (printl>=2) THEN
-    !  WRITE (stdout,'(a,/)') 'Destroying all HDLC residues'
-    !END IF
+    IF (printl>=2) THEN
+      WRITE (stdout,'(a,/)') 'Destroying all HDLC residues'
+    END IF
     i = 1
     DO WHILE (hdlc%ngroups/=0)
       this=hdlc%first

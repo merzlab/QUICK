@@ -55,38 +55,36 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	oshell_denspt.f90 naive_distribute.f90 time.cpp)
 
 set(DLFIND_MODULES_SOURCES
-        dlf_allocate.f90 dlf_checkpoint.f90 
-        dlf_conint.f90 dlf_convergence.f90 
-        dlf_coords.f90 dlf_dimer.f90
-        dlf_formstep.f90 dlf_global_module.f90 
-        dlf_hdlc_constraint.f90 dlf_hdlc_hdlclib.f90 
-        dlf_hdlc_interface.f90 dlf_hdlc_matrixlib.f90 
-        dlf_hdlc_primitive.f90 dl_find.f90 
-        dlfind_main_driver.f90
-        dlf_lbfgs.f90 dlf_linalg.f90 
-        dlf_microiter.f90
-        dlf_neb.f90 dlf_parallel_opt.f90 
-        dlf_qts.f90 dlf_scalestep.f90
-        dlf_serial.f90 dlf_sort.f90 
-        dlf_stat_module.f90 dlf_svnversion.f90 
-        dlf_task.f90 dlf_time.f90 dlf_util.f90)
-
-set(DLFIND_MODULES_SOURCES
-        dlf_allocate.f90 dlf_checkpoint.f90 
-        dlf_conint.f90 dlf_convergence.f90 
-        dlf_coords.f90 dlf_dimer.f90
-        dlf_formstep.f90 dlf_global_module.f90 
-        dlf_hdlc_constraint.f90 dlf_hdlc_hdlclib.f90 
-        dlf_hdlc_interface.f90 dlf_hdlc_matrixlib.f90 
-        dlf_hdlc_primitive.f90 dl_find.f90 
-        dlfind_main_driver.f90
-        dlf_lbfgs.f90 dlf_linalg.f90 
-        dlf_microiter.f90
-        dlf_neb.f90 dlf_parallel_opt.f90 
-        dlf_qts.f90 dlf_scalestep.f90
-        dlf_serial.f90 dlf_sort.f90 
-        dlf_stat_module.f90 dlf_svnversion.f90 
-        dlf_task.f90 dlf_time.f90 dlf_util.f90)
+	dlf_allocate.f90  dlf_checkpoint.f90
+	dlf_cinter.f90  dlf_conint.f90
+	dlf_convergence.f90  dlf_coords.f90
+	dlf_dimer.f90  dlf_formstep.f90
+	dlf_geodesic.f90  dlf_global_module.f90
+	dlf_gpr_hdlc.f90  dlf_gprmep.f90
+	dlf_hdlc_constraint.f90  dlf_hdlc_hdlclib.f90
+	dlf_hdlc_interface.f90  dlf_hdlc_matrixlib.f90
+	dlf_hdlc_primitive.f90  dl_find.f90
+	dlfind_main_driver.f90  dlfind_quick.f90
+	dlf_lbfgs.f90  dlf_linalg.f90
+	dlf_linalg_interface_mod.f90
+	dlf_microiter.f90
+	dlf_neb.f90  dlf_oop_lbfgs.f90
+	dlf_parallel_opt.f90  dlf_pes.f90
+	dlf_qts.f90  dlf_rateaux.f90
+	dlf_scalestep.f90  dlf_sct.f90
+	dlf_serial.f90  dlf_sort.f90
+	dlf_stat_module.f90  dlf_svnversion.f90
+	dlf_task.f90  dlf_time.f90
+	dlf_util.f90  dlf_vpt2_freq.mod.f90
+	dlf_vpt2_hess_deriv.mod.f90  dlf_vpt2_intcoord.mod.f90
+	dlf_vpt2_main.mod.f90   dlf_vpt2_part_func.mod.f90
+	dlf_vpt2_project.mod.f90  dlf_vpt2_terms.mod.f90
+	dlf_vpt2_test_routines.mod.f90
+	dlf_vpt2_utility.mod.f90  fftpack5-1d.f90
+	gpr_extensions.f90  gpr.f90
+	gpr_kernels.f90  gpr_opt.f90
+	gpr_types.f90  kronrod.f90
+	nr_gamma.mod.f90  oop_clock.f90)
 
 set(DFTD3_SOURCES
 	api.f90  common.f90  core.f90  pars.f90  sizes.f90)

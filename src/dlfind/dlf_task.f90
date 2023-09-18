@@ -13,11 +13,11 @@
 !! optimisation loop)
 !!
 !! DATA
-!! $Date$                   
-!! $Rev$                                                              
-!! $Author$                                                         
-!! $URL$   
-!! $Id$                      
+!! $Date: 2009-05-13 15:45:11 +0200 (Wed, 13 May 2009) $                   
+!! $Rev: 408 $                                                              
+!! $Author: jmcarr $                                                         
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_task.f90 $   
+!! $Id: dlf_task.f90 408 2009-05-13 13:45:11Z jmcarr $                      
 !!
 !! COPYRIGHT
 !!
@@ -89,7 +89,7 @@ subroutine dlf_task(ierr2 &
 !
 ! 2xxx   input RS + PS
 
-!  glob%task=1011
+!  glob%task=1001
 
   select case (glob%task)
 
@@ -97,6 +97,7 @@ subroutine dlf_task(ierr2 &
 ! task = 0: standard optimisation, input unmodified
 ! ======================================================================
   case (0)
+
     ! main optimisation cycle
     call dlf_run(ierr2 &
 #ifdef GAMESS

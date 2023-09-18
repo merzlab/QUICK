@@ -1,0 +1,594 @@
+module dlf_vpt2_lj_pes_new
+use dlf_parameter_module
+implicit none
+integer, save :: lj_nat, lj_npairs
+real(rk), parameter :: eps_uniform=0.1_rk
+real(rk), parameter :: sig_uniform=2.5e0_rk
+real(rk), dimension(:,:),allocatable, save :: eps
+real(rk), dimension(:,:),allocatable, save :: sig
+real(rk), dimension(:,:),allocatable, save :: C6,C12
+real(rk), dimension(:,:,:),allocatable, save :: top
+real(rk), dimension(:,:,:),allocatable, save :: topTtop
+integer, dimension(:,:),allocatable, save :: Rdef
+logical, save :: LJ_initialized=.false.
+logical, parameter :: ring_mode=.false.
+
+contains
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine dlf_vpt2_lj_pes_new_init(nat)
+  implicit none
+  integer, intent(in) :: nat
+  
+  lj_nat=nat
+  lj_npairs=(nat*(nat-1))/2
+  
+  if (allocated(eps))     deallocate(eps)
+  if (allocated(sig))     deallocate(sig)
+  if (allocated(C6))      deallocate(C6)
+  if (allocated(C12))     deallocate(C12)
+  if (allocated(top))     deallocate(top)
+  if (allocated(topTtop)) deallocate(topTtop)
+  if (allocated(Rdef))    deallocate(Rdef)
+  
+  allocate(eps(nat,nat))
+  allocate(sig(nat,nat))
+  allocate(C6(nat,nat))
+  allocate(C12(nat,nat))
+  allocate(top(3,3*lj_nat,lj_npairs))
+  allocate(topTtop(3*lj_nat,3*lj_nat,lj_npairs))
+  allocate(Rdef(lj_npairs,2))
+  
+  eps(:,:)=eps_uniform
+  sig(:,:)=sig_uniform
+  
+  call get_c6_c12_lj()
+  call build_topology_matrices_lj()
+  
+  call random_seed()
+  
+  LJ_initialized = .true.
+  
+  return
+end subroutine dlf_vpt2_lj_pes_new_init
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine get_c6_c12_lj()
+  implicit none
+  integer :: i,j
+  
+  C6 =4._rk*eps*sig**6._rk
+  C12=4._rk*eps*sig**12._rk
+    
+  if (ring_mode) then
+    do i=1,lj_nat
+      do j=1,lj_nat
+        if (abs(j-i).gt.1) then
+          if (i.eq.1 .and. j.eq.lj_nat) cycle
+          if (j.eq.1 .and. i.eq.lj_nat) cycle
+          C12(i,j)=0._rk
+          C6(i,j)=-C6(i,j)
+        endif
+      enddo
+    enddo
+  endif
+  
+  return
+end subroutine get_c6_c12_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine build_topology_matrices_lj()
+  implicit none
+  integer :: i,j,k
+  
+  k=0
+  do i=1,lj_nat
+    do j=i+1,lj_nat
+      k=k+1
+      Rdef(k,1)=i
+      Rdef(k,2)=j
+    enddo
+  enddo
+  
+  top=0._rk
+  do k=1,lj_npairs
+    i=Rdef(k,1)
+    j=Rdef(k,2)
+    top(1,3*(i-1)+1,k)=1._rk
+    top(2,3*(i-1)+2,k)=1._rk
+    top(3,3*(i-1)+3,k)=1._rk
+    top(1,3*(j-1)+1,k)=-1._rk
+    top(2,3*(j-1)+2,k)=-1._rk
+    top(3,3*(j-1)+3,k)=-1._rk
+    topTtop(:,:,k)=matmul(transpose(top(:,:,k)),top(:,:,k))
+  enddo
+  return
+end subroutine build_topology_matrices_lj
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function VLJ(rsq,c6,c12)
+use dlf_parameter_module, only: rk
+implicit none
+real(rk), intent(in) :: rsq,c6,c12
+real(rk) :: VLJ, invr6, invr12
+
+invr6=1._rk/(rsq*rsq*rsq)
+invr12=invr6*invr6
+
+VLJ=-c6*invr6+c12*invr12
+
+end function VLJ
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function V1LJ(rsq,c6,c12)
+use dlf_parameter_module, only: rk
+implicit none
+real(rk), intent(in) :: rsq,c6,c12
+real(rk) :: V1LJ, invrsq4, invrsq7
+
+invrsq4=1._rk/(rsq**4)
+invrsq7=1._rk/(rsq**7)
+
+V1LJ= c6*3._rk*invrsq4 -c12*6._rk*invrsq7
+
+end function V1LJ
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function V2LJ(rsq,c6,c12)
+use dlf_parameter_module, only: rk
+implicit none
+real(rk), intent(in) :: rsq,c6,c12
+real(rk) :: V2LJ, invrsq5, invrsq8
+
+invrsq5=1._rk/(rsq**5)
+invrsq8=1._rk/(rsq**8)
+
+V2LJ=-c6*12._rk*invrsq5 +c12*42._rk*invrsq8
+
+end function V2LJ
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function V3LJ(rsq,c6,c12)
+use dlf_parameter_module, only: rk
+implicit none
+real(rk), intent(in) :: rsq,c6,c12
+real(rk) :: V3LJ, invrsq6, invrsq9
+
+invrsq6=1._rk/(rsq**6)
+invrsq9=1._rk/(rsq**9)
+
+V3LJ= c6*60._rk*invrsq6 -c12*336._rk*invrsq9
+
+end function V3LJ
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function V4LJ(rsq,c6,c12)
+use dlf_parameter_module, only: rk
+implicit none
+real(rk), intent(in) :: rsq,c6,c12
+real(rk) :: V4LJ, invrsq7, invrsq10
+
+invrsq7 =1._rk/(rsq**7)
+invrsq10=1._rk/(rsq**10)
+
+V4LJ=-c6*360._rk*invrsq7 +c12*3024._rk*invrsq10
+
+end function V4LJ
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine dlf_get_energy_lj(nvar,coords,energy,iimage,iter,status)
+use dlf_parameter_module, only: rk
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: energy
+integer,  intent(in)     :: iimage
+integer,  intent(in)     :: iter
+integer   ,intent(out)   :: status
+
+integer :: k
+real(rk), dimension(lj_npairs)   :: Rsq
+
+if (.not. LJ_initialized) then
+  call dlf_vpt2_lj_pes_new_init(nvar/3)
+endif
+
+energy=0._rk
+do k=1,lj_npairs
+  Rsq(k)=dot_product(coords,matmul(topTtop(:,:,k),coords))
+  energy=energy+VLJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+enddo
+
+status=0
+return
+
+end subroutine dlf_get_energy_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_get_noisy_gradient_lj(nvar,coords,energy,gradient,iimage,kiter,status)
+use dlf_parameter_module, only: rk
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: energy
+real(rk)  ,intent(out)   :: gradient(nvar)
+integer   ,intent(in)    :: iimage
+integer   ,intent(in)    :: kiter
+integer   ,intent(out)   :: status
+
+!real(rk), parameter :: noise_level=0._rk
+real(rk), parameter :: noise_level=5.e-6_rk
+character(len=3), parameter :: mode='rel'
+
+integer  :: i
+real(rk) :: noise,noisemax
+
+call dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status)
+
+do i=1,nvar
+  if (mode=='abs') then
+    noisemax=noise_level
+  elseif (mode=='rel') then
+    if (gradient(i)<=noise_level) then
+      noisemax=noise_level
+    else
+      noisemax=abs(gradient(i))*noise_level
+    endif
+  else
+    stop 1
+  endif
+  call random_number(noise)
+  noise=noisemax*(2*noise-1._rk)
+  gradient(i)=gradient(i)+noise
+enddo
+
+return
+
+end subroutine dlf_get_noisy_gradient_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_get_gradient_lj(nvar,coords,energy,gradient,iimage,kiter,status)
+use dlf_parameter_module, only: rk
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: energy
+real(rk)  ,intent(out)   :: gradient(nvar)
+integer   ,intent(in)    :: iimage
+integer   ,intent(in)    :: kiter
+integer   ,intent(out)   :: status
+
+integer :: k
+real(rk), dimension(lj_npairs)   :: Rsq
+
+if (.not. LJ_initialized) then
+  call dlf_vpt2_lj_pes_new_init(nvar/3)
+endif
+
+energy=0._rk
+do k=1,lj_npairs
+  Rsq(k)=dot_product(coords,matmul(topTtop(:,:,k),coords))
+  energy=energy+VLJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+enddo
+
+gradient=0._rk
+do k=1,lj_npairs
+  gradient=gradient + 2._rk*V1LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2))) * &
+                 & matmul(topTtop(:,:,k),coords)
+enddo
+
+status=0
+return
+
+end subroutine dlf_get_gradient_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_get_noisy_hessian_lj(nvar,coords,hessian,status)
+!  get the hessian at a given geometry
+use dlf_parameter_module
+
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: hessian(nvar,nvar)
+integer   ,intent(out)   :: status
+!real(rk), parameter :: noise_level=0._rk
+real(rk), parameter :: noise_level=5.e-6_rk
+character(len=3), parameter :: mode='rel'
+
+integer  :: i,j,iseed
+real(rk) :: noise,noisemax
+
+call dlf_get_hessian(nvar,coords,hessian,status)
+
+do i=1,nvar
+  do j=1,i
+    if (mode=='abs') then
+      noisemax=noise_level
+    elseif (mode=='rel') then
+      if (hessian(i,j)<=noise_level) then
+        noisemax=noise_level
+      else
+        noisemax=abs(hessian(i,j))*noise_level
+      endif
+    else
+      stop 1
+    endif
+    call random_number(noise)
+    noise=noisemax*(2*noise-1._rk)
+    hessian(i,j)=hessian(i,j)+noise
+  enddo
+enddo
+
+do i=1,nvar
+  do j=i+1,nvar
+    hessian(i,j)=hessian(j,i)
+  enddo
+enddo
+
+return
+
+end subroutine dlf_get_noisy_hessian_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_get_hessian_lj(nvar,coords,hessian,status)
+!  get the hessian at a given geometry
+use dlf_parameter_module
+use dlf_linalg_interface_mod, only: dlf_outer_product
+
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: hessian(nvar,nvar)
+integer   ,intent(out)   :: status
+
+integer :: k
+real(rk), dimension(lj_npairs)    :: Rsq
+real(rk), dimension(nvar,nvar) :: xxT
+
+if (.not. LJ_initialized) then
+  call dlf_vpt2_lj_pes_new_init(nvar/3)
+endif
+
+do k=1,lj_npairs
+  Rsq(k)=dot_product(coords,matmul(topTtop(:,:,k),coords))
+enddo
+
+xxT=dlf_outer_product(coords,coords)
+
+hessian=0._rk
+do k=1,lj_npairs
+  hessian=hessian+V1LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))*topTtop(:,:,k)
+  hessian=hessian+2._rk*V2LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2))) * &
+                   & matmul(topTtop(:,:,k),matmul(xxT,topTtop(:,:,k)))
+enddo
+
+hessian=hessian*2._rk
+
+status=0
+return
+
+end subroutine dlf_get_hessian_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine dlf_get_cubic_quartic_lj(nvar,coords,cubic,quartic,status)
+!  get third derivatives and some fourth derivatives at a given geometry
+use dlf_parameter_module
+use dlf_linalg_interface_mod, only: dlf_outer_product
+
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: cubic(nvar,nvar,nvar)
+real(rk)  ,intent(out)   :: quartic(nvar,nvar,nvar,nvar)
+integer   ,intent(out)   :: status
+
+integer :: k,i,j
+real(rk) :: LJfirstderiv,LJsecondderiv,LJthirdderiv,LJfourthderiv
+real(rk), dimension(lj_npairs)    :: Rsq
+real(rk), dimension(nvar,nvar) :: xxT
+real(rk), dimension(nvar,nvar,nvar) :: dxxT_dxi
+real(rk), dimension(nvar,nvar,nvar,nvar) :: HxxT
+real(rk), dimension(nvar) :: gradRK
+real(rk), dimension(nvar,nvar) :: HessRK
+
+if (.not. LJ_initialized) then
+  call dlf_vpt2_lj_pes_new_init(nvar/3)
+endif
+
+do k=1,lj_npairs
+  Rsq(k)=dot_product(coords,matmul(topTtop(:,:,k),coords))
+enddo
+
+xxT=dlf_outer_product(coords,coords)
+
+dxxT_dxi=0._rk
+do i=1,nvar
+  dxxT_dxi(i,:,i)=coords(:)
+  dxxT_dxi(:,i,i)=coords(:)
+  dxxT_dxi(i,i,i)=2._rk*coords(i)
+enddo
+HxxT=0._rk
+do i=1,nvar
+  do j=1,nvar
+    if (j.eq.i) then
+      HxxT(i,i,i,i)=2._rk
+    else
+      HxxT(i,j,i,j)=1._rk
+      HxxT(j,i,i,j)=1._rk
+    endif
+  enddo
+enddo
+
+cubic=0._rk
+quartic=0._rk
+
+do k=1,lj_npairs
+  LJfirstderiv =V1LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+  LJsecondderiv=V2LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+  LJthirdderiv =V3LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+  LJfourthderiv=V4LJ(Rsq(k),c6(Rdef(k,1),Rdef(k,2)),c12(Rdef(k,1),Rdef(k,2)))
+  gradRk=2._rk*matmul(topTtop(:,:,k),coords)
+  HessRk=2._rk*topTtop(:,:,k)
+  do i=1,nvar
+    cubic(:,:,i)=cubic(:,:,i)+gradRk(i)*LJsecondderiv*topTtop(:,:,k)
+    cubic(:,:,i)=cubic(:,:,i)+2._rk* (gradRk(i)*LJthirdderiv*matmul(topTtop(:,:,k),matmul(xxT,topTtop(:,:,k))) + &
+                                    & LJsecondderiv*matmul(topTtop(:,:,k),matmul(dxxT_dxi(:,:,i),topTtop(:,:,k))))
+  enddo
+  do i=1,nvar
+    do j=1,nvar
+      quartic(:,:,i,j)=quartic(:,:,i,j)+(HessRk(i,j)*LJsecondderiv+gradRk(i)*gradRk(j)*LJthirdderiv)*topTtop(:,:,k)
+      quartic(:,:,i,j)=quartic(:,:,i,j)+2._rk*(HessRk(i,j)*LJthirdderiv+gradRk(i)*gradRk(j)* &
+                       & LJfourthderiv)*matmul(topTtop(:,:,k),matmul(xxT,topTtop(:,:,k)))
+      quartic(:,:,i,j)=quartic(:,:,i,j)+2._rk*(gradRk(j)*LJthirdderiv)* &
+                       & matmul(topTtop(:,:,k),matmul(dxxT_dxi(:,:,i),topTtop(:,:,k)))
+      quartic(:,:,i,j)=quartic(:,:,i,j)+2._rk*(gradRk(i)*LJthirdderiv)* &
+                       & matmul(topTtop(:,:,k),matmul(dxxT_dxi(:,:,j),topTtop(:,:,k)))
+      quartic(:,:,i,j)=quartic(:,:,i,j)+2._rk*LJsecondderiv*matmul(topTtop(:,:,k),matmul(HxxT(:,:,i,j),topTtop(:,:,k)))
+    enddo
+  enddo
+enddo
+
+cubic  =cubic*2._rk
+quartic=quartic*2._rk
+
+status=0
+return
+
+end subroutine dlf_get_cubic_quartic_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subroutine dlf_get_cubic_quartic_num_lj(nvar,coords,cubic,quartic,status)
+!  get third derivatives and some fourth derivatives at a given geometry via finite-difference derivatives of hessians
+use dlf_parameter_module
+
+implicit none
+integer   ,intent(in)    :: nvar
+real(rk)  ,intent(in)    :: coords(nvar)
+real(rk)  ,intent(out)   :: cubic(nvar,nvar,nvar)
+real(rk)  ,intent(out)   :: quartic(nvar,nvar,nvar,nvar)
+integer   ,intent(out)   :: status
+
+real(rk), parameter :: delQdiff=0.001_rk
+real(rk), dimension(nvar,nvar) :: hess0,hesspl,hessmi
+real(rk), dimension(nvar,nvar) :: hesspp,hesspm,hessmp,hessmm
+real(rk), dimension(nvar) :: coords_disp
+integer  :: i,j,k,m,localstatus
+real(rk) :: averaged
+
+! Cubic numeric derivatives and quartic semi-diagonal derivatives
+
+call dlf_get_hessian(nvar,coords,hess0,localstatus)
+do i=1,nvar
+  coords_disp=coords
+  coords_disp(i)=coords(i)+delQdiff
+  call dlf_get_hessian(nvar,coords_disp,hesspl,localstatus)
+  coords_disp(i)=coords(i)-delQdiff
+  call dlf_get_hessian(nvar,coords_disp,hessmi,localstatus)
+  cubic(:,:,i)=(hesspl(:,:)-hessmi(:,:))/(2._rk*delQdiff)
+  quartic(:,:,i,i)=(hesspl+hessmi-2._rk*hess0)/(delQdiff**2)
+enddo
+
+! Symmetrize cubic force constants
+
+do i=1,nvar
+  do j=1,i
+    do k=1,j
+      averaged=cubic(i,j,k)+cubic(i,k,j)+cubic(j,i,k)+cubic(j,k,i)+cubic(k,i,j)+cubic(k,j,i)
+      averaged=averaged/6._rk
+      cubic(i,j,k)=averaged
+      cubic(i,k,j)=averaged
+      cubic(j,i,k)=averaged
+      cubic(j,k,i)=averaged
+      cubic(k,i,j)=averaged
+      cubic(k,j,i)=averaged
+    enddo
+  enddo
+enddo
+
+! (Semi-)Off-diagonal quartic
+do i=1,nvar
+  do j=1,nvar
+    if (i.eq.j) cycle
+    coords_disp=coords
+    coords_disp(i)=coords(i)+delQdiff
+    coords_disp(j)=coords(j)+delQdiff
+    call dlf_get_hessian(nvar,coords_disp,hesspp,localstatus)
+    coords_disp=coords
+    coords_disp(i)=coords(i)+delQdiff
+    coords_disp(j)=coords(j)-delQdiff
+    call dlf_get_hessian(nvar,coords_disp,hesspm,localstatus)
+    coords_disp=coords
+    coords_disp(i)=coords(i)-delQdiff
+    coords_disp(j)=coords(j)+delQdiff
+    call dlf_get_hessian(nvar,coords_disp,hessmp,localstatus)
+    coords_disp=coords
+    coords_disp(i)=coords(i)-delQdiff
+    coords_disp(j)=coords(j)-delQdiff
+    call dlf_get_hessian(nvar,coords_disp,hessmm,localstatus)
+    quartic(:,:,i,j)=(hesspp+hessmm-hesspm-hessmp)/(4._rk*delQdiff**2)
+  enddo
+enddo
+
+! Symmetrize quartic force constants
+
+do i=1,nvar
+  do j=1,i
+    do k=1,j
+      do m=1,k
+        averaged=quartic(i,j,k,m)+quartic(i,k,j,m)+quartic(j,i,k,m)+quartic(j,k,i,m)+quartic(k,i,j,m)+quartic(k,j,i,m) + &
+           &     quartic(i,j,m,k)+quartic(i,k,m,j)+quartic(j,i,m,k)+quartic(j,k,m,i)+quartic(k,i,m,j)+quartic(k,j,m,i) + &
+           &     quartic(i,m,j,k)+quartic(i,m,k,j)+quartic(j,m,i,k)+quartic(j,m,k,i)+quartic(k,m,i,j)+quartic(k,m,j,i) + &
+           &     quartic(m,i,j,k)+quartic(m,i,k,j)+quartic(m,j,i,k)+quartic(m,j,k,i)+quartic(m,k,i,j)+quartic(m,k,j,i)
+        averaged=averaged/24._rk
+        quartic(i,j,k,m)=averaged
+        quartic(i,k,j,m)=averaged
+        quartic(j,i,k,m)=averaged
+        quartic(j,k,i,m)=averaged
+        quartic(k,i,j,m)=averaged
+        quartic(k,j,i,m)=averaged
+        quartic(i,j,m,k)=averaged
+        quartic(i,k,m,j)=averaged
+        quartic(j,i,m,k)=averaged
+        quartic(j,k,m,i)=averaged
+        quartic(k,i,m,j)=averaged
+        quartic(k,j,m,i)=averaged
+        quartic(i,m,j,k)=averaged
+        quartic(i,m,k,j)=averaged
+        quartic(j,m,i,k)=averaged
+        quartic(j,m,k,i)=averaged
+        quartic(k,m,i,j)=averaged
+        quartic(k,m,j,i)=averaged
+        quartic(m,i,j,k)=averaged
+        quartic(m,i,k,j)=averaged
+        quartic(m,j,i,k)=averaged
+        quartic(m,j,k,i)=averaged
+        quartic(m,k,i,j)=averaged
+        quartic(m,k,j,i)=averaged
+      enddo
+    enddo
+  enddo
+enddo
+
+status=0
+return
+
+end subroutine dlf_get_cubic_quartic_num_lj
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+end module dlf_vpt2_lj_pes_new
+
+

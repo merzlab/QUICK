@@ -11,11 +11,11 @@
 !!
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2013-08-07 15:08:09 +0200 (Wed, 07 Aug 2013) $
+!! $Rev: 529 $
+!! $Author: twk $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_neb.f90 $
+!! $Id: dlf_neb.f90 529 2013-08-07 13:08:09Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -1123,7 +1123,7 @@ subroutine dlf_neb_improved_tangent_neb
           write(stdout,"('Either the climbing image threshold &
               &was not reached or the path is monotonic.')")
           write(stdout,"('Maximum gradient component converged to the frozen &
-              &image tolerance of ',es10.4)") neb%tolfreeze
+              &image tolerance of ',es11.4)") neb%tolfreeze
         end if
 
         ! set complete gradient to 0
@@ -1376,6 +1376,7 @@ subroutine dlf_neb_itox(external_iimage)
   real(rk), allocatable :: xtmp(:,:)
   integer , allocatable :: useimage(:)
   real(rk)              :: svar,svar2
+  real(rk), allocatable :: tmp2(:)
 ! **********************************************************************
 
   ! ====================================================================
@@ -1535,6 +1536,15 @@ subroutine dlf_neb_itox(external_iimage)
     neb%iimage=1
   end if
 
+  if(glob%icoord/=190) then
+    ! write all images to qts_coords.txt
+    call allocate(tmp2,glob%nimage+1)
+    tmp2=-1.D0
+    call write_qts_coords(glob%nat,glob%nimage,neb%varperimage,0.D0,&
+        0.D0,0.D0,0.D0,neb%ene,neb%xcoords,tmp2,0.D0,tmp2)
+    call deallocate(tmp2)
+  end if
+
   external_iimage=neb%iimage
   if(glob%tatoms) then
      glob%xcoords=reshape(neb%xcoords(:,neb%iimage),(/3,glob%nat/))
@@ -1585,12 +1595,35 @@ subroutine dlf_neb_definepath(nimage,useimage)
   integer               :: maxuse,iat,nuse,map(nimage)
   real(rk)              :: svar,dist(nimage),lastdist
   logical               :: tok,tchk
+  ! for short-term use
+  real(rk), allocatable :: tmp(:),tmp2(:)
 ! **********************************************************************
   glob%igradient=0.D0
   glob%icoords=0.D0
   dist(:)=0.D0 ! dist is a cumulative distance from the first image
   maxuse=1
   nuse=0 ! number of images to use to construct the path
+
+  ! this is an abuse of qtsflag for the time being. It may be replaced
+  ! by a more appropriate keyword eventually.
+  if(glob%qtsflag==1) then
+    ! read coordiantes from qts_coords.txt
+    call allocate(tmp,nimage)
+    call allocate(tmp2,nimage+1)
+    svar=0.D0
+    iimage=nimage
+    if(printl>=4) then
+      write(stdout,'("NEB path is read in from qts_coords.txt")')
+    end if
+    call read_qts_coords(glob%nat,iimage,neb%varperimage,svar,&
+        svar,svar,svar,tmp,neb%xcoords,tmp2,svar,tmp2)
+    call deallocate(tmp)
+    call deallocate(tmp2)
+    useimage(1:iimage)=1
+    if(printl>=4) then
+      write(stdout,'("Number of images read in: ",i4)') iimage
+    end if
+  end if
 
   ! get internal coordinates of well-defined images
   lastdist=0.D0
@@ -2224,4 +2257,276 @@ subroutine dlf_checkpoint_neb_read(tok)
 end subroutine dlf_checkpoint_neb_read
 
 !!****
+
+! Module and routines for implementing a distance-based potential
+! function called IDPP (image dependent pair potential) to
+! pre-optimize NEB paths. The method is based on DOI
+! 10.1063/1.4878664, Improved initial guess for minimum energy path
+! calculations by Soren Smidstrup, Andreas Pedersen, Kurt Stokbro, and
+! Hannes Jonsson, J. Chem. Phys. 140, 214106 (2014)
+!
+! One could move these routines to a separate file, but for the time
+! being it remains here.
+!
+! Everything related to idpp was written by Matthias Bohner
+! (bohner@theochem.uni-stuttgart.de)
+
+module dlf_idpp
+  use dlf_parameter_module, only: rk
+  !holds the target distances
+  !one gets target distances between ith and jth atom
+  !by distances(nat*(i-1)-(i*(i+1))/2+j,iimage)
+  logical :: tdist=.false.
+  real(rk), allocatable, save :: distances(:,:) !(number of pairs,nimage)
+end module dlf_idpp
+
+subroutine dlf_idpp_get_distances(nvar,nat,nframe,coords,coords2,spec,nimage)
+  use dlf_idpp
+  use dlf_parameter_module, only: rk
+  implicit none
+  integer, intent(in) :: nvar
+  integer, intent(in) :: nat
+  integer, intent(in) :: nframe
+  real(rk), intent(in) :: coords(nvar)
+  real(rk), intent(in) :: coords2(nvar*nframe)
+  integer, intent(in) :: spec(nat)
+  integer, intent(in) :: nimage
+
+  integer ::nstructs !number of given intermediate structures
+  integer :: i, j, jvat, iimage, istruct, offset, tmp(1), aindex, bindex
+  !interdist holds pair distances for the intermediate structures
+  real(rk), allocatable :: interdist(:,:)
+  !pathatstruct holds pathlength at given structures
+  real(rk) ::  pathatstruct(nframe)
+  !path_per_image: distance between path
+  !path: pathvariable path=(iimage-1)*path_per_image
+  !lambda interpolation parameter
+  real(rk) :: path_per_image, path, lambda
+
+  !If we have nspec atoms we have nspec*(nspec-1)/2 possible pairs
+  !count(-1.eq.spec) is number of frozen atoms
+  !Ergo nspec*(nspec-1)/2-count(-1.eq.spec)*(count(-1.eq.spec)-1)/2
+  !relevant pairs
+  offset=count(-1.eq.spec) !abusing offset
+  allocate(distances(((nat)*(nat-1))/2-((offset)*(offset-1))/2,nimage-1))
+  allocate(interdist(((nat)*(nat-1))/2-((offset)*(offset-1))/2,(nvar*nframe)/nvar))
+  !last nat entries are for the atom masses
+  nstructs=nframe-1
+
+  pathatstruct(1)=sqrt(sum((coords2(1:nvar)-coords)**2))
+  do i=2,nstructs+1
+    pathatstruct(i)=sqrt(sum((coords2(nvar*(i-1)+1:nvar*i)-coords2(nvar*(i-2)+1:nvar*(i-1)))**2))&
+        +pathatstruct(i-1)
+  enddo
+
+  distances=0.D0 
+  path_per_image=pathatstruct(nstructs+1)/dble(nimage-2)
+  !Calculate all pair distances for the first structure and write it
+  !into distances(:,1)
+  jvat=0
+  do i=1, nat, 1
+    do j=i+1, nat ,1
+      if((spec(i).eq.-1).and.(spec(j).eq.-1)) cycle
+      jvat=jvat+1 !jvat counts all relevant pairs
+      distances(jvat,1)=&
+          sqrt(sum((coords(3*(i-1)+1:3*i)-coords(3*(j-1)+1:3*j))**2))
+    enddo
+  enddo
+
+
+  !Calculate all pair distances for the intermediate structures
+  !into interdist(:,nimage)
+  do istruct=1,nstructs,1
+    offset=nvar*(istruct-1)+1
+    jvat=0
+    do i=1, nat, 1
+      do j=i+1, nat ,1
+        if((spec(i).eq.-1).and.(spec(j).eq.-1)) cycle
+        jvat=jvat+1 !jvat counts relevant pairs
+        interdist(jvat,istruct)=&
+            sqrt(sum((coords2(offset+3*(i-1):3*i+offset-1)&
+            -coords2(offset+3*(j-1):3*j+offset-1))**2))
+      enddo
+    enddo
+  enddo
+
+  !Calculate all pair distances for the last structure and write it
+  !into distances(:,nimage-1)
+  offset=nvar*nframe-nvar+1
+  jvat=0
+  do i=1, nat, 1
+    do j=i+1, nat ,1
+      if((spec(i).eq.-1).and.(spec(j).eq.-1)) cycle
+      jvat=jvat+1
+      distances(jvat,nimage-1)=&
+          sqrt(sum((coords2(offset+3*(i-1):3*i+offset-1)&
+          -coords2(offset+3*(j-1):3*j+offset-1))**2))
+    enddo
+  enddo
+
+
+  !linear interpolations of pair-distances between given structures
+  if(nstructs==0) then
+    do iimage=2, nimage-2,1
+      lambda=dble(iimage-1)*path_per_image/pathatstruct(nstructs+1)
+      distances(:,iimage)=(1D0-lambda)*distances(:,1)+lambda*distances(:,nimage-1)
+    enddo
+  else
+    do iimage=2,nimage-2,1
+      !Determining where image is located along the path
+      path=dble(iimage-1)*path_per_image
+
+      aindex=0
+      do i=1,nframe
+         if(path<pathatstruct(i)) exit
+         aindex=i
+      end do
+      bindex=aindex+1
+      
+      if(0==aindex) then
+        lambda=path/pathatstruct(1)
+        distances(:,iimage)=(1.D0-lambda)*distances(:,1)+lambda*interdist(:,1)
+        cycle
+      endif
+      lambda=(path-pathatstruct(aindex))/(pathatstruct(bindex)-pathatstruct(aindex))
+
+      if(bindex==nstructs+1) then
+        distances(:,iimage)=(1.D0-lambda)*interdist(:,aindex)+lambda*distances(:,nimage-1)
+        cycle
+      endif
+
+      distances(:,iimage)=(1.D0-lambda)*interdist(:,aindex)+lambda*interdist(:,bindex)
+
+    end do
+  endif
+  tdist=.true.
+end subroutine dlf_idpp_get_distances
+
+subroutine dlf_idpp_destroy()
+  use dlf_idpp
+  if(.not.tdist) then
+    call dlf_fail("dlf_idpp_get_distances must be called before dlf_idpp_destroy")
+  end if
+  deallocate(distances)
+end subroutine dlf_idpp_destroy
+
+subroutine dlf_get_idpp_hessian(nvar,coords,hessian,status,iimage)
+  !  get the IDPP hessian at a given geometry
+  use dlf_parameter_module, only: rk
+  use dlf_global, only: glob
+  use dlf_idpp
+  implicit none
+  integer   ,intent(in)    :: nvar
+  real(rk)  ,intent(in)    :: coords(nvar)
+  real(rk)  ,intent(out)   :: hessian(nvar,nvar)
+  integer   ,intent(out)   :: status
+  integer   ,intent(in), optional :: iimage
+  real(rk) :: svar,svar2
+  integer  :: iat,jat,nat,jvat
+  real(rk) :: dvec(3), dyadic(3,3), identy(3,3),aux(3,3)
+  ! **********************************************************************
+
+  if(.not.tdist) then
+    call dlf_fail("dlf_idpp_get_distances must be called before dlf_get_idpp_hessian")
+  end if
+
+  hessian(:,:)=0.D0
+  status=1
+
+  nat=nvar/3
+  hessian=0D0
+  identy=0D0
+  forall(iat=1:3) identy(iat,iat)=1.D0
+  jvat=0
+  do iat=1,nat,1
+    do jat=iat+1,nat,1
+      if((glob%spec(iat).eq.-1).and.(glob%spec(jat).eq.-1)) cycle
+      jvat=jvat+1
+      dvec=coords(3*(iat-1)+1:3*iat)-coords(3*(jat-1)+1:3*jat)
+      !svar holds the actual distance
+      svar=sqrt(dot_product(dvec,dvec))
+      dvec=dvec/svar
+      !svar2 holds the target distance
+      svar2=distances(jvat,iimage)
+      !dyadic product of the distance unity vector
+      dyadic=spread(dvec,dim=2,ncopies=3)*spread(dvec,dim=1,ncopies=3)
+
+      aux=2D0*svar**(-4)*((12D0*svar**(-2)*(svar2-svar)**2+9D0/svar*(svar2-svar)+1D0&
+          )*dyadic-(2D0*svar**(-2)*(svar2-svar)**2+(svar2-svar)*svar**(-1))*identy)
+
+
+      ! aux=2D0*(svar**(-4))*(((8D0*(svar**(-2))*(svar2-svar)+7D0/svar)*(svar2-svar)+1&
+      !      )*dyadic-(2D0*(svar**(-2))*(svar2-svar)+1D0/svar)*(svar2-svar)*identy)
+
+      !+delta_l^k part
+      hessian(3*(iat-1)+1:3*iat,3*(iat-1)+1:3*iat)=hessian(3*(iat-1)+1:3*iat,3*(iat-1)+1:3*iat)&
+          +aux
+      hessian(3*(jat-1)+1:3*jat,3*(jat-1)+1:3*jat)=hessian(3*(jat-1)+1:3*jat,3*(jat-1)+1:3*jat)&
+          +aux
+      !-delta_l^j part
+      hessian(3*(iat-1)+1:3*iat,3*(jat-1)+1:3*jat)=hessian(3*(iat-1)+1:3*iat,3*(jat-1)+1:3*jat)&
+          -aux
+      hessian(3*(jat-1)+1:3*jat,3*(iat-1)+1:3*iat)=hessian(3*(jat-1)+1:3*jat,3*(iat-1)+1:3*iat)&
+          -aux
+
+    enddo
+  enddo
+  status=0
+
+end subroutine dlf_get_idpp_hessian
+
+subroutine dlf_get_idpp_gradient(nvar,coords,energy,gradient,iimage,status)
+  ! calculate an idpp gradient for a given geometry
+  use dlf_global, only: glob
+  use dlf_parameter_module, only: rk
+  use dlf_idpp
+  implicit none
+  integer   ,intent(in)    :: nvar
+  real(rk)  ,intent(in)    :: coords(nvar)
+  real(rk)  ,intent(out)   :: energy
+  real(rk)  ,intent(out)   :: gradient(nvar)
+  integer   ,intent(in)    :: iimage
+  integer   ,intent(out)   :: status
+  !
+  real(rk) :: svar,svar2
+  integer  :: nat,iat,jat,jvat
+  ! additional variables non-cont. diff MEP potential
+  !variables for the initial path construction
+  ! The Journal of Chemical Physics 140, 214106 (2014); doi: 10.1063/1.4878664
+  real(rk) :: aux
+  ! **********************************************************************
+
+  if(.not.tdist) then
+    call dlf_fail("dlf_idpp_get_distances must be called before dlf_get_idpp_gradient")
+  end if
+
+  !  call test_update
+  status=1
+  nat=nvar/3
+  energy=0D0
+  gradient=0D0
+  jvat=0
+  do iat=1,nat,1
+    do jat=iat+1,nat,1
+      if((glob%spec(iat).eq.-1).and.(glob%spec(jat).eq.-1)) cycle
+      jvat=jvat+1
+      !svar holds the actual distance
+      svar=sqrt(sum((coords(3*(iat-1)+1:3*iat)-coords(3*(jat-1)+1:3*jat))**2))
+      !svar2 holds desired value
+      svar2=distances(jvat,iimage)
+      energy=energy+(svar2-svar)**2*svar**(-4)
+
+      aux=-2D0*svar**(-4)*(svar2-svar)*(2D0*svar**(-1)*(svar2-svar)+1D0)
+      !atomnumbers
+      gradient(3*(iat-1)+1:3*iat)=gradient(3*(iat-1)+1:3*iat)&
+          +aux*(coords(3*(iat-1)+1:3*iat)-coords(3*(jat-1)+1:3*jat))/svar
+
+      gradient(3*(jat-1)+1:3*jat)=gradient(3*(jat-1)+1:3*jat)&
+          -aux*(coords(3*(iat-1)+1:3*iat)-coords(3*(jat-1)+1:3*jat))/svar
+    end do
+  end do
+  !  print*, iimage, sqrt(sum(gradient**2))
+  status=0
+
+end subroutine dlf_get_idpp_gradient
 

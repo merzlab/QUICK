@@ -27,11 +27,11 @@
 !! Equation numbers refer to this paper.
 !!
 !! DATA
-!!  $Date$
-!!  $Rev$
-!!  $Author$
-!!  $URL$
-!!  $Id$
+!!  $Date: 2013-06-04 17:19:44 +0200 (Tue, 04 Jun 2013) $
+!!  $Rev: 523 $
+!!  $Author: twk $
+!!  $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_conint.f90 $
+!!  $Id: dlf_conint.f90 523 2013-06-04 15:19:44Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -367,8 +367,6 @@ subroutine dlf_make_gp_gradient
 ! g = c3*[c4*f1 + (1-c4)*f2]
   glob%xgradient = glob%gp_c3 * ((glob%gp_c4 * f1) + &
                                  ((1.D0 - glob%gp_c4) * f2))
-
-print*, "check 5"
 
 ! Warning (when comparing the MNDO and DL-FIND implementations)...
 ! The orthonormalisation procedure when carried out in ChemShell units

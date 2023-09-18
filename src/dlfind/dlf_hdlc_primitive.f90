@@ -488,8 +488,10 @@ CONTAINS
     INTEGER maxbend, maxrots
     INTEGER, DIMENSION (:), ALLOCATABLE :: ivale, ipvle, ipcvl, ipple, index
     REAL (rk) :: angle, tx, ty, tz, ax, ay, az, ex, ey, ez, dx, dy, dz, r
-
+    logical bond_1_connected,bond_2_connected,bond_3_connected, dihedral_connected
+    logical is_linear
 ! begin
+    is_linear =.false.
     IF (printl>=5) THEN
       WRITE (stdout,'(5X,A,/)') 'Generating primitive internal coordinates'
     END IF
@@ -662,6 +664,7 @@ CONTAINS
 ! make an l_function if the centre is bi-valent & > 179 deg
           IF (angle>=175.0D0) THEN
             IF (ivale(i)==2) THEN
+              is_linear = .true.      
               IF (printl>=4) THEN
                 WRITE (stdout,'(7X,A,I5)') 'Making linear about ', i
               END IF
@@ -925,6 +928,41 @@ CONTAINS
           END DO
         END IF ! valid and matching bend
 
+!check if all four atoms are connected, if not -> delete
+if(.not. is_linear) then
+  bond_1_connected = .false.
+  bond_2_connected = .false.
+  bond_3_connected = .false.
+      if(nrots > 0) then
+        do j=1,nconn
+          if((iconn(1,j) == irots(1,nrots) .or. &
+             iconn(2,j) == irots(1,nrots)) .and.&
+            (iconn(1,j) == irots(2,nrots) .or.  &
+             iconn(2,j) == irots(2,nrots))) then
+             bond_1_connected = .true.
+          endif
+          if((iconn(1,j) == irots(2,nrots) .or. &
+             iconn(2,j) == irots(2,nrots)) .and.&
+            (iconn(1,j) == irots(3,nrots) .or.  &
+             iconn(2,j) == irots(3,nrots))) then
+             bond_2_connected = .true.
+          endif          
+          if((iconn(1,j) == irots(3,nrots) .or. &
+             iconn(2,j) == irots(3,nrots)) .and.&
+            (iconn(1,j) == irots(4,nrots) .or.  &
+             iconn(2,j) == irots(4,nrots))) then
+             bond_3_connected = .true.
+          endif           
+        enddo   
+        if(bond_1_connected .and. bond_2_connected .and. bond_3_connected) then
+          dihedral_connected = .true.
+        else
+          dihedral_connected = .false.
+        endif
+        
+        if(.not. dihedral_connected) nrots = nrots-1
+      endif
+endif
 ! end cycle over all bends around icent
         k = k + 1
         IF (k>maxbend) EXIT

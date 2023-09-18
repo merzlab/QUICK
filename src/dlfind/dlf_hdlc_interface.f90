@@ -28,11 +28,11 @@
 !!
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2014-10-21 14:22:53 +0200 (Tue, 21 Oct 2014) $
+!! $Rev: 540 $
+!! $Author: twk $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/trunk/dlf_hdlc_interface.f90 $
+!! $Id: dlf_hdlc_interface.f90 540 2014-10-21 12:22:53Z twk $
 !!
 !! COPYRIGHT
 !!
@@ -659,8 +659,8 @@ subroutine dlf_hdlc_xtoi(nat,nivar,nicore,micspec,xcoords,xgradient,&
 
   IF(hdlc%NGROUPS<1) call dlf_fail("Number of fragements in HDLC must be >0")
 
-!  IF (printl>=4) WRITE (stdout,'(/,A)') &
-!      'Converting Cartesians to HDLC'
+  IF (printl>=4) WRITE (stdout,'(/,A)') &
+      'Converting Cartesians to HDLC'
   ndfcons = 0
 
   ipinner = 1
@@ -807,8 +807,8 @@ subroutine dlf_hdlc_hessian_xtoi(nat,nivar,xcoords,xhessian,ihessian)
         & for only one fragment (residue)")
   end if
 
-  !IF (printl>=4) WRITE (stdout,'(/,A)') &
-  !    'Converting Cartesian Hessian to HDLC'
+  IF (printl>=4) WRITE (stdout,'(/,A)') &
+      'Converting Cartesian Hessian to HDLC'
 
   pos=1
   istart=1
@@ -871,7 +871,7 @@ end subroutine dlf_hdlc_hessian_xtoi
 subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout  
+  use dlf_global 
   use dlfhdlc_hdlclib, only: hdlc,matrix,residue_type,matrix_create,matrix_set, &
       matrix_destroy,matrix_get, matrix_print,&
       ! subroutines
@@ -901,8 +901,8 @@ subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
 
   tok=.true.
   hdlc%interror=.false.
-  !IF (printl>=4) WRITE (stdout,'(/,A)') &
-  !    'Converting HDLC to Cartesians'
+  IF (printl>=4) WRITE (stdout,'(/,A)') &
+      'Converting HDLC to Cartesians'
 
   ipinner = 1
   ipouter = nicore + 1
@@ -942,8 +942,9 @@ subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
 ! conversion HDLC -> Cartesian failed due to singular G matrix
     IF ( .NOT. residue%lgmatok) THEN
       tok=.false.
-      residue%err_cnt = residue%err_cnt + 1000
-
+      !if(glob%gpr_internal /=1) then
+        residue%err_cnt = residue%err_cnt + 1000
+      !endif
       IF (printl>=2) WRITE (stdout,'(3X,A,I4,A,I4,/)') &
           'Conversion of residue ', residue%name, &
           ' failed , HDLC failure gauge: ', residue%err_cnt

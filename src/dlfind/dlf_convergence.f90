@@ -11,11 +11,11 @@
 !!
 !!
 !! DATA
-!! $Date$
-!! $Rev$
-!! $Author$
-!! $URL$
-!! $Id$
+!! $Date: 2008-02-14 16:15:07 +0000 (Thu, 14 Feb 2008) $
+!! $Rev: 284 $
+!! $Author: jk37 $
+!! $URL: http://ccpforge.cse.rl.ac.uk/svn/dl-find/branches/task_manager/dlf_convergence.f90 $
+!! $Id: dlf_convergence.f90 284 2008-02-14 16:15:07Z jk37 $
 !!
 !! COPYRIGHT
 !!
@@ -79,6 +79,8 @@ subroutine convergence_test(icycle,tene,tconv)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
   use dlf_convergence
+  use gpr_in_dl_find_mod, only: gpr_opt
+  use gprmep_module, only: gprmep_instance
   implicit none
   integer,intent(in)  :: icycle ! just for printing
   logical,intent(in)  :: tene   ! store current energy as old energy?
@@ -87,17 +89,25 @@ subroutine convergence_test(icycle,tene,tconv)
   logical  :: le,lrmss,ls,lrmsg,lg
   real(rk) :: svar
 ! **********************************************************************
-
+  if (glob%iopt==101) then 
+    ! GPRTS
+    if(gpr_opt%posIsResultOfRot) then
+      if(printl>=4) then
+          write(stdout,*) "Rotation performed, no convergence tested."
+      end if      
+      return
+    end if
+    if(.not.gpr_opt%limitStepExternally) then
+      if(printl>=4) then
+          write(stdout,*) "No convergence tested!"
+      end if      
+      return
+    end if
+  end if
   ! This is initialisation in reality
   if(glob%tolerance<0.D0) call dlf_fail("Convergence tolerance < 0")
   tolg=glob%tolerance
-
   tole=glob%tolerance_e
-
-!  tolrmsg = 3.0D-4
-!  tols    = 1.8D-3
-!  tolrmss = 1.2D-3
-
   tolrmsg= tolg / 1.5D0
   tols=    tolg * 4.D0
   tolrmss= tolg * 8.D0/3.D0
@@ -120,7 +130,7 @@ subroutine convergence_test(icycle,tene,tconv)
       if(le) then
         write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole
       else
-        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole 
+        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole
       end if
     end if
 
@@ -133,7 +143,7 @@ subroutine convergence_test(icycle,tene,tconv)
         write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")')vals,tols
       end if
     end if
-    
+
     ! RMS step convergence
     lrmss=(valrmss < tolrmss)
     if(printl>0) then
@@ -143,7 +153,7 @@ subroutine convergence_test(icycle,tene,tconv)
         write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")')valrmss,tolrmss
       end if
     end if
-    
+
   else
     if(tene) then
       le=.true.
@@ -188,6 +198,7 @@ subroutine convergence_test(icycle,tene,tconv)
   end if
 
   !if (printl > 0 .and. tconv) write(stdout,'(a)') "Convergence reached"
+
 
   ! send convergence information to task module
   call dlf_task_set_l("CONVERGED",tconv)
@@ -255,7 +266,6 @@ subroutine convergence_set_info(msg,nvar,energy,gradient,step)
   vals=maxval(abs(step(:)))
   locs=maxloc(abs(step(:)))
   valrmss=sqrt(sum(step(:)**2)/dble(nvar))
-
 end subroutine convergence_set_info
 !!****
     
