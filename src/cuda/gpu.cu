@@ -603,6 +603,9 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     
     gpu -> gpu_basis -> fStart = 0;
     gpu -> gpu_sim.fStart = 0;
+
+    gpu -> gpu_basis -> ffStart = 0;
+    gpu -> gpu_sim.ffStart = 0;
     
     if (sort_method == 0) {
         QUICKDouble cut1 = 1E-10;
