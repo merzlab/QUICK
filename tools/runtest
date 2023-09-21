@@ -306,6 +306,7 @@ print_test_info(){
     grad_ohrad_b3lyp_631gss)              testinfo="OH radical: UDFT B3LYP gradient test";;
     opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
+    opt_wat_b3lyp_ccpvtz)                 testinfo="Water: RHF geometry optimization test: s, p, d and f basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
     opt_merad_b3lyp_631gss)               testinfo="Methyl radical: UDFT B3LYP geometry optimization test";;
     opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT DL-Find geometry optimization test with s, p and d basis functions";;
