@@ -118,6 +118,7 @@ ene_psb3_blyp_631g	            #BLYP test with s and p basis functions
 ene_psb3_blyp_631gss	            #BLYP test with s, p and d basis functions
 ene_psb3_b3lyp_631g	            #B3LYP test with s and p basis functions
 ene_psb3_b3lyp_631gss	            #B3LYP test with s, p and d basis functions
+ene_C2H6_b3lyp_def2tzvp             #B3LYP test with s, p, d and f basis functions
 ene_psb3_libxc_lda_631g             #LIBXC lda functional test
 ene_psb3_libxc_gga_631g             #LIBXC gga functional test
 ene_psb3_libxc_hgga_631g            #LIBXC hybrid functional test
