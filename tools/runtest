@@ -264,6 +264,7 @@ print_test_info(){
     ene_psb3_blyp_631gss)                 testinfo="PSB3: DFT energy test: s, p and d basis functions, BLYP functional";;
     ene_psb3_b3lyp_631g)                  testinfo="PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
     ene_psb3_b3lyp_631gss)                testinfo="PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_C2H6_b3lyp_def2tzvp)              testinfo="PSB3: DFT energy test: s, p, d and f basis functions, native B3LYP functional";;
     ene_psb3_libxc_lda_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
     ene_psb3_libxc_gga_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
     ene_psb3_libxc_hgga_631g)             testinfo="PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
