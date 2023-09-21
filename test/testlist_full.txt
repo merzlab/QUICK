@@ -155,6 +155,7 @@ grad_rpsb_meoh_rhf_sto3g          #RHF point charge gradient test
 grad_ohrad_b3lyp_631gss           #UDFT B3LYP gradient test
 opt_wat_rhf_631g	          #RHF geometry optimization test with s and p basis functions
 opt_wat_rhf_ccpvdz	          #RHF geometry test with s, p and d basis functions
+opt_wat_b3lyp_ccpvtz              #DFT geometry test with s, p, d and f basis functions
 opt_nh4_pbe_def2svp               #DFT geometry test with s, p and d basis functions
 opt_merad_b3lyp_631gss            #UDFT B3LYP geometry optimization
 opt_hsoh_pbe0_def2svp             #DFT DL-Find geometry test with s, p and d basis functions
