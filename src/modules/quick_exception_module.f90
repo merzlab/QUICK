@@ -127,6 +127,9 @@ contains
     case(35)
       msg='Requested export file format is not available.'
 
+    case(36)
+      msg='Support for F functions is disabled. Please recompile the code with support for F functions.'
+
     case default
       msg='Unknown error.'
 
