@@ -260,10 +260,12 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch){
     gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;
     gpu -> gpu_sim.YVerticalTemp = gpu -> scratch -> YVerticalTemp -> _devData;
 
+    gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store2 -> DeleteCPU();
+
+    gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
+
     if(*allocate_gradient_scratch){
-        gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
-        gpu -> scratch -> store2 -> DeleteCPU();
- 
         gpu -> scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
         gpu -> scratch -> storeAA -> DeleteCPU();
  
@@ -273,7 +275,6 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch){
         gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
         gpu -> scratch -> storeCC -> DeleteCPU();
  
-        gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
         gpu -> gpu_sim.storeAA       = gpu -> scratch -> storeAA -> _devData;
         gpu -> gpu_sim.storeBB       = gpu -> scratch -> storeBB -> _devData;
         gpu -> gpu_sim.storeCC       = gpu -> scratch -> storeCC -> _devData;
@@ -287,9 +288,9 @@ extern "C" void gpu_deallocate_scratch_(bool* deallocate_gradient_scratch){
 
    SAFE_DELETE(gpu -> scratch -> store);
    SAFE_DELETE(gpu -> scratch -> YVerticalTemp);
+   SAFE_DELETE(gpu -> scratch -> store2);
 
    if(*deallocate_gradient_scratch){
-      SAFE_DELETE(gpu -> scratch -> store2);
       SAFE_DELETE(gpu -> scratch -> storeAA);
       SAFE_DELETE(gpu -> scratch -> storeBB);
       SAFE_DELETE(gpu -> scratch -> storeCC);
