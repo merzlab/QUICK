@@ -656,7 +656,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            jshell = jshell+1
                            elseif (shell == 'F') then
 
-                           ierr=10 
+
+#ifndef ENABLEF
+                           ierr=36 
+#endif
 
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
