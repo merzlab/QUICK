@@ -551,7 +551,9 @@ check_dipole(){
 
 # function to clean up files
 clean_up(){
+
     rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+
 }
 
 # function to report summary
@@ -651,6 +653,14 @@ print_summary(){
   if [ "$log" = 'yes' ]; then
     echo "$sum_footer" >> $QUICK_HOME/.quick.runtest.summary.log
   fi
+
+}
+
+# Function to skip F tests if the code wasnt compiled with support
+check_f_error(){
+    f_error_string=`grep 'Error: Support for F functions is disabled' "$t.out"`
+
+    if [ -z "$f_error_string" ]; then echo 0 ; else echo 1 ; fi
 
 }
 
