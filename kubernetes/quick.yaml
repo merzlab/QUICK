@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quick-qm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quick-qm
+  template:
+    metadata:
+      labels:
+        app: quick-qm
+    spec:
+      containers:
+      - name: quick
+        image: kkricksdsu/quick:latest
+        command: ["/bin/bash", "-c", "./runtest --serial --full && sleep 3600"]
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
