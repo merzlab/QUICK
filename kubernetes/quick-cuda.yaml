@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quick-qm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quick-qm
+  template:
+    metadata:
+      labels:
+        app: quick-qm
+    spec:
+      containers:
+      - name: quick
+        image: kkricksdsu/quick@sha256:46020a60808e667bac076f25fddb66ecd639caa11ab4942048650e7385f25188
+        command: ["/bin/bash", "-c", "./runtest --cuda --full && sleep 3600"]
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+            nvidia.com/gpu: 1
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+            nvidia.com/gpu: 1
