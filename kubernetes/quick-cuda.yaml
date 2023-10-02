@@ -12,6 +12,15 @@ spec:
       labels:
         app: quick-qm
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-GeForce-GTX-1080-Ti
       containers:
       - name: quick
         image: kkricksdsu/quick@sha256:46020a60808e667bac076f25fddb66ecd639caa11ab4942048650e7385f25188
