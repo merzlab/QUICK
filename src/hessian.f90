@@ -214,29 +214,20 @@ subroutine HFHessian
      do I = 1, natom*3, 3
         write(ioutfile,*)" Atom no : ", (I+2)/3 
         do J = 1, ntri
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J),quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
         enddo
      enddo
 
-     call formCPHF
+     call form_D1W1
 
-     write(ioutfile,*)"  Derivative Fock after 1st-order Ele-Nuc  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ", (I+2)/3
-        do J = 1, ntri
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J),quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
-        enddo
-     enddo
+  !---------------------------------------------------------------------
+  !  5) FINAL HESSIAN CONTRIBUTION
+  !---------------------------------------------------------------------
 
-     write(ioutfile,*)"  1st-order Overlap  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ", (I+2)/3
-        do J = 1, ntri
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%od(I,J),quick_qm_struct%od(I+1,J),quick_qm_struct%od(I+2,J)
-        enddo
-     enddo
+     call hess_total
 
 end subroutine HFHessian
 
@@ -369,6 +360,188 @@ subroutine get_oneen_hessian
   return
 
 end subroutine get_oneen_hessian
+
+subroutine hess_total
+  use allmod
+  implicit real*8 (a-h,o-z)
+!---------------------------------------------------------------------
+!  calculates two contributions (last two) to the final hessian
+!  tr(d1*f1) - tr(w1*s1)
+!
+!  makes the full hessian matrix out of its upper triangle
+!---------------------------------------------------------------------
+
+  ntri=nbasis*(nbasis+1)/2
+
+!  do IAT=1,NATOMS
+!     do J=1,3
+!        do K=1,ntri
+!           quick_qm_struct%fd(3*(IAT-1)+J,K)=quick_qm_struct%fd(3*(IAT-1)+J,K) &
+!                               +quick_qm_struct%fd1g0(3*(IAT-1)+J,K)
+!        enddo 
+!     enddo
+!  enddo
+
+  call calc_d1f1_w1s1(natom,ntri,nbasis,quick_qm_struct%dense1, &
+                     quick_qm_struct%fd,quick_qm_struct%wdens1, &
+                     quick_qm_struct%od,quick_qm_struct%hessian)
+
+  call hess_full(quick_qm_struct%hessian,natom)
+
+
+  write(ioutfile,*)
+  write(ioutfile,*)'FINAL HESSIAN'
+  do Iatm=1,natom*3
+     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
+  enddo
+
+end subroutine hess_total
+
+subroutine calc_d1f1_w1s1(natoms,ntri, ncf, &
+                         den1,fock1,wen1,over1,hess)
+      implicit real*8 (a-h,o-z)
+!---------------------------------------------------------------------
+!  calculates two contributions (last two) to the final hessian
+!  tr(d1*f1) - tr(w1*s1)
+!---------------------------------------------------------------------
+! Input :
+!
+! natoms  - number of atoms
+! ntri    - ncf*(ncf+1)/2
+! ncf     - basis set dimension
+!  den1() - Ist-order density matrix
+! fock1() - Ist-order fock matrix
+!  wen1() _ Ist-order weighted density
+! over1() - Ist-order overlap matrix
+!
+! Input/Output  :
+!
+! hess()  - final hessian
+!---------------------------------------------------------------------
+      dimension den1(3*natoms,ntri),fock1(3*natoms,ntri)
+      dimension wen1(3*natoms,ntri),over1(3*natoms,ntri)
+      dimension hess(3*natoms,3*natoms)
+!-----------------------------------------------------------------
+! Atom=Btom
+!
+      do iat=1,natoms
+         do ixyz=1,3
+            call spur(den1(3*(IAT-1)+ixyz,:),fock1(3*(IAT-1)+ixyz,:),ncf,df1)
+            call spur(wen1(3*(IAT-1)+ixyz,:),over1(3*(IAT-1)+ixyz,:),ncf,ws1)
+            dewe=df1-ws1
+            hess(3*(IAT-1)+ixyz,3*(IAT-1)+ixyz)=hess(3*(IAT-1)+ixyz,3*(IAT-1)+ixyz)+dewe
+            do jxyz=ixyz+1,3
+                call spur(den1(3*(IAT-1)+ixyz,:),fock1(3*(IAT-1)+jxyz,:),ncf,df1)
+                call spur(den1(3*(IAT-1)+jxyz,:),fock1(3*(IAT-1)+ixyz,:),ncf,fd1)
+                call spur(wen1(3*(IAT-1)+ixyz,:),over1(3*(IAT-1)+jxyz,:),ncf,ws1)
+                call spur(wen1(3*(IAT-1)+jxyz,:),over1(3*(IAT-1)+ixyz,:),ncf,sw1)
+                df=df1+fd1
+                ws=ws1+sw1
+                dewe=df-ws
+                dewe= dewe*0.5d0
+                hess(3*(IAT-1)+jxyz,3*(IAT-1)+ixyz)=hess(3*(IAT-1)+jxyz,3*(IAT-1)+ixyz)+dewe
+            enddo
+         enddo
+      enddo
+!
+! different atoms :
+!
+      do iat=1,natoms
+         do jat=iat+1,natoms
+            do ixyz=1,3
+               do jxyz=1,3
+                  call spur(den1(3*(IAT-1)+ixyz,:),fock1(3*(JAT-1)+jxyz,:),ncf,df1)
+                  call spur(den1(3*(JAT-1)+jxyz,:),fock1(3*(IAT-1)+ixyz,:),ncf,fd1)
+                  call spur(wen1(3*(IAT-1)+ixyz,:),over1(3*(JAT-1)+jxyz,:),ncf,ws1)
+                  call spur(wen1(3*(JAT-1)+jxyz,:),over1(3*(IAT-1)+ixyz,:),ncf,sw1)
+                  df=df1+fd1
+                  ws=ws1+sw1
+                  dewe=df-ws
+                  dewe= dewe*0.5d0
+                  hess(3*(JAT-1)+jxyz,3*(IAT-1)+ixyz)=hess(3*(JAT-1)+jxyz,3*(IAT-1)+ixyz)+dewe
+               enddo
+            enddo
+         enddo
+      enddo
+
+end subroutine calc_d1f1_w1s1
+
+!======================================================================
+!
+      subroutine hess_full(hess,na)
+      implicit real*8 (a-h,o-z)
+      dimension hess(3*na,3*na)
+!
+      do i=1,na
+         do ixyz=1,3
+            do j=i,na
+               if(j.eq.i) then
+                  do jxyz=ixyz,3
+                     hess(3*(i-1)+ixyz,3*(j-1)+jxyz)=hess(3*(j-1)+jxyz,3*(i-1)+ixyz)
+                  enddo
+               else
+                  do jxyz=1,3
+                     hess(3*(i-1)+ixyz,3*(j-1)+jxyz)=hess(3*(j-1)+jxyz,3*(i-1)+ixyz)
+                  enddo
+               endif
+            enddo
+         enddo
+      enddo
+!
+      end
+!======================================================================
+SUBROUTINE MATDIAG(A,N,VM,V,D,IErr)
+IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+INTEGER i4err
+
+!  Diagonalizes a Real Symmetric matrix A by Householder
+!  reduction to Tridiagonal form
+!
+!  ARGUMENTS
+!
+!  A     -  input matrix
+!           on exit contains eigenvectors
+!  N     -  dimension of A
+!  VM    -  scratch space for eigenvector ordering (N*N)
+!  V     -  scratch space (N)
+!  D     -  on exit contains eigenvalues
+
+DIMENSION A(N,N),VM(N,N),V(N),D(N),S(10)
+
+If(N.GT.3) Then
+  call dsyev('V','U',N,A,N,D,VM,N*N,i4err)
+Else
+  call dsyev('V','U',N,A,N,D,S,10,i4err)
+EndIf
+
+IERR=int(i4err)
+RETURN
+END SUBROUTINE
+!=============================================================================
+      subroutine spur (A,B,n,s)
+!  This subroutine calculates the trace of the product of two symmetrical
+!  matrices, stored in triangular form (upper triangle column-wise)
+!  Arguments
+!  INTENT(IN)
+!  A, B = two symmatrical matrices, stored as n*(n+1)/2 long arrays
+!         indexing: (ij)=i*(i-1)/2+j where i>=j
+!  n    = dimension
+!  INTENT(OUT)
+!  s = Trace(A*B)
+!  Spur is German for Trace
+!
+      implicit real*8 (a-h,o-z)
+      parameter(two=2.0d0)
+      dimension A(*), B(*)
+      ntri=n*(n+1)/2
+      s=ddot(ntri,A,1,B,1)*two
+      ii=0
+      do i=1,n
+        ii=ii+i
+        s=s-A(ii)*B(ii)
+      end do
+      end
+!==============================================================
 
 subroutine get_cphf_hessian
   use allmod
