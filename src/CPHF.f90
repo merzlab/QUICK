@@ -3,16 +3,34 @@
 ! Ed Brothers. November 14, 2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
-subroutine formCPHF
+subroutine form_D1W1
   use allmod
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic, attrashellfock1
   use quick_cutoff_module, only: cshell_density_cutoff
+  use quick_cshell_eri_module, only: getCshellEri
+
+  implicit double precision(a-h,o-z)
+
+    call form_d1const
+ 
+    call form_CPHF
+
+    call form_wdens1
+
+end subroutine form_D1W1
+
+subroutine form_d1const
+  use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic, attrashellfock1
+  use quick_cutoff_module, only: cshell_density_cutoff
+  use quick_cshell_eri_module, only: getCshellEri
 
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
-  logical :: ijcon
-  double precision g_table(200),a,b,fxd(nbasis, nbasis)
+  logical :: ijcon, delta0
+  double precision g_table(200),a,b, d1c((nbasis*(nbasis+1))/2,natom*3), fds(nbasis,nbasis,natom*3)
   integer i,j,k,ii,jj,kk,g_count, IIsh, JJsh, nocc
 
      do Ibas=1,nbasis
@@ -23,7 +41,7 @@ subroutine formCPHF
 
               DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
 
-  !  We have selected our two basis functions, now loop over angular momentum.
+  !  We have selecte two basis functions, now loop over angular momentum.
               do Imomentum=1,3
 
   !  do the Ibas derivatives first. In order to prevent code duplication,
@@ -46,7 +64,10 @@ subroutine formCPHF
      do I = 1, natom*3, 3
         write(ioutfile,*)" Atom no : ",(I+2)/3
         do J = 1, ntri
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J),quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
         enddo
      enddo
 
@@ -57,15 +78,422 @@ subroutine formCPHF
            call attrashellfock1(IIsh,JJsh)
         enddo
      enddo
+
+     write(ioutfile,*)"  Derivative Fock after 1st-order Ele-Nuc  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+!           do K=1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
+        enddo
+     enddo
+
+     write(ioutfile,*)"  1st-order Overlap  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%od(I,J), &
+           quick_qm_struct%od(I+1,J),quick_qm_struct%od(I+2,J)
+!           enddo
+        enddo
+     enddo
     
-     call calcFD(nbasis, ntri, quick_qm_struct%o, quick_qm_struct%dense, fxd)
+     call calcFD(nbasis, ntri, quick_qm_struct%o, &
+                 quick_qm_struct%dense,quick_qm_struct%fxd)
 
      nocc = quick_molspec%nelec/2
      nat3 = natom*3
 
-     call d1_const(nat3, nbasis, ntri, nocc, fxd, quick_qm_struct%fd, quick_qm_struct%od, quick_qm_struct%dense, d1c, fds)
 
-end subroutine formCPHF
+     call d1_const(nat3, nbasis, ntri, nocc, quick_qm_struct%co, quick_qm_struct%E, &
+                  quick_qm_struct%fxd, quick_qm_struct%fd, quick_qm_struct%od, &
+                  quick_qm_struct%dense, d1c, quick_qm_struct%fds1)
+
+     call trspmo(d1c,ntri,quick_qm_struct%d1con,nat3) 
+
+end subroutine form_d1const
+
+subroutine form_CPHF
+  use allmod
+  use quick_overlap_module, only: gpt, overlap
+  use quick_oei_module, only: ekinetic, attrashellfock1
+  use quick_cutoff_module, only: cshell_density_cutoff
+  use quick_cshell_eri_module, only: getCshellEri
+
+  implicit double precision(a-h,o-z)
+  dimension natend(natom)
+  dimension g1((nbasis*(nbasis+1))/2,3,natom) ! storage for G(D1,g0)
+  dimension r1((nbasis*(nbasis+1))/2,3,natom) ! final 1st-order density
+  dimension d1_curr((nbasis*(nbasis+1))/2,3,natom) ! current 1st-order density
+  dimension d1con((nbasis*(nbasis+1))/2,3) ! storage for constant part of D1
+  dimension work1((nbasis*(nbasis+1))/2,3)
+  dimension w1(nbasis,nbasis)
+  dimension w2(nbasis*(nbasis-quick_molspec%nelec/2))
+  integer nocc,ntri,icycle,nvirt
+  dimension x1((nbasis*(nbasis+1))/2,3,natom)
+  dimension y1((nbasis*(nbasis+1))/2,3,natom)
+  character*4 fext1, fext2
+  dimension hess(3,natom,3,natom)
+  dimension resx(natom),resy(natom),resz(natom)
+  dimension hesx(natom),hesy(natom),hesz(natom)
+  dimension deltx(natom),delty(natom),deltz(natom)
+  dimension heltx(natom),helty(natom),heltz(natom)
+  logical oscylates
+  
+!-------------------------------------------------------------------
+      do iat=1,natonce
+         resx(iat)=1.d+5
+         resy(iat)=1.d+5
+         resz(iat)=1.d+5
+         natend(iat)=0       ! cphf not converged for this atom yet
+         hesx(iat)=1.d+5
+         hesy(iat)=1.d+5
+         hesz(iat)=1.d+5
+      enddo
+!-------------------------------------------------------------------
+! for dens1_part1 :
+!
+      factor=2.0d0     ! for RHF , like orbital's occupancy
+!-------------------------------------------------------------------
+
+     ntri=(nbasis*(nbasis+1))/2
+write(*,*)'R1:'
+     do iat=1,natom 
+        natend(iat) = 0
+        do J=1,3
+           r1(:,J,IAT)=quick_qm_struct%d1con(3*(iat-1)+J,:)
+           quick_qm_struct%dense1(3*(iat-1)+J,:)=r1(:,J,IAT)
+           d1_curr(:,J,IAT)=r1(:,J,IAT)
+write(*,*)d1_curr(:,J,IAT)           
+        enddo
+     enddo 
+     g1=0.d0
+     MXITER=3
+     icycle=0
+     lend=0
+
+!     do I=1, natom*3, 3
+!        do J=1,3
+!           d1con(:,J,(I+2)/3)=quick_qm_struct%dense1(I-1+J,:)
+!        enddo
+!     enddo
+
+!     ITER=1
+
+     DO ITER=1,MXITER
+        icycle=icycle+1
+
+write(*,*)'ITER:',ITER
+
+        call get_fext(iter,fext1,fext2)
+!                           name.fext1  - files for rl=l(r)
+!                           name.fext2  - files for ro=O(r)
+
+     ! Calculate G(D1,g0)
+
+         do I=1, natom
+            do J=1,3
+               call quad(r1(:,J,I),quick_qm_struct%psdense,1.0d0,nbasis)
+               quick_method%CalcFock_d1g0=.true.
+               quick_qm_struct%o=0.d0
+               call cshell_density_cutoff
+               do II=1,jshell
+                  call getCshellEri(II)
+               enddo
+               KL=0
+               do K=1,nbasis
+                  do L=1,K
+                     KL=KL+1
+                     g1(KL,J,I)=quick_qm_struct%o(K,L)
+                  enddo
+               enddo               
+            enddo
+         enddo
+
+write(*,*)'G1:'      
+         do iat=1,natom
+            natend(iat) = 0
+            do J=1,3
+               quick_qm_struct%fd1g0(3*(IAT-1)+J,:)=G1(:,J,IAT)
+write(*,*)G1(:,J,IAT)
+            enddo
+         enddo
+
+         nocc=quick_molspec%nelec/2
+
+         DO IAT=1,NATOM
+         IF(natend(iat).eq.0) THEN
+
+write(*,*)'Atom No.:',iat
+            do icr=1,3
+               call dens1_1dir1n(factor, nbasis, nocc, 0.0d0, g1(1,icr,iat), &
+                    -quick_qm_struct%co, quick_qm_struct%E, r1(1,icr,iat), w1, w2)
+            enddo
+
+            call file4cphf_o(ntri*3,iat,fext1,r1(1,1,iat),'write') !rl1=L(r1)
+            call make_r_orto(iter,ntri,iat,d1con, r1(1,1,iat))
+            call file4cphf_o(ntri*3,iat,fext2,r1(1,1,iat),'write') ! ro1=O(rl1)
+
+            if(iter.ge.2) then
+              call calc_d1r(iter,ntri,iat,d1con,work1,g1(1,1,iat))
+write(*,*)'r1'
+do icr=1,3
+write(*,*)r1(:,icr,iat)
+enddo
+
+write(*,*)'g1'
+do icr=1,3
+write(*,*)g1(:,icr,iat)
+enddo
+            endif
+
+            if(iter.eq.1) then
+            do J=1,3
+               G1(:,J,IAT)=d1_curr(:,J,IAT)
+            enddo
+              call file4cphf_o(ntri*3,iat,fext1,r1(1,1,iat),'read')
+              call daxpy(ntri*3,1.0d0,r1(1,1,iat),1,g1(1,1,iat),1)
+            endif
+
+            call file4cphf_o(ntri*3,iat,fext2,r1(1,1,iat),'read') !ro dft=0
+            do J=1,3
+               D1_CURR(:,J,IAT)=G1(:,J,IAT)
+            enddo
+
+         ENDIF ! if(natend(iat).eq.0) then
+         ENDDO ! over atoms
+
+         ! For convergence test calculate contributions to hessian :
+         !                FDS1*D1 and S1DF*D1
+
+         call HessCont2Diag(natom,natend,nbasis,ntri,r1(1,1,1),hess)
+         call whessContDiag(hess,natom)
+
+         thrs=1.0D-08
+
+write(*,*)'hess:'
+write(*,*)hess
+
+         call cphf_enHR(r1,hess,thrs,ntri,nbasis,iter,&
+                       lend,1,natend,errmax,natom, & 
+                       resx,resy,resz,hesx,hesy,hesz, &
+                       deltx,delty,deltz, heltx,helty,heltz, &
+                       oscylates)
+
+write(*,*)'lend',lend
+
+!--------------------------------------------------------------------
+!
+         IF(LEND.EQ.1 .or. ICYCLE.EQ.MXITER) EXIT
+!
+!....................................................................
+
+
+!
+         IF(ICYCLE.EQ.MXITER) EXIT
+!
+
+    ENDDO    ! end of iterations
+
+!---------------------------------------------------------------
+      call file4cphf_c(ntri*3,iter)
+!---------------------------------------------------------------
+
+      do IAT=1,NATOM
+         do J=1,3
+            quick_qm_struct%dense1(3*(iat-1)+J,:)= D1_CURR(:,J,IAT)
+            R1(:,J,IAT)=D1_CURR(:,J,IAT) 
+         enddo
+      enddo
+
+      write(6,*) ' PRINTOUT IN SUBROUTINE <form_CPHF>'
+      do iat=1,natom
+         write(6,*)' 1st-order density matrix  for at=',iat
+         call drumh(g1(1,1,iat),nbasis, 6  ,'dens1-X ')
+         call drumh(g1(1,2,iat),nbasis, 6  ,'dens1-Y ')
+         call drumh(g1(1,3,iat),nbasis, 6  ,'dens1-Z ')
+      enddo
+
+end subroutine form_CPHF
+
+subroutine form_wdens1
+      use allmod
+      implicit real*8 (a-h,o-z)
+!--------------------------------------------------------------
+! This routine calculates the  Ist-order weighted density(x,y,z)
+! one atom, 3 directions at once
+!--------------------------------------------------------------
+! At this point we have 1st-order density D1 and G(D1,g0).
+! We need to calculate 1-st order "weighted density" W1 which
+! contributes to the hessian as -2*Tr W1*S1 . This contribution
+! to the final hessian can be expressed in terms of ordinary D1
+! and 0th- and 1st-order FULL Fock as follows :
+!
+
+! -2 TrSa Wb =  -Tr Sa (Db F D + D Fb  D + D F Db )
+!
+! where F=h+G(D,g)  and  Fb=hb + G(Db,g)+G(D,gb)
+!
+! Comparing Tr Sa*Wb with Tr Sa*(Db*F*D+D*Fb*D+D*F*Db)
+! one may named the (Db F D + D Fb D + D F Db) matrix
+! the 1st-order "weighted density" . Thus we define Wb as :
+!
+!   Wb = Db*F*D + D*Fb*D + D*F*Db
+!
+! with full fock :  F=h+G(D,g)  and  Fb=hb + G(Db,g)+G(D,gb)
+!
+!  G(D1,g0) already done in chfsol_nat
+!--------------------------------------------------------------
+! INPUT :
+! rhf      - logical flag for rhf/uhf
+! ncf      - number of basis function
+! ntri     -  ncf*(ncf+1)/2
+! lind     - diagonals of i*(i-1)/2
+! d0       - unpreturbed density
+! fd       - FD matrix
+! f1       - part of Ist-order fock matrix f1=h1 + G(D0,g1)
+! g1       - G(D1,g0)
+! d1       - Ist-order Density
+! work     - scratch for D*F1
+!
+! OUTPUT :
+! w1       - resulting Ist-order weighted density
+!--------------------------------------------------------------
+      dimension work(nbasis,nbasis,3)
+      dimension d0(nbasis,nbasis)
+      dimension fd(nbasis,nbasis)
+!--------------------------------------------------------------
+      dimension f1(nbasis*(nbasis+1)/2,3)
+      dimension g1(nbasis*(nbasis+1)/2,3)
+
+      dimension d1(nbasis*(nbasis+1)/2,3)
+      dimension w1(nbasis*(nbasis+1)/2,3)
+!--------------------------------------------------------------
+   ncf=nbasis
+   ntri=ncf*(ncf+1)/2
+
+   do i=1,ncf
+      do j=1,ncf
+         d0(i,j)=quick_qm_struct%dense(i,j)
+         fd(i,j)=quick_qm_struct%fxd(i,j)
+      enddo
+   enddo
+
+   DO IAT=1, NATOM
+
+      do J=1,3
+         f1(:,J)=quick_qm_struct%fd(3*(IAT-1)+J,:)
+         g1(:,J)=quick_qm_struct%fd1g0(3*(IAT-1)+J,:)
+         d1(:,J)=quick_qm_struct%dense1(3*(IAT-1)+J,:)
+      enddo
+
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            jj=j*(j-1)/2
+            dxfd=0.d0
+            dyfd=0.d0
+            dzfd=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               ik=ii+k
+               kj=jj+k
+               if(k.gt.i) ik=kk+i
+               if(k.gt.j) kj=kk+j
+               dxfd=dxfd+d1(ik,1)*fd(k,j)
+               dyfd=dyfd+d1(ik,2)*fd(k,j)
+               dzfd=dzfd+d1(ik,3)*fd(k,j)       !   D1*FD
+            enddo
+            work(i,j,1)=dxfd
+            work(i,j,2)=dyfd
+            work(i,j,3)=dzfd                    !  D1*FD
+         enddo !   j=1,ncf
+      enddo    !   i=1,ncf
+!
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            ij=ii+j
+            if(j.gt.i) ij=(j*(j-1)/2)+i
+            w1(ij,1)=work(i,j,1)+work(j,i,1)
+            w1(ij,2)=work(i,j,2)+work(j,i,2)
+            w1(ij,3)=work(i,j,3)+work(j,i,3)
+         enddo
+      enddo
+!--------------------------------------------------------------
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            jj=j*(j-1)/2
+            dfx=0.d0
+            dfy=0.d0
+            dfz=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               ik=ii+k
+               kj=jj+k
+               if(k.gt.i) ik=kk+i
+               if(k.gt.j) kj=kk+j
+               dfx=dfx+d0(i,k)*( f1(kj,1)+g1(kj,1) )
+               dfy=dfy+d0(i,k)*( f1(kj,2)+g1(kj,2) )
+               dfz=dfz+d0(i,k)*( f1(kj,3)+g1(kj,3) )
+            enddo
+            work(i,j,1)=dfx
+            work(i,j,2)=dfy
+            work(i,j,3)=dfz                !  D0*F1
+         enddo !   j=1,ncf
+      enddo    !   i=1,ncf
+!--------------------------------------------------------------
+      ij=0
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,i
+            jj=j*(j-1)/2
+            ij=ij+1
+            dfxd=0.d0
+            dfyd=0.d0
+            dfzd=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               kj=jj+k
+               if(k.gt.j) kj=kk+j
+!cccccc         ik=ii+k
+!cccccc         if(k.gt.i) ik=kk+i
+               dfxd=dfxd + work(i,k,1)*d0(k,j)      ! (D0*F1)*D0
+               dfyd=dfyd + work(i,k,2)*d0(k,j)
+               dfzd=dfzd + work(i,k,3)*d0(k,j)
+            enddo
+            w1(ij,1)=w1(ij,1)+dfxd
+            w1(ij,2)=w1(ij,2)+dfyd
+            w1(ij,3)=w1(ij,3)+dfzd
+         enddo !   j=1,ncf
+      enddo    !   i=1,ncf
+!--------------------------------------------------------------
+!
+!     for rhf we need to divide by two
+!
+      call VScal(ntri*3,0.5d0,w1)
+!
+!--------------------------------------------------------------
+!       Ist-order weighted density in W1 on return
+!--------------------------------------------------------------
+!     call getival('printh',iprint)
+      write(6,*) ' 1st-order weighted density for at=',iat
+      call drumh(w1(1,1),ncf, 6  ,'wens1-X ')
+      call drumh(w1(1,2),ncf, 6  ,'wens1-Y ')
+      call drumh(w1(1,3),ncf, 6  ,'wens1-Z ')
+
+      do J=1,3
+         quick_qm_struct%wdens1(3*(IAT-1)+J,:)=w1(:,J)
+      enddo
+  
+   ENDDO
+end subroutine form_wdens1
 
   subroutine get_ijbas_fockderiv(Imomentum, Ibas, Jbas, mbas, mstart, ijcon, DENSEJI)
 
@@ -180,10 +608,10 @@ end subroutine formCPHF
 
   end subroutine get_ijbas_fockderiv
 
-      subroutine calcFD(ncf,ntri,f0,d0,fd)
+      subroutine calcFD(ncf,ntri,f0,d0,fxd)
       use quick_scf_operator_module, only: scf_operator
       implicit real*8 (a-h,o-z)
-      double precision f0(ncf,ncf),d0(ncf,ncf),fd(ncf,ncf)
+      double precision f0(ncf,ncf),d0(ncf,ncf),fxd(ncf,ncf)
       logical :: deltaO   = .false.  ! delta Operator
 
       call scf_operator(deltaO)
@@ -207,7 +635,7 @@ end subroutine formCPHF
                endif
                sum1=sum1+f0(i,k)*d0(k,j)
             enddo
-            fd(i,j)=sum1
+            fxd(i,j)=sum1
          enddo ! j=1,ncf
       enddo    ! i=1,ncf
 
@@ -220,7 +648,7 @@ end subroutine formCPHF
        write(*,*)' fd  matrix'
        do i=1,ncf
        do j=1,ncf
-          write(*,66) i,j,fd(i,j),f0(i,j),d0(i,j)
+          write(*,66) i,j,fxd(i,j),f0(i,j),d0(i,j)
        enddo
        enddo
 
@@ -228,13 +656,1380 @@ end subroutine formCPHF
 
       end
 
-      subroutine d1_const(nat3, ncf, ntri, nocc, fxd, f1, s1, dense0, d1c, fds)
+      subroutine d1_const(nat3, ncf, ntri, nocc, vec, val, fxd, f1, s1, dense0, d1c, fds1)
       implicit double precision(a-h,o-z)
-      double precision fxd(ncf,ncf), f1(nat3,ntri), s1(nat3,ntri), dense0(ncf,ncf), d1c, fds
+      double precision fxd(ncf,ncf), f1(nat3,ntri), s1(nat3,ntri), dense0(ncf,ncf)
+      double precision fock1(3,ntri), overlap1(3,ntri), vec(ncf,ncf), val(ncf)
+      double precision d1c(ntri,nat3), fds1(ncf,ncf,nat3)
 
+      do i=1, nat3/3
+         overlap1=s1(3*i-2:i*3,:)
+         fock1=f1(3*i-2:i*3,:)
+         call calcF1FDS1(ncf, ntri, i, fxd, overlap1, fock1, fds1(:,:,3*i-2:i*3))
+         call d1const_xyz(ncf, ntri, nocc, i, vec, val, dense0, fock1, overlap1, d1c(:,3*i-2:i*3))
+      enddo
 
+!print*,'fds1',fds1
+!print*,'d1c',d1c
 
       end subroutine d1_const
+
+      subroutine calcF1FDS1(ncf, ntri, atm, fxd, s1, f1, fds1)
+      implicit real*8 (a-h,o-z)
+      dimension s1(3,ntri),f1(3,ntri)
+      dimension fxd(ncf,ncf)
+      dimension fds1(ncf,ncf,3)
+!------------------------------------------------------------------------
+! Input :
+! ncf     - number of basis functions
+! ntri    - ncf*(ncf+1)/2
+! fxd      - Fock*Density matirx 
+! s1      - 1st-order overlap
+! f1      - 1st-order Fock
+!
+! Output:
+!
+! FDS1    - Fock1- Fock*Density*Overlap1 
+!------------------------------------------------------------------------
+!
+! in order to save memory calculate first FDS1
+!
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            jj=j*(j-1)/2
+            if(i.ge.j) then
+               ij=ii+j
+            else
+               ij=jj+i
+            endif
+            sum1=0.d0
+            sum2=0.d0
+            sum3=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               if(k.ge.j) then
+                  kj=kk+j
+               else
+                  kj=jj+k
+               endif
+               sum1=sum1+fxd(i,k)*s1(1,kj)
+               sum2=sum2+fxd(i,k)*s1(2,kj)
+               sum3=sum3+fxd(i,k)*s1(3,kj)
+            enddo !  k=1,ncf
+
+            fds1(i,j,1)=f1(1,ij)-sum1
+            fds1(i,j,2)=f1(2,ij)-sum2
+            fds1(i,j,3)=f1(3,ij)-sum3
+
+         enddo !  j=1,ncf
+      enddo !  i=1,ncf
+
+!  and then S1DF and add it to FDS1
+
+      do i=1,ncf
+         ii=i*(i-1)/2
+         do j=1,ncf
+            jj=j*(j-1)/2
+            sum1=0.d0
+            sum2=0.d0
+            sum3=0.d0
+            do k=1,ncf
+               kk=k*(k-1)/2
+               if(k.ge.j) then
+                  kj=kk+j
+               else
+                  kj=jj+k
+               endif
+               sum1=sum1+fxd(i,k)*s1(1,kj)
+               sum2=sum2+fxd(i,k)*s1(2,kj)
+               sum3=sum3+fxd(i,k)*s1(3,kj)
+            enddo !  k=1,ncf
+
+            fds1(j,i,1)=-sum1+fds1(j,i,1)
+            fds1(j,i,2)=-sum2+fds1(j,i,2)
+            fds1(j,i,3)=-sum3+fds1(j,i,3)
+      
+!            write(*,67)fds1(j,i,1),fds1(j,i,2),fds1(j,i,3)
+!67          format(3(f10.5,1x))
+
+         enddo !  j=1,ncf
+      enddo !  i=1,ncf
+
+      end subroutine calcF1FDS1
+
+      subroutine d1const_xyz(ncf, ntri, nocc, atm, vec, val, dense0, f1, s1, d1c)
+!-----------------------------------------------------------------
+! Calculates the constant part of the D1 matrix for :
+!
+!  (1) nuclear displacement perturbation (analytical hessian)
+!
+! It does it for three directions at once (x,y,z)
+!-----------------------------------------------------------------
+! INPUT :
+!
+! ncf      - number of basis function
+! ntri     -  ncf*(ncf+1)/2
+! nocc     - number of occupied orbitals
+! vec      - eigen vectors
+! val      - eigen values
+! dense0   - unpreturbed density
+! f1       - Ist-order fock matrix
+! s1       - Ist-order overlap matrix
+!
+! OUTPUT :
+!
+! d1c      - constant part of D1 :
+!            D1const=-1/2*DS1D+
+!            2*Sum(o,v)(eo-ev)^-1*Co+(h1+G(d0,g1)-eo*S1)Cv*[CoCv+ + CvCo+]
+!-----------------------------------------------------------------
+
+      implicit real*8 (a-h,o-z)
+      dimension dense0(ncf,ncf), vec(ncf,ncf), val(ncf)
+      dimension s1(3,ntri), f1(3,ntri),s1t(ntri,3),f1t(ntri,3)
+      dimension w0(ncf,ncf),w1(ncf,ncf), w2(ncf,ncf), w3(nocc,ncf)
+      dimension d1c(ntri,3)          ! output
+
+!--------------------------------------------------------------
+!    Calculate the constant part of D10
+!   ----------------------------------------
+! 1. contributions from [ F1(d0,g1) - ei S1 ]
+! 2. contributions from the 0.5 D0*S1*D0
+!
+!  S1 is not zero only for field dependent basis set
+!
+! The total constant part of the D1 stored in d1con(*)
+!
+!--------------------------------------------------------------
+      xlvsh = 0.0d0
+!--------------------------------------------------------------
+      fact1=2.0d0     ! for dens1_part1 like occupancy number
+      fact2=0.5d0     ! for dS1d
+!      if(.not.rhf) then
+!        fact1=1.0d0
+!        fact2=1.0d0
+!      endif
+!--------------------------------------------------------------
+! 1. calculate contributions from [ F1(d0,g1) - ei S1 ]
+!
+! one direction at the time :
+!
+      nvirt=ncf-nocc
+
+      call trspmo(s1,3,s1t,ntri)
+      call trspmo(f1,3,f1t,ntri)
+
+       write(6,*)' f1  matrix'
+       do i=1,3
+       do j=1,ntri
+          write(6,666) i,j,f1t(j,i)
+       enddo
+       enddo
+
+       write(6,*)' s1  matrix'
+       do i=1,3
+       do j=1,ntri
+          write(6,666) i,j,s1t(j,i)
+       enddo
+       enddo
+
+666    format(2(i2,1x),1(f10.5,1x))
+
+      do icr=1,3
+        call dens1_1dir2n(fact1,ncf, nocc, xlvsh, f1t(1,icr), &
+                          s1t(1,icr),vec, val, d1c(1,icr), w1, &
+                          w2,w3)
+      enddo
+
+      write(6,*)' D1const  exit   '
+      call drumh(d1c(1,1),ncf, 6  ,'D1con-x ')
+      call drumh(d1c(1,2),ncf, 6  ,'D1con-y ')
+      call drumh(d1c(1,3),ncf, 6  ,'D1con-z ')
+
+!
+!  2. calculate -fact2*D0*S1*D0 and add it to the constant part of D10.
+!
+      do icr=1,3
+        call ds1d_1m(fact2,ncf, &
+                     dense0,s1t(1,icr),d1c(1,icr))
+      enddo
+
+      write(6,*)' D1const  exit   '
+      call drumh(d1c(1,1),ncf, 6  ,'D1con-x ')
+      call drumh(d1c(1,2),ncf, 6  ,'D1con-y ')
+      call drumh(d1c(1,3),ncf, 6  ,'D1con-z ')
+
+      end subroutine d1const_xyz
+
+!==============================================================
+!
+      subroutine drumh (d,ncf,ifi,txt)
+      implicit real*8 (a-h,o-z)
+      character*8 txt
+      dimension d(1)
+!
+      write (ifi,20) txt
+!----------------------------------------------------------------------c
+! do not print anything if it is too long :
+      if(ncf.gt.200) then
+          write(ifi,*) ' it is not printed out for NCF=',ncf,' > 200 '
+         return
+      endif
+!----------------------------------------------------------------------c
+      n=ncf
+      ja=1
+      do 10 i=1,n
+         je=ja+i-1
+         write (ifi,30) i,(d(j),j=ja,je)
+         ja=je+1
+   10 continue
+      return
+!
+   20 format (30x,3h***,a8,3h***)
+!  30 format (1x,i4,2x,7e12.3,/,(7x,7e12.3))
+   30 format (1x,i4,2x,7f12.7,/,(7x,7f12.7))
+!
+      end
+!=======================================================================
+
+      subroutine dens1_1dir2n(fact ,ncf,nocc, xlv,  fock, smat, cvec ,eval ,d1, w1, w2,   w3)
+!-----------------------------------------------------------------------
+! one direction at the time
+!-----------------------------------------------------------------------
+! This routine calculates the constant part of the first-order density matrix :
+!
+! D1 = SUM(jocc,avir){Cj(T)*[F(D0,g1)-ej*S]*Ca/(ej-ea-xlv)*[Cj*Ca(T)+Ca*Cj(T)]}
+!
+!  It is calculated here as
+!
+! D1(p,q)=SUM(j,a)[C(T)*F-Eocc*C(T)S]*Cvirt](j,a)/(ej-ea-xlv)*[Cpj*Cqa+Cpa*Cqj]
+!
+!  (T) = transpose
+!-----------------------------------------------------------------------
+!  INTENT(IN)
+!  fact    = occupancy : 2 for RHF, 1 for UHF
+!  ncf     = number of contracted basis functions
+!  nocc    = number of occupied orbitals
+!  xlv     = level shift  (should not be used here, set it to zero)
+!  fock    = first-order Fock matrix ,F(D0,g1) above, in triangular form
+!  smat    = first-order AO overlap matrix in triangular form
+!  cvec    = MO coefficients, C, the first nocc columns are occupied
+!  eval    = orbital energies e above
+!  INTENT(OUT)
+!  d1      = the above part of the first-order density
+!  STORAGE
+!  w1      = a working array ncf**2 long
+!  w2      = a working array ncf*nvirt long
+!  w3      = a working array ncf*nocc long
+!---------------------------------------------------
+      implicit real*8 (a-h,o-z)
+      parameter (zero=0.d0,one=1.0d0,two=2.d0)
+      dimension fock(*),cvec(ncf,ncf),eval(ncf),d1(*)
+      dimension w1(ncf,ncf),w2(ncf*(ncf-nocc)),w3(nocc,ncf)
+      dimension w222(ncf,nocc),w22(nocc,ncf),w11(nocc,ncf-nocc)
+!
+      nvirt=ncf-nocc
+!      ivirtst=nocc*ncf+1
+!  expand the Fock matrix to quadratic
+      call quad(fock,w1,one,ncf)
+!  W2=Cocc(T)*F
+      call dgemm('t','n',nocc,ncf,ncf, &
+                 one, cvec, ncf, w1, ncf, &
+                 zero, w2, nocc)
+!  expand the overlap matrix to quadratic
+      call quad(smat,w1,one,ncf)
+!  W3=Cocc(T)*S
+      call dgemm('t','n',nocc,ncf,ncf, &
+                 one, cvec, ncf, w1, ncf, &
+                 zero, w3, nocc)
+!  Multiply the rows of W3 by the occupied orbital energies and subtract
+!  them from W2
+      call RowMultiply(nocc,ncf,eval,w3,w2)
+!  Build W1=[Cocc(T)*F-Eocc*Cocc(T)*S]Cvirt=W2*Cvirt
+      call dgemm('n','n', nocc, nvirt,ncf, &
+                  one, w2, nocc, cvec(1,nocc+1), ncf, &
+                  zero,w1, nocc)
+!  Now scale W1cc(T)FCvirt with 1.0/(e(i)-e(a)-xlv)
+      call scalebydenom(nocc,nvirt,eval,eval(nocc+1),xlv,w1)
+!  Calculate Cvirt*W1(T). Multiply with the factor (occupancy)
+!  Result is the perturbed coeff mx      
+      call dgemm('n','t', ncf, nocc, nvirt, &
+                  one, cvec(1,nocc+1), ncf, w1, nocc, &
+                  zero,w2, ncf)
+! Calculate W2*Cocc(T). Factor moved to this call by GM
+      call dgemm('n','t',ncf,ncf,nocc, &
+                  fact,w2,ncf,cvec,ncf, &
+                  zero, w1,ncf)
+!  Result, in quadratic form, is in W1.
+!  Add transpose to W1 and transfer it to the triangular array d1
+      call symtrian(ncf,w1,d1)
+      end subroutine dens1_1dir2n
+!=======================================================
+
+      subroutine ds1d_1m(fact,ncf,d0,s1,d1c)
+      implicit real*8 (a-h,o-z)
+!
+      parameter (zero=0.d0,one=1.0d0,half=0.5d0)
+      dimension d0(ncf,ncf),s1(*)
+      dimension w0(ncf,ncf),w1(ncf,ncf),w2(ncf,ncf)
+      dimension d1c(*)         ! inp/out
+!
+!
+!  expand the dens and overlap1 matrices to quadratic
+!
+
+      call quad(s1,w1, one,ncf)
+!  calculate W2=D0*S1
+      call dgemm('n','n',ncf,ncf,ncf, &
+                 one,d0 , ncf, w1, ncf, &
+                 zero, w2, ncf)
+!  calculate w1=0.5*W2*D0=0.5*D0*S1*D0   RHF
+!  calculate w1=1.0*W2*D0=1.0*D0*S1*D0   UHF
+      call dgemm('n','n',ncf,ncf,ncf, &
+                 fact,w2,ncf,d0,ncf, &
+!     1           half,w2,ncf,w0,ncf,
+                 zero, w1, ncf)
+      ij=0
+      do i=1,ncf
+         do j=1,i
+            ij=ij+1
+            d1c(ij)=d1c(ij)-w1(j,i)
+         enddo
+      enddo
+
+      end subroutine ds1d_1m
+
+!=======================================================
+      subroutine dens1_1dir1n(fact ,ncf,nocc, xlv,  fock, cvec ,eval ,d1, w1,   w2)
+!-----------------------------------------------------------------------
+! one direction at the time
+!-----------------------------------------------------------------------
+! This routine calculates a part of the first-order density matrix :
+!
+! D1 = SUM(jocc,avir){Cj(T)*F(D1,g0)*Ca/(ej-ea-xlv)*[Cj*Ca(T)+Ca*Cj(T)]}
+!
+!  (T) = transpose
+!-----------------------------------------------------------------------
+!  INTENT(IN)
+!  fact    = occupancy : 2 for RHF, 1 for UHF
+!  ncf     = number of contracted basis functions
+!  nocc    = number of occupied orbitals
+!  xlv     = level shift  (see below)
+!  fock    = first-order Fock matrix ,F(D1,g0) above, in triangular form
+!  cvec    = MO coefficients, C, the first nocc columns are occupied
+!  eval    = orbital energies e above
+!  INTENT(OUT)
+!  d1      = the above part of the first-order density
+!  STORAGE
+!  w1      = a working array ncf**2 long
+!  w2      = a working array ncf*nvirt long  (nvirt=ncf-nocc)
+!---------------------------------------------------
+      implicit real*8 (a-h,o-z)
+      parameter (zero=0.d0,one=1.0d0,two=2.d0)
+      dimension fock(*),cvec(ncf,ncf),eval(ncf),d1(*)
+      dimension w1(ncf**2),w2(ncf*(ncf-nocc))
+!
+write(6,*)'cvec:'
+write(6,*)cvec(:ncf,:ncf)  
+      nvirt=ncf-nocc
+!  expand the Fock matrix to quadratic
+      call quad(fock,w1,one,ncf)
+write(*,*)'expand the Fock matrix to quadratic'
+write(*,*)w1(:ncf**2)
+!  W2=Cocc(T)*F
+      call dgemm('t','n',nocc,ncf,ncf, &
+                 one, cvec, ncf, w1, ncf, &
+                 zero, w2, nocc)
+write(*,*)'W2=Cocc(T)*F'
+write(*,*)w2(:ncf*nvirt)
+!  W1=Cocc(T)*F*Cvirt=W2*Cvirt  nocc x nvirt matrix
+      call dgemm('n','n', nocc, nvirt,ncf, &
+                  one, w2, nocc, cvec(1,nocc+1), ncf, &
+                  zero,w1, nocc)
+write(*,*)'W1=Cocc(T)*F*Cvirt=W2*Cvirt  nocc x nvirt matrix'
+write(*,*)w1(:ncf**2)
+!  Now scale W1=Cocc(T)FCvirt with 1.0/(e(i)-e(a)-xlv)
+      call scalebydenom(nocc,nvirt,eval,eval(nocc+1),xlv,w1)
+write(*,*)'scale W1=Cocc(T)FCvirt with 1.0/(e(i)-e(a)-xlv)'
+write(*,*)w1(:ncf**2)
+!  Calculate Cvirt*W1(T). Multiply with the factor(occupancy)
+!  Result is the perturbed coeff mx in W2!      
+      call dgemm('n','t', ncf, nocc, nvirt, &
+                  one, cvec(1,nocc+1), ncf, w1, nocc, &
+                  zero,w2, ncf)
+write(*,*)'Calculate Cvirt*W1(T)'
+write(*,*)w2(:ncf*nvirt)
+! Calculate W2*Cocc(T). Factor moved to this call by GM
+      call dgemm('n','t',ncf,ncf,nocc, &
+                  fact,w2,ncf,cvec,ncf, &
+                  zero, w1,ncf)
+write(*,*)'Calculate W2*Cocc(T)'
+write(*,*)w1(:ncf**2)
+!  Result, in quadratic form, is in W1.
+!  Add transpose to W1 and transfer it to the triangular array d1
+      call symtrian(ncf,w1,d1)
+      end
+!=======================================================
+      subroutine trspmo(amat,m,bmat,n)
+! This is matrix transpose A(T)--> b  (blas replacement)
+      implicit real*8 (a-h,o-z)
+      dimension amat(m,n), bmat(n,m)
+!
+      do 100 i=1,m
+      do 100 j=1,n
+      bmat(j,i)=amat(i,j)
+  100 continue
+      end
+!==============================================================
+      subroutine quad(a,b,c,m)
+      implicit real*8 (a-h,o-z)
+      dimension a(*),b(m,m)
+!
+!     make a quadratic symmetric or antisymmetric matrix b from
+!     triangular matrix a
+!
+      c1=c
+      con=abs(c1)
+      ij=0
+      do 10 i=1,m
+         do 20 j=1,i
+            ij=ij+1
+            b(i,j)=c1*a(ij)
+            b(j,i)=con*a(ij)
+   20 continue
+      b(i,i)=b(i,i)*(c1+con)/2
+!print*,b(i,i)
+   10 continue
+      return
+
+      end
+!======================================================================
+      subroutine scalebydenom(nocc,nvirt,eocc,evirt,xlv,f)
+!  This routine divides element (i,a) of the matrix F by
+!  (eocc(i)-eocc(a)-xlv); F(i,a)=F(i,a)/(eocc(i)-eocc(a)-xlv)
+!
+!  Arguments:
+!  INTENT(IN)
+!  nocc     = number of occupied orbitals, number of rows of F
+!  nvirt    = number of virtual orbitals, number of columns of F
+!  eocc     = occupied orbital energies
+!  evirt    = virtual orbital energies
+!  INTENT(INOUT)
+!  f        = Fock matrix (occupied x virtual part in MO basis)
+      implicit real*8 (a-h,o-z)
+      integer a
+      dimension f(nocc,nvirt),eocc(nocc),evirt(nvirt)
+      do a=1,nvirt
+        xx=evirt(a)+xlv
+        do i=1,nocc
+          yy=eocc(i)-xx
+          f(i,a)=f(i,a)/yy
+        end do
+      end do
+      end subroutine scalebydenom
+!======================================================================
+      subroutine symtrian(n,a,b)
+!  This routine adds A+A(T) to the symmetrical matrix B stored as
+!  the upper triangle row-wise.
+!  Arguments:
+!  INTENT(IN)
+!  n - dimension of the square matrix A
+!  A(n,n) - square matrix
+!  INTENT(OUT)
+!  B(1:n*(n+1)/2): triangular matrix, it i,j element is A(i,j)+A(j,i)
+      implicit real*8 (a-h,o-z)
+      dimension a(n,n),b(*)
+      ij=0
+      do i=1,n
+        do j=1,i
+          ij=ij+1
+          b(ij)=a(i,j)+a(j,i)
+        end do
+      end do
+      end subroutine symtrian
+!======================================================================
+      subroutine RowMultiply(nocc,ncf,eocc,a,b)
+!  B=B-Eocc*A
+!  A,B= nocc x ncf matrices
+!  Eocc is diagonal (orb. energies)
+!  Arguments:
+!  INTENT(IN)
+!  nocc   = number of rows of A,B, Eocc  (number of occupied orbitals)
+!  ncf    = number of columns of A,B (number of AOs)
+!  Eocc   = occupied orbital energies (vector, diagonal matrix)
+!  A      = nocc x ncf
+!  INTENT(INOUT)
+!  B      = nocc x ncf
+      implicit real*8 (a-h,o-z)
+      dimension eocc(nocc),a(nocc,ncf),b(nocc,ncf)
+      do k=1,ncf
+        do i=1,nocc
+           b(i,k)=b(i,k)-eocc(i)*a(i,k)
+        end do
+      end do
+      end subroutine RowMultiply
+!======================================================================
+      subroutine get_fext(liter,fext1,fext2)
+      character*4 fext1,fext2      ! name extention for files
+      character*4 name1(30),name2(30),name3(30)      ! name extention for files
+      data name1 /'rl1 ','rl2 ','rl3 ','rl4 ','rl5 ', &
+                  'rl6 ','rl7 ','rl8 ','rl9 ','rl10', &
+                  'rl11','rl12','rl13','rl14','rl15', &
+                  'rl16','rl17','rl18','rl19','rl20', &
+                  'rl21','rl22','rl23','rl24','rl25', &
+                  'rl26','rl27','rl28','rl29','rl30'/
+      data name2 /'ro1 ','ro2 ','ro3 ','ro4 ','ro5 ', &
+                  'ro6 ','ro7 ','ro8 ','ro9 ','ro10', &
+                  'ro11','ro12','ro13','ro14','ro15', &
+                  'ro16','ro17','ro18','ro19','ro20', &
+                  'ro21','ro22','ro23','ro24','ro25', &
+                  'ro26','ro27','ro28','ro29','ro30'/
+
+         fext1=name1(liter)
+         fext2=name2(liter)
+
+      end
+!======================================================================
+      subroutine file4cphf_o(ndim,iat,fext,xmat,action)
+      implicit real*8(a-h,o-z)
+      character*256 jobname,scrf,filename
+      Character*5 action
+      Character*4 fext
+      dimension xmat(ndim)
+!----------------------------------------------------
+! ndim - record length
+!----------------------------------------------------
+      if(action(1:3).eq.'wri' .or. action(1:3).eq.'rea') then
+      else
+!        call nerror(1,'file4cphf_o','wrong action: '//action,0,0)
+      endif
+!----------------------------------------------------
+      lrec = ndim*8          ! record length in bytes
+      nfile =97
+
+      scrf='CPHF'
+      len1=4
+      lent = len1 + 6
+      filename = scrf(1:len1)//'.'//fext
+write(*,*)'filename:',filename(1:lent)
+      open (unit=nfile,file=filename(1:lent), &
+            form='unformatted',access='direct',recl=lrec)
+
+      if(action(1:3).eq.'wri') then
+         write(unit=nfile,rec=iat) xmat
+      endif
+      if(action(1:3).eq.'rea') then
+         read(unit=nfile,rec=iat) xmat
+      endif
+
+      close (nfile,status='keep')
+
+      end
+!======================================================================
+      subroutine make_r_orto(liter,ntri,iat,r,r_curr)
+
+      use allmod
+      implicit real*8 (a-h,o-z)
+      character*4 fext1,fext2      ! name extention for files
+      dimension  r_curr(ntri,3)    ! current    r
+      dimension  r(ntri,3)         ! previous   r
+      data acc /1.d-15 /
+
+!
+!       dn+1 = L(dn) - SUM(i=1,n)[ <di|L(dn)>/<di|di> * di ]
+!
+! e.g.       d2 = L(d1) - <d1|L(d1)>/<d1|d1> * d1
+!
+
+      do istep=0,liter-1
+         if(istep.eq.0) then
+            do J=1,3
+               r(:,J)=quick_qm_struct%dense1(3*(iat-1)+J,:)
+            enddo
+         else
+            call get_fext(istep,fext1,fext2)
+            call file4cphf_o(ntri*3,iat,fext2,r ,'read') ! previous ro
+         endif
+!
+!        calculate scalars <r|l(r_curr)> & <r|r>
+!
+         dxldx=ddot(ntri,r(1,1),1,r_curr(1,1),1)
+         dyldy=ddot(ntri,r(1,2),1,r_curr(1,2),1)
+         dzldz=ddot(ntri,r(1,3),1,r_curr(1,3),1)
+
+         dx_dx=ddot(ntri,r(1,1),1,r(1,1),1)
+         dy_dy=ddot(ntri,r(1,2),1,r(1,2),1)
+         dz_dz=ddot(ntri,r(1,3),1,r(1,3),1)
+
+         if(dx_dx.gt.acc) then
+            scx=dxldx/dx_dx
+         else
+            scx=zero
+         endif
+         if(dy_dy.gt.acc) then
+            scy=dyldy/dy_dy
+         else
+            scy=zero
+         endif
+         if(dz_dz.gt.acc) then
+            scz=dzldz/dz_dz
+         else
+            scz=zero
+         endif
+
+         call daxpy(ntri,-scx,r(1,1),1,r_curr(1,1),1)
+         call daxpy(ntri,-scy,r(1,2),1,r_curr(1,2),1)
+         call daxpy(ntri,-scz,r(1,3),1,r_curr(1,3),1)
+      enddo
+
+      end
+!======================================================================
+      subroutine HessCont2Diag(natoms,natend,ncf,ntri,d1,hess)
+      use quick_calculated_module, only : quick_qm_struct 
+      implicit real*8 (a-h,o-z)
+      dimension natend(natoms)
+      dimension d1(ntri,3,natoms)
+!
+!     for 1 atom
+      dimension fds1(ncf,ncf,3)
+      dimension f1(ntri,3)
+      dimension hess(3,natoms,3,natoms)
+!---------------------------------------------------------------------
+! calculates contributions to the hessian that involve D1
+! for atom-diagonal part of the hessian
+!---------------------------------------------------------------------
+!     fds1 read from file 60 contains : f1 -(fds1+s1df)
+!---------------------------------------------------------------------
+!     contributions to Hess :
+!
+!     -0.5*Tr S1*[ D1FD + DF1D  +DFD1]=
+!    =-0.5*Tr [D1*FDS1 + S1DF*D1]
+!     -0.5*Tr DS1D*F1                 ! this one is not included
+!
+!                                      (I do not have G(D1,g0) only G(R1,g0)
+!     and
+!
+!    +0.5*Tr [ h1 + G(D,g1) ]*D1     ;  f1=h1+G(d0,g)
+!
+!---------------------------------------------------------------------
+!
+      hess=0.0d0
+!
+      ncf2=ncf*ncf
+!---------------------------------------------------------------------
+!
+!  Iat=Jat :
+!
+      DO IAT=1,NATOMS
+        if(natend(iat).eq.0) then
+
+         fds1(:,:,1)=quick_qm_struct%fds1(:,:,iat*3-2)
+         fds1(:,:,2)=quick_qm_struct%fds1(:,:,iat*3-1)
+         fds1(:,:,3)=quick_qm_struct%fds1(:,:,iat*3)
+
+         do ixyz=1,3
+            call spuX(d1(1,ixyz,iat),fds1(1,1,ixyz),ncf,ntri,dewe)
+            hess(ixyz,iat,ixyz,iat)=hess(ixyz,iat,ixyz,iat)+dewe
+            do jxyz=ixyz+1,3
+                call spuX(d1(1,ixyz,iat),fds1(1,1,jxyz),ncf,ntri,ws1)
+                call spuX(d1(1,jxyz,iat),fds1(1,1,ixyz),ncf,ntri,sw1)
+                dewe= ws1+sw1
+                dewe= dewe*0.5d0
+                hess(ixyz,iat,jxyz,iat)=hess(ixyz,iat,jxyz,iat)+dewe
+            enddo
+         enddo
+        endif    !    (natend(iat).eq.0) then
+      ENDDO       !   DO IAT=1,NATOMS
+!---------------------------------------------------------------------
+! atom-diagonal only
+!---------------------------------------------------------------------
+! make full hessian out of its upper triangle part :
+!
+      call hess_full_up(hess,natoms)
+!
+!---------------------------------------------------------------------
+!
+!       do iat=1,natonce
+!          do jat=1,natonce
+!             write(6,*) ' Atoms ',iat,jat
+!        write(6,66) ((hess(i,iat,j,jat),i=1,3),j=1,3)
+!          enddo
+!       enddo
+!
+!
+! 66  format(1x,3(e12.6,1x))
+! 66  format(1x,9(f9.5,1x))
+!---------------------------------------------------------------------
+      end
+!======================================================================
+      subroutine spuX(xmat1,xmat2,ncf,ntri,trace)
+      implicit real*8 (a-h,o-z)
+      parameter (zero=0.0d0)
+      dimension xmat1(ntri) , xmat2(ncf,ncf)
+!
+!  calculates trace of X1(ntri)*X2(ncf,ncf)
+!  Arguments
+!  INTENT(IN)
+!  Xmat1    = symmetric matrix stored in the columnwise upper triangle
+!  form, Xmat(ij)=X1(i,j) where (ij)=i*(i-1)/2+j, i>=j, X is symmetrical
+!  Xmat2    = square matrix
+!  ncf      = dimension of the (square) matrices X1 (Xmat1) and Xmat2
+!  ntri     = should be ncf*(ncf+1)/2
+!  INTENT(OUT)
+!  trace    = Trace(X1*Xmat2)
+
+      trace=zero
+      ii=0
+      do i=1,ncf
+        do k=1,i
+          ik=ii+k
+          trace=trace+(xmat2(i,k)+xmat2(k,i))*xmat1(ik)
+        enddo
+        ii=ii+i
+      enddo
+!  Subtract the overcounted diagonal
+      ii=0
+      do i=1,ncf
+        ii=ii+i
+        trace=trace-xmat2(i,i)*xmat1(ii)
+      end do
+      end
+!======================================================================
+      subroutine hess_full_up(hess,na)
+      implicit real*8 (a-h,o-z)
+      dimension hess(3,na,3,na)
+!
+      do i=1,na
+         do ixyz=1,3
+            do j=i,na
+               if(j.eq.i) then
+                  do jxyz=ixyz,3
+                     hess(jxyz,j,ixyz,i)=hess(ixyz,i,jxyz,j)
+                  enddo
+               else
+                  do jxyz=1,3
+                     hess(jxyz,j,ixyz,i)=hess(ixyz,i,jxyz,j)
+                  enddo
+               endif
+            enddo
+         enddo
+      enddo
+
+      end
+!======================================================================
+      subroutine whessContDiag(hess,natoms)
+      use allmod
+      implicit real*8 (a-h,o-z)
+      dimension hess(3,natoms,3,natoms)
+
+      do iat=1,natoms
+         xmasi=1.0d0/sqrt(emass(quick_molspec%iattype(iat)))
+         factor=xmasi*xmasi
+         do icr=1,3
+            do jcr=1,3
+               hess(icr,iat,jcr,iat)=hess(icr,iat,jcr,iat)*factor
+            enddo
+         enddo
+      enddo
+
+      end
+!======================================================================
+      subroutine cphf_enHR(r1,dhess,thrs,ntri,ncf,liter, &
+                           lend, mgo, natend,errmax,natonce, &
+                           resx,resy,resz,    hesx,hesy,hesz, &
+                           deltx,delty,deltz, heltx,helty,heltz, &
+                           oscylates)
+!----------------------------------------------------------------------
+! This routine checks the convergence in the CPHF procedure
+!
+! INPUT :
+!
+! natonce            -  number of atoms treated at once in CPHF
+! dhess              -  changes in the hessain (delta hessian)
+! thrs               -  cphf threshold
+! ntri               -  ncf*(ncf+1)/2
+!
+! INPUT :
+! liter              -  number of current CPHF iteration
+! cpuit,elait        -  cpu & elapsed time of iteration
+!
+! OUTPUT
+! lend               - shows end of CPHF : 1=converged, 0=not conv.
+!
+! INPUT/OUTPUT :
+! natend             - natend(iatom)=1 or 0 : cophf converged or not for Iatom
+!
+! OUTPUT
+! errmax             - maximum element in delta density
+! INPUT/OUTPUT :
+! resx,resy,resz     - maximu residuals for each atom
+! oscylates          - logical showing smootness of CPHF
+!----------------------------------------------------------------------
+      implicit real*8 (a-h,o-z)
+      logical oscylates
+      integer mgo
+      dimension r1(ntri,3,natonce)     ! last residiuum
+      dimension dhess(3,natonce,3,natonce)
+
+      dimension resx(natonce),resy(natonce),resz(natonce)
+      dimension hesx(natonce),hesy(natonce),hesz(natonce)
+
+      dimension heltx(natonce),helty(natonce),heltz(natonce)
+      dimension deltx(natonce),delty(natonce),deltz(natonce)
+
+      dimension natprt(10000)    ! for local print only
+      dimension natend(*)
+
+      data zero /0.d0/
+      data natconv /0/
+!
+!..............................................
+! natend(iat) = 0 (not done) or 1 (done)
+!..............................................
+       thrs10= thrs*10.d0
+!..............................................
+!
+      iout=ioutfile !call getival('iout',iout)
+      iprint=1 !call getival('printh',iprint)
+!..............................................
+      DO IAT=1,NATONCE
+        if(natend(iat).eq.0) then
+           hx_max=zero
+           hy_max=zero
+           hz_max=zero
+!try       do jat=1,natonce
+           do jcr=1,3
+              hx= abs( dhess(1,iat, jcr,Iat) )
+              hy= abs( dhess(2,iat, jcr,Iat) )
+              hz= abs( dhess(3,iat, jcr,Iat) )
+              hx_max=max(hx_max,hx)
+              hy_max=max(hy_max,hy)
+              hz_max=max(hz_max,hz)
+           enddo
+!try       enddo
+           heltx(iat)=hx_max
+           helty(iat)=hy_max
+           heltz(iat)=hz_max
+        endif
+      ENDDO
+!..............................................
+      DO IAT=1,NATONCE
+        if(natend(iat).eq.0) then
+           deltx(iat)=zero
+           delty(iat)=zero
+           deltz(iat)=zero
+           call absmax(ntri,r1(1,1,iat),ix,deltx(iat))
+           call absmax(ntri,r1(1,2,iat),iy,delty(iat))
+           call absmax(ntri,r1(1,3,iat),iz,deltz(iat))
+        endif
+      ENDDO
+!..............................................
+
+      oscylates=.false.
+      noscx=0
+      noscy=0
+      noscz=0
+
+      errmax=0.d0
+      pelRx=0.d0
+      pelRy=0.d0
+      pelRz=0.d0
+      pelHx=0.d0
+      pelHy=0.d0
+      pelHz=0.d0
+      do iat=1,natonce
+        if(natend(iat).eq.0) then
+!..............
+         if(liter.gt.3) then
+           if(resx(iat).gt.thrs10 .and. hesx(iat).gt.thrs10) then
+            if(deltx(iat).gt.resx(iat).and.heltx(iat).gt.hesx(iat)) then
+               noscx=noscx+1
+               oscylates=.true.
+            endif
+           endif
+           if(resy(iat).gt.thrs10 .and. hesy(iat).gt.thrs10) then
+            if(delty(iat).gt.resy(iat).and.helty(iat).gt.hesy(iat)) then
+               noscy=noscy+1
+               oscylates=.true.
+            endif
+           endif
+           if(resz(iat).gt.thrs10 .and. hesz(iat).gt.thrs10) then
+            if(deltz(iat).gt.resz(iat).and.heltz(iat).gt.hesz(iat)) then
+               noscz=noscz+1
+               oscylates=.true.
+            endif
+           endif
+         endif
+!..............
+           erRiat=max(deltx(iat),delty(iat),deltz(iat))
+           erHiat=max(heltx(iat),helty(iat),heltz(iat))
+           errorIat=MIN(erRiat,erHiat)
+!CCCCCCCC   if(errorIat.le.thrs) natend(iat)=1
+           if(errorIat.le.thrs .and. mgo.eq.3) natend(iat)=1
+           errmax=max(errorIat,errmax)
+
+           pelRx=max(     deltx(iat),pelRx)
+           pelRy=max(     delty(iat),pelRy)
+           pelRz=max(     deltz(iat),pelRz)
+
+           pelHx=max(     Heltx(iat),pelHx)
+           pelHy=max(     Helty(iat),pelHy)
+           pelHz=max(     Heltz(iat),pelHz)
+!..............
+           resx(iat)=deltx(iat)
+           resy(iat)=delty(iat)
+           resz(iat)=deltz(iat)
+
+           hesx(iat)=heltx(iat)
+           hesy(iat)=helty(iat)
+           hesz(iat)=heltz(iat)
+!..............
+        endif      !   (natend(iat).eq.0) then
+      enddo
+
+      lend=1
+      if(errmax.gt.thrs) lend=0
+
+      cput=cpuit/60.d0
+      elat=elait/60.d0
+
+      iatconv=0
+      do iat=1,natonce
+        if(natend(iat).eq.1) then
+           iatconv=iatconv+1
+           natprt(iatconv)=iat
+        endif
+      enddo
+
+      if(oscylates) then
+         write(iout,421) liter,pelRx,pelRy,pelRz,oscylates, &
+                         noscx,noscy,noscz
+         write(iout,4200) pelHx,pelHy,pelHz
+      else
+         write(iout,420) liter,pelRx,pelRy,pelRz,oscylates
+         write(iout,4200) pelHx,pelHy,pelHz
+!
+!        write(iout,520) liter,pelRx,pelRy,pelRz,
+!    *                         pelHx,pelHy,pelHz,
+!    *                   cput,elat,oscylates
+! 520 format(i3,3x,3(1x,e10.3),1x,3(1x,e10.3),2(f8.2,1x),l5)
+      endif
+
+      if(iatconv.gt.natconv) then
+         if(iprint.ge.1) then
+            write(iout,422) iatconv,(natprt(k),k=1,iatconv)
+         else
+            write(iout,423) iatconv
+         endif
+      endif
+      natconv=iatconv
+
+ 4200 format(  6x ,3(1x,e11.4) )
+  420 format(i3,3x,3(1x,e11.4),1x,l5)
+  421 format(i3,3x,3(1x,e11.4),1x,l5, &
+              ' xyz=',3(i2,1x))
+  422 format(3x,' cphf converged for ',i4,' unique atoms no :',6(i3,1x)/ &
+           ,6(3x,'                    ',2x,'                  ', &
+                                                             6(i3,1x)/))
+  423 format(3x,' cphf converged for ',i4,' unique atoms ')
+
+      end
+!======================================================================
+      subroutine absmax(n,a,i,xmax)
+!  this routine returns the highest absolute value in the
+! array a, from a(1) to a(n)
+      implicit real*8 (a-h,o-z)
+      dimension a(n)
+
+      i=idamax(n,a,1)
+      xmax=abs(a(i))
+      end
+!==============================================================
+      subroutine file4cphf_c(ndim,liter)
+      implicit real*8(a-h,o-z)
+      character*256 jobname,scrf,filename
+      common /job/jobname,lenJ
+      character*4 fext1,fext2      ! name extention for files
+!----------------------------------------------------
+! delete files open for cphf :
+!----------------------------------------------------
+      lrec = ndim*8          ! record length in bytes
+      nfile =97
+
+      scrf='CPHF'
+      len1=4
+      len = len1 + 6
+
+      do iter=1,liter
+         call get_fext(iter,fext1,fext2)
+         filename = scrf(1:len1)//'.'//fext1
+         open (unit=nfile,file=filename(1:len+1), &
+               form='unformatted',access='direct',recl=lrec)
+         close (nfile,status='delete')
+
+         filename = scrf(1:len1)//'.'//fext2
+         open (unit=nfile,file=filename(1:len), &
+               form='unformatted',access='direct',recl=lrec)
+         close (nfile,status='delete')
+      enddo
+
+      end
+!======================================================================
+      subroutine calc_d1r(liter,ntri,iat,ri,rj,d)
+      use quick_calculated_module, only : quick_qm_struct
+      implicit real*8 (a-h,o-z)
+      character*4 fexi1,fexi2      ! extention name for files
+      character*4 fexj1,fexj2      ! extention name for files
+      dimension ri(ntri,3),rj(ntri,3)
+      dimension  d(ntri,3)             ! output
+!----------------------------------------------------------------------
+      dimension a(liter*liter),b(liter,liter),w(liter+1),c(liter)
+      dimension lv(liter), mv(liter)
+      dimension liter_dir(3)
+!----------------------------------------------------------------------
+! input :
+!
+! liter   - current iteration
+! ntri    - ncf*(ncf+1)/2  ; ncf=no of b.f.
+! a,b     - arrays (liter x liter) for linear sys. of eq.
+!   w       vector (liter)
+! lv,mv   - aux. vctors needed for: osinv (b,n,det ,acc,lv,mv)
+!
+!           a c = w
+!
+! ri,rj   - storage for residuals from previous iterations
+!
+! output :
+!
+! d       - resulting 1st-order density matrix (solution at iter=liter)
+! there is no r among the parameters!!???      
+! r       - "predicted" residuum , needed ONLY for RESET
+!
+!
+!....................................................................
+! Note : the algorithm works like this :
+!
+!    equation to solve :  D = D0 + L(D) -> Res R= D0 + L(D) -D
+!
+!  iter
+!
+!    0      d0=dconst=r0=r0o
+!    1      calc: r1=L(r0) ,
+!           make r1 orthog. to r0o  r1o=Ort(r1)
+!    2      calc: r2=l(r1o),
+!           make r2 orthog. to r0o,r1o      r2o=Ort(r2)
+!           calc d2=c0*r0o + c1*r1o
+!    3      calc: r3=l(r2o),
+!           make r3 orthog. to r0o,r1o,r2o  r3o=Ort(r3)
+!           calc d3=c0*r0o + c1*r1o + c2*r2o
+!    4      calc: r4=l(r3o),
+!           make r4 orthog. to r0o,...,r3o,  r4o=Ort(r4)
+!           calc d4=c0*r0o + c1*r1o + c2*r2o + c3*r3o
+!    5      calc: r5=l(r4o),
+!           make r5 orthog. to r0o,...,r4o,  r5o=Ort(r5)
+!           calc d5=c0*r0o + c1*r1o + c2*r2o + c3*r3o+c4*r4o
+!
+!   k+1     calc: r(k+1)=l(rko),
+!           make r(k+1) orthog. to r0o,...,rko,  r(k+1)o=Ort(r(k+1))
+!           calc d(k+1)=c0*r0o + c1*r1o + ... + c(k)*r(k)o
+!....................................................................
+! Coefficients { c(0).....c(k) } determined from projections of the
+! " predicted " residuum R(K+1) on all previous ORTHOG. resid. {r(k)o}
+!
+!  <r0o | R(k+1)> =0
+!  <r1o | R(k+1)> =0
+!  <r2o | R(k+1)> =0
+!    .........
+!  <rko | R(k+1)> =0
+!
+! where R(K+1) = r0o + c0*(r1 - r0o)
+!                    + c1*(r2 - r1o)
+!                    + c2*(r3 - r2o)
+!                      ............
+!                    + ck*(r(k+1) - rko)
+!
+! R(K+1) needed to be calculated ONLY because of potential RESET:
+! if we want to reset (restart) CPHF after, let say, iter=3
+! then using :
+!
+!    d3=c0*r0o + c1*r1o + c2*r2o and R3=r0o+ c0*(r1 - r0o)
+!                                          + c1*(r2 - r1o)
+!                                          + c2*(r3 - r2o)
+!
+! we express :
+!
+!   d5 = d3  +  c3*r3o+c4*r4o
+!
+!   R5 = R3  +  c3*(r4-r3o) + c4*(r5-r4o)
+!----------------------------------------------------------------------
+! read in data :
+      do J=1,3
+         d(:,J)=quick_qm_struct%dense1(3*(iat-1)+J,:)
+      enddo
+!----------------------------------------------------------------------
+      liter_dir(1)=liter
+      liter_dir(2)=liter
+      liter_dir(3)=liter
+      do istep=1,liter
+         call get_fext(istep,fexi1,fexi2)
+         call file4cphf_o(ntri*3,iat,fexi1,ri,'read')   !  rl
+         do icr=1,3
+            call absmax(ntri,ri(1,icr),ix,rmax)
+            if(rmax.le.1.0d-7) liter_dir(icr)=liter_dir(icr)-1
+         enddo
+      enddo
+!----------------------------------------------------------------------
+      do icr=1,3
+         do istep=1,liter_dir(icr)
+            if(istep.eq.1) then
+               do J=1,3
+                  ri(:,J)=quick_qm_struct%dense1(3*(iat-1)+J,:)
+               enddo
+            else
+               call get_fext(istep-1,fexi1,fexi2)
+               call file4cphf_o(ntri*3,iat,fexi2,ri,'read') !  ro
+            endif
+
+            w(istep)=ddot(ntri,ri(1,icr),1, d(1,icr),1) !<ro|dcon>
+            c(istep)=ddot(ntri,ri(1,icr),1,ri(1,icr),1)
+
+            do jstep=1,liter_dir(icr)
+               call get_fext(jstep,fexj1,fexj2)
+               call file4cphf_o(ntri*3,iat,fexj1,rj,'read')        !  rl
+               b(istep,jstep)=ddot(ntri,ri(1,icr),1,rj(1,icr),1) ! <ro | rl>
+            enddo
+         enddo
+!----------------------------------------------------------
+         do ii=1,liter_dir(icr)
+            b(ii,ii)=b(ii,ii)-c(ii)
+            w(ii)=-w(ii)
+         enddo
+
+         call make_smallA(b,liter,a,liter_dir(icr))
+!
+!        ready to solve linear system of equations liter x liter :
+!
+         call lineqsys(liter_dir(icr),A,w,lv,mv,c)
+!
+!        calculate density (residuum not needed) :
+!
+!         d= c1*ro_0 + c2*ro_1 + c3*ro_2 + ...+ c_l*ro_l-1
+!
+!         r=d0 + c1*(rl_1-ro_0)
+!              + c2*(rl_2-ro_1)
+!              + c3*(rl_3-ro_2)
+!              +...
+!              + cl*(rl_l -ro_l-1)
+!
+! for density
+              d=0.0d0
+
+         do istep=1,liter_dir(icr)
+            if(istep.eq.1) then
+               do J=1,3
+                  ri(:,J)=quick_qm_struct%dense1(3*(iat-1)+J,:)
+               enddo
+            else
+               call get_fext(istep-1,fexi1,fexi2)
+               call file4cphf_o(ntri*3,iat,fexi2,ri,'read') !  ro
+            endif
+            call daxpy(ntri,c(istep), ri(1,icr),1, d(1,icr),1 ) ! final d
+         enddo
+
+      enddo
+!----------------------------------------------------------------------
+      end
+!======================================================================
+      subroutine make_smallA(b,liter,a,liter_n0)
+      implicit real*8 (a-h,o-z)
+      dimension b(liter,liter)
+      dimension a(liter_n0,liter_n0)
+
+      do j=1,liter_n0
+         do i=1,liter_n0
+            a(i,j)=b(i,j)
+         enddo
+      enddo
+
+      end
+!======================================================================
+      subroutine lineqsys(n,b,w,lv,mv,c)
+      implicit real*8 (a-h,o-z)
+      dimension b(n,n),w(n)
+      dimension lv(n),mv(n)
+      dimension c(n)            ! coefficients output
+      data acc,zero,one /1.d-15 , 0.d0 , 1.d0/
+!----------------------------------------------------------
+! re-normalize rows :
+!
+      do 110 i=1,n
+      bii1=one
+      if(abs(b(i,i)).gt.acc) bii1=one/b(i,i)
+      w(i)=w(i)*bii1
+      do 110 j=1,n
+      b(i,j)=b(i,j)*bii1
+  110 continue
+!----------------------------------------------------------
+!     write(6,*)' b-matrix nxn w(n) : n=',n
+!     call f_lush(6)
+!
+!     if(n.eq.2) then
+!        do ii=1,n
+!           write(6,62)(b(ii,jj),jj=1,n),w(ii)
+!        enddo
+!     endif
+! 62  format(2(f12.6,1x),2x,f12.6)
+!     if(n.eq.3) then
+!        do ii=1,n
+!           write(6,63)(b(ii,jj),jj=1,n),w(ii)
+!        enddo
+!     endif
+! 63  format(3(f12.6,1x),2x,f12.6)
+!----------------------------------------------------------
+      call osinv (b,n,det ,acc,lv,mv)
+!-------------------------------------------------------------
+!     write(6,*)'det(n)=',det,' n=',n
+!-------------------------------------------------------------
+      if( abs(det).gt.acc)then
+         do 111 i=1,n
+            sx=zero
+            do 222 j=1,n
+            sx=sx+b(i,j)*w(j)
+  222       continue
+            c(i)=sx
+  111    continue
+      else
+         do i=1,n
+            c(i)=one
+         enddo
+      endif
+
+!     write(6,*)'    n=',n,' det=',det,' coefficients :'
+!     write(6,67) n,c
+! 67  format('n=',i2,2x,6(f10.6,1x))
+!-------------------------------------------------------------
+      end
+!======================================================================
+      subroutine osinv (a,n,d,tol,l,m)
+      implicit real*8 (a-h,o-z)
+!
+!     parameters:  a - input matrix , destroyed in computation and repla
+!                      by resultant inverse (must be a general matrix)
+!                  n - order of matrix a
+!                  d - resultant determinant
+!            l and m - work vectors of length n
+!                tol - if pivot element is less than this parameter the
+!                      matrix is taken for singular (usually = 1.0e-8)
+!     a determinant of zero indicates that the matrix is singular
+!
+      dimension a(1), m(1), l(1)
+      d=1.0d0
+      nk=-n
+      do 180 k=1,n
+         nk=nk+n
+         l(k)=k
+         m(k)=k
+         kk=nk+k
+         biga=a(kk)
+         do 20 j=k,n
+            iz=n*(j-1)
+         do 20 i=k,n
+            ij=iz+i
+!
+!     10 follows
+!
+            if (abs(biga)-abs(a(ij))) 10,20,20
+   10       biga=a(ij)
+            l(k)=i
+            m(k)=j
+   20    continue
+         j=l(k)
+         if (j-k) 50,50,30
+   30    ki=k-n
+         do 40 i=1,n
+            ki=ki+n
+            holo=-a(ki)
+            ji=ki-k+j
+            a(ki)=a(ji)
+   40    a(ji)=holo
+   50    i=m(k)
+         if (i-k) 80,80,60
+   60    jp=n*(i-1)
+         do 70 j=1,n
+            jk=nk+j
+            ji=jp+j
+            holo=-a(jk)
+            a(jk)=a(ji)
+   70    a(ji)=holo
+   80    if (abs(biga)-tol) 90,100,100
+   90    d=0.0d0
+         return
+  100    do 120 i=1,n
+            if (i-k) 110,120,110
+  110       ik=nk+i
+            a(ik)=a(ik)/(-biga)
+  120    continue
+         do 150 i=1,n
+            ik=nk+i
+            ij=i-n
+         do 150 j=1,n
+            ij=ij+n
+            if (i-k) 130,150,130
+  130       if (j-k) 140,150,140
+  140       kj=ij-i+k
+            a(ij)=a(ik)*a(kj)+a(ij)
+  150    continue
+         kj=k-n
+         do 170 j=1,n
+            kj=kj+n
+            if (j-k) 160,170,160
+  160       a(kj)=a(kj)/biga
+  170    continue
+         d=d*biga
+         a(kk)=1.0d0/biga
+  180 continue
+      k=n
+  190 k=k-1
+      if (k) 260,260,200
+  200 i=l(k)
+      if (i-k) 230,230,210
+  210 jq=n*(k-1)
+      jr=n*(i-1)
+      do 220 j=1,n
+         jk=jq+j
+         holo=a(jk)
+         ji=jr+j
+         a(jk)=-a(ji)
+  220 a(ji)=holo
+  230 j=m(k)
+      if (j-k) 190,190,240
+  240 ki=k-n
+      do 250 i=1,n
+         ki=ki+n
+         holo=a(ki)
+         ji=ki+j-k
+         a(ki)=-a(ji)
+  250 a(ji)=holo
+      go to 190
+  260 return
+      end
+!==============================================================
+!      SUBROUTINE VScal(N,skal,V)
+!      IMPLICIT REAL*8(A-H,O-Z)
+!
+!  Scales all elements of a vector by skal
+!    V = V * skal
+!
+!      REAL*8 V(N)
+!
+!      DO 10 I=1,N
+!      V(I) = V(I)*skal
+! 10   CONTINUE
+!
+!      RETURN
+!      END
+! =================================================================
+
 
 subroutine formCPHFA(Ibas,Jbas,IIbas,JJbas)
   use allmod
