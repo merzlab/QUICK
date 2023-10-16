@@ -11,7 +11,7 @@ COPY . .
 
 WORKDIR /src/build
 
-FROM build-base-serial AS serial-cmake
+FROM build-base-serial AS serial-cpu
 
 RUN apt-get install -y \
     gfortran \
@@ -42,7 +42,7 @@ COPY . .
 
 WORKDIR /src/build
 
-FROM build-base-cuda AS cuda-cmake
+FROM build-base-cuda AS serial-cuda
 
 RUN apt-get install -y \
     gfortran \
