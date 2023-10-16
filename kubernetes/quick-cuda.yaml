@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quick-qm
+  name: quick-qm-cuda-serial
 spec:
   replicas: 1
   selector:
@@ -23,7 +23,7 @@ spec:
                 - NVIDIA-GeForce-GTX-1080-Ti
       containers:
       - name: quick
-        image: kkricksdsu/quick@sha256:46020a60808e667bac076f25fddb66ecd639caa11ab4942048650e7385f25188
+        image: kkricksdsu/quick@sha256:62479688e5b3bfac64b4ec3db390df197d5fb6fdc853dfe8045164704f4567c2
         command: ["/bin/bash", "-c", "./runtest --cuda --full && sleep 3600"]
         resources:
           limits:
