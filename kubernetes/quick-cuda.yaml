@@ -22,6 +22,20 @@ spec:
                 values:
                 - NVIDIA-GeForce-GTX-1080-Ti
       containers:
+      - name: rclone
+        image: rclone/rclone:latest
+        command: ["rclone", "ls", "nrp-s3:"]
+        resources:
+          limits:
+            cpu: 1
+            memory: 500Mi
+          requests:
+            cpu: 500m
+            memory: 250Mi
+        volumeMounts:
+        - name: rclone
+          mountPath: "/config/rclone/"
+          readOnly: true
       - name: quick
         image: kkricksdsu/quick@sha256:62479688e5b3bfac64b4ec3db390df197d5fb6fdc853dfe8045164704f4567c2
         command: ["/bin/bash", "-c", "./runtest --cuda --full && sleep 3600"]
@@ -34,3 +48,8 @@ spec:
             cpu: "1"
             memory: "1Gi"
             nvidia.com/gpu: 1
+      restartPolicy: OnFailure
+      volumes:
+      - name: rclone
+        secret:
+          secretName: rclone
