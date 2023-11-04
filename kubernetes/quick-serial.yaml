@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quick
-        image: kkricksdsu/quick@sha256:c85bb36129fb52d3c365fc1634c99205a3ee47e58a88e295c955ac90d9cf232a
+        image: docker pull kkricksdsu/quick:serial-cpu-latest
         command: ["/bin/bash", "-c", "./runtest --serial --full && sleep 3600"]
         resources:
           limits:
