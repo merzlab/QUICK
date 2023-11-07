@@ -34,15 +34,16 @@ spec:
       containers:
       - name: quick
         image: kkricksdsu/quick@sha256:62479688e5b3bfac64b4ec3db390df197d5fb6fdc853dfe8045164704f4567c2
-        command: ["/bin/bash", "-c", "cd /data/quick-benchmarks && quick.cuda morphine.in && quick.cuda psb5.in && quick.cuda taxol.in && quick.cuda valinomycin.in"]
+        # command: ["/bin/bash", "-c", "cd /data/quick-benchmarks && quick.cuda morphine.in && quick.cuda psb5.in && quick.cuda taxol.in && quick.cuda valinomycin.in"]
+        command: ["/bin/bash", "-c", "cd /data/quick-benchmarks && quick.cuda water.in && sleep 3600"]
         resources:
           limits:
-            cpu: "2"
-            memory: "4Gi"
+            cpu: "4"
+            memory: "8Gi"
             nvidia.com/gpu: 1
           requests:
-            cpu: "1"
-            memory: "1Gi"
+            cpu: "2"
+            memory: "4Gi"
             nvidia.com/gpu: 1
         volumeMounts:
         - name: quick-qm-benchmarks
@@ -54,4 +55,3 @@ spec:
       - name: quick-qm-benchmarks
         persistentVolumeClaim:
           claimName: quick-qm-benchmarks
-# 
