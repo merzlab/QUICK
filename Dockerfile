@@ -117,3 +117,87 @@ WORKDIR /src/install
 ENV QUICK_INSTALL /src/install
 ENV QUICK_BASIS $QUICK_INSTALL/basis
 ENV PATH $PATH:$QUICK_INSTALL/bin
+
+## Base MPI CUDA ##
+FROM nvidia/cuda:11.7.1-devel-ubuntu22.04 AS base-mpi-cuda-11.7.1
+
+RUN apt-get update -y \
+ && apt-get install -y \
+    gfortran \
+    cmake \
+    g++ \
+    openmpi-bin \
+    openmpi-common \
+    libopenmpi-dev
+
+RUN mkdir /src \
+ && mkdir /src/build
+
+WORKDIR /src
+
+COPY . .
+
+WORKDIR /src/build
+
+RUN cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install -DCUDA=TRUE -DMPI=TRUE
+
+RUN make -j2 install
+
+FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04 AS mpi-cuda-11.7.1
+
+RUN apt-get update -y \
+ && apt-get install -y \
+    openmpi-bin \
+    openmpi-common \
+    libopenmpi-dev
+
+COPY --from=base-mpi-cuda-11.7.1 /src /src
+
+WORKDIR /src/install
+
+# Manually run steps from quick.rc
+ENV QUICK_INSTALL /src/install
+ENV QUICK_BASIS $QUICK_INSTALL/basis
+ENV PATH $PATH:$QUICK_INSTALL/bin
+
+## Base MPI CUDA 12. ##
+FROM nvidia/cuda:12.0.1-devel-ubuntu22.04 AS base-mpi-cuda-12.0.1
+
+RUN apt-get update -y \
+ && apt-get install -y \
+    gfortran \
+    cmake \
+    g++ \
+    openmpi-bin \
+    openmpi-common \
+    libopenmpi-dev
+
+RUN mkdir /src \
+ && mkdir /src/build
+
+WORKDIR /src
+
+COPY . .
+
+WORKDIR /src/build
+
+RUN cmake .. -DCOMPILER=GNU -DCMAKE_INSTALL_PREFIX=$(pwd)/../install -DCUDA=TRUE -DMPI=TRUE
+
+RUN make -j2 install
+
+FROM nvidia/cuda:12.0.1-runtime-ubuntu22.04 AS mpi-cuda-12.0.1
+
+RUN apt-get update -y \
+ && apt-get install -y \
+    openmpi-bin \
+    openmpi-common \
+    libopenmpi-dev
+
+COPY --from=base-mpi-cuda-12.0.1 /src /src
+
+WORKDIR /src/install
+
+# Manually run steps from quick.rc
+ENV QUICK_INSTALL /src/install
+ENV QUICK_BASIS $QUICK_INSTALL/basis
+ENV PATH $PATH:$QUICK_INSTALL/bin
