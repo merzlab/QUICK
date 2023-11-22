@@ -18,36 +18,21 @@
 
     dimension Vib(natom*3),SVec(natom*3,4), ATMASS(natom)
     dimension RMode(3*natom,3*natom), P(3*natom,3*natom)
- 
+    PARAMETER (ToCM=5.89141d-07,ToCM2=3.94562d0) 
+
     call prtAct(ioutfile,"Begin Frequency calculation")
 
 ! Note:  This can be changed.
 
     TempK = 298.15d0
 
-! Conversion factor to get from atomic units:
-! from atomic charge to ESU = 4.803242D-10
-! from particle to mole = 6.0221367D23
-! from Bohrs to cm = .529177249D-8
-! And since the eigenvalues are 4 Pi^2 (freq)^2 you also need the speed
-! of light in cm = 2.99792458D10
-
-    convfact = (4.803242D-10)**2.d0
-    convfact = convfact* 6.0221367D23
-    convfact = convfact/ (4 *pi*pi)
-    convfact = convfact/ (2.99792458D10)**2.d0
-    convfact = convfact/ (.529177249D-8)**3.d0
-
 ! This procedure calculates the frequencies of the molecule given the
 ! hessian.
 
-!    do I=1, natom
-!       ATMASS(I)=emass(quick_molspec%iattype(I))
-!    enddo
 
 ! First, mass weight the hessian.
 
-    write (ioutfile,'(/" MASS WEIGHT THE HESSIAN. ")')
+    write (ioutfile,'(/" MASS-WEIGHTED HESSIAN ")')
     do Iatm=1,natom
        AMASI = 1.0d0/sqrt(quick_molspec%iatmass(Iatm))
        II = 3*(Iatm-1)
@@ -66,8 +51,9 @@
 
 ! Second, project out translations/rotations from Mass-Weighted Hessian
 
-  call ProjTRM(natom, xyz, quick_molspec%iatmass, P, RMode, quick_qm_struct%hessian)
-
+    write (ioutfile,'(/" PROJECTED MASS-WEIGHTED HESSIAN ")')
+    call ProjTRM(natom, xyz, quick_molspec%iatmass, P, RMode, quick_qm_struct%hessian)
+    call PriHessian(ioutfile,3*natom,quick_qm_struct%hessian,'f12.6')
 
 ! Diagonalize the Hessian.
 
@@ -75,7 +61,9 @@
 
 !! print out vibrations
 
-
+    WRITE(ioutfile,1200)
+    WRITE(ioutfile,1300) (SIGN(SQRT(ABS(Vib(I))),Vib(I)),I=1,NATOM*3)
+ 1200 FORMAT(/,' HAROMNIC FREQUENCIES (au): ')
 
 ! Remove Zero frequencies
 
@@ -89,17 +77,18 @@
 ! Mass Weight and normalize the normal modes
 !  Calculated IR intensities (using unnormalized modes)
 
-    write (ioutfile,'(/" THE HARMONIC FREQUENCIES (1/cm): ")')
+    write (ioutfile,'(/" HARMONIC FREQUENCIES (1/cm): ")')
     write (ioutfile,*)
     do I=1,natom*3
-        Vib(I) = convfact*Vib(I)
-        if (Vib(I) < 0.d0) then
-            Vib(I) = -1.d0* DABS(Vib(I))**.5d0
-        else
-            Vib(I) = Vib(I)**.5d0
-        endif
-        write (ioutfile,'(6x,F15.5)') Vib(I)
+        Vib(I) = SIGN(SQRT(Abs(Vib(I))/ToCM),Vib(I))*ToCM2
+!        if (Vib(I) < 0.d0) then
+!            Vib(I) = -1.d0* DABS(Vib(I))**.5d0
+!        else
+!            Vib(I) = Vib(I)**.5d0
+!        endif
     enddo
+    WRITE(ioutfile,1300) (Vib(I),I=1,NATOM*3) 
+ 1300 FORMAT(1X,6F12.6)
     write (ioutfile,*)
     
 ! Now we have the frequencies.  Before continuing, we need to see if the
