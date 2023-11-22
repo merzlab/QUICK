@@ -48,6 +48,7 @@ subroutine fdhessian(failed)
   use allmod
   use quick_cshell_gradient_module, only: cshell_gradient
   use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_exception_module, only: RaiseException
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
@@ -387,13 +388,6 @@ subroutine hess_total
                      quick_qm_struct%od,quick_qm_struct%hessian)
 
   call hess_full(quick_qm_struct%hessian,natom)
-
-
-  write(ioutfile,*)
-  write(ioutfile,*)'FINAL HESSIAN'
-  do Iatm=1,natom*3
-     write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
-  enddo
 
 end subroutine hess_total
 
