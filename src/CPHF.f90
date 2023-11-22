@@ -132,8 +132,9 @@ subroutine form_CPHF
   dimension d1_curr((nbasis*(nbasis+1))/2,3,natom) ! current 1st-order density
   dimension d1con((nbasis*(nbasis+1))/2,3) ! storage for constant part of D1
   dimension work1((nbasis*(nbasis+1))/2,3)
-  dimension w1(nbasis,nbasis)
-  dimension w2(nbasis*(nbasis-quick_molspec%nelec/2))
+  dimension work2((nbasis*(nbasis+1))/2,3)
+  dimension w1(nbasis**2)
+  dimension w2(nbasis*(quick_molspec%nelec/2))
   integer nocc,ntri,icycle,nvirt
   dimension x1((nbasis*(nbasis+1))/2,3,natom)
   dimension y1((nbasis*(nbasis+1))/2,3,natom)
@@ -146,7 +147,7 @@ subroutine form_CPHF
   logical oscylates
   
 !-------------------------------------------------------------------
-      do iat=1,natonce
+      do iat=1,natom
          resx(iat)=1.d+5
          resy(iat)=1.d+5
          resz(iat)=1.d+5
@@ -162,33 +163,24 @@ subroutine form_CPHF
 !-------------------------------------------------------------------
 
      ntri=(nbasis*(nbasis+1))/2
-write(*,*)'R1:'
      do iat=1,natom 
         natend(iat) = 0
         do J=1,3
            r1(:,J,IAT)=quick_qm_struct%d1con(3*(iat-1)+J,:)
            quick_qm_struct%dense1(3*(iat-1)+J,:)=r1(:,J,IAT)
            d1_curr(:,J,IAT)=r1(:,J,IAT)
-write(*,*)d1_curr(:,J,IAT)           
         enddo
-     enddo 
+     enddo
+ 
      g1=0.d0
-     MXITER=3
+     MXITER=30
      icycle=0
      lend=0
-
-!     do I=1, natom*3, 3
-!        do J=1,3
-!           d1con(:,J,(I+2)/3)=quick_qm_struct%dense1(I-1+J,:)
-!        enddo
-!     enddo
 
 !     ITER=1
 
      DO ITER=1,MXITER
         icycle=icycle+1
-
-write(*,*)'ITER:',ITER
 
         call get_fext(iter,fext1,fext2)
 !                           name.fext1  - files for rl=l(r)
@@ -215,13 +207,8 @@ write(*,*)'ITER:',ITER
             enddo
          enddo
 
-write(*,*)'G1:'      
          do iat=1,natom
             natend(iat) = 0
-            do J=1,3
-               quick_qm_struct%fd1g0(3*(IAT-1)+J,:)=G1(:,J,IAT)
-write(*,*)G1(:,J,IAT)
-            enddo
          enddo
 
          nocc=quick_molspec%nelec/2
@@ -229,27 +216,23 @@ write(*,*)G1(:,J,IAT)
          DO IAT=1,NATOM
          IF(natend(iat).eq.0) THEN
 
-write(*,*)'Atom No.:',iat
             do icr=1,3
                call dens1_1dir1n(factor, nbasis, nocc, 0.0d0, g1(1,icr,iat), &
-                    -quick_qm_struct%co, quick_qm_struct%E, r1(1,icr,iat), w1, w2)
+                    quick_qm_struct%co, quick_qm_struct%E, r1(1,icr,iat), w1, w2)
             enddo
+!            call drumh(r1(1,1,iat),nbasis, 6  ,'PD1co -x ')
+!            call drumh(r1(1,2,iat),nbasis, 6  ,'PD1co -y ')
+!            call drumh(r1(1,3,iat),nbasis, 6  ,'PD1co -z ')
+           do J=1,3
+              d1con(:,J)=quick_qm_struct%d1con(3*(IAT-1)+J,:)
+           enddo
 
             call file4cphf_o(ntri*3,iat,fext1,r1(1,1,iat),'write') !rl1=L(r1)
             call make_r_orto(iter,ntri,iat,d1con, r1(1,1,iat))
             call file4cphf_o(ntri*3,iat,fext2,r1(1,1,iat),'write') ! ro1=O(rl1)
 
             if(iter.ge.2) then
-              call calc_d1r(iter,ntri,iat,d1con,work1,g1(1,1,iat))
-write(*,*)'r1'
-do icr=1,3
-write(*,*)r1(:,icr,iat)
-enddo
-
-write(*,*)'g1'
-do icr=1,3
-write(*,*)g1(:,icr,iat)
-enddo
+              call calc_d1r(iter,ntri,iat,work2,work1,g1(1,1,iat))
             endif
 
             if(iter.eq.1) then
@@ -276,16 +259,11 @@ enddo
 
          thrs=1.0D-08
 
-write(*,*)'hess:'
-write(*,*)hess
-
          call cphf_enHR(r1,hess,thrs,ntri,nbasis,iter,&
                        lend,1,natend,errmax,natom, & 
                        resx,resy,resz,hesx,hesy,hesz, &
                        deltx,delty,deltz, heltx,helty,heltz, &
                        oscylates)
-
-write(*,*)'lend',lend
 
 !--------------------------------------------------------------------
 !
@@ -300,25 +278,59 @@ write(*,*)'lend',lend
 
     ENDDO    ! end of iterations
 
-!---------------------------------------------------------------
+!--------------------------------------------------------------------
       call file4cphf_c(ntri*3,iter)
-!---------------------------------------------------------------
-
+!--------------------------------------------------------------------
+!
+! read in last D1 soluiton (in R1) :
+!
       do IAT=1,NATOM
          do J=1,3
-            quick_qm_struct%dense1(3*(iat-1)+J,:)= D1_CURR(:,J,IAT)
             R1(:,J,IAT)=D1_CURR(:,J,IAT) 
+            quick_qm_struct%dense1(3*(iat-1)+J,:)= D1_CURR(:,J,IAT)
          enddo
       enddo
 
-      write(6,*) ' PRINTOUT IN SUBROUTINE <form_CPHF>'
-      do iat=1,natom
-         write(6,*)' 1st-order density matrix  for at=',iat
-         call drumh(g1(1,1,iat),nbasis, 6  ,'dens1-X ')
-         call drumh(g1(1,2,iat),nbasis, 6  ,'dens1-Y ')
-         call drumh(g1(1,3,iat),nbasis, 6  ,'dens1-Z ')
-      enddo
+!--------------------------------------------------------------------
+! DO ONE MORE CALCULATION OF D1 USING FULL D1 & full integral thresh
+!
 
+!           this call is only to get G(D1,g0) with current (final) D1 
+!           needed for Ist-order Weighted Density
+!
+!               W1 = D1*F*D + D*F1*D + D*F*D1
+!
+!           with full fock :  F=h+G(D,g)  and  F1=h1 + G(D1,g)+G(D,g1)
+!
+!           W1 MUST be consistent with D1 thus, G(D1,g0) in W1 must
+!           be calculated with CURRENT D1
+!
+!           Thus, after this call D1 should NOT be changed
+!
+
+     ! Calculate G(D1,g0)
+
+         do I=1, natom
+            do J=1,3
+               call quad(r1(:,J,I),quick_qm_struct%psdense,1.0d0,nbasis)
+               quick_method%CalcFock_d1g0=.true.
+               quick_qm_struct%o=0.d0
+               call cshell_density_cutoff
+               do II=1,jshell
+                  call getCshellEri(II)
+               enddo
+               KL=0
+               do K=1,nbasis
+                  do L=1,K
+                     KL=KL+1
+                     g1(KL,J,I)=quick_qm_struct%o(K,L)
+                  enddo
+               enddo
+               quick_qm_struct%fd1g0(3*(I-1)+J,:)=G1(:,J,I)
+            enddo
+         enddo
+
+!--------------------------------------------------------------------
 end subroutine form_CPHF
 
 subroutine form_wdens1
@@ -482,12 +494,7 @@ subroutine form_wdens1
 !--------------------------------------------------------------
 !       Ist-order weighted density in W1 on return
 !--------------------------------------------------------------
-!     call getival('printh',iprint)
-      write(6,*) ' 1st-order weighted density for at=',iat
-      call drumh(w1(1,1),ncf, 6  ,'wens1-X ')
-      call drumh(w1(1,2),ncf, 6  ,'wens1-Y ')
-      call drumh(w1(1,3),ncf, 6  ,'wens1-Z ')
-
+!
       do J=1,3
          quick_qm_struct%wdens1(3*(IAT-1)+J,:)=w1(:,J)
       enddo
@@ -644,16 +651,6 @@ end subroutine form_wdens1
 !      ncf2=ncf*ncf
 !      call save1mat(60,lrec,ncf2,fd)
 
-
-       write(*,*)' fd  matrix'
-       do i=1,ncf
-       do j=1,ncf
-          write(*,66) i,j,fxd(i,j),f0(i,j),d0(i,j)
-       enddo
-       enddo
-
-  66    format(2(i2,1x),3(f10.5,1x))
-
       end
 
       subroutine d1_const(nat3, ncf, ntri, nocc, vec, val, fxd, f1, s1, dense0, d1c, fds1)
@@ -668,9 +665,6 @@ end subroutine form_wdens1
          call calcF1FDS1(ncf, ntri, i, fxd, overlap1, fock1, fds1(:,:,3*i-2:i*3))
          call d1const_xyz(ncf, ntri, nocc, i, vec, val, dense0, fock1, overlap1, d1c(:,3*i-2:i*3))
       enddo
-
-!print*,'fds1',fds1
-!print*,'d1c',d1c
 
       end subroutine d1_const
 
@@ -750,9 +744,6 @@ end subroutine form_wdens1
             fds1(j,i,2)=-sum2+fds1(j,i,2)
             fds1(j,i,3)=-sum3+fds1(j,i,3)
       
-!            write(*,67)fds1(j,i,1),fds1(j,i,2),fds1(j,i,3)
-!67          format(3(f10.5,1x))
-
          enddo !  j=1,ncf
       enddo !  i=1,ncf
 
@@ -819,32 +810,11 @@ end subroutine form_wdens1
       call trspmo(s1,3,s1t,ntri)
       call trspmo(f1,3,f1t,ntri)
 
-       write(6,*)' f1  matrix'
-       do i=1,3
-       do j=1,ntri
-          write(6,666) i,j,f1t(j,i)
-       enddo
-       enddo
-
-       write(6,*)' s1  matrix'
-       do i=1,3
-       do j=1,ntri
-          write(6,666) i,j,s1t(j,i)
-       enddo
-       enddo
-
-666    format(2(i2,1x),1(f10.5,1x))
-
       do icr=1,3
         call dens1_1dir2n(fact1,ncf, nocc, xlvsh, f1t(1,icr), &
                           s1t(1,icr),vec, val, d1c(1,icr), w1, &
                           w2,w3)
       enddo
-
-      write(6,*)' D1const  exit   '
-      call drumh(d1c(1,1),ncf, 6  ,'D1con-x ')
-      call drumh(d1c(1,2),ncf, 6  ,'D1con-y ')
-      call drumh(d1c(1,3),ncf, 6  ,'D1con-z ')
 
 !
 !  2. calculate -fact2*D0*S1*D0 and add it to the constant part of D10.
@@ -853,11 +823,6 @@ end subroutine form_wdens1
         call ds1d_1m(fact2,ncf, &
                      dense0,s1t(1,icr),d1c(1,icr))
       enddo
-
-      write(6,*)' D1const  exit   '
-      call drumh(d1c(1,1),ncf, 6  ,'D1con-x ')
-      call drumh(d1c(1,2),ncf, 6  ,'D1con-y ')
-      call drumh(d1c(1,3),ncf, 6  ,'D1con-z ')
 
       end subroutine d1const_xyz
 
@@ -1026,45 +991,31 @@ end subroutine form_wdens1
 !---------------------------------------------------
       implicit real*8 (a-h,o-z)
       parameter (zero=0.d0,one=1.0d0,two=2.d0)
-      dimension fock(*),cvec(ncf,ncf),eval(ncf),d1(*)
-      dimension w1(ncf**2),w2(ncf*(ncf-nocc))
+      dimension fock(*),cvec(ncf,ncf),eval(*),d1(*)
+      dimension w1(*),w2(*)
 !
-write(6,*)'cvec:'
-write(6,*)cvec(:ncf,:ncf)  
       nvirt=ncf-nocc
 !  expand the Fock matrix to quadratic
       call quad(fock,w1,one,ncf)
-write(*,*)'expand the Fock matrix to quadratic'
-write(*,*)w1(:ncf**2)
 !  W2=Cocc(T)*F
       call dgemm('t','n',nocc,ncf,ncf, &
                  one, cvec, ncf, w1, ncf, &
                  zero, w2, nocc)
-write(*,*)'W2=Cocc(T)*F'
-write(*,*)w2(:ncf*nvirt)
 !  W1=Cocc(T)*F*Cvirt=W2*Cvirt  nocc x nvirt matrix
       call dgemm('n','n', nocc, nvirt,ncf, &
                   one, w2, nocc, cvec(1,nocc+1), ncf, &
                   zero,w1, nocc)
-write(*,*)'W1=Cocc(T)*F*Cvirt=W2*Cvirt  nocc x nvirt matrix'
-write(*,*)w1(:ncf**2)
 !  Now scale W1=Cocc(T)FCvirt with 1.0/(e(i)-e(a)-xlv)
       call scalebydenom(nocc,nvirt,eval,eval(nocc+1),xlv,w1)
-write(*,*)'scale W1=Cocc(T)FCvirt with 1.0/(e(i)-e(a)-xlv)'
-write(*,*)w1(:ncf**2)
 !  Calculate Cvirt*W1(T). Multiply with the factor(occupancy)
 !  Result is the perturbed coeff mx in W2!      
       call dgemm('n','t', ncf, nocc, nvirt, &
                   one, cvec(1,nocc+1), ncf, w1, nocc, &
                   zero,w2, ncf)
-write(*,*)'Calculate Cvirt*W1(T)'
-write(*,*)w2(:ncf*nvirt)
 ! Calculate W2*Cocc(T). Factor moved to this call by GM
       call dgemm('n','t',ncf,ncf,nocc, &
                   fact,w2,ncf,cvec,ncf, &
                   zero, w1,ncf)
-write(*,*)'Calculate W2*Cocc(T)'
-write(*,*)w1(:ncf**2)
 !  Result, in quadratic form, is in W1.
 !  Add transpose to W1 and transfer it to the triangular array d1
       call symtrian(ncf,w1,d1)
@@ -1098,7 +1049,6 @@ write(*,*)w1(:ncf**2)
             b(j,i)=con*a(ij)
    20 continue
       b(i,i)=b(i,i)*(c1+con)/2
-!print*,b(i,i)
    10 continue
       return
 
@@ -1211,7 +1161,6 @@ write(*,*)w1(:ncf**2)
       len1=4
       lent = len1 + 6
       filename = scrf(1:len1)//'.'//fext
-write(*,*)'filename:',filename(1:lent)
       open (unit=nfile,file=filename(1:lent), &
             form='unformatted',access='direct',recl=lrec)
 
@@ -1590,9 +1539,6 @@ write(*,*)'filename:',filename(1:lent)
       lend=1
       if(errmax.gt.thrs) lend=0
 
-      cput=cpuit/60.d0
-      elat=elait/60.d0
-
       iatconv=0
       do iat=1,natonce
         if(natend(iat).eq.1) then
@@ -1602,12 +1548,12 @@ write(*,*)'filename:',filename(1:lent)
       enddo
 
       if(oscylates) then
-         write(iout,421) liter,pelRx,pelRy,pelRz,oscylates, &
-                         noscx,noscy,noscz
-         write(iout,4200) pelHx,pelHy,pelHz
+!         write(iout,421) liter,pelRx,pelRy,pelRz,oscylates, &
+!                         noscx,noscy,noscz
+!         write(iout,4200) pelHx,pelHy,pelHz
       else
-         write(iout,420) liter,pelRx,pelRy,pelRz,oscylates
-         write(iout,4200) pelHx,pelHy,pelHz
+!         write(iout,420) liter,pelRx,pelRy,pelRz,oscylates
+!         write(iout,4200) pelHx,pelHy,pelHz
 !
 !        write(iout,520) liter,pelRx,pelRy,pelRz,
 !    *                         pelHx,pelHy,pelHz,
@@ -1822,7 +1768,7 @@ write(*,*)'filename:',filename(1:lent)
 !              + cl*(rl_l -ro_l-1)
 !
 ! for density
-              d=0.0d0
+              d(:,icr)=0.0d0
 
          do istep=1,liter_dir(icr)
             if(istep.eq.1) then
@@ -1835,7 +1781,6 @@ write(*,*)'filename:',filename(1:lent)
             endif
             call daxpy(ntri,c(istep), ri(1,icr),1, d(1,icr),1 ) ! final d
          enddo
-
       enddo
 !----------------------------------------------------------------------
       end
