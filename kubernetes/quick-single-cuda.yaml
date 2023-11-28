@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quick-qm-single-cuda
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-GeForce-GTX-1080-Ti
+      initContainers:
+      - name: rclone
+        image: rclone/rclone:latest
+        command: ["rclone", "copy", "nrp-s3:quick-benchmarks", "/data"]
+        volumeMounts:
+        - name: quick-qm-benchmarks
+          mountPath: "/data"
+        - name: rclone
+          mountPath: "/config/rclone/"
+          readOnly: true
+      containers:
+      - name: quick
+        image: kkricksdsu/quick:single-cuda-11.7.1
+        # command: ["/bin/bash", "-c", "cd /data/quick-benchmarks && quick.cuda morphine.in && quick.cuda psb5.in && quick.cuda taxol.in && quick.cuda valinomycin.in"]
+        command: ["/bin/bash", "-c", "cd /data/input && quick.cuda water.in && sleep 3600"]
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: quick-qm-benchmarks
+          mountPath: "/data"
+      restartPolicy: Never
+      volumes:
+      - name: rclone
+        secret:
+          secretName: rclone
+      - name: quick-qm-benchmarks
+        persistentVolumeClaim:
+          claimName: quick-qm-benchmarks
