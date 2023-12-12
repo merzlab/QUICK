@@ -39,7 +39,7 @@ RUN apt-get update -y \
     openmpi-common \
     libopenmpi-dev
 
-# Copy the compiled quick runtimes, leaving behind extra build dependencies & saving image size
+# Copy the compiled quick runtimes, leaving behind extra build dependencies & reducing image size
 COPY --from=base-mpi-cuda-11.7.1 /src /src
 
 WORKDIR /src/install
@@ -90,7 +90,7 @@ RUN apt-get update -y \
     openmpi-common \
     libopenmpi-dev
 
-# Copy the compiled quick runtimes, leaving behind extra build dependencies & saving image size
+# Copy the compiled quick runtimes, leaving behind extra build dependencies & reducing image size
 COPY --from=base-mpi-cuda-12.0.1 /src /src
 
 WORKDIR /src/install
