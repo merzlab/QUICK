@@ -31,6 +31,9 @@ module quick_molspec_module
       ! number of external atoms
       integer :: nExtAtom = 0
 
+      ! number of external grid points 
+      integer :: nextpoint = 0
+
       ! multiplicity
       integer :: imult = 1
 
@@ -160,6 +163,15 @@ contains
          enddo
       endif
 
+      if (self%nextpoint.gt.0) then
+         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextpoint))
+         do i=1,self%nextpoint
+            do j=1,3
+               self%extxyz(j,i)=0d0
+            enddo
+         enddo
+      endif
+
    end subroutine allocate_quick_molspec
 
    !-----------------------------
@@ -188,6 +200,15 @@ contains
        endif
      endif
 
+     if(self%nextpoint .gt. 0) then
+      if(current_size /= self%nextpoint) then
+        deallocate(self%extxyz, stat=ierr)
+        allocate(self%extxyz(3,self%nextpoint), stat=ierr)
+        self%extchg=0.0d0
+        self%extxyz=0.0d0
+      endif
+    endif
+
    end subroutine reallocate_quick_molspec
 
    !-------------------
@@ -204,6 +225,7 @@ contains
       self%nElec = 0
       self%nElecb = 0
       self%nExtAtom = 0
+      self%nextpoint = 0
       self%imult = 1
       self%molchg = 0
       self%nNonHAtom = 0
@@ -235,6 +257,11 @@ contains
         if (allocated(self%extchg)) deallocate(self%extchg)
       endif
 
+      ! if exist external grid
+      if (self%nextpoint.gt.0) then
+         if (allocated(self%extxyz)) deallocate(self%extxyz)
+       endif   
+
    end subroutine deallocate_quick_molspec
 
 #ifdef MPIV
@@ -258,6 +285,7 @@ contains
       call MPI_BCAST(self%nElec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nElecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nextpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -273,8 +301,14 @@ contains
          call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       endif
+
+      if (self%nextpoint.gt.0) then
+         call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      endif
+
       call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
    end subroutine broadcast_quick_molspec
 #endif
 
@@ -295,6 +329,7 @@ contains
     integer :: ierror
     integer :: iAtomType
     integer :: nextatom
+    integer :: nextpoint
     double precision :: temp,rdnml
     character(len=200) :: keywd
     logical :: is_extcharge = .false.
@@ -326,6 +361,15 @@ contains
     ! determine if external charge exists
     if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
 
+   ! determine if external grid points exist
+    if (index(keywd,'ESP_GRID') /= 0) is_extcharge=.true.
+   
+   ! determine if external grid points exist
+    if (index(keywd,'EFIELD_GRID') /= 0) is_extcharge=.true.
+   
+   ! determine if external grid points exist
+    if (index(keywd,'EFG_GRID') /= 0) is_extcharge=.true.
+
     ! get the atom number, type and number of external charges
 
   if( .not. isTemplate) then
@@ -336,6 +380,7 @@ contains
     iAtomType = 1
     natom = 0
     nextatom = 0
+    nextpoint = 0
     do
        read(input,'(A80)',end=111,err=111) keywd
        i=1;j=80
@@ -375,6 +420,24 @@ contains
     self%iAtomType = iAtomType
     self%nextatom = nextatom
   endif
+
+      ! read external grid part
+  if (is_extcharge)  then
+   rewind(input)
+   call findBlock(input,2)
+   do
+      read(input,'(A80)',end=112,err=112) keywd
+      if (is_blank(keywd,1,80)) exit
+      nextpoint=nextpoint+1
+   enddo
+endif
+
+112     continue
+
+iAtomType=iAtomType-1
+self%iAtomType = iAtomType
+self%nextpoint = nextpoint
+endif
 
   end subroutine read_quick_molspec
 
@@ -433,6 +496,9 @@ contains
 
       if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input,ierr)
 
+      if (self%nextpoint.gt.0) call read_quick_molespec_extgridpoints(self,input,ierr)
+
+
    end subroutine read_quick_molspec_2
 
 
@@ -478,6 +544,45 @@ contains
 
     end subroutine read_quick_molespec_extcharges
 
+    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
+      use quick_constants_module
+      use quick_exception_module
+
+      implicit none
+
+      ! parameter
+      type (quick_molspec_type) self
+      integer input
+      integer, intent(inout) :: ierr
+      ! inner varibles
+      integer i,j,k,istart,ifinal
+      integer nextpoint,ierror
+      double precision temp
+      character(len=200) keywd
+
+      rewind(input)
+      call findBlock(input,2)
+      nextpoint=self%nextpoint
+
+      do i=1,nextpoint
+          istart = 1
+          ifinal = 80
+
+          read(input,'(A80)') keywd
+
+          do j=1,3
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdnum(keywd,istart,temp,ierror)
+              self%extxyz(j,i) = temp*A_TO_BOHRS
+              istart=ifinal+1
+          enddo
+
+          call rdword(keywd,istart,ifinal)
+      enddo
+
+  end subroutine read_quick_molespec_extgridpoints
+
    ! check if molecular specifications are correct
    subroutine check_quick_molspec(self, ierr)
 
@@ -513,6 +618,10 @@ contains
            write(io,'(" NUMBER OF EXTERNAL POINT CHARGES = ",i4)') self%nextatom
          endif
 
+         if(self%nextpoint.gt.0 )then
+            write(io,'(" NUMBER OF EXTERNAL GRID POINTS = ",i4)') self%nextpoint
+          endif         
+
          if (self%nelecb.ne.0) then
             write (io,'(" NUMBER OF ALPHA ELECTRONS = ",I4)') self%nelec
             write (io,'(" NUMBER OF BETA ELECTRONS  = ",I4)') self%nelecb
@@ -532,6 +641,14 @@ contains
             write(io,'(" -- EXTERNAL POINT CHARGES: (X,Y,Z,Q) -- ")')
             do i=1,self%nextatom
                write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3),self%extchg(i)
+            enddo
+         endif
+
+         if(self%nextpoint.gt.0 )then
+            write(io,*)
+            write(io,'(" -- EXTERNAL GRID : (X,Y,Z) -- ")')
+            do i=1,self%nextpoint
+               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
             enddo
          endif
 
