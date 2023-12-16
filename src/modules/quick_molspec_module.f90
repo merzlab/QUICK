@@ -333,6 +333,7 @@ contains
     double precision :: temp,rdnml
     character(len=200) :: keywd
     logical :: is_extcharge = .false.
+    logical :: is_extgrid = .false.
     logical :: is_blank
     logical, intent(in)   :: isTemplate
     logical, intent(in)   :: hasKeywd
@@ -362,13 +363,13 @@ contains
     if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
 
    ! determine if external grid points exist
-    if (index(keywd,'ESP_GRID') /= 0) is_extcharge=.true.
+    if (index(keywd,'ESP_GRID') /= 0) is_extgrid=.true.
    
    ! determine if external grid points exist
-    if (index(keywd,'EFIELD_GRID') /= 0) is_extcharge=.true.
+    if (index(keywd,'EFIELD_GRID') /= 0) is_extgrid=.true.
    
    ! determine if external grid points exist
-    if (index(keywd,'EFG_GRID') /= 0) is_extcharge=.true.
+    if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
 
     ! get the atom number, type and number of external charges
 
@@ -403,41 +404,56 @@ contains
 
     111     continue
 
-    ! read external charge part
-    if (is_extcharge)  then
-       rewind(input)
-       call findBlock(input,2)
-       do
-          read(input,'(A80)',end=112,err=112) keywd
-          if (is_blank(keywd,1,80)) exit
-          nextatom=nextatom+1
-       enddo
-    endif
+!    ! read external charge part
+!    if (is_extcharge)  then
+!       rewind(input)
+!       call findBlock(input,2)
+!       do
+!          read(input,'(A80)',end=112,err=112) keywd
+!          if (is_blank(keywd,1,80)) exit
+!          nextatom=nextatom+1
+!       enddo
+!    endif
 
-    112     continue
+! read external charge part
+    if (is_extcharge) then
+      rewind(input)
+      call findBlock(input,2)
+      do
+         read(input,'(A80)',end=112,err=112) keywd
+         if (is_blank(keywd,1,80)) exit
+         nextatom = nextatom + 1
+      enddo
+   endif
+   
+   ! read external grid part
+   if (is_extgrid) then
+      rewind(input)
+      call findBlock(input,2)
+      do
+         read(input,'(A80)',end=112,err=112) keywd
+         if (is_blank(keywd,1,80)) exit
+         nextpoint = nextpoint + 1
+      enddo
+   endif
 
-    iAtomType=iAtomType-1
-    self%iAtomType = iAtomType
-    self%nextatom = nextatom
-  endif
+!    112     continue
 
-      ! read external grid part
-  if (is_extcharge)  then
-   rewind(input)
-   call findBlock(input,2)
-   do
-      read(input,'(A80)',end=112,err=112) keywd
-      if (is_blank(keywd,1,80)) exit
-      nextpoint=nextpoint+1
-   enddo
-endif
+!    iAtomType=iAtomType-1
+!    self%iAtomType = iAtomType
+!    self%nextatom = nextatom
+!  endif
+   112     continue
 
-112     continue
+   iAtomType = iAtomType - 1
+   self%iAtomType = iAtomType
+   self%nextatom = nextatom
 
-iAtomType=iAtomType-1
-self%iAtomType = iAtomType
-self%nextpoint = nextpoint
-endif
+   ! Check if the external grid part was processed
+   if (is_extgrid) then
+      self%nextpoint = nextpoint
+   endif
+ endif
 
   end subroutine read_quick_molspec
 
