@@ -100,8 +100,8 @@ subroutine electdiisdc(jscf,PRMS)
          call hfoperatordc(oneElecO)
 #endif
       endif
-      if (quick_method%DFT)   call dftoperator
-      if (quick_method%SEDFT) call sedftoperator
+      !if (quick_method%DFT)   call dftoperator
+      !if (quick_method%SEDFT) call sedftoperator
       RECORD_TIME(timer_end%TOp)
 
       jscf=jscf+1            ! Cycle time
@@ -138,7 +138,7 @@ subroutine electdiisdc(jscf,PRMS)
             ! obtain opertor now
             !--------------------------------------------
             if (quick_method%HF) call hfoperatordeltadc
-            if (quick_method%DFT) call dftoperator(.true.)
+            !if (quick_method%DFT) call dftoperator(.true.)
 
 
             !--------------------------------------------
@@ -375,17 +375,17 @@ subroutine electdiisdc(jscf,PRMS)
 
       !------ END MPI/ALL NODES --------------------
 
-      if(quick_method%MP2)then
-         do itt=1,np
-            natt=0
-            do k=1,nbasisdc(itt)
-               if (evaldcsub(itt,k).lt.efermi(1)) then
-                  natt=natt+1
-               endif
-            enddo
-            nelecmp2sub(itt)=natt*2
-         enddo
-      endif
+      !if(quick_method%MP2)then
+      !   do itt=1,np
+      !      natt=0
+      !      do k=1,nbasisdc(itt)
+      !         if (evaldcsub(itt,k).lt.efermi(1)) then
+      !            natt=natt+1
+      !         endif
+      !      enddo
+      !      nelecmp2sub(itt)=natt*2
+      !   enddo
+      !endif
 
       !---------- MPI/MASTER ----------------------
       if (master) then
@@ -411,10 +411,10 @@ subroutine electdiisdc(jscf,PRMS)
          endif
 
          ! density for dft
-         if (quick_method%DFT .or. quick_method%SEDFT) then
-            write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)')    quick_qm_struct%aelec
-            write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)')    quick_qm_struct%belec
-         endif
+         !if (quick_method%DFT .or. quick_method%SEDFT) then
+         !   write (ioutfile,'("ALPHA ELECTRON DENSITY    =",F16.10)')    quick_qm_struct%aelec
+         !   write (ioutfile,'("BETA ELECTRON DENSITY     =",F16.10)')    quick_qm_struct%belec
+         !endif
 
          ! lsolerr.ne.0 indicates dii failure
          if (lsolerr /= 0) write (ioutfile,'("DIIS FAILED !! PERFORM NORMAL SCF. (NOT FATAL.)")')
