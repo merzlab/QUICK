@@ -91,6 +91,11 @@ set(DLFIND_MODULES_SOURCES
 set(DFTD3_SOURCES
 	api.f90  common.f90  core.f90  pars.f90  sizes.f90)
 
+set(DNC_SOURCES
+        MFCC.f90
+        dnc_hfoperator.f90 dnc_scf.f90
+        dnc_shell.f90 inidivcon.f90 shell.f90)
+
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
 endif()
@@ -113,6 +118,7 @@ set(QUICK_MODULES_SOURCES_FULLPATH "")
 set(QUICK_SUBS_SOURCES_FULLPATH "")
 set(DLFIND_MODULES_SOURCES_FULLPATH "")
 set(DFTD3_SOURCES_FULLPATH "")
+set(DNC_SOURCES_FULLPATH "")
 
 foreach(MODULES_SOURCE ${QUICK_MODULES_SOURCES})
 	list(APPEND QUICK_MODULES_SOURCES_FULLPATH "modules/${MODULES_SOURCE}")
@@ -130,12 +136,16 @@ foreach(DFTD3_SOURCE ${DFTD3_SOURCES})
         list(APPEND DFTD3_SOURCES_FULLPATH "dftd3/${DFTD3_SOURCE}")
 endforeach()
 
+foreach(DNC_SOURCE ${DNC_SOURCES})
+        list(APPEND DNC_SOURCES_FULLPATH "dnc/${DNC_SOURCE}")
+endforeach()
+
 # create serial and MPI libraries
 # --------------------------------------------------------------------
 
 include_directories(util)
 
-add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
+add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DNC_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
 config_module_dirs(libquick quick/serial libxc/serial)
 
