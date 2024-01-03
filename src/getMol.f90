@@ -275,7 +275,7 @@ subroutine initialGuess(ierr)
       endif
 
       !  SAD inital guess
-      if (quick_method%SAD) then
+      if (quick_method%SAD .and. .not. quick_method%MFCC) then
          call getSadDense
       endif
 
