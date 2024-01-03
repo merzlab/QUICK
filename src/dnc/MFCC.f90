@@ -21,6 +21,7 @@ end subroutine
 
 subroutine MFCC_initial_guess
    use allmod
+   call PrtAct(ioutfile,"Begin MFCC initial guess")
    do i=1,nbasis
       do j=1,nbasis
          quick_qm_struct%dense(i,j)=0.0d0
@@ -126,4 +127,5 @@ subroutine MFCC_initial_guess
       enddo
    enddo
 
+call PrtAct(ioutfile,"Finish MFCC initial guess")
 end subroutine
