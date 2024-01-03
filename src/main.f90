@@ -141,7 +141,7 @@
     call read_Job_and_Atom(ierr)
     !allocate essential variables
     call alloc(quick_molspec,ierr)
-    !if (quick_method%MFCC) call allocate_MFCC()
+    if (quick_method%MFCC) call allocate_MFCC()
    
     RECORD_TIME(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
@@ -150,8 +150,8 @@
     RECORD_TIME(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
-    if (quick_method%writeSAD) then
+    if (quick_method%SAD .and. .not. quick_method%MFCC) SAFE_CALL(getSadGuess(ierr))
+    if (quick_method%writeSAD .and. .not. quick_method%MFCC) then
        call quick_exit(iOutFile,ierr)
     end if
 
