@@ -8,6 +8,9 @@ subroutine hfoperatordeltadc
    use allmod
    use quick_gaussian_class_module
    use quick_cutoff_module, only: cshell_dnscreen
+   use quick_oei_module, only: ekinetic
+   use quick_overlap_module, only: gpt
+
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp
@@ -219,8 +222,10 @@ end subroutine hfoperatordeltadc
 subroutine hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
-    use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cutoff_module, only: cshell_density_cutoff
    use quick_cshell_eri_module, only: getCshellEriEnergy
+   use quick_oei_module, only:get1eEnergy   
+
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp,oneElecO(nbasis,nbasis)
@@ -229,6 +234,7 @@ subroutine hfoperatordc(oneElecO)
 
    double precision fmmonearrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
    double precision fmmtwoarrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
+   logical :: deltaO 
 
    !---------------------------------------------------------------------
    ! This subroutine is to form hf operator with div-and-con
@@ -252,7 +258,7 @@ subroutine hfoperatordc(oneElecO)
    ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
    !-----------------------------------------------------------------
    call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
-   if (quick_method%printEnergy) call get1eEnergy
+   if (quick_method%printEnergy) call get1eEnergy(deltaO)
 
    !-----------------------------------------------------------------
    ! Alessandro GENONI 03/21/2007

@@ -7,7 +7,7 @@
 ! 10/25/2010 YIPU MIAO Successful run on mpi, begin to test
 ! 10/20/2010 YIPU MIAO Add MPI option to DIIS div&con
 ! this is dii for div & con
-subroutine electdiisdc(jscf,PRMS)
+subroutine electdiisdc(jscf,ierr)
    use allmod
 #ifdef MPIV
    use mpi
@@ -24,6 +24,7 @@ subroutine electdiisdc(jscf,PRMS)
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
    integer :: lsolerr = 0
+   integer, intent(inout) :: ierr   
 
    !===========================================================
    ! The purpose of this subroutine is to utilize Pulay's accelerated
