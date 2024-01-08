@@ -10,6 +10,7 @@ subroutine hfoperatordeltadc
    use quick_cutoff_module, only: cshell_dnscreen
    use quick_oei_module, only: ekinetic
    use quick_overlap_module, only: gpt
+   use quick_cshell_eri_module, only: getCshellEri
 
    implicit double precision(a-h,o-z)
 
@@ -181,7 +182,7 @@ subroutine hfoperatordeltadc
                         .or.(dcconnect(JJ,KK).eq.1.and.(cutmatrix(II,LL)*testCutoff).gt.quick_method%integralCutoff) &
                         .or.(dcconnect(JJ,LL).eq.1.and.(cutmatrix(II,KK)*testCutoff).gt.quick_method%integralCutoff))then
 
-                     call shell
+                     call getCshellEri(II)
                   endif
                endif
 
@@ -478,6 +479,7 @@ subroutine get2edc
    ! This subroutine is to get 2e integral for d&c
    !------------------------------------------------
    use allmod
+   use quick_cshell_eri_module, only: getCshellEri
    implicit double precision(a-h,o-z)
    double precision testtmp,cutoffTest
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -501,7 +503,7 @@ subroutine get2edc
                      .or.(dcconnect(JJ,KK).eq.1.and.(cutmatrix(II,LL)*testCutoff).gt.quick_method%integralCutoff) &
                      .or.(dcconnect(JJ,LL).eq.1.and.(cutmatrix(II,KK)*testCutoff).gt.quick_method%integralCutoff))then
 
-                  call shell
+                  call getCshellEri(II)
                endif
             endif
 
