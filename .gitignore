@@ -15,3 +15,8 @@ debug.*
 *~
 *.bak
 make.in
+builddir/
+quick.rc
+runtest
+runtest.log
+share/
