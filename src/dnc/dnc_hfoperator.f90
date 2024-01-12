@@ -225,7 +225,7 @@ subroutine hfoperatordc(oneElecO)
    use quick_gaussian_class_module
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_cshell_eri_module, only: getCshellEriEnergy
-   use quick_oei_module, only:get1eEnergy   
+   use quick_oei_module, only:get1eEnergy,get1e  
 
    implicit double precision(a-h,o-z)
 
@@ -259,7 +259,12 @@ subroutine hfoperatordc(oneElecO)
    ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
    !-----------------------------------------------------------------
    call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
-   if (quick_method%printEnergy) call get1eEnergy(deltaO)
+
+   ! One-electron integrals
+   call get1e(deltaO)
+
+   ! 1eEnergy calculation
+   if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
    !-----------------------------------------------------------------
    ! Alessandro GENONI 03/21/2007
@@ -273,6 +278,7 @@ subroutine hfoperatordc(oneElecO)
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next two terms define the two electron part.
    !--------------------------------------------
+
    call cshell_density_cutoff
 
    !--------------------------------------------
