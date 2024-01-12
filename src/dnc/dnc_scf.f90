@@ -9,6 +9,7 @@
 ! this is dii for div & con
 subroutine electdiisdc(jscf,ierr)
    use allmod
+   use quick_oei_module, only: bCalc1e
    implicit double precision(a-h,o-z)
 
    logical :: diisdone
@@ -22,6 +23,7 @@ subroutine electdiisdc(jscf,ierr)
    double precision efermi(10),oneElecO(nbasis,nbasis)
    integer :: lsolerr = 0
    integer, intent(inout) :: ierr   
+   logical :: deltaO   = .false.  ! delta Operator
 
 #ifdef MPIV
    include "mpif.h"
@@ -69,6 +71,8 @@ subroutine electdiisdc(jscf,ierr)
    !--------------------------------------------
    ! Form the operator matrix for step i, O(i).
    !--------------------------------------------
+   bCalc1e = .true.
+   deltaO = .false.
    diisdone=.false.
    idiis=0
    jscf=0
@@ -79,13 +83,21 @@ subroutine electdiisdc(jscf,ierr)
    if (bMPI)   call MPI_setup_hfoperator
 #endif
 
-   ! First, let's get 1e opertor which only need 1-time calculation
+   !!! Danil !!! QUICK-2.1.0.0 DnC used to "call get1e(oneElecO)"
+   ! before "do while (.not.diisdone)", which is not consistent
+   ! with current version of QUICK-23.08a
+
+   !!!  QUICK-2.1.0.0
+   ! First, let's get 1e operator which only need 1-time calculation
    ! and store them in oneElecO and fetch it every scf time.
-   call get1e(oneElecO)
+   ! call get1e(oneElecO)
+
+   !!! In QUICK-23.08a we call get1e from hfoperatordc
+   ! and assure only single evaluation with bCalc1e variable
 
    do while (.not.diisdone)
 
-      ! Tragger timer
+      ! Trigger timer
       RECORD_TIME(timer_begin%TSCF)
       ! Now Get the Operator
 
