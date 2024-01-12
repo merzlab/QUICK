@@ -260,6 +260,9 @@ subroutine hfoperatordc(oneElecO)
    !-----------------------------------------------------------------
    call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
 
+   ! Delta density matrix cutoff
+   call cshell_density_cutoff
+
    ! One-electron integrals
    call get1e(deltaO)
 
@@ -277,10 +280,6 @@ subroutine hfoperatordc(oneElecO)
    !--------------------------------------------
    ! The previous two terms are the one electron part of the Fock matrix.
    ! The next two terms define the two electron part.
-   !--------------------------------------------
-
-   call cshell_density_cutoff
-
    !--------------------------------------------
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
    ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
