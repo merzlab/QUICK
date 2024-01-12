@@ -60,7 +60,7 @@ subroutine inidivcon(natomsaved)
 #endif
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
-  bEliminate=.true.
+  bEliminate=.false.
 
   allocate(sn(natomt))                     ! ="ATOM"
   allocate(coord(3,natomt))                ! Coordinates, equalance with xyz, but with bohr unit
