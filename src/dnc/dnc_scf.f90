@@ -105,12 +105,12 @@ subroutine electdiisdc(jscf,ierr)
       if (quick_method%HF) then
 #ifdef MPIV
          if (bMPI) then
-            call MPI_hfoperatordc(oneElecO)
+!            call MPI_hfoperatordc(oneElecO)
          else
-            call hfoperatordc(oneElecO)
+!            call hfoperatordc(oneElecO)
          endif
 #else
-         call hfoperatordc(oneElecO)
+!         call hfoperatordc(oneElecO)
 #endif
       endif
       !if (quick_method%DFT)   call dftoperator
@@ -121,9 +121,9 @@ subroutine electdiisdc(jscf,ierr)
       idiis=idiis+1          ! DIIS time
 
       !-------- MPI/MASTER----------------
-      if (master) then
+!      if (master) then
 
-         if (quick_method%debug) call debugDivconNorm()
+!         if (quick_method%debug) call debugDivconNorm()
 
          !--------------------------------------------
          ! Now begin to implement delta increase
@@ -131,35 +131,35 @@ subroutine electdiisdc(jscf,ierr)
          ! 10/20/10 YIPU MIAO Rewrite everything, you can't image how mess and urgly it was.
          ! 07/07/07 Xiao HE   Delta density matrix increase is implemented here.
          !--------------------------------------------
-         if(jscf.ge.quick_method%ncyc)then
+         ! if want to calculate operator difference?
+         if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
             RECORD_TIME(timer_begin%TDII)
             !--------------------------------------------
             ! Before doing everything, we may save Density Matrix and Operator matrix first.
             ! Note try not to modify Osave and DENSAVE unless you know what you are doing
             !--------------------------------------------
-            call CopyDMat(quick_qm_struct%oSave,quick_qm_struct%o,nbasis)            ! recover Operator first
-            call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseSave,nbasis)    ! save density matrix
+            !call CopyDMat(quick_qm_struct%oSave,quick_qm_struct%o,nbasis)            ! recover Operator first
+            !call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseSave,nbasis)    ! save density matrix
 
-            do I=1,nbasis
-               do J=1,nbasis
-                  quick_qm_struct%dense(I,J)=quick_qm_struct%dense(I,J)-quick_qm_struct%denseOld(I,J)
-               enddo
-            enddo
+            !do I=1,nbasis
+            !   do J=1,nbasis
+            !      quick_qm_struct%dense(I,J)=quick_qm_struct%dense(I,J)-quick_qm_struct%denseOld(I,J)
+            !   enddo
+            !enddo
 
             !--------------------------------------------
             ! obtain opertor now
             !--------------------------------------------
-            if (quick_method%HF) call hfoperatordeltadc
+            if (quick_method%HF) call hfoperatordc(deltaO)
             !if (quick_method%DFT) call dftoperator(.true.)
-
 
             !--------------------------------------------
             ! recover density matrix
             !--------------------------------------------
-            call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
+            ! call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
             RECORD_TIME(timer_end%TDII)
-         endif
+!         endif
 
          !--------------------------------------------
          ! We have modified O and density matrix. And we need to save
@@ -181,7 +181,7 @@ subroutine electdiisdc(jscf,ierr)
          ! recover basis number
          !--------------------------------------------
          nbasissave=nbasis
-      endif
+!      endif
       !------ END MPI/MASTER ----------------------
 
 #ifdef MPIV

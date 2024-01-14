@@ -258,7 +258,19 @@ subroutine hfoperatordc(oneElecO)
    ! The first part is kinetic part
    ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
    !-----------------------------------------------------------------
-   call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
+
+   !  if only calculate operation difference
+     if (deltaO) then
+   !     save density matrix
+        quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
+        quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
+
+        if(quick_method%dft) then
+          quick_qm_struct%o = quick_qm_struct%oSave-quick_qm_struct%oxc
+        else
+          quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
+        endif
+     endif
 
    ! Delta density matrix cutoff
    call cshell_density_cutoff
@@ -288,8 +300,13 @@ subroutine hfoperatordc(oneElecO)
       call get2edc
    enddo
 
+   !  Remember the operator is symmetric
    call copySym(quick_qm_struct%o,nbasis)
 
+   !  recover density if calculate difference
+   if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+
+   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
    if(quick_method%printEnergy) call getCshellEriEnergy
 
    return
