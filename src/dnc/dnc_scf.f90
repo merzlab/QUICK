@@ -76,102 +76,71 @@ subroutine electdiisdc(jscf,ierr)
    diisdone=.false.
    idiis=0
    jscf=0
-   if (bMPI) TdcDiagMPI=0.0d0
 
+! This is original DNC MPI lines of code.
+! Needs to be reviewed for current implemetation
+
+   if (bMPI) TdcDiagMPI=0.0d0
 #ifdef MPIV
    ! Setup MPI integral configuration
    if (bMPI)   call MPI_setup_hfoperator
 #endif
-
-   !!! Danil !!! QUICK-2.1.0.0 DnC used to "call get1e(oneElecO)"
-   ! before "do while (.not.diisdone)", which is not consistent
-   ! with current version of QUICK-23.08a
-
-   !!!  QUICK-2.1.0.0
-   ! First, let's get 1e operator which only need 1-time calculation
-   ! and store them in oneElecO and fetch it every scf time.
-   ! call get1e(oneElecO)
-
-   !!! In QUICK-23.08a we call get1e from hfoperatordc
-   ! and assure only single evaluation with bCalc1e variable
-
+ 
+  ! Now Begin DIIS
    do while (.not.diisdone)
 
-      ! Trigger timer
-      RECORD_TIME(timer_begin%TSCF)
-      ! Now Get the Operator
+   ! Trigger timer
+   RECORD_TIME(timer_begin%TSCF)
 
-      RECORD_TIME(timer_begin%TOp)
-      if (quick_method%HF) then
-#ifdef MPIV
-         if (bMPI) then
-!            call MPI_hfoperatordc(oneElecO)
-         else
-!            call hfoperatordc(oneElecO)
-         endif
-#else
-!         call hfoperatordc(oneElecO)
-#endif
-      endif
-      !if (quick_method%DFT)   call dftoperator
-      !if (quick_method%SEDFT) call sedftoperator
-      RECORD_TIME(timer_end%TOp)
+  ! Determine dii cycle and scf cycle
+   idiis=idiis+1
+   jscf=jscf+1
 
-      jscf=jscf+1            ! Cycle time
-      idiis=idiis+1          ! DIIS time
+   if(idiis.le.quick_method%maxdiisscf)then
+      IDIISfinal=idiis; iidiis=idiis
+   else
+      IDIISfinal=quick_method%maxdiisscf; iidiis=1
+   endif
 
-      !-------- MPI/MASTER----------------
-!      if (master) then
+  ! Similarly to HF, with utilization of deltaO variable
+  ! the structure of dftoperator has to be changed.
+  ! Moreover it needs to be called after:
+  ! "if(jscf.ge.quick_method%ncyc) deltaO = .true."
+  ! because deltaO is flag for update of operator
+  
+  !if (quick_method%DFT)   call dftoperator
+  !if (quick_method%SEDFT) call sedftoperator
 
-!         if (quick_method%debug) call debugDivconNorm()
+  ! Triger Operator timer
+   RECORD_TIME(timer_begin%TOp)
 
-         !--------------------------------------------
-         ! Now begin to implement delta increase
-         !--------------------------------------------
-         ! 10/20/10 YIPU MIAO Rewrite everything, you can't image how mess and urgly it was.
-         ! 07/07/07 Xiao HE   Delta density matrix increase is implemented here.
-         !--------------------------------------------
-         ! if want to calculate operator difference?
-         if(jscf.ge.quick_method%ncyc) deltaO = .true.
+  ! if want to calculate operator difference?
+   if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
-            RECORD_TIME(timer_begin%TDII)
-            !--------------------------------------------
-            ! Before doing everything, we may save Density Matrix and Operator matrix first.
-            ! Note try not to modify Osave and DENSAVE unless you know what you are doing
-            !--------------------------------------------
-            !call CopyDMat(quick_qm_struct%oSave,quick_qm_struct%o,nbasis)            ! recover Operator first
-            !call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseSave,nbasis)    ! save density matrix
+   RECORD_TIME(timer_begin%TDII)
 
-            !do I=1,nbasis
-            !   do J=1,nbasis
-            !      quick_qm_struct%dense(I,J)=quick_qm_struct%dense(I,J)-quick_qm_struct%denseOld(I,J)
-            !   enddo
-            !enddo
+  ! Calculate energy and update operator if deltaO= .true.
+   if (quick_method%HF) call hfoperatordc(deltaO)
+  !if (quick_method%DFT) call dftoperator(.true.)
+ 
+   RECORD_TIME(timer_end%TOp)
 
-            !--------------------------------------------
-            ! obtain opertor now
-            !--------------------------------------------
-            if (quick_method%HF) call hfoperatordc(deltaO)
-            !if (quick_method%DFT) call dftoperator(.true.)
+  !--------------------------------------------
+  ! We have modified O and density matrix. And we need to save
+  ! Operator for next cycle
+  !--------------------------------------------
+   call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
+   call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
 
-            !--------------------------------------------
-            ! recover density matrix
-            !--------------------------------------------
-            ! call CopyDMat(quick_qm_struct%denseSave,quick_qm_struct%dense,nbasis)
-            RECORD_TIME(timer_end%TDII)
-!         endif
+   RECORD_TIME(timer_end%TDII)
 
-         !--------------------------------------------
-         ! We have modified O and density matrix. And we need to save
-         ! Operator for next cycle
-         !--------------------------------------------
-         call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
-         call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
+   if(quick_method%debug) call debugElecdii(jscf)
 
-
-         if(quick_method%debug) call debugElecdii(jscf)
-
-
+  ! Original DnC implementation above used HF and deltaHF
+  ! subroutines and had different structure.
+  ! Need to carefully think about how MPI can be implemented
+  ! in new structure of the DnC code.
+ 
          !--------------------------------------------
          ! Form extract subsystem operator from full system
          !--------------------------------------------
@@ -181,7 +150,6 @@ subroutine electdiisdc(jscf,ierr)
          ! recover basis number
          !--------------------------------------------
          nbasissave=nbasis
-!      endif
       !------ END MPI/MASTER ----------------------
 
 #ifdef MPIV
