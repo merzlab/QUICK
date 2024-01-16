@@ -53,14 +53,22 @@ subroutine inidivcon(natomsaved)
   integer,allocatable:: temp1d(:),temp2d(:,:)
   integer tempinteger,tempinteger2
   integer natomt,natomsaved
-  logical bEliminate  ! if elimination step needed(test only)
+  logical bEliminate  ! if elimination step needed (absolute must for large systems)
 
 #ifdef MPIV
   include 'mpif.h'
 #endif
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
-  bEliminate=.false.
+
+  ! BEoff is to be used only if fragments have to be very small (less than 5 atoms or so).
+  ! BEoff is primarly for testing. Smaller fragments can be achieved with custom rbuffer value. 
+
+  if (quick_method%beoff) then
+     bEliminate=.false.
+  else
+     bEliminate=.true.
+  endif
 
   allocate(sn(natomt))                     ! ="ATOM"
   allocate(coord(3,natomt))                ! Coordinates, equalance with xyz, but with bohr unit
