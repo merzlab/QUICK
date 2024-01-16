@@ -125,6 +125,12 @@ subroutine inidivcon(natomsaved)
         np=quick_molspec%nNonHAtom            ! Non-H Atom basis
      end select
 
+     ! Assign rbuffer1 to DNCRB, if size of buffer is expicitly specified by user
+     if (quick_method%isDefaultDNCRB .eqv. .false.) then
+        rbuffer1 = quick_method%DNCRB  
+     endif
+
+     ! Save atoms based on case 1, 2 or 3 (above)
      npsaved=np
 
      ! Output basic div-con information

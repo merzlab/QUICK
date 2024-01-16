@@ -110,7 +110,11 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        double precision :: DNCRB          = 7.0d0    ! buffer region size in DIVCON
+
         logical :: isDefaultXCCutoff       = .true.
+        logical :: isDefaultDNCRB          = .true.
+
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
@@ -244,6 +248,7 @@ module quick_method_module
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%DNCRB,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -740,6 +745,12 @@ module quick_method_module
                 self%isDefaultXCCutoff = .false.
             endif
 
+            ! Custom buffer cutoff for DIVCON
+            if (index(keywd,'DNCRB') /= 0) then
+                call read(keywd,'DNCRB', self%DNCRB)
+                self%isDefaultDNCRB = .false.
+            endif
+
             ! Basis cutoff
             if (index(keywd,'BASISCUTOFF=') /= 0) then
                 call read(keywd,'BASISCUTOFF', self%basisCutoff)
@@ -874,6 +885,7 @@ module quick_method_module
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
             self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
+            self%isDefaultDNCRB    = .true. ! is DNCRB default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCutoff    = 1.0d-6  ! basis set cutoff
