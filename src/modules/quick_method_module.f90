@@ -78,6 +78,10 @@ module quick_method_module
         logical :: DIVCON = .false.    ! Div&Con
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
+        ! this part is Div&Con options
+        logical :: BEoff = .false.
+        logical :: Qint = .false.
+
         ! this is DFT grid
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
 
@@ -240,6 +244,8 @@ module quick_method_module
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -467,6 +473,10 @@ module quick_method_module
                 endif
             endif
 
+            ! additional DIVCON options
+            if (self%BEoff)  write(io,'(" NO ELIMINATION OF EMBEDDED SUBSYSTEM IN DIVCON ")')
+            if (self%Qint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
+
             ! computing cycles
             write(io,'(" MAX SCF CYCLES = ",i6)') self%iscf
             if (self%diisSCF) write (io,'(" MAX DIIS CYCLES = ",I4)') self%maxdiisscf
@@ -633,6 +643,8 @@ module quick_method_module
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
+            if (index(keyWD,'BEOFF').ne.0)      self%BEoff=.true.
+            if (index(keyWD,'QINT').ne.0)       self%Qint=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
 
@@ -843,6 +855,8 @@ module quick_method_module
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
             self%DIVCON = .false.      ! Div&Con
+            self%BEoff = .false.       ! Turns off bEliminate in Div&Con
+            self%Qint = .false.        ! Prints 1e and 2e integrals in Qiskit format
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
