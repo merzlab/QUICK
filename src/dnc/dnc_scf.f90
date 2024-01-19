@@ -117,8 +117,6 @@ subroutine electdiisdc(jscf,ierr)
   ! if want to calculate operator difference?
    if(jscf.ge.quick_method%ncyc) deltaO = .true.
 
-   RECORD_TIME(timer_begin%TDII)
-
   ! Calculate energy and update operator if deltaO= .true.
    if (quick_method%HF) call hfoperatordc(deltaO)
   !if (quick_method%DFT) call dftoperator(.true.)
@@ -132,9 +130,10 @@ subroutine electdiisdc(jscf,ierr)
    call CopyDMat(quick_qm_struct%o,quick_qm_struct%oSave,nbasis)
    call CopyDMat(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
 
-   RECORD_TIME(timer_end%TDII)
-
    if(quick_method%debug) call debugElecdii(jscf)
+
+  ! TDII Timer needs to be checked when start MPI implementation
+   RECORD_TIME(timer_begin%TDII)
 
   ! Original DnC implementation above used HF and deltaHF
   ! subroutines and had different structure.
@@ -269,6 +268,9 @@ subroutine electdiisdc(jscf,ierr)
          if (allocated(IDEGEN1temp)) deallocate(IDEGEN1temp)
          if (allocated(dcco)) deallocate(dcco)
       enddo
+
+      ! TDII Timer needs to be checked when start MPI implementation
+      RECORD_TIME(timer_end%TDII)      
 
 #ifdef MPIV
       !--------------------------------------------
