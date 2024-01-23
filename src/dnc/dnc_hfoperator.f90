@@ -226,6 +226,7 @@ subroutine hfoperatordc(oneElecO)
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_cshell_eri_module, only: getCshellEriEnergy
    use quick_oei_module, only:get1eEnergy,get1e  
+   use quick_cutoff_module, only: cshell_dnscreen
 
    implicit double precision(a-h,o-z)
 
@@ -296,6 +297,27 @@ subroutine hfoperatordc(oneElecO)
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
    ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
    !--------------------------------------------
+
+   ! This part was formerly implemented in hfoperatordeltadc.
+   ! Here we make it consistent with modern QUICK structure
+   ! by utilizing deltaO variable.
+
+   ! Usage of call cshell_dnscreen substantially 
+   ! slows down DnC calculations. Need to test if the cshell_dnscreen
+   ! is really beneficial for accuracy of DnC calculations.
+
+   !if (deltaO) then
+   !   do II=1,jshell
+   !   do JJ=II,jshell
+   !      DNtemp=0.0d0
+   !      call cshell_dnscreen(II,JJ,DNtemp)
+   !      Cutmatrix(II,JJ)=DNtemp
+   !      Cutmatrix(JJ,II)=DNtemp
+   !   enddo
+   !enddo
+   !endif
+
+   ! Now call the 2e DnC subroutine utilizing dcconnect
    do II=1,jshell
       call get2edc
    enddo
