@@ -93,7 +93,8 @@ set(DFTD3_SOURCES
 
 set(DNC_SOURCES
         dnc_scf.f90 dnc_hfoperator.f90
-        inidivcon.f90 mfcc_init_guess.f90)
+        inidivcon.f90 mfcc_init_guess.f90
+        mfcc_start.f90)
 
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
