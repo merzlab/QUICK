@@ -12,23 +12,35 @@
 module quick_mfcc_module
     implicit none
 
+! Danil ! was already commented out
 !    integer, allocatable, dimension(:) :: mfccatom,mfcccharge
-    integer :: mfccatom(50),mfcccharge(50),npmfcc,IMFCC,kxiaoconnect
+
+! This one I commented out
+!    integer :: mfccatom(50),mfcccharge(50),IMFCC,kxiaoconnect
+    integer :: IMFCC,kxiaoconnect
+
+! This one I commented out
+!   integer npmfcc
     double precision :: mfcccord(3,100,50)
     integer ::Ftmp(300)
     character(len=100)::linetmp
     character(len=2) :: mfccatomxiao(100,50)
     integer :: mfccstart(50),mfccfinal(50),mfccbases(50),mfccbasef(50)
     integer :: matomstart(50),matomfinal(50),matombases(50),matombasef(50)
+
+! Danil ! was already commented out
 !    integer, dimension(:), allocatable :: matomstart,matomfinal,matombases &
 !    ,matombasef
 
-    integer :: mfccatomcap(50),mfccchargecap(50)
+! This one I commented out
+!    integer :: mfccatomcap(50),mfccchargecap(50)
     double precision :: mfcccordcap(3,100,50)
     character(len=2) :: mfccatomxiaocap(100,50)
     integer :: mfccstartcap(50),mfccfinalcap(50),mfccbasescap(50),mfccbasefcap(50)
     integer :: matomstartcap(50),matomfinalcap(50),matombasescap(50) &
     ,matombasefcap(50)
+
+! Danil ! was already commented out
 !    integer, dimension(:), allocatable :: matomstartcap,matomfinalcap,matombasescap &
 !    ,matombasefcap
 
@@ -38,6 +50,8 @@ module quick_mfcc_module
     integer :: mfccstartcon(50),mfccfinalcon(50),mfccbasescon(50),mfccbasefcon(50)
     integer :: matomstartcon(50),matomfinalcon(50),matombasescon(50) &
     ,matombasefcon(50)
+
+! Danil ! was already commented out
 !    integer, dimension(:), allocatable :: matomstartcap,matomfinalcap,matombasescap &
 !    ,matombasefcap
 
