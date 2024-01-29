@@ -250,6 +250,73 @@ subroutine mfcc(natomsaved)
 
   endif
   enddo
+
+! Start the second fragmentation cycle over the coordinates
+
+  mm=mselectN(npmfcc-1)
+  mmm=mselectCA(npmfcc-1)
+  nnnn=mselectC(npmfcc-2)
+  if(residue(mselectN(npmfcc-1)).ne.'PRO')then
+  call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
+  coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
+  write(*,*) "first call xyzchange in 2nd loop"
+  write(*,*)'H ',xx,ym,zm
+
+  mfccatomxiao(1,npmfcc)='H '
+  
+  mfcccord(1,1,npmfcc)=xx
+  mfcccord(2,1,npmfcc)=ym
+  mfcccord(3,1,npmfcc)=zm
+  
+  mfccatom(npmfcc)=number-mmm+1+1
+  
+  mfccstart(npmfcc)=2
+  mfccfinal(npmfcc)=number-mmm+2
+  
+  matomstart(npmfcc)=mmm
+  matomfinal(npmfcc)=number  
+
+  do kk=mmm,number
+    write(*,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+
+     mfccatomxiao(kk-mmm+2,np)=atomname(kk)(2:2)//' '
+     do j=1,3
+       mfcccord(j,kk-mmm+2,np)=coord(j,kk)
+     enddo
+
+   enddo
+  else
+  call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
+   coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
+   write(*,*)'H ',xx,ym,zm
+
+    mfccatomxiao(1,npmfcc)='H '
+
+    mfcccord(1,1,npmfcc)=xx
+    mfcccord(2,1,npmfcc)=ym
+    mfcccord(3,1,npmfcc)=zm
+
+    mfccatom(npmfcc)=number-mm+1+1
+
+   mfccstart(npmfcc)=2
+   mfccfinal(npmfcc)=number-mmm+2
+
+   matomstart(npmfcc)=mm
+   matomfinal(npmfcc)=number
+
+   do kk=mm,number
+    write(40,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+
+    mfccatomxiao(kk-mm+2,np)=atomname(kk)(2:2)//' '
+    do j=1,3
+      mfcccord(j,kk-mm+2,np)=coord(j,kk)
+    enddo
+
+  enddo
+  endif     
+
+! Start loop over caps
+
 end
 
 subroutine xyzchange(xold,yold,zold,xzero,yzero,zzero, &
