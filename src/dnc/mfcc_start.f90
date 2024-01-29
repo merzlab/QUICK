@@ -377,6 +377,98 @@ subroutine mfcc(natomsaved)
  write(ioutfile,*) '  '
 
 ! Start loop over caps
+   do k=1,npmfcc-1
+   mm=mselectN(k)
+   nn=mselectC(k+1)
+   mmm=mselectCA(k)
+   nnn=mselectCA(k+1)
+   nnnn=mselectC(k-1)
+   if(residue(mselectN(k)).ne.'PRO')then
+    call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
+    coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)       
+   write(*,*) '1st call for xyzchange in caps loop'
+   write(*,*)'H ',xx,ym,zm
+
+   mfccatomxiaocap(1,k)='H '
+
+   mfcccordcap(1,1,k)=xx
+   mfcccordcap(2,1,k)=ym
+   mfcccordcap(3,1,k)=zm
+
+   mfccatomcap(k)=nn-mmm+1+1
+
+   mfccstartcap(k)=2
+   mfccfinalcap(k)=nn-mmm+1
+
+   matomstartcap(k)=mmm
+   matomfinalcap(k)=nn-1
+
+   do kk=mmm,nn-1
+    write(*,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+    mfccatomxiaocap(kk-mmm+2,k)=atomname(kk)(2:2)//' '
+    do j=1,3
+      mfcccordcap(j,kk-mmm+2,k)=coord(j,kk)
+    enddo
+
+ enddo
+
+ call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
+  coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
+  write(*,*) '2nd xyzchange call for caps'
+  write(*,*)'H ',xx,ym,zm
+
+        mfccatomxiaocap(nn-mmm+2,k)='H '
+
+        mfcccordcap(1,nn-mmm+2,k)=xx
+        mfcccordcap(2,nn-mmm+2,k)=ym
+        mfcccordcap(3,nn-mmm+2,k)=zm
+
+    else
+
+  call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
+   coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
+   write(*,*) 'nxyzchange call for caps if PROline present'
+   write(*,*)'H ',xx,ym,zm
+
+       mfccatomxiaocap(1,k)='H '
+
+       mfcccordcap(1,1,k)=xx
+       mfcccordcap(2,1,k)=ym
+       mfcccordcap(3,1,k)=zm
+
+       mfccatomcap(k)=nn-mm+1+1
+
+      mfccstartcap(k)=2
+      mfccfinalcap(k)=nn-mm+1
+
+      matomstartcap(k)=mm
+      matomfinalcap(k)=nn-1
+
+     do kk=mm,nn-1
+       write(*,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+       mfccatomxiaocap(kk-mm+2,k)=atomname(kk)(2:2)//' '
+       do j=1,3
+         mfcccordcap(j,kk-mm+2,k)=coord(j,kk)
+       enddo
+
+   enddo
+
+  call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
+   coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
+    write(*,*) 'PROline xyzchange call for caps'
+    write(*,*)'H ',xx,ym,zm
+       mfccatomxiaocap(nn-mm+2,k)='H '
+
+       mfcccordcap(1,nn-mm+2,k)=xx
+       mfcccordcap(2,nn-mm+2,k)=ym
+       mfcccordcap(3,nn-mm+2,k)=zm
+
+   endif   
+
+ enddo
+
+! Start the final loop. 
+! It takes care of terminus.
 
    do k=1,npmfcc-1
 
