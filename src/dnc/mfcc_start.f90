@@ -8,7 +8,8 @@ subroutine mfcc(natomsaved)
    implicit none
    integer xiaoconnect(100,100)
    integer :: i,j,j1,j2,j3,number,mm,nn,kk
-   integer :: mmm,nnn,nnnn,k
+   integer :: mmm,nnn,nnnn,k,ii,jj
+   integer :: ixiao,jxiao,xiaodis,kxiao
    character*6,allocatable:: sn(:)             ! series no.
    double precision,allocatable::coord(:,:)    ! cooridnates
    integer,allocatable::class(:),ttnumber(:)   ! class and residue number
@@ -21,6 +22,7 @@ subroutine mfcc(natomsaved)
    integer :: mfccatomcap(50),mfccchargecap(50)
    integer :: mspin(50)
 
+! integer :: kxiaoconnect
 !   double precision :: mfcccord(:,:,:)
 !   integer :: selectC(:), selectCA(:)
 !   character*4,allocatable::mfccatomxiao(:,:)
@@ -406,8 +408,178 @@ subroutine mfcc(natomsaved)
 
  enddo
 
-! Start the final loop. 
-! It takes care of terminus.
+! Start the final loop, which concerns neutral terminus.
+
+  do ixiao=2,npmfcc
+    do jxiao=ixiao+3,npmfcc+3
+      do ii=1,number
+        do jj=1,number
+          if((class(ii).eq.ixiao).and.(class(jj).eq.jxiao))then
+            xiaodis=dsqrt((coord(1,ii)-coord(1,jj))**2.0d0+ &
+                          (coord(2,ii)-coord(2,jj))**2.0d0+ &
+                          (coord(3,ii)-coord(3,jj))**2.0d0)
+            if(xiaodis.le.-1.0d0)then
+              xiaoconnect(ixiao,jxiao)=0
+              print*,ixiao,jxiao,ii,jj, 'ixiao,jxiao,ii,jj'
+            endif
+          endif
+         enddo
+       enddo
+     enddo
+   enddo
+
+  kxiao=1
+
+  write(*,*) 'MFCC checked for neutral terminus'
+
+! The whole block of code (below) up until the end
+! of the subroutine is only executed when
+! xiaoconnect(i,jj).eq.0
+
+  do i=2,npmfcc
+    do jj=i+3,npmfcc+3
+
+    if(xiaoconnect(i,jj).eq.0)then
+      print*,'xiaoconnect(i,jj) is zero'
+
+  if(i.eq.2)then
+    mm=9
+    nn=mselectN(1)
+    nnn=mselectCA(1)
+
+  else
+    mm=mselectCA(i-2)
+    nn=mselectN(i-1)
+    nnn=mselectCA(i-1)
+  endif
+
+  call xyzchange(coord(1,mm-2),coord(2,mm-2),coord(3,mm-2), &
+  coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)
+     write(*,*) '1st call for xyzchange in final loop'
+     write(*,*)'H ',xx,ym,zm
+
+  mfccatomxiaocon(1,kxiao)='H '
+  mfccatomxiaoconi(1,kxiao)='H '
+
+  mfcccordcon(1,1,kxiao)=xx
+  mfcccordcon(2,1,kxiao)=ym
+  mfcccordcon(3,1,kxiao)=zm
+  mfcccordconi(1,1,kxiao)=xx
+  mfcccordconi(2,1,kxiao)=ym
+  mfcccordconi(3,1,kxiao)=zm
+
+  mfccatomcon(kxiao)=nnn-mm+2
+  mfccatomconi(kxiao)=nnn-mm+2
+
+  mfccstartcon(kxiao)=2
+  mfccfinalcon(kxiao)=nnn-mm+1
+  mfccstartconi(kxiao)=2
+  mfccfinalconi(kxiao)=nnn-mm+1
+
+  matomstartcon(kxiao)=mm
+  matomfinalcon(kxiao)=nnn-1
+  matomstartconi(kxiao)=mm
+  matomfinalconi(kxiao)=nnn-1
+
+  do kk=mm,nnn-1
+     write(*,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+     mfccatomxiaocon(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
+     mfccatomxiaoconi(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
+
+     do j=1,3
+       mfcccordcon(j,kk-mm+2,kxiao)=coord(j,kk)
+       mfcccordconi(j,kk-mm+2,kxiao)=coord(j,kk)
+     enddo
+  enddo
+
+  call Nxyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
+  coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
+     write(*,*) 'call for Nxyzchange in final loop'
+     write(*,*)'H ',xx,ym,zm
+
+        mfccatomxiaocon(nnn-mm+2,kxiao)='H '
+        mfccatomxiaoconi(nnn-mm+2,kxiao)='H '
+
+        mfcccordcon(1,nnn-mm+2,kxiao)=xx
+        mfcccordcon(2,nnn-mm+2,kxiao)=ym
+        mfcccordcon(3,nnn-mm+2,kxiao)=zm
+        mfcccordconi(1,nnn-mm+2,kxiao)=xx
+        mfcccordconi(2,nnn-mm+2,kxiao)=ym
+        mfcccordconi(3,nnn-mm+2,kxiao)=zm
+
+         if(jj.eq.np+3)then
+           mm=mselectCA(np)
+           mmm=mselectC(np)
+           nn=mselectC(np)+4
+           nnn=number-7
+
+         else
+           mm=mselectCA(jj-3)
+           mmm=mselectC(jj-3)
+           nn=mselectCA(jj-2)
+           nnn=mselectC(jj-2)
+         endif
+
+   call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
+   coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)
+      write(*,*) '2nd call for xyzchange in final loop'
+      write(*,*)'H ',xx,ym,zm
+
+        mfccatomxiaocon2(1,kxiao)='H '
+        mfccatomxiaoconj(1,kxiao)='H '
+
+        mfcccordcon2(1,1,kxiao)=xx
+        mfcccordcon2(2,1,kxiao)=ym
+        mfcccordcon2(3,1,kxiao)=zm
+        mfcccordconj(1,1,kxiao)=xx
+        mfcccordconj(2,1,kxiao)=ym
+        mfcccordconj(3,1,kxiao)=zm
+
+        mfccatomcon2(kxiao)=nnn-mmm+2
+        mfccatomconj(kxiao)=nnn-mmm+2
+
+        mfccstartcon2(kxiao)=2
+        mfccfinalcon2(kxiao)=nnn-mmm+1
+        mfccstartconj(kxiao)=2
+        mfccfinalconj(kxiao)=nnn-mmm+1
+
+        matomstartcon2(kxiao)=mmm
+        matomfinalcon2(kxiao)=nnn-1
+        matomstartconj(kxiao)=mmm
+        matomfinalconj(kxiao)=nnn-1
+
+    do kk=mmm,nnn-1
+      write(*,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      mfccatomxiaocon2(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
+      mfccatomxiaoconj(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
+
+      do j=1,3
+        mfcccordcon2(j,kk-mmm+2,kxiao)=coord(j,kk)
+        mfcccordconj(j,kk-mmm+2,kxiao)=coord(j,kk)
+      enddo
+  enddo
+
+  call xyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
+  coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
+     write(*,*)'H ',xx,ym,zm
+
+        mfccatomxiaocon2(nnn-mmm+2,kxiao)='H '
+        mfccatomxiaoconj(nnn-mmm+2,kxiao)='H '
+
+        mfcccordcon2(1,nnn-mmm+2,kxiao)=xx
+        mfcccordcon2(2,nnn-mmm+2,kxiao)=ym
+        mfcccordcon2(3,nnn-mmm+2,kxiao)=zm
+        mfcccordconj(1,nnn-mmm+2,kxiao)=xx
+        mfcccordconj(2,nnn-mmm+2,kxiao)=ym
+        mfcccordconj(3,nnn-mmm+2,kxiao)=zm
+
+    kxiao=kxiao+1
+
+    endif
+   enddo
+  enddo
+
+  kxiaoconnect=kxiao-1
 
 end
 
