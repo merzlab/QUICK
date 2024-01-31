@@ -48,7 +48,7 @@ subroutine electdiisdc(jscf,ierr)
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
      double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERROR,nbasissave,itt,dcnbasis
+     integer :: I,J,K,L,IERROR,nbasissave,itt,NtempN
 
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp,Ttmp
@@ -60,7 +60,7 @@ subroutine electdiisdc(jscf,ierr)
    dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
    dimension:: allerror(nbasis, nbasis, quick_method%maxdiisscf)
    dimension:: alloperator(nbasis, nbasis, quick_method%maxdiisscf)
-   double precision,allocatable :: dcco(:,:), holddc(:,:)
+   double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
 
    logical templog1,templog2
    integer elecs,itemp
@@ -510,9 +510,8 @@ subroutine electdiisdc(jscf,ierr)
 
       do itt = 1, np
 
-print*,'Fragrament No:',itt
          ! pass value for convience reason
-         dcnbasis=nbasisdc(itt)    ! basis set for fragment
+         nbasis=nbasisdc(itt)    ! basis set for fragment
 
          allocate(Odcsubtemp(nbasisdc(itt),nbasisdc(itt)))
          allocate(Xdcsubtemp(nbasisdc(itt),nbasisdc(itt)))
@@ -523,8 +522,14 @@ print*,'Fragrament No:',itt
          allocate(dcco(nbasisdc(itt),nbasisdc(itt)))
          allocate(holddc(nbasisdc(itt),nbasisdc(itt)))
 
-         Odcsubtemp(:,:) = Odcsub(itt,:,:)
-         Xdcsubtemp(:,:) = Xdcsub(itt,:,:)
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               Odcsubtemp(I,J) = Odcsub(itt,I,J)
+               Xdcsubtemp(I,J) = Xdcsub(itt,I,J)
+            enddo
+         enddo
+
+         NtempN=nbasisdc(itt)
 
 #if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
 
@@ -532,37 +537,37 @@ print*,'Fragrament No:',itt
           call cuda_diag(Odcsubtemp, Xdcsubtemp, quick_scratch%hold,&
                 EVAL1temp, IDEGEN1temp, &
                 VECtemp, dcco, &
-                Vtemp, dcnbasis)
+                Vtemp, NtempN)
            RECORD_TIME(timer_end%TDiag)
 
-           call GPU_DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Xdcsubtemp, &
-                 dcnbasis, holddc, dcnbasis, 0.0d0, Odcsubtemp,dcnbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #else
 
 #if defined HIP || defined HIP_MPIV
 
-           call GPU_DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Odcsubtemp, &
-                 dcnbasis, Xdcsubtemp, dcnbasis, 0.0d0, holddc,dcnbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
 
-           call GPU_DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Xdcsubtemp, &
-                 dcnbasis, holddc, dcnbasis, 0.0d0, Odcsubtemp,dcnbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 
 #else
-           call DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Odcsubtemp, &
-                 dcnbasis, Xdcsubtemp, dcnbasis, 0.0d0, holddc,dcnbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
 
-           call DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Xdcsubtemp, &
-                 dcnbasis, holddc, dcnbasis, 0.0d0, Odcsubtemp,dcnbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
 #if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(dcnbasis,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
+           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
 #else
 #if defined LAPACK || defined MKL
-           call DIAGMKL(dcnbasis,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
+           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
 #else
-           call DIAG(dcnbasis,Odcsubtemp,dcnbasis,quick_method%DMCutoff,Vtemp,i &
+           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
                      EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
 #endif
 
@@ -574,8 +579,12 @@ print*,'Fragrament No:',itt
          Ttmp=Ttmp+timer_end%TDiag-timer_begin%TDiag
          timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag   ! Global dc diag time
 
-         evaldcsub(itt,:)= EVAL1temp(:)
-         Odcsub(itt,:,:) = Odcsubtemp(:,:)
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               Odcsub(itt,I,J) = Odcsubtemp(I,J)
+            enddo
+            evaldcsub(itt,I)= EVAL1temp(I)
+         enddo
 
          !---------------------------------------------
          ! Calculate C = XC' and form a new density matrix.
@@ -584,15 +593,19 @@ print*,'Fragrament No:',itt
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
-           call GPU_DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Xdcsubtemp, &
-                 dcnbasis, VECtemp, dcnbasis, 0.0d0, dcco,dcnbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #else
-           call DGEMM ('n', 'n', dcnbasis, dcnbasis, dcnbasis, 1.0d0, Xdcsubtemp, &
-                 dcnbasis, VECtemp, dcnbasis, 0.0d0, dcco,dcnbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #endif
 
-           codcsub(:,:,itt)=dcco(:,:)
-           codcsubtran(:,:,itt)=dcco(:,:)
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               codcsub(I,J,itt)=dcco(I,J)
+               codcsubtran(I,J,itt)=dcco(I,J)
+            enddo
+         enddo
 
          if (allocated(Odcsubtemp)) deallocate(Odcsubtemp)
          if (allocated(Xdcsubtemp)) deallocate(Xdcsubtemp)
@@ -606,17 +619,17 @@ print*,'Fragrament No:',itt
 
       quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:)
 
-
+      nbasis=nbasissave
       !--------------------------------------------
       ! Next step is to calculate fermi energy and renormalize
       ! the density matrix
       !--------------------------------------------
+
       call fermiSCF(efermi,jscf)
 
       ! TDII Timer needs to be checked when start MPI implementation
       RECORD_TIME(timer_end%TDII)      
 
-      nbasis=nbasissave
       ! Now check for convergence. pchange is the max change
       ! and prms is the rms
       PCHANGE=0.d0
@@ -799,7 +812,6 @@ subroutine fermiSCF(efermi,jscf)
 
    ! Use iteriation method to calculate fermi energy
    do while ((niter .le. maxit).and.(.not.fermidone))
-
 
       efermi(1) = (emax + emin)/2.0d0
 
