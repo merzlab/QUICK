@@ -211,58 +211,52 @@ subroutine hfoperatordeltadc
    return
 end subroutine hfoperatordeltadc
 
+  subroutine scf_operatordc(deltaO)
+  !-------------------------------------------------------
+  !  The purpose of this subroutine is to form the operator matrix
+  !  for a full Hartree-Fock/DFT calculation, i.e. the Fock matrix.  The
+  !  Fock matrix is as follows:  O(I,J) =  F(I,J) = KE(I,J) + IJ attraction
+  !  to each atom + repulsion_prim
+  !  with each possible basis  - 1/2 exchange with each
+  !  possible basis. Note that the Fock matrix is symmetric.
+  !  This code now also does all the HF energy calculation. Ed.
+  !-------------------------------------------------------
+     use allmod
+     use quick_cutoff_module, only: cshell_density_cutoff
+     use quick_cshell_eri_module, only: getCshellEriDC, getCshellEriEnergy
+     use quick_oei_module, only:get1eEnergy,get1e
 
+     implicit none
 
+#ifdef MPIV
+     include "mpif.h"
+#endif
+  !   double precision oneElecO(nbasis,nbasis)
+     logical :: deltaO
+     integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
+     common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     double precision tst, te, tred
+#ifdef MPIV
+     integer ierror
+     double precision :: Eelsum, Excsum, aelec, belec
 
-! hfoperatordc
-!-------------------------------------------------------
-! 11/14/2010 Yipu Miao: Clean up code with the integration of
-! some subroutines
-! Ed Brothers. November 27, 2001
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-subroutine hfoperatordc(oneElecO)
-   use allmod
-   use quick_gaussian_class_module
-   use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEriEnergy
-   use quick_oei_module, only:get1eEnergy,get1e  
-   use quick_cutoff_module, only: cshell_dnscreen
+     quick_scratch%osum=0.0d0
+     Eelsum=0.0d0
+     Excsum=0.0d0
+     aelec=0.0d0
+     belec=0.0d0
+#endif
 
-   implicit double precision(a-h,o-z)
+     quick_qm_struct%o = 0.0d0
+     quick_qm_struct%Eel=0.0d0
 
-   double precision cutoffTest,testtmp,oneElecO(nbasis,nbasis)
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  !-----------------------------------------------------------------
+  !  Step 1. evaluate 1e integrals
+  !-----------------------------------------------------------------
 
-   double precision fmmonearrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
-   double precision fmmtwoarrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
-   logical :: deltaO 
-
-   !---------------------------------------------------------------------
-   ! This subroutine is to form hf operator with div-and-con
-   ! The original purpose of this subroutine is to form the operator matrix
-   ! for a full Hartree-Fock calculation, i.e. the Fock matrix. But after
-   ! a very simple modification, it becomes hf operator generator for div-and-con
-   ! Calculation. Since the Fock matrix is as follows:
-   ! O(I,J) =  F(I,J) = KE(I,J) + IJ attraction to each atom + repulsion_prim
-   ! with each possible basis  - 1/2 exchange with each possible basis. Note that
-   ! the Fock matrix is symmetric. The 2e integral will be ommited if two basis is
-   ! appears in the subsystems at the same time
-   ! May 15,2002-This code now also does all the HF energy calculation. Ed.
-   !---------------------------------------------------------------------
-
-   !=================================================================
-   ! Step 1. evaluate 1e integrals
-   ! This job is only done on master node since it won't cost much resource
-   ! and parallel will even waste more than it saves
-   !-----------------------------------------------------------------
-   ! The first part is kinetic part
-   ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-   !-----------------------------------------------------------------
-
-   !  if only calculate operation difference
+  !  if only calculate operation difference
      if (deltaO) then
-   !     save density matrix
+  !     save density matrix
         quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
 
@@ -273,289 +267,170 @@ subroutine hfoperatordc(oneElecO)
         endif
      endif
 
-   ! Delta density matrix cutoff
-   call cshell_density_cutoff
+  !  Delta density matrix cutoff
+     call cshell_density_cutoff
 
-   ! One-electron integrals
-   call get1e(deltaO)
+#ifdef MPIV
+     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
-   ! 1eEnergy calculation
-   if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-   !-----------------------------------------------------------------
-   ! Alessandro GENONI 03/21/2007
-   ! Sum the ECP integrals to the partial Fock matrix
-   !-----------------------------------------------------------------
-   if (quick_method%ecp) then
-      call ecpoperator
-   end if
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+     if (quick_method%bCUDA) then
 
-   !--------------------------------------------
-   ! The previous two terms are the one electron part of the Fock matrix.
-   ! The next two terms define the two electron part.
-   !--------------------------------------------
-   ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
-   ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
-   !--------------------------------------------
+        call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
+        quick_qm_struct%vec,quick_qm_struct%dense)
+        call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, &
+                                quick_method%coreIntegralCutoff)
 
-   ! This part was formerly implemented in hfoperatordeltadc.
-   ! Here we make it consistent with modern QUICK structure
-   ! by utilizing deltaO variable.
+     endif
+#endif
 
-   ! Usage of call cshell_dnscreen substantially 
-   ! slows down DnC calculations. Need to test if the cshell_dnscreen
-   ! is really beneficial for accuracy of DnC calculations.
+     call get1e(deltaO)
 
-   !if (deltaO) then
-   !   do II=1,jshell
-   !   do JJ=II,jshell
-   !      DNtemp=0.0d0
-   !      call cshell_dnscreen(II,JJ,DNtemp)
-   !      Cutmatrix(II,JJ)=DNtemp
-   !      Cutmatrix(JJ,II)=DNtemp
-   !   enddo
-   !enddo
-   !endif
+     if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-   ! Now call the 2e DnC subroutine utilizing dcconnect
-   do II=1,jshell
-      call get2edc
-   enddo
+!write(*,*) "1e energy:", quick_qm_struct%Eel 
 
-   !  Remember the operator is symmetric
-   call copySym(quick_qm_struct%o,nbasis)
+!     if (quick_method%nodirect) then
+!#ifdef CUDA
+!        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
+!#else
+!#ifndef MPI
+!        call addInt
+!#endif
+!#endif
+!     else
+  !-----------------------------------------------------------------
+  ! Step 2. evaluate 2e integrals
+  !-----------------------------------------------------------------
+  !
+  ! The previous two terms are the one electron part of the Fock matrix.
+  ! The next two terms define the two electron part.
+  !-----------------------------------------------------------------
+  !  Start the timer for 2e-integrals
+     RECORD_TIME(timer_begin%T2e)
 
-   !  recover density if calculate difference
-   if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+        if (quick_method%bCUDA) then
+           call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)
+        else
+#endif
+  !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
+  !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
-   if(quick_method%printEnergy) call getCshellEriEnergy
+#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+  !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
+  !  which has 
+  !  4 jshell, and 2 nodes will take 2 jshell respectively.
+     if(bMPI) then
+        do i=1,mpi_jshelln(mpirank)
+           ii=mpi_jshell(mpirank,i)
+           call getCshellEriDC(II)
+        enddo
+     else
+        do II=1,jshell
+           call getCshellEriDC(II)
+        enddo
+     endif
+#else
+        do II=1,jshell
+           call getCshellEriDC(II)
+        enddo
+#endif
 
-   return
-end subroutine hfoperatordc
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+        endif
+#endif
+ !    endif
+
+  !  Remember the operator is symmetric
+     call copySym(quick_qm_struct%o,nbasis)
+
+  !  recover density if calculate difference
+     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+
+  !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
+     if(quick_method%printEnergy) call getCshellEriEnergy
+
+!write(*,*) "2e Energy added", quick_qm_struct%Eel
 
 
 #ifdef MPIV
-!*******************************************************
-! mpi_hfoperatordc
-!-------------------------------------------------------
-! Yipu Miao.    11/02/2010: Transfer it to MPI version
-! Ed Brothers.  05/15/2002: This code now also does all the HF energy calculation
-! Ed Brothers. created at November 27, 2001
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-!*******************************************************
-subroutine mpi_hfoperatordc(oneElecO)
-   use allmod
-   use quick_gaussian_class_module
-    use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEriEnergy
-   implicit double precision(a-h,o-z)
+     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
-   include "mpif.h"
-   double precision testtmp,cutoffTest,oneElecO(nbasis,nbasis)
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   double precision,allocatable:: temp2d(:,:)
+  !  Terminate the timer for 2e-integrals
+     RECORD_TIME(timer_end%T2e)
 
-   double precision fmmonearrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
-   double precision fmmtwoarrayfirst(0:2,0:2,1:2,1:6,1:6,1:6,1:6)
-   !-------------------------------------------------------
-   ! The purpose of this subroutine is to form the operator matrix
-   ! for a full Hartree-Fock calculation, i.e. the Fock matrix.  The
-   ! Fock matrix is as follows:
+  !  add the time to cumer
+     timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e
 
-   ! O(I,J) =  F(I,J) = KE(I,J) + IJ attraction to each atom + repulsion_prim
-   ! with each possible basis  - 1/2 exchange with each
-   ! possible basis.
+  !-----------------------------------------------------------------
+  !  Step 3. If DFT, evaluate the exchange/correlation contribution 
+  !          to the operator
+  !-----------------------------------------------------------------
 
-   ! Note that the Fock matrix is symmetric.
-   !-------------------------------------------------------
+#ifdef MPIV
+     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
+     if (quick_method%DFT) then
 
-   allocate(temp2d(nbasis,nbasis))
+  !  Start the timer for exchange correlation calculation
+        RECORD_TIME(timer_begin%TEx)
 
-   !------- MPI/ ALL NODES -------------------
+  !  Calculate exchange correlation contribution & add to operator    
+!        call get_xc(deltaO)
 
-   !=================================================================
-   ! Step 1. evaluate 1e integrals
-   ! This job is only done on master node since it won't cost much resource
-   ! and parallel will even waste more than it saves
-   !-----------------------------------------------------------------
-   ! The first part is kinetic part
-   ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
-   !-----------------------------------------------------------------
+  !  Remember the operator is symmetric
+        call copySym(quick_qm_struct%o,nbasis)
 
-   !------- MPI/MASTER -------------------
-   if(MASTER) then
+#ifdef MPIV
+     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
 
-      call copyDMat(oneElecO,quick_qm_struct%o,nbasis)
-      !-----------------------------------------------------------------
-      ! Now calculate 1e-Energy
-      !-----------------------------------------------------------------
-      if(quick_method%printEnergy) call get1eEnergy
+  !  Stop the exchange correlation timer
+        RECORD_TIME(timer_end%TEx)
 
-      !-----------------------------------------------------------------
-      ! Alessandro GENONI 03/21/2007
-      ! Sum the ECP integrals to the partial Fock matrix
-      !-----------------------------------------------------------------
-      if (quick_method%ecp) then
-         call ecpoperator
-      end if
-   endif
+  !  Add time total time
+        timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
+     endif
 
-   !------- END MPI/MASTER ----------------
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
 
+#ifdef MPIV
+  !  MPI reduction operations
 
-   !------- MPI/ ALL NODES ----------------
+     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
-   !=================================================================
-   ! Step 2. evaluate 2e integrals
-   ! The 2e integrals are evenly distibuted to every nodes.(not absolutely even)
-   ! And every node will work one some kind of shell
-   ! since the integral will be summed into opeartor such as Fock Operator, together
-   ! with 1e integrals, we reset Operator value for slave nodes
-   ! and summation of the operator of slave nodes(only 2e integrals) and
-   ! master node(with 1e integral and 2e integrals), is the anticipated operator
-   !-----------------------------------------------------------------
+     RECORD_TIME(timer_begin%TEred)
 
-   ! The previous two terms are the one electron part of the Fock matrix.
-   ! The next two terms define the two electron part.
-   call cshell_density_cutoff
+     if (quick_method%DFT) then
+     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
 
+     if(master) then
+       quick_qm_struct%Exc = Excsum
+       quick_qm_struct%aelec  = aelec
+       quick_qm_struct%belec  = belec
+     endif
+     endif
 
-   ! We reset the operator value for slave nodes. Actually, in most situation,
-   ! they were zero before reset, but to make things safe
-   if (.not.master) then
-      do i=1,nbasis
-         do j=1,nbasis
-            quick_qm_struct%o(i,j)=0
-         enddo
-      enddo
-   endif
+     call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
 
-!-----------------Madu----------------
-   if(master) then
-   write (*,*) "Madu: Before 2e "
-   do i=1,nbasis
-      do j=1,nbasis
-         write (*,*) "Madu: O = ",quick_qm_struct%o(i,j) !Madu
-      enddo
-   enddo
-   endif
-!-----------------Madu----------------
+     if(master) then
+       quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
+       quick_qm_struct%Eel    = Eelsum
+     endif
 
-   ! sync every nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-
-   !------------------------------------------------------------------
-   ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
-   ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
-   !------------------------------------------------------------------
-
-   ! every nodes will take about jshell/nodes shells integrals
-   ! such as 1 water, which has 4 jshell, and 2 nodes will take 2 jshell respectively
-   do i=1,mpi_jshelln(mpirank)
-      ii=mpi_jshell(mpirank,i)
-      call get2edc
-   enddo
-
-   ! After evaluation of 2e integrals, we can communicate every node so
-   ! that we can sum all integrals
-
-   ! slave node will send infos
-
-
-   if(.not.master) then
-      do i=1,nbasis
-         do j=1,nbasis
-            temp2d(i,j)=quick_qm_struct%o(i,j)
-         enddo
-      enddo
-      ! send operator to master node
-      call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
-
-      ! master node will receive infos from every nodes
-   else
-      do i=1,mpisize-1
-         ! receive opertors from slave nodes
-         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-         ! and sum them into operator
-         do ii=1,nbasis
-            do jj=1,nbasis
-               quick_qm_struct%o(ii,jj)=quick_qm_struct%o(ii,jj)+temp2d(ii,jj)
-            enddo
-         enddo
-      enddo
-   endif
-
-   ! sync all nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-
-!-----------------Madu----------------
-   if(master) then
-   write (*,*) "Madu: after 2e "
-   do i=1,nbasis
-      do j=1,nbasis
-         write (*,*) "Madu: O = ",quick_qm_struct%o(i,j) !Madu
-      enddo
-   enddo
-   endif
-!-----------------Madu----------------
-   stop
-
-   !--------- MPI/ MASTER NODE -------------------
-   if (master) then
-      ! remeber the operator is symmetry, which can save many resource
-      call copySym(quick_qm_struct%o,nbasis)
-
-      ! E=sigma[i,j] (Pij*Fji)
-      if(quick_method%printEnergy) call getCshellEriEnergy
-   endif
-   !-------- END MPI/MASTER NODE -----------------
-
-   return
-end subroutine mpi_hfoperatordc
+     RECORD_TIME(timer_end%TEred)
+     timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
 
 #endif
 
-subroutine get2edc
-   !------------------------------------------------
-   ! This subroutine is to get 2e integral for d&c
-   !------------------------------------------------
-   use allmod
-   use quick_cshell_eri_module, only: getCshellEri
-   implicit double precision(a-h,o-z)
-   double precision testtmp,cutoffTest
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+  return
 
-   RECORD_TIME(timer_begin%t2e) !Trigger the timer for 2e-integrals
-
-   do JJ=II,jshell
-      Testtmp=Ycutoff(II,JJ)
-      !      tbd1=quick_basis%gcexpomin(II)+quick_basis%gcexpomin(JJ)
-      do KK=II,jshell
-         do LL=KK,jshell
-            !            tbd2=quick_basis%gcexpomin(KK)+quick_basis%gcexpomin(LL)
-            testCutoff = TESTtmp*Ycutoff(KK,LL)
-            if(testCutoff.gt.quick_method%integralCutoff)then
-               DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
-                     cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
-               if((dcconnect(II,JJ).eq.1.and.(4.0d0*cutmatrix(KK,LL)*testCutoff).gt.quick_method%integralCutoff) &
-                     .or.(dcconnect(KK,LL).eq.1.and.(4.0d0*cutmatrix(II,JJ)*testCutoff).gt.quick_method%integralCutoff) &
-                     .or.(dcconnect(II,KK).eq.1.and.(cutmatrix(JJ,LL)*testCutoff).gt.quick_method%integralCutoff) &
-                     .or.(dcconnect(LL,II).eq.1.and.(cutmatrix(JJ,KK)*testCutoff).gt.quick_method%integralCutoff) &
-                     .or.(dcconnect(JJ,KK).eq.1.and.(cutmatrix(II,LL)*testCutoff).gt.quick_method%integralCutoff) &
-                     .or.(dcconnect(JJ,LL).eq.1.and.(cutmatrix(II,KK)*testCutoff).gt.quick_method%integralCutoff))then
-
-                  call getCshellEri(II)
-               endif
-            endif
-
-         enddo
-      enddo
-   enddo
-
-
-   RECORD_TIME(timer_end%T2e)  ! Terminate the timer for 2e-integrals
-   timer_cumer%T2e=timer_cumer%T2e+timer_end%T2e-timer_begin%T2e ! add the time to cumer
-end subroutine get2edc
+  end subroutine scf_operatordc
