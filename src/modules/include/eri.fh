@@ -26,7 +26,7 @@ module quick_cshell_eri_module
 #else
    public :: cshell ! Should be private, but we still need this for deprecated
                     ! subroutines such as addInt in shell.f90
-   public :: getCshellEri, getCshellEriEnergy
+   public :: getCshellEri, getCshellEriDC, getCshellEriEnergy
    public :: getEriPrecomputables
 #endif 
 
@@ -49,6 +49,10 @@ end interface getEriPrecomputables
 interface getCshellEri
   module procedure get_cshell_eri
 end interface getCshellEri
+
+interface getCshellEriDC
+  module procedure get_cshell_eridc
+end interface getCshellEriDC
 
 interface getCshellEriEnergy
   module procedure get_cshell_eri_energy
@@ -201,6 +205,60 @@ end subroutine get_oshell_eri
 #else
 end subroutine get_cshell_eri
 #endif
+
+#ifdef OSHELL
+subroutine get_oshell_eridc(II_arg)
+#else
+subroutine get_cshell_eridc(II_arg)
+#endif
+
+   !------------------------------------------------
+   ! This subroutine is to get 2e integral
+   !------------------------------------------------
+   use allmod
+   implicit double precision(a-h,o-z)
+   double precision testtmp,cutoffTest
+   integer II_arg
+   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   II = II_arg
+   do JJ = II,jshell
+      testtmp = Ycutoff(II,JJ)
+      do KK = II,jshell
+         do LL = KK,jshell
+
+          cutoffTest = testtmp * Ycutoff(KK,LL)
+          if (cutoffTest .gt. quick_method%integralCutoff) then
+            DNmax =  max(4.0d0*cutmatrix(II,JJ), &
+                  4.0d0*cutmatrix(KK,LL), &
+                  cutmatrix(II,LL), &
+                  cutmatrix(II,KK), &
+                  cutmatrix(JJ,KK), &
+                  cutmatrix(JJ,LL))
+            ! (IJ|KL)^2<=(II|JJ)*(KK|LL) if smaller than cutoff criteria, then
+            ! ignore the calculation to save computation time
+
+            if ((dcconnect(II,JJ).eq.1.and.(4.0d0*cutmatrix(KK,LL)*cutoffTest).gt.quick_method%integralCutoff) &
+            .or.(dcconnect(KK,LL).eq.1.and.(4.0d0*cutmatrix(II,JJ)*cutoffTest).gt.quick_method%integralCutoff) &
+            .or.(dcconnect(II,KK).eq.1.and.(cutmatrix(JJ,LL)*cutoffTest).gt.quick_method%integralCutoff) &
+            .or.(dcconnect(JJ,LL).eq.1.and.(cutmatrix(II,KK)*cutoffTest).gt.quick_method%integralCutoff) &
+            .or.(dcconnect(II,LL).eq.1.and.(cutmatrix(JJ,KK)*cutoffTest).gt.quick_method%integralCutoff) &
+            .or.(dcconnect(JJ,KK).eq.1.and.(cutmatrix(II,LL)*cutoffTest).gt.quick_method%integralCutoff))then
+#ifdef OSHELL 
+                call oshell
+#else
+                call cshell
+#endif
+             endif
+           endif
+         enddo
+      enddo
+   enddo
+#ifdef OSHELL
+end subroutine get_oshell_eridc
+#else
+end subroutine get_cshell_eridc
+#endif
+
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
 #ifdef OSHELL
