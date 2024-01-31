@@ -31,7 +31,8 @@ subroutine mfcc(natomsaved)
 
 ! Allocate arrays
 
-   write(*,*) "Started MFCC fragmentation"
+   write(ioutfile,*) '=========== MFCC FRAGMENTATION OUTPUT ============'
+   write(ioutfile,*) "MFCC started fragmentation"
 
    allocate(sn(number))
    allocate(coord(3,number))
@@ -52,7 +53,7 @@ subroutine mfcc(natomsaved)
    enddo 
 
 ! Temporal files for fragmentation tests
-   open(20,file='number01.gjf')
+!   open(20,file='initial.gjf')
    open(40,file='number'//char(48+npmfcc/10) &
    //char(48+npmfcc-npmfcc/10*10)//'.gjf')
 
@@ -65,7 +66,7 @@ subroutine mfcc(natomsaved)
 99   enddo
    close(iPDBFile)
 
-   write(*,*) "Processed PDB file"
+   write(ioutfile,*) "MFCC processed PDB file"
 
 ! Confirm reading of residue
 ! do i=1,number
@@ -85,8 +86,9 @@ subroutine mfcc(natomsaved)
 ! Number of fragments
  npmfcc=class(number)
 
-  write(*,*) "npmfcc=", npmfcc
-  write(*,*) "Assigned number of fragments"
+ write(ioutfile,*) 'Number of MFCC fragments', ' is ', npmfcc
+
+!  write(*,*) "Assigned number of fragments"
 
 ! Assign zero values for initialization of MFCC
 ! Make multiplicity equal to one for all fragments
@@ -102,7 +104,7 @@ subroutine mfcc(natomsaved)
     mspin(i)=1
   enddo
 
- write(*,*) "Initialiazed MFCC arguments"
+! write(*,*) "Initialiazed MFCC arguments"
 
 ! Identify C, N, and CA atoms
    j1=1
@@ -111,34 +113,39 @@ subroutine mfcc(natomsaved)
    do i=1,number
    if(atomname(i).eq.' C  ')then
      mselectC(j1)=i
-     write(*,*) mselectC(j1), "C"
+!     write(*,*) mselectC(j1), "C"
      j1=j1+1
    endif
    if(atomname(i).eq.' N  ')then
      mselectN(j2)=i
-     write(*,*) mselectN(j2), "N"
+!     write(*,*) mselectN(j2), "N"
      j2=j2+1
    endif
    if(atomname(i).eq.' CA ')then
      mselectCA(j3)=i
-     write(*,*) mselectCA(j3), "CA"
+!     write(*,*) mselectCA(j3), "CA"
      j3=j3+1
    endif
   enddo
 
- write(*,*) "Identified C, N, CA"
+! write(*,*) "Identified C, N, CA"
 
 ! Start assigning coordinates to MFCC fragments
 
- write(*,*) mselectC(2), mselectCA(2), "mselectC and mselectCA"
+ write(ioutfile,*) 'Second C and CA atoms are:', mselectC(2), &
+   ' and ', mselectCA(2) 
 
    mm=mselectC(2)
    nn=mselectCA(2)
 
- write(*,*) mm,nn, "mm and nn values"
+! write(*,*) mm,nn, "mm and nn values"
+
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) 'Start of MFCC fragment #1'
+ write(ioutfile,*) '  '
 
   do kk=1,mm-1
-      write(20,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiao(kk,1)=atomname(kk)(2:2)//' '
       do j=1,3
         mfcccord(j,kk,1)=coord(j,kk)
@@ -150,8 +157,12 @@ subroutine mfcc(natomsaved)
  call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
    coord(1,nn),coord(2,nn),coord(3,nn),xx,yy,zz)     
 
- write(*,*) "first call xyzchange output" 
- write(20,*)'H ',xx,yy,zz
+! write(*,*) "first call xyzchange output" 
+ write(ioutfile,*)'H ',xx,yy,zz
+ write(ioutfile,*) '  '
+ write(ioutfile,*) 'End of MFCC fragment #1'
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) '  '
 
  mfccatomxiao(mm,1)='H '
 
@@ -167,12 +178,21 @@ subroutine mfcc(natomsaved)
  matomstart(1)=1
  matomfinal(1)=mm-1
 
+ write(ioutfile,*) '  '
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) 'START FIRST MFCC LOOP'
+ write(ioutfile,*) '======================================' 
+ write(ioutfile,*) '  '
+
   do k=2,npmfcc-1
 
-! Another temporal file to debug MFCC fragmentation
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) 'Start of MFCC fragment #', k
+ write(ioutfile,*) '  '
 
-  open(30,file='number'//char(48+k/10) &
-  //char(48+k-k/10*10)//'.gjf')
+! Another temporal file to debug MFCC fragmentation
+!  open(30,file='number'//char(48+k/10) &
+!  //char(48+k-k/10*10)//'.gjf')
  
    mm=mselectN(k-1)
    nn=mselectC(k+1)
@@ -183,7 +203,7 @@ subroutine mfcc(natomsaved)
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
     write(*,*) 'second call xyzchange output'
-    write(30,*)'H ',xx,ym,zm
+    write(ioutfile,*)'H ',xx,ym,zm
 
     mfccatomxiao(1,k)='H '
 
@@ -200,7 +220,7 @@ subroutine mfcc(natomsaved)
     matomfinal(k)=nn-1
 
     do kk=mmm,nn-1
-      write(30,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiao(kk-mmm+2,k)=atomname(kk)(2:2)//' '
       do j=1,3
         mfcccord(j,kk-mmm+2,k)=coord(j,kk)
@@ -209,20 +229,24 @@ subroutine mfcc(natomsaved)
 
    call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
-   write(*,*) 'third call xyzchange output'
-   write(30,*)'H ',xx,ym,zm
+!   write(*,*) 'third call xyzchange output'
+   write(ioutfile,*)'H ',xx,ym,zm
 
    mfccatomxiao(nn-mmm+2,k)='H '
 
    mfcccord(1,nn-mmm+2,k)=xx
    mfcccord(2,nn-mmm+2,k)=ym
    mfcccord(3,nn-mmm+2,k)=zm
-      
+
+  write(ioutfile,*) '  '
+  write(ioutfile,*) 'End of MFCC fragment #', k
+  write(ioutfile,*) '======================================'
+  write(ioutfile,*) '  '      
     else
 
    call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
-   write(30,*)'H ',xx,ym,zm
+   write(ioutfile,*)'H ',xx,ym,zm
 
    mfccatomxiao(1,k)='H '
 
@@ -239,7 +263,7 @@ subroutine mfcc(natomsaved)
    matomfinal(k)=nn-1
 
    do kk=mm,nn-1
-      write(30,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
 
       mfccatomxiao(kk-mm+2,k)=atomname(kk)(2:2)//' '
       do j=1,3
@@ -251,13 +275,18 @@ subroutine mfcc(natomsaved)
    call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
    write(*,*) 'PROline call xyzchange output'
-   write(30,*)'H ',xx,ym,zm
+   write(ioutfile,*)'H ',xx,ym,zm
 
    mfccatomxiao(nn-mm+2,k)='H '
 
    mfcccord(1,nn-mm+2,k)=xx
    mfcccord(2,nn-mm+2,k)=ym
    mfcccord(3,nn-mm+2,k)=zm
+
+  write(ioutfile,*) '  '
+  write(ioutfile,*) 'End of MFCC fragment #', k
+  write(ioutfile,*) '======================================'
+  write(ioutfile,*) '  '
 
   endif
   enddo
