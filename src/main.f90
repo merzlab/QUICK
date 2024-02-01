@@ -145,7 +145,9 @@
     call read_Job_and_Atom(ierr)
     !allocate essential variables
     call alloc(quick_molspec,ierr)
-    if (quick_method%MFCC) call allocate_MFCC()
+    !!! Danil !!! This is allocation for final density assembling step
+    !!! deactivate for initial tests
+    !if (quick_method%MFCC) call allocate_MFCC()
    
     RECORD_TIME(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
@@ -154,16 +156,19 @@
     RECORD_TIME(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
-    if (quick_method%SAD .and. .not. quick_method%MFCC) SAFE_CALL(getSadGuess(ierr))
-    if (quick_method%writeSAD .and. .not. quick_method%MFCC) then
+!    if (quick_method%SAD .and. .not. quick_method%MFCC) SAFE_CALL(getSadGuess(ierr))
+!    if (quick_method%writeSAD .and. .not. quick_method%MFCC) then
+    if (quick_method%SAD)    SAFE_CALL(getSadGuess(ierr))
+    if (quick_method%writeSAD) then
        call quick_exit(iOutFile,ierr)
     end if
 
+    write(*,*) "Now calling MFCC fragmentation"
     ! b. MFCC initial guess
-    !if (quick_method%MFCC) then
-    !    call mfcc
+    if (quick_method%MFCC) then
+        call mfcc(quick_molspec%natom)
     !    call getmolmfcc
-    !endif
+    endif
 
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
