@@ -364,13 +364,23 @@ subroutine mfcc(natomsaved)
   enddo
   endif     
 
+ write(ioutfile,*) '  '
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) 'MFCC PRINT FOR CAPS'
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) '  '
+
 ! Start loop over caps
 
    do k=1,npmfcc-1
 
 ! Temporal file for debug of caps
-   open(60,file='cap'//char(48+k/10) &
-   //char(48+k-k/10*10)//'.gjf')
+!   open(60,file='cap'//char(48+k/10) &
+!   //char(48+k-k/10*10)//'.gjf')
+
+ write(ioutfile,*) '======================================'
+ write(ioutfile,*) 'Start of MFCC cap #', k
+ write(ioutfile,*) '  '
 
    mm=mselectN(k)
    nn=mselectC(k+1)
@@ -380,8 +390,8 @@ subroutine mfcc(natomsaved)
    if(residue(mselectN(k)).ne.'PRO')then
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)       
-   write(*,*) '1st call for xyzchange in caps loop'
-   write(60,*)'H ',xx,ym,zm
+!   write(*,*) '1st call for xyzchange in caps loop'
+   write(ioutfile,*)'H ',xx,ym,zm
 
    mfccatomxiaocap(1,k)='H '
 
@@ -398,7 +408,7 @@ subroutine mfcc(natomsaved)
    matomfinalcap(k)=nn-1
 
    do kk=mmm,nn-1
-    write(60,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+    write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
     mfccatomxiaocap(kk-mmm+2,k)=atomname(kk)(2:2)//' '
     do j=1,3
       mfcccordcap(j,kk-mmm+2,k)=coord(j,kk)
@@ -408,8 +418,8 @@ subroutine mfcc(natomsaved)
 
  call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
   coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
-  write(*,*) '2nd xyzchange call for caps'
-  write(60,*)'H ',xx,ym,zm
+!  write(*,*) '2nd xyzchange call for caps'
+  write(ioutfile,*)'H ',xx,ym,zm
 
         mfccatomxiaocap(nn-mmm+2,k)='H '
 
@@ -422,7 +432,7 @@ subroutine mfcc(natomsaved)
   call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
    write(*,*) 'nxyzchange call for caps if PROline present'
-   write(60,*)'H ',xx,ym,zm
+   write(ioutfile,*)'H ',xx,ym,zm
 
        mfccatomxiaocap(1,k)='H '
 
@@ -439,7 +449,7 @@ subroutine mfcc(natomsaved)
       matomfinalcap(k)=nn-1
 
      do kk=mm,nn-1
-       write(60,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+       write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
        mfccatomxiaocap(kk-mm+2,k)=atomname(kk)(2:2)//' '
        do j=1,3
          mfcccordcap(j,kk-mm+2,k)=coord(j,kk)
@@ -450,7 +460,7 @@ subroutine mfcc(natomsaved)
   call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
     write(*,*) 'PROline xyzchange call for caps'
-    write(60,*)'H ',xx,ym,zm
+    write(ioutfile,*)'H ',xx,ym,zm
        mfccatomxiaocap(nn-mm+2,k)='H '
 
        mfcccordcap(1,nn-mm+2,k)=xx
