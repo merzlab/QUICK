@@ -270,12 +270,13 @@ subroutine initialGuess(ierr)
 
 
       ! MFCC Initial Guess
-      if(quick_method%MFCC)then
-         call MFCC_initial_guess
-      endif
+      !if(quick_method%MFCC)then
+      !   call MFCC_initial_guess
+      !endif
 
       !  SAD inital guess
-      if (quick_method%SAD .and. .not. quick_method%MFCC) then
+      !if (quick_method%SAD .and. .not. quick_method%MFCC) then
+      if (quick_method%SAD) then
          call getSadDense
       endif
 
