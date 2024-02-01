@@ -63,6 +63,7 @@ subroutine electdiisdc(jscf,ierr)
    double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
 
    logical templog1,templog2
+   logical :: diisoff=.false.
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
 
@@ -224,6 +225,9 @@ subroutine electdiisdc(jscf,ierr)
    RECORD_TIME(timer_end%TOp)
    !------------- MASTER NODE -------------------------------
    if (master) then
+
+if (.not.diisoff) then
+
       !-----------------------------------------------
       ! End of Delta Matrix
       !-----------------------------------------------
@@ -345,8 +349,7 @@ subroutine electdiisdc(jscf,ierr)
 
       ! Where B(i,j) = Trace(e(i) Transpose(e(j)))
       ! According to an example done in mathematica, B12 = B21.  Note that
-      ! the rigorous proof of this phenomenon is left as an exercise for
-      ! the
+      ! the rigorous proof of this phenomenon is left as an exercise for the
       ! reader.  Thus the first step is copying BCOPY to B.  In this way we
       ! only have to recalculate the new elements.
       !-----------------------------------------------
@@ -364,8 +367,7 @@ subroutine electdiisdc(jscf,ierr)
          enddo
       endif
 
-      ! Now copy the current matrix into HOLD2 transposed.  This will be
-      ! the
+      ! Now copy the current matrix into HOLD2 transposed.  This will be the
       ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
       quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
@@ -480,6 +482,12 @@ subroutine electdiisdc(jscf,ierr)
          enddo
 
       endif
+
+      ! TDII Timer needs to be checked when start MPI implementation
+      RECORD_TIME(timer_end%TDII)
+
+endif
+
       !-----------------------------------------------
       ! 8) Diagonalize the operator matrix to form a new density matrix.
       ! First you have to transpose this into an orthogonal basis, which
@@ -627,8 +635,6 @@ subroutine electdiisdc(jscf,ierr)
 
       call fermiSCF(efermi,jscf)
 
-      ! TDII Timer needs to be checked when start MPI implementation
-      RECORD_TIME(timer_end%TDII)      
 
       ! Now check for convergence. pchange is the max change
       ! and prms is the rms
@@ -673,8 +679,13 @@ subroutine electdiisdc(jscf,ierr)
          endif
          oldEnergy=quick_qm_struct%Eel+quick_qm_struct%Ecore
       endif
-      write (ioutfile,'(F10.3,4x)',advance="no") timer_end%TSCF-timer_begin%TSCF
-      write (ioutfile,'(I2,4x,F8.2,2x,F8.2,2x)',advance="no") current_diis,timer_end%TDII-timer_begin%TDII, &
+      write (ioutfile,'(F10.3,2x)',advance="no") timer_end%TSCF-timer_begin%TSCF
+      if (.not.diisoff) then
+         write (ioutfile,'(2x,I2,2x)',advance="no") current_diis
+      else
+         write (ioutfile,'(2x,"--",2x)',advance="no")
+      endif
+      write (ioutfile,'(2x,F8.2,2x,F8.2,2x)',advance="no") timer_end%TDII-timer_begin%TDII, &
             timer_end%TOp-timer_begin%TOp
       write (ioutfile,'(F8.2,4x)',advance="no") Ttmp
       write (ioutfile,'(E10.4,2x)',advance="no") errormax
@@ -703,6 +714,9 @@ subroutine electdiisdc(jscf,ierr)
          diisdone=.true.
          quick_method%scf_conv=.true.
 
+      endif
+      if (PRMS < 1.0d-4) then
+         diisoff=.true.
       endif
       if(jscf >= quick_method%iscf-1) then
          write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
