@@ -159,10 +159,10 @@ subroutine mfcc(natomsaved)
 
 ! write(*,*) "first call xyzchange output" 
  write(ioutfile,*)'H ',xx,yy,zz
- write(ioutfile,*) '  '
- write(ioutfile,*) 'End of MFCC fragment #1'
- write(ioutfile,*) '======================================'
- write(ioutfile,*) '  '
+! write(ioutfile,*) '  '
+! write(ioutfile,*) 'End of MFCC fragment #1'
+! write(ioutfile,*) '======================================'
+! write(ioutfile,*) '  '
 
  mfccatomxiao(mm,1)='H '
 
@@ -238,10 +238,10 @@ subroutine mfcc(natomsaved)
    mfcccord(2,nn-mmm+2,k)=ym
    mfcccord(3,nn-mmm+2,k)=zm
 
-  write(ioutfile,*) '  '
-  write(ioutfile,*) 'End of MFCC fragment #', k
-  write(ioutfile,*) '======================================'
-  write(ioutfile,*) '  '      
+!  write(ioutfile,*) '  '
+!  write(ioutfile,*) 'End of MFCC fragment #', k
+!  write(ioutfile,*) '======================================'
+!  write(ioutfile,*) '  '      
     else
 
    call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
