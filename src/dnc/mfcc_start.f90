@@ -202,7 +202,7 @@ subroutine mfcc(natomsaved)
    if(residue(mselectN(k-1)).ne.'PRO')then
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
-    write(*,*) 'second call xyzchange output'
+!    write(*,*) 'second call xyzchange output'
     write(ioutfile,*)'H ',xx,ym,zm
 
     mfccatomxiao(1,k)='H '
@@ -379,7 +379,7 @@ subroutine mfcc(natomsaved)
 !   //char(48+k-k/10*10)//'.gjf')
 
  write(ioutfile,*) '======================================'
- write(ioutfile,*) 'Start of MFCC cap #', k
+ write(ioutfile,*) 'MFCC cap #', k
  write(ioutfile,*) '  '
 
    mm=mselectN(k)
@@ -493,7 +493,9 @@ subroutine mfcc(natomsaved)
 
   kxiao=1
 
-  write(*,*) 'MFCC checked for neutral terminus'
+  write(ioutfile,*) '======================================'
+  write(ioutfile,*) 'MFCC checked for neutral terminus'
+  write(ioutfile,*) '  '
 
 ! The whole block of code (below) up until the end
 ! of the subroutine is only executed when
@@ -505,11 +507,15 @@ subroutine mfcc(natomsaved)
     if(xiaoconnect(i,jj).eq.0)then
       print*,'xiaoconnect(i,jj) is zero'
 
+  write(ioutfile,*) '======================================'
+  write(ioutfile,*) 'Neutral terminus fragment'
+  write(ioutfile,*) '  '
+
 ! Temporal files for debug of 'connect'
 
-  open(600,file='connect'//char(48+i/10) &
-  //char(48+i-i/10*10)//char(48+jj/10) &
-  //char(48+jj-jj/10*10)//'.gjf')
+!  open(600,file='connect'//char(48+i/10) &
+!  //char(48+i-i/10*10)//char(48+jj/10) &
+!  //char(48+jj-jj/10*10)//'.gjf')
 
   if(i.eq.2)then
     mm=9
@@ -524,8 +530,8 @@ subroutine mfcc(natomsaved)
 
   call xyzchange(coord(1,mm-2),coord(2,mm-2),coord(3,mm-2), &
   coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)
-     write(*,*) '1st call for xyzchange in final loop'
-     write(600,*)'H ',xx,ym,zm
+!     write(*,*) '1st call for xyzchange in final loop'
+     write(ioutfile,*)'H ',xx,ym,zm
 
   mfccatomxiaocon(1,kxiao)='H '
   mfccatomxiaoconi(1,kxiao)='H '
@@ -551,7 +557,7 @@ subroutine mfcc(natomsaved)
   matomfinalconi(kxiao)=nnn-1
 
   do kk=mm,nnn-1
-     write(600,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+     write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
      mfccatomxiaocon(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
      mfccatomxiaoconi(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
 
@@ -564,7 +570,7 @@ subroutine mfcc(natomsaved)
   call Nxyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
   coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
      write(*,*) 'call for Nxyzchange in final loop'
-     write(600,*)'H ',xx,ym,zm
+     write(ioutfile,*)'H ',xx,ym,zm
 
         mfccatomxiaocon(nnn-mm+2,kxiao)='H '
         mfccatomxiaoconi(nnn-mm+2,kxiao)='H '
@@ -592,7 +598,7 @@ subroutine mfcc(natomsaved)
    call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
    coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)
       write(*,*) '2nd call for xyzchange in final loop'
-      write(600,*)'H ',xx,ym,zm
+      write(ioutfile,*)'H ',xx,ym,zm
 
         mfccatomxiaocon2(1,kxiao)='H '
         mfccatomxiaoconj(1,kxiao)='H '
@@ -618,7 +624,7 @@ subroutine mfcc(natomsaved)
         matomfinalconj(kxiao)=nnn-1
 
     do kk=mmm,nnn-1
-      write(600,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiaocon2(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
       mfccatomxiaoconj(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
 
@@ -630,7 +636,7 @@ subroutine mfcc(natomsaved)
 
   call xyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
   coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
-     write(600,*)'H ',xx,ym,zm
+     write(ioutfile,*)'H ',xx,ym,zm
 
         mfccatomxiaocon2(nnn-mmm+2,kxiao)='H '
         mfccatomxiaoconj(nnn-mmm+2,kxiao)='H '
