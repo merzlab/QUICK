@@ -163,7 +163,7 @@
        call quick_exit(iOutFile,ierr)
     end if
 
-    write(*,*) "Now calling MFCC fragmentation"
+!    write(*,*) "Now calling MFCC fragmentation"
     ! b. MFCC initial guess
     if (quick_method%MFCC) then
         call mfcc(quick_molspec%natom)
