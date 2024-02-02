@@ -205,7 +205,7 @@ subroutine mfcc(natomsaved)
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
 !    write(*,*) 'second call xyzchange output'
-    write(ioutfile,*)'H ',xx,ym,zm
+    write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
     mfccatomxiao(1,k)='H '
 
@@ -222,7 +222,8 @@ subroutine mfcc(natomsaved)
     matomfinal(k)=nn-1
 
     do kk=mmm,nn-1
-      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiao(kk-mmm+2,k)=atomname(kk)(2:2)//' '
       do j=1,3
         mfcccord(j,kk-mmm+2,k)=coord(j,kk)
@@ -232,7 +233,7 @@ subroutine mfcc(natomsaved)
    call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
 !   write(*,*) 'third call xyzchange output'
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
    mfccatomxiao(nn-mmm+2,k)='H '
 
@@ -248,7 +249,7 @@ subroutine mfcc(natomsaved)
 
    call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
    mfccatomxiao(1,k)='H '
 
@@ -265,7 +266,8 @@ subroutine mfcc(natomsaved)
    matomfinal(k)=nn-1
 
    do kk=mm,nn-1
-      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
 
       mfccatomxiao(kk-mm+2,k)=atomname(kk)(2:2)//' '
       do j=1,3
@@ -277,7 +279,7 @@ subroutine mfcc(natomsaved)
    call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
    write(*,*) 'PROline call xyzchange output'
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
    mfccatomxiao(nn-mm+2,k)='H '
 
@@ -311,7 +313,7 @@ subroutine mfcc(natomsaved)
   call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
   coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
 !  write(*,*) "first call xyzchange in 2nd loop"
-  write(ioutfile,*)'H ',xx,ym,zm
+  write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
   mfccatomxiao(1,npmfcc)='H '
   
@@ -328,7 +330,8 @@ subroutine mfcc(natomsaved)
   matomfinal(npmfcc)=number  
 
   do kk=mmm,number
-    write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+    write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
 
      mfccatomxiao(kk-mmm+2,npmfcc)=atomname(kk)(2:2)//' '
      do j=1,3
@@ -339,7 +342,7 @@ subroutine mfcc(natomsaved)
   else
   call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
     mfccatomxiao(1,npmfcc)='H '
 
@@ -356,7 +359,8 @@ subroutine mfcc(natomsaved)
    matomfinal(npmfcc)=number
 
    do kk=mm,number
-    write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+    write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
 
     mfccatomxiao(kk-mm+2,npmfcc)=atomname(kk)(2:2)//' '
     do j=1,3
@@ -393,7 +397,7 @@ subroutine mfcc(natomsaved)
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)       
 !   write(*,*) '1st call for xyzchange in caps loop'
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
    mfccatomxiaocap(1,k)='H '
 
@@ -410,7 +414,8 @@ subroutine mfcc(natomsaved)
    matomfinalcap(k)=nn-1
 
    do kk=mmm,nn-1
-    write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+    write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+    atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
     mfccatomxiaocap(kk-mmm+2,k)=atomname(kk)(2:2)//' '
     do j=1,3
       mfcccordcap(j,kk-mmm+2,k)=coord(j,kk)
@@ -421,7 +426,7 @@ subroutine mfcc(natomsaved)
  call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
   coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
 !  write(*,*) '2nd xyzchange call for caps'
-  write(ioutfile,*)'H ',xx,ym,zm
+  write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
         mfccatomxiaocap(nn-mmm+2,k)='H '
 
@@ -434,7 +439,7 @@ subroutine mfcc(natomsaved)
   call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
    write(*,*) 'nxyzchange call for caps if PROline present'
-   write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
        mfccatomxiaocap(1,k)='H '
 
@@ -451,7 +456,8 @@ subroutine mfcc(natomsaved)
       matomfinalcap(k)=nn-1
 
      do kk=mm,nn-1
-       write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+       atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
        mfccatomxiaocap(kk-mm+2,k)=atomname(kk)(2:2)//' '
        do j=1,3
          mfcccordcap(j,kk-mm+2,k)=coord(j,kk)
@@ -462,7 +468,7 @@ subroutine mfcc(natomsaved)
   call xyzchange(coord(1,nn),coord(2,nn),coord(3,nn), &
    coord(1,nnn),coord(2,nnn),coord(3,nnn),xx,ym,zm)
     write(*,*) 'PROline xyzchange call for caps'
-    write(ioutfile,*)'H ',xx,ym,zm
+    write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
        mfccatomxiaocap(nn-mm+2,k)='H '
 
        mfcccordcap(1,nn-mm+2,k)=xx
@@ -533,7 +539,7 @@ subroutine mfcc(natomsaved)
   call xyzchange(coord(1,mm-2),coord(2,mm-2),coord(3,mm-2), &
   coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)
 !     write(*,*) '1st call for xyzchange in final loop'
-     write(ioutfile,*)'H ',xx,ym,zm
+     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
   mfccatomxiaocon(1,kxiao)='H '
   mfccatomxiaoconi(1,kxiao)='H '
@@ -559,7 +565,8 @@ subroutine mfcc(natomsaved)
   matomfinalconi(kxiao)=nnn-1
 
   do kk=mm,nnn-1
-     write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
      mfccatomxiaocon(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
      mfccatomxiaoconi(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
 
@@ -572,7 +579,7 @@ subroutine mfcc(natomsaved)
   call Nxyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
   coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
      write(*,*) 'call for Nxyzchange in final loop'
-     write(ioutfile,*)'H ',xx,ym,zm
+     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
         mfccatomxiaocon(nnn-mm+2,kxiao)='H '
         mfccatomxiaoconi(nnn-mm+2,kxiao)='H '
@@ -600,7 +607,7 @@ subroutine mfcc(natomsaved)
    call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
    coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)
       write(*,*) '2nd call for xyzchange in final loop'
-      write(ioutfile,*)'H ',xx,ym,zm
+      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
         mfccatomxiaocon2(1,kxiao)='H '
         mfccatomxiaoconj(1,kxiao)='H '
@@ -626,7 +633,8 @@ subroutine mfcc(natomsaved)
         matomfinalconj(kxiao)=nnn-1
 
     do kk=mmm,nnn-1
-      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiaocon2(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
       mfccatomxiaoconj(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
 
@@ -638,7 +646,7 @@ subroutine mfcc(natomsaved)
 
   call xyzchange(coord(1,nnn),coord(2,nnn),coord(3,nnn), &
   coord(1,nn),coord(2,nn),coord(3,nn),xx,ym,zm)
-     write(ioutfile,*)'H ',xx,ym,zm
+   write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,ym,zm
 
         mfccatomxiaocon2(nnn-mmm+2,kxiao)='H '
         mfccatomxiaoconj(nnn-mmm+2,kxiao)='H '
