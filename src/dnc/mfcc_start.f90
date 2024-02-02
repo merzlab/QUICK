@@ -145,7 +145,9 @@ subroutine mfcc(natomsaved)
  write(ioutfile,*) '  '
 
   do kk=1,mm-1
-      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+!      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+ write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
+      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
       mfccatomxiao(kk,1)=atomname(kk)(2:2)//' '
       do j=1,3
         mfcccord(j,kk,1)=coord(j,kk)
@@ -158,7 +160,7 @@ subroutine mfcc(natomsaved)
    coord(1,nn),coord(2,nn),coord(3,nn),xx,yy,zz)     
 
 ! write(*,*) "first call xyzchange output" 
- write(ioutfile,*)'H ',xx,yy,zz
+ write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)')'H ',xx,yy,zz
 ! write(ioutfile,*) '  '
 ! write(ioutfile,*) 'End of MFCC fragment #1'
 ! write(ioutfile,*) '======================================'
