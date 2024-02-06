@@ -34,9 +34,8 @@
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+    use quick_oeproperties_module, only: compute_esp
          exportMO, exportSCF, exportOPT
-    !use quick_dummy_module, only: some_function
-    use quick_oeproperties_module
 
     implicit none
 
@@ -55,10 +54,7 @@
     integer :: i,j,k
     double precision t1_t, t2_t
     common /timer/ t1_t, t2_t
-    
-
-    ierr=some_function()
-    write(6,'(a,i3)')'ierr=',ierr
+    double precision, dimension(:), allocatable :: esp_array
 
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -233,6 +229,8 @@
 
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
+      call gpu_upload_oei(quick_molspec%nextpoint, quick_molspec%extxyz, ierr)
+
     endif
 #endif
 
@@ -294,7 +292,10 @@
        end if
     endif
 
-
+    ! ESP_GRID
+    if (quick_method%esp_grid) then
+        call compute_esp(esp_array, ierr)
+    end if
 
     !------------------------------------------------------------------
     ! 6. Other job options
