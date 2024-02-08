@@ -79,6 +79,7 @@ module quick_method_module
         ! this part is Div&Con options
         logical :: BEoff = .false.
         logical :: Qint = .false.
+        logical :: OWNfrag = .false.
 
         ! this is DFT grid
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
@@ -248,6 +249,7 @@ module quick_method_module
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%OWNfrag,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DNCRB,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -470,6 +472,8 @@ module quick_method_module
                     write(iO,'(" = DIV AND CON ON RESIDUE BASIS")')
                 elseif (self%ifragbasis .eq. 3) then
                     write(io,'(" = DIV AND CON ON NON HYDROGEN ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 4) then
+                    write(io,'(" = DIV AND CON USING CORE.DNC AND BUFFER.DNC")')
                 else
                     write(io,'(" = DIV AND CON ON ATOM BASIS (BY DEFAULT)")')
                 endif
@@ -647,6 +651,7 @@ module quick_method_module
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
             if (index(keyWD,'BEOFF').ne.0)      self%BEoff=.true.
             if (index(keyWD,'QINT').ne.0)       self%Qint=.true.
+            if (index(keyWD,'OWNFRAG').ne.0)    self%OWNfrag=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
 
@@ -658,6 +663,8 @@ module quick_method_module
                     self%ifragbasis=2
                 else if (index(keywd,'NHAB') /= 0) then
                     self%ifragbasis=3
+                else if (index(keywd,'OWNFRAG') /= 0) then
+                    self%ifragbasis=4
                 else
                     self%ifragbasis=1
                 endif
@@ -865,6 +872,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
             self%BEoff = .false.       ! Turns off bEliminate in Div&Con
             self%Qint = .false.        ! Prints 1e and 2e integrals in Qiskit format
+            self%OWNfrag = .false.     ! User defined fragmentation based on CORE.DNC and BUFFER.DNC files
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
