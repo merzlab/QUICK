@@ -1,5 +1,9 @@
 #include "util.fh"
 
+#ifdef MPIV
+     include "mpif.h"
+#endif
+
 !---------------------------------------------------------------------!
 ! Created by Etienne Palos on   xx/xx/2024                            !
 !                                                                     ! 
@@ -13,21 +17,21 @@
 module quick_oeproperties_module
 implicit double precision(a-h,o-z)
 private 
-
-public :: esp_1pdm, electrostatic_potential, compute_esp, print_esp, logger
+!public :: esp_1pdm, esp_shell_pair, compute_esp, print_esp, logger
+public :: compute_esp
 
 contains
 
+!! SUBROUTINE 1 COMPUTES 1 PARTICLE CONTRIBUTION - ESP_1PDM
 subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
 !-----------------------------------------------------------------------------------------!
 ! Computes the 1 particle contribution to the ESP: P_{mu nu} V_{mu nu}                    !
-! Specifically, see how the Coulomb integral is defiend for cartesian gaussian functions  !
 ! See Eq. A14 of O&S [J. Chem. Phys. 84, 3963 (1986)]                                     !
-! First, calculates 〈 psi_mu | psi_nu 〉 for all mu and nu                               !
-! 〈 psi_mu | 1/|r-R| | psi_nu 〉 ; let R =  1/|r-R|                                      !
-!  P_{mu nu} * 〈 psi_mu | R | psi_nu 〉                                                  !
+! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                                !
+! Then, P_{mu nu} * 〈 phi_mu | 1/|rC| | phi_nu 〉                                        !
 !-----------------------------------------------------------------------------------------!
    use allmod
+   use quick_files_module, only: ioutfile
 
    implicit double precision(a-h,o-z)
 
@@ -38,6 +42,11 @@ subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,e
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
+   logical :: debug = .true.
+   
+   ! if (debug) then
+   !    call logger('esp_1pdm', 'enter')
+   ! end if
 
    AA(1)=Ax
    AA(2)=Ay
@@ -239,45 +248,59 @@ subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,e
             do JJJ=max(III,JJJ1),JJJ2
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
 
+               !write(ioutfile, *) 'esp_before = ', esp
               ! esp <--- P_{mu nu} * (mu | 1/C | nu) contribution
               esp= esp + quick_qm_struct%dense(JJJ,III)* &
                Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+
+            !   write(ioutfile, *) 'dense = ', quick_qm_struct%dense(JJJ,III)
+            !   write(ioutfile, *) 'xconstnt = ', Xconstant
+            !   write(ioutfile, *) 'cons1 = ', quick_basis%cons(III)
+            !   write(ioutfile, *) 'cons2 = ', quick_basis%cons(JJJ)
+            !   write(ioutfile, *) 'attraxiao = ', attraxiao(itemp1,itemp2,0)
+
+            !write(ioutfile, *) 'esp_after = ', esp
             enddo
          enddo
 
       enddo
    enddo
    201 return
+
+  ! if (debug) then
+  !      write(ioutfile, '(a)') '>>>DEBUG reached end of esp_1pdm'
+  ! end if
+
 End subroutine esp_1pdm
+
+
+!! SUBROUTINE 2 - ELECTROSTATIC POTENTIAL FOR A SHELL PAIR (ESP_SHELL_PAIR)
 
 !---------------------------------------------------------------!
 !      Electrostatic Potential (ESP) on grid subroutine         !
 !---------------------------------------------------------------!
-subroutine electrostatic_potential(IIsh, JJsh, esp_array)
-   use allmod
+subroutine esp_shell_pair(IIsh, JJsh, esp_array)
+   use allmod ! revisit, avoid allmod
+   use quick_molspec_module
    use quick_overlap_module, only: gpt, opf, overlap_core
    use quick_files_module, only: ioutfile
    use quick_mpi_module, only: master
    implicit double precision(a-h,o-z)
    
-   integer :: igridpoint
-!   integer, intent(out) :: ierr
-
-!   logical :: debug = .true.
-   
    dimension aux(0:20)
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g 
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
- 
-   double precision, dimension(:), intent(out) :: esp_array
 
-!   if (debug) then
-!      call logger('electrostatic_potential', 'enter')
-!   end if
+   integer :: igridpoint
+   logical :: debug = .true.
  
-   esp_array(:) = 0.0d0
+   double precision, dimension(:), intent(inout) :: esp_array
 
+   ! if (debug) then
+   !    call logger('esp_shell_pair', 'enter')
+   ! end if
+ 
    ! Related to positions of "QM" atoms
    Ax=xyz(1,quick_basis%katom(IIsh))
    Ay=xyz(2,quick_basis%katom(IIsh))
@@ -318,9 +341,9 @@ subroutine electrostatic_potential(IIsh, JJsh, esp_array)
                Cy=quick_molspec%extxyz(2,igridpoint)
                Cz=quick_molspec%extxyz(3,igridpoint)
 
-               ! dummy charge (value of Z in attrashell)
+               ! dummy charge (analogous to Z in attrashell)
                Q=1.0d0
-               constant2=constanttemp*Q
+               constant2=constanttemp
  
                 !Calculate the last term of O&S Eqn A21
                 PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
@@ -334,15 +357,12 @@ subroutine electrostatic_potential(IIsh, JJsh, esp_array)
                !Calculate all the auxilary integrals and store in attraxiao
                !array
                do L = 0,maxm
-                  aux(L) = aux(L)*constant*Z
+                  aux(L) = aux(L)*constant
                   attraxiao(1,1,L)=aux(L)
                enddo
  
                NIJ1=10*NII2+NJJ2
               
-
-               ! Calls esp_1pdm : P_{mu nu} * 〈 psi_mu | R | psi_nu 〉 to compute V(r_i) = sum_{i} V_i at each point
-
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz, esp_array(igridpoint))
             enddo
@@ -350,83 +370,115 @@ subroutine electrostatic_potential(IIsh, JJsh, esp_array)
          endif
       enddo
    enddo
-end subroutine electrostatic_potential
 
-!! new stuff
+!   if (debug) then
+!        write(ioutfile, '(a)') '>>>DEBUG reached end of esp_shell_pair'
+!   end if
+end subroutine esp_shell_pair
 
-subroutine compute_esp(esp_array, ierr)
+
+! SUBROUTINE 3 - LOOPS OVER ALL SHELL PAIRS AND COMPUTES THE ESP
+subroutine compute_esp(ierr)
+   use allmod ! to be revisited to avoid allmod (added to get jshell)
+  ! use quick_molspec_module
    use quick_files_module, only: ioutfile
    use quick_mpi_module, only: master
-!  implicit none
-   implicit double precision(a-h,o-z)
-   
-   double precision, intent(out) :: esp_array(:)
-
+   !implicit double precision(a-h,o-z)
+   implicit none 
+ 
    integer, intent(out) :: ierr
-    logical :: debug = .true.
+   logical :: debug = .true.
 
-    if (debug) then
-      call logger('compute_esp', 'enter')
-   end if
+   integer :: IIsh, JJsh
+   double precision, allocatable :: esp_array(:)
 
-   if (debug) then
-        write(ioutfile, '(a)') '>>>DEBUG entered subroutine compute_esp'
-   end if
+!   if (debug) then
+!      call logger('compute_esp', 'enter')
+!   end if
 
-   call electrostatic_potential(IIsh, JJsh, esp_array)
+   ierr=0
+
+   ! allocates and initializes the esp_array
+   allocate(esp_array(quick_molspec%nextpoint))
+   esp_array(:) = 0.0d0
+
+   ! Loop over all shell pairs and compute the ESP
+   do IIsh=1,jshell
+      do JJsh=IIsh,jshell
+         call esp_shell_pair(IIsh, JJsh, esp_array)
+      enddo
+   enddo
 
    call print_esp(esp_array, ierr)
+
+   deallocate(esp_array)
+
+!   if (debug) then
+!        write(ioutfile, '(a)') '>>>DEBUG entered subroutine compute_esp'
+!   end if
 end subroutine compute_esp
 
-!subroutine print_esp(ierr)
-    
-!    implicit none
-!   integer, intent(out) :: ierr
-
-!    logical :: debug = .true.
-
-!    if (debug) then
-!       call logger('print_esp', 'enter')
-!    end if
-
-    ! NEED TO IMPLEMENT
-
-!        if (debug) then
-!       call logger('print_esp', 'exit')
-!    end if
-
-!  end subroutine print_esp
-
+ !! SUBROUTINE 3 - PRINT ESP
 subroutine print_esp(esp_array, ierr)
-    use quick_files_module, only: ioutfile
-    implicit none
-    integer, intent(out) :: ierr
-    logical :: debug = .true.
-    double precision, dimension(:), intent(in) :: esp_array(:)
-    
-    integer :: igridpoint
+   use quick_molspec_module
+   use quick_method_module
+   use quick_files_module, only: ioutfile
+   use quick_mpi_module, only: master
 
-    if (debug) then
-        write(ioutfile, '(a)') '>>> DEBUG Entering print_esp subroutine'
-    endif
+   implicit none
+   integer, intent(out) :: ierr
+   logical :: debug = .true.
+   double precision, allocatable :: esp_array(:)
+   integer :: igridpoint
+   double precision :: Cx, Cy, Cz
 
-    ! Loop over the elements of esp_array and print them to the output file
-    do igridpoint = 1, size(esp_array)
-        write(ioutfile, *) esp_array(igridpoint)
-    end do
+  if (.not. allocated(esp_array)) then
+   allocate(esp_array(igridpoint))
+endif
+ 
+ ! If esp_grid is true, print the table
+ if (quick_method%esp_grid) then
+      write (ioutfile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) ")')
+      write (ioutfile,'(60("-"))')
+      write (ioutfile,'("X",16x,"Y",16x,"Z",16x,"V(r)")')
+      write (ioutfile,'(60("-"))')
 
-    if (debug) then
-        write(ioutfile, '(a)') '>>> DEBUG Exiting print_esp subroutine'
-    endif
+      do igridpoint = 1, quick_molspec%nextpoint
+       !  do i=1,quick_molspec%nextpoint
+       !     write(ioutfile,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+       !  enddo
+        Cx = quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A
+        Cy = quick_molspec%extxyz(2, igridpoint)*BOHRS_TO_A
+        Cz = quick_molspec%extxyz(3, igridpoint)*BOHRS_TO_A
+        if (allocated(esp_array) .and. igridpoint <= size(esp_array)) then
+           write(ioutfile, '(3F14.10,3x,F14.10)') Cx, Cy, Cz, esp_array(igridpoint)
+        else
+           write(ioutfile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A'
+        endif
+
+      end do
+     write (ioutfile,'(60("-"))')
+  endif
+  
+  ! If debug is enabled, print a debug message
+!   if (debug) then
+!        write(ioutfile, '(a)') '>>> DEBUG Exiting print_esp subroutine'
+!   endif
+  
 end subroutine print_esp
 
-subroutine logger(name, status)
+
+
+ !! SUBROUTINE 4 - LOGGER
+ 
+ subroutine logger(name, status)
 
     use quick_files_module
     implicit none
     character (len=*), intent(in) :: name
     character (len=*), intent(in) :: status
     write(ioutfile, '(3(a,x))') '>>> DEBUG', name, status
+    call flush(ioutfile)
   
 end subroutine logger
 
