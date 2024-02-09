@@ -55,10 +55,10 @@ subroutine inidivcon(natomsaved)
   integer natomt,natomsaved
   logical bEliminate  ! if elimination step needed (absolute must for large systems)
   integer:: nlines = 0
-  integer, PARAMETER :: ownmax = 10
+  integer, PARAMETER :: ownmax = 15
   integer,dimension (ownmax) :: incore,inbuff ! Reads DNC files line by line
 
-  ! ownmax limits number of atoms in OWNFRAG-defined fragments to 10.
+  ! ownmax limits number of atoms in OWNFRAG-defined fragments to 15.
   ! ownmax can be increased if needed, but for larger fragments
   ! the current read-in code of OWNFRAG is inefficient.
 
@@ -142,7 +142,6 @@ subroutine inidivcon(natomsaved)
           nlines = nlines + 1
         enddo
         close (10)
-        !write(*,*) 'CORE.DNC=', nlines 
         np = nlines
      end select
 
@@ -156,13 +155,13 @@ subroutine inidivcon(natomsaved)
         rbuffer1 = rbuffer1
      endif
 
-     !write(*,*) 'rbuffer1 and np', rbuffer1, np
-
      ! Output basic div-con information
      call PrtAct(iOutfile,"Now Begin Div & Con Fragment")
      write(iOutfile,'("NUMBER OF FRAG=",i3)') np
+ 
      ! RBuffer is not used when OWNFRAG is on.
      ! All atoms are defined by user input.
+
      if(quick_method%ifragbasis.lt.4) then
      write(iOutfile,'("RBuffer=",f7.2," A")') rbuffer1
      endif
@@ -405,10 +404,8 @@ subroutine inidivcon(natomsaved)
            if (incore(j).ne.0) then
            dccore(i,j)=incore(j)
            dccoren(i)=dccoren(i)+1
-          ! write(*,*) dccore(i,j)
            endif
         enddo 
-    ! write(*,*) dccoren(i)
      rewind (20)
     enddo
     close (10)
@@ -423,12 +420,11 @@ subroutine inidivcon(natomsaved)
            if (inbuff(j).ne.0) then
            dcbuffer1(i,j)=inbuff(j)
            dcbuffer1n(i)=dcbuffer1n(i)+1
-          ! write(*,*) dcbuffer1(i,j)
            endif
         enddo
-    ! write(*,*) dcbuffer1n(i)
      rewind (20)
     enddo
+    close (10)
 
      !-----------------------------------------------------------------         
      ! Now combine core and buffer regions to generate subsystems
