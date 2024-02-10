@@ -54,6 +54,13 @@ subroutine inidivcon(natomsaved)
   integer tempinteger,tempinteger2
   integer natomt,natomsaved
   logical bEliminate  ! if elimination step needed (absolute must for large systems)
+  integer:: nlines = 0
+  integer, PARAMETER :: ownmax = 15
+  integer,dimension (ownmax) :: incore,inbuff ! Reads DNC files line by line
+
+  ! ownmax limits number of atoms in OWNFRAG-defined fragments to 15.
+  ! ownmax can be increased if needed, but for larger fragments
+  ! the current read-in code of OWNFRAG is inefficient.
 
 #ifdef MPIV
   include 'mpif.h'
@@ -61,8 +68,8 @@ subroutine inidivcon(natomsaved)
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
 
-  ! BEoff is to be used only if fragments have to be very small (less than 5 atoms or so).
-  ! BEoff is primarly for testing. Smaller fragments can be achieved with custom rbuffer value. 
+  ! BEoff is to be used only if fragments have to be small.
+  ! BEoff is primarly designed for usage with OWNFRAG.
 
   if (quick_method%beoff) then
      bEliminate=.false.
@@ -106,12 +113,11 @@ subroutine inidivcon(natomsaved)
      endif
 
      !----------------------------------------------
-     ! Distubute some paramters for different fragment method
+     ! Distribute parameters for corresponding fragment method
      !----------------------------------------------
 
      select case (quick_method%ifragbasis)    ! define buffer region for different fragment method and number of fragment
      case (1)
-        !rbuffer1=7.0d0
         rbuffer1=7.0d0
         rbuffer2=0.0d0
         np=natomt               ! Atom basis
@@ -123,6 +129,20 @@ subroutine inidivcon(natomsaved)
         rbuffer1=6.0d0
         rbuffer2=0.0d0
         np=quick_molspec%nNonHAtom            ! Non-H Atom basis
+     case (4)
+        rbuffer1=0.0d0          ! For OWNFRAG buffer is extracted from BUFFER.DNC file,         
+        rbuffer2=0.0d0          ! which means rbuffer1 and rbuffer2 are not used
+
+      ! For OWNFRAG number of fragments is defined
+      ! based on number of lines in CORE.DNC file
+        open (10, file = 'CORE.DNC')
+        do
+          read(10,*,iostat=io)
+          if (io/=0) exit
+          nlines = nlines + 1
+        enddo
+        close (10)
+        np = nlines
      end select
 
      ! Save atoms based on case 1, 2 or 3 (above)
@@ -138,7 +158,13 @@ subroutine inidivcon(natomsaved)
      ! Output basic div-con information
      call PrtAct(iOutfile,"Now Begin Div & Con Fragment")
      write(iOutfile,'("NUMBER OF FRAG=",i3)') np
+ 
+     ! RBuffer is not used when OWNFRAG is on.
+     ! All atoms are defined by user input.
+
+     if(quick_method%ifragbasis.lt.4) then
      write(iOutfile,'("RBuffer=",f7.2," A")') rbuffer1
+     endif
 
      !-------------------MPI/MASTER---------------------------------------
   endif masterwork_inidivcon_readmol
@@ -233,6 +259,9 @@ subroutine inidivcon(natomsaved)
      ! selectN indicates no. of N
      !---------------------------------------------------------------
 
+     ! If OWNFRAG is used this section of code is skipped     
+     if(quick_method%ifragbasis.lt.4) then
+   
      j2=1
      selectN(1)=1
 
@@ -357,7 +386,45 @@ subroutine inidivcon(natomsaved)
            endif
         enddo
      enddo
+    ! The assigment of core and buffer as defined above is skiped
+    ! when OWNFRAG is used. Extracted from CORE.DNC and BUFFER.DNC files instead.
+     else 
+     write(ioutfile,*) '  '
+     write(iOutfile,*) 'Reading fragments from CORE.DNC and BUFFER.DNC files'
+     write(ioutfile,*) '  '
+    endif
+    
+    ! Assigment of core in OWNFRAG 
+    open (10, file = 'CORE.DNC',access="sequential", form="formatted")
+     
+    do i=1,np
+     read (10, '( *(i3) )' ) incore
+        dccoren(i)=0     
+        do j=1,ownmax
+           if (incore(j).ne.0) then
+           dccore(i,j)=incore(j)
+           dccoren(i)=dccoren(i)+1
+           endif
+        enddo 
+     rewind (20)
+    enddo
+    close (10)
 
+    ! Assigment of buffer in OWNFRAG 
+    open (10, file = 'BUFFER.DNC',access="sequential", form="formatted")
+
+    do i=1,np
+     read (10, '( *(i3) )' ) inbuff
+        dcbuffer1n(i)=0
+        do j=1,ownmax
+           if (inbuff(j).ne.0) then
+           dcbuffer1(i,j)=inbuff(j)
+           dcbuffer1n(i)=dcbuffer1n(i)+1
+           endif
+        enddo
+     rewind (20)
+    enddo
+    close (10)
 
      !-----------------------------------------------------------------         
      ! Now combine core and buffer regions to generate subsystems
@@ -376,11 +443,13 @@ subroutine inidivcon(natomsaved)
            dcsubn(i)=dcsubn(i)+1
            dcsub(i,dcsubn(i))=dcbuffer1(i,j)
         enddo
-
+     ! If OWNFRAG is used this section of code is skipped     
+       if(quick_method%ifragbasis.lt.4) then
         do j=1,dcbuffer2n(i)
            dcsubn(i)=dcsubn(i)+1
            dcsub(i,dcsubn(i))=dcbuffer2(i,j)
         enddo
+       endif
      enddo
 
      !-----------------------------------------------------------------
