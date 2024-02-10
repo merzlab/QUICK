@@ -23,7 +23,9 @@ module quick_divcon_module
     double precision, dimension(:,:,:), allocatable :: ODCSub,PDCSub,XDCSub,SMatrixDCSub, &
                                                        coDCSub,PDCSubtran,coDCSubtran
     double precision, dimension(:,:), allocatable :: ODCSubtemp,VECtemp
-    double precision, dimension(:,:), allocatable :: Vtemp,EVEC1temp,eValDCSub
+    double precision, dimension(:,:,:), allocatable :: OBDCSub,PBDCSub,cobDCSub,PBDCSubtran, &
+                                                       cobDCSubtran,OBDCSubtemp
+    double precision, dimension(:,:), allocatable :: Vtemp,EVEC1temp,eValDCSub,eValbDCSub
     double precision, dimension(:), allocatable :: EVAL1temp,IDEGEN1temp
     logical, dimension(:,:), allocatable :: disDivMFCC
     logical, dimension(:), allocatable :: mp2Shell

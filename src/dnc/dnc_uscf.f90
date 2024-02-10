@@ -1,135 +1,14 @@
-!---------------------------------------------------------------------!
-! Created by Madu Manathunga on 06/24/2020                            !
-!                                                                     ! 
-! Copyright (C) 2020-2021 Merz lab                                    !
-! Copyright (C) 2020-2021 Götz lab                                    !
-!                                                                     !
-! This Source Code Form is subject to the terms of the Mozilla Public !
-! License, v. 2.0. If a copy of the MPL was not distributed with this !
-! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
-!_____________________________________________________________________!
-
-!---------------------------------------------------------------------!
-! This module contains subroutines and data structures related to     !
-! unrestricted scf procedure.                                         ! 
-!---------------------------------------------------------------------!
-
 #include "util.fh"
 
-module quick_uscf_module
-
-  implicit none
-  private
-
-  public :: uscf,allocate_quick_uscf,deallocate_quick_uscf,alloperatorB 
-
-  double precision, allocatable, dimension(:,:,:) :: alloperatorB
-
-contains
-
-! This subroutine allocates memory for uscf data structures  and initializes them to zero. 
-  subroutine allocate_quick_uscf(ierr)
-
-    use quick_method_module, only: quick_method
-    use quick_basis_module, only: nbasis
-    use quick_scf_module, only: allocate_quick_scf
-
-    implicit none 
-
-    integer, intent(inout) :: ierr
-
-    call allocate_quick_scf(ierr)
-
-    if(.not. allocated(alloperatorB)) allocate(alloperatorB(nbasis, nbasis, quick_method%maxdiisscf), stat=ierr)
-
-    !initialize values to zero
-    alloperatorB = 0.0d0
-
-  end subroutine allocate_quick_uscf 
-
-! Deallocate memory allocated for uscf
-  subroutine deallocate_quick_uscf(ierr)
-
-    use quick_scf_module, only: deallocate_quick_scf
-    implicit none
-
-    integer, intent(inout) :: ierr
-
-    call deallocate_quick_scf(ierr)
-
-    if(allocated(alloperatorB)) deallocate(alloperatorB, stat=ierr)
-
-  end subroutine deallocate_quick_uscf
-
-  ! Ed Brothers. November 27, 2001
-  ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-  subroutine uscf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
-     use allmod
-     use quick_molden_module, only: quick_molden, exportMO, exportSCF
-     implicit none
-  
-     logical :: done
-     integer, intent(inout) :: ierr
-     integer :: jscf
-     done=.false.
-  
-     !-----------------------------------------------------------------
-     ! The purpose of this subroutine is to perform scf cycles.  At this
-     ! point, X has been formed. The remaining steps are:
-     ! 1)  Form operator matrix.
-     ! 2)  Calculate O' = Transpose[X] O X
-     ! 3)  Diagonalize O' to obtain C' and eigenvalues.
-     ! 4)  Calculate C = XC'
-     ! 5)  Form new density matrix.
-     ! 6)  Check for convergence.
-     !-----------------------------------------------------------------
-  
-     ! Each location in the code that the step is occurring will be marked.
-     ! The cycles stop when prms  is less than pmaxrms or when the maximum
-     ! number of scfcycles has been reached.
-     jscf=0
-  
-  
-     ! Alessandro GENONI 03/21/2007
-     ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
-     ! Note: the integrals are stored in the array ecp_int that corresponds
-     !       to the lower triangular matrix of the ECP integrals
-     !if (quick_method%ecp) call ecpint
-  
-     ! if not direct SCF, generate 2e int file
-     !if (quick_method%nodirect) call aoint
-  
-     if (quick_method%diisscf .and. .not. quick_method%divcon) call uelectdiis(jscf,ierr)       ! normal scf
-     if (quick_method%diisscf .and. quick_method%divcon) call uelectdiisdc(jscf,ierr)
-  
-     jscf=jscf+1
-  
-     !if (quick_method%debug)  call debug_SCF(jscf)
-
-     if(write_molden) then
-         call exportMO(quick_molden, ierr)
-         if(.not.quick_method%opt) then
-             quick_molden%iexport_snapshot=quick_molden%iexport_snapshot+1
-             call exportSCF(quick_molden, ierr)
-         endif
-     endif  
-
-     return
-  
-  end subroutine uscf
-  
   ! electdiis
   !-------------------------------------------------------
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
-  subroutine uelectdiis(jscf,ierr)
+  subroutine uelectdiisdc(jscf,ierr)
   
      use allmod
      use quick_gridpoints_module
      use quick_uscf_operator_module, only: uscf_operator
-     use quick_scf_module  
+!     use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
 
@@ -144,7 +23,7 @@ contains
 #endif
 #endif
 
-     implicit none
+     implicit double precision(a-h,o-z)
   
 #ifdef MPIV
      include "mpif.h"
@@ -162,10 +41,23 @@ contains
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
      double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERROR
+     integer :: I,J,K,L,IERRORi,nbasissave,itt,NtempN
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
      double precision :: PRMS,PRMS2,PCHANGE, tmp
+
+   dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
+   dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
+   dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
+   dimension:: allerror(nbasis, nbasis, quick_method%maxdiisscf)
+   dimension:: alloperator(nbasis, nbasis, quick_method%maxdiisscf)
+   dimension:: alloperatorB(nbasis, nbasis, quick_method%maxdiisscf)
+   double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
+
+   logical templog1,templog2
+   logical :: diisoff=.false.
+   integer elecs,itemp
+   double precision efermi(10),oneElecO(nbasis,nbasis)
   
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -191,7 +83,7 @@ contains
      !     |_                                                 _|
      ! Where B(i,j) = Trace(e(i) Transpose(e(j)) )
      ! 6)  Solve B*COEFF = RHS which is:
-     ! _                                             _  _  _     _  _
+     !  _                                             _  _  _     _  _
      ! |                                               ||    |   |    |
      ! |  B(1,1)      B(1,2)     . . .     B(1,J)  -1  ||  C1|   |  0 |
      ! |  B(2,1)      B(2,2)     . . .     B(2,J)  -1  ||  C2|   |  0 |
@@ -206,7 +98,7 @@ contains
      ! As in scf.F, each step wil be reviewed as we pass through the code.
      !---------------------------------------------------------------------------
   
-     call allocate_quick_uscf(ierr)
+!     call allocate_quick_uscf(ierr)
   
      if(master) then
         write(ioutfile,'(40x," USCF ENERGY")')
@@ -302,7 +194,7 @@ contains
   
         !if (quick_method%debug)  call debug_SCF(jscf)
   
-        call uscf_operator(deltaO)
+        call uscf_operatordc(deltaO)
   
         quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
         quick_qm_struct%densebOld(:,:) = quick_qm_struct%denseb(:,:)
@@ -623,74 +515,147 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
- 
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
-                quick_qm_struct%E, quick_qm_struct%idegen, &
-                quick_qm_struct%vec, quick_qm_struct%co, &
-                V2, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#else
-#if defined HIP || defined HIP_MPIV
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+  ! Original DnC implementation above used HF and deltaHF
+  ! subroutines and had different structure.
+  ! Need to carefully think about how MPI can be implemented
+  ! in new structure of the DnC code.
+
+         !--------------------------------------------
+         ! Form extract subsystem operator from full system
+         !--------------------------------------------
+         call Odivided
+
+         !--------------------------------------------
+         ! recover basis number
+         !--------------------------------------------
+         nbasissave=nbasis
+
+      !============================================
+      ! Now begin to diag O of subsystems:
+      ! which is to do DIV part
+      !============================================
+
+      Ttmp=0.0d0
+
+      do itt = 1, np
+
+         ! pass value for convience reason
+         nbasis=nbasisdc(itt)    ! basis set for fragment
+
+         allocate(Odcsubtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(Xdcsubtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(VECtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(Vtemp(3,nbasisdc(itt)))
+         allocate(EVAL1temp(nbasisdc(itt)))
+         allocate(IDEGEN1temp(nbasisdc(itt)))
+         allocate(dcco(nbasisdc(itt),nbasisdc(itt)))
+         allocate(holddc(nbasisdc(itt),nbasisdc(itt)))
+
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               Odcsubtemp(I,J) = Odcsub(itt,I,J)
+               Xdcsubtemp(I,J) = Xdcsub(itt,I,J)
+            enddo
+         enddo
+
+         NtempN=nbasisdc(itt)
+
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
+
+          RECORD_TIME(timer_begin%TDiag)
+          call cuda_diag(Odcsubtemp, Xdcsubtemp, quick_scratch%hold,&
+                EVAL1temp, IDEGEN1temp, &
+                VECtemp, dcco, &
+                Vtemp, NtempN)
+           RECORD_TIME(timer_end%TDiag)
+
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#endif
+
+#if defined HIP || defined HIP_MPIV
+
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
+
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
+
+#else
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
+
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
+#endif  
+
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
 #if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#else 
-#if defined LAPACK || defined MKL
-           call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
 #else
-           call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-#endif
-#endif
-           RECORD_TIME(timer_end%TDiag)
-  
+#if defined LAPACK || defined MKL
+           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
+#else
+           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
+                     EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
 #endif
 
+#endif
+           RECORD_TIME(timer_end%TDiag)
+
+#endif
+
+
+           Ttmp=Ttmp+timer_end%TDiag-timer_begin%TDiag
            timer_cumer%TDiag=timer_end%TDiag-timer_begin%TDiag
+
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               Odcsub(itt,I,J) = Odcsubtemp(I,J)
+            enddo
+            evaldcsub(itt,I)= EVAL1temp(I)
+         enddo
   
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
-           ! Density matrix to check for convergence.
-           !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-  
+ 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
+
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#endif
-  
-           quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
-  
-           ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-           call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
-#else
-           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #endif
 
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               codcsub(I,J,itt)=dcco(I,J)
+               codcsubtran(I,J,itt)=dcco(I,J)
+            enddo
+         enddo
+
+         if (allocated(Odcsubtemp)) deallocate(Odcsubtemp)
+         if (allocated(Xdcsubtemp)) deallocate(Xdcsubtemp)
+         if (allocated(VECtemp)) deallocate(VECtemp)
+         if (allocated(Vtemp)) deallocate(Vtemp)
+         if (allocated(EVAL1temp)) deallocate(EVAL1temp)
+         if (allocated(IDEGEN1temp)) deallocate(IDEGEN1temp)
+         if (allocated(dcco)) deallocate(dcco)
+         if (allocated(holddc)) deallocate(holddc)
+      enddo
+
+      quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:)
+
+      nbasis=nbasissave
+      !--------------------------------------------
+      ! Next step is to calculate fermi energy and renormalize
+      ! the density matrix
+      !--------------------------------------------
+      call fermiSCF(efermi,jscf)
+ 
            ! Now check for convergence. pchange is the max change
            ! and prms is the rms
            PCHANGE=0.d0
@@ -726,72 +691,146 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
+
+  ! Original DnC implementation above used HF and deltaHF
+  ! subroutines and had different structure.
+  ! Need to carefully think about how MPI can be implemented
+  ! in new structure of the DnC code.
+
+         !--------------------------------------------
+         ! Form extract subsystem operator from full system
+         !--------------------------------------------
+         call OBdivided
+
+         !--------------------------------------------
+         ! recover basis number
+         !--------------------------------------------
+         nbasissave=nbasis
+
+      !============================================
+      ! Now begin to diag O of subsystems:
+      ! which is to do DIV part
+      !============================================
+
+      Ttmp=0.0d0
+
+      do itt = 1, np
+
+         ! pass value for convience reason
+         nbasis=nbasisdc(itt)    ! basis set for fragment
+
+         allocate(Odcsubtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(Xdcsubtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(VECtemp(nbasisdc(itt),nbasisdc(itt)))
+         allocate(Vtemp(3,nbasisdc(itt)))
+         allocate(EVAL1temp(nbasisdc(itt)))
+         allocate(IDEGEN1temp(nbasisdc(itt)))
+         allocate(dcco(nbasisdc(itt),nbasisdc(itt)))
+         allocate(holddc(nbasisdc(itt),nbasisdc(itt)))
+
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               Odcsubtemp(I,J) = OBdcsub(itt,I,J)
+               Xdcsubtemp(I,J) = Xdcsub(itt,I,J)
+            enddo
+         enddo
+
+         NtempN=nbasisdc(itt)
+
 #if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
 
           RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%ob, quick_qm_struct%x, quick_scratch%hold,&
-                quick_qm_struct%EB, quick_qm_struct%idegen, &
-                quick_qm_struct%vec, quick_qm_struct%cob, &
-                V2, nbasis)
+          call cuda_diag(Odcsubtemp, Xdcsubtemp, quick_scratch%hold,&
+                EVAL1temp, IDEGEN1temp, &
+                VECtemp, dcco, &
+                Vtemp, NtempN)
            RECORD_TIME(timer_end%TDiag)
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #else
+
 #if defined HIP || defined HIP_MPIV
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
+
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
+
 #else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
 
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
-#endif
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
+#endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
 #if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
-#else 
-#if defined LAPACK || defined MKL
-           call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
 #else
-           call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
-                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#if defined LAPACK || defined MKL
+           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
+#else
+           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
+                     EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
 #endif
-#endif
-           RECORD_TIME(timer_end%TDiag)
 
 #endif
-           timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
+           RECORD_TIME(timer_end%TDiag)
+#endif
+
+         Ttmp=Ttmp+timer_end%TDiag-timer_begin%TDiag
+         timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
+
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               OBdcsub(itt,I,J) = Odcsubtemp(I,J)
+            enddo
+            evalbdcsub(itt,I)= EVAL1temp(I)
+         enddo
+
 
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
-           ! Density matrix to check for convergence.
-           !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
+           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
 #endif
 
-           quick_scratch%hold(:,:) = quick_qm_struct%denseb(:,:)
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               cobdcsub(I,J,itt)=dcco(I,J)
+               cobdcsubtran(I,J,itt)=dcco(I,J)
+            enddo
+         enddo
 
-           ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-           call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
-                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
-#else
-           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
-                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
-#endif
+         if (allocated(Odcsubtemp)) deallocate(Odcsubtemp)
+         if (allocated(Xdcsubtemp)) deallocate(Xdcsubtemp)
+         if (allocated(VECtemp)) deallocate(VECtemp)
+         if (allocated(Vtemp)) deallocate(Vtemp)
+         if (allocated(EVAL1temp)) deallocate(EVAL1temp)
+         if (allocated(IDEGEN1temp)) deallocate(IDEGEN1temp)
+         if (allocated(dcco)) deallocate(dcco)
+         if (allocated(holddc)) deallocate(holddc)
+      enddo
+
+      quick_scratch%hold(:,:) = quick_qm_struct%denseb(:,:)
+
+      nbasis=nbasissave
+
+      !--------------------------------------------
+      ! Next step is to calculate fermi energy and renormalize
+      ! the density matrix
+      !--------------------------------------------
+
+      call fermiUSCF(efermi,jscf)
 
            ! Now check for convergence. pchange is the max change
            ! and prms is the rms
@@ -932,9 +971,193 @@ contains
     endif
 #endif
   
-     call deallocate_quick_uscf(ierr)
+!     call deallocate_quick_uscf(ierr)
   
      return
-  end subroutine uelectdiis
+  end subroutine uelectdiisdc
 
-end module quick_uscf_module
+!*******************************************************
+! fermiUSCF(fermidone
+!-------------------------------------------------------
+! Use iteriation method to calculate fermi energy
+!
+!
+subroutine fermiUSCF(efermi,jscf)
+   use allmod
+   implicit double precision(a-h,o-z)
+   logical fermidone
+   integer jscf
+   double precision :: efermi(10)
+
+   ! Boltzmann constant in eV/Kelvin:
+   boltz = 8.617335408d0*0.00001d0/27.2116d0
+   tempk=1000.0d0
+   betah = 1.0d0/(boltz*tempk)
+   etoler = 1.0d-8
+   maxit = 100
+   elecs=quick_molspec%nelecb
+
+
+   ! Determine the observed range of eigenvalues for all subsystems.
+   emin = 10000000.0d0
+   emax =-10000000.0d0
+   if(np > 1)then
+      do itt=1,np
+         imin = nelecdcsub(itt)/2
+         imax = nelecdcsub(itt)/2+1
+         if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
+         emin = min(emin,evalbdcsub(itt,imin))
+         emax = max(emax,evalbdcsub(itt,imax))
+      enddo
+   endif
+
+   ! Use a bisection technique to determine the fermi energy.
+   !        emax =emax+2.0d0
+   elecs = quick_molspec%nelecb
+   niter = 0
+   fermidone = .false.
+
+   ! Use iteriation method to calculate fermi energy
+   do while ((niter .le. maxit).and.(.not.fermidone))
+
+      efermi(1) = (emax + emin)/2.0d0
+
+      ! Set fermi occupation numbers and use the sum of weighted squared
+      ! eigenvector coefficients evecsq to get the number of electrons.
+      niter = niter + 1
+      etotal = 0.0d0
+
+      do ii=1,nbasis
+         do jj=1,nbasis
+            quick_qm_struct%denseb(ii,jj)=0.0d0
+         enddo
+      enddo
+
+      !--------------------------------------------
+      ! Now Begin to transfer DENSE of subsystem to full system
+      ! Puv(a)=2puv*sigma(fb(Ef-ei)*Cui(sub a)*Cvi(sub a)
+      ! where puv is partion matrix=1,1/2 or 0
+      ! fb is Fermi function
+      ! Ef is the eigen energy
+      ! Ei is Fermi energy which is unknow but can be get from normlization
+      ! constraint
+      !--------------------------------------------
+
+      do itt=1,np
+         do I=1,nbasisdc(itt)
+            do J=1,nbasisdc(itt)
+               PBdcsubtran(I,J,itt)=0.0d0
+            enddo
+         enddo
+      enddo
+      do itt=1,np
+         do K=1,nbasisdc(itt)
+            deltae = evalbdcsub(itt,K) - efermi(1)
+            arg = betah*deltae
+            ! Fermi Function part
+            if(arg > 25.0d0)then
+               fermitemp = 0.0d0
+               elseif(arg < -25.0d0)then
+               fermitemp = 1.0d0
+            else
+               fermitemp = 1.0d0/(1.0d0 + exp(arg))
+            endif
+
+            if(dabs(fermitemp).ge.0.00000000001d0)then
+               do I=1,nbasisdc(itt)
+                  temp1=COBdcsub(I,K,itt)*fermitemp*2.0d0
+                  do J=I,nbasisdc(itt)
+                     temp2=COBdcsubtran(J,K,itt)
+                     DENSEJI=temp1*temp2
+                     Pbdcsubtran(J,I,itt)=Pbdcsubtran(J,I,itt)+DENSEJI
+                  enddo
+               enddo
+            endif
+         enddo
+      enddo
+
+      ! And Puv are symmatry
+      do itt=1,np
+         do I=1,nbasisdc(itt)
+            do J=I,nbasisdc(itt)
+               PBdcsub(itt,I,J)=PBdcsubtran(J,I,itt)
+               PBdcsub(itt,J,I)=PBdcsub(itt,I,J)
+            enddo
+         enddo
+      enddo
+
+      !------------------------------------------------
+      ! At this step, now we have Density matrix for subsystems for this cycle
+      ! What we want to do is to transfer them to full-system density matrix
+      !------------------------------------------------
+      ! Xiao HE reconsider buffer area 07/17/2008
+      do itt=1,np
+         Kstart1=0
+         do jtt=1,dcsubn(itt)
+            Iblockatom=dcsub(itt,jtt)
+            do itemp=quick_basis%first_basis_function(Iblockatom),quick_basis%last_basis_function(Iblockatom)
+               Kstart2=0
+               do jtt2=1,dcsubn(itt)
+                  Jblockatom=dcsub(itt,jtt2)
+                  if(dclogic(itt,Iblockatom,Jblockatom).eq.0)then
+                     do jtemp=quick_basis%first_basis_function(Jblockatom),quick_basis%last_basis_function(Jblockatom)
+                        quick_qm_struct%denseb(itemp,jtemp)= quick_qm_struct%denseb(itemp,jtemp)+ &
+                              invdcoverlap(Iblockatom,Jblockatom)* &
+                              PBdcsub(itt,Kstart1+itemp-quick_basis%first_basis_function(Iblockatom)+1, &
+                              Kstart2+jtemp-quick_basis%first_basis_function(Jblockatom)+1)
+                     enddo
+                  endif
+                  Kstart2=Kstart2+quick_basis%last_basis_function(Jblockatom)-quick_basis%first_basis_function(Jblockatom)+1
+               enddo
+            enddo
+            Kstart1=Kstart1+quick_basis%last_basis_function(Iblockatom)-quick_basis%first_basis_function(Iblockatom)+1
+         enddo
+      enddo
+
+      !------------------------------------------------
+      ! The accuracy of this step is depend on the fermi energy with under
+      ! normalization constraint
+      ! Now calculate normalization and compare with no. of elections to rule
+      ! the accurate of fermi energy
+      !------------------------------------------------
+
+      temp=0.0d0
+      do i=1,nbasis
+         do j=1,nbasis
+            temp=temp+quick_qm_struct%denseb(j,i)*quick_qm_struct%s(j,i)
+         enddo
+      enddo
+
+      diff = abs(temp - elecs)
+
+      !------------------------------------------------
+      ! Throw away lower or upper half of interval, depending upon whether
+      ! the computed number of electrons is too low or too high.  Note that
+      ! raising the fermi energy increases the number of electrons because
+      ! more mo's become fully occupied.
+      !------------------------------------------------
+
+      if (temp < elecs) then
+         emin = efermi(1)
+      else
+         emax = efermi(1)
+      endif
+
+
+      if(diff < etoler) fermidone=.true.
+   enddo
+
+   ! If can't converge, it will lead to fatal error at late step, but quite
+   ! common
+   ! for first or second iteration
+   if (.not.fermidone) then
+      write(ioutfile,*) "Exceed the maximum interations"
+      write(ioutfile,*) "IF IT APPEARS AT LATE STEP MAY LEAD TO WRONG RESULT!"
+   endif
+
+   ! At this point we get the fermi energy (Ei) and store for next cycle.
+   write (ioutfile,'("Eb(Fermi)    = ",f12.7,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
+
+   call flush(ioutfile)
+
+end subroutine fermiUSCF

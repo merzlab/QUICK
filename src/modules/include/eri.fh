@@ -22,7 +22,7 @@ module quick_cshell_eri_module
    implicit double precision(a-h,o-z)
    private
 #ifdef OSHELL
-   public :: getOshellEri, getOshellEriEnergy
+   public :: getOshellEri, getOshellEriDC,  getOshellEriEnergy
 #else
    public :: cshell ! Should be private, but we still need this for deprecated
                     ! subroutines such as addInt in shell.f90
@@ -35,6 +35,10 @@ module quick_cshell_eri_module
 interface getOshellEri
   module procedure get_oshell_eri
 end interface getOshellEri
+
+interface getOshellEriDC
+  module procedure get_oshell_eridc
+end interface getOshellEriDC
 
 interface getOshellEriEnergy
   module procedure get_oshell_eri_energy
