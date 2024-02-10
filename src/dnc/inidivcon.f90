@@ -393,6 +393,9 @@ subroutine inidivcon(natomsaved)
      write(iOutfile,*) 'Reading fragments from CORE.DNC and BUFFER.DNC files'
      write(ioutfile,*) '  '
     endif
+
+    ! Read CORE.DNC and BUFFER.DNC only if OWNFRAG is used
+    if(quick_method%ifragbasis.eq.4) then
     
     ! Assigment of core in OWNFRAG 
     open (10, file = 'CORE.DNC',access="sequential", form="formatted")
@@ -425,6 +428,7 @@ subroutine inidivcon(natomsaved)
      rewind (20)
     enddo
     close (10)
+    endif
 
      !-----------------------------------------------------------------         
      ! Now combine core and buffer regions to generate subsystems
