@@ -871,7 +871,11 @@ subroutine fermiSCF(efermi,jscf)
 
             if(dabs(fermitemp).ge.0.00000000001d0)then
                do I=1,nbasisdc(itt)
-                  temp1=COdcsub(I,K,itt)*fermitemp*2.0d0
+                  if (quick_method%UNRST) then
+                     temp1=COdcsub(I,K,itt)*fermitemp
+                  else
+                     temp1=COdcsub(I,K,itt)*fermitemp*2.0d0
+                  endif
                   do J=I,nbasisdc(itt)
                      temp2=COdcsubtran(J,K,itt)
                      DENSEJI=temp1*temp2

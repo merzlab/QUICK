@@ -44,7 +44,7 @@
      integer :: I,J,K,L,IERRORi,nbasissave,itt,NtempN
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-     double precision :: PRMS,PRMS2,PCHANGE, tmp
+     double precision :: PRMS,PRMS2,PCHANGE, tmp,Ttmp
 
    dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
    dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
@@ -1065,7 +1065,7 @@ subroutine fermiUSCF(efermi,jscf)
 
             if(dabs(fermitemp).ge.0.00000000001d0)then
                do I=1,nbasisdc(itt)
-                  temp1=COBdcsub(I,K,itt)*fermitemp*2.0d0
+                  temp1=COBdcsub(I,K,itt)*fermitemp!*2.0d0
                   do J=I,nbasisdc(itt)
                      temp2=COBdcsubtran(J,K,itt)
                      DENSEJI=temp1*temp2
