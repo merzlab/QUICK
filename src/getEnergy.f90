@@ -63,6 +63,9 @@ subroutine getEnergy(isGuess, ierr)
          call DivideS
          call DivideX
          call PDCDivided
+         if (quick_method%UNRST) then
+            call PBDCDivided
+         endif
       endif
 
       !Classical Nuclear-Nuclear interaction energy

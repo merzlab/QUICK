@@ -722,6 +722,15 @@ subroutine inidivcon(natomsaved)
   allocate(codcsub(NNmax,NNmax,np))
   allocate(codcsubtran(NNmax,NNmax,np))
 
+   if (quick_method%UNRST) then
+      allocate(evalbdcsub(np,NNmax))
+      allocate(Obdcsub(np,NNmax,NNmax))
+      allocate(Pbdcsub(np,NNmax,NNmax))
+      allocate(Pbdcsubtran(NNmax,NNmax,np))
+      allocate(cobdcsub(NNmax,NNmax,np))
+      allocate(cobdcsubtran(NNmax,NNmax,np))
+   endif
+
   !===================================================================
   ! STEP 3. Set varibles since we know everything about fragment
   !===================================================================
@@ -917,6 +926,38 @@ subroutine Odivided
 end subroutine Odivided
 
 !*******************************************************
+! Obdivided
+!-------------------------------------------------------
+! To get O matrix from D&C 
+!
+
+subroutine OBdivided
+  use allmod
+  implicit double precision (a-h,o-z)
+
+  do i=1,np
+     kstart1=0
+     do jxiao=1,dcsubn(i)
+        j=dcsub(i,jxiao)
+        do itemp=quick_basis%first_basis_function(j),quick_basis%last_basis_function(j)
+           kstart2=0
+           do jxiao2=1,dcsubn(i)
+              j2=dcsub(i,jxiao2)
+              do jtemp=quick_basis%first_basis_function(j2),quick_basis%last_basis_function(j2)
+                 Obdcsub(i,Kstart1+itemp-quick_basis%first_basis_function(j)+1,&
+                        kstart2+jtemp-quick_basis%first_basis_function(j2)+1) &
+                      =quick_qm_struct%ob(itemp,jtemp)
+              enddo
+              Kstart2=Kstart2+quick_basis%last_basis_function(j2)-quick_basis%first_basis_function(j2)+1
+           enddo
+        enddo
+        Kstart1=Kstart1+quick_basis%last_basis_function(j)-quick_basis%first_basis_function(j)+1
+     enddo
+  enddo
+
+end subroutine OBdivided
+
+!*******************************************************
 ! pdcdivided
 !-------------------------------------------------------
 ! pdc model for D&C 
@@ -946,6 +987,37 @@ subroutine Pdcdivided
   enddo
 
 end subroutine Pdcdivided
+
+!*******************************************************
+! pbdcdivided
+!-------------------------------------------------------
+! pbdc model for D&C 
+!
+subroutine PBdcdivided
+  use allmod
+  implicit double precision (a-h,o-z)
+
+  do i=1,np
+     kstart1=0
+     do jxiao=1,dcsubn(i)
+        j=dcsub(i,jxiao)
+        do itemp=quick_basis%first_basis_function(j),quick_basis%last_basis_function(j)
+           kstart2=0
+           do jxiao2=1,dcsubn(i)
+              j2=dcsub(i,jxiao2)
+              do jtemp=quick_basis%first_basis_function(j2),quick_basis%last_basis_function(j2)
+                 Pbdcsub(i,Kstart1+itemp-quick_basis%first_basis_function(j)+1, &
+                      kstart2+jtemp-quick_basis%first_basis_function(j2)+1) &
+                      =quick_qm_struct%denseb(itemp,jtemp)
+              enddo
+              Kstart2=Kstart2+quick_basis%last_basis_function(j2)-quick_basis%first_basis_function(j2)+1
+           enddo
+        enddo
+        Kstart1=Kstart1+quick_basis%last_basis_function(j)-quick_basis%first_basis_function(j)+1
+     enddo
+  enddo
+
+end subroutine PBdcdivided
 
 
 !*******************************************************
