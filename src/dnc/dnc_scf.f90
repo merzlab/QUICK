@@ -657,6 +657,22 @@ endif
       timer_cumer%TOp=timer_cumer%TOp+timer_end%TOp-timer_begin%TOp
       !------ END MPI/ALL NODES ----------------------------------------
 
+
+      ! The assigment of nelecmp2sub is essential for correct work
+      ! of DC-MP2 calculations
+      if(quick_method%MP2)then
+         do itt=1,np
+            natt=0
+            do k=1,nbasisdc(itt)
+               if (evaldcsub(itt,k).lt.efermi(1)) then
+                  natt=natt+1
+               endif
+            enddo
+            nelecmp2sub(itt)=natt*2
+         enddo
+      endif
+
+
    if (master) then
 
 #ifdef USEDAT

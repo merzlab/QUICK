@@ -14,9 +14,13 @@ subroutine calmp2divcon
 
   logical locallog1,locallog2
 
-  double precision Xiaotest,testtmp
+  double precision:: Xiaotest,testtmp
+!  double precision:: emp2temp,ttt
+!  integer:: ntemp, nstep
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+!  integer:: ntemp, iocc, ivir
+!  integer:: is, nstep, itt
 
   is = 0
   quick_basis%first_shell_basis_function(1) = 1
@@ -27,6 +31,12 @@ subroutine calmp2divcon
   enddo
   quick_basis%last_shell_basis_function(natom) = nshell
 
+! do ii=1,natom
+!   print*,"nshell=",ii,quick_basis%first_shell_basis_function(ii),quick_basis%last_shell_basis_function(ii)
+!!   print*,"nbasis=",ii,first_basis_function(ii),last_basis_function(ii)
+! enddo
+
+!  print*, 'Called MP2divcon'
   allocate(wtospoint(np,nbasis))
   call wtoscorr
 
@@ -36,6 +46,7 @@ subroutine calmp2divcon
   emp2temp=0.0d0
   nstep=1
 
+! Start big loop overl all fragments
 
   do itt=1,np
 
@@ -51,17 +62,37 @@ subroutine calmp2divcon
         enddo
      enddo
 
+    ! determine the electrons for subsystem
 
-        do k3=1,2
-            do j3=1,ivir
-            do l3=1,ivir
-                L3new=j3+iocc
-                do lll=1,nbasisdc(itt)
-                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
-                enddo
-            enddo
-            enddo
-        enddo
+!     if(mod(nelecmp2sub(itt),2).eq.1)then
+!        nelecmp2sub(itt)=nelecmp2sub(itt)+1
+!     endif
+
+    ! determine the occupied and virtual orbitals
+!     if(mod(nelecmp2sub(itt),2).eq.1)then
+!        iocc=Nelecmp2sub(itt)/2+1
+!        ivir=nbasisdc(itt)-iocc+1
+!     else
+!        iocc=Nelecmp2sub(itt)/2
+!        ivir=nbasisdc(itt)-iocc
+!     endif
+
+!     write(*,*) iocc,ivir, 'iocc,ivir'
+!     write(*,*) nbasisdc(itt), 'nbasisdc(itt)'
+     
+!        do k3=1,2
+!            do j3=1,ivir
+!            do l3=1,ivir
+!                L3new=j3+iocc
+!                write(*,*) L3new, 'L3new'
+!                write(*,*) k3, j3, l3, 'k3, j3, l3'
+!                do lll=1,nbasisdc(itt)
+!                 write(*,*) lll, 'lll' 
+!                 print*, k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+!                enddo
+!            enddo
+!            enddo
+!        enddo
 
      ttt=0.0d0
 
@@ -70,9 +101,12 @@ subroutine calmp2divcon
         do II=quick_basis%first_shell_basis_function(iiatom),quick_basis%last_shell_basis_function(iiatom)
            do jjat=iiat,dcsubn(itt)
               jjatom=dcsub(itt,jjat)
+              !write(*,*) jjatom, 'jjatom'
               do JJ=max(quick_basis%first_shell_basis_function(jjatom),II),quick_basis%last_shell_basis_function(jjatom)
                  Testtmp=Ycutoff(II,JJ)
+                 !write(*,*) Testtmp, 'Testtmp'
                  ttt=max(ttt,Testtmp)
+                 !write(*,*) ttt, 'ttt'
               enddo
            enddo
         enddo
@@ -92,7 +126,10 @@ subroutine calmp2divcon
         iocc=Nelecmp2sub(itt)/2
         ivir=nbasisdc(itt)-iocc
      endif
-!write(*,*) iocc,ivir
+   
+     write(*,*) iocc,ivir, 'iocc,ivir'
+     write(*,*) nbasisdc(itt), 'nbasisdc(itt)'
+
      ! with f orbital
      if (quick_method%ffunxiao) then
         nbasistemp=6
@@ -140,9 +177,11 @@ subroutine calmp2divcon
 
         do iiat=1,dcsubn(itt)
            iiatom=dcsub(itt,iiat)
+          ! write(*,*) iiatom,'iiatom'
 
            do jjat=iiat,dcsubn(itt)
               jjatom=dcsub(itt,jjat)
+             ! write(*,*) jjatom, 'jjatom'
 
               ! iiatom and jjatom is the atom of the subsystem
               ! first, we need to figure out which shell should we calclulate
@@ -160,14 +199,21 @@ subroutine calmp2divcon
                  IIstart2=quick_basis%last_shell_basis_function(jjatom)
               endif
 
+              !write(*,*) JJstart1, JJstart2, IIstart1, IIstart2, &
+              !  'JJstart1, JJstart2, IIstart1, IIstart2'              
+
               do II=IIstart1,IIstart2
                  do JJ=max(JJstart1,II),JJstart2
 
                     Testtmp=Ycutoff(II,JJ)
-                    if(Testtmp.gt.XiaoCUTOFFmp2/ttt)then
+                    !write(*,*) Testtmp, 'Testtmp'
+                    !write(*,*) XiaoCUTOFFmp2/ttt, 'XiaoCUTOFFmp2/ttt'
 
+                    if(Testtmp.gt.XiaoCUTOFFmp2/ttt)then
+                        !write(*,*) 'Testtmp.gt.XiaoCUTOFFmp2/ttt'
                         call initialOrbmp2ij(orbmp2i331,nstep,nstep,nbasisdc(itt),nbasistemp,nbasistemp)
                         call initialOrbmp2ij(orbmp2j331,nstep,nstep,ivir,nbasistemp,nbasistemp)
+                        !write(*,*) 'Made calls for initialOrbmp2ij'                         
 
                        ! Now we will determine K shell and L shell, the last two indices
                        do kkat=1,dcsubn(itt)
@@ -217,9 +263,14 @@ subroutine calmp2divcon
                                       enddo
 
                                       Xiaotest=xiaotest1*comax
+                                      !write(*,*) XiaoTEST, 'XiaoTEST'
                                       if(XiaoTEST.gt.XiaoCUTOFFmp2)then
                                          ntemp=ntemp+1
+                                         !print*, 'ntemp=', ntemp
                                          call shellmp2divcon(i3,itt)
+                                         ! call shellmp2(i3,itt)
+                                         ! print*, 'called shellmp2'
+                                         !print*, 'Done with shellmp2divcon'
                                       endif
 
                                    endif
@@ -316,14 +367,17 @@ subroutine calmp2divcon
 
            enddo
         enddo
-        write (ioutfile,*)"ntemp=",ntemp
+
+        !print*, 'Printing ntemp'
+        !print*, 'ntemp=', ntemp
+        !write (ioutfile,*) "ntemp=",ntemp
 
         do k3=1,2
             do j3=1,ivir
             do l3=1,ivir
                 L3new=j3+iocc
                 do lll=1,nbasisdc(itt)
-                 !write(10,*) k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
+                !print*, k3,j3,LLL,L3new,orbmp2k331(1,k3,j3,LLL),quick_qm_struct%co(LLL,L3new)
                 enddo
             enddo
             enddo
@@ -338,6 +392,7 @@ subroutine calmp2divcon
                  do k3=1,iocc
                     orbmp2(l3,j3)=orbmp2(l3,j3)+orbmp2k331(nstep,k3,j3,LLL)*quick_scratch%hold(L3new,LLL)
                     orbmp2dcsub(k3,l3,j3)=orbmp2dcsub(k3,l3,j3)+orbmp2k331dcsub(k3,j3,LLL)*quick_scratch%hold(L3new,LLL)
+                    !print*, 'Sum orbmp2dcsub'
                  enddo
               enddo
            enddo
@@ -350,28 +405,37 @@ subroutine calmp2divcon
                     quick_qm_struct%EMP2=quick_qm_struct%EMP2+1.0d0/(Evaldcsub(itt,i3)+Evaldcsub(itt,k) &
                          -Evaldcsub(itt,j+nelecmp2sub(itt)/2)-Evaldcsub(itt,l+nelecmp2sub(itt)/2)) &
                          *orbmp2dcsub(k,j,l)*(2.0d0*orbmp2(j,l)-orbmp2(l,j))
+                   ! print*,'quick_qm_struct%EMP2'
                  enddo
               enddo
            enddo
         endif
 
+!        print*, 'second mod(nelecmp2sub(itt),2 check'
+
         if(mod(nelecmp2sub(itt),2).eq.1)then
+           !print*,'mod(nelecmp2sub(itt),2).eq.1'
            do l=1,ivir
               do k=1,iocc
                  do j=1,ivir
                     quick_qm_struct%EMP2=quick_qm_struct%EMP2+1.0d0/(Evaldcsub(itt,i3)+Evaldcsub(itt,k) &
                          -Evaldcsub(itt,j+nelecmp2sub(itt)/2)-Evaldcsub(itt,l+nelecmp2sub(itt)/2)) &
                          *orbmp2dcsub(k,j,l)*(2.0d0*orbmp2(j,l)-orbmp2(l,j))
+                 !  print*,'quick_qm_struct%EMP2'
                  enddo
               enddo
            enddo
         endif
      enddo
+
      write(ioutfile,*) itt,quick_qm_struct%EMP2,quick_qm_struct%EMP2-emp2temp
+!     print*, itt,quick_qm_struct%EMP2,quick_qm_struct%EMP2-emp2temp
 
      emp2temp=quick_qm_struct%EMP2
+!     print*, emp2temp
 
 !     deallocate(mp2shell)
+
      if (allocated(orbmp2)) deallocate(orbmp2)
      if (allocated(orbmp2i331)) deallocate(orbmp2i331)
      if (allocated(orbmp2j331)) deallocate(orbmp2j331)
@@ -381,5 +445,6 @@ subroutine calmp2divcon
 
   enddo
 
-999 return
+    return
+!999 return
 end subroutine calmp2divcon
