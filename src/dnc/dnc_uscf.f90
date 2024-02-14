@@ -205,6 +205,9 @@
         RECORD_TIME(timer_end%TOp)
         !------------- MASTER NODE -------------------------------
         if (master) then
+
+if (.not.diisoff) then
+
            !-----------------------------------------------
            ! End of Delta Matrix
            !-----------------------------------------------
@@ -510,6 +513,22 @@
               enddo
               
            endif
+
+           if (LSOLERR == 0) then
+              do J=1,nbasis
+                 do K=1,nbasis
+                    OJK=0.d0
+                    do I=IDIIS_Error_Start, IDIIS_Error_End
+                       OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperatorB(K,J,I)
+                    enddo
+                    quick_qm_struct%ob(J,K) = OJK
+                 enddo
+              enddo
+
+           endif
+
+endif
+
            !-----------------------------------------------
            ! 10) Diagonalize the operator matrix to form a new density matrix.
            ! First you have to transpose this into an orthogonal basis, which
@@ -666,28 +685,8 @@
            enddo
            PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
 
-
            !-----------------------------------------------
-           ! 11) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
-           ! If the solution to step eight failed, skip this step and revert
-           ! to a standard scf cycle.
-           !-----------------------------------------------
-           ! Xiao HE 07/20/2007,if the B matrix is ill-conditioned, remove the first,second... error vector
-           if (LSOLERR == 0) then
-              do J=1,nbasis
-                 do K=1,nbasis
-                    OJK=0.d0
-                    do I=IDIIS_Error_Start, IDIIS_Error_End
-                       OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperatorB(K,J,I)
-                    enddo
-                    quick_qm_struct%ob(J,K) = OJK
-                 enddo
-              enddo
-
-           endif
-
-           !-----------------------------------------------
-           ! 12) Diagonalize the beta operator matrix to form a new beta density matrix.
+           ! 11) Diagonalize the beta operator matrix to form a new beta density matrix.
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
@@ -884,9 +883,14 @@
               oldEnergy=quick_qm_struct%Eel+quick_qm_struct%Ecore
            endif
            write (ioutfile,'(F10.3,4x)',advance="no") timer_end%TSCF-timer_begin%TSCF
-           write (ioutfile,'(I2,4x,F8.2,2x,F8.2,2x)',advance="no") current_diis,timer_end%TDII-timer_begin%TDII, &
+           if (.not.diisoff) then
+              write (ioutfile,'(2x,I2,2x)',advance="no") current_diis
+           else
+              write (ioutfile,'(2x,"--",2x)',advance="no")
+           endif
+           write (ioutfile,'(2x,F8.2,2x,F8.2,2x)',advance="no") timer_end%TDII-timer_begin%TDII, &
                  timer_end%TOp-timer_begin%TOp
-           write (ioutfile,'(F8.2,4x)',advance="no") timer_end%TDiag-timer_begin%TDiag
+           write (ioutfile,'(F8.2,4x)',advance="no")Ttmp 
            write (ioutfile,'(E10.4,2x)',advance="no") errormax
            write (ioutfile,'(E10.4,2x,E10.4)')  PRMS,PCHANGE
   
@@ -913,6 +917,9 @@
               diisdone=.true.
               quick_method%uscf_conv=.true. 
   
+           endif
+           if (PRMS < 1.0d-4) then
+              diisoff=.true.
            endif
            if(jscf >= quick_method%iscf-1) then
               write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
