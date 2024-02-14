@@ -155,6 +155,13 @@ subroutine inidivcon(natomsaved)
         rbuffer1 = rbuffer1
      endif
 
+     ! Assign rbuffer2 to DNCRB2, if size of buffer is expicitly specified by user
+     if (quick_method%isDefaultDNCRB2 .eqv. .false.) then
+        rbuffer2 = quick_method%DNCRB2
+     else
+        rbuffer2 = rbuffer2
+     endif
+
      ! Output basic div-con information
      call PrtAct(iOutfile,"Now Begin Div & Con Fragment")
      write(iOutfile,'("NUMBER OF FRAG=",i3)') np
@@ -192,6 +199,7 @@ subroutine inidivcon(natomsaved)
   allocate(dcbuffer2(np,500))
   allocate(dcsub(np,500))
   allocate(dcsubn(np))
+  allocate(dcsubn1(np))
   allocate(dccoren(np))
   allocate(dcbuffer1n(np))
   allocate(dcbuffer2n(np))
@@ -447,6 +455,9 @@ subroutine inidivcon(natomsaved)
            dcsubn(i)=dcsubn(i)+1
            dcsub(i,dcsubn(i))=dcbuffer1(i,j)
         enddo
+
+        dcsubn1(i)=dcsubn(i)
+
      ! If OWNFRAG is used this section of code is skipped     
        if(quick_method%ifragbasis.lt.4) then
         do j=1,dcbuffer2n(i)
@@ -499,8 +510,8 @@ subroutine inidivcon(natomsaved)
            do j=1,np
               Embedded(i,j)=.true.
               if (i.eq.j) cycle
-              do jj=1,dcsubn(i)
-                 if ((Any(dcsub(j,1:dcsubn(j)).eq.dcsub(i,jj))).eqv..false.) then
+              do jj=1,dcsubn1(i)
+                 if ((Any(dcsub(j,1:dcsubn1(j)).eq.dcsub(i,jj))).eqv..false.) then
                     Embedded(i,j)=.false.
                  endif
               enddo
@@ -516,7 +527,7 @@ subroutine inidivcon(natomsaved)
            if (count(embedded(i,1:np).eqv..true.).eq.2) then
               do j=1,np
                  if (i==j) cycle ! don't consider itself
-                 if ((dcsubn(j)==dcsubn(i)).and.(j>i)) cycle ! elimiate the subsystem with smaller serier no.
+                 if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle ! elimiate the subsystem with smaller serier no.
                  if (embedded(i,j)) then
                     ! Move process
                     dcsubn(i)=0
@@ -533,9 +544,9 @@ subroutine inidivcon(natomsaved)
               jj=i
               do j=1,np
                  if (i==j) cycle
-                 if ((dcsubn(j)==dcsubn(i)).and.(j>i)) cycle
+                 if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle
                  if(embedded(i,j)) then
-                    if (dcsubn(j)>=dcsubn(jj)) jj=j ! pick up the largest embedded subsystem
+                    if (dcsubn1(j)>=dcsubn1(jj)) jj=j ! pick up the largest embedded subsystem
                  endif
               enddo
               if (jj.ne.i) then
