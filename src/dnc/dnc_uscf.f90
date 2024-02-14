@@ -1003,9 +1003,9 @@ subroutine fermiUSCF(efermi,jscf)
    emax =-10000000.0d0
    if(np > 1)then
       do itt=1,np
-         imin = nelecdcsub(itt)/2
-         imax = nelecdcsub(itt)/2+1
-         if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
+         imin = 1!nelecdcsub(itt)/2
+         imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
+!         if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
          emin = min(emin,evalbdcsub(itt,imin))
          emax = max(emax,evalbdcsub(itt,imax))
       enddo
