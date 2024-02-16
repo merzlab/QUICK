@@ -15,6 +15,8 @@ subroutine calmp2divcon
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    integer ntemp, itt
 
+RECORD_TIME(timer_begin%TMP2)
+
  is = 0
  quick_basis%first_shell_basis_function(1) = 1
  do ii=1,natom-1
@@ -37,6 +39,9 @@ subroutine calmp2divcon
  quick_qm_struct%EMP2=0.0d0
  emp2temp=0.0d0
 
+ call PrtAct(ioutfile,"Begin DC-MP2 Calculation")
+ write(ioutfile,*) 'DC-MP2 Energies'
+ write(ioutfile,*) ' '
 
 do itt=1,np
 
@@ -82,8 +87,8 @@ do itt=1,np
    ivir=nbasisdc(itt)-iocc
  endif
 
-  write(ioutfile,*) '# of occ. orb ', '# of vir. orb'
-  write(ioutfile,*) iocc,ivir
+!  write(ioutfile,*) '# of occ. orb ', '# of vir. orb'
+!  write(ioutfile,*) iocc,ivir
 
 
  allocate(mp2shell(nbasisdc(itt)))
@@ -343,7 +348,7 @@ if(mod(nelecmp2sub(itt),2).eq.1)j33new=j33+iocc-1
  enddo
 enddo
 
-  write (ioutfile,*)"ntemp=",ntemp
+  ! write (ioutfile,*)"ntemp=",ntemp
 
                    do LLL=1,nbasisdc(itt)
                   do J3=1,ivir
@@ -401,7 +406,9 @@ endif
 
  enddo
 
+ write(ioutfile,*) '  Total                     ', 'Fragment',itt
  write(ioutfile,*)quick_qm_struct%EMP2,quick_qm_struct%EMP2-emp2temp
+ write(ioutfile,*) ' '
 
  emp2temp=quick_qm_struct%EMP2
 
@@ -414,6 +421,9 @@ endif
  if (allocated(orbmp2k331dcsub)) deallocate(orbmp2k331dcsub)
 
 enddo
+
+RECORD_TIME(timer_end%TMP2)
+timer_cumer%TMP2=timer_end%TMP2-timer_begin%TMP2+timer_cumer%TMP2
 
 ! print*,'Nxiao1=',Nxiao1,'Nxiao2=',Nxiao2,XiaoCUTOFF
 
