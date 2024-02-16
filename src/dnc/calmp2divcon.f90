@@ -87,8 +87,8 @@ do itt=1,np
    ivir=nbasisdc(itt)-iocc
  endif
 
-  write(ioutfile,*) '# of occ. orb ', '# of vir. orb'
-  write(ioutfile,*) iocc,ivir
+!  write(ioutfile,*) '# of occ. orb ', '# of vir. orb'
+!  write(ioutfile,*) iocc,ivir
 
 
  allocate(mp2shell(nbasisdc(itt)))
