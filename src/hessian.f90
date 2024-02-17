@@ -406,8 +406,17 @@ subroutine get_xc_hessian
     double precision :: tgrd(3), tsum(3)
     integer :: i,k,oi
     double precision,allocatable :: dp(:,:)
+    double precision,intent(out) :: gwt(3,natom)
+    double precision,intent(out) :: hwt(3,natom,3,natom)
+    double precision :: VM, ValM, ValX
+    double precision,allocatable :: DA(:), DM(:)
 
+
+     allocate(DA(NBASIS*(NBASIS+1)/2)) 
+     allocate(DM(NBASIS))
 print*,'inside xc_hessian'
+
+     call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
@@ -441,6 +450,7 @@ print*,'Igp:',Igp
 
   ! Form AO and derivative values at the grid point
 
+                 ValM = 0.0d0
                  icount=quick_dft_grid%basf_counter(Ibin)+1
                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                     Ibas=quick_dft_grid%basf(icount)+1
@@ -453,8 +463,15 @@ print*,'Igp:',Igp
                     iaoxx(:,Ibas)=phixx
                     iaoxxx(:,Ibas)=phixxx
 
+                    ValX = MAX(Abs(IAO(I)),Abs(IAOX(1,I)),Abs(IAOX(2,I)), &
+                           Abs(IAOX(3,I)),Abs(IAOXX(1,I)),Abs(IAOXX(2,I)), &
+                           Abs(IAOXX(3,I)),Abs(IAOXX(4,I)),Abs(IAOXX(5,I)), &
+                           Abs(IAOXX(6,I)))
+
                     icount=icount+1
+                    If(ValX.GT.ValM) ValM = ValX
                  enddo
+                 VM=ValM
 
   !  evaluate the densities at the grid point and the gradient at that grid
   !  point 
@@ -533,8 +550,8 @@ print*,'Igp:',Igp
                        ydot = 4.0d0*dfdgaa*gay
                        zdot = 4.0d0*dfdgaa*gaz
 
-!                       call GHWT()      
-
+!                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
+!                       call formfdhes()
 
                     endif
                  endif
