@@ -25,6 +25,8 @@ subroutine calmp2
   ! occupied and virtual orbitals number
   iocc=Nelec/2
   ivir=Nbasis-Nelec/2
+  write(ioutfile,*) '# of occ. orb ', '# of vir. orb'
+  write(ioutfile,*) iocc,ivir
 
   ! calculate memory usage and determine steps
   ememorysum=real(iocc*ivir*nbasis*8.0d0/1024.0d0/1024.0d0/1024.0d0)
