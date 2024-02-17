@@ -74,6 +74,7 @@ module quick_method_module
         ! those methods are mostly for research use
         logical :: FMM = .false.       ! Fast Multipole
         logical :: DIVCON = .false.    ! Div&Con
+        logical :: DCMP2only = .false. ! Canonical HF and Div&Con for MP2 only
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this part is Div&Con options
@@ -249,6 +250,7 @@ module quick_method_module
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%DCMP2only,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%OWNfrag,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -482,6 +484,21 @@ module quick_method_module
                 endif
             endif
 
+            if (self%DCMP2only) then
+                write(io,'(" DCMP2only METHOD")',advance="no")
+                if (self%ifragbasis .eq. 1) then
+                    write(io,'(" = DCMP2only ON ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 2) then
+                    write(iO,'(" = DCMP2only ON RESIDUE BASIS")')
+                elseif (self%ifragbasis .eq. 3) then
+                    write(io,'(" = DCMP2only ON NON HYDROGEN ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 4) then
+                    write(io,'(" = DCMP2only USING CORE.DNC AND BUFFER.DNC")')
+                else
+                    write(io,'(" = DCMP2only ON ATOM BASIS (BY DEFAULT)")')
+                endif
+            endif
+
             ! additional DIVCON options
             if (self%BEoff)  write(io,'(" NO ELIMINATION OF EMBEDDED SUBSYSTEM IN DIVCON ")')
             if (self%Qint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
@@ -660,6 +677,23 @@ module quick_method_module
 
             if (index(keywd,'DIVCON') .ne. 0) then
                 self%divcon = .true.
+                self%dcmp2only = .false.
+                if (index(keywd,'ATOMBASIS') /= 0) then
+                    self%ifragbasis=1
+                else if (index(keywd,'RESIDUEBASIS') /= 0) then
+                    self%ifragbasis=2
+                else if (index(keywd,'NHAB') /= 0) then
+                    self%ifragbasis=3
+                else if (index(keywd,'OWNFRAG') /= 0) then
+                    self%ifragbasis=4
+                else
+                    self%ifragbasis=1
+                endif
+            endif
+
+            if (index(keywd,'DCMP2ONLY') .ne. 0) then
+                self%divcon = .false.
+                self%dcmp2only = .true.
                 if (index(keywd,'ATOMBASIS') /= 0) then
                     self%ifragbasis=1
                 else if (index(keywd,'RESIDUEBASIS') /= 0) then
@@ -879,6 +913,7 @@ module quick_method_module
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
             self%DIVCON = .false.      ! Div&Con
+            self%DCMP2only = .false.   ! Canonical HF and Div&Con for MP2 only
             self%BEoff = .false.       ! Turns off bEliminate in Div&Con
             self%Qint = .false.        ! Prints 1e and 2e integrals in Qiskit format
             self%OWNfrag = .false.     ! User defined fragmentation based on CORE.DNC and BUFFER.DNC files
