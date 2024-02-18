@@ -142,8 +142,11 @@ contains
      ! if not direct SCF, generate 2e int file
      ! if (quick_method%nodirect) call aoint
   
-     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
+     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr) ! normal scf
      if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,ierr)     ! div & con scf
+     if (quick_method%diisscf .and. quick_method%dcmp2only) call electdiisdc(jscf,ierr)  ! perform one DC-SCF step 
+     ! In case of DCMP2only method program needs to finish canonical SCF cycle first and
+     ! then perform one DC-SCF step to get subsystem orbitals for DC-MP2.
   
      jscf=jscf+1
   
