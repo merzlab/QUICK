@@ -176,7 +176,6 @@ subroutine HFHessian
 
   call get_eri_hessian
 
-
   !---------------------------------------------------------------------
   !  4) If DFT, the second derivative of exchahnge correlation  term
   !---------------------------------------------------------------------
@@ -186,48 +185,6 @@ subroutine HFHessian
   !---------------------------------------------------------------------
   !  5) The CPHF part
   !---------------------------------------------------------------------
-
-!  call get_cphf_hessian
-
-    call cshell_density_cutoff
-
-     do II=1,jshell
-        do JJ=II,jshell
-        Testtmp=Ycutoff(II,JJ)
-           do KK=II,jshell
-              do LL=KK,jshell
-                 if(quick_basis%katom(II).eq.quick_basis%katom(JJ).and.quick_basis%katom(II).eq. &
-                 quick_basis%katom(KK).and.quick_basis%katom(II).eq.quick_basis%katom(LL))then
-                    continue
-                 else
-                    testCutoff = TESTtmp*Ycutoff(KK,LL)
-                    if(testCutoff.gt.quick_method%gradCutoff)then
-                       DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
-                       cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
-                       cutoffTest=testCutoff*DNmax
-                       if(cutoffTest.gt.quick_method%gradCutoff)then
-                          call cshell_eri_fock1
-                       endif
-                    endif
-                 endif
-              enddo
-           enddo
-        enddo
-     enddo
-
-         ntri =  (nbasis*(nbasis+1))/2
-
-     write(ioutfile,*)"  Derivative Fock after G(D0,g1)  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ", (I+2)/3 
-        do J = 1, ntri
-!           do K= 1, nbasis
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
-           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
-!           enddo
-        enddo
-     enddo
 
      call form_D1W1
 
@@ -330,7 +287,10 @@ end subroutine get_nuclear_repulsion_hessian
 subroutine get_oneen_hessian
   use allmod
   use quick_overlap_module, only: gpt, overlap
-  use quick_oei_module, only: ekinetic
+  use quick_oei_module, only: ekinetic, attrashellfock1
+  use quick_cutoff_module, only: cshell_density_cutoff
+  use quick_cshell_eri_module, only: getCshellEri
+
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
   double precision g_table(200),a,b
@@ -352,6 +312,45 @@ subroutine get_oneen_hessian
      write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
   enddo
 
+     do Ibas=1,nbasis
+        ISTART = (quick_basis%ncenter(Ibas)-1) *3
+           do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
+
+              JSTART = (quick_basis%ncenter(Jbas)-1) *3
+
+              DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
+
+  !  We have selecte two basis functions, now loop over angular momentum.
+              do Imomentum=1,3
+
+  !  do the Ibas derivatives first. In order to prevent code duplication,
+  !  this has been implemented in a seperate subroutine. 
+                 ijcon = .true.
+                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
+
+  !  do the Jbas derivatives.
+                 ijcon = .false.
+                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI)
+
+              enddo
+           enddo
+     enddo
+
+     ntri =  (nbasis*(nbasis+1))/2
+ 
+     write(ioutfile,*)
+     write(ioutfile,*)"  Derivative Fock after 1st-order Kinetic  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ",(I+2)/3
+        do J = 1, ntri
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
+        enddo
+     enddo
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 4)  The second derivative of the 1 electron nuclear attraction term ij
   ! ij times the density matrix element ij.
@@ -364,6 +363,38 @@ subroutine get_oneen_hessian
   do Iatm=1,natom*3
      write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
   enddo
+
+     do IIsh = 1, jshell
+        do JJsh = IIsh, jshell
+           call attrashellfock1(IIsh,JJsh)
+        enddo
+     enddo
+
+     write(ioutfile,*)
+     write(ioutfile,*)"  Derivative Fock after 1st-order Ele-Nuc  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+!           do K=1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
+        enddo
+     enddo
+
+     write(ioutfile,*)
+     write(ioutfile,*)"  1st-order Overlap  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%od(I,J), &
+           quick_qm_struct%od(I+1,J),quick_qm_struct%od(I+2,J)
+!           enddo
+        enddo
+     enddo
 
   return
 
@@ -406,8 +437,8 @@ subroutine get_xc_hessian
     double precision :: tgrd(3), tsum(3)
     integer :: i,k,oi
     double precision,allocatable :: dp(:,:)
-    double precision,intent(out) :: gwt(3,natom)
-    double precision,intent(out) :: hwt(3,natom,3,natom)
+    double precision :: gwt(3,natom)
+    double precision :: hwt(3,natom,3,natom)
     double precision :: VM, ValM, ValX
     double precision,allocatable :: DA(:), DM(:)
     double precision :: hess(3,natom,3,natom),fda(3,natom,nbasis*(nbasis+1)/2)
@@ -421,7 +452,7 @@ subroutine get_xc_hessian
      hess=0.0d0
 print*,'inside xc_hessian'
 
-     call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
+!     call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
@@ -555,19 +586,19 @@ print*,'Igp:',Igp
                        ydot = 4.0d0*dfdgaa*gay
                        zdot = 4.0d0*dfdgaa*gaz
 
-                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
-                       gden(1) = gax
-                       gden(2) = gay
-                       gden(3) = gaz
-                       thrsh = quick_method%maxIntegralCutoff
-                       wght = weight/sswt
-                       call formFdHess(nbasis,natom,thrsh,DA,DM,gden,wght, &
-                                libxc_vrho(1),libxc_v2rho2(1),libxc_v2rho2(2), &
-                                libxc_vsigma(1),libxc_vsigma(2), &
-                                libxc_v2rhosigma(1),libxc_v2rhosigma(3),libxc_v2rhosigma(2), &
-                                libxc_v2sigma2(1),libxc_v2sigma2(3), &
-                                libxc_v2sigma2(2),libxc_v2sigma2(4), &
-                                Ibin,iao,iaox,iaoxx,iaoxxx,VM,iatm,gwt,hwt,fda,hess)
+!                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
+!                       gden(1) = gax
+!                       gden(2) = gay
+!                       gden(3) = gaz
+!                       thrsh = quick_method%maxIntegralCutoff
+!                       wght = weight/sswt
+!                       call formFdHess(nbasis,natom,thrsh,DA,DM,gden,wght, &
+!                                libxc_vrho(1),libxc_v2rho2(1),libxc_v2rho2(2), &
+!                                libxc_vsigma(1),libxc_vsigma(2), &
+!                                libxc_v2rhosigma(1),libxc_v2rhosigma(3),libxc_v2rhosigma(2), &
+!                                libxc_v2sigma2(1),libxc_v2sigma2(3), &
+!                                libxc_v2sigma2(2),libxc_v2sigma2(4), &
+!                                Ibin,iao,iaox,iaoxx,iaoxxx,VM,iatm,gwt,hwt,fda,hess)
 
                     endif
                  endif
@@ -1954,10 +1985,15 @@ subroutine get_eri_hessian
   use allmod
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
+  use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
+  use quick_cshell_eri_fock1_module
+
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
   double precision g_table(200), a,b
-  integer i,j,k,ii,jj,kk,g_count
+  integer i,j,k,g_count
+  integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, ntri
+  common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
   ! 5)  The 2nd derivative of the 4center 2e- terms with respect to X times
   ! the coefficient found in the energy. (i.e. the multiplicative
@@ -2076,6 +2112,47 @@ subroutine get_eri_hessian
   do Iatm=1,natom*3
      write(ioutfile,'(9(F7.4,7X))')(quick_qm_struct%hessian(Jatm,Iatm),Jatm=1,natom*3)
   enddo
+
+    call cshell_density_cutoff
+
+     do II=1,jshell
+        do JJ=II,jshell
+        Testtmp=Ycutoff(II,JJ)
+           do KK=II,jshell
+              do LL=KK,jshell
+                 if(quick_basis%katom(II).eq.quick_basis%katom(JJ).and.quick_basis%katom(II).eq. &
+                 quick_basis%katom(KK).and.quick_basis%katom(II).eq.quick_basis%katom(LL))then
+                    continue
+                 else
+                    testCutoff = TESTtmp*Ycutoff(KK,LL)
+                    if(testCutoff.gt.quick_method%gradCutoff)then
+                       DNmax=max(4.0d0*cutmatrix(II,JJ),4.0d0*cutmatrix(KK,LL), &
+                       cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
+                       cutoffTest=testCutoff*DNmax
+                       if(cutoffTest.gt.quick_method%gradCutoff)then
+                          call cshell_eri_fock1
+                       endif
+                    endif
+                 endif
+              enddo
+           enddo
+        enddo
+     enddo
+
+         ntri =  (nbasis*(nbasis+1))/2
+
+     write(ioutfile,*)
+     write(ioutfile,*)"  Derivative Fock after G(D0,g1)  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+!           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+!           enddo
+        enddo
+     enddo
 
   return
 

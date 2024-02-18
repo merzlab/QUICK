@@ -33,76 +33,7 @@ subroutine form_d1const
   double precision g_table(200),a,b, d1c((nbasis*(nbasis+1))/2,natom*3), fds(nbasis,nbasis,natom*3)
   integer i,j,k,ii,jj,kk,g_count, IIsh, JJsh, nocc
 
-     do Ibas=1,nbasis
-        ISTART = (quick_basis%ncenter(Ibas)-1) *3
-           do Jbas=quick_basis%last_basis_function(quick_basis%ncenter(IBAS))+1,nbasis
-
-              JSTART = (quick_basis%ncenter(Jbas)-1) *3
-
-              DENSEJI = quick_qm_struct%dense(Jbas,Ibas)
-
-  !  We have selecte two basis functions, now loop over angular momentum.
-              do Imomentum=1,3
-
-  !  do the Ibas derivatives first. In order to prevent code duplication,
-  !  this has been implemented in a seperate subroutine. 
-                 ijcon = .true.
-                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Ibas, ISTART, ijcon, DENSEJI)
-
-  !  do the Jbas derivatives.
-                 ijcon = .false.
-                 call get_ijbas_fockderiv(Imomentum, Ibas, Jbas, Jbas, JSTART, ijcon, DENSEJI)
-
-              enddo
-           enddo
-     enddo
-
      ntri =  (nbasis*(nbasis+1))/2
-
-     write(ioutfile,*)"  Derivative Fock after 1st-order Kinetic  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ",(I+2)/3
-        do J = 1, ntri
-!           do K= 1, nbasis
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
-           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
-!           enddo
-        enddo
-     enddo
-
-!     call cshell_density_cutoff
-
-     do IIsh = 1, jshell
-        do JJsh = IIsh, jshell
-           call attrashellfock1(IIsh,JJsh)
-        enddo
-     enddo
-
-     write(ioutfile,*)"  Derivative Fock after 1st-order Ele-Nuc  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ", (I+2)/3
-        do J = 1, ntri
-!           do K=1, nbasis
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
-           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
-!           enddo
-        enddo
-     enddo
-
-     write(ioutfile,*)"  1st-order Overlap  "
-     write(ioutfile,*)"     X             Y             Z "
-     do I = 1, natom*3, 3
-        write(ioutfile,*)" Atom no : ", (I+2)/3
-        do J = 1, ntri
-!           do K= 1, nbasis
-           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%od(I,J), &
-           quick_qm_struct%od(I+1,J),quick_qm_struct%od(I+2,J)
-!           enddo
-        enddo
-     enddo
-    
      call calcFD(nbasis, ntri, quick_qm_struct%o, &
                  quick_qm_struct%dense,quick_qm_struct%fxd)
 
