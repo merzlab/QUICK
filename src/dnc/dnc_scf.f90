@@ -212,6 +212,7 @@ subroutine electdiisdc(jscf,ierr)
 
   ! if want to calculate operator difference?
    if(jscf.ge.quick_method%ncyc) deltaO = .true.
+   if(quick_method%dcmp2only) deltaO = .false.
 
    if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -743,6 +744,11 @@ endif
 
       if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then
          write(ioutfile, '("| -------------- 2E-INT CUTOFF CHANGE TO ", E10.4, " ------------")') quick_method%integralCutoff
+      endif
+
+      if(quick_method%dcmp2only) then
+         diisdone=.true. 
+         quick_method%scf_conv=.true.
       endif
 
       if(write_molden) quick_molden%e_snapshots(jscf, quick_molden%iexport_snapshot) &

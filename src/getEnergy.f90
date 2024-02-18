@@ -59,7 +59,7 @@ subroutine getEnergy(isGuess, ierr)
       call fullX
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
-      if (quick_method%DivCon) then
+      if (quick_method%DivCon .or. quick_method%dcmp2only) then
          call DivideS
          call DivideX
          call PDCDivided
