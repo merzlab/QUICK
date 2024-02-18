@@ -410,10 +410,15 @@ subroutine get_xc_hessian
     double precision,intent(out) :: hwt(3,natom,3,natom)
     double precision :: VM, ValM, ValX
     double precision,allocatable :: DA(:), DM(:)
-
+    double precision :: hess(3,natom,3,natom),fda(3,natom,nbasis*(nbasis+1)/2)
+    double precision :: gden(3)
+    double precision :: thrsh,wght
 
      allocate(DA(NBASIS*(NBASIS+1)/2)) 
      allocate(DM(NBASIS))
+
+     fda=0.0d0
+     hess=0.0d0
 print*,'inside xc_hessian'
 
      call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
@@ -550,8 +555,19 @@ print*,'Igp:',Igp
                        ydot = 4.0d0*dfdgaa*gay
                        zdot = 4.0d0*dfdgaa*gaz
 
-!                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
-!                       call formfdhes()
+                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
+                       gden(1) = gax
+                       gden(2) = gay
+                       gden(3) = gaz
+                       thrsh = quick_method%maxIntegralCutoff
+                       wght = weight/sswt
+                       call formFdHess(nbasis,natom,thrsh,DA,DM,gden,wght, &
+                                libxc_vrho(1),libxc_v2rho2(1),libxc_v2rho2(2), &
+                                libxc_vsigma(1),libxc_vsigma(2), &
+                                libxc_v2rhosigma(1),libxc_v2rhosigma(3),libxc_v2rhosigma(2), &
+                                libxc_v2sigma2(1),libxc_v2sigma2(3), &
+                                libxc_v2sigma2(2),libxc_v2sigma2(4), &
+                                Ibin,iao,iaox,iaoxx,iaoxxx,VM,iatm,gwt,hwt,fda,hess)
 
                     endif
                  endif
