@@ -671,7 +671,18 @@ module quick_method_module
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
             if (index(keyWD,'BEOFF').ne.0)      self%BEoff=.true.
             if (index(keyWD,'QINT').ne.0)       self%Qint=.true.
-            if (index(keyWD,'OWNFRAG').ne.0)    self%OWNfrag=.true.
+
+            ! The BEoff keyword is redundant when OWNFRAG is used.
+            ! OWNFRAG sets radii of both buffer1 and buffer2 to zero,
+            ! which results in requested fragments even after bEliminate portion
+            ! of code is executed. Combination of BEoff and OWNFRAG leads
+            ! to bugs when DCMP2only method is used. Hence, code below
+            ! overwrites BEoff even if the keyword is requested by user.
+
+            if (index(keyWD,'OWNFRAG').ne.0) then   
+                   self%OWNfrag=.true.
+                   self%BEoff=.false.
+            end if
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
 
