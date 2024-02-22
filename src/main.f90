@@ -58,6 +58,7 @@
     common /timer/ t1_t, t2_t
     double precision, dimension(:), allocatable :: esp_array
 
+
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
