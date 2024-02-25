@@ -44,7 +44,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
-        run: sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
+        run: |
+             sudo apt-get update
+             sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
       - name: Configure MPI
         run: |
              mkdir build

@@ -42,7 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
-        run: sudo apt-get -y install gfortran cmake
+        run: |
+             sudo apt-get update
+             sudo apt-get -y install gfortran cmake
       - name: Configure serial
         run: |
              mkdir build
