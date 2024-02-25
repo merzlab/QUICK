@@ -42,17 +42,19 @@ fflush(stdout);\
 #define STOREDIM_S 35
 
 #define STOREDIM_GRAD_T 20
+#define STOREDIM_GRAD_S 56
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84
+#define STOREDIM_XL 120
 #else
 #define STOREDIM_L 84
+#define STOREDIM_XL 84
 #endif
 
+#define MAXPRIM 20
 #define TRANSDIM 8
 #define MCALDIM 120
-
-#define MAXPRIM 10
 
 #define BUFFERSIZE 150000
 

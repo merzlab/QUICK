@@ -850,7 +850,7 @@ contains
   
   
         endif
-        if(jscf >= quick_method%iscf-1) then
+        if(jscf >= quick_method%iscf_sad-1) then
            if(verbose) write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
            if(verbose) write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
            diisdone=.true.
