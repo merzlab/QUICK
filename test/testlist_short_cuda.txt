@@ -5,6 +5,7 @@ ene_psb3_blyp_631g	            #BLYP test with s and p basis functions
 ene_psb3_blyp_631gss	            #BLYP test with s, p and d basis functions
 ene_psb3_b3lyp_631g	            #B3LYP test with s and p basis functions
 ene_psb3_b3lyp_631gss	            #B3LYP test with s, p and d basis functions
+ene_C2H6_b3lyp_def2tzvp             #B3LYP test with s, p, d and f basis functions
 ene_psb3_libxc_lda_631g             #LIBXC lda functional test
 ene_psb3_libxc_gga_631g             #LIBXC gga functional test
 ene_psb3_libxc_hgga_631g            #LIBXC hybrid functional test
@@ -14,6 +15,7 @@ grad_psb3_b3lyp_631g                #B3LYP gradient test with s and p basis func
 grad_psb3_b3lyp_631gss              #B3LYP gradient test with s, p and d basis functions
 grad_ch3conhch3_b3lyp_ccpvdz        #B3LYP gradient test with s, p and d basis functions
 grad_NaCl_b3lyp_def2svp             #B3LYP gradient test with s, p and d basis functions 
+grad_CH4_pbe0_6311g2df2pd           #PBE0 gradient test with s, p, d and f basis functions
 grad_wat_b3lyp_ccpvdz               #B3LYP point charge gradient test
 grad_c10h9o2s_b3lyp_def2svp         #B3LYP point charge gradient test
 grad_daspi_meoh_b3lyp_6-31g         #B3LYP point charge gradient test
