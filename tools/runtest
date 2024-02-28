@@ -293,6 +293,7 @@ print_test_info(){
     grad_ch5nos_pbe_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE functional";;
     grad_ch5nos_pw91_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PW91 functional";;
     grad_ch5nos_revpbe_631g)              testinfo="CH5NOS: DFT gradient test: s and p basis functions, revPBE functional";;
+    grad_nma_rhf_def2tzvp)                testinfo="NMA: RHF gradient test with DEF2-TZVP basis set: s, p, d and f basis functions";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
     grad_c10h9o2s_b3lyp_def2svp)          testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
