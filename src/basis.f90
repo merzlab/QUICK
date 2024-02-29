@@ -654,8 +654,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            enddo
 
                            jshell = jshell+1
-                           elseif (shell == 'F') then
 
+                           elseif (shell == 'F') then
 
 #ifndef ENABLEF
                            ierr=36 
@@ -740,6 +740,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            end if
 
                            jshell = jshell+1
+
+                           elseif (shell == 'G') then
+                           ierr = 37   
+
                         endif
                      enddo
                   endif

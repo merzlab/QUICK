@@ -130,6 +130,9 @@ contains
     case(36)
       msg='Support for F functions is disabled. Please recompile the code with support for F functions.'
 
+    case(37)
+      msg='G functions are not supported. Please choose a different basis set.'
+      
     case default
       msg='Unknown error.'
 
