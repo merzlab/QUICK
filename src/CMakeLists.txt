@@ -99,7 +99,7 @@ endif()
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90
     getMol.f90 quick_one_electron_integral.f90 getEnergy.f90
     ecp.f90 nuclear.f90 finalize.f90 mpi_setup.f90 quick_debug.f90
-    calMP2.f90 hessian.f90 CPHF.f90 frequency.f90 basis.f90)
+    calMP2.f90 hessian.f90 CPHF.f90 hess_dft.f90 frequency.f90 basis.f90)
 
 set(QUICK_GPU_FORTRAN_SOURCE ${QUICK_GPU_TARGET_NAME}/gpu_write_info.f90)
 
