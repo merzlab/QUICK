@@ -94,7 +94,6 @@ do itt=1,np
  allocate(mp2shell(nbasisdc(itt)))
  allocate(orbmp2dc(iocc,ivir,ivir))
  allocate(orbmp2dcsub(iocc,ivir,ivir))
-<<<<<<< HEAD
  if(quick_method%hasF) then
   nbasistemp=6
   allocate(orbmp2i331dc(nbasisdc(itt),6,6,2))
