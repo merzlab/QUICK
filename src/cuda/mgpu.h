@@ -330,9 +330,9 @@ void mgpu_oei_greedy_distribute(){
 #endif
 
     // Upload the flags to GPU
-    gpu -> gpu_basis -> mpi_boeicompute = new cuda_buffer_type<char>(nitems);
+    gpu -> gpu_basis -> mpi_boeicompute = new cuda_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu -> gpu_basis -> mpi_boeicompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(char)*nitems);
+    memcpy(gpu -> gpu_basis -> mpi_boeicompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char)*nitems);
 
     gpu -> gpu_basis -> mpi_boeicompute -> Upload();
     gpu -> gpu_sim.mpi_boeicompute  = gpu -> gpu_basis -> mpi_boeicompute  -> _devData;
@@ -486,9 +486,9 @@ void mgpu_eri_greedy_distribute(){
 #endif
 
     // Upload the flags to GPU
-    gpu -> gpu_basis -> mpi_bcompute = new cuda_buffer_type<char>(nitems);
+    gpu -> gpu_basis -> mpi_bcompute = new cuda_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu -> gpu_basis -> mpi_bcompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(char)*nitems);
+    memcpy(gpu -> gpu_basis -> mpi_bcompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char)*nitems);
 
     gpu -> gpu_basis -> mpi_bcompute -> Upload();
     gpu -> gpu_sim.mpi_bcompute  = gpu -> gpu_basis -> mpi_bcompute  -> _devData;

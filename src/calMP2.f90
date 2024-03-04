@@ -35,7 +35,7 @@ subroutine calmp2
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
   ! if with f orbital
-  if(quick_method%ffunxiao)then
+  if(quick_method%hasF)then
      nbasistemp=6
   else
      nbasistemp=10
@@ -296,7 +296,7 @@ subroutine MPI_calmp2
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
   ! if with f orbital
-  if(quick_method%ffunxiao)then
+  if(quick_method%hasF)then
      nbasistemp=6
   else
      nbasistemp=10

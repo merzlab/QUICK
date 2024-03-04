@@ -286,7 +286,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_allocate_scratch()
+  call gpu_allocate_scratch(.true.)
 #endif
 
   ! read job specifications
@@ -478,6 +478,9 @@ subroutine run_quick(self,ierr)
   use quick_oshell_gradient_module, only: oshell_gradient
   use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
+  use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+      exportMO, exportSCF, exportOPT
+
 
 #ifdef CEW 
   use quick_cew_module
@@ -550,6 +553,17 @@ subroutine run_quick(self,ierr)
 #endif
 #endif
 
+  if(write_molden) then
+#ifdef MPIV
+     if(master) then
+#endif
+     write(moldenFileName, '(A, ".molden.", I0)') trim(baseinFileName), quick_api%step
+     call initializeExport(quick_molden, ierr)
+#ifdef MPIV
+     endif
+#endif
+  endif
+
   ! stop the timer for initial guess
   RECORD_TIME(timer_end%TIniGuess)
 
@@ -590,6 +604,21 @@ subroutine run_quick(self,ierr)
       endif
   endif
 
+  if(write_molden) then
+#ifdef MPIV
+     if(master) then
+#endif
+     call exportCoordinates(quick_molden, ierr)
+     call exportBasis(quick_molden, ierr)
+     call exportMO(quick_molden, ierr)
+     if (quick_method%opt) then
+        call exportSCF(quick_molden, ierr)
+        call exportOPT(quick_molden, ierr)
+     end if
+#ifdef MPIV
+     endif
+#endif
+  endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
       if (quick_method%bCUDA) then
@@ -823,7 +852,7 @@ subroutine delete_quick_job(ierr)
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_deallocate_scratch()
+  call gpu_deallocate_scratch(.true.)
 #endif
 
 #if defined CUDA || defined HIP

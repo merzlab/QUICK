@@ -102,7 +102,6 @@ contains
 
      if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-!write(*,*) "1e energy:", quick_qm_struct%Eel 
 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
@@ -164,7 +163,6 @@ contains
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getCshellEriEnergy
 
-!write(*,*) "2e Energy added", quick_qm_struct%Eel
 
 
 #ifdef MPIV
@@ -235,8 +233,14 @@ contains
      if(master) then
        quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
        quick_qm_struct%Eel    = Eelsum
+
+!do i=1, nbasis
+!  do j=1, nbasis
+!    write(*,*) j, i, quick_qm_struct%o(j,i)
+!  enddo
+!enddo
      endif
-  
+
      RECORD_TIME(timer_end%TEred)
      timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
   
