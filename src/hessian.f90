@@ -492,7 +492,7 @@ print*,'Igp:',Igp
                     Ibas=quick_dft_grid%basf(icount)+1
 
 !                    call pt3dr(gridx,gridy,gridz,phi,phix(1:3),&
-                    phixx(1:6),phixxx(1:10),Ibas,icount)
+!                    phixx(1:6),phixxx(1:10),Ibas,icount)
 
                     iao(Ibas)=phi
                     iaox(:,Ibas)=phix
