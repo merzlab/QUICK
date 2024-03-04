@@ -17,33 +17,33 @@ if(CUDA)
     set(CUDA_NVCC_FLAGS "")
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-    #SM9.0 = H100
+    #SM9.0 = H100, GH200 (Hopper)
     set(SM90FLAGS -gencode arch=compute_90,code=sm_90)
-    #SM8.6 -- not currently used, but should be tested on Cuda 11.1
+    #SM8.9 = L4, L40 (Ada Lovelace)
+    set(SM89FLAGS -gencode arch=compute_89,code=sm_89)
+    #SM8.6 = A2, A10, A16, A40 (Ampere)
     set(SM86FLAGS -gencode arch=compute_86,code=sm_86)
-    #SM8.0 = A100
+    #SM8.0 = A30, A100 (Ampere)
     set(SM80FLAGS -gencode arch=compute_80,code=sm_80)
-    #SM7.5 = RTX20xx, RTX Titan, T4 and Quadro RTX
+    #SM7.5 = RTX20xx, RTX Titan, T4 and Quadro RTX (Turing)
     set(SM75FLAGS -gencode arch=compute_75,code=sm_75)        
-    #SM7.0 = V100 and Volta Geforce / GTX Ampere?
+    #SM7.0 = V100 and Volta Geforce / GTX Ampere? (Volta)
     set(SM70FLAGS -gencode arch=compute_70,code=sm_70)
-    #SM6.2 = ??? 
-    set(SM62FLAGS -gencode arch=compute_62,code=sm_62)
-    #SM6.1 = GP106 = GTX-1070, GP104 = GTX-1080, GP102 = Titan-X[P]
+    #SM6.1 = GP106 = GTX-1070, GP104 = GTX-1080, GP102 = Titan-X[P] (Pascal)
     set(SM61FLAGS -gencode arch=compute_61,code=sm_61)
-    #SM6.0 = GP100 / P100 = DGX-1
+    #SM6.0 = GP100 / P100 = DGX-1 (Pascal)
     set(SM60FLAGS -gencode arch=compute_60,code=sm_60)
-    #SM5.3 = GM200 [Grid] = M60, M40?
+    #SM5.3 = GM200 [Grid] = M60, M40 (Maxwell)
     set(SM53FLAGS -gencode arch=compute_53,code=sm_53)
-    #SM5.2 = GM200 = GTX-Titan-X, M6000 etc.
+    #SM5.2 = GM200 = GTX-Titan-X, M6000 etc (Maxwell)
     set(SM52FLAGS -gencode arch=compute_52,code=sm_52)
-    #SM5.0 = GM204 = GTX980, 970 etc
+    #SM5.0 = GM204 = GTX980, 970 et (Maxwell)
     set(SM50FLAGS -gencode arch=compute_50,code=sm_50)
-    #SM3.7 = GK210 = K80 -- not currently used, since SM3.0 may be better
+    #SM3.7 = GK210 = K80 -- not currently used, since SM3.0 may be better (Kepler)
     set(SM37FLAGS -gencode arch=compute_37,code=sm_37)
-    #SM3.5 = GK110 + 110B = K20, K20X, K40, GTX780, GTX-Titan, GTX-Titan-Black, GTX-Titan-Z
+    #SM3.5 = GK110 + 110B = K20, K20X, K40, GTX780, GTX-Titan, GTX-Titan-Black, GTX-Titan-Z (Kepler)
     set(SM35FLAGS -gencode arch=compute_35,code=sm_35)
-    #SM3.0 = GK104 = K10, GTX680, 690 etc.
+    #SM3.0 = GK104 = K10, GTX680, 690 etc. (Kepler)
     set(SM30FLAGS -gencode arch=compute_30,code=sm_30)
 
     message(STATUS "CUDA version ${CUDA_VERSION} detected")
@@ -74,24 +74,31 @@ if(CUDA)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_EQUAL 11.0))
-	    message(STATUS "Configuring QUICK for SM3.5, SM5.0, SM6.0, SM7.0, SM7.5 and SM8.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
+	    message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM6.0, SM7.0, SM7.5 and SM8.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.1) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.7))
-	    message(STATUS "Configuring QUICK for SM3.5, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0 and SM8.6")
-            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
+	    message(STATUS "Configuring QUICK for SM3.5, SM3.7, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0 and SM8.6")
+            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-	    
-        elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.0))
-            message(STATUS "Configuring QUICK for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0, SM8.6, SM9.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM90FLAGS})
+
+	elseif((${CUDA_VERSION} VERSION_EQUAL 11.8))
+            message(STATUS "Configuring QUICK for SM3.5, SM3.7, SM5.0, SM6.0, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+	    
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.3))
+            message(STATUS "Configuring QUICK for SM5.0, SM6.0, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM60FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
 	else()
-	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 12.0.  Please upgrade your CUDA installation or disable building with CUDA.")
+	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 12.3.  Please upgrade your CUDA installation or disable building with CUDA.")
 	endif()
 
     else()
@@ -144,6 +151,13 @@ if(CUDA)
             set(FOUND "TRUE")
         endif()
 
+        if("${QUICK_USER_ARCH}" MATCHES "adalovelace")
+            message(STATUS "Configuring QUICK for SM8.9")
+            list(APPEND CUDA_NVCC_FLAGS ${SM89FLAGS})
+            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+            set(FOUND "TRUE")
+        endif()
+
         if("${QUICK_USER_ARCH}" MATCHES "hopper")
             message(STATUS "Configuring QUICK for SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM90FLAGS})
@@ -152,7 +166,7 @@ if(CUDA)
         endif()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere and hopper.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere, adalovelace, and hopper.")
         endif()
 
     endif()
@@ -173,6 +187,11 @@ if(CUDA)
     list(APPEND CUDA_NVCC_FLAGS $<$<CONFIG:Debug>:-g>)
     if(QUICK_VERBOSE_PTXAS)
         list(APPEND CUDA_NVCC_FLAGS -Xptxas=-v)
+    endif()
+
+    # profiling flags
+    if(QUICK_PROFILE)
+        list(APPEND CUDA_NVCC_FLAGS --generate-line-info)
     endif()
 
     # extra CUDA flags

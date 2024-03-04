@@ -264,6 +264,7 @@ print_test_info(){
     ene_psb3_blyp_631gss)                 testinfo="PSB3: DFT energy test: s, p and d basis functions, BLYP functional";;
     ene_psb3_b3lyp_631g)                  testinfo="PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
     ene_psb3_b3lyp_631gss)                testinfo="PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
+    ene_C2H6_b3lyp_def2tzvp)              testinfo="PSB3: DFT energy test: s, p, d and f basis functions, native B3LYP functional";;
     ene_psb3_libxc_lda_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
     ene_psb3_libxc_gga_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
     ene_psb3_libxc_hgga_631g)             testinfo="PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
@@ -273,6 +274,7 @@ print_test_info(){
     grad_psb3_b3lyp_631gss)               testinfo="PSB3: DFT gradient test: s and p and d basis functions";;
     grad_psb3_b3lyp_d3bj_def2svp)         testinfo="PSB3: DFT gradient test: s and p basis functions, DFT-D3 dispersion correction";; 
     grad_ch3conhch3_b3lyp_ccpvdz)         testinfo="CH3CONHCH3: DFT gradient test: s and p and d basis functions";;
+    grad_CH4_pbe0_6311g2df2pd)            testinfo="CH4: DFT gradient test: s, p, d and f basis functions";;
     grad_ch5nos_b3lyp_6311g)              testinfo="CH5NOS: B3LYP gradient test with 6-311G basis set";;
     grad_ch5nos_b3lyp_6311gd)             testinfo="CH5NOS: B3LYP gradient test with 6-311G(d) basis set";;
     grad_ch5nos_b3lyp_6311gdp)            testinfo="CH5NOS: B3LYP gradient test with 6-311G(d,p) basis set";;
@@ -291,6 +293,7 @@ print_test_info(){
     grad_ch5nos_pbe_631g)                 testinfo="CH5NOS: DFT gradient test: s and p basis functions, PBE functional";;
     grad_ch5nos_pw91_631g)                testinfo="CH5NOS: DFT gradient test: s and p basis functions, PW91 functional";;
     grad_ch5nos_revpbe_631g)              testinfo="CH5NOS: DFT gradient test: s and p basis functions, revPBE functional";;
+    grad_nma_rhf_def2tzvp)                testinfo="NMA: RHF gradient test with DEF2-TZVP basis set: s, p, d and f basis functions";;
     grad_wat_b3lyp_ccpvdz)                testinfo="Water: DFT point charge gradient test: s and p and d basis functions";;
     grad_c10h9o2s_b3lyp_def2svp)          testinfo="C10H9O2S: DFT point charge gradient test: s and p and d basis functions";;
     grad_daspi_meoh_b3lyp_sto3g)          testinfo="DASPI-DCM: DFT point charge gradient test: s and p basis functions";;
@@ -306,6 +309,7 @@ print_test_info(){
     grad_ohrad_b3lyp_631gss)              testinfo="OH radical: UDFT B3LYP gradient test";;
     opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
     opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
+    opt_wat_b3lyp_ccpvtz)                 testinfo="Water: RHF geometry optimization test: s, p, d and f basis functions";;
     opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
     opt_merad_b3lyp_631gss)               testinfo="Methyl radical: UDFT B3LYP geometry optimization test";;
     opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT DL-Find geometry optimization test with s, p and d basis functions";;
@@ -469,12 +473,17 @@ run_test(){
       "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
     fi
 
-    if [ "$?" -ne 0 ]; then
+    if [ "$?" -ne 0 ] && [ `check_f_error` -eq 0 ]; then
       echo "Error: $qexe execution failed."
       echo ""
       exit 1
     fi
-  
+
+    if [ `check_f_error` -eq 1 ]; then
+      echo "SKIPPED."
+      echo "=============================================================="
+      echo ""
+    fi
 }
 
 # function to run api tests
@@ -527,8 +536,8 @@ check_opt(){
 
     accuracy='4.0e-3'
 
-    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
-    awk '/OPTIMIZED GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
+    awk '/GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.ref.out" > "$t.ref.opt"
+    awk '/GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$t.out" > "$t.opt"
 
     "$testdir/dacdif" -k -a "$accuracy" "$t.ref.opt" "$t.opt" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
 
@@ -548,7 +557,9 @@ check_dipole(){
 
 # function to clean up files
 clean_up(){
+
     rm -f "$t.ref.out" "$t.in" ddtmp* *.ene *.grad *.dipole *.opt
+
 }
 
 # function to report summary
@@ -648,6 +659,14 @@ print_summary(){
   if [ "$log" = 'yes' ]; then
     echo "$sum_footer" >> $QUICK_HOME/.quick.runtest.summary.log
   fi
+
+}
+
+# Function to skip F tests if the code wasnt compiled with support
+check_f_error(){
+    f_error_string=`grep 'Error: Support for F functions is disabled' "$t.out"`
+
+    if [ -z "$f_error_string" ]; then echo 0 ; else echo 1 ; fi
 
 }
 
@@ -915,11 +934,13 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$test_list"| grep "ene"`; do
       set_test
       run_test
-      check_energy
-      check_dipole
-      clean_up
-
-      echo ""
+      if [ `check_f_error` -eq 0 ]; then
+          check_energy
+          check_dipole
+          clean_up
+         
+          echo ""
+      fi
       tc=$((tc+1))
     done
   fi
@@ -929,12 +950,14 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$test_list" |grep "grad"`; do
       set_test
       run_test
-      check_energy
-      check_gradient
-      check_dipole
-      clean_up
-
-      echo ""
+      if [ `check_f_error` -eq 0 ]; then
+          check_energy
+          check_gradient
+          check_dipole
+          clean_up
+        
+          echo ""
+      fi
       tc=$((tc+1))
     done
   fi
@@ -944,11 +967,13 @@ for buildtype in $buildtypes; do
     for t in `awk '{print $1}' "$test_list" | grep "opt"`; do
       set_test
       run_test
-      check_opt
-      check_dipole
-      clean_up
-
-      echo ""
+      if [ `check_f_error` -eq 0 ]; then
+          check_opt
+          check_dipole
+          clean_up
+         
+          echo ""
+      fi
       tc=$((tc+1))
     done
   fi

@@ -111,7 +111,16 @@ subroutine get1e(deltaO)
          RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA || defined HIP
-         call gpu_get_oei(quick_qm_struct%o)
+         if(quick_method%hasF) then
+           call gpu_get_oei(quick_qm_struct%o)
+         else
+
+           do IIsh=1,jshell
+              do JJsh=IIsh,jshell
+                 call attrashell(IIsh,JJsh)
+              enddo
+           enddo
+         endif
 #else
          do IIsh=1,jshell
             do JJsh=IIsh,jshell
@@ -188,7 +197,16 @@ subroutine get1e(deltaO)
       RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA_MPIV || defined HIP_MPIV
-      call gpu_get_oei(quick_qm_struct%o)
+      if(quick_method%hasF) then
+        call gpu_get_oei(quick_qm_struct%o)
+      else
+        do i=1,mpi_jshelln(mpirank)
+           IIsh=mpi_jshell(mpirank,i)
+           do JJsh=IIsh,jshell
+              call attrashell(IIsh,JJsh)
+           enddo
+        enddo
+      endif
 #else
       do i=1,mpi_jshelln(mpirank)
          IIsh=mpi_jshell(mpirank,i)
