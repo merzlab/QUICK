@@ -133,9 +133,6 @@
 
 #endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-    call gpu_allocate_scratch()
-#endif
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
@@ -176,6 +173,9 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+
+    call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
+
     call upload(quick_method, ierr)
 
     if(.not.quick_method%opt)then
@@ -365,7 +365,7 @@
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_deallocate_scratch()
+  call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #endif
 
 
