@@ -491,7 +491,7 @@ print*,'Igp:',Igp
                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                     Ibas=quick_dft_grid%basf(icount)+1
 
-                    call pt3dr(gridx,gridy,gridz,phi,phix(1:3),&
+!                    call pt3dr(gridx,gridy,gridz,phi,phix(1:3),&
                     phixx(1:6),phixxx(1:10),Ibas,icount)
 
                     iao(Ibas)=phi
