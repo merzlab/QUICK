@@ -51,7 +51,7 @@ contains
 #ifdef MPIV
      integer ierror
      double precision :: Eelsum, Excsum, aelec, belec
-  
+ 
      quick_scratch%osum=0.0d0
      quick_scratch%obsum=0.0d0
      Eelsum=0.0d0
@@ -59,7 +59,9 @@ contains
      aelec=0.0d0
      belec=0.0d0
 #endif
-  
+
+     if(.not. allocated(quick_qm_struct%obSave)) allocate(quick_qm_struct%obSave(nbasis,nbasis))  
+     if(.not. allocated(quick_qm_struct%ob)) allocate(quick_qm_struct%ob(nbasis,nbasis)) 
      quick_qm_struct%o  = 0.0d0
      quick_qm_struct%ob = 0.0d0
      quick_qm_struct%Eel=0.0d0

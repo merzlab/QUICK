@@ -186,7 +186,8 @@ integer, dimension(incoreSize) :: bIncore
    double precision, allocatable, dimension(:,:,:,:) :: attraxiaoopt
 
    ! only for dft
-   double precision, allocatable, dimension(:) :: phixiao,dphidxxiao,dphidyxiao,dphidzxiao
+   double precision, allocatable, dimension(:) :: iao,phixiao,dphidxxiao,dphidyxiao,dphidzxiao
+   double precision, allocatable, dimension(:,:) :: iaox, iaoxx, iaoxxx
 
 #ifdef MPIV
    ! MPI
@@ -344,6 +345,10 @@ contains
        if(.not. allocated(dPhidXXiao)) allocate(dPhidXXiao(nbasis))
        if(.not. allocated(dPhidYXiao)) allocate(dPhidYXiao(nbasis))
        if(.not. allocated(dPhidZXiao)) allocate(dPhidZXiao(nbasis))
+       if(.not. allocated(iao)) allocate(iao(nbasis))
+       if(.not. allocated(iaox)) allocate(iaox(3,nbasis))
+       if(.not. allocated(iaoxx)) allocate(iaoxx(6,nbasis))
+       if(.not. allocated(iaoxxx)) allocate(iaoxxx(10,nbasis))
      endif
 
    end subroutine allocate_host_xc_basis
@@ -360,6 +365,10 @@ contains
         if(allocated(dPhidXXiao)) deallocate(dPhidXXiao)
         if(allocated(dPhidYXiao)) deallocate(dPhidYXiao)
         if(allocated(dPhidZXiao)) deallocate(dPhidZXiao)
+        if(allocated(iao))    deallocate(iao)
+        if(allocated(iaox))    deallocate(iaox)
+        if(allocated(iaoxx))    deallocate(iaoxx)
+        if(allocated(iaoxxx))    deallocate(iaoxxx)
      end if
 
    end subroutine deallocate_host_xc_basis

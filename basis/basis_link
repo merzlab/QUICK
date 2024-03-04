@@ -25,6 +25,7 @@
 | #6-311G(d)                        | 6-311GD.BAS                         |
 | #6-311G**                         | 6-311GDP.BAS                        |
 | #6-311G(d,p)                      | 6-311GDP.BAS                        |
+| #6-311G(2df,2pd)                  | 6-311G2DF2PD.BAS                    |
 | #6-31+G*                          | 6-31PLGD.BAS                        |
 | #6-31+G(d)                        | 6-31PLGD.BAS                        |
 | #6-31+G**                         | 6-31PLGDP.BAS                       |
@@ -34,12 +35,15 @@
 | #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
 | #6-311++G(2d,2p)                  | 6-311PLPLG2D2P.BAS                  |
 | #cc-pVDZ                          | CC-PVDZ.BAS                         |
+| #cc-pVTZ                          | CC-PVTZ.BAS                         |
 | #def2-svp                         | DEF2-SVP.BAS                        |
 | #def2-sv(p)                       | DEF2-SV_P.BAS                       |
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
+| #def2-tzvp                        | DEF2-TZVP.BAS                       |
 | #PC-0                             | PC0.BAS                             |
 | #PC-1                             | PC1.BAS                             |
 | #aug-cc-pVDZ                      | AUG-CC-PVDZ.BAS                     |
 | #CUSTOM                           | CUSTOM.BAS                          |
+| #CUSTOM2                          | CUSTOM2.BAS                         |
 |_________________________________________________________________________|
 

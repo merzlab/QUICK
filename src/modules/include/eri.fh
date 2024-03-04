@@ -685,12 +685,21 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
 #else
                      !write(*,*) Y,III,JJJ,KKK,LLL
+                     if (quick_method%CalcFock_d1g0) then
+                     DENSEKI=quick_qm_struct%psdense(KKK,III)
+                     DENSEKJ=quick_qm_struct%psdense(KKK,JJJ)
+                     DENSELJ=quick_qm_struct%psdense(LLL,JJJ)
+                     DENSELI=quick_qm_struct%psdense(LLL,III)
+                     DENSELK=quick_qm_struct%psdense(LLL,KKK)
+                     DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                     else
                      DENSEKI=quick_qm_struct%dense(KKK,III)
                      DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                      DENSELJ=quick_qm_struct%dense(LLL,JJJ)
                      DENSELI=quick_qm_struct%dense(LLL,III)
                      DENSELK=quick_qm_struct%dense(LLL,KKK)
                      DENSEJI=quick_qm_struct%dense(JJJ,III)
+                     endif
 
                      ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
                      ! can be equal.
@@ -749,12 +758,21 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%ob(KKK,JJJ) = quick_qm_struct%ob(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSELIB*Y
                            quick_qm_struct%ob(LLL,JJJ) = quick_qm_struct%ob(LLL,JJJ)-quick_method%x_hybrid_coeff*DENSEKIB*Y
 #else
+                           if (quick_method%CalcFock_d1g0) then
+                           DENSEKI=quick_qm_struct%psdense(KKK,III)
+                           DENSEKJ=quick_qm_struct%psdense(KKK,JJJ)
+                           DENSELJ=quick_qm_struct%psdense(LLL,JJJ)
+                           DENSELI=quick_qm_struct%psdense(LLL,III)
+                           DENSELK=quick_qm_struct%psdense(LLL,KKK)
+                           DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                           else
                            DENSEKI=quick_qm_struct%dense(KKK,III)
                            DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                            DENSELJ=quick_qm_struct%dense(LLL,JJJ)
                            DENSELI=quick_qm_struct%dense(LLL,III)
                            DENSELK=quick_qm_struct%dense(LLL,KKK)
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
+                           endif
 
                            ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
                            ! can be equal.
@@ -786,9 +804,15 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%ob(KKK,III) = quick_qm_struct%ob(KKK,III)-quick_method%x_hybrid_coeff*DENSEJIB*Y
 #else
 
+                           if (quick_method%CalcFock_d1g0) then
+                           DENSEJI=quick_qm_struct%psdense(KKK,III)
+                           DENSEJJ=quick_qm_struct%psdense(KKK,KKK)
+                           DENSEII=quick_qm_struct%psdense(III,III)
+                           else
                            DENSEJI=quick_qm_struct%dense(KKK,III)
                            DENSEJJ=quick_qm_struct%dense(KKK,KKK)
                            DENSEII=quick_qm_struct%dense(III,III)
+                           endif
                            ! Find  all the (ii|jj) integrals.
                            quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEJJ*Y
                            quick_qm_struct%o(KKK,KKK) = quick_qm_struct%o(KKK,KKK)+DENSEII*Y
@@ -818,8 +842,13 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                                 -2.0d0*quick_method%x_hybrid_coeff*DENSEJIB*Y
 #else
 
+                           if (quick_method%CalcFock_d1g0) then
+                           DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                           DENSEJJ=quick_qm_struct%psdense(JJJ,JJJ)
+                           else
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
                            DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
+                           endif
 
                            ! Find  all the (ij|jj) integrals.
                            quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEJJ*Y &
@@ -854,10 +883,17 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%ob(KKK,JJJ) = quick_qm_struct%ob(KKK,JJJ)-quick_method%x_hybrid_coeff*DENSEKIB*Y
                            quick_qm_struct%ob(JJJ,KKK) = quick_qm_struct%ob(JJJ,KKK)-quick_method%x_hybrid_coeff*DENSEKIB*Y
 #else
+                           if (quick_method%CalcFock_d1g0) then
+                           DENSEKI=quick_qm_struct%psdense(KKK,III)
+                           DENSEKJ=quick_qm_struct%psdense(KKK,JJJ)
+                           DENSEKK=quick_qm_struct%psdense(KKK,KKK)
+                           DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                           else
                            DENSEKI=quick_qm_struct%dense(KKK,III)
                            DENSEKJ=quick_qm_struct%dense(KKK,JJJ)
                            DENSEKK=quick_qm_struct%dense(KKK,KKK)
                            DENSEJI=quick_qm_struct%dense(JJJ,III)
+                           endif
 
                            ! Find all the (ij|kk) integrals where j>i, k>j.
                            quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+DENSEKK*Y
@@ -890,10 +926,17 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                            quick_qm_struct%ob(LLL,III) = quick_qm_struct%ob(LLL,III)-quick_method%x_hybrid_coeff*DENSEJIB*Y
 #else
 
+                           if (quick_method%CalcFock_d1g0) then
+                           DENSEII=quick_qm_struct%psdense(III,III)
+                           DENSEJI=quick_qm_struct%psdense(KKK,III)
+                           DENSEKI=quick_qm_struct%psdense(LLL,III)
+                           DENSEKJ=quick_qm_struct%psdense(LLL,KKK)
+                           else
                            DENSEII=quick_qm_struct%dense(III,III)
                            DENSEJI=quick_qm_struct%dense(KKK,III)
                            DENSEKI=quick_qm_struct%dense(LLL,III)
                            DENSEKJ=quick_qm_struct%dense(LLL,KKK)
+                           endif
 
                            ! Find all the (ii|jk) integrals where j>i, k>j.
                            quick_qm_struct%o(LLL,KKK) = quick_qm_struct%o(LLL,KKK)+DENSEII*Y
@@ -920,7 +963,11 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+DENSEII*Y- &
                                                             quick_method%x_hybrid_coeff*DENSEIIB*Y
 #else
+                           if (quick_method%CalcFock_d1g0) then
+                              DENSEII=quick_qm_struct%psdense(III,III)
+                           else
                               DENSEII=quick_qm_struct%dense(III,III)
+                           endif
 
                               ! do all the (ii|ii) integrals.
                               quick_qm_struct%o(III,III) = quick_qm_struct%o(III,III)+DENSEII*Y &
@@ -948,8 +995,13 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)+2.0d0*DENSEJI*Y &
                                 -quick_method%x_hybrid_coeff*2.0d0*DENSEJIB*Y
 #else
+                           if (quick_method%CalcFock_d1g0) then
+                              DENSEJI=quick_qm_struct%psdense(LLL,III)
+                              DENSEII=quick_qm_struct%psdense(III,III)
+                           else
                               DENSEJI=quick_qm_struct%dense(LLL,III)
                               DENSEII=quick_qm_struct%dense(III,III)
+                           endif
 
                               ! Find  all the (ii|ij) integrals.
                               quick_qm_struct%o(LLL,III) = quick_qm_struct%o(LLL,III)+DENSEII*Y &
@@ -983,9 +1035,15 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               quick_qm_struct%ob(III,III) = quick_qm_struct%ob(III,III)-quick_method%x_hybrid_coeff*DENSEJJB*Y
 #else
 
+                           if (quick_method%CalcFock_d1g0) then
+                              DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                              DENSEJJ=quick_qm_struct%psdense(JJJ,JJJ)
+                              DENSEII=quick_qm_struct%psdense(III,III)
+                           else
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
                               DENSEJJ=quick_qm_struct%dense(JJJ,JJJ)
                               DENSEII=quick_qm_struct%dense(III,III)
+                           endif
 
                               ! Find all the (ij|ij) integrals
                               quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEJI*Y &
@@ -1026,11 +1084,17 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
                               quick_qm_struct%ob(LLL,JJJ) = quick_qm_struct%ob(LLL,JJJ)-quick_method%x_hybrid_coeff* &
                                                             DENSEIIB*Y
 #else
+                           if (quick_method%CalcFock_d1g0) then
+                              DENSEKI=quick_qm_struct%psdense(LLL,III)
+                              DENSEKJ=quick_qm_struct%psdense(LLL,JJJ)
+                              DENSEII=quick_qm_struct%psdense(III,III)
+                              DENSEJI=quick_qm_struct%psdense(JJJ,III)
+                           else
                               DENSEKI=quick_qm_struct%dense(LLL,III)
                               DENSEKJ=quick_qm_struct%dense(LLL,JJJ)
                               DENSEII=quick_qm_struct%dense(III,III)
                               DENSEJI=quick_qm_struct%dense(JJJ,III)
-
+                           endif
                               ! Find all the (ij|ik) integrals where j>i,k>j
                               quick_qm_struct%o(JJJ,III) = quick_qm_struct%o(JJJ,III)+2.0d0*DENSEKI*Y &
                                 -quick_method%x_hybrid_coeff*0.5d0*DENSEKI*Y

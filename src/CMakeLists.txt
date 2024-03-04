@@ -33,6 +33,7 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90
+        oshell_quick_eri_fock1_module.f90 quick_eri_fock1_module.f90
 	oshell_quick_gradient_module.f90 quick_dftd3_module.f90 quick_molden_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
@@ -50,7 +51,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	ssw.f90 sum2Mat.f90 transpose.f90 tridi.f90
 	upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
-	pt2der.f90 sswder.f90 denspt_new_imp.f90
+	pt3der.f90  pt2der.f90 sswder.f90 denspt_new_imp.f90
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
 	oshell_denspt.f90 naive_distribute.f90 time.cpp)
 
@@ -98,7 +99,7 @@ endif()
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90
     getMol.f90 quick_one_electron_integral.f90 getEnergy.f90
     ecp.f90 nuclear.f90 finalize.f90 mpi_setup.f90 quick_debug.f90
-    calMP2.f90 hessian.f90 CPHF.f90 frequency.f90 basis.f90)
+    calMP2.f90 hessian.f90 CPHF.f90 hess_dft.f90 frequency.f90 basis.f90)
 
 set(QUICK_GPU_FORTRAN_SOURCE ${QUICK_GPU_TARGET_NAME}/gpu_write_info.f90)
 

@@ -62,8 +62,8 @@ module quick_molspec_module
       ! which atom type id every atom crosponds to
       integer,dimension(:),allocatable :: iattype
 
-      ! atom charge and external atom charge
-      double precision, dimension(:), allocatable ::chg,extchg
+      ! atom charge, external atom charge and atom mass
+      double precision, dimension(:), allocatable ::chg,extchg,iatmass
 
       ! basis set number
       integer,pointer:: nbasis
@@ -135,11 +135,13 @@ contains
 !      allocate(self%xyz(3,natom))
       if (.not. allocated(self%distnbor))  allocate(self%distnbor(natom))
       if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+      if (.not. allocated(self%iatmass)) allocate(self%iatmass(natom))
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
       do i=1,natom
          self%distnbor(i)=0
          self%iattype(i)=0
+         self%iatmass(i)=0d0
          self%chg(i)=0d0
          do j=1,3
             xyz(j,i)=0d0
@@ -227,6 +229,7 @@ contains
       if (allocated(self%distnbor)) deallocate(self%distnbor)
 !      deallocate(self%xyz)
       if (allocated(self%iattype)) deallocate(self%iattype)
+      if (allocated(self%iatmass)) deallocate(self%iatmass)
       if (allocated(self%chg)) deallocate(self%chg)
 
       ! if exist external charge
@@ -295,6 +298,7 @@ contains
     integer :: ierror
     integer :: iAtomType
     integer :: nextatom
+    integer :: check_iso
     double precision :: temp,rdnml
     character(len=200) :: keywd
     logical :: is_extcharge = .false.
@@ -342,6 +346,9 @@ contains
        call upcase(keywd,80)
        call rdword(keywd,i,j)
        if (is_blank(keywd,1,80)) exit
+
+       check_iso = index(keywd(:j),'ISO=')
+       if (check_iso /=0) j=check_iso-2 
 
        do k=0,71
           if (keywd(i:j) == symbol(k)) then
@@ -391,7 +398,7 @@ contains
       integer input
       integer, intent(inout) :: ierr
       ! inner varibles
-      integer i,j,k,istart,ifinal
+      integer i,j,k,istart,ifinal,check_iso
       integer ierror
       double precision temp
       character(len=200) keywd
@@ -411,11 +418,21 @@ contains
          call rdword(keywd,istart,ifinal)
 
          !-----------------------------
-         ! First, find the atom type.
+         ! First, find the atom type and atom mass
          !-----------------------------
-         do k=1,SYMBOL_MAX
-             if (keywd(istart:ifinal) == symbol(k)) self%iattype(i)=k
-         enddo
+         check_iso=index(keywd(:ifinal),'ISO=')
+         if (check_iso/=0) then
+            do k=1,SYMBOL_MAX
+               if (keywd(istart:check_iso-2) == symbol(k)) self%iattype(i)=k
+            enddo
+            call rdnum(keywd(:ifinal-1),check_iso+4,temp,ierror)
+            self%iatmass(i)=temp
+         else
+            do k=1,SYMBOL_MAX
+               if (keywd(istart:ifinal) == symbol(k)) self%iattype(i)=k
+            enddo
+            self%iatmass(i)=emass(self%iattype(i))
+         endif
 
          !-----------------------------
          ! Next, find the xyz coordinates of the atom and convert to bohr.
@@ -426,7 +443,8 @@ contains
             call rdword(keywd,istart,ifinal)
             call rdnum(keywd,istart,temp,ierror)
             xyz(k,i) = temp*A_TO_BOHRS
-        enddo
+         enddo
+
       enddo
 
       self%xyz => xyz
