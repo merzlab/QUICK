@@ -58,7 +58,7 @@ module quick_method_module
         logical :: zmat = .false.      ! Z-matrix
         logical :: dipole = .false.    ! Dipole Momenta
         logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
-        logical :: fFunXiao            ! If f orbitial is contained
+        logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false.
                                        ! calculate density lap
@@ -89,6 +89,7 @@ module quick_method_module
 
         ! max cycles for scf or opt
         integer :: iscf = 200          ! max scf cycles
+        integer :: iscf_sad = 200      ! max scf cycles for sad guess
         integer :: iopt = 0            ! max opt cycles
 
         ! Maximum number of DIIS error vectors for scf convergence.
@@ -229,7 +230,7 @@ module quick_method_module
             call MPI_BCAST(self%ecp,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%custECP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%printEnergy,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%fFunXiao,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDens,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -244,6 +245,7 @@ module quick_method_module
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%maxdiisscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ncyc,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -833,7 +835,7 @@ module quick_method_module
             self%ecp = .false.       ! ECP
             self%custECP = .false.   ! Custom ECP
             self%printEnergy = .true.! Print Energy each cycle
-            self%fFunXiao = .false.            ! If f orbitial is contained
+            self%hasF = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
             self%writePMat = .false.   ! Output density matrix
@@ -848,6 +850,7 @@ module quick_method_module
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200
+            self%iscf_sad = 200
             self%maxdiisscf = 10
             self%iopt = 0
             self%ncyc = 3

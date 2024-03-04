@@ -36,7 +36,7 @@ if(NOT INSIDE_AMBER)
 
 endif()
 
-option(ENABLEF "Enables the compilation of QUICK's time consuming f functions in the ERI code of cuda version." FALSE)
+option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)
 
 # Compiler flags
 # These should really go into cmake/CompilerFlags.cmake but with the
@@ -234,6 +234,11 @@ endif()
 # extra compiling flags
 if(INSIDE_AMBER)
   add_definitions(-DCEW)
+endif()
+
+# set general preprocessor flag for enabling F functions
+if(ENABLEF)
+  add_definitions(-DENABLEF)
 endif()
 
 # CUDA compiler flags

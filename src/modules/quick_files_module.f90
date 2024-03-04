@@ -29,6 +29,7 @@ module quick_files_module
     implicit none
 
     character(len=80) :: inFileName     = ''
+    character(len=80) :: baseinFileName = ''
     character(len=80) :: outFileName    = ''
     character(len=80) :: dmxFileName    = ''
     character(len=80) :: rstFileName    = ''
@@ -112,6 +113,7 @@ module quick_files_module
           i = index(inFileName,'.')  
         endif
 
+        baseinFileName=inFileName(1:i-1)
         outFileName=inFileName(1:i-1)//'.out'
 
         dmxFileName=inFileName(1:i-1)//'.dmx'
