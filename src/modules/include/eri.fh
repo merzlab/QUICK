@@ -574,6 +574,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
    LLL2=quick_basis%ksumtype(LL)+NBL2
 
    if (quick_method%nodirect) then
+#ifdef COMPILE_AOINT
       INTNUM = 0
       do III=III1,III2
          do JJJ=max(III,JJJ1),JJJ2
@@ -644,6 +645,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
       enddo
 
       intindex = intindex + INTNUM
+#endif
    else
       if(II.lt.JJ.and.II.lt.KK.and.KK.lt.LL)then
          do III=III1,III2
@@ -1081,7 +1083,7 @@ end subroutine get_oshell_eri_energy
 end subroutine get_cshell_eri_energy
 #endif
 
-
+#ifdef COMPILE_AOINT
 ! Drivers to dump integrals into files. Currently not working.
 subroutine writeInt(iIntFile, intDim, a, b, int)
    Implicit none
@@ -1450,6 +1452,7 @@ subroutine addInt
    100 continue
 
 end subroutine addInt
+#endif
 
 #ifdef OSHELL
 end module quick_oshell_eri_module
