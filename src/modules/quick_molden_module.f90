@@ -367,6 +367,7 @@ subroutine reorder_mo_coeffs(co, KLMN, nbasis, i, reord_mo_vec, ierr)
     j=1
     do while (j <= nbasis)
         reord_mo_vec(j)=co(j,i)
+        ! order d functions. xx is the first, followed by yy, zz, xy, xz, yz
         if(KLMN(1,j) .eq. 2) then
             reord_mo_vec(j+1)=co(j+2,i)
             reord_mo_vec(j+2)=co(j+5,i)
@@ -375,6 +376,21 @@ subroutine reorder_mo_coeffs(co, KLMN, nbasis, i, reord_mo_vec, ierr)
             reord_mo_vec(j+5)=co(j+4,i)
             j=j+5
         endif
+
+        ! order f functions. xxx is the first, followed by yyy, zzz, xyy, xxy, xxz, xzz, yzz, yyz, xyz
+        if(KLMN(1,j) .eq. 3) then
+            reord_mo_vec(j+1)=co(j+3,i) 
+            reord_mo_vec(j+2)=co(j+9,i) 
+            reord_mo_vec(j+3)=co(j+2,i) 
+            reord_mo_vec(j+4)=co(j+1,i) 
+            reord_mo_vec(j+5)=co(j+4,i)
+            reord_mo_vec(j+6)=co(j+7,i)
+            reord_mo_vec(j+7)=co(j+8,i)
+            reord_mo_vec(j+8)=co(j+6,i)
+            reord_mo_vec(j+9)=co(j+5,i)
+            j=j+9
+        endif
+
         j=j+1
     enddo 
     
