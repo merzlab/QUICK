@@ -43,6 +43,9 @@ module quick_molden_module
 
       ! counter to keep track of number of snapshots
       integer :: iexport_snapshot
+    
+      ! temporary vector for reorganizing mo coefficients
+      double precision, dimension(:), allocatable :: reord_mo_vec
 
     end type quick_molden_type
 
@@ -163,11 +166,13 @@ subroutine write_mo(self, ierr)
     use quick_molspec_module, only: quick_molspec
     use quick_method_module, only: quick_method
     implicit none
-    type (quick_molden_type), intent(in) :: self
+    type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr    
     integer :: i, j, k, neleca, nelecb
     character(len=5) :: lbl1
     double precision :: occnum, occval
+
+    if(.not. allocated(self%reord_mo_vec)) allocate(self%reord_mo_vec(nbasis))
 
     write(self%iMoldenFile, '("[MO]")')
 
@@ -196,9 +201,12 @@ subroutine write_mo(self, ierr)
         ! write orbital occupation numbers
         write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum 
 
-        ! write molecular orbital coefficients        
+        ! reorder molecular orbital coefficients        
+         call reorder_mo_coeffs(quick_qm_struct%co, quick_basis%KLMN, nbasis, i, self%reord_mo_vec, ierr)
+
+        ! write molecular orbital coefficients  
         do j=1, nbasis
-            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%co(j,i)
+            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, self%reord_mo_vec(j)
         enddo
     enddo
 
@@ -218,13 +226,18 @@ subroutine write_mo(self, ierr)
     
             ! write orbital occupation numbers
             write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum
+
+            ! reorder molecular orbital coefficients        
+            call reorder_mo_coeffs(quick_qm_struct%cob, quick_basis%KLMN, nbasis, i, self%reord_mo_vec, ierr)
     
             ! write molecular orbital coefficients        
             do j=1, nbasis
-                write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, quick_qm_struct%cob(j,i)
+                write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, self%reord_mo_vec(j)
             enddo
         enddo
     endif
+
+    if(allocated(self%reord_mo_vec)) deallocate(self%reord_mo_vec)
 
 end subroutine write_mo
 
@@ -340,5 +353,31 @@ subroutine finalize_molden(self, ierr)
     close(self%iMoldenFile)
 
 end subroutine finalize_molden
+
+subroutine reorder_mo_coeffs(co, KLMN, nbasis, i, reord_mo_vec, ierr)
+
+    implicit none
+    double precision, intent(in) :: co(:,:)
+    integer, intent(in) :: KLMN(:,:)
+    integer, intent (in) :: nbasis, i 
+    double precision, intent(inout) :: reord_mo_vec(:)
+    integer, intent(out) :: ierr
+    integer :: j
+   
+    j=1
+    do while (j <= nbasis)
+        reord_mo_vec(j)=co(j,i)
+        if(KLMN(1,j) .eq. 2) then
+            reord_mo_vec(j+1)=co(j+2,i)
+            reord_mo_vec(j+2)=co(j+5,i)
+            reord_mo_vec(j+3)=co(j+1,i)
+            reord_mo_vec(j+4)=co(j+3,i)
+            reord_mo_vec(j+5)=co(j+4,i)
+            j=j+5
+        endif
+        j=j+1
+    enddo 
+    
+end subroutine reorder_mo_coeffs
 
 end module quick_molden_module
