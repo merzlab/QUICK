@@ -118,41 +118,80 @@ subroutine write_basis_info(self, ierr)
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
     integer :: iatom, ishell, ibas, iprim, nprim, j
+    logical :: print_gto
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
     do iatom=1, natom
         write(self%iMoldenFile, '(2x, I5)') iatom
 
+        ! s basis functions
         do ishell=1, nshell
             if(quick_basis%katom(ishell) .eq. iatom) then
                 nprim = quick_basis%kprim(ishell)
                 if(quick_basis%ktype(ishell) .eq. 1) then
                     write(self%iMoldenFile, '(2x, "s", 4x, I2)') nprim
-                elseif(quick_basis%ktype(ishell) .eq. 3) then
-                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
-                elseif(quick_basis%ktype(ishell) .eq. 4) then
-                    write(self%iMoldenFile, '(2x, "sp", 4x, I2)') nprim
-                elseif(quick_basis%ktype(ishell) .eq. 6) then
-                    write(self%iMoldenFile, '(2x, "d", 4x, I2)') nprim
-                elseif(quick_basis%ktype(ishell) .eq. 10) then
-                    write(self%iMoldenFile, '(2x, "f", 4x, I2)') nprim
-                endif
-                 
-                if(quick_basis%ktype(ishell) .eq. 4) then
-                    do iprim=1, nprim
-                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8, 2x, E14.8)') &
-                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)+j), j=0,1)
-                    enddo                    
-
-                else
                     do iprim=1, nprim
                         write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
                         aexp(iprim, quick_basis%ksumtype(ishell)), dcoeff(iprim,quick_basis%ksumtype(ishell))
+                    enddo                    
+                endif
+            endif
+        enddo
+
+        ! s basis functions of sp shell
+        do ishell=1, nshell
+            if(quick_basis%katom(ishell) .eq. iatom) then
+                nprim = quick_basis%kprim(ishell)
+                if(quick_basis%ktype(ishell) .eq. 4) then
+                    write(self%iMoldenFile, '(2x, "s", 4x, I2)') nprim
+                    do iprim=1, nprim
+                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
+                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)))
                     enddo
                 endif
             endif
         enddo
+
+        ! p basis functions of sp shell
+        do ishell=1, nshell
+            if(quick_basis%katom(ishell) .eq. iatom) then
+                nprim = quick_basis%kprim(ishell)
+                if(quick_basis%ktype(ishell) .eq. 4) then
+                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
+                    do iprim=1, nprim
+                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
+                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)+1))
+                    enddo
+                endif
+            endif
+        enddo
+        
+        ! p, d, anf f basis functions
+        do ishell=1, nshell
+            if(quick_basis%katom(ishell) .eq. iatom) then
+                nprim = quick_basis%kprim(ishell)
+                print_gto=.false.
+                if(quick_basis%ktype(ishell) .eq. 3) then
+                    print_gto=.true.
+                    write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
+                elseif(quick_basis%ktype(ishell) .eq. 6) then
+                    print_gto=.true.
+                    write(self%iMoldenFile, '(2x, "d", 4x, I2)') nprim
+                elseif(quick_basis%ktype(ishell) .eq. 10) then
+                    print_gto=.true.
+                    write(self%iMoldenFile, '(2x, "f", 4x, I2)') nprim
+                endif
+                
+                do iprim=1, nprim
+                    if(print_gto) then
+                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
+                        aexp(iprim, quick_basis%ksumtype(ishell)), dcoeff(iprim,quick_basis%ksumtype(ishell))
+                    endif
+                enddo
+            endif
+        enddo
+
         write(self%iMoldenFile, '("")')
     enddo
 
