@@ -100,11 +100,11 @@ subroutine write_coordinates(self, ierr)
            ! we need to do this because optimizers may return the geometry
            ! for the next step which may be stored in xyz
            k = self%iexport_snapshot - 1
-           write(self%iMoldenFile, '(3(4x,F10.4))') (self%xyz_snapshots(j,i,k),j=1,3)
+           write(self%iMoldenFile, '(3(4x,F13.10))') (self%xyz_snapshots(j,i,k),j=1,3)
          else
            ! if it's a single point calculation we can use xyz
            ! we can't use xyz_snapshots because they have not been populated
-           write(self%iMoldenFile, '(3(4x,F10.4))') (xyz(j,i),j=1,3)
+           write(self%iMoldenFile, '(3(4x,F13.10))') (xyz(j,i),j=1,3)
         endif
     enddo
 
@@ -117,8 +117,9 @@ subroutine write_basis_info(self, ierr)
     implicit none
     type (quick_molden_type), intent(in) :: self
     integer, intent(out) :: ierr
-    integer :: iatom, ishell, ibas, iprim, nprim, j
+    integer :: iatom, ishell, ibas, iprim, nprim, j, ishell_idx
     logical :: print_gto
+    double precision :: val_gccoeff, xnorm
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
@@ -132,36 +133,30 @@ subroutine write_basis_info(self, ierr)
                 if(quick_basis%ktype(ishell) .eq. 1) then
                     write(self%iMoldenFile, '(2x, "s", 4x, I2)') nprim
                     do iprim=1, nprim
-                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
-                        aexp(iprim, quick_basis%ksumtype(ishell)), dcoeff(iprim,quick_basis%ksumtype(ishell))
+                        ishell_idx=quick_basis%ksumtype(ishell)
+                        write(self%iMoldenFile, '(2E20.10)') &
+                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx) 
                     enddo                    
                 endif
             endif
         enddo
 
-        ! s basis functions of sp shell
+        ! s, p basis functions of sp shell
         do ishell=1, nshell
             if(quick_basis%katom(ishell) .eq. iatom) then
                 nprim = quick_basis%kprim(ishell)
                 if(quick_basis%ktype(ishell) .eq. 4) then
                     write(self%iMoldenFile, '(2x, "s", 4x, I2)') nprim
                     do iprim=1, nprim
-                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
-                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)))
+                        ishell_idx=quick_basis%ksumtype(ishell)
+                        write(self%iMoldenFile, '(2E20.10)') &
+                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
                     enddo
-                endif
-            endif
-        enddo
-
-        ! p basis functions of sp shell
-        do ishell=1, nshell
-            if(quick_basis%katom(ishell) .eq. iatom) then
-                nprim = quick_basis%kprim(ishell)
-                if(quick_basis%ktype(ishell) .eq. 4) then
                     write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
                     do iprim=1, nprim
-                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
-                        aexp(iprim, quick_basis%ksumtype(ishell)), (dcoeff(iprim,quick_basis%ksumtype(ishell)+1))
+                        ishell_idx=quick_basis%ksumtype(ishell)
+                        write(self%iMoldenFile, '(2E20.10)') &
+                        aexp(iprim, ishell_idx), (quick_basis%unnorm_gccoeff(iprim,ishell_idx+1))
                     enddo
                 endif
             endif
@@ -185,8 +180,9 @@ subroutine write_basis_info(self, ierr)
                 
                 do iprim=1, nprim
                     if(print_gto) then
-                        write(self%iMoldenFile, '(2x, E14.8, 2x, E14.8)') &
-                        aexp(iprim, quick_basis%ksumtype(ishell)), dcoeff(iprim,quick_basis%ksumtype(ishell))
+                        ishell_idx=quick_basis%ksumtype(ishell)
+                        write(self%iMoldenFile, '(2E20.10)') &
+                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
                     endif
                 enddo
             endif
@@ -233,19 +229,19 @@ subroutine write_mo(self, ierr)
         endif
 
         write(lbl1,'(I5)') i
-        write(self%iMoldenFile, '(A11)') "Sym= a"//trim(adjustl(lbl1))
-        write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%E(i)
+        write(self%iMoldenFile, '(A11)') "  Sym= a"//trim(adjustl(lbl1))
+        write(self%iMoldenFile, '("  Ene= ", F15.10)') quick_qm_struct%E(i)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
         ! write orbital occupation numbers
-        write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum 
+        write(self%iMoldenFile, '("  Occup= ", F10.8)') occnum 
 
         ! reorder molecular orbital coefficients        
          call reorder_mo_coeffs(quick_qm_struct%co, quick_basis%KLMN, nbasis, i, self%reord_mo_vec, ierr)
 
         ! write molecular orbital coefficients  
         do j=1, nbasis
-            write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, self%reord_mo_vec(j)
+            write(self%iMoldenFile, '(I4,F15.10)') j, self%reord_mo_vec(j)
         enddo
     enddo
 
@@ -259,19 +255,19 @@ subroutine write_mo(self, ierr)
             endif
     
             write(lbl1,'(I5)') i
-            write(self%iMoldenFile, '(A11)') "Sym= b"//trim(adjustl(lbl1))
-            write(self%iMoldenFile, '(2x, "Ene= ", E16.10)') quick_qm_struct%Eb(i)
+            write(self%iMoldenFile, '(A11)') "  Sym= b"//trim(adjustl(lbl1))
+            write(self%iMoldenFile, '("  Ene= ",F15.10)') quick_qm_struct%Eb(i)
             write(self%iMoldenFile, '(2x, "Spin= Beta" )')
     
             ! write orbital occupation numbers
-            write(self%iMoldenFile, '(2x, "Occup= ", F10.4)') occnum
+            write(self%iMoldenFile, '("  Occup= ", F10.8)') occnum
 
             ! reorder molecular orbital coefficients        
             call reorder_mo_coeffs(quick_qm_struct%cob, quick_basis%KLMN, nbasis, i, self%reord_mo_vec, ierr)
     
             ! write molecular orbital coefficients        
             do j=1, nbasis
-                write(self%iMoldenFile, '(2x, I5, 2x, E16.10)') j, self%reord_mo_vec(j)
+                write(self%iMoldenFile, '(I4,F15.10)') j, self%reord_mo_vec(j)
             enddo
         enddo
     endif
