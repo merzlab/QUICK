@@ -21,6 +21,10 @@ module quick_mpi_module
 !  AUTHOR      : Yipu Miao
 !------------------------------------------------------------------------    
 
+#ifdef MPIV
+    use mpi
+#endif
+
     integer :: mpierror
     integer :: mpirank
     integer :: myid

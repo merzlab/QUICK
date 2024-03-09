@@ -103,12 +103,11 @@ contains
   ! initialize mpi library and save mpirank and mpisize
   subroutine mpi_initialize(mpisize, mpirank, master, mpierror)
 
+    use mpi
     implicit none
 
     integer, intent(inout) :: mpisize, mpirank, mpierror
     logical, intent(inout) :: master
-
-    include 'mpif.h'
 
     call MPI_INIT(mpierror)
     call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
@@ -144,10 +143,9 @@ contains
 
   subroutine mpi_exit
 
+    use mpi
     implicit none
     integer :: mpierror
-
-    include 'mpif.h'
 
     call MPI_FINALIZE(mpierror)
     call exit(0)

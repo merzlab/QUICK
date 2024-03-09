@@ -38,6 +38,9 @@ contains
      use quick_oshell_gradient_module, only: uscf_gradient
      use quick_exception_module
      use quick_molden_module, only: quick_molden
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
 
      logical :: done,diagco
@@ -52,10 +55,6 @@ contains
      double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
      double precision EChg
      integer, intent(inout) :: ierr
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
      !---------------------------------------------------------
      ! This subroutine optimizes the geometry of the molecule. It has a

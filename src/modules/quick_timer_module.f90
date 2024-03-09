@@ -119,6 +119,9 @@ module quick_timer_module
     subroutine timer_output(io)
         use quick_mpi_module
         use quick_method_module
+#ifdef MPIV
+        use mpi
+#endif
         implicit none
         integer i,IERROR,io
         double precision :: t_tot_dftop, t_tot_lb
@@ -127,7 +130,6 @@ module quick_timer_module
         double precision :: tst2e(mpisize), tstxc(mpisize), tst2egrad(mpisize), tstxcgrad(mpisize)
         double precision :: tend2e(mpisize), tendxc(mpisize), tend2egrad(mpisize), tendxcgrad(mpisize)
         double precision :: t2e(mpisize), txc(mpisize), t2egrad(mpisize), txcgrad(mpisize)
-        include "mpif.h"
 #endif
         type (quick_timer) tmp_timer
         type (quick_timer_cumer) tmp_timer_cumer,max_timer_cumer
@@ -445,8 +447,8 @@ module quick_timer_module
     subroutine mpi_setup_timer
 
         use quick_mpi_module
+        use mpi
         implicit none
-        include "mpif.h"
 
         ! declaim mpi timer
         if (bMPI) then
@@ -463,10 +465,10 @@ module quick_timer_module
 #if defined CUDA_MPIV || defined HIP_MPIV
     subroutine get_mgpu_time
         use quick_mpi_module
+        use mpi
         implicit none
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
-        include "mpif.h"
 
         call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
         call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)

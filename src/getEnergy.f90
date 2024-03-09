@@ -20,6 +20,9 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef CEW
    use quick_cew_module, only : quick_cew
 #endif
+#ifdef MPIV
+   use mpi
+#endif
 
    implicit none
 
@@ -29,10 +32,6 @@ subroutine getEnergy(isGuess, ierr)
    logical, intent(in) :: isGuess
    integer, intent(inout) :: ierr
    logical :: verbose
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
    verbose = .true.
    if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.

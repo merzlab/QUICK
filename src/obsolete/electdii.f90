@@ -14,9 +14,8 @@
 !
 subroutine electdiis(jscf,PRMS)
   use allmod
+  use mpi
   implicit double precision(a-h,o-z)
-  
-  include "mpif.h"
 
   logical :: diisdone
   double precision:: oldEnergy=0.0d0,E1e
@@ -543,6 +542,7 @@ end subroutine electdiis
 !
     subroutine electdiisdc(jscf,PRMS)
       use allmod
+      use mpi
       implicit double precision(a-h,o-z)
 
       logical :: diisdone
@@ -554,8 +554,6 @@ end subroutine electdiis
       logical templog1,templog2
       integer elecs,itemp
       double precision efermi(10),oneElecO(nbasis,nbasis)
-
-      include "mpif.h"
 
 
       !=========================================================== 

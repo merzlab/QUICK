@@ -26,9 +26,8 @@ subroutine qm2_quick_energy(escf,scf_mchg)
    
 ! quick mod
    use allmod
+   use mpi
    implicit none
-   
-   include 'mpif.h'
 
    double precision, intent(out)   :: escf
    double precision, intent(inout) :: scf_mchg(qmmm_struct%nquant_nlink)
