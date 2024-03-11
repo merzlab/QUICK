@@ -636,10 +636,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
                            elseif (shell == 'F') then
                            quick_method%hasF=.true.
-#ifndef ENABLEF
-                           ierr=36 
-#endif
-
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
                            quick_basis%kstart(jshell) = jbasis
@@ -831,6 +827,13 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
    endif
    !======== END MPI/ALL NODES ================
+#endif
+
+#ifndef ENABLEF   
+   if(quick_method%hasF) then 
+       ierr=36
+       return
+   endif
 #endif
 
    ! Allocate the arrays now that we know the sizes
