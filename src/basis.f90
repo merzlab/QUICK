@@ -15,6 +15,11 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+
+#ifdef CEW
+   use quick_cew_module, only: quick_cew
+#endif
+
    !
    implicit double precision(a-h,o-z)
    character(len=120) :: line
@@ -832,6 +837,13 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 #ifndef ENABLEF   
    if(quick_method%hasF) then 
        ierr=36
+       return
+   endif
+#endif
+
+#ifdef CEW
+   if(quick_method%hasF .and. quick_cew%use_cew) then
+       ierr=38
        return
    endif
 #endif

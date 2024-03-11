@@ -132,7 +132,10 @@ contains
 
     case(37)
       msg='G functions are not supported. Please choose a different basis set.'
-      
+
+    case(38)
+      msg='Support for F functions is currently not available in cEW-enabled QM/MM.'      
+
     case default
       msg='Unknown error.'
 
