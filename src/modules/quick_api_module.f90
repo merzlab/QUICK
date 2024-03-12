@@ -818,14 +818,13 @@ end subroutine set_quick_mpi
 ! broadcasts results from master to slaves
 
 subroutine broadcast_quick_mpi_results(self,ierr)
+  use mpi
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
   integer :: mpierror
   integer, intent(inout) :: ierr
-
-  include 'mpif.h'
 
   call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
   call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)

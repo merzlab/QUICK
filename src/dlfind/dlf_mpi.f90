@@ -32,7 +32,7 @@
 !! SOURCE
 !!****
 module dlf_mpi_module
-  include 'mpif.h'
+  use mpi
   save
 
   integer  :: global_comm      ! set to, and use instead of, mpi_comm_world
