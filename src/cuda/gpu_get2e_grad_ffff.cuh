@@ -1699,6 +1699,7 @@ if(bprint){
 #endif    
    
 #ifdef USE_LEGACY_ATOMICS 
+/*
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart], AGradx);
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 1], AGrady);
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 2], AGradz);
@@ -1717,6 +1718,7 @@ if(bprint){
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart], (-AGradx-BGradx-CGradx));
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 1], (-AGrady-BGrady-CGrady));
     GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 2], (-AGradz-BGradz-CGradz));
+*/
 #else 
     atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart], AGradx);
     atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 1], AGrady);

@@ -589,7 +589,7 @@ contains
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
-        if(quick_method%hasF) then
+        if(.not. quick_method%hasF) then
           call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
         else
 
