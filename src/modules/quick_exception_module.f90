@@ -136,6 +136,9 @@ contains
     case(38)
       msg='Support for F functions is currently not available in cEW-enabled QM/MM.'      
 
+    case(39)
+      msg='Support for F functions is currently not available for GPU accelerated UHF/UDFT gradients.'
+
     case default
       msg='Unknown error.'
 

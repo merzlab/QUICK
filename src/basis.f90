@@ -23,6 +23,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 #ifdef MPIV
    use mpi
 #endif
+
    !
    implicit double precision(a-h,o-z)
    character(len=120) :: line
