@@ -15,12 +15,11 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+#ifdef MPIV
+   use mpi
+#endif
 
    implicit none
-
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
    logical :: present
    integer :: i,j,k,itemp

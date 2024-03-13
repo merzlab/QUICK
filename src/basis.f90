@@ -20,6 +20,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use quick_cew_module, only: quick_cew
 #endif
 
+#ifdef MPIV
+   use mpi
+#endif
+
    !
    implicit double precision(a-h,o-z)
    character(len=120) :: line
@@ -34,11 +38,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
    integer, intent(inout) :: ierr
    logical :: blngr_test
-
-
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
    ! initialize the arra
 

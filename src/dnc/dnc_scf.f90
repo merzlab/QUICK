@@ -9,6 +9,9 @@
 ! this is dii for div & con
 subroutine electdiisdc(jscf,PRMS)
    use allmod
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    logical :: diisdone
@@ -21,10 +24,6 @@ subroutine electdiisdc(jscf,PRMS)
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
    integer :: lsolerr = 0
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
    !===========================================================
    ! The purpose of this subroutine is to utilize Pulay's accelerated

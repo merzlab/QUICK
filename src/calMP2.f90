@@ -254,9 +254,8 @@ subroutine MPI_calmp2
   use allmod
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
+  use mpi
   implicit double precision(a-h,o-z)
-
-  include "mpif.h"
 
   double precision cutoffTest,testtmp,testCutoff
   double precision, allocatable:: temp4d(:,:,:,:)
