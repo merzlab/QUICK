@@ -100,11 +100,11 @@ subroutine write_coordinates(self, ierr)
            ! we need to do this because optimizers may return the geometry
            ! for the next step which may be stored in xyz
            k = self%iexport_snapshot - 1
-           write(self%iMoldenFile, '(3(4x,F13.10))') (self%xyz_snapshots(j,i,k),j=1,3)
+           write(self%iMoldenFile, '(3(2x,F20.10))') (self%xyz_snapshots(j,i,k),j=1,3)
          else
            ! if it's a single point calculation we can use xyz
            ! we can't use xyz_snapshots because they have not been populated
-           write(self%iMoldenFile, '(3(4x,F13.10))') (xyz(j,i),j=1,3)
+           write(self%iMoldenFile, '(3(2x,F20.10))') (xyz(j,i),j=1,3)
         endif
     enddo
 
@@ -230,7 +230,7 @@ subroutine write_mo(self, ierr)
 
         write(lbl1,'(I5)') i
         write(self%iMoldenFile, '(A11)') "  Sym= a"//trim(adjustl(lbl1))
-        write(self%iMoldenFile, '("  Ene= ", F15.10)') quick_qm_struct%E(i)
+        write(self%iMoldenFile, '("  Ene= ", E20.10)') quick_qm_struct%E(i)
         write(self%iMoldenFile, '(2x, "Spin= Alpha" )') 
 
         ! write orbital occupation numbers
@@ -256,7 +256,7 @@ subroutine write_mo(self, ierr)
     
             write(lbl1,'(I5)') i
             write(self%iMoldenFile, '(A11)') "  Sym= b"//trim(adjustl(lbl1))
-            write(self%iMoldenFile, '("  Ene= ",F15.10)') quick_qm_struct%Eb(i)
+            write(self%iMoldenFile, '("  Ene= ",E20.10)') quick_qm_struct%Eb(i)
             write(self%iMoldenFile, '(2x, "Spin= Beta" )')
     
             ! write orbital occupation numbers
