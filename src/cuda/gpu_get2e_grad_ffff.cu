@@ -70,6 +70,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE 2
 #define ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE 1
 
+#define ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE 1
+
 #define DEV_SIM_INT_PTR_KATOM smem_int_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
 #define DEV_SIM_INT_PTR_KPRIM smem_int_ptr[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
 #define DEV_SIM_INT_PTR_KSTART smem_int_ptr[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
@@ -113,6 +115,8 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define DEV_SIM_INT_SQRQSHELL smem_int[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
 #define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
 #define DEV_SIM_INT_FFSTART smem_int[ERI_GRAD_FFFF_TPB*6+threadIdx.x]
+
+#define DEV_SIM_ULL_PTR_GRAD smem_ull_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
 
 #define LOCTRANS(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*ERI_GRAD_FFFF_TPB+threadIdx.x]
 #define DEV_SIM_CHAR_TRANS smem_char
@@ -372,6 +376,7 @@ void getGrad_ffff(_gpu_type gpu)
        QUICKDouble **dbl_ptr_buffer = (QUICKDouble**) malloc(ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
        int2 **int2_ptr_buffer = (int2**) malloc(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        unsigned char **char_ptr_buffer = (unsigned char**) malloc(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
+       QUICKULL **ull_ptr_buffer = (QUICKULL**) malloc(ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*));
        unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
 
 //printf("Storing data \n");
@@ -421,6 +426,7 @@ void getGrad_ffff(_gpu_type gpu)
        int2_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.sorted_YCutoffIJ;
        char_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.mpi_bcompute;
        char_ptr_buffer[ERI_GRAD_FFFF_TPB*1+i] = gpu->gpu_sim.KLMN;
+       ull_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.gradULL;
        }
 
 
@@ -562,6 +568,7 @@ char));
        int2 **dev_int2_ptr_buffer;
        unsigned char **dev_char_ptr_buffer;
        unsigned char *dev_char_buffer;
+       QUICKULL **dev_ull_ptr_buffer;
 
        cudaMalloc((void **)&dev_int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int));
 //printf("Allocating int ptr device memory %d %d %d %d %d %d\n", sizeof(int), sizeof(int*), sizeof(QUICKDouble), sizeof(QUICKDouble*),
@@ -573,6 +580,7 @@ char));
        cudaMalloc((void **)&dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        cudaMalloc((void **)&dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
        cudaMalloc((void **)&dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char));
+       cudaMalloc((void **)&dev_ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*));
 
 //printf("Uploading data \n");
 
@@ -584,6 +592,8 @@ char));
        cudaMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
 char*), cudaMemcpyHostToDevice);
        cudaMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char), cudaMemcpyHostToDevice);
+       cudaMemcpy(dev_ull_ptr_buffer, ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*),
+cudaMemcpyHostToDevice);
 
 /*
        int_buffer -> Upload();
@@ -614,7 +624,7 @@ sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
 char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE>>>(dev_int_buffer,
 dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer,
-gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
+dev_ull_ptr_buffer,gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
 
 #endif  
         }
@@ -631,6 +641,7 @@ gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
    free(dbl_ptr_buffer);
    free(int2_ptr_buffer);
    free(char_ptr_buffer);
+   free(ull_ptr_buffer);
 //   free(trans_buffer);
 
    cudaFree(dev_int_buffer);
@@ -640,6 +651,7 @@ gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
    cudaFree(dev_int2_ptr_buffer);
    cudaFree(dev_char_ptr_buffer);
    cudaFree(dev_char_buffer);
+   cudaFree(dev_ull_ptr_buffer);
 /*
     SAFE_DELETE(int_buffer);
     SAFE_DELETE(int_ptr_buffer);
