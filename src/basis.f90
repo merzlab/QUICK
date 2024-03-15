@@ -444,6 +444,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
 
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
 
@@ -486,6 +487,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                                  !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
@@ -529,6 +531,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
                               if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                            enddo
@@ -548,6 +551,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=CC(k)*xnorm(AA(k),1,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=CC(k)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -613,6 +617,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                             quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
 
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
@@ -707,6 +712,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                         quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
