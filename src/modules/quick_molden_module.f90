@@ -112,7 +112,7 @@ end subroutine write_coordinates
 
 subroutine write_basis_info(self, ierr)
 
-    use quick_basis_module, only: quick_basis, nshell, nbasis, aexp, dcoeff, ncontract
+    use quick_basis_module, only: quick_basis, nshell, nbasis, ncontract
     use quick_molspec_module, only: natom
     implicit none
     type (quick_molden_type), intent(in) :: self
@@ -135,7 +135,7 @@ subroutine write_basis_info(self, ierr)
                     do iprim=1, nprim
                         ishell_idx=quick_basis%ksumtype(ishell)
                         write(self%iMoldenFile, '(2E20.10)') &
-                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx) 
+                        quick_basis%gcexpo(iprim,ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx) 
                     enddo                    
                 endif
             endif
@@ -150,19 +150,19 @@ subroutine write_basis_info(self, ierr)
                     do iprim=1, nprim
                         ishell_idx=quick_basis%ksumtype(ishell)
                         write(self%iMoldenFile, '(2E20.10)') &
-                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
+                        quick_basis%gcexpo(iprim,ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
                     enddo
                     write(self%iMoldenFile, '(2x, "p", 4x, I2)') nprim
                     do iprim=1, nprim
                         ishell_idx=quick_basis%ksumtype(ishell)
                         write(self%iMoldenFile, '(2E20.10)') &
-                        aexp(iprim, ishell_idx), (quick_basis%unnorm_gccoeff(iprim,ishell_idx+1))
+                        quick_basis%gcexpo(iprim,ishell_idx), (quick_basis%unnorm_gccoeff(iprim,ishell_idx+1))
                     enddo
                 endif
             endif
         enddo
         
-        ! p, d, anf f basis functions
+        ! p, d, and f basis functions
         do ishell=1, nshell
             if(quick_basis%katom(ishell) .eq. iatom) then
                 nprim = quick_basis%kprim(ishell)
@@ -182,7 +182,7 @@ subroutine write_basis_info(self, ierr)
                     if(print_gto) then
                         ishell_idx=quick_basis%ksumtype(ishell)
                         write(self%iMoldenFile, '(2E20.10)') &
-                        aexp(iprim, ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
+                        quick_basis%gcexpo(iprim,ishell_idx), quick_basis%unnorm_gccoeff(iprim,ishell_idx)
                     endif
                 enddo
             endif
