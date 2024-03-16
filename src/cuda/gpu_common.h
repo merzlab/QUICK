@@ -189,6 +189,11 @@ if (error != cudaSuccess && error != cudaErrorNotReady)\
 typedef float  QUICKSingle;
 #define QUICKULL \
 unsigned long long int
+#ifdef USE_LEGACY_ATOMICS
+#define QUICKAtomicType unsigned long long int
+#else
+#define QUICKAtomicType double
+#endif
 
 /* 
  ****************************************************************
