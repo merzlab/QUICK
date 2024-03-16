@@ -52,6 +52,11 @@ if(CUDA)
 
     # note: need -disable-optimizer-constants for sm <= 7.0
 
+    # CUDA codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (Kepler and Maxwell)
+    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "kepler") OR ("${QUICK_USER_ARCH}" MATCHES "maxwell")))
+        message(FATAL_ERROR "Error: Unsupported CUDA options (ENABLEF with -DUSE_LEGACY_ATOMICS). ${PROJECT_NAME} support for f-functions requires newer CUDA architecture targets not using LEGACY_ATOMICS.  Please specify architectures with QUICK_USER_ARCH not needing LEGACY_ATOMICS (post-Maxwell) or disable f-function support.")
+    endif()
+
     if("${QUICK_USER_ARCH}" STREQUAL "")
         
         # build for all supported CUDA versions
@@ -250,6 +255,11 @@ if(HIP)
 
     list(APPEND AMD_HIP_FLAGS -fPIC)
     set(TARGET_ID_SUPPORT ON)
+
+    # HIP codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (gfx906 and gfx908)
+    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "gfx906") OR ("${QUICK_USER_ARCH}" MATCHES "gfx908")))
+	    message(FATAL_ERROR "Error: Unsupported HIP options (ENABLEF with -DUSE_LEGACY_ATOMICS). ${PROJECT_NAME} support for f-functions requires newer HIP architecture targets not using LEGACY_ATOMICS.  Please specify architectures with QUICK_USER_ARCH not needing LEGACY_ATOMICS (post-gfx908) or disable f-function support.")
+    endif()
 
     if( NOT "${QUICK_USER_ARCH}" STREQUAL "")
         set(FOUND "FALSE")

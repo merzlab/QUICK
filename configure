@@ -1026,6 +1026,14 @@ if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
 
     cudaversion=`$nvcc --version | grep 'release' | cut -d' ' -f5 | cut -d',' -f1`
 
+    # CUDA codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (Kepler and Maxwell)
+    if [ "$enablef" = 'yes' -a ( "$uspec_arch" -ne 'true' -o "$cuda_arch" = "kepler" -o "$cuda_arch" = "maxwell" ) ]; then
+      echo  "Error: Unsupported CUDA options (ENABLEF with -DUSE_LEGACY_ATOMICS). "
+      echo  "       QUICK support for f-functions requires newer CUDA architecture targets not using LEGACY_ATOMICS. "
+      echo  "       Please specify architectures with --arch not needing LEGACY_ATOMICS (post-Maxwell) or disable f-function support. "
+      exit 1
+    fi
+
     if [ "$cudaversion" = "12.0" -o "$cudaversion" = "12.1" -o "$cudaversion" = "12.2" -o "$cudaversion" = "12.3" ]; then
 
       echo "CUDA Version $cudaversion detected"
@@ -1162,6 +1170,14 @@ if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
       echo "HIP version $hipversion detected"
     else
       echo "Error: HIP version must be greater thant 4.4."
+      exit 1
+    fi
+
+    # HIP codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (gfx906 and gfx908)
+    if [ "$enablef" = 'yes' -a ( "$uspec_arch" -ne 'true' -o "$cuda_arch" = "gfx906" -o "$cuda_arch" = "gfx908" ) ]; then
+      echo  "Error: Unsupported HIP options (ENABLEF with -DUSE_LEGACY_ATOMICS). "
+      echo  "       QUICK support for f-functions requires newer HIP architecture targets not using LEGACY_ATOMICS. "
+      echo  "       Please specify architectures with --arch not needing LEGACY_ATOMICS (post-gfx908) or disable f-function support. "
       exit 1
     fi
 
