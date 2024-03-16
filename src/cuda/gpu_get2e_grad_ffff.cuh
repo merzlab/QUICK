@@ -1700,24 +1700,24 @@ if(bprint){
    
 #ifdef USE_LEGACY_ATOMICS 
 
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart], AGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 1], AGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 2], AGradz);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[AStart], AGradx);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[AStart + 1], AGrady);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[AStart + 2], AGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart], BGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 1], BGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 2], BGradz);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[BStart], BGradx);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[BStart + 1], BGrady);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[BStart + 2], BGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart], CGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 1], CGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 2], CGradz);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[CStart], CGradx);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[CStart + 1], CGrady);
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[CStart + 2], CGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 2], (-AGradz-BGradz-CGradz));
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    GRADADD(DEV_SIM_ULL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));
 
 #else 
     atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart], AGradx);
@@ -1769,7 +1769,7 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
     unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB];
-    QUICKULL **smem_ull_ptr = (QUICKULL**) &smem_char[ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB];
+    QUICKULL **smem_ull_ptr = (QUICKULL**) &smem_char[ERI_GRAD_FFFF_SMEM_CHAR_SIZE];
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_DBL_SIZE ; i+=blockDim.x)
         smem_dbl[i]=dev_dbl_data[i];
