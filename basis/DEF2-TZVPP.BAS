@@ -9,7 +9,7 @@
 !     Version: 1  (Data from Turbomole 7.3)
 !----------------------------------------------------------------------
 ! Available elements: H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar
-!                     Ca Ga Ge As Se Br Kr
+!                     K Ca Ga Ge As Se Br Kr
 !----------------------------------------------------------------------
 
 
