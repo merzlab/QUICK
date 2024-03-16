@@ -65,7 +65,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define ERI_GRAD_FFFF_SMEM_INT_SIZE 7
 #define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE 10
 #define ERI_GRAD_FFFF_SMEM_DBL_SIZE 3
-#define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE 20
+#define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE 19
 #define ERI_GRAD_FFFF_SMEM_CHAR_SIZE 512
 #define ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE 2
 #define ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE 1
@@ -92,19 +92,18 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define DEV_SIM_DBL_PTR_DENSEB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*4+threadIdx.x]
 #define DEV_SIM_DBL_PTR_EXPOSUM smem_dbl_ptr[ERI_GRAD_FFFF_TPB*5+threadIdx.x]
 #define DEV_SIM_DBL_PTR_GCEXPO smem_dbl_ptr[ERI_GRAD_FFFF_TPB*6+threadIdx.x]
-#define DEV_SIM_DBL_PTR_GRAD smem_dbl_ptr[ERI_GRAD_FFFF_TPB*7+threadIdx.x]
-#define DEV_SIM_DBL_PTR_STORE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*8+threadIdx.x]
-#define DEV_SIM_DBL_PTR_STORE2 smem_dbl_ptr[ERI_GRAD_FFFF_TPB*9+threadIdx.x]
-#define DEV_SIM_DBL_PTR_STOREAA smem_dbl_ptr[ERI_GRAD_FFFF_TPB*10+threadIdx.x]
-#define DEV_SIM_DBL_PTR_STOREBB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*11+threadIdx.x]
-#define DEV_SIM_DBL_PTR_STORECC smem_dbl_ptr[ERI_GRAD_FFFF_TPB*12+threadIdx.x]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*13+threadIdx.x]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERY smem_dbl_ptr[ERI_GRAD_FFFF_TPB*14+threadIdx.x]
-#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*15+threadIdx.x]
-#define DEV_SIM_DBL_PTR_XCOEFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*16+threadIdx.x]
-#define DEV_SIM_DBL_PTR_XYZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*17+threadIdx.x]
-#define DEV_SIM_DBL_PTR_YCUTOFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*18+threadIdx.x]
-#define DEV_SIM_DBL_PTR_YVERTICALTEMP smem_dbl_ptr[ERI_GRAD_FFFF_TPB*19+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORE smem_dbl_ptr[ERI_GRAD_FFFF_TPB*7+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORE2 smem_dbl_ptr[ERI_GRAD_FFFF_TPB*8+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STOREAA smem_dbl_ptr[ERI_GRAD_FFFF_TPB*9+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STOREBB smem_dbl_ptr[ERI_GRAD_FFFF_TPB*10+threadIdx.x]
+#define DEV_SIM_DBL_PTR_STORECC smem_dbl_ptr[ERI_GRAD_FFFF_TPB*11+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERX smem_dbl_ptr[ERI_GRAD_FFFF_TPB*12+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERY smem_dbl_ptr[ERI_GRAD_FFFF_TPB*13+threadIdx.x]
+#define DEV_SIM_DBL_PTR_WEIGHTEDCENTERZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*14+threadIdx.x]
+#define DEV_SIM_DBL_PTR_XCOEFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*15+threadIdx.x]
+#define DEV_SIM_DBL_PTR_XYZ smem_dbl_ptr[ERI_GRAD_FFFF_TPB*16+threadIdx.x]
+#define DEV_SIM_DBL_PTR_YCUTOFF smem_dbl_ptr[ERI_GRAD_FFFF_TPB*17+threadIdx.x]
+#define DEV_SIM_DBL_PTR_YVERTICALTEMP smem_dbl_ptr[ERI_GRAD_FFFF_TPB*18+threadIdx.x]
 #define DEV_SIM_DBL_PRIMLIMIT smem_dbl[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
 #define DEV_SIM_DBL_GRADCUTOFF smem_dbl[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
 #define DEV_SIM_DBL_HYB_COEFF smem_dbl[ERI_GRAD_FFFF_TPB*2+threadIdx.x]
@@ -376,7 +375,7 @@ void getGrad_ffff(_gpu_type gpu)
        QUICKDouble **dbl_ptr_buffer = (QUICKDouble**) malloc(ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
        int2 **int2_ptr_buffer = (int2**) malloc(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        unsigned char **char_ptr_buffer = (unsigned char**) malloc(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
-       QUICKULL **ull_ptr_buffer = (QUICKULL**) malloc(ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*));
+       QUICKAtomicType **ull_ptr_buffer = (QUICKAtomicType**) malloc(ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*));
        unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
 
 //printf("Storing data \n");
@@ -410,23 +409,26 @@ void getGrad_ffff(_gpu_type gpu)
        dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*4+i] = gpu->gpu_sim.denseb;
        dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*5+i] = gpu->gpu_sim.expoSum;
        dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*6+i] = gpu->gpu_sim.gcexpo;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*7+i] = gpu->gpu_sim.grad;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*8+i] = gpu->gpu_sim.store;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*9+i] = gpu->gpu_sim.store2;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*10+i] = gpu->gpu_sim.storeAA;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*11+i] = gpu->gpu_sim.storeBB;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*12+i] = gpu->gpu_sim.storeCC;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*13+i] = gpu->gpu_sim.weightedCenterX;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*14+i] = gpu->gpu_sim.weightedCenterY;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*15+i] = gpu->gpu_sim.weightedCenterZ;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*16+i] = gpu->gpu_sim.Xcoeff;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*17+i] = gpu->gpu_sim.xyz;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*18+i] = gpu->gpu_sim.YCutoff;
-       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*19+i] = gpu->gpu_sim.YVerticalTemp;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*7+i] = gpu->gpu_sim.store;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*8+i] = gpu->gpu_sim.store2;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*9+i] = gpu->gpu_sim.storeAA;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*10+i] = gpu->gpu_sim.storeBB;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*11+i] = gpu->gpu_sim.storeCC;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*12+i] = gpu->gpu_sim.weightedCenterX;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*13+i] = gpu->gpu_sim.weightedCenterY;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*14+i] = gpu->gpu_sim.weightedCenterZ;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*15+i] = gpu->gpu_sim.Xcoeff;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*16+i] = gpu->gpu_sim.xyz;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*17+i] = gpu->gpu_sim.YCutoff;
+       dbl_ptr_buffer[ERI_GRAD_FFFF_TPB*18+i] = gpu->gpu_sim.YVerticalTemp;
        int2_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.sorted_YCutoffIJ;
        char_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.mpi_bcompute;
        char_ptr_buffer[ERI_GRAD_FFFF_TPB*1+i] = gpu->gpu_sim.KLMN;
+#ifdef USE_LEGACY_ATOMICS 
        ull_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.gradULL;
+#else
+       ull_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.grad;
+#endif
        }
 
 
@@ -568,7 +570,7 @@ char));
        int2 **dev_int2_ptr_buffer;
        unsigned char **dev_char_ptr_buffer;
        unsigned char *dev_char_buffer;
-       QUICKULL **dev_ull_ptr_buffer;
+       QUICKAtomicType **dev_ull_ptr_buffer;
 
        cudaMalloc((void **)&dev_int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int));
 //printf("Allocating int ptr device memory %d %d %d %d %d %d\n", sizeof(int), sizeof(int*), sizeof(QUICKDouble), sizeof(QUICKDouble*),
@@ -580,7 +582,7 @@ char));
        cudaMalloc((void **)&dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
        cudaMalloc((void **)&dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
        cudaMalloc((void **)&dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char));
-       cudaMalloc((void **)&dev_ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*));
+       cudaMalloc((void **)&dev_ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*));
 
 //printf("Uploading data \n");
 
@@ -592,7 +594,7 @@ char));
        cudaMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
 char*), cudaMemcpyHostToDevice);
        cudaMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char), cudaMemcpyHostToDevice);
-       cudaMemcpy(dev_ull_ptr_buffer, ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKULL*),
+       cudaMemcpy(dev_ull_ptr_buffer, ull_ptr_buffer, ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*),
 cudaMemcpyHostToDevice);
 
 /*
@@ -623,7 +625,7 @@ sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
 char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE+
- sizeof(QUICKULL*)*ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB>>>(dev_int_buffer,
+ sizeof(QUICKAtomicType*)*ERI_GRAD_FFFF_SMEM_ULL_PTR_SIZE*ERI_GRAD_FFFF_TPB>>>(dev_int_buffer,
 dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer,
 dev_ull_ptr_buffer,gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
 

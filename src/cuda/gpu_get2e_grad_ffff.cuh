@@ -1046,7 +1046,7 @@ __device__ __inline__ void iclass_grad_ffff
 unsigned int LL, const QUICKDouble DNMax, \
 QUICKDouble* const YVerticalTemp, QUICKDouble* const store, QUICKDouble* const store2, QUICKDouble* const storeAA, QUICKDouble*
 const storeBB, QUICKDouble* const storeCC, int* const smem_int, QUICKDouble* const smem_dbl, int** const smem_int_ptr, QUICKDouble**
-const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char, QUICKULL** const smem_ull_ptr){
+const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char, QUICKAtomicType** const smem_ull_ptr){
     /*
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
      and be careful with the index difference between Fortran and C++,
@@ -1720,24 +1720,24 @@ if(bprint){
     GRADADD(DEV_SIM_ULL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));
 
 #else 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart], AGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 1], AGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 2], AGradz);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[AStart], AGradx);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[AStart + 1], AGrady);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[AStart + 2], AGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart], BGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 1], BGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 2], BGradz);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[BStart], BGradx);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[BStart + 1], BGrady);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[BStart + 2], BGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart], CGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 1], CGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 2], CGradz);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[CStart], CGradx);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[CStart + 1], CGrady);
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[CStart + 2], CGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    atomicAdd(&DEV_SIM_ULL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
 #endif
 
     return;
@@ -1755,7 +1755,7 @@ __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_oshell_kernel_f
 __global__ void 
 __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_kernel_ffff(int *dev_int_data, 
 int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_data, int2
-**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, QUICKULL **dev_ull_ptr_data, const int ffStart, const int sqrQshell)
+**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, QUICKAtomicType **dev_ull_ptr_data, const int ffStart, const int sqrQshell)
 #endif
 #endif
 {
@@ -1769,7 +1769,7 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
     unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB];
-    QUICKULL **smem_ull_ptr = (QUICKULL**) &smem_char[ERI_GRAD_FFFF_SMEM_CHAR_SIZE];
+    QUICKAtomicType **smem_ull_ptr = (QUICKAtomicType**) &smem_char[ERI_GRAD_FFFF_SMEM_CHAR_SIZE];
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_DBL_SIZE ; i+=blockDim.x)
         smem_dbl[i]=dev_dbl_data[i];
