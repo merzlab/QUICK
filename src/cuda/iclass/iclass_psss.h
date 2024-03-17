@@ -16,9 +16,9 @@
     // [PS|SS] integral - Start
     QUICKDouble VY_0 = VY(0, 0, 0);
     QUICKDouble VY_1 = VY(0, 0, 1);
-    LOCSTORE(store, 1, 0, STOREDIM, STOREDIM) += Ptempx * VY_0 + WPtempx * VY_1;
-    LOCSTORE(store, 2, 0, STOREDIM, STOREDIM) += Ptempy * VY_0 + WPtempy * VY_1;
-    LOCSTORE(store, 3, 0, STOREDIM, STOREDIM) += Ptempz * VY_0 + WPtempz * VY_1;
+    LOCSTORE(store, 1, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * VY_0 + WPtempx * VY_1;
+    LOCSTORE(store, 2, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * VY_0 + WPtempy * VY_1;
+    LOCSTORE(store, 3, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * VY_0 + WPtempz * VY_1;
     // [PS|SS] integral - End 
 
 }

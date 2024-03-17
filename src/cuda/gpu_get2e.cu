@@ -48,12 +48,13 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #endif
 
 //#define USE_ERI_GRAD_STOREADD
-
+/*
 #ifdef USE_ERI_GRAD_STOREADD
 #define STORE_OPERATOR +=
 #else
 #define STORE_OPERATOR =  
 #endif
+*/
 
 #include "gpu_get2e_subs_hrr.h"
 #include "int.h"

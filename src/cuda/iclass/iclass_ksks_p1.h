@@ -646,7 +646,7 @@
     QUICKDouble x_84_38_1 = Qtempx * x_84_23_1 + WQtempx * x_84_23_2 + 2.000000 * CDtemp * (x_84_10_1 - ABcom * x_84_10_2) + 5.000000 * ABCDtemp * x_56_23_2;
     QUICKDouble x_84_56_0 = Ptempx * x_56_56_0 + WPtempx * x_56_56_1 + 4.000000 * ABtemp * (x_38_56_0 - CDcom * x_38_56_1) + 4.000000 * ABCDtemp * x_56_38_1;
     QUICKDouble x_84_56_1 = Ptempx * x_56_56_1 + WPtempx * x_56_56_2 + 4.000000 * ABtemp * (x_38_56_1 - CDcom * x_38_56_2) + 4.000000 * ABCDtemp * x_56_38_2;
-    LOCSTORE(store, 84, 84, STOREDIM, STOREDIM) += Qtempx * x_84_56_0 + WQtempx * x_84_56_1 + 4.000000 * CDtemp * (x_84_38_0 - ABcom * x_84_38_1) + 5.000000 * ABCDtemp * x_56_56_1;
+    LOCSTORE(store, 84, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_56_0 + WQtempx * x_84_56_1 + 4.000000 * CDtemp * (x_84_38_0 - ABcom * x_84_38_1) + 5.000000 * ABCDtemp * x_56_56_1;
     QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
     QUICKDouble x_0_15_1 = Qtempy * x_0_5_1 + WQtempy * x_0_5_2 + CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
     QUICKDouble x_0_8_3 = Qtempy * x_0_2_3 + WQtempy * x_0_2_4 + CDtemp * (VY_3 - ABcom * VY_4);
@@ -863,7 +863,7 @@
     QUICKDouble x_84_48_1 = Qtempy * x_84_30_1 + WQtempy * x_84_30_2 + 3.000000 * CDtemp * (x_84_15_1 - ABcom * x_84_15_2) + ABCDtemp * x_69_30_2;
     QUICKDouble x_84_57_0 = Ptempx * x_56_57_0 + WPtempx * x_56_57_1 + 4.000000 * ABtemp * (x_38_57_0 - CDcom * x_38_57_1) + ABCDtemp * x_56_48_1;
     QUICKDouble x_84_57_1 = Ptempx * x_56_57_1 + WPtempx * x_56_57_2 + 4.000000 * ABtemp * (x_38_57_1 - CDcom * x_38_57_2) + ABCDtemp * x_56_48_2;
-    LOCSTORE(store, 84, 91, STOREDIM, STOREDIM) += Qtempx * x_84_57_0 + WQtempx * x_84_57_1 + CDtemp * (x_84_48_0 - ABcom * x_84_48_1) + 5.000000 * ABCDtemp * x_56_57_1;
+    LOCSTORE(store, 84, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_57_0 + WQtempx * x_84_57_1 + CDtemp * (x_84_48_0 - ABcom * x_84_48_1) + 5.000000 * ABCDtemp * x_56_57_1;
     QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
     QUICKDouble x_0_9_2 = Qtempz * x_0_3_2 + WQtempz * x_0_3_3 + CDtemp * (VY_2 - ABcom * VY_3);
     QUICKDouble x_0_9_3 = Qtempz * x_0_3_3 + WQtempz * x_0_3_4 + CDtemp * (VY_3 - ABcom * VY_4);
@@ -1172,7 +1172,7 @@
     QUICKDouble x_84_47_1 = Qtempy * x_84_34_1 + WQtempy * x_84_34_2 + ABCDtemp * x_69_34_2;
     QUICKDouble x_84_58_0 = Ptempx * x_56_58_0 + WPtempx * x_56_58_1 + 4.000000 * ABtemp * (x_38_58_0 - CDcom * x_38_58_1) + ABCDtemp * x_56_47_1;
     QUICKDouble x_84_58_1 = Ptempx * x_56_58_1 + WPtempx * x_56_58_2 + 4.000000 * ABtemp * (x_38_58_1 - CDcom * x_38_58_2) + ABCDtemp * x_56_47_2;
-    LOCSTORE(store, 84, 89, STOREDIM, STOREDIM) += Qtempx * x_84_58_0 + WQtempx * x_84_58_1 + CDtemp * (x_84_47_0 - ABcom * x_84_47_1) + 5.000000 * ABCDtemp * x_56_58_1;
+    LOCSTORE(store, 84, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_58_0 + WQtempx * x_84_58_1 + CDtemp * (x_84_47_0 - ABcom * x_84_47_1) + 5.000000 * ABCDtemp * x_56_58_1;
     QUICKDouble x_0_16_3 = Qtempy * x_0_9_3 + WQtempy * x_0_9_4;
     QUICKDouble x_0_16_2 = Qtempy * x_0_9_2 + WQtempy * x_0_9_3;
     QUICKDouble x_0_16_1 = Qtempy * x_0_9_1 + WQtempy * x_0_9_2;
@@ -1311,7 +1311,7 @@
     QUICKDouble x_84_41_1 = Qtempy * x_84_31_1 + WQtempy * x_84_31_2 + CDtemp * (x_84_19_1 - ABcom * x_84_19_2) + ABCDtemp * x_69_31_2;
     QUICKDouble x_84_59_0 = Ptempx * x_56_59_0 + WPtempx * x_56_59_1 + 4.000000 * ABtemp * (x_38_59_0 - CDcom * x_38_59_1) + ABCDtemp * x_56_41_1;
     QUICKDouble x_84_59_1 = Ptempx * x_56_59_1 + WPtempx * x_56_59_2 + 4.000000 * ABtemp * (x_38_59_1 - CDcom * x_38_59_2) + ABCDtemp * x_56_41_2;
-    LOCSTORE(store, 84, 98, STOREDIM, STOREDIM) += Qtempx * x_84_59_0 + WQtempx * x_84_59_1 + CDtemp * (x_84_41_0 - ABcom * x_84_41_1) + 5.000000 * ABCDtemp * x_56_59_1;
+    LOCSTORE(store, 84, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_59_0 + WQtempx * x_84_59_1 + CDtemp * (x_84_41_0 - ABcom * x_84_41_1) + 5.000000 * ABCDtemp * x_56_59_1;
     QUICKDouble x_0_16_0 = Qtempy * x_0_9_0 + WQtempy * x_0_9_1;
     QUICKDouble x_0_16_10 = Qtempy * x_0_9_10 + WQtempy * x_0_9_11;
     QUICKDouble x_0_22_0 = Qtempy * x_0_16_0 + WQtempy * x_0_16_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
@@ -1455,7 +1455,7 @@
     QUICKDouble x_84_42_1 = Qtempy * x_84_22_1 + WQtempy * x_84_22_2 + 2.000000 * CDtemp * (x_84_16_1 - ABcom * x_84_16_2) + ABCDtemp * x_69_22_2;
     QUICKDouble x_84_60_0 = Ptempx * x_56_60_0 + WPtempx * x_56_60_1 + 4.000000 * ABtemp * (x_38_60_0 - CDcom * x_38_60_1) + ABCDtemp * x_56_42_1;
     QUICKDouble x_84_60_1 = Ptempx * x_56_60_1 + WPtempx * x_56_60_2 + 4.000000 * ABtemp * (x_38_60_1 - CDcom * x_38_60_2) + ABCDtemp * x_56_42_2;
-    LOCSTORE(store, 84, 97, STOREDIM, STOREDIM) += Qtempx * x_84_60_0 + WQtempx * x_84_60_1 + CDtemp * (x_84_42_0 - ABcom * x_84_42_1) + 5.000000 * ABCDtemp * x_56_60_1;
+    LOCSTORE(store, 84, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_60_0 + WQtempx * x_84_60_1 + CDtemp * (x_84_42_0 - ABcom * x_84_42_1) + 5.000000 * ABCDtemp * x_56_60_1;
     QUICKDouble x_0_14_3 = Qtempx * x_0_9_3 + WQtempx * x_0_9_4;
     QUICKDouble x_0_14_2 = Qtempx * x_0_9_2 + WQtempx * x_0_9_3;
     QUICKDouble x_0_27_1 = Qtempx * x_0_19_1 + WQtempx * x_0_19_2;
@@ -1609,7 +1609,7 @@
     QUICKDouble x_84_40_1 = Qtempx * x_84_31_1 + WQtempx * x_84_31_2 + 5.000000 * ABCDtemp * x_56_31_2;
     QUICKDouble x_84_61_0 = Ptempx * x_56_61_0 + WPtempx * x_56_61_1 + 4.000000 * ABtemp * (x_38_61_0 - CDcom * x_38_61_1) + 2.000000 * ABCDtemp * x_56_40_1;
     QUICKDouble x_84_61_1 = Ptempx * x_56_61_1 + WPtempx * x_56_61_2 + 4.000000 * ABtemp * (x_38_61_1 - CDcom * x_38_61_2) + 2.000000 * ABCDtemp * x_56_40_2;
-    LOCSTORE(store, 84, 94, STOREDIM, STOREDIM) += Qtempx * x_84_61_0 + WQtempx * x_84_61_1 + 2.000000 * CDtemp * (x_84_40_0 - ABcom * x_84_40_1) + 5.000000 * ABCDtemp * x_56_61_1;
+    LOCSTORE(store, 84, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_61_0 + WQtempx * x_84_61_1 + 2.000000 * CDtemp * (x_84_40_0 - ABcom * x_84_40_1) + 5.000000 * ABCDtemp * x_56_61_1;
     QUICKDouble x_0_14_1 = Qtempx * x_0_9_1 + WQtempx * x_0_9_2;
     QUICKDouble x_0_25_0 = Qtempx * x_0_16_0 + WQtempx * x_0_16_1;
     QUICKDouble x_0_14_9 = Qtempx * x_0_9_9 + WQtempx * x_0_9_10;
@@ -1761,7 +1761,7 @@
     QUICKDouble x_84_36_1 = Qtempx * x_84_25_1 + WQtempx * x_84_25_2 + CDtemp * (x_84_16_1 - ABcom * x_84_16_2) + 5.000000 * ABCDtemp * x_56_25_2;
     QUICKDouble x_84_62_0 = Ptempx * x_56_62_0 + WPtempx * x_56_62_1 + 4.000000 * ABtemp * (x_38_62_0 - CDcom * x_38_62_1) + 3.000000 * ABCDtemp * x_56_36_1;
     QUICKDouble x_84_62_1 = Ptempx * x_56_62_1 + WPtempx * x_56_62_2 + 4.000000 * ABtemp * (x_38_62_1 - CDcom * x_38_62_2) + 3.000000 * ABCDtemp * x_56_36_2;
-    LOCSTORE(store, 84, 90, STOREDIM, STOREDIM) += Qtempx * x_84_62_0 + WQtempx * x_84_62_1 + 3.000000 * CDtemp * (x_84_36_0 - ABcom * x_84_36_1) + 5.000000 * ABCDtemp * x_56_62_1;
+    LOCSTORE(store, 84, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_62_0 + WQtempx * x_84_62_1 + 3.000000 * CDtemp * (x_84_36_0 - ABcom * x_84_36_1) + 5.000000 * ABCDtemp * x_56_62_1;
     QUICKDouble x_0_12_3 = Qtempx * x_0_8_3 + WQtempx * x_0_8_4;
     QUICKDouble x_0_12_2 = Qtempx * x_0_8_2 + WQtempx * x_0_8_3;
     QUICKDouble x_0_24_1 = Qtempx * x_0_15_1 + WQtempx * x_0_15_2;
@@ -1890,7 +1890,7 @@
     QUICKDouble x_84_39_1 = Qtempx * x_84_30_1 + WQtempx * x_84_30_2 + 5.000000 * ABCDtemp * x_56_30_2;
     QUICKDouble x_84_63_0 = Ptempx * x_56_63_0 + WPtempx * x_56_63_1 + 4.000000 * ABtemp * (x_38_63_0 - CDcom * x_38_63_1) + 2.000000 * ABCDtemp * x_56_39_1;
     QUICKDouble x_84_63_1 = Ptempx * x_56_63_1 + WPtempx * x_56_63_2 + 4.000000 * ABtemp * (x_38_63_1 - CDcom * x_38_63_2) + 2.000000 * ABCDtemp * x_56_39_2;
-    LOCSTORE(store, 84, 95, STOREDIM, STOREDIM) += Qtempx * x_84_63_0 + WQtempx * x_84_63_1 + 2.000000 * CDtemp * (x_84_39_0 - ABcom * x_84_39_1) + 5.000000 * ABCDtemp * x_56_63_1;
+    LOCSTORE(store, 84, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_63_0 + WQtempx * x_84_63_1 + 2.000000 * CDtemp * (x_84_39_0 - ABcom * x_84_39_1) + 5.000000 * ABCDtemp * x_56_63_1;
     QUICKDouble x_0_12_1 = Qtempx * x_0_8_1 + WQtempx * x_0_8_2;
     QUICKDouble x_0_24_0 = Qtempx * x_0_15_0 + WQtempx * x_0_15_1;
     QUICKDouble x_0_12_9 = Qtempx * x_0_8_9 + WQtempx * x_0_8_10;
@@ -1996,7 +1996,7 @@
     QUICKDouble x_84_37_1 = Qtempx * x_84_24_1 + WQtempx * x_84_24_2 + CDtemp * (x_84_15_1 - ABcom * x_84_15_2) + 5.000000 * ABCDtemp * x_56_24_2;
     QUICKDouble x_84_64_0 = Ptempx * x_56_64_0 + WPtempx * x_56_64_1 + 4.000000 * ABtemp * (x_38_64_0 - CDcom * x_38_64_1) + 3.000000 * ABCDtemp * x_56_37_1;
     QUICKDouble x_84_64_1 = Ptempx * x_56_64_1 + WPtempx * x_56_64_2 + 4.000000 * ABtemp * (x_38_64_1 - CDcom * x_38_64_2) + 3.000000 * ABCDtemp * x_56_37_2;
-    LOCSTORE(store, 84, 92, STOREDIM, STOREDIM) += Qtempx * x_84_64_0 + WQtempx * x_84_64_1 + 3.000000 * CDtemp * (x_84_37_0 - ABcom * x_84_37_1) + 5.000000 * ABCDtemp * x_56_64_1;
+    LOCSTORE(store, 84, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_64_0 + WQtempx * x_84_64_1 + 3.000000 * CDtemp * (x_84_37_0 - ABcom * x_84_37_1) + 5.000000 * ABCDtemp * x_56_64_1;
     QUICKDouble x_0_35_0 = Qtempx * x_0_22_0 + WQtempx * x_0_22_1;
     QUICKDouble x_0_35_8 = Qtempx * x_0_22_8 + WQtempx * x_0_22_9;
     QUICKDouble x_0_65_0 = Qtempx * x_0_35_0 + WQtempx * x_0_35_1 + CDtemp * (x_0_22_0 - ABcom * x_0_22_1);
@@ -2071,7 +2071,7 @@
     QUICKDouble x_84_35_1 = Qtempx * x_84_22_1 + WQtempx * x_84_22_2 + 5.000000 * ABCDtemp * x_56_22_2;
     QUICKDouble x_84_65_0 = Ptempx * x_56_65_0 + WPtempx * x_56_65_1 + 4.000000 * ABtemp * (x_38_65_0 - CDcom * x_38_65_1) + 2.000000 * ABCDtemp * x_56_35_1;
     QUICKDouble x_84_65_1 = Ptempx * x_56_65_1 + WPtempx * x_56_65_2 + 4.000000 * ABtemp * (x_38_65_1 - CDcom * x_38_65_2) + 2.000000 * ABCDtemp * x_56_35_2;
-    LOCSTORE(store, 84, 96, STOREDIM, STOREDIM) += Qtempx * x_84_65_0 + WQtempx * x_84_65_1 + 2.000000 * CDtemp * (x_84_35_0 - ABcom * x_84_35_1) + 5.000000 * ABCDtemp * x_56_65_1;
+    LOCSTORE(store, 84, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_65_0 + WQtempx * x_84_65_1 + 2.000000 * CDtemp * (x_84_35_0 - ABcom * x_84_35_1) + 5.000000 * ABCDtemp * x_56_65_1;
     QUICKDouble x_0_55_1 = Qtempz * x_0_34_1 + WQtempz * x_0_34_2 + 4.000000 * CDtemp * (x_0_19_1 - ABcom * x_0_19_2);
     QUICKDouble x_0_55_0 = Qtempz * x_0_34_0 + WQtempz * x_0_34_1 + 4.000000 * CDtemp * (x_0_19_0 - ABcom * x_0_19_1);
     QUICKDouble x_0_55_2 = Qtempz * x_0_34_2 + WQtempz * x_0_34_3 + 4.000000 * CDtemp * (x_0_19_2 - ABcom * x_0_19_3);
@@ -2157,8 +2157,8 @@
     QUICKDouble x_84_55_1 = Qtempz * x_84_34_1 + WQtempz * x_84_34_2 + 4.000000 * CDtemp * (x_84_19_1 - ABcom * x_84_19_2) + ABCDtemp * x_71_34_2;
     QUICKDouble x_84_66_0 = Ptempx * x_56_66_0 + WPtempx * x_56_66_1 + 4.000000 * ABtemp * (x_38_66_0 - CDcom * x_38_66_1);
     QUICKDouble x_84_66_1 = Ptempx * x_56_66_1 + WPtempx * x_56_66_2 + 4.000000 * ABtemp * (x_38_66_1 - CDcom * x_38_66_2);
-    LOCSTORE(store, 84, 105, STOREDIM, STOREDIM) += Qtempy * x_84_66_0 + WQtempy * x_84_66_1 + CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + ABCDtemp * x_69_66_1;
-    LOCSTORE(store, 84, 86, STOREDIM, STOREDIM) += Qtempx * x_84_66_0 + WQtempx * x_84_66_1 + 5.000000 * ABCDtemp * x_56_66_1;
+    LOCSTORE(store, 84, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_66_0 + WQtempy * x_84_66_1 + CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + ABCDtemp * x_69_66_1;
+    LOCSTORE(store, 84, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_66_0 + WQtempx * x_84_66_1 + 5.000000 * ABCDtemp * x_56_66_1;
     QUICKDouble x_0_54_1 = Qtempy * x_0_33_1 + WQtempy * x_0_33_2 + 4.000000 * CDtemp * (x_0_18_1 - ABcom * x_0_18_2);
     QUICKDouble x_0_67_0 = Qtempy * x_0_48_0 + WQtempy * x_0_48_1 + 4.000000 * CDtemp * (x_0_30_0 - ABcom * x_0_30_1);
     QUICKDouble x_0_67_1 = Qtempy * x_0_48_1 + WQtempy * x_0_48_2 + 4.000000 * CDtemp * (x_0_30_1 - ABcom * x_0_30_2);
@@ -2213,8 +2213,8 @@
     QUICKDouble x_69_67_1 = Qtempy * x_69_48_1 + WQtempy * x_69_48_2 + 4.000000 * CDtemp * (x_69_30_1 - ABcom * x_69_30_2);
     QUICKDouble x_84_67_0 = Ptempx * x_56_67_0 + WPtempx * x_56_67_1 + 4.000000 * ABtemp * (x_38_67_0 - CDcom * x_38_67_1);
     QUICKDouble x_84_67_1 = Ptempx * x_56_67_1 + WPtempx * x_56_67_2 + 4.000000 * ABtemp * (x_38_67_1 - CDcom * x_38_67_2);
-    LOCSTORE(store, 84, 100, STOREDIM, STOREDIM) += Qtempy * x_84_67_0 + WQtempy * x_84_67_1 + 5.000000 * CDtemp * (x_84_48_0 - ABcom * x_84_48_1) + ABCDtemp * x_69_67_1;
-    LOCSTORE(store, 84, 85, STOREDIM, STOREDIM) += Qtempx * x_84_67_0 + WQtempx * x_84_67_1 + 5.000000 * ABCDtemp * x_56_67_1;
+    LOCSTORE(store, 84, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_67_0 + WQtempy * x_84_67_1 + 5.000000 * CDtemp * (x_84_48_0 - ABcom * x_84_48_1) + ABCDtemp * x_69_67_1;
+    LOCSTORE(store, 84, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_67_0 + WQtempx * x_84_67_1 + 5.000000 * ABCDtemp * x_56_67_1;
     QUICKDouble x_0_68_0 = Qtempx * x_0_55_0 + WQtempx * x_0_55_1;
     QUICKDouble x_0_68_1 = Qtempx * x_0_55_1 + WQtempx * x_0_55_2;
     QUICKDouble x_0_68_2 = Qtempx * x_0_55_2 + WQtempx * x_0_55_3;
@@ -2271,7 +2271,7 @@
     QUICKDouble x_56_68_2 = Qtempx * x_56_55_2 + WQtempx * x_56_55_3 + 4.000000 * ABCDtemp * x_38_55_3;
     QUICKDouble x_84_68_0 = Ptempx * x_56_68_0 + WPtempx * x_56_68_1 + 4.000000 * ABtemp * (x_38_68_0 - CDcom * x_38_68_1) + ABCDtemp * x_56_55_1;
     QUICKDouble x_84_68_1 = Ptempx * x_56_68_1 + WPtempx * x_56_68_2 + 4.000000 * ABtemp * (x_38_68_1 - CDcom * x_38_68_2) + ABCDtemp * x_56_55_2;
-    LOCSTORE(store, 84, 107, STOREDIM, STOREDIM) += Qtempx * x_84_68_0 + WQtempx * x_84_68_1 + CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + 5.000000 * ABCDtemp * x_56_68_1;
+    LOCSTORE(store, 84, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_68_0 + WQtempx * x_84_68_1 + CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + 5.000000 * ABCDtemp * x_56_68_1;
     QUICKDouble x_0_6_0 = Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
     QUICKDouble x_0_7_1 = Qtempx * x_0_1_1 + WQtempx * x_0_1_2 + CDtemp * (VY_1 - ABcom * VY_2);
     QUICKDouble x_0_1_11 = Qtempx * VY_11 + WQtempx * VY_12;
@@ -2435,7 +2435,7 @@
     QUICKDouble x_84_50_1 = Qtempx * x_84_26_1 + WQtempx * x_84_26_2 + 3.000000 * CDtemp * (x_84_13_1 - ABcom * x_84_13_2) + 5.000000 * ABCDtemp * x_56_26_2;
     QUICKDouble x_84_69_0 = Ptempx * x_56_69_0 + WPtempx * x_56_69_1 + 4.000000 * ABtemp * (x_38_69_0 - CDcom * x_38_69_1) + 5.000000 * ABCDtemp * x_56_50_1;
     QUICKDouble x_84_69_1 = Ptempx * x_56_69_1 + WPtempx * x_56_69_2 + 4.000000 * ABtemp * (x_38_69_1 - CDcom * x_38_69_2) + 5.000000 * ABCDtemp * x_56_50_2;
-    LOCSTORE(store, 84, 102, STOREDIM, STOREDIM) += Qtempx * x_84_69_0 + WQtempx * x_84_69_1 + 5.000000 * CDtemp * (x_84_50_0 - ABcom * x_84_50_1) + 5.000000 * ABCDtemp * x_56_69_1;
+    LOCSTORE(store, 84, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_69_0 + WQtempx * x_84_69_1 + 5.000000 * CDtemp * (x_84_50_0 - ABcom * x_84_50_1) + 5.000000 * ABCDtemp * x_56_69_1;
     QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
     QUICKDouble x_0_2_12 = Qtempy * VY_12 + WQtempy * VY_13;
     QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
@@ -2642,7 +2642,7 @@
     QUICKDouble x_84_54_1 = Qtempy * x_84_33_1 + WQtempy * x_84_33_2 + 4.000000 * CDtemp * (x_84_18_1 - ABcom * x_84_18_2) + ABCDtemp * x_69_33_2;
     QUICKDouble x_84_70_0 = Ptempx * x_56_70_0 + WPtempx * x_56_70_1 + 4.000000 * ABtemp * (x_38_70_0 - CDcom * x_38_70_1) + ABCDtemp * x_56_54_1;
     QUICKDouble x_84_70_1 = Ptempx * x_56_70_1 + WPtempx * x_56_70_2 + 4.000000 * ABtemp * (x_38_70_1 - CDcom * x_38_70_2) + ABCDtemp * x_56_54_2;
-    LOCSTORE(store, 84, 109, STOREDIM, STOREDIM) += Qtempx * x_84_70_0 + WQtempx * x_84_70_1 + CDtemp * (x_84_54_0 - ABcom * x_84_54_1) + 5.000000 * ABCDtemp * x_56_70_1;
+    LOCSTORE(store, 84, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_70_0 + WQtempx * x_84_70_1 + CDtemp * (x_84_54_0 - ABcom * x_84_54_1) + 5.000000 * ABCDtemp * x_56_70_1;
     QUICKDouble x_0_4_0 = Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
     QUICKDouble x_0_4_11 = Qtempx * x_0_2_11 + WQtempx * x_0_2_12;
     QUICKDouble x_0_11_0 = Qtempx * x_0_4_0 + WQtempx * x_0_4_1 + CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
@@ -2842,7 +2842,7 @@
     QUICKDouble x_84_52_1 = Qtempx * x_84_28_1 + WQtempx * x_84_28_2 + 3.000000 * CDtemp * (x_84_11_1 - ABcom * x_84_11_2) + 5.000000 * ABCDtemp * x_56_28_2;
     QUICKDouble x_84_71_0 = Ptempx * x_56_71_0 + WPtempx * x_56_71_1 + 4.000000 * ABtemp * (x_38_71_0 - CDcom * x_38_71_1) + 5.000000 * ABCDtemp * x_56_52_1;
     QUICKDouble x_84_71_1 = Ptempx * x_56_71_1 + WPtempx * x_56_71_2 + 4.000000 * ABtemp * (x_38_71_1 - CDcom * x_38_71_2) + 5.000000 * ABCDtemp * x_56_52_2;
-    LOCSTORE(store, 84, 104, STOREDIM, STOREDIM) += Qtempx * x_84_71_0 + WQtempx * x_84_71_1 + 5.000000 * CDtemp * (x_84_52_0 - ABcom * x_84_52_1) + 5.000000 * ABCDtemp * x_56_71_1;
+    LOCSTORE(store, 84, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_71_0 + WQtempx * x_84_71_1 + 5.000000 * CDtemp * (x_84_52_0 - ABcom * x_84_52_1) + 5.000000 * ABCDtemp * x_56_71_1;
     QUICKDouble x_0_72_0 = Qtempy * x_0_47_0 + WQtempy * x_0_47_1 + CDtemp * (x_0_34_0 - ABcom * x_0_34_1);
     QUICKDouble x_0_72_1 = Qtempy * x_0_47_1 + WQtempy * x_0_47_2 + CDtemp * (x_0_34_1 - ABcom * x_0_34_2);
     QUICKDouble x_0_72_2 = Qtempy * x_0_47_2 + WQtempy * x_0_47_3 + CDtemp * (x_0_34_2 - ABcom * x_0_34_3);
@@ -2887,8 +2887,8 @@
     QUICKDouble x_69_72_1 = Qtempy * x_69_47_1 + WQtempy * x_69_47_2 + CDtemp * (x_69_34_1 - ABcom * x_69_34_2);
     QUICKDouble x_84_72_0 = Ptempx * x_56_72_0 + WPtempx * x_56_72_1 + 4.000000 * ABtemp * (x_38_72_0 - CDcom * x_38_72_1);
     QUICKDouble x_84_72_1 = Ptempx * x_56_72_1 + WPtempx * x_56_72_2 + 4.000000 * ABtemp * (x_38_72_1 - CDcom * x_38_72_2);
-    LOCSTORE(store, 84, 111, STOREDIM, STOREDIM) += Qtempy * x_84_72_0 + WQtempy * x_84_72_1 + 2.000000 * CDtemp * (x_84_47_0 - ABcom * x_84_47_1) + ABCDtemp * x_69_72_1;
-    LOCSTORE(store, 84, 87, STOREDIM, STOREDIM) += Qtempx * x_84_72_0 + WQtempx * x_84_72_1 + 5.000000 * ABCDtemp * x_56_72_1;
+    LOCSTORE(store, 84, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_72_0 + WQtempy * x_84_72_1 + 2.000000 * CDtemp * (x_84_47_0 - ABcom * x_84_47_1) + ABCDtemp * x_69_72_1;
+    LOCSTORE(store, 84, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_72_0 + WQtempx * x_84_72_1 + 5.000000 * ABCDtemp * x_56_72_1;
     QUICKDouble x_0_73_0 = Qtempy * x_0_42_0 + WQtempy * x_0_42_1 + 3.000000 * CDtemp * (x_0_22_0 - ABcom * x_0_22_1);
     QUICKDouble x_0_73_1 = Qtempy * x_0_42_1 + WQtempy * x_0_42_2 + 3.000000 * CDtemp * (x_0_22_1 - ABcom * x_0_22_2);
     QUICKDouble x_0_73_2 = Qtempy * x_0_42_2 + WQtempy * x_0_42_3 + 3.000000 * CDtemp * (x_0_22_2 - ABcom * x_0_22_3);
@@ -2935,8 +2935,8 @@
     QUICKDouble x_69_73_1 = Qtempy * x_69_42_1 + WQtempy * x_69_42_2 + 3.000000 * CDtemp * (x_69_22_1 - ABcom * x_69_22_2);
     QUICKDouble x_84_73_0 = Ptempx * x_56_73_0 + WPtempx * x_56_73_1 + 4.000000 * ABtemp * (x_38_73_0 - CDcom * x_38_73_1);
     QUICKDouble x_84_73_1 = Ptempx * x_56_73_1 + WPtempx * x_56_73_2 + 4.000000 * ABtemp * (x_38_73_1 - CDcom * x_38_73_2);
-    LOCSTORE(store, 84, 106, STOREDIM, STOREDIM) += Qtempy * x_84_73_0 + WQtempy * x_84_73_1 + 4.000000 * CDtemp * (x_84_42_0 - ABcom * x_84_42_1) + ABCDtemp * x_69_73_1;
-    LOCSTORE(store, 84, 88, STOREDIM, STOREDIM) += Qtempx * x_84_73_0 + WQtempx * x_84_73_1 + 5.000000 * ABCDtemp * x_56_73_1;
+    LOCSTORE(store, 84, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_73_0 + WQtempy * x_84_73_1 + 4.000000 * CDtemp * (x_84_42_0 - ABcom * x_84_42_1) + ABCDtemp * x_69_73_1;
+    LOCSTORE(store, 84, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_73_0 + WQtempx * x_84_73_1 + 5.000000 * ABCDtemp * x_56_73_1;
     QUICKDouble x_0_49_0 = Qtempx * x_0_34_0 + WQtempx * x_0_34_1;
     QUICKDouble x_0_49_8 = Qtempx * x_0_34_8 + WQtempx * x_0_34_9;
     QUICKDouble x_0_74_0 = Qtempx * x_0_49_0 + WQtempx * x_0_49_1 + CDtemp * (x_0_34_0 - ABcom * x_0_34_1);
@@ -3011,7 +3011,7 @@
     QUICKDouble x_84_49_1 = Qtempx * x_84_34_1 + WQtempx * x_84_34_2 + 5.000000 * ABCDtemp * x_56_34_2;
     QUICKDouble x_84_74_0 = Ptempx * x_56_74_0 + WPtempx * x_56_74_1 + 4.000000 * ABtemp * (x_38_74_0 - CDcom * x_38_74_1) + 2.000000 * ABCDtemp * x_56_49_1;
     QUICKDouble x_84_74_1 = Ptempx * x_56_74_1 + WPtempx * x_56_74_2 + 4.000000 * ABtemp * (x_38_74_1 - CDcom * x_38_74_2) + 2.000000 * ABCDtemp * x_56_49_2;
-    LOCSTORE(store, 84, 113, STOREDIM, STOREDIM) += Qtempx * x_84_74_0 + WQtempx * x_84_74_1 + 2.000000 * CDtemp * (x_84_49_0 - ABcom * x_84_49_1) + 5.000000 * ABCDtemp * x_56_74_1;
+    LOCSTORE(store, 84, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_74_0 + WQtempx * x_84_74_1 + 2.000000 * CDtemp * (x_84_49_0 - ABcom * x_84_49_1) + 5.000000 * ABCDtemp * x_56_74_1;
     QUICKDouble x_0_14_0 = Qtempx * x_0_9_0 + WQtempx * x_0_9_1;
     QUICKDouble x_0_14_10 = Qtempx * x_0_9_10 + WQtempx * x_0_9_11;
     QUICKDouble x_0_21_0 = Qtempx * x_0_14_0 + WQtempx * x_0_14_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
@@ -3127,7 +3127,7 @@
     QUICKDouble x_84_44_1 = Qtempx * x_84_21_1 + WQtempx * x_84_21_2 + 2.000000 * CDtemp * (x_84_14_1 - ABcom * x_84_14_2) + 5.000000 * ABCDtemp * x_56_21_2;
     QUICKDouble x_84_75_0 = Ptempx * x_56_75_0 + WPtempx * x_56_75_1 + 4.000000 * ABtemp * (x_38_75_0 - CDcom * x_38_75_1) + 4.000000 * ABCDtemp * x_56_44_1;
     QUICKDouble x_84_75_1 = Ptempx * x_56_75_1 + WPtempx * x_56_75_2 + 4.000000 * ABtemp * (x_38_75_1 - CDcom * x_38_75_2) + 4.000000 * ABCDtemp * x_56_44_2;
-    LOCSTORE(store, 84, 108, STOREDIM, STOREDIM) += Qtempx * x_84_75_0 + WQtempx * x_84_75_1 + 4.000000 * CDtemp * (x_84_44_0 - ABcom * x_84_44_1) + 5.000000 * ABCDtemp * x_56_75_1;
+    LOCSTORE(store, 84, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_75_0 + WQtempx * x_84_75_1 + 4.000000 * CDtemp * (x_84_44_0 - ABcom * x_84_44_1) + 5.000000 * ABCDtemp * x_56_75_1;
     QUICKDouble x_0_51_0 = Qtempx * x_0_33_0 + WQtempx * x_0_33_1;
     QUICKDouble x_0_51_8 = Qtempx * x_0_33_8 + WQtempx * x_0_33_9;
     QUICKDouble x_13_2_4 = Qtempy * x_13_0_4 + WQtempy * x_13_0_5;
@@ -3235,7 +3235,7 @@
     QUICKDouble x_84_51_1 = Qtempx * x_84_33_1 + WQtempx * x_84_33_2 + 5.000000 * ABCDtemp * x_56_33_2;
     QUICKDouble x_84_76_0 = Ptempx * x_56_76_0 + WPtempx * x_56_76_1 + 4.000000 * ABtemp * (x_38_76_0 - CDcom * x_38_76_1) + 2.000000 * ABCDtemp * x_56_51_1;
     QUICKDouble x_84_76_1 = Ptempx * x_56_76_1 + WPtempx * x_56_76_2 + 4.000000 * ABtemp * (x_38_76_1 - CDcom * x_38_76_2) + 2.000000 * ABCDtemp * x_56_51_2;
-    LOCSTORE(store, 84, 115, STOREDIM, STOREDIM) += Qtempx * x_84_76_0 + WQtempx * x_84_76_1 + 2.000000 * CDtemp * (x_84_51_0 - ABcom * x_84_51_1) + 5.000000 * ABCDtemp * x_56_76_1;
+    LOCSTORE(store, 84, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_76_0 + WQtempx * x_84_76_1 + 2.000000 * CDtemp * (x_84_51_0 - ABcom * x_84_51_1) + 5.000000 * ABCDtemp * x_56_76_1;
     QUICKDouble x_0_12_0 = Qtempx * x_0_8_0 + WQtempx * x_0_8_1;
     QUICKDouble x_0_12_10 = Qtempx * x_0_8_10 + WQtempx * x_0_8_11;
     QUICKDouble x_0_20_0 = Qtempx * x_0_12_0 + WQtempx * x_0_12_1 + CDtemp * (x_0_8_0 - ABcom * x_0_8_1);
@@ -3381,7 +3381,7 @@
     QUICKDouble x_84_46_1 = Qtempx * x_84_20_1 + WQtempx * x_84_20_2 + 2.000000 * CDtemp * (x_84_12_1 - ABcom * x_84_12_2) + 5.000000 * ABCDtemp * x_56_20_2;
     QUICKDouble x_84_77_0 = Ptempx * x_56_77_0 + WPtempx * x_56_77_1 + 4.000000 * ABtemp * (x_38_77_0 - CDcom * x_38_77_1) + 4.000000 * ABCDtemp * x_56_46_1;
     QUICKDouble x_84_77_1 = Ptempx * x_56_77_1 + WPtempx * x_56_77_2 + 4.000000 * ABtemp * (x_38_77_1 - CDcom * x_38_77_2) + 4.000000 * ABCDtemp * x_56_46_2;
-    LOCSTORE(store, 84, 110, STOREDIM, STOREDIM) += Qtempx * x_84_77_0 + WQtempx * x_84_77_1 + 4.000000 * CDtemp * (x_84_46_0 - ABcom * x_84_46_1) + 5.000000 * ABCDtemp * x_56_77_1;
+    LOCSTORE(store, 84, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_77_0 + WQtempx * x_84_77_1 + 4.000000 * CDtemp * (x_84_46_0 - ABcom * x_84_46_1) + 5.000000 * ABCDtemp * x_56_77_1;
     QUICKDouble x_0_78_0 = Qtempy * x_0_41_0 + WQtempy * x_0_41_1 + 2.000000 * CDtemp * (x_0_31_0 - ABcom * x_0_31_1);
     QUICKDouble x_0_78_1 = Qtempy * x_0_41_1 + WQtempy * x_0_41_2 + 2.000000 * CDtemp * (x_0_31_1 - ABcom * x_0_31_2);
     QUICKDouble x_0_78_2 = Qtempy * x_0_41_2 + WQtempy * x_0_41_3 + 2.000000 * CDtemp * (x_0_31_2 - ABcom * x_0_31_3);
@@ -3427,8 +3427,8 @@
     QUICKDouble x_69_78_1 = Qtempy * x_69_41_1 + WQtempy * x_69_41_2 + 2.000000 * CDtemp * (x_69_31_1 - ABcom * x_69_31_2);
     QUICKDouble x_84_78_0 = Ptempx * x_56_78_0 + WPtempx * x_56_78_1 + 4.000000 * ABtemp * (x_38_78_0 - CDcom * x_38_78_1);
     QUICKDouble x_84_78_1 = Ptempx * x_56_78_1 + WPtempx * x_56_78_2 + 4.000000 * ABtemp * (x_38_78_1 - CDcom * x_38_78_2);
-    LOCSTORE(store, 84, 112, STOREDIM, STOREDIM) += Qtempy * x_84_78_0 + WQtempy * x_84_78_1 + 3.000000 * CDtemp * (x_84_41_0 - ABcom * x_84_41_1) + ABCDtemp * x_69_78_1;
-    LOCSTORE(store, 84, 93, STOREDIM, STOREDIM) += Qtempx * x_84_78_0 + WQtempx * x_84_78_1 + 5.000000 * ABCDtemp * x_56_78_1;
+    LOCSTORE(store, 84, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_78_0 + WQtempy * x_84_78_1 + 3.000000 * CDtemp * (x_84_41_0 - ABcom * x_84_41_1) + ABCDtemp * x_69_78_1;
+    LOCSTORE(store, 84, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_78_0 + WQtempx * x_84_78_1 + 5.000000 * ABCDtemp * x_56_78_1;
     QUICKDouble x_0_27_0 = Qtempx * x_0_19_0 + WQtempx * x_0_19_1;
     QUICKDouble x_0_27_9 = Qtempx * x_0_19_9 + WQtempx * x_0_19_10;
     QUICKDouble x_0_43_0 = Qtempx * x_0_27_0 + WQtempx * x_0_27_1 + CDtemp * (x_0_19_0 - ABcom * x_0_19_1);
@@ -3527,7 +3527,7 @@
     QUICKDouble x_84_43_1 = Qtempx * x_84_27_1 + WQtempx * x_84_27_2 + CDtemp * (x_84_19_1 - ABcom * x_84_19_2) + 5.000000 * ABCDtemp * x_56_27_2;
     QUICKDouble x_84_79_0 = Ptempx * x_56_79_0 + WPtempx * x_56_79_1 + 4.000000 * ABtemp * (x_38_79_0 - CDcom * x_38_79_1) + 3.000000 * ABCDtemp * x_56_43_1;
     QUICKDouble x_84_79_1 = Ptempx * x_56_79_1 + WPtempx * x_56_79_2 + 4.000000 * ABtemp * (x_38_79_1 - CDcom * x_38_79_2) + 3.000000 * ABCDtemp * x_56_43_2;
-    LOCSTORE(store, 84, 114, STOREDIM, STOREDIM) += Qtempx * x_84_79_0 + WQtempx * x_84_79_1 + 3.000000 * CDtemp * (x_84_43_0 - ABcom * x_84_43_1) + 5.000000 * ABCDtemp * x_56_79_1;
+    LOCSTORE(store, 84, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_79_0 + WQtempx * x_84_79_1 + 3.000000 * CDtemp * (x_84_43_0 - ABcom * x_84_43_1) + 5.000000 * ABCDtemp * x_56_79_1;
     QUICKDouble x_0_29_0 = Qtempx * x_0_18_0 + WQtempx * x_0_18_1;
     QUICKDouble x_0_29_9 = Qtempx * x_0_18_9 + WQtempx * x_0_18_10;
     QUICKDouble x_0_45_0 = Qtempx * x_0_29_0 + WQtempx * x_0_29_1 + CDtemp * (x_0_18_0 - ABcom * x_0_18_1);
@@ -3622,7 +3622,7 @@
     QUICKDouble x_84_45_1 = Qtempx * x_84_29_1 + WQtempx * x_84_29_2 + CDtemp * (x_84_18_1 - ABcom * x_84_18_2) + 5.000000 * ABCDtemp * x_56_29_2;
     QUICKDouble x_84_80_0 = Ptempx * x_56_80_0 + WPtempx * x_56_80_1 + 4.000000 * ABtemp * (x_38_80_0 - CDcom * x_38_80_1) + 3.000000 * ABCDtemp * x_56_45_1;
     QUICKDouble x_84_80_1 = Ptempx * x_56_80_1 + WPtempx * x_56_80_2 + 4.000000 * ABtemp * (x_38_80_1 - CDcom * x_38_80_2) + 3.000000 * ABCDtemp * x_56_45_2;
-    LOCSTORE(store, 84, 116, STOREDIM, STOREDIM) += Qtempx * x_84_80_0 + WQtempx * x_84_80_1 + 3.000000 * CDtemp * (x_84_45_0 - ABcom * x_84_45_1) + 5.000000 * ABCDtemp * x_56_80_1;
+    LOCSTORE(store, 84, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_80_0 + WQtempx * x_84_80_1 + 3.000000 * CDtemp * (x_84_45_0 - ABcom * x_84_45_1) + 5.000000 * ABCDtemp * x_56_80_1;
     QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
     QUICKDouble x_0_1_12 = Qtempx * VY_12 + WQtempx * VY_13;
     QUICKDouble x_0_7_0 = Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
@@ -3806,7 +3806,7 @@
     QUICKDouble x_84_53_1 = Qtempx * x_84_32_1 + WQtempx * x_84_32_2 + 4.000000 * CDtemp * (x_84_17_1 - ABcom * x_84_17_2) + 5.000000 * ABCDtemp * x_56_32_2;
     QUICKDouble x_84_81_0 = Ptempx * x_56_81_0 + WPtempx * x_56_81_1 + 4.000000 * ABtemp * (x_38_81_0 - CDcom * x_38_81_1) + 6.000000 * ABCDtemp * x_56_53_1;
     QUICKDouble x_84_81_1 = Ptempx * x_56_81_1 + WPtempx * x_56_81_2 + 4.000000 * ABtemp * (x_38_81_1 - CDcom * x_38_81_2) + 6.000000 * ABCDtemp * x_56_53_2;
-    LOCSTORE(store, 84, 117, STOREDIM, STOREDIM) += Qtempx * x_84_81_0 + WQtempx * x_84_81_1 + 6.000000 * CDtemp * (x_84_53_0 - ABcom * x_84_53_1) + 5.000000 * ABCDtemp * x_56_81_1;
+    LOCSTORE(store, 84, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_81_0 + WQtempx * x_84_81_1 + 6.000000 * CDtemp * (x_84_53_0 - ABcom * x_84_53_1) + 5.000000 * ABCDtemp * x_56_81_1;
     QUICKDouble x_0_82_0 = Qtempy * x_0_54_0 + WQtempy * x_0_54_1 + 5.000000 * CDtemp * (x_0_33_0 - ABcom * x_0_33_1);
     QUICKDouble x_0_82_1 = Qtempy * x_0_54_1 + WQtempy * x_0_54_2 + 5.000000 * CDtemp * (x_0_33_1 - ABcom * x_0_33_2);
     QUICKDouble x_0_82_2 = Qtempy * x_0_54_2 + WQtempy * x_0_54_3 + 5.000000 * CDtemp * (x_0_33_2 - ABcom * x_0_33_3);
@@ -3855,8 +3855,8 @@
     QUICKDouble x_69_82_1 = Qtempy * x_69_54_1 + WQtempy * x_69_54_2 + 5.000000 * CDtemp * (x_69_33_1 - ABcom * x_69_33_2);
     QUICKDouble x_84_82_0 = Ptempx * x_56_82_0 + WPtempx * x_56_82_1 + 4.000000 * ABtemp * (x_38_82_0 - CDcom * x_38_82_1);
     QUICKDouble x_84_82_1 = Ptempx * x_56_82_1 + WPtempx * x_56_82_2 + 4.000000 * ABtemp * (x_38_82_1 - CDcom * x_38_82_2);
-    LOCSTORE(store, 84, 118, STOREDIM, STOREDIM) += Qtempy * x_84_82_0 + WQtempy * x_84_82_1 + 6.000000 * CDtemp * (x_84_54_0 - ABcom * x_84_54_1) + ABCDtemp * x_69_82_1;
-    LOCSTORE(store, 84, 103, STOREDIM, STOREDIM) += Qtempx * x_84_82_0 + WQtempx * x_84_82_1 + 5.000000 * ABCDtemp * x_56_82_1;
+    LOCSTORE(store, 84, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_82_0 + WQtempy * x_84_82_1 + 6.000000 * CDtemp * (x_84_54_0 - ABcom * x_84_54_1) + ABCDtemp * x_69_82_1;
+    LOCSTORE(store, 84, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_82_0 + WQtempx * x_84_82_1 + 5.000000 * ABCDtemp * x_56_82_1;
     QUICKDouble x_71_0_7 = Ptempx * x_52_0_7 + WPtempx * x_52_0_8 + 4.000000 * ABtemp * (x_28_0_7 - CDcom * x_28_0_8);
     QUICKDouble x_0_83_0 = Qtempz * x_0_55_0 + WQtempz * x_0_55_1 + 5.000000 * CDtemp * (x_0_34_0 - ABcom * x_0_34_1);
     QUICKDouble x_0_83_1 = Qtempz * x_0_55_1 + WQtempz * x_0_55_2 + 5.000000 * CDtemp * (x_0_34_1 - ABcom * x_0_34_2);
@@ -3906,11 +3906,11 @@
     QUICKDouble x_71_83_1 = Qtempz * x_71_55_1 + WQtempz * x_71_55_2 + 5.000000 * CDtemp * (x_71_34_1 - ABcom * x_71_34_2);
     QUICKDouble x_84_83_0 = Ptempx * x_56_83_0 + WPtempx * x_56_83_1 + 4.000000 * ABtemp * (x_38_83_0 - CDcom * x_38_83_1);
     QUICKDouble x_84_83_1 = Ptempx * x_56_83_1 + WPtempx * x_56_83_2 + 4.000000 * ABtemp * (x_38_83_1 - CDcom * x_38_83_2);
-    LOCSTORE(store, 84, 119, STOREDIM, STOREDIM) += Qtempz * x_84_83_0 + WQtempz * x_84_83_1 + 6.000000 * CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + ABCDtemp * x_71_83_1;
-    LOCSTORE(store, 84, 101, STOREDIM, STOREDIM) += Qtempx * x_84_83_0 + WQtempx * x_84_83_1 + 5.000000 * ABCDtemp * x_56_83_1;
+    LOCSTORE(store, 84, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_84_83_0 + WQtempz * x_84_83_1 + 6.000000 * CDtemp * (x_84_55_0 - ABcom * x_84_55_1) + ABCDtemp * x_71_83_1;
+    LOCSTORE(store, 84, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_84_83_0 + WQtempx * x_84_83_1 + 5.000000 * ABCDtemp * x_56_83_1;
     QUICKDouble x_53_55_2 = Qtempz * x_53_34_2 + WQtempz * x_53_34_3 + 4.000000 * CDtemp * (x_53_19_2 - ABcom * x_53_19_3);
     QUICKDouble x_69_83_1 = Qtempz * x_69_55_1 + WQtempz * x_69_55_2 + 5.000000 * CDtemp * (x_69_34_1 - ABcom * x_69_34_2) + ABCDtemp * x_53_55_2;
-    LOCSTORE(store, 84, 99, STOREDIM, STOREDIM) += Qtempy * x_84_83_0 + WQtempy * x_84_83_1 + ABCDtemp * x_69_83_1;
+    LOCSTORE(store, 84, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_84_83_0 + WQtempy * x_84_83_1 + ABCDtemp * x_69_83_1;
     QUICKDouble x_8_0_1 = Ptempy * x_2_0_1 + WPtempy * x_2_0_2 + ABtemp * (VY_1 - CDcom * VY_2);
     QUICKDouble x_15_0_1 = Ptempy * x_5_0_1 + WPtempy * x_5_0_2 + ABtemp * (x_3_0_1 - CDcom * x_3_0_2);
     QUICKDouble x_8_0_2 = Ptempy * x_2_0_2 + WPtempy * x_2_0_3 + ABtemp * (VY_2 - CDcom * VY_3);
@@ -4082,7 +4082,7 @@
     QUICKDouble x_85_38_1 = Qtempx * x_85_23_1 + WQtempx * x_85_23_2 + 2.000000 * CDtemp * (x_85_10_1 - ABcom * x_85_10_2) + ABCDtemp * x_67_23_2;
     QUICKDouble x_85_56_0 = Ptempx * x_67_56_0 + WPtempx * x_67_56_1 + 4.000000 * ABCDtemp * x_67_38_1;
     QUICKDouble x_85_56_1 = Ptempx * x_67_56_1 + WPtempx * x_67_56_2 + 4.000000 * ABCDtemp * x_67_38_2;
-    LOCSTORE(store, 85, 84, STOREDIM, STOREDIM) += Qtempx * x_85_56_0 + WQtempx * x_85_56_1 + 4.000000 * CDtemp * (x_85_38_0 - ABcom * x_85_38_1) + ABCDtemp * x_67_56_1;
+    LOCSTORE(store, 85, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_56_0 + WQtempx * x_85_56_1 + 4.000000 * CDtemp * (x_85_38_0 - ABcom * x_85_38_1) + ABCDtemp * x_67_56_1;
     QUICKDouble x_15_3_4 = Qtempz * x_15_0_4 + WQtempz * x_15_0_5 + ABCDtemp * x_8_0_5;
     QUICKDouble x_15_3_5 = Qtempz * x_15_0_5 + WQtempz * x_15_0_6 + ABCDtemp * x_8_0_6;
     QUICKDouble x_30_3_3 = Qtempz * x_30_0_3 + WQtempz * x_30_0_4 + ABCDtemp * x_18_0_4;
@@ -4190,7 +4190,7 @@
     QUICKDouble x_85_48_1 = Qtempy * x_85_30_1 + WQtempy * x_85_30_2 + 3.000000 * CDtemp * (x_85_15_1 - ABcom * x_85_15_2) + 5.000000 * ABCDtemp * x_57_30_2;
     QUICKDouble x_85_57_0 = Ptempx * x_67_57_0 + WPtempx * x_67_57_1 + ABCDtemp * x_67_48_1;
     QUICKDouble x_85_57_1 = Ptempx * x_67_57_1 + WPtempx * x_67_57_2 + ABCDtemp * x_67_48_2;
-    LOCSTORE(store, 85, 91, STOREDIM, STOREDIM) += Qtempx * x_85_57_0 + WQtempx * x_85_57_1 + CDtemp * (x_85_48_0 - ABcom * x_85_48_1) + ABCDtemp * x_67_57_1;
+    LOCSTORE(store, 85, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_57_0 + WQtempx * x_85_57_1 + CDtemp * (x_85_48_0 - ABcom * x_85_48_1) + ABCDtemp * x_67_57_1;
     QUICKDouble x_33_3_3 = Qtempz * x_33_0_3 + WQtempz * x_33_0_4;
     QUICKDouble x_33_3_4 = Qtempz * x_33_0_4 + WQtempz * x_33_0_5;
     QUICKDouble x_33_3_5 = Qtempz * x_33_0_5 + WQtempz * x_33_0_6;
@@ -4310,7 +4310,7 @@
     QUICKDouble x_85_47_1 = Qtempy * x_85_34_1 + WQtempy * x_85_34_2 + 5.000000 * ABCDtemp * x_57_34_2;
     QUICKDouble x_85_58_0 = Ptempx * x_67_58_0 + WPtempx * x_67_58_1 + ABCDtemp * x_67_47_1;
     QUICKDouble x_85_58_1 = Ptempx * x_67_58_1 + WPtempx * x_67_58_2 + ABCDtemp * x_67_47_2;
-    LOCSTORE(store, 85, 89, STOREDIM, STOREDIM) += Qtempx * x_85_58_0 + WQtempx * x_85_58_1 + CDtemp * (x_85_47_0 - ABcom * x_85_47_1) + ABCDtemp * x_67_58_1;
+    LOCSTORE(store, 85, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_58_0 + WQtempx * x_85_58_1 + CDtemp * (x_85_47_0 - ABcom * x_85_47_1) + ABCDtemp * x_67_58_1;
     QUICKDouble x_18_3_4 = Qtempz * x_18_0_4 + WQtempz * x_18_0_5;
     QUICKDouble x_18_3_5 = Qtempz * x_18_0_5 + WQtempz * x_18_0_6;
     QUICKDouble x_18_3_6 = Qtempz * x_18_0_6 + WQtempz * x_18_0_7;
@@ -4364,7 +4364,7 @@
     QUICKDouble x_85_41_1 = Qtempy * x_85_31_1 + WQtempy * x_85_31_2 + CDtemp * (x_85_19_1 - ABcom * x_85_19_2) + 5.000000 * ABCDtemp * x_57_31_2;
     QUICKDouble x_85_59_0 = Ptempx * x_67_59_0 + WPtempx * x_67_59_1 + ABCDtemp * x_67_41_1;
     QUICKDouble x_85_59_1 = Ptempx * x_67_59_1 + WPtempx * x_67_59_2 + ABCDtemp * x_67_41_2;
-    LOCSTORE(store, 85, 98, STOREDIM, STOREDIM) += Qtempx * x_85_59_0 + WQtempx * x_85_59_1 + CDtemp * (x_85_41_0 - ABcom * x_85_41_1) + ABCDtemp * x_67_59_1;
+    LOCSTORE(store, 85, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_59_0 + WQtempx * x_85_59_1 + CDtemp * (x_85_41_0 - ABcom * x_85_41_1) + ABCDtemp * x_67_59_1;
     QUICKDouble x_8_3_5 = Qtempz * x_8_0_5 + WQtempz * x_8_0_6;
     QUICKDouble x_8_3_6 = Qtempz * x_8_0_6 + WQtempz * x_8_0_7;
     QUICKDouble x_8_3_4 = Qtempz * x_8_0_4 + WQtempz * x_8_0_5;
@@ -4426,7 +4426,7 @@
     QUICKDouble x_85_42_1 = Qtempy * x_85_22_1 + WQtempy * x_85_22_2 + 2.000000 * CDtemp * (x_85_16_1 - ABcom * x_85_16_2) + 5.000000 * ABCDtemp * x_57_22_2;
     QUICKDouble x_85_60_0 = Ptempx * x_67_60_0 + WPtempx * x_67_60_1 + ABCDtemp * x_67_42_1;
     QUICKDouble x_85_60_1 = Ptempx * x_67_60_1 + WPtempx * x_67_60_2 + ABCDtemp * x_67_42_2;
-    LOCSTORE(store, 85, 97, STOREDIM, STOREDIM) += Qtempx * x_85_60_0 + WQtempx * x_85_60_1 + CDtemp * (x_85_42_0 - ABcom * x_85_42_1) + ABCDtemp * x_67_60_1;
+    LOCSTORE(store, 85, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_60_0 + WQtempx * x_85_60_1 + CDtemp * (x_85_42_0 - ABcom * x_85_42_1) + ABCDtemp * x_67_60_1;
     QUICKDouble x_67_40_1 = Qtempx * x_67_31_1 + WQtempx * x_67_31_2;
     QUICKDouble x_67_40_2 = Qtempx * x_67_31_2 + WQtempx * x_67_31_3;
     QUICKDouble x_67_40_0 = Qtempx * x_67_31_0 + WQtempx * x_67_31_1;
@@ -4438,7 +4438,7 @@
     QUICKDouble x_85_40_1 = Qtempx * x_85_31_1 + WQtempx * x_85_31_2 + ABCDtemp * x_67_31_2;
     QUICKDouble x_85_61_0 = Ptempx * x_67_61_0 + WPtempx * x_67_61_1 + 2.000000 * ABCDtemp * x_67_40_1;
     QUICKDouble x_85_61_1 = Ptempx * x_67_61_1 + WPtempx * x_67_61_2 + 2.000000 * ABCDtemp * x_67_40_2;
-    LOCSTORE(store, 85, 94, STOREDIM, STOREDIM) += Qtempx * x_85_61_0 + WQtempx * x_85_61_1 + 2.000000 * CDtemp * (x_85_40_0 - ABcom * x_85_40_1) + ABCDtemp * x_67_61_1;
+    LOCSTORE(store, 85, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_61_0 + WQtempx * x_85_61_1 + 2.000000 * CDtemp * (x_85_40_0 - ABcom * x_85_40_1) + ABCDtemp * x_67_61_1;
     QUICKDouble x_67_25_1 = Qtempx * x_67_16_1 + WQtempx * x_67_16_2;
     QUICKDouble x_67_25_2 = Qtempx * x_67_16_2 + WQtempx * x_67_16_3;
     QUICKDouble x_67_25_3 = Qtempx * x_67_16_3 + WQtempx * x_67_16_4;
@@ -4458,7 +4458,7 @@
     QUICKDouble x_85_36_1 = Qtempx * x_85_25_1 + WQtempx * x_85_25_2 + CDtemp * (x_85_16_1 - ABcom * x_85_16_2) + ABCDtemp * x_67_25_2;
     QUICKDouble x_85_62_0 = Ptempx * x_67_62_0 + WPtempx * x_67_62_1 + 3.000000 * ABCDtemp * x_67_36_1;
     QUICKDouble x_85_62_1 = Ptempx * x_67_62_1 + WPtempx * x_67_62_2 + 3.000000 * ABCDtemp * x_67_36_2;
-    LOCSTORE(store, 85, 90, STOREDIM, STOREDIM) += Qtempx * x_85_62_0 + WQtempx * x_85_62_1 + 3.000000 * CDtemp * (x_85_36_0 - ABcom * x_85_36_1) + ABCDtemp * x_67_62_1;
+    LOCSTORE(store, 85, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_62_0 + WQtempx * x_85_62_1 + 3.000000 * CDtemp * (x_85_36_0 - ABcom * x_85_36_1) + ABCDtemp * x_67_62_1;
     QUICKDouble x_67_39_1 = Qtempx * x_67_30_1 + WQtempx * x_67_30_2;
     QUICKDouble x_67_39_2 = Qtempx * x_67_30_2 + WQtempx * x_67_30_3;
     QUICKDouble x_67_39_0 = Qtempx * x_67_30_0 + WQtempx * x_67_30_1;
@@ -4470,7 +4470,7 @@
     QUICKDouble x_85_39_1 = Qtempx * x_85_30_1 + WQtempx * x_85_30_2 + ABCDtemp * x_67_30_2;
     QUICKDouble x_85_63_0 = Ptempx * x_67_63_0 + WPtempx * x_67_63_1 + 2.000000 * ABCDtemp * x_67_39_1;
     QUICKDouble x_85_63_1 = Ptempx * x_67_63_1 + WPtempx * x_67_63_2 + 2.000000 * ABCDtemp * x_67_39_2;
-    LOCSTORE(store, 85, 95, STOREDIM, STOREDIM) += Qtempx * x_85_63_0 + WQtempx * x_85_63_1 + 2.000000 * CDtemp * (x_85_39_0 - ABcom * x_85_39_1) + ABCDtemp * x_67_63_1;
+    LOCSTORE(store, 85, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_63_0 + WQtempx * x_85_63_1 + 2.000000 * CDtemp * (x_85_39_0 - ABcom * x_85_39_1) + ABCDtemp * x_67_63_1;
     QUICKDouble x_67_24_1 = Qtempx * x_67_15_1 + WQtempx * x_67_15_2;
     QUICKDouble x_67_24_2 = Qtempx * x_67_15_2 + WQtempx * x_67_15_3;
     QUICKDouble x_67_24_3 = Qtempx * x_67_15_3 + WQtempx * x_67_15_4;
@@ -4490,7 +4490,7 @@
     QUICKDouble x_85_37_1 = Qtempx * x_85_24_1 + WQtempx * x_85_24_2 + CDtemp * (x_85_15_1 - ABcom * x_85_15_2) + ABCDtemp * x_67_24_2;
     QUICKDouble x_85_64_0 = Ptempx * x_67_64_0 + WPtempx * x_67_64_1 + 3.000000 * ABCDtemp * x_67_37_1;
     QUICKDouble x_85_64_1 = Ptempx * x_67_64_1 + WPtempx * x_67_64_2 + 3.000000 * ABCDtemp * x_67_37_2;
-    LOCSTORE(store, 85, 92, STOREDIM, STOREDIM) += Qtempx * x_85_64_0 + WQtempx * x_85_64_1 + 3.000000 * CDtemp * (x_85_37_0 - ABcom * x_85_37_1) + ABCDtemp * x_67_64_1;
+    LOCSTORE(store, 85, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_64_0 + WQtempx * x_85_64_1 + 3.000000 * CDtemp * (x_85_37_0 - ABcom * x_85_37_1) + ABCDtemp * x_67_64_1;
     QUICKDouble x_67_35_1 = Qtempx * x_67_22_1 + WQtempx * x_67_22_2;
     QUICKDouble x_67_35_2 = Qtempx * x_67_22_2 + WQtempx * x_67_22_3;
     QUICKDouble x_67_35_0 = Qtempx * x_67_22_0 + WQtempx * x_67_22_1;
@@ -4502,7 +4502,7 @@
     QUICKDouble x_85_35_1 = Qtempx * x_85_22_1 + WQtempx * x_85_22_2 + ABCDtemp * x_67_22_2;
     QUICKDouble x_85_65_0 = Ptempx * x_67_65_0 + WPtempx * x_67_65_1 + 2.000000 * ABCDtemp * x_67_35_1;
     QUICKDouble x_85_65_1 = Ptempx * x_67_65_1 + WPtempx * x_67_65_2 + 2.000000 * ABCDtemp * x_67_35_2;
-    LOCSTORE(store, 85, 96, STOREDIM, STOREDIM) += Qtempx * x_85_65_0 + WQtempx * x_85_65_1 + 2.000000 * CDtemp * (x_85_35_0 - ABcom * x_85_35_1) + ABCDtemp * x_67_65_1;
+    LOCSTORE(store, 85, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_65_0 + WQtempx * x_85_65_1 + 2.000000 * CDtemp * (x_85_35_0 - ABcom * x_85_35_1) + ABCDtemp * x_67_65_1;
     QUICKDouble x_29_0_7 = Ptempx * x_18_0_7 + WPtempx * x_18_0_8;
     QUICKDouble x_39_0_7 = Ptempx * x_30_0_7 + WPtempx * x_30_0_8;
     QUICKDouble x_51_0_7 = Ptempx * x_33_0_7 + WPtempx * x_33_0_8;
@@ -4553,8 +4553,8 @@
     QUICKDouble x_85_55_1 = Qtempz * x_85_34_1 + WQtempz * x_85_34_2 + 4.000000 * CDtemp * (x_85_19_1 - ABcom * x_85_19_2) + ABCDtemp * x_70_34_2;
     QUICKDouble x_85_66_0 = Ptempx * x_67_66_0 + WPtempx * x_67_66_1;
     QUICKDouble x_85_66_1 = Ptempx * x_67_66_1 + WPtempx * x_67_66_2;
-    LOCSTORE(store, 85, 105, STOREDIM, STOREDIM) += Qtempy * x_85_66_0 + WQtempy * x_85_66_1 + CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + 5.000000 * ABCDtemp * x_57_66_1;
-    LOCSTORE(store, 85, 86, STOREDIM, STOREDIM) += Qtempx * x_85_66_0 + WQtempx * x_85_66_1 + ABCDtemp * x_67_66_1;
+    LOCSTORE(store, 85, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_66_0 + WQtempy * x_85_66_1 + CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + 5.000000 * ABCDtemp * x_57_66_1;
+    LOCSTORE(store, 85, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_66_0 + WQtempx * x_85_66_1 + ABCDtemp * x_67_66_1;
     QUICKDouble x_12_0_7 = Ptempx * x_8_0_7 + WPtempx * x_8_0_8;
     QUICKDouble x_24_0_7 = Ptempx * x_15_0_7 + WPtempx * x_15_0_8;
     QUICKDouble x_24_3_6 = Qtempz * x_24_0_6 + WQtempz * x_24_0_7 + ABCDtemp * x_12_0_7;
@@ -4587,14 +4587,14 @@
     QUICKDouble x_57_67_1 = Qtempy * x_57_48_1 + WQtempy * x_57_48_2 + 4.000000 * CDtemp * (x_57_30_1 - ABcom * x_57_30_2) + 4.000000 * ABCDtemp * x_39_48_2;
     QUICKDouble x_85_67_0 = Ptempx * x_67_67_0 + WPtempx * x_67_67_1;
     QUICKDouble x_85_67_1 = Ptempx * x_67_67_1 + WPtempx * x_67_67_2;
-    LOCSTORE(store, 85, 100, STOREDIM, STOREDIM) += Qtempy * x_85_67_0 + WQtempy * x_85_67_1 + 5.000000 * CDtemp * (x_85_48_0 - ABcom * x_85_48_1) + 5.000000 * ABCDtemp * x_57_67_1;
-    LOCSTORE(store, 85, 85, STOREDIM, STOREDIM) += Qtempx * x_85_67_0 + WQtempx * x_85_67_1 + ABCDtemp * x_67_67_1;
+    LOCSTORE(store, 85, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_67_0 + WQtempy * x_85_67_1 + 5.000000 * CDtemp * (x_85_48_0 - ABcom * x_85_48_1) + 5.000000 * ABCDtemp * x_57_67_1;
+    LOCSTORE(store, 85, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_67_0 + WQtempx * x_85_67_1 + ABCDtemp * x_67_67_1;
     QUICKDouble x_67_68_1 = Qtempx * x_67_55_1 + WQtempx * x_67_55_2;
     QUICKDouble x_67_68_0 = Qtempx * x_67_55_0 + WQtempx * x_67_55_1;
     QUICKDouble x_67_68_2 = Qtempx * x_67_55_2 + WQtempx * x_67_55_3;
     QUICKDouble x_85_68_0 = Ptempx * x_67_68_0 + WPtempx * x_67_68_1 + ABCDtemp * x_67_55_1;
     QUICKDouble x_85_68_1 = Ptempx * x_67_68_1 + WPtempx * x_67_68_2 + ABCDtemp * x_67_55_2;
-    LOCSTORE(store, 85, 107, STOREDIM, STOREDIM) += Qtempx * x_85_68_0 + WQtempx * x_85_68_1 + CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + ABCDtemp * x_67_68_1;
+    LOCSTORE(store, 85, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_68_0 + WQtempx * x_85_68_1 + CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + ABCDtemp * x_67_68_1;
     QUICKDouble x_67_6_1 = Qtempx * x_67_3_1 + WQtempx * x_67_3_2;
     QUICKDouble x_67_6_2 = Qtempx * x_67_3_2 + WQtempx * x_67_3_3;
     QUICKDouble x_67_6_3 = Qtempx * x_67_3_3 + WQtempx * x_67_3_4;
@@ -4636,7 +4636,7 @@
     QUICKDouble x_85_50_1 = Qtempx * x_85_26_1 + WQtempx * x_85_26_2 + 3.000000 * CDtemp * (x_85_13_1 - ABcom * x_85_13_2) + ABCDtemp * x_67_26_2;
     QUICKDouble x_85_69_0 = Ptempx * x_67_69_0 + WPtempx * x_67_69_1 + 5.000000 * ABCDtemp * x_67_50_1;
     QUICKDouble x_85_69_1 = Ptempx * x_67_69_1 + WPtempx * x_67_69_2 + 5.000000 * ABCDtemp * x_67_50_2;
-    LOCSTORE(store, 85, 102, STOREDIM, STOREDIM) += Qtempx * x_85_69_0 + WQtempx * x_85_69_1 + 5.000000 * CDtemp * (x_85_50_0 - ABcom * x_85_50_1) + ABCDtemp * x_67_69_1;
+    LOCSTORE(store, 85, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_69_0 + WQtempx * x_85_69_1 + 5.000000 * CDtemp * (x_85_50_0 - ABcom * x_85_50_1) + ABCDtemp * x_67_69_1;
     QUICKDouble x_15_2_4 = Qtempy * x_15_0_4 + WQtempy * x_15_0_5 + 2.000000 * ABCDtemp * x_5_0_5;
     QUICKDouble x_15_2_5 = Qtempy * x_15_0_5 + WQtempy * x_15_0_6 + 2.000000 * ABCDtemp * x_5_0_6;
     QUICKDouble x_30_2_3 = Qtempy * x_30_0_3 + WQtempy * x_30_0_4 + 3.000000 * ABCDtemp * x_15_0_4;
@@ -4766,7 +4766,7 @@
     QUICKDouble x_85_54_1 = Qtempy * x_85_33_1 + WQtempy * x_85_33_2 + 4.000000 * CDtemp * (x_85_18_1 - ABcom * x_85_18_2) + 5.000000 * ABCDtemp * x_57_33_2;
     QUICKDouble x_85_70_0 = Ptempx * x_67_70_0 + WPtempx * x_67_70_1 + ABCDtemp * x_67_54_1;
     QUICKDouble x_85_70_1 = Ptempx * x_67_70_1 + WPtempx * x_67_70_2 + ABCDtemp * x_67_54_2;
-    LOCSTORE(store, 85, 109, STOREDIM, STOREDIM) += Qtempx * x_85_70_0 + WQtempx * x_85_70_1 + CDtemp * (x_85_54_0 - ABcom * x_85_54_1) + ABCDtemp * x_67_70_1;
+    LOCSTORE(store, 85, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_70_0 + WQtempx * x_85_70_1 + CDtemp * (x_85_54_0 - ABcom * x_85_54_1) + ABCDtemp * x_67_70_1;
     QUICKDouble x_67_4_1 = Qtempx * x_67_2_1 + WQtempx * x_67_2_2;
     QUICKDouble x_67_4_2 = Qtempx * x_67_2_2 + WQtempx * x_67_2_3;
     QUICKDouble x_67_4_3 = Qtempx * x_67_2_3 + WQtempx * x_67_2_4;
@@ -4808,7 +4808,7 @@
     QUICKDouble x_85_52_1 = Qtempx * x_85_28_1 + WQtempx * x_85_28_2 + 3.000000 * CDtemp * (x_85_11_1 - ABcom * x_85_11_2) + ABCDtemp * x_67_28_2;
     QUICKDouble x_85_71_0 = Ptempx * x_67_71_0 + WPtempx * x_67_71_1 + 5.000000 * ABCDtemp * x_67_52_1;
     QUICKDouble x_85_71_1 = Ptempx * x_67_71_1 + WPtempx * x_67_71_2 + 5.000000 * ABCDtemp * x_67_52_2;
-    LOCSTORE(store, 85, 104, STOREDIM, STOREDIM) += Qtempx * x_85_71_0 + WQtempx * x_85_71_1 + 5.000000 * CDtemp * (x_85_52_0 - ABcom * x_85_52_1) + ABCDtemp * x_67_71_1;
+    LOCSTORE(store, 85, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_71_0 + WQtempx * x_85_71_1 + 5.000000 * CDtemp * (x_85_52_0 - ABcom * x_85_52_1) + ABCDtemp * x_67_71_1;
     QUICKDouble x_12_3_6 = Qtempz * x_12_0_6 + WQtempz * x_12_0_7;
     QUICKDouble x_12_9_4 = Qtempz * x_12_3_4 + WQtempz * x_12_3_5 + CDtemp * (x_12_0_4 - ABcom * x_12_0_5);
     QUICKDouble x_24_9_5 = Qtempz * x_24_3_5 + WQtempz * x_24_3_6 + CDtemp * (x_24_0_5 - ABcom * x_24_0_6) + ABCDtemp * x_12_3_6;
@@ -4835,8 +4835,8 @@
     QUICKDouble x_57_72_1 = Qtempy * x_57_47_1 + WQtempy * x_57_47_2 + CDtemp * (x_57_34_1 - ABcom * x_57_34_2) + 4.000000 * ABCDtemp * x_39_47_2;
     QUICKDouble x_85_72_0 = Ptempx * x_67_72_0 + WPtempx * x_67_72_1;
     QUICKDouble x_85_72_1 = Ptempx * x_67_72_1 + WPtempx * x_67_72_2;
-    LOCSTORE(store, 85, 111, STOREDIM, STOREDIM) += Qtempy * x_85_72_0 + WQtempy * x_85_72_1 + 2.000000 * CDtemp * (x_85_47_0 - ABcom * x_85_47_1) + 5.000000 * ABCDtemp * x_57_72_1;
-    LOCSTORE(store, 85, 87, STOREDIM, STOREDIM) += Qtempx * x_85_72_0 + WQtempx * x_85_72_1 + ABCDtemp * x_67_72_1;
+    LOCSTORE(store, 85, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_72_0 + WQtempy * x_85_72_1 + 2.000000 * CDtemp * (x_85_47_0 - ABcom * x_85_47_1) + 5.000000 * ABCDtemp * x_57_72_1;
+    LOCSTORE(store, 85, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_72_0 + WQtempx * x_85_72_1 + ABCDtemp * x_67_72_1;
     QUICKDouble x_15_16_4 = Qtempy * x_15_9_4 + WQtempy * x_15_9_5 + 2.000000 * ABCDtemp * x_5_9_5;
     QUICKDouble x_15_16_3 = Qtempy * x_15_9_3 + WQtempy * x_15_9_4 + 2.000000 * ABCDtemp * x_5_9_4;
     QUICKDouble x_15_16_5 = Qtempy * x_15_9_5 + WQtempy * x_15_9_6 + 2.000000 * ABCDtemp * x_5_9_6;
@@ -4863,8 +4863,8 @@
     QUICKDouble x_57_73_1 = Qtempy * x_57_42_1 + WQtempy * x_57_42_2 + 3.000000 * CDtemp * (x_57_22_1 - ABcom * x_57_22_2) + 4.000000 * ABCDtemp * x_39_42_2;
     QUICKDouble x_85_73_0 = Ptempx * x_67_73_0 + WPtempx * x_67_73_1;
     QUICKDouble x_85_73_1 = Ptempx * x_67_73_1 + WPtempx * x_67_73_2;
-    LOCSTORE(store, 85, 106, STOREDIM, STOREDIM) += Qtempy * x_85_73_0 + WQtempy * x_85_73_1 + 4.000000 * CDtemp * (x_85_42_0 - ABcom * x_85_42_1) + 5.000000 * ABCDtemp * x_57_73_1;
-    LOCSTORE(store, 85, 88, STOREDIM, STOREDIM) += Qtempx * x_85_73_0 + WQtempx * x_85_73_1 + ABCDtemp * x_67_73_1;
+    LOCSTORE(store, 85, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_73_0 + WQtempy * x_85_73_1 + 4.000000 * CDtemp * (x_85_42_0 - ABcom * x_85_42_1) + 5.000000 * ABCDtemp * x_57_73_1;
+    LOCSTORE(store, 85, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_73_0 + WQtempx * x_85_73_1 + ABCDtemp * x_67_73_1;
     QUICKDouble x_67_49_1 = Qtempx * x_67_34_1 + WQtempx * x_67_34_2;
     QUICKDouble x_67_49_2 = Qtempx * x_67_34_2 + WQtempx * x_67_34_3;
     QUICKDouble x_67_49_0 = Qtempx * x_67_34_0 + WQtempx * x_67_34_1;
@@ -4876,7 +4876,7 @@
     QUICKDouble x_85_49_1 = Qtempx * x_85_34_1 + WQtempx * x_85_34_2 + ABCDtemp * x_67_34_2;
     QUICKDouble x_85_74_0 = Ptempx * x_67_74_0 + WPtempx * x_67_74_1 + 2.000000 * ABCDtemp * x_67_49_1;
     QUICKDouble x_85_74_1 = Ptempx * x_67_74_1 + WPtempx * x_67_74_2 + 2.000000 * ABCDtemp * x_67_49_2;
-    LOCSTORE(store, 85, 113, STOREDIM, STOREDIM) += Qtempx * x_85_74_0 + WQtempx * x_85_74_1 + 2.000000 * CDtemp * (x_85_49_0 - ABcom * x_85_49_1) + ABCDtemp * x_67_74_1;
+    LOCSTORE(store, 85, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_74_0 + WQtempx * x_85_74_1 + 2.000000 * CDtemp * (x_85_49_0 - ABcom * x_85_49_1) + ABCDtemp * x_67_74_1;
     QUICKDouble x_67_14_1 = Qtempx * x_67_9_1 + WQtempx * x_67_9_2;
     QUICKDouble x_67_14_2 = Qtempx * x_67_9_2 + WQtempx * x_67_9_3;
     QUICKDouble x_67_14_3 = Qtempx * x_67_9_3 + WQtempx * x_67_9_4;
@@ -4906,7 +4906,7 @@
     QUICKDouble x_85_44_1 = Qtempx * x_85_21_1 + WQtempx * x_85_21_2 + 2.000000 * CDtemp * (x_85_14_1 - ABcom * x_85_14_2) + ABCDtemp * x_67_21_2;
     QUICKDouble x_85_75_0 = Ptempx * x_67_75_0 + WPtempx * x_67_75_1 + 4.000000 * ABCDtemp * x_67_44_1;
     QUICKDouble x_85_75_1 = Ptempx * x_67_75_1 + WPtempx * x_67_75_2 + 4.000000 * ABCDtemp * x_67_44_2;
-    LOCSTORE(store, 85, 108, STOREDIM, STOREDIM) += Qtempx * x_85_75_0 + WQtempx * x_85_75_1 + 4.000000 * CDtemp * (x_85_44_0 - ABcom * x_85_44_1) + ABCDtemp * x_67_75_1;
+    LOCSTORE(store, 85, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_75_0 + WQtempx * x_85_75_1 + 4.000000 * CDtemp * (x_85_44_0 - ABcom * x_85_44_1) + ABCDtemp * x_67_75_1;
     QUICKDouble x_67_51_1 = Qtempx * x_67_33_1 + WQtempx * x_67_33_2;
     QUICKDouble x_67_51_2 = Qtempx * x_67_33_2 + WQtempx * x_67_33_3;
     QUICKDouble x_67_51_0 = Qtempx * x_67_33_0 + WQtempx * x_67_33_1;
@@ -4918,7 +4918,7 @@
     QUICKDouble x_85_51_1 = Qtempx * x_85_33_1 + WQtempx * x_85_33_2 + ABCDtemp * x_67_33_2;
     QUICKDouble x_85_76_0 = Ptempx * x_67_76_0 + WPtempx * x_67_76_1 + 2.000000 * ABCDtemp * x_67_51_1;
     QUICKDouble x_85_76_1 = Ptempx * x_67_76_1 + WPtempx * x_67_76_2 + 2.000000 * ABCDtemp * x_67_51_2;
-    LOCSTORE(store, 85, 115, STOREDIM, STOREDIM) += Qtempx * x_85_76_0 + WQtempx * x_85_76_1 + 2.000000 * CDtemp * (x_85_51_0 - ABcom * x_85_51_1) + ABCDtemp * x_67_76_1;
+    LOCSTORE(store, 85, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_76_0 + WQtempx * x_85_76_1 + 2.000000 * CDtemp * (x_85_51_0 - ABcom * x_85_51_1) + ABCDtemp * x_67_76_1;
     QUICKDouble x_67_12_1 = Qtempx * x_67_8_1 + WQtempx * x_67_8_2;
     QUICKDouble x_67_12_2 = Qtempx * x_67_8_2 + WQtempx * x_67_8_3;
     QUICKDouble x_67_12_3 = Qtempx * x_67_8_3 + WQtempx * x_67_8_4;
@@ -4948,7 +4948,7 @@
     QUICKDouble x_85_46_1 = Qtempx * x_85_20_1 + WQtempx * x_85_20_2 + 2.000000 * CDtemp * (x_85_12_1 - ABcom * x_85_12_2) + ABCDtemp * x_67_20_2;
     QUICKDouble x_85_77_0 = Ptempx * x_67_77_0 + WPtempx * x_67_77_1 + 4.000000 * ABCDtemp * x_67_46_1;
     QUICKDouble x_85_77_1 = Ptempx * x_67_77_1 + WPtempx * x_67_77_2 + 4.000000 * ABCDtemp * x_67_46_2;
-    LOCSTORE(store, 85, 110, STOREDIM, STOREDIM) += Qtempx * x_85_77_0 + WQtempx * x_85_77_1 + 4.000000 * CDtemp * (x_85_46_0 - ABcom * x_85_46_1) + ABCDtemp * x_67_77_1;
+    LOCSTORE(store, 85, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_77_0 + WQtempx * x_85_77_1 + 4.000000 * CDtemp * (x_85_46_0 - ABcom * x_85_46_1) + ABCDtemp * x_67_77_1;
     QUICKDouble x_8_9_5 = Ptempy * x_2_9_5 + WPtempy * x_2_9_6 + ABtemp * (x_0_9_5 - CDcom * x_0_9_6);
     QUICKDouble x_8_9_4 = Ptempy * x_2_9_4 + WPtempy * x_2_9_5 + ABtemp * (x_0_9_4 - CDcom * x_0_9_5);
     QUICKDouble x_8_9_6 = Ptempy * x_2_9_6 + WPtempy * x_2_9_7 + ABtemp * (x_0_9_6 - CDcom * x_0_9_7);
@@ -4974,8 +4974,8 @@
     QUICKDouble x_57_78_1 = Qtempy * x_57_41_1 + WQtempy * x_57_41_2 + 2.000000 * CDtemp * (x_57_31_1 - ABcom * x_57_31_2) + 4.000000 * ABCDtemp * x_39_41_2;
     QUICKDouble x_85_78_0 = Ptempx * x_67_78_0 + WPtempx * x_67_78_1;
     QUICKDouble x_85_78_1 = Ptempx * x_67_78_1 + WPtempx * x_67_78_2;
-    LOCSTORE(store, 85, 112, STOREDIM, STOREDIM) += Qtempy * x_85_78_0 + WQtempy * x_85_78_1 + 3.000000 * CDtemp * (x_85_41_0 - ABcom * x_85_41_1) + 5.000000 * ABCDtemp * x_57_78_1;
-    LOCSTORE(store, 85, 93, STOREDIM, STOREDIM) += Qtempx * x_85_78_0 + WQtempx * x_85_78_1 + ABCDtemp * x_67_78_1;
+    LOCSTORE(store, 85, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_78_0 + WQtempy * x_85_78_1 + 3.000000 * CDtemp * (x_85_41_0 - ABcom * x_85_41_1) + 5.000000 * ABCDtemp * x_57_78_1;
+    LOCSTORE(store, 85, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_78_0 + WQtempx * x_85_78_1 + ABCDtemp * x_67_78_1;
     QUICKDouble x_67_27_1 = Qtempx * x_67_19_1 + WQtempx * x_67_19_2;
     QUICKDouble x_67_27_2 = Qtempx * x_67_19_2 + WQtempx * x_67_19_3;
     QUICKDouble x_67_27_3 = Qtempx * x_67_19_3 + WQtempx * x_67_19_4;
@@ -4995,7 +4995,7 @@
     QUICKDouble x_85_43_1 = Qtempx * x_85_27_1 + WQtempx * x_85_27_2 + CDtemp * (x_85_19_1 - ABcom * x_85_19_2) + ABCDtemp * x_67_27_2;
     QUICKDouble x_85_79_0 = Ptempx * x_67_79_0 + WPtempx * x_67_79_1 + 3.000000 * ABCDtemp * x_67_43_1;
     QUICKDouble x_85_79_1 = Ptempx * x_67_79_1 + WPtempx * x_67_79_2 + 3.000000 * ABCDtemp * x_67_43_2;
-    LOCSTORE(store, 85, 114, STOREDIM, STOREDIM) += Qtempx * x_85_79_0 + WQtempx * x_85_79_1 + 3.000000 * CDtemp * (x_85_43_0 - ABcom * x_85_43_1) + ABCDtemp * x_67_79_1;
+    LOCSTORE(store, 85, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_79_0 + WQtempx * x_85_79_1 + 3.000000 * CDtemp * (x_85_43_0 - ABcom * x_85_43_1) + ABCDtemp * x_67_79_1;
     QUICKDouble x_67_29_1 = Qtempx * x_67_18_1 + WQtempx * x_67_18_2;
     QUICKDouble x_67_29_2 = Qtempx * x_67_18_2 + WQtempx * x_67_18_3;
     QUICKDouble x_67_29_3 = Qtempx * x_67_18_3 + WQtempx * x_67_18_4;
@@ -5015,7 +5015,7 @@
     QUICKDouble x_85_45_1 = Qtempx * x_85_29_1 + WQtempx * x_85_29_2 + CDtemp * (x_85_18_1 - ABcom * x_85_18_2) + ABCDtemp * x_67_29_2;
     QUICKDouble x_85_80_0 = Ptempx * x_67_80_0 + WPtempx * x_67_80_1 + 3.000000 * ABCDtemp * x_67_45_1;
     QUICKDouble x_85_80_1 = Ptempx * x_67_80_1 + WPtempx * x_67_80_2 + 3.000000 * ABCDtemp * x_67_45_2;
-    LOCSTORE(store, 85, 116, STOREDIM, STOREDIM) += Qtempx * x_85_80_0 + WQtempx * x_85_80_1 + 3.000000 * CDtemp * (x_85_45_0 - ABcom * x_85_45_1) + ABCDtemp * x_67_80_1;
+    LOCSTORE(store, 85, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_80_0 + WQtempx * x_85_80_1 + 3.000000 * CDtemp * (x_85_45_0 - ABcom * x_85_45_1) + ABCDtemp * x_67_80_1;
     QUICKDouble x_67_1_1 = Qtempx * x_67_0_1 + WQtempx * x_67_0_2;
     QUICKDouble x_67_1_2 = Qtempx * x_67_0_2 + WQtempx * x_67_0_3;
     QUICKDouble x_67_1_3 = Qtempx * x_67_0_3 + WQtempx * x_67_0_4;
@@ -5071,7 +5071,7 @@
     QUICKDouble x_85_53_1 = Qtempx * x_85_32_1 + WQtempx * x_85_32_2 + 4.000000 * CDtemp * (x_85_17_1 - ABcom * x_85_17_2) + ABCDtemp * x_67_32_2;
     QUICKDouble x_85_81_0 = Ptempx * x_67_81_0 + WPtempx * x_67_81_1 + 6.000000 * ABCDtemp * x_67_53_1;
     QUICKDouble x_85_81_1 = Ptempx * x_67_81_1 + WPtempx * x_67_81_2 + 6.000000 * ABCDtemp * x_67_53_2;
-    LOCSTORE(store, 85, 117, STOREDIM, STOREDIM) += Qtempx * x_85_81_0 + WQtempx * x_85_81_1 + 6.000000 * CDtemp * (x_85_53_0 - ABcom * x_85_53_1) + ABCDtemp * x_67_81_1;
+    LOCSTORE(store, 85, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_81_0 + WQtempx * x_85_81_1 + 6.000000 * CDtemp * (x_85_53_0 - ABcom * x_85_53_1) + ABCDtemp * x_67_81_1;
     QUICKDouble x_24_2_6 = Qtempy * x_24_0_6 + WQtempy * x_24_0_7 + 2.000000 * ABCDtemp * x_10_0_7;
     QUICKDouble x_39_2_6 = Qtempy * x_39_0_6 + WQtempy * x_39_0_7 + 3.000000 * ABCDtemp * x_24_0_7;
     QUICKDouble x_57_2_6 = Qtempy * x_57_0_6 + WQtempy * x_57_0_7 + 4.000000 * ABCDtemp * x_39_0_7;
@@ -5104,8 +5104,8 @@
     QUICKDouble x_57_82_1 = Qtempy * x_57_54_1 + WQtempy * x_57_54_2 + 5.000000 * CDtemp * (x_57_33_1 - ABcom * x_57_33_2) + 4.000000 * ABCDtemp * x_39_54_2;
     QUICKDouble x_85_82_0 = Ptempx * x_67_82_0 + WPtempx * x_67_82_1;
     QUICKDouble x_85_82_1 = Ptempx * x_67_82_1 + WPtempx * x_67_82_2;
-    LOCSTORE(store, 85, 118, STOREDIM, STOREDIM) += Qtempy * x_85_82_0 + WQtempy * x_85_82_1 + 6.000000 * CDtemp * (x_85_54_0 - ABcom * x_85_54_1) + 5.000000 * ABCDtemp * x_57_82_1;
-    LOCSTORE(store, 85, 103, STOREDIM, STOREDIM) += Qtempx * x_85_82_0 + WQtempx * x_85_82_1 + ABCDtemp * x_67_82_1;
+    LOCSTORE(store, 85, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_82_0 + WQtempy * x_85_82_1 + 6.000000 * CDtemp * (x_85_54_0 - ABcom * x_85_54_1) + 5.000000 * ABCDtemp * x_57_82_1;
+    LOCSTORE(store, 85, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_82_0 + WQtempx * x_85_82_1 + ABCDtemp * x_67_82_1;
     QUICKDouble x_70_0_7 = Ptempx * x_54_0_7 + WPtempx * x_54_0_8;
     QUICKDouble x_70_3_6 = Qtempz * x_70_0_6 + WQtempz * x_70_0_7;
     QUICKDouble x_70_9_5 = Qtempz * x_70_3_5 + WQtempz * x_70_3_6 + CDtemp * (x_70_0_5 - ABcom * x_70_0_6);
@@ -5122,11 +5122,11 @@
     QUICKDouble x_70_83_1 = Qtempz * x_70_55_1 + WQtempz * x_70_55_2 + 5.000000 * CDtemp * (x_70_34_1 - ABcom * x_70_34_2);
     QUICKDouble x_85_83_0 = Ptempx * x_67_83_0 + WPtempx * x_67_83_1;
     QUICKDouble x_85_83_1 = Ptempx * x_67_83_1 + WPtempx * x_67_83_2;
-    LOCSTORE(store, 85, 119, STOREDIM, STOREDIM) += Qtempz * x_85_83_0 + WQtempz * x_85_83_1 + 6.000000 * CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + ABCDtemp * x_70_83_1;
-    LOCSTORE(store, 85, 101, STOREDIM, STOREDIM) += Qtempx * x_85_83_0 + WQtempx * x_85_83_1 + ABCDtemp * x_67_83_1;
+    LOCSTORE(store, 85, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_85_83_0 + WQtempz * x_85_83_1 + 6.000000 * CDtemp * (x_85_55_0 - ABcom * x_85_55_1) + ABCDtemp * x_70_83_1;
+    LOCSTORE(store, 85, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_85_83_0 + WQtempx * x_85_83_1 + ABCDtemp * x_67_83_1;
     QUICKDouble x_51_55_2 = Qtempz * x_51_34_2 + WQtempz * x_51_34_3 + 4.000000 * CDtemp * (x_51_19_2 - ABcom * x_51_19_3);
     QUICKDouble x_57_83_1 = Qtempz * x_57_55_1 + WQtempz * x_57_55_2 + 5.000000 * CDtemp * (x_57_34_1 - ABcom * x_57_34_2) + ABCDtemp * x_51_55_2;
-    LOCSTORE(store, 85, 99, STOREDIM, STOREDIM) += Qtempy * x_85_83_0 + WQtempy * x_85_83_1 + 5.000000 * ABCDtemp * x_57_83_1;
+    LOCSTORE(store, 85, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_85_83_0 + WQtempy * x_85_83_1 + 5.000000 * ABCDtemp * x_57_83_1;
     QUICKDouble x_9_0_1 = Ptempz * x_3_0_1 + WPtempz * x_3_0_2 + ABtemp * (VY_1 - CDcom * VY_2);
     QUICKDouble x_9_0_2 = Ptempz * x_3_0_2 + WPtempz * x_3_0_3 + ABtemp * (VY_2 - CDcom * VY_3);
     QUICKDouble x_9_0_3 = Ptempz * x_3_0_3 + WPtempz * x_3_0_4 + ABtemp * (VY_3 - CDcom * VY_4);
@@ -5281,7 +5281,7 @@
     QUICKDouble x_86_38_1 = Qtempx * x_86_23_1 + WQtempx * x_86_23_2 + 2.000000 * CDtemp * (x_86_10_1 - ABcom * x_86_10_2) + ABCDtemp * x_66_23_2;
     QUICKDouble x_86_56_0 = Ptempx * x_66_56_0 + WPtempx * x_66_56_1 + 4.000000 * ABCDtemp * x_66_38_1;
     QUICKDouble x_86_56_1 = Ptempx * x_66_56_1 + WPtempx * x_66_56_2 + 4.000000 * ABCDtemp * x_66_38_2;
-    LOCSTORE(store, 86, 84, STOREDIM, STOREDIM) += Qtempx * x_86_56_0 + WQtempx * x_86_56_1 + 4.000000 * CDtemp * (x_86_38_0 - ABcom * x_86_38_1) + ABCDtemp * x_66_56_1;
+    LOCSTORE(store, 86, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_56_0 + WQtempx * x_86_56_1 + 4.000000 * CDtemp * (x_86_38_0 - ABcom * x_86_38_1) + ABCDtemp * x_66_56_1;
     QUICKDouble x_55_5_2 = Qtempy * x_55_3_2 + WQtempy * x_55_3_3;
     QUICKDouble x_55_5_3 = Qtempy * x_55_3_3 + WQtempy * x_55_3_4;
     QUICKDouble x_55_5_4 = Qtempy * x_55_3_4 + WQtempy * x_55_3_5;
@@ -5335,7 +5335,7 @@
     QUICKDouble x_86_48_1 = Qtempy * x_86_30_1 + WQtempy * x_86_30_2 + 3.000000 * CDtemp * (x_86_15_1 - ABcom * x_86_15_2) + ABCDtemp * x_68_30_2;
     QUICKDouble x_86_57_0 = Ptempx * x_66_57_0 + WPtempx * x_66_57_1 + ABCDtemp * x_66_48_1;
     QUICKDouble x_86_57_1 = Ptempx * x_66_57_1 + WPtempx * x_66_57_2 + ABCDtemp * x_66_48_2;
-    LOCSTORE(store, 86, 91, STOREDIM, STOREDIM) += Qtempx * x_86_57_0 + WQtempx * x_86_57_1 + CDtemp * (x_86_48_0 - ABcom * x_86_48_1) + ABCDtemp * x_66_57_1;
+    LOCSTORE(store, 86, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_57_0 + WQtempx * x_86_57_1 + CDtemp * (x_86_48_0 - ABcom * x_86_48_1) + ABCDtemp * x_66_57_1;
     QUICKDouble x_16_0_4 = Ptempy * x_9_0_4 + WPtempy * x_9_0_5;
     QUICKDouble x_16_0_5 = Ptempy * x_9_0_5 + WPtempy * x_9_0_6;
     QUICKDouble x_31_0_3 = Ptempy * x_19_0_3 + WPtempy * x_19_0_4;
@@ -5530,7 +5530,7 @@
     QUICKDouble x_86_47_1 = Qtempy * x_86_34_1 + WQtempy * x_86_34_2 + ABCDtemp * x_68_34_2;
     QUICKDouble x_86_58_0 = Ptempx * x_66_58_0 + WPtempx * x_66_58_1 + ABCDtemp * x_66_47_1;
     QUICKDouble x_86_58_1 = Ptempx * x_66_58_1 + WPtempx * x_66_58_2 + ABCDtemp * x_66_47_2;
-    LOCSTORE(store, 86, 89, STOREDIM, STOREDIM) += Qtempx * x_86_58_0 + WQtempx * x_86_58_1 + CDtemp * (x_86_47_0 - ABcom * x_86_47_1) + ABCDtemp * x_66_58_1;
+    LOCSTORE(store, 86, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_58_0 + WQtempx * x_86_58_1 + CDtemp * (x_86_47_0 - ABcom * x_86_47_1) + ABCDtemp * x_66_58_1;
     QUICKDouble x_55_31_2 = Qtempy * x_55_19_2 + WQtempy * x_55_19_3;
     QUICKDouble x_66_31_1 = Qtempy * x_66_19_1 + WQtempy * x_66_19_2 + ABCDtemp * x_55_19_2;
     QUICKDouble x_66_31_2 = Qtempy * x_66_19_2 + WQtempy * x_66_19_3 + ABCDtemp * x_55_19_3;
@@ -5556,7 +5556,7 @@
     QUICKDouble x_86_41_1 = Qtempy * x_86_31_1 + WQtempy * x_86_31_2 + CDtemp * (x_86_19_1 - ABcom * x_86_19_2) + ABCDtemp * x_68_31_2;
     QUICKDouble x_86_59_0 = Ptempx * x_66_59_0 + WPtempx * x_66_59_1 + ABCDtemp * x_66_41_1;
     QUICKDouble x_86_59_1 = Ptempx * x_66_59_1 + WPtempx * x_66_59_2 + ABCDtemp * x_66_41_2;
-    LOCSTORE(store, 86, 98, STOREDIM, STOREDIM) += Qtempx * x_86_59_0 + WQtempx * x_86_59_1 + CDtemp * (x_86_41_0 - ABcom * x_86_41_1) + ABCDtemp * x_66_59_1;
+    LOCSTORE(store, 86, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_59_0 + WQtempx * x_86_59_1 + CDtemp * (x_86_41_0 - ABcom * x_86_41_1) + ABCDtemp * x_66_59_1;
     QUICKDouble x_55_16_2 = Qtempy * x_55_9_2 + WQtempy * x_55_9_3;
     QUICKDouble x_55_16_3 = Qtempy * x_55_9_3 + WQtempy * x_55_9_4;
     QUICKDouble x_66_16_1 = Qtempy * x_66_9_1 + WQtempy * x_66_9_2 + ABCDtemp * x_55_9_2;
@@ -5600,7 +5600,7 @@
     QUICKDouble x_86_42_1 = Qtempy * x_86_22_1 + WQtempy * x_86_22_2 + 2.000000 * CDtemp * (x_86_16_1 - ABcom * x_86_16_2) + ABCDtemp * x_68_22_2;
     QUICKDouble x_86_60_0 = Ptempx * x_66_60_0 + WPtempx * x_66_60_1 + ABCDtemp * x_66_42_1;
     QUICKDouble x_86_60_1 = Ptempx * x_66_60_1 + WPtempx * x_66_60_2 + ABCDtemp * x_66_42_2;
-    LOCSTORE(store, 86, 97, STOREDIM, STOREDIM) += Qtempx * x_86_60_0 + WQtempx * x_86_60_1 + CDtemp * (x_86_42_0 - ABcom * x_86_42_1) + ABCDtemp * x_66_60_1;
+    LOCSTORE(store, 86, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_60_0 + WQtempx * x_86_60_1 + CDtemp * (x_86_42_0 - ABcom * x_86_42_1) + ABCDtemp * x_66_60_1;
     QUICKDouble x_66_40_1 = Qtempx * x_66_31_1 + WQtempx * x_66_31_2;
     QUICKDouble x_66_40_2 = Qtempx * x_66_31_2 + WQtempx * x_66_31_3;
     QUICKDouble x_66_40_0 = Qtempx * x_66_31_0 + WQtempx * x_66_31_1;
@@ -5612,7 +5612,7 @@
     QUICKDouble x_86_40_1 = Qtempx * x_86_31_1 + WQtempx * x_86_31_2 + ABCDtemp * x_66_31_2;
     QUICKDouble x_86_61_0 = Ptempx * x_66_61_0 + WPtempx * x_66_61_1 + 2.000000 * ABCDtemp * x_66_40_1;
     QUICKDouble x_86_61_1 = Ptempx * x_66_61_1 + WPtempx * x_66_61_2 + 2.000000 * ABCDtemp * x_66_40_2;
-    LOCSTORE(store, 86, 94, STOREDIM, STOREDIM) += Qtempx * x_86_61_0 + WQtempx * x_86_61_1 + 2.000000 * CDtemp * (x_86_40_0 - ABcom * x_86_40_1) + ABCDtemp * x_66_61_1;
+    LOCSTORE(store, 86, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_61_0 + WQtempx * x_86_61_1 + 2.000000 * CDtemp * (x_86_40_0 - ABcom * x_86_40_1) + ABCDtemp * x_66_61_1;
     QUICKDouble x_66_25_1 = Qtempx * x_66_16_1 + WQtempx * x_66_16_2;
     QUICKDouble x_66_25_2 = Qtempx * x_66_16_2 + WQtempx * x_66_16_3;
     QUICKDouble x_66_25_3 = Qtempx * x_66_16_3 + WQtempx * x_66_16_4;
@@ -5632,7 +5632,7 @@
     QUICKDouble x_86_36_1 = Qtempx * x_86_25_1 + WQtempx * x_86_25_2 + CDtemp * (x_86_16_1 - ABcom * x_86_16_2) + ABCDtemp * x_66_25_2;
     QUICKDouble x_86_62_0 = Ptempx * x_66_62_0 + WPtempx * x_66_62_1 + 3.000000 * ABCDtemp * x_66_36_1;
     QUICKDouble x_86_62_1 = Ptempx * x_66_62_1 + WPtempx * x_66_62_2 + 3.000000 * ABCDtemp * x_66_36_2;
-    LOCSTORE(store, 86, 90, STOREDIM, STOREDIM) += Qtempx * x_86_62_0 + WQtempx * x_86_62_1 + 3.000000 * CDtemp * (x_86_36_0 - ABcom * x_86_36_1) + ABCDtemp * x_66_62_1;
+    LOCSTORE(store, 86, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_62_0 + WQtempx * x_86_62_1 + 3.000000 * CDtemp * (x_86_36_0 - ABcom * x_86_36_1) + ABCDtemp * x_66_62_1;
     QUICKDouble x_66_39_1 = Qtempx * x_66_30_1 + WQtempx * x_66_30_2;
     QUICKDouble x_66_39_2 = Qtempx * x_66_30_2 + WQtempx * x_66_30_3;
     QUICKDouble x_66_39_0 = Qtempx * x_66_30_0 + WQtempx * x_66_30_1;
@@ -5644,7 +5644,7 @@
     QUICKDouble x_86_39_1 = Qtempx * x_86_30_1 + WQtempx * x_86_30_2 + ABCDtemp * x_66_30_2;
     QUICKDouble x_86_63_0 = Ptempx * x_66_63_0 + WPtempx * x_66_63_1 + 2.000000 * ABCDtemp * x_66_39_1;
     QUICKDouble x_86_63_1 = Ptempx * x_66_63_1 + WPtempx * x_66_63_2 + 2.000000 * ABCDtemp * x_66_39_2;
-    LOCSTORE(store, 86, 95, STOREDIM, STOREDIM) += Qtempx * x_86_63_0 + WQtempx * x_86_63_1 + 2.000000 * CDtemp * (x_86_39_0 - ABcom * x_86_39_1) + ABCDtemp * x_66_63_1;
+    LOCSTORE(store, 86, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_63_0 + WQtempx * x_86_63_1 + 2.000000 * CDtemp * (x_86_39_0 - ABcom * x_86_39_1) + ABCDtemp * x_66_63_1;
     QUICKDouble x_66_24_1 = Qtempx * x_66_15_1 + WQtempx * x_66_15_2;
     QUICKDouble x_66_24_2 = Qtempx * x_66_15_2 + WQtempx * x_66_15_3;
     QUICKDouble x_66_24_3 = Qtempx * x_66_15_3 + WQtempx * x_66_15_4;
@@ -5664,7 +5664,7 @@
     QUICKDouble x_86_37_1 = Qtempx * x_86_24_1 + WQtempx * x_86_24_2 + CDtemp * (x_86_15_1 - ABcom * x_86_15_2) + ABCDtemp * x_66_24_2;
     QUICKDouble x_86_64_0 = Ptempx * x_66_64_0 + WPtempx * x_66_64_1 + 3.000000 * ABCDtemp * x_66_37_1;
     QUICKDouble x_86_64_1 = Ptempx * x_66_64_1 + WPtempx * x_66_64_2 + 3.000000 * ABCDtemp * x_66_37_2;
-    LOCSTORE(store, 86, 92, STOREDIM, STOREDIM) += Qtempx * x_86_64_0 + WQtempx * x_86_64_1 + 3.000000 * CDtemp * (x_86_37_0 - ABcom * x_86_37_1) + ABCDtemp * x_66_64_1;
+    LOCSTORE(store, 86, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_64_0 + WQtempx * x_86_64_1 + 3.000000 * CDtemp * (x_86_37_0 - ABcom * x_86_37_1) + ABCDtemp * x_66_64_1;
     QUICKDouble x_66_35_1 = Qtempx * x_66_22_1 + WQtempx * x_66_22_2;
     QUICKDouble x_66_35_2 = Qtempx * x_66_22_2 + WQtempx * x_66_22_3;
     QUICKDouble x_66_35_0 = Qtempx * x_66_22_0 + WQtempx * x_66_22_1;
@@ -5676,7 +5676,7 @@
     QUICKDouble x_86_35_1 = Qtempx * x_86_22_1 + WQtempx * x_86_22_2 + ABCDtemp * x_66_22_2;
     QUICKDouble x_86_65_0 = Ptempx * x_66_65_0 + WPtempx * x_66_65_1 + 2.000000 * ABCDtemp * x_66_35_1;
     QUICKDouble x_86_65_1 = Ptempx * x_66_65_1 + WPtempx * x_66_65_2 + 2.000000 * ABCDtemp * x_66_35_2;
-    LOCSTORE(store, 86, 96, STOREDIM, STOREDIM) += Qtempx * x_86_65_0 + WQtempx * x_86_65_1 + 2.000000 * CDtemp * (x_86_35_0 - ABcom * x_86_35_1) + ABCDtemp * x_66_65_1;
+    LOCSTORE(store, 86, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_65_0 + WQtempx * x_86_65_1 + 2.000000 * CDtemp * (x_86_35_0 - ABcom * x_86_35_1) + ABCDtemp * x_66_65_1;
     QUICKDouble x_14_0_7 = Ptempx * x_9_0_7 + WPtempx * x_9_0_8;
     QUICKDouble x_27_0_7 = Ptempx * x_19_0_7 + WPtempx * x_19_0_8;
     QUICKDouble x_49_0_7 = Ptempx * x_34_0_7 + WPtempx * x_34_0_8;
@@ -5741,8 +5741,8 @@
     QUICKDouble x_86_55_1 = Qtempz * x_86_34_1 + WQtempz * x_86_34_2 + 4.000000 * CDtemp * (x_86_19_1 - ABcom * x_86_19_2) + 5.000000 * ABCDtemp * x_58_34_2;
     QUICKDouble x_86_66_0 = Ptempx * x_66_66_0 + WPtempx * x_66_66_1;
     QUICKDouble x_86_66_1 = Ptempx * x_66_66_1 + WPtempx * x_66_66_2;
-    LOCSTORE(store, 86, 105, STOREDIM, STOREDIM) += Qtempy * x_86_66_0 + WQtempy * x_86_66_1 + CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + ABCDtemp * x_68_66_1;
-    LOCSTORE(store, 86, 86, STOREDIM, STOREDIM) += Qtempx * x_86_66_0 + WQtempx * x_86_66_1 + ABCDtemp * x_66_66_1;
+    LOCSTORE(store, 86, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_66_0 + WQtempy * x_86_66_1 + CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + ABCDtemp * x_68_66_1;
+    LOCSTORE(store, 86, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_66_0 + WQtempx * x_86_66_1 + ABCDtemp * x_66_66_1;
     QUICKDouble x_68_5_5 = Qtempy * x_68_3_5 + WQtempy * x_68_3_6;
     QUICKDouble x_68_15_4 = Qtempy * x_68_5_4 + WQtempy * x_68_5_5 + CDtemp * (x_68_3_4 - ABcom * x_68_3_5);
     QUICKDouble x_68_30_3 = Qtempy * x_68_15_3 + WQtempy * x_68_15_4 + 2.000000 * CDtemp * (x_68_5_3 - ABcom * x_68_5_4);
@@ -5757,14 +5757,14 @@
     QUICKDouble x_68_67_1 = Qtempy * x_68_48_1 + WQtempy * x_68_48_2 + 4.000000 * CDtemp * (x_68_30_1 - ABcom * x_68_30_2);
     QUICKDouble x_86_67_0 = Ptempx * x_66_67_0 + WPtempx * x_66_67_1;
     QUICKDouble x_86_67_1 = Ptempx * x_66_67_1 + WPtempx * x_66_67_2;
-    LOCSTORE(store, 86, 100, STOREDIM, STOREDIM) += Qtempy * x_86_67_0 + WQtempy * x_86_67_1 + 5.000000 * CDtemp * (x_86_48_0 - ABcom * x_86_48_1) + ABCDtemp * x_68_67_1;
-    LOCSTORE(store, 86, 85, STOREDIM, STOREDIM) += Qtempx * x_86_67_0 + WQtempx * x_86_67_1 + ABCDtemp * x_66_67_1;
+    LOCSTORE(store, 86, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_67_0 + WQtempy * x_86_67_1 + 5.000000 * CDtemp * (x_86_48_0 - ABcom * x_86_48_1) + ABCDtemp * x_68_67_1;
+    LOCSTORE(store, 86, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_67_0 + WQtempx * x_86_67_1 + ABCDtemp * x_66_67_1;
     QUICKDouble x_66_68_1 = Qtempx * x_66_55_1 + WQtempx * x_66_55_2;
     QUICKDouble x_66_68_0 = Qtempx * x_66_55_0 + WQtempx * x_66_55_1;
     QUICKDouble x_66_68_2 = Qtempx * x_66_55_2 + WQtempx * x_66_55_3;
     QUICKDouble x_86_68_0 = Ptempx * x_66_68_0 + WPtempx * x_66_68_1 + ABCDtemp * x_66_55_1;
     QUICKDouble x_86_68_1 = Ptempx * x_66_68_1 + WPtempx * x_66_68_2 + ABCDtemp * x_66_55_2;
-    LOCSTORE(store, 86, 107, STOREDIM, STOREDIM) += Qtempx * x_86_68_0 + WQtempx * x_86_68_1 + CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + ABCDtemp * x_66_68_1;
+    LOCSTORE(store, 86, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_68_0 + WQtempx * x_86_68_1 + CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + ABCDtemp * x_66_68_1;
     QUICKDouble x_66_6_1 = Qtempx * x_66_3_1 + WQtempx * x_66_3_2;
     QUICKDouble x_66_6_2 = Qtempx * x_66_3_2 + WQtempx * x_66_3_3;
     QUICKDouble x_66_6_3 = Qtempx * x_66_3_3 + WQtempx * x_66_3_4;
@@ -5806,7 +5806,7 @@
     QUICKDouble x_86_50_1 = Qtempx * x_86_26_1 + WQtempx * x_86_26_2 + 3.000000 * CDtemp * (x_86_13_1 - ABcom * x_86_13_2) + ABCDtemp * x_66_26_2;
     QUICKDouble x_86_69_0 = Ptempx * x_66_69_0 + WPtempx * x_66_69_1 + 5.000000 * ABCDtemp * x_66_50_1;
     QUICKDouble x_86_69_1 = Ptempx * x_66_69_1 + WPtempx * x_66_69_2 + 5.000000 * ABCDtemp * x_66_50_2;
-    LOCSTORE(store, 86, 102, STOREDIM, STOREDIM) += Qtempx * x_86_69_0 + WQtempx * x_86_69_1 + 5.000000 * CDtemp * (x_86_50_0 - ABcom * x_86_50_1) + ABCDtemp * x_66_69_1;
+    LOCSTORE(store, 86, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_69_0 + WQtempx * x_86_69_1 + 5.000000 * CDtemp * (x_86_50_0 - ABcom * x_86_50_1) + ABCDtemp * x_66_69_1;
     QUICKDouble x_55_2_2 = Qtempy * x_55_0_2 + WQtempy * x_55_0_3;
     QUICKDouble x_55_2_3 = Qtempy * x_55_0_3 + WQtempy * x_55_0_4;
     QUICKDouble x_55_2_4 = Qtempy * x_55_0_4 + WQtempy * x_55_0_5;
@@ -5898,7 +5898,7 @@
     QUICKDouble x_86_54_1 = Qtempy * x_86_33_1 + WQtempy * x_86_33_2 + 4.000000 * CDtemp * (x_86_18_1 - ABcom * x_86_18_2) + ABCDtemp * x_68_33_2;
     QUICKDouble x_86_70_0 = Ptempx * x_66_70_0 + WPtempx * x_66_70_1 + ABCDtemp * x_66_54_1;
     QUICKDouble x_86_70_1 = Ptempx * x_66_70_1 + WPtempx * x_66_70_2 + ABCDtemp * x_66_54_2;
-    LOCSTORE(store, 86, 109, STOREDIM, STOREDIM) += Qtempx * x_86_70_0 + WQtempx * x_86_70_1 + CDtemp * (x_86_54_0 - ABcom * x_86_54_1) + ABCDtemp * x_66_70_1;
+    LOCSTORE(store, 86, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_70_0 + WQtempx * x_86_70_1 + CDtemp * (x_86_54_0 - ABcom * x_86_54_1) + ABCDtemp * x_66_70_1;
     QUICKDouble x_66_4_1 = Qtempx * x_66_2_1 + WQtempx * x_66_2_2;
     QUICKDouble x_66_4_2 = Qtempx * x_66_2_2 + WQtempx * x_66_2_3;
     QUICKDouble x_66_4_3 = Qtempx * x_66_2_3 + WQtempx * x_66_2_4;
@@ -5940,7 +5940,7 @@
     QUICKDouble x_86_52_1 = Qtempx * x_86_28_1 + WQtempx * x_86_28_2 + 3.000000 * CDtemp * (x_86_11_1 - ABcom * x_86_11_2) + ABCDtemp * x_66_28_2;
     QUICKDouble x_86_71_0 = Ptempx * x_66_71_0 + WPtempx * x_66_71_1 + 5.000000 * ABCDtemp * x_66_52_1;
     QUICKDouble x_86_71_1 = Ptempx * x_66_71_1 + WPtempx * x_66_71_2 + 5.000000 * ABCDtemp * x_66_52_2;
-    LOCSTORE(store, 86, 104, STOREDIM, STOREDIM) += Qtempx * x_86_71_0 + WQtempx * x_86_71_1 + 5.000000 * CDtemp * (x_86_52_0 - ABcom * x_86_52_1) + ABCDtemp * x_66_71_1;
+    LOCSTORE(store, 86, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_71_0 + WQtempx * x_86_71_1 + 5.000000 * CDtemp * (x_86_52_0 - ABcom * x_86_52_1) + ABCDtemp * x_66_71_1;
     QUICKDouble x_55_47_2 = Qtempy * x_55_34_2 + WQtempy * x_55_34_3;
     QUICKDouble x_55_47_1 = Qtempy * x_55_34_1 + WQtempy * x_55_34_2;
     QUICKDouble x_55_47_3 = Qtempy * x_55_34_3 + WQtempy * x_55_34_4;
@@ -5952,8 +5952,8 @@
     QUICKDouble x_68_72_1 = Qtempy * x_68_47_1 + WQtempy * x_68_47_2 + CDtemp * (x_68_34_1 - ABcom * x_68_34_2);
     QUICKDouble x_86_72_0 = Ptempx * x_66_72_0 + WPtempx * x_66_72_1;
     QUICKDouble x_86_72_1 = Ptempx * x_66_72_1 + WPtempx * x_66_72_2;
-    LOCSTORE(store, 86, 111, STOREDIM, STOREDIM) += Qtempy * x_86_72_0 + WQtempy * x_86_72_1 + 2.000000 * CDtemp * (x_86_47_0 - ABcom * x_86_47_1) + ABCDtemp * x_68_72_1;
-    LOCSTORE(store, 86, 87, STOREDIM, STOREDIM) += Qtempx * x_86_72_0 + WQtempx * x_86_72_1 + ABCDtemp * x_66_72_1;
+    LOCSTORE(store, 86, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_72_0 + WQtempy * x_86_72_1 + 2.000000 * CDtemp * (x_86_47_0 - ABcom * x_86_47_1) + ABCDtemp * x_68_72_1;
+    LOCSTORE(store, 86, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_72_0 + WQtempx * x_86_72_1 + ABCDtemp * x_66_72_1;
     QUICKDouble x_68_16_4 = Qtempy * x_68_9_4 + WQtempy * x_68_9_5;
     QUICKDouble x_68_22_3 = Qtempy * x_68_16_3 + WQtempy * x_68_16_4 + CDtemp * (x_68_9_3 - ABcom * x_68_9_4);
     QUICKDouble x_55_42_2 = Qtempy * x_55_22_2 + WQtempy * x_55_22_3 + 2.000000 * CDtemp * (x_55_16_2 - ABcom * x_55_16_3);
@@ -5967,8 +5967,8 @@
     QUICKDouble x_68_73_1 = Qtempy * x_68_42_1 + WQtempy * x_68_42_2 + 3.000000 * CDtemp * (x_68_22_1 - ABcom * x_68_22_2);
     QUICKDouble x_86_73_0 = Ptempx * x_66_73_0 + WPtempx * x_66_73_1;
     QUICKDouble x_86_73_1 = Ptempx * x_66_73_1 + WPtempx * x_66_73_2;
-    LOCSTORE(store, 86, 106, STOREDIM, STOREDIM) += Qtempy * x_86_73_0 + WQtempy * x_86_73_1 + 4.000000 * CDtemp * (x_86_42_0 - ABcom * x_86_42_1) + ABCDtemp * x_68_73_1;
-    LOCSTORE(store, 86, 88, STOREDIM, STOREDIM) += Qtempx * x_86_73_0 + WQtempx * x_86_73_1 + ABCDtemp * x_66_73_1;
+    LOCSTORE(store, 86, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_73_0 + WQtempy * x_86_73_1 + 4.000000 * CDtemp * (x_86_42_0 - ABcom * x_86_42_1) + ABCDtemp * x_68_73_1;
+    LOCSTORE(store, 86, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_73_0 + WQtempx * x_86_73_1 + ABCDtemp * x_66_73_1;
     QUICKDouble x_66_49_1 = Qtempx * x_66_34_1 + WQtempx * x_66_34_2;
     QUICKDouble x_66_49_2 = Qtempx * x_66_34_2 + WQtempx * x_66_34_3;
     QUICKDouble x_66_49_0 = Qtempx * x_66_34_0 + WQtempx * x_66_34_1;
@@ -5980,7 +5980,7 @@
     QUICKDouble x_86_49_1 = Qtempx * x_86_34_1 + WQtempx * x_86_34_2 + ABCDtemp * x_66_34_2;
     QUICKDouble x_86_74_0 = Ptempx * x_66_74_0 + WPtempx * x_66_74_1 + 2.000000 * ABCDtemp * x_66_49_1;
     QUICKDouble x_86_74_1 = Ptempx * x_66_74_1 + WPtempx * x_66_74_2 + 2.000000 * ABCDtemp * x_66_49_2;
-    LOCSTORE(store, 86, 113, STOREDIM, STOREDIM) += Qtempx * x_86_74_0 + WQtempx * x_86_74_1 + 2.000000 * CDtemp * (x_86_49_0 - ABcom * x_86_49_1) + ABCDtemp * x_66_74_1;
+    LOCSTORE(store, 86, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_74_0 + WQtempx * x_86_74_1 + 2.000000 * CDtemp * (x_86_49_0 - ABcom * x_86_49_1) + ABCDtemp * x_66_74_1;
     QUICKDouble x_66_14_1 = Qtempx * x_66_9_1 + WQtempx * x_66_9_2;
     QUICKDouble x_66_14_2 = Qtempx * x_66_9_2 + WQtempx * x_66_9_3;
     QUICKDouble x_66_14_3 = Qtempx * x_66_9_3 + WQtempx * x_66_9_4;
@@ -6010,7 +6010,7 @@
     QUICKDouble x_86_44_1 = Qtempx * x_86_21_1 + WQtempx * x_86_21_2 + 2.000000 * CDtemp * (x_86_14_1 - ABcom * x_86_14_2) + ABCDtemp * x_66_21_2;
     QUICKDouble x_86_75_0 = Ptempx * x_66_75_0 + WPtempx * x_66_75_1 + 4.000000 * ABCDtemp * x_66_44_1;
     QUICKDouble x_86_75_1 = Ptempx * x_66_75_1 + WPtempx * x_66_75_2 + 4.000000 * ABCDtemp * x_66_44_2;
-    LOCSTORE(store, 86, 108, STOREDIM, STOREDIM) += Qtempx * x_86_75_0 + WQtempx * x_86_75_1 + 4.000000 * CDtemp * (x_86_44_0 - ABcom * x_86_44_1) + ABCDtemp * x_66_75_1;
+    LOCSTORE(store, 86, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_75_0 + WQtempx * x_86_75_1 + 4.000000 * CDtemp * (x_86_44_0 - ABcom * x_86_44_1) + ABCDtemp * x_66_75_1;
     QUICKDouble x_66_51_1 = Qtempx * x_66_33_1 + WQtempx * x_66_33_2;
     QUICKDouble x_66_51_2 = Qtempx * x_66_33_2 + WQtempx * x_66_33_3;
     QUICKDouble x_66_51_0 = Qtempx * x_66_33_0 + WQtempx * x_66_33_1;
@@ -6022,7 +6022,7 @@
     QUICKDouble x_86_51_1 = Qtempx * x_86_33_1 + WQtempx * x_86_33_2 + ABCDtemp * x_66_33_2;
     QUICKDouble x_86_76_0 = Ptempx * x_66_76_0 + WPtempx * x_66_76_1 + 2.000000 * ABCDtemp * x_66_51_1;
     QUICKDouble x_86_76_1 = Ptempx * x_66_76_1 + WPtempx * x_66_76_2 + 2.000000 * ABCDtemp * x_66_51_2;
-    LOCSTORE(store, 86, 115, STOREDIM, STOREDIM) += Qtempx * x_86_76_0 + WQtempx * x_86_76_1 + 2.000000 * CDtemp * (x_86_51_0 - ABcom * x_86_51_1) + ABCDtemp * x_66_76_1;
+    LOCSTORE(store, 86, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_76_0 + WQtempx * x_86_76_1 + 2.000000 * CDtemp * (x_86_51_0 - ABcom * x_86_51_1) + ABCDtemp * x_66_76_1;
     QUICKDouble x_66_12_1 = Qtempx * x_66_8_1 + WQtempx * x_66_8_2;
     QUICKDouble x_66_12_2 = Qtempx * x_66_8_2 + WQtempx * x_66_8_3;
     QUICKDouble x_66_12_3 = Qtempx * x_66_8_3 + WQtempx * x_66_8_4;
@@ -6052,7 +6052,7 @@
     QUICKDouble x_86_46_1 = Qtempx * x_86_20_1 + WQtempx * x_86_20_2 + 2.000000 * CDtemp * (x_86_12_1 - ABcom * x_86_12_2) + ABCDtemp * x_66_20_2;
     QUICKDouble x_86_77_0 = Ptempx * x_66_77_0 + WPtempx * x_66_77_1 + 4.000000 * ABCDtemp * x_66_46_1;
     QUICKDouble x_86_77_1 = Ptempx * x_66_77_1 + WPtempx * x_66_77_2 + 4.000000 * ABCDtemp * x_66_46_2;
-    LOCSTORE(store, 86, 110, STOREDIM, STOREDIM) += Qtempx * x_86_77_0 + WQtempx * x_86_77_1 + 4.000000 * CDtemp * (x_86_46_0 - ABcom * x_86_46_1) + ABCDtemp * x_66_77_1;
+    LOCSTORE(store, 86, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_77_0 + WQtempx * x_86_77_1 + 4.000000 * CDtemp * (x_86_46_0 - ABcom * x_86_46_1) + ABCDtemp * x_66_77_1;
     QUICKDouble x_68_31_3 = Qtempy * x_68_19_3 + WQtempy * x_68_19_4;
     QUICKDouble x_55_41_2 = Qtempy * x_55_31_2 + WQtempy * x_55_31_3 + CDtemp * (x_55_19_2 - ABcom * x_55_19_3);
     QUICKDouble x_55_41_1 = Qtempy * x_55_31_1 + WQtempy * x_55_31_2 + CDtemp * (x_55_19_1 - ABcom * x_55_19_2);
@@ -6065,8 +6065,8 @@
     QUICKDouble x_68_78_1 = Qtempy * x_68_41_1 + WQtempy * x_68_41_2 + 2.000000 * CDtemp * (x_68_31_1 - ABcom * x_68_31_2);
     QUICKDouble x_86_78_0 = Ptempx * x_66_78_0 + WPtempx * x_66_78_1;
     QUICKDouble x_86_78_1 = Ptempx * x_66_78_1 + WPtempx * x_66_78_2;
-    LOCSTORE(store, 86, 112, STOREDIM, STOREDIM) += Qtempy * x_86_78_0 + WQtempy * x_86_78_1 + 3.000000 * CDtemp * (x_86_41_0 - ABcom * x_86_41_1) + ABCDtemp * x_68_78_1;
-    LOCSTORE(store, 86, 93, STOREDIM, STOREDIM) += Qtempx * x_86_78_0 + WQtempx * x_86_78_1 + ABCDtemp * x_66_78_1;
+    LOCSTORE(store, 86, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_78_0 + WQtempy * x_86_78_1 + 3.000000 * CDtemp * (x_86_41_0 - ABcom * x_86_41_1) + ABCDtemp * x_68_78_1;
+    LOCSTORE(store, 86, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_78_0 + WQtempx * x_86_78_1 + ABCDtemp * x_66_78_1;
     QUICKDouble x_66_27_1 = Qtempx * x_66_19_1 + WQtempx * x_66_19_2;
     QUICKDouble x_66_27_2 = Qtempx * x_66_19_2 + WQtempx * x_66_19_3;
     QUICKDouble x_66_27_3 = Qtempx * x_66_19_3 + WQtempx * x_66_19_4;
@@ -6086,7 +6086,7 @@
     QUICKDouble x_86_43_1 = Qtempx * x_86_27_1 + WQtempx * x_86_27_2 + CDtemp * (x_86_19_1 - ABcom * x_86_19_2) + ABCDtemp * x_66_27_2;
     QUICKDouble x_86_79_0 = Ptempx * x_66_79_0 + WPtempx * x_66_79_1 + 3.000000 * ABCDtemp * x_66_43_1;
     QUICKDouble x_86_79_1 = Ptempx * x_66_79_1 + WPtempx * x_66_79_2 + 3.000000 * ABCDtemp * x_66_43_2;
-    LOCSTORE(store, 86, 114, STOREDIM, STOREDIM) += Qtempx * x_86_79_0 + WQtempx * x_86_79_1 + 3.000000 * CDtemp * (x_86_43_0 - ABcom * x_86_43_1) + ABCDtemp * x_66_79_1;
+    LOCSTORE(store, 86, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_79_0 + WQtempx * x_86_79_1 + 3.000000 * CDtemp * (x_86_43_0 - ABcom * x_86_43_1) + ABCDtemp * x_66_79_1;
     QUICKDouble x_66_29_1 = Qtempx * x_66_18_1 + WQtempx * x_66_18_2;
     QUICKDouble x_66_29_2 = Qtempx * x_66_18_2 + WQtempx * x_66_18_3;
     QUICKDouble x_66_29_3 = Qtempx * x_66_18_3 + WQtempx * x_66_18_4;
@@ -6106,7 +6106,7 @@
     QUICKDouble x_86_45_1 = Qtempx * x_86_29_1 + WQtempx * x_86_29_2 + CDtemp * (x_86_18_1 - ABcom * x_86_18_2) + ABCDtemp * x_66_29_2;
     QUICKDouble x_86_80_0 = Ptempx * x_66_80_0 + WPtempx * x_66_80_1 + 3.000000 * ABCDtemp * x_66_45_1;
     QUICKDouble x_86_80_1 = Ptempx * x_66_80_1 + WPtempx * x_66_80_2 + 3.000000 * ABCDtemp * x_66_45_2;
-    LOCSTORE(store, 86, 116, STOREDIM, STOREDIM) += Qtempx * x_86_80_0 + WQtempx * x_86_80_1 + 3.000000 * CDtemp * (x_86_45_0 - ABcom * x_86_45_1) + ABCDtemp * x_66_80_1;
+    LOCSTORE(store, 86, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_80_0 + WQtempx * x_86_80_1 + 3.000000 * CDtemp * (x_86_45_0 - ABcom * x_86_45_1) + ABCDtemp * x_66_80_1;
     QUICKDouble x_66_1_1 = Qtempx * x_66_0_1 + WQtempx * x_66_0_2;
     QUICKDouble x_66_1_2 = Qtempx * x_66_0_2 + WQtempx * x_66_0_3;
     QUICKDouble x_66_1_3 = Qtempx * x_66_0_3 + WQtempx * x_66_0_4;
@@ -6162,7 +6162,7 @@
     QUICKDouble x_86_53_1 = Qtempx * x_86_32_1 + WQtempx * x_86_32_2 + 4.000000 * CDtemp * (x_86_17_1 - ABcom * x_86_17_2) + ABCDtemp * x_66_32_2;
     QUICKDouble x_86_81_0 = Ptempx * x_66_81_0 + WPtempx * x_66_81_1 + 6.000000 * ABCDtemp * x_66_53_1;
     QUICKDouble x_86_81_1 = Ptempx * x_66_81_1 + WPtempx * x_66_81_2 + 6.000000 * ABCDtemp * x_66_53_2;
-    LOCSTORE(store, 86, 117, STOREDIM, STOREDIM) += Qtempx * x_86_81_0 + WQtempx * x_86_81_1 + 6.000000 * CDtemp * (x_86_53_0 - ABcom * x_86_53_1) + ABCDtemp * x_66_81_1;
+    LOCSTORE(store, 86, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_81_0 + WQtempx * x_86_81_1 + 6.000000 * CDtemp * (x_86_53_0 - ABcom * x_86_53_1) + ABCDtemp * x_66_81_1;
     QUICKDouble x_68_2_6 = Qtempy * x_68_0_6 + WQtempy * x_68_0_7;
     QUICKDouble x_68_8_5 = Qtempy * x_68_2_5 + WQtempy * x_68_2_6 + CDtemp * (x_68_0_5 - ABcom * x_68_0_6);
     QUICKDouble x_68_18_4 = Qtempy * x_68_8_4 + WQtempy * x_68_8_5 + 2.000000 * CDtemp * (x_68_2_4 - ABcom * x_68_2_5);
@@ -6178,8 +6178,8 @@
     QUICKDouble x_68_82_1 = Qtempy * x_68_54_1 + WQtempy * x_68_54_2 + 5.000000 * CDtemp * (x_68_33_1 - ABcom * x_68_33_2);
     QUICKDouble x_86_82_0 = Ptempx * x_66_82_0 + WPtempx * x_66_82_1;
     QUICKDouble x_86_82_1 = Ptempx * x_66_82_1 + WPtempx * x_66_82_2;
-    LOCSTORE(store, 86, 118, STOREDIM, STOREDIM) += Qtempy * x_86_82_0 + WQtempy * x_86_82_1 + 6.000000 * CDtemp * (x_86_54_0 - ABcom * x_86_54_1) + ABCDtemp * x_68_82_1;
-    LOCSTORE(store, 86, 103, STOREDIM, STOREDIM) += Qtempx * x_86_82_0 + WQtempx * x_86_82_1 + ABCDtemp * x_66_82_1;
+    LOCSTORE(store, 86, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_82_0 + WQtempy * x_86_82_1 + 6.000000 * CDtemp * (x_86_54_0 - ABcom * x_86_54_1) + ABCDtemp * x_68_82_1;
+    LOCSTORE(store, 86, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_82_0 + WQtempx * x_86_82_1 + ABCDtemp * x_66_82_1;
     QUICKDouble x_25_0_7 = Ptempx * x_16_0_7 + WPtempx * x_16_0_8;
     QUICKDouble x_40_0_7 = Ptempx * x_31_0_7 + WPtempx * x_31_0_8;
     QUICKDouble x_58_0_7 = Ptempx * x_47_0_7 + WPtempx * x_47_0_8;
@@ -6215,13 +6215,13 @@
     QUICKDouble x_58_83_1 = Qtempz * x_58_55_1 + WQtempz * x_58_55_2 + 5.000000 * CDtemp * (x_58_34_1 - ABcom * x_58_34_2) + 4.000000 * ABCDtemp * x_40_55_2;
     QUICKDouble x_86_83_0 = Ptempx * x_66_83_0 + WPtempx * x_66_83_1;
     QUICKDouble x_86_83_1 = Ptempx * x_66_83_1 + WPtempx * x_66_83_2;
-    LOCSTORE(store, 86, 119, STOREDIM, STOREDIM) += Qtempz * x_86_83_0 + WQtempz * x_86_83_1 + 6.000000 * CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + 5.000000 * ABCDtemp * x_58_83_1;
-    LOCSTORE(store, 86, 101, STOREDIM, STOREDIM) += Qtempx * x_86_83_0 + WQtempx * x_86_83_1 + ABCDtemp * x_66_83_1;
+    LOCSTORE(store, 86, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_86_83_0 + WQtempz * x_86_83_1 + 6.000000 * CDtemp * (x_86_55_0 - ABcom * x_86_55_1) + 5.000000 * ABCDtemp * x_58_83_1;
+    LOCSTORE(store, 86, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_86_83_0 + WQtempx * x_86_83_1 + ABCDtemp * x_66_83_1;
     QUICKDouble x_14_19_4 = Qtempz * x_14_9_4 + WQtempz * x_14_9_5 + 2.000000 * CDtemp * (x_14_3_4 - ABcom * x_14_3_5) + 2.000000 * ABCDtemp * x_6_9_5;
     QUICKDouble x_27_34_3 = Qtempz * x_27_19_3 + WQtempz * x_27_19_4 + 3.000000 * CDtemp * (x_27_9_3 - ABcom * x_27_9_4) + 3.000000 * ABCDtemp * x_14_19_4;
     QUICKDouble x_49_55_2 = Qtempz * x_49_34_2 + WQtempz * x_49_34_3 + 4.000000 * CDtemp * (x_49_19_2 - ABcom * x_49_19_3) + 4.000000 * ABCDtemp * x_27_34_3;
     QUICKDouble x_68_83_1 = Qtempz * x_68_55_1 + WQtempz * x_68_55_2 + 5.000000 * CDtemp * (x_68_34_1 - ABcom * x_68_34_2) + 5.000000 * ABCDtemp * x_49_55_2;
-    LOCSTORE(store, 86, 99, STOREDIM, STOREDIM) += Qtempy * x_86_83_0 + WQtempy * x_86_83_1 + ABCDtemp * x_68_83_1;
+    LOCSTORE(store, 86, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_86_83_0 + WQtempy * x_86_83_1 + ABCDtemp * x_68_83_1;
     QUICKDouble x_31_0_1 = Ptempy * x_19_0_1 + WPtempy * x_19_0_2;
     QUICKDouble x_47_0_0 = Ptempy * x_34_0_0 + WPtempy * x_34_0_1;
     QUICKDouble x_31_0_9 = Ptempy * x_19_0_9 + WPtempy * x_19_0_10;
@@ -6311,7 +6311,7 @@
     QUICKDouble x_87_38_1 = Qtempx * x_87_23_1 + WQtempx * x_87_23_2 + 2.000000 * CDtemp * (x_87_10_1 - ABcom * x_87_10_2) + ABCDtemp * x_72_23_2;
     QUICKDouble x_87_56_0 = Ptempx * x_72_56_0 + WPtempx * x_72_56_1 + 4.000000 * ABCDtemp * x_72_38_1;
     QUICKDouble x_87_56_1 = Ptempx * x_72_56_1 + WPtempx * x_72_56_2 + 4.000000 * ABCDtemp * x_72_38_2;
-    LOCSTORE(store, 87, 84, STOREDIM, STOREDIM) += Qtempx * x_87_56_0 + WQtempx * x_87_56_1 + 4.000000 * CDtemp * (x_87_38_0 - ABcom * x_87_38_1) + ABCDtemp * x_72_56_1;
+    LOCSTORE(store, 87, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_56_0 + WQtempx * x_87_56_1 + 4.000000 * CDtemp * (x_87_38_0 - ABcom * x_87_38_1) + ABCDtemp * x_72_56_1;
     QUICKDouble x_47_5_2 = Qtempy * x_47_3_2 + WQtempy * x_47_3_3 + ABCDtemp * x_34_3_3;
     QUICKDouble x_47_5_3 = Qtempy * x_47_3_3 + WQtempy * x_47_3_4 + ABCDtemp * x_34_3_4;
     QUICKDouble x_34_5_3 = Qtempy * x_34_3_3 + WQtempy * x_34_3_4;
@@ -6379,7 +6379,7 @@
     QUICKDouble x_87_48_1 = Qtempy * x_87_30_1 + WQtempy * x_87_30_2 + 3.000000 * CDtemp * (x_87_15_1 - ABcom * x_87_15_2) + 2.000000 * ABCDtemp * x_58_30_2;
     QUICKDouble x_87_57_0 = Ptempx * x_72_57_0 + WPtempx * x_72_57_1 + ABCDtemp * x_72_48_1;
     QUICKDouble x_87_57_1 = Ptempx * x_72_57_1 + WPtempx * x_72_57_2 + ABCDtemp * x_72_48_2;
-    LOCSTORE(store, 87, 91, STOREDIM, STOREDIM) += Qtempx * x_87_57_0 + WQtempx * x_87_57_1 + CDtemp * (x_87_48_0 - ABcom * x_87_48_1) + ABCDtemp * x_72_57_1;
+    LOCSTORE(store, 87, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_57_0 + WQtempx * x_87_57_1 + CDtemp * (x_87_48_0 - ABcom * x_87_48_1) + ABCDtemp * x_72_57_1;
     QUICKDouble x_16_0_2 = Ptempy * x_9_0_2 + WPtempy * x_9_0_3;
     QUICKDouble x_16_0_9 = Ptempy * x_9_0_9 + WPtempy * x_9_0_10;
     QUICKDouble x_22_0_3 = Ptempy * x_16_0_3 + WPtempy * x_16_0_4 + ABtemp * (x_9_0_3 - CDcom * x_9_0_4);
@@ -6483,7 +6483,7 @@
     QUICKDouble x_87_47_1 = Qtempy * x_87_34_1 + WQtempy * x_87_34_2 + 2.000000 * ABCDtemp * x_58_34_2;
     QUICKDouble x_87_58_0 = Ptempx * x_72_58_0 + WPtempx * x_72_58_1 + ABCDtemp * x_72_47_1;
     QUICKDouble x_87_58_1 = Ptempx * x_72_58_1 + WPtempx * x_72_58_2 + ABCDtemp * x_72_47_2;
-    LOCSTORE(store, 87, 89, STOREDIM, STOREDIM) += Qtempx * x_87_58_0 + WQtempx * x_87_58_1 + CDtemp * (x_87_47_0 - ABcom * x_87_47_1) + ABCDtemp * x_72_58_1;
+    LOCSTORE(store, 87, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_58_0 + WQtempx * x_87_58_1 + CDtemp * (x_87_47_0 - ABcom * x_87_47_1) + ABCDtemp * x_72_58_1;
     QUICKDouble x_47_31_2 = Qtempy * x_47_19_2 + WQtempy * x_47_19_3 + ABCDtemp * x_34_19_3;
     QUICKDouble x_72_31_1 = Qtempy * x_72_19_1 + WQtempy * x_72_19_2 + 2.000000 * ABCDtemp * x_47_19_2;
     QUICKDouble x_72_31_2 = Qtempy * x_72_19_2 + WQtempy * x_72_19_3 + 2.000000 * ABCDtemp * x_47_19_3;
@@ -6509,7 +6509,7 @@
     QUICKDouble x_87_41_1 = Qtempy * x_87_31_1 + WQtempy * x_87_31_2 + CDtemp * (x_87_19_1 - ABcom * x_87_19_2) + 2.000000 * ABCDtemp * x_58_31_2;
     QUICKDouble x_87_59_0 = Ptempx * x_72_59_0 + WPtempx * x_72_59_1 + ABCDtemp * x_72_41_1;
     QUICKDouble x_87_59_1 = Ptempx * x_72_59_1 + WPtempx * x_72_59_2 + ABCDtemp * x_72_41_2;
-    LOCSTORE(store, 87, 98, STOREDIM, STOREDIM) += Qtempx * x_87_59_0 + WQtempx * x_87_59_1 + CDtemp * (x_87_41_0 - ABcom * x_87_41_1) + ABCDtemp * x_72_59_1;
+    LOCSTORE(store, 87, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_59_0 + WQtempx * x_87_59_1 + CDtemp * (x_87_41_0 - ABcom * x_87_41_1) + ABCDtemp * x_72_59_1;
     QUICKDouble x_34_16_3 = Qtempy * x_34_9_3 + WQtempy * x_34_9_4;
     QUICKDouble x_47_16_2 = Qtempy * x_47_9_2 + WQtempy * x_47_9_3 + ABCDtemp * x_34_9_3;
     QUICKDouble x_47_16_3 = Qtempy * x_47_9_3 + WQtempy * x_47_9_4 + ABCDtemp * x_34_9_4;
@@ -6559,7 +6559,7 @@
     QUICKDouble x_87_42_1 = Qtempy * x_87_22_1 + WQtempy * x_87_22_2 + 2.000000 * CDtemp * (x_87_16_1 - ABcom * x_87_16_2) + 2.000000 * ABCDtemp * x_58_22_2;
     QUICKDouble x_87_60_0 = Ptempx * x_72_60_0 + WPtempx * x_72_60_1 + ABCDtemp * x_72_42_1;
     QUICKDouble x_87_60_1 = Ptempx * x_72_60_1 + WPtempx * x_72_60_2 + ABCDtemp * x_72_42_2;
-    LOCSTORE(store, 87, 97, STOREDIM, STOREDIM) += Qtempx * x_87_60_0 + WQtempx * x_87_60_1 + CDtemp * (x_87_42_0 - ABcom * x_87_42_1) + ABCDtemp * x_72_60_1;
+    LOCSTORE(store, 87, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_60_0 + WQtempx * x_87_60_1 + CDtemp * (x_87_42_0 - ABcom * x_87_42_1) + ABCDtemp * x_72_60_1;
     QUICKDouble x_72_40_1 = Qtempx * x_72_31_1 + WQtempx * x_72_31_2;
     QUICKDouble x_72_40_2 = Qtempx * x_72_31_2 + WQtempx * x_72_31_3;
     QUICKDouble x_72_40_0 = Qtempx * x_72_31_0 + WQtempx * x_72_31_1;
@@ -6571,7 +6571,7 @@
     QUICKDouble x_87_40_1 = Qtempx * x_87_31_1 + WQtempx * x_87_31_2 + ABCDtemp * x_72_31_2;
     QUICKDouble x_87_61_0 = Ptempx * x_72_61_0 + WPtempx * x_72_61_1 + 2.000000 * ABCDtemp * x_72_40_1;
     QUICKDouble x_87_61_1 = Ptempx * x_72_61_1 + WPtempx * x_72_61_2 + 2.000000 * ABCDtemp * x_72_40_2;
-    LOCSTORE(store, 87, 94, STOREDIM, STOREDIM) += Qtempx * x_87_61_0 + WQtempx * x_87_61_1 + 2.000000 * CDtemp * (x_87_40_0 - ABcom * x_87_40_1) + ABCDtemp * x_72_61_1;
+    LOCSTORE(store, 87, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_61_0 + WQtempx * x_87_61_1 + 2.000000 * CDtemp * (x_87_40_0 - ABcom * x_87_40_1) + ABCDtemp * x_72_61_1;
     QUICKDouble x_72_25_1 = Qtempx * x_72_16_1 + WQtempx * x_72_16_2;
     QUICKDouble x_72_25_2 = Qtempx * x_72_16_2 + WQtempx * x_72_16_3;
     QUICKDouble x_72_25_3 = Qtempx * x_72_16_3 + WQtempx * x_72_16_4;
@@ -6591,7 +6591,7 @@
     QUICKDouble x_87_36_1 = Qtempx * x_87_25_1 + WQtempx * x_87_25_2 + CDtemp * (x_87_16_1 - ABcom * x_87_16_2) + ABCDtemp * x_72_25_2;
     QUICKDouble x_87_62_0 = Ptempx * x_72_62_0 + WPtempx * x_72_62_1 + 3.000000 * ABCDtemp * x_72_36_1;
     QUICKDouble x_87_62_1 = Ptempx * x_72_62_1 + WPtempx * x_72_62_2 + 3.000000 * ABCDtemp * x_72_36_2;
-    LOCSTORE(store, 87, 90, STOREDIM, STOREDIM) += Qtempx * x_87_62_0 + WQtempx * x_87_62_1 + 3.000000 * CDtemp * (x_87_36_0 - ABcom * x_87_36_1) + ABCDtemp * x_72_62_1;
+    LOCSTORE(store, 87, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_62_0 + WQtempx * x_87_62_1 + 3.000000 * CDtemp * (x_87_36_0 - ABcom * x_87_36_1) + ABCDtemp * x_72_62_1;
     QUICKDouble x_72_39_1 = Qtempx * x_72_30_1 + WQtempx * x_72_30_2;
     QUICKDouble x_72_39_2 = Qtempx * x_72_30_2 + WQtempx * x_72_30_3;
     QUICKDouble x_72_39_0 = Qtempx * x_72_30_0 + WQtempx * x_72_30_1;
@@ -6603,7 +6603,7 @@
     QUICKDouble x_87_39_1 = Qtempx * x_87_30_1 + WQtempx * x_87_30_2 + ABCDtemp * x_72_30_2;
     QUICKDouble x_87_63_0 = Ptempx * x_72_63_0 + WPtempx * x_72_63_1 + 2.000000 * ABCDtemp * x_72_39_1;
     QUICKDouble x_87_63_1 = Ptempx * x_72_63_1 + WPtempx * x_72_63_2 + 2.000000 * ABCDtemp * x_72_39_2;
-    LOCSTORE(store, 87, 95, STOREDIM, STOREDIM) += Qtempx * x_87_63_0 + WQtempx * x_87_63_1 + 2.000000 * CDtemp * (x_87_39_0 - ABcom * x_87_39_1) + ABCDtemp * x_72_63_1;
+    LOCSTORE(store, 87, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_63_0 + WQtempx * x_87_63_1 + 2.000000 * CDtemp * (x_87_39_0 - ABcom * x_87_39_1) + ABCDtemp * x_72_63_1;
     QUICKDouble x_72_24_1 = Qtempx * x_72_15_1 + WQtempx * x_72_15_2;
     QUICKDouble x_72_24_2 = Qtempx * x_72_15_2 + WQtempx * x_72_15_3;
     QUICKDouble x_72_24_3 = Qtempx * x_72_15_3 + WQtempx * x_72_15_4;
@@ -6623,7 +6623,7 @@
     QUICKDouble x_87_37_1 = Qtempx * x_87_24_1 + WQtempx * x_87_24_2 + CDtemp * (x_87_15_1 - ABcom * x_87_15_2) + ABCDtemp * x_72_24_2;
     QUICKDouble x_87_64_0 = Ptempx * x_72_64_0 + WPtempx * x_72_64_1 + 3.000000 * ABCDtemp * x_72_37_1;
     QUICKDouble x_87_64_1 = Ptempx * x_72_64_1 + WPtempx * x_72_64_2 + 3.000000 * ABCDtemp * x_72_37_2;
-    LOCSTORE(store, 87, 92, STOREDIM, STOREDIM) += Qtempx * x_87_64_0 + WQtempx * x_87_64_1 + 3.000000 * CDtemp * (x_87_37_0 - ABcom * x_87_37_1) + ABCDtemp * x_72_64_1;
+    LOCSTORE(store, 87, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_64_0 + WQtempx * x_87_64_1 + 3.000000 * CDtemp * (x_87_37_0 - ABcom * x_87_37_1) + ABCDtemp * x_72_64_1;
     QUICKDouble x_72_35_1 = Qtempx * x_72_22_1 + WQtempx * x_72_22_2;
     QUICKDouble x_72_35_2 = Qtempx * x_72_22_2 + WQtempx * x_72_22_3;
     QUICKDouble x_72_35_0 = Qtempx * x_72_22_0 + WQtempx * x_72_22_1;
@@ -6635,7 +6635,7 @@
     QUICKDouble x_87_35_1 = Qtempx * x_87_22_1 + WQtempx * x_87_22_2 + ABCDtemp * x_72_22_2;
     QUICKDouble x_87_65_0 = Ptempx * x_72_65_0 + WPtempx * x_72_65_1 + 2.000000 * ABCDtemp * x_72_35_1;
     QUICKDouble x_87_65_1 = Ptempx * x_72_65_1 + WPtempx * x_72_65_2 + 2.000000 * ABCDtemp * x_72_35_2;
-    LOCSTORE(store, 87, 96, STOREDIM, STOREDIM) += Qtempx * x_87_65_0 + WQtempx * x_87_65_1 + 2.000000 * CDtemp * (x_87_35_0 - ABcom * x_87_35_1) + ABCDtemp * x_72_65_1;
+    LOCSTORE(store, 87, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_65_0 + WQtempx * x_87_65_1 + 2.000000 * CDtemp * (x_87_35_0 - ABcom * x_87_35_1) + ABCDtemp * x_72_65_1;
     QUICKDouble x_22_19_3 = Qtempz * x_22_9_3 + WQtempz * x_22_9_4 + 2.000000 * CDtemp * (x_22_3_3 - ABcom * x_22_3_4) + 2.000000 * ABCDtemp * x_15_9_4;
     QUICKDouble x_22_19_4 = Qtempz * x_22_9_4 + WQtempz * x_22_9_5 + 2.000000 * CDtemp * (x_22_3_4 - ABcom * x_22_3_5) + 2.000000 * ABCDtemp * x_15_9_5;
     QUICKDouble x_22_19_2 = Qtempz * x_22_9_2 + WQtempz * x_22_9_3 + 2.000000 * CDtemp * (x_22_3_2 - ABcom * x_22_3_3) + 2.000000 * ABCDtemp * x_15_9_3;
@@ -6660,8 +6660,8 @@
     QUICKDouble x_87_55_1 = Qtempz * x_87_34_1 + WQtempz * x_87_34_2 + 4.000000 * CDtemp * (x_87_19_1 - ABcom * x_87_19_2) + 4.000000 * ABCDtemp * x_59_34_2;
     QUICKDouble x_87_66_0 = Ptempx * x_72_66_0 + WPtempx * x_72_66_1;
     QUICKDouble x_87_66_1 = Ptempx * x_72_66_1 + WPtempx * x_72_66_2;
-    LOCSTORE(store, 87, 105, STOREDIM, STOREDIM) += Qtempy * x_87_66_0 + WQtempy * x_87_66_1 + CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + 2.000000 * ABCDtemp * x_58_66_1;
-    LOCSTORE(store, 87, 86, STOREDIM, STOREDIM) += Qtempx * x_87_66_0 + WQtempx * x_87_66_1 + ABCDtemp * x_72_66_1;
+    LOCSTORE(store, 87, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_66_0 + WQtempy * x_87_66_1 + CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + 2.000000 * ABCDtemp * x_58_66_1;
+    LOCSTORE(store, 87, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_66_0 + WQtempx * x_87_66_1 + ABCDtemp * x_72_66_1;
     QUICKDouble x_49_5_5 = Qtempy * x_49_3_5 + WQtempy * x_49_3_6;
     QUICKDouble x_58_5_5 = Qtempy * x_58_3_5 + WQtempy * x_58_3_6 + ABCDtemp * x_49_3_6;
     QUICKDouble x_49_15_4 = Qtempy * x_49_5_4 + WQtempy * x_49_5_5 + CDtemp * (x_49_3_4 - ABcom * x_49_3_5);
@@ -6684,14 +6684,14 @@
     QUICKDouble x_58_67_1 = Qtempy * x_58_48_1 + WQtempy * x_58_48_2 + 4.000000 * CDtemp * (x_58_30_1 - ABcom * x_58_30_2) + ABCDtemp * x_49_48_2;
     QUICKDouble x_87_67_0 = Ptempx * x_72_67_0 + WPtempx * x_72_67_1;
     QUICKDouble x_87_67_1 = Ptempx * x_72_67_1 + WPtempx * x_72_67_2;
-    LOCSTORE(store, 87, 100, STOREDIM, STOREDIM) += Qtempy * x_87_67_0 + WQtempy * x_87_67_1 + 5.000000 * CDtemp * (x_87_48_0 - ABcom * x_87_48_1) + 2.000000 * ABCDtemp * x_58_67_1;
-    LOCSTORE(store, 87, 85, STOREDIM, STOREDIM) += Qtempx * x_87_67_0 + WQtempx * x_87_67_1 + ABCDtemp * x_72_67_1;
+    LOCSTORE(store, 87, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_67_0 + WQtempy * x_87_67_1 + 5.000000 * CDtemp * (x_87_48_0 - ABcom * x_87_48_1) + 2.000000 * ABCDtemp * x_58_67_1;
+    LOCSTORE(store, 87, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_67_0 + WQtempx * x_87_67_1 + ABCDtemp * x_72_67_1;
     QUICKDouble x_72_68_1 = Qtempx * x_72_55_1 + WQtempx * x_72_55_2;
     QUICKDouble x_72_68_0 = Qtempx * x_72_55_0 + WQtempx * x_72_55_1;
     QUICKDouble x_72_68_2 = Qtempx * x_72_55_2 + WQtempx * x_72_55_3;
     QUICKDouble x_87_68_0 = Ptempx * x_72_68_0 + WPtempx * x_72_68_1 + ABCDtemp * x_72_55_1;
     QUICKDouble x_87_68_1 = Ptempx * x_72_68_1 + WPtempx * x_72_68_2 + ABCDtemp * x_72_55_2;
-    LOCSTORE(store, 87, 107, STOREDIM, STOREDIM) += Qtempx * x_87_68_0 + WQtempx * x_87_68_1 + CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + ABCDtemp * x_72_68_1;
+    LOCSTORE(store, 87, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_68_0 + WQtempx * x_87_68_1 + CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + ABCDtemp * x_72_68_1;
     QUICKDouble x_72_6_1 = Qtempx * x_72_3_1 + WQtempx * x_72_3_2;
     QUICKDouble x_72_6_2 = Qtempx * x_72_3_2 + WQtempx * x_72_3_3;
     QUICKDouble x_72_6_3 = Qtempx * x_72_3_3 + WQtempx * x_72_3_4;
@@ -6733,7 +6733,7 @@
     QUICKDouble x_87_50_1 = Qtempx * x_87_26_1 + WQtempx * x_87_26_2 + 3.000000 * CDtemp * (x_87_13_1 - ABcom * x_87_13_2) + ABCDtemp * x_72_26_2;
     QUICKDouble x_87_69_0 = Ptempx * x_72_69_0 + WPtempx * x_72_69_1 + 5.000000 * ABCDtemp * x_72_50_1;
     QUICKDouble x_87_69_1 = Ptempx * x_72_69_1 + WPtempx * x_72_69_2 + 5.000000 * ABCDtemp * x_72_50_2;
-    LOCSTORE(store, 87, 102, STOREDIM, STOREDIM) += Qtempx * x_87_69_0 + WQtempx * x_87_69_1 + 5.000000 * CDtemp * (x_87_50_0 - ABcom * x_87_50_1) + ABCDtemp * x_72_69_1;
+    LOCSTORE(store, 87, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_69_0 + WQtempx * x_87_69_1 + 5.000000 * CDtemp * (x_87_50_0 - ABcom * x_87_50_1) + ABCDtemp * x_72_69_1;
     QUICKDouble x_34_2_3 = Qtempy * x_34_0_3 + WQtempy * x_34_0_4;
     QUICKDouble x_34_2_4 = Qtempy * x_34_0_4 + WQtempy * x_34_0_5;
     QUICKDouble x_47_2_2 = Qtempy * x_47_0_2 + WQtempy * x_47_0_3 + ABCDtemp * x_34_0_3;
@@ -6849,7 +6849,7 @@
     QUICKDouble x_87_54_1 = Qtempy * x_87_33_1 + WQtempy * x_87_33_2 + 4.000000 * CDtemp * (x_87_18_1 - ABcom * x_87_18_2) + 2.000000 * ABCDtemp * x_58_33_2;
     QUICKDouble x_87_70_0 = Ptempx * x_72_70_0 + WPtempx * x_72_70_1 + ABCDtemp * x_72_54_1;
     QUICKDouble x_87_70_1 = Ptempx * x_72_70_1 + WPtempx * x_72_70_2 + ABCDtemp * x_72_54_2;
-    LOCSTORE(store, 87, 109, STOREDIM, STOREDIM) += Qtempx * x_87_70_0 + WQtempx * x_87_70_1 + CDtemp * (x_87_54_0 - ABcom * x_87_54_1) + ABCDtemp * x_72_70_1;
+    LOCSTORE(store, 87, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_70_0 + WQtempx * x_87_70_1 + CDtemp * (x_87_54_0 - ABcom * x_87_54_1) + ABCDtemp * x_72_70_1;
     QUICKDouble x_72_4_1 = Qtempx * x_72_2_1 + WQtempx * x_72_2_2;
     QUICKDouble x_72_4_2 = Qtempx * x_72_2_2 + WQtempx * x_72_2_3;
     QUICKDouble x_72_4_3 = Qtempx * x_72_2_3 + WQtempx * x_72_2_4;
@@ -6891,7 +6891,7 @@
     QUICKDouble x_87_52_1 = Qtempx * x_87_28_1 + WQtempx * x_87_28_2 + 3.000000 * CDtemp * (x_87_11_1 - ABcom * x_87_11_2) + ABCDtemp * x_72_28_2;
     QUICKDouble x_87_71_0 = Ptempx * x_72_71_0 + WPtempx * x_72_71_1 + 5.000000 * ABCDtemp * x_72_52_1;
     QUICKDouble x_87_71_1 = Ptempx * x_72_71_1 + WPtempx * x_72_71_2 + 5.000000 * ABCDtemp * x_72_52_2;
-    LOCSTORE(store, 87, 104, STOREDIM, STOREDIM) += Qtempx * x_87_71_0 + WQtempx * x_87_71_1 + 5.000000 * CDtemp * (x_87_52_0 - ABcom * x_87_52_1) + ABCDtemp * x_72_71_1;
+    LOCSTORE(store, 87, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_71_0 + WQtempx * x_87_71_1 + 5.000000 * CDtemp * (x_87_52_0 - ABcom * x_87_52_1) + ABCDtemp * x_72_71_1;
     QUICKDouble x_47_47_2 = Qtempy * x_47_34_2 + WQtempy * x_47_34_3 + ABCDtemp * x_34_34_3;
     QUICKDouble x_47_47_1 = Qtempy * x_47_34_1 + WQtempy * x_47_34_2 + ABCDtemp * x_34_34_2;
     QUICKDouble x_47_47_3 = Qtempy * x_47_34_3 + WQtempy * x_47_34_4 + ABCDtemp * x_34_34_4;
@@ -6904,8 +6904,8 @@
     QUICKDouble x_58_72_1 = Qtempy * x_58_47_1 + WQtempy * x_58_47_2 + CDtemp * (x_58_34_1 - ABcom * x_58_34_2) + ABCDtemp * x_49_47_2;
     QUICKDouble x_87_72_0 = Ptempx * x_72_72_0 + WPtempx * x_72_72_1;
     QUICKDouble x_87_72_1 = Ptempx * x_72_72_1 + WPtempx * x_72_72_2;
-    LOCSTORE(store, 87, 111, STOREDIM, STOREDIM) += Qtempy * x_87_72_0 + WQtempy * x_87_72_1 + 2.000000 * CDtemp * (x_87_47_0 - ABcom * x_87_47_1) + 2.000000 * ABCDtemp * x_58_72_1;
-    LOCSTORE(store, 87, 87, STOREDIM, STOREDIM) += Qtempx * x_87_72_0 + WQtempx * x_87_72_1 + ABCDtemp * x_72_72_1;
+    LOCSTORE(store, 87, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_72_0 + WQtempy * x_87_72_1 + 2.000000 * CDtemp * (x_87_47_0 - ABcom * x_87_47_1) + 2.000000 * ABCDtemp * x_58_72_1;
+    LOCSTORE(store, 87, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_72_0 + WQtempx * x_87_72_1 + ABCDtemp * x_72_72_1;
     QUICKDouble x_49_16_4 = Qtempy * x_49_9_4 + WQtempy * x_49_9_5;
     QUICKDouble x_58_16_4 = Qtempy * x_58_9_4 + WQtempy * x_58_9_5 + ABCDtemp * x_49_9_5;
     QUICKDouble x_34_22_3 = Qtempy * x_34_16_3 + WQtempy * x_34_16_4 + CDtemp * (x_34_9_3 - ABcom * x_34_9_4);
@@ -6926,8 +6926,8 @@
     QUICKDouble x_58_73_1 = Qtempy * x_58_42_1 + WQtempy * x_58_42_2 + 3.000000 * CDtemp * (x_58_22_1 - ABcom * x_58_22_2) + ABCDtemp * x_49_42_2;
     QUICKDouble x_87_73_0 = Ptempx * x_72_73_0 + WPtempx * x_72_73_1;
     QUICKDouble x_87_73_1 = Ptempx * x_72_73_1 + WPtempx * x_72_73_2;
-    LOCSTORE(store, 87, 106, STOREDIM, STOREDIM) += Qtempy * x_87_73_0 + WQtempy * x_87_73_1 + 4.000000 * CDtemp * (x_87_42_0 - ABcom * x_87_42_1) + 2.000000 * ABCDtemp * x_58_73_1;
-    LOCSTORE(store, 87, 88, STOREDIM, STOREDIM) += Qtempx * x_87_73_0 + WQtempx * x_87_73_1 + ABCDtemp * x_72_73_1;
+    LOCSTORE(store, 87, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_73_0 + WQtempy * x_87_73_1 + 4.000000 * CDtemp * (x_87_42_0 - ABcom * x_87_42_1) + 2.000000 * ABCDtemp * x_58_73_1;
+    LOCSTORE(store, 87, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_73_0 + WQtempx * x_87_73_1 + ABCDtemp * x_72_73_1;
     QUICKDouble x_72_49_1 = Qtempx * x_72_34_1 + WQtempx * x_72_34_2;
     QUICKDouble x_72_49_2 = Qtempx * x_72_34_2 + WQtempx * x_72_34_3;
     QUICKDouble x_72_49_0 = Qtempx * x_72_34_0 + WQtempx * x_72_34_1;
@@ -6939,7 +6939,7 @@
     QUICKDouble x_87_49_1 = Qtempx * x_87_34_1 + WQtempx * x_87_34_2 + ABCDtemp * x_72_34_2;
     QUICKDouble x_87_74_0 = Ptempx * x_72_74_0 + WPtempx * x_72_74_1 + 2.000000 * ABCDtemp * x_72_49_1;
     QUICKDouble x_87_74_1 = Ptempx * x_72_74_1 + WPtempx * x_72_74_2 + 2.000000 * ABCDtemp * x_72_49_2;
-    LOCSTORE(store, 87, 113, STOREDIM, STOREDIM) += Qtempx * x_87_74_0 + WQtempx * x_87_74_1 + 2.000000 * CDtemp * (x_87_49_0 - ABcom * x_87_49_1) + ABCDtemp * x_72_74_1;
+    LOCSTORE(store, 87, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_74_0 + WQtempx * x_87_74_1 + 2.000000 * CDtemp * (x_87_49_0 - ABcom * x_87_49_1) + ABCDtemp * x_72_74_1;
     QUICKDouble x_72_14_1 = Qtempx * x_72_9_1 + WQtempx * x_72_9_2;
     QUICKDouble x_72_14_2 = Qtempx * x_72_9_2 + WQtempx * x_72_9_3;
     QUICKDouble x_72_14_3 = Qtempx * x_72_9_3 + WQtempx * x_72_9_4;
@@ -6969,7 +6969,7 @@
     QUICKDouble x_87_44_1 = Qtempx * x_87_21_1 + WQtempx * x_87_21_2 + 2.000000 * CDtemp * (x_87_14_1 - ABcom * x_87_14_2) + ABCDtemp * x_72_21_2;
     QUICKDouble x_87_75_0 = Ptempx * x_72_75_0 + WPtempx * x_72_75_1 + 4.000000 * ABCDtemp * x_72_44_1;
     QUICKDouble x_87_75_1 = Ptempx * x_72_75_1 + WPtempx * x_72_75_2 + 4.000000 * ABCDtemp * x_72_44_2;
-    LOCSTORE(store, 87, 108, STOREDIM, STOREDIM) += Qtempx * x_87_75_0 + WQtempx * x_87_75_1 + 4.000000 * CDtemp * (x_87_44_0 - ABcom * x_87_44_1) + ABCDtemp * x_72_75_1;
+    LOCSTORE(store, 87, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_75_0 + WQtempx * x_87_75_1 + 4.000000 * CDtemp * (x_87_44_0 - ABcom * x_87_44_1) + ABCDtemp * x_72_75_1;
     QUICKDouble x_72_51_1 = Qtempx * x_72_33_1 + WQtempx * x_72_33_2;
     QUICKDouble x_72_51_2 = Qtempx * x_72_33_2 + WQtempx * x_72_33_3;
     QUICKDouble x_72_51_0 = Qtempx * x_72_33_0 + WQtempx * x_72_33_1;
@@ -6981,7 +6981,7 @@
     QUICKDouble x_87_51_1 = Qtempx * x_87_33_1 + WQtempx * x_87_33_2 + ABCDtemp * x_72_33_2;
     QUICKDouble x_87_76_0 = Ptempx * x_72_76_0 + WPtempx * x_72_76_1 + 2.000000 * ABCDtemp * x_72_51_1;
     QUICKDouble x_87_76_1 = Ptempx * x_72_76_1 + WPtempx * x_72_76_2 + 2.000000 * ABCDtemp * x_72_51_2;
-    LOCSTORE(store, 87, 115, STOREDIM, STOREDIM) += Qtempx * x_87_76_0 + WQtempx * x_87_76_1 + 2.000000 * CDtemp * (x_87_51_0 - ABcom * x_87_51_1) + ABCDtemp * x_72_76_1;
+    LOCSTORE(store, 87, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_76_0 + WQtempx * x_87_76_1 + 2.000000 * CDtemp * (x_87_51_0 - ABcom * x_87_51_1) + ABCDtemp * x_72_76_1;
     QUICKDouble x_72_12_1 = Qtempx * x_72_8_1 + WQtempx * x_72_8_2;
     QUICKDouble x_72_12_2 = Qtempx * x_72_8_2 + WQtempx * x_72_8_3;
     QUICKDouble x_72_12_3 = Qtempx * x_72_8_3 + WQtempx * x_72_8_4;
@@ -7011,7 +7011,7 @@
     QUICKDouble x_87_46_1 = Qtempx * x_87_20_1 + WQtempx * x_87_20_2 + 2.000000 * CDtemp * (x_87_12_1 - ABcom * x_87_12_2) + ABCDtemp * x_72_20_2;
     QUICKDouble x_87_77_0 = Ptempx * x_72_77_0 + WPtempx * x_72_77_1 + 4.000000 * ABCDtemp * x_72_46_1;
     QUICKDouble x_87_77_1 = Ptempx * x_72_77_1 + WPtempx * x_72_77_2 + 4.000000 * ABCDtemp * x_72_46_2;
-    LOCSTORE(store, 87, 110, STOREDIM, STOREDIM) += Qtempx * x_87_77_0 + WQtempx * x_87_77_1 + 4.000000 * CDtemp * (x_87_46_0 - ABcom * x_87_46_1) + ABCDtemp * x_72_77_1;
+    LOCSTORE(store, 87, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_77_0 + WQtempx * x_87_77_1 + 4.000000 * CDtemp * (x_87_46_0 - ABcom * x_87_46_1) + ABCDtemp * x_72_77_1;
     QUICKDouble x_34_31_3 = Qtempy * x_34_19_3 + WQtempy * x_34_19_4;
     QUICKDouble x_34_31_2 = Qtempy * x_34_19_2 + WQtempy * x_34_19_3;
     QUICKDouble x_34_31_4 = Qtempy * x_34_19_4 + WQtempy * x_34_19_5;
@@ -7030,8 +7030,8 @@
     QUICKDouble x_58_78_1 = Qtempy * x_58_41_1 + WQtempy * x_58_41_2 + 2.000000 * CDtemp * (x_58_31_1 - ABcom * x_58_31_2) + ABCDtemp * x_49_41_2;
     QUICKDouble x_87_78_0 = Ptempx * x_72_78_0 + WPtempx * x_72_78_1;
     QUICKDouble x_87_78_1 = Ptempx * x_72_78_1 + WPtempx * x_72_78_2;
-    LOCSTORE(store, 87, 112, STOREDIM, STOREDIM) += Qtempy * x_87_78_0 + WQtempy * x_87_78_1 + 3.000000 * CDtemp * (x_87_41_0 - ABcom * x_87_41_1) + 2.000000 * ABCDtemp * x_58_78_1;
-    LOCSTORE(store, 87, 93, STOREDIM, STOREDIM) += Qtempx * x_87_78_0 + WQtempx * x_87_78_1 + ABCDtemp * x_72_78_1;
+    LOCSTORE(store, 87, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_78_0 + WQtempy * x_87_78_1 + 3.000000 * CDtemp * (x_87_41_0 - ABcom * x_87_41_1) + 2.000000 * ABCDtemp * x_58_78_1;
+    LOCSTORE(store, 87, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_78_0 + WQtempx * x_87_78_1 + ABCDtemp * x_72_78_1;
     QUICKDouble x_72_27_1 = Qtempx * x_72_19_1 + WQtempx * x_72_19_2;
     QUICKDouble x_72_27_2 = Qtempx * x_72_19_2 + WQtempx * x_72_19_3;
     QUICKDouble x_72_27_3 = Qtempx * x_72_19_3 + WQtempx * x_72_19_4;
@@ -7051,7 +7051,7 @@
     QUICKDouble x_87_43_1 = Qtempx * x_87_27_1 + WQtempx * x_87_27_2 + CDtemp * (x_87_19_1 - ABcom * x_87_19_2) + ABCDtemp * x_72_27_2;
     QUICKDouble x_87_79_0 = Ptempx * x_72_79_0 + WPtempx * x_72_79_1 + 3.000000 * ABCDtemp * x_72_43_1;
     QUICKDouble x_87_79_1 = Ptempx * x_72_79_1 + WPtempx * x_72_79_2 + 3.000000 * ABCDtemp * x_72_43_2;
-    LOCSTORE(store, 87, 114, STOREDIM, STOREDIM) += Qtempx * x_87_79_0 + WQtempx * x_87_79_1 + 3.000000 * CDtemp * (x_87_43_0 - ABcom * x_87_43_1) + ABCDtemp * x_72_79_1;
+    LOCSTORE(store, 87, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_79_0 + WQtempx * x_87_79_1 + 3.000000 * CDtemp * (x_87_43_0 - ABcom * x_87_43_1) + ABCDtemp * x_72_79_1;
     QUICKDouble x_72_29_1 = Qtempx * x_72_18_1 + WQtempx * x_72_18_2;
     QUICKDouble x_72_29_2 = Qtempx * x_72_18_2 + WQtempx * x_72_18_3;
     QUICKDouble x_72_29_3 = Qtempx * x_72_18_3 + WQtempx * x_72_18_4;
@@ -7071,7 +7071,7 @@
     QUICKDouble x_87_45_1 = Qtempx * x_87_29_1 + WQtempx * x_87_29_2 + CDtemp * (x_87_18_1 - ABcom * x_87_18_2) + ABCDtemp * x_72_29_2;
     QUICKDouble x_87_80_0 = Ptempx * x_72_80_0 + WPtempx * x_72_80_1 + 3.000000 * ABCDtemp * x_72_45_1;
     QUICKDouble x_87_80_1 = Ptempx * x_72_80_1 + WPtempx * x_72_80_2 + 3.000000 * ABCDtemp * x_72_45_2;
-    LOCSTORE(store, 87, 116, STOREDIM, STOREDIM) += Qtempx * x_87_80_0 + WQtempx * x_87_80_1 + 3.000000 * CDtemp * (x_87_45_0 - ABcom * x_87_45_1) + ABCDtemp * x_72_80_1;
+    LOCSTORE(store, 87, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_80_0 + WQtempx * x_87_80_1 + 3.000000 * CDtemp * (x_87_45_0 - ABcom * x_87_45_1) + ABCDtemp * x_72_80_1;
     QUICKDouble x_72_1_1 = Qtempx * x_72_0_1 + WQtempx * x_72_0_2;
     QUICKDouble x_72_1_2 = Qtempx * x_72_0_2 + WQtempx * x_72_0_3;
     QUICKDouble x_72_1_3 = Qtempx * x_72_0_3 + WQtempx * x_72_0_4;
@@ -7127,7 +7127,7 @@
     QUICKDouble x_87_53_1 = Qtempx * x_87_32_1 + WQtempx * x_87_32_2 + 4.000000 * CDtemp * (x_87_17_1 - ABcom * x_87_17_2) + ABCDtemp * x_72_32_2;
     QUICKDouble x_87_81_0 = Ptempx * x_72_81_0 + WPtempx * x_72_81_1 + 6.000000 * ABCDtemp * x_72_53_1;
     QUICKDouble x_87_81_1 = Ptempx * x_72_81_1 + WPtempx * x_72_81_2 + 6.000000 * ABCDtemp * x_72_53_2;
-    LOCSTORE(store, 87, 117, STOREDIM, STOREDIM) += Qtempx * x_87_81_0 + WQtempx * x_87_81_1 + 6.000000 * CDtemp * (x_87_53_0 - ABcom * x_87_53_1) + ABCDtemp * x_72_81_1;
+    LOCSTORE(store, 87, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_81_0 + WQtempx * x_87_81_1 + 6.000000 * CDtemp * (x_87_53_0 - ABcom * x_87_53_1) + ABCDtemp * x_72_81_1;
     QUICKDouble x_49_2_6 = Qtempy * x_49_0_6 + WQtempy * x_49_0_7;
     QUICKDouble x_58_2_6 = Qtempy * x_58_0_6 + WQtempy * x_58_0_7 + ABCDtemp * x_49_0_7;
     QUICKDouble x_49_8_5 = Qtempy * x_49_2_5 + WQtempy * x_49_2_6 + CDtemp * (x_49_0_5 - ABcom * x_49_0_6);
@@ -7152,8 +7152,8 @@
     QUICKDouble x_58_82_1 = Qtempy * x_58_54_1 + WQtempy * x_58_54_2 + 5.000000 * CDtemp * (x_58_33_1 - ABcom * x_58_33_2) + ABCDtemp * x_49_54_2;
     QUICKDouble x_87_82_0 = Ptempx * x_72_82_0 + WPtempx * x_72_82_1;
     QUICKDouble x_87_82_1 = Ptempx * x_72_82_1 + WPtempx * x_72_82_2;
-    LOCSTORE(store, 87, 118, STOREDIM, STOREDIM) += Qtempy * x_87_82_0 + WQtempy * x_87_82_1 + 6.000000 * CDtemp * (x_87_54_0 - ABcom * x_87_54_1) + 2.000000 * ABCDtemp * x_58_82_1;
-    LOCSTORE(store, 87, 103, STOREDIM, STOREDIM) += Qtempx * x_87_82_0 + WQtempx * x_87_82_1 + ABCDtemp * x_72_82_1;
+    LOCSTORE(store, 87, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_82_0 + WQtempy * x_87_82_1 + 6.000000 * CDtemp * (x_87_54_0 - ABcom * x_87_54_1) + 2.000000 * ABCDtemp * x_58_82_1;
+    LOCSTORE(store, 87, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_82_0 + WQtempx * x_87_82_1 + ABCDtemp * x_72_82_1;
     QUICKDouble x_35_0_7 = Ptempx * x_22_0_7 + WPtempx * x_22_0_8;
     QUICKDouble x_59_0_7 = Ptempx * x_41_0_7 + WPtempx * x_41_0_8;
     QUICKDouble x_35_3_6 = Qtempz * x_35_0_6 + WQtempz * x_35_0_7 + 2.000000 * ABCDtemp * x_24_0_7;
@@ -7180,9 +7180,9 @@
     QUICKDouble x_59_83_1 = Qtempz * x_59_55_1 + WQtempz * x_59_55_2 + 5.000000 * CDtemp * (x_59_34_1 - ABcom * x_59_34_2) + 3.000000 * ABCDtemp * x_35_55_2;
     QUICKDouble x_87_83_0 = Ptempx * x_72_83_0 + WPtempx * x_72_83_1;
     QUICKDouble x_87_83_1 = Ptempx * x_72_83_1 + WPtempx * x_72_83_2;
-    LOCSTORE(store, 87, 119, STOREDIM, STOREDIM) += Qtempz * x_87_83_0 + WQtempz * x_87_83_1 + 6.000000 * CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + 4.000000 * ABCDtemp * x_59_83_1;
-    LOCSTORE(store, 87, 101, STOREDIM, STOREDIM) += Qtempx * x_87_83_0 + WQtempx * x_87_83_1 + ABCDtemp * x_72_83_1;
-    LOCSTORE(store, 87, 99, STOREDIM, STOREDIM) += Qtempy * x_87_83_0 + WQtempy * x_87_83_1 + 2.000000 * ABCDtemp * x_58_83_1;
+    LOCSTORE(store, 87, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_87_83_0 + WQtempz * x_87_83_1 + 6.000000 * CDtemp * (x_87_55_0 - ABcom * x_87_55_1) + 4.000000 * ABCDtemp * x_59_83_1;
+    LOCSTORE(store, 87, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_87_83_0 + WQtempx * x_87_83_1 + ABCDtemp * x_72_83_1;
+    LOCSTORE(store, 87, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_87_83_0 + WQtempy * x_87_83_1 + 2.000000 * ABCDtemp * x_58_83_1;
     QUICKDouble x_16_0_1 = Ptempy * x_9_0_1 + WPtempy * x_9_0_2;
     QUICKDouble x_16_0_10 = Ptempy * x_9_0_10 + WPtempy * x_9_0_11;
     QUICKDouble x_16_0_0 = Ptempy * x_9_0_0 + WPtempy * x_9_0_1;
@@ -7290,7 +7290,7 @@
     QUICKDouble x_88_38_1 = Qtempx * x_88_23_1 + WQtempx * x_88_23_2 + 2.000000 * CDtemp * (x_88_10_1 - ABcom * x_88_10_2) + ABCDtemp * x_73_23_2;
     QUICKDouble x_88_56_0 = Ptempx * x_73_56_0 + WPtempx * x_73_56_1 + 4.000000 * ABCDtemp * x_73_38_1;
     QUICKDouble x_88_56_1 = Ptempx * x_73_56_1 + WPtempx * x_73_56_2 + 4.000000 * ABCDtemp * x_73_38_2;
-    LOCSTORE(store, 88, 84, STOREDIM, STOREDIM) += Qtempx * x_88_56_0 + WQtempx * x_88_56_1 + 4.000000 * CDtemp * (x_88_38_0 - ABcom * x_88_38_1) + ABCDtemp * x_73_56_1;
+    LOCSTORE(store, 88, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_56_0 + WQtempx * x_88_56_1 + 4.000000 * CDtemp * (x_88_38_0 - ABcom * x_88_38_1) + ABCDtemp * x_73_56_1;
     QUICKDouble x_22_5_3 = Qtempy * x_22_3_3 + WQtempy * x_22_3_4 + 2.000000 * ABCDtemp * x_16_3_4;
     QUICKDouble x_22_5_4 = Qtempy * x_22_3_4 + WQtempy * x_22_3_5 + 2.000000 * ABCDtemp * x_16_3_5;
     QUICKDouble x_16_5_4 = Qtempy * x_16_3_4 + WQtempy * x_16_3_5 + ABCDtemp * x_9_3_5;
@@ -7364,7 +7364,7 @@
     QUICKDouble x_88_48_1 = Qtempy * x_88_30_1 + WQtempy * x_88_30_2 + 3.000000 * CDtemp * (x_88_15_1 - ABcom * x_88_15_2) + 4.000000 * ABCDtemp * x_60_30_2;
     QUICKDouble x_88_57_0 = Ptempx * x_73_57_0 + WPtempx * x_73_57_1 + ABCDtemp * x_73_48_1;
     QUICKDouble x_88_57_1 = Ptempx * x_73_57_1 + WPtempx * x_73_57_2 + ABCDtemp * x_73_48_2;
-    LOCSTORE(store, 88, 91, STOREDIM, STOREDIM) += Qtempx * x_88_57_0 + WQtempx * x_88_57_1 + CDtemp * (x_88_48_0 - ABcom * x_88_48_1) + ABCDtemp * x_73_57_1;
+    LOCSTORE(store, 88, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_57_0 + WQtempx * x_88_57_1 + CDtemp * (x_88_48_0 - ABcom * x_88_48_1) + ABCDtemp * x_73_57_1;
     QUICKDouble x_42_9_2 = Qtempz * x_42_3_2 + WQtempz * x_42_3_3 + CDtemp * (x_42_0_2 - ABcom * x_42_0_3) + 2.000000 * ABCDtemp * x_30_3_3;
     QUICKDouble x_42_9_3 = Qtempz * x_42_3_3 + WQtempz * x_42_3_4 + CDtemp * (x_42_0_3 - ABcom * x_42_0_4) + 2.000000 * ABCDtemp * x_30_3_4;
     QUICKDouble x_42_9_4 = Qtempz * x_42_3_4 + WQtempz * x_42_3_5 + CDtemp * (x_42_0_4 - ABcom * x_42_0_5) + 2.000000 * ABCDtemp * x_30_3_5;
@@ -7430,7 +7430,7 @@
     QUICKDouble x_88_47_1 = Qtempy * x_88_34_1 + WQtempy * x_88_34_2 + 4.000000 * ABCDtemp * x_60_34_2;
     QUICKDouble x_88_58_0 = Ptempx * x_73_58_0 + WPtempx * x_73_58_1 + ABCDtemp * x_73_47_1;
     QUICKDouble x_88_58_1 = Ptempx * x_73_58_1 + WPtempx * x_73_58_2 + ABCDtemp * x_73_47_2;
-    LOCSTORE(store, 88, 89, STOREDIM, STOREDIM) += Qtempx * x_88_58_0 + WQtempx * x_88_58_1 + CDtemp * (x_88_47_0 - ABcom * x_88_47_1) + ABCDtemp * x_73_58_1;
+    LOCSTORE(store, 88, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_58_0 + WQtempx * x_88_58_1 + CDtemp * (x_88_47_0 - ABcom * x_88_47_1) + ABCDtemp * x_73_58_1;
     QUICKDouble x_42_31_2 = Qtempy * x_42_19_2 + WQtempy * x_42_19_3 + 3.000000 * ABCDtemp * x_22_19_3;
     QUICKDouble x_73_31_1 = Qtempy * x_73_19_1 + WQtempy * x_73_19_2 + 4.000000 * ABCDtemp * x_42_19_2;
     QUICKDouble x_73_31_2 = Qtempy * x_73_19_2 + WQtempy * x_73_19_3 + 4.000000 * ABCDtemp * x_42_19_3;
@@ -7456,7 +7456,7 @@
     QUICKDouble x_88_41_1 = Qtempy * x_88_31_1 + WQtempy * x_88_31_2 + CDtemp * (x_88_19_1 - ABcom * x_88_19_2) + 4.000000 * ABCDtemp * x_60_31_2;
     QUICKDouble x_88_59_0 = Ptempx * x_73_59_0 + WPtempx * x_73_59_1 + ABCDtemp * x_73_41_1;
     QUICKDouble x_88_59_1 = Ptempx * x_73_59_1 + WPtempx * x_73_59_2 + ABCDtemp * x_73_41_2;
-    LOCSTORE(store, 88, 98, STOREDIM, STOREDIM) += Qtempx * x_88_59_0 + WQtempx * x_88_59_1 + CDtemp * (x_88_41_0 - ABcom * x_88_41_1) + ABCDtemp * x_73_59_1;
+    LOCSTORE(store, 88, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_59_0 + WQtempx * x_88_59_1 + CDtemp * (x_88_41_0 - ABcom * x_88_41_1) + ABCDtemp * x_73_59_1;
     QUICKDouble x_22_16_3 = Qtempy * x_22_9_3 + WQtempy * x_22_9_4 + 2.000000 * ABCDtemp * x_16_9_4;
     QUICKDouble x_42_16_2 = Qtempy * x_42_9_2 + WQtempy * x_42_9_3 + 3.000000 * ABCDtemp * x_22_9_3;
     QUICKDouble x_42_16_3 = Qtempy * x_42_9_3 + WQtempy * x_42_9_4 + 3.000000 * ABCDtemp * x_22_9_4;
@@ -7506,7 +7506,7 @@
     QUICKDouble x_88_42_1 = Qtempy * x_88_22_1 + WQtempy * x_88_22_2 + 2.000000 * CDtemp * (x_88_16_1 - ABcom * x_88_16_2) + 4.000000 * ABCDtemp * x_60_22_2;
     QUICKDouble x_88_60_0 = Ptempx * x_73_60_0 + WPtempx * x_73_60_1 + ABCDtemp * x_73_42_1;
     QUICKDouble x_88_60_1 = Ptempx * x_73_60_1 + WPtempx * x_73_60_2 + ABCDtemp * x_73_42_2;
-    LOCSTORE(store, 88, 97, STOREDIM, STOREDIM) += Qtempx * x_88_60_0 + WQtempx * x_88_60_1 + CDtemp * (x_88_42_0 - ABcom * x_88_42_1) + ABCDtemp * x_73_60_1;
+    LOCSTORE(store, 88, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_60_0 + WQtempx * x_88_60_1 + CDtemp * (x_88_42_0 - ABcom * x_88_42_1) + ABCDtemp * x_73_60_1;
     QUICKDouble x_73_40_1 = Qtempx * x_73_31_1 + WQtempx * x_73_31_2;
     QUICKDouble x_73_40_2 = Qtempx * x_73_31_2 + WQtempx * x_73_31_3;
     QUICKDouble x_73_40_0 = Qtempx * x_73_31_0 + WQtempx * x_73_31_1;
@@ -7518,7 +7518,7 @@
     QUICKDouble x_88_40_1 = Qtempx * x_88_31_1 + WQtempx * x_88_31_2 + ABCDtemp * x_73_31_2;
     QUICKDouble x_88_61_0 = Ptempx * x_73_61_0 + WPtempx * x_73_61_1 + 2.000000 * ABCDtemp * x_73_40_1;
     QUICKDouble x_88_61_1 = Ptempx * x_73_61_1 + WPtempx * x_73_61_2 + 2.000000 * ABCDtemp * x_73_40_2;
-    LOCSTORE(store, 88, 94, STOREDIM, STOREDIM) += Qtempx * x_88_61_0 + WQtempx * x_88_61_1 + 2.000000 * CDtemp * (x_88_40_0 - ABcom * x_88_40_1) + ABCDtemp * x_73_61_1;
+    LOCSTORE(store, 88, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_61_0 + WQtempx * x_88_61_1 + 2.000000 * CDtemp * (x_88_40_0 - ABcom * x_88_40_1) + ABCDtemp * x_73_61_1;
     QUICKDouble x_73_25_1 = Qtempx * x_73_16_1 + WQtempx * x_73_16_2;
     QUICKDouble x_73_25_2 = Qtempx * x_73_16_2 + WQtempx * x_73_16_3;
     QUICKDouble x_73_25_3 = Qtempx * x_73_16_3 + WQtempx * x_73_16_4;
@@ -7538,7 +7538,7 @@
     QUICKDouble x_88_36_1 = Qtempx * x_88_25_1 + WQtempx * x_88_25_2 + CDtemp * (x_88_16_1 - ABcom * x_88_16_2) + ABCDtemp * x_73_25_2;
     QUICKDouble x_88_62_0 = Ptempx * x_73_62_0 + WPtempx * x_73_62_1 + 3.000000 * ABCDtemp * x_73_36_1;
     QUICKDouble x_88_62_1 = Ptempx * x_73_62_1 + WPtempx * x_73_62_2 + 3.000000 * ABCDtemp * x_73_36_2;
-    LOCSTORE(store, 88, 90, STOREDIM, STOREDIM) += Qtempx * x_88_62_0 + WQtempx * x_88_62_1 + 3.000000 * CDtemp * (x_88_36_0 - ABcom * x_88_36_1) + ABCDtemp * x_73_62_1;
+    LOCSTORE(store, 88, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_62_0 + WQtempx * x_88_62_1 + 3.000000 * CDtemp * (x_88_36_0 - ABcom * x_88_36_1) + ABCDtemp * x_73_62_1;
     QUICKDouble x_73_39_1 = Qtempx * x_73_30_1 + WQtempx * x_73_30_2;
     QUICKDouble x_73_39_2 = Qtempx * x_73_30_2 + WQtempx * x_73_30_3;
     QUICKDouble x_73_39_0 = Qtempx * x_73_30_0 + WQtempx * x_73_30_1;
@@ -7550,7 +7550,7 @@
     QUICKDouble x_88_39_1 = Qtempx * x_88_30_1 + WQtempx * x_88_30_2 + ABCDtemp * x_73_30_2;
     QUICKDouble x_88_63_0 = Ptempx * x_73_63_0 + WPtempx * x_73_63_1 + 2.000000 * ABCDtemp * x_73_39_1;
     QUICKDouble x_88_63_1 = Ptempx * x_73_63_1 + WPtempx * x_73_63_2 + 2.000000 * ABCDtemp * x_73_39_2;
-    LOCSTORE(store, 88, 95, STOREDIM, STOREDIM) += Qtempx * x_88_63_0 + WQtempx * x_88_63_1 + 2.000000 * CDtemp * (x_88_39_0 - ABcom * x_88_39_1) + ABCDtemp * x_73_63_1;
+    LOCSTORE(store, 88, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_63_0 + WQtempx * x_88_63_1 + 2.000000 * CDtemp * (x_88_39_0 - ABcom * x_88_39_1) + ABCDtemp * x_73_63_1;
     QUICKDouble x_73_24_1 = Qtempx * x_73_15_1 + WQtempx * x_73_15_2;
     QUICKDouble x_73_24_2 = Qtempx * x_73_15_2 + WQtempx * x_73_15_3;
     QUICKDouble x_73_24_3 = Qtempx * x_73_15_3 + WQtempx * x_73_15_4;
@@ -7570,7 +7570,7 @@
     QUICKDouble x_88_37_1 = Qtempx * x_88_24_1 + WQtempx * x_88_24_2 + CDtemp * (x_88_15_1 - ABcom * x_88_15_2) + ABCDtemp * x_73_24_2;
     QUICKDouble x_88_64_0 = Ptempx * x_73_64_0 + WPtempx * x_73_64_1 + 3.000000 * ABCDtemp * x_73_37_1;
     QUICKDouble x_88_64_1 = Ptempx * x_73_64_1 + WPtempx * x_73_64_2 + 3.000000 * ABCDtemp * x_73_37_2;
-    LOCSTORE(store, 88, 92, STOREDIM, STOREDIM) += Qtempx * x_88_64_0 + WQtempx * x_88_64_1 + 3.000000 * CDtemp * (x_88_37_0 - ABcom * x_88_37_1) + ABCDtemp * x_73_64_1;
+    LOCSTORE(store, 88, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_64_0 + WQtempx * x_88_64_1 + 3.000000 * CDtemp * (x_88_37_0 - ABcom * x_88_37_1) + ABCDtemp * x_73_64_1;
     QUICKDouble x_73_35_1 = Qtempx * x_73_22_1 + WQtempx * x_73_22_2;
     QUICKDouble x_73_35_2 = Qtempx * x_73_22_2 + WQtempx * x_73_22_3;
     QUICKDouble x_73_35_0 = Qtempx * x_73_22_0 + WQtempx * x_73_22_1;
@@ -7582,7 +7582,7 @@
     QUICKDouble x_88_35_1 = Qtempx * x_88_22_1 + WQtempx * x_88_22_2 + ABCDtemp * x_73_22_2;
     QUICKDouble x_88_65_0 = Ptempx * x_73_65_0 + WPtempx * x_73_65_1 + 2.000000 * ABCDtemp * x_73_35_1;
     QUICKDouble x_88_65_1 = Ptempx * x_73_65_1 + WPtempx * x_73_65_2 + 2.000000 * ABCDtemp * x_73_35_2;
-    LOCSTORE(store, 88, 96, STOREDIM, STOREDIM) += Qtempx * x_88_65_0 + WQtempx * x_88_65_1 + 2.000000 * CDtemp * (x_88_35_0 - ABcom * x_88_35_1) + ABCDtemp * x_73_65_1;
+    LOCSTORE(store, 88, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_65_0 + WQtempx * x_88_65_1 + 2.000000 * CDtemp * (x_88_35_0 - ABcom * x_88_35_1) + ABCDtemp * x_73_65_1;
     QUICKDouble x_60_0_7 = Ptempx * x_42_0_7 + WPtempx * x_42_0_8;
     QUICKDouble x_60_3_6 = Qtempz * x_60_0_6 + WQtempz * x_60_0_7 + 2.000000 * ABCDtemp * x_39_0_7;
     QUICKDouble x_60_9_5 = Qtempz * x_60_3_5 + WQtempz * x_60_3_6 + CDtemp * (x_60_0_5 - ABcom * x_60_0_6) + 2.000000 * ABCDtemp * x_39_3_6;
@@ -7605,8 +7605,8 @@
     QUICKDouble x_88_55_1 = Qtempz * x_88_34_1 + WQtempz * x_88_34_2 + 4.000000 * CDtemp * (x_88_19_1 - ABcom * x_88_19_2) + 2.000000 * ABCDtemp * x_57_34_2;
     QUICKDouble x_88_66_0 = Ptempx * x_73_66_0 + WPtempx * x_73_66_1;
     QUICKDouble x_88_66_1 = Ptempx * x_73_66_1 + WPtempx * x_73_66_2;
-    LOCSTORE(store, 88, 105, STOREDIM, STOREDIM) += Qtempy * x_88_66_0 + WQtempy * x_88_66_1 + CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + 4.000000 * ABCDtemp * x_60_66_1;
-    LOCSTORE(store, 88, 86, STOREDIM, STOREDIM) += Qtempx * x_88_66_0 + WQtempx * x_88_66_1 + ABCDtemp * x_73_66_1;
+    LOCSTORE(store, 88, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_66_0 + WQtempy * x_88_66_1 + CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + 4.000000 * ABCDtemp * x_60_66_1;
+    LOCSTORE(store, 88, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_66_0 + WQtempx * x_88_66_1 + ABCDtemp * x_73_66_1;
     QUICKDouble x_9_5_5 = Ptempz * x_3_5_5 + WPtempz * x_3_5_6 + ABtemp * (x_0_5_5 - CDcom * x_0_5_6) + ABCDtemp * x_3_2_6;
     QUICKDouble x_9_5_4 = Ptempz * x_3_5_4 + WPtempz * x_3_5_5 + ABtemp * (x_0_5_4 - CDcom * x_0_5_5) + ABCDtemp * x_3_2_5;
     QUICKDouble x_9_5_6 = Ptempz * x_3_5_6 + WPtempz * x_3_5_7 + ABtemp * (x_0_5_6 - CDcom * x_0_5_7) + ABCDtemp * x_3_2_7;
@@ -7642,14 +7642,14 @@
     QUICKDouble x_60_67_1 = Qtempy * x_60_48_1 + WQtempy * x_60_48_2 + 4.000000 * CDtemp * (x_60_30_1 - ABcom * x_60_30_2) + 3.000000 * ABCDtemp * x_35_48_2;
     QUICKDouble x_88_67_0 = Ptempx * x_73_67_0 + WPtempx * x_73_67_1;
     QUICKDouble x_88_67_1 = Ptempx * x_73_67_1 + WPtempx * x_73_67_2;
-    LOCSTORE(store, 88, 100, STOREDIM, STOREDIM) += Qtempy * x_88_67_0 + WQtempy * x_88_67_1 + 5.000000 * CDtemp * (x_88_48_0 - ABcom * x_88_48_1) + 4.000000 * ABCDtemp * x_60_67_1;
-    LOCSTORE(store, 88, 85, STOREDIM, STOREDIM) += Qtempx * x_88_67_0 + WQtempx * x_88_67_1 + ABCDtemp * x_73_67_1;
+    LOCSTORE(store, 88, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_67_0 + WQtempy * x_88_67_1 + 5.000000 * CDtemp * (x_88_48_0 - ABcom * x_88_48_1) + 4.000000 * ABCDtemp * x_60_67_1;
+    LOCSTORE(store, 88, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_67_0 + WQtempx * x_88_67_1 + ABCDtemp * x_73_67_1;
     QUICKDouble x_73_68_1 = Qtempx * x_73_55_1 + WQtempx * x_73_55_2;
     QUICKDouble x_73_68_0 = Qtempx * x_73_55_0 + WQtempx * x_73_55_1;
     QUICKDouble x_73_68_2 = Qtempx * x_73_55_2 + WQtempx * x_73_55_3;
     QUICKDouble x_88_68_0 = Ptempx * x_73_68_0 + WPtempx * x_73_68_1 + ABCDtemp * x_73_55_1;
     QUICKDouble x_88_68_1 = Ptempx * x_73_68_1 + WPtempx * x_73_68_2 + ABCDtemp * x_73_55_2;
-    LOCSTORE(store, 88, 107, STOREDIM, STOREDIM) += Qtempx * x_88_68_0 + WQtempx * x_88_68_1 + CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + ABCDtemp * x_73_68_1;
+    LOCSTORE(store, 88, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_68_0 + WQtempx * x_88_68_1 + CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + ABCDtemp * x_73_68_1;
     QUICKDouble x_73_6_1 = Qtempx * x_73_3_1 + WQtempx * x_73_3_2;
     QUICKDouble x_73_6_2 = Qtempx * x_73_3_2 + WQtempx * x_73_3_3;
     QUICKDouble x_73_6_3 = Qtempx * x_73_3_3 + WQtempx * x_73_3_4;
@@ -7691,7 +7691,7 @@
     QUICKDouble x_88_50_1 = Qtempx * x_88_26_1 + WQtempx * x_88_26_2 + 3.000000 * CDtemp * (x_88_13_1 - ABcom * x_88_13_2) + ABCDtemp * x_73_26_2;
     QUICKDouble x_88_69_0 = Ptempx * x_73_69_0 + WPtempx * x_73_69_1 + 5.000000 * ABCDtemp * x_73_50_1;
     QUICKDouble x_88_69_1 = Ptempx * x_73_69_1 + WPtempx * x_73_69_2 + 5.000000 * ABCDtemp * x_73_50_2;
-    LOCSTORE(store, 88, 102, STOREDIM, STOREDIM) += Qtempx * x_88_69_0 + WQtempx * x_88_69_1 + 5.000000 * CDtemp * (x_88_50_0 - ABcom * x_88_50_1) + ABCDtemp * x_73_69_1;
+    LOCSTORE(store, 88, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_69_0 + WQtempx * x_88_69_1 + 5.000000 * CDtemp * (x_88_50_0 - ABcom * x_88_50_1) + ABCDtemp * x_73_69_1;
     QUICKDouble x_16_2_4 = Qtempy * x_16_0_4 + WQtempy * x_16_0_5 + ABCDtemp * x_9_0_5;
     QUICKDouble x_22_2_3 = Qtempy * x_22_0_3 + WQtempy * x_22_0_4 + 2.000000 * ABCDtemp * x_16_0_4;
     QUICKDouble x_22_2_4 = Qtempy * x_22_0_4 + WQtempy * x_22_0_5 + 2.000000 * ABCDtemp * x_16_0_5;
@@ -7827,7 +7827,7 @@
     QUICKDouble x_88_54_1 = Qtempy * x_88_33_1 + WQtempy * x_88_33_2 + 4.000000 * CDtemp * (x_88_18_1 - ABcom * x_88_18_2) + 4.000000 * ABCDtemp * x_60_33_2;
     QUICKDouble x_88_70_0 = Ptempx * x_73_70_0 + WPtempx * x_73_70_1 + ABCDtemp * x_73_54_1;
     QUICKDouble x_88_70_1 = Ptempx * x_73_70_1 + WPtempx * x_73_70_2 + ABCDtemp * x_73_54_2;
-    LOCSTORE(store, 88, 109, STOREDIM, STOREDIM) += Qtempx * x_88_70_0 + WQtempx * x_88_70_1 + CDtemp * (x_88_54_0 - ABcom * x_88_54_1) + ABCDtemp * x_73_70_1;
+    LOCSTORE(store, 88, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_70_0 + WQtempx * x_88_70_1 + CDtemp * (x_88_54_0 - ABcom * x_88_54_1) + ABCDtemp * x_73_70_1;
     QUICKDouble x_73_4_1 = Qtempx * x_73_2_1 + WQtempx * x_73_2_2;
     QUICKDouble x_73_4_2 = Qtempx * x_73_2_2 + WQtempx * x_73_2_3;
     QUICKDouble x_73_4_3 = Qtempx * x_73_2_3 + WQtempx * x_73_2_4;
@@ -7869,7 +7869,7 @@
     QUICKDouble x_88_52_1 = Qtempx * x_88_28_1 + WQtempx * x_88_28_2 + 3.000000 * CDtemp * (x_88_11_1 - ABcom * x_88_11_2) + ABCDtemp * x_73_28_2;
     QUICKDouble x_88_71_0 = Ptempx * x_73_71_0 + WPtempx * x_73_71_1 + 5.000000 * ABCDtemp * x_73_52_1;
     QUICKDouble x_88_71_1 = Ptempx * x_73_71_1 + WPtempx * x_73_71_2 + 5.000000 * ABCDtemp * x_73_52_2;
-    LOCSTORE(store, 88, 104, STOREDIM, STOREDIM) += Qtempx * x_88_71_0 + WQtempx * x_88_71_1 + 5.000000 * CDtemp * (x_88_52_0 - ABcom * x_88_52_1) + ABCDtemp * x_73_71_1;
+    LOCSTORE(store, 88, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_71_0 + WQtempx * x_88_71_1 + 5.000000 * CDtemp * (x_88_52_0 - ABcom * x_88_52_1) + ABCDtemp * x_73_71_1;
     QUICKDouble x_42_47_2 = Qtempy * x_42_34_2 + WQtempy * x_42_34_3 + 3.000000 * ABCDtemp * x_22_34_3;
     QUICKDouble x_42_47_1 = Qtempy * x_42_34_1 + WQtempy * x_42_34_2 + 3.000000 * ABCDtemp * x_22_34_2;
     QUICKDouble x_42_47_3 = Qtempy * x_42_34_3 + WQtempy * x_42_34_4 + 3.000000 * ABCDtemp * x_22_34_4;
@@ -7882,8 +7882,8 @@
     QUICKDouble x_60_72_1 = Qtempy * x_60_47_1 + WQtempy * x_60_47_2 + CDtemp * (x_60_34_1 - ABcom * x_60_34_2) + 3.000000 * ABCDtemp * x_35_47_2;
     QUICKDouble x_88_72_0 = Ptempx * x_73_72_0 + WPtempx * x_73_72_1;
     QUICKDouble x_88_72_1 = Ptempx * x_73_72_1 + WPtempx * x_73_72_2;
-    LOCSTORE(store, 88, 111, STOREDIM, STOREDIM) += Qtempy * x_88_72_0 + WQtempy * x_88_72_1 + 2.000000 * CDtemp * (x_88_47_0 - ABcom * x_88_47_1) + 4.000000 * ABCDtemp * x_60_72_1;
-    LOCSTORE(store, 88, 87, STOREDIM, STOREDIM) += Qtempx * x_88_72_0 + WQtempx * x_88_72_1 + ABCDtemp * x_73_72_1;
+    LOCSTORE(store, 88, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_72_0 + WQtempy * x_88_72_1 + 2.000000 * CDtemp * (x_88_47_0 - ABcom * x_88_47_1) + 4.000000 * ABCDtemp * x_60_72_1;
+    LOCSTORE(store, 88, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_72_0 + WQtempx * x_88_72_1 + ABCDtemp * x_73_72_1;
     QUICKDouble x_16_16_4 = Qtempy * x_16_9_4 + WQtempy * x_16_9_5 + ABCDtemp * x_9_9_5;
     QUICKDouble x_16_16_3 = Qtempy * x_16_9_3 + WQtempy * x_16_9_4 + ABCDtemp * x_9_9_4;
     QUICKDouble x_16_16_5 = Qtempy * x_16_9_5 + WQtempy * x_16_9_6 + ABCDtemp * x_9_9_6;
@@ -7911,8 +7911,8 @@
     QUICKDouble x_60_73_1 = Qtempy * x_60_42_1 + WQtempy * x_60_42_2 + 3.000000 * CDtemp * (x_60_22_1 - ABcom * x_60_22_2) + 3.000000 * ABCDtemp * x_35_42_2;
     QUICKDouble x_88_73_0 = Ptempx * x_73_73_0 + WPtempx * x_73_73_1;
     QUICKDouble x_88_73_1 = Ptempx * x_73_73_1 + WPtempx * x_73_73_2;
-    LOCSTORE(store, 88, 106, STOREDIM, STOREDIM) += Qtempy * x_88_73_0 + WQtempy * x_88_73_1 + 4.000000 * CDtemp * (x_88_42_0 - ABcom * x_88_42_1) + 4.000000 * ABCDtemp * x_60_73_1;
-    LOCSTORE(store, 88, 88, STOREDIM, STOREDIM) += Qtempx * x_88_73_0 + WQtempx * x_88_73_1 + ABCDtemp * x_73_73_1;
+    LOCSTORE(store, 88, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_73_0 + WQtempy * x_88_73_1 + 4.000000 * CDtemp * (x_88_42_0 - ABcom * x_88_42_1) + 4.000000 * ABCDtemp * x_60_73_1;
+    LOCSTORE(store, 88, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_73_0 + WQtempx * x_88_73_1 + ABCDtemp * x_73_73_1;
     QUICKDouble x_73_49_1 = Qtempx * x_73_34_1 + WQtempx * x_73_34_2;
     QUICKDouble x_73_49_2 = Qtempx * x_73_34_2 + WQtempx * x_73_34_3;
     QUICKDouble x_73_49_0 = Qtempx * x_73_34_0 + WQtempx * x_73_34_1;
@@ -7924,7 +7924,7 @@
     QUICKDouble x_88_49_1 = Qtempx * x_88_34_1 + WQtempx * x_88_34_2 + ABCDtemp * x_73_34_2;
     QUICKDouble x_88_74_0 = Ptempx * x_73_74_0 + WPtempx * x_73_74_1 + 2.000000 * ABCDtemp * x_73_49_1;
     QUICKDouble x_88_74_1 = Ptempx * x_73_74_1 + WPtempx * x_73_74_2 + 2.000000 * ABCDtemp * x_73_49_2;
-    LOCSTORE(store, 88, 113, STOREDIM, STOREDIM) += Qtempx * x_88_74_0 + WQtempx * x_88_74_1 + 2.000000 * CDtemp * (x_88_49_0 - ABcom * x_88_49_1) + ABCDtemp * x_73_74_1;
+    LOCSTORE(store, 88, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_74_0 + WQtempx * x_88_74_1 + 2.000000 * CDtemp * (x_88_49_0 - ABcom * x_88_49_1) + ABCDtemp * x_73_74_1;
     QUICKDouble x_73_14_1 = Qtempx * x_73_9_1 + WQtempx * x_73_9_2;
     QUICKDouble x_73_14_2 = Qtempx * x_73_9_2 + WQtempx * x_73_9_3;
     QUICKDouble x_73_14_3 = Qtempx * x_73_9_3 + WQtempx * x_73_9_4;
@@ -7954,7 +7954,7 @@
     QUICKDouble x_88_44_1 = Qtempx * x_88_21_1 + WQtempx * x_88_21_2 + 2.000000 * CDtemp * (x_88_14_1 - ABcom * x_88_14_2) + ABCDtemp * x_73_21_2;
     QUICKDouble x_88_75_0 = Ptempx * x_73_75_0 + WPtempx * x_73_75_1 + 4.000000 * ABCDtemp * x_73_44_1;
     QUICKDouble x_88_75_1 = Ptempx * x_73_75_1 + WPtempx * x_73_75_2 + 4.000000 * ABCDtemp * x_73_44_2;
-    LOCSTORE(store, 88, 108, STOREDIM, STOREDIM) += Qtempx * x_88_75_0 + WQtempx * x_88_75_1 + 4.000000 * CDtemp * (x_88_44_0 - ABcom * x_88_44_1) + ABCDtemp * x_73_75_1;
+    LOCSTORE(store, 88, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_75_0 + WQtempx * x_88_75_1 + 4.000000 * CDtemp * (x_88_44_0 - ABcom * x_88_44_1) + ABCDtemp * x_73_75_1;
     QUICKDouble x_73_51_1 = Qtempx * x_73_33_1 + WQtempx * x_73_33_2;
     QUICKDouble x_73_51_2 = Qtempx * x_73_33_2 + WQtempx * x_73_33_3;
     QUICKDouble x_73_51_0 = Qtempx * x_73_33_0 + WQtempx * x_73_33_1;
@@ -7966,7 +7966,7 @@
     QUICKDouble x_88_51_1 = Qtempx * x_88_33_1 + WQtempx * x_88_33_2 + ABCDtemp * x_73_33_2;
     QUICKDouble x_88_76_0 = Ptempx * x_73_76_0 + WPtempx * x_73_76_1 + 2.000000 * ABCDtemp * x_73_51_1;
     QUICKDouble x_88_76_1 = Ptempx * x_73_76_1 + WPtempx * x_73_76_2 + 2.000000 * ABCDtemp * x_73_51_2;
-    LOCSTORE(store, 88, 115, STOREDIM, STOREDIM) += Qtempx * x_88_76_0 + WQtempx * x_88_76_1 + 2.000000 * CDtemp * (x_88_51_0 - ABcom * x_88_51_1) + ABCDtemp * x_73_76_1;
+    LOCSTORE(store, 88, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_76_0 + WQtempx * x_88_76_1 + 2.000000 * CDtemp * (x_88_51_0 - ABcom * x_88_51_1) + ABCDtemp * x_73_76_1;
     QUICKDouble x_73_12_1 = Qtempx * x_73_8_1 + WQtempx * x_73_8_2;
     QUICKDouble x_73_12_2 = Qtempx * x_73_8_2 + WQtempx * x_73_8_3;
     QUICKDouble x_73_12_3 = Qtempx * x_73_8_3 + WQtempx * x_73_8_4;
@@ -7996,7 +7996,7 @@
     QUICKDouble x_88_46_1 = Qtempx * x_88_20_1 + WQtempx * x_88_20_2 + 2.000000 * CDtemp * (x_88_12_1 - ABcom * x_88_12_2) + ABCDtemp * x_73_20_2;
     QUICKDouble x_88_77_0 = Ptempx * x_73_77_0 + WPtempx * x_73_77_1 + 4.000000 * ABCDtemp * x_73_46_1;
     QUICKDouble x_88_77_1 = Ptempx * x_73_77_1 + WPtempx * x_73_77_2 + 4.000000 * ABCDtemp * x_73_46_2;
-    LOCSTORE(store, 88, 110, STOREDIM, STOREDIM) += Qtempx * x_88_77_0 + WQtempx * x_88_77_1 + 4.000000 * CDtemp * (x_88_46_0 - ABcom * x_88_46_1) + ABCDtemp * x_73_77_1;
+    LOCSTORE(store, 88, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_77_0 + WQtempx * x_88_77_1 + 4.000000 * CDtemp * (x_88_46_0 - ABcom * x_88_46_1) + ABCDtemp * x_73_77_1;
     QUICKDouble x_22_31_3 = Qtempy * x_22_19_3 + WQtempy * x_22_19_4 + 2.000000 * ABCDtemp * x_16_19_4;
     QUICKDouble x_22_31_2 = Qtempy * x_22_19_2 + WQtempy * x_22_19_3 + 2.000000 * ABCDtemp * x_16_19_3;
     QUICKDouble x_22_31_4 = Qtempy * x_22_19_4 + WQtempy * x_22_19_5 + 2.000000 * ABCDtemp * x_16_19_5;
@@ -8016,8 +8016,8 @@
     QUICKDouble x_60_78_1 = Qtempy * x_60_41_1 + WQtempy * x_60_41_2 + 2.000000 * CDtemp * (x_60_31_1 - ABcom * x_60_31_2) + 3.000000 * ABCDtemp * x_35_41_2;
     QUICKDouble x_88_78_0 = Ptempx * x_73_78_0 + WPtempx * x_73_78_1;
     QUICKDouble x_88_78_1 = Ptempx * x_73_78_1 + WPtempx * x_73_78_2;
-    LOCSTORE(store, 88, 112, STOREDIM, STOREDIM) += Qtempy * x_88_78_0 + WQtempy * x_88_78_1 + 3.000000 * CDtemp * (x_88_41_0 - ABcom * x_88_41_1) + 4.000000 * ABCDtemp * x_60_78_1;
-    LOCSTORE(store, 88, 93, STOREDIM, STOREDIM) += Qtempx * x_88_78_0 + WQtempx * x_88_78_1 + ABCDtemp * x_73_78_1;
+    LOCSTORE(store, 88, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_78_0 + WQtempy * x_88_78_1 + 3.000000 * CDtemp * (x_88_41_0 - ABcom * x_88_41_1) + 4.000000 * ABCDtemp * x_60_78_1;
+    LOCSTORE(store, 88, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_78_0 + WQtempx * x_88_78_1 + ABCDtemp * x_73_78_1;
     QUICKDouble x_73_27_1 = Qtempx * x_73_19_1 + WQtempx * x_73_19_2;
     QUICKDouble x_73_27_2 = Qtempx * x_73_19_2 + WQtempx * x_73_19_3;
     QUICKDouble x_73_27_3 = Qtempx * x_73_19_3 + WQtempx * x_73_19_4;
@@ -8037,7 +8037,7 @@
     QUICKDouble x_88_43_1 = Qtempx * x_88_27_1 + WQtempx * x_88_27_2 + CDtemp * (x_88_19_1 - ABcom * x_88_19_2) + ABCDtemp * x_73_27_2;
     QUICKDouble x_88_79_0 = Ptempx * x_73_79_0 + WPtempx * x_73_79_1 + 3.000000 * ABCDtemp * x_73_43_1;
     QUICKDouble x_88_79_1 = Ptempx * x_73_79_1 + WPtempx * x_73_79_2 + 3.000000 * ABCDtemp * x_73_43_2;
-    LOCSTORE(store, 88, 114, STOREDIM, STOREDIM) += Qtempx * x_88_79_0 + WQtempx * x_88_79_1 + 3.000000 * CDtemp * (x_88_43_0 - ABcom * x_88_43_1) + ABCDtemp * x_73_79_1;
+    LOCSTORE(store, 88, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_79_0 + WQtempx * x_88_79_1 + 3.000000 * CDtemp * (x_88_43_0 - ABcom * x_88_43_1) + ABCDtemp * x_73_79_1;
     QUICKDouble x_73_29_1 = Qtempx * x_73_18_1 + WQtempx * x_73_18_2;
     QUICKDouble x_73_29_2 = Qtempx * x_73_18_2 + WQtempx * x_73_18_3;
     QUICKDouble x_73_29_3 = Qtempx * x_73_18_3 + WQtempx * x_73_18_4;
@@ -8057,7 +8057,7 @@
     QUICKDouble x_88_45_1 = Qtempx * x_88_29_1 + WQtempx * x_88_29_2 + CDtemp * (x_88_18_1 - ABcom * x_88_18_2) + ABCDtemp * x_73_29_2;
     QUICKDouble x_88_80_0 = Ptempx * x_73_80_0 + WPtempx * x_73_80_1 + 3.000000 * ABCDtemp * x_73_45_1;
     QUICKDouble x_88_80_1 = Ptempx * x_73_80_1 + WPtempx * x_73_80_2 + 3.000000 * ABCDtemp * x_73_45_2;
-    LOCSTORE(store, 88, 116, STOREDIM, STOREDIM) += Qtempx * x_88_80_0 + WQtempx * x_88_80_1 + 3.000000 * CDtemp * (x_88_45_0 - ABcom * x_88_45_1) + ABCDtemp * x_73_80_1;
+    LOCSTORE(store, 88, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_80_0 + WQtempx * x_88_80_1 + 3.000000 * CDtemp * (x_88_45_0 - ABcom * x_88_45_1) + ABCDtemp * x_73_80_1;
     QUICKDouble x_73_1_1 = Qtempx * x_73_0_1 + WQtempx * x_73_0_2;
     QUICKDouble x_73_1_2 = Qtempx * x_73_0_2 + WQtempx * x_73_0_3;
     QUICKDouble x_73_1_3 = Qtempx * x_73_0_3 + WQtempx * x_73_0_4;
@@ -8113,7 +8113,7 @@
     QUICKDouble x_88_53_1 = Qtempx * x_88_32_1 + WQtempx * x_88_32_2 + 4.000000 * CDtemp * (x_88_17_1 - ABcom * x_88_17_2) + ABCDtemp * x_73_32_2;
     QUICKDouble x_88_81_0 = Ptempx * x_73_81_0 + WPtempx * x_73_81_1 + 6.000000 * ABCDtemp * x_73_53_1;
     QUICKDouble x_88_81_1 = Ptempx * x_73_81_1 + WPtempx * x_73_81_2 + 6.000000 * ABCDtemp * x_73_53_2;
-    LOCSTORE(store, 88, 117, STOREDIM, STOREDIM) += Qtempx * x_88_81_0 + WQtempx * x_88_81_1 + 6.000000 * CDtemp * (x_88_53_0 - ABcom * x_88_53_1) + ABCDtemp * x_73_81_1;
+    LOCSTORE(store, 88, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_81_0 + WQtempx * x_88_81_1 + 6.000000 * CDtemp * (x_88_53_0 - ABcom * x_88_53_1) + ABCDtemp * x_73_81_1;
     QUICKDouble x_25_2_6 = Qtempy * x_25_0_6 + WQtempy * x_25_0_7 + ABCDtemp * x_14_0_7;
     QUICKDouble x_14_2_6 = Qtempy * x_14_0_6 + WQtempy * x_14_0_7;
     QUICKDouble x_35_2_6 = Qtempy * x_35_0_6 + WQtempy * x_35_0_7 + 2.000000 * ABCDtemp * x_25_0_7;
@@ -8153,17 +8153,17 @@
     QUICKDouble x_60_82_1 = Qtempy * x_60_54_1 + WQtempy * x_60_54_2 + 5.000000 * CDtemp * (x_60_33_1 - ABcom * x_60_33_2) + 3.000000 * ABCDtemp * x_35_54_2;
     QUICKDouble x_88_82_0 = Ptempx * x_73_82_0 + WPtempx * x_73_82_1;
     QUICKDouble x_88_82_1 = Ptempx * x_73_82_1 + WPtempx * x_73_82_2;
-    LOCSTORE(store, 88, 118, STOREDIM, STOREDIM) += Qtempy * x_88_82_0 + WQtempy * x_88_82_1 + 6.000000 * CDtemp * (x_88_54_0 - ABcom * x_88_54_1) + 4.000000 * ABCDtemp * x_60_82_1;
-    LOCSTORE(store, 88, 103, STOREDIM, STOREDIM) += Qtempx * x_88_82_0 + WQtempx * x_88_82_1 + ABCDtemp * x_73_82_1;
+    LOCSTORE(store, 88, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_82_0 + WQtempy * x_88_82_1 + 6.000000 * CDtemp * (x_88_54_0 - ABcom * x_88_54_1) + 4.000000 * ABCDtemp * x_60_82_1;
+    LOCSTORE(store, 88, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_82_0 + WQtempx * x_88_82_1 + ABCDtemp * x_73_82_1;
     QUICKDouble x_73_83_1 = Qtempz * x_73_55_1 + WQtempz * x_73_55_2 + 5.000000 * CDtemp * (x_73_34_1 - ABcom * x_73_34_2) + 2.000000 * ABCDtemp * x_48_55_2;
     QUICKDouble x_73_83_0 = Qtempz * x_73_55_0 + WQtempz * x_73_55_1 + 5.000000 * CDtemp * (x_73_34_0 - ABcom * x_73_34_1) + 2.000000 * ABCDtemp * x_48_55_1;
     QUICKDouble x_73_83_2 = Qtempz * x_73_55_2 + WQtempz * x_73_55_3 + 5.000000 * CDtemp * (x_73_34_2 - ABcom * x_73_34_3) + 2.000000 * ABCDtemp * x_48_55_3;
     QUICKDouble x_88_83_0 = Ptempx * x_73_83_0 + WPtempx * x_73_83_1;
     QUICKDouble x_88_83_1 = Ptempx * x_73_83_1 + WPtempx * x_73_83_2;
-    LOCSTORE(store, 88, 119, STOREDIM, STOREDIM) += Qtempz * x_88_83_0 + WQtempz * x_88_83_1 + 6.000000 * CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + 2.000000 * ABCDtemp * x_57_83_1;
-    LOCSTORE(store, 88, 101, STOREDIM, STOREDIM) += Qtempx * x_88_83_0 + WQtempx * x_88_83_1 + ABCDtemp * x_73_83_1;
+    LOCSTORE(store, 88, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_88_83_0 + WQtempz * x_88_83_1 + 6.000000 * CDtemp * (x_88_55_0 - ABcom * x_88_55_1) + 2.000000 * ABCDtemp * x_57_83_1;
+    LOCSTORE(store, 88, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_88_83_0 + WQtempx * x_88_83_1 + ABCDtemp * x_73_83_1;
     QUICKDouble x_60_83_1 = Qtempz * x_60_55_1 + WQtempz * x_60_55_2 + 5.000000 * CDtemp * (x_60_34_1 - ABcom * x_60_34_2) + 2.000000 * ABCDtemp * x_39_55_2;
-    LOCSTORE(store, 88, 99, STOREDIM, STOREDIM) += Qtempy * x_88_83_0 + WQtempy * x_88_83_1 + 4.000000 * ABCDtemp * x_60_83_1;
+    LOCSTORE(store, 88, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_88_83_0 + WQtempy * x_88_83_1 + 4.000000 * ABCDtemp * x_60_83_1;
     QUICKDouble x_27_0_2 = Ptempx * x_19_0_2 + WPtempx * x_19_0_3;
     QUICKDouble x_49_0_1 = Ptempx * x_34_0_1 + WPtempx * x_34_0_2;
     QUICKDouble x_40_0_1 = Ptempx * x_31_0_1 + WPtempx * x_31_0_2;
@@ -8305,7 +8305,7 @@
     QUICKDouble x_89_38_1 = Qtempx * x_89_23_1 + WQtempx * x_89_23_2 + 2.000000 * CDtemp * (x_89_10_1 - ABcom * x_89_10_2) + 2.000000 * ABCDtemp * x_58_23_2;
     QUICKDouble x_89_56_0 = Ptempx * x_58_56_0 + WPtempx * x_58_56_1 + ABtemp * (x_47_56_0 - CDcom * x_47_56_1) + 4.000000 * ABCDtemp * x_58_38_1;
     QUICKDouble x_89_56_1 = Ptempx * x_58_56_1 + WPtempx * x_58_56_2 + ABtemp * (x_47_56_1 - CDcom * x_47_56_2) + 4.000000 * ABCDtemp * x_58_38_2;
-    LOCSTORE(store, 89, 84, STOREDIM, STOREDIM) += Qtempx * x_89_56_0 + WQtempx * x_89_56_1 + 4.000000 * CDtemp * (x_89_38_0 - ABcom * x_89_38_1) + 2.000000 * ABCDtemp * x_58_56_1;
+    LOCSTORE(store, 89, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_56_0 + WQtempx * x_89_56_1 + 4.000000 * CDtemp * (x_89_38_0 - ABcom * x_89_38_1) + 2.000000 * ABCDtemp * x_58_56_1;
     QUICKDouble x_49_5_1 = Qtempy * x_49_3_1 + WQtempy * x_49_3_2;
     QUICKDouble x_49_5_6 = Qtempy * x_49_3_6 + WQtempy * x_49_3_7;
     QUICKDouble x_9_39_1 = Ptempz * x_3_39_1 + WPtempz * x_3_39_2 + ABtemp * (x_0_39_1 - CDcom * x_0_39_2) + ABCDtemp * x_3_29_2;
@@ -8387,7 +8387,7 @@
     QUICKDouble x_89_48_1 = Qtempy * x_89_30_1 + WQtempy * x_89_30_2 + 3.000000 * CDtemp * (x_89_15_1 - ABcom * x_89_15_2) + ABCDtemp * x_74_30_2;
     QUICKDouble x_89_57_0 = Ptempx * x_58_57_0 + WPtempx * x_58_57_1 + ABtemp * (x_47_57_0 - CDcom * x_47_57_1) + ABCDtemp * x_58_48_1;
     QUICKDouble x_89_57_1 = Ptempx * x_58_57_1 + WPtempx * x_58_57_2 + ABtemp * (x_47_57_1 - CDcom * x_47_57_2) + ABCDtemp * x_58_48_2;
-    LOCSTORE(store, 89, 91, STOREDIM, STOREDIM) += Qtempx * x_89_57_0 + WQtempx * x_89_57_1 + CDtemp * (x_89_48_0 - ABcom * x_89_48_1) + 2.000000 * ABCDtemp * x_58_57_1;
+    LOCSTORE(store, 89, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_57_0 + WQtempx * x_89_57_1 + CDtemp * (x_89_48_0 - ABcom * x_89_48_1) + 2.000000 * ABCDtemp * x_58_57_1;
     QUICKDouble x_14_0_3 = Ptempx * x_9_0_3 + WPtempx * x_9_0_4;
     QUICKDouble x_25_0_2 = Ptempx * x_16_0_2 + WPtempx * x_16_0_3;
     QUICKDouble x_14_0_8 = Ptempx * x_9_0_8 + WPtempx * x_9_0_9;
@@ -8549,7 +8549,7 @@
     QUICKDouble x_89_47_1 = Qtempy * x_89_34_1 + WQtempy * x_89_34_2 + ABCDtemp * x_74_34_2;
     QUICKDouble x_89_58_0 = Ptempx * x_58_58_0 + WPtempx * x_58_58_1 + ABtemp * (x_47_58_0 - CDcom * x_47_58_1) + ABCDtemp * x_58_47_1;
     QUICKDouble x_89_58_1 = Ptempx * x_58_58_1 + WPtempx * x_58_58_2 + ABtemp * (x_47_58_1 - CDcom * x_47_58_2) + ABCDtemp * x_58_47_2;
-    LOCSTORE(store, 89, 89, STOREDIM, STOREDIM) += Qtempx * x_89_58_0 + WQtempx * x_89_58_1 + CDtemp * (x_89_47_0 - ABcom * x_89_47_1) + 2.000000 * ABCDtemp * x_58_58_1;
+    LOCSTORE(store, 89, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_58_0 + WQtempx * x_89_58_1 + CDtemp * (x_89_47_0 - ABcom * x_89_47_1) + 2.000000 * ABCDtemp * x_58_58_1;
     QUICKDouble x_9_10_3 = Ptempz * x_3_10_3 + WPtempz * x_3_10_4 + ABtemp * (x_0_10_3 - CDcom * x_0_10_4) + ABCDtemp * x_3_4_4;
     QUICKDouble x_9_59_0 = Ptempz * x_3_59_0 + WPtempz * x_3_59_1 + ABtemp * (x_0_59_0 - CDcom * x_0_59_1) + 3.000000 * ABCDtemp * x_3_35_1;
     QUICKDouble x_9_59_1 = Ptempz * x_3_59_1 + WPtempz * x_3_59_2 + ABtemp * (x_0_59_1 - CDcom * x_0_59_2) + 3.000000 * ABCDtemp * x_3_35_2;
@@ -8608,7 +8608,7 @@
     QUICKDouble x_89_41_1 = Qtempy * x_89_31_1 + WQtempy * x_89_31_2 + CDtemp * (x_89_19_1 - ABcom * x_89_19_2) + ABCDtemp * x_74_31_2;
     QUICKDouble x_89_59_0 = Ptempx * x_58_59_0 + WPtempx * x_58_59_1 + ABtemp * (x_47_59_0 - CDcom * x_47_59_1) + ABCDtemp * x_58_41_1;
     QUICKDouble x_89_59_1 = Ptempx * x_58_59_1 + WPtempx * x_58_59_2 + ABtemp * (x_47_59_1 - CDcom * x_47_59_2) + ABCDtemp * x_58_41_2;
-    LOCSTORE(store, 89, 98, STOREDIM, STOREDIM) += Qtempx * x_89_59_0 + WQtempx * x_89_59_1 + CDtemp * (x_89_41_0 - ABcom * x_89_41_1) + 2.000000 * ABCDtemp * x_58_59_1;
+    LOCSTORE(store, 89, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_59_0 + WQtempx * x_89_59_1 + CDtemp * (x_89_41_0 - ABcom * x_89_41_1) + 2.000000 * ABCDtemp * x_58_59_1;
     QUICKDouble x_9_12_3 = Ptempz * x_3_12_3 + WPtempz * x_3_12_4 + ABtemp * (x_0_12_3 - CDcom * x_0_12_4);
     QUICKDouble x_9_60_0 = Ptempz * x_3_60_0 + WPtempz * x_3_60_1 + ABtemp * (x_0_60_0 - CDcom * x_0_60_1) + 2.000000 * ABCDtemp * x_3_39_1;
     QUICKDouble x_9_60_1 = Ptempz * x_3_60_1 + WPtempz * x_3_60_2 + ABtemp * (x_0_60_1 - CDcom * x_0_60_2) + 2.000000 * ABCDtemp * x_3_39_2;
@@ -8665,7 +8665,7 @@
     QUICKDouble x_89_42_1 = Qtempy * x_89_22_1 + WQtempy * x_89_22_2 + 2.000000 * CDtemp * (x_89_16_1 - ABcom * x_89_16_2) + ABCDtemp * x_74_22_2;
     QUICKDouble x_89_60_0 = Ptempx * x_58_60_0 + WPtempx * x_58_60_1 + ABtemp * (x_47_60_0 - CDcom * x_47_60_1) + ABCDtemp * x_58_42_1;
     QUICKDouble x_89_60_1 = Ptempx * x_58_60_1 + WPtempx * x_58_60_2 + ABtemp * (x_47_60_1 - CDcom * x_47_60_2) + ABCDtemp * x_58_42_2;
-    LOCSTORE(store, 89, 97, STOREDIM, STOREDIM) += Qtempx * x_89_60_0 + WQtempx * x_89_60_1 + CDtemp * (x_89_42_0 - ABcom * x_89_42_1) + 2.000000 * ABCDtemp * x_58_60_1;
+    LOCSTORE(store, 89, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_60_0 + WQtempx * x_89_60_1 + CDtemp * (x_89_42_0 - ABcom * x_89_42_1) + 2.000000 * ABCDtemp * x_58_60_1;
     QUICKDouble x_9_43_1 = Ptempz * x_3_43_1 + WPtempz * x_3_43_2 + ABtemp * (x_0_43_1 - CDcom * x_0_43_2) + 3.000000 * ABCDtemp * x_3_21_2;
     QUICKDouble x_9_43_2 = Ptempz * x_3_43_2 + WPtempz * x_3_43_3 + ABtemp * (x_0_43_2 - CDcom * x_0_43_3) + 3.000000 * ABCDtemp * x_3_21_3;
     QUICKDouble x_9_21_2 = Ptempz * x_3_21_2 + WPtempz * x_3_21_3 + ABtemp * (x_0_21_2 - CDcom * x_0_21_3) + 2.000000 * ABCDtemp * x_3_13_3;
@@ -8733,7 +8733,7 @@
     QUICKDouble x_89_40_1 = Qtempx * x_89_31_1 + WQtempx * x_89_31_2 + 2.000000 * ABCDtemp * x_58_31_2;
     QUICKDouble x_89_61_0 = Ptempx * x_58_61_0 + WPtempx * x_58_61_1 + ABtemp * (x_47_61_0 - CDcom * x_47_61_1) + 2.000000 * ABCDtemp * x_58_40_1;
     QUICKDouble x_89_61_1 = Ptempx * x_58_61_1 + WPtempx * x_58_61_2 + ABtemp * (x_47_61_1 - CDcom * x_47_61_2) + 2.000000 * ABCDtemp * x_58_40_2;
-    LOCSTORE(store, 89, 94, STOREDIM, STOREDIM) += Qtempx * x_89_61_0 + WQtempx * x_89_61_1 + 2.000000 * CDtemp * (x_89_40_0 - ABcom * x_89_40_1) + 2.000000 * ABCDtemp * x_58_61_1;
+    LOCSTORE(store, 89, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_61_0 + WQtempx * x_89_61_1 + 2.000000 * CDtemp * (x_89_40_0 - ABcom * x_89_40_1) + 2.000000 * ABCDtemp * x_58_61_1;
     QUICKDouble x_9_26_2 = Ptempz * x_3_26_2 + WPtempz * x_3_26_3 + ABtemp * (x_0_26_2 - CDcom * x_0_26_3) + ABCDtemp * x_3_17_3;
     QUICKDouble x_9_26_3 = Ptempz * x_3_26_3 + WPtempz * x_3_26_4 + ABtemp * (x_0_26_3 - CDcom * x_0_26_4) + ABCDtemp * x_3_17_4;
     QUICKDouble x_9_17_3 = Ptempz * x_3_17_3 + WPtempz * x_3_17_4 + ABtemp * (x_0_17_3 - CDcom * x_0_17_4);
@@ -8813,7 +8813,7 @@
     QUICKDouble x_89_36_1 = Qtempx * x_89_25_1 + WQtempx * x_89_25_2 + CDtemp * (x_89_16_1 - ABcom * x_89_16_2) + 2.000000 * ABCDtemp * x_58_25_2;
     QUICKDouble x_89_62_0 = Ptempx * x_58_62_0 + WPtempx * x_58_62_1 + ABtemp * (x_47_62_0 - CDcom * x_47_62_1) + 3.000000 * ABCDtemp * x_58_36_1;
     QUICKDouble x_89_62_1 = Ptempx * x_58_62_1 + WPtempx * x_58_62_2 + ABtemp * (x_47_62_1 - CDcom * x_47_62_2) + 3.000000 * ABCDtemp * x_58_36_2;
-    LOCSTORE(store, 89, 90, STOREDIM, STOREDIM) += Qtempx * x_89_62_0 + WQtempx * x_89_62_1 + 3.000000 * CDtemp * (x_89_36_0 - ABcom * x_89_36_1) + 2.000000 * ABCDtemp * x_58_62_1;
+    LOCSTORE(store, 89, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_62_0 + WQtempx * x_89_62_1 + 3.000000 * CDtemp * (x_89_36_0 - ABcom * x_89_36_1) + 2.000000 * ABCDtemp * x_58_62_1;
     QUICKDouble x_9_37_1 = Ptempz * x_3_37_1 + WPtempz * x_3_37_2 + ABtemp * (x_0_37_1 - CDcom * x_0_37_2) + ABCDtemp * x_3_20_2;
     QUICKDouble x_9_37_2 = Ptempz * x_3_37_2 + WPtempz * x_3_37_3 + ABtemp * (x_0_37_2 - CDcom * x_0_37_3) + ABCDtemp * x_3_20_3;
     QUICKDouble x_9_20_2 = Ptempz * x_3_20_2 + WPtempz * x_3_20_3 + ABtemp * (x_0_20_2 - CDcom * x_0_20_3);
@@ -8874,7 +8874,7 @@
     QUICKDouble x_89_39_1 = Qtempx * x_89_30_1 + WQtempx * x_89_30_2 + 2.000000 * ABCDtemp * x_58_30_2;
     QUICKDouble x_89_63_0 = Ptempx * x_58_63_0 + WPtempx * x_58_63_1 + ABtemp * (x_47_63_0 - CDcom * x_47_63_1) + 2.000000 * ABCDtemp * x_58_39_1;
     QUICKDouble x_89_63_1 = Ptempx * x_58_63_1 + WPtempx * x_58_63_2 + ABtemp * (x_47_63_1 - CDcom * x_47_63_2) + 2.000000 * ABCDtemp * x_58_39_2;
-    LOCSTORE(store, 89, 95, STOREDIM, STOREDIM) += Qtempx * x_89_63_0 + WQtempx * x_89_63_1 + 2.000000 * CDtemp * (x_89_39_0 - ABcom * x_89_39_1) + 2.000000 * ABCDtemp * x_58_63_1;
+    LOCSTORE(store, 89, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_63_0 + WQtempx * x_89_63_1 + 2.000000 * CDtemp * (x_89_39_0 - ABcom * x_89_39_1) + 2.000000 * ABCDtemp * x_58_63_1;
     QUICKDouble x_9_64_0 = Ptempz * x_3_64_0 + WPtempz * x_3_64_1 + ABtemp * (x_0_64_0 - CDcom * x_0_64_1) + ABCDtemp * x_3_46_1;
     QUICKDouble x_9_64_1 = Ptempz * x_3_64_1 + WPtempz * x_3_64_2 + ABtemp * (x_0_64_1 - CDcom * x_0_64_2) + ABCDtemp * x_3_46_2;
     QUICKDouble x_9_46_1 = Ptempz * x_3_46_1 + WPtempz * x_3_46_2 + ABtemp * (x_0_46_1 - CDcom * x_0_46_2);
@@ -8934,7 +8934,7 @@
     QUICKDouble x_89_37_1 = Qtempx * x_89_24_1 + WQtempx * x_89_24_2 + CDtemp * (x_89_15_1 - ABcom * x_89_15_2) + 2.000000 * ABCDtemp * x_58_24_2;
     QUICKDouble x_89_64_0 = Ptempx * x_58_64_0 + WPtempx * x_58_64_1 + ABtemp * (x_47_64_0 - CDcom * x_47_64_1) + 3.000000 * ABCDtemp * x_58_37_1;
     QUICKDouble x_89_64_1 = Ptempx * x_58_64_1 + WPtempx * x_58_64_2 + ABtemp * (x_47_64_1 - CDcom * x_47_64_2) + 3.000000 * ABCDtemp * x_58_37_2;
-    LOCSTORE(store, 89, 92, STOREDIM, STOREDIM) += Qtempx * x_89_64_0 + WQtempx * x_89_64_1 + 3.000000 * CDtemp * (x_89_37_0 - ABcom * x_89_37_1) + 2.000000 * ABCDtemp * x_58_64_1;
+    LOCSTORE(store, 89, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_64_0 + WQtempx * x_89_64_1 + 3.000000 * CDtemp * (x_89_37_0 - ABcom * x_89_37_1) + 2.000000 * ABCDtemp * x_58_64_1;
     QUICKDouble x_9_11_3 = Ptempz * x_3_11_3 + WPtempz * x_3_11_4 + ABtemp * (x_0_11_3 - CDcom * x_0_11_4);
     QUICKDouble x_9_65_0 = Ptempz * x_3_65_0 + WPtempz * x_3_65_1 + ABtemp * (x_0_65_0 - CDcom * x_0_65_1) + 2.000000 * ABCDtemp * x_3_37_1;
     QUICKDouble x_9_65_1 = Ptempz * x_3_65_1 + WPtempz * x_3_65_2 + ABtemp * (x_0_65_1 - CDcom * x_0_65_2) + 2.000000 * ABCDtemp * x_3_37_2;
@@ -8976,7 +8976,7 @@
     QUICKDouble x_89_35_1 = Qtempx * x_89_22_1 + WQtempx * x_89_22_2 + 2.000000 * ABCDtemp * x_58_22_2;
     QUICKDouble x_89_65_0 = Ptempx * x_58_65_0 + WPtempx * x_58_65_1 + ABtemp * (x_47_65_0 - CDcom * x_47_65_1) + 2.000000 * ABCDtemp * x_58_35_1;
     QUICKDouble x_89_65_1 = Ptempx * x_58_65_1 + WPtempx * x_58_65_2 + ABtemp * (x_47_65_1 - CDcom * x_47_65_2) + 2.000000 * ABCDtemp * x_58_35_2;
-    LOCSTORE(store, 89, 96, STOREDIM, STOREDIM) += Qtempx * x_89_65_0 + WQtempx * x_89_65_1 + 2.000000 * CDtemp * (x_89_35_0 - ABcom * x_89_35_1) + 2.000000 * ABCDtemp * x_58_65_1;
+    LOCSTORE(store, 89, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_65_0 + WQtempx * x_89_65_1 + 2.000000 * CDtemp * (x_89_35_0 - ABcom * x_89_35_1) + 2.000000 * ABCDtemp * x_58_65_1;
     QUICKDouble x_21_0_7 = Ptempx * x_14_0_7 + WPtempx * x_14_0_8 + ABtemp * (x_9_0_7 - CDcom * x_9_0_8);
     QUICKDouble x_43_0_7 = Ptempx * x_27_0_7 + WPtempx * x_27_0_8 + ABtemp * (x_19_0_7 - CDcom * x_19_0_8);
     QUICKDouble x_74_0_7 = Ptempx * x_49_0_7 + WPtempx * x_49_0_8 + ABtemp * (x_34_0_7 - CDcom * x_34_0_8);
@@ -9071,8 +9071,8 @@
     QUICKDouble x_89_55_1 = Qtempz * x_89_34_1 + WQtempz * x_89_34_2 + 4.000000 * CDtemp * (x_89_19_1 - ABcom * x_89_19_2) + 4.000000 * ABCDtemp * x_61_34_2;
     QUICKDouble x_89_66_0 = Ptempx * x_58_66_0 + WPtempx * x_58_66_1 + ABtemp * (x_47_66_0 - CDcom * x_47_66_1);
     QUICKDouble x_89_66_1 = Ptempx * x_58_66_1 + WPtempx * x_58_66_2 + ABtemp * (x_47_66_1 - CDcom * x_47_66_2);
-    LOCSTORE(store, 89, 105, STOREDIM, STOREDIM) += Qtempy * x_89_66_0 + WQtempy * x_89_66_1 + CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + ABCDtemp * x_74_66_1;
-    LOCSTORE(store, 89, 86, STOREDIM, STOREDIM) += Qtempx * x_89_66_0 + WQtempx * x_89_66_1 + 2.000000 * ABCDtemp * x_58_66_1;
+    LOCSTORE(store, 89, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_66_0 + WQtempy * x_89_66_1 + CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + ABCDtemp * x_74_66_1;
+    LOCSTORE(store, 89, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_66_0 + WQtempx * x_89_66_1 + 2.000000 * ABCDtemp * x_58_66_1;
     QUICKDouble x_74_5_5 = Qtempy * x_74_3_5 + WQtempy * x_74_3_6;
     QUICKDouble x_9_48_1 = Ptempz * x_3_48_1 + WPtempz * x_3_48_2 + ABtemp * (x_0_48_1 - CDcom * x_0_48_2) + ABCDtemp * x_3_33_2;
     QUICKDouble x_9_48_2 = Ptempz * x_3_48_2 + WPtempz * x_3_48_3 + ABtemp * (x_0_48_2 - CDcom * x_0_48_3) + ABCDtemp * x_3_33_3;
@@ -9131,8 +9131,8 @@
     QUICKDouble x_74_67_1 = Qtempy * x_74_48_1 + WQtempy * x_74_48_2 + 4.000000 * CDtemp * (x_74_30_1 - ABcom * x_74_30_2);
     QUICKDouble x_89_67_0 = Ptempx * x_58_67_0 + WPtempx * x_58_67_1 + ABtemp * (x_47_67_0 - CDcom * x_47_67_1);
     QUICKDouble x_89_67_1 = Ptempx * x_58_67_1 + WPtempx * x_58_67_2 + ABtemp * (x_47_67_1 - CDcom * x_47_67_2);
-    LOCSTORE(store, 89, 100, STOREDIM, STOREDIM) += Qtempy * x_89_67_0 + WQtempy * x_89_67_1 + 5.000000 * CDtemp * (x_89_48_0 - ABcom * x_89_48_1) + ABCDtemp * x_74_67_1;
-    LOCSTORE(store, 89, 85, STOREDIM, STOREDIM) += Qtempx * x_89_67_0 + WQtempx * x_89_67_1 + 2.000000 * ABCDtemp * x_58_67_1;
+    LOCSTORE(store, 89, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_67_0 + WQtempy * x_89_67_1 + 5.000000 * CDtemp * (x_89_48_0 - ABcom * x_89_48_1) + ABCDtemp * x_74_67_1;
+    LOCSTORE(store, 89, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_67_0 + WQtempx * x_89_67_1 + 2.000000 * ABCDtemp * x_58_67_1;
     QUICKDouble x_9_68_0 = Ptempz * x_3_68_0 + WPtempz * x_3_68_1 + ABtemp * (x_0_68_0 - CDcom * x_0_68_1) + 5.000000 * ABCDtemp * x_3_49_1;
     QUICKDouble x_9_68_1 = Ptempz * x_3_68_1 + WPtempz * x_3_68_2 + ABtemp * (x_0_68_1 - CDcom * x_0_68_2) + 5.000000 * ABCDtemp * x_3_49_2;
     QUICKDouble x_9_68_2 = Ptempz * x_3_68_2 + WPtempz * x_3_68_3 + ABtemp * (x_0_68_2 - CDcom * x_0_68_3) + 5.000000 * ABCDtemp * x_3_49_3;
@@ -9156,7 +9156,7 @@
     QUICKDouble x_58_68_2 = Qtempx * x_58_55_2 + WQtempx * x_58_55_3 + ABCDtemp * x_47_55_3;
     QUICKDouble x_89_68_0 = Ptempx * x_58_68_0 + WPtempx * x_58_68_1 + ABtemp * (x_47_68_0 - CDcom * x_47_68_1) + ABCDtemp * x_58_55_1;
     QUICKDouble x_89_68_1 = Ptempx * x_58_68_1 + WPtempx * x_58_68_2 + ABtemp * (x_47_68_1 - CDcom * x_47_68_2) + ABCDtemp * x_58_55_2;
-    LOCSTORE(store, 89, 107, STOREDIM, STOREDIM) += Qtempx * x_89_68_0 + WQtempx * x_89_68_1 + CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + 2.000000 * ABCDtemp * x_58_68_1;
+    LOCSTORE(store, 89, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_68_0 + WQtempx * x_89_68_1 + CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + 2.000000 * ABCDtemp * x_58_68_1;
     QUICKDouble x_47_6_2 = Qtempx * x_47_3_2 + WQtempx * x_47_3_3;
     QUICKDouble x_47_6_3 = Qtempx * x_47_3_3 + WQtempx * x_47_3_4;
     QUICKDouble x_47_6_4 = Qtempx * x_47_3_4 + WQtempx * x_47_3_5;
@@ -9243,7 +9243,7 @@
     QUICKDouble x_89_50_1 = Qtempx * x_89_26_1 + WQtempx * x_89_26_2 + 3.000000 * CDtemp * (x_89_13_1 - ABcom * x_89_13_2) + 2.000000 * ABCDtemp * x_58_26_2;
     QUICKDouble x_89_69_0 = Ptempx * x_58_69_0 + WPtempx * x_58_69_1 + ABtemp * (x_47_69_0 - CDcom * x_47_69_1) + 5.000000 * ABCDtemp * x_58_50_1;
     QUICKDouble x_89_69_1 = Ptempx * x_58_69_1 + WPtempx * x_58_69_2 + ABtemp * (x_47_69_1 - CDcom * x_47_69_2) + 5.000000 * ABCDtemp * x_58_50_2;
-    LOCSTORE(store, 89, 102, STOREDIM, STOREDIM) += Qtempx * x_89_69_0 + WQtempx * x_89_69_1 + 5.000000 * CDtemp * (x_89_50_0 - ABcom * x_89_50_1) + 2.000000 * ABCDtemp * x_58_69_1;
+    LOCSTORE(store, 89, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_69_0 + WQtempx * x_89_69_1 + 5.000000 * CDtemp * (x_89_50_0 - ABcom * x_89_50_1) + 2.000000 * ABCDtemp * x_58_69_1;
     QUICKDouble x_49_2_1 = Qtempy * x_49_0_1 + WQtempy * x_49_0_2;
     QUICKDouble x_58_2_0 = Qtempy * x_58_0_0 + WQtempy * x_58_0_1 + ABCDtemp * x_49_0_1;
     QUICKDouble x_49_2_7 = Qtempy * x_49_0_7 + WQtempy * x_49_0_8;
@@ -9322,7 +9322,7 @@
     QUICKDouble x_89_54_1 = Qtempy * x_89_33_1 + WQtempy * x_89_33_2 + 4.000000 * CDtemp * (x_89_18_1 - ABcom * x_89_18_2) + ABCDtemp * x_74_33_2;
     QUICKDouble x_89_70_0 = Ptempx * x_58_70_0 + WPtempx * x_58_70_1 + ABtemp * (x_47_70_0 - CDcom * x_47_70_1) + ABCDtemp * x_58_54_1;
     QUICKDouble x_89_70_1 = Ptempx * x_58_70_1 + WPtempx * x_58_70_2 + ABtemp * (x_47_70_1 - CDcom * x_47_70_2) + ABCDtemp * x_58_54_2;
-    LOCSTORE(store, 89, 109, STOREDIM, STOREDIM) += Qtempx * x_89_70_0 + WQtempx * x_89_70_1 + CDtemp * (x_89_54_0 - ABcom * x_89_54_1) + 2.000000 * ABCDtemp * x_58_70_1;
+    LOCSTORE(store, 89, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_70_0 + WQtempx * x_89_70_1 + CDtemp * (x_89_54_0 - ABcom * x_89_54_1) + 2.000000 * ABCDtemp * x_58_70_1;
     QUICKDouble x_47_4_2 = Qtempx * x_47_2_2 + WQtempx * x_47_2_3;
     QUICKDouble x_47_4_3 = Qtempx * x_47_2_3 + WQtempx * x_47_2_4;
     QUICKDouble x_47_4_4 = Qtempx * x_47_2_4 + WQtempx * x_47_2_5;
@@ -9403,7 +9403,7 @@
     QUICKDouble x_89_52_1 = Qtempx * x_89_28_1 + WQtempx * x_89_28_2 + 3.000000 * CDtemp * (x_89_11_1 - ABcom * x_89_11_2) + 2.000000 * ABCDtemp * x_58_28_2;
     QUICKDouble x_89_71_0 = Ptempx * x_58_71_0 + WPtempx * x_58_71_1 + ABtemp * (x_47_71_0 - CDcom * x_47_71_1) + 5.000000 * ABCDtemp * x_58_52_1;
     QUICKDouble x_89_71_1 = Ptempx * x_58_71_1 + WPtempx * x_58_71_2 + ABtemp * (x_47_71_1 - CDcom * x_47_71_2) + 5.000000 * ABCDtemp * x_58_52_2;
-    LOCSTORE(store, 89, 104, STOREDIM, STOREDIM) += Qtempx * x_89_71_0 + WQtempx * x_89_71_1 + 5.000000 * CDtemp * (x_89_52_0 - ABcom * x_89_52_1) + 2.000000 * ABCDtemp * x_58_71_1;
+    LOCSTORE(store, 89, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_71_0 + WQtempx * x_89_71_1 + 5.000000 * CDtemp * (x_89_52_0 - ABcom * x_89_52_1) + 2.000000 * ABCDtemp * x_58_71_1;
     QUICKDouble x_9_16_3 = Ptempz * x_3_16_3 + WPtempz * x_3_16_4 + ABtemp * (x_0_16_3 - CDcom * x_0_16_4) + 2.000000 * ABCDtemp * x_3_5_4;
     QUICKDouble x_9_41_1 = Ptempz * x_3_41_1 + WPtempz * x_3_41_2 + ABtemp * (x_0_41_1 - CDcom * x_0_41_2) + 3.000000 * ABCDtemp * x_3_22_2;
     QUICKDouble x_9_41_2 = Ptempz * x_3_41_2 + WPtempz * x_3_41_3 + ABtemp * (x_0_41_2 - CDcom * x_0_41_3) + 3.000000 * ABCDtemp * x_3_22_3;
@@ -9453,8 +9453,8 @@
     QUICKDouble x_74_72_1 = Qtempy * x_74_47_1 + WQtempy * x_74_47_2 + CDtemp * (x_74_34_1 - ABcom * x_74_34_2);
     QUICKDouble x_89_72_0 = Ptempx * x_58_72_0 + WPtempx * x_58_72_1 + ABtemp * (x_47_72_0 - CDcom * x_47_72_1);
     QUICKDouble x_89_72_1 = Ptempx * x_58_72_1 + WPtempx * x_58_72_2 + ABtemp * (x_47_72_1 - CDcom * x_47_72_2);
-    LOCSTORE(store, 89, 111, STOREDIM, STOREDIM) += Qtempy * x_89_72_0 + WQtempy * x_89_72_1 + 2.000000 * CDtemp * (x_89_47_0 - ABcom * x_89_47_1) + ABCDtemp * x_74_72_1;
-    LOCSTORE(store, 89, 87, STOREDIM, STOREDIM) += Qtempx * x_89_72_0 + WQtempx * x_89_72_1 + 2.000000 * ABCDtemp * x_58_72_1;
+    LOCSTORE(store, 89, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_72_0 + WQtempy * x_89_72_1 + 2.000000 * CDtemp * (x_89_47_0 - ABcom * x_89_47_1) + ABCDtemp * x_74_72_1;
+    LOCSTORE(store, 89, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_72_0 + WQtempx * x_89_72_1 + 2.000000 * ABCDtemp * x_58_72_1;
     QUICKDouble x_9_30_2 = Ptempz * x_3_30_2 + WPtempz * x_3_30_3 + ABtemp * (x_0_30_2 - CDcom * x_0_30_3) + ABCDtemp * x_3_18_3;
     QUICKDouble x_9_30_3 = Ptempz * x_3_30_3 + WPtempz * x_3_30_4 + ABtemp * (x_0_30_3 - CDcom * x_0_30_4) + ABCDtemp * x_3_18_4;
     QUICKDouble x_9_18_3 = Ptempz * x_3_18_3 + WPtempz * x_3_18_4 + ABtemp * (x_0_18_3 - CDcom * x_0_18_4);
@@ -9506,8 +9506,8 @@
     QUICKDouble x_74_73_1 = Qtempy * x_74_42_1 + WQtempy * x_74_42_2 + 3.000000 * CDtemp * (x_74_22_1 - ABcom * x_74_22_2);
     QUICKDouble x_89_73_0 = Ptempx * x_58_73_0 + WPtempx * x_58_73_1 + ABtemp * (x_47_73_0 - CDcom * x_47_73_1);
     QUICKDouble x_89_73_1 = Ptempx * x_58_73_1 + WPtempx * x_58_73_2 + ABtemp * (x_47_73_1 - CDcom * x_47_73_2);
-    LOCSTORE(store, 89, 106, STOREDIM, STOREDIM) += Qtempy * x_89_73_0 + WQtempy * x_89_73_1 + 4.000000 * CDtemp * (x_89_42_0 - ABcom * x_89_42_1) + ABCDtemp * x_74_73_1;
-    LOCSTORE(store, 89, 88, STOREDIM, STOREDIM) += Qtempx * x_89_73_0 + WQtempx * x_89_73_1 + 2.000000 * ABCDtemp * x_58_73_1;
+    LOCSTORE(store, 89, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_73_0 + WQtempy * x_89_73_1 + 4.000000 * CDtemp * (x_89_42_0 - ABcom * x_89_42_1) + ABCDtemp * x_74_73_1;
+    LOCSTORE(store, 89, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_73_0 + WQtempx * x_89_73_1 + 2.000000 * ABCDtemp * x_58_73_1;
     QUICKDouble x_9_74_0 = Ptempz * x_3_74_0 + WPtempz * x_3_74_1 + ABtemp * (x_0_74_0 - CDcom * x_0_74_1) + 4.000000 * ABCDtemp * x_3_43_1;
     QUICKDouble x_9_74_1 = Ptempz * x_3_74_1 + WPtempz * x_3_74_2 + ABtemp * (x_0_74_1 - CDcom * x_0_74_2) + 4.000000 * ABCDtemp * x_3_43_2;
     QUICKDouble x_9_74_2 = Ptempz * x_3_74_2 + WPtempz * x_3_74_3 + ABtemp * (x_0_74_2 - CDcom * x_0_74_3) + 4.000000 * ABCDtemp * x_3_43_3;
@@ -9540,7 +9540,7 @@
     QUICKDouble x_89_49_1 = Qtempx * x_89_34_1 + WQtempx * x_89_34_2 + 2.000000 * ABCDtemp * x_58_34_2;
     QUICKDouble x_89_74_0 = Ptempx * x_58_74_0 + WPtempx * x_58_74_1 + ABtemp * (x_47_74_0 - CDcom * x_47_74_1) + 2.000000 * ABCDtemp * x_58_49_1;
     QUICKDouble x_89_74_1 = Ptempx * x_58_74_1 + WPtempx * x_58_74_2 + ABtemp * (x_47_74_1 - CDcom * x_47_74_2) + 2.000000 * ABCDtemp * x_58_49_2;
-    LOCSTORE(store, 89, 113, STOREDIM, STOREDIM) += Qtempx * x_89_74_0 + WQtempx * x_89_74_1 + 2.000000 * CDtemp * (x_89_49_0 - ABcom * x_89_49_1) + 2.000000 * ABCDtemp * x_58_74_1;
+    LOCSTORE(store, 89, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_74_0 + WQtempx * x_89_74_1 + 2.000000 * CDtemp * (x_89_49_0 - ABcom * x_89_49_1) + 2.000000 * ABCDtemp * x_58_74_1;
     QUICKDouble x_47_14_2 = Qtempx * x_47_9_2 + WQtempx * x_47_9_3;
     QUICKDouble x_47_14_3 = Qtempx * x_47_9_3 + WQtempx * x_47_9_4;
     QUICKDouble x_47_14_4 = Qtempx * x_47_9_4 + WQtempx * x_47_9_5;
@@ -9600,7 +9600,7 @@
     QUICKDouble x_89_44_1 = Qtempx * x_89_21_1 + WQtempx * x_89_21_2 + 2.000000 * CDtemp * (x_89_14_1 - ABcom * x_89_14_2) + 2.000000 * ABCDtemp * x_58_21_2;
     QUICKDouble x_89_75_0 = Ptempx * x_58_75_0 + WPtempx * x_58_75_1 + ABtemp * (x_47_75_0 - CDcom * x_47_75_1) + 4.000000 * ABCDtemp * x_58_44_1;
     QUICKDouble x_89_75_1 = Ptempx * x_58_75_1 + WPtempx * x_58_75_2 + ABtemp * (x_47_75_1 - CDcom * x_47_75_2) + 4.000000 * ABCDtemp * x_58_44_2;
-    LOCSTORE(store, 89, 108, STOREDIM, STOREDIM) += Qtempx * x_89_75_0 + WQtempx * x_89_75_1 + 4.000000 * CDtemp * (x_89_44_0 - ABcom * x_89_44_1) + 2.000000 * ABCDtemp * x_58_75_1;
+    LOCSTORE(store, 89, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_75_0 + WQtempx * x_89_75_1 + 4.000000 * CDtemp * (x_89_44_0 - ABcom * x_89_44_1) + 2.000000 * ABCDtemp * x_58_75_1;
     QUICKDouble x_9_76_0 = Ptempz * x_3_76_0 + WPtempz * x_3_76_1 + ABtemp * (x_0_76_0 - CDcom * x_0_76_1);
     QUICKDouble x_9_76_1 = Ptempz * x_3_76_1 + WPtempz * x_3_76_2 + ABtemp * (x_0_76_1 - CDcom * x_0_76_2);
     QUICKDouble x_9_76_2 = Ptempz * x_3_76_2 + WPtempz * x_3_76_3 + ABtemp * (x_0_76_2 - CDcom * x_0_76_3);
@@ -9636,7 +9636,7 @@
     QUICKDouble x_89_51_1 = Qtempx * x_89_33_1 + WQtempx * x_89_33_2 + 2.000000 * ABCDtemp * x_58_33_2;
     QUICKDouble x_89_76_0 = Ptempx * x_58_76_0 + WPtempx * x_58_76_1 + ABtemp * (x_47_76_0 - CDcom * x_47_76_1) + 2.000000 * ABCDtemp * x_58_51_1;
     QUICKDouble x_89_76_1 = Ptempx * x_58_76_1 + WPtempx * x_58_76_2 + ABtemp * (x_47_76_1 - CDcom * x_47_76_2) + 2.000000 * ABCDtemp * x_58_51_2;
-    LOCSTORE(store, 89, 115, STOREDIM, STOREDIM) += Qtempx * x_89_76_0 + WQtempx * x_89_76_1 + 2.000000 * CDtemp * (x_89_51_0 - ABcom * x_89_51_1) + 2.000000 * ABCDtemp * x_58_76_1;
+    LOCSTORE(store, 89, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_76_0 + WQtempx * x_89_76_1 + 2.000000 * CDtemp * (x_89_51_0 - ABcom * x_89_51_1) + 2.000000 * ABCDtemp * x_58_76_1;
     QUICKDouble x_47_12_2 = Qtempx * x_47_8_2 + WQtempx * x_47_8_3;
     QUICKDouble x_47_12_3 = Qtempx * x_47_8_3 + WQtempx * x_47_8_4;
     QUICKDouble x_47_12_4 = Qtempx * x_47_8_4 + WQtempx * x_47_8_5;
@@ -9699,7 +9699,7 @@
     QUICKDouble x_89_46_1 = Qtempx * x_89_20_1 + WQtempx * x_89_20_2 + 2.000000 * CDtemp * (x_89_12_1 - ABcom * x_89_12_2) + 2.000000 * ABCDtemp * x_58_20_2;
     QUICKDouble x_89_77_0 = Ptempx * x_58_77_0 + WPtempx * x_58_77_1 + ABtemp * (x_47_77_0 - CDcom * x_47_77_1) + 4.000000 * ABCDtemp * x_58_46_1;
     QUICKDouble x_89_77_1 = Ptempx * x_58_77_1 + WPtempx * x_58_77_2 + ABtemp * (x_47_77_1 - CDcom * x_47_77_2) + 4.000000 * ABCDtemp * x_58_46_2;
-    LOCSTORE(store, 89, 110, STOREDIM, STOREDIM) += Qtempx * x_89_77_0 + WQtempx * x_89_77_1 + 4.000000 * CDtemp * (x_89_46_0 - ABcom * x_89_46_1) + 2.000000 * ABCDtemp * x_58_77_1;
+    LOCSTORE(store, 89, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_77_0 + WQtempx * x_89_77_1 + 4.000000 * CDtemp * (x_89_46_0 - ABcom * x_89_46_1) + 2.000000 * ABCDtemp * x_58_77_1;
     QUICKDouble x_9_15_3 = Ptempz * x_3_15_3 + WPtempz * x_3_15_4 + ABtemp * (x_0_15_3 - CDcom * x_0_15_4) + ABCDtemp * x_3_8_4;
     QUICKDouble x_9_78_0 = Ptempz * x_3_78_0 + WPtempz * x_3_78_1 + ABtemp * (x_0_78_0 - CDcom * x_0_78_1) + 3.000000 * ABCDtemp * x_3_42_1;
     QUICKDouble x_9_78_1 = Ptempz * x_3_78_1 + WPtempz * x_3_78_2 + ABtemp * (x_0_78_1 - CDcom * x_0_78_2) + 3.000000 * ABCDtemp * x_3_42_2;
@@ -9737,8 +9737,8 @@
     QUICKDouble x_74_78_1 = Qtempy * x_74_41_1 + WQtempy * x_74_41_2 + 2.000000 * CDtemp * (x_74_31_1 - ABcom * x_74_31_2);
     QUICKDouble x_89_78_0 = Ptempx * x_58_78_0 + WPtempx * x_58_78_1 + ABtemp * (x_47_78_0 - CDcom * x_47_78_1);
     QUICKDouble x_89_78_1 = Ptempx * x_58_78_1 + WPtempx * x_58_78_2 + ABtemp * (x_47_78_1 - CDcom * x_47_78_2);
-    LOCSTORE(store, 89, 112, STOREDIM, STOREDIM) += Qtempy * x_89_78_0 + WQtempy * x_89_78_1 + 3.000000 * CDtemp * (x_89_41_0 - ABcom * x_89_41_1) + ABCDtemp * x_74_78_1;
-    LOCSTORE(store, 89, 93, STOREDIM, STOREDIM) += Qtempx * x_89_78_0 + WQtempx * x_89_78_1 + 2.000000 * ABCDtemp * x_58_78_1;
+    LOCSTORE(store, 89, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_78_0 + WQtempy * x_89_78_1 + 3.000000 * CDtemp * (x_89_41_0 - ABcom * x_89_41_1) + ABCDtemp * x_74_78_1;
+    LOCSTORE(store, 89, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_78_0 + WQtempx * x_89_78_1 + 2.000000 * ABCDtemp * x_58_78_1;
     QUICKDouble x_9_79_0 = Ptempz * x_3_79_0 + WPtempz * x_3_79_1 + ABtemp * (x_0_79_0 - CDcom * x_0_79_1) + 3.000000 * ABCDtemp * x_3_44_1;
     QUICKDouble x_9_79_1 = Ptempz * x_3_79_1 + WPtempz * x_3_79_2 + ABtemp * (x_0_79_1 - CDcom * x_0_79_2) + 3.000000 * ABCDtemp * x_3_44_2;
     QUICKDouble x_9_79_2 = Ptempz * x_3_79_2 + WPtempz * x_3_79_3 + ABtemp * (x_0_79_2 - CDcom * x_0_79_3) + 3.000000 * ABCDtemp * x_3_44_3;
@@ -9783,7 +9783,7 @@
     QUICKDouble x_89_43_1 = Qtempx * x_89_27_1 + WQtempx * x_89_27_2 + CDtemp * (x_89_19_1 - ABcom * x_89_19_2) + 2.000000 * ABCDtemp * x_58_27_2;
     QUICKDouble x_89_79_0 = Ptempx * x_58_79_0 + WPtempx * x_58_79_1 + ABtemp * (x_47_79_0 - CDcom * x_47_79_1) + 3.000000 * ABCDtemp * x_58_43_1;
     QUICKDouble x_89_79_1 = Ptempx * x_58_79_1 + WPtempx * x_58_79_2 + ABtemp * (x_47_79_1 - CDcom * x_47_79_2) + 3.000000 * ABCDtemp * x_58_43_2;
-    LOCSTORE(store, 89, 114, STOREDIM, STOREDIM) += Qtempx * x_89_79_0 + WQtempx * x_89_79_1 + 3.000000 * CDtemp * (x_89_43_0 - ABcom * x_89_43_1) + 2.000000 * ABCDtemp * x_58_79_1;
+    LOCSTORE(store, 89, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_79_0 + WQtempx * x_89_79_1 + 3.000000 * CDtemp * (x_89_43_0 - ABcom * x_89_43_1) + 2.000000 * ABCDtemp * x_58_79_1;
     QUICKDouble x_9_80_0 = Ptempz * x_3_80_0 + WPtempz * x_3_80_1 + ABtemp * (x_0_80_0 - CDcom * x_0_80_1);
     QUICKDouble x_9_80_1 = Ptempz * x_3_80_1 + WPtempz * x_3_80_2 + ABtemp * (x_0_80_1 - CDcom * x_0_80_2);
     QUICKDouble x_9_80_2 = Ptempz * x_3_80_2 + WPtempz * x_3_80_3 + ABtemp * (x_0_80_2 - CDcom * x_0_80_3);
@@ -9831,7 +9831,7 @@
     QUICKDouble x_89_45_1 = Qtempx * x_89_29_1 + WQtempx * x_89_29_2 + CDtemp * (x_89_18_1 - ABcom * x_89_18_2) + 2.000000 * ABCDtemp * x_58_29_2;
     QUICKDouble x_89_80_0 = Ptempx * x_58_80_0 + WPtempx * x_58_80_1 + ABtemp * (x_47_80_0 - CDcom * x_47_80_1) + 3.000000 * ABCDtemp * x_58_45_1;
     QUICKDouble x_89_80_1 = Ptempx * x_58_80_1 + WPtempx * x_58_80_2 + ABtemp * (x_47_80_1 - CDcom * x_47_80_2) + 3.000000 * ABCDtemp * x_58_45_2;
-    LOCSTORE(store, 89, 116, STOREDIM, STOREDIM) += Qtempx * x_89_80_0 + WQtempx * x_89_80_1 + 3.000000 * CDtemp * (x_89_45_0 - ABcom * x_89_45_1) + 2.000000 * ABCDtemp * x_58_80_1;
+    LOCSTORE(store, 89, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_80_0 + WQtempx * x_89_80_1 + 3.000000 * CDtemp * (x_89_45_0 - ABcom * x_89_45_1) + 2.000000 * ABCDtemp * x_58_80_1;
     QUICKDouble x_47_1_2 = Qtempx * x_47_0_2 + WQtempx * x_47_0_3;
     QUICKDouble x_47_1_3 = Qtempx * x_47_0_3 + WQtempx * x_47_0_4;
     QUICKDouble x_47_1_4 = Qtempx * x_47_0_4 + WQtempx * x_47_0_5;
@@ -9930,7 +9930,7 @@
     QUICKDouble x_89_53_1 = Qtempx * x_89_32_1 + WQtempx * x_89_32_2 + 4.000000 * CDtemp * (x_89_17_1 - ABcom * x_89_17_2) + 2.000000 * ABCDtemp * x_58_32_2;
     QUICKDouble x_89_81_0 = Ptempx * x_58_81_0 + WPtempx * x_58_81_1 + ABtemp * (x_47_81_0 - CDcom * x_47_81_1) + 6.000000 * ABCDtemp * x_58_53_1;
     QUICKDouble x_89_81_1 = Ptempx * x_58_81_1 + WPtempx * x_58_81_2 + ABtemp * (x_47_81_1 - CDcom * x_47_81_2) + 6.000000 * ABCDtemp * x_58_53_2;
-    LOCSTORE(store, 89, 117, STOREDIM, STOREDIM) += Qtempx * x_89_81_0 + WQtempx * x_89_81_1 + 6.000000 * CDtemp * (x_89_53_0 - ABcom * x_89_53_1) + 2.000000 * ABCDtemp * x_58_81_1;
+    LOCSTORE(store, 89, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_81_0 + WQtempx * x_89_81_1 + 6.000000 * CDtemp * (x_89_53_0 - ABcom * x_89_53_1) + 2.000000 * ABCDtemp * x_58_81_1;
     QUICKDouble x_74_2_6 = Qtempy * x_74_0_6 + WQtempy * x_74_0_7;
     QUICKDouble x_74_8_5 = Qtempy * x_74_2_5 + WQtempy * x_74_2_6 + CDtemp * (x_74_0_5 - ABcom * x_74_0_6);
     QUICKDouble x_9_82_0 = Ptempz * x_3_82_0 + WPtempz * x_3_82_1 + ABtemp * (x_0_82_0 - CDcom * x_0_82_1);
@@ -9965,8 +9965,8 @@
     QUICKDouble x_74_82_1 = Qtempy * x_74_54_1 + WQtempy * x_74_54_2 + 5.000000 * CDtemp * (x_74_33_1 - ABcom * x_74_33_2);
     QUICKDouble x_89_82_0 = Ptempx * x_58_82_0 + WPtempx * x_58_82_1 + ABtemp * (x_47_82_0 - CDcom * x_47_82_1);
     QUICKDouble x_89_82_1 = Ptempx * x_58_82_1 + WPtempx * x_58_82_2 + ABtemp * (x_47_82_1 - CDcom * x_47_82_2);
-    LOCSTORE(store, 89, 118, STOREDIM, STOREDIM) += Qtempy * x_89_82_0 + WQtempy * x_89_82_1 + 6.000000 * CDtemp * (x_89_54_0 - ABcom * x_89_54_1) + ABCDtemp * x_74_82_1;
-    LOCSTORE(store, 89, 103, STOREDIM, STOREDIM) += Qtempx * x_89_82_0 + WQtempx * x_89_82_1 + 2.000000 * ABCDtemp * x_58_82_1;
+    LOCSTORE(store, 89, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_82_0 + WQtempy * x_89_82_1 + 6.000000 * CDtemp * (x_89_54_0 - ABcom * x_89_54_1) + ABCDtemp * x_74_82_1;
+    LOCSTORE(store, 89, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_82_0 + WQtempx * x_89_82_1 + 2.000000 * ABCDtemp * x_58_82_1;
     QUICKDouble x_36_0_7 = Ptempx * x_25_0_7 + WPtempx * x_25_0_8 + ABtemp * (x_16_0_7 - CDcom * x_16_0_8);
     QUICKDouble x_61_0_7 = Ptempx * x_40_0_7 + WPtempx * x_40_0_8 + ABtemp * (x_31_0_7 - CDcom * x_31_0_8);
     QUICKDouble x_36_3_6 = Qtempz * x_36_0_6 + WQtempz * x_36_0_7 + 2.000000 * ABCDtemp * x_23_0_7;
@@ -10008,12 +10008,12 @@
     QUICKDouble x_61_83_1 = Qtempz * x_61_55_1 + WQtempz * x_61_55_2 + 5.000000 * CDtemp * (x_61_34_1 - ABcom * x_61_34_2) + 3.000000 * ABCDtemp * x_36_55_2;
     QUICKDouble x_89_83_0 = Ptempx * x_58_83_0 + WPtempx * x_58_83_1 + ABtemp * (x_47_83_0 - CDcom * x_47_83_1);
     QUICKDouble x_89_83_1 = Ptempx * x_58_83_1 + WPtempx * x_58_83_2 + ABtemp * (x_47_83_1 - CDcom * x_47_83_2);
-    LOCSTORE(store, 89, 119, STOREDIM, STOREDIM) += Qtempz * x_89_83_0 + WQtempz * x_89_83_1 + 6.000000 * CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + 4.000000 * ABCDtemp * x_61_83_1;
-    LOCSTORE(store, 89, 101, STOREDIM, STOREDIM) += Qtempx * x_89_83_0 + WQtempx * x_89_83_1 + 2.000000 * ABCDtemp * x_58_83_1;
+    LOCSTORE(store, 89, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_89_83_0 + WQtempz * x_89_83_1 + 6.000000 * CDtemp * (x_89_55_0 - ABcom * x_89_55_1) + 4.000000 * ABCDtemp * x_61_83_1;
+    LOCSTORE(store, 89, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_89_83_0 + WQtempx * x_89_83_1 + 2.000000 * ABCDtemp * x_58_83_1;
     QUICKDouble x_21_34_3 = Qtempz * x_21_19_3 + WQtempz * x_21_19_4 + 3.000000 * CDtemp * (x_21_9_3 - ABcom * x_21_9_4) + 2.000000 * ABCDtemp * x_13_19_4;
     QUICKDouble x_43_55_2 = Qtempz * x_43_34_2 + WQtempz * x_43_34_3 + 4.000000 * CDtemp * (x_43_19_2 - ABcom * x_43_19_3) + 3.000000 * ABCDtemp * x_21_34_3;
     QUICKDouble x_74_83_1 = Qtempz * x_74_55_1 + WQtempz * x_74_55_2 + 5.000000 * CDtemp * (x_74_34_1 - ABcom * x_74_34_2) + 4.000000 * ABCDtemp * x_43_55_2;
-    LOCSTORE(store, 89, 99, STOREDIM, STOREDIM) += Qtempy * x_89_83_0 + WQtempy * x_89_83_1 + ABCDtemp * x_74_83_1;
+    LOCSTORE(store, 89, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_89_83_0 + WQtempy * x_89_83_1 + ABCDtemp * x_74_83_1;
     QUICKDouble x_14_0_1 = Ptempx * x_9_0_1 + WPtempx * x_9_0_2;
     QUICKDouble x_25_0_1 = Ptempx * x_16_0_1 + WPtempx * x_16_0_2;
     QUICKDouble x_14_0_2 = Ptempx * x_9_0_2 + WPtempx * x_9_0_3;
@@ -10183,7 +10183,7 @@
     QUICKDouble x_90_38_1 = Qtempx * x_90_23_1 + WQtempx * x_90_23_2 + 2.000000 * CDtemp * (x_90_10_1 - ABcom * x_90_10_2) + 4.000000 * ABCDtemp * x_62_23_2;
     QUICKDouble x_90_56_0 = Ptempx * x_62_56_0 + WPtempx * x_62_56_1 + 3.000000 * ABtemp * (x_36_56_0 - CDcom * x_36_56_1) + 4.000000 * ABCDtemp * x_62_38_1;
     QUICKDouble x_90_56_1 = Ptempx * x_62_56_1 + WPtempx * x_62_56_2 + 3.000000 * ABtemp * (x_36_56_1 - CDcom * x_36_56_2) + 4.000000 * ABCDtemp * x_62_38_2;
-    LOCSTORE(store, 90, 84, STOREDIM, STOREDIM) += Qtempx * x_90_56_0 + WQtempx * x_90_56_1 + 4.000000 * CDtemp * (x_90_38_0 - ABcom * x_90_38_1) + 4.000000 * ABCDtemp * x_62_56_1;
+    LOCSTORE(store, 90, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_56_0 + WQtempx * x_90_56_1 + 4.000000 * CDtemp * (x_90_38_0 - ABcom * x_90_38_1) + 4.000000 * ABCDtemp * x_62_56_1;
     QUICKDouble x_21_5_3 = Qtempy * x_21_3_3 + WQtempy * x_21_3_4;
     QUICKDouble x_21_5_4 = Qtempy * x_21_3_4 + WQtempy * x_21_3_5;
     QUICKDouble x_21_5_5 = Qtempy * x_21_3_5 + WQtempy * x_21_3_6;
@@ -10280,7 +10280,7 @@
     QUICKDouble x_90_48_1 = Qtempy * x_90_30_1 + WQtempy * x_90_30_2 + 3.000000 * CDtemp * (x_90_15_1 - ABcom * x_90_15_2) + ABCDtemp * x_75_30_2;
     QUICKDouble x_90_57_0 = Ptempx * x_62_57_0 + WPtempx * x_62_57_1 + 3.000000 * ABtemp * (x_36_57_0 - CDcom * x_36_57_1) + ABCDtemp * x_62_48_1;
     QUICKDouble x_90_57_1 = Ptempx * x_62_57_1 + WPtempx * x_62_57_2 + 3.000000 * ABtemp * (x_36_57_1 - CDcom * x_36_57_2) + ABCDtemp * x_62_48_2;
-    LOCSTORE(store, 90, 91, STOREDIM, STOREDIM) += Qtempx * x_90_57_0 + WQtempx * x_90_57_1 + CDtemp * (x_90_48_0 - ABcom * x_90_48_1) + 4.000000 * ABCDtemp * x_62_57_1;
+    LOCSTORE(store, 90, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_57_0 + WQtempx * x_90_57_1 + CDtemp * (x_90_48_0 - ABcom * x_90_48_1) + 4.000000 * ABCDtemp * x_62_57_1;
     QUICKDouble x_44_9_2 = Qtempz * x_44_3_2 + WQtempz * x_44_3_3 + CDtemp * (x_44_0_2 - ABcom * x_44_0_3) + 2.000000 * ABCDtemp * x_26_3_3;
     QUICKDouble x_44_9_3 = Qtempz * x_44_3_3 + WQtempz * x_44_3_4 + CDtemp * (x_44_0_3 - ABcom * x_44_0_4) + 2.000000 * ABCDtemp * x_26_3_4;
     QUICKDouble x_44_9_4 = Qtempz * x_44_3_4 + WQtempz * x_44_3_5 + CDtemp * (x_44_0_4 - ABcom * x_44_0_5) + 2.000000 * ABCDtemp * x_26_3_5;
@@ -10380,7 +10380,7 @@
     QUICKDouble x_90_47_1 = Qtempy * x_90_34_1 + WQtempy * x_90_34_2 + ABCDtemp * x_75_34_2;
     QUICKDouble x_90_58_0 = Ptempx * x_62_58_0 + WPtempx * x_62_58_1 + 3.000000 * ABtemp * (x_36_58_0 - CDcom * x_36_58_1) + ABCDtemp * x_62_47_1;
     QUICKDouble x_90_58_1 = Ptempx * x_62_58_1 + WPtempx * x_62_58_2 + 3.000000 * ABtemp * (x_36_58_1 - CDcom * x_36_58_2) + ABCDtemp * x_62_47_2;
-    LOCSTORE(store, 90, 89, STOREDIM, STOREDIM) += Qtempx * x_90_58_0 + WQtempx * x_90_58_1 + CDtemp * (x_90_47_0 - ABcom * x_90_47_1) + 4.000000 * ABCDtemp * x_62_58_1;
+    LOCSTORE(store, 90, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_58_0 + WQtempx * x_90_58_1 + CDtemp * (x_90_47_0 - ABcom * x_90_47_1) + 4.000000 * ABCDtemp * x_62_58_1;
     QUICKDouble x_36_31_2 = Qtempy * x_36_19_2 + WQtempy * x_36_19_3 + ABCDtemp * x_21_19_3;
     QUICKDouble x_36_31_3 = Qtempy * x_36_19_3 + WQtempy * x_36_19_4 + ABCDtemp * x_21_19_4;
     QUICKDouble x_21_31_3 = Qtempy * x_21_19_3 + WQtempy * x_21_19_4;
@@ -10435,7 +10435,7 @@
     QUICKDouble x_90_41_1 = Qtempy * x_90_31_1 + WQtempy * x_90_31_2 + CDtemp * (x_90_19_1 - ABcom * x_90_19_2) + ABCDtemp * x_75_31_2;
     QUICKDouble x_90_59_0 = Ptempx * x_62_59_0 + WPtempx * x_62_59_1 + 3.000000 * ABtemp * (x_36_59_0 - CDcom * x_36_59_1) + ABCDtemp * x_62_41_1;
     QUICKDouble x_90_59_1 = Ptempx * x_62_59_1 + WPtempx * x_62_59_2 + 3.000000 * ABtemp * (x_36_59_1 - CDcom * x_36_59_2) + ABCDtemp * x_62_41_2;
-    LOCSTORE(store, 90, 98, STOREDIM, STOREDIM) += Qtempx * x_90_59_0 + WQtempx * x_90_59_1 + CDtemp * (x_90_41_0 - ABcom * x_90_41_1) + 4.000000 * ABCDtemp * x_62_59_1;
+    LOCSTORE(store, 90, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_59_0 + WQtempx * x_90_59_1 + CDtemp * (x_90_41_0 - ABcom * x_90_41_1) + 4.000000 * ABCDtemp * x_62_59_1;
     QUICKDouble x_21_16_3 = Qtempy * x_21_9_3 + WQtempy * x_21_9_4;
     QUICKDouble x_36_16_2 = Qtempy * x_36_9_2 + WQtempy * x_36_9_3 + ABCDtemp * x_21_9_3;
     QUICKDouble x_36_16_3 = Qtempy * x_36_9_3 + WQtempy * x_36_9_4 + ABCDtemp * x_21_9_4;
@@ -10517,7 +10517,7 @@
     QUICKDouble x_90_42_1 = Qtempy * x_90_22_1 + WQtempy * x_90_22_2 + 2.000000 * CDtemp * (x_90_16_1 - ABcom * x_90_16_2) + ABCDtemp * x_75_22_2;
     QUICKDouble x_90_60_0 = Ptempx * x_62_60_0 + WPtempx * x_62_60_1 + 3.000000 * ABtemp * (x_36_60_0 - CDcom * x_36_60_1) + ABCDtemp * x_62_42_1;
     QUICKDouble x_90_60_1 = Ptempx * x_62_60_1 + WPtempx * x_62_60_2 + 3.000000 * ABtemp * (x_36_60_1 - CDcom * x_36_60_2) + ABCDtemp * x_62_42_2;
-    LOCSTORE(store, 90, 97, STOREDIM, STOREDIM) += Qtempx * x_90_60_0 + WQtempx * x_90_60_1 + CDtemp * (x_90_42_0 - ABcom * x_90_42_1) + 4.000000 * ABCDtemp * x_62_60_1;
+    LOCSTORE(store, 90, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_60_0 + WQtempx * x_90_60_1 + CDtemp * (x_90_42_0 - ABcom * x_90_42_1) + 4.000000 * ABCDtemp * x_62_60_1;
     QUICKDouble x_16_31_2 = Ptempy * x_9_31_2 + WPtempy * x_9_31_3 + ABCDtemp * x_9_19_3;
     QUICKDouble x_16_40_1 = Ptempy * x_9_40_1 + WPtempy * x_9_40_2 + ABCDtemp * x_9_27_2;
     QUICKDouble x_16_40_2 = Ptempy * x_9_40_2 + WPtempy * x_9_40_3 + ABCDtemp * x_9_27_3;
@@ -10556,7 +10556,7 @@
     QUICKDouble x_90_40_1 = Qtempx * x_90_31_1 + WQtempx * x_90_31_2 + 4.000000 * ABCDtemp * x_62_31_2;
     QUICKDouble x_90_61_0 = Ptempx * x_62_61_0 + WPtempx * x_62_61_1 + 3.000000 * ABtemp * (x_36_61_0 - CDcom * x_36_61_1) + 2.000000 * ABCDtemp * x_62_40_1;
     QUICKDouble x_90_61_1 = Ptempx * x_62_61_1 + WPtempx * x_62_61_2 + 3.000000 * ABtemp * (x_36_61_1 - CDcom * x_36_61_2) + 2.000000 * ABCDtemp * x_62_40_2;
-    LOCSTORE(store, 90, 94, STOREDIM, STOREDIM) += Qtempx * x_90_61_0 + WQtempx * x_90_61_1 + 2.000000 * CDtemp * (x_90_40_0 - ABcom * x_90_40_1) + 4.000000 * ABCDtemp * x_62_61_1;
+    LOCSTORE(store, 90, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_61_0 + WQtempx * x_90_61_1 + 2.000000 * CDtemp * (x_90_40_0 - ABcom * x_90_40_1) + 4.000000 * ABCDtemp * x_62_61_1;
     QUICKDouble x_25_16_2 = Qtempy * x_25_9_2 + WQtempy * x_25_9_3 + ABCDtemp * x_14_9_3;
     QUICKDouble x_25_16_5 = Qtempy * x_25_9_5 + WQtempy * x_25_9_6 + ABCDtemp * x_14_9_6;
     QUICKDouble x_25_25_3 = Qtempx * x_25_16_3 + WQtempx * x_25_16_4 + ABCDtemp * x_16_16_4;
@@ -10610,7 +10610,7 @@
     QUICKDouble x_90_36_1 = Qtempx * x_90_25_1 + WQtempx * x_90_25_2 + CDtemp * (x_90_16_1 - ABcom * x_90_16_2) + 4.000000 * ABCDtemp * x_62_25_2;
     QUICKDouble x_90_62_0 = Ptempx * x_62_62_0 + WPtempx * x_62_62_1 + 3.000000 * ABtemp * (x_36_62_0 - CDcom * x_36_62_1) + 3.000000 * ABCDtemp * x_62_36_1;
     QUICKDouble x_90_62_1 = Ptempx * x_62_62_1 + WPtempx * x_62_62_2 + 3.000000 * ABtemp * (x_36_62_1 - CDcom * x_36_62_2) + 3.000000 * ABCDtemp * x_62_36_2;
-    LOCSTORE(store, 90, 90, STOREDIM, STOREDIM) += Qtempx * x_90_62_0 + WQtempx * x_90_62_1 + 3.000000 * CDtemp * (x_90_36_0 - ABcom * x_90_36_1) + 4.000000 * ABCDtemp * x_62_62_1;
+    LOCSTORE(store, 90, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_62_0 + WQtempx * x_90_62_1 + 3.000000 * CDtemp * (x_90_36_0 - ABcom * x_90_36_1) + 4.000000 * ABCDtemp * x_62_62_1;
     QUICKDouble x_14_5_3 = Qtempy * x_14_3_3 + WQtempy * x_14_3_4;
     QUICKDouble x_14_5_6 = Qtempy * x_14_3_6 + WQtempy * x_14_3_7;
     QUICKDouble x_25_15_2 = Qtempy * x_25_5_2 + WQtempy * x_25_5_3 + CDtemp * (x_25_3_2 - ABcom * x_25_3_3) + ABCDtemp * x_14_5_3;
@@ -10655,7 +10655,7 @@
     QUICKDouble x_90_39_1 = Qtempx * x_90_30_1 + WQtempx * x_90_30_2 + 4.000000 * ABCDtemp * x_62_30_2;
     QUICKDouble x_90_63_0 = Ptempx * x_62_63_0 + WPtempx * x_62_63_1 + 3.000000 * ABtemp * (x_36_63_0 - CDcom * x_36_63_1) + 2.000000 * ABCDtemp * x_62_39_1;
     QUICKDouble x_90_63_1 = Ptempx * x_62_63_1 + WPtempx * x_62_63_2 + 3.000000 * ABtemp * (x_36_63_1 - CDcom * x_36_63_2) + 2.000000 * ABCDtemp * x_62_39_2;
-    LOCSTORE(store, 90, 95, STOREDIM, STOREDIM) += Qtempx * x_90_63_0 + WQtempx * x_90_63_1 + 2.000000 * CDtemp * (x_90_39_0 - ABcom * x_90_39_1) + 4.000000 * ABCDtemp * x_62_63_1;
+    LOCSTORE(store, 90, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_63_0 + WQtempx * x_90_63_1 + 2.000000 * CDtemp * (x_90_39_0 - ABcom * x_90_39_1) + 4.000000 * ABCDtemp * x_62_63_1;
     QUICKDouble x_25_24_3 = Qtempx * x_25_15_3 + WQtempx * x_25_15_4 + ABCDtemp * x_16_15_4;
     QUICKDouble x_36_24_2 = Qtempx * x_36_15_2 + WQtempx * x_36_15_3 + 2.000000 * ABCDtemp * x_25_15_3;
     QUICKDouble x_36_24_3 = Qtempx * x_36_15_3 + WQtempx * x_36_15_4 + 2.000000 * ABCDtemp * x_25_15_4;
@@ -10707,7 +10707,7 @@
     QUICKDouble x_90_37_1 = Qtempx * x_90_24_1 + WQtempx * x_90_24_2 + CDtemp * (x_90_15_1 - ABcom * x_90_15_2) + 4.000000 * ABCDtemp * x_62_24_2;
     QUICKDouble x_90_64_0 = Ptempx * x_62_64_0 + WPtempx * x_62_64_1 + 3.000000 * ABtemp * (x_36_64_0 - CDcom * x_36_64_1) + 3.000000 * ABCDtemp * x_62_37_1;
     QUICKDouble x_90_64_1 = Ptempx * x_62_64_1 + WPtempx * x_62_64_2 + 3.000000 * ABtemp * (x_36_64_1 - CDcom * x_36_64_2) + 3.000000 * ABCDtemp * x_62_37_2;
-    LOCSTORE(store, 90, 92, STOREDIM, STOREDIM) += Qtempx * x_90_64_0 + WQtempx * x_90_64_1 + 3.000000 * CDtemp * (x_90_37_0 - ABcom * x_90_37_1) + 4.000000 * ABCDtemp * x_62_64_1;
+    LOCSTORE(store, 90, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_64_0 + WQtempx * x_90_64_1 + 3.000000 * CDtemp * (x_90_37_0 - ABcom * x_90_37_1) + 4.000000 * ABCDtemp * x_62_64_1;
     QUICKDouble x_14_16_3 = Qtempy * x_14_9_3 + WQtempy * x_14_9_4;
     QUICKDouble x_14_16_5 = Qtempy * x_14_9_5 + WQtempy * x_14_9_6;
     QUICKDouble x_16_22_2 = Ptempy * x_9_22_2 + WPtempy * x_9_22_3 + 2.000000 * ABCDtemp * x_9_16_3;
@@ -10748,7 +10748,7 @@
     QUICKDouble x_90_35_1 = Qtempx * x_90_22_1 + WQtempx * x_90_22_2 + 4.000000 * ABCDtemp * x_62_22_2;
     QUICKDouble x_90_65_0 = Ptempx * x_62_65_0 + WPtempx * x_62_65_1 + 3.000000 * ABtemp * (x_36_65_0 - CDcom * x_36_65_1) + 2.000000 * ABCDtemp * x_62_35_1;
     QUICKDouble x_90_65_1 = Ptempx * x_62_65_1 + WPtempx * x_62_65_2 + 3.000000 * ABtemp * (x_36_65_1 - CDcom * x_36_65_2) + 2.000000 * ABCDtemp * x_62_35_2;
-    LOCSTORE(store, 90, 96, STOREDIM, STOREDIM) += Qtempx * x_90_65_0 + WQtempx * x_90_65_1 + 2.000000 * CDtemp * (x_90_35_0 - ABcom * x_90_35_1) + 4.000000 * ABCDtemp * x_62_65_1;
+    LOCSTORE(store, 90, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_65_0 + WQtempx * x_90_65_1 + 2.000000 * CDtemp * (x_90_35_0 - ABcom * x_90_35_1) + 4.000000 * ABCDtemp * x_62_65_1;
     QUICKDouble x_75_0_7 = Ptempx * x_44_0_7 + WPtempx * x_44_0_8 + 3.000000 * ABtemp * (x_21_0_7 - CDcom * x_21_0_8);
     QUICKDouble x_75_3_6 = Qtempz * x_75_0_6 + WQtempz * x_75_0_7 + 2.000000 * ABCDtemp * x_50_0_7;
     QUICKDouble x_75_9_5 = Qtempz * x_75_3_5 + WQtempz * x_75_3_6 + CDtemp * (x_75_0_5 - ABcom * x_75_0_6) + 2.000000 * ABCDtemp * x_50_3_6;
@@ -10783,8 +10783,8 @@
     QUICKDouble x_90_55_1 = Qtempz * x_90_34_1 + WQtempz * x_90_34_2 + 4.000000 * CDtemp * (x_90_19_1 - ABcom * x_90_19_2) + 2.000000 * ABCDtemp * x_56_34_2;
     QUICKDouble x_90_66_0 = Ptempx * x_62_66_0 + WPtempx * x_62_66_1 + 3.000000 * ABtemp * (x_36_66_0 - CDcom * x_36_66_1);
     QUICKDouble x_90_66_1 = Ptempx * x_62_66_1 + WPtempx * x_62_66_2 + 3.000000 * ABtemp * (x_36_66_1 - CDcom * x_36_66_2);
-    LOCSTORE(store, 90, 105, STOREDIM, STOREDIM) += Qtempy * x_90_66_0 + WQtempy * x_90_66_1 + CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + ABCDtemp * x_75_66_1;
-    LOCSTORE(store, 90, 86, STOREDIM, STOREDIM) += Qtempx * x_90_66_0 + WQtempx * x_90_66_1 + 4.000000 * ABCDtemp * x_62_66_1;
+    LOCSTORE(store, 90, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_66_0 + WQtempy * x_90_66_1 + CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + ABCDtemp * x_75_66_1;
+    LOCSTORE(store, 90, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_66_0 + WQtempx * x_90_66_1 + 4.000000 * ABCDtemp * x_62_66_1;
     QUICKDouble x_75_5_5 = Qtempy * x_75_3_5 + WQtempy * x_75_3_6;
     QUICKDouble x_75_15_4 = Qtempy * x_75_5_4 + WQtempy * x_75_5_5 + CDtemp * (x_75_3_4 - ABcom * x_75_3_5);
     QUICKDouble x_16_67_0 = Ptempy * x_9_67_0 + WPtempy * x_9_67_1 + 5.000000 * ABCDtemp * x_9_48_1;
@@ -10811,8 +10811,8 @@
     QUICKDouble x_75_67_1 = Qtempy * x_75_48_1 + WQtempy * x_75_48_2 + 4.000000 * CDtemp * (x_75_30_1 - ABcom * x_75_30_2);
     QUICKDouble x_90_67_0 = Ptempx * x_62_67_0 + WPtempx * x_62_67_1 + 3.000000 * ABtemp * (x_36_67_0 - CDcom * x_36_67_1);
     QUICKDouble x_90_67_1 = Ptempx * x_62_67_1 + WPtempx * x_62_67_2 + 3.000000 * ABtemp * (x_36_67_1 - CDcom * x_36_67_2);
-    LOCSTORE(store, 90, 100, STOREDIM, STOREDIM) += Qtempy * x_90_67_0 + WQtempy * x_90_67_1 + 5.000000 * CDtemp * (x_90_48_0 - ABcom * x_90_48_1) + ABCDtemp * x_75_67_1;
-    LOCSTORE(store, 90, 85, STOREDIM, STOREDIM) += Qtempx * x_90_67_0 + WQtempx * x_90_67_1 + 4.000000 * ABCDtemp * x_62_67_1;
+    LOCSTORE(store, 90, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_67_0 + WQtempy * x_90_67_1 + 5.000000 * CDtemp * (x_90_48_0 - ABcom * x_90_48_1) + ABCDtemp * x_75_67_1;
+    LOCSTORE(store, 90, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_67_0 + WQtempx * x_90_67_1 + 4.000000 * ABCDtemp * x_62_67_1;
     QUICKDouble x_16_55_1 = Ptempy * x_9_55_1 + WPtempy * x_9_55_2;
     QUICKDouble x_16_55_2 = Ptempy * x_9_55_2 + WPtempy * x_9_55_3;
     QUICKDouble x_16_68_0 = Ptempy * x_9_68_0 + WPtempy * x_9_68_1;
@@ -10839,7 +10839,7 @@
     QUICKDouble x_62_68_2 = Qtempx * x_62_55_2 + WQtempx * x_62_55_3 + 3.000000 * ABCDtemp * x_36_55_3;
     QUICKDouble x_90_68_0 = Ptempx * x_62_68_0 + WPtempx * x_62_68_1 + 3.000000 * ABtemp * (x_36_68_0 - CDcom * x_36_68_1) + ABCDtemp * x_62_55_1;
     QUICKDouble x_90_68_1 = Ptempx * x_62_68_1 + WPtempx * x_62_68_2 + 3.000000 * ABtemp * (x_36_68_1 - CDcom * x_36_68_2) + ABCDtemp * x_62_55_2;
-    LOCSTORE(store, 90, 107, STOREDIM, STOREDIM) += Qtempx * x_90_68_0 + WQtempx * x_90_68_1 + CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + 4.000000 * ABCDtemp * x_62_68_1;
+    LOCSTORE(store, 90, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_68_0 + WQtempx * x_90_68_1 + CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + 4.000000 * ABCDtemp * x_62_68_1;
     QUICKDouble x_16_6_4 = Qtempx * x_16_3_4 + WQtempx * x_16_3_5;
     QUICKDouble x_16_6_5 = Qtempx * x_16_3_5 + WQtempx * x_16_3_6;
     QUICKDouble x_25_6_3 = Qtempx * x_25_3_3 + WQtempx * x_25_3_4 + ABCDtemp * x_16_3_4;
@@ -10940,7 +10940,7 @@
     QUICKDouble x_90_50_1 = Qtempx * x_90_26_1 + WQtempx * x_90_26_2 + 3.000000 * CDtemp * (x_90_13_1 - ABcom * x_90_13_2) + 4.000000 * ABCDtemp * x_62_26_2;
     QUICKDouble x_90_69_0 = Ptempx * x_62_69_0 + WPtempx * x_62_69_1 + 3.000000 * ABtemp * (x_36_69_0 - CDcom * x_36_69_1) + 5.000000 * ABCDtemp * x_62_50_1;
     QUICKDouble x_90_69_1 = Ptempx * x_62_69_1 + WPtempx * x_62_69_2 + 3.000000 * ABtemp * (x_36_69_1 - CDcom * x_36_69_2) + 5.000000 * ABCDtemp * x_62_50_2;
-    LOCSTORE(store, 90, 102, STOREDIM, STOREDIM) += Qtempx * x_90_69_0 + WQtempx * x_90_69_1 + 5.000000 * CDtemp * (x_90_50_0 - ABcom * x_90_50_1) + 4.000000 * ABCDtemp * x_62_69_1;
+    LOCSTORE(store, 90, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_69_0 + WQtempx * x_90_69_1 + 5.000000 * CDtemp * (x_90_50_0 - ABcom * x_90_50_1) + 4.000000 * ABCDtemp * x_62_69_1;
     QUICKDouble x_21_2_3 = Qtempy * x_21_0_3 + WQtempy * x_21_0_4;
     QUICKDouble x_21_2_4 = Qtempy * x_21_0_4 + WQtempy * x_21_0_5;
     QUICKDouble x_36_2_2 = Qtempy * x_36_0_2 + WQtempy * x_36_0_3 + ABCDtemp * x_21_0_3;
@@ -11094,7 +11094,7 @@
     QUICKDouble x_90_54_1 = Qtempy * x_90_33_1 + WQtempy * x_90_33_2 + 4.000000 * CDtemp * (x_90_18_1 - ABcom * x_90_18_2) + ABCDtemp * x_75_33_2;
     QUICKDouble x_90_70_0 = Ptempx * x_62_70_0 + WPtempx * x_62_70_1 + 3.000000 * ABtemp * (x_36_70_0 - CDcom * x_36_70_1) + ABCDtemp * x_62_54_1;
     QUICKDouble x_90_70_1 = Ptempx * x_62_70_1 + WPtempx * x_62_70_2 + 3.000000 * ABtemp * (x_36_70_1 - CDcom * x_36_70_2) + ABCDtemp * x_62_54_2;
-    LOCSTORE(store, 90, 109, STOREDIM, STOREDIM) += Qtempx * x_90_70_0 + WQtempx * x_90_70_1 + CDtemp * (x_90_54_0 - ABcom * x_90_54_1) + 4.000000 * ABCDtemp * x_62_70_1;
+    LOCSTORE(store, 90, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_70_0 + WQtempx * x_90_70_1 + CDtemp * (x_90_54_0 - ABcom * x_90_54_1) + 4.000000 * ABCDtemp * x_62_70_1;
     QUICKDouble x_25_2_2 = Qtempy * x_25_0_2 + WQtempy * x_25_0_3 + ABCDtemp * x_14_0_3;
     QUICKDouble x_25_2_7 = Qtempy * x_25_0_7 + WQtempy * x_25_0_8 + ABCDtemp * x_14_0_8;
     QUICKDouble x_16_4_4 = Qtempx * x_16_2_4 + WQtempx * x_16_2_5;
@@ -11197,7 +11197,7 @@
     QUICKDouble x_90_52_1 = Qtempx * x_90_28_1 + WQtempx * x_90_28_2 + 3.000000 * CDtemp * (x_90_11_1 - ABcom * x_90_11_2) + 4.000000 * ABCDtemp * x_62_28_2;
     QUICKDouble x_90_71_0 = Ptempx * x_62_71_0 + WPtempx * x_62_71_1 + 3.000000 * ABtemp * (x_36_71_0 - CDcom * x_36_71_1) + 5.000000 * ABCDtemp * x_62_52_1;
     QUICKDouble x_90_71_1 = Ptempx * x_62_71_1 + WPtempx * x_62_71_2 + 3.000000 * ABtemp * (x_36_71_1 - CDcom * x_36_71_2) + 5.000000 * ABCDtemp * x_62_52_2;
-    LOCSTORE(store, 90, 104, STOREDIM, STOREDIM) += Qtempx * x_90_71_0 + WQtempx * x_90_71_1 + 5.000000 * CDtemp * (x_90_52_0 - ABcom * x_90_52_1) + 4.000000 * ABCDtemp * x_62_71_1;
+    LOCSTORE(store, 90, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_71_0 + WQtempx * x_90_71_1 + 5.000000 * CDtemp * (x_90_52_0 - ABcom * x_90_52_1) + 4.000000 * ABCDtemp * x_62_71_1;
     QUICKDouble x_16_72_0 = Ptempy * x_9_72_0 + WPtempy * x_9_72_1 + 2.000000 * ABCDtemp * x_9_47_1;
     QUICKDouble x_16_72_1 = Ptempy * x_9_72_1 + WPtempy * x_9_72_2 + 2.000000 * ABCDtemp * x_9_47_2;
     QUICKDouble x_16_72_2 = Ptempy * x_9_72_2 + WPtempy * x_9_72_3 + 2.000000 * ABCDtemp * x_9_47_3;
@@ -11221,8 +11221,8 @@
     QUICKDouble x_75_72_1 = Qtempy * x_75_47_1 + WQtempy * x_75_47_2 + CDtemp * (x_75_34_1 - ABcom * x_75_34_2);
     QUICKDouble x_90_72_0 = Ptempx * x_62_72_0 + WPtempx * x_62_72_1 + 3.000000 * ABtemp * (x_36_72_0 - CDcom * x_36_72_1);
     QUICKDouble x_90_72_1 = Ptempx * x_62_72_1 + WPtempx * x_62_72_2 + 3.000000 * ABtemp * (x_36_72_1 - CDcom * x_36_72_2);
-    LOCSTORE(store, 90, 111, STOREDIM, STOREDIM) += Qtempy * x_90_72_0 + WQtempy * x_90_72_1 + 2.000000 * CDtemp * (x_90_47_0 - ABcom * x_90_47_1) + ABCDtemp * x_75_72_1;
-    LOCSTORE(store, 90, 87, STOREDIM, STOREDIM) += Qtempx * x_90_72_0 + WQtempx * x_90_72_1 + 4.000000 * ABCDtemp * x_62_72_1;
+    LOCSTORE(store, 90, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_72_0 + WQtempy * x_90_72_1 + 2.000000 * CDtemp * (x_90_47_0 - ABcom * x_90_47_1) + ABCDtemp * x_75_72_1;
+    LOCSTORE(store, 90, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_72_0 + WQtempx * x_90_72_1 + 4.000000 * ABCDtemp * x_62_72_1;
     QUICKDouble x_75_16_4 = Qtempy * x_75_9_4 + WQtempy * x_75_9_5;
     QUICKDouble x_16_73_0 = Ptempy * x_9_73_0 + WPtempy * x_9_73_1 + 4.000000 * ABCDtemp * x_9_42_1;
     QUICKDouble x_16_73_1 = Ptempy * x_9_73_1 + WPtempy * x_9_73_2 + 4.000000 * ABCDtemp * x_9_42_2;
@@ -11248,8 +11248,8 @@
     QUICKDouble x_75_73_1 = Qtempy * x_75_42_1 + WQtempy * x_75_42_2 + 3.000000 * CDtemp * (x_75_22_1 - ABcom * x_75_22_2);
     QUICKDouble x_90_73_0 = Ptempx * x_62_73_0 + WPtempx * x_62_73_1 + 3.000000 * ABtemp * (x_36_73_0 - CDcom * x_36_73_1);
     QUICKDouble x_90_73_1 = Ptempx * x_62_73_1 + WPtempx * x_62_73_2 + 3.000000 * ABtemp * (x_36_73_1 - CDcom * x_36_73_2);
-    LOCSTORE(store, 90, 106, STOREDIM, STOREDIM) += Qtempy * x_90_73_0 + WQtempy * x_90_73_1 + 4.000000 * CDtemp * (x_90_42_0 - ABcom * x_90_42_1) + ABCDtemp * x_75_73_1;
-    LOCSTORE(store, 90, 88, STOREDIM, STOREDIM) += Qtempx * x_90_73_0 + WQtempx * x_90_73_1 + 4.000000 * ABCDtemp * x_62_73_1;
+    LOCSTORE(store, 90, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_73_0 + WQtempy * x_90_73_1 + 4.000000 * CDtemp * (x_90_42_0 - ABcom * x_90_42_1) + ABCDtemp * x_75_73_1;
+    LOCSTORE(store, 90, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_73_0 + WQtempx * x_90_73_1 + 4.000000 * ABCDtemp * x_62_73_1;
     QUICKDouble x_16_34_2 = Ptempy * x_9_34_2 + WPtempy * x_9_34_3;
     QUICKDouble x_16_49_1 = Ptempy * x_9_49_1 + WPtempy * x_9_49_2;
     QUICKDouble x_16_49_2 = Ptempy * x_9_49_2 + WPtempy * x_9_49_3;
@@ -11286,7 +11286,7 @@
     QUICKDouble x_90_49_1 = Qtempx * x_90_34_1 + WQtempx * x_90_34_2 + 4.000000 * ABCDtemp * x_62_34_2;
     QUICKDouble x_90_74_0 = Ptempx * x_62_74_0 + WPtempx * x_62_74_1 + 3.000000 * ABtemp * (x_36_74_0 - CDcom * x_36_74_1) + 2.000000 * ABCDtemp * x_62_49_1;
     QUICKDouble x_90_74_1 = Ptempx * x_62_74_1 + WPtempx * x_62_74_2 + 3.000000 * ABtemp * (x_36_74_1 - CDcom * x_36_74_2) + 2.000000 * ABCDtemp * x_62_49_2;
-    LOCSTORE(store, 90, 113, STOREDIM, STOREDIM) += Qtempx * x_90_74_0 + WQtempx * x_90_74_1 + 2.000000 * CDtemp * (x_90_49_0 - ABcom * x_90_49_1) + 4.000000 * ABCDtemp * x_62_74_1;
+    LOCSTORE(store, 90, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_74_0 + WQtempx * x_90_74_1 + 2.000000 * CDtemp * (x_90_49_0 - ABcom * x_90_49_1) + 4.000000 * ABCDtemp * x_62_74_1;
     QUICKDouble x_16_14_4 = Qtempx * x_16_9_4 + WQtempx * x_16_9_5;
     QUICKDouble x_25_14_3 = Qtempx * x_25_9_3 + WQtempx * x_25_9_4 + ABCDtemp * x_16_9_4;
     QUICKDouble x_25_14_4 = Qtempx * x_25_9_4 + WQtempx * x_25_9_5 + ABCDtemp * x_16_9_5;
@@ -11360,7 +11360,7 @@
     QUICKDouble x_90_44_1 = Qtempx * x_90_21_1 + WQtempx * x_90_21_2 + 2.000000 * CDtemp * (x_90_14_1 - ABcom * x_90_14_2) + 4.000000 * ABCDtemp * x_62_21_2;
     QUICKDouble x_90_75_0 = Ptempx * x_62_75_0 + WPtempx * x_62_75_1 + 3.000000 * ABtemp * (x_36_75_0 - CDcom * x_36_75_1) + 4.000000 * ABCDtemp * x_62_44_1;
     QUICKDouble x_90_75_1 = Ptempx * x_62_75_1 + WPtempx * x_62_75_2 + 3.000000 * ABtemp * (x_36_75_1 - CDcom * x_36_75_2) + 4.000000 * ABCDtemp * x_62_44_2;
-    LOCSTORE(store, 90, 108, STOREDIM, STOREDIM) += Qtempx * x_90_75_0 + WQtempx * x_90_75_1 + 4.000000 * CDtemp * (x_90_44_0 - ABcom * x_90_44_1) + 4.000000 * ABCDtemp * x_62_75_1;
+    LOCSTORE(store, 90, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_75_0 + WQtempx * x_90_75_1 + 4.000000 * CDtemp * (x_90_44_0 - ABcom * x_90_44_1) + 4.000000 * ABCDtemp * x_62_75_1;
     QUICKDouble x_14_2_3 = Qtempy * x_14_0_3 + WQtempy * x_14_0_4;
     QUICKDouble x_14_2_7 = Qtempy * x_14_0_7 + WQtempy * x_14_0_8;
     QUICKDouble x_25_8_2 = Qtempy * x_25_2_2 + WQtempy * x_25_2_3 + CDtemp * (x_25_0_2 - ABcom * x_25_0_3) + ABCDtemp * x_14_2_3;
@@ -11409,7 +11409,7 @@
     QUICKDouble x_90_51_1 = Qtempx * x_90_33_1 + WQtempx * x_90_33_2 + 4.000000 * ABCDtemp * x_62_33_2;
     QUICKDouble x_90_76_0 = Ptempx * x_62_76_0 + WPtempx * x_62_76_1 + 3.000000 * ABtemp * (x_36_76_0 - CDcom * x_36_76_1) + 2.000000 * ABCDtemp * x_62_51_1;
     QUICKDouble x_90_76_1 = Ptempx * x_62_76_1 + WPtempx * x_62_76_2 + 3.000000 * ABtemp * (x_36_76_1 - CDcom * x_36_76_2) + 2.000000 * ABCDtemp * x_62_51_2;
-    LOCSTORE(store, 90, 115, STOREDIM, STOREDIM) += Qtempx * x_90_76_0 + WQtempx * x_90_76_1 + 2.000000 * CDtemp * (x_90_51_0 - ABcom * x_90_51_1) + 4.000000 * ABCDtemp * x_62_76_1;
+    LOCSTORE(store, 90, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_76_0 + WQtempx * x_90_76_1 + 2.000000 * CDtemp * (x_90_51_0 - ABcom * x_90_51_1) + 4.000000 * ABCDtemp * x_62_76_1;
     QUICKDouble x_16_12_4 = Qtempx * x_16_8_4 + WQtempx * x_16_8_5;
     QUICKDouble x_25_12_3 = Qtempx * x_25_8_3 + WQtempx * x_25_8_4 + ABCDtemp * x_16_8_4;
     QUICKDouble x_25_12_4 = Qtempx * x_25_8_4 + WQtempx * x_25_8_5 + ABCDtemp * x_16_8_5;
@@ -11483,7 +11483,7 @@
     QUICKDouble x_90_46_1 = Qtempx * x_90_20_1 + WQtempx * x_90_20_2 + 2.000000 * CDtemp * (x_90_12_1 - ABcom * x_90_12_2) + 4.000000 * ABCDtemp * x_62_20_2;
     QUICKDouble x_90_77_0 = Ptempx * x_62_77_0 + WPtempx * x_62_77_1 + 3.000000 * ABtemp * (x_36_77_0 - CDcom * x_36_77_1) + 4.000000 * ABCDtemp * x_62_46_1;
     QUICKDouble x_90_77_1 = Ptempx * x_62_77_1 + WPtempx * x_62_77_2 + 3.000000 * ABtemp * (x_36_77_1 - CDcom * x_36_77_2) + 4.000000 * ABCDtemp * x_62_46_2;
-    LOCSTORE(store, 90, 110, STOREDIM, STOREDIM) += Qtempx * x_90_77_0 + WQtempx * x_90_77_1 + 4.000000 * CDtemp * (x_90_46_0 - ABcom * x_90_46_1) + 4.000000 * ABCDtemp * x_62_77_1;
+    LOCSTORE(store, 90, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_77_0 + WQtempx * x_90_77_1 + 4.000000 * CDtemp * (x_90_46_0 - ABcom * x_90_46_1) + 4.000000 * ABCDtemp * x_62_77_1;
     QUICKDouble x_16_78_0 = Ptempy * x_9_78_0 + WPtempy * x_9_78_1 + 3.000000 * ABCDtemp * x_9_41_1;
     QUICKDouble x_16_78_1 = Ptempy * x_9_78_1 + WPtempy * x_9_78_2 + 3.000000 * ABCDtemp * x_9_41_2;
     QUICKDouble x_16_78_2 = Ptempy * x_9_78_2 + WPtempy * x_9_78_3 + 3.000000 * ABCDtemp * x_9_41_3;
@@ -11508,8 +11508,8 @@
     QUICKDouble x_75_78_1 = Qtempy * x_75_41_1 + WQtempy * x_75_41_2 + 2.000000 * CDtemp * (x_75_31_1 - ABcom * x_75_31_2);
     QUICKDouble x_90_78_0 = Ptempx * x_62_78_0 + WPtempx * x_62_78_1 + 3.000000 * ABtemp * (x_36_78_0 - CDcom * x_36_78_1);
     QUICKDouble x_90_78_1 = Ptempx * x_62_78_1 + WPtempx * x_62_78_2 + 3.000000 * ABtemp * (x_36_78_1 - CDcom * x_36_78_2);
-    LOCSTORE(store, 90, 112, STOREDIM, STOREDIM) += Qtempy * x_90_78_0 + WQtempy * x_90_78_1 + 3.000000 * CDtemp * (x_90_41_0 - ABcom * x_90_41_1) + ABCDtemp * x_75_78_1;
-    LOCSTORE(store, 90, 93, STOREDIM, STOREDIM) += Qtempx * x_90_78_0 + WQtempx * x_90_78_1 + 4.000000 * ABCDtemp * x_62_78_1;
+    LOCSTORE(store, 90, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_78_0 + WQtempy * x_90_78_1 + 3.000000 * CDtemp * (x_90_41_0 - ABcom * x_90_41_1) + ABCDtemp * x_75_78_1;
+    LOCSTORE(store, 90, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_78_0 + WQtempx * x_90_78_1 + 4.000000 * ABCDtemp * x_62_78_1;
     QUICKDouble x_25_27_3 = Qtempx * x_25_19_3 + WQtempx * x_25_19_4 + ABCDtemp * x_16_19_4;
     QUICKDouble x_36_27_2 = Qtempx * x_36_19_2 + WQtempx * x_36_19_3 + 2.000000 * ABCDtemp * x_25_19_3;
     QUICKDouble x_36_27_3 = Qtempx * x_36_19_3 + WQtempx * x_36_19_4 + 2.000000 * ABCDtemp * x_25_19_4;
@@ -11561,7 +11561,7 @@
     QUICKDouble x_90_43_1 = Qtempx * x_90_27_1 + WQtempx * x_90_27_2 + CDtemp * (x_90_19_1 - ABcom * x_90_19_2) + 4.000000 * ABCDtemp * x_62_27_2;
     QUICKDouble x_90_79_0 = Ptempx * x_62_79_0 + WPtempx * x_62_79_1 + 3.000000 * ABtemp * (x_36_79_0 - CDcom * x_36_79_1) + 3.000000 * ABCDtemp * x_62_43_1;
     QUICKDouble x_90_79_1 = Ptempx * x_62_79_1 + WPtempx * x_62_79_2 + 3.000000 * ABtemp * (x_36_79_1 - CDcom * x_36_79_2) + 3.000000 * ABCDtemp * x_62_43_2;
-    LOCSTORE(store, 90, 114, STOREDIM, STOREDIM) += Qtempx * x_90_79_0 + WQtempx * x_90_79_1 + 3.000000 * CDtemp * (x_90_43_0 - ABcom * x_90_43_1) + 4.000000 * ABCDtemp * x_62_79_1;
+    LOCSTORE(store, 90, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_79_0 + WQtempx * x_90_79_1 + 3.000000 * CDtemp * (x_90_43_0 - ABcom * x_90_43_1) + 4.000000 * ABCDtemp * x_62_79_1;
     QUICKDouble x_25_29_3 = Qtempx * x_25_18_3 + WQtempx * x_25_18_4 + ABCDtemp * x_16_18_4;
     QUICKDouble x_36_29_2 = Qtempx * x_36_18_2 + WQtempx * x_36_18_3 + 2.000000 * ABCDtemp * x_25_18_3;
     QUICKDouble x_36_29_3 = Qtempx * x_36_18_3 + WQtempx * x_36_18_4 + 2.000000 * ABCDtemp * x_25_18_4;
@@ -11613,7 +11613,7 @@
     QUICKDouble x_90_45_1 = Qtempx * x_90_29_1 + WQtempx * x_90_29_2 + CDtemp * (x_90_18_1 - ABcom * x_90_18_2) + 4.000000 * ABCDtemp * x_62_29_2;
     QUICKDouble x_90_80_0 = Ptempx * x_62_80_0 + WPtempx * x_62_80_1 + 3.000000 * ABtemp * (x_36_80_0 - CDcom * x_36_80_1) + 3.000000 * ABCDtemp * x_62_45_1;
     QUICKDouble x_90_80_1 = Ptempx * x_62_80_1 + WPtempx * x_62_80_2 + 3.000000 * ABtemp * (x_36_80_1 - CDcom * x_36_80_2) + 3.000000 * ABCDtemp * x_62_45_2;
-    LOCSTORE(store, 90, 116, STOREDIM, STOREDIM) += Qtempx * x_90_80_0 + WQtempx * x_90_80_1 + 3.000000 * CDtemp * (x_90_45_0 - ABcom * x_90_45_1) + 4.000000 * ABCDtemp * x_62_80_1;
+    LOCSTORE(store, 90, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_80_0 + WQtempx * x_90_80_1 + 3.000000 * CDtemp * (x_90_45_0 - ABcom * x_90_45_1) + 4.000000 * ABCDtemp * x_62_80_1;
     QUICKDouble x_16_1_4 = Qtempx * x_16_0_4 + WQtempx * x_16_0_5;
     QUICKDouble x_16_1_5 = Qtempx * x_16_0_5 + WQtempx * x_16_0_6;
     QUICKDouble x_16_1_6 = Qtempx * x_16_0_6 + WQtempx * x_16_0_7;
@@ -11746,7 +11746,7 @@
     QUICKDouble x_90_53_1 = Qtempx * x_90_32_1 + WQtempx * x_90_32_2 + 4.000000 * CDtemp * (x_90_17_1 - ABcom * x_90_17_2) + 4.000000 * ABCDtemp * x_62_32_2;
     QUICKDouble x_90_81_0 = Ptempx * x_62_81_0 + WPtempx * x_62_81_1 + 3.000000 * ABtemp * (x_36_81_0 - CDcom * x_36_81_1) + 6.000000 * ABCDtemp * x_62_53_1;
     QUICKDouble x_90_81_1 = Ptempx * x_62_81_1 + WPtempx * x_62_81_2 + 3.000000 * ABtemp * (x_36_81_1 - CDcom * x_36_81_2) + 6.000000 * ABCDtemp * x_62_53_2;
-    LOCSTORE(store, 90, 117, STOREDIM, STOREDIM) += Qtempx * x_90_81_0 + WQtempx * x_90_81_1 + 6.000000 * CDtemp * (x_90_53_0 - ABcom * x_90_53_1) + 4.000000 * ABCDtemp * x_62_81_1;
+    LOCSTORE(store, 90, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_81_0 + WQtempx * x_90_81_1 + 6.000000 * CDtemp * (x_90_53_0 - ABcom * x_90_53_1) + 4.000000 * ABCDtemp * x_62_81_1;
     QUICKDouble x_75_2_6 = Qtempy * x_75_0_6 + WQtempy * x_75_0_7;
     QUICKDouble x_75_8_5 = Qtempy * x_75_2_5 + WQtempy * x_75_2_6 + CDtemp * (x_75_0_5 - ABcom * x_75_0_6);
     QUICKDouble x_75_18_4 = Qtempy * x_75_8_4 + WQtempy * x_75_8_5 + 2.000000 * CDtemp * (x_75_2_4 - ABcom * x_75_2_5);
@@ -11774,8 +11774,8 @@
     QUICKDouble x_75_82_1 = Qtempy * x_75_54_1 + WQtempy * x_75_54_2 + 5.000000 * CDtemp * (x_75_33_1 - ABcom * x_75_33_2);
     QUICKDouble x_90_82_0 = Ptempx * x_62_82_0 + WPtempx * x_62_82_1 + 3.000000 * ABtemp * (x_36_82_0 - CDcom * x_36_82_1);
     QUICKDouble x_90_82_1 = Ptempx * x_62_82_1 + WPtempx * x_62_82_2 + 3.000000 * ABtemp * (x_36_82_1 - CDcom * x_36_82_2);
-    LOCSTORE(store, 90, 118, STOREDIM, STOREDIM) += Qtempy * x_90_82_0 + WQtempy * x_90_82_1 + 6.000000 * CDtemp * (x_90_54_0 - ABcom * x_90_54_1) + ABCDtemp * x_75_82_1;
-    LOCSTORE(store, 90, 103, STOREDIM, STOREDIM) += Qtempx * x_90_82_0 + WQtempx * x_90_82_1 + 4.000000 * ABCDtemp * x_62_82_1;
+    LOCSTORE(store, 90, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_82_0 + WQtempy * x_90_82_1 + 6.000000 * CDtemp * (x_90_54_0 - ABcom * x_90_54_1) + ABCDtemp * x_75_82_1;
+    LOCSTORE(store, 90, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_82_0 + WQtempx * x_90_82_1 + 4.000000 * ABCDtemp * x_62_82_1;
     QUICKDouble x_16_83_0 = Ptempy * x_9_83_0 + WPtempy * x_9_83_1;
     QUICKDouble x_16_83_1 = Ptempy * x_9_83_1 + WPtempy * x_9_83_2;
     QUICKDouble x_16_83_2 = Ptempy * x_9_83_2 + WPtempy * x_9_83_3;
@@ -11793,10 +11793,10 @@
     QUICKDouble x_62_83_2 = Qtempz * x_62_55_2 + WQtempz * x_62_55_3 + 5.000000 * CDtemp * (x_62_34_2 - ABcom * x_62_34_3) + 2.000000 * ABCDtemp * x_38_55_3;
     QUICKDouble x_90_83_0 = Ptempx * x_62_83_0 + WPtempx * x_62_83_1 + 3.000000 * ABtemp * (x_36_83_0 - CDcom * x_36_83_1);
     QUICKDouble x_90_83_1 = Ptempx * x_62_83_1 + WPtempx * x_62_83_2 + 3.000000 * ABtemp * (x_36_83_1 - CDcom * x_36_83_2);
-    LOCSTORE(store, 90, 119, STOREDIM, STOREDIM) += Qtempz * x_90_83_0 + WQtempz * x_90_83_1 + 6.000000 * CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + 2.000000 * ABCDtemp * x_56_83_1;
-    LOCSTORE(store, 90, 101, STOREDIM, STOREDIM) += Qtempx * x_90_83_0 + WQtempx * x_90_83_1 + 4.000000 * ABCDtemp * x_62_83_1;
+    LOCSTORE(store, 90, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_90_83_0 + WQtempz * x_90_83_1 + 6.000000 * CDtemp * (x_90_55_0 - ABcom * x_90_55_1) + 2.000000 * ABCDtemp * x_56_83_1;
+    LOCSTORE(store, 90, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_90_83_0 + WQtempx * x_90_83_1 + 4.000000 * ABCDtemp * x_62_83_1;
     QUICKDouble x_75_83_1 = Qtempz * x_75_55_1 + WQtempz * x_75_55_2 + 5.000000 * CDtemp * (x_75_34_1 - ABcom * x_75_34_2) + 2.000000 * ABCDtemp * x_50_55_2;
-    LOCSTORE(store, 90, 99, STOREDIM, STOREDIM) += Qtempy * x_90_83_0 + WQtempy * x_90_83_1 + ABCDtemp * x_75_83_1;
+    LOCSTORE(store, 90, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_90_83_0 + WQtempy * x_90_83_1 + ABCDtemp * x_75_83_1;
     QUICKDouble x_29_0_2 = Ptempx * x_18_0_2 + WPtempx * x_18_0_3;
     QUICKDouble x_39_0_1 = Ptempx * x_30_0_1 + WPtempx * x_30_0_2;
     QUICKDouble x_51_0_1 = Ptempx * x_33_0_1 + WPtempx * x_33_0_2;
@@ -11911,7 +11911,7 @@
     QUICKDouble x_91_38_1 = Qtempx * x_91_23_1 + WQtempx * x_91_23_2 + 2.000000 * CDtemp * (x_91_10_1 - ABcom * x_91_10_2) + 2.000000 * ABCDtemp * x_57_23_2;
     QUICKDouble x_91_56_0 = Ptempx * x_57_56_0 + WPtempx * x_57_56_1 + ABtemp * (x_48_56_0 - CDcom * x_48_56_1) + 4.000000 * ABCDtemp * x_57_38_1;
     QUICKDouble x_91_56_1 = Ptempx * x_57_56_1 + WPtempx * x_57_56_2 + ABtemp * (x_48_56_1 - CDcom * x_48_56_2) + 4.000000 * ABCDtemp * x_57_38_2;
-    LOCSTORE(store, 91, 84, STOREDIM, STOREDIM) += Qtempx * x_91_56_0 + WQtempx * x_91_56_1 + 4.000000 * CDtemp * (x_91_38_0 - ABcom * x_91_38_1) + 2.000000 * ABCDtemp * x_57_56_1;
+    LOCSTORE(store, 91, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_56_0 + WQtempx * x_91_56_1 + 4.000000 * CDtemp * (x_91_38_0 - ABcom * x_91_38_1) + 2.000000 * ABCDtemp * x_57_56_1;
     QUICKDouble x_12_0_3 = Ptempx * x_8_0_3 + WPtempx * x_8_0_4;
     QUICKDouble x_24_0_2 = Ptempx * x_15_0_2 + WPtempx * x_15_0_3;
     QUICKDouble x_12_0_8 = Ptempx * x_8_0_8 + WPtempx * x_8_0_9;
@@ -11997,7 +11997,7 @@
     QUICKDouble x_91_48_1 = Qtempy * x_91_30_1 + WQtempy * x_91_30_2 + 3.000000 * CDtemp * (x_91_15_1 - ABcom * x_91_15_2) + 4.000000 * ABCDtemp * x_63_30_2;
     QUICKDouble x_91_57_0 = Ptempx * x_57_57_0 + WPtempx * x_57_57_1 + ABtemp * (x_48_57_0 - CDcom * x_48_57_1) + ABCDtemp * x_57_48_1;
     QUICKDouble x_91_57_1 = Ptempx * x_57_57_1 + WPtempx * x_57_57_2 + ABtemp * (x_48_57_1 - CDcom * x_48_57_2) + ABCDtemp * x_57_48_2;
-    LOCSTORE(store, 91, 91, STOREDIM, STOREDIM) += Qtempx * x_91_57_0 + WQtempx * x_91_57_1 + CDtemp * (x_91_48_0 - ABcom * x_91_48_1) + 2.000000 * ABCDtemp * x_57_57_1;
+    LOCSTORE(store, 91, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_57_0 + WQtempx * x_91_57_1 + CDtemp * (x_91_48_0 - ABcom * x_91_48_1) + 2.000000 * ABCDtemp * x_57_57_1;
     QUICKDouble x_29_3_2 = Qtempz * x_29_0_2 + WQtempz * x_29_0_3;
     QUICKDouble x_51_3_1 = Qtempz * x_51_0_1 + WQtempz * x_51_0_2;
     QUICKDouble x_29_3_7 = Qtempz * x_29_0_7 + WQtempz * x_29_0_8;
@@ -12092,7 +12092,7 @@
     QUICKDouble x_91_47_1 = Qtempy * x_91_34_1 + WQtempy * x_91_34_2 + 4.000000 * ABCDtemp * x_63_34_2;
     QUICKDouble x_91_58_0 = Ptempx * x_57_58_0 + WPtempx * x_57_58_1 + ABtemp * (x_48_58_0 - CDcom * x_48_58_1) + ABCDtemp * x_57_47_1;
     QUICKDouble x_91_58_1 = Ptempx * x_57_58_1 + WPtempx * x_57_58_2 + ABtemp * (x_48_58_1 - CDcom * x_48_58_2) + ABCDtemp * x_57_47_2;
-    LOCSTORE(store, 91, 89, STOREDIM, STOREDIM) += Qtempx * x_91_58_0 + WQtempx * x_91_58_1 + CDtemp * (x_91_47_0 - ABcom * x_91_47_1) + 2.000000 * ABCDtemp * x_57_58_1;
+    LOCSTORE(store, 91, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_58_0 + WQtempx * x_91_58_1 + CDtemp * (x_91_47_0 - ABcom * x_91_47_1) + 2.000000 * ABCDtemp * x_57_58_1;
     QUICKDouble x_12_3_3 = Qtempz * x_12_0_3 + WQtempz * x_12_0_4;
     QUICKDouble x_12_3_7 = Qtempz * x_12_0_7 + WQtempz * x_12_0_8;
     QUICKDouble x_24_9_2 = Qtempz * x_24_3_2 + WQtempz * x_24_3_3 + CDtemp * (x_24_0_2 - ABcom * x_24_0_3) + ABCDtemp * x_12_3_3;
@@ -12151,7 +12151,7 @@
     QUICKDouble x_91_41_1 = Qtempy * x_91_31_1 + WQtempy * x_91_31_2 + CDtemp * (x_91_19_1 - ABcom * x_91_19_2) + 4.000000 * ABCDtemp * x_63_31_2;
     QUICKDouble x_91_59_0 = Ptempx * x_57_59_0 + WPtempx * x_57_59_1 + ABtemp * (x_48_59_0 - CDcom * x_48_59_1) + ABCDtemp * x_57_41_1;
     QUICKDouble x_91_59_1 = Ptempx * x_57_59_1 + WPtempx * x_57_59_2 + ABtemp * (x_48_59_1 - CDcom * x_48_59_2) + ABCDtemp * x_57_41_2;
-    LOCSTORE(store, 91, 98, STOREDIM, STOREDIM) += Qtempx * x_91_59_0 + WQtempx * x_91_59_1 + CDtemp * (x_91_41_0 - ABcom * x_91_41_1) + 2.000000 * ABCDtemp * x_57_59_1;
+    LOCSTORE(store, 91, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_59_0 + WQtempx * x_91_59_1 + CDtemp * (x_91_41_0 - ABcom * x_91_41_1) + 2.000000 * ABCDtemp * x_57_59_1;
     QUICKDouble x_24_16_2 = Qtempy * x_24_9_2 + WQtempy * x_24_9_3 + 2.000000 * ABCDtemp * x_10_9_3;
     QUICKDouble x_39_16_1 = Qtempy * x_39_9_1 + WQtempy * x_39_9_2 + 3.000000 * ABCDtemp * x_24_9_2;
     QUICKDouble x_57_16_0 = Qtempy * x_57_9_0 + WQtempy * x_57_9_1 + 4.000000 * ABCDtemp * x_39_9_1;
@@ -12207,7 +12207,7 @@
     QUICKDouble x_91_42_1 = Qtempy * x_91_22_1 + WQtempy * x_91_22_2 + 2.000000 * CDtemp * (x_91_16_1 - ABcom * x_91_16_2) + 4.000000 * ABCDtemp * x_63_22_2;
     QUICKDouble x_91_60_0 = Ptempx * x_57_60_0 + WPtempx * x_57_60_1 + ABtemp * (x_48_60_0 - CDcom * x_48_60_1) + ABCDtemp * x_57_42_1;
     QUICKDouble x_91_60_1 = Ptempx * x_57_60_1 + WPtempx * x_57_60_2 + ABtemp * (x_48_60_1 - CDcom * x_48_60_2) + ABCDtemp * x_57_42_2;
-    LOCSTORE(store, 91, 97, STOREDIM, STOREDIM) += Qtempx * x_91_60_0 + WQtempx * x_91_60_1 + CDtemp * (x_91_42_0 - ABcom * x_91_42_1) + 2.000000 * ABCDtemp * x_57_60_1;
+    LOCSTORE(store, 91, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_60_0 + WQtempx * x_91_60_1 + CDtemp * (x_91_42_0 - ABcom * x_91_42_1) + 2.000000 * ABCDtemp * x_57_60_1;
     QUICKDouble x_15_61_0 = Ptempy * x_5_61_0 + WPtempy * x_5_61_1 + ABtemp * (x_3_61_0 - CDcom * x_3_61_1) + ABCDtemp * x_5_43_1;
     QUICKDouble x_15_61_1 = Ptempy * x_5_61_1 + WPtempy * x_5_61_2 + ABtemp * (x_3_61_1 - CDcom * x_3_61_2) + ABCDtemp * x_5_43_2;
     QUICKDouble x_15_43_1 = Ptempy * x_5_43_1 + WPtempy * x_5_43_2 + ABtemp * (x_3_43_1 - CDcom * x_3_43_2);
@@ -12241,7 +12241,7 @@
     QUICKDouble x_91_40_1 = Qtempx * x_91_31_1 + WQtempx * x_91_31_2 + 2.000000 * ABCDtemp * x_57_31_2;
     QUICKDouble x_91_61_0 = Ptempx * x_57_61_0 + WPtempx * x_57_61_1 + ABtemp * (x_48_61_0 - CDcom * x_48_61_1) + 2.000000 * ABCDtemp * x_57_40_1;
     QUICKDouble x_91_61_1 = Ptempx * x_57_61_1 + WPtempx * x_57_61_2 + ABtemp * (x_48_61_1 - CDcom * x_48_61_2) + 2.000000 * ABCDtemp * x_57_40_2;
-    LOCSTORE(store, 91, 94, STOREDIM, STOREDIM) += Qtempx * x_91_61_0 + WQtempx * x_91_61_1 + 2.000000 * CDtemp * (x_91_40_0 - ABcom * x_91_40_1) + 2.000000 * ABCDtemp * x_57_61_1;
+    LOCSTORE(store, 91, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_61_0 + WQtempx * x_91_61_1 + 2.000000 * CDtemp * (x_91_40_0 - ABcom * x_91_40_1) + 2.000000 * ABCDtemp * x_57_61_1;
     QUICKDouble x_48_25_2 = Qtempx * x_48_16_2 + WQtempx * x_48_16_3;
     QUICKDouble x_48_25_3 = Qtempx * x_48_16_3 + WQtempx * x_48_16_4;
     QUICKDouble x_57_25_1 = Qtempx * x_57_16_1 + WQtempx * x_57_16_2 + ABCDtemp * x_48_16_2;
@@ -12287,7 +12287,7 @@
     QUICKDouble x_91_36_1 = Qtempx * x_91_25_1 + WQtempx * x_91_25_2 + CDtemp * (x_91_16_1 - ABcom * x_91_16_2) + 2.000000 * ABCDtemp * x_57_25_2;
     QUICKDouble x_91_62_0 = Ptempx * x_57_62_0 + WPtempx * x_57_62_1 + ABtemp * (x_48_62_0 - CDcom * x_48_62_1) + 3.000000 * ABCDtemp * x_57_36_1;
     QUICKDouble x_91_62_1 = Ptempx * x_57_62_1 + WPtempx * x_57_62_2 + ABtemp * (x_48_62_1 - CDcom * x_48_62_2) + 3.000000 * ABCDtemp * x_57_36_2;
-    LOCSTORE(store, 91, 90, STOREDIM, STOREDIM) += Qtempx * x_91_62_0 + WQtempx * x_91_62_1 + 3.000000 * CDtemp * (x_91_36_0 - ABcom * x_91_36_1) + 2.000000 * ABCDtemp * x_57_62_1;
+    LOCSTORE(store, 91, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_62_0 + WQtempx * x_91_62_1 + 3.000000 * CDtemp * (x_91_36_0 - ABcom * x_91_36_1) + 2.000000 * ABCDtemp * x_57_62_1;
     QUICKDouble x_15_63_0 = Ptempy * x_5_63_0 + WPtempy * x_5_63_1 + ABtemp * (x_3_63_0 - CDcom * x_3_63_1) + 3.000000 * ABCDtemp * x_5_37_1;
     QUICKDouble x_15_63_1 = Ptempy * x_5_63_1 + WPtempy * x_5_63_2 + ABtemp * (x_3_63_1 - CDcom * x_3_63_2) + 3.000000 * ABCDtemp * x_5_37_2;
     QUICKDouble x_15_37_1 = Ptempy * x_5_37_1 + WPtempy * x_5_37_2 + ABtemp * (x_3_37_1 - CDcom * x_3_37_2) + 2.000000 * ABCDtemp * x_5_23_2;
@@ -12324,7 +12324,7 @@
     QUICKDouble x_91_39_1 = Qtempx * x_91_30_1 + WQtempx * x_91_30_2 + 2.000000 * ABCDtemp * x_57_30_2;
     QUICKDouble x_91_63_0 = Ptempx * x_57_63_0 + WPtempx * x_57_63_1 + ABtemp * (x_48_63_0 - CDcom * x_48_63_1) + 2.000000 * ABCDtemp * x_57_39_1;
     QUICKDouble x_91_63_1 = Ptempx * x_57_63_1 + WPtempx * x_57_63_2 + ABtemp * (x_48_63_1 - CDcom * x_48_63_2) + 2.000000 * ABCDtemp * x_57_39_2;
-    LOCSTORE(store, 91, 95, STOREDIM, STOREDIM) += Qtempx * x_91_63_0 + WQtempx * x_91_63_1 + 2.000000 * CDtemp * (x_91_39_0 - ABcom * x_91_39_1) + 2.000000 * ABCDtemp * x_57_63_1;
+    LOCSTORE(store, 91, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_63_0 + WQtempx * x_91_63_1 + 2.000000 * CDtemp * (x_91_39_0 - ABcom * x_91_39_1) + 2.000000 * ABCDtemp * x_57_63_1;
     QUICKDouble x_48_24_2 = Qtempx * x_48_15_2 + WQtempx * x_48_15_3;
     QUICKDouble x_48_24_3 = Qtempx * x_48_15_3 + WQtempx * x_48_15_4;
     QUICKDouble x_57_24_1 = Qtempx * x_57_15_1 + WQtempx * x_57_15_2 + ABCDtemp * x_48_15_2;
@@ -12373,7 +12373,7 @@
     QUICKDouble x_91_37_1 = Qtempx * x_91_24_1 + WQtempx * x_91_24_2 + CDtemp * (x_91_15_1 - ABcom * x_91_15_2) + 2.000000 * ABCDtemp * x_57_24_2;
     QUICKDouble x_91_64_0 = Ptempx * x_57_64_0 + WPtempx * x_57_64_1 + ABtemp * (x_48_64_0 - CDcom * x_48_64_1) + 3.000000 * ABCDtemp * x_57_37_1;
     QUICKDouble x_91_64_1 = Ptempx * x_57_64_1 + WPtempx * x_57_64_2 + ABtemp * (x_48_64_1 - CDcom * x_48_64_2) + 3.000000 * ABCDtemp * x_57_37_2;
-    LOCSTORE(store, 91, 92, STOREDIM, STOREDIM) += Qtempx * x_91_64_0 + WQtempx * x_91_64_1 + 3.000000 * CDtemp * (x_91_37_0 - ABcom * x_91_37_1) + 2.000000 * ABCDtemp * x_57_64_1;
+    LOCSTORE(store, 91, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_64_0 + WQtempx * x_91_64_1 + 3.000000 * CDtemp * (x_91_37_0 - ABcom * x_91_37_1) + 2.000000 * ABCDtemp * x_57_64_1;
     QUICKDouble x_15_36_1 = Ptempy * x_5_36_1 + WPtempy * x_5_36_2 + ABtemp * (x_3_36_1 - CDcom * x_3_36_2) + ABCDtemp * x_5_21_2;
     QUICKDouble x_15_36_2 = Ptempy * x_5_36_2 + WPtempy * x_5_36_3 + ABtemp * (x_3_36_2 - CDcom * x_3_36_3) + ABCDtemp * x_5_21_3;
     QUICKDouble x_15_21_2 = Ptempy * x_5_21_2 + WPtempy * x_5_21_3 + ABtemp * (x_3_21_2 - CDcom * x_3_21_3);
@@ -12410,7 +12410,7 @@
     QUICKDouble x_91_35_1 = Qtempx * x_91_22_1 + WQtempx * x_91_22_2 + 2.000000 * ABCDtemp * x_57_22_2;
     QUICKDouble x_91_65_0 = Ptempx * x_57_65_0 + WPtempx * x_57_65_1 + ABtemp * (x_48_65_0 - CDcom * x_48_65_1) + 2.000000 * ABCDtemp * x_57_35_1;
     QUICKDouble x_91_65_1 = Ptempx * x_57_65_1 + WPtempx * x_57_65_2 + ABtemp * (x_48_65_1 - CDcom * x_48_65_2) + 2.000000 * ABCDtemp * x_57_35_2;
-    LOCSTORE(store, 91, 96, STOREDIM, STOREDIM) += Qtempx * x_91_65_0 + WQtempx * x_91_65_1 + 2.000000 * CDtemp * (x_91_35_0 - ABcom * x_91_35_1) + 2.000000 * ABCDtemp * x_57_65_1;
+    LOCSTORE(store, 91, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_65_0 + WQtempx * x_91_65_1 + 2.000000 * CDtemp * (x_91_35_0 - ABcom * x_91_35_1) + 2.000000 * ABCDtemp * x_57_65_1;
     QUICKDouble x_20_0_7 = Ptempx * x_12_0_7 + WPtempx * x_12_0_8 + ABtemp * (x_8_0_7 - CDcom * x_8_0_8);
     QUICKDouble x_37_0_7 = Ptempx * x_24_0_7 + WPtempx * x_24_0_8 + ABtemp * (x_15_0_7 - CDcom * x_15_0_8);
     QUICKDouble x_45_0_7 = Ptempx * x_29_0_7 + WPtempx * x_29_0_8 + ABtemp * (x_18_0_7 - CDcom * x_18_0_8);
@@ -12473,8 +12473,8 @@
     QUICKDouble x_91_55_1 = Qtempz * x_91_34_1 + WQtempz * x_91_34_2 + 4.000000 * CDtemp * (x_91_19_1 - ABcom * x_91_19_2) + ABCDtemp * x_76_34_2;
     QUICKDouble x_91_66_0 = Ptempx * x_57_66_0 + WPtempx * x_57_66_1 + ABtemp * (x_48_66_0 - CDcom * x_48_66_1);
     QUICKDouble x_91_66_1 = Ptempx * x_57_66_1 + WPtempx * x_57_66_2 + ABtemp * (x_48_66_1 - CDcom * x_48_66_2);
-    LOCSTORE(store, 91, 105, STOREDIM, STOREDIM) += Qtempy * x_91_66_0 + WQtempy * x_91_66_1 + CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + 4.000000 * ABCDtemp * x_63_66_1;
-    LOCSTORE(store, 91, 86, STOREDIM, STOREDIM) += Qtempx * x_91_66_0 + WQtempx * x_91_66_1 + 2.000000 * ABCDtemp * x_57_66_1;
+    LOCSTORE(store, 91, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_66_0 + WQtempy * x_91_66_1 + CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + 4.000000 * ABCDtemp * x_63_66_1;
+    LOCSTORE(store, 91, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_66_0 + WQtempx * x_91_66_1 + 2.000000 * ABCDtemp * x_57_66_1;
     QUICKDouble x_37_5_5 = Qtempy * x_37_3_5 + WQtempy * x_37_3_6 + 2.000000 * ABCDtemp * x_23_3_6;
     QUICKDouble x_63_5_5 = Qtempy * x_63_3_5 + WQtempy * x_63_3_6 + 3.000000 * ABCDtemp * x_37_3_6;
     QUICKDouble x_37_15_4 = Qtempy * x_37_5_4 + WQtempy * x_37_5_5 + CDtemp * (x_37_3_4 - ABcom * x_37_3_5) + 2.000000 * ABCDtemp * x_23_5_5;
@@ -12516,8 +12516,8 @@
     QUICKDouble x_63_67_1 = Qtempy * x_63_48_1 + WQtempy * x_63_48_2 + 4.000000 * CDtemp * (x_63_30_1 - ABcom * x_63_30_2) + 3.000000 * ABCDtemp * x_37_48_2;
     QUICKDouble x_91_67_0 = Ptempx * x_57_67_0 + WPtempx * x_57_67_1 + ABtemp * (x_48_67_0 - CDcom * x_48_67_1);
     QUICKDouble x_91_67_1 = Ptempx * x_57_67_1 + WPtempx * x_57_67_2 + ABtemp * (x_48_67_1 - CDcom * x_48_67_2);
-    LOCSTORE(store, 91, 100, STOREDIM, STOREDIM) += Qtempy * x_91_67_0 + WQtempy * x_91_67_1 + 5.000000 * CDtemp * (x_91_48_0 - ABcom * x_91_48_1) + 4.000000 * ABCDtemp * x_63_67_1;
-    LOCSTORE(store, 91, 85, STOREDIM, STOREDIM) += Qtempx * x_91_67_0 + WQtempx * x_91_67_1 + 2.000000 * ABCDtemp * x_57_67_1;
+    LOCSTORE(store, 91, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_67_0 + WQtempy * x_91_67_1 + 5.000000 * CDtemp * (x_91_48_0 - ABcom * x_91_48_1) + 4.000000 * ABCDtemp * x_63_67_1;
+    LOCSTORE(store, 91, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_67_0 + WQtempx * x_91_67_1 + 2.000000 * ABCDtemp * x_57_67_1;
     QUICKDouble x_15_68_0 = Ptempy * x_5_68_0 + WPtempy * x_5_68_1 + ABtemp * (x_3_68_0 - CDcom * x_3_68_1);
     QUICKDouble x_15_68_1 = Ptempy * x_5_68_1 + WPtempy * x_5_68_2 + ABtemp * (x_3_68_1 - CDcom * x_3_68_2);
     QUICKDouble x_15_68_2 = Ptempy * x_5_68_2 + WPtempy * x_5_68_3 + ABtemp * (x_3_68_2 - CDcom * x_3_68_3);
@@ -12535,7 +12535,7 @@
     QUICKDouble x_57_68_2 = Qtempx * x_57_55_2 + WQtempx * x_57_55_3 + ABCDtemp * x_48_55_3;
     QUICKDouble x_91_68_0 = Ptempx * x_57_68_0 + WPtempx * x_57_68_1 + ABtemp * (x_48_68_0 - CDcom * x_48_68_1) + ABCDtemp * x_57_55_1;
     QUICKDouble x_91_68_1 = Ptempx * x_57_68_1 + WPtempx * x_57_68_2 + ABtemp * (x_48_68_1 - CDcom * x_48_68_2) + ABCDtemp * x_57_55_2;
-    LOCSTORE(store, 91, 107, STOREDIM, STOREDIM) += Qtempx * x_91_68_0 + WQtempx * x_91_68_1 + CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + 2.000000 * ABCDtemp * x_57_68_1;
+    LOCSTORE(store, 91, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_68_0 + WQtempx * x_91_68_1 + CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + 2.000000 * ABCDtemp * x_57_68_1;
     QUICKDouble x_48_6_2 = Qtempx * x_48_3_2 + WQtempx * x_48_3_3;
     QUICKDouble x_48_6_3 = Qtempx * x_48_3_3 + WQtempx * x_48_3_4;
     QUICKDouble x_48_6_4 = Qtempx * x_48_3_4 + WQtempx * x_48_3_5;
@@ -12607,7 +12607,7 @@
     QUICKDouble x_91_50_1 = Qtempx * x_91_26_1 + WQtempx * x_91_26_2 + 3.000000 * CDtemp * (x_91_13_1 - ABcom * x_91_13_2) + 2.000000 * ABCDtemp * x_57_26_2;
     QUICKDouble x_91_69_0 = Ptempx * x_57_69_0 + WPtempx * x_57_69_1 + ABtemp * (x_48_69_0 - CDcom * x_48_69_1) + 5.000000 * ABCDtemp * x_57_50_1;
     QUICKDouble x_91_69_1 = Ptempx * x_57_69_1 + WPtempx * x_57_69_2 + ABtemp * (x_48_69_1 - CDcom * x_48_69_2) + 5.000000 * ABCDtemp * x_57_50_2;
-    LOCSTORE(store, 91, 102, STOREDIM, STOREDIM) += Qtempx * x_91_69_0 + WQtempx * x_91_69_1 + 5.000000 * CDtemp * (x_91_50_0 - ABcom * x_91_50_1) + 2.000000 * ABCDtemp * x_57_69_1;
+    LOCSTORE(store, 91, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_69_0 + WQtempx * x_91_69_1 + 5.000000 * CDtemp * (x_91_50_0 - ABcom * x_91_50_1) + 2.000000 * ABCDtemp * x_57_69_1;
     QUICKDouble x_24_2_2 = Qtempy * x_24_0_2 + WQtempy * x_24_0_3 + 2.000000 * ABCDtemp * x_10_0_3;
     QUICKDouble x_39_2_1 = Qtempy * x_39_0_1 + WQtempy * x_39_0_2 + 3.000000 * ABCDtemp * x_24_0_2;
     QUICKDouble x_57_2_0 = Qtempy * x_57_0_0 + WQtempy * x_57_0_1 + 4.000000 * ABCDtemp * x_39_0_1;
@@ -12702,7 +12702,7 @@
     QUICKDouble x_91_54_1 = Qtempy * x_91_33_1 + WQtempy * x_91_33_2 + 4.000000 * CDtemp * (x_91_18_1 - ABcom * x_91_18_2) + 4.000000 * ABCDtemp * x_63_33_2;
     QUICKDouble x_91_70_0 = Ptempx * x_57_70_0 + WPtempx * x_57_70_1 + ABtemp * (x_48_70_0 - CDcom * x_48_70_1) + ABCDtemp * x_57_54_1;
     QUICKDouble x_91_70_1 = Ptempx * x_57_70_1 + WPtempx * x_57_70_2 + ABtemp * (x_48_70_1 - CDcom * x_48_70_2) + ABCDtemp * x_57_54_2;
-    LOCSTORE(store, 91, 109, STOREDIM, STOREDIM) += Qtempx * x_91_70_0 + WQtempx * x_91_70_1 + CDtemp * (x_91_54_0 - ABcom * x_91_54_1) + 2.000000 * ABCDtemp * x_57_70_1;
+    LOCSTORE(store, 91, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_70_0 + WQtempx * x_91_70_1 + CDtemp * (x_91_54_0 - ABcom * x_91_54_1) + 2.000000 * ABCDtemp * x_57_70_1;
     QUICKDouble x_48_4_2 = Qtempx * x_48_2_2 + WQtempx * x_48_2_3;
     QUICKDouble x_48_4_3 = Qtempx * x_48_2_3 + WQtempx * x_48_2_4;
     QUICKDouble x_48_4_4 = Qtempx * x_48_2_4 + WQtempx * x_48_2_5;
@@ -12781,7 +12781,7 @@
     QUICKDouble x_91_52_1 = Qtempx * x_91_28_1 + WQtempx * x_91_28_2 + 3.000000 * CDtemp * (x_91_11_1 - ABcom * x_91_11_2) + 2.000000 * ABCDtemp * x_57_28_2;
     QUICKDouble x_91_71_0 = Ptempx * x_57_71_0 + WPtempx * x_57_71_1 + ABtemp * (x_48_71_0 - CDcom * x_48_71_1) + 5.000000 * ABCDtemp * x_57_52_1;
     QUICKDouble x_91_71_1 = Ptempx * x_57_71_1 + WPtempx * x_57_71_2 + ABtemp * (x_48_71_1 - CDcom * x_48_71_2) + 5.000000 * ABCDtemp * x_57_52_2;
-    LOCSTORE(store, 91, 104, STOREDIM, STOREDIM) += Qtempx * x_91_71_0 + WQtempx * x_91_71_1 + 5.000000 * CDtemp * (x_91_52_0 - ABcom * x_91_52_1) + 2.000000 * ABCDtemp * x_57_71_1;
+    LOCSTORE(store, 91, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_71_0 + WQtempx * x_91_71_1 + 5.000000 * CDtemp * (x_91_52_0 - ABcom * x_91_52_1) + 2.000000 * ABCDtemp * x_57_71_1;
     QUICKDouble x_12_19_3 = Qtempz * x_12_9_3 + WQtempz * x_12_9_4 + 2.000000 * CDtemp * (x_12_3_3 - ABcom * x_12_3_4);
     QUICKDouble x_12_19_5 = Qtempz * x_12_9_5 + WQtempz * x_12_9_6 + 2.000000 * CDtemp * (x_12_3_5 - ABcom * x_12_3_6);
     QUICKDouble x_15_47_1 = Ptempy * x_5_47_1 + WPtempy * x_5_47_2 + ABtemp * (x_3_47_1 - CDcom * x_3_47_2) + ABCDtemp * x_5_34_2;
@@ -12818,8 +12818,8 @@
     QUICKDouble x_63_72_1 = Qtempy * x_63_47_1 + WQtempy * x_63_47_2 + CDtemp * (x_63_34_1 - ABcom * x_63_34_2) + 3.000000 * ABCDtemp * x_37_47_2;
     QUICKDouble x_91_72_0 = Ptempx * x_57_72_0 + WPtempx * x_57_72_1 + ABtemp * (x_48_72_0 - CDcom * x_48_72_1);
     QUICKDouble x_91_72_1 = Ptempx * x_57_72_1 + WPtempx * x_57_72_2 + ABtemp * (x_48_72_1 - CDcom * x_48_72_2);
-    LOCSTORE(store, 91, 111, STOREDIM, STOREDIM) += Qtempy * x_91_72_0 + WQtempy * x_91_72_1 + 2.000000 * CDtemp * (x_91_47_0 - ABcom * x_91_47_1) + 4.000000 * ABCDtemp * x_63_72_1;
-    LOCSTORE(store, 91, 87, STOREDIM, STOREDIM) += Qtempx * x_91_72_0 + WQtempx * x_91_72_1 + 2.000000 * ABCDtemp * x_57_72_1;
+    LOCSTORE(store, 91, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_72_0 + WQtempy * x_91_72_1 + 2.000000 * CDtemp * (x_91_47_0 - ABcom * x_91_47_1) + 4.000000 * ABCDtemp * x_63_72_1;
+    LOCSTORE(store, 91, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_72_0 + WQtempx * x_91_72_1 + 2.000000 * ABCDtemp * x_57_72_1;
     QUICKDouble x_37_16_4 = Qtempy * x_37_9_4 + WQtempy * x_37_9_5 + 2.000000 * ABCDtemp * x_23_9_5;
     QUICKDouble x_63_16_4 = Qtempy * x_63_9_4 + WQtempy * x_63_9_5 + 3.000000 * ABCDtemp * x_37_9_5;
     QUICKDouble x_15_42_1 = Ptempy * x_5_42_1 + WPtempy * x_5_42_2 + ABtemp * (x_3_42_1 - CDcom * x_3_42_2) + 3.000000 * ABCDtemp * x_5_22_2;
@@ -12859,8 +12859,8 @@
     QUICKDouble x_63_73_1 = Qtempy * x_63_42_1 + WQtempy * x_63_42_2 + 3.000000 * CDtemp * (x_63_22_1 - ABcom * x_63_22_2) + 3.000000 * ABCDtemp * x_37_42_2;
     QUICKDouble x_91_73_0 = Ptempx * x_57_73_0 + WPtempx * x_57_73_1 + ABtemp * (x_48_73_0 - CDcom * x_48_73_1);
     QUICKDouble x_91_73_1 = Ptempx * x_57_73_1 + WPtempx * x_57_73_2 + ABtemp * (x_48_73_1 - CDcom * x_48_73_2);
-    LOCSTORE(store, 91, 106, STOREDIM, STOREDIM) += Qtempy * x_91_73_0 + WQtempy * x_91_73_1 + 4.000000 * CDtemp * (x_91_42_0 - ABcom * x_91_42_1) + 4.000000 * ABCDtemp * x_63_73_1;
-    LOCSTORE(store, 91, 88, STOREDIM, STOREDIM) += Qtempx * x_91_73_0 + WQtempx * x_91_73_1 + 2.000000 * ABCDtemp * x_57_73_1;
+    LOCSTORE(store, 91, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_73_0 + WQtempy * x_91_73_1 + 4.000000 * CDtemp * (x_91_42_0 - ABcom * x_91_42_1) + 4.000000 * ABCDtemp * x_63_73_1;
+    LOCSTORE(store, 91, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_73_0 + WQtempx * x_91_73_1 + 2.000000 * ABCDtemp * x_57_73_1;
     QUICKDouble x_15_74_0 = Ptempy * x_5_74_0 + WPtempy * x_5_74_1 + ABtemp * (x_3_74_0 - CDcom * x_3_74_1);
     QUICKDouble x_15_74_1 = Ptempy * x_5_74_1 + WPtempy * x_5_74_2 + ABtemp * (x_3_74_1 - CDcom * x_3_74_2);
     QUICKDouble x_15_74_2 = Ptempy * x_5_74_2 + WPtempy * x_5_74_3 + ABtemp * (x_3_74_2 - CDcom * x_3_74_3);
@@ -12887,7 +12887,7 @@
     QUICKDouble x_91_49_1 = Qtempx * x_91_34_1 + WQtempx * x_91_34_2 + 2.000000 * ABCDtemp * x_57_34_2;
     QUICKDouble x_91_74_0 = Ptempx * x_57_74_0 + WPtempx * x_57_74_1 + ABtemp * (x_48_74_0 - CDcom * x_48_74_1) + 2.000000 * ABCDtemp * x_57_49_1;
     QUICKDouble x_91_74_1 = Ptempx * x_57_74_1 + WPtempx * x_57_74_2 + ABtemp * (x_48_74_1 - CDcom * x_48_74_2) + 2.000000 * ABCDtemp * x_57_49_2;
-    LOCSTORE(store, 91, 113, STOREDIM, STOREDIM) += Qtempx * x_91_74_0 + WQtempx * x_91_74_1 + 2.000000 * CDtemp * (x_91_49_0 - ABcom * x_91_49_1) + 2.000000 * ABCDtemp * x_57_74_1;
+    LOCSTORE(store, 91, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_74_0 + WQtempx * x_91_74_1 + 2.000000 * CDtemp * (x_91_49_0 - ABcom * x_91_49_1) + 2.000000 * ABCDtemp * x_57_74_1;
     QUICKDouble x_48_14_2 = Qtempx * x_48_9_2 + WQtempx * x_48_9_3;
     QUICKDouble x_48_14_3 = Qtempx * x_48_9_3 + WQtempx * x_48_9_4;
     QUICKDouble x_48_14_4 = Qtempx * x_48_9_4 + WQtempx * x_48_9_5;
@@ -12941,7 +12941,7 @@
     QUICKDouble x_91_44_1 = Qtempx * x_91_21_1 + WQtempx * x_91_21_2 + 2.000000 * CDtemp * (x_91_14_1 - ABcom * x_91_14_2) + 2.000000 * ABCDtemp * x_57_21_2;
     QUICKDouble x_91_75_0 = Ptempx * x_57_75_0 + WPtempx * x_57_75_1 + ABtemp * (x_48_75_0 - CDcom * x_48_75_1) + 4.000000 * ABCDtemp * x_57_44_1;
     QUICKDouble x_91_75_1 = Ptempx * x_57_75_1 + WPtempx * x_57_75_2 + ABtemp * (x_48_75_1 - CDcom * x_48_75_2) + 4.000000 * ABCDtemp * x_57_44_2;
-    LOCSTORE(store, 91, 108, STOREDIM, STOREDIM) += Qtempx * x_91_75_0 + WQtempx * x_91_75_1 + 4.000000 * CDtemp * (x_91_44_0 - ABcom * x_91_44_1) + 2.000000 * ABCDtemp * x_57_75_1;
+    LOCSTORE(store, 91, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_75_0 + WQtempx * x_91_75_1 + 4.000000 * CDtemp * (x_91_44_0 - ABcom * x_91_44_1) + 2.000000 * ABCDtemp * x_57_75_1;
     QUICKDouble x_15_76_0 = Ptempy * x_5_76_0 + WPtempy * x_5_76_1 + ABtemp * (x_3_76_0 - CDcom * x_3_76_1) + 4.000000 * ABCDtemp * x_5_45_1;
     QUICKDouble x_15_76_1 = Ptempy * x_5_76_1 + WPtempy * x_5_76_2 + ABtemp * (x_3_76_1 - CDcom * x_3_76_2) + 4.000000 * ABCDtemp * x_5_45_2;
     QUICKDouble x_15_45_1 = Ptempy * x_5_45_1 + WPtempy * x_5_45_2 + ABtemp * (x_3_45_1 - CDcom * x_3_45_2) + 3.000000 * ABCDtemp * x_5_20_2;
@@ -12978,7 +12978,7 @@
     QUICKDouble x_91_51_1 = Qtempx * x_91_33_1 + WQtempx * x_91_33_2 + 2.000000 * ABCDtemp * x_57_33_2;
     QUICKDouble x_91_76_0 = Ptempx * x_57_76_0 + WPtempx * x_57_76_1 + ABtemp * (x_48_76_0 - CDcom * x_48_76_1) + 2.000000 * ABCDtemp * x_57_51_1;
     QUICKDouble x_91_76_1 = Ptempx * x_57_76_1 + WPtempx * x_57_76_2 + ABtemp * (x_48_76_1 - CDcom * x_48_76_2) + 2.000000 * ABCDtemp * x_57_51_2;
-    LOCSTORE(store, 91, 115, STOREDIM, STOREDIM) += Qtempx * x_91_76_0 + WQtempx * x_91_76_1 + 2.000000 * CDtemp * (x_91_51_0 - ABcom * x_91_51_1) + 2.000000 * ABCDtemp * x_57_76_1;
+    LOCSTORE(store, 91, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_76_0 + WQtempx * x_91_76_1 + 2.000000 * CDtemp * (x_91_51_0 - ABcom * x_91_51_1) + 2.000000 * ABCDtemp * x_57_76_1;
     QUICKDouble x_48_12_2 = Qtempx * x_48_8_2 + WQtempx * x_48_8_3;
     QUICKDouble x_48_12_3 = Qtempx * x_48_8_3 + WQtempx * x_48_8_4;
     QUICKDouble x_48_12_4 = Qtempx * x_48_8_4 + WQtempx * x_48_8_5;
@@ -13042,7 +13042,7 @@
     QUICKDouble x_91_46_1 = Qtempx * x_91_20_1 + WQtempx * x_91_20_2 + 2.000000 * CDtemp * (x_91_12_1 - ABcom * x_91_12_2) + 2.000000 * ABCDtemp * x_57_20_2;
     QUICKDouble x_91_77_0 = Ptempx * x_57_77_0 + WPtempx * x_57_77_1 + ABtemp * (x_48_77_0 - CDcom * x_48_77_1) + 4.000000 * ABCDtemp * x_57_46_1;
     QUICKDouble x_91_77_1 = Ptempx * x_57_77_1 + WPtempx * x_57_77_2 + ABtemp * (x_48_77_1 - CDcom * x_48_77_2) + 4.000000 * ABCDtemp * x_57_46_2;
-    LOCSTORE(store, 91, 110, STOREDIM, STOREDIM) += Qtempx * x_91_77_0 + WQtempx * x_91_77_1 + 4.000000 * CDtemp * (x_91_46_0 - ABcom * x_91_46_1) + 2.000000 * ABCDtemp * x_57_77_1;
+    LOCSTORE(store, 91, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_77_0 + WQtempx * x_91_77_1 + 4.000000 * CDtemp * (x_91_46_0 - ABcom * x_91_46_1) + 2.000000 * ABCDtemp * x_57_77_1;
     QUICKDouble x_15_41_1 = Ptempy * x_5_41_1 + WPtempy * x_5_41_2 + ABtemp * (x_3_41_1 - CDcom * x_3_41_2) + 2.000000 * ABCDtemp * x_5_31_2;
     QUICKDouble x_15_41_2 = Ptempy * x_5_41_2 + WPtempy * x_5_41_3 + ABtemp * (x_3_41_2 - CDcom * x_3_41_3) + 2.000000 * ABCDtemp * x_5_31_3;
     QUICKDouble x_15_31_2 = Ptempy * x_5_31_2 + WPtempy * x_5_31_3 + ABtemp * (x_3_31_2 - CDcom * x_3_31_3) + ABCDtemp * x_5_19_3;
@@ -13080,8 +13080,8 @@
     QUICKDouble x_63_78_1 = Qtempy * x_63_41_1 + WQtempy * x_63_41_2 + 2.000000 * CDtemp * (x_63_31_1 - ABcom * x_63_31_2) + 3.000000 * ABCDtemp * x_37_41_2;
     QUICKDouble x_91_78_0 = Ptempx * x_57_78_0 + WPtempx * x_57_78_1 + ABtemp * (x_48_78_0 - CDcom * x_48_78_1);
     QUICKDouble x_91_78_1 = Ptempx * x_57_78_1 + WPtempx * x_57_78_2 + ABtemp * (x_48_78_1 - CDcom * x_48_78_2);
-    LOCSTORE(store, 91, 112, STOREDIM, STOREDIM) += Qtempy * x_91_78_0 + WQtempy * x_91_78_1 + 3.000000 * CDtemp * (x_91_41_0 - ABcom * x_91_41_1) + 4.000000 * ABCDtemp * x_63_78_1;
-    LOCSTORE(store, 91, 93, STOREDIM, STOREDIM) += Qtempx * x_91_78_0 + WQtempx * x_91_78_1 + 2.000000 * ABCDtemp * x_57_78_1;
+    LOCSTORE(store, 91, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_78_0 + WQtempy * x_91_78_1 + 3.000000 * CDtemp * (x_91_41_0 - ABcom * x_91_41_1) + 4.000000 * ABCDtemp * x_63_78_1;
+    LOCSTORE(store, 91, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_78_0 + WQtempx * x_91_78_1 + 2.000000 * ABCDtemp * x_57_78_1;
     QUICKDouble x_48_27_2 = Qtempx * x_48_19_2 + WQtempx * x_48_19_3;
     QUICKDouble x_48_27_3 = Qtempx * x_48_19_3 + WQtempx * x_48_19_4;
     QUICKDouble x_57_27_1 = Qtempx * x_57_19_1 + WQtempx * x_57_19_2 + ABCDtemp * x_48_19_2;
@@ -13120,7 +13120,7 @@
     QUICKDouble x_91_43_1 = Qtempx * x_91_27_1 + WQtempx * x_91_27_2 + CDtemp * (x_91_19_1 - ABcom * x_91_19_2) + 2.000000 * ABCDtemp * x_57_27_2;
     QUICKDouble x_91_79_0 = Ptempx * x_57_79_0 + WPtempx * x_57_79_1 + ABtemp * (x_48_79_0 - CDcom * x_48_79_1) + 3.000000 * ABCDtemp * x_57_43_1;
     QUICKDouble x_91_79_1 = Ptempx * x_57_79_1 + WPtempx * x_57_79_2 + ABtemp * (x_48_79_1 - CDcom * x_48_79_2) + 3.000000 * ABCDtemp * x_57_43_2;
-    LOCSTORE(store, 91, 114, STOREDIM, STOREDIM) += Qtempx * x_91_79_0 + WQtempx * x_91_79_1 + 3.000000 * CDtemp * (x_91_43_0 - ABcom * x_91_43_1) + 2.000000 * ABCDtemp * x_57_79_1;
+    LOCSTORE(store, 91, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_79_0 + WQtempx * x_91_79_1 + 3.000000 * CDtemp * (x_91_43_0 - ABcom * x_91_43_1) + 2.000000 * ABCDtemp * x_57_79_1;
     QUICKDouble x_48_29_2 = Qtempx * x_48_18_2 + WQtempx * x_48_18_3;
     QUICKDouble x_48_29_3 = Qtempx * x_48_18_3 + WQtempx * x_48_18_4;
     QUICKDouble x_57_29_1 = Qtempx * x_57_18_1 + WQtempx * x_57_18_2 + ABCDtemp * x_48_18_2;
@@ -13169,7 +13169,7 @@
     QUICKDouble x_91_45_1 = Qtempx * x_91_29_1 + WQtempx * x_91_29_2 + CDtemp * (x_91_18_1 - ABcom * x_91_18_2) + 2.000000 * ABCDtemp * x_57_29_2;
     QUICKDouble x_91_80_0 = Ptempx * x_57_80_0 + WPtempx * x_57_80_1 + ABtemp * (x_48_80_0 - CDcom * x_48_80_1) + 3.000000 * ABCDtemp * x_57_45_1;
     QUICKDouble x_91_80_1 = Ptempx * x_57_80_1 + WPtempx * x_57_80_2 + ABtemp * (x_48_80_1 - CDcom * x_48_80_2) + 3.000000 * ABCDtemp * x_57_45_2;
-    LOCSTORE(store, 91, 116, STOREDIM, STOREDIM) += Qtempx * x_91_80_0 + WQtempx * x_91_80_1 + 3.000000 * CDtemp * (x_91_45_0 - ABcom * x_91_45_1) + 2.000000 * ABCDtemp * x_57_80_1;
+    LOCSTORE(store, 91, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_80_0 + WQtempx * x_91_80_1 + 3.000000 * CDtemp * (x_91_45_0 - ABcom * x_91_45_1) + 2.000000 * ABCDtemp * x_57_80_1;
     QUICKDouble x_48_1_2 = Qtempx * x_48_0_2 + WQtempx * x_48_0_3;
     QUICKDouble x_48_1_3 = Qtempx * x_48_0_3 + WQtempx * x_48_0_4;
     QUICKDouble x_48_1_4 = Qtempx * x_48_0_4 + WQtempx * x_48_0_5;
@@ -13262,7 +13262,7 @@
     QUICKDouble x_91_53_1 = Qtempx * x_91_32_1 + WQtempx * x_91_32_2 + 4.000000 * CDtemp * (x_91_17_1 - ABcom * x_91_17_2) + 2.000000 * ABCDtemp * x_57_32_2;
     QUICKDouble x_91_81_0 = Ptempx * x_57_81_0 + WPtempx * x_57_81_1 + ABtemp * (x_48_81_0 - CDcom * x_48_81_1) + 6.000000 * ABCDtemp * x_57_53_1;
     QUICKDouble x_91_81_1 = Ptempx * x_57_81_1 + WPtempx * x_57_81_2 + ABtemp * (x_48_81_1 - CDcom * x_48_81_2) + 6.000000 * ABCDtemp * x_57_53_2;
-    LOCSTORE(store, 91, 117, STOREDIM, STOREDIM) += Qtempx * x_91_81_0 + WQtempx * x_91_81_1 + 6.000000 * CDtemp * (x_91_53_0 - ABcom * x_91_53_1) + 2.000000 * ABCDtemp * x_57_81_1;
+    LOCSTORE(store, 91, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_81_0 + WQtempx * x_91_81_1 + 6.000000 * CDtemp * (x_91_53_0 - ABcom * x_91_53_1) + 2.000000 * ABCDtemp * x_57_81_1;
     QUICKDouble x_37_2_6 = Qtempy * x_37_0_6 + WQtempy * x_37_0_7 + 2.000000 * ABCDtemp * x_23_0_7;
     QUICKDouble x_63_2_6 = Qtempy * x_63_0_6 + WQtempy * x_63_0_7 + 3.000000 * ABCDtemp * x_37_0_7;
     QUICKDouble x_37_8_5 = Qtempy * x_37_2_5 + WQtempy * x_37_2_6 + CDtemp * (x_37_0_5 - ABcom * x_37_0_6) + 2.000000 * ABCDtemp * x_23_2_6;
@@ -13306,8 +13306,8 @@
     QUICKDouble x_63_82_1 = Qtempy * x_63_54_1 + WQtempy * x_63_54_2 + 5.000000 * CDtemp * (x_63_33_1 - ABcom * x_63_33_2) + 3.000000 * ABCDtemp * x_37_54_2;
     QUICKDouble x_91_82_0 = Ptempx * x_57_82_0 + WPtempx * x_57_82_1 + ABtemp * (x_48_82_0 - CDcom * x_48_82_1);
     QUICKDouble x_91_82_1 = Ptempx * x_57_82_1 + WPtempx * x_57_82_2 + ABtemp * (x_48_82_1 - CDcom * x_48_82_2);
-    LOCSTORE(store, 91, 118, STOREDIM, STOREDIM) += Qtempy * x_91_82_0 + WQtempy * x_91_82_1 + 6.000000 * CDtemp * (x_91_54_0 - ABcom * x_91_54_1) + 4.000000 * ABCDtemp * x_63_82_1;
-    LOCSTORE(store, 91, 103, STOREDIM, STOREDIM) += Qtempx * x_91_82_0 + WQtempx * x_91_82_1 + 2.000000 * ABCDtemp * x_57_82_1;
+    LOCSTORE(store, 91, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_82_0 + WQtempy * x_91_82_1 + 6.000000 * CDtemp * (x_91_54_0 - ABcom * x_91_54_1) + 4.000000 * ABCDtemp * x_63_82_1;
+    LOCSTORE(store, 91, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_82_0 + WQtempx * x_91_82_1 + 2.000000 * ABCDtemp * x_57_82_1;
     QUICKDouble x_76_0_7 = Ptempx * x_51_0_7 + WPtempx * x_51_0_8 + ABtemp * (x_33_0_7 - CDcom * x_33_0_8);
     QUICKDouble x_76_3_6 = Qtempz * x_76_0_6 + WQtempz * x_76_0_7;
     QUICKDouble x_76_9_5 = Qtempz * x_76_3_5 + WQtempz * x_76_3_6 + CDtemp * (x_76_0_5 - ABcom * x_76_0_6);
@@ -13334,11 +13334,11 @@
     QUICKDouble x_76_83_1 = Qtempz * x_76_55_1 + WQtempz * x_76_55_2 + 5.000000 * CDtemp * (x_76_34_1 - ABcom * x_76_34_2);
     QUICKDouble x_91_83_0 = Ptempx * x_57_83_0 + WPtempx * x_57_83_1 + ABtemp * (x_48_83_0 - CDcom * x_48_83_1);
     QUICKDouble x_91_83_1 = Ptempx * x_57_83_1 + WPtempx * x_57_83_2 + ABtemp * (x_48_83_1 - CDcom * x_48_83_2);
-    LOCSTORE(store, 91, 119, STOREDIM, STOREDIM) += Qtempz * x_91_83_0 + WQtempz * x_91_83_1 + 6.000000 * CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + ABCDtemp * x_76_83_1;
-    LOCSTORE(store, 91, 101, STOREDIM, STOREDIM) += Qtempx * x_91_83_0 + WQtempx * x_91_83_1 + 2.000000 * ABCDtemp * x_57_83_1;
+    LOCSTORE(store, 91, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_91_83_0 + WQtempz * x_91_83_1 + 6.000000 * CDtemp * (x_91_55_0 - ABcom * x_91_55_1) + ABCDtemp * x_76_83_1;
+    LOCSTORE(store, 91, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_91_83_0 + WQtempx * x_91_83_1 + 2.000000 * ABCDtemp * x_57_83_1;
     QUICKDouble x_45_55_2 = Qtempz * x_45_34_2 + WQtempz * x_45_34_3 + 4.000000 * CDtemp * (x_45_19_2 - ABcom * x_45_19_3);
     QUICKDouble x_63_83_1 = Qtempz * x_63_55_1 + WQtempz * x_63_55_2 + 5.000000 * CDtemp * (x_63_34_1 - ABcom * x_63_34_2) + ABCDtemp * x_45_55_2;
-    LOCSTORE(store, 91, 99, STOREDIM, STOREDIM) += Qtempy * x_91_83_0 + WQtempy * x_91_83_1 + 4.000000 * ABCDtemp * x_63_83_1;
+    LOCSTORE(store, 91, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_91_83_0 + WQtempy * x_91_83_1 + 4.000000 * ABCDtemp * x_63_83_1;
     QUICKDouble x_12_0_1 = Ptempx * x_8_0_1 + WPtempx * x_8_0_2;
     QUICKDouble x_24_0_1 = Ptempx * x_15_0_1 + WPtempx * x_15_0_2;
     QUICKDouble x_12_0_2 = Ptempx * x_8_0_2 + WPtempx * x_8_0_3;
@@ -13476,7 +13476,7 @@
     QUICKDouble x_92_38_1 = Qtempx * x_92_23_1 + WQtempx * x_92_23_2 + 2.000000 * CDtemp * (x_92_10_1 - ABcom * x_92_10_2) + 4.000000 * ABCDtemp * x_64_23_2;
     QUICKDouble x_92_56_0 = Ptempx * x_64_56_0 + WPtempx * x_64_56_1 + 3.000000 * ABtemp * (x_37_56_0 - CDcom * x_37_56_1) + 4.000000 * ABCDtemp * x_64_38_1;
     QUICKDouble x_92_56_1 = Ptempx * x_64_56_1 + WPtempx * x_64_56_2 + 3.000000 * ABtemp * (x_37_56_1 - CDcom * x_37_56_2) + 4.000000 * ABCDtemp * x_64_38_2;
-    LOCSTORE(store, 92, 84, STOREDIM, STOREDIM) += Qtempx * x_92_56_0 + WQtempx * x_92_56_1 + 4.000000 * CDtemp * (x_92_38_0 - ABcom * x_92_38_1) + 4.000000 * ABCDtemp * x_64_56_1;
+    LOCSTORE(store, 92, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_56_0 + WQtempx * x_92_56_1 + 4.000000 * CDtemp * (x_92_38_0 - ABcom * x_92_38_1) + 4.000000 * ABCDtemp * x_64_56_1;
     QUICKDouble x_64_15_1 = Qtempy * x_64_5_1 + WQtempy * x_64_5_2 + CDtemp * (x_64_3_1 - ABcom * x_64_3_2) + 2.000000 * ABCDtemp * x_38_5_2;
     QUICKDouble x_64_15_2 = Qtempy * x_64_5_2 + WQtempy * x_64_5_3 + CDtemp * (x_64_3_2 - ABcom * x_64_3_3) + 2.000000 * ABCDtemp * x_38_5_3;
     QUICKDouble x_64_15_3 = Qtempy * x_64_5_3 + WQtempy * x_64_5_4 + CDtemp * (x_64_3_3 - ABcom * x_64_3_4) + 2.000000 * ABCDtemp * x_38_5_4;
@@ -13522,7 +13522,7 @@
     QUICKDouble x_92_48_1 = Qtempy * x_92_30_1 + WQtempy * x_92_30_2 + 3.000000 * CDtemp * (x_92_15_1 - ABcom * x_92_15_2) + 2.000000 * ABCDtemp * x_56_30_2;
     QUICKDouble x_92_57_0 = Ptempx * x_64_57_0 + WPtempx * x_64_57_1 + 3.000000 * ABtemp * (x_37_57_0 - CDcom * x_37_57_1) + ABCDtemp * x_64_48_1;
     QUICKDouble x_92_57_1 = Ptempx * x_64_57_1 + WPtempx * x_64_57_2 + 3.000000 * ABtemp * (x_37_57_1 - CDcom * x_37_57_2) + ABCDtemp * x_64_48_2;
-    LOCSTORE(store, 92, 91, STOREDIM, STOREDIM) += Qtempx * x_92_57_0 + WQtempx * x_92_57_1 + CDtemp * (x_92_48_0 - ABcom * x_92_48_1) + 4.000000 * ABCDtemp * x_64_57_1;
+    LOCSTORE(store, 92, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_57_0 + WQtempx * x_92_57_1 + CDtemp * (x_92_48_0 - ABcom * x_92_48_1) + 4.000000 * ABCDtemp * x_64_57_1;
     QUICKDouble x_46_3_2 = Qtempz * x_46_0_2 + WQtempz * x_46_0_3;
     QUICKDouble x_46_3_3 = Qtempz * x_46_0_3 + WQtempz * x_46_0_4;
     QUICKDouble x_46_3_4 = Qtempz * x_46_0_4 + WQtempz * x_46_0_5;
@@ -13618,7 +13618,7 @@
     QUICKDouble x_92_47_1 = Qtempy * x_92_34_1 + WQtempy * x_92_34_2 + 2.000000 * ABCDtemp * x_56_34_2;
     QUICKDouble x_92_58_0 = Ptempx * x_64_58_0 + WPtempx * x_64_58_1 + 3.000000 * ABtemp * (x_37_58_0 - CDcom * x_37_58_1) + ABCDtemp * x_64_47_1;
     QUICKDouble x_92_58_1 = Ptempx * x_64_58_1 + WPtempx * x_64_58_2 + 3.000000 * ABtemp * (x_37_58_1 - CDcom * x_37_58_2) + ABCDtemp * x_64_47_2;
-    LOCSTORE(store, 92, 89, STOREDIM, STOREDIM) += Qtempx * x_92_58_0 + WQtempx * x_92_58_1 + CDtemp * (x_92_47_0 - ABcom * x_92_47_1) + 4.000000 * ABCDtemp * x_64_58_1;
+    LOCSTORE(store, 92, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_58_0 + WQtempx * x_92_58_1 + CDtemp * (x_92_47_0 - ABcom * x_92_47_1) + 4.000000 * ABCDtemp * x_64_58_1;
     QUICKDouble x_64_31_1 = Qtempy * x_64_19_1 + WQtempy * x_64_19_2 + 2.000000 * ABCDtemp * x_38_19_2;
     QUICKDouble x_64_31_2 = Qtempy * x_64_19_2 + WQtempy * x_64_19_3 + 2.000000 * ABCDtemp * x_38_19_3;
     QUICKDouble x_64_31_3 = Qtempy * x_64_19_3 + WQtempy * x_64_19_4 + 2.000000 * ABCDtemp * x_38_19_4;
@@ -13652,7 +13652,7 @@
     QUICKDouble x_92_41_1 = Qtempy * x_92_31_1 + WQtempy * x_92_31_2 + CDtemp * (x_92_19_1 - ABcom * x_92_19_2) + 2.000000 * ABCDtemp * x_56_31_2;
     QUICKDouble x_92_59_0 = Ptempx * x_64_59_0 + WPtempx * x_64_59_1 + 3.000000 * ABtemp * (x_37_59_0 - CDcom * x_37_59_1) + ABCDtemp * x_64_41_1;
     QUICKDouble x_92_59_1 = Ptempx * x_64_59_1 + WPtempx * x_64_59_2 + 3.000000 * ABtemp * (x_37_59_1 - CDcom * x_37_59_2) + ABCDtemp * x_64_41_2;
-    LOCSTORE(store, 92, 98, STOREDIM, STOREDIM) += Qtempx * x_92_59_0 + WQtempx * x_92_59_1 + CDtemp * (x_92_41_0 - ABcom * x_92_41_1) + 4.000000 * ABCDtemp * x_64_59_1;
+    LOCSTORE(store, 92, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_59_0 + WQtempx * x_92_59_1 + CDtemp * (x_92_41_0 - ABcom * x_92_41_1) + 4.000000 * ABCDtemp * x_64_59_1;
     QUICKDouble x_64_16_1 = Qtempy * x_64_9_1 + WQtempy * x_64_9_2 + 2.000000 * ABCDtemp * x_38_9_2;
     QUICKDouble x_64_16_2 = Qtempy * x_64_9_2 + WQtempy * x_64_9_3 + 2.000000 * ABCDtemp * x_38_9_3;
     QUICKDouble x_64_16_3 = Qtempy * x_64_9_3 + WQtempy * x_64_9_4 + 2.000000 * ABCDtemp * x_38_9_4;
@@ -13698,7 +13698,7 @@
     QUICKDouble x_92_42_1 = Qtempy * x_92_22_1 + WQtempy * x_92_22_2 + 2.000000 * CDtemp * (x_92_16_1 - ABcom * x_92_16_2) + 2.000000 * ABCDtemp * x_56_22_2;
     QUICKDouble x_92_60_0 = Ptempx * x_64_60_0 + WPtempx * x_64_60_1 + 3.000000 * ABtemp * (x_37_60_0 - CDcom * x_37_60_1) + ABCDtemp * x_64_42_1;
     QUICKDouble x_92_60_1 = Ptempx * x_64_60_1 + WPtempx * x_64_60_2 + 3.000000 * ABtemp * (x_37_60_1 - CDcom * x_37_60_2) + ABCDtemp * x_64_42_2;
-    LOCSTORE(store, 92, 97, STOREDIM, STOREDIM) += Qtempx * x_92_60_0 + WQtempx * x_92_60_1 + CDtemp * (x_92_42_0 - ABcom * x_92_42_1) + 4.000000 * ABCDtemp * x_64_60_1;
+    LOCSTORE(store, 92, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_60_0 + WQtempx * x_92_60_1 + CDtemp * (x_92_42_0 - ABcom * x_92_42_1) + 4.000000 * ABCDtemp * x_64_60_1;
     QUICKDouble x_37_40_2 = Qtempx * x_37_31_2 + WQtempx * x_37_31_3 + 2.000000 * ABCDtemp * x_24_31_3;
     QUICKDouble x_64_40_1 = Qtempx * x_64_31_1 + WQtempx * x_64_31_2 + 3.000000 * ABCDtemp * x_37_31_2;
     QUICKDouble x_64_40_2 = Qtempx * x_64_31_2 + WQtempx * x_64_31_3 + 3.000000 * ABCDtemp * x_37_31_3;
@@ -13723,7 +13723,7 @@
     QUICKDouble x_92_40_1 = Qtempx * x_92_31_1 + WQtempx * x_92_31_2 + 4.000000 * ABCDtemp * x_64_31_2;
     QUICKDouble x_92_61_0 = Ptempx * x_64_61_0 + WPtempx * x_64_61_1 + 3.000000 * ABtemp * (x_37_61_0 - CDcom * x_37_61_1) + 2.000000 * ABCDtemp * x_64_40_1;
     QUICKDouble x_92_61_1 = Ptempx * x_64_61_1 + WPtempx * x_64_61_2 + 3.000000 * ABtemp * (x_37_61_1 - CDcom * x_37_61_2) + 2.000000 * ABCDtemp * x_64_40_2;
-    LOCSTORE(store, 92, 94, STOREDIM, STOREDIM) += Qtempx * x_92_61_0 + WQtempx * x_92_61_1 + 2.000000 * CDtemp * (x_92_40_0 - ABcom * x_92_40_1) + 4.000000 * ABCDtemp * x_64_61_1;
+    LOCSTORE(store, 92, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_61_0 + WQtempx * x_92_61_1 + 2.000000 * CDtemp * (x_92_40_0 - ABcom * x_92_40_1) + 4.000000 * ABCDtemp * x_64_61_1;
     QUICKDouble x_24_25_3 = Qtempx * x_24_16_3 + WQtempx * x_24_16_4 + ABCDtemp * x_15_16_4;
     QUICKDouble x_37_25_2 = Qtempx * x_37_16_2 + WQtempx * x_37_16_3 + 2.000000 * ABCDtemp * x_24_16_3;
     QUICKDouble x_37_25_3 = Qtempx * x_37_16_3 + WQtempx * x_37_16_4 + 2.000000 * ABCDtemp * x_24_16_4;
@@ -13763,7 +13763,7 @@
     QUICKDouble x_92_36_1 = Qtempx * x_92_25_1 + WQtempx * x_92_25_2 + CDtemp * (x_92_16_1 - ABcom * x_92_16_2) + 4.000000 * ABCDtemp * x_64_25_2;
     QUICKDouble x_92_62_0 = Ptempx * x_64_62_0 + WPtempx * x_64_62_1 + 3.000000 * ABtemp * (x_37_62_0 - CDcom * x_37_62_1) + 3.000000 * ABCDtemp * x_64_36_1;
     QUICKDouble x_92_62_1 = Ptempx * x_64_62_1 + WPtempx * x_64_62_2 + 3.000000 * ABtemp * (x_37_62_1 - CDcom * x_37_62_2) + 3.000000 * ABCDtemp * x_64_36_2;
-    LOCSTORE(store, 92, 90, STOREDIM, STOREDIM) += Qtempx * x_92_62_0 + WQtempx * x_92_62_1 + 3.000000 * CDtemp * (x_92_36_0 - ABcom * x_92_36_1) + 4.000000 * ABCDtemp * x_64_62_1;
+    LOCSTORE(store, 92, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_62_0 + WQtempx * x_92_62_1 + 3.000000 * CDtemp * (x_92_36_0 - ABcom * x_92_36_1) + 4.000000 * ABCDtemp * x_64_62_1;
     QUICKDouble x_37_39_2 = Qtempx * x_37_30_2 + WQtempx * x_37_30_3 + 2.000000 * ABCDtemp * x_24_30_3;
     QUICKDouble x_64_39_1 = Qtempx * x_64_30_1 + WQtempx * x_64_30_2 + 3.000000 * ABCDtemp * x_37_30_2;
     QUICKDouble x_64_39_2 = Qtempx * x_64_30_2 + WQtempx * x_64_30_3 + 3.000000 * ABCDtemp * x_37_30_3;
@@ -13788,7 +13788,7 @@
     QUICKDouble x_92_39_1 = Qtempx * x_92_30_1 + WQtempx * x_92_30_2 + 4.000000 * ABCDtemp * x_64_30_2;
     QUICKDouble x_92_63_0 = Ptempx * x_64_63_0 + WPtempx * x_64_63_1 + 3.000000 * ABtemp * (x_37_63_0 - CDcom * x_37_63_1) + 2.000000 * ABCDtemp * x_64_39_1;
     QUICKDouble x_92_63_1 = Ptempx * x_64_63_1 + WPtempx * x_64_63_2 + 3.000000 * ABtemp * (x_37_63_1 - CDcom * x_37_63_2) + 2.000000 * ABCDtemp * x_64_39_2;
-    LOCSTORE(store, 92, 95, STOREDIM, STOREDIM) += Qtempx * x_92_63_0 + WQtempx * x_92_63_1 + 2.000000 * CDtemp * (x_92_39_0 - ABcom * x_92_39_1) + 4.000000 * ABCDtemp * x_64_63_1;
+    LOCSTORE(store, 92, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_63_0 + WQtempx * x_92_63_1 + 2.000000 * CDtemp * (x_92_39_0 - ABcom * x_92_39_1) + 4.000000 * ABCDtemp * x_64_63_1;
     QUICKDouble x_24_24_3 = Qtempx * x_24_15_3 + WQtempx * x_24_15_4 + ABCDtemp * x_15_15_4;
     QUICKDouble x_37_24_2 = Qtempx * x_37_15_2 + WQtempx * x_37_15_3 + 2.000000 * ABCDtemp * x_24_15_3;
     QUICKDouble x_37_24_3 = Qtempx * x_37_15_3 + WQtempx * x_37_15_4 + 2.000000 * ABCDtemp * x_24_15_4;
@@ -13828,7 +13828,7 @@
     QUICKDouble x_92_37_1 = Qtempx * x_92_24_1 + WQtempx * x_92_24_2 + CDtemp * (x_92_15_1 - ABcom * x_92_15_2) + 4.000000 * ABCDtemp * x_64_24_2;
     QUICKDouble x_92_64_0 = Ptempx * x_64_64_0 + WPtempx * x_64_64_1 + 3.000000 * ABtemp * (x_37_64_0 - CDcom * x_37_64_1) + 3.000000 * ABCDtemp * x_64_37_1;
     QUICKDouble x_92_64_1 = Ptempx * x_64_64_1 + WPtempx * x_64_64_2 + 3.000000 * ABtemp * (x_37_64_1 - CDcom * x_37_64_2) + 3.000000 * ABCDtemp * x_64_37_2;
-    LOCSTORE(store, 92, 92, STOREDIM, STOREDIM) += Qtempx * x_92_64_0 + WQtempx * x_92_64_1 + 3.000000 * CDtemp * (x_92_37_0 - ABcom * x_92_37_1) + 4.000000 * ABCDtemp * x_64_64_1;
+    LOCSTORE(store, 92, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_64_0 + WQtempx * x_92_64_1 + 3.000000 * CDtemp * (x_92_37_0 - ABcom * x_92_37_1) + 4.000000 * ABCDtemp * x_64_64_1;
     QUICKDouble x_37_35_2 = Qtempx * x_37_22_2 + WQtempx * x_37_22_3 + 2.000000 * ABCDtemp * x_24_22_3;
     QUICKDouble x_64_35_1 = Qtempx * x_64_22_1 + WQtempx * x_64_22_2 + 3.000000 * ABCDtemp * x_37_22_2;
     QUICKDouble x_64_35_2 = Qtempx * x_64_22_2 + WQtempx * x_64_22_3 + 3.000000 * ABCDtemp * x_37_22_3;
@@ -13853,7 +13853,7 @@
     QUICKDouble x_92_35_1 = Qtempx * x_92_22_1 + WQtempx * x_92_22_2 + 4.000000 * ABCDtemp * x_64_22_2;
     QUICKDouble x_92_65_0 = Ptempx * x_64_65_0 + WPtempx * x_64_65_1 + 3.000000 * ABtemp * (x_37_65_0 - CDcom * x_37_65_1) + 2.000000 * ABCDtemp * x_64_35_1;
     QUICKDouble x_92_65_1 = Ptempx * x_64_65_1 + WPtempx * x_64_65_2 + 3.000000 * ABtemp * (x_37_65_1 - CDcom * x_37_65_2) + 2.000000 * ABCDtemp * x_64_35_2;
-    LOCSTORE(store, 92, 96, STOREDIM, STOREDIM) += Qtempx * x_92_65_0 + WQtempx * x_92_65_1 + 2.000000 * CDtemp * (x_92_35_0 - ABcom * x_92_35_1) + 4.000000 * ABCDtemp * x_64_65_1;
+    LOCSTORE(store, 92, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_65_0 + WQtempx * x_92_65_1 + 2.000000 * CDtemp * (x_92_35_0 - ABcom * x_92_35_1) + 4.000000 * ABCDtemp * x_64_65_1;
     QUICKDouble x_46_34_2 = Qtempz * x_46_19_2 + WQtempz * x_46_19_3 + 3.000000 * CDtemp * (x_46_9_2 - ABcom * x_46_9_3);
     QUICKDouble x_46_34_3 = Qtempz * x_46_19_3 + WQtempz * x_46_19_4 + 3.000000 * CDtemp * (x_46_9_3 - ABcom * x_46_9_4);
     QUICKDouble x_46_34_1 = Qtempz * x_46_19_1 + WQtempz * x_46_19_2 + 3.000000 * CDtemp * (x_46_9_1 - ABcom * x_46_9_2);
@@ -13878,8 +13878,8 @@
     QUICKDouble x_92_55_1 = Qtempz * x_92_34_1 + WQtempz * x_92_34_2 + 4.000000 * CDtemp * (x_92_19_1 - ABcom * x_92_19_2) + ABCDtemp * x_77_34_2;
     QUICKDouble x_92_66_0 = Ptempx * x_64_66_0 + WPtempx * x_64_66_1 + 3.000000 * ABtemp * (x_37_66_0 - CDcom * x_37_66_1);
     QUICKDouble x_92_66_1 = Ptempx * x_64_66_1 + WPtempx * x_64_66_2 + 3.000000 * ABtemp * (x_37_66_1 - CDcom * x_37_66_2);
-    LOCSTORE(store, 92, 105, STOREDIM, STOREDIM) += Qtempy * x_92_66_0 + WQtempy * x_92_66_1 + CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + 2.000000 * ABCDtemp * x_56_66_1;
-    LOCSTORE(store, 92, 86, STOREDIM, STOREDIM) += Qtempx * x_92_66_0 + WQtempx * x_92_66_1 + 4.000000 * ABCDtemp * x_64_66_1;
+    LOCSTORE(store, 92, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_66_0 + WQtempy * x_92_66_1 + CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + 2.000000 * ABCDtemp * x_56_66_1;
+    LOCSTORE(store, 92, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_66_0 + WQtempx * x_92_66_1 + 4.000000 * ABCDtemp * x_64_66_1;
     QUICKDouble x_24_67_0 = Ptempx * x_15_67_0 + WPtempx * x_15_67_1;
     QUICKDouble x_24_67_1 = Ptempx * x_15_67_1 + WPtempx * x_15_67_2;
     QUICKDouble x_24_67_2 = Ptempx * x_15_67_2 + WPtempx * x_15_67_3;
@@ -13892,8 +13892,8 @@
     QUICKDouble x_64_67_2 = Qtempy * x_64_48_2 + WQtempy * x_64_48_3 + 4.000000 * CDtemp * (x_64_30_2 - ABcom * x_64_30_3) + 2.000000 * ABCDtemp * x_38_48_3;
     QUICKDouble x_92_67_0 = Ptempx * x_64_67_0 + WPtempx * x_64_67_1 + 3.000000 * ABtemp * (x_37_67_0 - CDcom * x_37_67_1);
     QUICKDouble x_92_67_1 = Ptempx * x_64_67_1 + WPtempx * x_64_67_2 + 3.000000 * ABtemp * (x_37_67_1 - CDcom * x_37_67_2);
-    LOCSTORE(store, 92, 100, STOREDIM, STOREDIM) += Qtempy * x_92_67_0 + WQtempy * x_92_67_1 + 5.000000 * CDtemp * (x_92_48_0 - ABcom * x_92_48_1) + 2.000000 * ABCDtemp * x_56_67_1;
-    LOCSTORE(store, 92, 85, STOREDIM, STOREDIM) += Qtempx * x_92_67_0 + WQtempx * x_92_67_1 + 4.000000 * ABCDtemp * x_64_67_1;
+    LOCSTORE(store, 92, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_67_0 + WQtempy * x_92_67_1 + 5.000000 * CDtemp * (x_92_48_0 - ABcom * x_92_48_1) + 2.000000 * ABCDtemp * x_56_67_1;
+    LOCSTORE(store, 92, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_67_0 + WQtempx * x_92_67_1 + 4.000000 * ABCDtemp * x_64_67_1;
     QUICKDouble x_20_34_2 = Qtempz * x_20_19_2 + WQtempz * x_20_19_3 + 3.000000 * CDtemp * (x_20_9_2 - ABcom * x_20_9_3);
     QUICKDouble x_20_34_4 = Qtempz * x_20_19_4 + WQtempz * x_20_19_5 + 3.000000 * CDtemp * (x_20_9_4 - ABcom * x_20_9_5);
     QUICKDouble x_24_55_1 = Ptempx * x_15_55_1 + WPtempx * x_15_55_2;
@@ -13913,7 +13913,7 @@
     QUICKDouble x_64_68_2 = Qtempx * x_64_55_2 + WQtempx * x_64_55_3 + 3.000000 * ABCDtemp * x_37_55_3;
     QUICKDouble x_92_68_0 = Ptempx * x_64_68_0 + WPtempx * x_64_68_1 + 3.000000 * ABtemp * (x_37_68_0 - CDcom * x_37_68_1) + ABCDtemp * x_64_55_1;
     QUICKDouble x_92_68_1 = Ptempx * x_64_68_1 + WPtempx * x_64_68_2 + 3.000000 * ABtemp * (x_37_68_1 - CDcom * x_37_68_2) + ABCDtemp * x_64_55_2;
-    LOCSTORE(store, 92, 107, STOREDIM, STOREDIM) += Qtempx * x_92_68_0 + WQtempx * x_92_68_1 + CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + 4.000000 * ABCDtemp * x_64_68_1;
+    LOCSTORE(store, 92, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_68_0 + WQtempx * x_92_68_1 + CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + 4.000000 * ABCDtemp * x_64_68_1;
     QUICKDouble x_15_6_4 = Qtempx * x_15_3_4 + WQtempx * x_15_3_5;
     QUICKDouble x_15_6_5 = Qtempx * x_15_3_5 + WQtempx * x_15_3_6;
     QUICKDouble x_24_6_3 = Qtempx * x_24_3_3 + WQtempx * x_24_3_4 + ABCDtemp * x_15_3_4;
@@ -14002,7 +14002,7 @@
     QUICKDouble x_92_50_1 = Qtempx * x_92_26_1 + WQtempx * x_92_26_2 + 3.000000 * CDtemp * (x_92_13_1 - ABcom * x_92_13_2) + 4.000000 * ABCDtemp * x_64_26_2;
     QUICKDouble x_92_69_0 = Ptempx * x_64_69_0 + WPtempx * x_64_69_1 + 3.000000 * ABtemp * (x_37_69_0 - CDcom * x_37_69_1) + 5.000000 * ABCDtemp * x_64_50_1;
     QUICKDouble x_92_69_1 = Ptempx * x_64_69_1 + WPtempx * x_64_69_2 + 3.000000 * ABtemp * (x_37_69_1 - CDcom * x_37_69_2) + 5.000000 * ABCDtemp * x_64_50_2;
-    LOCSTORE(store, 92, 102, STOREDIM, STOREDIM) += Qtempx * x_92_69_0 + WQtempx * x_92_69_1 + 5.000000 * CDtemp * (x_92_50_0 - ABcom * x_92_50_1) + 4.000000 * ABCDtemp * x_64_69_1;
+    LOCSTORE(store, 92, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_69_0 + WQtempx * x_92_69_1 + 5.000000 * CDtemp * (x_92_50_0 - ABcom * x_92_50_1) + 4.000000 * ABCDtemp * x_64_69_1;
     QUICKDouble x_64_2_1 = Qtempy * x_64_0_1 + WQtempy * x_64_0_2 + 2.000000 * ABCDtemp * x_38_0_2;
     QUICKDouble x_64_2_2 = Qtempy * x_64_0_2 + WQtempy * x_64_0_3 + 2.000000 * ABCDtemp * x_38_0_3;
     QUICKDouble x_64_2_3 = Qtempy * x_64_0_3 + WQtempy * x_64_0_4 + 2.000000 * ABCDtemp * x_38_0_4;
@@ -14078,7 +14078,7 @@
     QUICKDouble x_92_54_1 = Qtempy * x_92_33_1 + WQtempy * x_92_33_2 + 4.000000 * CDtemp * (x_92_18_1 - ABcom * x_92_18_2) + 2.000000 * ABCDtemp * x_56_33_2;
     QUICKDouble x_92_70_0 = Ptempx * x_64_70_0 + WPtempx * x_64_70_1 + 3.000000 * ABtemp * (x_37_70_0 - CDcom * x_37_70_1) + ABCDtemp * x_64_54_1;
     QUICKDouble x_92_70_1 = Ptempx * x_64_70_1 + WPtempx * x_64_70_2 + 3.000000 * ABtemp * (x_37_70_1 - CDcom * x_37_70_2) + ABCDtemp * x_64_54_2;
-    LOCSTORE(store, 92, 109, STOREDIM, STOREDIM) += Qtempx * x_92_70_0 + WQtempx * x_92_70_1 + CDtemp * (x_92_54_0 - ABcom * x_92_54_1) + 4.000000 * ABCDtemp * x_64_70_1;
+    LOCSTORE(store, 92, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_70_0 + WQtempx * x_92_70_1 + CDtemp * (x_92_54_0 - ABcom * x_92_54_1) + 4.000000 * ABCDtemp * x_64_70_1;
     QUICKDouble x_15_4_4 = Qtempx * x_15_2_4 + WQtempx * x_15_2_5;
     QUICKDouble x_15_4_5 = Qtempx * x_15_2_5 + WQtempx * x_15_2_6;
     QUICKDouble x_24_4_3 = Qtempx * x_24_2_3 + WQtempx * x_24_2_4 + ABCDtemp * x_15_2_4;
@@ -14167,7 +14167,7 @@
     QUICKDouble x_92_52_1 = Qtempx * x_92_28_1 + WQtempx * x_92_28_2 + 3.000000 * CDtemp * (x_92_11_1 - ABcom * x_92_11_2) + 4.000000 * ABCDtemp * x_64_28_2;
     QUICKDouble x_92_71_0 = Ptempx * x_64_71_0 + WPtempx * x_64_71_1 + 3.000000 * ABtemp * (x_37_71_0 - CDcom * x_37_71_1) + 5.000000 * ABCDtemp * x_64_52_1;
     QUICKDouble x_92_71_1 = Ptempx * x_64_71_1 + WPtempx * x_64_71_2 + 3.000000 * ABtemp * (x_37_71_1 - CDcom * x_37_71_2) + 5.000000 * ABCDtemp * x_64_52_2;
-    LOCSTORE(store, 92, 104, STOREDIM, STOREDIM) += Qtempx * x_92_71_0 + WQtempx * x_92_71_1 + 5.000000 * CDtemp * (x_92_52_0 - ABcom * x_92_52_1) + 4.000000 * ABCDtemp * x_64_71_1;
+    LOCSTORE(store, 92, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_71_0 + WQtempx * x_92_71_1 + 5.000000 * CDtemp * (x_92_52_0 - ABcom * x_92_52_1) + 4.000000 * ABCDtemp * x_64_71_1;
     QUICKDouble x_24_72_0 = Ptempx * x_15_72_0 + WPtempx * x_15_72_1;
     QUICKDouble x_24_72_1 = Ptempx * x_15_72_1 + WPtempx * x_15_72_2;
     QUICKDouble x_24_72_2 = Ptempx * x_15_72_2 + WPtempx * x_15_72_3;
@@ -14180,8 +14180,8 @@
     QUICKDouble x_64_72_2 = Qtempy * x_64_47_2 + WQtempy * x_64_47_3 + CDtemp * (x_64_34_2 - ABcom * x_64_34_3) + 2.000000 * ABCDtemp * x_38_47_3;
     QUICKDouble x_92_72_0 = Ptempx * x_64_72_0 + WPtempx * x_64_72_1 + 3.000000 * ABtemp * (x_37_72_0 - CDcom * x_37_72_1);
     QUICKDouble x_92_72_1 = Ptempx * x_64_72_1 + WPtempx * x_64_72_2 + 3.000000 * ABtemp * (x_37_72_1 - CDcom * x_37_72_2);
-    LOCSTORE(store, 92, 111, STOREDIM, STOREDIM) += Qtempy * x_92_72_0 + WQtempy * x_92_72_1 + 2.000000 * CDtemp * (x_92_47_0 - ABcom * x_92_47_1) + 2.000000 * ABCDtemp * x_56_72_1;
-    LOCSTORE(store, 92, 87, STOREDIM, STOREDIM) += Qtempx * x_92_72_0 + WQtempx * x_92_72_1 + 4.000000 * ABCDtemp * x_64_72_1;
+    LOCSTORE(store, 92, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_72_0 + WQtempy * x_92_72_1 + 2.000000 * CDtemp * (x_92_47_0 - ABcom * x_92_47_1) + 2.000000 * ABCDtemp * x_56_72_1;
+    LOCSTORE(store, 92, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_72_0 + WQtempx * x_92_72_1 + 4.000000 * ABCDtemp * x_64_72_1;
     QUICKDouble x_24_73_0 = Ptempx * x_15_73_0 + WPtempx * x_15_73_1;
     QUICKDouble x_24_73_1 = Ptempx * x_15_73_1 + WPtempx * x_15_73_2;
     QUICKDouble x_24_73_2 = Ptempx * x_15_73_2 + WPtempx * x_15_73_3;
@@ -14194,8 +14194,8 @@
     QUICKDouble x_64_73_2 = Qtempy * x_64_42_2 + WQtempy * x_64_42_3 + 3.000000 * CDtemp * (x_64_22_2 - ABcom * x_64_22_3) + 2.000000 * ABCDtemp * x_38_42_3;
     QUICKDouble x_92_73_0 = Ptempx * x_64_73_0 + WPtempx * x_64_73_1 + 3.000000 * ABtemp * (x_37_73_0 - CDcom * x_37_73_1);
     QUICKDouble x_92_73_1 = Ptempx * x_64_73_1 + WPtempx * x_64_73_2 + 3.000000 * ABtemp * (x_37_73_1 - CDcom * x_37_73_2);
-    LOCSTORE(store, 92, 106, STOREDIM, STOREDIM) += Qtempy * x_92_73_0 + WQtempy * x_92_73_1 + 4.000000 * CDtemp * (x_92_42_0 - ABcom * x_92_42_1) + 2.000000 * ABCDtemp * x_56_73_1;
-    LOCSTORE(store, 92, 88, STOREDIM, STOREDIM) += Qtempx * x_92_73_0 + WQtempx * x_92_73_1 + 4.000000 * ABCDtemp * x_64_73_1;
+    LOCSTORE(store, 92, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_73_0 + WQtempy * x_92_73_1 + 4.000000 * CDtemp * (x_92_42_0 - ABcom * x_92_42_1) + 2.000000 * ABCDtemp * x_56_73_1;
+    LOCSTORE(store, 92, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_73_0 + WQtempx * x_92_73_1 + 4.000000 * ABCDtemp * x_64_73_1;
     QUICKDouble x_37_49_2 = Qtempx * x_37_34_2 + WQtempx * x_37_34_3 + 2.000000 * ABCDtemp * x_24_34_3;
     QUICKDouble x_64_49_1 = Qtempx * x_64_34_1 + WQtempx * x_64_34_2 + 3.000000 * ABCDtemp * x_37_34_2;
     QUICKDouble x_64_49_2 = Qtempx * x_64_34_2 + WQtempx * x_64_34_3 + 3.000000 * ABCDtemp * x_37_34_3;
@@ -14220,7 +14220,7 @@
     QUICKDouble x_92_49_1 = Qtempx * x_92_34_1 + WQtempx * x_92_34_2 + 4.000000 * ABCDtemp * x_64_34_2;
     QUICKDouble x_92_74_0 = Ptempx * x_64_74_0 + WPtempx * x_64_74_1 + 3.000000 * ABtemp * (x_37_74_0 - CDcom * x_37_74_1) + 2.000000 * ABCDtemp * x_64_49_1;
     QUICKDouble x_92_74_1 = Ptempx * x_64_74_1 + WPtempx * x_64_74_2 + 3.000000 * ABtemp * (x_37_74_1 - CDcom * x_37_74_2) + 2.000000 * ABCDtemp * x_64_49_2;
-    LOCSTORE(store, 92, 113, STOREDIM, STOREDIM) += Qtempx * x_92_74_0 + WQtempx * x_92_74_1 + 2.000000 * CDtemp * (x_92_49_0 - ABcom * x_92_49_1) + 4.000000 * ABCDtemp * x_64_74_1;
+    LOCSTORE(store, 92, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_74_0 + WQtempx * x_92_74_1 + 2.000000 * CDtemp * (x_92_49_0 - ABcom * x_92_49_1) + 4.000000 * ABCDtemp * x_64_74_1;
     QUICKDouble x_15_14_4 = Qtempx * x_15_9_4 + WQtempx * x_15_9_5;
     QUICKDouble x_24_14_3 = Qtempx * x_24_9_3 + WQtempx * x_24_9_4 + ABCDtemp * x_15_9_4;
     QUICKDouble x_24_14_4 = Qtempx * x_24_9_4 + WQtempx * x_24_9_5 + ABCDtemp * x_15_9_5;
@@ -14282,7 +14282,7 @@
     QUICKDouble x_92_44_1 = Qtempx * x_92_21_1 + WQtempx * x_92_21_2 + 2.000000 * CDtemp * (x_92_14_1 - ABcom * x_92_14_2) + 4.000000 * ABCDtemp * x_64_21_2;
     QUICKDouble x_92_75_0 = Ptempx * x_64_75_0 + WPtempx * x_64_75_1 + 3.000000 * ABtemp * (x_37_75_0 - CDcom * x_37_75_1) + 4.000000 * ABCDtemp * x_64_44_1;
     QUICKDouble x_92_75_1 = Ptempx * x_64_75_1 + WPtempx * x_64_75_2 + 3.000000 * ABtemp * (x_37_75_1 - CDcom * x_37_75_2) + 4.000000 * ABCDtemp * x_64_44_2;
-    LOCSTORE(store, 92, 108, STOREDIM, STOREDIM) += Qtempx * x_92_75_0 + WQtempx * x_92_75_1 + 4.000000 * CDtemp * (x_92_44_0 - ABcom * x_92_44_1) + 4.000000 * ABCDtemp * x_64_75_1;
+    LOCSTORE(store, 92, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_75_0 + WQtempx * x_92_75_1 + 4.000000 * CDtemp * (x_92_44_0 - ABcom * x_92_44_1) + 4.000000 * ABCDtemp * x_64_75_1;
     QUICKDouble x_37_51_2 = Qtempx * x_37_33_2 + WQtempx * x_37_33_3 + 2.000000 * ABCDtemp * x_24_33_3;
     QUICKDouble x_64_51_1 = Qtempx * x_64_33_1 + WQtempx * x_64_33_2 + 3.000000 * ABCDtemp * x_37_33_2;
     QUICKDouble x_64_51_2 = Qtempx * x_64_33_2 + WQtempx * x_64_33_3 + 3.000000 * ABCDtemp * x_37_33_3;
@@ -14307,7 +14307,7 @@
     QUICKDouble x_92_51_1 = Qtempx * x_92_33_1 + WQtempx * x_92_33_2 + 4.000000 * ABCDtemp * x_64_33_2;
     QUICKDouble x_92_76_0 = Ptempx * x_64_76_0 + WPtempx * x_64_76_1 + 3.000000 * ABtemp * (x_37_76_0 - CDcom * x_37_76_1) + 2.000000 * ABCDtemp * x_64_51_1;
     QUICKDouble x_92_76_1 = Ptempx * x_64_76_1 + WPtempx * x_64_76_2 + 3.000000 * ABtemp * (x_37_76_1 - CDcom * x_37_76_2) + 2.000000 * ABCDtemp * x_64_51_2;
-    LOCSTORE(store, 92, 115, STOREDIM, STOREDIM) += Qtempx * x_92_76_0 + WQtempx * x_92_76_1 + 2.000000 * CDtemp * (x_92_51_0 - ABcom * x_92_51_1) + 4.000000 * ABCDtemp * x_64_76_1;
+    LOCSTORE(store, 92, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_76_0 + WQtempx * x_92_76_1 + 2.000000 * CDtemp * (x_92_51_0 - ABcom * x_92_51_1) + 4.000000 * ABCDtemp * x_64_76_1;
     QUICKDouble x_15_12_4 = Qtempx * x_15_8_4 + WQtempx * x_15_8_5;
     QUICKDouble x_24_12_3 = Qtempx * x_24_8_3 + WQtempx * x_24_8_4 + ABCDtemp * x_15_8_4;
     QUICKDouble x_24_12_4 = Qtempx * x_24_8_4 + WQtempx * x_24_8_5 + ABCDtemp * x_15_8_5;
@@ -14369,7 +14369,7 @@
     QUICKDouble x_92_46_1 = Qtempx * x_92_20_1 + WQtempx * x_92_20_2 + 2.000000 * CDtemp * (x_92_12_1 - ABcom * x_92_12_2) + 4.000000 * ABCDtemp * x_64_20_2;
     QUICKDouble x_92_77_0 = Ptempx * x_64_77_0 + WPtempx * x_64_77_1 + 3.000000 * ABtemp * (x_37_77_0 - CDcom * x_37_77_1) + 4.000000 * ABCDtemp * x_64_46_1;
     QUICKDouble x_92_77_1 = Ptempx * x_64_77_1 + WPtempx * x_64_77_2 + 3.000000 * ABtemp * (x_37_77_1 - CDcom * x_37_77_2) + 4.000000 * ABCDtemp * x_64_46_2;
-    LOCSTORE(store, 92, 110, STOREDIM, STOREDIM) += Qtempx * x_92_77_0 + WQtempx * x_92_77_1 + 4.000000 * CDtemp * (x_92_46_0 - ABcom * x_92_46_1) + 4.000000 * ABCDtemp * x_64_77_1;
+    LOCSTORE(store, 92, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_77_0 + WQtempx * x_92_77_1 + 4.000000 * CDtemp * (x_92_46_0 - ABcom * x_92_46_1) + 4.000000 * ABCDtemp * x_64_77_1;
     QUICKDouble x_24_78_0 = Ptempx * x_15_78_0 + WPtempx * x_15_78_1;
     QUICKDouble x_24_78_1 = Ptempx * x_15_78_1 + WPtempx * x_15_78_2;
     QUICKDouble x_24_78_2 = Ptempx * x_15_78_2 + WPtempx * x_15_78_3;
@@ -14382,8 +14382,8 @@
     QUICKDouble x_64_78_2 = Qtempy * x_64_41_2 + WQtempy * x_64_41_3 + 2.000000 * CDtemp * (x_64_31_2 - ABcom * x_64_31_3) + 2.000000 * ABCDtemp * x_38_41_3;
     QUICKDouble x_92_78_0 = Ptempx * x_64_78_0 + WPtempx * x_64_78_1 + 3.000000 * ABtemp * (x_37_78_0 - CDcom * x_37_78_1);
     QUICKDouble x_92_78_1 = Ptempx * x_64_78_1 + WPtempx * x_64_78_2 + 3.000000 * ABtemp * (x_37_78_1 - CDcom * x_37_78_2);
-    LOCSTORE(store, 92, 112, STOREDIM, STOREDIM) += Qtempy * x_92_78_0 + WQtempy * x_92_78_1 + 3.000000 * CDtemp * (x_92_41_0 - ABcom * x_92_41_1) + 2.000000 * ABCDtemp * x_56_78_1;
-    LOCSTORE(store, 92, 93, STOREDIM, STOREDIM) += Qtempx * x_92_78_0 + WQtempx * x_92_78_1 + 4.000000 * ABCDtemp * x_64_78_1;
+    LOCSTORE(store, 92, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_78_0 + WQtempy * x_92_78_1 + 3.000000 * CDtemp * (x_92_41_0 - ABcom * x_92_41_1) + 2.000000 * ABCDtemp * x_56_78_1;
+    LOCSTORE(store, 92, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_78_0 + WQtempx * x_92_78_1 + 4.000000 * ABCDtemp * x_64_78_1;
     QUICKDouble x_24_27_3 = Qtempx * x_24_19_3 + WQtempx * x_24_19_4 + ABCDtemp * x_15_19_4;
     QUICKDouble x_37_27_2 = Qtempx * x_37_19_2 + WQtempx * x_37_19_3 + 2.000000 * ABCDtemp * x_24_19_3;
     QUICKDouble x_37_27_3 = Qtempx * x_37_19_3 + WQtempx * x_37_19_4 + 2.000000 * ABCDtemp * x_24_19_4;
@@ -14423,7 +14423,7 @@
     QUICKDouble x_92_43_1 = Qtempx * x_92_27_1 + WQtempx * x_92_27_2 + CDtemp * (x_92_19_1 - ABcom * x_92_19_2) + 4.000000 * ABCDtemp * x_64_27_2;
     QUICKDouble x_92_79_0 = Ptempx * x_64_79_0 + WPtempx * x_64_79_1 + 3.000000 * ABtemp * (x_37_79_0 - CDcom * x_37_79_1) + 3.000000 * ABCDtemp * x_64_43_1;
     QUICKDouble x_92_79_1 = Ptempx * x_64_79_1 + WPtempx * x_64_79_2 + 3.000000 * ABtemp * (x_37_79_1 - CDcom * x_37_79_2) + 3.000000 * ABCDtemp * x_64_43_2;
-    LOCSTORE(store, 92, 114, STOREDIM, STOREDIM) += Qtempx * x_92_79_0 + WQtempx * x_92_79_1 + 3.000000 * CDtemp * (x_92_43_0 - ABcom * x_92_43_1) + 4.000000 * ABCDtemp * x_64_79_1;
+    LOCSTORE(store, 92, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_79_0 + WQtempx * x_92_79_1 + 3.000000 * CDtemp * (x_92_43_0 - ABcom * x_92_43_1) + 4.000000 * ABCDtemp * x_64_79_1;
     QUICKDouble x_24_29_3 = Qtempx * x_24_18_3 + WQtempx * x_24_18_4 + ABCDtemp * x_15_18_4;
     QUICKDouble x_37_29_2 = Qtempx * x_37_18_2 + WQtempx * x_37_18_3 + 2.000000 * ABCDtemp * x_24_18_3;
     QUICKDouble x_37_29_3 = Qtempx * x_37_18_3 + WQtempx * x_37_18_4 + 2.000000 * ABCDtemp * x_24_18_4;
@@ -14463,7 +14463,7 @@
     QUICKDouble x_92_45_1 = Qtempx * x_92_29_1 + WQtempx * x_92_29_2 + CDtemp * (x_92_18_1 - ABcom * x_92_18_2) + 4.000000 * ABCDtemp * x_64_29_2;
     QUICKDouble x_92_80_0 = Ptempx * x_64_80_0 + WPtempx * x_64_80_1 + 3.000000 * ABtemp * (x_37_80_0 - CDcom * x_37_80_1) + 3.000000 * ABCDtemp * x_64_45_1;
     QUICKDouble x_92_80_1 = Ptempx * x_64_80_1 + WPtempx * x_64_80_2 + 3.000000 * ABtemp * (x_37_80_1 - CDcom * x_37_80_2) + 3.000000 * ABCDtemp * x_64_45_2;
-    LOCSTORE(store, 92, 116, STOREDIM, STOREDIM) += Qtempx * x_92_80_0 + WQtempx * x_92_80_1 + 3.000000 * CDtemp * (x_92_45_0 - ABcom * x_92_45_1) + 4.000000 * ABCDtemp * x_64_80_1;
+    LOCSTORE(store, 92, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_80_0 + WQtempx * x_92_80_1 + 3.000000 * CDtemp * (x_92_45_0 - ABcom * x_92_45_1) + 4.000000 * ABCDtemp * x_64_80_1;
     QUICKDouble x_15_1_4 = Qtempx * x_15_0_4 + WQtempx * x_15_0_5;
     QUICKDouble x_15_1_5 = Qtempx * x_15_0_5 + WQtempx * x_15_0_6;
     QUICKDouble x_15_1_6 = Qtempx * x_15_0_6 + WQtempx * x_15_0_7;
@@ -14584,7 +14584,7 @@
     QUICKDouble x_92_53_1 = Qtempx * x_92_32_1 + WQtempx * x_92_32_2 + 4.000000 * CDtemp * (x_92_17_1 - ABcom * x_92_17_2) + 4.000000 * ABCDtemp * x_64_32_2;
     QUICKDouble x_92_81_0 = Ptempx * x_64_81_0 + WPtempx * x_64_81_1 + 3.000000 * ABtemp * (x_37_81_0 - CDcom * x_37_81_1) + 6.000000 * ABCDtemp * x_64_53_1;
     QUICKDouble x_92_81_1 = Ptempx * x_64_81_1 + WPtempx * x_64_81_2 + 3.000000 * ABtemp * (x_37_81_1 - CDcom * x_37_81_2) + 6.000000 * ABCDtemp * x_64_53_2;
-    LOCSTORE(store, 92, 117, STOREDIM, STOREDIM) += Qtempx * x_92_81_0 + WQtempx * x_92_81_1 + 6.000000 * CDtemp * (x_92_53_0 - ABcom * x_92_53_1) + 4.000000 * ABCDtemp * x_64_81_1;
+    LOCSTORE(store, 92, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_81_0 + WQtempx * x_92_81_1 + 6.000000 * CDtemp * (x_92_53_0 - ABcom * x_92_53_1) + 4.000000 * ABCDtemp * x_64_81_1;
     QUICKDouble x_24_82_0 = Ptempx * x_15_82_0 + WPtempx * x_15_82_1;
     QUICKDouble x_24_82_1 = Ptempx * x_15_82_1 + WPtempx * x_15_82_2;
     QUICKDouble x_24_82_2 = Ptempx * x_15_82_2 + WPtempx * x_15_82_3;
@@ -14597,8 +14597,8 @@
     QUICKDouble x_64_82_2 = Qtempy * x_64_54_2 + WQtempy * x_64_54_3 + 5.000000 * CDtemp * (x_64_33_2 - ABcom * x_64_33_3) + 2.000000 * ABCDtemp * x_38_54_3;
     QUICKDouble x_92_82_0 = Ptempx * x_64_82_0 + WPtempx * x_64_82_1 + 3.000000 * ABtemp * (x_37_82_0 - CDcom * x_37_82_1);
     QUICKDouble x_92_82_1 = Ptempx * x_64_82_1 + WPtempx * x_64_82_2 + 3.000000 * ABtemp * (x_37_82_1 - CDcom * x_37_82_2);
-    LOCSTORE(store, 92, 118, STOREDIM, STOREDIM) += Qtempy * x_92_82_0 + WQtempy * x_92_82_1 + 6.000000 * CDtemp * (x_92_54_0 - ABcom * x_92_54_1) + 2.000000 * ABCDtemp * x_56_82_1;
-    LOCSTORE(store, 92, 103, STOREDIM, STOREDIM) += Qtempx * x_92_82_0 + WQtempx * x_92_82_1 + 4.000000 * ABCDtemp * x_64_82_1;
+    LOCSTORE(store, 92, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_82_0 + WQtempy * x_92_82_1 + 6.000000 * CDtemp * (x_92_54_0 - ABcom * x_92_54_1) + 2.000000 * ABCDtemp * x_56_82_1;
+    LOCSTORE(store, 92, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_82_0 + WQtempx * x_92_82_1 + 4.000000 * ABCDtemp * x_64_82_1;
     QUICKDouble x_77_0_7 = Ptempx * x_46_0_7 + WPtempx * x_46_0_8 + 3.000000 * ABtemp * (x_20_0_7 - CDcom * x_20_0_8);
     QUICKDouble x_77_3_6 = Qtempz * x_77_0_6 + WQtempz * x_77_0_7;
     QUICKDouble x_77_9_5 = Qtempz * x_77_3_5 + WQtempz * x_77_3_6 + CDtemp * (x_77_0_5 - ABcom * x_77_0_6);
@@ -14622,9 +14622,9 @@
     QUICKDouble x_77_83_1 = Qtempz * x_77_55_1 + WQtempz * x_77_55_2 + 5.000000 * CDtemp * (x_77_34_1 - ABcom * x_77_34_2);
     QUICKDouble x_92_83_0 = Ptempx * x_64_83_0 + WPtempx * x_64_83_1 + 3.000000 * ABtemp * (x_37_83_0 - CDcom * x_37_83_1);
     QUICKDouble x_92_83_1 = Ptempx * x_64_83_1 + WPtempx * x_64_83_2 + 3.000000 * ABtemp * (x_37_83_1 - CDcom * x_37_83_2);
-    LOCSTORE(store, 92, 119, STOREDIM, STOREDIM) += Qtempz * x_92_83_0 + WQtempz * x_92_83_1 + 6.000000 * CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + ABCDtemp * x_77_83_1;
-    LOCSTORE(store, 92, 101, STOREDIM, STOREDIM) += Qtempx * x_92_83_0 + WQtempx * x_92_83_1 + 4.000000 * ABCDtemp * x_64_83_1;
-    LOCSTORE(store, 92, 99, STOREDIM, STOREDIM) += Qtempy * x_92_83_0 + WQtempy * x_92_83_1 + 2.000000 * ABCDtemp * x_56_83_1;
+    LOCSTORE(store, 92, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_92_83_0 + WQtempz * x_92_83_1 + 6.000000 * CDtemp * (x_92_55_0 - ABcom * x_92_55_1) + ABCDtemp * x_77_83_1;
+    LOCSTORE(store, 92, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_92_83_0 + WQtempx * x_92_83_1 + 4.000000 * ABCDtemp * x_64_83_1;
+    LOCSTORE(store, 92, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_92_83_0 + WQtempy * x_92_83_1 + 2.000000 * ABCDtemp * x_56_83_1;
     QUICKDouble x_31_0_0 = Ptempy * x_19_0_0 + WPtempy * x_19_0_1;
     QUICKDouble x_31_0_10 = Ptempy * x_19_0_10 + WPtempy * x_19_0_11;
     QUICKDouble x_41_0_0 = Ptempy * x_31_0_0 + WPtempy * x_31_0_1 + ABtemp * (x_19_0_0 - CDcom * x_19_0_1);
@@ -14700,7 +14700,7 @@
     QUICKDouble x_93_38_1 = Qtempx * x_93_23_1 + WQtempx * x_93_23_2 + 2.000000 * CDtemp * (x_93_10_1 - ABcom * x_93_10_2) + ABCDtemp * x_78_23_2;
     QUICKDouble x_93_56_0 = Ptempx * x_78_56_0 + WPtempx * x_78_56_1 + 4.000000 * ABCDtemp * x_78_38_1;
     QUICKDouble x_93_56_1 = Ptempx * x_78_56_1 + WPtempx * x_78_56_2 + 4.000000 * ABCDtemp * x_78_38_2;
-    LOCSTORE(store, 93, 84, STOREDIM, STOREDIM) += Qtempx * x_93_56_0 + WQtempx * x_93_56_1 + 4.000000 * CDtemp * (x_93_38_0 - ABcom * x_93_38_1) + ABCDtemp * x_78_56_1;
+    LOCSTORE(store, 93, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_56_0 + WQtempx * x_93_56_1 + 4.000000 * CDtemp * (x_93_38_0 - ABcom * x_93_38_1) + ABCDtemp * x_78_56_1;
     QUICKDouble x_19_5_4 = Qtempy * x_19_3_4 + WQtempy * x_19_3_5;
     QUICKDouble x_31_5_3 = Qtempy * x_31_3_3 + WQtempy * x_31_3_4 + ABCDtemp * x_19_3_4;
     QUICKDouble x_31_5_4 = Qtempy * x_31_3_4 + WQtempy * x_31_3_5 + ABCDtemp * x_19_3_5;
@@ -14774,7 +14774,7 @@
     QUICKDouble x_93_48_1 = Qtempy * x_93_30_1 + WQtempy * x_93_30_2 + 3.000000 * CDtemp * (x_93_15_1 - ABcom * x_93_15_2) + 3.000000 * ABCDtemp * x_59_30_2;
     QUICKDouble x_93_57_0 = Ptempx * x_78_57_0 + WPtempx * x_78_57_1 + ABCDtemp * x_78_48_1;
     QUICKDouble x_93_57_1 = Ptempx * x_78_57_1 + WPtempx * x_78_57_2 + ABCDtemp * x_78_48_2;
-    LOCSTORE(store, 93, 91, STOREDIM, STOREDIM) += Qtempx * x_93_57_0 + WQtempx * x_93_57_1 + CDtemp * (x_93_48_0 - ABcom * x_93_48_1) + ABCDtemp * x_78_57_1;
+    LOCSTORE(store, 93, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_57_0 + WQtempx * x_93_57_1 + CDtemp * (x_93_48_0 - ABcom * x_93_48_1) + ABCDtemp * x_78_57_1;
     QUICKDouble x_78_9_1 = Qtempz * x_78_3_1 + WQtempz * x_78_3_2 + CDtemp * (x_78_0_1 - ABcom * x_78_0_2) + 3.000000 * ABCDtemp * x_42_3_2;
     QUICKDouble x_78_9_2 = Qtempz * x_78_3_2 + WQtempz * x_78_3_3 + CDtemp * (x_78_0_2 - ABcom * x_78_0_3) + 3.000000 * ABCDtemp * x_42_3_3;
     QUICKDouble x_78_9_3 = Qtempz * x_78_3_3 + WQtempz * x_78_3_4 + CDtemp * (x_78_0_3 - ABcom * x_78_0_4) + 3.000000 * ABCDtemp * x_42_3_4;
@@ -14816,7 +14816,7 @@
     QUICKDouble x_93_47_1 = Qtempy * x_93_34_1 + WQtempy * x_93_34_2 + 3.000000 * ABCDtemp * x_59_34_2;
     QUICKDouble x_93_58_0 = Ptempx * x_78_58_0 + WPtempx * x_78_58_1 + ABCDtemp * x_78_47_1;
     QUICKDouble x_93_58_1 = Ptempx * x_78_58_1 + WPtempx * x_78_58_2 + ABCDtemp * x_78_47_2;
-    LOCSTORE(store, 93, 89, STOREDIM, STOREDIM) += Qtempx * x_93_58_0 + WQtempx * x_93_58_1 + CDtemp * (x_93_47_0 - ABcom * x_93_47_1) + ABCDtemp * x_78_58_1;
+    LOCSTORE(store, 93, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_58_0 + WQtempx * x_93_58_1 + CDtemp * (x_93_47_0 - ABcom * x_93_47_1) + ABCDtemp * x_78_58_1;
     QUICKDouble x_41_31_2 = Qtempy * x_41_19_2 + WQtempy * x_41_19_3 + 2.000000 * ABCDtemp * x_31_19_3;
     QUICKDouble x_78_31_1 = Qtempy * x_78_19_1 + WQtempy * x_78_19_2 + 3.000000 * ABCDtemp * x_41_19_2;
     QUICKDouble x_78_31_2 = Qtempy * x_78_19_2 + WQtempy * x_78_19_3 + 3.000000 * ABCDtemp * x_41_19_3;
@@ -14842,7 +14842,7 @@
     QUICKDouble x_93_41_1 = Qtempy * x_93_31_1 + WQtempy * x_93_31_2 + CDtemp * (x_93_19_1 - ABcom * x_93_19_2) + 3.000000 * ABCDtemp * x_59_31_2;
     QUICKDouble x_93_59_0 = Ptempx * x_78_59_0 + WPtempx * x_78_59_1 + ABCDtemp * x_78_41_1;
     QUICKDouble x_93_59_1 = Ptempx * x_78_59_1 + WPtempx * x_78_59_2 + ABCDtemp * x_78_41_2;
-    LOCSTORE(store, 93, 98, STOREDIM, STOREDIM) += Qtempx * x_93_59_0 + WQtempx * x_93_59_1 + CDtemp * (x_93_41_0 - ABcom * x_93_41_1) + ABCDtemp * x_78_59_1;
+    LOCSTORE(store, 93, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_59_0 + WQtempx * x_93_59_1 + CDtemp * (x_93_41_0 - ABcom * x_93_41_1) + ABCDtemp * x_78_59_1;
     QUICKDouble x_31_16_3 = Qtempy * x_31_9_3 + WQtempy * x_31_9_4 + ABCDtemp * x_19_9_4;
     QUICKDouble x_41_16_2 = Qtempy * x_41_9_2 + WQtempy * x_41_9_3 + 2.000000 * ABCDtemp * x_31_9_3;
     QUICKDouble x_41_16_3 = Qtempy * x_41_9_3 + WQtempy * x_41_9_4 + 2.000000 * ABCDtemp * x_31_9_4;
@@ -14892,7 +14892,7 @@
     QUICKDouble x_93_42_1 = Qtempy * x_93_22_1 + WQtempy * x_93_22_2 + 2.000000 * CDtemp * (x_93_16_1 - ABcom * x_93_16_2) + 3.000000 * ABCDtemp * x_59_22_2;
     QUICKDouble x_93_60_0 = Ptempx * x_78_60_0 + WPtempx * x_78_60_1 + ABCDtemp * x_78_42_1;
     QUICKDouble x_93_60_1 = Ptempx * x_78_60_1 + WPtempx * x_78_60_2 + ABCDtemp * x_78_42_2;
-    LOCSTORE(store, 93, 97, STOREDIM, STOREDIM) += Qtempx * x_93_60_0 + WQtempx * x_93_60_1 + CDtemp * (x_93_42_0 - ABcom * x_93_42_1) + ABCDtemp * x_78_60_1;
+    LOCSTORE(store, 93, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_60_0 + WQtempx * x_93_60_1 + CDtemp * (x_93_42_0 - ABcom * x_93_42_1) + ABCDtemp * x_78_60_1;
     QUICKDouble x_78_40_1 = Qtempx * x_78_31_1 + WQtempx * x_78_31_2;
     QUICKDouble x_78_40_2 = Qtempx * x_78_31_2 + WQtempx * x_78_31_3;
     QUICKDouble x_78_40_0 = Qtempx * x_78_31_0 + WQtempx * x_78_31_1;
@@ -14904,7 +14904,7 @@
     QUICKDouble x_93_40_1 = Qtempx * x_93_31_1 + WQtempx * x_93_31_2 + ABCDtemp * x_78_31_2;
     QUICKDouble x_93_61_0 = Ptempx * x_78_61_0 + WPtempx * x_78_61_1 + 2.000000 * ABCDtemp * x_78_40_1;
     QUICKDouble x_93_61_1 = Ptempx * x_78_61_1 + WPtempx * x_78_61_2 + 2.000000 * ABCDtemp * x_78_40_2;
-    LOCSTORE(store, 93, 94, STOREDIM, STOREDIM) += Qtempx * x_93_61_0 + WQtempx * x_93_61_1 + 2.000000 * CDtemp * (x_93_40_0 - ABcom * x_93_40_1) + ABCDtemp * x_78_61_1;
+    LOCSTORE(store, 93, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_61_0 + WQtempx * x_93_61_1 + 2.000000 * CDtemp * (x_93_40_0 - ABcom * x_93_40_1) + ABCDtemp * x_78_61_1;
     QUICKDouble x_78_25_1 = Qtempx * x_78_16_1 + WQtempx * x_78_16_2;
     QUICKDouble x_78_25_2 = Qtempx * x_78_16_2 + WQtempx * x_78_16_3;
     QUICKDouble x_78_25_3 = Qtempx * x_78_16_3 + WQtempx * x_78_16_4;
@@ -14924,7 +14924,7 @@
     QUICKDouble x_93_36_1 = Qtempx * x_93_25_1 + WQtempx * x_93_25_2 + CDtemp * (x_93_16_1 - ABcom * x_93_16_2) + ABCDtemp * x_78_25_2;
     QUICKDouble x_93_62_0 = Ptempx * x_78_62_0 + WPtempx * x_78_62_1 + 3.000000 * ABCDtemp * x_78_36_1;
     QUICKDouble x_93_62_1 = Ptempx * x_78_62_1 + WPtempx * x_78_62_2 + 3.000000 * ABCDtemp * x_78_36_2;
-    LOCSTORE(store, 93, 90, STOREDIM, STOREDIM) += Qtempx * x_93_62_0 + WQtempx * x_93_62_1 + 3.000000 * CDtemp * (x_93_36_0 - ABcom * x_93_36_1) + ABCDtemp * x_78_62_1;
+    LOCSTORE(store, 93, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_62_0 + WQtempx * x_93_62_1 + 3.000000 * CDtemp * (x_93_36_0 - ABcom * x_93_36_1) + ABCDtemp * x_78_62_1;
     QUICKDouble x_78_39_1 = Qtempx * x_78_30_1 + WQtempx * x_78_30_2;
     QUICKDouble x_78_39_2 = Qtempx * x_78_30_2 + WQtempx * x_78_30_3;
     QUICKDouble x_78_39_0 = Qtempx * x_78_30_0 + WQtempx * x_78_30_1;
@@ -14936,7 +14936,7 @@
     QUICKDouble x_93_39_1 = Qtempx * x_93_30_1 + WQtempx * x_93_30_2 + ABCDtemp * x_78_30_2;
     QUICKDouble x_93_63_0 = Ptempx * x_78_63_0 + WPtempx * x_78_63_1 + 2.000000 * ABCDtemp * x_78_39_1;
     QUICKDouble x_93_63_1 = Ptempx * x_78_63_1 + WPtempx * x_78_63_2 + 2.000000 * ABCDtemp * x_78_39_2;
-    LOCSTORE(store, 93, 95, STOREDIM, STOREDIM) += Qtempx * x_93_63_0 + WQtempx * x_93_63_1 + 2.000000 * CDtemp * (x_93_39_0 - ABcom * x_93_39_1) + ABCDtemp * x_78_63_1;
+    LOCSTORE(store, 93, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_63_0 + WQtempx * x_93_63_1 + 2.000000 * CDtemp * (x_93_39_0 - ABcom * x_93_39_1) + ABCDtemp * x_78_63_1;
     QUICKDouble x_78_24_1 = Qtempx * x_78_15_1 + WQtempx * x_78_15_2;
     QUICKDouble x_78_24_2 = Qtempx * x_78_15_2 + WQtempx * x_78_15_3;
     QUICKDouble x_78_24_3 = Qtempx * x_78_15_3 + WQtempx * x_78_15_4;
@@ -14956,7 +14956,7 @@
     QUICKDouble x_93_37_1 = Qtempx * x_93_24_1 + WQtempx * x_93_24_2 + CDtemp * (x_93_15_1 - ABcom * x_93_15_2) + ABCDtemp * x_78_24_2;
     QUICKDouble x_93_64_0 = Ptempx * x_78_64_0 + WPtempx * x_78_64_1 + 3.000000 * ABCDtemp * x_78_37_1;
     QUICKDouble x_93_64_1 = Ptempx * x_78_64_1 + WPtempx * x_78_64_2 + 3.000000 * ABCDtemp * x_78_37_2;
-    LOCSTORE(store, 93, 92, STOREDIM, STOREDIM) += Qtempx * x_93_64_0 + WQtempx * x_93_64_1 + 3.000000 * CDtemp * (x_93_37_0 - ABcom * x_93_37_1) + ABCDtemp * x_78_64_1;
+    LOCSTORE(store, 93, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_64_0 + WQtempx * x_93_64_1 + 3.000000 * CDtemp * (x_93_37_0 - ABcom * x_93_37_1) + ABCDtemp * x_78_64_1;
     QUICKDouble x_78_35_1 = Qtempx * x_78_22_1 + WQtempx * x_78_22_2;
     QUICKDouble x_78_35_2 = Qtempx * x_78_22_2 + WQtempx * x_78_22_3;
     QUICKDouble x_78_35_0 = Qtempx * x_78_22_0 + WQtempx * x_78_22_1;
@@ -14968,7 +14968,7 @@
     QUICKDouble x_93_35_1 = Qtempx * x_93_22_1 + WQtempx * x_93_22_2 + ABCDtemp * x_78_22_2;
     QUICKDouble x_93_65_0 = Ptempx * x_78_65_0 + WPtempx * x_78_65_1 + 2.000000 * ABCDtemp * x_78_35_1;
     QUICKDouble x_93_65_1 = Ptempx * x_78_65_1 + WPtempx * x_78_65_2 + 2.000000 * ABCDtemp * x_78_35_2;
-    LOCSTORE(store, 93, 96, STOREDIM, STOREDIM) += Qtempx * x_93_65_0 + WQtempx * x_93_65_1 + 2.000000 * CDtemp * (x_93_35_0 - ABcom * x_93_35_1) + ABCDtemp * x_78_65_1;
+    LOCSTORE(store, 93, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_65_0 + WQtempx * x_93_65_1 + 2.000000 * CDtemp * (x_93_35_0 - ABcom * x_93_35_1) + ABCDtemp * x_78_65_1;
     QUICKDouble x_78_55_1 = Qtempz * x_78_34_1 + WQtempz * x_78_34_2 + 4.000000 * CDtemp * (x_78_19_1 - ABcom * x_78_19_2) + 3.000000 * ABCDtemp * x_42_34_2;
     QUICKDouble x_78_55_2 = Qtempz * x_78_34_2 + WQtempz * x_78_34_3 + 4.000000 * CDtemp * (x_78_19_2 - ABcom * x_78_19_3) + 3.000000 * ABCDtemp * x_42_34_3;
     QUICKDouble x_78_55_0 = Qtempz * x_78_34_0 + WQtempz * x_78_34_1 + 4.000000 * CDtemp * (x_78_19_0 - ABcom * x_78_19_1) + 3.000000 * ABCDtemp * x_42_34_1;
@@ -14981,8 +14981,8 @@
     QUICKDouble x_93_55_1 = Qtempz * x_93_34_1 + WQtempz * x_93_34_2 + 4.000000 * CDtemp * (x_93_19_1 - ABcom * x_93_19_2) + 3.000000 * ABCDtemp * x_60_34_2;
     QUICKDouble x_93_66_0 = Ptempx * x_78_66_0 + WPtempx * x_78_66_1;
     QUICKDouble x_93_66_1 = Ptempx * x_78_66_1 + WPtempx * x_78_66_2;
-    LOCSTORE(store, 93, 105, STOREDIM, STOREDIM) += Qtempy * x_93_66_0 + WQtempy * x_93_66_1 + CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + 3.000000 * ABCDtemp * x_59_66_1;
-    LOCSTORE(store, 93, 86, STOREDIM, STOREDIM) += Qtempx * x_93_66_0 + WQtempx * x_93_66_1 + ABCDtemp * x_78_66_1;
+    LOCSTORE(store, 93, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_66_0 + WQtempy * x_93_66_1 + CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + 3.000000 * ABCDtemp * x_59_66_1;
+    LOCSTORE(store, 93, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_66_0 + WQtempx * x_93_66_1 + ABCDtemp * x_78_66_1;
     QUICKDouble x_40_5_5 = Qtempy * x_40_3_5 + WQtempy * x_40_3_6 + ABCDtemp * x_27_3_6;
     QUICKDouble x_27_5_5 = Qtempy * x_27_3_5 + WQtempy * x_27_3_6;
     QUICKDouble x_59_5_5 = Qtempy * x_59_3_5 + WQtempy * x_59_3_6 + 2.000000 * ABCDtemp * x_40_3_6;
@@ -15012,14 +15012,14 @@
     QUICKDouble x_59_67_1 = Qtempy * x_59_48_1 + WQtempy * x_59_48_2 + 4.000000 * CDtemp * (x_59_30_1 - ABcom * x_59_30_2) + 2.000000 * ABCDtemp * x_40_48_2;
     QUICKDouble x_93_67_0 = Ptempx * x_78_67_0 + WPtempx * x_78_67_1;
     QUICKDouble x_93_67_1 = Ptempx * x_78_67_1 + WPtempx * x_78_67_2;
-    LOCSTORE(store, 93, 100, STOREDIM, STOREDIM) += Qtempy * x_93_67_0 + WQtempy * x_93_67_1 + 5.000000 * CDtemp * (x_93_48_0 - ABcom * x_93_48_1) + 3.000000 * ABCDtemp * x_59_67_1;
-    LOCSTORE(store, 93, 85, STOREDIM, STOREDIM) += Qtempx * x_93_67_0 + WQtempx * x_93_67_1 + ABCDtemp * x_78_67_1;
+    LOCSTORE(store, 93, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_67_0 + WQtempy * x_93_67_1 + 5.000000 * CDtemp * (x_93_48_0 - ABcom * x_93_48_1) + 3.000000 * ABCDtemp * x_59_67_1;
+    LOCSTORE(store, 93, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_67_0 + WQtempx * x_93_67_1 + ABCDtemp * x_78_67_1;
     QUICKDouble x_78_68_1 = Qtempx * x_78_55_1 + WQtempx * x_78_55_2;
     QUICKDouble x_78_68_0 = Qtempx * x_78_55_0 + WQtempx * x_78_55_1;
     QUICKDouble x_78_68_2 = Qtempx * x_78_55_2 + WQtempx * x_78_55_3;
     QUICKDouble x_93_68_0 = Ptempx * x_78_68_0 + WPtempx * x_78_68_1 + ABCDtemp * x_78_55_1;
     QUICKDouble x_93_68_1 = Ptempx * x_78_68_1 + WPtempx * x_78_68_2 + ABCDtemp * x_78_55_2;
-    LOCSTORE(store, 93, 107, STOREDIM, STOREDIM) += Qtempx * x_93_68_0 + WQtempx * x_93_68_1 + CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + ABCDtemp * x_78_68_1;
+    LOCSTORE(store, 93, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_68_0 + WQtempx * x_93_68_1 + CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + ABCDtemp * x_78_68_1;
     QUICKDouble x_78_6_1 = Qtempx * x_78_3_1 + WQtempx * x_78_3_2;
     QUICKDouble x_78_6_2 = Qtempx * x_78_3_2 + WQtempx * x_78_3_3;
     QUICKDouble x_78_6_3 = Qtempx * x_78_3_3 + WQtempx * x_78_3_4;
@@ -15061,7 +15061,7 @@
     QUICKDouble x_93_50_1 = Qtempx * x_93_26_1 + WQtempx * x_93_26_2 + 3.000000 * CDtemp * (x_93_13_1 - ABcom * x_93_13_2) + ABCDtemp * x_78_26_2;
     QUICKDouble x_93_69_0 = Ptempx * x_78_69_0 + WPtempx * x_78_69_1 + 5.000000 * ABCDtemp * x_78_50_1;
     QUICKDouble x_93_69_1 = Ptempx * x_78_69_1 + WPtempx * x_78_69_2 + 5.000000 * ABCDtemp * x_78_50_2;
-    LOCSTORE(store, 93, 102, STOREDIM, STOREDIM) += Qtempx * x_93_69_0 + WQtempx * x_93_69_1 + 5.000000 * CDtemp * (x_93_50_0 - ABcom * x_93_50_1) + ABCDtemp * x_78_69_1;
+    LOCSTORE(store, 93, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_69_0 + WQtempx * x_93_69_1 + 5.000000 * CDtemp * (x_93_50_0 - ABcom * x_93_50_1) + ABCDtemp * x_78_69_1;
     QUICKDouble x_19_2_4 = Qtempy * x_19_0_4 + WQtempy * x_19_0_5;
     QUICKDouble x_19_2_5 = Qtempy * x_19_0_5 + WQtempy * x_19_0_6;
     QUICKDouble x_31_2_3 = Qtempy * x_31_0_3 + WQtempy * x_31_0_4 + ABCDtemp * x_19_0_4;
@@ -15191,7 +15191,7 @@
     QUICKDouble x_93_54_1 = Qtempy * x_93_33_1 + WQtempy * x_93_33_2 + 4.000000 * CDtemp * (x_93_18_1 - ABcom * x_93_18_2) + 3.000000 * ABCDtemp * x_59_33_2;
     QUICKDouble x_93_70_0 = Ptempx * x_78_70_0 + WPtempx * x_78_70_1 + ABCDtemp * x_78_54_1;
     QUICKDouble x_93_70_1 = Ptempx * x_78_70_1 + WPtempx * x_78_70_2 + ABCDtemp * x_78_54_2;
-    LOCSTORE(store, 93, 109, STOREDIM, STOREDIM) += Qtempx * x_93_70_0 + WQtempx * x_93_70_1 + CDtemp * (x_93_54_0 - ABcom * x_93_54_1) + ABCDtemp * x_78_70_1;
+    LOCSTORE(store, 93, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_70_0 + WQtempx * x_93_70_1 + CDtemp * (x_93_54_0 - ABcom * x_93_54_1) + ABCDtemp * x_78_70_1;
     QUICKDouble x_78_4_1 = Qtempx * x_78_2_1 + WQtempx * x_78_2_2;
     QUICKDouble x_78_4_2 = Qtempx * x_78_2_2 + WQtempx * x_78_2_3;
     QUICKDouble x_78_4_3 = Qtempx * x_78_2_3 + WQtempx * x_78_2_4;
@@ -15233,7 +15233,7 @@
     QUICKDouble x_93_52_1 = Qtempx * x_93_28_1 + WQtempx * x_93_28_2 + 3.000000 * CDtemp * (x_93_11_1 - ABcom * x_93_11_2) + ABCDtemp * x_78_28_2;
     QUICKDouble x_93_71_0 = Ptempx * x_78_71_0 + WPtempx * x_78_71_1 + 5.000000 * ABCDtemp * x_78_52_1;
     QUICKDouble x_93_71_1 = Ptempx * x_78_71_1 + WPtempx * x_78_71_2 + 5.000000 * ABCDtemp * x_78_52_2;
-    LOCSTORE(store, 93, 104, STOREDIM, STOREDIM) += Qtempx * x_93_71_0 + WQtempx * x_93_71_1 + 5.000000 * CDtemp * (x_93_52_0 - ABcom * x_93_52_1) + ABCDtemp * x_78_71_1;
+    LOCSTORE(store, 93, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_71_0 + WQtempx * x_93_71_1 + 5.000000 * CDtemp * (x_93_52_0 - ABcom * x_93_52_1) + ABCDtemp * x_78_71_1;
     QUICKDouble x_41_47_2 = Qtempy * x_41_34_2 + WQtempy * x_41_34_3 + 2.000000 * ABCDtemp * x_31_34_3;
     QUICKDouble x_41_47_1 = Qtempy * x_41_34_1 + WQtempy * x_41_34_2 + 2.000000 * ABCDtemp * x_31_34_2;
     QUICKDouble x_41_47_3 = Qtempy * x_41_34_3 + WQtempy * x_41_34_4 + 2.000000 * ABCDtemp * x_31_34_4;
@@ -15246,8 +15246,8 @@
     QUICKDouble x_59_72_1 = Qtempy * x_59_47_1 + WQtempy * x_59_47_2 + CDtemp * (x_59_34_1 - ABcom * x_59_34_2) + 2.000000 * ABCDtemp * x_40_47_2;
     QUICKDouble x_93_72_0 = Ptempx * x_78_72_0 + WPtempx * x_78_72_1;
     QUICKDouble x_93_72_1 = Ptempx * x_78_72_1 + WPtempx * x_78_72_2;
-    LOCSTORE(store, 93, 111, STOREDIM, STOREDIM) += Qtempy * x_93_72_0 + WQtempy * x_93_72_1 + 2.000000 * CDtemp * (x_93_47_0 - ABcom * x_93_47_1) + 3.000000 * ABCDtemp * x_59_72_1;
-    LOCSTORE(store, 93, 87, STOREDIM, STOREDIM) += Qtempx * x_93_72_0 + WQtempx * x_93_72_1 + ABCDtemp * x_78_72_1;
+    LOCSTORE(store, 93, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_72_0 + WQtempy * x_93_72_1 + 2.000000 * CDtemp * (x_93_47_0 - ABcom * x_93_47_1) + 3.000000 * ABCDtemp * x_59_72_1;
+    LOCSTORE(store, 93, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_72_0 + WQtempx * x_93_72_1 + ABCDtemp * x_78_72_1;
     QUICKDouble x_19_16_4 = Qtempy * x_19_9_4 + WQtempy * x_19_9_5;
     QUICKDouble x_19_16_3 = Qtempy * x_19_9_3 + WQtempy * x_19_9_4;
     QUICKDouble x_19_16_5 = Qtempy * x_19_9_5 + WQtempy * x_19_9_6;
@@ -15274,8 +15274,8 @@
     QUICKDouble x_59_73_1 = Qtempy * x_59_42_1 + WQtempy * x_59_42_2 + 3.000000 * CDtemp * (x_59_22_1 - ABcom * x_59_22_2) + 2.000000 * ABCDtemp * x_40_42_2;
     QUICKDouble x_93_73_0 = Ptempx * x_78_73_0 + WPtempx * x_78_73_1;
     QUICKDouble x_93_73_1 = Ptempx * x_78_73_1 + WPtempx * x_78_73_2;
-    LOCSTORE(store, 93, 106, STOREDIM, STOREDIM) += Qtempy * x_93_73_0 + WQtempy * x_93_73_1 + 4.000000 * CDtemp * (x_93_42_0 - ABcom * x_93_42_1) + 3.000000 * ABCDtemp * x_59_73_1;
-    LOCSTORE(store, 93, 88, STOREDIM, STOREDIM) += Qtempx * x_93_73_0 + WQtempx * x_93_73_1 + ABCDtemp * x_78_73_1;
+    LOCSTORE(store, 93, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_73_0 + WQtempy * x_93_73_1 + 4.000000 * CDtemp * (x_93_42_0 - ABcom * x_93_42_1) + 3.000000 * ABCDtemp * x_59_73_1;
+    LOCSTORE(store, 93, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_73_0 + WQtempx * x_93_73_1 + ABCDtemp * x_78_73_1;
     QUICKDouble x_78_49_1 = Qtempx * x_78_34_1 + WQtempx * x_78_34_2;
     QUICKDouble x_78_49_2 = Qtempx * x_78_34_2 + WQtempx * x_78_34_3;
     QUICKDouble x_78_49_0 = Qtempx * x_78_34_0 + WQtempx * x_78_34_1;
@@ -15287,7 +15287,7 @@
     QUICKDouble x_93_49_1 = Qtempx * x_93_34_1 + WQtempx * x_93_34_2 + ABCDtemp * x_78_34_2;
     QUICKDouble x_93_74_0 = Ptempx * x_78_74_0 + WPtempx * x_78_74_1 + 2.000000 * ABCDtemp * x_78_49_1;
     QUICKDouble x_93_74_1 = Ptempx * x_78_74_1 + WPtempx * x_78_74_2 + 2.000000 * ABCDtemp * x_78_49_2;
-    LOCSTORE(store, 93, 113, STOREDIM, STOREDIM) += Qtempx * x_93_74_0 + WQtempx * x_93_74_1 + 2.000000 * CDtemp * (x_93_49_0 - ABcom * x_93_49_1) + ABCDtemp * x_78_74_1;
+    LOCSTORE(store, 93, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_74_0 + WQtempx * x_93_74_1 + 2.000000 * CDtemp * (x_93_49_0 - ABcom * x_93_49_1) + ABCDtemp * x_78_74_1;
     QUICKDouble x_78_14_1 = Qtempx * x_78_9_1 + WQtempx * x_78_9_2;
     QUICKDouble x_78_14_2 = Qtempx * x_78_9_2 + WQtempx * x_78_9_3;
     QUICKDouble x_78_14_3 = Qtempx * x_78_9_3 + WQtempx * x_78_9_4;
@@ -15317,7 +15317,7 @@
     QUICKDouble x_93_44_1 = Qtempx * x_93_21_1 + WQtempx * x_93_21_2 + 2.000000 * CDtemp * (x_93_14_1 - ABcom * x_93_14_2) + ABCDtemp * x_78_21_2;
     QUICKDouble x_93_75_0 = Ptempx * x_78_75_0 + WPtempx * x_78_75_1 + 4.000000 * ABCDtemp * x_78_44_1;
     QUICKDouble x_93_75_1 = Ptempx * x_78_75_1 + WPtempx * x_78_75_2 + 4.000000 * ABCDtemp * x_78_44_2;
-    LOCSTORE(store, 93, 108, STOREDIM, STOREDIM) += Qtempx * x_93_75_0 + WQtempx * x_93_75_1 + 4.000000 * CDtemp * (x_93_44_0 - ABcom * x_93_44_1) + ABCDtemp * x_78_75_1;
+    LOCSTORE(store, 93, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_75_0 + WQtempx * x_93_75_1 + 4.000000 * CDtemp * (x_93_44_0 - ABcom * x_93_44_1) + ABCDtemp * x_78_75_1;
     QUICKDouble x_78_51_1 = Qtempx * x_78_33_1 + WQtempx * x_78_33_2;
     QUICKDouble x_78_51_2 = Qtempx * x_78_33_2 + WQtempx * x_78_33_3;
     QUICKDouble x_78_51_0 = Qtempx * x_78_33_0 + WQtempx * x_78_33_1;
@@ -15329,7 +15329,7 @@
     QUICKDouble x_93_51_1 = Qtempx * x_93_33_1 + WQtempx * x_93_33_2 + ABCDtemp * x_78_33_2;
     QUICKDouble x_93_76_0 = Ptempx * x_78_76_0 + WPtempx * x_78_76_1 + 2.000000 * ABCDtemp * x_78_51_1;
     QUICKDouble x_93_76_1 = Ptempx * x_78_76_1 + WPtempx * x_78_76_2 + 2.000000 * ABCDtemp * x_78_51_2;
-    LOCSTORE(store, 93, 115, STOREDIM, STOREDIM) += Qtempx * x_93_76_0 + WQtempx * x_93_76_1 + 2.000000 * CDtemp * (x_93_51_0 - ABcom * x_93_51_1) + ABCDtemp * x_78_76_1;
+    LOCSTORE(store, 93, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_76_0 + WQtempx * x_93_76_1 + 2.000000 * CDtemp * (x_93_51_0 - ABcom * x_93_51_1) + ABCDtemp * x_78_76_1;
     QUICKDouble x_78_12_1 = Qtempx * x_78_8_1 + WQtempx * x_78_8_2;
     QUICKDouble x_78_12_2 = Qtempx * x_78_8_2 + WQtempx * x_78_8_3;
     QUICKDouble x_78_12_3 = Qtempx * x_78_8_3 + WQtempx * x_78_8_4;
@@ -15359,7 +15359,7 @@
     QUICKDouble x_93_46_1 = Qtempx * x_93_20_1 + WQtempx * x_93_20_2 + 2.000000 * CDtemp * (x_93_12_1 - ABcom * x_93_12_2) + ABCDtemp * x_78_20_2;
     QUICKDouble x_93_77_0 = Ptempx * x_78_77_0 + WPtempx * x_78_77_1 + 4.000000 * ABCDtemp * x_78_46_1;
     QUICKDouble x_93_77_1 = Ptempx * x_78_77_1 + WPtempx * x_78_77_2 + 4.000000 * ABCDtemp * x_78_46_2;
-    LOCSTORE(store, 93, 110, STOREDIM, STOREDIM) += Qtempx * x_93_77_0 + WQtempx * x_93_77_1 + 4.000000 * CDtemp * (x_93_46_0 - ABcom * x_93_46_1) + ABCDtemp * x_78_77_1;
+    LOCSTORE(store, 93, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_77_0 + WQtempx * x_93_77_1 + 4.000000 * CDtemp * (x_93_46_0 - ABcom * x_93_46_1) + ABCDtemp * x_78_77_1;
     QUICKDouble x_31_31_3 = Qtempy * x_31_19_3 + WQtempy * x_31_19_4 + ABCDtemp * x_19_19_4;
     QUICKDouble x_31_31_2 = Qtempy * x_31_19_2 + WQtempy * x_31_19_3 + ABCDtemp * x_19_19_3;
     QUICKDouble x_31_31_4 = Qtempy * x_31_19_4 + WQtempy * x_31_19_5 + ABCDtemp * x_19_19_5;
@@ -15379,8 +15379,8 @@
     QUICKDouble x_59_78_1 = Qtempy * x_59_41_1 + WQtempy * x_59_41_2 + 2.000000 * CDtemp * (x_59_31_1 - ABcom * x_59_31_2) + 2.000000 * ABCDtemp * x_40_41_2;
     QUICKDouble x_93_78_0 = Ptempx * x_78_78_0 + WPtempx * x_78_78_1;
     QUICKDouble x_93_78_1 = Ptempx * x_78_78_1 + WPtempx * x_78_78_2;
-    LOCSTORE(store, 93, 112, STOREDIM, STOREDIM) += Qtempy * x_93_78_0 + WQtempy * x_93_78_1 + 3.000000 * CDtemp * (x_93_41_0 - ABcom * x_93_41_1) + 3.000000 * ABCDtemp * x_59_78_1;
-    LOCSTORE(store, 93, 93, STOREDIM, STOREDIM) += Qtempx * x_93_78_0 + WQtempx * x_93_78_1 + ABCDtemp * x_78_78_1;
+    LOCSTORE(store, 93, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_78_0 + WQtempy * x_93_78_1 + 3.000000 * CDtemp * (x_93_41_0 - ABcom * x_93_41_1) + 3.000000 * ABCDtemp * x_59_78_1;
+    LOCSTORE(store, 93, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_78_0 + WQtempx * x_93_78_1 + ABCDtemp * x_78_78_1;
     QUICKDouble x_78_27_1 = Qtempx * x_78_19_1 + WQtempx * x_78_19_2;
     QUICKDouble x_78_27_2 = Qtempx * x_78_19_2 + WQtempx * x_78_19_3;
     QUICKDouble x_78_27_3 = Qtempx * x_78_19_3 + WQtempx * x_78_19_4;
@@ -15400,7 +15400,7 @@
     QUICKDouble x_93_43_1 = Qtempx * x_93_27_1 + WQtempx * x_93_27_2 + CDtemp * (x_93_19_1 - ABcom * x_93_19_2) + ABCDtemp * x_78_27_2;
     QUICKDouble x_93_79_0 = Ptempx * x_78_79_0 + WPtempx * x_78_79_1 + 3.000000 * ABCDtemp * x_78_43_1;
     QUICKDouble x_93_79_1 = Ptempx * x_78_79_1 + WPtempx * x_78_79_2 + 3.000000 * ABCDtemp * x_78_43_2;
-    LOCSTORE(store, 93, 114, STOREDIM, STOREDIM) += Qtempx * x_93_79_0 + WQtempx * x_93_79_1 + 3.000000 * CDtemp * (x_93_43_0 - ABcom * x_93_43_1) + ABCDtemp * x_78_79_1;
+    LOCSTORE(store, 93, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_79_0 + WQtempx * x_93_79_1 + 3.000000 * CDtemp * (x_93_43_0 - ABcom * x_93_43_1) + ABCDtemp * x_78_79_1;
     QUICKDouble x_78_29_1 = Qtempx * x_78_18_1 + WQtempx * x_78_18_2;
     QUICKDouble x_78_29_2 = Qtempx * x_78_18_2 + WQtempx * x_78_18_3;
     QUICKDouble x_78_29_3 = Qtempx * x_78_18_3 + WQtempx * x_78_18_4;
@@ -15420,7 +15420,7 @@
     QUICKDouble x_93_45_1 = Qtempx * x_93_29_1 + WQtempx * x_93_29_2 + CDtemp * (x_93_18_1 - ABcom * x_93_18_2) + ABCDtemp * x_78_29_2;
     QUICKDouble x_93_80_0 = Ptempx * x_78_80_0 + WPtempx * x_78_80_1 + 3.000000 * ABCDtemp * x_78_45_1;
     QUICKDouble x_93_80_1 = Ptempx * x_78_80_1 + WPtempx * x_78_80_2 + 3.000000 * ABCDtemp * x_78_45_2;
-    LOCSTORE(store, 93, 116, STOREDIM, STOREDIM) += Qtempx * x_93_80_0 + WQtempx * x_93_80_1 + 3.000000 * CDtemp * (x_93_45_0 - ABcom * x_93_45_1) + ABCDtemp * x_78_80_1;
+    LOCSTORE(store, 93, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_80_0 + WQtempx * x_93_80_1 + 3.000000 * CDtemp * (x_93_45_0 - ABcom * x_93_45_1) + ABCDtemp * x_78_80_1;
     QUICKDouble x_78_1_1 = Qtempx * x_78_0_1 + WQtempx * x_78_0_2;
     QUICKDouble x_78_1_2 = Qtempx * x_78_0_2 + WQtempx * x_78_0_3;
     QUICKDouble x_78_1_3 = Qtempx * x_78_0_3 + WQtempx * x_78_0_4;
@@ -15476,7 +15476,7 @@
     QUICKDouble x_93_53_1 = Qtempx * x_93_32_1 + WQtempx * x_93_32_2 + 4.000000 * CDtemp * (x_93_17_1 - ABcom * x_93_17_2) + ABCDtemp * x_78_32_2;
     QUICKDouble x_93_81_0 = Ptempx * x_78_81_0 + WPtempx * x_78_81_1 + 6.000000 * ABCDtemp * x_78_53_1;
     QUICKDouble x_93_81_1 = Ptempx * x_78_81_1 + WPtempx * x_78_81_2 + 6.000000 * ABCDtemp * x_78_53_2;
-    LOCSTORE(store, 93, 117, STOREDIM, STOREDIM) += Qtempx * x_93_81_0 + WQtempx * x_93_81_1 + 6.000000 * CDtemp * (x_93_53_0 - ABcom * x_93_53_1) + ABCDtemp * x_78_81_1;
+    LOCSTORE(store, 93, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_81_0 + WQtempx * x_93_81_1 + 6.000000 * CDtemp * (x_93_53_0 - ABcom * x_93_53_1) + ABCDtemp * x_78_81_1;
     QUICKDouble x_27_2_6 = Qtempy * x_27_0_6 + WQtempy * x_27_0_7;
     QUICKDouble x_40_2_6 = Qtempy * x_40_0_6 + WQtempy * x_40_0_7 + ABCDtemp * x_27_0_7;
     QUICKDouble x_59_2_6 = Qtempy * x_59_0_6 + WQtempy * x_59_0_7 + 2.000000 * ABCDtemp * x_40_0_7;
@@ -15509,16 +15509,16 @@
     QUICKDouble x_59_82_1 = Qtempy * x_59_54_1 + WQtempy * x_59_54_2 + 5.000000 * CDtemp * (x_59_33_1 - ABcom * x_59_33_2) + 2.000000 * ABCDtemp * x_40_54_2;
     QUICKDouble x_93_82_0 = Ptempx * x_78_82_0 + WPtempx * x_78_82_1;
     QUICKDouble x_93_82_1 = Ptempx * x_78_82_1 + WPtempx * x_78_82_2;
-    LOCSTORE(store, 93, 118, STOREDIM, STOREDIM) += Qtempy * x_93_82_0 + WQtempy * x_93_82_1 + 6.000000 * CDtemp * (x_93_54_0 - ABcom * x_93_54_1) + 3.000000 * ABCDtemp * x_59_82_1;
-    LOCSTORE(store, 93, 103, STOREDIM, STOREDIM) += Qtempx * x_93_82_0 + WQtempx * x_93_82_1 + ABCDtemp * x_78_82_1;
+    LOCSTORE(store, 93, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_82_0 + WQtempy * x_93_82_1 + 6.000000 * CDtemp * (x_93_54_0 - ABcom * x_93_54_1) + 3.000000 * ABCDtemp * x_59_82_1;
+    LOCSTORE(store, 93, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_82_0 + WQtempx * x_93_82_1 + ABCDtemp * x_78_82_1;
     QUICKDouble x_78_83_1 = Qtempz * x_78_55_1 + WQtempz * x_78_55_2 + 5.000000 * CDtemp * (x_78_34_1 - ABcom * x_78_34_2) + 3.000000 * ABCDtemp * x_42_55_2;
     QUICKDouble x_78_83_0 = Qtempz * x_78_55_0 + WQtempz * x_78_55_1 + 5.000000 * CDtemp * (x_78_34_0 - ABcom * x_78_34_1) + 3.000000 * ABCDtemp * x_42_55_1;
     QUICKDouble x_78_83_2 = Qtempz * x_78_55_2 + WQtempz * x_78_55_3 + 5.000000 * CDtemp * (x_78_34_2 - ABcom * x_78_34_3) + 3.000000 * ABCDtemp * x_42_55_3;
     QUICKDouble x_93_83_0 = Ptempx * x_78_83_0 + WPtempx * x_78_83_1;
     QUICKDouble x_93_83_1 = Ptempx * x_78_83_1 + WPtempx * x_78_83_2;
-    LOCSTORE(store, 93, 119, STOREDIM, STOREDIM) += Qtempz * x_93_83_0 + WQtempz * x_93_83_1 + 6.000000 * CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + 3.000000 * ABCDtemp * x_60_83_1;
-    LOCSTORE(store, 93, 101, STOREDIM, STOREDIM) += Qtempx * x_93_83_0 + WQtempx * x_93_83_1 + ABCDtemp * x_78_83_1;
-    LOCSTORE(store, 93, 99, STOREDIM, STOREDIM) += Qtempy * x_93_83_0 + WQtempy * x_93_83_1 + 3.000000 * ABCDtemp * x_59_83_1;
+    LOCSTORE(store, 93, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_93_83_0 + WQtempz * x_93_83_1 + 6.000000 * CDtemp * (x_93_55_0 - ABcom * x_93_55_1) + 3.000000 * ABCDtemp * x_60_83_1;
+    LOCSTORE(store, 93, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_93_83_0 + WQtempx * x_93_83_1 + ABCDtemp * x_78_83_1;
+    LOCSTORE(store, 93, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_93_83_0 + WQtempy * x_93_83_1 + 3.000000 * ABCDtemp * x_59_83_1;
     QUICKDouble x_27_0_1 = Ptempx * x_19_0_1 + WPtempx * x_19_0_2;
     QUICKDouble x_40_0_0 = Ptempx * x_31_0_0 + WPtempx * x_31_0_1;
     QUICKDouble x_27_0_9 = Ptempx * x_19_0_9 + WPtempx * x_19_0_10;
@@ -15627,7 +15627,7 @@
     QUICKDouble x_94_38_1 = Qtempx * x_94_23_1 + WQtempx * x_94_23_2 + 2.000000 * CDtemp * (x_94_10_1 - ABcom * x_94_10_2) + 3.000000 * ABCDtemp * x_61_23_2;
     QUICKDouble x_94_56_0 = Ptempx * x_61_56_0 + WPtempx * x_61_56_1 + 2.000000 * ABtemp * (x_40_56_0 - CDcom * x_40_56_1) + 4.000000 * ABCDtemp * x_61_38_1;
     QUICKDouble x_94_56_1 = Ptempx * x_61_56_1 + WPtempx * x_61_56_2 + 2.000000 * ABtemp * (x_40_56_1 - CDcom * x_40_56_2) + 4.000000 * ABCDtemp * x_61_38_2;
-    LOCSTORE(store, 94, 84, STOREDIM, STOREDIM) += Qtempx * x_94_56_0 + WQtempx * x_94_56_1 + 4.000000 * CDtemp * (x_94_38_0 - ABcom * x_94_38_1) + 3.000000 * ABCDtemp * x_61_56_1;
+    LOCSTORE(store, 94, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_56_0 + WQtempx * x_94_56_1 + 4.000000 * CDtemp * (x_94_38_0 - ABcom * x_94_38_1) + 3.000000 * ABCDtemp * x_61_56_1;
     QUICKDouble x_43_5_2 = Qtempy * x_43_3_2 + WQtempy * x_43_3_3;
     QUICKDouble x_43_5_3 = Qtempy * x_43_3_3 + WQtempy * x_43_3_4;
     QUICKDouble x_43_5_4 = Qtempy * x_43_3_4 + WQtempy * x_43_3_5;
@@ -15703,7 +15703,7 @@
     QUICKDouble x_94_48_1 = Qtempy * x_94_30_1 + WQtempy * x_94_30_2 + 3.000000 * CDtemp * (x_94_15_1 - ABcom * x_94_15_2) + ABCDtemp * x_79_30_2;
     QUICKDouble x_94_57_0 = Ptempx * x_61_57_0 + WPtempx * x_61_57_1 + 2.000000 * ABtemp * (x_40_57_0 - CDcom * x_40_57_1) + ABCDtemp * x_61_48_1;
     QUICKDouble x_94_57_1 = Ptempx * x_61_57_1 + WPtempx * x_61_57_2 + 2.000000 * ABtemp * (x_40_57_1 - CDcom * x_40_57_2) + ABCDtemp * x_61_48_2;
-    LOCSTORE(store, 94, 91, STOREDIM, STOREDIM) += Qtempx * x_94_57_0 + WQtempx * x_94_57_1 + CDtemp * (x_94_48_0 - ABcom * x_94_48_1) + 3.000000 * ABCDtemp * x_61_57_1;
+    LOCSTORE(store, 94, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_57_0 + WQtempx * x_94_57_1 + CDtemp * (x_94_48_0 - ABcom * x_94_48_1) + 3.000000 * ABCDtemp * x_61_57_1;
     QUICKDouble x_43_9_1 = Qtempz * x_43_3_1 + WQtempz * x_43_3_2 + CDtemp * (x_43_0_1 - ABcom * x_43_0_2) + 3.000000 * ABCDtemp * x_21_3_2;
     QUICKDouble x_61_9_0 = Qtempz * x_61_3_0 + WQtempz * x_61_3_1 + CDtemp * (x_61_0_0 - ABcom * x_61_0_1) + 3.000000 * ABCDtemp * x_36_3_1;
     QUICKDouble x_43_9_6 = Qtempz * x_43_3_6 + WQtempz * x_43_3_7 + CDtemp * (x_43_0_6 - ABcom * x_43_0_7) + 3.000000 * ABCDtemp * x_21_3_7;
@@ -15760,7 +15760,7 @@
     QUICKDouble x_94_47_1 = Qtempy * x_94_34_1 + WQtempy * x_94_34_2 + ABCDtemp * x_79_34_2;
     QUICKDouble x_94_58_0 = Ptempx * x_61_58_0 + WPtempx * x_61_58_1 + 2.000000 * ABtemp * (x_40_58_0 - CDcom * x_40_58_1) + ABCDtemp * x_61_47_1;
     QUICKDouble x_94_58_1 = Ptempx * x_61_58_1 + WPtempx * x_61_58_2 + 2.000000 * ABtemp * (x_40_58_1 - CDcom * x_40_58_2) + ABCDtemp * x_61_47_2;
-    LOCSTORE(store, 94, 89, STOREDIM, STOREDIM) += Qtempx * x_94_58_0 + WQtempx * x_94_58_1 + CDtemp * (x_94_47_0 - ABcom * x_94_47_1) + 3.000000 * ABCDtemp * x_61_58_1;
+    LOCSTORE(store, 94, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_58_0 + WQtempx * x_94_58_1 + CDtemp * (x_94_47_0 - ABcom * x_94_47_1) + 3.000000 * ABCDtemp * x_61_58_1;
     QUICKDouble x_43_31_2 = Qtempy * x_43_19_2 + WQtempy * x_43_19_3;
     QUICKDouble x_61_31_1 = Qtempy * x_61_19_1 + WQtempy * x_61_19_2 + ABCDtemp * x_43_19_2;
     QUICKDouble x_61_31_2 = Qtempy * x_61_19_2 + WQtempy * x_61_19_3 + ABCDtemp * x_43_19_3;
@@ -15802,7 +15802,7 @@
     QUICKDouble x_94_41_1 = Qtempy * x_94_31_1 + WQtempy * x_94_31_2 + CDtemp * (x_94_19_1 - ABcom * x_94_19_2) + ABCDtemp * x_79_31_2;
     QUICKDouble x_94_59_0 = Ptempx * x_61_59_0 + WPtempx * x_61_59_1 + 2.000000 * ABtemp * (x_40_59_0 - CDcom * x_40_59_1) + ABCDtemp * x_61_41_1;
     QUICKDouble x_94_59_1 = Ptempx * x_61_59_1 + WPtempx * x_61_59_2 + 2.000000 * ABtemp * (x_40_59_1 - CDcom * x_40_59_2) + ABCDtemp * x_61_41_2;
-    LOCSTORE(store, 94, 98, STOREDIM, STOREDIM) += Qtempx * x_94_59_0 + WQtempx * x_94_59_1 + CDtemp * (x_94_41_0 - ABcom * x_94_41_1) + 3.000000 * ABCDtemp * x_61_59_1;
+    LOCSTORE(store, 94, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_59_0 + WQtempx * x_94_59_1 + CDtemp * (x_94_41_0 - ABcom * x_94_41_1) + 3.000000 * ABCDtemp * x_61_59_1;
     QUICKDouble x_43_16_2 = Qtempy * x_43_9_2 + WQtempy * x_43_9_3;
     QUICKDouble x_43_16_3 = Qtempy * x_43_9_3 + WQtempy * x_43_9_4;
     QUICKDouble x_61_16_1 = Qtempy * x_61_9_1 + WQtempy * x_61_9_2 + ABCDtemp * x_43_9_2;
@@ -15866,7 +15866,7 @@
     QUICKDouble x_94_42_1 = Qtempy * x_94_22_1 + WQtempy * x_94_22_2 + 2.000000 * CDtemp * (x_94_16_1 - ABcom * x_94_16_2) + ABCDtemp * x_79_22_2;
     QUICKDouble x_94_60_0 = Ptempx * x_61_60_0 + WPtempx * x_61_60_1 + 2.000000 * ABtemp * (x_40_60_0 - CDcom * x_40_60_1) + ABCDtemp * x_61_42_1;
     QUICKDouble x_94_60_1 = Ptempx * x_61_60_1 + WPtempx * x_61_60_2 + 2.000000 * ABtemp * (x_40_60_1 - CDcom * x_40_60_2) + ABCDtemp * x_61_42_2;
-    LOCSTORE(store, 94, 97, STOREDIM, STOREDIM) += Qtempx * x_94_60_0 + WQtempx * x_94_60_1 + CDtemp * (x_94_42_0 - ABcom * x_94_42_1) + 3.000000 * ABCDtemp * x_61_60_1;
+    LOCSTORE(store, 94, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_60_0 + WQtempx * x_94_60_1 + CDtemp * (x_94_42_0 - ABcom * x_94_42_1) + 3.000000 * ABCDtemp * x_61_60_1;
     QUICKDouble x_40_40_2 = Qtempx * x_40_31_2 + WQtempx * x_40_31_3 + ABCDtemp * x_31_31_3;
     QUICKDouble x_61_40_1 = Qtempx * x_61_31_1 + WQtempx * x_61_31_2 + 2.000000 * ABCDtemp * x_40_31_2;
     QUICKDouble x_61_40_2 = Qtempx * x_61_31_2 + WQtempx * x_61_31_3 + 2.000000 * ABCDtemp * x_40_31_3;
@@ -15891,7 +15891,7 @@
     QUICKDouble x_94_40_1 = Qtempx * x_94_31_1 + WQtempx * x_94_31_2 + 3.000000 * ABCDtemp * x_61_31_2;
     QUICKDouble x_94_61_0 = Ptempx * x_61_61_0 + WPtempx * x_61_61_1 + 2.000000 * ABtemp * (x_40_61_0 - CDcom * x_40_61_1) + 2.000000 * ABCDtemp * x_61_40_1;
     QUICKDouble x_94_61_1 = Ptempx * x_61_61_1 + WPtempx * x_61_61_2 + 2.000000 * ABtemp * (x_40_61_1 - CDcom * x_40_61_2) + 2.000000 * ABCDtemp * x_61_40_2;
-    LOCSTORE(store, 94, 94, STOREDIM, STOREDIM) += Qtempx * x_94_61_0 + WQtempx * x_94_61_1 + 2.000000 * CDtemp * (x_94_40_0 - ABcom * x_94_40_1) + 3.000000 * ABCDtemp * x_61_61_1;
+    LOCSTORE(store, 94, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_61_0 + WQtempx * x_94_61_1 + 2.000000 * CDtemp * (x_94_40_0 - ABcom * x_94_40_1) + 3.000000 * ABCDtemp * x_61_61_1;
     QUICKDouble x_31_25_3 = Qtempx * x_31_16_3 + WQtempx * x_31_16_4;
     QUICKDouble x_40_25_2 = Qtempx * x_40_16_2 + WQtempx * x_40_16_3 + ABCDtemp * x_31_16_3;
     QUICKDouble x_40_25_3 = Qtempx * x_40_16_3 + WQtempx * x_40_16_4 + ABCDtemp * x_31_16_4;
@@ -15931,7 +15931,7 @@
     QUICKDouble x_94_36_1 = Qtempx * x_94_25_1 + WQtempx * x_94_25_2 + CDtemp * (x_94_16_1 - ABcom * x_94_16_2) + 3.000000 * ABCDtemp * x_61_25_2;
     QUICKDouble x_94_62_0 = Ptempx * x_61_62_0 + WPtempx * x_61_62_1 + 2.000000 * ABtemp * (x_40_62_0 - CDcom * x_40_62_1) + 3.000000 * ABCDtemp * x_61_36_1;
     QUICKDouble x_94_62_1 = Ptempx * x_61_62_1 + WPtempx * x_61_62_2 + 2.000000 * ABtemp * (x_40_62_1 - CDcom * x_40_62_2) + 3.000000 * ABCDtemp * x_61_36_2;
-    LOCSTORE(store, 94, 90, STOREDIM, STOREDIM) += Qtempx * x_94_62_0 + WQtempx * x_94_62_1 + 3.000000 * CDtemp * (x_94_36_0 - ABcom * x_94_36_1) + 3.000000 * ABCDtemp * x_61_62_1;
+    LOCSTORE(store, 94, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_62_0 + WQtempx * x_94_62_1 + 3.000000 * CDtemp * (x_94_36_0 - ABcom * x_94_36_1) + 3.000000 * ABCDtemp * x_61_62_1;
     QUICKDouble x_40_39_2 = Qtempx * x_40_30_2 + WQtempx * x_40_30_3 + ABCDtemp * x_31_30_3;
     QUICKDouble x_61_39_1 = Qtempx * x_61_30_1 + WQtempx * x_61_30_2 + 2.000000 * ABCDtemp * x_40_30_2;
     QUICKDouble x_61_39_2 = Qtempx * x_61_30_2 + WQtempx * x_61_30_3 + 2.000000 * ABCDtemp * x_40_30_3;
@@ -15956,7 +15956,7 @@
     QUICKDouble x_94_39_1 = Qtempx * x_94_30_1 + WQtempx * x_94_30_2 + 3.000000 * ABCDtemp * x_61_30_2;
     QUICKDouble x_94_63_0 = Ptempx * x_61_63_0 + WPtempx * x_61_63_1 + 2.000000 * ABtemp * (x_40_63_0 - CDcom * x_40_63_1) + 2.000000 * ABCDtemp * x_61_39_1;
     QUICKDouble x_94_63_1 = Ptempx * x_61_63_1 + WPtempx * x_61_63_2 + 2.000000 * ABtemp * (x_40_63_1 - CDcom * x_40_63_2) + 2.000000 * ABCDtemp * x_61_39_2;
-    LOCSTORE(store, 94, 95, STOREDIM, STOREDIM) += Qtempx * x_94_63_0 + WQtempx * x_94_63_1 + 2.000000 * CDtemp * (x_94_39_0 - ABcom * x_94_39_1) + 3.000000 * ABCDtemp * x_61_63_1;
+    LOCSTORE(store, 94, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_63_0 + WQtempx * x_94_63_1 + 2.000000 * CDtemp * (x_94_39_0 - ABcom * x_94_39_1) + 3.000000 * ABCDtemp * x_61_63_1;
     QUICKDouble x_31_24_3 = Qtempx * x_31_15_3 + WQtempx * x_31_15_4;
     QUICKDouble x_40_24_2 = Qtempx * x_40_15_2 + WQtempx * x_40_15_3 + ABCDtemp * x_31_15_3;
     QUICKDouble x_40_24_3 = Qtempx * x_40_15_3 + WQtempx * x_40_15_4 + ABCDtemp * x_31_15_4;
@@ -15996,7 +15996,7 @@
     QUICKDouble x_94_37_1 = Qtempx * x_94_24_1 + WQtempx * x_94_24_2 + CDtemp * (x_94_15_1 - ABcom * x_94_15_2) + 3.000000 * ABCDtemp * x_61_24_2;
     QUICKDouble x_94_64_0 = Ptempx * x_61_64_0 + WPtempx * x_61_64_1 + 2.000000 * ABtemp * (x_40_64_0 - CDcom * x_40_64_1) + 3.000000 * ABCDtemp * x_61_37_1;
     QUICKDouble x_94_64_1 = Ptempx * x_61_64_1 + WPtempx * x_61_64_2 + 2.000000 * ABtemp * (x_40_64_1 - CDcom * x_40_64_2) + 3.000000 * ABCDtemp * x_61_37_2;
-    LOCSTORE(store, 94, 92, STOREDIM, STOREDIM) += Qtempx * x_94_64_0 + WQtempx * x_94_64_1 + 3.000000 * CDtemp * (x_94_37_0 - ABcom * x_94_37_1) + 3.000000 * ABCDtemp * x_61_64_1;
+    LOCSTORE(store, 94, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_64_0 + WQtempx * x_94_64_1 + 3.000000 * CDtemp * (x_94_37_0 - ABcom * x_94_37_1) + 3.000000 * ABCDtemp * x_61_64_1;
     QUICKDouble x_40_35_2 = Qtempx * x_40_22_2 + WQtempx * x_40_22_3 + ABCDtemp * x_31_22_3;
     QUICKDouble x_61_35_1 = Qtempx * x_61_22_1 + WQtempx * x_61_22_2 + 2.000000 * ABCDtemp * x_40_22_2;
     QUICKDouble x_61_35_2 = Qtempx * x_61_22_2 + WQtempx * x_61_22_3 + 2.000000 * ABCDtemp * x_40_22_3;
@@ -16021,7 +16021,7 @@
     QUICKDouble x_94_35_1 = Qtempx * x_94_22_1 + WQtempx * x_94_22_2 + 3.000000 * ABCDtemp * x_61_22_2;
     QUICKDouble x_94_65_0 = Ptempx * x_61_65_0 + WPtempx * x_61_65_1 + 2.000000 * ABtemp * (x_40_65_0 - CDcom * x_40_65_1) + 2.000000 * ABCDtemp * x_61_35_1;
     QUICKDouble x_94_65_1 = Ptempx * x_61_65_1 + WPtempx * x_61_65_2 + 2.000000 * ABtemp * (x_40_65_1 - CDcom * x_40_65_2) + 2.000000 * ABCDtemp * x_61_35_2;
-    LOCSTORE(store, 94, 96, STOREDIM, STOREDIM) += Qtempx * x_94_65_0 + WQtempx * x_94_65_1 + 2.000000 * CDtemp * (x_94_35_0 - ABcom * x_94_35_1) + 3.000000 * ABCDtemp * x_61_65_1;
+    LOCSTORE(store, 94, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_65_0 + WQtempx * x_94_65_1 + 2.000000 * CDtemp * (x_94_35_0 - ABcom * x_94_35_1) + 3.000000 * ABCDtemp * x_61_65_1;
     QUICKDouble x_79_0_7 = Ptempx * x_43_0_7 + WPtempx * x_43_0_8 + 2.000000 * ABtemp * (x_27_0_7 - CDcom * x_27_0_8);
     QUICKDouble x_79_3_6 = Qtempz * x_79_0_6 + WQtempz * x_79_0_7 + 3.000000 * ABCDtemp * x_44_0_7;
     QUICKDouble x_79_9_5 = Qtempz * x_79_3_5 + WQtempz * x_79_3_6 + CDtemp * (x_79_0_5 - ABcom * x_79_0_6) + 3.000000 * ABCDtemp * x_44_3_6;
@@ -16048,8 +16048,8 @@
     QUICKDouble x_94_55_1 = Qtempz * x_94_34_1 + WQtempz * x_94_34_2 + 4.000000 * CDtemp * (x_94_19_1 - ABcom * x_94_19_2) + 3.000000 * ABCDtemp * x_62_34_2;
     QUICKDouble x_94_66_0 = Ptempx * x_61_66_0 + WPtempx * x_61_66_1 + 2.000000 * ABtemp * (x_40_66_0 - CDcom * x_40_66_1);
     QUICKDouble x_94_66_1 = Ptempx * x_61_66_1 + WPtempx * x_61_66_2 + 2.000000 * ABtemp * (x_40_66_1 - CDcom * x_40_66_2);
-    LOCSTORE(store, 94, 105, STOREDIM, STOREDIM) += Qtempy * x_94_66_0 + WQtempy * x_94_66_1 + CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + ABCDtemp * x_79_66_1;
-    LOCSTORE(store, 94, 86, STOREDIM, STOREDIM) += Qtempx * x_94_66_0 + WQtempx * x_94_66_1 + 3.000000 * ABCDtemp * x_61_66_1;
+    LOCSTORE(store, 94, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_66_0 + WQtempy * x_94_66_1 + CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + ABCDtemp * x_79_66_1;
+    LOCSTORE(store, 94, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_66_0 + WQtempx * x_94_66_1 + 3.000000 * ABCDtemp * x_61_66_1;
     QUICKDouble x_79_5_5 = Qtempy * x_79_3_5 + WQtempy * x_79_3_6;
     QUICKDouble x_79_15_4 = Qtempy * x_79_5_4 + WQtempy * x_79_5_5 + CDtemp * (x_79_3_4 - ABcom * x_79_3_5);
     QUICKDouble x_79_30_3 = Qtempy * x_79_15_3 + WQtempy * x_79_15_4 + 2.000000 * CDtemp * (x_79_5_3 - ABcom * x_79_5_4);
@@ -16071,8 +16071,8 @@
     QUICKDouble x_79_67_1 = Qtempy * x_79_48_1 + WQtempy * x_79_48_2 + 4.000000 * CDtemp * (x_79_30_1 - ABcom * x_79_30_2);
     QUICKDouble x_94_67_0 = Ptempx * x_61_67_0 + WPtempx * x_61_67_1 + 2.000000 * ABtemp * (x_40_67_0 - CDcom * x_40_67_1);
     QUICKDouble x_94_67_1 = Ptempx * x_61_67_1 + WPtempx * x_61_67_2 + 2.000000 * ABtemp * (x_40_67_1 - CDcom * x_40_67_2);
-    LOCSTORE(store, 94, 100, STOREDIM, STOREDIM) += Qtempy * x_94_67_0 + WQtempy * x_94_67_1 + 5.000000 * CDtemp * (x_94_48_0 - ABcom * x_94_48_1) + ABCDtemp * x_79_67_1;
-    LOCSTORE(store, 94, 85, STOREDIM, STOREDIM) += Qtempx * x_94_67_0 + WQtempx * x_94_67_1 + 3.000000 * ABCDtemp * x_61_67_1;
+    LOCSTORE(store, 94, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_67_0 + WQtempy * x_94_67_1 + 5.000000 * CDtemp * (x_94_48_0 - ABcom * x_94_48_1) + ABCDtemp * x_79_67_1;
+    LOCSTORE(store, 94, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_67_0 + WQtempx * x_94_67_1 + 3.000000 * ABCDtemp * x_61_67_1;
     QUICKDouble x_31_55_1 = Ptempy * x_19_55_1 + WPtempy * x_19_55_2;
     QUICKDouble x_31_68_0 = Ptempy * x_19_68_0 + WPtempy * x_19_68_1;
     QUICKDouble x_31_68_1 = Ptempy * x_19_68_1 + WPtempy * x_19_68_2;
@@ -16088,7 +16088,7 @@
     QUICKDouble x_61_68_2 = Qtempx * x_61_55_2 + WQtempx * x_61_55_3 + 2.000000 * ABCDtemp * x_40_55_3;
     QUICKDouble x_94_68_0 = Ptempx * x_61_68_0 + WPtempx * x_61_68_1 + 2.000000 * ABtemp * (x_40_68_0 - CDcom * x_40_68_1) + ABCDtemp * x_61_55_1;
     QUICKDouble x_94_68_1 = Ptempx * x_61_68_1 + WPtempx * x_61_68_2 + 2.000000 * ABtemp * (x_40_68_1 - CDcom * x_40_68_2) + ABCDtemp * x_61_55_2;
-    LOCSTORE(store, 94, 107, STOREDIM, STOREDIM) += Qtempx * x_94_68_0 + WQtempx * x_94_68_1 + CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + 3.000000 * ABCDtemp * x_61_68_1;
+    LOCSTORE(store, 94, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_68_0 + WQtempx * x_94_68_1 + CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + 3.000000 * ABCDtemp * x_61_68_1;
     QUICKDouble x_31_6_3 = Qtempx * x_31_3_3 + WQtempx * x_31_3_4;
     QUICKDouble x_31_6_4 = Qtempx * x_31_3_4 + WQtempx * x_31_3_5;
     QUICKDouble x_31_6_5 = Qtempx * x_31_3_5 + WQtempx * x_31_3_6;
@@ -16170,7 +16170,7 @@
     QUICKDouble x_94_50_1 = Qtempx * x_94_26_1 + WQtempx * x_94_26_2 + 3.000000 * CDtemp * (x_94_13_1 - ABcom * x_94_13_2) + 3.000000 * ABCDtemp * x_61_26_2;
     QUICKDouble x_94_69_0 = Ptempx * x_61_69_0 + WPtempx * x_61_69_1 + 2.000000 * ABtemp * (x_40_69_0 - CDcom * x_40_69_1) + 5.000000 * ABCDtemp * x_61_50_1;
     QUICKDouble x_94_69_1 = Ptempx * x_61_69_1 + WPtempx * x_61_69_2 + 2.000000 * ABtemp * (x_40_69_1 - CDcom * x_40_69_2) + 5.000000 * ABCDtemp * x_61_50_2;
-    LOCSTORE(store, 94, 102, STOREDIM, STOREDIM) += Qtempx * x_94_69_0 + WQtempx * x_94_69_1 + 5.000000 * CDtemp * (x_94_50_0 - ABcom * x_94_50_1) + 3.000000 * ABCDtemp * x_61_69_1;
+    LOCSTORE(store, 94, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_69_0 + WQtempx * x_94_69_1 + 5.000000 * CDtemp * (x_94_50_0 - ABcom * x_94_50_1) + 3.000000 * ABCDtemp * x_61_69_1;
     QUICKDouble x_43_2_2 = Qtempy * x_43_0_2 + WQtempy * x_43_0_3;
     QUICKDouble x_43_2_3 = Qtempy * x_43_0_3 + WQtempy * x_43_0_4;
     QUICKDouble x_43_2_4 = Qtempy * x_43_0_4 + WQtempy * x_43_0_5;
@@ -16290,7 +16290,7 @@
     QUICKDouble x_94_54_1 = Qtempy * x_94_33_1 + WQtempy * x_94_33_2 + 4.000000 * CDtemp * (x_94_18_1 - ABcom * x_94_18_2) + ABCDtemp * x_79_33_2;
     QUICKDouble x_94_70_0 = Ptempx * x_61_70_0 + WPtempx * x_61_70_1 + 2.000000 * ABtemp * (x_40_70_0 - CDcom * x_40_70_1) + ABCDtemp * x_61_54_1;
     QUICKDouble x_94_70_1 = Ptempx * x_61_70_1 + WPtempx * x_61_70_2 + 2.000000 * ABtemp * (x_40_70_1 - CDcom * x_40_70_2) + ABCDtemp * x_61_54_2;
-    LOCSTORE(store, 94, 109, STOREDIM, STOREDIM) += Qtempx * x_94_70_0 + WQtempx * x_94_70_1 + CDtemp * (x_94_54_0 - ABcom * x_94_54_1) + 3.000000 * ABCDtemp * x_61_70_1;
+    LOCSTORE(store, 94, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_70_0 + WQtempx * x_94_70_1 + CDtemp * (x_94_54_0 - ABcom * x_94_54_1) + 3.000000 * ABCDtemp * x_61_70_1;
     QUICKDouble x_31_4_3 = Qtempx * x_31_2_3 + WQtempx * x_31_2_4;
     QUICKDouble x_31_4_4 = Qtempx * x_31_2_4 + WQtempx * x_31_2_5;
     QUICKDouble x_31_4_5 = Qtempx * x_31_2_5 + WQtempx * x_31_2_6;
@@ -16372,7 +16372,7 @@
     QUICKDouble x_94_52_1 = Qtempx * x_94_28_1 + WQtempx * x_94_28_2 + 3.000000 * CDtemp * (x_94_11_1 - ABcom * x_94_11_2) + 3.000000 * ABCDtemp * x_61_28_2;
     QUICKDouble x_94_71_0 = Ptempx * x_61_71_0 + WPtempx * x_61_71_1 + 2.000000 * ABtemp * (x_40_71_0 - CDcom * x_40_71_1) + 5.000000 * ABCDtemp * x_61_52_1;
     QUICKDouble x_94_71_1 = Ptempx * x_61_71_1 + WPtempx * x_61_71_2 + 2.000000 * ABtemp * (x_40_71_1 - CDcom * x_40_71_2) + 5.000000 * ABCDtemp * x_61_52_2;
-    LOCSTORE(store, 94, 104, STOREDIM, STOREDIM) += Qtempx * x_94_71_0 + WQtempx * x_94_71_1 + 5.000000 * CDtemp * (x_94_52_0 - ABcom * x_94_52_1) + 3.000000 * ABCDtemp * x_61_71_1;
+    LOCSTORE(store, 94, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_71_0 + WQtempx * x_94_71_1 + 5.000000 * CDtemp * (x_94_52_0 - ABcom * x_94_52_1) + 3.000000 * ABCDtemp * x_61_71_1;
     QUICKDouble x_43_47_2 = Qtempy * x_43_34_2 + WQtempy * x_43_34_3;
     QUICKDouble x_31_72_0 = Ptempy * x_19_72_0 + WPtempy * x_19_72_1 + 2.000000 * ABCDtemp * x_19_47_1;
     QUICKDouble x_31_72_1 = Ptempy * x_19_72_1 + WPtempy * x_19_72_2 + 2.000000 * ABCDtemp * x_19_47_2;
@@ -16391,8 +16391,8 @@
     QUICKDouble x_79_72_1 = Qtempy * x_79_47_1 + WQtempy * x_79_47_2 + CDtemp * (x_79_34_1 - ABcom * x_79_34_2);
     QUICKDouble x_94_72_0 = Ptempx * x_61_72_0 + WPtempx * x_61_72_1 + 2.000000 * ABtemp * (x_40_72_0 - CDcom * x_40_72_1);
     QUICKDouble x_94_72_1 = Ptempx * x_61_72_1 + WPtempx * x_61_72_2 + 2.000000 * ABtemp * (x_40_72_1 - CDcom * x_40_72_2);
-    LOCSTORE(store, 94, 111, STOREDIM, STOREDIM) += Qtempy * x_94_72_0 + WQtempy * x_94_72_1 + 2.000000 * CDtemp * (x_94_47_0 - ABcom * x_94_47_1) + ABCDtemp * x_79_72_1;
-    LOCSTORE(store, 94, 87, STOREDIM, STOREDIM) += Qtempx * x_94_72_0 + WQtempx * x_94_72_1 + 3.000000 * ABCDtemp * x_61_72_1;
+    LOCSTORE(store, 94, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_72_0 + WQtempy * x_94_72_1 + 2.000000 * CDtemp * (x_94_47_0 - ABcom * x_94_47_1) + ABCDtemp * x_79_72_1;
+    LOCSTORE(store, 94, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_72_0 + WQtempx * x_94_72_1 + 3.000000 * ABCDtemp * x_61_72_1;
     QUICKDouble x_79_16_4 = Qtempy * x_79_9_4 + WQtempy * x_79_9_5;
     QUICKDouble x_79_22_3 = Qtempy * x_79_16_3 + WQtempy * x_79_16_4 + CDtemp * (x_79_9_3 - ABcom * x_79_9_4);
     QUICKDouble x_43_42_2 = Qtempy * x_43_22_2 + WQtempy * x_43_22_3 + 2.000000 * CDtemp * (x_43_16_2 - ABcom * x_43_16_3);
@@ -16413,8 +16413,8 @@
     QUICKDouble x_79_73_1 = Qtempy * x_79_42_1 + WQtempy * x_79_42_2 + 3.000000 * CDtemp * (x_79_22_1 - ABcom * x_79_22_2);
     QUICKDouble x_94_73_0 = Ptempx * x_61_73_0 + WPtempx * x_61_73_1 + 2.000000 * ABtemp * (x_40_73_0 - CDcom * x_40_73_1);
     QUICKDouble x_94_73_1 = Ptempx * x_61_73_1 + WPtempx * x_61_73_2 + 2.000000 * ABtemp * (x_40_73_1 - CDcom * x_40_73_2);
-    LOCSTORE(store, 94, 106, STOREDIM, STOREDIM) += Qtempy * x_94_73_0 + WQtempy * x_94_73_1 + 4.000000 * CDtemp * (x_94_42_0 - ABcom * x_94_42_1) + ABCDtemp * x_79_73_1;
-    LOCSTORE(store, 94, 88, STOREDIM, STOREDIM) += Qtempx * x_94_73_0 + WQtempx * x_94_73_1 + 3.000000 * ABCDtemp * x_61_73_1;
+    LOCSTORE(store, 94, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_73_0 + WQtempy * x_94_73_1 + 4.000000 * CDtemp * (x_94_42_0 - ABcom * x_94_42_1) + ABCDtemp * x_79_73_1;
+    LOCSTORE(store, 94, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_73_0 + WQtempx * x_94_73_1 + 3.000000 * ABCDtemp * x_61_73_1;
     QUICKDouble x_40_49_2 = Qtempx * x_40_34_2 + WQtempx * x_40_34_3 + ABCDtemp * x_31_34_3;
     QUICKDouble x_61_49_1 = Qtempx * x_61_34_1 + WQtempx * x_61_34_2 + 2.000000 * ABCDtemp * x_40_34_2;
     QUICKDouble x_61_49_2 = Qtempx * x_61_34_2 + WQtempx * x_61_34_3 + 2.000000 * ABCDtemp * x_40_34_3;
@@ -16439,7 +16439,7 @@
     QUICKDouble x_94_49_1 = Qtempx * x_94_34_1 + WQtempx * x_94_34_2 + 3.000000 * ABCDtemp * x_61_34_2;
     QUICKDouble x_94_74_0 = Ptempx * x_61_74_0 + WPtempx * x_61_74_1 + 2.000000 * ABtemp * (x_40_74_0 - CDcom * x_40_74_1) + 2.000000 * ABCDtemp * x_61_49_1;
     QUICKDouble x_94_74_1 = Ptempx * x_61_74_1 + WPtempx * x_61_74_2 + 2.000000 * ABtemp * (x_40_74_1 - CDcom * x_40_74_2) + 2.000000 * ABCDtemp * x_61_49_2;
-    LOCSTORE(store, 94, 113, STOREDIM, STOREDIM) += Qtempx * x_94_74_0 + WQtempx * x_94_74_1 + 2.000000 * CDtemp * (x_94_49_0 - ABcom * x_94_49_1) + 3.000000 * ABCDtemp * x_61_74_1;
+    LOCSTORE(store, 94, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_74_0 + WQtempx * x_94_74_1 + 2.000000 * CDtemp * (x_94_49_0 - ABcom * x_94_49_1) + 3.000000 * ABCDtemp * x_61_74_1;
     QUICKDouble x_31_14_3 = Qtempx * x_31_9_3 + WQtempx * x_31_9_4;
     QUICKDouble x_31_14_4 = Qtempx * x_31_9_4 + WQtempx * x_31_9_5;
     QUICKDouble x_40_14_2 = Qtempx * x_40_9_2 + WQtempx * x_40_9_3 + ABCDtemp * x_31_9_3;
@@ -16498,7 +16498,7 @@
     QUICKDouble x_94_44_1 = Qtempx * x_94_21_1 + WQtempx * x_94_21_2 + 2.000000 * CDtemp * (x_94_14_1 - ABcom * x_94_14_2) + 3.000000 * ABCDtemp * x_61_21_2;
     QUICKDouble x_94_75_0 = Ptempx * x_61_75_0 + WPtempx * x_61_75_1 + 2.000000 * ABtemp * (x_40_75_0 - CDcom * x_40_75_1) + 4.000000 * ABCDtemp * x_61_44_1;
     QUICKDouble x_94_75_1 = Ptempx * x_61_75_1 + WPtempx * x_61_75_2 + 2.000000 * ABtemp * (x_40_75_1 - CDcom * x_40_75_2) + 4.000000 * ABCDtemp * x_61_44_2;
-    LOCSTORE(store, 94, 108, STOREDIM, STOREDIM) += Qtempx * x_94_75_0 + WQtempx * x_94_75_1 + 4.000000 * CDtemp * (x_94_44_0 - ABcom * x_94_44_1) + 3.000000 * ABCDtemp * x_61_75_1;
+    LOCSTORE(store, 94, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_75_0 + WQtempx * x_94_75_1 + 4.000000 * CDtemp * (x_94_44_0 - ABcom * x_94_44_1) + 3.000000 * ABCDtemp * x_61_75_1;
     QUICKDouble x_40_51_2 = Qtempx * x_40_33_2 + WQtempx * x_40_33_3 + ABCDtemp * x_31_33_3;
     QUICKDouble x_61_51_1 = Qtempx * x_61_33_1 + WQtempx * x_61_33_2 + 2.000000 * ABCDtemp * x_40_33_2;
     QUICKDouble x_61_51_2 = Qtempx * x_61_33_2 + WQtempx * x_61_33_3 + 2.000000 * ABCDtemp * x_40_33_3;
@@ -16523,7 +16523,7 @@
     QUICKDouble x_94_51_1 = Qtempx * x_94_33_1 + WQtempx * x_94_33_2 + 3.000000 * ABCDtemp * x_61_33_2;
     QUICKDouble x_94_76_0 = Ptempx * x_61_76_0 + WPtempx * x_61_76_1 + 2.000000 * ABtemp * (x_40_76_0 - CDcom * x_40_76_1) + 2.000000 * ABCDtemp * x_61_51_1;
     QUICKDouble x_94_76_1 = Ptempx * x_61_76_1 + WPtempx * x_61_76_2 + 2.000000 * ABtemp * (x_40_76_1 - CDcom * x_40_76_2) + 2.000000 * ABCDtemp * x_61_51_2;
-    LOCSTORE(store, 94, 115, STOREDIM, STOREDIM) += Qtempx * x_94_76_0 + WQtempx * x_94_76_1 + 2.000000 * CDtemp * (x_94_51_0 - ABcom * x_94_51_1) + 3.000000 * ABCDtemp * x_61_76_1;
+    LOCSTORE(store, 94, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_76_0 + WQtempx * x_94_76_1 + 2.000000 * CDtemp * (x_94_51_0 - ABcom * x_94_51_1) + 3.000000 * ABCDtemp * x_61_76_1;
     QUICKDouble x_31_12_3 = Qtempx * x_31_8_3 + WQtempx * x_31_8_4;
     QUICKDouble x_31_12_4 = Qtempx * x_31_8_4 + WQtempx * x_31_8_5;
     QUICKDouble x_40_12_2 = Qtempx * x_40_8_2 + WQtempx * x_40_8_3 + ABCDtemp * x_31_8_3;
@@ -16582,7 +16582,7 @@
     QUICKDouble x_94_46_1 = Qtempx * x_94_20_1 + WQtempx * x_94_20_2 + 2.000000 * CDtemp * (x_94_12_1 - ABcom * x_94_12_2) + 3.000000 * ABCDtemp * x_61_20_2;
     QUICKDouble x_94_77_0 = Ptempx * x_61_77_0 + WPtempx * x_61_77_1 + 2.000000 * ABtemp * (x_40_77_0 - CDcom * x_40_77_1) + 4.000000 * ABCDtemp * x_61_46_1;
     QUICKDouble x_94_77_1 = Ptempx * x_61_77_1 + WPtempx * x_61_77_2 + 2.000000 * ABtemp * (x_40_77_1 - CDcom * x_40_77_2) + 4.000000 * ABCDtemp * x_61_46_2;
-    LOCSTORE(store, 94, 110, STOREDIM, STOREDIM) += Qtempx * x_94_77_0 + WQtempx * x_94_77_1 + 4.000000 * CDtemp * (x_94_46_0 - ABcom * x_94_46_1) + 3.000000 * ABCDtemp * x_61_77_1;
+    LOCSTORE(store, 94, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_77_0 + WQtempx * x_94_77_1 + 4.000000 * CDtemp * (x_94_46_0 - ABcom * x_94_46_1) + 3.000000 * ABCDtemp * x_61_77_1;
     QUICKDouble x_79_31_3 = Qtempy * x_79_19_3 + WQtempy * x_79_19_4;
     QUICKDouble x_43_41_2 = Qtempy * x_43_31_2 + WQtempy * x_43_31_3 + CDtemp * (x_43_19_2 - ABcom * x_43_19_3);
     QUICKDouble x_31_78_0 = Ptempy * x_19_78_0 + WPtempy * x_19_78_1 + 3.000000 * ABCDtemp * x_19_41_1;
@@ -16602,8 +16602,8 @@
     QUICKDouble x_79_78_1 = Qtempy * x_79_41_1 + WQtempy * x_79_41_2 + 2.000000 * CDtemp * (x_79_31_1 - ABcom * x_79_31_2);
     QUICKDouble x_94_78_0 = Ptempx * x_61_78_0 + WPtempx * x_61_78_1 + 2.000000 * ABtemp * (x_40_78_0 - CDcom * x_40_78_1);
     QUICKDouble x_94_78_1 = Ptempx * x_61_78_1 + WPtempx * x_61_78_2 + 2.000000 * ABtemp * (x_40_78_1 - CDcom * x_40_78_2);
-    LOCSTORE(store, 94, 112, STOREDIM, STOREDIM) += Qtempy * x_94_78_0 + WQtempy * x_94_78_1 + 3.000000 * CDtemp * (x_94_41_0 - ABcom * x_94_41_1) + ABCDtemp * x_79_78_1;
-    LOCSTORE(store, 94, 93, STOREDIM, STOREDIM) += Qtempx * x_94_78_0 + WQtempx * x_94_78_1 + 3.000000 * ABCDtemp * x_61_78_1;
+    LOCSTORE(store, 94, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_78_0 + WQtempy * x_94_78_1 + 3.000000 * CDtemp * (x_94_41_0 - ABcom * x_94_41_1) + ABCDtemp * x_79_78_1;
+    LOCSTORE(store, 94, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_78_0 + WQtempx * x_94_78_1 + 3.000000 * ABCDtemp * x_61_78_1;
     QUICKDouble x_31_27_3 = Qtempx * x_31_19_3 + WQtempx * x_31_19_4;
     QUICKDouble x_40_27_2 = Qtempx * x_40_19_2 + WQtempx * x_40_19_3 + ABCDtemp * x_31_19_3;
     QUICKDouble x_40_27_3 = Qtempx * x_40_19_3 + WQtempx * x_40_19_4 + ABCDtemp * x_31_19_4;
@@ -16643,7 +16643,7 @@
     QUICKDouble x_94_43_1 = Qtempx * x_94_27_1 + WQtempx * x_94_27_2 + CDtemp * (x_94_19_1 - ABcom * x_94_19_2) + 3.000000 * ABCDtemp * x_61_27_2;
     QUICKDouble x_94_79_0 = Ptempx * x_61_79_0 + WPtempx * x_61_79_1 + 2.000000 * ABtemp * (x_40_79_0 - CDcom * x_40_79_1) + 3.000000 * ABCDtemp * x_61_43_1;
     QUICKDouble x_94_79_1 = Ptempx * x_61_79_1 + WPtempx * x_61_79_2 + 2.000000 * ABtemp * (x_40_79_1 - CDcom * x_40_79_2) + 3.000000 * ABCDtemp * x_61_43_2;
-    LOCSTORE(store, 94, 114, STOREDIM, STOREDIM) += Qtempx * x_94_79_0 + WQtempx * x_94_79_1 + 3.000000 * CDtemp * (x_94_43_0 - ABcom * x_94_43_1) + 3.000000 * ABCDtemp * x_61_79_1;
+    LOCSTORE(store, 94, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_79_0 + WQtempx * x_94_79_1 + 3.000000 * CDtemp * (x_94_43_0 - ABcom * x_94_43_1) + 3.000000 * ABCDtemp * x_61_79_1;
     QUICKDouble x_31_29_3 = Qtempx * x_31_18_3 + WQtempx * x_31_18_4;
     QUICKDouble x_40_29_2 = Qtempx * x_40_18_2 + WQtempx * x_40_18_3 + ABCDtemp * x_31_18_3;
     QUICKDouble x_40_29_3 = Qtempx * x_40_18_3 + WQtempx * x_40_18_4 + ABCDtemp * x_31_18_4;
@@ -16683,7 +16683,7 @@
     QUICKDouble x_94_45_1 = Qtempx * x_94_29_1 + WQtempx * x_94_29_2 + CDtemp * (x_94_18_1 - ABcom * x_94_18_2) + 3.000000 * ABCDtemp * x_61_29_2;
     QUICKDouble x_94_80_0 = Ptempx * x_61_80_0 + WPtempx * x_61_80_1 + 2.000000 * ABtemp * (x_40_80_0 - CDcom * x_40_80_1) + 3.000000 * ABCDtemp * x_61_45_1;
     QUICKDouble x_94_80_1 = Ptempx * x_61_80_1 + WPtempx * x_61_80_2 + 2.000000 * ABtemp * (x_40_80_1 - CDcom * x_40_80_2) + 3.000000 * ABCDtemp * x_61_45_2;
-    LOCSTORE(store, 94, 116, STOREDIM, STOREDIM) += Qtempx * x_94_80_0 + WQtempx * x_94_80_1 + 3.000000 * CDtemp * (x_94_45_0 - ABcom * x_94_45_1) + 3.000000 * ABCDtemp * x_61_80_1;
+    LOCSTORE(store, 94, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_80_0 + WQtempx * x_94_80_1 + 3.000000 * CDtemp * (x_94_45_0 - ABcom * x_94_45_1) + 3.000000 * ABCDtemp * x_61_80_1;
     QUICKDouble x_31_1_3 = Qtempx * x_31_0_3 + WQtempx * x_31_0_4;
     QUICKDouble x_31_1_4 = Qtempx * x_31_0_4 + WQtempx * x_31_0_5;
     QUICKDouble x_31_1_5 = Qtempx * x_31_0_5 + WQtempx * x_31_0_6;
@@ -16792,7 +16792,7 @@
     QUICKDouble x_94_53_1 = Qtempx * x_94_32_1 + WQtempx * x_94_32_2 + 4.000000 * CDtemp * (x_94_17_1 - ABcom * x_94_17_2) + 3.000000 * ABCDtemp * x_61_32_2;
     QUICKDouble x_94_81_0 = Ptempx * x_61_81_0 + WPtempx * x_61_81_1 + 2.000000 * ABtemp * (x_40_81_0 - CDcom * x_40_81_1) + 6.000000 * ABCDtemp * x_61_53_1;
     QUICKDouble x_94_81_1 = Ptempx * x_61_81_1 + WPtempx * x_61_81_2 + 2.000000 * ABtemp * (x_40_81_1 - CDcom * x_40_81_2) + 6.000000 * ABCDtemp * x_61_53_2;
-    LOCSTORE(store, 94, 117, STOREDIM, STOREDIM) += Qtempx * x_94_81_0 + WQtempx * x_94_81_1 + 6.000000 * CDtemp * (x_94_53_0 - ABcom * x_94_53_1) + 3.000000 * ABCDtemp * x_61_81_1;
+    LOCSTORE(store, 94, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_81_0 + WQtempx * x_94_81_1 + 6.000000 * CDtemp * (x_94_53_0 - ABcom * x_94_53_1) + 3.000000 * ABCDtemp * x_61_81_1;
     QUICKDouble x_79_2_6 = Qtempy * x_79_0_6 + WQtempy * x_79_0_7;
     QUICKDouble x_79_8_5 = Qtempy * x_79_2_5 + WQtempy * x_79_2_6 + CDtemp * (x_79_0_5 - ABcom * x_79_0_6);
     QUICKDouble x_79_18_4 = Qtempy * x_79_8_4 + WQtempy * x_79_8_5 + 2.000000 * CDtemp * (x_79_2_4 - ABcom * x_79_2_5);
@@ -16815,8 +16815,8 @@
     QUICKDouble x_79_82_1 = Qtempy * x_79_54_1 + WQtempy * x_79_54_2 + 5.000000 * CDtemp * (x_79_33_1 - ABcom * x_79_33_2);
     QUICKDouble x_94_82_0 = Ptempx * x_61_82_0 + WPtempx * x_61_82_1 + 2.000000 * ABtemp * (x_40_82_0 - CDcom * x_40_82_1);
     QUICKDouble x_94_82_1 = Ptempx * x_61_82_1 + WPtempx * x_61_82_2 + 2.000000 * ABtemp * (x_40_82_1 - CDcom * x_40_82_2);
-    LOCSTORE(store, 94, 118, STOREDIM, STOREDIM) += Qtempy * x_94_82_0 + WQtempy * x_94_82_1 + 6.000000 * CDtemp * (x_94_54_0 - ABcom * x_94_54_1) + ABCDtemp * x_79_82_1;
-    LOCSTORE(store, 94, 103, STOREDIM, STOREDIM) += Qtempx * x_94_82_0 + WQtempx * x_94_82_1 + 3.000000 * ABCDtemp * x_61_82_1;
+    LOCSTORE(store, 94, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_82_0 + WQtempy * x_94_82_1 + 6.000000 * CDtemp * (x_94_54_0 - ABcom * x_94_54_1) + ABCDtemp * x_79_82_1;
+    LOCSTORE(store, 94, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_82_0 + WQtempx * x_94_82_1 + 3.000000 * ABCDtemp * x_61_82_1;
     QUICKDouble x_31_83_0 = Ptempy * x_19_83_0 + WPtempy * x_19_83_1;
     QUICKDouble x_31_83_1 = Ptempy * x_19_83_1 + WPtempy * x_19_83_2;
     QUICKDouble x_31_83_2 = Ptempy * x_19_83_2 + WPtempy * x_19_83_3;
@@ -16828,10 +16828,10 @@
     QUICKDouble x_61_83_2 = Qtempz * x_61_55_2 + WQtempz * x_61_55_3 + 5.000000 * CDtemp * (x_61_34_2 - ABcom * x_61_34_3) + 3.000000 * ABCDtemp * x_36_55_3;
     QUICKDouble x_94_83_0 = Ptempx * x_61_83_0 + WPtempx * x_61_83_1 + 2.000000 * ABtemp * (x_40_83_0 - CDcom * x_40_83_1);
     QUICKDouble x_94_83_1 = Ptempx * x_61_83_1 + WPtempx * x_61_83_2 + 2.000000 * ABtemp * (x_40_83_1 - CDcom * x_40_83_2);
-    LOCSTORE(store, 94, 119, STOREDIM, STOREDIM) += Qtempz * x_94_83_0 + WQtempz * x_94_83_1 + 6.000000 * CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + 3.000000 * ABCDtemp * x_62_83_1;
-    LOCSTORE(store, 94, 101, STOREDIM, STOREDIM) += Qtempx * x_94_83_0 + WQtempx * x_94_83_1 + 3.000000 * ABCDtemp * x_61_83_1;
+    LOCSTORE(store, 94, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_94_83_0 + WQtempz * x_94_83_1 + 6.000000 * CDtemp * (x_94_55_0 - ABcom * x_94_55_1) + 3.000000 * ABCDtemp * x_62_83_1;
+    LOCSTORE(store, 94, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_94_83_0 + WQtempx * x_94_83_1 + 3.000000 * ABCDtemp * x_61_83_1;
     QUICKDouble x_79_83_1 = Qtempz * x_79_55_1 + WQtempz * x_79_55_2 + 5.000000 * CDtemp * (x_79_34_1 - ABcom * x_79_34_2) + 3.000000 * ABCDtemp * x_44_55_2;
-    LOCSTORE(store, 94, 99, STOREDIM, STOREDIM) += Qtempy * x_94_83_0 + WQtempy * x_94_83_1 + ABCDtemp * x_79_83_1;
+    LOCSTORE(store, 94, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_94_83_0 + WQtempy * x_94_83_1 + ABCDtemp * x_79_83_1;
     QUICKDouble x_29_0_1 = Ptempx * x_18_0_1 + WPtempx * x_18_0_2;
     QUICKDouble x_39_0_0 = Ptempx * x_30_0_0 + WPtempx * x_30_0_1;
     QUICKDouble x_29_0_9 = Ptempx * x_18_0_9 + WPtempx * x_18_0_10;
@@ -16919,7 +16919,7 @@
     QUICKDouble x_95_38_1 = Qtempx * x_95_23_1 + WQtempx * x_95_23_2 + 2.000000 * CDtemp * (x_95_10_1 - ABcom * x_95_10_2) + 3.000000 * ABCDtemp * x_63_23_2;
     QUICKDouble x_95_56_0 = Ptempx * x_63_56_0 + WPtempx * x_63_56_1 + 2.000000 * ABtemp * (x_39_56_0 - CDcom * x_39_56_1) + 4.000000 * ABCDtemp * x_63_38_1;
     QUICKDouble x_95_56_1 = Ptempx * x_63_56_1 + WPtempx * x_63_56_2 + 2.000000 * ABtemp * (x_39_56_1 - CDcom * x_39_56_2) + 4.000000 * ABCDtemp * x_63_38_2;
-    LOCSTORE(store, 95, 84, STOREDIM, STOREDIM) += Qtempx * x_95_56_0 + WQtempx * x_95_56_1 + 4.000000 * CDtemp * (x_95_38_0 - ABcom * x_95_38_1) + 3.000000 * ABCDtemp * x_63_56_1;
+    LOCSTORE(store, 95, 84, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_56_0 + WQtempx * x_95_56_1 + 4.000000 * CDtemp * (x_95_38_0 - ABcom * x_95_38_1) + 3.000000 * ABCDtemp * x_63_56_1;
     QUICKDouble x_63_15_0 = Qtempy * x_63_5_0 + WQtempy * x_63_5_1 + CDtemp * (x_63_3_0 - ABcom * x_63_3_1) + 3.000000 * ABCDtemp * x_37_5_1;
     QUICKDouble x_63_15_5 = Qtempy * x_63_5_5 + WQtempy * x_63_5_6 + CDtemp * (x_63_3_5 - ABcom * x_63_3_6) + 3.000000 * ABCDtemp * x_37_5_6;
     QUICKDouble x_63_30_0 = Qtempy * x_63_15_0 + WQtempy * x_63_15_1 + 2.000000 * CDtemp * (x_63_5_0 - ABcom * x_63_5_1) + 3.000000 * ABCDtemp * x_37_15_1;
@@ -16943,7 +16943,7 @@
     QUICKDouble x_95_48_1 = Qtempy * x_95_30_1 + WQtempy * x_95_30_2 + 3.000000 * CDtemp * (x_95_15_1 - ABcom * x_95_15_2) + 3.000000 * ABCDtemp * x_64_30_2;
     QUICKDouble x_95_57_0 = Ptempx * x_63_57_0 + WPtempx * x_63_57_1 + 2.000000 * ABtemp * (x_39_57_0 - CDcom * x_39_57_1) + ABCDtemp * x_63_48_1;
     QUICKDouble x_95_57_1 = Ptempx * x_63_57_1 + WPtempx * x_63_57_2 + 2.000000 * ABtemp * (x_39_57_1 - CDcom * x_39_57_2) + ABCDtemp * x_63_48_2;
-    LOCSTORE(store, 95, 91, STOREDIM, STOREDIM) += Qtempx * x_95_57_0 + WQtempx * x_95_57_1 + CDtemp * (x_95_48_0 - ABcom * x_95_48_1) + 3.000000 * ABCDtemp * x_63_57_1;
+    LOCSTORE(store, 95, 91, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_57_0 + WQtempx * x_95_57_1 + CDtemp * (x_95_48_0 - ABcom * x_95_48_1) + 3.000000 * ABCDtemp * x_63_57_1;
     QUICKDouble x_45_3_1 = Qtempz * x_45_0_1 + WQtempz * x_45_0_2;
     QUICKDouble x_45_3_7 = Qtempz * x_45_0_7 + WQtempz * x_45_0_8;
     QUICKDouble x_45_9_1 = Qtempz * x_45_3_1 + WQtempz * x_45_3_2 + CDtemp * (x_45_0_1 - ABcom * x_45_0_2);
@@ -16992,7 +16992,7 @@
     QUICKDouble x_95_47_1 = Qtempy * x_95_34_1 + WQtempy * x_95_34_2 + 3.000000 * ABCDtemp * x_64_34_2;
     QUICKDouble x_95_58_0 = Ptempx * x_63_58_0 + WPtempx * x_63_58_1 + 2.000000 * ABtemp * (x_39_58_0 - CDcom * x_39_58_1) + ABCDtemp * x_63_47_1;
     QUICKDouble x_95_58_1 = Ptempx * x_63_58_1 + WPtempx * x_63_58_2 + 2.000000 * ABtemp * (x_39_58_1 - CDcom * x_39_58_2) + ABCDtemp * x_63_47_2;
-    LOCSTORE(store, 95, 89, STOREDIM, STOREDIM) += Qtempx * x_95_58_0 + WQtempx * x_95_58_1 + CDtemp * (x_95_47_0 - ABcom * x_95_47_1) + 3.000000 * ABCDtemp * x_63_58_1;
+    LOCSTORE(store, 95, 89, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_58_0 + WQtempx * x_95_58_1 + CDtemp * (x_95_47_0 - ABcom * x_95_47_1) + 3.000000 * ABCDtemp * x_63_58_1;
     QUICKDouble x_63_31_0 = Qtempy * x_63_19_0 + WQtempy * x_63_19_1 + 3.000000 * ABCDtemp * x_37_19_1;
     QUICKDouble x_63_31_4 = Qtempy * x_63_19_4 + WQtempy * x_63_19_5 + 3.000000 * ABCDtemp * x_37_19_5;
     QUICKDouble x_63_41_0 = Qtempy * x_63_31_0 + WQtempy * x_63_31_1 + CDtemp * (x_63_19_0 - ABcom * x_63_19_1) + 3.000000 * ABCDtemp * x_37_31_1;
@@ -17010,7 +17010,7 @@
     QUICKDouble x_95_41_1 = Qtempy * x_95_31_1 + WQtempy * x_95_31_2 + CDtemp * (x_95_19_1 - ABcom * x_95_19_2) + 3.000000 * ABCDtemp * x_64_31_2;
     QUICKDouble x_95_59_0 = Ptempx * x_63_59_0 + WPtempx * x_63_59_1 + 2.000000 * ABtemp * (x_39_59_0 - CDcom * x_39_59_1) + ABCDtemp * x_63_41_1;
     QUICKDouble x_95_59_1 = Ptempx * x_63_59_1 + WPtempx * x_63_59_2 + 2.000000 * ABtemp * (x_39_59_1 - CDcom * x_39_59_2) + ABCDtemp * x_63_41_2;
-    LOCSTORE(store, 95, 98, STOREDIM, STOREDIM) += Qtempx * x_95_59_0 + WQtempx * x_95_59_1 + CDtemp * (x_95_41_0 - ABcom * x_95_41_1) + 3.000000 * ABCDtemp * x_63_59_1;
+    LOCSTORE(store, 95, 98, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_59_0 + WQtempx * x_95_59_1 + CDtemp * (x_95_41_0 - ABcom * x_95_41_1) + 3.000000 * ABCDtemp * x_63_59_1;
     QUICKDouble x_63_16_0 = Qtempy * x_63_9_0 + WQtempy * x_63_9_1 + 3.000000 * ABCDtemp * x_37_9_1;
     QUICKDouble x_63_16_5 = Qtempy * x_63_9_5 + WQtempy * x_63_9_6 + 3.000000 * ABCDtemp * x_37_9_6;
     QUICKDouble x_63_22_0 = Qtempy * x_63_16_0 + WQtempy * x_63_16_1 + CDtemp * (x_63_9_0 - ABcom * x_63_9_1) + 3.000000 * ABCDtemp * x_37_16_1;
@@ -17034,7 +17034,7 @@
     QUICKDouble x_95_42_1 = Qtempy * x_95_22_1 + WQtempy * x_95_22_2 + 2.000000 * CDtemp * (x_95_16_1 - ABcom * x_95_16_2) + 3.000000 * ABCDtemp * x_64_22_2;
     QUICKDouble x_95_60_0 = Ptempx * x_63_60_0 + WPtempx * x_63_60_1 + 2.000000 * ABtemp * (x_39_60_0 - CDcom * x_39_60_1) + ABCDtemp * x_63_42_1;
     QUICKDouble x_95_60_1 = Ptempx * x_63_60_1 + WPtempx * x_63_60_2 + 2.000000 * ABtemp * (x_39_60_1 - CDcom * x_39_60_2) + ABCDtemp * x_63_42_2;
-    LOCSTORE(store, 95, 97, STOREDIM, STOREDIM) += Qtempx * x_95_60_0 + WQtempx * x_95_60_1 + CDtemp * (x_95_42_0 - ABcom * x_95_42_1) + 3.000000 * ABCDtemp * x_63_60_1;
+    LOCSTORE(store, 95, 97, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_60_0 + WQtempx * x_95_60_1 + CDtemp * (x_95_42_0 - ABcom * x_95_42_1) + 3.000000 * ABCDtemp * x_63_60_1;
     QUICKDouble x_39_40_2 = Qtempx * x_39_31_2 + WQtempx * x_39_31_3 + ABCDtemp * x_30_31_3;
     QUICKDouble x_63_40_1 = Qtempx * x_63_31_1 + WQtempx * x_63_31_2 + 2.000000 * ABCDtemp * x_39_31_2;
     QUICKDouble x_63_40_2 = Qtempx * x_63_31_2 + WQtempx * x_63_31_3 + 2.000000 * ABCDtemp * x_39_31_3;
@@ -17052,7 +17052,7 @@
     QUICKDouble x_95_40_1 = Qtempx * x_95_31_1 + WQtempx * x_95_31_2 + 3.000000 * ABCDtemp * x_63_31_2;
     QUICKDouble x_95_61_0 = Ptempx * x_63_61_0 + WPtempx * x_63_61_1 + 2.000000 * ABtemp * (x_39_61_0 - CDcom * x_39_61_1) + 2.000000 * ABCDtemp * x_63_40_1;
     QUICKDouble x_95_61_1 = Ptempx * x_63_61_1 + WPtempx * x_63_61_2 + 2.000000 * ABtemp * (x_39_61_1 - CDcom * x_39_61_2) + 2.000000 * ABCDtemp * x_63_40_2;
-    LOCSTORE(store, 95, 94, STOREDIM, STOREDIM) += Qtempx * x_95_61_0 + WQtempx * x_95_61_1 + 2.000000 * CDtemp * (x_95_40_0 - ABcom * x_95_40_1) + 3.000000 * ABCDtemp * x_63_61_1;
+    LOCSTORE(store, 95, 94, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_61_0 + WQtempx * x_95_61_1 + 2.000000 * CDtemp * (x_95_40_0 - ABcom * x_95_40_1) + 3.000000 * ABCDtemp * x_63_61_1;
     QUICKDouble x_30_25_3 = Qtempx * x_30_16_3 + WQtempx * x_30_16_4;
     QUICKDouble x_39_25_2 = Qtempx * x_39_16_2 + WQtempx * x_39_16_3 + ABCDtemp * x_30_16_3;
     QUICKDouble x_39_25_3 = Qtempx * x_39_16_3 + WQtempx * x_39_16_4 + ABCDtemp * x_30_16_4;
@@ -17085,7 +17085,7 @@
     QUICKDouble x_95_36_1 = Qtempx * x_95_25_1 + WQtempx * x_95_25_2 + CDtemp * (x_95_16_1 - ABcom * x_95_16_2) + 3.000000 * ABCDtemp * x_63_25_2;
     QUICKDouble x_95_62_0 = Ptempx * x_63_62_0 + WPtempx * x_63_62_1 + 2.000000 * ABtemp * (x_39_62_0 - CDcom * x_39_62_1) + 3.000000 * ABCDtemp * x_63_36_1;
     QUICKDouble x_95_62_1 = Ptempx * x_63_62_1 + WPtempx * x_63_62_2 + 2.000000 * ABtemp * (x_39_62_1 - CDcom * x_39_62_2) + 3.000000 * ABCDtemp * x_63_36_2;
-    LOCSTORE(store, 95, 90, STOREDIM, STOREDIM) += Qtempx * x_95_62_0 + WQtempx * x_95_62_1 + 3.000000 * CDtemp * (x_95_36_0 - ABcom * x_95_36_1) + 3.000000 * ABCDtemp * x_63_62_1;
+    LOCSTORE(store, 95, 90, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_62_0 + WQtempx * x_95_62_1 + 3.000000 * CDtemp * (x_95_36_0 - ABcom * x_95_36_1) + 3.000000 * ABCDtemp * x_63_62_1;
     QUICKDouble x_39_39_2 = Qtempx * x_39_30_2 + WQtempx * x_39_30_3 + ABCDtemp * x_30_30_3;
     QUICKDouble x_63_39_1 = Qtempx * x_63_30_1 + WQtempx * x_63_30_2 + 2.000000 * ABCDtemp * x_39_30_2;
     QUICKDouble x_63_39_2 = Qtempx * x_63_30_2 + WQtempx * x_63_30_3 + 2.000000 * ABCDtemp * x_39_30_3;
@@ -17103,7 +17103,7 @@
     QUICKDouble x_95_39_1 = Qtempx * x_95_30_1 + WQtempx * x_95_30_2 + 3.000000 * ABCDtemp * x_63_30_2;
     QUICKDouble x_95_63_0 = Ptempx * x_63_63_0 + WPtempx * x_63_63_1 + 2.000000 * ABtemp * (x_39_63_0 - CDcom * x_39_63_1) + 2.000000 * ABCDtemp * x_63_39_1;
     QUICKDouble x_95_63_1 = Ptempx * x_63_63_1 + WPtempx * x_63_63_2 + 2.000000 * ABtemp * (x_39_63_1 - CDcom * x_39_63_2) + 2.000000 * ABCDtemp * x_63_39_2;
-    LOCSTORE(store, 95, 95, STOREDIM, STOREDIM) += Qtempx * x_95_63_0 + WQtempx * x_95_63_1 + 2.000000 * CDtemp * (x_95_39_0 - ABcom * x_95_39_1) + 3.000000 * ABCDtemp * x_63_63_1;
+    LOCSTORE(store, 95, 95, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_63_0 + WQtempx * x_95_63_1 + 2.000000 * CDtemp * (x_95_39_0 - ABcom * x_95_39_1) + 3.000000 * ABCDtemp * x_63_63_1;
     QUICKDouble x_30_24_3 = Qtempx * x_30_15_3 + WQtempx * x_30_15_4;
     QUICKDouble x_39_24_2 = Qtempx * x_39_15_2 + WQtempx * x_39_15_3 + ABCDtemp * x_30_15_3;
     QUICKDouble x_39_24_3 = Qtempx * x_39_15_3 + WQtempx * x_39_15_4 + ABCDtemp * x_30_15_4;
@@ -17136,7 +17136,7 @@
     QUICKDouble x_95_37_1 = Qtempx * x_95_24_1 + WQtempx * x_95_24_2 + CDtemp * (x_95_15_1 - ABcom * x_95_15_2) + 3.000000 * ABCDtemp * x_63_24_2;
     QUICKDouble x_95_64_0 = Ptempx * x_63_64_0 + WPtempx * x_63_64_1 + 2.000000 * ABtemp * (x_39_64_0 - CDcom * x_39_64_1) + 3.000000 * ABCDtemp * x_63_37_1;
     QUICKDouble x_95_64_1 = Ptempx * x_63_64_1 + WPtempx * x_63_64_2 + 2.000000 * ABtemp * (x_39_64_1 - CDcom * x_39_64_2) + 3.000000 * ABCDtemp * x_63_37_2;
-    LOCSTORE(store, 95, 92, STOREDIM, STOREDIM) += Qtempx * x_95_64_0 + WQtempx * x_95_64_1 + 3.000000 * CDtemp * (x_95_37_0 - ABcom * x_95_37_1) + 3.000000 * ABCDtemp * x_63_64_1;
+    LOCSTORE(store, 95, 92, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_64_0 + WQtempx * x_95_64_1 + 3.000000 * CDtemp * (x_95_37_0 - ABcom * x_95_37_1) + 3.000000 * ABCDtemp * x_63_64_1;
     QUICKDouble x_39_35_2 = Qtempx * x_39_22_2 + WQtempx * x_39_22_3 + ABCDtemp * x_30_22_3;
     QUICKDouble x_63_35_1 = Qtempx * x_63_22_1 + WQtempx * x_63_22_2 + 2.000000 * ABCDtemp * x_39_22_2;
     QUICKDouble x_63_35_2 = Qtempx * x_63_22_2 + WQtempx * x_63_22_3 + 2.000000 * ABCDtemp * x_39_22_3;
@@ -17154,7 +17154,7 @@
     QUICKDouble x_95_35_1 = Qtempx * x_95_22_1 + WQtempx * x_95_22_2 + 3.000000 * ABCDtemp * x_63_22_2;
     QUICKDouble x_95_65_0 = Ptempx * x_63_65_0 + WPtempx * x_63_65_1 + 2.000000 * ABtemp * (x_39_65_0 - CDcom * x_39_65_1) + 2.000000 * ABCDtemp * x_63_35_1;
     QUICKDouble x_95_65_1 = Ptempx * x_63_65_1 + WPtempx * x_63_65_2 + 2.000000 * ABtemp * (x_39_65_1 - CDcom * x_39_65_2) + 2.000000 * ABCDtemp * x_63_35_2;
-    LOCSTORE(store, 95, 96, STOREDIM, STOREDIM) += Qtempx * x_95_65_0 + WQtempx * x_95_65_1 + 2.000000 * CDtemp * (x_95_35_0 - ABcom * x_95_35_1) + 3.000000 * ABCDtemp * x_63_65_1;
+    LOCSTORE(store, 95, 96, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_65_0 + WQtempx * x_95_65_1 + 2.000000 * CDtemp * (x_95_35_0 - ABcom * x_95_35_1) + 3.000000 * ABCDtemp * x_63_65_1;
     QUICKDouble x_45_34_1 = Qtempz * x_45_19_1 + WQtempz * x_45_19_2 + 3.000000 * CDtemp * (x_45_9_1 - ABcom * x_45_9_2);
     QUICKDouble x_45_34_4 = Qtempz * x_45_19_4 + WQtempz * x_45_19_5 + 3.000000 * CDtemp * (x_45_9_4 - ABcom * x_45_9_5);
     QUICKDouble x_63_55_0 = Qtempz * x_63_34_0 + WQtempz * x_63_34_1 + 4.000000 * CDtemp * (x_63_19_0 - ABcom * x_63_19_1) + ABCDtemp * x_45_34_1;
@@ -17170,8 +17170,8 @@
     QUICKDouble x_95_55_1 = Qtempz * x_95_34_1 + WQtempz * x_95_34_2 + 4.000000 * CDtemp * (x_95_19_1 - ABcom * x_95_19_2) + ABCDtemp * x_80_34_2;
     QUICKDouble x_95_66_0 = Ptempx * x_63_66_0 + WPtempx * x_63_66_1 + 2.000000 * ABtemp * (x_39_66_0 - CDcom * x_39_66_1);
     QUICKDouble x_95_66_1 = Ptempx * x_63_66_1 + WPtempx * x_63_66_2 + 2.000000 * ABtemp * (x_39_66_1 - CDcom * x_39_66_2);
-    LOCSTORE(store, 95, 105, STOREDIM, STOREDIM) += Qtempy * x_95_66_0 + WQtempy * x_95_66_1 + CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + 3.000000 * ABCDtemp * x_64_66_1;
-    LOCSTORE(store, 95, 86, STOREDIM, STOREDIM) += Qtempx * x_95_66_0 + WQtempx * x_95_66_1 + 3.000000 * ABCDtemp * x_63_66_1;
+    LOCSTORE(store, 95, 105, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_66_0 + WQtempy * x_95_66_1 + CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + 3.000000 * ABCDtemp * x_64_66_1;
+    LOCSTORE(store, 95, 86, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_66_0 + WQtempx * x_95_66_1 + 3.000000 * ABCDtemp * x_63_66_1;
     QUICKDouble x_39_67_0 = Ptempx * x_30_67_0 + WPtempx * x_30_67_1;
     QUICKDouble x_39_67_1 = Ptempx * x_30_67_1 + WPtempx * x_30_67_2;
     QUICKDouble x_63_67_0 = Qtempy * x_63_48_0 + WQtempy * x_63_48_1 + 4.000000 * CDtemp * (x_63_30_0 - ABcom * x_63_30_1) + 3.000000 * ABCDtemp * x_37_48_1;
@@ -17179,8 +17179,8 @@
     QUICKDouble x_63_67_2 = Qtempy * x_63_48_2 + WQtempy * x_63_48_3 + 4.000000 * CDtemp * (x_63_30_2 - ABcom * x_63_30_3) + 3.000000 * ABCDtemp * x_37_48_3;
     QUICKDouble x_95_67_0 = Ptempx * x_63_67_0 + WPtempx * x_63_67_1 + 2.000000 * ABtemp * (x_39_67_0 - CDcom * x_39_67_1);
     QUICKDouble x_95_67_1 = Ptempx * x_63_67_1 + WPtempx * x_63_67_2 + 2.000000 * ABtemp * (x_39_67_1 - CDcom * x_39_67_2);
-    LOCSTORE(store, 95, 100, STOREDIM, STOREDIM) += Qtempy * x_95_67_0 + WQtempy * x_95_67_1 + 5.000000 * CDtemp * (x_95_48_0 - ABcom * x_95_48_1) + 3.000000 * ABCDtemp * x_64_67_1;
-    LOCSTORE(store, 95, 85, STOREDIM, STOREDIM) += Qtempx * x_95_67_0 + WQtempx * x_95_67_1 + 3.000000 * ABCDtemp * x_63_67_1;
+    LOCSTORE(store, 95, 100, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_67_0 + WQtempy * x_95_67_1 + 5.000000 * CDtemp * (x_95_48_0 - ABcom * x_95_48_1) + 3.000000 * ABCDtemp * x_64_67_1;
+    LOCSTORE(store, 95, 85, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_67_0 + WQtempx * x_95_67_1 + 3.000000 * ABCDtemp * x_63_67_1;
     QUICKDouble x_63_68_1 = Qtempx * x_63_55_1 + WQtempx * x_63_55_2 + 2.000000 * ABCDtemp * x_39_55_2;
     QUICKDouble x_39_68_0 = Ptempx * x_30_68_0 + WPtempx * x_30_68_1 + ABCDtemp * x_30_55_1;
     QUICKDouble x_39_68_1 = Ptempx * x_30_68_1 + WPtempx * x_30_68_2 + ABCDtemp * x_30_55_2;
@@ -17189,7 +17189,7 @@
     QUICKDouble x_63_68_2 = Qtempx * x_63_55_2 + WQtempx * x_63_55_3 + 2.000000 * ABCDtemp * x_39_55_3;
     QUICKDouble x_95_68_0 = Ptempx * x_63_68_0 + WPtempx * x_63_68_1 + 2.000000 * ABtemp * (x_39_68_0 - CDcom * x_39_68_1) + ABCDtemp * x_63_55_1;
     QUICKDouble x_95_68_1 = Ptempx * x_63_68_1 + WPtempx * x_63_68_2 + 2.000000 * ABtemp * (x_39_68_1 - CDcom * x_39_68_2) + ABCDtemp * x_63_55_2;
-    LOCSTORE(store, 95, 107, STOREDIM, STOREDIM) += Qtempx * x_95_68_0 + WQtempx * x_95_68_1 + CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + 3.000000 * ABCDtemp * x_63_68_1;
+    LOCSTORE(store, 95, 107, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_68_0 + WQtempx * x_95_68_1 + CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + 3.000000 * ABCDtemp * x_63_68_1;
     QUICKDouble x_30_6_3 = Qtempx * x_30_3_3 + WQtempx * x_30_3_4;
     QUICKDouble x_30_6_4 = Qtempx * x_30_3_4 + WQtempx * x_30_3_5;
     QUICKDouble x_30_6_5 = Qtempx * x_30_3_5 + WQtempx * x_30_3_6;
@@ -17264,7 +17264,7 @@
     QUICKDouble x_95_50_1 = Qtempx * x_95_26_1 + WQtempx * x_95_26_2 + 3.000000 * CDtemp * (x_95_13_1 - ABcom * x_95_13_2) + 3.000000 * ABCDtemp * x_63_26_2;
     QUICKDouble x_95_69_0 = Ptempx * x_63_69_0 + WPtempx * x_63_69_1 + 2.000000 * ABtemp * (x_39_69_0 - CDcom * x_39_69_1) + 5.000000 * ABCDtemp * x_63_50_1;
     QUICKDouble x_95_69_1 = Ptempx * x_63_69_1 + WPtempx * x_63_69_2 + 2.000000 * ABtemp * (x_39_69_1 - CDcom * x_39_69_2) + 5.000000 * ABCDtemp * x_63_50_2;
-    LOCSTORE(store, 95, 102, STOREDIM, STOREDIM) += Qtempx * x_95_69_0 + WQtempx * x_95_69_1 + 5.000000 * CDtemp * (x_95_50_0 - ABcom * x_95_50_1) + 3.000000 * ABCDtemp * x_63_69_1;
+    LOCSTORE(store, 95, 102, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_69_0 + WQtempx * x_95_69_1 + 5.000000 * CDtemp * (x_95_50_0 - ABcom * x_95_50_1) + 3.000000 * ABCDtemp * x_63_69_1;
     QUICKDouble x_63_2_0 = Qtempy * x_63_0_0 + WQtempy * x_63_0_1 + 3.000000 * ABCDtemp * x_37_0_1;
     QUICKDouble x_63_2_7 = Qtempy * x_63_0_7 + WQtempy * x_63_0_8 + 3.000000 * ABCDtemp * x_37_0_8;
     QUICKDouble x_63_8_0 = Qtempy * x_63_2_0 + WQtempy * x_63_2_1 + CDtemp * (x_63_0_0 - ABcom * x_63_0_1) + 3.000000 * ABCDtemp * x_37_2_1;
@@ -17303,7 +17303,7 @@
     QUICKDouble x_95_54_1 = Qtempy * x_95_33_1 + WQtempy * x_95_33_2 + 4.000000 * CDtemp * (x_95_18_1 - ABcom * x_95_18_2) + 3.000000 * ABCDtemp * x_64_33_2;
     QUICKDouble x_95_70_0 = Ptempx * x_63_70_0 + WPtempx * x_63_70_1 + 2.000000 * ABtemp * (x_39_70_0 - CDcom * x_39_70_1) + ABCDtemp * x_63_54_1;
     QUICKDouble x_95_70_1 = Ptempx * x_63_70_1 + WPtempx * x_63_70_2 + 2.000000 * ABtemp * (x_39_70_1 - CDcom * x_39_70_2) + ABCDtemp * x_63_54_2;
-    LOCSTORE(store, 95, 109, STOREDIM, STOREDIM) += Qtempx * x_95_70_0 + WQtempx * x_95_70_1 + CDtemp * (x_95_54_0 - ABcom * x_95_54_1) + 3.000000 * ABCDtemp * x_63_70_1;
+    LOCSTORE(store, 95, 109, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_70_0 + WQtempx * x_95_70_1 + CDtemp * (x_95_54_0 - ABcom * x_95_54_1) + 3.000000 * ABCDtemp * x_63_70_1;
     QUICKDouble x_30_4_3 = Qtempx * x_30_2_3 + WQtempx * x_30_2_4;
     QUICKDouble x_30_4_4 = Qtempx * x_30_2_4 + WQtempx * x_30_2_5;
     QUICKDouble x_30_4_5 = Qtempx * x_30_2_5 + WQtempx * x_30_2_6;
@@ -17378,7 +17378,7 @@
     QUICKDouble x_95_52_1 = Qtempx * x_95_28_1 + WQtempx * x_95_28_2 + 3.000000 * CDtemp * (x_95_11_1 - ABcom * x_95_11_2) + 3.000000 * ABCDtemp * x_63_28_2;
     QUICKDouble x_95_71_0 = Ptempx * x_63_71_0 + WPtempx * x_63_71_1 + 2.000000 * ABtemp * (x_39_71_0 - CDcom * x_39_71_1) + 5.000000 * ABCDtemp * x_63_52_1;
     QUICKDouble x_95_71_1 = Ptempx * x_63_71_1 + WPtempx * x_63_71_2 + 2.000000 * ABtemp * (x_39_71_1 - CDcom * x_39_71_2) + 5.000000 * ABCDtemp * x_63_52_2;
-    LOCSTORE(store, 95, 104, STOREDIM, STOREDIM) += Qtempx * x_95_71_0 + WQtempx * x_95_71_1 + 5.000000 * CDtemp * (x_95_52_0 - ABcom * x_95_52_1) + 3.000000 * ABCDtemp * x_63_71_1;
+    LOCSTORE(store, 95, 104, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_71_0 + WQtempx * x_95_71_1 + 5.000000 * CDtemp * (x_95_52_0 - ABcom * x_95_52_1) + 3.000000 * ABCDtemp * x_63_71_1;
     QUICKDouble x_39_72_0 = Ptempx * x_30_72_0 + WPtempx * x_30_72_1;
     QUICKDouble x_39_72_1 = Ptempx * x_30_72_1 + WPtempx * x_30_72_2;
     QUICKDouble x_63_72_0 = Qtempy * x_63_47_0 + WQtempy * x_63_47_1 + CDtemp * (x_63_34_0 - ABcom * x_63_34_1) + 3.000000 * ABCDtemp * x_37_47_1;
@@ -17386,8 +17386,8 @@
     QUICKDouble x_63_72_2 = Qtempy * x_63_47_2 + WQtempy * x_63_47_3 + CDtemp * (x_63_34_2 - ABcom * x_63_34_3) + 3.000000 * ABCDtemp * x_37_47_3;
     QUICKDouble x_95_72_0 = Ptempx * x_63_72_0 + WPtempx * x_63_72_1 + 2.000000 * ABtemp * (x_39_72_0 - CDcom * x_39_72_1);
     QUICKDouble x_95_72_1 = Ptempx * x_63_72_1 + WPtempx * x_63_72_2 + 2.000000 * ABtemp * (x_39_72_1 - CDcom * x_39_72_2);
-    LOCSTORE(store, 95, 111, STOREDIM, STOREDIM) += Qtempy * x_95_72_0 + WQtempy * x_95_72_1 + 2.000000 * CDtemp * (x_95_47_0 - ABcom * x_95_47_1) + 3.000000 * ABCDtemp * x_64_72_1;
-    LOCSTORE(store, 95, 87, STOREDIM, STOREDIM) += Qtempx * x_95_72_0 + WQtempx * x_95_72_1 + 3.000000 * ABCDtemp * x_63_72_1;
+    LOCSTORE(store, 95, 111, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_72_0 + WQtempy * x_95_72_1 + 2.000000 * CDtemp * (x_95_47_0 - ABcom * x_95_47_1) + 3.000000 * ABCDtemp * x_64_72_1;
+    LOCSTORE(store, 95, 87, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_72_0 + WQtempx * x_95_72_1 + 3.000000 * ABCDtemp * x_63_72_1;
     QUICKDouble x_39_73_0 = Ptempx * x_30_73_0 + WPtempx * x_30_73_1;
     QUICKDouble x_39_73_1 = Ptempx * x_30_73_1 + WPtempx * x_30_73_2;
     QUICKDouble x_63_73_0 = Qtempy * x_63_42_0 + WQtempy * x_63_42_1 + 3.000000 * CDtemp * (x_63_22_0 - ABcom * x_63_22_1) + 3.000000 * ABCDtemp * x_37_42_1;
@@ -17395,8 +17395,8 @@
     QUICKDouble x_63_73_2 = Qtempy * x_63_42_2 + WQtempy * x_63_42_3 + 3.000000 * CDtemp * (x_63_22_2 - ABcom * x_63_22_3) + 3.000000 * ABCDtemp * x_37_42_3;
     QUICKDouble x_95_73_0 = Ptempx * x_63_73_0 + WPtempx * x_63_73_1 + 2.000000 * ABtemp * (x_39_73_0 - CDcom * x_39_73_1);
     QUICKDouble x_95_73_1 = Ptempx * x_63_73_1 + WPtempx * x_63_73_2 + 2.000000 * ABtemp * (x_39_73_1 - CDcom * x_39_73_2);
-    LOCSTORE(store, 95, 106, STOREDIM, STOREDIM) += Qtempy * x_95_73_0 + WQtempy * x_95_73_1 + 4.000000 * CDtemp * (x_95_42_0 - ABcom * x_95_42_1) + 3.000000 * ABCDtemp * x_64_73_1;
-    LOCSTORE(store, 95, 88, STOREDIM, STOREDIM) += Qtempx * x_95_73_0 + WQtempx * x_95_73_1 + 3.000000 * ABCDtemp * x_63_73_1;
+    LOCSTORE(store, 95, 106, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_73_0 + WQtempy * x_95_73_1 + 4.000000 * CDtemp * (x_95_42_0 - ABcom * x_95_42_1) + 3.000000 * ABCDtemp * x_64_73_1;
+    LOCSTORE(store, 95, 88, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_73_0 + WQtempx * x_95_73_1 + 3.000000 * ABCDtemp * x_63_73_1;
     QUICKDouble x_39_49_2 = Qtempx * x_39_34_2 + WQtempx * x_39_34_3 + ABCDtemp * x_30_34_3;
     QUICKDouble x_63_49_1 = Qtempx * x_63_34_1 + WQtempx * x_63_34_2 + 2.000000 * ABCDtemp * x_39_34_2;
     QUICKDouble x_63_49_2 = Qtempx * x_63_34_2 + WQtempx * x_63_34_3 + 2.000000 * ABCDtemp * x_39_34_3;
@@ -17414,7 +17414,7 @@
     QUICKDouble x_95_49_1 = Qtempx * x_95_34_1 + WQtempx * x_95_34_2 + 3.000000 * ABCDtemp * x_63_34_2;
     QUICKDouble x_95_74_0 = Ptempx * x_63_74_0 + WPtempx * x_63_74_1 + 2.000000 * ABtemp * (x_39_74_0 - CDcom * x_39_74_1) + 2.000000 * ABCDtemp * x_63_49_1;
     QUICKDouble x_95_74_1 = Ptempx * x_63_74_1 + WPtempx * x_63_74_2 + 2.000000 * ABtemp * (x_39_74_1 - CDcom * x_39_74_2) + 2.000000 * ABCDtemp * x_63_49_2;
-    LOCSTORE(store, 95, 113, STOREDIM, STOREDIM) += Qtempx * x_95_74_0 + WQtempx * x_95_74_1 + 2.000000 * CDtemp * (x_95_49_0 - ABcom * x_95_49_1) + 3.000000 * ABCDtemp * x_63_74_1;
+    LOCSTORE(store, 95, 113, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_74_0 + WQtempx * x_95_74_1 + 2.000000 * CDtemp * (x_95_49_0 - ABcom * x_95_49_1) + 3.000000 * ABCDtemp * x_63_74_1;
     QUICKDouble x_30_14_3 = Qtempx * x_30_9_3 + WQtempx * x_30_9_4;
     QUICKDouble x_30_14_4 = Qtempx * x_30_9_4 + WQtempx * x_30_9_5;
     QUICKDouble x_39_14_2 = Qtempx * x_39_9_2 + WQtempx * x_39_9_3 + ABCDtemp * x_30_9_3;
@@ -17466,7 +17466,7 @@
     QUICKDouble x_95_44_1 = Qtempx * x_95_21_1 + WQtempx * x_95_21_2 + 2.000000 * CDtemp * (x_95_14_1 - ABcom * x_95_14_2) + 3.000000 * ABCDtemp * x_63_21_2;
     QUICKDouble x_95_75_0 = Ptempx * x_63_75_0 + WPtempx * x_63_75_1 + 2.000000 * ABtemp * (x_39_75_0 - CDcom * x_39_75_1) + 4.000000 * ABCDtemp * x_63_44_1;
     QUICKDouble x_95_75_1 = Ptempx * x_63_75_1 + WPtempx * x_63_75_2 + 2.000000 * ABtemp * (x_39_75_1 - CDcom * x_39_75_2) + 4.000000 * ABCDtemp * x_63_44_2;
-    LOCSTORE(store, 95, 108, STOREDIM, STOREDIM) += Qtempx * x_95_75_0 + WQtempx * x_95_75_1 + 4.000000 * CDtemp * (x_95_44_0 - ABcom * x_95_44_1) + 3.000000 * ABCDtemp * x_63_75_1;
+    LOCSTORE(store, 95, 108, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_75_0 + WQtempx * x_95_75_1 + 4.000000 * CDtemp * (x_95_44_0 - ABcom * x_95_44_1) + 3.000000 * ABCDtemp * x_63_75_1;
     QUICKDouble x_39_51_2 = Qtempx * x_39_33_2 + WQtempx * x_39_33_3 + ABCDtemp * x_30_33_3;
     QUICKDouble x_63_51_1 = Qtempx * x_63_33_1 + WQtempx * x_63_33_2 + 2.000000 * ABCDtemp * x_39_33_2;
     QUICKDouble x_63_51_2 = Qtempx * x_63_33_2 + WQtempx * x_63_33_3 + 2.000000 * ABCDtemp * x_39_33_3;
@@ -17484,7 +17484,7 @@
     QUICKDouble x_95_51_1 = Qtempx * x_95_33_1 + WQtempx * x_95_33_2 + 3.000000 * ABCDtemp * x_63_33_2;
     QUICKDouble x_95_76_0 = Ptempx * x_63_76_0 + WPtempx * x_63_76_1 + 2.000000 * ABtemp * (x_39_76_0 - CDcom * x_39_76_1) + 2.000000 * ABCDtemp * x_63_51_1;
     QUICKDouble x_95_76_1 = Ptempx * x_63_76_1 + WPtempx * x_63_76_2 + 2.000000 * ABtemp * (x_39_76_1 - CDcom * x_39_76_2) + 2.000000 * ABCDtemp * x_63_51_2;
-    LOCSTORE(store, 95, 115, STOREDIM, STOREDIM) += Qtempx * x_95_76_0 + WQtempx * x_95_76_1 + 2.000000 * CDtemp * (x_95_51_0 - ABcom * x_95_51_1) + 3.000000 * ABCDtemp * x_63_76_1;
+    LOCSTORE(store, 95, 115, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_76_0 + WQtempx * x_95_76_1 + 2.000000 * CDtemp * (x_95_51_0 - ABcom * x_95_51_1) + 3.000000 * ABCDtemp * x_63_76_1;
     QUICKDouble x_30_12_3 = Qtempx * x_30_8_3 + WQtempx * x_30_8_4;
     QUICKDouble x_30_12_4 = Qtempx * x_30_8_4 + WQtempx * x_30_8_5;
     QUICKDouble x_39_12_2 = Qtempx * x_39_8_2 + WQtempx * x_39_8_3 + ABCDtemp * x_30_8_3;
@@ -17536,7 +17536,7 @@
     QUICKDouble x_95_46_1 = Qtempx * x_95_20_1 + WQtempx * x_95_20_2 + 2.000000 * CDtemp * (x_95_12_1 - ABcom * x_95_12_2) + 3.000000 * ABCDtemp * x_63_20_2;
     QUICKDouble x_95_77_0 = Ptempx * x_63_77_0 + WPtempx * x_63_77_1 + 2.000000 * ABtemp * (x_39_77_0 - CDcom * x_39_77_1) + 4.000000 * ABCDtemp * x_63_46_1;
     QUICKDouble x_95_77_1 = Ptempx * x_63_77_1 + WPtempx * x_63_77_2 + 2.000000 * ABtemp * (x_39_77_1 - CDcom * x_39_77_2) + 4.000000 * ABCDtemp * x_63_46_2;
-    LOCSTORE(store, 95, 110, STOREDIM, STOREDIM) += Qtempx * x_95_77_0 + WQtempx * x_95_77_1 + 4.000000 * CDtemp * (x_95_46_0 - ABcom * x_95_46_1) + 3.000000 * ABCDtemp * x_63_77_1;
+    LOCSTORE(store, 95, 110, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_77_0 + WQtempx * x_95_77_1 + 4.000000 * CDtemp * (x_95_46_0 - ABcom * x_95_46_1) + 3.000000 * ABCDtemp * x_63_77_1;
     QUICKDouble x_39_78_0 = Ptempx * x_30_78_0 + WPtempx * x_30_78_1;
     QUICKDouble x_39_78_1 = Ptempx * x_30_78_1 + WPtempx * x_30_78_2;
     QUICKDouble x_63_78_0 = Qtempy * x_63_41_0 + WQtempy * x_63_41_1 + 2.000000 * CDtemp * (x_63_31_0 - ABcom * x_63_31_1) + 3.000000 * ABCDtemp * x_37_41_1;
@@ -17544,8 +17544,8 @@
     QUICKDouble x_63_78_2 = Qtempy * x_63_41_2 + WQtempy * x_63_41_3 + 2.000000 * CDtemp * (x_63_31_2 - ABcom * x_63_31_3) + 3.000000 * ABCDtemp * x_37_41_3;
     QUICKDouble x_95_78_0 = Ptempx * x_63_78_0 + WPtempx * x_63_78_1 + 2.000000 * ABtemp * (x_39_78_0 - CDcom * x_39_78_1);
     QUICKDouble x_95_78_1 = Ptempx * x_63_78_1 + WPtempx * x_63_78_2 + 2.000000 * ABtemp * (x_39_78_1 - CDcom * x_39_78_2);
-    LOCSTORE(store, 95, 112, STOREDIM, STOREDIM) += Qtempy * x_95_78_0 + WQtempy * x_95_78_1 + 3.000000 * CDtemp * (x_95_41_0 - ABcom * x_95_41_1) + 3.000000 * ABCDtemp * x_64_78_1;
-    LOCSTORE(store, 95, 93, STOREDIM, STOREDIM) += Qtempx * x_95_78_0 + WQtempx * x_95_78_1 + 3.000000 * ABCDtemp * x_63_78_1;
+    LOCSTORE(store, 95, 112, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_78_0 + WQtempy * x_95_78_1 + 3.000000 * CDtemp * (x_95_41_0 - ABcom * x_95_41_1) + 3.000000 * ABCDtemp * x_64_78_1;
+    LOCSTORE(store, 95, 93, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_78_0 + WQtempx * x_95_78_1 + 3.000000 * ABCDtemp * x_63_78_1;
     QUICKDouble x_30_27_3 = Qtempx * x_30_19_3 + WQtempx * x_30_19_4;
     QUICKDouble x_39_27_2 = Qtempx * x_39_19_2 + WQtempx * x_39_19_3 + ABCDtemp * x_30_19_3;
     QUICKDouble x_39_27_3 = Qtempx * x_39_19_3 + WQtempx * x_39_19_4 + ABCDtemp * x_30_19_4;
@@ -17578,7 +17578,7 @@
     QUICKDouble x_95_43_1 = Qtempx * x_95_27_1 + WQtempx * x_95_27_2 + CDtemp * (x_95_19_1 - ABcom * x_95_19_2) + 3.000000 * ABCDtemp * x_63_27_2;
     QUICKDouble x_95_79_0 = Ptempx * x_63_79_0 + WPtempx * x_63_79_1 + 2.000000 * ABtemp * (x_39_79_0 - CDcom * x_39_79_1) + 3.000000 * ABCDtemp * x_63_43_1;
     QUICKDouble x_95_79_1 = Ptempx * x_63_79_1 + WPtempx * x_63_79_2 + 2.000000 * ABtemp * (x_39_79_1 - CDcom * x_39_79_2) + 3.000000 * ABCDtemp * x_63_43_2;
-    LOCSTORE(store, 95, 114, STOREDIM, STOREDIM) += Qtempx * x_95_79_0 + WQtempx * x_95_79_1 + 3.000000 * CDtemp * (x_95_43_0 - ABcom * x_95_43_1) + 3.000000 * ABCDtemp * x_63_79_1;
+    LOCSTORE(store, 95, 114, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_79_0 + WQtempx * x_95_79_1 + 3.000000 * CDtemp * (x_95_43_0 - ABcom * x_95_43_1) + 3.000000 * ABCDtemp * x_63_79_1;
     QUICKDouble x_30_29_3 = Qtempx * x_30_18_3 + WQtempx * x_30_18_4;
     QUICKDouble x_39_29_2 = Qtempx * x_39_18_2 + WQtempx * x_39_18_3 + ABCDtemp * x_30_18_3;
     QUICKDouble x_39_29_3 = Qtempx * x_39_18_3 + WQtempx * x_39_18_4 + ABCDtemp * x_30_18_4;
@@ -17611,7 +17611,7 @@
     QUICKDouble x_95_45_1 = Qtempx * x_95_29_1 + WQtempx * x_95_29_2 + CDtemp * (x_95_18_1 - ABcom * x_95_18_2) + 3.000000 * ABCDtemp * x_63_29_2;
     QUICKDouble x_95_80_0 = Ptempx * x_63_80_0 + WPtempx * x_63_80_1 + 2.000000 * ABtemp * (x_39_80_0 - CDcom * x_39_80_1) + 3.000000 * ABCDtemp * x_63_45_1;
     QUICKDouble x_95_80_1 = Ptempx * x_63_80_1 + WPtempx * x_63_80_2 + 2.000000 * ABtemp * (x_39_80_1 - CDcom * x_39_80_2) + 3.000000 * ABCDtemp * x_63_45_2;
-    LOCSTORE(store, 95, 116, STOREDIM, STOREDIM) += Qtempx * x_95_80_0 + WQtempx * x_95_80_1 + 3.000000 * CDtemp * (x_95_45_0 - ABcom * x_95_45_1) + 3.000000 * ABCDtemp * x_63_80_1;
+    LOCSTORE(store, 95, 116, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_80_0 + WQtempx * x_95_80_1 + 3.000000 * CDtemp * (x_95_45_0 - ABcom * x_95_45_1) + 3.000000 * ABCDtemp * x_63_80_1;
     QUICKDouble x_30_1_3 = Qtempx * x_30_0_3 + WQtempx * x_30_0_4;
     QUICKDouble x_30_1_4 = Qtempx * x_30_0_4 + WQtempx * x_30_0_5;
     QUICKDouble x_30_1_5 = Qtempx * x_30_0_5 + WQtempx * x_30_0_6;
@@ -17713,7 +17713,7 @@
     QUICKDouble x_95_53_1 = Qtempx * x_95_32_1 + WQtempx * x_95_32_2 + 4.000000 * CDtemp * (x_95_17_1 - ABcom * x_95_17_2) + 3.000000 * ABCDtemp * x_63_32_2;
     QUICKDouble x_95_81_0 = Ptempx * x_63_81_0 + WPtempx * x_63_81_1 + 2.000000 * ABtemp * (x_39_81_0 - CDcom * x_39_81_1) + 6.000000 * ABCDtemp * x_63_53_1;
     QUICKDouble x_95_81_1 = Ptempx * x_63_81_1 + WPtempx * x_63_81_2 + 2.000000 * ABtemp * (x_39_81_1 - CDcom * x_39_81_2) + 6.000000 * ABCDtemp * x_63_53_2;
-    LOCSTORE(store, 95, 117, STOREDIM, STOREDIM) += Qtempx * x_95_81_0 + WQtempx * x_95_81_1 + 6.000000 * CDtemp * (x_95_53_0 - ABcom * x_95_53_1) + 3.000000 * ABCDtemp * x_63_81_1;
+    LOCSTORE(store, 95, 117, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_81_0 + WQtempx * x_95_81_1 + 6.000000 * CDtemp * (x_95_53_0 - ABcom * x_95_53_1) + 3.000000 * ABCDtemp * x_63_81_1;
     QUICKDouble x_39_82_0 = Ptempx * x_30_82_0 + WPtempx * x_30_82_1;
     QUICKDouble x_39_82_1 = Ptempx * x_30_82_1 + WPtempx * x_30_82_2;
     QUICKDouble x_63_82_0 = Qtempy * x_63_54_0 + WQtempy * x_63_54_1 + 5.000000 * CDtemp * (x_63_33_0 - ABcom * x_63_33_1) + 3.000000 * ABCDtemp * x_37_54_1;
@@ -17721,8 +17721,8 @@
     QUICKDouble x_63_82_2 = Qtempy * x_63_54_2 + WQtempy * x_63_54_3 + 5.000000 * CDtemp * (x_63_33_2 - ABcom * x_63_33_3) + 3.000000 * ABCDtemp * x_37_54_3;
     QUICKDouble x_95_82_0 = Ptempx * x_63_82_0 + WPtempx * x_63_82_1 + 2.000000 * ABtemp * (x_39_82_0 - CDcom * x_39_82_1);
     QUICKDouble x_95_82_1 = Ptempx * x_63_82_1 + WPtempx * x_63_82_2 + 2.000000 * ABtemp * (x_39_82_1 - CDcom * x_39_82_2);
-    LOCSTORE(store, 95, 118, STOREDIM, STOREDIM) += Qtempy * x_95_82_0 + WQtempy * x_95_82_1 + 6.000000 * CDtemp * (x_95_54_0 - ABcom * x_95_54_1) + 3.000000 * ABCDtemp * x_64_82_1;
-    LOCSTORE(store, 95, 103, STOREDIM, STOREDIM) += Qtempx * x_95_82_0 + WQtempx * x_95_82_1 + 3.000000 * ABCDtemp * x_63_82_1;
+    LOCSTORE(store, 95, 118, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_82_0 + WQtempy * x_95_82_1 + 6.000000 * CDtemp * (x_95_54_0 - ABcom * x_95_54_1) + 3.000000 * ABCDtemp * x_64_82_1;
+    LOCSTORE(store, 95, 103, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_82_0 + WQtempx * x_95_82_1 + 3.000000 * ABCDtemp * x_63_82_1;
     QUICKDouble x_80_0_7 = Ptempx * x_45_0_7 + WPtempx * x_45_0_8 + 2.000000 * ABtemp * (x_29_0_7 - CDcom * x_29_0_8);
     QUICKDouble x_80_3_6 = Qtempz * x_80_0_6 + WQtempz * x_80_0_7;
     QUICKDouble x_80_9_5 = Qtempz * x_80_3_5 + WQtempz * x_80_3_6 + CDtemp * (x_80_0_5 - ABcom * x_80_0_6);
@@ -17740,9 +17740,9 @@
     QUICKDouble x_80_83_1 = Qtempz * x_80_55_1 + WQtempz * x_80_55_2 + 5.000000 * CDtemp * (x_80_34_1 - ABcom * x_80_34_2);
     QUICKDouble x_95_83_0 = Ptempx * x_63_83_0 + WPtempx * x_63_83_1 + 2.000000 * ABtemp * (x_39_83_0 - CDcom * x_39_83_1);
     QUICKDouble x_95_83_1 = Ptempx * x_63_83_1 + WPtempx * x_63_83_2 + 2.000000 * ABtemp * (x_39_83_1 - CDcom * x_39_83_2);
-    LOCSTORE(store, 95, 119, STOREDIM, STOREDIM) += Qtempz * x_95_83_0 + WQtempz * x_95_83_1 + 6.000000 * CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + ABCDtemp * x_80_83_1;
-    LOCSTORE(store, 95, 101, STOREDIM, STOREDIM) += Qtempx * x_95_83_0 + WQtempx * x_95_83_1 + 3.000000 * ABCDtemp * x_63_83_1;
-    LOCSTORE(store, 95, 99, STOREDIM, STOREDIM) += Qtempy * x_95_83_0 + WQtempy * x_95_83_1 + 3.000000 * ABCDtemp * x_64_83_1;
+    LOCSTORE(store, 95, 119, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_95_83_0 + WQtempz * x_95_83_1 + 6.000000 * CDtemp * (x_95_55_0 - ABcom * x_95_55_1) + ABCDtemp * x_80_83_1;
+    LOCSTORE(store, 95, 101, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_95_83_0 + WQtempx * x_95_83_1 + 3.000000 * ABCDtemp * x_63_83_1;
+    LOCSTORE(store, 95, 99, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_95_83_0 + WQtempy * x_95_83_1 + 3.000000 * ABCDtemp * x_64_83_1;
     // [KS|KS] integral - End 
 }
 

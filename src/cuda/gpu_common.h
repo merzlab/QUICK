@@ -52,6 +52,8 @@ fflush(stdout);\
 #define STOREDIM_XL 84
 #endif
 
+#define STORE_OPERATOR +=
+
 #define MAXPRIM 20
 #define TRANSDIM 8
 #define MCALDIM 120
