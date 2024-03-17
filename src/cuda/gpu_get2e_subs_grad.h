@@ -876,6 +876,9 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
         for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
                 if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
                 }
@@ -891,6 +894,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
             }
         }
     }    
+
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
