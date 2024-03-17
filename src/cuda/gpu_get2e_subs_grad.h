@@ -347,6 +347,9 @@ __device__ __forceinline__ void iclass_grad_spd
     for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
         for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
                 if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
                 }
@@ -479,13 +482,14 @@ __device__ __forceinline__ void iclass_grad_spd
 */
 
 //#ifdef USE_ERI_GRAD_STOREADD
-                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                                 LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
                 }
+*/
 //#endif
       
 #ifdef int_sp 
@@ -1020,14 +1024,14 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf3
 
-                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM ) {
                             LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
                 }
-
+*/
 
                 ERint_vertical_spdf_1_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \

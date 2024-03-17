@@ -1106,6 +1106,14 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
         }
     }
 
+    for (int i = 4; i< 120; i++) {
+        for (int j = 4; j< 120; j++) {
+//          if (i < STOREDIM && j < STOREDIM ) {
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+//          }
+        }
+    }
+
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
@@ -1208,16 +1216,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                 }
                 
                 //QUICKDouble store2[STOREDIM*STOREDIM];
-                
-                
-                for (int i = 4; i< 120; i++) {
-                    for (int j = 4; j< 120; j++) {
-//                        if (i < STOREDIM && j < STOREDIM ) {
-                            LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
-//                        }
-                    }
-                }
-                
                 
 #if defined int_spdf4
 

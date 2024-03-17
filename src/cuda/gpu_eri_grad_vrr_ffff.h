@@ -15,10 +15,12 @@
 #undef VDIM3 
 #undef VY 
 #undef LOCSTORE 
+#undef STORE_OPERATOR
 #define STOREDIM STOREDIM_XL 
 #define VDIM3 VDIM3_L 
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x] 
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3) 
+#define STORE_OPERATOR =
 
 __device__ __inline__ void ERint_grad_vrr_ffff_1(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL,
             const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
@@ -466,3 +468,6 @@ __device__ __inline__ void ERint_grad_vrr_ffff_32(const int I, const int J, cons
 #include "iclass_fshs.h"
 #endif
 }
+
+#undef STORE_OPERATOR
+#define STORE_OPERATOR +=
