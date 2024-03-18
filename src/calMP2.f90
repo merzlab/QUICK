@@ -485,7 +485,7 @@ subroutine MPI_calmp2
      else
         do i=1,mpisize-1
            ! receive integrals from slave nodes
-           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
            ! and sum them into operator
            do j1=1,nbasis
               do k1=1,ivir
