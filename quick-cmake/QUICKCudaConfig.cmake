@@ -53,7 +53,7 @@ if(CUDA)
     # note: need -disable-optimizer-constants for sm <= 7.0
 
     # CUDA codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (Kepler and Maxwell)
-    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "kepler") OR ("${QUICK_USER_ARCH}" MATCHES "maxwell")))
+    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "kepler")))
         message(FATAL_ERROR "Error: Unsupported CUDA options (ENABLEF with -DUSE_LEGACY_ATOMICS). ${PROJECT_NAME} support for f-functions requires newer CUDA architecture targets not using LEGACY_ATOMICS.  Please specify architectures with QUICK_USER_ARCH not needing LEGACY_ATOMICS (post-Maxwell) or disable f-function support.")
     endif()
 
@@ -121,7 +121,7 @@ if(CUDA)
         if("${QUICK_USER_ARCH}" MATCHES "maxwell")
 	    message(STATUS "Configuring QUICK for SM5.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+	    list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS --allow-unsupported-compiler)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             set(FOUND "TRUE")
         endif()
