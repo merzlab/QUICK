@@ -39,7 +39,7 @@ module quick_size_module
 #ifdef ENABLEF 
     integer,parameter :: MAXPRIM = 20
 #else
-    integer,parameter :: MAXPRIM = 10
+    integer,parameter :: MAXPRIM = 14
 #endif
 
 end module quick_size_module

@@ -49,7 +49,7 @@ fflush(stdout);\
 #define STOREDIM_XL 120
 #define MAXPRIM 20
 #else
-#define MAXPRIM 10
+#define MAXPRIM 14
 #define STOREDIM_L 84
 #define STOREDIM_XL 84
 #endif
