@@ -26,5 +26,5 @@ These options allow you do adjust this behavior.
 By default QUICK will only build the serial version.  This can be changed with these options:
 - `-DMPI=TRUE`: Also build MPI versions of all programs.
 - `-DCUDA=TRUE`: Also build CUDA versions of all programs.  If both MPI and CUDA are active at the same time, CUDA MPI versions will additionally be built.
-- `-DQUICK_USER_ARCH=<kepler|maxwell|pascal|volta|turing|ampere>`: Build CUDA code only for the given architecture.  If not provided, quick will compile for all supported architectures in your CUDA version.
+- `-DQUICK_USER_ARCH=<kepler|maxwell|pascal|volta|turing|ampere|adalovelace>`: Build CUDA code only for the given architecture.  If not provided, quick will compile for all supported architectures in your CUDA version.
 - `-DQUICK_VERBOSE_PTXAS=TRUE`: Pass -v flag to ptxas to dump details about compiled functions in CUDA code.

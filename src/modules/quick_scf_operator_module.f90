@@ -37,12 +37,11 @@ contains
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
      use quick_oei_module, only:get1eEnergy,get1e
+#ifdef MPIV
+     use mpi
+#endif
   
      implicit none
-  
-#ifdef MPIV
-     include "mpif.h"
-#endif
   !   double precision oneElecO(nbasis,nbasis)
      logical :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -278,11 +277,10 @@ contains
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
-     implicit none
-  
 #ifdef MPIV
-     include "mpif.h"
+     use mpi
 #endif
+     implicit none
   
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

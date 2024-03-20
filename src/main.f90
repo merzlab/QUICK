@@ -35,12 +35,11 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+#ifdef MPIV
+    use mpi
+#endif
 
     implicit none
-
-#ifdef MPIV
-    include 'mpif.h'
-#endif
 
 #if defined CUDA || defined HIP
     integer :: gpu_device_id = -1

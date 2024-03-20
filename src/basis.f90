@@ -15,6 +15,15 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+
+#ifdef CEW
+   use quick_cew_module, only: quick_cew
+#endif
+
+#ifdef MPIV
+   use mpi
+#endif
+
    !
    implicit double precision(a-h,o-z)
    character(len=120) :: line
@@ -29,11 +38,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
    integer, intent(inout) :: ierr
    logical :: blngr_test
-
-
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
    ! initialize the arra
 
@@ -58,7 +62,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       atmbs=.true.
       atmbs2=.true.
       icont=0
-      quick_method%hasF=.true.
 
       ! parse the file and find the sizes of things to allocate them in memory
       do while (iofile  == 0 )
@@ -80,6 +83,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
             do while (iatom==0)
                read(ibasisfile,'(A80)',iostat=iofile) line
                read(line,*,iostat=iatom) shell,iprim,dnorm
+
                if (iatom == 0) then
                   quick_basis%kshell(iat) = quick_basis%kshell(iat) +1
                   !kcontract(iat) = kcontract(iat) + iprim
@@ -96,7 +100,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                      kbasis(iat) = kbasis(iat) + 6
                      kcontract(iat) = kcontract(iat) + iprim * 6
                      elseif (shell == 'F') then
-                     quick_method%hasF=.false.
                      kbasis(iat) = kbasis(iat) + 10
                      kcontract(iat) = kcontract(iat) + iprim * 10
                   end if
@@ -158,7 +161,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                  kbasis(iat) = kbasis(iat) + 6
                                  kcontract(iat) = kcontract(iat) + iprim*6
                                  elseif (shell == 'F') then
-                                 quick_method%hasF=.false.
                                  kbasis(iat) = kbasis(iat) + 10
                                  kcontract(iat) = kcontract(iat) + iprim*10
                               end if
@@ -270,7 +272,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
       call MPI_BCAST(nshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(nprim,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    endif
 #endif
@@ -278,21 +279,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    ! =============END MPI/ALL NODES=====================
 
    ! Allocate the arrays now that we know the sizes
-
-   if(quick_method%hasF)then
-      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,56,56))
-      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(56,56,0:10))
-      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
-      if(.not. allocated(attraxiao))    allocate(attraxiao(56,56,0:6))
-      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,56,56,0:5))
-   else
-      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,120,120))
-      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(120,120,0:14))
-      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,120,120))
-      if(.not. allocated(attraxiao))    allocate(attraxiao(120,120,0:8))
-      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,120,120,0:7))
-   endif
-
    if(.not. allocated(Ycutoff)) allocate(Ycutoff(nshell,nshell))
    if(.not. allocated(cutmatrix)) allocate(cutmatrix(nshell,nshell))
    if(.not. allocated(aex)) allocate(aex(nprim ))
@@ -303,11 +289,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    if(.not. allocated(gcg)) allocate(gcg(nprim ))
 
    ! initialize the array values to zero
-   Yxiao        = 0.0d0
-   Yxiaotemp    = 0.0d0
-   Yxiaoprim    = 0.0d0
-   attraxiao    = 0.0d0
-   attraxiaoopt = 0.0d0
    Ycutoff      = 0.0d0
    cutmatrix    = 0.0d0
    aex          = 0.0d0
@@ -406,6 +387,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
         enddo
    enddo
 
+   quick_method%hasF=.false.
+
    !====== MPI/MASTER ====================
    masterwork_readfile: if (master) then
       !====== END MPI/MASTER ================
@@ -461,6 +444,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
 
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
 
@@ -503,6 +487,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                                  !quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),1,0,0)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
@@ -546,6 +531,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),0,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                               quick_basis%gcexpo(k,Ninitial)=AA(k)
                               if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                            enddo
@@ -565,6 +551,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                               else
                                 quick_basis%gccoeff(k,Ninitial)=CC(k)*xnorm(AA(k),1,0,0)
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=CC(k)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -630,6 +617,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                             quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
 
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
@@ -654,13 +642,9 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            enddo
 
                            jshell = jshell+1
+
                            elseif (shell == 'F') then
-
-
-#ifndef ENABLEF
-                           ierr=36 
-#endif
-
+                           quick_method%hasF=.true.
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
                            quick_basis%kstart(jshell) = jbasis
@@ -728,6 +712,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                 quick_basis%gccoeff(k,Ninitial)=BB(k)*xnorm(AA(k),quick_basis%KLMN(1,Ninitial), &
                                         quick_basis%KLMN(2,Ninitial),quick_basis%KLMN(3,Ninitial))
                               endif
+                              quick_basis%unnorm_gccoeff(k,Ninitial)=BB(k)
                                  quick_basis%gcexpo(k,Ninitial)=AA(k)
                                  if(quick_basis%gcexpomin(jshell).gt.AA(k))quick_basis%gcexpomin(jshell)=AA(k)
                               enddo
@@ -740,6 +725,10 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            end if
 
                            jshell = jshell+1
+
+                           elseif (shell == 'G') then
+                           ierr = 37   
+
                         endif
                      enddo
                   endif
@@ -801,6 +790,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                            enddo
                            jshell = jshell+1
                            elseif (shell == 'F') then
+                           quick_method%hasF=.true.
                            quick_basis%ktype(jshell) = 10
                            quick_basis%katom(jshell) = i
                            quick_basis%kstart(jshell) = jbasis
@@ -844,9 +834,45 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    !======== MPI/ALL NODES ====================
    if (bMPI) then
       call MPI_BCAST(maxcontract,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
    endif
    !======== END MPI/ALL NODES ================
 #endif
+
+#ifndef ENABLEF   
+   if(quick_method%hasF) then 
+       ierr=36
+       return
+   endif
+#endif
+
+#ifdef CEW
+   if(quick_method%hasF .and. quick_cew%use_cew) then
+       ierr=38
+       return
+   endif
+#endif
+
+   ! Allocate the arrays now that we know the sizes
+   if(.not. quick_method%hasF)then
+      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,56,56))
+      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(56,56,0:10))
+      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,56,56))
+      if(.not. allocated(attraxiao))    allocate(attraxiao(56,56,0:6))
+      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,56,56,0:5))
+   else
+      if(.not. allocated(Yxiao))        allocate(Yxiao(10000,120,120))
+      if(.not. allocated(Yxiaotemp))    allocate(Yxiaotemp(120,120,0:14))
+      if(.not. allocated(Yxiaoprim))    allocate(Yxiaoprim(MAXPRIM,MAXPRIM,120,120))
+      if(.not. allocated(attraxiao))    allocate(attraxiao(120,120,0:8))
+      if(.not. allocated(attraxiaoopt)) allocate(attraxiaoopt(3,120,120,0:7))
+   endif
+
+   Yxiao        = 0.0d0
+   Yxiaotemp    = 0.0d0
+   Yxiaoprim    = 0.0d0
+   attraxiao    = 0.0d0
+   attraxiaoopt = 0.0d0
 
    if(.not. allocated(aexp)) allocate(aexp(maxcontract,nbasis))
 

@@ -58,12 +58,11 @@ subroutine electdiis(jscf,ierr)
    use allmod
    use quick_gridpoints_module
    use quick_scf_module
+#ifdef MPIV
+   use mpi
+#endif
 
    implicit none
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
    ! variable inputed to return
    integer :: jscf                ! scf interation

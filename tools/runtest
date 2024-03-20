@@ -21,7 +21,7 @@
 #  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
 
-QUICK_VERSION='QUICK-22.03'
+QUICK_VERSION='QUICK-24.03'
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -264,7 +264,7 @@ print_test_info(){
     ene_psb3_blyp_631gss)                 testinfo="PSB3: DFT energy test: s, p and d basis functions, BLYP functional";;
     ene_psb3_b3lyp_631g)                  testinfo="PSB3: DFT energy test: s and p basis functions, native B3LYP functional";;
     ene_psb3_b3lyp_631gss)                testinfo="PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional";;
-    ene_C2H6_b3lyp_def2tzvp)              testinfo="PSB3: DFT energy test: s, p, d and f basis functions, native B3LYP functional";;
+    ene_C2H6_b3lyp_def2tzvp)              testinfo="C2H6: DFT energy test: s, p, d and f basis functions, native B3LYP functional";;
     ene_psb3_libxc_lda_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc LDA functional";;
     ene_psb3_libxc_gga_631g)              testinfo="PSB3: DFT energy test: s and p basis functions, libxc GGA functional";;
     ene_psb3_libxc_hgga_631g)             testinfo="PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional";;
@@ -307,15 +307,16 @@ print_test_info(){
     grad_ncnaip_b3lyp_631gss)             testinfo="NAIP2-MeOH: DFT point charge gradient test: s and p basis functions";;
     grad_rpsb_meoh_rhf_321g)              testinfo="RPSB-MeOH: RHF point charge gradient test: s and p basis functions";;
     grad_ohrad_b3lyp_631gss)              testinfo="OH radical: UDFT B3LYP gradient test";;
-    opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions";;
-    opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions";;
-    opt_wat_b3lyp_ccpvtz)                 testinfo="Water: RHF geometry optimization test: s, p, d and f basis functions";;
-    opt_nh4_pbe_def2svp)                  testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions";;
-    opt_merad_b3lyp_631gss)               testinfo="Methyl radical: UDFT B3LYP geometry optimization test";;
-    opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT DL-Find geometry optimization test with s, p and d basis functions";;
-    opt_c3h4_rhf_631g)                    testinfo="Allene: RHF DL-Find geometry optimization test with s and p basis functions";;
-    opt_c2h5rad_b3lyp_631gss)             testinfo="Ethyl radical: UDFT B3LYP DL-FIND geometry optimization test";;
-    opt_c2hrad_uhf_ccpvdz)                testinfo="Ethynyl radical: UHF DL-Find geometry optimization test with s, p and d basis functions";;
+    opt_wat_rhf_631g)                     testinfo="Water: RHF geometry optimization test: s and p basis functions (Legacy optimizer)";;
+    opt_wat_rhf_ccpvdz)                   testinfo="Water: RHF geometry optimization test: s, p and d basis functions (Legacy optimizer)";;
+    opt_wat_b3lyp_ccpvtz)                 testinfo="Water: RHF geometry optimization test: s, p, d and f basis functions (Legacy optimizer)";;
+    opt_nh4_pbe0_def2svp)                 testinfo="NH4+: DFT geometry optimization test: s, p and d basis functions (Legacy optimizer)";;
+    opt_caffeine_b3lyp_3-21g)             testinfo="Caffeine: DFT B3LYP DL-FIND geometry optimization test: s and p basis functions (Baker test set)";;
+    opt_merad_ub3lyp_631gss)              testinfo="Methyl radical: UDFT B3LYP geometry optimization test (Legacy optimizer)";;
+    opt_hsoh_pbe0_def2svp)                testinfo="Oxadisulfane: DFT PBE0 DL-FIND geometry optimization test with s, p and d basis functions";;
+    opt_c3h4_rhf_631g)                    testinfo="Allene: RHF DL-FIND geometry optimization test with s and p basis functions";;
+    opt_c2h5rad_uhf_631gss)               testinfo="Ethyl radical: UHF DL-FIND geometry optimization test";;
+    opt_c2hrad_ub3lyp_ccpvdz)             testinfo="Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test with s, p and d basis functions";;
     api_water_rhf_631g)                   testinfo="Water: API test";;
   esac
 

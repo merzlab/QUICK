@@ -40,9 +40,16 @@
 | #def2-sv(p)                       | DEF2-SV_P.BAS                       |
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
 | #def2-tzvp                        | DEF2-TZVP.BAS                       |
+| #def2-tzvpd                       | DEF2-TZVPD.BAS                      |
+| #def2-tzvpp                       | DEF2-TZVPP.BAS                      |
+| #def2-tzvppd                      | DEF2-TZVPPD.BAS                     |
 | #PC-0                             | PC0.BAS                             |
 | #PC-1                             | PC1.BAS                             |
+| #PC-2                             | PC2.BAS                             |
 | #aug-cc-pVDZ                      | AUG-CC-PVDZ.BAS                     |
+| #aug-cc-pVTZ                      | AUG-CC-PVTZ.BAS                     |
+| #AUG-PC-1                         | AUG-PC1.BAS                         |
+| #AUG-PC-2                         | AUG-PC2.BAS                         |
 | #CUSTOM                           | CUSTOM.BAS                          |
 | #CUSTOM2                          | CUSTOM2.BAS                         |
 |_________________________________________________________________________|

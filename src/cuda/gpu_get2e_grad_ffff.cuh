@@ -620,7 +620,7 @@ __device__ __forceinline__ void hrrwholegrad2_ffff(QUICKDouble* const Yaax, QUIC
                                              const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz, \
                                              const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz, \
                                              const QUICKDouble RDx, const QUICKDouble RDy, const QUICKDouble RDz, int* const smem_int, 
-int** const smem_int_ptr, QUICKDouble** const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char, bool bprint)
+int** const smem_int_ptr, QUICKDouble** const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
@@ -651,14 +651,6 @@ int** const smem_int_ptr, QUICKDouble** const smem_dbl_ptr, unsigned char** cons
                           LOC2(DEV_SIM_CHAR_PTR_KLMN,0,JJJ-1,3,DEV_SIM_INT_NBASIS), LOC2(DEV_SIM_CHAR_PTR_KLMN,1,JJJ-1,3,DEV_SIM_INT_NBASIS), LOC2(DEV_SIM_CHAR_PTR_KLMN,2,JJJ-1,3,DEV_SIM_INT_NBASIS), \
                           J, coefAngularL, angularL, smem_char);
 
-if(bprint){
-    for (int i = 4; i< 84; i++) {
-        for (int j = 10; j< 120; j++) {
-printf("Test Yax1: %d %d %d %d %.9f \n", j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA, LOCSTORE(storeAA,
-j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
-        }
-    }
-}
 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
@@ -666,14 +658,10 @@ j-STORE_INIT_J_AA, i-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
                 *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
 
-if(bprint) printf("Yax1: %d %d %d %d %.9f \n", angularL[i]-1-STORE_INIT_I_AA, angularR[j]-1-STORE_INIT_J_AA, STORE_DIM_I_AA, STORE_DIM_J_AA, LOCSTORE(storeAA,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
-
 //            }
         }
     }
    
-//if(bprint) printf("Yaax: %.9f \n", *Yaax );
  
     numAngularL = lefthrr(RAx, RAy, RAz, RBx, RBy, RBz, \
                           LOC2(DEV_SIM_CHAR_PTR_KLMN,0,III-1,3,DEV_SIM_INT_NBASIS), LOC2(DEV_SIM_CHAR_PTR_KLMN,1,III-1,3,DEV_SIM_INT_NBASIS) + 1, LOC2(DEV_SIM_CHAR_PTR_KLMN,2,III-1,3,DEV_SIM_INT_NBASIS), \
@@ -684,8 +672,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
-if(bprint) printf("Yax2: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
 //            }
         }
     }
@@ -699,8 +685,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
-if(bprint) printf("Yax3: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
 //            }
         }
     }
@@ -714,8 +698,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
-if(bprint) printf("Ybx1: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
 //            }
         }
     }
@@ -729,8 +711,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
-if(bprint) printf("Ybx2: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
 //            }
         }
     }
@@ -744,8 +724,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1-STORE_INIT_J_AA,
 angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA);
-if(bprint) printf("Ybx3: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB,
-angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, STORE_DIM_I_AA) );
 //            }
         }
     }
@@ -765,8 +743,6 @@ angularL[i]-1-STORE_INIT_J_AA, angularR[j]-1-STORE_INIT_I_AA, STORE_DIM_J_AA, ST
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaax = *Yaax - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -785,8 +761,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaay = *Yaay - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -804,8 +778,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaaz = *Yaaz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,III-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -826,8 +798,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybbx = *Ybbx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -847,8 +817,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybby = *Ybby - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -867,8 +835,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybbz = *Ybbz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,JJJ-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
                     
 //                }
             }
@@ -899,8 +865,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_J_CC,
 angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
-angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC) );
 //            }
         }
     }
@@ -917,8 +881,6 @@ angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, ST
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccx = *Yccx - LOC2(DEV_SIM_CHAR_PTR_KLMN,0,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -939,8 +901,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_J_CC,
 angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
-angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC) );
 //            }
         }
     }
@@ -958,8 +918,6 @@ angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, ST
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccy = *Yccy - LOC2(DEV_SIM_CHAR_PTR_KLMN,1,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -979,8 +937,6 @@ angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1-STORE_INIT_J_CC,
 angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC,
-angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, STORE_DIM_I_CC) );
 //            }
         }
     }
@@ -998,8 +954,6 @@ angularL[i]-1-STORE_INIT_J_CC, angularR[j]-1-STORE_INIT_I_CC, STORE_DIM_J_CC, ST
 //                if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccz = *Yccz - LOC2(DEV_SIM_CHAR_PTR_KLMN,2,KKK-1,3,DEV_SIM_INT_NBASIS) * coefAngularL[i] * coefAngularR[j] *
 LOCSTORE(store, angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store,
-angularL[i]-1-STORE_INIT, angularR[j]-1-STORE_INIT, STORE_DIM, STORE_DIM) );
 //                }
             }
         }
@@ -1046,7 +1000,7 @@ __device__ __inline__ void iclass_grad_ffff
 unsigned int LL, const QUICKDouble DNMax, \
 QUICKDouble* const YVerticalTemp, QUICKDouble* const store, QUICKDouble* const store2, QUICKDouble* const storeAA, QUICKDouble*
 const storeBB, QUICKDouble* const storeCC, int* const smem_int, QUICKDouble* const smem_dbl, int** const smem_int_ptr, QUICKDouble**
-const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char){
+const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char, QUICKAtomicType** const smem_grad_ptr){
     /*
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
      and be careful with the index difference between Fortran and C++,
@@ -1515,26 +1469,8 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                                     QUICKDouble Ybbx, Ybby, Ybbz;
                                     QUICKDouble Yccx, Yccy, Yccz;
 
-bool bprint=false;
-//if(II == 9 && JJ == 19 && KK == 29 && LL == 39 && III == 26 && JJJ == 61 && KKK == 96 && LLL == 139) bprint=true;
-//if( I == 3 && J == 3 && K == 3 && L == 3) bprint=true;
 
 
-if(bprint){
-
-                for (int i = 4; i< 120; i++) {
-                    for (int j = 10; j< 120; j++) {
-                        if (i < STOREDIM && j < STOREDIM) {
-//                            printf("STOREAA   %d %d %d %d   %d   %d   %.9f \n",Sumindex[K], Sumindex[K+L+2],
-//Sumindex[I], Sumindex[I+J+2], j, i, LOCSTORE(storeAA, j, i , STOREDIM, STOREDIM));
-                        }
-                    }
-                } 
-
-}
-
-
-//if(bprint) printf("calling hrrwholegrad2 bprint \n");
 
                                     hrrwholegrad2_ffff
                                     (&Yaax, &Yaay, &Yaaz, \
@@ -1544,13 +1480,9 @@ if(bprint){
                                                   III, JJJ, KKK, LLL, IJKLTYPE, \
                                                   store, storeAA, storeBB, storeCC, \
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
-                                                  RCx, RCy, RCz, RDx, RDy, RDz, smem_int, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char, bprint);
+                                                  RCx, RCy, RCz, RDx, RDy, RDz, smem_int, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
 
 #if defined int_spdf3 || defined int_spdf4
-if(bprint){ 
-//if( I == 3 && J == 3 && K == 3 && L == 3){
-//printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
-}
 #endif                                    
                                     QUICKDouble constant = 0.0 ;
                                     
@@ -1699,43 +1631,45 @@ if(bprint){
 #endif    
    
 #ifdef USE_LEGACY_ATOMICS 
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart], AGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 1], AGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 2], AGradz);
+
+    GRADADD(DEV_SIM_PTR_GRAD[AStart], AGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart], BGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 1], BGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 2], BGradz);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart], BGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart], CGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 1], CGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 2], CGradz);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart], CGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 2], (-AGradz-BGradz-CGradz));
+    GRADADD(DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    GRADADD(DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    GRADADD(DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));
+
 #else 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart], AGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 1], AGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 2], AGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart], AGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart], BGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 1], BGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 2], BGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart], BGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart], CGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 1], CGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 2], CGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart], CGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
 #endif
 
     return;
@@ -1753,7 +1687,7 @@ __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_oshell_kernel_f
 __global__ void 
 __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_kernel_ffff(int *dev_int_data, 
 int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_data, int2
-**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, const int ffStart, const int sqrQshell)
+**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, QUICKAtomicType **dev_grad_ptr_data, const int ffStart, const int sqrQshell)
 #endif
 #endif
 {
@@ -1767,7 +1701,7 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
     unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB];
-
+    QUICKAtomicType **smem_grad_ptr = (QUICKAtomicType**) &smem_char[ERI_GRAD_FFFF_SMEM_CHAR_SIZE];
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_DBL_SIZE ; i+=blockDim.x)
         smem_dbl[i]=dev_dbl_data[i];
@@ -1789,6 +1723,9 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_SMEM_CHAR_SIZE ; i+=blockDim.x)
         smem_char[i]=dev_char_data[i];
+
+    for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_PTR_SIZE ; i+=blockDim.x)
+        smem_grad_ptr[i]=dev_grad_ptr_data[i];
 
 __syncthreads();
 
@@ -1862,7 +1799,7 @@ DNMax) > DEV_SIM_DBL_GRADCUTOFF) {
                     if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
                     iclass_oshell_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
 DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
-DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char, smem_grad_ptr);
                     }
 #endif
 #else
@@ -1871,7 +1808,7 @@ DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, 
 		    if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
                     iclass_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
 DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
-DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char);
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char, smem_grad_ptr);
 		    }
 #endif
 #endif

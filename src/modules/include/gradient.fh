@@ -83,16 +83,15 @@ contains
   
      use allmod
      use quick_lri_grad_module
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
   
      integer, intent(inout) :: ierr
      character(len=1) cartsym(3)
      double precision :: c_coords(3),c_zeta,c_chg ! for testing lri gradients
      integer :: c_idx  ! for testing lri gradients
- 
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
   !  Curently, only analytical gradients are available. This should be changed later.
      quick_method%analgrad=.true.
@@ -188,13 +187,13 @@ contains
 #ifdef OSHELL
      use quick_cshell_gradient_module
 #endif
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
   !---------------------------------------------------------------------
   !  The purpose of this subroutine is to calculate the gradient of
@@ -523,12 +522,11 @@ contains
 #else
     use quick_cutoff_module, only: cshell_density_cutoff
 #endif
+#ifdef MPIV
+     use mpi
+#endif
     implicit none
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
-  
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
   !---------------------------------------------------------------------
   !  1) The derivative of the kinetic term
@@ -591,7 +589,7 @@ contains
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
-        if(quick_method%hasF) then
+        if(.not. quick_method%hasF) then
           call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
         else
 
@@ -691,15 +689,14 @@ contains
 #ifdef OSHELL
      use quick_cshell_gradient_module, only:get_ijbas_derivative
 #endif
-
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      logical :: ijcon
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
   !  1)  The negative of the energy weighted density matrix element i j
   !   with the derivative of the ij overlap.
@@ -839,14 +836,13 @@ contains
    use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
    use quick_cshell_eri_grad_module, only: cshell_eri_grad
 #endif
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-    
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
   !  This subroutine calculates the derivative of 4center 2e- 
   !  terms with respect to X times the coefficient found in the energy.
@@ -993,6 +989,9 @@ contains
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
+#ifdef MPIV 
+     use mpi
+#endif
      implicit none
   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
@@ -1014,10 +1013,6 @@ contains
      double precision :: tgrd(3), tsum(3)
      integer :: i,k,oi
      double precision,allocatable :: dp(:,:)
-     
-#ifdef MPIV 
-     include "mpif.h"
-#endif
 
      if ( quick_method%HF ) then
         ! If we don't return for HF+CEW, then the unitialized data will enter

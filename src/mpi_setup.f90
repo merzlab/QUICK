@@ -7,10 +7,9 @@
 !
     subroutine initialize_quick_mpi()
     use allmod
+    use mpi
     implicit none
     logical mpi_initialized_flag
-    
-    include 'mpif.h'
 
     ! Initinalize MPI evironment, and determind master node
     if (bMPI) then
@@ -46,10 +45,9 @@
 !
     subroutine mpi_setup_job(ierr)
     use allmod
+    use mpi
     implicit none
     integer, intent(inout) :: ierr   
- 
-    include "mpif.h"
     
     call Broadcast(quick_method,ierr)
     call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -71,11 +69,11 @@
     subroutine mpi_setup_mol1(ierr)
     use allmod
     use quick_gridpoints_module
+    use mpi
     implicit none
 
     integer :: i    
     integer, intent(inout) :: ierr
-    include 'mpif.h'
 
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    
@@ -98,10 +96,9 @@
 
     use allmod
     use quick_gridpoints_module
+    use mpi
     implicit none
     integer, intent(inout) :: ierr
-    
-    include 'mpif.h'
 
     call Broadcast(quick_molspec,ierr)
 
@@ -123,8 +120,8 @@
       use quick_gridpoints_module, only: RGRID, RWT 
       use quick_size_module, only: MAXRADGRID
       use quick_mpi_module, only: mpierror
+      use mpi
       implicit none
-      include 'mpif.h'
 
       call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(RWT,MAXRADGRID,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -137,9 +134,8 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine mpi_setup_basis
     use allmod
+    use mpi
     implicit none
-    
-    include 'mpif.h'
     
     integer :: i, j
 
@@ -208,10 +204,10 @@
 !
     subroutine mpi_setup_inidivcon(natomt)
     use allmod
+    use mpi
     implicit none
     integer natomt,i,k1,k2,j,k,tempinteger,tempinteger2
     
-    include 'mpif.h'    
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
 
@@ -297,11 +293,10 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine MPI_setup_hfoperator()
     use allmod
+    use mpi
     implicit none
     integer i,k1,k2,j,k,tempinteger,tempinteger2
     integer temp1d(nbasis)
-    
-    include 'mpif.h'
     
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
@@ -366,9 +361,9 @@
     subroutine mgpu_setup()
 
       use quick_mpi_module
+      use mpi
       implicit none
       integer :: i, IERROR
-      include 'mpif.h'
 
       ! allocate memory for device ids
       if(master) call allocate_mgpu
@@ -409,9 +404,8 @@
  subroutine setup_xc_mpi_1
    use allmod
    use quick_gridpoints_module
+   use mpi
    implicit double precision(a-h,o-z)
-
-   include 'mpif.h'
 
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_dft_grid%gridb_count,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -431,13 +425,12 @@
 !-----------------------------------------------------------------------------
    use allmod
    use quick_gridpoints_module
+   use mpi
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
 !   integer, dimension(0:mpisize-1) :: igridptul
 !   integer, dimension(0:mpisize-1) :: igridptll
-
-   include 'mpif.h'
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
@@ -513,10 +506,10 @@
 
    use allmod
    use quick_gridpoints_module
+   use mpi
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
-   include 'mpif.h'
    
    if(master) then
 
@@ -584,9 +577,8 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
    use allmod
    use quick_gridpoints_module
+   use mpi
    implicit double precision(a-h,o-z)
-
-   include 'mpif.h'
 
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 

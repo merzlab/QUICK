@@ -98,6 +98,9 @@ module quick_basis_module
         ! normalized coeffecient
         double precision, allocatable, dimension(:,:) :: gccoeff
 
+        ! unnormalized contraction coefficients
+        double precision, allocatable, dimension(:,:) :: unnorm_gccoeff
+
         ! basis set factor
         double precision, allocatable, dimension(:) :: cons
 
@@ -256,11 +259,13 @@ contains
 
         if(.not. allocated(self%gcexpo)) allocate(self%gcexpo(MAXPRIM,nbasis_arg))
         if(.not. allocated(self%gccoeff)) allocate(self%gccoeff(MAXPRIM,nbasis_arg))
+        if(.not. allocated(self%unnorm_gccoeff)) allocate(self%unnorm_gccoeff(MAXPRIM,nbasis_arg))
         if(.not. allocated(self%cons)) allocate(self%cons(nbasis_arg))
         do i = 1, MAXPRIM
             do j = 1, nbasis_arg
                 self%gcexpo( i, j) = 0.0
                 self%gccoeff( i, j) = 0.0
+                self%unnorm_gccoeff( i, j) = 0.0
             enddo
         enddo
 
@@ -304,6 +309,7 @@ contains
         if (allocated(self%cons)) deallocate(self%cons)
         if (allocated(self%gcexpo)) deallocate(self%gcexpo)
         if (allocated(self%gccoeff)) deallocate(self%gccoeff)
+        if (allocated(self%unnorm_gccoeff)) deallocate(self%unnorm_gccoeff)
         if (allocated(self%KLMN)) deallocate(self%KLMN)
 
 #if defined CUDA_MPIV || defined HIP_MPIV

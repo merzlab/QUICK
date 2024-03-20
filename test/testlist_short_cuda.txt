@@ -22,11 +22,12 @@ grad_c10h9o2s_b3lyp_def2svp         #B3LYP point charge gradient test
 grad_daspi_meoh_b3lyp_6-31g         #B3LYP point charge gradient test
 grad_rpsb_meoh_rhf_321g             #RHF point charge gradient test
 grad_ohrad_b3lyp_631gss             #UDFT B3LYP gradient test
-opt_wat_rhf_631g	            #RHF geometry optimization test with s and p basis functions
-opt_wat_rhf_ccpvdz	            #RHF geometry test with s, p and d basis functions
-opt_nh4_pbe_def2svp                 #DFT geometry test with s, p and d basis functions
-opt_hsoh_pbe0_def2svp               #DFT DL-Find geometry test with s, p and d basis functions
-opt_c3h4_rhf_631g                   #RHF DL-Find geometry test with s and p basis functions
-opt_c2h5rad_b3lyp_631gss            #UDFT B3LYP DL-FIND geometry optimization
-opt_c2hrad_uhf_ccpvdz               #UHF DL-Find geometry test with s, p and d basis functions
+opt_wat_rhf_631g	            #RHF geometry optimization test with s and p basis functions (Legacy optimizer)
+opt_wat_rhf_ccpvdz	            #RHF geometry optimization test with s, p and d basis functions (Legacy optimizer)
+opt_nh4_pbe0_def2svp                #DFT geometry optimization test with s, p and d basis functions (Legacy optimizer)
+opt_hsoh_pbe0_def2svp               #DFT DL-FIND geometry optimization test with s, p and d basis functions
+opt_c3h4_rhf_631g                   #RHF DL-FIND geometry optimization test with s and p basis functions
+opt_caffeine_b3lyp_3-21g            #DFT B3LYP DL-FIND geometry optimization test: s and p basis functions (internal coordinates)
+opt_c2h5rad_uhf_631gss              #UHF DL-FIND geometry optimization
+opt_c2hrad_ub3lyp_ccpvdz            #UDFT B3LYP DL-FIND geometry optimization test with s, p and d basis functions
 api_water_rhf_631g                  #API test

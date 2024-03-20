@@ -247,9 +247,9 @@ contains
    subroutine broadcast_quick_molspec(self,ierr)
       use quick_mpi_module
       use quick_exception_module
+      use mpi
 
       implicit none
-      include "mpif.h"
       type (quick_molspec_type) self
       integer natom2
       integer, intent(inout) :: ierr

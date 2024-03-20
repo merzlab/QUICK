@@ -68,14 +68,14 @@ subroutine get1e(deltaO)
 #ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
 #endif
+
+#ifdef MPIV
+   use mpi
+#endif
    
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -111,7 +111,7 @@ subroutine get1e(deltaO)
          RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA || defined HIP
-         if(quick_method%hasF) then
+         if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
          else
 
@@ -197,7 +197,7 @@ subroutine get1e(deltaO)
       RECORD_TIME(timer_begin%T1eV)
 
 #if defined CUDA_MPIV || defined HIP_MPIV
-      if(quick_method%hasF) then
+      if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
       else
         do i=1,mpi_jshelln(mpirank)
@@ -436,15 +436,15 @@ end subroutine attrashell
      use allmod
      use quick_overlap_module, only: opf, overlap
      !    use xiaoconstants
+#ifdef MPIV
+     use mpi
+#endif
      implicit double precision(a-h,o-z)
      dimension aux(0:20)
      double precision AA(3),BB(3),CC(3),PP(3)
      common /xiaoattra/attra,aux,AA,BB,CC,PP,g
   
      double precision RA(3),RB(3),RP(3), valopf, g_table(200)
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
      Ax=xyz(1,quick_basis%katom(IIsh))
      Ay=xyz(2,quick_basis%katom(IIsh))

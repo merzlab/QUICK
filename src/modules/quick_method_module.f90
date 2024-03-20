@@ -7,6 +7,8 @@
 !
 #include "util.fh"
 
+#define FUNCTIONAL_ID_SIZE (10)
+
 module quick_method_module
     use quick_constants_module
     use quick_input_parser_module  
@@ -126,7 +128,7 @@ module quick_method_module
         logical :: uselibxc = .false.
         integer :: xc_polarization = 0
         !Following holds functional ids. Currently only holds two functionals.
-        integer, dimension(10) :: functional_id
+        integer, dimension(FUNCTIONAL_ID_SIZE) :: functional_id
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
@@ -192,13 +194,12 @@ module quick_method_module
         subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
             use quick_exception_module            
+            use mpi
 
             implicit none
 
             type(quick_method_type) self
             integer, intent(inout) :: ierr
-
-            include 'mpif.h'
 
             call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%HF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -267,7 +268,7 @@ module quick_method_module
             !mpi variables for libxc implementation
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%functional_id,FUNCTIONAL_ID_SIZE,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -1122,3 +1123,5 @@ module quick_method_module
 #endif
 
 end module quick_method_module
+
+#undef FUNCTIONAL_ID_SIZE

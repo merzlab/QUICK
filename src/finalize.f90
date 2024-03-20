@@ -127,13 +127,12 @@ end subroutine finalize
 subroutine quick_exit(io, ierr)
 
    use allmod
+#ifdef MPIV
+   use mpi
+#endif
    implicit none
    integer io           ! close this unit if greater than zero
    integer, intent(inout) :: ierr
-
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
 
    if (ierr /= 0) then
