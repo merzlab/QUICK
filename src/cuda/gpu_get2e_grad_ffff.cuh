@@ -651,6 +651,7 @@ int** const smem_int_ptr, QUICKDouble** const smem_dbl_ptr, unsigned char** cons
                           LOC2(DEV_SIM_CHAR_PTR_KLMN,0,JJJ-1,3,DEV_SIM_INT_NBASIS), LOC2(DEV_SIM_CHAR_PTR_KLMN,1,JJJ-1,3,DEV_SIM_INT_NBASIS), LOC2(DEV_SIM_CHAR_PTR_KLMN,2,JJJ-1,3,DEV_SIM_INT_NBASIS), \
                           J, coefAngularL, angularL, smem_char);
 
+
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
 //            if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
@@ -999,7 +1000,7 @@ __device__ __inline__ void iclass_grad_ffff
 unsigned int LL, const QUICKDouble DNMax, \
 QUICKDouble* const YVerticalTemp, QUICKDouble* const store, QUICKDouble* const store2, QUICKDouble* const storeAA, QUICKDouble*
 const storeBB, QUICKDouble* const storeCC, int* const smem_int, QUICKDouble* const smem_dbl, int** const smem_int_ptr, QUICKDouble**
-const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char){
+const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const smem_char, QUICKAtomicType** const smem_grad_ptr){
     /*
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
      and be careful with the index difference between Fortran and C++,
@@ -1624,45 +1625,45 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
 #endif    
    
 #ifdef USE_LEGACY_ATOMICS 
-/*
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart], AGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 1], AGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[AStart + 2], AGradz);
+
+    GRADADD(DEV_SIM_PTR_GRAD[AStart], AGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart], BGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 1], BGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[BStart + 2], BGradz);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart], BGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart], CGradx);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 1], CGrady);
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[CStart + 2], CGradz);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart], CGradx);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
+    GRADADD(DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
     
     
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(DEV_SIM_DBL_PTR_GRADULL[DStart + 2], (-AGradz-BGradz-CGradz));
-*/
+    GRADADD(DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    GRADADD(DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    GRADADD(DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));
+
 #else 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart], AGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 1], AGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[AStart + 2], AGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart], AGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart], BGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 1], BGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[BStart + 2], BGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart], BGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart], CGradx);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 1], CGrady);
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[CStart + 2], CGradz);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart], CGradx);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
+    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
 
 
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
-    atomicAdd(&DEV_SIM_DBL_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
+    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
 #endif
 
     return;
@@ -1680,7 +1681,7 @@ __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_oshell_kernel_f
 __global__ void 
 __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad_kernel_ffff(int *dev_int_data, 
 int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_data, int2
-**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, const int ffStart, const int sqrQshell)
+**dev_int2_ptr_data, unsigned char **dev_char_ptr_data, unsigned char *dev_char_data, QUICKAtomicType **dev_grad_ptr_data, const int ffStart, const int sqrQshell)
 #endif
 #endif
 {
@@ -1694,7 +1695,7 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
     unsigned char **smem_char_ptr = (unsigned char**) &smem_int2_ptr[ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     int *smem_int = (int*) &smem_char_ptr[ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB];
     unsigned char *smem_char=(unsigned char*) &smem_int[ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB];
-
+    QUICKAtomicType **smem_grad_ptr = (QUICKAtomicType**) &smem_char[ERI_GRAD_FFFF_SMEM_CHAR_SIZE];
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_DBL_SIZE ; i+=blockDim.x)
         smem_dbl[i]=dev_dbl_data[i];
@@ -1716,6 +1717,9 @@ int **dev_int_ptr_data, QUICKDouble *dev_dbl_data, QUICKDouble **dev_dbl_ptr_dat
 
     for(int i = threadIdx.x; i<ERI_GRAD_FFFF_SMEM_CHAR_SIZE ; i+=blockDim.x)
         smem_char[i]=dev_char_data[i];
+
+    for(int i = threadIdx.x; i<ERI_GRAD_FFFF_TPB*ERI_GRAD_FFFF_SMEM_PTR_SIZE ; i+=blockDim.x)
+        smem_grad_ptr[i]=dev_grad_ptr_data[i];
 
 __syncthreads();
 
@@ -1789,7 +1793,7 @@ DNMax) > DEV_SIM_DBL_GRADCUTOFF) {
                     if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
                     iclass_oshell_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
 DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
-DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char, smem_grad_ptr);
                     }
 #endif
 #else
@@ -1798,7 +1802,7 @@ DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr, 
 		    if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
                     iclass_grad_ffff(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, DEV_SIM_DBL_PTR_YVERTICALTEMP+offset,
 DEV_SIM_DBL_PTR_STORE+offset, DEV_SIM_DBL_PTR_STORE2+offset, DEV_SIM_DBL_PTR_STOREAA+offset, DEV_SIM_DBL_PTR_STOREBB+offset,
-DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char);
+DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,smem_char_ptr, smem_char, smem_grad_ptr);
 		    }
 #endif
 #endif
