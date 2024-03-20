@@ -15,7 +15,7 @@
 
     // [SS|SS] integral - Start
     QUICKDouble VY_0 = VY(0, 0, 0);
-    LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) += VY_0;
+    LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) STORE_OPERATOR VY_0;
     // [SS|SS] integral - End 
 
 }

@@ -1060,6 +1060,14 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
         }
     }
 
+    for (int i = 4; i< 120; i++) {
+        for (int j = 4; j< 120; j++) {
+//          if (i < STOREDIM && j < STOREDIM ) {
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+//          }
+        }
+    }
+
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
@@ -1162,16 +1170,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                 }
                 
                 //QUICKDouble store2[STOREDIM*STOREDIM];
-                
-                
-                for (int i = 4; i< 120; i++) {
-                    for (int j = 4; j< 120; j++) {
-//                        if (i < STOREDIM && j < STOREDIM ) {
-                            LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
-//                        }
-                    }
-                }
-                
                 
 #if defined int_spdf4
 
@@ -1470,8 +1468,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                                     QUICKDouble Yccx, Yccy, Yccz;
 
 
-
-
                                     hrrwholegrad2_ffff
                                     (&Yaax, &Yaay, &Yaaz, \
                                                   &Ybbx, &Ybby, &Ybbz, \
@@ -1482,8 +1478,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
                                                   RCx, RCy, RCz, RDx, RDy, RDz, smem_int, smem_int_ptr, smem_dbl_ptr, smem_char_ptr, smem_char);
 
-#if defined int_spdf3 || defined int_spdf4
-#endif                                    
                                     QUICKDouble constant = 0.0 ;
                                     
 #ifdef OSHELL
