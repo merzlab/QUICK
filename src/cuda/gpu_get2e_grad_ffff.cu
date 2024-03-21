@@ -52,12 +52,13 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #endif
 
 //#define USE_ERI_GRAD_STOREADD
-
+/*
 #ifdef USE_ERI_GRAD_STOREADD
 #define STORE_OPERATOR +=
 #else
 #define STORE_OPERATOR =  
 #endif
+*/
 
 #define ERI_GRAD_FFFF_TPB 32
 #define ERI_GRAD_FFFF_BPSM 8

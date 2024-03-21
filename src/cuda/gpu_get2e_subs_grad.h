@@ -347,6 +347,9 @@ __device__ __forceinline__ void iclass_grad_spd
     for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
         for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
                 if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
                 }
@@ -479,13 +482,14 @@ __device__ __forceinline__ void iclass_grad_spd
 */
 
 //#ifdef USE_ERI_GRAD_STOREADD
-                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                                 LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
                 }
+*/
 //#endif
       
 #ifdef int_sp 
@@ -876,6 +880,9 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
         for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
                 if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
                 }
@@ -891,6 +898,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
             }
         }
     }    
+
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
@@ -994,7 +1002,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 
                 //QUICKDouble store2[STOREDIM*STOREDIM];
                 
-                
+/*                
                 for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM ) {
@@ -1002,7 +1010,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                         }
                     }
                 }
-                
+*/                
                 
 #ifdef int_spdf
                 ERint_grad_vertical_dddd_1(I, J+1, K, L+1, II, JJ, KK, LL, \
@@ -1016,6 +1024,14 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf3
 
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
+                        if (i < STOREDIM && j < STOREDIM ) {
+                            LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+                        }
+                    }
+                }
+*/
 
                 ERint_vertical_spdf_1_2(I, J+1, K, L+1, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
@@ -1461,36 +1477,14 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                     QUICKDouble Ybbx, Ybby, Ybbz;
                                     QUICKDouble Yccx, Yccy, Yccz;
 
-bool bprint=false;
-
-//if(II == 9 && JJ == 41 && KK == 9 && LL == 41 && III == 26 && JJJ == 126 && KKK == 26 && LLL == 126) bprint=true;
-//if( I == 3 && J == 3 && K == 3 && L == 3) bprint=true;
 
 #ifdef  int_spdf
-//if(bprint) printf("int_spdf bprint \n");
                                     hrrwholegrad2_1
 #elif defined int_spdf2
 
-//if(bprint) printf("int_spdf2 bprint \n");
                                     hrrwholegrad2_2
 #else
 
-
-if(bprint){
-
-                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
-                    for (int j = Sumindex[I+1]; j< Sumindex[I+J+3]; j++) {
-                        if (i < STOREDIM && j < STOREDIM) {
-//                            printf("STOREAA   %d %d %d %d   %d   %d   %.9f \n",Sumindex[K], Sumindex[K+L+2],
-//Sumindex[I], Sumindex[I+J+2], j, i, LOCSTORE(storeAA, j, i , STOREDIM, STOREDIM));
-                        }
-                    }
-                } 
-
-}
-
-
-//if(bprint) printf("calling hrrwholegrad2 bprint \n");
 
                                     hrrwholegrad2
 #endif
@@ -1501,14 +1495,8 @@ if(bprint){
                                                   III, JJJ, KKK, LLL, IJKLTYPE, \
                                                   store, storeAA, storeBB, storeCC, \
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
-                                                  RCx, RCy, RCz, RDx, RDy, RDz, bprint);
+                                                  RCx, RCy, RCz, RDx, RDy, RDz);
 
-#if defined int_spdf3 || defined int_spdf4
-if(bprint){ 
-//if( I == 3 && J == 3 && K == 3 && L == 3){
-//printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
-}
-#endif                                    
                                     QUICKDouble constant = 0.0 ;
                                     
 #ifdef OSHELL
@@ -2417,7 +2405,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                              QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
+                                             QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
@@ -2453,14 +2441,10 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
-
             }
         }
     }
    
-//if(bprint) printf("Yaax: %.9f \n", *Yaax );
  
     numAngularL = lefthrr(RAx, RAy, RAz, RBx, RBy, RBz, \
                           LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + 1, LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), \
@@ -2470,7 +2454,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2483,7 +2466,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2496,7 +2478,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2509,7 +2490,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2522,7 +2502,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2541,7 +2520,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaax = *Yaax - LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2559,7 +2537,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaay = *Yaay - LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2576,7 +2553,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yaaz = *Yaaz - LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2596,7 +2572,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybbx = *Ybbx - LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2615,7 +2590,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybby = *Ybby - LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2633,7 +2607,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Ybbz = *Ybbz - LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                     
                 }
             }
@@ -2663,7 +2636,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2679,7 +2651,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             for (int j = 0; j<numAngularR; j++) {
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccx = *Yccx - LOC2(devSim.KLMN,0,KKK-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2699,7 +2670,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2716,7 +2686,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccy = *Yccy - LOC2(devSim.KLMN,1,KKK-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2735,7 +2704,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                 *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
             }
         }
     }
@@ -2752,7 +2720,6 @@ if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STORED
                 
                 if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
                     *Yccz = *Yccz - LOC2(devSim.KLMN,2,KKK-1,3,devSim.nbasis) * coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
-if(bprint) printf("Y: %d %d %d %d %.9f \n", angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM, LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) );
                 }
             }
         }
@@ -2791,7 +2758,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
@@ -2899,7 +2866,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
-                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz, bool bprint)
+                                              QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
     unsigned char angularL[12], angularR[12];
     QUICKDouble coefAngularL[12], coefAngularR[12];
