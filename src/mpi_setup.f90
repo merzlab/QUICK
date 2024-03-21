@@ -588,8 +588,10 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    else
 
       do i=1,mpisize-1
-         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
-         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
 
          do j=1,quick_dft_grid%init_ngpts
             quick_xcg_tmp%sswt(j)=quick_xcg_tmp%sswt(j)+quick_xcg_tmp%tmp_sswt(j)

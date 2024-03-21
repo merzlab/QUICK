@@ -296,7 +296,7 @@ end subroutine hfoperatordc
 subroutine mpi_hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
-    use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cutoff_module, only: cshell_density_cutoff
    use quick_cshell_eri_module, only: getCshellEriEnergy
    use mpi
    implicit double precision(a-h,o-z)
