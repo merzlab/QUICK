@@ -1139,6 +1139,10 @@ set_uspec_hip_arch(){
 }
 
 if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
+  echo  "Error: HIP support is currently unavailable in this QUICK release. "
+  echo  "       Support will be added back in a future release. "
+  exit 1
+
   if [ -z "$ROCM_PATH" ]; then
     echo  "Error: ROCM_PATH environment variable is not set."
     echo  "Please make sure ROCm toolkit is loaded."
