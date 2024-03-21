@@ -23,7 +23,7 @@
       call MPI_GET_PROCESSOR_NAME(pname,namelen,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
-      if(.not. allocated(MPI_STATUS)) allocate(MPI_STATUS(MPI_STATUS_SIZE))
+      if(.not. allocated(QUICK_MPI_STATUS)) allocate(QUICK_MPI_STATUS(MPI_STATUS_SIZE))
     
       if (mpirank.eq.0) then
         master=.true.
@@ -375,7 +375,7 @@
         mgpu_ids(1)=mgpu_id
 
         do i=1,mpisize-1
-          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
         enddo
         
       endif
@@ -588,8 +588,10 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    else
 
       do i=1,mpisize-1
-         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
 
          do j=1,quick_dft_grid%init_ngpts
             quick_xcg_tmp%sswt(j)=quick_xcg_tmp%sswt(j)+quick_xcg_tmp%tmp_sswt(j)
