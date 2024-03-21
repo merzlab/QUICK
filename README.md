@@ -24,20 +24,21 @@ Features
 * Supports QM/MM calculations with Amber22 and later
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
-* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs
+* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs (HIP currently disabled)
 * Multi-GPU support via MPI + CUDA/HIP, also across multiple compute nodes
 
 Limitations
 -----------
-* Supports energy/gradient calculations with basis functions up to d
+* Supports energy/gradient calculations with basis functions up to f
 * Supports only Cartesian basis functions (no spherical harmonics)
 * Effective core potentials (ECPs) are not supported
 * DFT calculations are performed exclusively using the SG1 grid system 
 * No meta-GGA functionals, no range-separated hybrid functionals
+* HIP (AMD GPU support) is currently disabled (available in QUICK-23.08 but not QUICK-24.03)
 
 Installation
 ------------
-Supported platforms: Linux (x86 and ARM), macOS (only Intel x86 tested)
+Supported platforms: Linux (x86 and ARM), macOS (x86 and ARM)
 
 * [Installation Guide](https://quick-docs.readthedocs.io/en/23.8.0/installation-guide.html#installation-guide)
    1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/23.8.0/installation-guide.html#compatible-compilers-and-hardware)
@@ -56,10 +57,12 @@ A list of installation and runtime issues can be found [here](https://quick-docs
 
 Citation
 --------
-Please cite QUICK-23.08 as follows.
+Please cite QUICK-24.03 as follows.
 
 Manathunga, M.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
-Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-23.08 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2023.
+Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03 
+University of California San Diego, CA and
+Michigan State University, East Lansing, MI, 2024.
 
 If you perform density functional theory calculations please also cite:
 
@@ -99,9 +102,16 @@ Cruzeiro, V. W. D.; Manathunga, M.; Merz, K. M.; Götz, A. W.
 Open-Source Multi-GPU-Accelerated QM/MM Simulations with AMBER and QUICK.
 [*J. Chem. Inf. Model.* 61, 2109–2115 (2021)](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.1c00169).
 
-If you perform geometry optimization calculations using the DL-FIND optimizer please also cite:
+If you perform geometry optimizations please cite:
 
-Kästner, J.; Carr, J. M.; Keal, T. W.; Thiel, W.; Wander, A.; Sherwood, P. DL-FIND: An Open-Source Geometry Optimizer for Atomistic Simulations. 
+Shajan, A.; Manathunga, M.; Götz, A.W.; Merz, K.M.
+Geometry optimization: A comparison of different open-source geometry optimizers.
+[*J. Chem. Theory Comput.* 19, 7533-7541 (2023)](https://doi.org/10.1021/acs.jctc.3c00188).
+
+If you use the DL-FIND for the geometry optimizations please also cite:
+
+Kästner, J.; Carr, J. M.; Keal, T. W.; Thiel, W.; Wander, A.; Sherwood, P.
+DL-FIND: An Open-Source Geometry Optimizer for Atomistic Simulations. 
 [*J. Phys. Chem. A* 113, 11856-11865 (2009)](https://pubs.acs.org/doi/10.1021/jp9028968).
 
 License
