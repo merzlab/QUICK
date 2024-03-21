@@ -225,6 +225,8 @@ if(CUDA)
 endif()
 
 if(HIP)
+    # HIP builds currently unavailable (TODO: fix post release)
+    message(FATAL_ERROR "Error: HIP support is currently unavailable in this QUICK release. Support will be added back in a future release.")
 
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
