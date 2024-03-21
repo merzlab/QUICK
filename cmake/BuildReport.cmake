@@ -165,4 +165,13 @@ function(print_build_report)
 	if(DEFINED PRINT_PACKAGING_REPORT AND PRINT_PACKAGING_REPORT)
 		print_packaging_report()
 	endif()
+
+
+	if(ENABLEF AND (DEFINED CUDA OR DEFINED HIP))
+		message("")
+		colormsg(HIRED "You have enabled F function support for GPUs. The current version of the F function ")
+		colormsg(HIRED "code takes very long to compile (hours) and requires a large amount of RAM. ")
+		colormsg(HIRED "Work is planned to optimize this in future releases. ")
+		message("")
+	endif()
 endfunction(print_build_report)

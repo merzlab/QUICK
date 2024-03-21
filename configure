@@ -1169,6 +1169,14 @@ if [ "$hip" = 'yes' ] || [ "$hipmpi" = 'yes' ]; then
       exit 1
     fi
 
+    # HIP codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (gfx906 and gfx908)
+    if [ "$enablef" = 'yes' -a [ "$uspec_arch" -ne 'true' -o "$cuda_arch" = "gfx906" -o "$cuda_arch" = "gfx908" ] ]; then
+      echo  "Error: Unsupported HIP options (ENABLEF with -DUSE_LEGACY_ATOMICS). "
+      echo  "       QUICK support for f-functions requires newer HIP architecture targets not using LEGACY_ATOMICS. "
+      echo  "       Please specify architectures with --arch not needing LEGACY_ATOMICS (post-gfx908) or disable f-function support. "
+      exit 1
+    fi
+
     set_uspec_hip_arch
 
     if [ -z $verbose ]; then
