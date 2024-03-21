@@ -398,7 +398,8 @@ extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* h
 	gpu -> gpu_sim.hyb_coeff = *hyb_coeff;
     }
 
-    gpu -> gpu_sim.is_oshell = *is_oshell;
+    bool interpreted_is_oshell = *is_oshell != 0;
+    gpu -> gpu_sim.is_oshell = interpreted_is_oshell;
 }
 
 #ifdef CEW
