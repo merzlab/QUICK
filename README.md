@@ -24,7 +24,7 @@ Features
 * Supports QM/MM calculations with Amber22 and later
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
-* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs (HIP currently disabled)
+* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs (HIP available in QUICK-23.08, currently disabled)
 * Multi-GPU support via MPI + CUDA/HIP, also across multiple compute nodes
 
 Limitations
