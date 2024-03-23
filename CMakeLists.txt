@@ -289,6 +289,9 @@ if(INSIDE_AMBER)
 	# install tests dir
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
+        # install runtest script
+        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests)
+
 else()
 	# Standalone install
 
