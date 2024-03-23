@@ -701,8 +701,13 @@ done
 #  !---------------------------------------------------------------------!
 
 if [ ! -d "$qbindir" ]; then
-  echo  "Error: QUICK bin folder not found. "
-  exit 1
+  if [ "$AMBERHOME" != "" ]; then
+    # Assume we are in Amber
+    qbindir=$AMBERHOME/bin
+  else
+    echo  "Error: QUICK bin folder not found. "
+    exit 1
+  fi
 fi
 
 if [ ! -d "$qbasisdir" ]; then
