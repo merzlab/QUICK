@@ -629,11 +629,10 @@ module quick_gridpoints_module
       !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
       ! 2
       use allmod
-      implicit double precision(a-h,o-z)
-   
 #ifdef MPIV
-      include 'mpif.h'
+      use mpi
 #endif
+      implicit double precision(a-h,o-z)
    
 #ifdef MPIV
       if(master) then

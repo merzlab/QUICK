@@ -15,12 +15,11 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+#ifdef MPIV
+   use mpi
+#endif
 
    implicit none
-
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
    logical :: present
    integer :: i,j,k,itemp
@@ -64,6 +63,14 @@ subroutine getMol(ierr)
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
    call readbasis(natom,0,0,0,0,ierr)
+   ! F implementation of GPU ERI code currently doesnt support open shell
+   ! gradient calculations
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+   if(quick_method%hasF .and. quick_method%unrst .and. quick_method%grad) then
+       ierr=39
+       return
+   endif
+#endif
    CHECK_ERROR(ierr)
 
    quick_molspec%nbasis   => nbasis

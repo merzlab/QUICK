@@ -7,6 +7,8 @@
 !
 #include "util.fh"
 
+#define FUNCTIONAL_ID_SIZE (10)
+
 module quick_method_module
     use quick_constants_module
     use quick_input_parser_module  
@@ -61,7 +63,7 @@ module quick_method_module
         logical :: zmat = .false.      ! Z-matrix
         logical :: dipole = .false.    ! Dipole Momenta
         logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
-        logical :: fFunXiao            ! If f orbitial is contained
+        logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false.
                                        ! calculate density lap
@@ -93,6 +95,7 @@ module quick_method_module
 
         ! max cycles for scf or opt
         integer :: iscf = 200          ! max scf cycles
+        integer :: iscf_sad = 200      ! max scf cycles for sad guess
         integer :: iopt = 0            ! max opt cycles
 
         ! Maximum number of DIIS error vectors for scf convergence.
@@ -129,7 +132,7 @@ module quick_method_module
         logical :: uselibxc = .false.
         integer :: xc_polarization = 0
         !Following holds functional ids. Currently only holds two functionals.
-        integer, dimension(10) :: functional_id
+        integer, dimension(FUNCTIONAL_ID_SIZE) :: functional_id
         double precision :: x_hybrid_coeff  = 1.0d0 !Amount of exchange contribution. 1.0 for HF.
         integer :: nof_functionals = 0
 
@@ -193,13 +196,12 @@ module quick_method_module
         subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
             use quick_exception_module            
+            use mpi
 
             implicit none
 
             type(quick_method_type) self
             integer, intent(inout) :: ierr
-
-            include 'mpif.h'
 
             call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%HF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -234,7 +236,7 @@ module quick_method_module
             call MPI_BCAST(self%ecp,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%custECP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%printEnergy,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%fFunXiao,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDens,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -250,6 +252,7 @@ module quick_method_module
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%maxdiisscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ncyc,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -271,7 +274,7 @@ module quick_method_module
             !mpi variables for libxc implementation
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%functional_id,shape(self%functional_id),mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%functional_id,FUNCTIONAL_ID_SIZE,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -868,7 +871,7 @@ module quick_method_module
             self%ecp = .false.       ! ECP
             self%custECP = .false.   ! Custom ECP
             self%printEnergy = .true.! Print Energy each cycle
-            self%fFunXiao = .false.            ! If f orbitial is contained
+            self%hasF = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
             self%writePMat = .false.   ! Output density matrix
@@ -884,6 +887,7 @@ module quick_method_module
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200
+            self%iscf_sad = 200
             self%maxdiisscf = 10
             self%iopt = 0
             self%ncyc = 3
@@ -1155,3 +1159,5 @@ module quick_method_module
 #endif
 
 end module quick_method_module
+
+#undef FUNCTIONAL_ID_SIZE

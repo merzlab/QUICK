@@ -127,6 +127,18 @@ contains
     case(35)
       msg='Requested export file format is not available.'
 
+    case(36)
+      msg='Support for F functions is disabled. Please recompile the code with support for F functions.'
+
+    case(37)
+      msg='G functions are not supported. Please choose a different basis set.'
+
+    case(38)
+      msg='Support for F functions is currently not available in cEW-enabled QM/MM.'      
+
+    case(39)
+      msg='Support for F functions is currently not available for GPU accelerated UHF/UDFT gradients.'
+
     case default
       msg='Unknown error.'
 

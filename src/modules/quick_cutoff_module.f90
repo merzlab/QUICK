@@ -53,11 +53,11 @@ end subroutine deallocate_quick_cutoff
 
 subroutine schwarzoff
   use allmod
+#ifdef MPIV
+  use mpi
+#endif
 
   Implicit none
-#ifdef MPIV
-   include 'mpif.h'
-#endif
 
   integer ii,jj
   double precision Ymaxtemp

@@ -33,7 +33,7 @@ subroutine calmp2
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
   ! if with f orbital
-  if(quick_method%ffunxiao)then
+  if(quick_method%hasF)then
      nbasistemp=6
   else
      nbasistemp=10
@@ -254,9 +254,8 @@ subroutine MPI_calmp2
   use allmod
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
+  use mpi
   implicit double precision(a-h,o-z)
-
-  include "mpif.h"
 
   double precision cutoffTest,testtmp,testCutoff
   double precision, allocatable:: temp4d(:,:,:,:)
@@ -294,7 +293,7 @@ subroutine MPI_calmp2
   nstep=min(int(1.5d0/ememorysum),Nelec/2)
 
   ! if with f orbital
-  if(quick_method%ffunxiao)then
+  if(quick_method%hasF)then
      nbasistemp=6
   else
      nbasistemp=10
@@ -486,7 +485,7 @@ subroutine MPI_calmp2
      else
         do i=1,mpisize-1
            ! receive integrals from slave nodes
-           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
            ! and sum them into operator
            do j1=1,nbasis
               do k1=1,ivir
