@@ -66,7 +66,7 @@ module quick_oeproperties_module
  subroutine print_esp(esp_nuclear, esp_electrostatic, ierr)
    use quick_molspec_module
    use quick_method_module
-   use quick_files_module, only: ioutfile
+   use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
 
    implicit none
@@ -87,31 +87,70 @@ module quick_oeproperties_module
    if (.not. allocated(esp_nuclear)) then
    allocate(esp_nuclear(igridpoint))
  endif
- 
- ! If ESP_GRID is true, print to table X, Y, Z, V(r)
+
+  ! If ESP_GRID is true, print to table X, Y, Z, V(r)
  if (quick_method%esp_grid) then
-      write (ioutfile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-      write (ioutfile,'(100("-"))')
-      write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
-      write (ioutfile,'(100("-"))')
+   write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+   write(ioutfile,'(/, " NUMBER OF GRID POINTS = ",i4)') quick_molspec%nextpoint
+   write (ioutfile,'(84("-"))')
+   write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
+   write (ioutfile,'(84("-"))')
+   write (ioutfile,'(/," ESP is printed to PROPERTIES file ")')
+   write (ioutfile,'(84("-"))')
 
-      do igridpoint = 1, quick_molspec%nextpoint
-       !  do i=1,quick_molspec%nextpoint
-       !     write(ioutfile,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
-       !  enddo
-        Cx = quick_molspec%extxyz(1, igridpoint)
-        Cy = quick_molspec%extxyz(2, igridpoint)
-        Cz = quick_molspec%extxyz(3, igridpoint)
-        if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
-           write(ioutfile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-            esp_nuclear(igridpoint), esp_electrostatic(igridpoint), (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
-        else
-           write(ioutfile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
-        endif
+   write (ioutfile,'(/," THANK YOU FOR USING THE QUICK PROPERTIES MODULE ")')
+   write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+   ! write (iPropFile,'(100("-"))')
+   write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
+   ! write (iPropFile,'(100("-"))')
 
-      end do
-     write (ioutfile,'(100("-"))')
-  endif
+   do igridpoint = 1, quick_molspec%nextpoint
+     Cx = quick_molspec%extxyz(1, igridpoint)
+     Cy = quick_molspec%extxyz(2, igridpoint)
+     Cz = quick_molspec%extxyz(3, igridpoint)
+     if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
+        write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+         (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+     else
+        write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A'
+     endif
+
+   end do
+!  write (iPropFile,'(/," THANK YOU FOR USING QUICK PROPERTIES MODULE!  HAVE A GREAT DAY! ")')
+endif
+
+!  ! If ESP_GRID is true, print to table X, Y, Z, V(r)
+!  if (quick_method%esp_grid) then
+!       write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+!       write (ioutfile,'(84("-"))')
+!       write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+!       write (ioutfile,'(84("-"))')
+!       write (ioutfile,'(/," ESP is printed to PROPERTIES file ")')
+!       write (ioutfile,'(84("-"))')
+
+!       write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+!       write (iPropFile,'(100("-"))')
+!       write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+!      ! write (iPropFile,'(100("-"))')
+
+!       do igridpoint = 1, quick_molspec%nextpoint
+!        !  do i=1,quick_molspec%nextpoint
+!        !     write(ioutfile,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+!        !  enddo
+!         Cx = quick_molspec%extxyz(1, igridpoint)
+!         Cy = quick_molspec%extxyz(2, igridpoint)
+!         Cz = quick_molspec%extxyz(3, igridpoint)
+!         if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
+!            write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+!             esp_nuclear(igridpoint), esp_electrostatic(igridpoint), (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+!         else
+!            write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
+!         endif
+
+!       end do
+!     !  write (iPropFile,'(100("-"))')
+!      write (iPropFile,'(/," THANK YOU FOR USING QUICK PROPERTIES MODULE!  HAVE A GREAT DAY! ")')
+!   endif
   
  ! If debug is enabled, print a debug message
  !   if (debug) then
@@ -405,7 +444,7 @@ module quick_oeproperties_module
    use allmod ! revisit, avoid allmod
    use quick_molspec_module
    use quick_overlap_module, only: gpt, opf, overlap_core
-   use quick_files_module, only: ioutfile
+   use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
    implicit double precision(a-h,o-z)
    
