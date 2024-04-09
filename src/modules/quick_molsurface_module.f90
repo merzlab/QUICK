@@ -53,7 +53,6 @@ module quick_molsurface_module
 !        319.8, 197.2,   162,   112,    98,    87,    79,    72,    66, 26.14,    55,    46,    65,   53,   43,    38, 32.9,   27.32,
 !        400
 
-
 !        # list of van der Waals radii (vdw) (angstroms) in order of atomic number
 !        vdw_radii = [ # Source: ptable.com for elements unless in list below.
 !                      # Be, B, Al, Ca (Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3658832/)
