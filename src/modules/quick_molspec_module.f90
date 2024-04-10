@@ -389,7 +389,7 @@ contains
        call rdword(keywd,i,j)
        if (is_blank(keywd,1,80)) exit
 
-       do k=0,71
+       do k=0,92
           if (keywd(i:j) == symbol(k)) then
              natom=natom+1
              ! check if atom type has been shown before
