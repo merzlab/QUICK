@@ -432,7 +432,8 @@ module quick_oeproperties_module
               if (III /= JJJ) dense_sym_factor = 2.0d0
             !  end if
 
-                 esp = esp + dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0) 
+                 esp = esp + dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
+                       *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0) 
             enddo
          enddo
 
