@@ -53,6 +53,9 @@ module quick_method_module
         logical :: grad = .false.      ! if calculate gradient
         logical :: analGrad =  .false. ! Analytical Gradient
         logical :: analHess =  .false. ! Analytical Hessian Matrix
+        logical :: esp_grid =  .false.      ! Electrostatic potential on a grid (ESP)
+        logical :: efield_grid =  .false.   ! Electrostatic field (EFIELD)
+        logical :: efg_grid =  .false.      ! Electrostatic field gradient (EFG)
         logical :: diisOpt =  .false.  ! DIIS Optimization
         logical :: core =  .false.     ! Add core
         logical :: annil =  .false.    ! Annil Spin Contamination
@@ -70,7 +73,8 @@ module quick_method_module
                                        ! Density lapcacian file gridspacing
 
         logical :: PDB = .false.       ! PDB input
-        logical :: extCharges = .false.! external charge
+        logical :: extCharges = .false.! external charge (x,y,z,q)
+        logical :: ext_grid = .false.  ! external grid points (x,y,z)
 
 
         ! those methods are mostly for research use
@@ -98,7 +102,7 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =3
+        integer :: ncyc = 3
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
@@ -219,6 +223,9 @@ module quick_method_module
             call MPI_BCAST(self%grad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%diisOpt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%core,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%annil,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -236,6 +243,7 @@ module quick_method_module
             call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%ext_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -300,7 +308,7 @@ module quick_method_module
             if (io.ne.0) then
             write(io,'(" ============== JOB CARD =============")')
             if (self%HF) then
-                write(io,'(" METHOD = HATREE FOCK")')
+                write(io,'(" METHOD = HARTREE FOCK")')
             else if (self%MP2) then
                 write(io,'(" METHOD = SECOND ORDER PERTURBATION THEORY")')
             else if (self%DFT) then
@@ -418,6 +426,7 @@ module quick_method_module
             if (self%custECP)   write(io,'(" CUSTOM ECP BASIS SET")')
 
             if (self%extCharges)write(io,'(" EXTERNAL CHARGES")')
+            if (self%ext_grid)write(io,'(" EXTERNAL GRID POINTS")')
             if (self%core)      write(io,'(" SUM INNER ELECTRONS INTO CORE")')
             if (self%debug)     write(io,'(" DEBUG MODE")')
 
@@ -453,6 +462,11 @@ module quick_method_module
             endif
 
             if (self%grad)      write(io,'(" GRADIENT CALCULATION")')
+
+            ! computing esp, efield and efg
+            if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
+            if (self%efield_grid)      write(io,'(" ELECTROSTATIC FIELD CALCULATION")')
+            if (self%efg_grid)      write(io,'(" ELECTROSTATIC FIELD GRADIENT CALCULATION")')
 
             if (self%DIVCON) then
                 write(io,'(" DIV & CON METHOD")',advance="no")
@@ -632,6 +646,7 @@ module quick_method_module
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
+            if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
@@ -780,6 +795,25 @@ module quick_method_module
                     ierr=35
                 endif
             endif
+
+
+          ! Electrostatic Potential(ESP), Field (EF), Field Gradient (EFG) on a grid
+           if (index(keyWD,'EFG').ne.0) then
+               self%esp_grid=.true.
+               self%efield_grid=.true.
+               self%efg_grid=.true.
+               self%ext_grid=.true.
+           endif
+           if (index(keyWD,'EFIELD').ne.0) then
+               self%esp_grid=.true.
+               self%efield_grid=.true.
+               self%ext_grid=.true.
+           endif
+           if (index(keyWD,'ESP').ne.0) then
+               self%esp_grid=.true.
+               self%ext_grid=.true.
+           endif
+
             CHECK_ERROR(ierr)
 
         end subroutine read_quick_method
@@ -813,17 +847,20 @@ module quick_method_module
             self%PBSOL = .false.     ! PB Solvent
             self%UNRST =  .false.    ! Unrestricted
 
-            self%debug =  .false.    ! debug mode
-            self%nodirect = .false.  ! conventional SCF
-            self%readDMX =  .false.  ! flag to read density matrix
-            self%readSAD =  .true.   ! flag to read sad guess
-            self%writeSAD = .false.  ! flag to write sad guess
-            self%diisSCF =  .false.  ! DIIS SCF
-            self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
-            self%opt =  .false.      ! optimization
-            self%grad =  .false.     ! gradient
-            self%analGrad =  .true. ! Analytical Gradient
-            self%analHess =  .false. ! Analytical Hessian Matrix
+            self%debug =  .false.     ! debug mode
+            self%nodirect = .false.   ! conventional SCF
+            self%readDMX =  .false.   ! flag to read density matrix
+            self%readSAD =  .true.    ! flag to read sad guess
+            self%writeSAD = .false.   ! flag to write sad guess
+            self%diisSCF =  .false.   ! DIIS SCF
+            self%prtGap =  .false.    ! flag to print HOMO-LUMO gap
+            self%opt =  .false.       ! optimization
+            self%grad =  .false.      ! gradient
+            self%analGrad =  .true.   ! Analytical Gradient
+            self%analHess =  .false.  ! Analytical Hessian Matrix
+            self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
+            self%efield_grid = .false.     ! Electric field (EF) corresponding to ESP 
+            self%efg_grid = .false.        ! Electric field gradient (EFG)
 
             self%diisOpt =  .false.  ! DIIS Optimization
             self%core =  .false.     !
@@ -839,6 +876,7 @@ module quick_method_module
             self%calcDensLap = .false. ! calculate density lap
             self%writePMat = .false.   ! Output density matrix
             self%extCharges = .false.  ! external charge
+            self%ext_grid = .false.    ! external grid points
             self%PDB = .false.         ! PDB input
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole

@@ -218,9 +218,17 @@ subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,
 !              quick_qm_struct%o(JJJ,III),Xconstant,quick_basis%cons(III),quick_basis%cons(JJJ)&
 !              ,attraxiao(itemp1,itemp2,0) 
 
-               quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
+                quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
                      Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
-!write(*,*) "Madu O:", quick_qm_struct%o(JJJ,III)
+
+                  
+            !   write(ioutfile, *) 'dense_n = ', quick_qm_struct%dense(JJJ,III)
+            !   write(ioutfile, *) 'xconstnt_nuc = ', Xconstant
+            !   write(ioutfile, *) 'cons1_nuc = ', quick_basis%cons(III)
+            !   write(ioutfile, *) 'cons2_nuc = ', quick_basis%cons(JJJ)
+            !   write(ioutfile, *) 'attraxiao_nuc = ', attraxiao(itemp1,itemp2,0)
+            
+                     !write(*,*) "Madu O:", quick_qm_struct%o(JJJ,III)
             enddo
          enddo
 
