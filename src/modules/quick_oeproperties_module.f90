@@ -27,12 +27,12 @@ module quick_oeproperties_module
  !----------------------------------------------------------------------------!
  subroutine compute_esp(ierr)
    use allmod
-   implicit none
    
 #ifdef MPIV
    use mpi
 #endif
  
+   implicit none
    integer, intent(out) :: ierr
    logical :: debug = .true.
    integer :: IIsh, JJsh
