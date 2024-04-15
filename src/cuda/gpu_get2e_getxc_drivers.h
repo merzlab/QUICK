@@ -160,7 +160,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
         getGrad(gpu);
     }
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         upload_sim_to_constant_ffff(gpu);
        
@@ -229,7 +229,7 @@ extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
 {
     PRINTDEBUG("BEGIN TO RUN GETXC")
 
-    gpu -> DFT_calculated       = new cuda_buffer_type<DFT_calculated_type>(1, 1);
+    gpu -> DFT_calculated       = new gpu_buffer_type<DFT_calculated_type>(1, 1);
 
 #ifdef USE_LEGACY_ATOMICS
     QUICKULL valUII = (QUICKULL) (fabs ( *Eelxc * OSCALE + (QUICKDouble)0.5));
@@ -402,7 +402,7 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 {
 
 #if (defined CEW) && !(defined USE_LEGACY_ATOMICS)
-    gpu -> cew_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+    gpu -> cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
 #endif
 
         // calculate smem size
@@ -459,11 +459,11 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
 
-//    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 //#ifdef LEGACY_ATOMIC_ADD
 //    gpu -> gpu_calculated -> o        ->  DeleteGPU();
-//    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> oULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
 //    gpu -> gpu_calculated -> oULL     -> Upload();
 //    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
 /*#else
@@ -532,10 +532,10 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 
     // upload point charge grad vector
     if(gpu -> nextatom > 0) {
-        gpu -> ptchg_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+        gpu -> ptchg_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
 
 #ifdef USE_LEGACY_ATOMICS
-        gpu -> ptchg_gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu -> nextatom);       
+        gpu -> ptchg_gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu -> nextatom);       
         gpu -> ptchg_gradULL -> Upload();
         gpu -> gpu_sim.ptchg_gradULL =  gpu -> ptchg_gradULL -> _devData;
         gpu -> ptchg_grad -> DeleteGPU();
@@ -633,11 +633,11 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 extern "C" void gpu_get_lri_(QUICKDouble* o)
 {
   
-//    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 //#ifdef LEGACY_ATOMIC_ADD
 //    gpu -> gpu_calculated -> o        ->  DeleteGPU();
-//    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> oULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
 //    gpu -> gpu_calculated -> oULL     -> Upload();
 //    gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
 /*#else
@@ -798,7 +798,7 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
 {
 
 #ifndef USE_LEGACY_ATOMICS
-    gpu -> cew_grad = new cuda_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+    gpu -> cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
 #else
     memset(gpu -> grad -> _hostData, 0, sizeof(QUICKDouble)*3*gpu->natom);
 #endif

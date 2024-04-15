@@ -1,14 +1,16 @@
-set(QUICK_HIP_SOURCE gpu.cu gpu_type.cu gpu_get2e.cu gpu_oei.cu gpu_lri.cu xc_redistribute.cpp)
+set(QUICK_HIP_SOURCE gpu.cu gpu_type.cu gpu_get2e.cu gpu_oei.cu gpu_lri.cu xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
      
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
-cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels STATIC ${QUICK_HIP_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DHIP)
+cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels STATIC ${QUICK_HIP_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DGPU -D${QUICK_GPU_PLATFORM})
+target_include_directories(quick_${QUICK_GPU_TARGET_NAME}_kernels PUBLIC iclass)
 target_link_libraries(quick_${QUICK_GPU_TARGET_NAME}_kernels xc_gpu xc_${QUICK_GPU_TARGET_NAME})
 
 if(MPI)
-	cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi STATIC ${QUICK_HIP_SOURCE} 
-	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DHIP_MPIV) 
-	target_compile_definitions(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi PRIVATE HIP_MPIV)
+	cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi STATIC ${QUICK_HIP_SOURCE}
+		OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DMPIV_GPU -D${QUICK_GPU_PLATFORM}_MPIV) 
+	target_compile_definitions(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 	set_property(TARGET quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+        target_include_directories(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi PUBLIC iclass)
 	target_link_libraries(quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi xc_gpu xc_${QUICK_GPU_TARGET_NAME})
 
 	# the generator expressions in our MPI_CXX variable don't seem to work with CUDA files, so

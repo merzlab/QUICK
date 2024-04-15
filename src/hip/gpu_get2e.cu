@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  *  gpu_get2e.cpp
  *  new_quick
@@ -12,7 +13,7 @@
 #include "gpu.h"
 #include <hip/hip_runtime.h>
 
-//#ifdef HIP_SPDF
+//#ifdef GPU_SPDF
 //#endif
 
 
@@ -48,12 +49,13 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #endif
 
 //#define USE_ERI_GRAD_STOREADD
-
+/*
 #ifdef USE_ERI_GRAD_STOREADD
 #define STORE_OPERATOR +=
 #else
 #define STORE_OPERATOR =  
 #endif
+*/
 
 #include "gpu_get2e_subs_hrr.h"
 #include "int.h"
@@ -74,7 +76,6 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs.h"
 #include "gpu_eri_grad_assembler_sp.h"
 #include "gpu_get2e_subs_grad.h"
-
 
 #undef int_sp
 #define int_spd
@@ -107,6 +108,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_grad_vrr_dddd_1.h"
 #include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
@@ -120,7 +122,9 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_grad_vrr_dddd_2.h"
 #include "gpu_get2e_subs_grad.h"
+
 
 /*
 #undef int_spd
@@ -137,7 +141,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 */
 
-#ifdef HIP_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 #undef int_spd
@@ -151,6 +155,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_1.h"
 #include "gpu_get2e_subs.h"
 
 #undef int_spd
@@ -164,8 +169,8 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_2.h"
 #include "gpu_get2e_subs.h"
-
 
 #undef int_spd
 #undef int_spdf
@@ -178,8 +183,29 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_3.h"
 #include "gpu_get2e_subs.h"
 
+#include "gpu_eri_assembler_spdf_1_2.h"
+#include "gpu_eri_assembler_spdf_2_2.h"
+#include "gpu_eri_assembler_spdf_3_2.h"
+#include "gpu_eri_assembler_spdf_4_2.h"
+#include "gpu_eri_assembler_spdf_5_2.h"
+#include "gpu_eri_assembler_spdf_6_2.h"
+#include "gpu_eri_assembler_spdf_7_2.h"
+#include "gpu_eri_assembler_spdf_8_2.h"
+
+#include "gpu_eri_grad_assembler_spd_2.h"
+#include "gpu_eri_grad_assembler_spdf_1.h" 
+#include "gpu_eri_grad_assembler_spdf_2.h"
+#include "gpu_eri_grad_assembler_spdf_3.h"
+#include "gpu_eri_grad_assembler_spdf_4.h"
+#include "gpu_eri_grad_assembler_spdf_5.h"
+#include "gpu_eri_grad_assembler_spdf_6.h"
+//#include "gpu_eri_grad_assembler_spdf_7_1.h"
+//#include "gpu_eri_grad_assembler_spdf_7_2.h"
+//#include "gpu_eri_grad_assembler_spdf_7_3.h"
+#include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
 #undef int_spdf
@@ -192,8 +218,10 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_4.h"
+//#include "gpu_eri_grad_vrr_ffff.h"
 #include "gpu_get2e_subs.h"
-
+//#include "gpu_get2e_subs_grad.h"
 
 #undef int_spd
 #undef int_spdf
@@ -206,8 +234,8 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_5.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -221,8 +249,8 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_6.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -236,8 +264,8 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_7.h"
 #include "gpu_get2e_subs.h"
-
 
 
 #undef int_spd
@@ -251,6 +279,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #define int_spdf8
 #undef int_spdf9
 #undef int_spdf10
+#include "gpu_eri_assembler_spdf_8.h"
 #include "gpu_get2e_subs.h"
 
 
@@ -279,6 +308,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
+
 #endif
 
 #undef int_spd
@@ -370,7 +400,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 */
 
-#ifdef HIP_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 #undef int_spd
@@ -477,6 +507,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf10
 #include "gpu_get2e_subs.h"
 
+
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -502,6 +533,7 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #undef int_spdf9
 #define int_spdf10
 #include "gpu_get2e_subs.h"
+
 #endif
 
 #undef int_spd
@@ -534,33 +566,33 @@ void upload_sim_to_constant(_gpu_type gpu){
 static float totTime;
 #endif
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
 {
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI, intStart, intEnd, aoint_buffer, streamID))
-#ifdef HIP_SPDF
+    QUICK_SAFE_CALL((getAOInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>(intStart, intEnd, aoint_buffer, streamID)));
+#ifdef GPU_SPDF
     // Part f-1
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-2
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf2, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-3
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf3, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-4
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf4, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-5
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf5, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-6
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf6, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-7
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf7, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-8
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf8, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-9
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf9, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-10
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAOInt_kernel_spdf10, gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI,  intStart, intEnd, aoint_buffer, streamID))
+    QUICK_SAFE_CALL((getAOInt_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
 #endif
 }
 #endif
@@ -569,47 +601,47 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t str
 void get2e(_gpu_type gpu)
 {
     // Part spd
-//    nvtxRangePushA("SCF 2e");
+//    roctxRangePush("SCF 2e");
 
 #ifdef USE_TEXTURE
     bind_eri_texture(gpu);
 #endif
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((get2e_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    //hipLaunchKernelGGL(get2e_kernel_sp, 1, 1, 0, 0);
+    //get2e_kernel_sp<<<1,1>>>();
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((get2e_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
-#ifdef HIP_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf2, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-3
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf3, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-4
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf4, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-5
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf5, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-6
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf6, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-7
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf7, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-8
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf8, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get2e_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf9, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        //QUICK_SAFE_CALL((get2e_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get2e_kernel_spdf10, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        //QUICK_SAFE_CALL((get2e_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
 
 //    get1e_();
 
     hipDeviceSynchronize();
-//    nvtxRangePop();
+//    roctxRangePop();
 
 #ifdef USE_TEXTURE
     unbind_eri_texture();
@@ -621,43 +653,43 @@ void get2e(_gpu_type gpu)
 void get_oshell_eri(_gpu_type gpu)
 {
     // Part spd
-//    nvtxRangePushA("SCF 2e");
+//    roctxRangePush("SCF 2e");
 
 #ifdef USE_TEXTURE
     bind_eri_texture(gpu);
 #endif
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_sp, gpu->blocks, HIP_SP_2E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((get_oshell_eri_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spd, gpu->blocks, HIP_SPD_2E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((get_oshell_eri_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-#ifdef HIP_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf2, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-3
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf3, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-4
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf4, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-5
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf5, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-6
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf6, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-7
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf7, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-8
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf8, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf9, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        //QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_eri_kernel_spdf10, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0))
+        //QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif
 
 //    hipDeviceSynchronize();
-//    nvtxRangePop();
+//    roctxRangePop();
 
 #ifdef USE_TEXTURE
     unbind_eri_texture();
@@ -666,11 +698,11 @@ void get_oshell_eri(_gpu_type gpu)
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getAddInt_kernel, gpu->blocks, gpu->twoEThreadsPerBlock, 0, 0, bufferSize, aoint_buffer))
+    QUICK_SAFE_CALL((getAddInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>(bufferSize, aoint_buffer)));
 }
 #endif
 
@@ -678,28 +710,37 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 void getGrad(_gpu_type gpu)
 {
 
-//   nvtxRangePushA("Gradient 2e");
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_sp, gpu->blocks, HIP_SP_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+//   roctxRangePush("Gradient 2e");
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spd, gpu->blocks, HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((getGrad_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+
+    QUICK_SAFE_CALL((getGrad_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef HIP_SPDF
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf, gpu->blocks, HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((getGrad_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf2, gpu->blocks, HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+        if (gpu->maxL >= 3) {
         // Part f-3
-        //    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf3, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0)))
-        //#endif
+#ifdef GPU_SPDF
+
+//            printf("calling getGrad_kernel_spdf3 \n");
+            QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
+
+            //printf("calling getGrad_kernel_spdf4 \n");
+//            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
+
+#endif
+        }
     }
 
     hipDeviceSynchronize();   
 
-//    nvtxRangePop();
+//    roctxRangePop();
 
 }
 
@@ -708,32 +749,36 @@ void getGrad(_gpu_type gpu)
 void get_oshell_eri_grad(_gpu_type gpu)
 {
 
-//   nvtxRangePushA("Gradient 2e");
-   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_sp, gpu->blocks, HIP_SP_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+//   roctxRangePush("Gradient 2e");
 
-   QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spd, gpu->blocks, HIP_SPD_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+   QUICK_SAFE_CALL((getGrad_oshell_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef HIP_SPDF
+        //#ifdef GPU_SPDF
         // Part f-1
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf, gpu->blocks, HIP_SPDF_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_oshell_kernel_spdf2, gpu->blocks, HIP_SPDF2_2E_GRAD_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+
+	if (gpu->maxL >= 3) {
         // Part f-3
-        //    QUICK_SAFE_CALL(hipLaunchKernelGGL(getGrad_kernel_spdf3, gpu->blocks, gpu->gradThreadsPerBlock, 0, 0)))
+        //    QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
         //#endif
+	}
     }
 
     hipDeviceSynchronize();
-//    nvtxRangePop();
+//    roctxRangePop();
 
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // =======   KERNEL SECTION ===========================
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){

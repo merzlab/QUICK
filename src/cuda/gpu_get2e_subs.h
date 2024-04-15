@@ -413,7 +413,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
 #endif
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[a] > 0){
 #endif 
 
@@ -646,7 +646,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
         }
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         }      
 #endif        
     }
@@ -758,7 +758,7 @@ __device__ __forceinline__ void iclass_spdf10
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -1208,7 +1208,7 @@ __device__ __forceinline__ void iclass_spdf10
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 #if !(defined OSHELL) && !(defined int_sp)
 #ifdef int_spd
 __global__ void 
@@ -1404,7 +1404,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store)
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -2018,7 +2018,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
 
 #ifndef OSHELL  
 /*
- sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
+ sqr for double precision. there no internal function to do that in fast-math-lib of GPU
  */
 __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
 {

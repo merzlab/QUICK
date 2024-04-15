@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /*
   !---------------------------------------------------------------------!
   ! Written by Madu Manathunga on 06/17/2021                            !
@@ -194,13 +193,13 @@ static float totTime;
 // interface for kernel launching
 void getOEI(_gpu_type gpu){
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getOEI_kernel, gpu->blocks, HIP_1E_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
 }
 
 void get_oei_grad(_gpu_type gpu){
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oei_grad_kernel, gpu->blocks, HIP_1E_GRAD_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((get_oei_grad_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
 }
 

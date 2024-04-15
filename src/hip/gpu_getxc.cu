@@ -1,21 +1,24 @@
 #include "hip/hip_runtime.h"
 #include "gpu.h"
-#include <hip/hip_runtime.h>
 #include "libxc_dev_funcs.h"
 #include "gpu_work_gga_x.cu"
 #include "gpu_work_gga_c.cu"
 #include "gpu_work_lda.cu"
 
+#if defined(CUDA) || defined(CUDA_MPIV)
+static __constant__ gpu_simulation_type devSim_dft;
+#elif defined(HIP) || defined(HIP_MPIV)
 __constant__ gpu_simulation_type devSim_dft;
+#endif
 
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
 static float totTime;
 #endif
 
-#include "gpu_getxc_subs_generic.h"
+#include "gpu_getxc.h"
 #include "gpu_cew_quad.h"
 #define OSHELL
-#include "gpu_getxc_subs_generic.h"
+#include "gpu_getxc.h"
 #include "gpu_cew_quad.h"
 #undef OSHELL
 
@@ -41,7 +44,7 @@ void get_ssw(_gpu_type gpu){
     hipEventRecord(start, 0);
 #endif
 
-	QUICK_SAFE_CALL(hipLaunchKernelGGL(get_ssw_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0))
+	QUICK_SAFE_CALL((get_ssw_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
 
 #ifdef DEBUG
     hipEventRecord(end, 0);
@@ -66,7 +69,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
     hipEventRecord(start, 0);
 #endif
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_primf_contraf_lists_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0, gpweight, cfweight, pfweight))
+    QUICK_SAFE_CALL((get_primf_contraf_lists_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>(gpweight, cfweight, pfweight)));
 
 #ifdef DEBUG
     hipEventRecord(end, 0);
@@ -83,7 +86,7 @@ void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight, unsigned in
 
 void getpteval(_gpu_type gpu){
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_pteval_kernel, gpu -> blocks, gpu -> xc_threadsPerBlock, 0, 0))
+    QUICK_SAFE_CALL((get_pteval_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
     hipDeviceSynchronize();
 }
 
@@ -98,19 +101,19 @@ void getxc(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxc_kernel, gpu->blocks, HIP_XC_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((oshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
     }else{
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxc_kernel, gpu->blocks, HIP_XC_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((cshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
     }
 
     hipDeviceSynchronize();
@@ -126,7 +129,7 @@ void getxc(_gpu_type gpu){
     hipEventDestroy(end);
 #endif
 
-//    nvtxRangePop();
+//    roctxRangePop();
 
 }
 
@@ -142,19 +145,19 @@ void getxc_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size , 0))
+        QUICK_SAFE_CALL((oshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size >>>()));
 
     }else{
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getxcgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
+        QUICK_SAFE_CALL((cshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
     }
 
     hipDeviceSynchronize();
@@ -165,11 +168,11 @@ void getxc_grad(_gpu_type gpu){
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(get_sswgrad_kernel, gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
+    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
-//hipLaunchKernelGGL(get_sswgrad_kernel, 1, 1, gpu -> gpu_xcq -> smem_size, 0);
+//get_sswgrad_kernel<<<1,1, gpu -> gpu_xcq -> smem_size>>>();
 
-    //QUICK_SAFE_CALL(hipLaunchKernelGGL(get_sswnumgrad_kernel, gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size, 0))
+    //QUICK_SAFE_CALL((get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
     hipDeviceSynchronize();
 
@@ -186,13 +189,12 @@ void getxc_grad(_gpu_type gpu){
     hipEventDestroy(end);
 #endif
 
-//    nvtxRangePop();
+//    roctxRangePop();
 
 }
 
 
-__global__ void 
-__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_pteval_kernel(){
+__global__ void get_pteval_kernel(){
 
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -225,8 +227,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_pteval_kernel(){
 
 
 //device kernel to compute significant grid pts, contracted and primitive functions for octree
-__global__ void 
-__launch_bounds__(SM_2X_XCGRAD_THREADS_PER_BLOCK, 1) get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
+__global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned int *cfweight, unsigned int *pfweight){
 
         unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
         int totalThreads = blockDim.x*gridDim.x;
@@ -335,8 +336,7 @@ __launch_bounds__(SM_2X_XCGRAD_THREADS_PER_BLOCK, 1) get_primf_contraf_lists_ker
 
 }
 
-__global__ void 
-__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_ssw_kernel(){
+__global__ void get_ssw_kernel(){
 
 	unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
 	int totalThreads = blockDim.x*gridDim.x;
@@ -361,8 +361,7 @@ __launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_ssw_kernel(){
 
 }
 
-__global__ void 
-__launch_bounds__(SM_2X_XC_THREADS_PER_BLOCK, 1) get_sswgrad_kernel(){
+__global__ void get_sswgrad_kernel(){
 
 
         //declare smem grad vector

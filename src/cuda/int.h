@@ -460,7 +460,7 @@ __device__ void vertical2_spdf(int I, int J, int K, int L,
     }
     
     
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if ((I+J) >=  0 && (K+L) >= 6) {
         h2_0_6(YVerticalTemp, store, \
               Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
@@ -527,7 +527,7 @@ __device__ void vertical2_spdf2(int I, int J, int K, int L,
                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
     }
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if ((I+J) >=  6 && (K+L) >= 0) {
         h2_6_0(YVerticalTemp, store, \
                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \

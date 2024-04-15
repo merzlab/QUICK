@@ -145,7 +145,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[a] > 0){
 #endif
                 
@@ -268,7 +268,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
 
         }
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         }
 #endif
 
@@ -333,7 +333,7 @@ __device__ __forceinline__ void iclass_grad_spd
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -872,7 +872,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
 */    
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */

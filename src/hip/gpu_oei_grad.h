@@ -383,8 +383,7 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
 
 }
 
-__global__ void 
-__launch_bounds__(HIP_1E_GRAD_THREADS_PER_BLOCK, 1) get_oei_grad_kernel(){
+__global__ void get_oei_grad_kernel(){
 
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   unsigned int totalThreads = blockDim.x*gridDim.x;
@@ -401,7 +400,7 @@ __launch_bounds__(HIP_1E_GRAD_THREADS_PER_BLOCK, 1) get_oei_grad_kernel(){
     unsigned int iatom = (int) i/(jshell * jshell);
     unsigned int idx   = i - iatom * jshell * jshell;
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
       if(devSim.mpi_boeicompute[idx] > 0){
 #endif
 
@@ -422,7 +421,7 @@ __launch_bounds__(HIP_1E_GRAD_THREADS_PER_BLOCK, 1) get_oei_grad_kernel(){
         iclass_oei_grad(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset,\
         devSim.storeAA+offset, devSim.storeBB+offset);
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
       }
 #endif
 

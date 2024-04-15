@@ -12,7 +12,7 @@
 #include "gpu.h"
 #include <cuda.h>
 
-//#ifdef CUDA_SPDF
+//#ifdef GPU_SPDF
 //#endif
 
 
@@ -140,7 +140,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 */
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 #undef int_spd
@@ -399,7 +399,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #include "gpu_get2e_subs_grad.h"
 */
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 #undef int_spd
@@ -565,13 +565,13 @@ void upload_sim_to_constant(_gpu_type gpu){
 static float totTime;
 #endif
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL((getAOInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>(intStart, intEnd, aoint_buffer, streamID)));
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     // Part f-1
     QUICK_SAFE_CALL((getAOInt_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>( intStart, intEnd, aoint_buffer, streamID)));
     // Part f-2
@@ -612,7 +612,7 @@ void get2e(_gpu_type gpu)
 
     QUICK_SAFE_CALL((get2e_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         QUICK_SAFE_CALL((get2e_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
@@ -662,7 +662,7 @@ void get_oshell_eri(_gpu_type gpu)
 
     QUICK_SAFE_CALL((get_oshell_eri_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         QUICK_SAFE_CALL((get_oshell_eri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
@@ -697,7 +697,7 @@ void get_oshell_eri(_gpu_type gpu)
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // interface to call Kernel subroutine
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 {
@@ -725,7 +725,7 @@ void getGrad(_gpu_type gpu)
         QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         if (gpu->maxL >= 3) {
         // Part f-3
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 
 //            printf("calling getGrad_kernel_spdf3 \n");
             QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
@@ -758,7 +758,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
     //get_oneen_grad_();
 
     if (gpu->maxL >= 2) {
-        //#ifdef CUDA_SPDF
+        //#ifdef GPU_SPDF
         // Part f-1
         QUICK_SAFE_CALL((getGrad_oshell_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
@@ -777,7 +777,7 @@ void get_oshell_eri_grad(_gpu_type gpu)
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 // =======   KERNEL SECTION ===========================
 __global__ void 
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){

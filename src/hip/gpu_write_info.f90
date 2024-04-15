@@ -8,6 +8,7 @@
 
 #include "util.fh"
 
+
 subroutine gpu_write_info(io, ierr)
     implicit none
     ! io unit
@@ -41,10 +42,10 @@ subroutine gpu_write_info(io, ierr)
     write(io,'(a,i8)')     '| AMD DEVICE MEMORY SIZE (MB) : ', gpu_dev_mem
     write(io,'(a,i6,a,i1)')'| SUPPORTING ROCm VERSION     : ', majorv,'.',minorv
     write(io,'(a)')        '|--------------------------------------------'
-    
 end subroutine gpu_write_info
 
-#ifdef HIP_MPIV
+
+#if defined(MPIV_GPU)
 subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids, ierr)
     implicit none
     ! io unit
@@ -70,13 +71,11 @@ subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids, ierr)
 
     write(io,'(a)')         '|------------ GPU INFORMATION -------------------------------'
     write(io,'(a,i8)')      '| AMD DEVICE COUNT             : ', gpu_dev_count
-
     do rank=0, gpu_dev_count-1
     write(io,'(a)')         '|                                                            '
     write(io,'(a,i3,a)')    '|        --    MPI RANK ',rank,' --          '
     gpu_dev_id=mgpu_ids(rank+1)
     call mgpu_get_device_info(gpu_dev_id,gpu_dev_mem,gpu_num_proc,gpu_core_freq,gpu_dev_name,name_len,gpu_arch_name,arch_len,majorv,minorv,ierr) 
-
     write(io,'(a,i8)')      '|   AMD DEVICE IN USE          : ', gpu_dev_id
     write(io,'(a,a)')       '|   AMD DEVICE NAME            : ', gpu_dev_name(1:name_len)
     write(io,'(a,a)')       '|   AMD DEVICE ARCHITECTURE    : ', gpu_arch_name(1:arch_len)
@@ -84,10 +83,7 @@ subroutine mgpu_write_info(io, gpu_dev_count, mgpu_ids, ierr)
     write(io,'(a,f8.2)')    '|   AMD DEVICE CORE FREQ(GHZ)  : ', gpu_core_freq
     write(io,'(a,i8)')      '|   AMD DEVICE MEMORY SIZE (MB): ', gpu_dev_mem
     write(io,'(a,i6,a,i1)') '|   SUPPORTING ROCm VERSION    : ', majorv,'.',minorv
-
     enddo
-
     write(io,'(a)')         '|------------------------------------------------------------'
-
 end subroutine mgpu_write_info
 #endif    

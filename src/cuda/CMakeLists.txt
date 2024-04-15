@@ -1,14 +1,14 @@
 set(QUICK_CUDA_SOURCE gpu.cu gpu_type.cu gpu_get2e.cu gpu_oei.cu gpu_lri.cu xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
      
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
-cuda_add_library(quick_cuda_kernels STATIC ${QUICK_CUDA_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DCUDA) 
+cuda_add_library(quick_cuda_kernels STATIC ${QUICK_CUDA_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DGPU -D${QUICK_GPU_PLATFORM}) 
 target_include_directories(quick_cuda_kernels PUBLIC iclass)
 target_link_libraries(quick_cuda_kernels xc_gpu xc_cuda)
 
 if(MPI)
-	cuda_add_library(quick_cuda_kernels_mpi STATIC ${QUICK_CUDA_SOURCE} 
-	OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DCUDA_MPIV) 
-	target_compile_definitions(quick_cuda_kernels_mpi PRIVATE CUDA_MPIV)
+	cuda_add_library(quick_cuda_kernels_mpi STATIC ${QUICK_CUDA_SOURCE}
+		OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DMPIV -DMPIV_GPU -D${QUICK_GPU_PLATFORM}_MPIV) 
+	target_compile_definitions(quick_cuda_kernels_mpi PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 	set_property(TARGET quick_cuda_kernels_mpi PROPERTY POSITION_INDEPENDENT_CODE TRUE)
         target_include_directories(quick_cuda_kernels_mpi PUBLIC iclass)
 	target_link_libraries(quick_cuda_kernels_mpi xc_gpu xc_cuda)

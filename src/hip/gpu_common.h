@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
+//#include "roctx.h"
 #include "../octree/gpack_common.h"
 
 #if defined DEBUG || defined DEBUGTIME
@@ -41,17 +42,22 @@ fflush(stdout);\
 #define STOREDIM_S 35
 
 #define STOREDIM_GRAD_T 20
+#define STOREDIM_GRAD_S 56
 
-#ifdef HIP_SPDF
+#ifdef GPU_SPDF
 #define STOREDIM_L 84
+#define STOREDIM_XL 120
+#define MAXPRIM 20
 #else
+#define MAXPRIM 14
 #define STOREDIM_L 84
+#define STOREDIM_XL 84
 #endif
+
+#define STORE_OPERATOR +=
 
 #define TRANSDIM 8
 #define MCALDIM 120
-
-#define MAXPRIM 10
 
 #define BUFFERSIZE 150000
 
@@ -144,10 +150,7 @@ hipEventDestroy(end);
     QUICKADD(address, val2); \
 }
 
-// use intrinsic fp64 atomic add
-#define CUDAADD(address, val) atomicAdd(&(address),(val))
-
-// CUDA safe call
+// GPU safe call
 #if defined DEBUG || defined DEBUGTIME
 #define QUICK_SAFE_CALL(x)\
 {\
@@ -186,14 +189,42 @@ if (error != hipSuccess && error != hipErrorNotReady)\
 typedef float  QUICKSingle;
 #define QUICKULL \
 unsigned long long int
+#ifdef USE_LEGACY_ATOMICS
+#define QUICKAtomicType unsigned long long int
+#else
+#define QUICKAtomicType double
+#endif
 
 /* 
  ****************************************************************
  *  constant define
  ****************************************************************
  */
+// constant for general purpose
+#if defined(CUDA) || defined(CUDA_MPIV)
+// constant for general purpose
+static const int SM_13_THREADS_PER_BLOCK    =   256;
+static const int SM_2X_THREADS_PER_BLOCK    =   256;
 
-#ifdef AMD_ARCH_GFX90a
+// constant for 2e-integral
+static const int SM_13_2E_THREADS_PER_BLOCK =   256;
+static const int SM_2X_2E_THREADS_PER_BLOCK =   256;
+
+// constant for DFT Exchange-Correlation part
+static const int MAX_GRID                   =   194;
+static const int SM_13_XC_THREADS_PER_BLOCK =   256;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
+
+
+// constant for grad
+static const int SM_13_GRAD_THREADS_PER_BLOCK =   256;
+static const int SM_2X_GRAD_THREADS_PER_BLOCK =   256;
+
+//Launch parameters for octree based Exchange-Correlation part
+static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
+static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
+#elif defined(HIP) || defined(HIP_MPIV)
+#  ifdef AMD_ARCH_GFX90a
 // constant for general purpose
 static const int SM_13_THREADS_PER_BLOCK    =   256;
 static const int SM_2X_THREADS_PER_BLOCK    =   256;
@@ -216,7 +247,8 @@ static const int HIP_SPD_2E_WAVES_PER_CU = 1;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+//static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
 
 static const int HIP_XC_WAVES_PER_CU = 1;
 static const int HIP_XC_DENSE_WAVES_PER_CU = 1;
@@ -255,9 +287,7 @@ static const int HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK = 384;
 
 static const int HIP_CEW_QUAD_WAVES_PER_CU = 1;
 static const int HIP_CEW_QUAD_GRAD_WAVES_PER_CU = 1;
-
-#else
-
+#  else
 // constant for general purpose
 static const int SM_13_THREADS_PER_BLOCK    =   256;
 static const int SM_2X_THREADS_PER_BLOCK    =   256;
@@ -280,7 +310,8 @@ static const int HIP_SPD_2E_WAVES_PER_CU = 1;
 // constant for DFT Exchange-Correlation part
 static const int MAX_GRID                   =   194;
 static const int SM_13_XC_THREADS_PER_BLOCK =   256;
-static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+//static const int SM_2X_XC_THREADS_PER_BLOCK =   512;
+static const int SM_2X_XC_THREADS_PER_BLOCK =   256;
 
 static const int HIP_XC_WAVES_PER_CU = 1;
 static const int HIP_XC_DENSE_WAVES_PER_CU = 1;
@@ -317,12 +348,12 @@ static const int HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK = 256;
 
 static const int HIP_CEW_QUAD_WAVES_PER_CU = 1;
 static const int HIP_CEW_QUAD_GRAD_WAVES_PER_CU = 1;
-
-#endif
+#  endif
 
 //Launch parameters for octree based Exchange-Correlation part
 static const int SM_2X_XCGRAD_THREADS_PER_BLOCK = MAX_POINTS_PER_CLUSTER;
 static const int SM_2X_SSW_GRAD_THREADS_PER_BLOCK = 320;
+#endif
 
 // physical constant, the same with quick_constants_module
 //static const QUICKDouble PI                 =   (QUICKDouble)3.1415926535897932384626433832795;

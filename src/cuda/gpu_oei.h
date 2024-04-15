@@ -222,7 +222,7 @@ __global__ void getOEI_kernel(){
     unsigned int iatom = (int) i/(jshell * jshell);
     unsigned int idx   = i - iatom * jshell * jshell;
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
       if(devSim.mpi_boeicompute[idx] > 0){
 #endif
 
@@ -242,7 +242,7 @@ __global__ void getOEI_kernel(){
         // compute coulomb attraction for the selected shell pair.  
         iclass_oei(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset);
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
       }
 #endif
 

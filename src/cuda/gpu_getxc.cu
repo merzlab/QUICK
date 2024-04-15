@@ -5,9 +5,13 @@
 #include "gpu_work_gga_c.cu"
 #include "gpu_work_lda.cu"
 
+#if defined(CUDA) || defined(CUDA_MPIV)
 static __constant__ gpu_simulation_type devSim_dft;
+#elif defined(HIP) || defined(HIP_MPIV)
+__constant__ gpu_simulation_type devSim_dft;
+#endif
 
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
 static float totTime;
 #endif
 

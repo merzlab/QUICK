@@ -154,7 +154,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
 }
 
 /*
- sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
+ sqr for double precision. there no internal function to do that in fast-math-lib of GPU
  */
 __device__ __forceinline__ QUICKDouble quick_dsqr_MP2(QUICKDouble a)
 {
@@ -205,7 +205,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now. 
+     of GPU limitation, we can not do that now. 
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -1085,7 +1085,7 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
         }
         default:
         {
-#ifndef CUDA_SP
+#ifndef GPU_SP
             if (K+L>=1){
                 //SSPS(0, YVerticalTemp, Qtempx, Qtempy, Qtempz, WQtempx, WQtempy, WQtempz);
                 QUICKDouble x_0_1_0 = Qtempx * VY( 0, 0, 0) + WQtempx * VY( 0, 0, 1);
@@ -5480,7 +5480,7 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
                                 QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz)
 {
     QUICKDouble Y;
-#ifdef CUDA_SP
+#ifdef GPU_SP
     int NAx = LOC2(devSim_MP2.KLMN,0,III-1,3,devSim_MP2.nbasis);
     int NAy = LOC2(devSim_MP2.KLMN,1,III-1,3,devSim_MP2.nbasis);
     int NAz = LOC2(devSim_MP2.KLMN,2,III-1,3,devSim_MP2.nbasis);
@@ -5754,7 +5754,7 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L, \
 }  
 
 
-#ifndef CUDA_SP
+#ifndef GPU_SP
 __device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz, 
                        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
                        int KLMNAx, int KLMNAy, int KLMNAz,

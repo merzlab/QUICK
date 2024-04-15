@@ -15,7 +15,7 @@
 #include <time.h>
 #include "gpu_libxc.h"
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
 #include "mgpu.h"
 #endif
 
@@ -46,7 +46,7 @@ extern "C" void gpu_startup_(int* ierr)
 {
 
 #if defined DEBUG || defined DEBUGTIME
-        debugFile = fopen("debug.cuda", "w+");
+        debugFile = fopen("debug.gpu", "w+");
 #endif
 	PRINTDEBUGNS("BEGIN TO WARM UP")
 
@@ -146,8 +146,8 @@ extern "C" void gpu_init_(int* ierr)
     }
     
     status = cudaSetDevice(device);
-    cudaGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "cudaSetDevice gpu_init failed!");
+    cudaGetDeviceProperties(&deviceProp, device);
     cudaDeviceSynchronize();
     
     cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
@@ -212,13 +212,13 @@ extern "C" void gpu_init_(int* ierr)
 extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
                                      int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv, int* ierr)
 {
-    cudaError_t cuda_error;
+    cudaError_t error;
     cudaDeviceProp prop;
     size_t device_mem;
     
     *gpu_dev_id = gpu->gpu_dev_id;  // currently one GPU is supported
-    cuda_error = cudaGetDeviceCount(gpu_dev_count);
-    PRINTERROR(cuda_error,"cudaGetDeviceCount gpu_get_device_info failed!");
+    error = cudaGetDeviceCount(gpu_dev_count);
+    PRINTERROR(error,"cudaGetDeviceCount gpu_get_device_info failed!");
     if (*gpu_dev_count == 0)
     {
         cudaDeviceReset();
@@ -251,28 +251,28 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch){
     */
     unsigned int store_size = gpu->blocks * gpu -> twoEThreadsPerBlock * STOREDIM_XL * STOREDIM_XL;
 
-    gpu -> scratch -> store         = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store         = new gpu_buffer_type<QUICKDouble>(store_size);
     gpu -> scratch -> store -> DeleteCPU();
 
-    gpu -> scratch -> YVerticalTemp = new cuda_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
+    gpu -> scratch -> YVerticalTemp = new gpu_buffer_type<QUICKDouble>(gpu->blocks * gpu -> twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
     gpu -> scratch -> YVerticalTemp -> DeleteCPU();
 
     gpu -> gpu_sim.store         = gpu -> scratch -> store -> _devData;
     gpu -> gpu_sim.YVerticalTemp = gpu -> scratch -> YVerticalTemp -> _devData;
 
-    gpu -> scratch -> store2        = new cuda_buffer_type<QUICKDouble>(store_size);
+    gpu -> scratch -> store2        = new gpu_buffer_type<QUICKDouble>(store_size);
     gpu -> scratch -> store2 -> DeleteCPU();
 
     gpu -> gpu_sim.store2        = gpu -> scratch -> store2 -> _devData;
 
     if(*allocate_gradient_scratch){
-        gpu -> scratch -> storeAA       = new cuda_buffer_type<QUICKDouble>(store_size);
+        gpu -> scratch -> storeAA       = new gpu_buffer_type<QUICKDouble>(store_size);
         gpu -> scratch -> storeAA -> DeleteCPU();
  
-        gpu -> scratch -> storeBB       = new cuda_buffer_type<QUICKDouble>(store_size);
+        gpu -> scratch -> storeBB       = new gpu_buffer_type<QUICKDouble>(store_size);
         gpu -> scratch -> storeBB -> DeleteCPU();
  
-        gpu -> scratch -> storeCC       = new cuda_buffer_type<QUICKDouble>(store_size);
+        gpu -> scratch -> storeCC       = new gpu_buffer_type<QUICKDouble>(store_size);
         gpu -> scratch -> storeCC -> DeleteCPU();
  
         gpu -> gpu_sim.storeAA       = gpu -> scratch -> storeAA -> _devData;
@@ -330,7 +330,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     cudaEventRecord(start, 0);
     PRINTDEBUG("BEGIN TO SETUP")
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
     fprintf(gpu->debugFile,"mpirank %i natoms %i \n", gpu -> mpirank, *natom );    
 #endif
 #endif
@@ -365,7 +365,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     cudaEventSynchronize(end);
     float time;
     cudaEventElapsedTime(&time, start, end);
-#ifdef CUDA
+#ifdef GPU
     PRINTUSINGTIME("UPLOAD PARA TO CONST",time);
 #endif
     cudaEventDestroy(start);
@@ -444,11 +444,11 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
 #endif
     
     PRINTDEBUG("BEGIN TO UPLOAD COORDINATES")
-    //    gpu -> gpu_basis -> xyz = new cuda_buffer_type<QUICKDouble>(atom_xyz, 3, gpu->natom);
+    //    gpu -> gpu_basis -> xyz = new gpu_buffer_type<QUICKDouble>(atom_xyz, 3, gpu->natom);
     //	gpu -> gpu_basis -> xyz ->Upload();
-    gpu -> gpu_calculated -> distance = new cuda_buffer_type<QUICKDouble>(gpu->natom, gpu->natom);
+    gpu -> gpu_calculated -> distance = new gpu_buffer_type<QUICKDouble>(gpu->natom, gpu->natom);
     
-    gpu -> xyz = new cuda_buffer_type<QUICKDouble>(atom_xyz, 3, gpu->natom);
+    gpu -> xyz = new gpu_buffer_type<QUICKDouble>(atom_xyz, 3, gpu->natom);
     
     for (int i = 0; i < gpu->natom; i++) {
         for (int j = 0; j < gpu->natom; j++) {
@@ -490,8 +490,8 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
     
     PRINTDEBUG("BEGIN TO UPLOAD ATOM AND CHARGE")
     
-    gpu -> iattype = new cuda_buffer_type<int>(atom, gpu->natom);
-    gpu -> chg     = new cuda_buffer_type<QUICKDouble>(atom_chg, gpu->natom);
+    gpu -> iattype = new gpu_buffer_type<int>(atom, gpu->natom);
+    gpu -> chg     = new gpu_buffer_type<QUICKDouble>(atom_chg, gpu->natom);
     gpu -> iattype -> Upload();
     gpu -> chg     -> Upload();
     
@@ -526,7 +526,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     gpu -> gpu_cutoff -> primLimit      = *primLimit;
     gpu -> gpu_cutoff -> DMCutoff       = *DMCutoff;
     
-    gpu -> gpu_cutoff -> cutMatrix  = new cuda_buffer_type<QUICKDouble>(cutMatrix, gpu->nshell, gpu->nshell);
+    gpu -> gpu_cutoff -> cutMatrix  = new gpu_buffer_type<QUICKDouble>(cutMatrix, gpu->nshell, gpu->nshell);
     
     gpu -> gpu_cutoff -> cutMatrix  -> Upload();
     
@@ -569,14 +569,14 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     PRINTDEBUG("BEGIN TO UPLOAD CUTOFF")
     
     gpu -> gpu_cutoff -> natom      = gpu -> natom;
-    gpu -> gpu_cutoff -> YCutoff    = new cuda_buffer_type<QUICKDouble>(YCutoff, gpu->nshell, gpu->nshell);
-    gpu -> gpu_cutoff -> cutPrim    = new cuda_buffer_type<QUICKDouble>(cutPrim, gpu->jbasis, gpu->jbasis);
+    gpu -> gpu_cutoff -> YCutoff    = new gpu_buffer_type<QUICKDouble>(YCutoff, gpu->nshell, gpu->nshell);
+    gpu -> gpu_cutoff -> cutPrim    = new gpu_buffer_type<QUICKDouble>(cutPrim, gpu->jbasis, gpu->jbasis);
     
     gpu -> gpu_cutoff -> YCutoff    -> Upload();
     gpu -> gpu_cutoff -> cutPrim    -> Upload();
     
     gpu -> gpu_cutoff -> sqrQshell  = (gpu -> gpu_basis -> Qshell) * (gpu -> gpu_basis -> Qshell);
-    gpu -> gpu_cutoff -> sorted_YCutoffIJ           = new cuda_buffer_type<int2>(gpu->gpu_cutoff->sqrQshell);
+    gpu -> gpu_cutoff -> sorted_YCutoffIJ           = new gpu_buffer_type<int2>(gpu->gpu_cutoff->sqrQshell);
 
     int a = 0;
     bool flag = true;
@@ -604,7 +604,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
     int sort_method = 0;
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if(maxL >= 3){
         sort_method = 1;
     }
@@ -1167,7 +1167,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     gpu -> gpu_sim.cutPrim          = gpu -> gpu_cutoff -> cutPrim -> _devData;
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
 
    cudaEvent_t t_start, t_end;
    float t_time;
@@ -1215,8 +1215,8 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 
     // store coordinates and charges for oei calculation     
     gpu -> nextatom   = *nextatom;
-    gpu -> allxyz     = new cuda_buffer_type<QUICKDouble>(3, gpu->natom+gpu->nextatom);
-    gpu -> allchg     = new cuda_buffer_type<QUICKDouble>(gpu->natom+gpu->nextatom);
+    gpu -> allxyz     = new gpu_buffer_type<QUICKDouble>(3, gpu->natom+gpu->nextatom);
+    gpu -> allchg     = new gpu_buffer_type<QUICKDouble>(gpu->natom+gpu->nextatom);
 
     memcpy(gpu -> allxyz -> _hostData, gpu -> xyz -> _hostData, sizeof(QUICKDouble)*3*gpu->natom);
     memcpy(gpu -> allchg -> _hostData, gpu -> chg -> _hostData, sizeof(QUICKDouble)*gpu->natom);
@@ -1239,7 +1239,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     gpu -> gpu_sim.allchg    = gpu -> allchg -> _devData;    
 
   // precompute the product of overlap prefactor and contraction coefficients and store
-  gpu -> gpu_basis -> Xcoeff_oei                   =   new cuda_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
+  gpu -> gpu_basis -> Xcoeff_oei                   =   new gpu_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
 
   for (int i = 0; i<gpu->jshell; i++) {
     for (int j = 0; j<gpu->jshell; j++) {
@@ -1282,7 +1282,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 
 
   // allocate array for sorted shell pair info
-  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new cuda_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
+  gpu -> gpu_cutoff -> sorted_OEICutoffIJ = new gpu_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
 
   unsigned char sort_method = 0;
   unsigned int a = 0;
@@ -1348,7 +1348,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
   gpu -> gpu_sim.sorted_OEICutoffIJ = gpu -> gpu_cutoff -> sorted_OEICutoffIJ  -> _devData;
   gpu -> gpu_sim.Qshell_OEI = a; 
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
   mgpu_oei_greedy_distribute();
 #endif
 
@@ -1394,12 +1394,12 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     
     PRINTDEBUG("BEGIN TO UPLOAD O MATRIX")
     
-    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
-    gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> dense    =   new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
 
 #ifdef USE_LEGACY_ATOMICS
     gpu -> gpu_calculated -> o        ->  DeleteGPU();
-    gpu -> gpu_calculated -> oULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> oULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> oULL     -> Upload();
     gpu -> gpu_sim.oULL              =  gpu -> gpu_calculated -> oULL -> _devData;
 #else
@@ -1461,11 +1461,11 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX")
 
-    gpu -> gpu_calculated -> ob        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> ob        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #ifdef USE_LEGACY_ATOMICS
     gpu -> gpu_calculated -> ob        ->  DeleteGPU();
-    gpu -> gpu_calculated -> obULL     =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> obULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> obULL     -> Upload();
     gpu -> gpu_sim.obULL              =  gpu -> gpu_calculated -> obULL -> _devData;
 #else
@@ -1513,14 +1513,14 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 //This method uploads density matrix onto gpu for XC gradient calculation
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
 {
-    gpu -> gpu_calculated -> dense    =   new cuda_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> dense    =   new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> dense    -> Upload();
     gpu -> gpu_sim.dense             =  gpu -> gpu_calculated -> dense -> _devData;
 }
 
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb)
 {
-    gpu -> gpu_calculated -> denseb    =   new cuda_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> denseb    =   new gpu_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu -> gpu_calculated -> denseb    -> Upload();
     gpu -> gpu_sim.denseb             =  gpu -> gpu_calculated -> denseb -> _devData;
 }
@@ -1563,37 +1563,37 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu -> gpu_sim.maxcontract              =   *maxcontract;
     
     
-    gpu -> gpu_basis -> ncontract                   =   new cuda_buffer_type<int>(ncontract, gpu->nbasis);//gpu->nbasis);
-    gpu -> gpu_basis -> itype                       =   new cuda_buffer_type<int>(itype, 3,  gpu->nbasis);//3, gpu->nbasis);
-    gpu -> gpu_basis -> aexp                        =   new cuda_buffer_type<QUICKDouble>(aexp, gpu->gpu_basis->maxcontract, gpu->nbasis);//gpu->gpu_basis->maxcontract, gpu->nbasis);
-    gpu -> gpu_basis -> dcoeff                      =   new cuda_buffer_type<QUICKDouble>(dcoeff, gpu->gpu_basis->maxcontract, gpu->nbasis);//gpu->gpu_basis->maxcontract, gpu->nbasis);
+    gpu -> gpu_basis -> ncontract                   =   new gpu_buffer_type<int>(ncontract, gpu->nbasis);//gpu->nbasis);
+    gpu -> gpu_basis -> itype                       =   new gpu_buffer_type<int>(itype, 3,  gpu->nbasis);//3, gpu->nbasis);
+    gpu -> gpu_basis -> aexp                        =   new gpu_buffer_type<QUICKDouble>(aexp, gpu->gpu_basis->maxcontract, gpu->nbasis);//gpu->gpu_basis->maxcontract, gpu->nbasis);
+    gpu -> gpu_basis -> dcoeff                      =   new gpu_buffer_type<QUICKDouble>(dcoeff, gpu->gpu_basis->maxcontract, gpu->nbasis);//gpu->gpu_basis->maxcontract, gpu->nbasis);
     /*
-     gpu -> gpu_basis -> first_basis_function        =   new cuda_buffer_type<int>(first_basis_function, 1);//gpu->natom);
-     gpu -> gpu_basis -> last_basis_function         =   new cuda_buffer_type<int>(last_basis_function,  1);//gpu->natom);
+     gpu -> gpu_basis -> first_basis_function        =   new gpu_buffer_type<int>(first_basis_function, 1);//gpu->natom);
+     gpu -> gpu_basis -> last_basis_function         =   new gpu_buffer_type<int>(last_basis_function,  1);//gpu->natom);
      
-     gpu -> gpu_basis -> first_shell_basis_function  =   new cuda_buffer_type<int>(first_shell_basis_function, 1);//gpu->gpu_basis->nshell);
-     gpu -> gpu_basis -> last_shell_basis_function   =   new cuda_buffer_type<int>(last_shell_basis_function,  1);//gpu->gpu_basis->nshell);
+     gpu -> gpu_basis -> first_shell_basis_function  =   new gpu_buffer_type<int>(first_shell_basis_function, 1);//gpu->gpu_basis->nshell);
+     gpu -> gpu_basis -> last_shell_basis_function   =   new gpu_buffer_type<int>(last_shell_basis_function,  1);//gpu->gpu_basis->nshell);
      
-     gpu -> gpu_basis -> ktype                       =   new cuda_buffer_type<int>(ktype,    gpu->gpu_basis->nshell);
-     gpu -> gpu_basis -> kshell                      =   new cuda_buffer_type<int>(kshell,   93);
+     gpu -> gpu_basis -> ktype                       =   new gpu_buffer_type<int>(ktype,    gpu->gpu_basis->nshell);
+     gpu -> gpu_basis -> kshell                      =   new gpu_buffer_type<int>(kshell,   93);
      */
-    gpu -> gpu_basis -> ncenter                     =   new cuda_buffer_type<int>(ncenter,  gpu->gpu_basis->nbasis);
+    gpu -> gpu_basis -> ncenter                     =   new gpu_buffer_type<int>(ncenter,  gpu->gpu_basis->nbasis);
     
-    gpu -> gpu_basis -> kstart                      =   new cuda_buffer_type<int>(kstart,   gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> katom                       =   new cuda_buffer_type<int>(katom,    gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> kprim                       =   new cuda_buffer_type<int>(kprim,    gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> Ksumtype                    =   new cuda_buffer_type<int>(Ksumtype, gpu->gpu_basis->nshell+1);
+    gpu -> gpu_basis -> kstart                      =   new gpu_buffer_type<int>(kstart,   gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> katom                       =   new gpu_buffer_type<int>(katom,    gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> kprim                       =   new gpu_buffer_type<int>(kprim,    gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> Ksumtype                    =   new gpu_buffer_type<int>(Ksumtype, gpu->gpu_basis->nshell+1);
     
-    gpu -> gpu_basis -> Qnumber                     =   new cuda_buffer_type<int>(Qnumber,  gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> Qstart                      =   new cuda_buffer_type<int>(Qstart,   gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> Qfinal                      =   new cuda_buffer_type<int>(Qfinal,   gpu->gpu_basis->nshell);
-    gpu -> gpu_basis -> Qsbasis                     =   new cuda_buffer_type<int>(Qsbasis,  gpu->gpu_basis->nshell, 4);
-    gpu -> gpu_basis -> Qfbasis                     =   new cuda_buffer_type<int>(Qfbasis,  gpu->gpu_basis->nshell, 4);
-    gpu -> gpu_basis -> gccoeff                     =   new cuda_buffer_type<QUICKDouble>(gccoeff, MAXPRIM, gpu->nbasis);
+    gpu -> gpu_basis -> Qnumber                     =   new gpu_buffer_type<int>(Qnumber,  gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> Qstart                      =   new gpu_buffer_type<int>(Qstart,   gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> Qfinal                      =   new gpu_buffer_type<int>(Qfinal,   gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> Qsbasis                     =   new gpu_buffer_type<int>(Qsbasis,  gpu->gpu_basis->nshell, 4);
+    gpu -> gpu_basis -> Qfbasis                     =   new gpu_buffer_type<int>(Qfbasis,  gpu->gpu_basis->nshell, 4);
+    gpu -> gpu_basis -> gccoeff                     =   new gpu_buffer_type<QUICKDouble>(gccoeff, MAXPRIM, gpu->nbasis);
     
-    gpu -> gpu_basis -> cons                        =   new cuda_buffer_type<QUICKDouble>(cons, gpu->nbasis);
-    gpu -> gpu_basis -> gcexpo                      =   new cuda_buffer_type<QUICKDouble>(gcexpo, MAXPRIM, gpu->nbasis);
-    gpu -> gpu_basis -> KLMN                        =   new cuda_buffer_type<unsigned char>(3, gpu->nbasis);
+    gpu -> gpu_basis -> cons                        =   new gpu_buffer_type<QUICKDouble>(cons, gpu->nbasis);
+    gpu -> gpu_basis -> gcexpo                      =   new gpu_buffer_type<QUICKDouble>(gcexpo, MAXPRIM, gpu->nbasis);
+    gpu -> gpu_basis -> KLMN                        =   new gpu_buffer_type<unsigned char>(3, gpu->nbasis);
 
     size_t index_c = 0;
     size_t index_f = 0;
@@ -1604,7 +1604,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
         }
     }
 
-    gpu -> gpu_basis -> prim_start                  =   new cuda_buffer_type<int>(gpu->gpu_basis->nshell);
+    gpu -> gpu_basis -> prim_start                  =   new gpu_buffer_type<int>(gpu->gpu_basis->nshell);
     gpu -> gpu_basis -> prim_total = 0;
     
     for (int i = 0 ; i < gpu->gpu_basis->nshell; i++) {
@@ -1622,11 +1622,11 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     int prim_total = gpu -> gpu_basis -> prim_total;
     gpu -> gpu_sim.prim_total = gpu -> gpu_basis -> prim_total;
     
-    gpu -> gpu_basis -> Xcoeff                      =   new cuda_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
-    gpu -> gpu_basis -> expoSum                     =   new cuda_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu -> gpu_basis -> weightedCenterX             =   new cuda_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu -> gpu_basis -> weightedCenterY             =   new cuda_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu -> gpu_basis -> weightedCenterZ             =   new cuda_buffer_type<QUICKDouble>(prim_total, prim_total);
+    gpu -> gpu_basis -> Xcoeff                      =   new gpu_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
+    gpu -> gpu_basis -> expoSum                     =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    gpu -> gpu_basis -> weightedCenterX             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    gpu -> gpu_basis -> weightedCenterY             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    gpu -> gpu_basis -> weightedCenterZ             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
     
     
     /*
@@ -1654,8 +1654,8 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
 
     gpu -> gpu_sim.Qshell = gpu->gpu_basis->Qshell;
     
-    gpu -> gpu_basis -> sorted_Q                    =   new cuda_buffer_type<int>( gpu->gpu_basis->Qshell);
-    gpu -> gpu_basis -> sorted_Qnumber              =   new cuda_buffer_type<int>( gpu->gpu_basis->Qshell);
+    gpu -> gpu_basis -> sorted_Q                    =   new gpu_buffer_type<int>( gpu->gpu_basis->Qshell);
+    gpu -> gpu_basis -> sorted_Qnumber              =   new gpu_buffer_type<int>( gpu->gpu_basis->Qshell);
     
     /*
      Now because to sort, sorted_Q stands for the shell no, and sorted_Qnumber is the shell orbital type (or angular momentum).
@@ -1909,10 +1909,10 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     
     PRINTDEBUG("BEGIN TO UPLOAD GRAD")
     
-    gpu -> grad = new cuda_buffer_type<QUICKDouble>(3 * gpu->natom);
+    gpu -> grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->natom);
 
 #ifdef USE_LEGACY_ATOMICS
-    gpu -> gradULL = new cuda_buffer_type<QUICKULL>(3 * gpu->natom);
+    gpu -> gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu->natom);
     gpu -> gpu_sim.gradULL =  gpu -> gradULL -> _devData;
     gpu -> gradULL -> Upload();
 #endif
@@ -1948,7 +1948,7 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 
     gpu -> lri_data = new lri_data_type;
     
-    gpu -> lri_data -> cc   = new cuda_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
+    gpu -> lri_data -> cc   = new gpu_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
     gpu -> lri_data -> cc -> Upload();
     
     gpu -> gpu_sim.lri_zeta = *zeta;
@@ -1971,7 +1971,7 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 //-----------------------------------------------
 extern "C" void gpu_upload_cew_vrecip_(int *ierr){
 
-  gpu -> lri_data -> vrecip = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+  gpu -> lri_data -> vrecip = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 
   QUICKDouble *gridpt = new QUICKDouble[3];
 
@@ -2004,15 +2004,15 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
 	gpu -> gpu_xcq -> npoints       = *count;
         gpu -> xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
 	
-        gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> gridz = new cuda_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> wtang = new cuda_buffer_type<QUICKDouble>(wtang, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> rwt   = new cuda_buffer_type<QUICKDouble>(rwt, gpu -> gpu_xcq -> npoints);	
-	gpu -> gpu_xcq -> rad3  = new cuda_buffer_type<QUICKDouble>(rad3, gpu -> gpu_xcq -> npoints); 
-        gpu -> gpu_xcq -> gatm  = new cuda_buffer_type<int>(gatm, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> sswt  = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> weight= new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridx = new gpu_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridy = new gpu_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridz = new gpu_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> wtang = new gpu_buffer_type<QUICKDouble>(wtang, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> rwt   = new gpu_buffer_type<QUICKDouble>(rwt, gpu -> gpu_xcq -> npoints);	
+	gpu -> gpu_xcq -> rad3  = new gpu_buffer_type<QUICKDouble>(rad3, gpu -> gpu_xcq -> npoints); 
+        gpu -> gpu_xcq -> gatm  = new gpu_buffer_type<int>(gatm, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> sswt  = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> weight= new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 
         gpu -> gpu_xcq -> gridx -> Upload();
         gpu -> gpu_xcq -> gridy -> Upload();
@@ -2065,7 +2065,7 @@ void prune_grid_sswgrad(){
 
 
         PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         cudaEvent_t t_startp, t_endp;
         float t_timep;
         cudaEventCreate(&t_startp);
@@ -2112,7 +2112,7 @@ void prune_grid_sswgrad(){
 
 	gpu_delete_dft_grid_();
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         cudaEvent_t t_start, t_end;
         float t_time;
         cudaEventCreate(&t_start);
@@ -2137,14 +2137,14 @@ void prune_grid_sswgrad(){
          gpu -> gpu_xcq -> npoints_ssd = count;
 
         //Upload data using templates
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
 
-        gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gridz_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> exc_ssd = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridx_ssd = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridy_ssd = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridz_ssd = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> exc_ssd = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> quadwt = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gatm_ssd = new gpu_buffer_type<int>(gpu -> gpu_xcq -> npoints_ssd);
 
         cudaEventCreate(&t_start);
         cudaEventCreate(&t_end);
@@ -2166,15 +2166,15 @@ void prune_grid_sswgrad(){
 
 #else
 
-        gpu -> gpu_xcq -> gridx_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gridy_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridy, gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gridz_ssd = new cuda_buffer_type<QUICKDouble>(tmp_gridz, gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> exc_ssd = new cuda_buffer_type<QUICKDouble>(tmp_exc, gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> quadwt = new cuda_buffer_type<QUICKDouble>(tmp_quadwt, gpu -> gpu_xcq -> npoints_ssd);
-        gpu -> gpu_xcq -> gatm_ssd = new cuda_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridx_ssd = new gpu_buffer_type<QUICKDouble>(tmp_gridx, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridy_ssd = new gpu_buffer_type<QUICKDouble>(tmp_gridy, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gridz_ssd = new gpu_buffer_type<QUICKDouble>(tmp_gridz, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> exc_ssd = new gpu_buffer_type<QUICKDouble>(tmp_exc, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> quadwt = new gpu_buffer_type<QUICKDouble>(tmp_quadwt, gpu -> gpu_xcq -> npoints_ssd);
+        gpu -> gpu_xcq -> gatm_ssd = new gpu_buffer_type<int>(tmp_gatm, gpu -> gpu_xcq -> npoints_ssd);
         
 #endif
-        gpu -> gpu_xcq -> uw_ssd= new cuda_buffer_type<QUICKDouble>(gpu -> blocks * gpu -> xc_threadsPerBlock * gpu->natom*3);
+        gpu -> gpu_xcq -> uw_ssd= new gpu_buffer_type<QUICKDouble>(gpu -> blocks * gpu -> xc_threadsPerBlock * gpu->natom*3);
 
         gpu -> gpu_xcq -> gridx_ssd -> Upload();
         gpu -> gpu_xcq -> gridy_ssd -> Upload();
@@ -2204,7 +2204,7 @@ void prune_grid_sswgrad(){
         free(tmp_quadwt);
         free(tmp_gatm);
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         cudaEventRecord(t_endp, 0);
         cudaEventSynchronize(t_endp);
         cudaEventElapsedTime(&t_timep, t_startp, t_endp);
@@ -2226,11 +2226,11 @@ unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, dou
         gpu -> gpu_xcq -> npoints       = count;
         gpu -> xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
 
-        gpu -> gpu_xcq -> gridx = new cuda_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> gridy = new cuda_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> gridz = new cuda_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-        gpu -> gpu_xcq -> bin_locator = new cuda_buffer_type<int>(bin_locator,gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridx = new gpu_buffer_type<QUICKDouble>(gridx, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridy = new gpu_buffer_type<QUICKDouble>(gridy, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> gridz = new gpu_buffer_type<QUICKDouble>(gridz, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_basis -> sigrad2 = new gpu_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+        gpu -> gpu_xcq -> bin_locator = new gpu_buffer_type<int>(bin_locator,gpu -> gpu_xcq -> npoints);
 
         gpu -> gpu_xcq -> gridx -> Upload();
         gpu -> gpu_xcq -> gridy -> Upload();
@@ -2403,24 +2403,24 @@ QUICKDouble *XCCutoff){
 	gpu -> gpu_cutoff -> DMCutoff   = *DMCutoff;
         gpu -> gpu_cutoff -> XCCutoff   = *XCCutoff;
 
-	gpu -> gpu_xcq -> gridx	= new cuda_buffer_type<QUICKDouble>(gridxb, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gridy	= new cuda_buffer_type<QUICKDouble>(gridyb, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gridz	= new cuda_buffer_type<QUICKDouble>(gridzb, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> sswt	= new cuda_buffer_type<QUICKDouble>(gridb_sswt, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> weight	= new cuda_buffer_type<QUICKDouble>(gridb_weight, gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gatm		= new cuda_buffer_type<int>(gridb_atm, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> dweight_ssd   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> basf	= new cuda_buffer_type<int>(basf, gpu -> gpu_xcq -> ntotbf);
-	gpu -> gpu_xcq -> primf	= new cuda_buffer_type<int>(primf, gpu -> gpu_xcq -> ntotpf);
-	gpu -> gpu_xcq -> basf_locator     = new cuda_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
-	gpu -> gpu_xcq -> primf_locator    = new cuda_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
-	gpu -> gpu_basis -> sigrad2 = new cuda_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
-        gpu -> gpu_xcq -> bin_locator       = new cuda_buffer_type<int>(bin_locator, gpu -> gpu_xcq -> npoints);
-        gpu -> gpu_xcq -> bin_counter       = new cuda_buffer_type<int>(bin_counter, gpu -> gpu_xcq -> nbins +1);
+	gpu -> gpu_xcq -> gridx	= new gpu_buffer_type<QUICKDouble>(gridxb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gridy	= new gpu_buffer_type<QUICKDouble>(gridyb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gridz	= new gpu_buffer_type<QUICKDouble>(gridzb, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> sswt	= new gpu_buffer_type<QUICKDouble>(gridb_sswt, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> weight	= new gpu_buffer_type<QUICKDouble>(gridb_weight, gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gatm		= new gpu_buffer_type<int>(gridb_atm, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> dweight_ssd   = new gpu_buffer_type<int>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> basf	= new gpu_buffer_type<int>(basf, gpu -> gpu_xcq -> ntotbf);
+	gpu -> gpu_xcq -> primf	= new gpu_buffer_type<int>(primf, gpu -> gpu_xcq -> ntotpf);
+	gpu -> gpu_xcq -> basf_locator     = new gpu_buffer_type<int>(basf_counter, gpu -> gpu_xcq -> nbins +1);
+	gpu -> gpu_xcq -> primf_locator    = new gpu_buffer_type<int>(primf_counter, gpu -> gpu_xcq -> ntotbf +1);
+	gpu -> gpu_basis -> sigrad2 = new gpu_buffer_type<QUICKDouble>(sigrad2, gpu->nbasis);
+        gpu -> gpu_xcq -> bin_locator       = new gpu_buffer_type<int>(bin_locator, gpu -> gpu_xcq -> npoints);
+        gpu -> gpu_xcq -> bin_counter       = new gpu_buffer_type<int>(bin_counter, gpu -> gpu_xcq -> nbins +1);
 
         for(int i=0; i< gpu -> gpu_xcq -> npoints; ++i) gpu -> gpu_xcq -> dweight_ssd -> _hostData[i] =1;
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
 
         cudaEvent_t t_start, t_end;
         float t_time;
@@ -2447,15 +2447,15 @@ QUICKDouble *XCCutoff){
 #endif
 
 	gpu -> xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
-	gpu -> gpu_xcq -> densa = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> densb = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gax = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gbx = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gay = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gby = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gaz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> gbz = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-	gpu -> gpu_xcq -> exc = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> densa = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> densb = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gax = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gbx = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gay = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gby = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gaz = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> gbz = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+	gpu -> gpu_xcq -> exc = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
 
 
 	gpu -> gpu_xcq -> gridx -> UploadAsync();
@@ -2679,7 +2679,7 @@ extern "C" void gpu_delete_dft_grid_(){
 	SAFE_DELETE(gpu -> gpu_xcq -> exc);
 	SAFE_DELETE(gpu -> gpu_basis -> sigrad2);
 //        SAFE_DELETE(gpu -> gpu_xcq -> primfpbin);
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
         delete_pteval(false);
@@ -2697,7 +2697,7 @@ void gpu_delete_sswgrad_vars(){
         SAFE_DELETE(gpu -> gpu_xcq -> quadwt);
 	SAFE_DELETE(gpu -> gpu_xcq -> uw_ssd);
         SAFE_DELETE(gpu -> gpu_xcq -> gatm_ssd);
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         SAFE_DELETE(gpu -> gpu_xcq -> mpi_bxccompute);
 #endif
 
@@ -2749,7 +2749,7 @@ extern "C" void gpu_cleanup_(){
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 
 static bool debut = true;
 static bool incoreInt = true;
@@ -2803,12 +2803,12 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName){
 #endif    
     
     // Now begin to allocate AO INT space
-    gpu -> aoint_buffer = new cuda_buffer_type<ERI_entry>*[1];//(cuda_buffer_type<ERI_entry> **) malloc(sizeof(cuda_buffer_type<ERI_entry>*) * streamNum);
+    gpu -> aoint_buffer = new gpu_buffer_type<ERI_entry>*[1];//(gpu_buffer_type<ERI_entry> **) malloc(sizeof(gpu_buffer_type<ERI_entry>*) * streamNum);
     gpu -> gpu_sim.aoint_buffer = new ERI_entry*[1];
     
     
     // Zero them out
-    gpu -> aoint_buffer[0]                 = new cuda_buffer_type<ERI_entry>( availableERI, false );
+    gpu -> aoint_buffer[0]                 = new gpu_buffer_type<ERI_entry>( availableERI, false );
     gpu -> gpu_sim.aoint_buffer[0]         = gpu -> aoint_buffer[0] -> _devData;
     
 #ifdef DEBUG
@@ -3038,7 +3038,7 @@ char *trim(char *s) {
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName)
 {
     PRINTDEBUG("BEGIN TO RUN AOINT")
@@ -3109,13 +3109,13 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     int nBatchERICount = maxIntCount;
     
     // Now begin to allocate AO INT space
-    gpu -> aoint_buffer = new cuda_buffer_type<ERI_entry>*[streamNum];//(cuda_buffer_type<ERI_entry> **) malloc(sizeof(cuda_buffer_type<ERI_entry>*) * streamNum);
+    gpu -> aoint_buffer = new gpu_buffer_type<ERI_entry>*[streamNum];//(gpu_buffer_type<ERI_entry> **) malloc(sizeof(gpu_buffer_type<ERI_entry>*) * streamNum);
     gpu -> gpu_sim.aoint_buffer = new ERI_entry*[streamNum];
     
     
     // Zero them out
     for (int i = 0; i<streamNum; i++) {
-        gpu -> aoint_buffer[i]                 = new cuda_buffer_type<ERI_entry>( nBatchERICount, false );
+        gpu -> aoint_buffer[i]                 = new gpu_buffer_type<ERI_entry>( nBatchERICount, false );
         gpu -> gpu_sim.aoint_buffer[i]         = gpu -> aoint_buffer[i] -> _devData;
     }
     
@@ -3123,7 +3123,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     gpu -> gpu_sim.leastIntegralCutoff  = *leastIntegralCutoff;
     gpu -> gpu_sim.maxIntegralCutoff    = *maxIntegralCutoff;
     gpu -> gpu_sim.iBatchSize           = nBatchERICount;
-    gpu -> intCount                     = new cuda_buffer_type<QUICKULL>(streamNum);
+    gpu -> intCount                     = new gpu_buffer_type<QUICKULL>(streamNum);
     gpu -> gpu_sim.intCount = gpu->intCount->_devData;
     
     upload_sim_to_constant(gpu);
@@ -3303,7 +3303,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 
   // First, determine the sizes of prmitive function arrays that will go into smem. This is helpful
   // to copy data from gmem to smem. 
-  gpu -> gpu_xcq -> primfpbin          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins);
+  gpu -> gpu_xcq -> primfpbin          = new gpu_buffer_type<int>(gpu -> gpu_xcq -> nbins);
 
   // Count how many primitive functions per each bin, also keep track of maximum number of basis and
   // primitive functions
@@ -3383,11 +3383,11 @@ void upload_pteval(){
 
   if( reqMem < (free-estMem) ){
     gpu ->gpu_sim.prePtevl = true; 
-    gpu -> gpu_xcq -> phi_loc          = new cuda_buffer_type<unsigned int>(gpu -> gpu_xcq -> npoints);
-    gpu -> gpu_xcq -> phi          = new cuda_buffer_type<QUICKDouble>(count);
-    gpu -> gpu_xcq -> dphidx       = new cuda_buffer_type<QUICKDouble>(count);
-    gpu -> gpu_xcq -> dphidy       = new cuda_buffer_type<QUICKDouble>(count);
-    gpu -> gpu_xcq -> dphidz       = new cuda_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> phi_loc          = new gpu_buffer_type<unsigned int>(gpu -> gpu_xcq -> npoints);
+    gpu -> gpu_xcq -> phi          = new gpu_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidx       = new gpu_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidy       = new gpu_buffer_type<QUICKDouble>(count);
+    gpu -> gpu_xcq -> dphidz       = new gpu_buffer_type<QUICKDouble>(count);
 
     memcpy(gpu -> gpu_xcq -> phi_loc -> _hostData, &phi_loc, sizeof(unsigned int)*gpu -> gpu_xcq -> npoints);
 

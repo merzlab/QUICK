@@ -203,7 +203,7 @@ if(CUDA)
 
     # SPDF
     if(ENABLEF)
-        list(APPEND CUDA_NVCC_FLAGS -DCUDA_SPDF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
     endif()
 
     if(DISABLE_OPTIMIZER_CONSTANTS)
@@ -225,9 +225,6 @@ if(CUDA)
 endif()
 
 if(HIP)
-    # HIP builds currently unavailable (TODO: fix post release)
-    message(FATAL_ERROR "Error: HIP support is currently unavailable in this QUICK release. Support will be added back in a future release.")
-
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
     set(GPU_LD_FLAGS -fgpu-rdc --hip-link)

@@ -1,7 +1,7 @@
 
 #ifndef XC_REDISTRIBUTE
 #define XC_REDISTRIBUTE
-#ifdef HIP_MPIV
+#if defined(MPIV_GPU)
 #ifdef __cplusplus
 extern "C" {
 #endif

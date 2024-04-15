@@ -70,7 +70,7 @@ get_lri_grad_kernel_spdf2()
         QUICKULL iatom = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - iatom*jshell);
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[b] > 0){
 #endif
                 
@@ -111,7 +111,7 @@ get_lri_grad_kernel_spdf2()
                 //}
 //          }
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         }
 #endif
 
@@ -169,7 +169,7 @@ __device__ __forceinline__ void iclass_lri_grad
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -533,7 +533,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */

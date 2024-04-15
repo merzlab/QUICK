@@ -17,7 +17,6 @@
 #include "gpu_common.h"
 #include "gpu_libxc_type.h"
 
-// CUDA-C includes
 #include <hip/hip_runtime.h>
 //#include <hip/hip_runtime_api.h>
 
@@ -26,30 +25,30 @@
  *  gpu type and buffer type
  ****************************************************************
  */
-template <typename T> struct cuda_buffer_type;
+template <typename T> struct gpu_buffer_type;
 struct gpu_calculated_type {
     int                             natom;  // number of atom
     int                             nbasis; // number of basis sets
-    cuda_buffer_type<QUICKDouble>*  o;      // O matrix
-    cuda_buffer_type<QUICKDouble>*  ob;     // beta O matrix
-    cuda_buffer_type<QUICKDouble>*  dense;  // Density Matrix
-    cuda_buffer_type<QUICKDouble>*  denseb; // Beta Density Matrix
+    gpu_buffer_type<QUICKDouble>*  o;      // O matrix
+    gpu_buffer_type<QUICKDouble>*  ob;     // beta O matrix
+    gpu_buffer_type<QUICKDouble>*  dense;  // Density Matrix
+    gpu_buffer_type<QUICKDouble>*  denseb; // Beta Density Matrix
 #ifdef USE_LEGACY_ATOMICS
-    cuda_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
-    cuda_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
+    gpu_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
+    gpu_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
 #endif
-    cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
+    gpu_buffer_type<QUICKDouble>*  distance; // distance matrix
 };
 
 // struct to hold large temporary device arrays
 struct gpu_scratch{
 
-    cuda_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
-    cuda_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
-    cuda_buffer_type<QUICKDouble>* storeAA;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
-    cuda_buffer_type<QUICKDouble>* storeBB;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
-    cuda_buffer_type<QUICKDouble>* storeCC;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
-    cuda_buffer_type<QUICKDouble>* YVerticalTemp;  // holds boys function values
+    gpu_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
+    gpu_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
+    gpu_buffer_type<QUICKDouble>* storeAA;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    gpu_buffer_type<QUICKDouble>* storeBB;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    gpu_buffer_type<QUICKDouble>* storeCC;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
+    gpu_buffer_type<QUICKDouble>* YVerticalTemp;  // holds boys function values
 
 };
 
@@ -69,12 +68,12 @@ struct gpu_cutoff_type {
     
     // the following are for pre-sorting cutoff
     int                             sqrQshell;
-    cuda_buffer_type<int2>*         sorted_YCutoffIJ;
+    gpu_buffer_type<int2>*         sorted_YCutoffIJ;
     
     // Cutoff matrix
-    cuda_buffer_type<QUICKDouble>*  cutMatrix;
-    cuda_buffer_type<QUICKDouble>*  YCutoff;
-    cuda_buffer_type<QUICKDouble>*  cutPrim;
+    gpu_buffer_type<QUICKDouble>*  cutMatrix;
+    gpu_buffer_type<QUICKDouble>*  YCutoff;
+    gpu_buffer_type<QUICKDouble>*  cutPrim;
     
     // Cutoff criteria
     QUICKDouble                     integralCutoff;
@@ -85,7 +84,7 @@ struct gpu_cutoff_type {
     QUICKDouble                     gradCutoff;
 
     // One electron pre-sorting cutoff
-    cuda_buffer_type<int2>*         sorted_OEICutoffIJ;
+    gpu_buffer_type<int2>*         sorted_OEICutoffIJ;
     
 };
 
@@ -109,62 +108,62 @@ struct XC_quadrature_type{
 	int ntotpf;									//Total number of primitive functions
 	int bin_size;                               //Size of an octree bin
 
-	cuda_buffer_type<QUICKDouble>* gridx;		//X coordinate of a grid point
-	cuda_buffer_type<QUICKDouble>* gridy;		//Y coordinate of a grid point
-	cuda_buffer_type<QUICKDouble>* gridz;		//Z coordinate of a grid point
-	cuda_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
-	cuda_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
-	cuda_buffer_type<int>*	gatm;			//To which atom does a given grid point belongs to?
-        cuda_buffer_type<int>*  bin_counter;            //Keeps track of bin borders 
-	cuda_buffer_type<int>*  dweight_ssd;            //Dummy weight of grid points for sswder 
-	cuda_buffer_type<int>*	basf;			//Basis function indices of all grid points
-	cuda_buffer_type<int>*	primf;			//Primitive function inidices of all grid points
-        cuda_buffer_type<int>*  primfpbin;                 //Number of primitive functions per bin
-	cuda_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
-	cuda_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
-        cuda_buffer_type<int>*  bin_locator;            //Helps accessing bin of a grid point
+	gpu_buffer_type<QUICKDouble>* gridx;		//X coordinate of a grid point
+	gpu_buffer_type<QUICKDouble>* gridy;		//Y coordinate of a grid point
+	gpu_buffer_type<QUICKDouble>* gridz;		//Z coordinate of a grid point
+	gpu_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
+	gpu_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
+	gpu_buffer_type<int>*	gatm;			//To which atom does a given grid point belongs to?
+        gpu_buffer_type<int>*  bin_counter;            //Keeps track of bin borders 
+	gpu_buffer_type<int>*  dweight_ssd;            //Dummy weight of grid points for sswder 
+	gpu_buffer_type<int>*	basf;			//Basis function indices of all grid points
+	gpu_buffer_type<int>*	primf;			//Primitive function inidices of all grid points
+        gpu_buffer_type<int>*  primfpbin;                 //Number of primitive functions per bin
+	gpu_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
+	gpu_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
+        gpu_buffer_type<int>*  bin_locator;            //Helps accessing bin of a grid point
 
 	//Temporary variables
-	cuda_buffer_type<QUICKDouble>* densa;
-	cuda_buffer_type<QUICKDouble>* densb;
-	cuda_buffer_type<QUICKDouble>* gax;
-	cuda_buffer_type<QUICKDouble>* gbx;
-	cuda_buffer_type<QUICKDouble>* gay;
-	cuda_buffer_type<QUICKDouble>* gby;
-	cuda_buffer_type<QUICKDouble>* gaz;
-	cuda_buffer_type<QUICKDouble>* gbz;
-	cuda_buffer_type<QUICKDouble>* exc;
-	cuda_buffer_type<QUICKDouble>* xc_grad;
-	cuda_buffer_type<QUICKDouble>* gxc_grad;        // a global xc gradient vector of size number_of_blocks * number_of_threads_per_block
-        cuda_buffer_type<QUICKDouble>* phi;             // value of a basis function at a grid point 
-        cuda_buffer_type<QUICKDouble>* dphidx;          // x gradient of a basis function at a grid point 
-        cuda_buffer_type<QUICKDouble>* dphidy;          // y gradient of a basis function at a grid point
-        cuda_buffer_type<QUICKDouble>* dphidz;          // z gradient of a basis function at a grid point  
-        cuda_buffer_type<unsigned int>*  phi_loc;       // stores locations of phi array for each grid point
+	gpu_buffer_type<QUICKDouble>* densa;
+	gpu_buffer_type<QUICKDouble>* densb;
+	gpu_buffer_type<QUICKDouble>* gax;
+	gpu_buffer_type<QUICKDouble>* gbx;
+	gpu_buffer_type<QUICKDouble>* gay;
+	gpu_buffer_type<QUICKDouble>* gby;
+	gpu_buffer_type<QUICKDouble>* gaz;
+	gpu_buffer_type<QUICKDouble>* gbz;
+	gpu_buffer_type<QUICKDouble>* exc;
+	gpu_buffer_type<QUICKDouble>* xc_grad;
+	gpu_buffer_type<QUICKDouble>* gxc_grad;        // a global xc gradient vector of size number_of_blocks * number_of_threads_per_block
+        gpu_buffer_type<QUICKDouble>* phi;             // value of a basis function at a grid point 
+        gpu_buffer_type<QUICKDouble>* dphidx;          // x gradient of a basis function at a grid point 
+        gpu_buffer_type<QUICKDouble>* dphidy;          // y gradient of a basis function at a grid point
+        gpu_buffer_type<QUICKDouble>* dphidz;          // z gradient of a basis function at a grid point  
+        gpu_buffer_type<unsigned int>*  phi_loc;       // stores locations of phi array for each grid point
 
         //Variables for ssw derivative calculation
         int npoints_ssd; //Total number of input points for ssd
 
-        cuda_buffer_type<QUICKDouble>* gridx_ssd;       //X coordinate of a grid point
-        cuda_buffer_type<QUICKDouble>* gridy_ssd;       //Y coordinate of a grid point
-        cuda_buffer_type<QUICKDouble>* gridz_ssd;       //Z coordinate of a grid point
-        cuda_buffer_type<QUICKDouble>* exc_ssd;
-        cuda_buffer_type<QUICKDouble>* quadwt;          //quadrature weight
-        cuda_buffer_type<int>*  gatm_ssd;               //To which atom does a given grid point belongs to?
-	cuda_buffer_type<QUICKDouble>* uw_ssd;          //Holds unnormalized weights during ssd calculation
+        gpu_buffer_type<QUICKDouble>* gridx_ssd;       //X coordinate of a grid point
+        gpu_buffer_type<QUICKDouble>* gridy_ssd;       //Y coordinate of a grid point
+        gpu_buffer_type<QUICKDouble>* gridz_ssd;       //Z coordinate of a grid point
+        gpu_buffer_type<QUICKDouble>* exc_ssd;
+        gpu_buffer_type<QUICKDouble>* quadwt;          //quadrature weight
+        gpu_buffer_type<int>*  gatm_ssd;               //To which atom does a given grid point belongs to?
+	gpu_buffer_type<QUICKDouble>* uw_ssd;          //Holds unnormalized weights during ssd calculation
 	
 	//Variables for grid weight calculation
-	cuda_buffer_type<QUICKDouble>* wtang;
-	cuda_buffer_type<QUICKDouble>* rwt;
-	cuda_buffer_type<QUICKDouble>* rad3;
+	gpu_buffer_type<QUICKDouble>* wtang;
+	gpu_buffer_type<QUICKDouble>* rwt;
+	gpu_buffer_type<QUICKDouble>* rad3;
 
 	//Variables for obtaining octree info 
-	cuda_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
-	cuda_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
-	cuda_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
+	gpu_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
+	gpu_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
+	gpu_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
 
         // mpi variables
-        cuda_buffer_type<char>*          mpi_bxccompute;
+        gpu_buffer_type<char>*          mpi_bxccompute;
 
         // shared memory size
         int smem_size;                                 //size of shared memory buffer in xc kernels 
@@ -173,8 +172,8 @@ struct XC_quadrature_type{
 struct lri_data_type{
 
     int zeta;
-    cuda_buffer_type<QUICKDouble>* cc;
-    cuda_buffer_type<QUICKDouble>* vrecip;
+    gpu_buffer_type<QUICKDouble>* cc;
+    gpu_buffer_type<QUICKDouble>* vrecip;
 
 };
 
@@ -364,9 +363,9 @@ struct gpu_simulation_type {
     int                             mpisize;
 
     // multi-GPU variables
-    char*                           mpi_bcompute;
+    unsigned char*                           mpi_bcompute;
     char*                           mpi_bxccompute;
-    char*                           mpi_boeicompute;
+    unsigned char*                           mpi_boeicompute;
 
     int                             mpi_xcstart;
     int                             mpi_xcend;
@@ -403,56 +402,56 @@ struct gpu_basis_type {
     
     // Gaussian Type function
 
-    cuda_buffer_type<int>*          ncontract;
-    cuda_buffer_type<int>*          itype;
-    cuda_buffer_type<QUICKDouble>*  aexp;
-    cuda_buffer_type<QUICKDouble>*  dcoeff;
+    gpu_buffer_type<int>*          ncontract;
+    gpu_buffer_type<int>*          itype;
+    gpu_buffer_type<QUICKDouble>*  aexp;
+    gpu_buffer_type<QUICKDouble>*  dcoeff;
   
     // Some more infos about basis function
 /*
-    cuda_buffer_type<QUICKDouble>*  xyz;
-    cuda_buffer_type<int>*          first_basis_function;
-    cuda_buffer_type<int>*          last_basis_function;
-    cuda_buffer_type<int>*          first_shell_basis_function;
-    cuda_buffer_type<int>*          last_shell_basis_function;
+    gpu_buffer_type<QUICKDouble>*  xyz;
+    gpu_buffer_type<int>*          first_basis_function;
+    gpu_buffer_type<int>*          last_basis_function;
+    gpu_buffer_type<int>*          first_shell_basis_function;
+    gpu_buffer_type<int>*          last_shell_basis_function;
 */
-    cuda_buffer_type<int>*          ncenter;
+    gpu_buffer_type<int>*          ncenter;
     /*
-    cuda_buffer_type<int>*          ktype;
-    cuda_buffer_type<int>*          kshell;
+    gpu_buffer_type<int>*          ktype;
+    gpu_buffer_type<int>*          kshell;
   */
-    cuda_buffer_type<QUICKDouble>*  sigrad2;
-    cuda_buffer_type<int>*          kstart;
-    cuda_buffer_type<int>*          katom;  
-    cuda_buffer_type<int>*          kprim;
-    cuda_buffer_type<int>*          Ksumtype;
-    cuda_buffer_type<int>*          Qnumber;
-    cuda_buffer_type<int>*          Qstart;
-    cuda_buffer_type<int>*          Qfinal;
-    cuda_buffer_type<int>*          Qsbasis;
-    cuda_buffer_type<int>*          Qfbasis;
-    cuda_buffer_type<int>*          sorted_Qnumber;
-    cuda_buffer_type<int>*          sorted_Q;
-    cuda_buffer_type<QUICKDouble>*  gccoeff;
-    cuda_buffer_type<QUICKDouble>*  Xcoeff;                     // 4-dimension one
-    cuda_buffer_type<QUICKDouble>*  Xcoeff_oei;                 // 4-dimension one, precomputed overlap prefactor for oei
-    cuda_buffer_type<QUICKDouble>*  expoSum;                    // 4-dimension one
-    cuda_buffer_type<QUICKDouble>*  weightedCenterX;            // 4-dimension one
-    cuda_buffer_type<QUICKDouble>*  weightedCenterY;            // 4-dimension one
-    cuda_buffer_type<QUICKDouble>*  weightedCenterZ;            // 4-dimension one
-    cuda_buffer_type<QUICKDouble>*  cons;
-    cuda_buffer_type<QUICKDouble>*  gcexpo;
-    cuda_buffer_type<unsigned char>* KLMN;
-    cuda_buffer_type<QUICKDouble>*  Apri;
-    cuda_buffer_type<QUICKDouble>*  Kpri;
-    cuda_buffer_type<QUICKDouble>*  PpriX;
-    cuda_buffer_type<QUICKDouble>*  PpriY;
-    cuda_buffer_type<QUICKDouble>*  PpriZ;
-    cuda_buffer_type<int>*          prim_start;
+    gpu_buffer_type<QUICKDouble>*  sigrad2;
+    gpu_buffer_type<int>*          kstart;
+    gpu_buffer_type<int>*          katom;  
+    gpu_buffer_type<int>*          kprim;
+    gpu_buffer_type<int>*          Ksumtype;
+    gpu_buffer_type<int>*          Qnumber;
+    gpu_buffer_type<int>*          Qstart;
+    gpu_buffer_type<int>*          Qfinal;
+    gpu_buffer_type<int>*          Qsbasis;
+    gpu_buffer_type<int>*          Qfbasis;
+    gpu_buffer_type<int>*          sorted_Qnumber;
+    gpu_buffer_type<int>*          sorted_Q;
+    gpu_buffer_type<QUICKDouble>*  gccoeff;
+    gpu_buffer_type<QUICKDouble>*  Xcoeff;                     // 4-dimension one
+    gpu_buffer_type<QUICKDouble>*  Xcoeff_oei;                 // 4-dimension one, precomputed overlap prefactor for oei
+    gpu_buffer_type<QUICKDouble>*  expoSum;                    // 4-dimension one
+    gpu_buffer_type<QUICKDouble>*  weightedCenterX;            // 4-dimension one
+    gpu_buffer_type<QUICKDouble>*  weightedCenterY;            // 4-dimension one
+    gpu_buffer_type<QUICKDouble>*  weightedCenterZ;            // 4-dimension one
+    gpu_buffer_type<QUICKDouble>*  cons;
+    gpu_buffer_type<QUICKDouble>*  gcexpo;
+    gpu_buffer_type<unsigned char>* KLMN;
+    gpu_buffer_type<QUICKDouble>*  Apri;
+    gpu_buffer_type<QUICKDouble>*  Kpri;
+    gpu_buffer_type<QUICKDouble>*  PpriX;
+    gpu_buffer_type<QUICKDouble>*  PpriY;
+    gpu_buffer_type<QUICKDouble>*  PpriZ;
+    gpu_buffer_type<int>*          prim_start;
 
     // For multi GPU version
-    cuda_buffer_type<char>*           mpi_bcompute;
-    cuda_buffer_type<char>*           mpi_boeicompute;
+    gpu_buffer_type<unsigned char>*           mpi_bcompute;
+    gpu_buffer_type<unsigned char>*           mpi_boeicompute;
 
     void upload_all();
     
@@ -469,8 +468,8 @@ struct gpu_type {
     SM_VERSION                      sm_version;
     
     // Memory parameters
-    long long int                   totalCPUMemory; // total CPU memory allocated by CUDA part
-    long long int                   totalGPUMemory; // total GPU memory allocated by CUDA part
+    long long int                   totalCPUMemory; // total CPU memory allocated
+    long long int                   totalGPUMemory; // total GPU memory allocated
     
     // Launch parameters
     int                             gpu_dev_id;  // set 0 for master GPU
@@ -505,20 +504,20 @@ struct gpu_type {
     int                             jbasis;
     int                             maxL;
     
-    cuda_buffer_type<int>*          iattype;
-    cuda_buffer_type<QUICKDouble>*  xyz;
-    cuda_buffer_type<QUICKDouble>*  allxyz; // coordinates of nuclei and external point charges
-    cuda_buffer_type<QUICKDouble>*  chg;
-    cuda_buffer_type<QUICKDouble>*  allchg; // charges of nuclei and external point charges
-    cuda_buffer_type<DFT_calculated_type>*
+    gpu_buffer_type<int>*          iattype;
+    gpu_buffer_type<QUICKDouble>*  xyz;
+    gpu_buffer_type<QUICKDouble>*  allxyz; // coordinates of nuclei and external point charges
+    gpu_buffer_type<QUICKDouble>*  chg;
+    gpu_buffer_type<QUICKDouble>*  allchg; // charges of nuclei and external point charges
+    gpu_buffer_type<DFT_calculated_type>*
                                     DFT_calculated;
     
     // For gradient
-    cuda_buffer_type<QUICKDouble>*  grad;
-    cuda_buffer_type<QUICKDouble>*  ptchg_grad;
-    cuda_buffer_type<QUICKULL>*     gradULL;
-    cuda_buffer_type<QUICKULL>*     ptchg_gradULL;
-    cuda_buffer_type<QUICKDouble>*  cew_grad;
+    gpu_buffer_type<QUICKDouble>*  grad;
+    gpu_buffer_type<QUICKDouble>*  ptchg_grad;
+    gpu_buffer_type<QUICKULL>*     gradULL;
+    gpu_buffer_type<QUICKULL>*     ptchg_gradULL;
+    gpu_buffer_type<QUICKDouble>*  cew_grad;
 
     gpu_calculated_type*            gpu_calculated;
     gpu_basis_type*                 gpu_basis;
@@ -526,19 +525,13 @@ struct gpu_type {
     gpu_simulation_type             gpu_sim;
     XC_quadrature_type*             gpu_xcq;
 
-    cuda_buffer_type<ERI_entry>**   aoint_buffer;
+    gpu_buffer_type<ERI_entry>**   aoint_buffer;
     
-    cuda_buffer_type<QUICKULL>*     intCount;
+    gpu_buffer_type<QUICKULL>*     intCount;
 
     gpu_scratch*                    scratch;
     
     lri_data_type*                  lri_data;
-    
-/*    
-    // Method
-    cuda_gpu_type();
-    ~cuda_gpu_type();
- */
 };
 
 typedef struct gpu_type *_gpu_type;
@@ -546,7 +539,7 @@ static _gpu_type gpu = NULL;
 
 // template to pack buffered data for GPU-CPU communication
 template <typename T>
-struct cuda_buffer_type {
+struct gpu_buffer_type {
     bool            _bPinned;    // if pinned mem
     unsigned int    _length;     // length of the data
     unsigned int    _length2;    // length 2 is the row, and if it's not equals to 0, the data is a matrix
@@ -555,18 +548,18 @@ struct cuda_buffer_type {
     T*              _f90Data;    // if constructed from f90 array, it is the pointer
     
     // constructor
-    cuda_buffer_type(int length);
-    cuda_buffer_type(int length, bool bPinned);
-    cuda_buffer_type(unsigned int length);
-    cuda_buffer_type(int length, int length2);
-    cuda_buffer_type(unsigned int length, unsigned int length2);
-    cuda_buffer_type(T* f90data, int length, int length2);
-    cuda_buffer_type(T* f90Data, unsigned int length, unsigned int length2);
-    cuda_buffer_type(T* f90data, int length);
-    cuda_buffer_type(T* f90Data, unsigned int length);
+    gpu_buffer_type(int length);
+    gpu_buffer_type(int length, bool bPinned);
+    gpu_buffer_type(unsigned int length);
+    gpu_buffer_type(int length, int length2);
+    gpu_buffer_type(unsigned int length, unsigned int length2);
+    gpu_buffer_type(T* f90data, int length, int length2);
+    gpu_buffer_type(T* f90Data, unsigned int length, unsigned int length2);
+    gpu_buffer_type(T* f90data, int length);
+    gpu_buffer_type(T* f90Data, unsigned int length);
     
     // destructor
-    virtual ~cuda_buffer_type();    
+    virtual ~gpu_buffer_type();    
     
     // allocate and deallocate data
     void Allocate();
@@ -588,63 +581,63 @@ struct cuda_buffer_type {
 
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(int length) :
+gpu_buffer_type<T> :: gpu_buffer_type(int length) :
 _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(int length, bool bPinned) :
+gpu_buffer_type<T> :: gpu_buffer_type(int length, bool bPinned) :
 _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(bPinned)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(unsigned int length) :
+gpu_buffer_type<T> :: gpu_buffer_type(unsigned int length) :
 _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(int length, int length2) :
+gpu_buffer_type<T> :: gpu_buffer_type(int length, int length2) :
 _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(unsigned int length, unsigned int length2) :
+gpu_buffer_type<T> :: gpu_buffer_type(unsigned int length, unsigned int length2) :
 _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(T* f90data, unsigned int length, unsigned int length2) :
+gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, unsigned int length, unsigned int length2) :
 _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(T* f90data, int length, int length2) :
+gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, int length, int length2) :
 _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(T* f90data, unsigned int length) :
+gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, unsigned int length) :
 _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
 
 template <typename T>
-cuda_buffer_type<T> :: cuda_buffer_type(T* f90data, int length) :
+gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, int length) :
 _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
@@ -652,13 +645,13 @@ _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data)
 
 
 template <typename T>
-cuda_buffer_type<T> :: ~cuda_buffer_type()
+gpu_buffer_type<T> :: ~gpu_buffer_type()
 {
     Deallocate();
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: Allocate()
+void gpu_buffer_type<T> :: Allocate()
 {
     
     PRINTDEBUG(">>BEGIN TO ALLOCATE TEMPLATE")
@@ -669,7 +662,7 @@ void cuda_buffer_type<T> :: Allocate()
         if (!_bPinned) {
             //Allocate GPU memeory
             status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
             gpu->totalCPUMemory   += _length*_length2*sizeof(T);
             
@@ -679,13 +672,13 @@ void cuda_buffer_type<T> :: Allocate()
         }else{
             //Allocate GPU memeory
             status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
             gpu->totalCPUMemory   += _length*_length2*sizeof(T);
             
             //Allocate CPU emembory
             status = hipHostGetDevicePointer((void **)&_devData, (void *)_hostData, 0);
-            PRINTERROR(status, " cudaGetDevicePointer cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipHostGetDevicePointer gpu_buffer_type :: Allocate failed!");
             memset(_hostData, 0, _length*_length2*sizeof(T));
         }
     }else {
@@ -693,7 +686,7 @@ void cuda_buffer_type<T> :: Allocate()
         if (!_bPinned) {
             //Allocate GPU memeory
             status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
             gpu->totalCPUMemory   += _length*_length2*sizeof(T);
             
@@ -703,13 +696,13 @@ void cuda_buffer_type<T> :: Allocate()
         }else{
             //Allocate GPU memeory
             status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
             gpu->totalCPUMemory   += _length*_length2*sizeof(T);
             
             //Allocate CPU emembory
             status = hipHostGetDevicePointer((void **)&_devData, (void *)_hostData, 0);
-            PRINTERROR(status, " cudaGetDevicePointer cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipHostGetDevicePointer gpu_buffer_type :: Allocate failed!");
             memset(_hostData, 0, _length*_length2*sizeof(T));
         }
         
@@ -732,7 +725,7 @@ void cuda_buffer_type<T> :: Allocate()
 
 
 template <typename T>
-void cuda_buffer_type<T> :: ReallocateGPU()
+void gpu_buffer_type<T> :: ReallocateGPU()
 {
   PRINTDEBUG(">>BEGIN TO REALLOCATE GPU")
 
@@ -743,13 +736,13 @@ void cuda_buffer_type<T> :: ReallocateGPU()
         if (!_bPinned) {
             //Allocate GPU memeory
             status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
 
         }else{
             //Allocate GPU memeory
             status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc cuda_buffer_type :: Allocate failed!");
+            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
             gpu->totalGPUMemory   += _length*_length2*sizeof(T);
 
         }
@@ -761,7 +754,7 @@ void cuda_buffer_type<T> :: ReallocateGPU()
 #else
        status=hipErrorNotMappedAsPointer;
 #endif
-        PRINTERROR(status, " hipMalloc cuda_buffer_type :: Reallocation failed!");
+        PRINTERROR(status, " hipMalloc gpu_buffer_type :: Reallocation failed!");
     }
 
     PRINTMEM("ALLOCATE GPU MEMORY",(unsigned long long int)_length*_length2*sizeof(T))
@@ -772,7 +765,7 @@ void cuda_buffer_type<T> :: ReallocateGPU()
 
 
 template <typename T>
-void cuda_buffer_type<T> :: Deallocate()
+void gpu_buffer_type<T> :: Deallocate()
 {
 
     PRINTDEBUG(">>BEGIN TO DEALLOCATE TEMPLATE")
@@ -782,7 +775,7 @@ void cuda_buffer_type<T> :: Deallocate()
             hipError_t status;
             status = hipFree(_devData);
             //	status = hipHostFree(_hostData);
-            PRINTERROR(status, " hipFree cuda_buffer_type :: Deallocate failed!");
+            PRINTERROR(status, " hipFree gpu_buffer_type :: Deallocate failed!");
             gpu->totalGPUMemory -= _length*_length2*sizeof(T);
         }
         
@@ -794,7 +787,7 @@ void cuda_buffer_type<T> :: Deallocate()
     }else{
         hipError_t status;
         status = hipHostFree(_hostData);
-        PRINTERROR(status, " hipFree cuda_buffer_type :: Deallocate failed!");
+        PRINTERROR(status, " hipFree gpu_buffer_type :: Deallocate failed!");
         gpu->totalGPUMemory -= _length*_length2*sizeof(T);
         gpu->totalCPUMemory -= _length*_length2*sizeof(T);
     }
@@ -812,44 +805,44 @@ void cuda_buffer_type<T> :: Deallocate()
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: Upload()
+void gpu_buffer_type<T> :: Upload()
 {
 
     PRINTDEBUG(">>BEGIN TO UPLOAD TEMPLATE")
 
     hipError_t status;
     status = hipMemcpy(_devData,_hostData,_length*_length2*sizeof(T),hipMemcpyHostToDevice);
-    PRINTERROR(status, " hipMemcpy cuda_buffer_type :: Upload failed!");
+    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Upload failed!");
     PRINTDEBUG("<<FINISH UPLOADING TEMPLATE")
 
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: UploadAsync()
+void gpu_buffer_type<T> :: UploadAsync()
 {
 
     PRINTDEBUG(">>BEGIN TO UPLOAD TEMPLATE")
 
     hipError_t status;
     status = hipMemcpyAsync(_devData,_hostData,_length*_length2*sizeof(T),hipMemcpyHostToDevice);
-    PRINTERROR(status, " hipMemcpy cuda_buffer_type :: Upload failed!");
+    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Upload failed!");
     PRINTDEBUG("<<FINISH UPLOADING TEMPLATE")
 
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: Download()
+void gpu_buffer_type<T> :: Download()
 {
 
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE")
     hipError_t status;
     status = hipMemcpy(_hostData,_devData,_length*_length2*sizeof(T),hipMemcpyDeviceToHost);
-    PRINTERROR(status, " hipMemcpy cuda_buffer_type :: Download failed!");
+    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Download failed!");
     PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE")
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: Download(T* f90Data)
+void gpu_buffer_type<T> :: Download(T* f90Data)
 {
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE TO FORTRAN ARRAY")
     size_t index_c = 0;
@@ -864,7 +857,7 @@ void cuda_buffer_type<T> :: Download(T* f90Data)
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: DownloadSum(T* f90Data)
+void gpu_buffer_type<T> :: DownloadSum(T* f90Data)
 {
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE TO FORTRAN ARRAY")
     size_t index_c = 0;
@@ -879,7 +872,7 @@ void cuda_buffer_type<T> :: DownloadSum(T* f90Data)
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: DeleteCPU()
+void gpu_buffer_type<T> :: DeleteCPU()
 {
     
     PRINTDEBUG(">>BEGIN TO DELETE CPU")
@@ -900,7 +893,7 @@ void cuda_buffer_type<T> :: DeleteCPU()
 }
 
 template <typename T>
-void cuda_buffer_type<T> :: DeleteGPU()
+void gpu_buffer_type<T> :: DeleteGPU()
 {
     
     PRINTDEBUG(">>BEGIN TO DELETE GPU")

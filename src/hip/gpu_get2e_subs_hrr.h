@@ -185,6 +185,149 @@ __device__ __forceinline__ int lefthrr_spd(const QUICKDouble RAx, const QUICKDou
             return numAngularL;
         }
     }
+    else if (IJTYPE == 3)
+    {
+        if (KLMNBx == 3 || KLMNBy == 3 || KLMNBz == 3) {
+            numAngularL = 4;
+            QUICKDouble tmp;
+            
+            if (KLMNBx == 3) {
+                tmp = RAx - RBx;
+                angularL[1] = (int) LOC3(devTrans, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            }else if (KLMNBy == 3) {
+                tmp = RAy - RBy;
+                angularL[1] = (int) LOC3(devTrans, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = (int) LOC3(devTrans, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            }else if (KLMNBz == 3) {
+                tmp = RAz - RBz;
+                angularL[1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[2] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            
+            coefAngularL[1] = 3 * tmp;
+            coefAngularL[2] = 3 * tmp * tmp;
+            coefAngularL[3] = tmp * tmp * tmp;
+            
+            
+            angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            
+            return numAngularL;
+        }else if (KLMNBx == 1 && KLMNBy == 1) {
+            numAngularL = 8;
+            QUICKDouble tmp = RAx - RBx;
+            QUICKDouble tmp2 = RAy - RBy;
+            QUICKDouble tmp3 = RAz - RBz;
+            
+            coefAngularL[1] = tmp;
+            coefAngularL[2] = tmp2;
+            coefAngularL[3] = tmp3;
+            coefAngularL[4] = tmp * tmp2;
+            coefAngularL[5] = tmp * tmp3;
+            coefAngularL[6] = tmp2 * tmp3;
+            coefAngularL[7] = tmp * tmp2 * tmp3;
+            
+            angularL[1] = (int) LOC3(devTrans, KLMNAx,   KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[3] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[4] = (int) LOC3(devTrans, KLMNAx,   KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[5] = (int) LOC3(devTrans, KLMNAx,   KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            angularL[6] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy,   KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            
+            angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            
+            return numAngularL;
+        }else{
+            
+            numAngularL = 6;
+            QUICKDouble tmp;
+            QUICKDouble tmp2;
+            
+            if (KLMNBx == 1) {
+                tmp = RAx - RBx;
+            }else if (KLMNBy == 1){
+                tmp = RAy - RBy;
+            }else if (KLMNBz == 1){
+                tmp = RAz - RBz;
+            }
+            
+            if (KLMNBx == 2) {
+                tmp2 = RAx - RBx;
+            }else if (KLMNBy == 2){
+                tmp2 = RAy - RBy;
+            }else if (KLMNBz == 2){
+                tmp2 = RAz - RBz;
+            }
+            
+            coefAngularL[1] = tmp;
+            coefAngularL[2] = 2 * tmp2;
+            coefAngularL[3] = 2 * tmp * tmp2;
+            coefAngularL[4] = tmp2 * tmp2;
+            coefAngularL[5] = tmp * tmp2 * tmp2;
+            
+            
+            if (KLMNBx == 2) {
+                angularL[1] = (int) LOC3(devTrans, KLMNAx+2, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            if (KLMNBy == 2) {
+                angularL[1] = (int) LOC3(devTrans, KLMNAx, KLMNAy+2, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = (int) LOC3(devTrans, KLMNAx,   KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            if (KLMNBz == 2) {
+                angularL[1] = (int) LOC3(devTrans, KLMNAx, KLMNAy,   KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[3] = (int) LOC3(devTrans, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            if (KLMNBx == 1) {
+                if (KLMNBy == 2) {  //120
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else{              //102
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                }
+            }
+            
+            if (KLMNBy == 1) {
+                if (KLMNBx == 2) {  // 210
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else{              // 012
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                }
+            }
+            
+            if (KLMNBz == 1) {
+                if (KLMNBx == 2) {  // 201
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else{              // 021
+                    angularL[2] = (int) LOC3(devTrans, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                }
+            }
+            
+            
+            if (KLMNBx == 1) {
+                angularL[4] = (int) LOC3(devTrans, KLMNAx+1, KLMNAy,   KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            if (KLMNBy == 1) {
+                angularL[4] = (int) LOC3(devTrans, KLMNAx, KLMNAy+1, KLMNAz,   TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            if (KLMNBz == 1) {
+                angularL[4] = (int) LOC3(devTrans, KLMNAx, KLMNAy,   KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+            }
+            
+            angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+            
+            return numAngularL;
+            
+            
+            
+        }
+    } 
+
 
     return numAngularL;
 }
@@ -198,8 +341,8 @@ __device__ __forceinline__ QUICKDouble hrrwhole(const int I, const int J, const 
 {
     QUICKDouble Y;
     
-    unsigned char angularL[4], angularR[4];
-    QUICKDouble coefAngularL[4], coefAngularR[4];
+    unsigned char angularL[8], angularR[8];
+    QUICKDouble coefAngularL[8], coefAngularR[8];
     Y = (QUICKDouble) 0.0;
     
     int numAngularL = lefthrr_spd(RAx, RAy, RAz, RBx, RBy, RBz,
@@ -1118,11 +1261,11 @@ __device__ __forceinline__ int lefthrr_r(QUICKDouble RAx, QUICKDouble RAy, QUICK
     
 }
 
-__device__ __forceinline__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
-                                       QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
-                                       int KLMNAx, int KLMNAy, int KLMNAz,
-                                       int KLMNBx, int KLMNBy, int KLMNBz,
-                                       int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
+__device__ __forceinline__ int lefthrr(const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
+                                       const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
+                                       const int KLMNAx, const int KLMNAy, const int KLMNAz,
+                                       const int KLMNBx, const int KLMNBy, const int KLMNBz,
+                                       const int IJTYPE,QUICKDouble* coefAngularL, unsigned char* angularL)
 {
     
     
@@ -1357,7 +1500,7 @@ __device__ __forceinline__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDo
         }
     }    
     
-    /*    else if (IJTYPE == 4)
+        else if (IJTYPE == 4)
      {
      if (KLMNBx == 4) {
      numAngularL = 5;
@@ -1666,8 +1809,8 @@ __device__ __forceinline__ int lefthrr(QUICKDouble RAx, QUICKDouble RAy, QUICKDo
      }
      }
      
-     */
-    //angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+     
+    angularL[numAngularL - 1] = (int) LOC3(devTrans, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
 
     return numAngularL;
 }

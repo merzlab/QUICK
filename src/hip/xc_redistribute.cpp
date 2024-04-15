@@ -15,7 +15,7 @@
   ! implementation.                                                     !
   !---------------------------------------------------------------------!
 */
-#ifdef HIP_MPIV
+#if defined(MPIV_GPU)
 #include <iostream>
 #include <cmath>
 #include <cstring>

@@ -77,7 +77,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 // kernel interface [get2e]
 void get2e(_gpu_type gpu);
 void get_oshell_eri(_gpu_type gpu);
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, cudaStream_t streamI, int streamID,  ERI_entry* aoint_buffer);
 #endif
 void get_ssw(_gpu_type gpu);
@@ -117,7 +117,7 @@ __global__ void get2e_kernel_spdf8();
 __global__ void get2e_kernel_spdf9();
 __global__ void get2e_kernel_spdf10();
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 __global__ void getAOInt_kernel(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID);
 __global__ void getAOInt_kernel_spdf(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID);
 __global__ void getAOInt_kernel_spdf2(QUICKULL intStart, QUICKULL intEnd, ERI_entry* aoint_buffer, int streamID);
@@ -180,7 +180,7 @@ __device__ void iclass_oshell_spdf8(const int I, const int J, const int K, const
 __device__ void iclass_oshell_spdf9(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 __device__ void iclass_oshell_spdf10(const int I, const int J, const int K, const int L, const unsigned int II, const unsigned int JJ, const unsigned int KK, const unsigned int LL, const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store);
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 __device__ __forceinline__ void iclass_AOInt(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, ERI_entry* aoint_buffer, int streamID, \
 QUICKDouble* YVerticalTemp, QUICKDouble* store);
 __device__ __forceinline__ void iclass_AOInt_spdf(int I, int J, int K, int L, unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL, QUICKDouble DNMax, ERI_entry* aoint_buffer, int streamID, \

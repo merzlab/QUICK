@@ -28,14 +28,12 @@
 #endif
 
 #ifdef int_spd
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_LRI_GRAD_WAVES_PER_CU,HIP_LRI_GRAD_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_LRI_GRAD_THREADS_PER_BLOCK, HIP_LRI_GRAD_THREADS_PER_BLOCK)))
+__global__ void 
+//__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) get_lri_grad_kernel()
 get_lri_grad_kernel()
 #elif defined int_spdf2
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_LRI_GRAD_SPDF2_WAVES_PER_CU,HIP_LRI_GRAD_SPDF2_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK, HIP_LRI_GRAD_SPDF2_THREADS_PER_BLOCK)))
+__global__ void 
+//__launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) get_lri_grad_kernel_spdf2()
 get_lri_grad_kernel_spdf2()
 #endif
 {
@@ -73,7 +71,7 @@ get_lri_grad_kernel_spdf2()
         QUICKULL iatom = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - iatom*jshell);
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[b] > 0){
 #endif
                 
@@ -114,7 +112,7 @@ get_lri_grad_kernel_spdf2()
                 //}
 //          }
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
         }
 #endif
 
@@ -172,7 +170,7 @@ __device__ __forceinline__ void iclass_lri_grad
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -536,7 +534,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */

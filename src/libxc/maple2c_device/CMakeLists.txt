@@ -1,4 +1,4 @@
-set(LIBXC_CUDA_SOURCES
+set(LIBXC_GPU_SOURCES
 	gga_c_am05.cu gga_c_bcgp.cu gga_c_bmk.cu gga_c_cs1.cu 
 	gga_c_ft97.cu gga_c_gapc.cu gga_c_gaploc.cu gga_c_hcth_a.cu 
 	gga_c_lm.cu gga_c_lyp.cu gga_c_op_b88.cu gga_c_op_g96.cu 
@@ -36,22 +36,22 @@ set(LIBXC_CUDA_SOURCES
 
 set(GPU_RDC_FLAGS "")
 
-list(APPEND LIBXC_CUDA_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)	
+list(APPEND LIBXC_GPU_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)	
 
 if(HIP)
-        set(GPU_RDC_FLAGS -fgpu-rdc -c)
+	set(GPU_RDC_FLAGS -fgpu-rdc -c)
 else()
 
         set(CUDA_SEPARABLE_COMPILATION TRUE)
 endif()
 
-cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_CUDA_SOURCES}
+cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_GPU_SOURCES}
         OPTIONS
         ${GPU_RDC_FLAGS}
         ${CUDA_DEVICE_CODE_FLAGS}
         -I${CMAKE_CURRENT_SOURCE_DIR}/..
         )
-target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${QUICK_GPU_PLATFORM})
+target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 
 if(INSIDE_AMBER)
 	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)

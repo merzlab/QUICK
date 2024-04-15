@@ -11,23 +11,22 @@
 #include "gpu_common.h"
 #include "stdio.h"
 
-// CUDA-C includes
 #include <hip/hip_runtime_api.h>
 
 
 extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
         int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
 {
-    hipError_t cuda_error;
+    hipError_t error;
     hipDeviceProp_t prop;
     size_t device_mem;
     
     *gpu_dev_id = 0;  // currently one single GPU is supported
-    cuda_error = hipGetDeviceCount(gpu_dev_count);
-    PRINTERROR(cuda_error,"hipGetDeviceCount gpu_get_device_info failed!");
+    error = hipGetDeviceCount(gpu_dev_count);
+    PRINTERROR(error,"hipGetDeviceCount gpu_get_device_info failed!");
     if (*gpu_dev_count == 0) 
     {
-        printf("NO AMD DEVICE FOUNDED \n");
+        printf("NO GPU DEVICE FOUND \n");
         hipDeviceReset();
         exit(-1);
     }

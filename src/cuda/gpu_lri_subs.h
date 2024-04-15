@@ -160,7 +160,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
 
 #endif
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[b] > 0){
 #endif 
 
@@ -203,7 +203,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
 /*                
             }
 */
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         }      
 #endif        
     }
@@ -257,7 +257,7 @@ __device__ __forceinline__ void iclass_lri_spdf2
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -525,12 +525,13 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 #endif
 
 /*
- sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
+ sqr for double precision. there no internal function to do that in fast-math-lib of GPU
  */
 __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
 {
     return a*a;
 }
+//#define quick_dsqr(a) ((a)*(a))
 
 #endif
 

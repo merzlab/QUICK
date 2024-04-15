@@ -18,9 +18,9 @@
   !---------------------------------------------------------------------!
 */
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
 
-#define HIP_MPIV_MINBASIS 100
+#define MPIV_GPU_MIN_BASIS (100)
 
 #include "string.h"
 
@@ -31,7 +31,7 @@
 extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
 
-    int gpuCount = 0;           // Total number of cuda devices available
+    int gpuCount = 0;           // Total number of GPU devices available
     size_t minMem = 4000000000; // Threshold  memory (in bytes) for device selection criteria
     hipError_t status;
 
@@ -76,7 +76,7 @@ void mgpu_startup(int mpirank, int* ierr)
 
 #if defined DEBUG || defined DEBUGTIME
     char fname[16];
-    sprintf(fname, "debug.cuda.%i", mpirank);
+    sprintf(fname, "debug.gpu.%i", mpirank);
 
     debugFile = fopen(fname, "w+");
 #endif
@@ -139,16 +139,15 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 #endif
 
     status = hipSetDevice(gpu -> gpu_dev_id);
-    hipGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     PRINTERROR(status, "hipSetDevice gpu_init failed!");
+    hipGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     hipDeviceSynchronize();
 
     hipDeviceSetCacheConfig(hipFuncCachePreferL1);
 
-/*
     size_t val;
 
-    hipDeviceGetLimit(&val, cudaLimitStackSize);
+    hipDeviceGetLimit(&val, hipLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i Stack size limit:    %zu\n", gpu -> mpirank,val);
 #endif
@@ -163,13 +162,12 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
     fprintf(gpu->debugFile,"mpirank: %i Heap size limit:     %zu\n", gpu -> mpirank,val);
 #endif
 
-    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
+    hipDeviceSetLimit(hipLimitStackSize, 8192);
 
-    hipDeviceGetLimit(&val, cudaLimitStackSize);
+    hipDeviceGetLimit(&val, hipLimitStackSize);
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i New Stack size limit:    %zu\n", gpu -> mpirank,val);
 #endif
-*/
 
     gpu->blocks = deviceProp.multiProcessorCount;
 
@@ -235,7 +233,7 @@ void mgpu_oei_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > HIP_MPIV_MINBASIS){
+    if(nitems > MPIV_GPU_MIN_BASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core
@@ -332,9 +330,9 @@ void mgpu_oei_greedy_distribute(){
 #endif
 
     // Upload the flags to GPU
-    gpu -> gpu_basis -> mpi_boeicompute = new cuda_buffer_type<char>(nitems);
+    gpu -> gpu_basis -> mpi_boeicompute = new gpu_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu -> gpu_basis -> mpi_boeicompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(char)*nitems);
+    memcpy(gpu -> gpu_basis -> mpi_boeicompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char)*nitems);
 
     gpu -> gpu_basis -> mpi_boeicompute -> Upload();
     gpu -> gpu_sim.mpi_boeicompute  = gpu -> gpu_basis -> mpi_boeicompute  -> _devData;
@@ -392,7 +390,7 @@ void mgpu_eri_greedy_distribute(){
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > HIP_MPIV_MINBASIS){
+    if(nitems > MPIV_GPU_MIN_BASIS){
 
         int  q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core
@@ -488,9 +486,9 @@ void mgpu_eri_greedy_distribute(){
 #endif
 
     // Upload the flags to GPU
-    gpu -> gpu_basis -> mpi_bcompute = new cuda_buffer_type<char>(nitems);
+    gpu -> gpu_basis -> mpi_bcompute = new gpu_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu -> gpu_basis -> mpi_bcompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(char)*nitems);
+    memcpy(gpu -> gpu_basis -> mpi_bcompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char)*nitems);
 
     gpu -> gpu_basis -> mpi_bcompute -> Upload();
     gpu -> gpu_sim.mpi_bcompute  = gpu -> gpu_basis -> mpi_bcompute  -> _devData;
@@ -697,7 +695,7 @@ void mgpu_xc_tpbased_greedy_distribute(){
 #endif
 
     // upload flags to gpu
-    gpu -> gpu_xcq -> mpi_bxccompute = new cuda_buffer_type<char>(nbins);
+    gpu -> gpu_xcq -> mpi_bxccompute = new gpu_buffer_type<char>(nbins);
 
     memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
 
@@ -839,7 +837,7 @@ void mgpu_xc_pbased_greedy_distribute(){
 //#endif
 
     // upload flags to gpu
-    gpu -> gpu_xcq -> mpi_bxccompute = new cuda_buffer_type<char>(nbins);
+    gpu -> gpu_xcq -> mpi_bxccompute = new gpu_buffer_type<char>(nbins);
 
     memcpy(gpu -> gpu_xcq -> mpi_bxccompute -> _hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char)*nbins);
 
@@ -882,22 +880,22 @@ XC_quadrature_type* mgpu_xcq = new XC_quadrature_type;
 mgpu_xcq -> nbins    = nbtr;
 mgpu_xcq -> npoints  = ntot_tpts;
 
-mgpu_xcq -> gridx       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
-mgpu_xcq -> gridy       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
-mgpu_xcq -> gridz       = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
-mgpu_xcq -> sswt        = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
-mgpu_xcq -> weight      = new cuda_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
-mgpu_xcq -> gatm        = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
-mgpu_xcq -> dweight_ssd = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
+mgpu_xcq -> gridx       = new gpu_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
+mgpu_xcq -> gridy       = new gpu_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
+mgpu_xcq -> gridz       = new gpu_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
+mgpu_xcq -> sswt        = new gpu_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
+mgpu_xcq -> weight      = new gpu_buffer_type<QUICKDouble>(mgpu_xcq -> npoints);
+mgpu_xcq -> gatm        = new gpu_buffer_type<int>(mgpu_xcq -> npoints);
+mgpu_xcq -> dweight_ssd = new gpu_buffer_type<int>(mgpu_xcq -> npoints);
 
-mgpu_xcq -> bin_locator  = new cuda_buffer_type<int>(mgpu_xcq -> npoints);
-mgpu_xcq -> basf_locator  = new cuda_buffer_type<int>(mgpu_xcq -> nbins +1);
+mgpu_xcq -> bin_locator  = new gpu_buffer_type<int>(mgpu_xcq -> npoints);
+mgpu_xcq -> basf_locator  = new gpu_buffer_type<int>(mgpu_xcq -> nbins +1);
 
 // at this point we are still unsure about number of basis and primitive functions.
 // create the arrays with original sizes
-mgpu_xcq -> primf_locator = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf +1);
-mgpu_xcq -> basf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
-mgpu_xcq -> primf         = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
+mgpu_xcq -> primf_locator = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotbf +1);
+mgpu_xcq -> basf          = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
+mgpu_xcq -> primf         = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
 
 // load data, where obidx and nbidx are old and new bin indices, npidx is the new primitive index.
 // nbfidx_ul and npfidx_ul variables keep track of upper bounds of basis & primitive function
@@ -995,18 +993,18 @@ gpu -> gpu_xcq -> nbins    = mgpu_xcq -> nbins;
 gpu -> gpu_xcq -> ntotbf   = mgpu_xcq -> ntotbf;
 gpu -> gpu_xcq -> ntotpf   = mgpu_xcq -> ntotpf;
 
-gpu -> gpu_xcq -> gridx         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> gridy         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> gridz         = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> sswt          = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> weight        = new cuda_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> gatm          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> dweight_ssd   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> bin_locator   = new cuda_buffer_type<int>(gpu -> gpu_xcq -> npoints);
-gpu -> gpu_xcq -> basf          = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
-gpu -> gpu_xcq -> primf         = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
-gpu -> gpu_xcq -> basf_locator  = new cuda_buffer_type<int>(gpu -> gpu_xcq -> nbins +1);
-gpu -> gpu_xcq -> primf_locator = new cuda_buffer_type<int>(gpu -> gpu_xcq -> ntotbf +1);
+gpu -> gpu_xcq -> gridx         = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> gridy         = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> gridz         = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> sswt          = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> weight        = new gpu_buffer_type<QUICKDouble>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> gatm          = new gpu_buffer_type<int>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> dweight_ssd   = new gpu_buffer_type<int>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> bin_locator   = new gpu_buffer_type<int>(gpu -> gpu_xcq -> npoints);
+gpu -> gpu_xcq -> basf          = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotbf);
+gpu -> gpu_xcq -> primf         = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotpf);
+gpu -> gpu_xcq -> basf_locator  = new gpu_buffer_type<int>(gpu -> gpu_xcq -> nbins +1);
+gpu -> gpu_xcq -> primf_locator = new gpu_buffer_type<int>(gpu -> gpu_xcq -> ntotbf +1);
 
 // copy content from mgpu_xcq into gpu_xcq object
 memcpy(gpu -> gpu_xcq -> gridx -> _hostData, mgpu_xcq -> gridx -> _hostData, sizeof(QUICKDouble) * gpu -> gpu_xcq -> npoints);
@@ -1086,8 +1084,7 @@ SAFE_DELETE(mgpu_xcq -> bin_locator);
 //--------------------------------------------------------
 
 extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, char*
-				     gpu_arch_name,int* arch_name_len,int* majorv, int* minorv)
+                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
 {
     hipDeviceProp_t prop;
     size_t device_mem;
@@ -1099,8 +1096,6 @@ extern "C" void mgpu_get_device_info_(int* dev_id,int* gpu_dev_mem,
     *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
     strcpy(gpu_dev_name,prop.name);
     *name_len = strlen(gpu_dev_name);
-    strcpy(gpu_arch_name,prop.gcnArchName);
-    *arch_name_len = strlen(gpu_arch_name);
     *majorv = prop.major;
     *minorv = prop.minor;
 

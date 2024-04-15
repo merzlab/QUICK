@@ -26,7 +26,8 @@ LIBXC_HIP_FLAGS = -I$(libxcfolder)
 
 CXXOBJ=$(objfolder)/xc_redistribute.o
 
-HIPCOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_lri.o $(objfolder)/gpu_oei.o 
+HIPCOBJ=$(objfolder)/gpu.o $(objfolder)/gpu_type.o $(objfolder)/gpu_get2e.o $(objfolder)/gpu_lri.o $(objfolder)/gpu_oei.o \
+	$(objfolder)/gpu_get2e_grad_ffff.o
 
 HIPXCOBJ=$(objfolder)/gpu_getxc.o
 
@@ -105,6 +106,7 @@ endif
 allbutxc: $(CXXOBJ) $(HIPCOBJ) $(HIPFOBJ)
 
 xc: $(HIPXCOBJ)
+	$(VB)$(HIPCC) $(HIP_FLAGS) $(HIP_DC_FLAGS) $(HIP_INCL_FLAGS) $(LIBXC_HIP_FLAGS) -dlink $(objfolder)/gpu_getxc.o $(LIBXC_DEV_OBJ) -o $(objfolder)/gpu_xcall.o
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !

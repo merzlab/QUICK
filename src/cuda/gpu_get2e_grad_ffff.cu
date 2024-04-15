@@ -16,7 +16,7 @@
 #include <iostream>
 #include <algorithm>
 
-//#ifdef CUDA_SPDF
+//#ifdef GPU_SPDF
 //#endif
 
 
@@ -121,7 +121,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 #define LOCTRANS(A,i1,i2,i3,d1,d2,d3) A[(i3+((i2)+(i1)*(d2))*(d3))*ERI_GRAD_FFFF_TPB+threadIdx.x]
 #define DEV_SIM_CHAR_TRANS smem_char
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 
@@ -136,7 +136,7 @@ texture <int2, cudaTextureType1D, cudaReadModeElementType> tex_Xcoeff;
 //Include the kernels for open shell eri calculations
 #define OSHELL
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 #define int_spdf4
 //#include "gpu_get2e_grad_ffff.cuh"
 #endif
@@ -472,7 +472,7 @@ cudaMemcpyHostToDevice);
 
         if (gpu->maxL >= 3) {
         // Part f-3
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
             QUICK_SAFE_CALL((getGrad_kernel_ffff<<<gpu->blocks*ERI_GRAD_FFFF_BPSM, ERI_GRAD_FFFF_TPB,
 sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
             sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+

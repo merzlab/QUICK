@@ -20,11 +20,10 @@
 #ifdef CEW
 #include "iface.hpp"
 
-
 #ifndef OSHELL
 void getcew_quad(_gpu_type gpu){
 
-    QUICK_SAFE_CALL(hipLaunchKernelGGL(getcew_quad_kernel, gpu -> blocks, HIP_CEW_QUAD_THREADS_PER_BLOCK, 0, 0))
+    QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
 
     hipDeviceSynchronize();
 }
@@ -34,20 +33,20 @@ void getcew_quad_grad(_gpu_type gpu){
 
     if(gpu -> gpu_sim.is_oshell == true){
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_oshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(oshell_getcew_quad_grad_kernel, gpu -> blocks, HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK, gpu -> gpu_xcq -> smem_size, 0))
+        QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
 
     }else{
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(get_cshell_density_kernel, gpu->blocks, HIP_XC_DENSE_THREADS_PER_BLOCK, 0, 0))
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
 
         hipDeviceSynchronize();
 
-        QUICK_SAFE_CALL(hipLaunchKernelGGL(cshell_getcew_quad_grad_kernel, gpu -> blocks, HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK, gpu -> gpu_xcq -> smem_size, 0))
-        //QUICK_SAFE_CALL((hipLaunchKernelGGL(cshell_getcew_quad_grad_kernel, 1, 1, gpu -> gpu_xcq -> smem_size, 0)));
+        QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+        //QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>()));
 
     }
 
@@ -57,9 +56,9 @@ void getcew_quad_grad(_gpu_type gpu){
 
     prune_grid_sswgrad();
 
-    hipLaunchKernelGGL(get_sswnumgrad_kernel, gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size, 0);
+    get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>();
 
-    //hipLaunchKernelGGL(get_sswnumgrad_kernel, 1, 1, gpu -> gpu_xcq -> smem_size, 0);
+    //get_sswnumgrad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>();
 
     hipDeviceSynchronize();
 
@@ -121,10 +120,7 @@ void get_cew_accdens(_gpu_type gpu){
 
 
 
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_CEW_QUAD_WAVES_PER_CU,HIP_CEW_QUAD_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_CEW_QUAD_THREADS_PER_BLOCK, HIP_CEW_QUAD_THREADS_PER_BLOCK)))
-getcew_quad_kernel()
+__global__ void getcew_quad_kernel()
 {
   unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
   int totalThreads = blockDim.x*gridDim.x;
@@ -175,15 +171,9 @@ getcew_quad_kernel()
 #endif
 
 #ifdef OSHELL
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_CEW_QUAD_GRAD_WAVES_PER_CU,HIP_CEW_QUAD_GRAD_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK, HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK)))
-oshell_getcew_quad_grad_kernel()
+__global__ void oshell_getcew_quad_grad_kernel()
 #else
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_CEW_QUAD_GRAD_WAVES_PER_CU,HIP_CEW_QUAD_GRAD_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK, HIP_CEW_QUAD_GRAD_THREADS_PER_BLOCK)))
-cshell_getcew_quad_grad_kernel()
+__global__ void cshell_getcew_quad_grad_kernel()
 #endif
 {
 

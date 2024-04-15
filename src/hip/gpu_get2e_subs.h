@@ -90,15 +90,11 @@ To understand the following comments better, please refer to Figure 2(b) and 2(d
  */
 #ifdef OSHELL
 #ifdef int_sp
-__global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_THREADS_PER_BLOCK, HIP_SP_2E_THREADS_PER_BLOCK)))
-get_oshell_eri_kernel_sp()
+__global__ void 
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_sp()
 #elif defined int_spd
 __global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_SPD_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_SPD_2E_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))
-get_oshell_eri_kernel_spd()
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf()
@@ -133,14 +129,10 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_oshell_eri_kernel_spdf10()
 #else
 #ifdef int_sp
 __global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_SP_2E_WAVES_PER_CU,HIP_SP_2E_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_SP_2E_THREADS_PER_BLOCK, HIP_SP_2E_THREADS_PER_BLOCK)))
-get2e_kernel_sp()
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp()
 #elif defined int_spd
 __global__ void
-__attribute__((amdgpu_waves_per_eu(HIP_SPD_2E_WAVES_PER_CU,HIP_SPD_2E_WAVES_PER_CU)))
-__attribute__((amdgpu_flat_work_group_size(HIP_SPD_2E_THREADS_PER_BLOCK, HIP_SPD_2E_THREADS_PER_BLOCK)))
-get2e_kernel_spd()
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spd()
 #elif defined int_spdf
 __global__ void
 __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf()
@@ -422,7 +414,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
 #endif
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
         if(devSim.mpi_bcompute[a] > 0){
 #endif 
 
@@ -655,7 +647,7 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_spdf10()
 
         }
 
-#ifdef HIP_MPIV
+#ifdef MPIV_GPU
         }      
 #endif        
     }
@@ -767,7 +759,7 @@ __device__ __forceinline__ void iclass_spdf10
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -1013,71 +1005,89 @@ __device__ __forceinline__ void iclass_spdf10
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
 #elif defined int_spd
 
+/*
+ ERint_vertical_spd(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL,
+        const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz, 
+        const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz, 
+        const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, const QUICKDouble CDcom,
+        QUICKDouble* store, QUICKDouble* YVerticalTemp)
+ * */
+
                 ERint_vertical_spd(I, J, K, L, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                          0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
 
 #elif defined int_spdf
-                
-                vertical_spdf(I, J, K, L, YVerticalTemp, store, \
+
+                ERint_vertical_spdf_1(I, J, K, L, II, JJ, KK, LL, \
                          Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                          Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
+                
 #elif defined int_spdf2
+
+                ERint_vertical_spdf_2(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf2(I, J, K, L, YVerticalTemp, store, \
-                              Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                              Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                              0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf3
+
+                ERint_vertical_spdf_3(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf3(I, J, K, L, YVerticalTemp, store, \
-                              Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                              Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                              0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf4
+
+                ERint_vertical_spdf_4(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf4(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf5
+
+                ERint_vertical_spdf_5(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf5(I, J, K, L, YVerticalTemp, store, \
-                              Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                              Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                              0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf6
+
+                ERint_vertical_spdf_6(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf6(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf7
+
+                ERint_vertical_spdf_7(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf7(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf8
+
+                ERint_vertical_spdf_8(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf8(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf9
+
+                ERint_vertical_spdf_8(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf9(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #elif defined int_spdf10
+
+                ERint_vertical_spdf_8(I, J, K, L, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store, YVerticalTemp);
                 
-                vertical_spdf10(I, J, K, L, YVerticalTemp, store, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 #endif
                 
             }
@@ -1199,7 +1209,7 @@ __device__ __forceinline__ void iclass_spdf10
 }
 
 
-#ifdef COMPILE_CUDA_AOINT
+#ifdef COMPILE_GPU_AOINT
 #if !(defined OSHELL) && !(defined int_sp)
 #ifdef int_spd
 __global__ void 
@@ -1395,7 +1405,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store)
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -1646,6 +1656,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store)
 }
 #endif
 #endif
+
 
 
 
@@ -2008,7 +2019,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y, int III, i
 
 #ifndef OSHELL  
 /*
- sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
+ sqr for double precision. there no internal function to do that in fast-math-lib of GPU
  */
 __device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
 {

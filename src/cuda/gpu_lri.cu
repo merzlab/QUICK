@@ -64,7 +64,7 @@ namespace lri{
 #include "gpu_lri_subs_grad.h"
 
 
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
 //===================================
 
 #undef int_spd
@@ -120,7 +120,7 @@ void get_lri(_gpu_type gpu)
 
     QUICK_SAFE_CALL((get_lri_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
-#ifdef CUDA_SPDF
+#ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1
         //QUICK_SAFE_CALL((get_lri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
@@ -161,7 +161,7 @@ void get_lri_grad(_gpu_type gpu)
     QUICK_SAFE_CALL((get_lri_grad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     if (gpu->maxL >= 2) {
-        //#ifdef CUDA_SPDF
+        //#ifdef GPU_SPDF
         // Part f-1
         //QUICK_SAFE_CALL((get_lri_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2

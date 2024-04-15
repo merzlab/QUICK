@@ -36,7 +36,7 @@
 
 #ifndef OSHELL  
 /*
- *  sqr for double precision. there no internal function to do that in fast-math-lib of CUDA
+ *  sqr for double precision. there no internal function to do that in fast-math-lib of GPU
  *   */
 __device__ __forceinline__ QUICKDouble quick_dsqr(const QUICKDouble a)
 {
@@ -1036,7 +1036,7 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
     
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-     of cuda limitation, we can not do that now.
+     of GPU limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
@@ -1747,7 +1747,7 @@ __syncthreads();
             b = 0;
         }
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         if(DEV_SIM_CHAR_PTR_MPI_BCOMPUTE[a] > 0){
 #endif
                 
@@ -1812,7 +1812,7 @@ DEV_SIM_DBL_PTR_STORECC+offset, smem_int, smem_dbl, smem_int_ptr, smem_dbl_ptr,s
 
         }
 
-#ifdef CUDA_MPIV
+#ifdef MPIV_GPU
         }
 #endif
 

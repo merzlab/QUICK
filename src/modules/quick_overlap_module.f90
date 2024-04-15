@@ -174,12 +174,12 @@ subroutine fullx
    !   matrix X.  The first step is forming the overlap matrix (Smatrix).
    !
    use allmod
-#if defined HIP || defined HIP_MPIV
+#if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#if defined WITH_MAGMA
+#if defined(WITH_MAGMA)
      use quick_magma_module, only: magmaDIAG
 #else
-#if defined WITH_ROCSOLVER
+#if defined(WITH_ROCSOLVER)
      use quick_rocsolver_module, only: rocDIAG
 #endif
 #endif
@@ -244,22 +244,16 @@ subroutine fullx
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    RECORD_TIME(timer_begin%T1eSD)
 
-#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-
+#if defined(CUDA) || defined(CUDA_MPIV)
    call cuda_diag(quick_scratch%hold, quick_scratch%tmpx,quick_scratch%tmphold,&
    quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2,quick_scratch%tmpco, quick_scratch%V, nbasis)
-#else
-
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#elif (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
    call magmaDIAG(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
-#else
-#if defined LAPACK || defined MKL
+#elif defined(LAPACK) || defined(MKL)
    call DIAGMKL(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
 #else
    call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf,&
    quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
-#endif
-#endif
 #endif
 
    RECORD_TIME(timer_end%T1eSD)
@@ -302,7 +296,7 @@ subroutine fullx
       endif
    enddo
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
 
    call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%hold2, &
    nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
