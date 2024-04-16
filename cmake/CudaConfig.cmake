@@ -72,7 +72,7 @@ else()
 			list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM90FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
 
 		else()
-			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and <= 12.3.")
+			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and <  12.5.")
 		endif()
 
 		#  check maximum GNU compiler versions wrt cuda:
