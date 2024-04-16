@@ -44,7 +44,11 @@ if(EXISTS "${READLINE_LIBRARY}")
 		FUNCTION rl_initialize
 		LIBRARIES ${READLINE_LIBRARY}
 		INCLUDES ${READLINE_INCLUDE_DIR}
-		FUNC_DECLARATION "#include <readline/readline.h>")
+		FUNC_DECLARATION "
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>"
+		)
 endif()
 
 mark_as_advanced(READLINE_INCLUDE_DIR READLINE_LIBRARY READLINE_WORKS)

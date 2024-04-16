@@ -57,21 +57,29 @@ if(DOWNLOAD_MINICONDA)
 		unset(ENV{_CONDA_PYTHON2})
 	endif()
 		
-	set(MINICONDA_VERSION latest) 
-	option(MINICONDA_USE_PY3 "If true, Amber will download a Python 3 miniconda when DOWNLOAD_MINICONDA is enabled.  Otherwise, Python 2.7 Miniconda will get downloaded." TRUE)
-	
+	# Workaround for CentOS-7 & AmberTools23:
+	# - add the option to install a specific version of miniconda
+	# - add the MINICONDA_AUTO variable to track this later on (UseMiniconda.cmake)
+	# Recommended miniconda version for CentOS 7 (as of 2023-04): py38_4.12.0
+	if(NOT DEFINED MINICONDA_VERSION)
+		set(MINICONDA_VERSION latest)
+		set(MINICONDA_AUTO TRUE)
+	else()
+		set(MINICONDA_AUTO FALSE)
+	endif()
+
 	include(UseMiniconda)
 	download_and_use_miniconda()
-	
+
 	set(PYTHON_EXECUTABLE ${MINICONDA_PYTHON})
 	set(HAS_PYTHON TRUE)
-	
+
 	if(HOST_WINDOWS)
 		list(APPEND CMAKE_PROGRAM_PATH "${MINICONDA_INSTALL_DIR}" "${MINICONDA_INSTALL_DIR}/Scripts")
 	else()
 		list(APPEND CMAKE_PROGRAM_PATH "${MINICONDA_INSTALL_DIR}/bin")
 	endif()
-		
+
 else()
 
 	option(USE_CONDA_LIBS "Use system libraries from a found Anaconda installation" FALSE)
