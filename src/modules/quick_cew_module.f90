@@ -1205,7 +1205,7 @@ end do
   
     implicit none
     type(quick_cew_type), intent(in) :: self
-    integer, intent(out) :: iOutfile
+    integer, intent(in) :: iOutfile
     integer, intent(out) :: ierr
 
     if(self%use_cew) then 
