@@ -128,6 +128,7 @@ if(FIRST_RUN)
 			set_compiler(Fortran gfortran)
 			
 		endif()
+
 	elseif(${COMPILER} STREQUAL CLANG)
 		set_compiler(C clang)
 		set_compiler(CXX "clang++")

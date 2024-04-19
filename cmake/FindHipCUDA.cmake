@@ -891,10 +891,9 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE CACHE BOOL "Add paths to linker searc
 
 # Use target ID syntax if supported for AMDGPU_TARGETS
 if(TARGET_ID_SUPPORT)
-#  set(AMDGPU_TARGETS gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack- CACHE STRING "List of specific machine types for library to target")
-  set(AMDGPU_TARGETS ${QUICK_USER_ARCH} CACHE STRING "List of specific machine types for library to target")
+  set(AMDGPU_TARGETS gfx803;gfx900:xnack-;gfx906:xnack-;gfx908:xnack- CACHE STRING "List of specific machine types for library to target")
 else()
-  set(AMDGPU_TARGETS gfx803;gfx900;gfx906;gfx908;gfx90a CACHE STRING "List of specific machine types for library to target")
+  set(AMDGPU_TARGETS gfx803;gfx900;gfx906;gfx908 CACHE STRING "List of specific machine types for library to target")
 endif()
 set(AMDGPU_TEST_TARGETS "" CACHE STRING "List of specific device types to test for") # Leave empty for default system device
 
@@ -912,7 +911,7 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
   endif()
 
   # If HIP wrappers exist, append those
-#  if(NOT _name MATCHES "(solver)")
+  if(NOT _name MATCHES "(solver)")
     string(REGEX REPLACE "^(cu)" "hip" _hipname ${_name})
     if(_name MATCHES "(fft|rand)")
       set(_hipnamespace "hip")
@@ -929,11 +928,11 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
       if(_name MATCHES "(fft)")
         list(PREPEND CUDA_INCLUDE_DIRS ${HIPFFT_INCLUDE_DIR})
       endif()
-#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipfft/)
-#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipblas/)
-#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipsparse/)
+      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipfft/)
+      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipblas/)
+      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipsparse/)
     endif()
-#  endif()
+  endif()
 
   # Add legacy uppercase variables
   if(_name MATCHES "(fft|blas)")

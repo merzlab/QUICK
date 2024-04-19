@@ -39,6 +39,11 @@ list(APPEND FILES_NEEDING_REPLACEMENT "${AMBER_INSTALL_DIR}/miniconda${PREFIX_RE
 # --------------------------------------------------------------------
 include(${CMAKE_CURRENT_LIST_DIR}/../Replace-function.cmake)
 
+# mod path in jupyter kernel json config. If not fixed, amber.jupyter fails
+set(JUPYTER_KERNEL_JSON "${AMBER_INSTALL_DIR}/miniconda/share/jupyter/kernels/python3/kernel.json")
+configuretime_file_replace(${JUPYTER_KERNEL_JSON} ${JUPYTER_KERNEL_JSON} TO_REPLACE "${MINICONDA_INSTALL_DIR}/bin/python" REPLACEMENT "${AMBER_INSTALL_DIR}/miniconda/bin/python")
+
+
 foreach(FILE ${FILES_NEEDING_REPLACEMENT})
 	configuretime_file_replace(${FILE} ${FILE} TO_REPLACE ${BUILD_TREE_SHEBANG} REPLACEMENT ${INSTALL_TREE_SHEBANG})
 endforeach()

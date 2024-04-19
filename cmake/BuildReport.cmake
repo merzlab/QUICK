@@ -64,13 +64,9 @@ function(print_build_report)
 	color_print_bool("OpenMP:                 " "${OPENMP}")
 	endif()
 	
-	if(DEFINED CUDA AND NOT DEFINED HIP)
+	if(DEFINED CUDA)
 	color_print_bool("CUDA:                   " "${CUDA}")
 	endif()
-
-        if(DEFINED HIP)
-        color_print_bool("HIP:                    " "${HIP}")
-        endif()
 
 	if(DEFINED NCCL)
 	color_print_bool("NCCL:                   " "${NCCL}")
@@ -116,9 +112,7 @@ function(print_build_report)
 	colormsg("Using host tools from:  " HIBLUE "${HOST_TOOLS_DIR}")
 	endif()
 	colormsg("Install location:       " HIBLUE "${CMAKE_INSTALL_PREFIX}${CMAKE_INSTALL_POSTFIX}")
-	if(DEFINED INSTALL_TESTS)
 	color_print_bool("Installation of Tests:  " "${INSTALL_TESTS}")
-	endif()
 	message("")
 	
 	#------------------------------------------------------------------------------------------
