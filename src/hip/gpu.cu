@@ -52,6 +52,9 @@ extern "C" void gpu_startup_(int* ierr)
 
         gpu = new gpu_type;
 
+        gpu->totalCPUMemory = 0;
+        gpu->totalGPUMemory = 0;
+
 #if defined DEBUG || defined DEBUGTIME
         gpu->debugFile = debugFile;
 #endif
