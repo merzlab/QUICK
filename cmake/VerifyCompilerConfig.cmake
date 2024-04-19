@@ -1,6 +1,7 @@
 # This file is run during 2nd init to check the results of AmberCompilerConfig.
 
-# the necessity for this check is discussed here: https://github.com/Amber-MD/CMakeConfigScripts/issues/4
+# the necessity for this check is discussed here:
+# https://github.com/Amber-MD/CMakeConfigScripts/issues/4
 if("${COMPILER}" STREQUAL GNU)
 	
 	foreach(LANG C CXX)
@@ -17,6 +18,27 @@ CMAKE_C_COMPILER and CMAKE_CXX_COMPILER to point to gcc and g++ and use AUTO for
 ")
 		endif()
 	endforeach()
+
+#  check minimum GNU compiler versions:
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+		message(STATUS "")
+		message("************************************************************")
+		message("Error: Amber requires at least g++-6.0")
+		message("See https://ambermd.org/Installation.php for more info")
+		message("************************************************************")
+		message(STATUS "")
+		message(FATAL_ERROR)
+	endif()
+	if (CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 6.0)
+		message(STATUS "")
+		message("************************************************************")
+		message("Error: Amber requires at least gfortran-6.0")
+		message("See https://ambermd.org/Installation.php for more info")
+		message("************************************************************")
+		message(STATUS "")
+		message(FATAL_ERROR)
+	endif()
+
 endif()
 
 # try to detect and work around issue #92: https://gitlab.ambermd.org/amber/amber/issues/92
