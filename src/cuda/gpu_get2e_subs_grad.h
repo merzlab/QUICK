@@ -26,7 +26,17 @@
 #define VDIM3 VDIM3_S
 #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
 #define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
+#elif defined int_spdf || defined int_spdf2
+#undef VDIM3
+#define VDIM3 VDIM3_L
+#define STOREDIM STOREDIM_GRAD_S
+#elif defined int_spdf3 || defined int_spdf4
+#undef VDIM3
+#define VDIM3 VDIM3_L
+#define STOREDIM STOREDIM_XL
 #else
+#undef VDIM3
+#define VDIM3 VDIM3_L
 #define STOREDIM STOREDIM_L
 #endif
 
@@ -127,7 +137,11 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
             b = 2*t-k;
         }
         */
-        
+ 
+#ifdef int_spdf3
+//printf("getGrad_kernel_spdf3 working.. \n");       
+#endif
+
         QUICKULL a = (QUICKULL) i/jshell;
         QUICKULL b = (QUICKULL) (i - a*jshell);
 
@@ -161,7 +175,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
            
             int jj = devSim.sorted_Q[JJ];
             int ll = devSim.sorted_Q[LL];
-            
+
             
             if ( !((devSim.katom[ii] == devSim.katom[jj]) &&
                    (devSim.katom[ii] == devSim.katom[kk]) &&
@@ -193,7 +207,7 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
                         iclass_oshell_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
-                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+//                    iclass_oshell_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf4
                     iclass_oshell_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf5
@@ -207,21 +221,33 @@ __launch_bounds__(SM_2X_GRAD_THREADS_PER_BLOCK, 1) getGrad_kernel_spdf8()
 #endif
 #else
 #ifdef int_sp
+                    if( iii != 3 && jjj != 3 && kkk != 3 && lll !=3){
                     iclass_grad_sp(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+		    }
 #elif defined int_spd
+                    if( iii != 3 && jjj != 3 && kkk != 3 && lll !=3){
                     iclass_grad_spd(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+		    }
 #elif defined int_spdf
-                    if ( (kkk + lll) >= 4 ) {
+                    if ( (kkk + lll) >= 4 && iii != 3 && jjj != 3 && kkk != 3 && lll != 3) {
                         iclass_grad_spdf(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf2
-                    if ( (iii + jjj) >= 4 ) {
+                    if ( (iii + jjj) >= 4 && iii != 3 && jjj != 3 && kkk != 3 && lll != 3) {
                         iclass_grad_spdf2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
                     }
 #elif defined int_spdf3
+                    if( iii == 3 || jjj == 3 || kkk == 3 || lll ==3 ){
+                    if(iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
+
+			}else{
                     iclass_grad_spdf3(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+			}
+                    }
 #elif defined int_spdf4
+		    if( iii == 3 && jjj == 3 && kkk ==3 && lll ==3){
                     iclass_grad_spdf4(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
+		    }
 #elif defined int_spdf5
                     iclass_grad_spdf5(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax, devSim.YVerticalTemp+offside, devSim.store+offside, devSim.store2+offside, devSim.storeAA+offside, devSim.storeBB+offside, devSim.storeCC+offside);
 #elif defined int_spdf6
@@ -321,6 +347,9 @@ __device__ __forceinline__ void iclass_grad_spd
     for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
         for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
             if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
                 if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
                     LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
                 }
@@ -452,15 +481,16 @@ __device__ __forceinline__ void iclass_grad_spd
                           0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
 */
 
-#ifdef USE_ERI_GRAD_STOREADD
-                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+//#ifdef USE_ERI_GRAD_STOREADD
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
                         if (i < STOREDIM && j < STOREDIM) {
                                 LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
                 }
-#endif
+*/
+//#endif
       
 #ifdef int_sp 
                 ERint_grad_vertical_sp(I, J+1, K, L+1, II, JJ, KK, LL, \
@@ -507,8 +537,17 @@ __device__ __forceinline__ void iclass_grad_spd
         }
     }
     
-    
-    
+/*
+
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            printf("STORE   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f \n",II, JJ, KK, LL, I, J, K, L, j, i, LOCSTORE(store, j, i , STOREDIM, STOREDIM));
+                        }
+                    }
+                }
+   
+*/ 
     QUICKDouble AGradx = 0.0;
     QUICKDouble AGrady = 0.0;
     QUICKDouble AGradz = 0.0;
@@ -579,7 +618,9 @@ __device__ __forceinline__ void iclass_grad_spd
                                      store, storeAA, storeBB, storeCC, \
                                      RAx, RAy, RAz, RBx, RBy, RBz, \
                                      RCx, RCy, RCz, RDx, RDy, RDz);
-                        
+  
+//printf("Y   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f   %.9f\n",II, JJ, KK, LL, I, J, K, L, III, JJJ, KKK, LLL, Yaax, Yaay, Yaaz, Ybbx, Ybby, Ybbz, Yccx, Yccy, Yccz);
+                      
                         QUICKDouble constant = 0.0 ;
                         
 #ifdef OSHELL
@@ -813,7 +854,7 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     int kStartK = devSim.kstart[KK]-1;
     int kStartL = devSim.kstart[LL]-1;
     
-    
+/*    
     QUICKDouble AGradx = 0.0;
     QUICKDouble AGrady = 0.0;
     QUICKDouble AGradz = 0.0;
@@ -828,14 +869,36 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     int         BStart = (devSim.katom[JJ]-1) * 3;
     int         CStart = (devSim.katom[KK]-1) * 3;
     int         DStart = (devSim.katom[LL]-1) * 3;
-    
+*/    
     /*
      store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
      of cuda limitation, we can not do that now.
      
      See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
      */
-    
+
+    for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+        for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
+            if (i < STOREDIM && j < STOREDIM) {
+
+                LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+
+                if (j < Sumindex[I+J+2] && i < Sumindex[K+L+2]) {
+                    LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0;
+                }
+
+                if (j >= Sumindex[I+1]) {
+                    LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) = 0;
+                    LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) = 0;
+                }
+
+                if (i >= Sumindex[K+1]) {
+                    LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) = 0;
+                }
+            }
+        }
+    }    
+
     
     for (int i = 0; i<kPrimI*kPrimJ;i++){
         int JJJ = (int) i/kPrimI;
@@ -939,32 +1002,355 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 
                 //QUICKDouble store2[STOREDIM*STOREDIM];
                 
-                
+/*                
                 for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
                     for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
-                        if (i < STOREDIM && j < STOREDIM && !(i >= Sumindex[I+J+2] && j >= Sumindex[K+L+2])) {
+                        if (i < STOREDIM && j < STOREDIM ) {
                             LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
                         }
                     }
                 }
-                
+*/                
                 
 #ifdef int_spdf
-                vertical2_spdf(I, J + 1, K, L + 1, YVerticalTemp, store2, \
-                               Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                               Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                               0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+                ERint_grad_vertical_dddd_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf2
-                vertical2_spdf2(I, J + 1, K, L + 1, YVerticalTemp, store2, \
-                                Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
-                                Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
-                                0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+                ERint_grad_vertical_dddd_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 #elif defined int_spdf3
+
+/*                for (int i = Sumindex[K]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+3]; j++) {
+                        if (i < STOREDIM && j < STOREDIM ) {
+                            LOCSTORE(store2, j, i, STOREDIM, STOREDIM) = 0;
+                        }
+                    }
+                }
+*/
+
+                ERint_vertical_spdf_1_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+         
+                ERint_vertical_spdf_2_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_3_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_4_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_5_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_6_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_8_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spd_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_4(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_5(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_6(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+/*
+                ERint_grad_vertical_spdf_7_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
                 vertical2_spdf3(I, J + 1, K, L + 1, YVerticalTemp, store2, \
                                 Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+
                                 0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+*/
 #elif defined int_spdf4
+
+		ERint_grad_vrr_ffff_1(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_2(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_3(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_4(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_5(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_6(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_7(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_8(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_9(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_10(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_11(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_12(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_13(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_14(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_15(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_16(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_17(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_18(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_19(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_20(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_21(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_22(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_23(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_24(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_25(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_26(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_27(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_28(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_29(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_30(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_31(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+                ERint_grad_vrr_ffff_32(I, J, K, L, II, JJ, KK, LL, 
+                    Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, 
+                    Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, 
+                    0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
+
+/*
+                ERint_grad_vertical_spdf_5(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_1(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_2(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+                ERint_grad_vertical_spdf_7_3(I, J+1, K, L+1, II, JJ, KK, LL, \
+                         Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
+                         Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
+                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
+
+
                 vertical2_spdf4(I, J + 1, K, L + 1, YVerticalTemp, store2, \
                                 Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
@@ -989,11 +1375,67 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                 Px - RAx, Py - RAy, Pz - RAz, (Px*AB+Qx*CD)*ABCD - Px, (Py*AB+Qy*CD)*ABCD - Py, (Pz*AB+Qz*CD)*ABCD - Pz, \
                                 Qx - RCx, Qy - RCy, Qz - RCz, (Px*AB+Qx*CD)*ABCD - Qx, (Py*AB+Qy*CD)*ABCD - Qy, (Pz*AB+Qz*CD)*ABCD - Qz, \
                                 0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+*/
 #endif
+  
+
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            LOCSTORE(store, j, i , STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM);
+                        }
+                    }
+                }
+
+
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I+1]; j< Sumindex[I+J+3]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            LOCSTORE(storeAA, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * AA * 2 ;
+                            LOCSTORE(storeBB, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * BB * 2 ;
+                        }
+
+                    }
+                }
+
+                for (int i = Sumindex[K+1]; i< Sumindex[K+L+3]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            LOCSTORE(storeCC, j, i, STOREDIM, STOREDIM) += LOCSTORE(store2, j, i, STOREDIM, STOREDIM) * CC * 2 ;
+
+                        }
+                    }
+                }              
                 
                 
-                
-                
+            }
+        }
+    }
+ 
+/*
+                for (int i = Sumindex[K]; i< Sumindex[K+L+2]; i++) {
+                    for (int j = Sumindex[I]; j< Sumindex[I+J+2]; j++) {
+                        if (i < STOREDIM && j < STOREDIM) {
+                            printf("STORE   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f \n",II, JJ, KK, LL, I, J, K, L, j, i, LOCSTORE(store, j, i , STOREDIM, STOREDIM));
+                        }
+                    }
+                }    
+*/
+    QUICKDouble AGradx = 0.0;
+    QUICKDouble AGrady = 0.0;
+    QUICKDouble AGradz = 0.0;
+    QUICKDouble BGradx = 0.0;
+    QUICKDouble BGrady = 0.0;
+    QUICKDouble BGradz = 0.0;
+    QUICKDouble CGradx = 0.0;
+    QUICKDouble CGrady = 0.0;
+    QUICKDouble CGradz = 0.0;
+
+    int         AStart = (devSim.katom[II]-1) * 3;
+    int         BStart = (devSim.katom[JJ]-1) * 3;
+    int         CStart = (devSim.katom[KK]-1) * 3;
+    int         DStart = (devSim.katom[LL]-1) * 3;
+           
                 QUICKDouble RBx, RBy, RBz;
                 QUICKDouble RDx, RDy, RDz;
                 
@@ -1034,11 +1476,16 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                     QUICKDouble Yaax, Yaay, Yaaz;
                                     QUICKDouble Ybbx, Ybby, Ybbz;
                                     QUICKDouble Yccx, Yccy, Yccz;
+
+
 #ifdef  int_spdf
                                     hrrwholegrad2_1
 #elif defined int_spdf2
+
                                     hrrwholegrad2_2
 #else
+
+
                                     hrrwholegrad2
 #endif
                                     (&Yaax, &Yaay, &Yaaz, \
@@ -1046,10 +1493,10 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                                                   &Yccx, &Yccy, &Yccz, \
                                                   I, J, K, L,\
                                                   III, JJJ, KKK, LLL, IJKLTYPE, \
-                                                  store2, AA, BB, CC, \
+                                                  store, storeAA, storeBB, storeCC, \
                                                   RAx, RAy, RAz, RBx, RBy, RBz, \
                                                   RCx, RCy, RCz, RDx, RDy, RDz);
-                                    
+
                                     QUICKDouble constant = 0.0 ;
                                     
 #ifdef OSHELL
@@ -1185,12 +1632,12 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                            I, J, K, L, AGradx, AGrady, AGradz, BGradx, BGrady, BGradz, CGradx, CGrady, CGradz);
                 }*/
                 
-                
+/*                
                 
             }
         }
     }
-    
+*/    
     
 #ifdef DEBUG
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
@@ -1947,14 +2394,14 @@ __device__ __forceinline__ void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaa
 }
 
 #undef STOREDIM
-#define STOREDIM STOREDIM_L
+#define STOREDIM STOREDIM_XL
 
 __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                              QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                              QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                              int I, int J, int K, int L, \
                                              int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                             QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                             QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                              QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                              QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                              QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -1988,14 +2435,17 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                           LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis) + 1, LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), \
                           LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), \
                           J, coefAngularL, angularL);
+
+
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
-    
+   
+ 
     numAngularL = lefthrr(RAx, RAy, RAz, RBx, RBy, RBz, \
                           LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis) + 1, LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), \
                           LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis), \
@@ -2003,7 +2453,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2015,7 +2465,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2027,7 +2477,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2039,7 +2489,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2051,7 +2501,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2185,7 +2635,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2219,7 +2669,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2253,7 +2703,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2296,13 +2746,15 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
     
 }
 
+#undef STOREDIM
+#define STOREDIM STOREDIM_GRAD_S
 
 __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz, \
                                               QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz, \
                                               QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                               int I, int J, int K, int L, \
                                               int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -2345,7 +2797,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccx = *Yccx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2362,7 +2814,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccy = *Yccy + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2379,7 +2831,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
         for (int j = 0; j<numAngularR; j++) {
             
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * CC;
+                *Yccz = *Yccz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeCC, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2410,7 +2862,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                               int I, int J, int K, int L, \
                                               int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -2447,7 +2899,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaax = *Yaax + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2459,7 +2911,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaay = *Yaay + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2471,7 +2923,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * AA;
+                *Yaaz = *Yaaz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeAA, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2483,7 +2935,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybbx = *Ybbx + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2495,7 +2947,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybby = *Ybby + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }
@@ -2507,7 +2959,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
     for (int i = 0; i<numAngularL; i++) {
         for (int j = 0; j<numAngularR; j++) {
             if (angularL[i] <= STOREDIM && angularR[j] <= STOREDIM) {
-                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(store, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM) * 2 * BB;
+                *Ybbz = *Ybbz + coefAngularL[i] * coefAngularR[j] * LOCSTORE(storeBB, angularL[i]-1, angularR[j]-1, STOREDIM, STOREDIM);
             }
         }
     }

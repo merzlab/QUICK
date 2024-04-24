@@ -24,14 +24,13 @@ subroutine gradient(ierr)
 !------------------------------------------------------------------
 
    use allmod
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    integer, intent(inout) :: ierr
    character(len=1) cartsym(3)
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 !  Curently, only analytical gradients are available. This should be changed later.
    quick_method%analgrad=.true.
@@ -115,13 +114,13 @@ end subroutine gradient
 subroutine scf_gradient
    use allmod
    use quick_gradient_module
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 !---------------------------------------------------------------------
 !  The purpose of this subroutine is to calculate the gradient of
@@ -381,12 +380,11 @@ end subroutine get_nuclear_repulsion_grad
 subroutine get_oneen_grad
 
   use allmod
+#ifdef MPIV
+   use mpi
+#endif
   implicit none
   integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 !---------------------------------------------------------------------
 !  1) The derivative of the kinetic term
@@ -487,14 +485,14 @@ end subroutine get_oneen_grad
 subroutine get_kinetic_grad
 
    use allmod
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    logical :: ijcon
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 !  1)  The negative of the energy weighted density matrix element i j
 !   with the derivative of the ij overlap.
@@ -605,14 +603,13 @@ subroutine get_electron_replusion_grad
    use allmod
    use quick_gradient_module
    use quick_cutoff_module, only: cshell_dnscreen
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-  
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 !  This subroutine calculates the derivative of 4center 2e- 
 !  terms with respect to X times the coefficient found in the energy.
@@ -744,6 +741,9 @@ subroutine get_xc_grad
    use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
    use xc_f90_types_m
    use xc_f90_lib_m
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -755,10 +755,6 @@ subroutine get_xc_grad
    double precision, dimension(1) :: libxc_vsigmaa
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
 #if defined CUDA || defined CUDA_MPIV
 

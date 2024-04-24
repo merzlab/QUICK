@@ -80,6 +80,10 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
          endif()
 	endif()    
   
+	if("${CMAKE_C_COMPILER_VERSION}" VERSION_GREATER_EQUAL 10.0)
+		add_flags(C -fcommon)
+	endif()
+
 	if(DRAGONEGG)
 		#check dragonegg
 		check_c_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_C_WORKS)
@@ -176,6 +180,13 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 		
 		add_flags(Fortran -fplugin=${DRAGONEGG})
 	endif()
+
+    # gfortran 10.0 and higher need special flag to allow argument rank mismatch
+    if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 10.0)
+        add_flags(Fortran -fallow-argument-mismatch)
+        add_flags(Fortran -fno-inline-arg-packing)
+    endif()
+
 endif()
 
 #clang
@@ -330,6 +341,79 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
 	
+	set(OPT_CXXFLAGS -O3)
+endif()
+
+#IntelLLVM aka Intel oneAPI
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
+	set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
+	set(OPT_CFLAGS -ipo -O3)
+		
+	#  How flags get set for optimization depend on whether we have a MIC processor,
+    #  the version of Intel compiler we have, and whether we are cross-compiling
+    #  for multiple versions of SSE support.  The following coordinates all of this.
+    #  This was done assuming that MIC and SSE are mutually exclusive and that we want
+    #  SSE instructions included only when optimize = yes.  Note that use of an
+    #  SSE_TYPES specification needs to be given in place of xHost not in addition to.
+    #  This observed behavior is not what is reported by the Intel man pages. BPK
+	
+	if(SSE)
+		# BPK removed section that modified O1 or O2 to be O3 if optimize was set to yes.
+      	# We already begin with the O3 setting so it wasn't needed.
+        # For both coptflags and foptflags, use the appropriate settings
+        # for the sse flags (compiler version dependent).
+        if(${CMAKE_C_COMPILER_VERSION} VERSION_GREATER 11 OR ${CMAKE_C_COMPILER_VERSION} VERSION_EQUAL 11)
+			if(NOT "${SSE_TYPES}" STREQUAL "")
+				list(APPEND OPT_CFLAGS "-ax${SSE_TYPES}")
+			else()
+				list(APPEND OPT_CFLAGS -xHost)
+			endif()
+		else()
+			list(APPEND OPT_CFLAGS -axSTPW)
+		endif()
+		
+	endif()
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+
+	if(WIN32)
+		add_flags(Fortran /D_CRT_SECURE_NO_WARNINGS)
+		set(OPT_FFLAGS "/Ox")
+		set(CMAKE_Fortran_FLAGS_DEBUG "/Zi")
+	else()
+		set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
+		set(OPT_FFLAGS -ipo -O3)
+		
+		if(SSE)
+			if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 11 OR ${CMAKE_Fortran_COMPILER_VERSION} VERSION_EQUAL 11)
+				if(NOT "${SSE_TYPES}" STREQUAL "")
+					list(APPEND OPT_FFLAGS "-ax${SSE_TYPES}")
+				else()
+					list(APPEND OPT_FFLAGS -xHost)
+				endif()
+			else()
+				list(APPEND OPT_FFLAGS -axSTPW)
+			endif()
+		endif()
+		
+		# warning flags
+		add_flags(Fortran "-warn all" "-warn nounused")
+		
+		option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
+		
+		if(NOT IFORT_CHECK_INTERFACES)
+			# disable errors from type mismatches
+			add_flags(Fortran -warn nointerfaces)
+		endif()
+		
+	endif()
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
 	set(OPT_CXXFLAGS -O3)
 endif()
 

@@ -35,6 +35,9 @@
 
 subroutine inidivcon(natomsaved)
   use allmod
+#ifdef MPIV
+  use mpi
+#endif
   implicit double precision (a-h,o-z)
 
   double precision rbuffer1,rbuffer2
@@ -54,10 +57,6 @@ subroutine inidivcon(natomsaved)
   integer tempinteger,tempinteger2
   integer natomt,natomsaved
   logical bEliminate  ! if elimination step needed(test only)
-
-#ifdef MPIV
-  include 'mpif.h'
-#endif
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
   bEliminate=.true.

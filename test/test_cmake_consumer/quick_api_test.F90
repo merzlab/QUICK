@@ -17,13 +17,10 @@
 #ifdef MPIV
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
+    use mpi
 #endif
 
     implicit none
-
-#ifdef MPIV
-    include 'mpif.h'
-#endif
 
     ! i, j are some integers useful for loops, frames is the number of
     ! test snapshots (md steps), ierr is for error handling

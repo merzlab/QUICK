@@ -42,17 +42,22 @@ fflush(stdout);\
 #define STOREDIM_S 35
 
 #define STOREDIM_GRAD_T 20
+#define STOREDIM_GRAD_S 56
 
 #ifdef CUDA_SPDF
 #define STOREDIM_L 84
+#define STOREDIM_XL 120
+#define MAXPRIM 20
 #else
+#define MAXPRIM 14
 #define STOREDIM_L 84
+#define STOREDIM_XL 84
 #endif
+
+#define STORE_OPERATOR +=
 
 #define TRANSDIM 8
 #define MCALDIM 120
-
-#define MAXPRIM 10
 
 #define BUFFERSIZE 150000
 
@@ -187,6 +192,11 @@ if (error != cudaSuccess && error != cudaErrorNotReady)\
 typedef float  QUICKSingle;
 #define QUICKULL \
 unsigned long long int
+#ifdef USE_LEGACY_ATOMICS
+#define QUICKAtomicType unsigned long long int
+#else
+#define QUICKAtomicType double
+#endif
 
 /* 
  ****************************************************************

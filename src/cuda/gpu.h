@@ -92,6 +92,7 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
 
+
 #ifdef CEW
 void get_lri(_gpu_type gpu);
 void get_lri_grad(_gpu_type gpu);
@@ -411,7 +412,7 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
                                               QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                               int I, int J, int K, int L, \
                                               int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -422,7 +423,7 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                               int I, int J, int K, int L, \
                                               int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -433,7 +434,7 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz, \
                                               int I, int J, int K, int L, \
                                               int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
-                                              QUICKDouble* store, QUICKDouble AA, QUICKDouble BB, QUICKDouble CC, \
+                                              QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC, \
                                               QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
                                               QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \

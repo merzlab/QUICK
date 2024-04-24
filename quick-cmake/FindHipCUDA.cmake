@@ -912,7 +912,7 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
   endif()
 
   # If HIP wrappers exist, append those
-  #if(NOT _name MATCHES "(solver)")
+#  if(NOT _name MATCHES "(solver)")
     string(REGEX REPLACE "^(cu)" "hip" _hipname ${_name})
     if(_name MATCHES "(fft|rand)")
       set(_hipnamespace "hip")
@@ -929,8 +929,11 @@ foreach(_name IN ITEMS cufft cublas curand cusparse cusolver)
       if(_name MATCHES "(fft)")
         list(PREPEND CUDA_INCLUDE_DIRS ${HIPFFT_INCLUDE_DIR})
       endif()
+#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipfft/)
+#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipblas/)
+#      list(PREPEND CUDA_INCLUDE_DIRS ${ROCM_PATH}/include/hipsparse/)
     endif()
-  #endif()
+#  endif()
 
   # Add legacy uppercase variables
   if(_name MATCHES "(fft|blas)")

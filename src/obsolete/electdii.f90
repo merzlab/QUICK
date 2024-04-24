@@ -14,9 +14,8 @@
 !
 subroutine electdiis(jscf,PRMS)
   use allmod
+  use mpi
   implicit double precision(a-h,o-z)
-  
-  include "mpif.h"
 
   logical :: diisdone
   double precision:: oldEnergy=0.0d0,E1e
@@ -543,6 +542,7 @@ end subroutine electdiis
 !
     subroutine electdiisdc(jscf,PRMS)
       use allmod
+      use mpi
       implicit double precision(a-h,o-z)
 
       logical :: diisdone
@@ -554,8 +554,6 @@ end subroutine electdiis
       logical templog1,templog2
       integer elecs,itemp
       double precision efermi(10),oneElecO(nbasis,nbasis)
-
-      include "mpif.h"
 
 
       !=========================================================== 
@@ -834,11 +832,11 @@ end subroutine electdiis
                   do i=1,mpi_dc_fragn(ittt)
                      itt=mpi_dc_frag(ittt,i)
                      call MPI_RECV(codcsub(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                      call MPI_RECV(codcsubtran(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                      call MPI_RECV(evaldcsub(itt,1:NNmax),NNmax,mpi_double_precision, &
-                           ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                           ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                   enddo
                enddo
             endif

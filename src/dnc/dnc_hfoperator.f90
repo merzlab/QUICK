@@ -296,11 +296,11 @@ end subroutine hfoperatordc
 subroutine mpi_hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
-    use quick_cutoff_module, only: cshell_density_cutoff
+   use quick_cutoff_module, only: cshell_density_cutoff
    use quick_cshell_eri_module, only: getCshellEriEnergy
+   use mpi
    implicit double precision(a-h,o-z)
 
-   include "mpif.h"
    double precision testtmp,cutoffTest,oneElecO(nbasis,nbasis)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -427,7 +427,7 @@ subroutine mpi_hfoperatordc(oneElecO)
    else
       do i=1,mpisize-1
          ! receive opertors from slave nodes
-         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
          ! and sum them into operator
          do ii=1,nbasis
             do jj=1,nbasis

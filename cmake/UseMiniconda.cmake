@@ -15,13 +15,9 @@ function(download_and_use_miniconda)
 	set(MINICONDA_INSTALL_DIR ${MINICONDA_TEMP_DIR}/install)	
 	
 	set(MINICONDA_INSTALL_DIR ${MINICONDA_TEMP_DIR}/install PARENT_SCOPE) # need to keep this around for install_minconda()
-	
-	if(MINICONDA_USE_PY3)
-	    set(PYTHON_MAJOR_RELEASE 3)	    
-	else()
-	    set(PYTHON_MAJOR_RELEASE 2)
-	endif()
-	
+
+    set(PYTHON_MAJOR_RELEASE 3)	    
+
 	set(MINICONDA_STAMP_FILE ${CMAKE_BINARY_DIR}/CMakeFiles/miniconda-setup-py${PYTHON_MAJOR_RELEASE}-v${MINICONDA_VERSION}.stamp)
 	
 	# figure out executable paths
@@ -48,12 +44,8 @@ function(download_and_use_miniconda)
 		return()
 	endif()
 
-	if(MINICONDA_USE_PY3)	
-		message(STATUS "Downloading Python 3 Miniconda")	    
-	else()
-		message(STATUS "Downloading Python 2.7 Miniconda")
-	endif()
-		
+    message(STATUS "Downloading Python 3 Miniconda")	    
+
 	# Figure out the OS part of the URL
 	if(TARGET_OSX)
 	    message(STATUS "Detected Mac OS X operating system. Downloading the Mac installer")
@@ -77,8 +69,13 @@ function(download_and_use_miniconda)
 		        
 	# Figure out the bitiness part of the URL
 	if(TARGET_OSX)
-		# OS X does not have a 32 bit miniconda
-		set(CONTINUUM_BITS "x86_64")
+		if("${TARGET_ARCH}" STREQUAL "x86_64")
+			message(STATUS "Using 64 bit miniconda")
+			set(CONTINUUM_BITS "x86_64")
+		elseif("${TARGET_ARCH}" MATCHES "arm64.*")
+			message(STATUS "Using arm64 miniconda")
+			set(CONTINUUM_BITS "arm64")
+		endif()
 	else()
 		if("${TARGET_ARCH}" STREQUAL "x86_64")
 			message(STATUS "Using 64 bit miniconda")
@@ -86,6 +83,9 @@ function(download_and_use_miniconda)
 		elseif("${TARGET_ARCH}" STREQUAL "i386")
 			message(STATUS "Using 32 bit miniconda")
 			set(CONTINUUM_BITS "x86")
+		elseif("${TARGET_ARCH}" MATCHES "arm64")
+			message(STATUS "Using arm64 miniconda")
+			set(CONTINUUM_BITS "aarch64")
 		else()
 			message(WARNING "Unable to detect machine bits.  Falling back to downloading 32 bit x86 Miniconda.")
 			set(CONTINUUM_BITS "x86")
@@ -137,7 +137,7 @@ function(download_and_use_miniconda)
 		string(REPLACE "/" "\\" MINICONDA_INSTALL_DIR_BACKSLASHES "${MINICONDA_INSTALL_DIR}")
 		set(MINICONDA_INSTALLER_COMMANDLINE ${MINICONDA_INSTALLER} /AddToPath=0 /S "/D=${MINICONDA_INSTALL_DIR_BACKSLASHES}")
 	else()
-		set(MINICONDA_INSTALLER_COMMANDLINE ${CMAKE_COMMAND} -E env ${CMAKE_ENV_ARGS} ${MINICONDA_INSTALLER} -b -p "${MINICONDA_INSTALL_DIR}")
+		set(MINICONDA_INSTALLER_COMMANDLINE bash ${MINICONDA_INSTALLER} -b -p "${MINICONDA_INSTALL_DIR}")
 	endif()
 	
 	execute_process(COMMAND ${MINICONDA_INSTALLER_COMMANDLINE} 
@@ -148,13 +148,13 @@ function(download_and_use_miniconda)
 		
 	message(STATUS "Updating and installing required and optional packages...")
 	
-	
-	execute_process(COMMAND ${CONDA} update conda -y)	
-	execute_process(COMMAND ${MINICONDA_PYTHON} -m pip install pip --upgrade)
-	if (MINICONDA_USE_PY3)
-		# Revert setuptools as a temporary workaround to recent changes to path mangling behavior
-		execute_process(COMMAND ${MINICONDA_PYTHON} -m pip install setuptools==47.3.1)
+
+	# if the miniconda version has been specified (-DMINICONDA_VERSION=...)
+	# then do not update conda
+	if(MINICONDA_AUTO)
+		execute_process(COMMAND ${CONDA} update conda -y)
 	endif()
+	execute_process(COMMAND ${MINICONDA_PYTHON} -m pip install pip --upgrade)
 	
 	# Prefer non-mkl packages.
 	# This is because if Amber is using MKL, when Python programs run they will try to talk to two
@@ -162,6 +162,9 @@ function(download_and_use_miniconda)
 	# Amber was linked with.
 	# So, to fix this, we make sure Miniconda is not using MKL.
 	execute_process(COMMAND ${CONDA} install -y nomkl)
+
+	execute_process(COMMAND ${CONDA} install -y -c conda-forge f90nml mrcfile pdb2pqr)
+	execute_process(COMMAND ${CONDA} install -y pandas)
 	
 	execute_process(COMMAND ${CONDA} install -y -q conda-build numpy scipy cython=0.29 ipython notebook pytest 
 		RESULT_VARIABLE PACKAGE_INSTALL_RETVAL)
@@ -247,7 +250,10 @@ function(install_miniconda)
     	installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/conda ${BINDIR}/amber.conda Python)
     	installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/ipython ${BINDIR}/amber.ipython Python)
     	installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/jupyter ${BINDIR}/amber.jupyter Python)
-    	installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/pip ${BINDIR}/amber.pip Python)
+        installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/pdb2pqr ${BINDIR}/pdb2pqr Python)
+        installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/propka3 ${BINDIR}/propka3 Python)
+        # Some users don't seem to end up with a miniconda/bin/pip file:
+        #   installtime_create_symlink(${CMAKE_INSTALL_POSTFIX}miniconda/bin/pip ${BINDIR}/amber.pip Python)
     endif()
         
 	add_subdirectory(${CMAKE_SOURCE_DIR}/cmake/FixCondaShebang)
