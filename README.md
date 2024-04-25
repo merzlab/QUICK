@@ -30,6 +30,8 @@ Features
 Limitations
 -----------
 * Supports energy/gradient calculations with basis functions up to f
+* GPU f function code is not highly optimized, requires large amount of RAM (may fail on consumer GPUs)
+* No open shell gradients with f functions on GPUs
 * Supports only Cartesian basis functions (no spherical harmonics)
 * Effective core potentials (ECPs) are not supported
 * DFT calculations are performed exclusively using the SG1 grid system 
