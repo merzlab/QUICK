@@ -77,6 +77,7 @@ module quick_oeproperties_module
    use quick_method_module
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
+   use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
    integer, intent(out) :: ierr
@@ -97,74 +98,56 @@ module quick_oeproperties_module
    allocate(esp_nuclear(igridpoint))
  endif
 
-!   ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-!  if (quick_method%esp_grid) then
-!    write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-!    write(ioutfile,'(/, " NUMBER OF GRID POINTS = ",i4)') quick_molspec%nextpoint
-!    write (ioutfile,'(84("-"))')
-!    write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
-!    write (ioutfile,'(84("-"))')
-!    write (ioutfile,'(/," ESP is printed to PROPERTIES file ")')
-!    write (ioutfile,'(84("-"))')
-
-!    write (ioutfile,'(/," THANK YOU FOR USING THE QUICK PROPERTIES MODULE ")')
-!    write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-!    ! write (iPropFile,'(100("-"))')
-!    write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
-!    ! write (iPropFile,'(100("-"))')
-
-!    do igridpoint = 1, quick_molspec%nextpoint
-!      Cx = quick_molspec%extxyz(1, igridpoint)
-!      Cy = quick_molspec%extxyz(2, igridpoint)
-!      Cz = quick_molspec%extxyz(3, igridpoint)
-!      if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
-!         write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-!          (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
-!      else
-!         write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A'
-!      endif
-
-!    end do
-! !  write (iPropFile,'(/," THANK YOU FOR USING QUICK PROPERTIES MODULE!  HAVE A GREAT DAY! ")')
-! endif
-
  ! If ESP_GRID is true, print to table X, Y, Z, V(r)
- if (quick_method%esp_grid) then
+ if ((quick_method%esp_grid) .or. (quick_method%esp_print_terms)) then
       write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
       write (ioutfile,'(84("-"))')
+    if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
       write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+    else
+      write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
+      endif
       write (ioutfile,'(84("-"))')
       write (ioutfile,'(/," ESP is printed to PROPERTIES file ")')
       write (ioutfile,'(84("-"))')
-
       write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
       write (iPropFile,'(100("-"))')
-      write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
-     ! write (iPropFile,'(100("-"))')
+    ! Do you want V_nuc and V_elec?
+      if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
+          write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+      else if ((quick_method%extgrid_angstrom) .and. (quick_method%esp_grid))  then
+          write (iPropFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
+       else
+          write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
+      endif
 
-      do igridpoint = 1, quick_molspec%nextpoint
-       !  do i=1,quick_molspec%nextpoint
-       !     write(ioutfile,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
-       !  enddo
+      ! Collect ESP and print
+      do igridpoint = 1, quick_molspec%nextpoint 
+       if ((quick_method%extgrid_angstrom) .and. (quick_method%esp_grid))  then
+        Cx = (quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A)
+        Cy = (quick_molspec%extxyz(2, igridpoint)*BOHRS_TO_A)
+        Cz = (quick_molspec%extxyz(3, igridpoint)*BOHRS_TO_A)
+       else
         Cx = quick_molspec%extxyz(1, igridpoint)
         Cy = quick_molspec%extxyz(2, igridpoint)
         Cz = quick_molspec%extxyz(3, igridpoint)
+       endif
+
         if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
-           write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-            esp_nuclear(igridpoint), esp_electrostatic(igridpoint), (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+            ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
+            if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
+                write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+                esp_nuclear(igridpoint), esp_electrostatic(igridpoint), (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+            else
+                write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
+                 (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+            endif
         else
            write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
         endif
 
       end do
-    !  write (iPropFile,'(100("-"))')
-    ! write (iPropFile,'(/," THANK YOU FOR USING QUICK PROPERTIES MODULE!  HAVE A GREAT DAY! ")')
   endif
-  
- ! If debug is enabled, print a debug message
- !   if (debug) then
- !        write(ioutfile, '(a)') '>>> DEBUG Exiting print_esp subroutine'
- !   endif
  end subroutine print_esp
 
  !-----------------------------------------------------------------------!
@@ -193,8 +176,6 @@ module quick_oeproperties_module
      do i=1,natom
         distance = rootSquare(xyz(1:3,i), quick_molspec%extxyz(1:3,igridpoint), 3)
         esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(i) / distance
-       ! debug print V_nuc to ensure it is correct
-       !  write(ioutfile, *) 'V_nuc(r) = sum Z_k/|r-Rk| in [a.u.] = ', esp_nuclear_term
      enddo
    !enddo
  end subroutine esp_nuc
@@ -446,7 +427,7 @@ module quick_oeproperties_module
  !-----------------------------------------------------------------------------------------
  ! This subroutine computes loops over 
  ! This is \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
- ! See Eq. A14 of O&S [J. Chem. Phys. 84, 3963 (1986)]                                     
+ ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
@@ -498,7 +479,7 @@ module quick_oeproperties_module
            !Eqn 15 O&S
            inv_g = 1.0d0 / dble(g)
  
-           ! Calculate first two terms of O&S Eqn A20
+           ! Calculate first two terms of Obara & Saika Eqn A20
            constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
            constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
            

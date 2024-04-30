@@ -73,9 +73,7 @@ module quick_files_module
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file.
     logical :: write_molden = .false. ! flag to export data into molden format
-
-    ! is this necessary?
-   ! logical :: write_prop = .false. ! flag to export data into prop format
+    logical :: write_prop = .false.   ! flag to export data into prop format
 
 
     contains

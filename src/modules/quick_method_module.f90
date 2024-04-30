@@ -65,8 +65,8 @@ module quick_method_module
         logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
         logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
-        logical :: calcDensLap = .false.
-                                       ! calculate density lap
+        logical :: calcDensLap = .false. !calculate density lap
+
         double precision :: gridSpacing = 0.1d0
                                        ! Density file gridspacing
         double precision :: lapGridSpacing = 0.1d0
@@ -75,7 +75,8 @@ module quick_method_module
         logical :: PDB = .false.       ! PDB input
         logical :: extCharges = .false.! external charge (x,y,z,q)
         logical :: ext_grid = .false.  ! external grid points (x,y,z)
-
+        logical :: esp_print_terms =  .false.  ! to print nuclear, electronic and total ESP
+        logical :: extgrid_angstrom =  .false.  ! will print external X, Y, Z points in Angstrom as opposed to Bohr in properties file
 
         ! those methods are mostly for research use
         logical :: FMM = .false.       ! Fast Multipole
@@ -224,6 +225,7 @@ module quick_method_module
             call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%esp_print_terms,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%diisOpt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -244,6 +246,7 @@ module quick_method_module
             call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ext_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -465,6 +468,7 @@ module quick_method_module
 
             ! computing esp, efield and efg
             if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
+            if (self%esp_print_terms)      write(io,'(" ESP_NUC, ESP_ELEC, ESP_TOTAL")')
             if (self%efield_grid)      write(io,'(" ELECTROSTATIC FIELD CALCULATION")')
             if (self%efg_grid)      write(io,'(" ELECTROSTATIC FIELD GRADIENT CALCULATION")')
 
@@ -647,6 +651,7 @@ module quick_method_module
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
+            !if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) self%extgrid_angstrom=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
@@ -813,7 +818,16 @@ module quick_method_module
                self%esp_grid=.true.
                self%ext_grid=.true.
            endif
-
+           if (index(keyWD,'ESP_PRINT_TERMS').ne.0) then
+            self%esp_print_terms=.true.
+            self%esp_grid=.true.
+            self%ext_grid=.true.
+        endif
+        if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
+            self%extgrid_angstrom=.true.
+            self%esp_grid=.true.
+            self%ext_grid=.true.
+        endif
             CHECK_ERROR(ierr)
 
         end subroutine read_quick_method
@@ -859,6 +873,7 @@ module quick_method_module
             self%analGrad =  .true.   ! Analytical Gradient
             self%analHess =  .false.  ! Analytical Hessian Matrix
             self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
+            self%esp_print_terms = .false.        ! Electrostatic potential (ESP) on grid
             self%efield_grid = .false.     ! Electric field (EF) corresponding to ESP 
             self%efg_grid = .false.        ! Electric field gradient (EFG)
 
@@ -877,6 +892,7 @@ module quick_method_module
             self%writePMat = .false.   ! Output density matrix
             self%extCharges = .false.  ! external charge
             self%ext_grid = .false.    ! external grid points
+            self%extgrid_angstrom = .false.   ! external grid points (same as above) output in angstrom
             self%PDB = .false.         ! PDB input
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
