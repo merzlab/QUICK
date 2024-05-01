@@ -21,7 +21,7 @@ endif()
 # CUBLAS fortran thunking
 #------------------------------------------------------------------------------------------
 
-include_directories(../util)
+include_directories(../../util)
 
 set(CUBLAS_FORTRAN_SOURCE ${HIP_TOOLKIT_ROOT_DIR}/rocblas/include/rocblas_module.f90 rocblas/rocblas_extra_module.f90 rocblas/quick_rocblas_module.f90)
 

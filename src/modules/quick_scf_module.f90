@@ -166,11 +166,13 @@ contains
 
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#  if defined(WITH_MAGMA)
+  #if defined(WITH_MAGMA)
      use quick_magma_module, only: magmaDIAG
-#  elif defined(WITH_ROCSOLVER)
+  #else
+    #if defined(WITH_ROCSOLVER)
      use quick_rocsolver_module, only: rocDIAG
-#  endif
+    #endif
+  #endif
 #endif
 #if defined(MPIV)
      use mpi
@@ -377,7 +379,6 @@ contains
            ! The first part is ODS
   
 #if defined(GPU) || defined(MPIV_GPU)
-  
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -397,7 +398,6 @@ contains
            ! This means we now have the e(i) matrix.
            ! allerror=ODS-SDO
 #if defined(GPU) || defined(MPIV_GPU)
-  
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -427,14 +427,12 @@ contains
            quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
   
 #if defined(GPU) || defined(MPIV_GPU)
-  
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #else
-  
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -609,7 +607,7 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
+#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
           RECORD_TIME(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
                 quick_qm_struct%E, quick_qm_struct%idegen, &
@@ -620,37 +618,37 @@ contains
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
 #else
-#  if defined(HIP) || defined(HIP_MPIV)
+  #if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#  else
+  #else
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#  endif  
+  #endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#  if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
+  #if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
            call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#  else
-#    if defined(LAPACK) || defined(MKL)
+  #else
+    #if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#    else
+    #else
            call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-#    endif
+    #endif
 
 !        do i = 1,nbasis
 !          do j=1,nbasis
 !            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
 !          enddo
 !        end do
-#  endif
+  #endif
            RECORD_TIME(timer_end%TDiag)
 #endif
   
