@@ -31,12 +31,12 @@ set(LIBXC_GPU_SOURCES
 	lda_x_2d.cu lda_xc_1d_ehwlrg.cu lda_xc_ksdt.cu lda_xc_teter93.cu 
 	lda_x.cu lda_xc_zlp.cu lda_x_rel.cu
         )
-	# gpu_getxc.cu references functions inside libxc_cuda, so with how CMake separable
+	# gpu_getxc.cu references functions inside libxc_${QUICK_GPU_TARGET_NAME}, so with how CMake separable
 	# compilation linking works it's a lot simpler to add it as a source file here.
 
 set(GPU_RDC_FLAGS "")
 
-list(APPEND LIBXC_GPU_SOURCES ../../${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)	
+list(APPEND LIBXC_GPU_SOURCES ../../gpu/${QUICK_GPU_TARGET_NAME}/gpu_getxc.cu)	
 
 if(HIP)
 	set(GPU_RDC_FLAGS -fgpu-rdc -c)

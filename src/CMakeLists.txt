@@ -12,7 +12,7 @@ if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 endif()
 
 if(CUDA OR HIP)
-add_subdirectory(${QUICK_GPU_TARGET_NAME})
+add_subdirectory(gpu/${QUICK_GPU_TARGET_NAME})
 endif()
 
 # quick source lists
@@ -100,7 +100,7 @@ set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90
     ecp.f90 nuclear.f90 finalize.f90 mpi_setup.f90 quick_debug.f90
     calMP2.f90 hessian.f90 CPHF.f90 frequency.f90 basis.f90)
 
-set(QUICK_GPU_FORTRAN_SOURCE ${QUICK_GPU_TARGET_NAME}/gpu_write_info.f90)
+set(QUICK_GPU_FORTRAN_SOURCE gpu/${QUICK_GPU_TARGET_NAME}/gpu_write_info.f90)
 
 set(TEST_API_SOURCES quick_api_test.f90)
 set(MAIN_SOURCES main.f90)
