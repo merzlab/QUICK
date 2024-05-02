@@ -51,6 +51,10 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_begin%TESPGrid)
 
+ !  call quick_open(quick_files_module%iPropFile,propFileName,'U','F','R',.false.,ierr)
+
+    open(iPropFile,file=propFileName,status='unknown')
+
    ! Loops over all shells and computes the ESP
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
@@ -66,6 +70,8 @@ module quick_oeproperties_module
 
    deallocate(esp_electrostatic)
    deallocate(esp_nuclear)
+
+ close(iPropFile)
 
  end subroutine compute_esp
 
@@ -179,6 +185,17 @@ module quick_oeproperties_module
      enddo
    !enddo
  end subroutine esp_nuc
+
+!subroutine something_nuc(esp_nuc(igridpoint))
+
+ !           do igridpoint=1,quick_molspec%nextpoint
+     
+ !              call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
+
+ !           end do
+
+!end subroutine 
+
 
  !-----------------------------------------------------------------------------------------
  ! This subroutine computes the 1 particle contribution to the V_elec(r)
@@ -462,6 +479,11 @@ module quick_oeproperties_module
    NII2=quick_basis%Qfinal(IIsh)
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
+            
+   
+  do igridpoint=1,quick_molspec%nextpoint
+     call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
+  end do
  
    do ips=1,quick_basis%kprim(IIsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
@@ -510,8 +532,6 @@ module quick_oeproperties_module
               
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz, esp_electrostatic(igridpoint))
-
-               call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
 
             enddo
 

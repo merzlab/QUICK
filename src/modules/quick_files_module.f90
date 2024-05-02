@@ -66,7 +66,7 @@ module quick_files_module
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
     integer :: iIntFile       = INTFILEHANDLE    ! integral file
     integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
-    integer :: iPropFile    = PROPFILEHANDLE     ! properties file
+    integer :: iPropFile      = PROPFILEHANDLE     ! properties file for esp, efield, efg, qmmm
 
     logical :: fexist = .false.         ! Check if file exists
 
