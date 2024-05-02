@@ -168,7 +168,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
   nz         = quick_molspec%natom
   nmass      = quick_molspec%natom
-  ncons      = 0
+  ncons      = quick_molspec%nconsatom
   nconn      = 0
   nzero      = 0 
   nframe     = 0
@@ -181,8 +181,10 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
         coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
   enddo
- 
+
+  spec(1:nz) = quick_molspec%dlfind_freezeatm(:)
   spec(1+nz:nz+nz) = quick_molspec%iattype(:)
+  spec(nz+nz+1:nz+nz+(5*ncons)) = reshape(quick_molspec%dlfind_constr,(/5*ncons/))
 
   do iat = 1, quick_molspec%natom
     coords2(iat) = EMASS(quick_molspec%iattype(iat))

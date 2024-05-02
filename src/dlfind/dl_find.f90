@@ -88,6 +88,8 @@ subroutine dl_find (ierr2, master &
   integer   ,intent(inout) :: ierr2
   integer   ,intent(in)   :: master ! 1 if this task is the master of
                                      ! a parallel run, 0 otherwise
+  integer      :: ncons
+  integer      :: nconn
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
 #endif
@@ -97,7 +99,12 @@ subroutine dl_find (ierr2, master &
   ! Flag for dlf_fail - needs to be set before anything else
   glob%cleanup = 0
 
-  nspec = 3*quick_molspec%natom
+  
+  ! nspec= nat + nz + 5*ncons + 2*nconn + nat
+
+  ncons = quick_molspec%nconsatom
+  nconn = 0
+  nspec = 3*quick_molspec%natom + 5*ncons + 2*nconn
   nvarin = 3*quick_molspec%natom
   nvarin2 = quick_molspec%natom
 
