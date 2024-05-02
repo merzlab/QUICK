@@ -23,7 +23,7 @@ module quick_oeproperties_module
 
  !----------------------------------------------------------------------------!
  ! This is the main subroutine that computes the Electrostatic Potential (ESP)!
- ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it.             !        
+ ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !        
  !----------------------------------------------------------------------------!
  subroutine compute_esp(ierr)
    use allmod
@@ -36,49 +36,53 @@ module quick_oeproperties_module
    integer, intent(out) :: ierr
    logical :: debug = .true.
    integer :: IIsh, JJsh
-   double precision, allocatable :: esp_electrostatic(:)   
+   integer :: igridpoint
+   
+   double precision, allocatable :: esp_electronic(:)   
    double precision, allocatable :: esp_nuclear(:)   
 
    ierr = 0
    
-   ! Allocates and initiates ESP_NUC and ESP_ELEC arrays
-
+   ! Allocates & initiates ESP_NUC and ESP_ELEC arrays
    allocate(esp_nuclear(quick_molspec%nextpoint))
-   allocate(esp_electrostatic(quick_molspec%nextpoint))
+   allocate(esp_electronic(quick_molspec%nextpoint))
    
    esp_nuclear(:) = 0.0d0
-   esp_electrostatic(:) = 0.0d0
+   esp_electronic(:) = 0.0d0
 
    RECORD_TIME(timer_begin%TESPGrid)
 
- !  call quick_open(quick_files_module%iPropFile,propFileName,'U','F','R',.false.,ierr)
+   call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
 
-    open(iPropFile,file=propFileName,status='unknown')
-
-   ! Loops over all shells and computes the ESP
+   ! Computes ESP_NUC 
+   do igridpoint=1,quick_molspec%nextpoint
+     call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
+   end do
+   
+  ! Computes ESP_ELEC
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
-        call esp_shell_pair(IIsh, JJsh, esp_nuclear, esp_electrostatic)
+        call esp_shell_pair(IIsh, JJsh, esp_electronic)
       end do
    end do
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
    
-   ! Prints the ESP to the output file
-   call print_esp(esp_nuclear,esp_electrostatic, ierr)
+   ! Calls print ESP
+   call print_esp(esp_nuclear,esp_electronic, ierr)
 
-   deallocate(esp_electrostatic)
+   deallocate(esp_electronic)
    deallocate(esp_nuclear)
 
  close(iPropFile)
 
  end subroutine compute_esp
 
- !-----------------------------------------------------------------------------------------!
- ! This subroutine formats and prints the Electrostatic Potential (ESP) to the output file.!
- !-----------------------------------------------------------------------------------------!
- subroutine print_esp(esp_nuclear, esp_electrostatic, ierr)
+ !---------------------------------------------------------------------------------------------!
+ ! This subroutine formats and prints the Electrostatic Potential (ESP) to the output file.prop!
+ !---------------------------------------------------------------------------------------------!
+ subroutine print_esp(esp_nuclear, esp_electronic, ierr)
    use quick_molspec_module
    use quick_method_module
    use quick_files_module, only: ioutfile, iPropFile
@@ -90,14 +94,13 @@ module quick_oeproperties_module
    logical :: debug = .true.
 
    double precision, allocatable :: esp_nuclear(:)
-
-   double precision, allocatable :: esp_electrostatic(:)
+   double precision, allocatable :: esp_electronic(:)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
 
-  if (.not. allocated(esp_electrostatic)) then
-   allocate(esp_electrostatic(igridpoint))
+  if (.not. allocated(esp_electronic)) then
+   allocate(esp_electronic(igridpoint))
  endif
 
    if (.not. allocated(esp_nuclear)) then
@@ -108,9 +111,11 @@ module quick_oeproperties_module
  if ((quick_method%esp_grid) .or. (quick_method%esp_print_terms)) then
       write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
       write (ioutfile,'(84("-"))')
+      ! Do you want V_nuc and V_elec?  
     if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
       write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
     else
+      ! Default is V_total  
       write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
       endif
       write (ioutfile,'(84("-"))')
@@ -121,9 +126,11 @@ module quick_oeproperties_module
     ! Do you want V_nuc and V_elec?
       if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
           write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+    ! Do you want  X, Y, and Z in Angstrom?
       else if ((quick_method%extgrid_angstrom) .and. (quick_method%esp_grid))  then
           write (iPropFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
        else
+      ! Default is X, Y, and V_total in a.u.
           write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
       endif
 
@@ -139,14 +146,14 @@ module quick_oeproperties_module
         Cz = quick_molspec%extxyz(3, igridpoint)
        endif
 
-        if (allocated(esp_electrostatic) .and. igridpoint <= size(esp_electrostatic)) then
+        if (allocated(esp_electronic) .and. igridpoint <= size(esp_electronic)) then
             ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
             if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
                 write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-                esp_nuclear(igridpoint), esp_electrostatic(igridpoint), (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+                esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
             else
                 write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
-                 (esp_nuclear(igridpoint)+esp_electrostatic(igridpoint))
+                 (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
             endif
         else
            write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
@@ -157,11 +164,12 @@ module quick_oeproperties_module
  end subroutine print_esp
 
  !-----------------------------------------------------------------------!
- ! This subroutine calculates V_nuc(r) = sum Z_k/|r-Rk| at each point r  !
+ ! This subroutine calculates V_nuc(r) = sum Z_k/|r-Rk|                  !
  !-----------------------------------------------------------------------!
- !subroutine esp_nuc(isGuess, ierr, esp_nuclear_term)
  subroutine esp_nuc(ierr, igridpoint, esp_nuclear_term)
-   use allmod
+    use quick_molspec_module
+    !, only: extxyz, chg
+    !use allmod
    implicit none
 
    integer, intent(inout) :: ierr
@@ -177,30 +185,16 @@ module quick_oeproperties_module
 
    esp_nuclear_term = 0.d0
 
-  ! Loops over grid points, then atoms, calculates the |r-Rk| and computes the V_nuc(r)
-   !do igridpoint=1,quick_molspec%nextpoint
      do i=1,natom
         distance = rootSquare(xyz(1:3,i), quick_molspec%extxyz(1:3,igridpoint), 3)
         esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(i) / distance
      enddo
-   !enddo
  end subroutine esp_nuc
-
-!subroutine something_nuc(esp_nuc(igridpoint))
-
- !           do igridpoint=1,quick_molspec%nextpoint
-     
- !              call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
-
- !           end do
-
-!end subroutine 
-
 
  !-----------------------------------------------------------------------------------------
  ! This subroutine computes the 1 particle contribution to the V_elec(r)
  ! This is \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
- ! See Eq. A14 of O&S [J. Chem. Phys. 84, 3963 (1986)]                                     
+ ! See Eq. A14 of Oibara & Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
@@ -220,10 +214,6 @@ module quick_oeproperties_module
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    logical :: debug = .true.
-   
-   ! if (debug) then
-   !    call logger('esp_1pdm', 'enter')
-   ! end if
 
    AA(1)=Ax
    AA(2)=Ay
@@ -428,7 +418,6 @@ module quick_oeproperties_module
 
               dense_sym_factor = 1.0d0
               if (III /= JJJ) dense_sym_factor = 2.0d0
-            !  end if
 
                  esp = esp + dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
                        *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0) 
@@ -448,7 +437,7 @@ module quick_oeproperties_module
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
- subroutine esp_shell_pair(IIsh, JJsh, esp_nuclear, esp_electrostatic)
+ subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
    use allmod ! revisit, avoid allmod
    use quick_molspec_module
    use quick_overlap_module, only: gpt, opf, overlap_core
@@ -464,8 +453,7 @@ module quick_oeproperties_module
    integer :: igridpoint
    logical :: debug = .true.
  
-   double precision, dimension(:), intent(inout) :: esp_electrostatic
-   double precision, dimension(:), intent(inout) :: esp_nuclear
+   double precision, dimension(:), intent(inout) :: esp_electronic
   
    ! Related to positions of "QM" atoms
    Ax=xyz(1,quick_basis%katom(IIsh))
@@ -480,11 +468,8 @@ module quick_oeproperties_module
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
             
-   
-  do igridpoint=1,quick_molspec%nextpoint
-     call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
-  end do
  
+   ! Calculation of V_elec starts here
    do ips=1,quick_basis%kprim(IIsh)
       a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
       do jps=1,quick_basis%kprim(JJsh)
@@ -495,35 +480,34 @@ module quick_oeproperties_module
  
          if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
  
-           !Eqn 14 O&S
+           !Eqn 14 Obara-Saika 86
            call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
            g = a+b
-           !Eqn 15 O&S
+           !Eqn 15 Obara-Saika 86
            inv_g = 1.0d0 / dble(g)
  
            ! Calculate first two terms of Obara & Saika Eqn A20
            constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
            constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
            
-              ! Related to positions of environment (ext points, or MM atoms)
-              ! nextpoint=number of external grid points. set to 0 if none used
+           ! Loops over external grid points/MM atoms
             do igridpoint=1,quick_molspec%nextpoint
                Cx=quick_molspec%extxyz(1,igridpoint)
                Cy=quick_molspec%extxyz(2,igridpoint)
                Cz=quick_molspec%extxyz(3,igridpoint)
 
-                !Calculate the last term of O&S Eqn A21
+                ! Calculate the last term of Obara--Saika Eqn A21
                 PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
  
-                !Compute O&S Eqn A21
+                ! Compute Obara--Saika Eqn A21
                 U = g* PCsquare
  
-               !Calculate the last term of O&S Eqn A20
+               ! Calculate the last term of Obara--Saika Eqn A20
                call FmT(Maxm,U,aux)
  
-               !Calculate all the auxilary integrals and store in attraxiao array
+               ! Calculate all the auxilary integrals and store in attraxiao array
                do L = 0,maxm
-                  ! -1.0d0 is used to ensure the auxilary integrals are negative
+                  ! sign (-1.0d0) is used to ensure the auxilary integrals are negative
                   aux(L) = -1.0d0*aux(L)*constant
                   attraxiao(1,1,L)=aux(L)
                enddo
@@ -531,17 +515,13 @@ module quick_oeproperties_module
                NIJ1=10*NII2+NJJ2
               
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-                     Cx,Cy,Cz,Px,Py,Pz, esp_electrostatic(igridpoint))
+                     Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint))
 
             enddo
 
          endif
       enddo
    enddo
-
- !   if (debug) then
- !        write(ioutfile, '(a)') '>>>DEBUG reached end of esp_shell_pair'
- !   end if
  end subroutine esp_shell_pair
 
   subroutine logger(name, status)

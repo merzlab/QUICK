@@ -214,7 +214,7 @@ module quick_timer_module
             endif
 
             if(quick_method%esp_grid) then
-                write (io,'("| DISPERSION CORRECTION TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPGrid, &
+                write (io,'("| ESP COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPGrid, &
                 timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
