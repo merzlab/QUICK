@@ -76,9 +76,9 @@ call %this_script_dir%\\..\\amber.bat
 # Calls the real ${EXECUTABLE} after setting needed environment variables.
 
 this_script_dir=\"$(cd \"$(dirname \"$0\")\" && pwd)\"
-source $this_script_dir/../amber.sh
+source \"$this_script_dir/../amber.sh\"
 
-$AMBERHOME/bin/wrapped_progs/$<TARGET_FILE_NAME:${EXECUTABLE}> \"$@\"")
+\"$AMBERHOME/bin/wrapped_progs/$<TARGET_FILE_NAME:${EXECUTABLE}>\" \"$@\"")
 
 		endif()
 

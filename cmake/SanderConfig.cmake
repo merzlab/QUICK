@@ -23,6 +23,24 @@ if(BUILD_SANDER_PUPIL AND pupil_DISABLED)
 	message(FATAL_ERROR "You enabled sander's PUPIL support, but PUPIL was not found.")
 endif()
 
+# -------------------------------------------------------------
+# QUICK
+
+if(HIP)
+#disable QUICK for HIP for now
+option(BUILD_QUICK "Enable building QUICK and its associated sander variant." FALSE)
+else()
+option(BUILD_QUICK "Enable building QUICK and its associated sander variant." TRUE)
+endif()
+# -------------------------------------------------------------
+# reaxff-puremd (QMMM)
+
+option(BUILD_REAXFF_PUREMD "Enable building reaxff-puremd." FALSE)
+
+# -------------------------------------------------------------
+# ffq
+
+option(BUILD_FFQ "Enable building ffq." FALSE)
 	
 #---------------------------------------------------
 # make the SANDER report for the build report
@@ -53,6 +71,15 @@ if(MPI)
 	list(APPEND SANDER_VARIANTS MPI)
 	if(BUILD_SANDER_LES)
 		list(APPEND SANDER_VARIANTS LES-MPI)
+	endif()
+endif()
+
+if(BUILD_QUICK)
+	if(MPI)
+		list(APPEND SANDER_VARIANTS QUICK-MPI)
+	endif()
+	if(CUDA)
+		list(APPEND SANDER_VARIANTS QUICK-CUDA)
 	endif()
 endif()
 

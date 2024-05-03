@@ -80,6 +80,10 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
          endif()
 	endif()    
   
+	if("${CMAKE_C_COMPILER_VERSION}" VERSION_GREATER_EQUAL 10.0)
+		add_flags(C -fcommon)
+	endif()
+
 	if(DRAGONEGG)
 		#check dragonegg
 		check_c_compiler_flag(-fplugin=${DRAGONEGG} DRAGONEGG_C_WORKS)
@@ -176,6 +180,13 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 		
 		add_flags(Fortran -fplugin=${DRAGONEGG})
 	endif()
+
+    # gfortran 10.0 and higher need special flag to allow argument rank mismatch
+    if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 10.0)
+        add_flags(Fortran -fallow-argument-mismatch)
+        add_flags(Fortran -fno-inline-arg-packing)
+    endif()
+
 endif()
 
 #clang
@@ -338,7 +349,7 @@ endif()
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
 	set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
-	set(OPT_CFLAGS -ip -O3)
+	set(OPT_CFLAGS -ipo -O3)
 		
 	#  How flags get set for optimization depend on whether we have a MIC processor,
     #  the version of Intel compiler we have, and whether we are cross-compiling
@@ -374,7 +385,7 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
 		set(CMAKE_Fortran_FLAGS_DEBUG "/Zi")
 	else()
 		set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
-		set(OPT_FFLAGS -ip -O3)
+		set(OPT_FFLAGS -ipo -O3)
 		
 		if(SSE)
 			if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 11 OR ${CMAKE_Fortran_COMPILER_VERSION} VERSION_EQUAL 11)

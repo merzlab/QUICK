@@ -36,10 +36,11 @@ By default, source code for a void no-argument function prototype is generated a
     FUNC_DECLARATION - Optional code to use in place of the default function declaration in C and CXX.  Must prepare the named function to be called later in the code.  Can be multiline.  Can also include the library's header if that is easier to work with.
     FUNC_CALL        - Optional code to use to call the function.  Can be multiline.  NOTE: CMake argument passing weirdness prevents a trailing semicolon from being passed in FUNC_CALL.  For C and C++, a trailing semicolon is added to the code passed.
 
-Under some conditions, if it appears that nonexistant libraries were passed to the LIBRARIES argument, the check will immediately report false since preceding code has clearly failed to find
-the needed libraries.  This will happen if:
+Under some conditions, if it appears that nonexistant libraries were passed to the LIBRARIES argument or nonexistant directories were passed to INCLUDES, the check will immediately 
+report false since preceding code has clearly failed to find the needed libraries.  This will happen if:
 * A library is not a target and ends in -NOTFOUND
 * A library is an imported target name (containing "::"), but does not currently exist
+* An include ends in -NOTFOUND
 
 The following variables may be set before calling this macro to modify
 the way the check is run:
@@ -147,6 +148,13 @@ int main(int argc, char** args)
         # cmake error, so we have to bail out here.
         set(MISSING_LIBRARIES TRUE)
       endif()
+    endif()
+  endforeach()
+
+  # Also check for NOTFOUND includes
+  foreach(INCLUDE ${TLL_INCLUDES})
+    if("${INCLUDE}" MATCHES "-NOTFOUND$")
+      set(MISSING_LIBRARIES TRUE)
     endif()
   endforeach()
 
