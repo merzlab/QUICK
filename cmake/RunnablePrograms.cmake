@@ -3,9 +3,8 @@
 
 # Must be included after MPIConfig
 
-set(EXECUTABLES_TO_IMPORT ucpp utilMakeHelp nab2c mpinab2c rule_parse)
-
-set(EXECUTABLES_TO_IMPORT_REQUIRED TRUE TRUE TRUE TRUE ${MPI} TRUE) # true if the corresponding executable is needed to build Amber 
+set(EXECUTABLES_TO_IMPORT utilMakeHelp)
+set(EXECUTABLES_TO_IMPORT_REQUIRED TRUE) # true if the corresponding executable is needed to build Amber 
 
 if(USE_HOST_TOOLS)
 	

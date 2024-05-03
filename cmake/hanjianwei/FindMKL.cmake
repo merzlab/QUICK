@@ -191,10 +191,10 @@ endif()
 ############################ OpenMP Library ##########################
 
 if(MKL_MULTI_THREADED)
-	find_package(OpenMP)
+	find_package(OpenMPFixed)
 	
 	# NOTE: we don't want to link against the imported targets, because that would apply OpenMP compile flags to anything linked to MKL
-	set(MKL_OMP_LIBRARY ${OpenMP_C_FLAGS})
+	set(MKL_OMP_LIBRARY ${OpenMP_C_OPTIONS} ${OpenMP_C_LIBRARIES})
 else()
 	set(MKL_OMP_LIBRARY "")
 endif()
@@ -277,7 +277,7 @@ endif()
 find_package(CMath)
 list(APPEND MKL_NEEDED_LIBNAMES CMath_FOUND)
 
-# Build the final library lists  
+# Build the final library lists    
 set(MKL_LIBRARIES ${LIB_LIST_PREFIX} mkl::core mkl::threading mkl::interface ${LIB_LIST_SUFFIX} ${MKL_LIBDL} ${MKL_PTHREAD_LIB} ${MKL_OMP_LIBRARY} C::Math)
 set(MKL_FORTRAN_LIBRARIES ${LIB_LIST_PREFIX} mkl::core mkl::threading mkl::fortran_interface ${LIB_LIST_SUFFIX} ${MKL_LIBDL} ${MKL_PTHREAD_LIB} ${MKL_OMP_LIBRARY} C::Math)
 

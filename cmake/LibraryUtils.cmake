@@ -14,9 +14,6 @@ endif()
 # Sets OUTPUT_VARAIBLE to "IMPORT", "SHARED", or "STATIC" depending on the library passed
 function(get_lib_type LIBRARY OUTPUT_VARIABLE)
 
-	if(NOT EXISTS ${LIBRARY})
-		message(FATAL_ERROR "get_lib_type(): library ${LIBRARY} does not exist!")
-	endif()
 
 	get_filename_component(LIB_NAME ${LIBRARY} NAME)
 	
@@ -38,6 +35,10 @@ function(get_lib_type LIBRARY OUTPUT_VARIABLE)
 			endif()
 		else() # MSVC, Intel, or some other Windows compiler
 			
+			if(NOT EXISTS ${LIBRARY})
+				message(FATAL_ERROR "get_lib_type(${${CACHE_VAR_NAME}}): library ${LIBRARY} does not exist!  Libraries must exist to get their types on MSVC.")
+			endif()
+
 			# we have to work a little harder, and use Dumpbin to check the library type, since import and static libraries have the same extensions
 			find_program(DUMPBIN dumpbin)
 			
@@ -98,6 +99,10 @@ endfunction(get_lib_type)
 
 # usage: resolve_cmake_library_list(<path output var> <libs...>)
 function(resolve_cmake_library_list LIB_PATH_OUTPUT)
+
+	# Enable for debugging prints
+	set(RCLL_DEBUG FALSE)
+
 	# we don't want to add generator expressions to the library tracker...
 	string(GENEX_STRIP "${ARGN}" LIBS_TO_RESOLVE)
 	
@@ -121,8 +126,11 @@ function(resolve_cmake_library_list LIB_PATH_OUTPUT)
 
 			if(NOT "${LIB_DEPENDENCIES}" STREQUAL "")
 			
-				# avoid infinite recursion if somebody accidentally made an interface library depend on itself
+				# avoid infinite recursion if somebody accidentally made a library depend on itself
 				list(REMOVE_ITEM LIB_DEPENDENCIES "${LIBRARY}")
+				if(RCLL_DEBUG)
+					message("Found library ${LIBRARY} with dependencies ${LIB_DEPENDENCIES}")
+				endif()
 								
 				# now parse those dependencies!
 				resolve_cmake_library_list(INTERFACE_DEPS_LIB_PATHS ${LIB_DEPENDENCIES})
@@ -182,6 +190,16 @@ function(resolve_cmake_library_list LIB_PATH_OUTPUT)
 						# use target name if output name was not set
 						set(LIB_NAME ${LIBRARY})
 					endif()
+
+					# Check if the PREFIX target property was changed by remove_prefix
+					get_property(LIB_PREFIX TARGET ${LIBRARY} PROPERTY PREFIX)
+					if("${LIB_PREFIX}" STREQUAL "")
+						string(REGEX REPLACE "^lib" "" LIB_NAME ${LIB_NAME})
+					endif()
+
+					if(RCLL_DEBUG)
+						message("${LIBRARY} detected as CMake target with output name ${LIB_NAME}")
+					endif()
 					
 					list(APPEND LIB_PATHS ${LIB_NAME})
 				endif()
@@ -189,13 +207,16 @@ function(resolve_cmake_library_list LIB_PATH_OUTPUT)
 		else()
 		
 			# otherwise it's a library name to find on the linker search path (using CMake in "naive mode")
+			if(RCLL_DEBUG)
+				message("Not a known library: ${LIBRARY}")
+			endif()
 			list(APPEND LIB_PATHS ${LIBRARY})
 		endif()
 
 	endforeach()
 	
 	# debugging code
-	if(FALSE)
+	if(RCLL_DEBUG)
 		message("resolve_cmake_library_list(${LIBS_TO_RESOLVE}):")
 		message("    -> ${LIB_PATHS}")
 	endif()
@@ -220,11 +241,16 @@ function(get_linker_name LIBRARY_PATH OUTPUT_VARIABLE)
 		get_lib_type(${LIBRARY_PATH} LIB_TYPE)
 	
 		if("${LIB_TYPE}" STREQUAL "IMPORT")
-			string(REGEX REPLACE "${CMAKE_IMPORT_LIBRARY_SUFFIX}$" "" LIBNAME ${LIBNAME})
+			string(REGEX REPLACE "${CMAKE_IMPORT_LIBRARY_SUFFIX}\$" "" LIBNAME ${LIBNAME})
 		elseif("${LIB_TYPE}" STREQUAL "STATIC")
 			string(REGEX REPLACE "${CMAKE_STATIC_LIBRARY_SUFFIX}\$" "" LIBNAME ${LIBNAME})
 		else()
 			string(REGEX REPLACE "${CMAKE_SHARED_LIBRARY_SUFFIX}\$" "" LIBNAME ${LIBNAME})
+
+			# Also handle tbd libraries on OS X
+			if(TARGET_OSX)
+				string(REGEX REPLACE ".tbd\$" "" LIBNAME ${LIBNAME})
+			endif()
 		endif()
 		
 		set(${OUTPUT_VARIABLE} ${LIBNAME} PARENT_SCOPE)
@@ -249,7 +275,7 @@ macro(resolved_lib_list_to_link_line LINK_LINE_VAR DIRS_VAR) # ARGN: LIB_PATH_LI
 			string(TOLOWER "${FRAMEWORK_BASENAME}" FRAMEWORK_BASENAME_LCASE)
 			list(APPEND ${LINK_LINE_VAR} "-framework" "${FRAMEWORK_BASENAME_LCASE}")
 			
-		elseif(EXISTS "${LIBRARY}")
+		elseif(IS_ABSOLUTE "${LIBRARY}")
 		
 			if(NOT IS_DIRECTORY "${LIBRARY}")
 				# full path to library

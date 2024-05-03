@@ -8,7 +8,7 @@ if(OPENMP)
 		message(FATAL_ERROR "OpenMP is not compatible with Dragonegg.  Disable one or the other to build.")
 	endif()
 	
-	find_package(OpenMP)
+	find_package(OpenMPFixed)
 	
 	# check that OpenMP was found for each enabled language
 	foreach(LANG ${ENABLED_LANGUAGES})
@@ -23,13 +23,16 @@ if(OPENMP)
 	endforeach()
 		
 	# Add OpenMP support to an object library
-	function(openmp_object_library TARGET LANGUAGE)
-
-		# Note: In CMake 3.12, you can link a target to an object library directly
-		# to apply its interface properties.  However, we don't have that feature yet.
-		target_compile_options(${TARGET} PRIVATE $<TARGET_PROPERTY:OpenMP::OpenMP_${LANGUAGE}, INTERFACE_COMPILE_OPTIONS>)
-		target_include_directories(${TARGET} PUBLIC $<TARGET_PROPERTY:OpenMP::OpenMP_${LANGUAGE}, INTERFACE_INCLUDE_DIRECTORIES>)
-	endfunction()
+	macro(openmp_object_library TARGET LANGUAGE)
+		if(MCPAR_WORKAROUND_ENABLED)
+			# use generator expression
+			set_property(TARGET ${TARGET} PROPERTY COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:${LANGUAGE}>:${OpenMP_${LANGUAGE}_OPTIONS}>)
+		else()
+			set_property(TARGET ${TARGET} PROPERTY COMPILE_OPTIONS ${OpenMP_${LANGUAGE}_OPTIONS})
+		endif()
+		
+		target_include_directories(${TARGET} PUBLIC ${OpenMP_${LANGUAGE}_INCLUDE_PATH})
+	endmacro()
 	
 	# make an OpenMP version of the thing passed 
 	# also allows switching out sources if needed
@@ -71,8 +74,7 @@ if(OPENMP)
 			copy_target(${TARGET} ${NEW_NAME} SWAP_SOURCES ${MAKE_OPENMP_SWAP_SOURCES} TO ${MAKE_OPENMP_TO})
 		endif()
 		
-		# this ensures that the new version builds after all of the target's dependencies 
-		# that have been manually added with add_dependencies() have been satisfied.
+		# this ensures that the new version builds after all of the target's dependencies have been satisfied.
 		# Yes it is a bit of an ugly hack, but since we can't copy dependencies, this is the next-best thing.
 		add_dependencies(${NEW_NAME} ${TARGET})
 		
@@ -87,7 +89,8 @@ if(OPENMP)
 			if(IS_OBJECT_LIBRARY)
 				openmp_object_library(${NEW_NAME} ${LANG})
 			else()
-				target_link_libraries(${NEW_NAME} OpenMP::OpenMP_${LANG})
+				string(TOLOWER ${LANG} LANG_LOWERCASE)
+				target_link_libraries(${NEW_NAME} openmp_${LANG_LOWERCASE})
 			endif()
 			
 		endforeach()
