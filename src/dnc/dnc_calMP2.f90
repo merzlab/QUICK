@@ -94,7 +94,7 @@ subroutine calmp2divcon
      endif
 !write(*,*) iocc,ivir
      ! with f orbital
-     if (quick_method%ffunxiao) then
+     if (quick_method%hasF) then
         nbasistemp=6
      else
         nbasistemp=10

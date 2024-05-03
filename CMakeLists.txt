@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 22.03)
+project(quick LANGUAGES NONE VERSION 24.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
@@ -36,7 +36,7 @@ if(NOT INSIDE_AMBER)
 
 endif()
 
-option(ENABLEF "Enables the compilation of QUICK's time consuming f functions in the ERI code of cuda version." FALSE)
+option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)
 
 # Compiler flags
 # These should really go into cmake/CompilerFlags.cmake but with the
@@ -236,6 +236,11 @@ if(INSIDE_AMBER)
   add_definitions(-DCEW)
 endif()
 
+# set general preprocessor flag for enabling F functions
+if(ENABLEF)
+  add_definitions(-DENABLEF)
+endif()
+
 # CUDA compiler flags
 # --------------------------------------------------------------------
 include(QUICKCudaConfig)
@@ -283,6 +288,9 @@ if(INSIDE_AMBER)
 
 	# install tests dir
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
+
+        # install runtest script
+        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests)
 
 else()
 	# Standalone install

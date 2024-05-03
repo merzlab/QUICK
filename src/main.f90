@@ -30,17 +30,19 @@
     use quick_exception_module
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_cshell_gradient_module, only: cshell_gradient
+    use quick_oeproperties_module, only: compute_esp
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+#ifdef MPIV
+    use mpi
+#endif
+
+
 
     implicit none
-
-#ifdef MPIV
-    include 'mpif.h'
-#endif
 
 #if defined CUDA || defined HIP
     integer :: gpu_device_id = -1
@@ -53,6 +55,9 @@
     integer :: i,j,k
     double precision t1_t, t2_t
     common /timer/ t1_t, t2_t
+    double precision, dimension(:), allocatable :: esp_array
+
+
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
@@ -133,9 +138,6 @@
 
 #endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-    call gpu_allocate_scratch()
-#endif
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
@@ -171,6 +173,9 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+
+    call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
+
     call upload(quick_method, ierr)
 
     if(.not.quick_method%opt)then
@@ -225,6 +230,8 @@
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+
+      call gpu_upload_oei(quick_molspec%nextpoint, quick_molspec%extxyz, ierr)
 
     endif
 #endif
@@ -287,8 +294,6 @@
        end if
     endif
 
-
-
     !------------------------------------------------------------------
     ! 6. Other job options
     !-----------------------------------------------------------------
@@ -345,6 +350,11 @@
 
     endif
 
+    ! 6.e Electrostatic Potential
+    if (quick_method%esp_grid) then
+        call compute_esp(ierr)
+    end if
+    
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 
@@ -356,7 +366,7 @@
 #endif
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call gpu_deallocate_scratch()
+  call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #endif
 
 

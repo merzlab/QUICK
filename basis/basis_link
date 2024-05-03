@@ -25,6 +25,7 @@
 | #6-311G(d)                        | 6-311GD.BAS                         |
 | #6-311G**                         | 6-311GDP.BAS                        |
 | #6-311G(d,p)                      | 6-311GDP.BAS                        |
+| #6-311G(2df,2pd)                  | 6-311G2DF2PD.BAS                    |
 | #6-31+G*                          | 6-31PLGD.BAS                        |
 | #6-31+G(d)                        | 6-31PLGD.BAS                        |
 | #6-31+G**                         | 6-31PLGDP.BAS                       |
@@ -34,12 +35,21 @@
 | #6-311+G(2d,p)                    | 6-311PLG2DP.BAS                     |
 | #6-311++G(2d,2p)                  | 6-311PLPLG2D2P.BAS                  |
 | #cc-pVDZ                          | CC-PVDZ.BAS                         |
+| #cc-pVTZ                          | CC-PVTZ.BAS                         |
 | #def2-svp                         | DEF2-SVP.BAS                        |
 | #def2-sv(p)                       | DEF2-SV_P.BAS                       |
 | #def2-svpd                        | DEF2-SVPD.BAS                       |
+| #def2-tzvp                        | DEF2-TZVP.BAS                       |
+| #def2-tzvpd                       | DEF2-TZVPD.BAS                      |
+| #def2-tzvpp                       | DEF2-TZVPP.BAS                      |
+| #def2-tzvppd                      | DEF2-TZVPPD.BAS                     |
 | #PC-0                             | PC0.BAS                             |
 | #PC-1                             | PC1.BAS                             |
+| #PC-2                             | PC2.BAS                             |
 | #aug-cc-pVDZ                      | AUG-CC-PVDZ.BAS                     |
+| #aug-cc-pVTZ                      | AUG-CC-PVTZ.BAS                     |
+| #AUG-PC-1                         | AUG-PC1.BAS                         |
+| #AUG-PC-2                         | AUG-PC2.BAS                         |
 | #CUSTOM                           | CUSTOM.BAS                          |
 |_________________________________________________________________________|
 

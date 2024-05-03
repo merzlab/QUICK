@@ -29,6 +29,7 @@ module quick_files_module
     implicit none
 
     character(len=80) :: inFileName     = ''
+    character(len=80) :: baseinFileName = ''
     character(len=80) :: outFileName    = ''
     character(len=80) :: dmxFileName    = ''
     character(len=80) :: rstFileName    = ''
@@ -36,6 +37,8 @@ module quick_files_module
     character(len=80) :: dataFileName   = ''
     character(len=80) :: intFileName    = ''
     character(len=80) :: moldenFileName = ''
+    character(len=80) :: propFileName   = ''
+
 
     ! Basis set and directory
     character(len=240) :: basisDir       = ''
@@ -63,12 +66,15 @@ module quick_files_module
     integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
     integer :: iIntFile       = INTFILEHANDLE    ! integral file
     integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
+    integer :: iPropFile      = PROPFILEHANDLE     ! properties file for esp, efield, efg, qmmm
 
     logical :: fexist = .false.         ! Check if file exists
 
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file.
     logical :: write_molden = .false. ! flag to export data into molden format
+    logical :: write_prop = .false.   ! flag to export data into prop format
+
 
     contains
 
@@ -112,6 +118,7 @@ module quick_files_module
           i = index(inFileName,'.')  
         endif
 
+        baseinFileName=inFileName(1:i-1)
         outFileName=inFileName(1:i-1)//'.out'
 
         dmxFileName=inFileName(1:i-1)//'.dmx'
@@ -121,6 +128,7 @@ module quick_files_module
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
         moldenFileName=inFileName(1:i-1)//'.molden'
+        propFileName=inFileName(1:i-1)//'.prop'
 
         return
 
@@ -275,7 +283,6 @@ module quick_files_module
 
         return
     end subroutine print_quick_io_file
-
 
 
 end module quick_files_module

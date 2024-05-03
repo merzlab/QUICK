@@ -177,12 +177,11 @@ contains
 #endif
 #endif
 #endif
+#ifdef MPIV
+     use mpi
+#endif
 
      implicit none
-  
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
      ! variable inputed to return
      integer :: jscf                ! scf interation

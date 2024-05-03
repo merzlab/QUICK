@@ -59,6 +59,7 @@ module quick_timer_module
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
         double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
+        double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
     end type quick_timer
 
     type quick_timer_cumer
@@ -104,6 +105,7 @@ module quick_timer_module
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
         double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
+        double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -119,6 +121,9 @@ module quick_timer_module
     subroutine timer_output(io)
         use quick_mpi_module
         use quick_method_module
+#ifdef MPIV
+        use mpi
+#endif
         implicit none
         integer i,IERROR,io
         double precision :: t_tot_dftop, t_tot_lb
@@ -127,7 +132,6 @@ module quick_timer_module
         double precision :: tst2e(mpisize), tstxc(mpisize), tst2egrad(mpisize), tstxcgrad(mpisize)
         double precision :: tend2e(mpisize), tendxc(mpisize), tend2egrad(mpisize), tendxcgrad(mpisize)
         double precision :: t2e(mpisize), txc(mpisize), t2egrad(mpisize), txcgrad(mpisize)
-        include "mpif.h"
 #endif
         type (quick_timer) tmp_timer
         type (quick_timer_cumer) tmp_timer_cumer,max_timer_cumer
@@ -207,6 +211,11 @@ module quick_timer_module
             if(quick_method%edisp) then
                 write (io,'("| DISPERSION CORRECTION TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%Tdisp, &
                 timer_cumer%Tdisp/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
+            if(quick_method%esp_grid) then
+                write (io,'("| ESP COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPGrid, &
+                timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
             if (quick_method%nodirect) &
@@ -304,6 +313,14 @@ module quick_timer_module
             endif
 
 #ifdef DEBUGTIME
+            if (quick_method%esp_grid) then
+            ! Electrostatic Potential Timing
+                write (io,'("| ESP COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TESPGrid, &
+                    timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+#endif
+
+#ifdef DEBUGTIME
             if (quick_method%dipole) then
             ! Dipole Timing
                 write (io,'("| DIPOLE TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TDip, &
@@ -371,7 +388,7 @@ module quick_timer_module
 !                MPI_timer_cumer=timer_cumer
 !                max_timer_cumer=timer_cumer
 !                do i=1,mpisize-1
-!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
 !                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
@@ -445,8 +462,8 @@ module quick_timer_module
     subroutine mpi_setup_timer
 
         use quick_mpi_module
+        use mpi
         implicit none
-        include "mpif.h"
 
         ! declaim mpi timer
         if (bMPI) then
@@ -463,10 +480,10 @@ module quick_timer_module
 #if defined CUDA_MPIV || defined HIP_MPIV
     subroutine get_mgpu_time
         use quick_mpi_module
+        use mpi
         implicit none
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
-        include "mpif.h"
 
         call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
         call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)

@@ -167,6 +167,9 @@ module quick_calculated_module
       ! Mulliken charge and Lowdin charge
       double precision,dimension(:),allocatable :: Mulliken,Lowdin
 
+      ! Electrostatic potential 
+      double precision,dimension(:), allocatable   :: ESP
+
 
    end type quick_qm_struct_type
 
@@ -209,9 +212,9 @@ module quick_calculated_module
    !----------------------
 contains
 
-   !--------------
+   !--------------------------------------
    ! subroutine to allocate variables
-   !--------------
+   !---------------------------------------
    subroutine allocate_quick_qm_struct(self)
       use quick_method_module,only: quick_method
       use quick_molspec_module,only: quick_molspec
@@ -458,8 +461,8 @@ contains
       use quick_mpi_module
       use quick_method_module,only: quick_method
       use quick_molspec_module,only: quick_molspec
+      use mpi
       implicit none
-      include "mpif.h"
       type (quick_qm_struct_type) self
       integer natom
       integer nbasis,nbasis2

@@ -10,6 +10,9 @@ subroutine optimize(ierr)
    use quick_cutoff_module, only: schwarzoff
    use quick_cshell_eri_module, only: getEriPrecomputables
    use quick_gradient_module, only: scf_gradient
+#ifdef MPIV
+   use mpi
+#endif
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco
@@ -24,10 +27,6 @@ subroutine optimize(ierr)
    double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
    double precision EChg
    integer, intent(inout) :: ierr
-
-#ifdef MPIV
-   include "mpif.h"
-#endif
 
    !---------------------------------------------------------
    ! This subroutine optimizes the geometry of the molecule. It has a
