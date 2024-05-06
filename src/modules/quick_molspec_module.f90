@@ -285,7 +285,7 @@ contains
       call MPI_BCAST(self%nElec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nElecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nextpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      !call MPI_BCAST(self%nextpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -302,9 +302,9 @@ contains
          call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       endif
 
-      if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      endif
+      !if (self%nextpoint.gt.0) then
+      !   call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      !endif
 
       call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
