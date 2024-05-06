@@ -1,8 +1,8 @@
 #include "util.fh"
 
-#ifdef MPIV
-     include "mpif.h"
-#endif
+!#ifdef MPIV
+!     include "mpif.h"
+!#endif
 
 !---------------------------------------------------------------------!
 ! Created by Etienne Palos on   xx/xx/2024                            !
@@ -28,9 +28,9 @@ module quick_oeproperties_module
  subroutine compute_esp(ierr)
    use allmod
    
-#ifdef MPIV
-   use mpi
-#endif
+!#ifdef MPIV
+!   use mpi
+!#endif
  
    implicit none
    integer, intent(out) :: ierr
