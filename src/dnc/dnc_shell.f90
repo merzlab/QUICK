@@ -239,10 +239,10 @@ subroutine classmp2divcon(I,J,K,L,NNA,NNC,NNAB,NNCD,i33,ittsub)
                   IIInew=III-II111+1
                   JJJnew=JJJ-JJ111+1
 
-                  orbmp2i331(1,LLLsub,IIInew,JJJnew,1)=orbmp2i331(1,LLLsub,IIInew,JJJnew,1)+atemp
-                  orbmp2i331(1,LLLsub,JJJnew,IIInew,2)=orbmp2i331(1,LLLsub,JJJnew,IIInew,2)+atemp
-                  orbmp2i331(1,KKKsub,IIInew,JJJnew,1)=orbmp2i331(1,KKKsub,IIInew,JJJnew,1)+btemp
-                  orbmp2i331(1,KKKsub,JJJnew,IIInew,2)=orbmp2i331(1,KKKsub,JJJnew,IIInew,2)+btemp
+                  orbmp2i331dc(LLLsub,IIInew,JJJnew,1)=orbmp2i331dc(LLLsub,IIInew,JJJnew,1)+atemp
+                  orbmp2i331dc(LLLsub,JJJnew,IIInew,2)=orbmp2i331dc(LLLsub,JJJnew,IIInew,2)+atemp
+                  orbmp2i331dc(KKKsub,IIInew,JJJnew,1)=orbmp2i331dc(KKKsub,IIInew,JJJnew,1)+btemp
+                  orbmp2i331dc(KKKsub,JJJnew,IIInew,2)=orbmp2i331dc(KKKsub,JJJnew,IIInew,2)+btemp
 
                enddo
             enddo
@@ -272,14 +272,14 @@ subroutine classmp2divcon(I,J,K,L,NNA,NNC,NNAB,NNCD,i33,ittsub)
                   !                 mp2shell(KKK)=.true.
                   !                 mp2shell(LLL)=.true.
 
-                  orbmp2i331(1,LLLsub,IIInew,JJJnew,1)=orbmp2i331(1,LLLsub,IIInew,JJJnew,1)+atemp
+                  orbmp2i331dc(LLLsub,IIInew,JJJnew,1)=orbmp2i331dc(LLLsub,IIInew,JJJnew,1)+atemp
                   if(JJJ.ne.III)then
-                     orbmp2i331(1,LLLsub,JJJnew,IIInew,2)=orbmp2i331(1,LLLsub,JJJnew,IIInew,2)+atemp
+                     orbmp2i331dc(LLLsub,JJJnew,IIInew,2)=orbmp2i331dc(LLLsub,JJJnew,IIInew,2)+atemp
                   endif
                   if(KKK.ne.LLL)then
-                     orbmp2i331(1,KKKsub,IIInew,JJJnew,1)=orbmp2i331(1,KKKsub,IIInew,JJJnew,1)+btemp
+                     orbmp2i331dc(KKKsub,IIInew,JJJnew,1)=orbmp2i331dc(KKKsub,IIInew,JJJnew,1)+btemp
                      if(III.ne.JJJ)then
-                        orbmp2i331(1,KKKsub,JJJnew,IIInew,2)=orbmp2i331(1,KKKsub,JJJnew,IIInew,2)+btemp
+                        orbmp2i331dc(KKKsub,JJJnew,IIInew,2)=orbmp2i331dc(KKKsub,JJJnew,IIInew,2)+btemp
                      endif
                   endif
 

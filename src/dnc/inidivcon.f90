@@ -35,9 +35,6 @@
 
 subroutine inidivcon(natomsaved)
   use allmod
-#ifdef MPIV
-  use mpi
-#endif
   implicit double precision (a-h,o-z)
 
   double precision rbuffer1,rbuffer2
@@ -56,10 +53,29 @@ subroutine inidivcon(natomsaved)
   integer,allocatable:: temp1d(:),temp2d(:,:)
   integer tempinteger,tempinteger2
   integer natomt,natomsaved
-  logical bEliminate  ! if elimination step needed(test only)
+  logical bEliminate  ! if elimination step needed (absolute must for large systems)
+  integer:: nlines = 0
+  integer, PARAMETER :: ownmax = 15
+  integer,dimension (ownmax) :: incore,inbuff ! Reads DNC files line by line
+
+  ! ownmax limits number of atoms in OWNFRAG-defined fragments to 15.
+  ! ownmax can be increased if needed, but for larger fragments
+  ! the current read-in code of OWNFRAG is inefficient.
+
+#ifdef MPIV
+  include 'mpif.h'
+#endif
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
-  bEliminate=.true.
+
+  ! BEoff is to be used only if fragments have to be small.
+  ! BEoff is primarly designed for usage with OWNFRAG.
+
+  if (quick_method%beoff) then
+     bEliminate=.false.
+  else
+     bEliminate=.true.
+  endif
 
   allocate(sn(natomt))                     ! ="ATOM"
   allocate(coord(3,natomt))                ! Coordinates, equalance with xyz, but with bohr unit
@@ -97,12 +113,11 @@ subroutine inidivcon(natomsaved)
      endif
 
      !----------------------------------------------
-     ! Distubute some paramters for different fragment method
+     ! Distribute parameters for corresponding fragment method
      !----------------------------------------------
 
      select case (quick_method%ifragbasis)    ! define buffer region for different fragment method and number of fragment
      case (1)
-        !rbuffer1=7.0d0
         rbuffer1=7.0d0
         rbuffer2=0.0d0
         np=natomt               ! Atom basis
@@ -114,14 +129,49 @@ subroutine inidivcon(natomsaved)
         rbuffer1=6.0d0
         rbuffer2=0.0d0
         np=quick_molspec%nNonHAtom            ! Non-H Atom basis
+     case (4)
+        rbuffer1=0.0d0          ! For OWNFRAG buffer is extracted from BUFFER.DNC file,         
+        rbuffer2=0.0d0          ! which means rbuffer1 and rbuffer2 are not used
+
+      ! For OWNFRAG number of fragments is defined
+      ! based on number of lines in CORE.DNC file
+        open (10, file = 'CORE.DNC')
+        do
+          read(10,*,iostat=io)
+          if (io/=0) exit
+          nlines = nlines + 1
+        enddo
+        close (10)
+        np = nlines
      end select
 
+     ! Save atoms based on case 1, 2 or 3 (above)
      npsaved=np
+
+     ! Assign rbuffer1 to DNCRB, if size of buffer is expicitly specified by user
+     if (quick_method%isDefaultDNCRB .eqv. .false.) then
+        rbuffer1 = quick_method%DNCRB  
+     else
+        rbuffer1 = rbuffer1
+     endif
+
+     ! Assign rbuffer2 to DNCRB2, if size of buffer is expicitly specified by user
+     if (quick_method%isDefaultDNCRB2 .eqv. .false.) then
+        rbuffer2 = quick_method%DNCRB2
+     else
+        rbuffer2 = rbuffer2
+     endif
 
      ! Output basic div-con information
      call PrtAct(iOutfile,"Now Begin Div & Con Fragment")
      write(iOutfile,'("NUMBER OF FRAG=",i3)') np
+ 
+     ! RBuffer is not used when OWNFRAG is on.
+     ! All atoms are defined by user input.
+
+     if(quick_method%ifragbasis.lt.4) then
      write(iOutfile,'("RBuffer=",f7.2," A")') rbuffer1
+     endif
 
      !-------------------MPI/MASTER---------------------------------------
   endif masterwork_inidivcon_readmol
@@ -149,6 +199,7 @@ subroutine inidivcon(natomsaved)
   allocate(dcbuffer2(np,500))
   allocate(dcsub(np,500))
   allocate(dcsubn(np))
+  allocate(dcsubn1(np))
   allocate(dccoren(np))
   allocate(dcbuffer1n(np))
   allocate(dcbuffer2n(np))
@@ -157,7 +208,7 @@ subroutine inidivcon(natomsaved)
   allocate(nbasisdc(np))
   allocate(nelecdcsub(np))
   allocate(disdivmfcc(np,np))
-  allocate(selectNN(np))
+  allocate(selectNN(np+1))
   allocate(dclogic(np,natomt,natomt))
   allocate(embedded(np,np))
   allocate(templog2(np))
@@ -216,6 +267,9 @@ subroutine inidivcon(natomsaved)
      ! selectN indicates no. of N
      !---------------------------------------------------------------
 
+     ! If OWNFRAG is used this section of code is skipped     
+     if(quick_method%ifragbasis.lt.4) then
+   
      j2=1
      selectN(1)=1
 
@@ -340,7 +394,49 @@ subroutine inidivcon(natomsaved)
            endif
         enddo
      enddo
+    ! The assigment of core and buffer as defined above is skiped
+    ! when OWNFRAG is used. Extracted from CORE.DNC and BUFFER.DNC files instead.
+     else 
+     write(ioutfile,*) '  '
+     write(iOutfile,*) 'Reading fragments from CORE.DNC and BUFFER.DNC files'
+     write(ioutfile,*) '  '
+    endif
 
+    ! Read CORE.DNC and BUFFER.DNC only if OWNFRAG is used
+    if(quick_method%ifragbasis.eq.4) then
+    
+    ! Assigment of core in OWNFRAG 
+    open (10, file = 'CORE.DNC',access="sequential", form="formatted")
+     
+    do i=1,np
+     read (10, '( *(i3) )' ) incore
+        dccoren(i)=0     
+        do j=1,ownmax
+           if (incore(j).ne.0) then
+           dccore(i,j)=incore(j)
+           dccoren(i)=dccoren(i)+1
+           endif
+        enddo 
+     rewind (20)
+    enddo
+    close (10)
+
+    ! Assigment of buffer in OWNFRAG 
+    open (10, file = 'BUFFER.DNC',access="sequential", form="formatted")
+
+    do i=1,np
+     read (10, '( *(i3) )' ) inbuff
+        dcbuffer1n(i)=0
+        do j=1,ownmax
+           if (inbuff(j).ne.0) then
+           dcbuffer1(i,j)=inbuff(j)
+           dcbuffer1n(i)=dcbuffer1n(i)+1
+           endif
+        enddo
+     rewind (20)
+    enddo
+    close (10)
+    endif
 
      !-----------------------------------------------------------------         
      ! Now combine core and buffer regions to generate subsystems
@@ -360,10 +456,15 @@ subroutine inidivcon(natomsaved)
            dcsub(i,dcsubn(i))=dcbuffer1(i,j)
         enddo
 
+        dcsubn1(i)=dcsubn(i)
+
+     ! If OWNFRAG is used this section of code is skipped     
+       if(quick_method%ifragbasis.lt.4) then
         do j=1,dcbuffer2n(i)
            dcsubn(i)=dcsubn(i)+1
            dcsub(i,dcsubn(i))=dcbuffer2(i,j)
         enddo
+       endif
      enddo
 
      !-----------------------------------------------------------------
@@ -409,8 +510,8 @@ subroutine inidivcon(natomsaved)
            do j=1,np
               Embedded(i,j)=.true.
               if (i.eq.j) cycle
-              do jj=1,dcsubn(i)
-                 if ((Any(dcsub(j,1:dcsubn(j)).eq.dcsub(i,jj))).eqv..false.) then
+              do jj=1,dcsubn1(i)
+                 if ((Any(dcsub(j,1:dcsubn1(j)).eq.dcsub(i,jj))).eqv..false.) then
                     Embedded(i,j)=.false.
                  endif
               enddo
@@ -426,7 +527,7 @@ subroutine inidivcon(natomsaved)
            if (count(embedded(i,1:np).eqv..true.).eq.2) then
               do j=1,np
                  if (i==j) cycle ! don't consider itself
-                 if ((dcsubn(j)==dcsubn(i)).and.(j>i)) cycle ! elimiate the subsystem with smaller serier no.
+                 if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle ! elimiate the subsystem with smaller serier no.
                  if (embedded(i,j)) then
                     ! Move process
                     dcsubn(i)=0
@@ -443,9 +544,9 @@ subroutine inidivcon(natomsaved)
               jj=i
               do j=1,np
                  if (i==j) cycle
-                 if ((dcsubn(j)==dcsubn(i)).and.(j>i)) cycle
+                 if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle
                  if(embedded(i,j)) then
-                    if (dcsubn(j)>=dcsubn(jj)) jj=j ! pick up the largest embedded subsystem
+                    if (dcsubn1(j)>=dcsubn1(jj)) jj=j ! pick up the largest embedded subsystem
                  endif
               enddo
               if (jj.ne.i) then
@@ -631,6 +732,15 @@ subroutine inidivcon(natomsaved)
   allocate(evaldcsub(np,NNmax))
   allocate(codcsub(NNmax,NNmax,np))
   allocate(codcsubtran(NNmax,NNmax,np))
+
+   if (quick_method%UNRST) then
+      allocate(evalbdcsub(np,NNmax))
+      allocate(Obdcsub(np,NNmax,NNmax))
+      allocate(Pbdcsub(np,NNmax,NNmax))
+      allocate(Pbdcsubtran(NNmax,NNmax,np))
+      allocate(cobdcsub(NNmax,NNmax,np))
+      allocate(cobdcsubtran(NNmax,NNmax,np))
+   endif
 
   !===================================================================
   ! STEP 3. Set varibles since we know everything about fragment
@@ -827,6 +937,38 @@ subroutine Odivided
 end subroutine Odivided
 
 !*******************************************************
+! Obdivided
+!-------------------------------------------------------
+! To get O matrix from D&C 
+!
+
+subroutine OBdivided
+  use allmod
+  implicit double precision (a-h,o-z)
+
+  do i=1,np
+     kstart1=0
+     do jxiao=1,dcsubn(i)
+        j=dcsub(i,jxiao)
+        do itemp=quick_basis%first_basis_function(j),quick_basis%last_basis_function(j)
+           kstart2=0
+           do jxiao2=1,dcsubn(i)
+              j2=dcsub(i,jxiao2)
+              do jtemp=quick_basis%first_basis_function(j2),quick_basis%last_basis_function(j2)
+                 Obdcsub(i,Kstart1+itemp-quick_basis%first_basis_function(j)+1,&
+                        kstart2+jtemp-quick_basis%first_basis_function(j2)+1) &
+                      =quick_qm_struct%ob(itemp,jtemp)
+              enddo
+              Kstart2=Kstart2+quick_basis%last_basis_function(j2)-quick_basis%first_basis_function(j2)+1
+           enddo
+        enddo
+        Kstart1=Kstart1+quick_basis%last_basis_function(j)-quick_basis%first_basis_function(j)+1
+     enddo
+  enddo
+
+end subroutine OBdivided
+
+!*******************************************************
 ! pdcdivided
 !-------------------------------------------------------
 ! pdc model for D&C 
@@ -856,6 +998,37 @@ subroutine Pdcdivided
   enddo
 
 end subroutine Pdcdivided
+
+!*******************************************************
+! pbdcdivided
+!-------------------------------------------------------
+! pbdc model for D&C 
+!
+subroutine PBdcdivided
+  use allmod
+  implicit double precision (a-h,o-z)
+
+  do i=1,np
+     kstart1=0
+     do jxiao=1,dcsubn(i)
+        j=dcsub(i,jxiao)
+        do itemp=quick_basis%first_basis_function(j),quick_basis%last_basis_function(j)
+           kstart2=0
+           do jxiao2=1,dcsubn(i)
+              j2=dcsub(i,jxiao2)
+              do jtemp=quick_basis%first_basis_function(j2),quick_basis%last_basis_function(j2)
+                 Pbdcsub(i,Kstart1+itemp-quick_basis%first_basis_function(j)+1, &
+                      kstart2+jtemp-quick_basis%first_basis_function(j2)+1) &
+                      =quick_qm_struct%denseb(itemp,jtemp)
+              enddo
+              Kstart2=Kstart2+quick_basis%last_basis_function(j2)-quick_basis%first_basis_function(j2)+1
+           enddo
+        enddo
+        Kstart1=Kstart1+quick_basis%last_basis_function(j)-quick_basis%first_basis_function(j)+1
+     enddo
+  enddo
+
+end subroutine PBdcdivided
 
 
 !*******************************************************
