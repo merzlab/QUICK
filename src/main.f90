@@ -199,7 +199,7 @@
 
     ! if it is div&con method, begin fragmetation step, initial and setup
     ! div&con varibles
-    if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+    if (quick_method%DIVCON .or. quick_method%DCMP2only) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
     if(.not.quick_method%opt)then
@@ -306,19 +306,23 @@
 
     ! 6.b MP2,2nd order Møller–Plesset perturbation theory
     if(quick_method%MP2) then
-    !    if(.not. quick_method%DIVCON) then
+      if(.not. quick_method%DIVCON .and. .not. quick_method%DCMP2only) then
 #ifdef MPIV
            if (master) then
-!             call mpi_calmp2    ! MPI-MP2
-!           else
+             call mpi_calmp2    ! MPI-MP2
+           else
 #endif
              call calmp2()      ! none-MPI MP2
 #ifdef MPIV
            endif
 #endif
-    !    else
-    !        call calmp2divcon   ! DIV&CON MP2
-    !    endif
+        else
+            if(quick_method%DCMP2only) then
+               write(ioutfile,*) "DCMP2only method is using canonical SCF results"
+               write(ioutfile,*) "and one DC-SCF step to obtain subsystem orbitals."
+            endif 
+            call calmp2divcon   ! DIV&CON MP2
+        endif
     endif   !(quick_method%MP2)
 
     ! 6.c Freqency calculation and mode analysis
