@@ -15,7 +15,7 @@ module quick_divcon_module
 
     integer, dimension(:,:), allocatable :: DCCore,DCBuffer1,DCBuffer2,DCSub,wtospoint
     integer, dimension(:), allocatable :: DCCoren,DCBuffer1n,DCBuffer2n,DCSubn,nBasisDC, &
-                                          nElecDCSub,selectNN,nElecMP2Sub
+                                          nElecDCSub,selectNN,nElecMP2Sub,DCSubn1
     integer, dimension(:,:), allocatable :: DCOverlap,DCConnect
     integer, dimension(:), allocatable :: kShellS,kShellF
     integer, dimension(:,:,:), allocatable :: DCLogic
@@ -23,7 +23,9 @@ module quick_divcon_module
     double precision, dimension(:,:,:), allocatable :: ODCSub,PDCSub,XDCSub,SMatrixDCSub, &
                                                        coDCSub,PDCSubtran,coDCSubtran
     double precision, dimension(:,:), allocatable :: ODCSubtemp,VECtemp
-    double precision, dimension(:,:), allocatable :: Vtemp,EVEC1temp,eValDCSub
+    double precision, dimension(:,:,:), allocatable :: OBDCSub,PBDCSub,cobDCSub,PBDCSubtran, &
+                                                       cobDCSubtran,OBDCSubtemp
+    double precision, dimension(:,:), allocatable :: Vtemp,EVEC1temp,eValDCSub,eValbDCSub
     double precision, dimension(:), allocatable :: EVAL1temp,IDEGEN1temp
     logical, dimension(:,:), allocatable :: disDivMFCC
     logical, dimension(:), allocatable :: mp2Shell

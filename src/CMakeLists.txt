@@ -92,9 +92,10 @@ set(DFTD3_SOURCES
 	api.f90  common.f90  core.f90  pars.f90  sizes.f90)
 
 set(DNC_SOURCES
-        dnc_scf.f90 dnc_hfoperator.f90
+        dnc_scf.f90 dnc_scf_operator.f90
+        dnc_uscf.f90 dnc_uscf_operator.f90
         inidivcon.f90 mfcc_init_guess.f90
-        mfcc_start.f90)
+        mfcc_start.f90 calmp2divcon.f90 dnc_shell.f90)
 
 if(mirp_ENABLED)
 	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)

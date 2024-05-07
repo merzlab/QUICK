@@ -103,6 +103,7 @@ contains
      !if (quick_method%nodirect) call aoint
   
      if (quick_method%diisscf .and. .not. quick_method%divcon) call uelectdiis(jscf,ierr)       ! normal scf
+     if (quick_method%diisscf .and. quick_method%divcon) call uelectdiisdc(jscf,ierr)
   
      jscf=jscf+1
   
@@ -143,7 +144,7 @@ contains
 #endif
 #endif
 #ifdef MPIV
-     use mpi
+    use mpi
 #endif
 
      implicit none

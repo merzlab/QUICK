@@ -20,9 +20,9 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef CEW
    use quick_cew_module, only : quick_cew
 #endif
-#ifdef MPIV
-   use mpi
-#endif
+#ifdef MPIV 
+   use mpi  
+#endif      
 
    implicit none
 
@@ -58,10 +58,13 @@ subroutine getEnergy(isGuess, ierr)
       call fullX
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
-      if (quick_method%DivCon) then
+      if (quick_method%DivCon .or. quick_method%dcmp2only) then
          call DivideS
          call DivideX
          call PDCDivided
+         if (quick_method%UNRST) then
+            call PBDCDivided
+         endif
       endif
 
       !Classical Nuclear-Nuclear interaction energy
