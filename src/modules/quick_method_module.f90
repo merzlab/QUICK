@@ -76,11 +76,13 @@ module quick_method_module
         ! those methods are mostly for research use
         logical :: FMM = .false.       ! Fast Multipole
         logical :: DIVCON = .false.    ! Div&Con
+        logical :: DCMP2only = .false. ! Canonical HF and Div&Con for MP2 only
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this part is Div&Con options
         logical :: BEoff = .false.
-        logical :: Qint = .false.
+        logical :: QCint = .false.
+        logical :: OWNfrag = .false.
 
         ! this is DFT grid
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
@@ -113,7 +115,13 @@ module quick_method_module
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        double precision :: DNCRB          = 7.0d0    ! buffer region size in DIVCON
+        double precision :: DNCRB2          = 0.0d0    ! buffer region 2 size in DIVCON
+
         logical :: isDefaultXCCutoff       = .true.
+        logical :: isDefaultDNCRB          = .true.
+        logical :: isDefaultDNCRB2          = .true.
+
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
@@ -244,8 +252,12 @@ module quick_method_module
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%DCMP2only,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%QCint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%OWNfrag,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%DNCRB,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%DNCRB2,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -468,14 +480,31 @@ module quick_method_module
                     write(iO,'(" = DIV AND CON ON RESIDUE BASIS")')
                 elseif (self%ifragbasis .eq. 3) then
                     write(io,'(" = DIV AND CON ON NON HYDROGEN ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 4) then
+                    write(io,'(" = DIV AND CON USING CORE.DNC AND BUFFER.DNC")')
                 else
                     write(io,'(" = DIV AND CON ON ATOM BASIS (BY DEFAULT)")')
                 endif
             endif
 
+            if (self%DCMP2only) then
+                write(io,'(" DCMP2only METHOD")',advance="no")
+                if (self%ifragbasis .eq. 1) then
+                    write(io,'(" = DCMP2only ON ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 2) then
+                    write(iO,'(" = DCMP2only ON RESIDUE BASIS")')
+                elseif (self%ifragbasis .eq. 3) then
+                    write(io,'(" = DCMP2only ON NON HYDROGEN ATOM BASIS")')
+                elseif (self%ifragbasis .eq. 4) then
+                    write(io,'(" = DCMP2only USING CORE.DNC AND BUFFER.DNC")')
+                else
+                    write(io,'(" = DCMP2only ON ATOM BASIS (BY DEFAULT)")')
+                endif
+            endif
+
             ! additional DIVCON options
             if (self%BEoff)  write(io,'(" NO ELIMINATION OF EMBEDDED SUBSYSTEM IN DIVCON ")')
-            if (self%Qint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
+            if (self%QCint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
 
             ! computing cycles
             write(io,'(" MAX SCF CYCLES = ",i6)') self%iscf
@@ -644,18 +673,49 @@ module quick_method_module
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
             if (index(keyWD,'BEOFF').ne.0)      self%BEoff=.true.
-            if (index(keyWD,'QINT').ne.0)       self%Qint=.true.
+            if (index(keyWD,'QCINT').ne.0)       self%QCint=.true.
+
+            ! The BEoff keyword is redundant when OWNFRAG is used.
+            ! OWNFRAG sets radii of both buffer1 and buffer2 to zero,
+            ! which results in requested fragments even after bEliminate portion
+            ! of code is executed. Combination of BEoff and OWNFRAG leads
+            ! to bugs when DCMP2only method is used. Hence, code below
+            ! overwrites BEoff even if the keyword is requested by user.
+
+            if (index(keyWD,'OWNFRAG').ne.0) then   
+                   self%OWNfrag=.true.
+                   self%BEoff=.false.
+            end if
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
 
             if (index(keywd,'DIVCON') .ne. 0) then
                 self%divcon = .true.
+                self%dcmp2only = .false.
                 if (index(keywd,'ATOMBASIS') /= 0) then
                     self%ifragbasis=1
                 else if (index(keywd,'RESIDUEBASIS') /= 0) then
                     self%ifragbasis=2
                 else if (index(keywd,'NHAB') /= 0) then
                     self%ifragbasis=3
+                else if (index(keywd,'OWNFRAG') /= 0) then
+                    self%ifragbasis=4
+                else
+                    self%ifragbasis=1
+                endif
+            endif
+
+            if (index(keywd,'DCMP2ONLY') .ne. 0) then
+                self%divcon = .false.
+                self%dcmp2only = .true.
+                if (index(keywd,'ATOMBASIS') /= 0) then
+                    self%ifragbasis=1
+                else if (index(keywd,'RESIDUEBASIS') /= 0) then
+                    self%ifragbasis=2
+                else if (index(keywd,'NHAB') /= 0) then
+                    self%ifragbasis=3
+                else if (index(keywd,'OWNFRAG') /= 0) then
+                    self%ifragbasis=4
                 else
                     self%ifragbasis=1
                 endif
@@ -741,6 +801,18 @@ module quick_method_module
             if (index(keywd,'XCCUTOFF') /= 0) then           
                 call read(keywd,'XCCUTOFF', self%XCCutoff)
                 self%isDefaultXCCutoff = .false.
+            endif
+
+            ! Custom buffer cutoff for DIVCON
+            if (index(keywd,'DNCRB') /= 0) then
+                call read(keywd,'DNCRB', self%DNCRB)
+                self%isDefaultDNCRB = .false.
+            endif
+
+            ! Custom buffer cutoff for DIVCON
+            if (index(keywd,'DNCRB2') /= 0) then
+                call read(keywd,'DNCRB2', self%DNCRB2)
+                self%isDefaultDNCRB2 = .false.
             endif
 
             ! Basis cutoff
@@ -855,8 +927,10 @@ module quick_method_module
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
             self%DIVCON = .false.      ! Div&Con
+            self%DCMP2only = .false.   ! Canonical HF and Div&Con for MP2 only
             self%BEoff = .false.       ! Turns off bEliminate in Div&Con
-            self%Qint = .false.        ! Prints 1e and 2e integrals in Qiskit format
+            self%QCint = .false.        ! Prints 1e and 2e integrals in Qiskit format
+            self%OWNfrag = .false.     ! User defined fragmentation based on CORE.DNC and BUFFER.DNC files
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
@@ -878,6 +952,8 @@ module quick_method_module
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
             self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
+            self%isDefaultDNCRB    = .true. ! is DNCRB default or user specified
+            self%isDefaultDNCRB2   = .true. ! is DNCRB2 default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCutoff    = 1.0d-6  ! basis set cutoff
@@ -1135,5 +1211,3 @@ module quick_method_module
 #endif
 
 end module quick_method_module
-
-#undef FUNCTIONAL_ID_SIZE
