@@ -175,11 +175,18 @@ integer, dimension(incoreSize) :: bIncore
 
 
    ! for MP2
-   double precision, allocatable, dimension(:,:,:) :: orbmp2dcsub
    double precision, allocatable, dimension(:,:) :: orbmp2
    double precision, allocatable, dimension(:,:,:,:,:) :: orbmp2i331
    double precision, allocatable, dimension(:,:,:,:,:) :: orbmp2j331
    double precision, allocatable, dimension(:,:,:,:) :: orbmp2k331
+
+   ! for DC-MP2
+
+   double precision, allocatable, dimension(:,:,:) :: orbmp2dc
+   double precision, allocatable, dimension(:,:,:) :: orbmp2dcsub
+   double precision, allocatable, dimension(:,:,:,:) :: orbmp2i331dc
+   double precision, allocatable, dimension(:,:,:,:) :: orbmp2j331dc
+   double precision, allocatable, dimension(:,:,:) :: orbmp2k331dc
    double precision, allocatable, dimension(:,:,:) :: orbmp2k331dcsub
 
    !
