@@ -113,8 +113,12 @@ contains
   
      logical :: done
      integer, intent(inout) :: ierr
-     integer :: jscf
+     integer :: jscf,ierr1
      done=.false.
+
+     if (quick_method%QCint) then
+        call quick_open(iIntFile,intFileName,'U','U','A',.false.,ierr1)
+     end if
   
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
@@ -205,6 +209,9 @@ contains
      double precision :: PRMS,PCHANGE, tmp
 
      double precision :: c_coords(3),c_zeta,c_chg
+
+     ! For QC output
+     integer :: npair,ns8,ijkl, ijkl2
 
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -355,6 +362,21 @@ contains
         if (quick_method%debug)  call debug_SCF(jscf)
   
         call scf_operator(deltaO)
+
+        if (quick_method%QCint) then
+        if (jscf .eq. 2) then
+           write(iintfile)'1E INTEGRALS'
+           do ijkl=1, nbasis
+              write(iintfile)(quick_qm_struct%oneElecO(ijkl,ijkl2),ijkl2=1,nbasis)
+           enddo
+           write(iintfile)'2E INTEGRALS'
+           npair = (nbasis*(nbasis+1))/2
+           ns8 = (npair*(npair+1))/2
+           do ijkl=1,ns8
+              write(iintfile)quick_qm_struct%aoint2e(ijkl)
+           enddo
+        endif
+        endif
 
         quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
 

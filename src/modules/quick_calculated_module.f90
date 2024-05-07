@@ -167,6 +167,11 @@ module quick_calculated_module
       ! Mulliken charge and Lowdin charge
       double precision,dimension(:),allocatable :: Mulliken,Lowdin
 
+      ! ERI index for 8 fold symmetry
+      integer, dimension(:,:,:,:), allocatable :: iarray2
+
+      ! ERI in 8 fold symmetry
+      double precision,dimension(:),allocatable :: aoint2e 
 
    end type quick_qm_struct_type
 
@@ -222,6 +227,10 @@ contains
       integer nelec
       integer idimA
       integer nelecb
+      !For QC output
+      integer i,j,k,l
+      integer ij,kl,ijkl
+      integer npair,ns8
 
       type (quick_qm_struct_type) self
 
@@ -246,6 +255,39 @@ contains
 
       if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
       if(.not. allocated(self%Lowdin)) allocate(self%Lowdin(natom))
+
+      if (quick_method%QCint) then
+         if(.not. allocated(self%iarray2)) allocate(self%iarray2(nbasis,nbasis,nbasis,nbasis))
+         self%iarray2=0.d0
+         ijkl=0
+         ij=0
+         do i=1,nbasis
+            do j=1,i
+               ij=ij+1
+               kl=0
+               do k=1,i
+                  do l=1,k
+                     kl=kl+1
+                     if (ij .ge. kl) then
+                        ijkl=ijkl+1
+                        self%iarray2(i,j,k,l)=ijkl
+                        self%iarray2(i,j,l,k)=ijkl
+                        self%iarray2(j,i,l,k)=ijkl
+                        self%iarray2(j,i,k,l)=ijkl
+                        self%iarray2(k,l,i,j)=ijkl
+                        self%iarray2(k,l,j,i)=ijkl
+                        self%iarray2(l,k,j,i)=ijkl
+                        self%iarray2(l,k,i,j)=ijkl
+                     endif
+                  enddo
+               enddo
+            enddo
+         enddo
+
+         npair=(nbasis*(nbasis+1))/2
+         ns8=(ns8*(ns8+1))/2
+         if(.not. allocated(self%aoint2e)) allocate(self%aoint2e(ns8))
+      endif
 
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
@@ -410,6 +452,11 @@ contains
       if (allocated(self%Mulliken)) deallocate(self%Mulliken)
       if (allocated(self%Lowdin)) deallocate(self%Lowdin)
 
+      if (quick_method%QCint) then
+         if (allocated(self%iarray2)) deallocate(self%iarray2)
+         if (allocated(self%aoint2e)) deallocate(self%aoint2e)
+      endif
+
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if (allocated(self%gradient)) deallocate(self%gradient)
@@ -567,6 +614,11 @@ contains
       call zeroVec(self%Lowdin,natom)
 
       call zeroMatrix(self%denseOld,nbasis)
+
+      ! For QC output
+      if (quick_method%QCint) then
+         self%aoint2e=0.0d0
+      endif
 
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then

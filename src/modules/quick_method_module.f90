@@ -79,7 +79,7 @@ module quick_method_module
 
         ! this part is Div&Con options
         logical :: BEoff = .false.
-        logical :: Qint = .false.
+        logical :: QCint = .false.
         logical :: OWNfrag = .false.
 
         ! this is DFT grid
@@ -253,7 +253,7 @@ module quick_method_module
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DCMP2only,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%BEoff,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%Qint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%QCint,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%OWNfrag,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DNCRB,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%DNCRB2,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -503,7 +503,7 @@ module quick_method_module
 
             ! additional DIVCON options
             if (self%BEoff)  write(io,'(" NO ELIMINATION OF EMBEDDED SUBSYSTEM IN DIVCON ")')
-            if (self%Qint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
+            if (self%QCint)   write(io,'(" PRINT DIVCON FRAGMENT INTEGRALS IN QISKIT FORMAT ")') 
 
             ! computing cycles
             write(io,'(" MAX SCF CYCLES = ",i6)') self%iscf
@@ -672,7 +672,7 @@ module quick_method_module
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
             if (index(keyWD,'BEOFF').ne.0)      self%BEoff=.true.
-            if (index(keyWD,'QINT').ne.0)       self%Qint=.true.
+            if (index(keyWD,'QCINT').ne.0)       self%QCint=.true.
 
             ! The BEoff keyword is redundant when OWNFRAG is used.
             ! OWNFRAG sets radii of both buffer1 and buffer2 to zero,
@@ -928,7 +928,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
             self%DCMP2only = .false.   ! Canonical HF and Div&Con for MP2 only
             self%BEoff = .false.       ! Turns off bEliminate in Div&Con
-            self%Qint = .false.        ! Prints 1e and 2e integrals in Qiskit format
+            self%QCint = .false.        ! Prints 1e and 2e integrals in Qiskit format
             self%OWNfrag = .false.     ! User defined fragmentation based on CORE.DNC and BUFFER.DNC files
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
