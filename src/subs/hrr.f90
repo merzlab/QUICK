@@ -22,6 +22,9 @@ subroutine hrrwhole
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
+   !For QC output
+   integer ijkl
+
    select case (IJKLtype)
 
    case (0,10,1000,1010)
@@ -282,7 +285,13 @@ subroutine hrrwhole
 
    end select
    111 continue
-!  write(*,*) IJKLtype,mpirank, iii,jjj,kkk,lll,Y
+
+   if (quick_method%QCint) then
+      ijkl=quick_qm_struct%iarray2(iii,jjj,kkk,lll)
+      quick_qm_struct%aoint2e(ijkl)=Y
+print*,IJKL,quick_qm_struct%aoint2e(ijkl)
+   endif
+
 end subroutine hrrwhole
 
 
