@@ -5,7 +5,8 @@
 #endif
 
 !---------------------------------------------------------------------!
-! Created by Etienne Palos on   xx/xx/2024                            !
+! Created by Etienne Palos on  01/20/2024                             !
+! Contributor: Vikrant Tripathy                                       !
 !                                                                     ! 
 ! Copyright (C) 2024-2025 Götz lab                                    !
 !                                                                     !
@@ -22,12 +23,22 @@ module quick_oeproperties_module
  contains
 
  !----------------------------------------------------------------------------!
- ! This is the main subroutine that computes the Electrostatic Potential (ESP)!
- ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !        
+ ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
+ ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop ! 
+ !                                                                            !
+ ! This subroutine is called from the main program.                           !
+ ! It calls the following subroutines:                                        !
+ !     1. esp_nuc: Computes the nuclear contribution to the ESP               !
+ !     2. esp_shell_pair: Computes the electronic contribution to the ESP     !
+ !     3. print_esp: Prints the ESP to the output file.prop                   !
  !----------------------------------------------------------------------------!
  subroutine compute_esp(ierr)
-   use allmod
-   
+   use quick_mpi_module, only: master
+   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+   use quick_molspec_module, only : quick_molspec
+   use quick_files_module, only : iPropFile, propFileName
+   use quick_basis_module, only: jshell
+
 #ifdef MPIV
    use mpi
 #endif
@@ -76,15 +87,15 @@ module quick_oeproperties_module
    deallocate(esp_nuclear)
 
  close(iPropFile)
-
  end subroutine compute_esp
 
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the Electrostatic Potential (ESP) to the output file.prop!
  !---------------------------------------------------------------------------------------------!
  subroutine print_esp(esp_nuclear, esp_electronic, ierr)
-   use quick_molspec_module
-   use quick_method_module
+   use quick_mpi_module, only: master
+   use quick_molspec_module, only: quick_molspec
+   use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
    use quick_constants_module, only: BOHRS_TO_A
@@ -167,16 +178,15 @@ module quick_oeproperties_module
  ! This subroutine calculates V_nuc(r) = sum Z_k/|r-Rk|                  !
  !-----------------------------------------------------------------------!
  subroutine esp_nuc(ierr, igridpoint, esp_nuclear_term)
-    use quick_molspec_module
-    !, only: extxyz, chg
-    !use allmod
+   use quick_molspec_module, only: natom, quick_molspec, xyz
+   
    implicit none
 
    integer, intent(inout) :: ierr
 
    double precision :: distance
    double precision, external :: rootSquare
-   integer i,j
+   integer inucleus
 
    double precision, intent(inout) :: esp_nuclear_term
    integer ,intent(in) :: igridpoint
@@ -185,9 +195,9 @@ module quick_oeproperties_module
 
    esp_nuclear_term = 0.d0
 
-     do i=1,natom
-        distance = rootSquare(xyz(1:3,i), quick_molspec%extxyz(1:3,igridpoint), 3)
-        esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(i) / distance
+     do inucleus=1,natom
+        distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extxyz(1:3,igridpoint), 3)
+        esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(inucleus) / distance
      enddo
  end subroutine esp_nuc
 
@@ -199,7 +209,10 @@ module quick_oeproperties_module
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
  subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
-   use allmod
+  ! use allmod
+   use quick_params_module, only: trans
+   use quick_calculated_module, only : quick_qm_struct
+   use quick_basis_module, only: attraxiao,quick_basis
    use quick_files_module, only: ioutfile
 
    implicit double precision(a-h,o-z)
@@ -438,12 +451,12 @@ module quick_oeproperties_module
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
  subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
-   use allmod ! revisit, avoid allmod
-   use quick_molspec_module
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: quick_basis, attraxiao
+   use quick_molspec_module, only: quick_molspec, xyz
    use quick_overlap_module, only: gpt, opf, overlap_core
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
-   implicit double precision(a-h,o-z)
    
    dimension aux(0:20)
    double precision AA(3),BB(3),CC(3),PP(3)
