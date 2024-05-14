@@ -302,9 +302,9 @@ contains
          call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       endif
 
-      if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      endif
+      !if (self%nextpoint.gt.0) then
+      !   call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      !endif
 
       call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)

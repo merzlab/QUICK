@@ -1,8 +1,8 @@
 #include "util.fh"
 
-#ifdef MPIV
-     include "mpif.h"
-#endif
+!#ifdef MPIV
+!     include "mpif.h"
+!#endif
 
 !---------------------------------------------------------------------!
 ! Created by Etienne Palos on   xx/xx/2024                            !
@@ -15,7 +15,6 @@
 !_____________________________________________________________________!
 
 module quick_oeproperties_module
- implicit double precision(a-h,o-z)
  private 
  public :: compute_esp
 
@@ -26,11 +25,10 @@ module quick_oeproperties_module
  ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !        
  !----------------------------------------------------------------------------!
  subroutine compute_esp(ierr)
-   use allmod
-   
-#ifdef MPIV
-   use mpi
-#endif
+   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+   use quick_molspec_module, only : quick_molspec
+   use quick_files_module, only : iPropFile, propFileName
+   use quick_basis_module, only: jshell
  
    implicit none
    integer, intent(out) :: ierr
@@ -83,8 +81,8 @@ module quick_oeproperties_module
  ! This subroutine formats and prints the Electrostatic Potential (ESP) to the output file.prop!
  !---------------------------------------------------------------------------------------------!
  subroutine print_esp(esp_nuclear, esp_electronic, ierr)
-   use quick_molspec_module
-   use quick_method_module
+   use quick_molspec_module, only: quick_molspec
+   use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
    use quick_constants_module, only: BOHRS_TO_A
@@ -167,11 +165,9 @@ module quick_oeproperties_module
  ! This subroutine calculates V_nuc(r) = sum Z_k/|r-Rk|                  !
  !-----------------------------------------------------------------------!
  subroutine esp_nuc(ierr, igridpoint, esp_nuclear_term)
-    use quick_molspec_module
-    !, only: extxyz, chg
-    !use allmod
-   implicit none
+   use quick_molspec_module, only: natom, quick_molspec, xyz
 
+   implicit none
    integer, intent(inout) :: ierr
 
    double precision :: distance
@@ -182,6 +178,10 @@ module quick_oeproperties_module
    integer ,intent(in) :: igridpoint
    
    logical :: debug = .true.
+
+#ifdef MPIV
+   use mpi
+#endif
 
    esp_nuclear_term = 0.d0
 
@@ -199,10 +199,10 @@ module quick_oeproperties_module
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
  subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
-   use allmod
+   use quick_params_module, only: trans
+   use quick_calculated_module, only : quick_qm_struct
+   use quick_basis_module, only: attraxiao,quick_basis
    use quick_files_module, only: ioutfile
-
-   implicit double precision(a-h,o-z)
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
@@ -438,12 +438,14 @@ module quick_oeproperties_module
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
  !-----------------------------------------------------------------------------------------
  subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
-   use allmod ! revisit, avoid allmod
-   use quick_molspec_module
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: quick_basis, attraxiao
+   use quick_molspec_module, only: quick_molspec, xyz
    use quick_overlap_module, only: gpt, opf, overlap_core
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
-   implicit double precision(a-h,o-z)
+
+   implicit double precision(a-h,o-z) 
    
    dimension aux(0:20)
    double precision AA(3),BB(3),CC(3),PP(3)
