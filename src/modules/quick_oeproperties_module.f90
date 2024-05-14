@@ -29,10 +29,6 @@ module quick_oeproperties_module
    use quick_molspec_module, only : quick_molspec
    use quick_files_module, only : iPropFile, propFileName
    use quick_basis_module, only: jshell
-
-!#ifdef MPIV
-!   use mpi
-!#endif
  
    implicit none
    integer, intent(out) :: ierr
@@ -182,6 +178,10 @@ module quick_oeproperties_module
    integer ,intent(in) :: igridpoint
    
    logical :: debug = .true.
+
+#ifdef MPIV
+   use mpi
+#endif
 
    esp_nuclear_term = 0.d0
 
