@@ -444,10 +444,15 @@ module quick_oeproperties_module
    use quick_overlap_module, only: gpt, opf, overlap_core
    use quick_files_module, only: ioutfile, iPropFile
    use quick_mpi_module, only: master
+   use quick_constants_module, only : Pi
+   !implicit double precision(a-h,o-z) 
+   implicit none
 
-   implicit double precision(a-h,o-z) 
-   
-   dimension aux(0:20)
+   integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
+   double precision :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, g, U
+   double precision :: attra, const, constanttemp, PCsquare, Px, Py, Pz
+
+   double precision, dimension(0:20) :: aux
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g 
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
@@ -490,7 +495,7 @@ module quick_oeproperties_module
  
            ! Calculate first two terms of Obara & Saika Eqn A20
            constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
-           constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+           const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
            
            ! Loops over external grid points/MM atoms
             do igridpoint=1,quick_molspec%nextpoint
@@ -510,7 +515,7 @@ module quick_oeproperties_module
                ! Calculate all the auxilary integrals and store in attraxiao array
                do L = 0,maxm
                   ! sign (-1.0d0) is used to ensure the auxilary integrals are negative
-                  aux(L) = -1.0d0*aux(L)*constant
+                  aux(L) = -1.0d0*aux(L)*const
                   attraxiao(1,1,L)=aux(L)
                enddo
  
