@@ -179,10 +179,6 @@ module quick_oeproperties_module
    
    logical :: debug = .true.
 
-#ifdef MPIV
-   use mpi
-#endif
-
    esp_nuclear_term = 0.d0
 
      do i=1,natom
