@@ -5,14 +5,15 @@
 !#endif
 
 !---------------------------------------------------------------------!
-! Created by Etienne Palos on   xx/xx/2024                            !
+! Created by Etienne Palos on  01/20/2024                             !
+! Contributor: Vikrant Tripathy                                       !
 !                                                                     ! 
-! Copyright (C) 2024-2025 Götz lab                                    !
+! Copyright (C) 2024-2025                                             !
 !                                                                     !
 ! This Source Code Form is subject to the terms of the Mozilla Public !
 ! License, v. 2.0. If a copy of the MPL was not distributed with this !
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
-!_____________________________________________________________________!
+!---------------------------------------------------------------------!
 
 module quick_oeproperties_module
  private 
@@ -21,8 +22,14 @@ module quick_oeproperties_module
  contains
 
  !----------------------------------------------------------------------------!
- ! This is the main subroutine that computes the Electrostatic Potential (ESP)!
- ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !        
+ ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
+ ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !
+ !                                                                            !
+ ! This subroutine is called from the main program.                           !
+ ! It calls the following subroutines:                                        !
+ !     1. esp_nuc: Computes the nuclear contribution to the ESP               !
+ !     2. esp_shell_pair: Computes the electronic contribution to the ESP     !
+ !     3. print_esp: Prints the ESP to the output file.prop                   !
  !----------------------------------------------------------------------------!
  subroutine compute_esp(ierr)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
@@ -78,7 +85,7 @@ module quick_oeproperties_module
  end subroutine compute_esp
 
  !---------------------------------------------------------------------------------------------!
- ! This subroutine formats and prints the Electrostatic Potential (ESP) to the output file.prop!
+ ! This subroutine formats and prints the ESP data to file.prop                                !
  !---------------------------------------------------------------------------------------------!
  subroutine print_esp(esp_nuclear, esp_electronic, ierr)
    use quick_molspec_module, only: quick_molspec
@@ -172,7 +179,7 @@ module quick_oeproperties_module
 
    double precision :: distance
    double precision, external :: rootSquare
-   integer i,j
+   integer inucleus
 
    double precision, intent(inout) :: esp_nuclear_term
    integer ,intent(in) :: igridpoint
@@ -181,8 +188,8 @@ module quick_oeproperties_module
 
    esp_nuclear_term = 0.d0
 
-     do i=1,natom
-        distance = rootSquare(xyz(1:3,i), quick_molspec%extxyz(1:3,igridpoint), 3)
+     do inucleus=1,natom
+        distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extxyz(1:3,igridpoint), 3)
         esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(i) / distance
      enddo
  end subroutine esp_nuc
@@ -427,8 +434,9 @@ module quick_oeproperties_module
  End subroutine esp_1pdm
 
  !-----------------------------------------------------------------------------------------
- ! This subroutine computes loops over 
- ! This is \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
+ ! This subroutine computes the V_elec contribution for a shell pair for each grid point
+ ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()  
+ ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
  ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
@@ -517,6 +525,7 @@ module quick_oeproperties_module
  
                NIJ1=10*NII2+NJJ2
               
+               ! Call and get P_{mu nu} V_{mu nu} into esp_electronic( )
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint))
 
