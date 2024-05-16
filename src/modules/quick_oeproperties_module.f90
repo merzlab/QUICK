@@ -190,7 +190,7 @@ module quick_oeproperties_module
 
      do inucleus=1,natom
         distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extxyz(1:3,igridpoint), 3)
-        esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(i) / distance
+        esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(inucleus) / distance
      enddo
  end subroutine esp_nuc
 
