@@ -24,7 +24,7 @@
 
     program quick
 
-    use allMod
+!    use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
@@ -36,6 +36,15 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+    use quick_timer_module, only : timer_end, timer_cumer, timer_begin
+    use quick_method_module, only : quick_method
+    use quick_files_module, only: ioutfile, outFileName
+    use quick_mpi_module, only: master, bMPI, print_quick_mpi
+    use quick_molspec_module, only: quick_molspec
+    use quick_files_module, only: write_molden
+    use quick_molspec_module, only : alloc
+    use quick_files_module, only : set_quick_files, print_quick_io_file
+
 #ifdef MPIV
     use mpi
 #endif
