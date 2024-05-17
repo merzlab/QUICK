@@ -24,7 +24,6 @@
 
     program quick
 
-!    use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
@@ -39,7 +38,7 @@
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
     use quick_files_module, only: ioutfile, outFileName
-    use quick_mpi_module, only: master, bMPI, print_quick_mpi
+    use quick_mpi_module, only: master, bMPI, print_quick_mpi, mpirank
     use quick_molspec_module, only: quick_molspec
     use quick_files_module, only: write_molden
     use quick_molspec_module, only : alloc
@@ -208,7 +207,7 @@
     !-----------------------------------------------------------------
 
     ! if it is div&con method, begin fragmetation step, initial and setup
-    ! div&con varibles
+    ! div&con variables
     !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
@@ -361,7 +360,7 @@
 
     ! 6.e Electrostatic Potential
     if (quick_method%esp_grid) then
-        call compute_esp(ierr)
+      call compute_esp(ierr)
     end if
     
     ! Now at this point we have an energy and a geometry.  If this is

@@ -34,9 +34,14 @@ module quick_oeproperties_module
  subroutine compute_esp(ierr)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_molspec_module, only : quick_molspec
-   use quick_files_module, only : iPropFile, propFileName
+   use quick_files_module, only : ioutfile, iPropFile, propFileName
    use quick_basis_module, only: jshell
+   use quick_mpi_module, only: master, mpirank
  
+!#ifdef MPIV
+!    use mpi
+!#endif
+
    implicit none
    integer, intent(out) :: ierr
    logical :: debug = .true.
@@ -57,8 +62,6 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_begin%TESPGrid)
 
-   call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
-
    ! Computes ESP_NUC 
    do igridpoint=1,quick_molspec%nextpoint
      call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
@@ -74,13 +77,16 @@ module quick_oeproperties_module
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
    
-   ! Calls print ESP
-   call print_esp(esp_nuclear,esp_electronic, ierr)
+   if (master) then
+     call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
+
+     ! Calls print ESP
+     call print_esp(esp_nuclear,esp_electronic, ierr)
+     close(iPropFile)
+   endif
 
    deallocate(esp_electronic)
    deallocate(esp_nuclear)
-
- close(iPropFile)
 
  end subroutine compute_esp
 
@@ -90,8 +96,7 @@ module quick_oeproperties_module
  subroutine print_esp(esp_nuclear, esp_electronic, ierr)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
-   use quick_files_module, only: ioutfile, iPropFile
-   use quick_mpi_module, only: master
+   use quick_files_module, only: ioutfile, iPropFile, propFileName
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
@@ -105,67 +110,54 @@ module quick_oeproperties_module
    double precision :: Cx, Cy, Cz
 
   if (.not. allocated(esp_electronic)) then
-   allocate(esp_electronic(igridpoint))
- endif
+    allocate(esp_electronic(igridpoint))
+  endif
 
    if (.not. allocated(esp_nuclear)) then
-   allocate(esp_nuclear(igridpoint))
- endif
+     allocate(esp_nuclear(igridpoint))
+   endif
 
- ! If ESP_GRID is true, print to table X, Y, Z, V(r)
- if ((quick_method%esp_grid) .or. (quick_method%esp_print_terms)) then
-      write (ioutfile,'(/," QUICK PROPERTIES MODULE: ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-      write (ioutfile,'(84("-"))')
-      ! Do you want V_nuc and V_elec?  
-    if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
-      write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
-    else
-      ! Default is V_total  
-      write (ioutfile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_TOTAL")')
-      endif
-      write (ioutfile,'(84("-"))')
-      write (ioutfile,'(/," ESP is printed to PROPERTIES file ")')
-      write (ioutfile,'(84("-"))')
-      write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-      write (iPropFile,'(100("-"))')
-    ! Do you want V_nuc and V_elec?
-      if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
-          write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
-    ! Do you want  X, Y, and Z in Angstrom?
-      else if ((quick_method%extgrid_angstrom) .and. (quick_method%esp_grid))  then
-          write (iPropFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
-       else
-      ! Default is X, Y, and V_total in a.u.
-          write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
-      endif
+   ! If ESP_GRID is true, print to table X, Y, Z, V(r)
+   write (ioutfile,'(" ***Printing Electrostatic Potential (ESP) [a.u.] at external points to file ",A,x,"***")') propFileName
+   write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+   write (iPropFile,'(100("-"))')
+   ! Do you want V_nuc and V_elec?
+   if (quick_method%esp_print_terms) then
+     write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+     ! Do you want  X, Y, and Z in Angstrom?
+   else if (quick_method%extgrid_angstrom)  then
+     write (iPropFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
+   else
+     ! Default is X, Y, and V_total in a.u.
+     write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
+   endif
 
-      ! Collect ESP and print
-      do igridpoint = 1, quick_molspec%nextpoint 
-       if ((quick_method%extgrid_angstrom) .and. (quick_method%esp_grid))  then
-        Cx = (quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A)
-        Cy = (quick_molspec%extxyz(2, igridpoint)*BOHRS_TO_A)
-        Cz = (quick_molspec%extxyz(3, igridpoint)*BOHRS_TO_A)
+   ! Collect ESP and print
+   do igridpoint = 1, quick_molspec%nextpoint 
+     if (quick_method%extgrid_angstrom)  then
+       Cx = (quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A)
+       Cy = (quick_molspec%extxyz(2, igridpoint)*BOHRS_TO_A)
+       Cz = (quick_molspec%extxyz(3, igridpoint)*BOHRS_TO_A)
+     else
+       Cx = quick_molspec%extxyz(1, igridpoint)
+       Cy = quick_molspec%extxyz(2, igridpoint)
+       Cz = quick_molspec%extxyz(3, igridpoint)
+     endif
+
+     if (allocated(esp_electronic) .and. igridpoint <= size(esp_electronic)) then
+       ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
+       if (quick_method%esp_print_terms) then
+         write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+         esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
        else
-        Cx = quick_molspec%extxyz(1, igridpoint)
-        Cy = quick_molspec%extxyz(2, igridpoint)
-        Cz = quick_molspec%extxyz(3, igridpoint)
+         write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
+           (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
        endif
+     else
+       write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
+     endif
 
-        if (allocated(esp_electronic) .and. igridpoint <= size(esp_electronic)) then
-            ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
-            if ((quick_method%esp_print_terms) .and. (quick_method%esp_grid)) then
-                write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-                esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
-            else
-                write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
-                 (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
-            endif
-        else
-           write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
-        endif
-
-      end do
-  endif
+   end do
  end subroutine print_esp
 
  !-----------------------------------------------------------------------!
@@ -446,8 +438,6 @@ module quick_oeproperties_module
    use quick_basis_module, only: quick_basis, attraxiao
    use quick_molspec_module, only: quick_molspec, xyz
    use quick_overlap_module, only: gpt, opf, overlap_core
-   use quick_files_module, only: ioutfile, iPropFile
-   use quick_mpi_module, only: master
    use quick_constants_module, only : Pi
    !implicit double precision(a-h,o-z) 
    implicit none
