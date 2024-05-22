@@ -35,7 +35,12 @@
 
 subroutine inidivcon(natomsaved)
   use allmod
-  implicit double precision (a-h,o-z)
+
+#ifdef MPIV
+  use mpi
+#endif
+
+ implicit double precision (a-h,o-z)
 
   double precision rbuffer1,rbuffer2
 
@@ -61,10 +66,6 @@ subroutine inidivcon(natomsaved)
   ! ownmax limits number of atoms in OWNFRAG-defined fragments to 15.
   ! ownmax can be increased if needed, but for larger fragments
   ! the current read-in code of OWNFRAG is inefficient.
-
-#ifdef MPIV
-  include 'mpif.h'
-#endif
 
   natomt=natomsaved ! avoid modification of important variable natomsaved
 
@@ -725,6 +726,7 @@ subroutine inidivcon(natomsaved)
 #endif
 
   allocate(Odcsub(np,NNmax,NNmax))
+  allocate(Onedcsub(np,NNmax,NNmax))
   allocate(Pdcsub(np,NNmax,NNmax))
   allocate(Pdcsubtran(NNmax,NNmax,np))
   allocate(Xdcsub(np,NNmax,NNmax))
@@ -872,6 +874,38 @@ subroutine inidivcon(natomsaved)
   !===================================================================
   return
 end subroutine inidivcon
+
+!*******************************************************
+! Onedivided
+!-------------------------------------------------------
+! To get O matrix from D&C 
+!
+
+subroutine Onedivided
+  use allmod
+  implicit double precision (a-h,o-z)
+
+  do i=1,np
+     kstart1=0
+     do jxiao=1,dcsubn(i)
+        j=dcsub(i,jxiao)
+        do itemp=quick_basis%first_basis_function(j),quick_basis%last_basis_function(j)
+           kstart2=0
+           do jxiao2=1,dcsubn(i)
+              j2=dcsub(i,jxiao2)
+              do jtemp=quick_basis%first_basis_function(j2),quick_basis%last_basis_function(j2)
+                 Onedcsub(i,Kstart1+itemp-quick_basis%first_basis_function(j)+1,&
+                        kstart2+jtemp-quick_basis%first_basis_function(j2)+1) &
+                      =quick_qm_struct%oneElecO(itemp,jtemp)
+              enddo
+              Kstart2=Kstart2+quick_basis%last_basis_function(j2)-quick_basis%first_basis_function(j2)+1
+           enddo
+        enddo
+        Kstart1=Kstart1+quick_basis%last_basis_function(j)-quick_basis%first_basis_function(j)+1
+     enddo
+  enddo
+
+end subroutine Onedivided
 
 
 !*******************************************************
