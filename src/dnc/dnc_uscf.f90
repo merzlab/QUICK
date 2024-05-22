@@ -22,12 +22,11 @@
 #endif
 #endif
 #endif
-
-     implicit double precision(a-h,o-z)
-  
 #ifdef MPIV
-     include "mpif.h"
+     use mpi
 #endif
+  
+     implicit double precision(a-h,o-z)
   
      ! variable inputed to return
      integer :: jscf                ! scf interation

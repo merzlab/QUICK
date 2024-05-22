@@ -30,16 +30,16 @@ subroutine electdiisdc(jscf,ierr)
 #endif
 #endif
 
-   implicit double precision(a-h,o-z) 
-
 #ifdef MPIV
-     include "mpif.h"
+     use mpi
 #endif
+
+   implicit double precision(a-h,o-z) 
 
      ! variable inputed to return
      integer :: jscf                ! scf interation
      integer, intent(inout) :: ierr
-
+     integer :: ierr1
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
      integer :: idiis = 0           ! diis iteration
@@ -66,7 +66,7 @@ subroutine electdiisdc(jscf,ierr)
    logical :: diisoff=.false.
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
-
+   character(len=80) :: FileName = ''
 
    !---------------------------------------------------------------------------
    ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -217,6 +217,28 @@ subroutine electdiisdc(jscf,ierr)
    if (quick_method%debug)  call debug_SCF(jscf)
 
    call scf_operatordc(deltaO)
+
+!   if (quick_method%QCint) then
+!   if (jscf .eq. 2) then
+!      call Onedivided
+!      do itt=1, np
+!         write(filename,'(a,I0,a)')'1eint',itt,'.txt'
+!         call quick_open(iOneIntFile,filename,'U','F','R',.false.,ierr1)
+!         write(ioneintfile,'(" 1E INTEGRALS")')
+!         call PriSym(ioneintfile,nbasisdc(itt),Onedcsub(itt,:,:),'f14.8')
+!      enddo
+!      close(ioneintfile)
+!      call quick_open(iTwoIntFile,TwoIntFileName,'U','F','R',.false.,ierr1)
+!      write(itwointfile,'(" 2E INTEGRALS")')
+!      npair = (nbasis*(nbasis+1))/2
+!      ns8 = (npair*(npair+1))/2
+!      do ijkl=1,ns8
+!         write(itwointfile,*)quick_qm_struct%aoint2e(ijkl)
+!      enddo
+!      close(itwointfile)
+!   endif
+!   endif
+
 
    quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
 
@@ -519,6 +541,7 @@ endif
 
       do itt = 1, np
 
+
          ! pass value for convience reason
          nbasis=nbasisdc(itt)    ! basis set for fragment
 
@@ -730,6 +753,16 @@ endif
                (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
          diisdone=.true.
          quick_method%scf_conv=.true.
+     
+!         if (quick_method%QCint) then
+!            do itt=1, np
+!               write(filename,'(a,I0,a)')'coeff',itt,'.txt'
+!               call quick_open(iCoeffFile,filename,'U','F','R',.false.,ierr1)
+!               write(icoefffile,'(" MO COEFFECIENTS")')
+!               call PriSym(icoefffile,nbasisdc(itt),Codcsub(:,:,itt),'f14.8')
+!            enddo
+!            close(icoefffile)
+!         endif
 
       endif
       if (PRMS < 1.0d-4) then

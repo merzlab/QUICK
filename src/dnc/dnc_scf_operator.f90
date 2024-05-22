@@ -15,11 +15,11 @@
      use quick_cshell_eri_module, only: getCshellEriDC, getCshellEriEnergy
      use quick_oei_module, only:get1eEnergy,get1e
 
-     implicit none
-
 #ifdef MPIV
-     include "mpif.h"
+     use mpi
 #endif
+
+     implicit none
   !   double precision oneElecO(nbasis,nbasis)
      logical :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
