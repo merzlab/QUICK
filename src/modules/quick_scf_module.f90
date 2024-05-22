@@ -117,9 +117,9 @@ contains
      done=.false.
 
      if (quick_method%QCint) then
-        call quick_open(iIntFile,intFileName,'U','U','A',.false.,ierr1)
+        call quick_open(iIntFile,intFileName,'U','F','R',.false.,ierr1)
      end if
-  
+
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
      ! point, X has been formed. The remaining steps are:
@@ -364,15 +364,17 @@ contains
 
         if (quick_method%QCint) then
         if (jscf .eq. 2) then
-           write(iintfile)'1E INTEGRALS'
+           write(iintfile,'(" TOTAL BASIS FUNCTIONS")')
+           write(iintfile,'(I4)')nbasis
+           write(iintfile,'(" CORE HAMILTONIAN")')
            do ijkl=1, nbasis
-              write(iintfile)(quick_qm_struct%oneElecO(ijkl,ijkl2),ijkl2=1,nbasis)
+              write(iintfile,*)(quick_qm_struct%oneElecO(ijkl,ijkl2),ijkl2=1,nbasis)
            enddo
-           write(iintfile)'2E INTEGRALS'
+           write(iintfile,'(" 2E INTEGRALS")')
            npair = (nbasis*(nbasis+1))/2
            ns8 = (npair*(npair+1))/2
            do ijkl=1,ns8
-              write(iintfile)quick_qm_struct%aoint2e(ijkl)
+              write(iintfile,*)quick_qm_struct%aoint2e(ijkl)
            enddo
         endif
         endif
@@ -798,13 +800,33 @@ contains
                     (quick_qm_struct%E((quick_molspec%nelec/2)+1) - quick_qm_struct%E(quick_molspec%nelec/2))*AU_TO_EV
               diisdone=.true.
               quick_method%scf_conv=.true.
-  
+
+              if (quick_method%QCint) then
+                 write(iintfile,'(" MO COEFFICIENTS")')
+                 do ijkl=1, nbasis
+                    write(iintfile,*)(quick_qm_struct%co(ijkl,ijkl2),ijkl2=1,nbasis)
+                 enddo
+                 write(iintfile,'(" OVERLAP")')
+                 do ijkl=1, nbasis
+                    write(iintfile,*)(quick_qm_struct%o(ijkl,ijkl2),ijkl2=1,nbasis)
+                 enddo 
+              endif
            endif
            if(jscf >= quick_method%iscf-1) then
               write (ioutfile,'(" RAN OUT OF CYCLES.  NO CONVERGENCE.")')
               write (ioutfile,'(" PERFORM FINAL NO INTERPOLATION ITERATION")')
               diisdone=.true.
               quick_method%scf_conv=.false.
+              if (quick_method%QCint) then
+                 write(iintfile,'(" MO COEFFICIENTS")')
+                 do ijkl=1, nbasis
+                    write(iintfile,*)(quick_qm_struct%co(ijkl,ijkl2),ijkl2=1,nbasis)
+                 enddo
+                 write(iintfile,'(" OVERLAP")')
+                 do ijkl=1, nbasis
+                    write(iintfile,*)(quick_qm_struct%o(ijkl,ijkl2),ijkl2=1,nbasis)
+                 enddo
+              endif
            endif
   
            if((tmp .ne. quick_method%integralCutoff).and. .not.diisdone) then

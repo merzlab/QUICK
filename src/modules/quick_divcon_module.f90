@@ -21,7 +21,7 @@ module quick_divcon_module
     integer, dimension(:,:,:), allocatable :: DCLogic
     double precision, dimension(:,:), allocatable :: invDCOverlap
     double precision, dimension(:,:,:), allocatable :: ODCSub,PDCSub,XDCSub,SMatrixDCSub, &
-                                                       coDCSub,PDCSubtran,coDCSubtran
+                                                       coDCSub,PDCSubtran,coDCSubtran,OneDCSub
     double precision, dimension(:,:), allocatable :: ODCSubtemp,VECtemp
     double precision, dimension(:,:,:), allocatable :: OBDCSub,PBDCSub,cobDCSub,PBDCSubtran, &
                                                        cobDCSubtran,OBDCSubtemp

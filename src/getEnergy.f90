@@ -157,6 +157,10 @@ subroutine getEnergy(isGuess, ierr)
       if (ioutfile.ne.0 .and. verbose) then
          write (ioutfile,'(" ELECTRONIC ENERGY    = ",F16.9)') quick_qm_struct%Eel
          write (ioutfile,'(" CORE_CORE REPULSION  = ",F16.9)') quick_qm_struct%Ecore
+         if (quick_method%QCint) then
+            write (iintfile,'(" CORE_CORE REPULSION")')
+            write (iintfile,*)quick_qm_struct%Ecore
+         endif
          if(quick_method%edisp) then
             write (ioutfile,'(" DISPERSION CORRECTION  = ",F16.9)') quick_qm_struct%Edisp
          endif
@@ -164,6 +168,10 @@ subroutine getEnergy(isGuess, ierr)
             write (ioutfile,'(" EXT CHARGE REPULSION = ",F16.9)') quick_qm_struct%ECharge
          endif
          write (ioutfile,'(" TOTAL ENERGY         = ",F16.9)') quick_qm_struct%Etot
+         if (quick_method%QCint) then
+            write (iintfile,'(" TOTAL ENERGY")')
+            write (iintfile,*)quick_qm_struct%Etot
+         endif
          call prtact(ioutfile,"End Energy calculation")
          call flush(ioutfile)
       endif

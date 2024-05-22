@@ -289,7 +289,6 @@ subroutine hrrwhole
    if (quick_method%QCint) then
       ijkl=quick_qm_struct%iarray2(iii,jjj,kkk,lll)
       quick_qm_struct%aoint2e(ijkl)=Y
-print*,IJKL,quick_qm_struct%aoint2e(ijkl)
    endif
 
 end subroutine hrrwhole
