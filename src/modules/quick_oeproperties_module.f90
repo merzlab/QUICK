@@ -36,11 +36,13 @@ module quick_oeproperties_module
    use quick_molspec_module, only : quick_molspec
    use quick_files_module, only : ioutfile, iPropFile, propFileName
    use quick_basis_module, only: jshell
-   use quick_mpi_module, only: master, mpirank
+   use quick_mpi_module, only: master
  
-!#ifdef MPIV
-!    use mpi
-!#endif
+#ifdef MPIV
+    use mpi
+    use quick_basis_module, only: mpi_jshelln, mpi_jshell
+    use quick_mpi_module, only: mpirank, mpierror 
+#endif
 
    implicit none
    integer, intent(out) :: ierr
@@ -50,15 +52,19 @@ module quick_oeproperties_module
    
    double precision, allocatable :: esp_electronic(:)   
    double precision, allocatable :: esp_nuclear(:)   
+   double precision, allocatable :: esp_electronic_aggregate(:)
+   integer :: i
 
    ierr = 0
    
    ! Allocates & initiates ESP_NUC and ESP_ELEC arrays
    allocate(esp_nuclear(quick_molspec%nextpoint))
    allocate(esp_electronic(quick_molspec%nextpoint))
+   allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
    
    esp_nuclear(:) = 0.0d0
    esp_electronic(:) = 0.0d0
+   esp_electronic_aggregate(:) = 0.0d0
 
    RECORD_TIME(timer_begin%TESPGrid)
 
@@ -68,11 +74,21 @@ module quick_oeproperties_module
    end do
    
   ! Computes ESP_ELEC
+#ifdef MPIV
+   do i=1,mpi_jshelln(mpirank)
+      IIsh=mpi_jshell(mpirank,i)
+      do JJsh=IIsh,jshell
+         call esp_shell_pair(IIsh, JJsh, esp_electronic)
+      enddo
+   enddo
+   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+#else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
         call esp_shell_pair(IIsh, JJsh, esp_electronic)
       end do
    end do
+#endif
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
@@ -81,12 +97,17 @@ module quick_oeproperties_module
      call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
 
      ! Calls print ESP
+#ifdef MPIV
+     call print_esp(esp_nuclear,esp_electronic_aggregate, ierr)
+#else
      call print_esp(esp_nuclear,esp_electronic, ierr)
+#endif
      close(iPropFile)
    endif
 
    deallocate(esp_electronic)
    deallocate(esp_nuclear)
+   deallocate(esp_electronic_aggregate)
 
  end subroutine compute_esp
 
