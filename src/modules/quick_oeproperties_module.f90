@@ -81,7 +81,8 @@ module quick_oeproperties_module
          call esp_shell_pair(IIsh, JJsh, esp_electronic)
       enddo
    enddo
-   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
+     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
