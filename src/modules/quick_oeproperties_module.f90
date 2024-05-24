@@ -1,9 +1,4 @@
 #include "util.fh"
-
-!#ifdef MPIV
-!     include "mpif.h"
-!#endif
-
 !---------------------------------------------------------------------!
 ! Created by Etienne Palos on  01/20/2024                             !
 ! Contributor: Vikrant Tripathy                                       !
@@ -20,7 +15,6 @@ module quick_oeproperties_module
  public :: compute_esp
 
  contains
-
  !----------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
  ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !
@@ -52,7 +46,9 @@ module quick_oeproperties_module
    
    double precision, allocatable :: esp_electronic(:)   
    double precision, allocatable :: esp_nuclear(:)   
+#ifdef MPIV
    double precision, allocatable :: esp_electronic_aggregate(:)
+#endif
    integer :: i
 
    ierr = 0
@@ -60,11 +56,15 @@ module quick_oeproperties_module
    ! Allocates & initiates ESP_NUC and ESP_ELEC arrays
    allocate(esp_nuclear(quick_molspec%nextpoint))
    allocate(esp_electronic(quick_molspec%nextpoint))
+#ifdef MPIV
    allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
+#endif
    
    esp_nuclear(:) = 0.0d0
    esp_electronic(:) = 0.0d0
+#ifdef MPIV
    esp_electronic_aggregate(:) = 0.0d0
+#endif
 
    RECORD_TIME(timer_begin%TESPGrid)
 
@@ -72,7 +72,6 @@ module quick_oeproperties_module
    do igridpoint=1,quick_molspec%nextpoint
      call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
    end do
-   
   ! Computes ESP_ELEC
 #ifdef MPIV
    do i=1,mpi_jshelln(mpirank)
@@ -96,8 +95,7 @@ module quick_oeproperties_module
    
    if (master) then
      call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
-
-     ! Calls print ESP
+    ! Calls print ESP
 #ifdef MPIV
      call print_esp(esp_nuclear,esp_electronic_aggregate, ierr)
 #else
@@ -108,7 +106,9 @@ module quick_oeproperties_module
 
    deallocate(esp_electronic)
    deallocate(esp_nuclear)
+#ifdef MPIV
    deallocate(esp_electronic_aggregate)
+#endif
 
  end subroutine compute_esp
 
@@ -447,21 +447,20 @@ module quick_oeproperties_module
 
  End subroutine esp_1pdm
 
- !-----------------------------------------------------------------------------------------
- ! This subroutine computes the V_elec contribution for a shell pair for each grid point
- ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()  
- ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
- ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
- ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
- ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
- !-----------------------------------------------------------------------------------------
+ !-----------------------------------------------------------------------------------------!
+ ! This subroutine computes the V_elec contribution for a shell pair for each grid point   !
+ ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()   !  
+ ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                            !
+ ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                            !        
+ ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                                !
+ ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        !
+ !-----------------------------------------------------------------------------------------!
  subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
    use quick_method_module, only: quick_method
    use quick_basis_module, only: quick_basis, attraxiao
    use quick_molspec_module, only: quick_molspec, xyz
    use quick_overlap_module, only: gpt, opf, overlap_core
    use quick_constants_module, only : Pi
-   !implicit double precision(a-h,o-z) 
    implicit none
 
    integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
@@ -518,16 +517,13 @@ module quick_oeproperties_module
                Cx=quick_molspec%extxyz(1,igridpoint)
                Cy=quick_molspec%extxyz(2,igridpoint)
                Cz=quick_molspec%extxyz(3,igridpoint)
-
                 ! Calculate the last term of Obara--Saika Eqn A21
                 PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
- 
                 ! Compute Obara--Saika Eqn A21
                 U = g* PCsquare
  
                ! Calculate the last term of Obara--Saika Eqn A20
                call FmT(Maxm,U,aux)
- 
                ! Calculate all the auxilary integrals and store in attraxiao array
                do L = 0,maxm
                   ! sign (-1.0d0) is used to ensure the auxilary integrals are negative
@@ -540,7 +536,6 @@ module quick_oeproperties_module
                ! Call and get P_{mu nu} V_{mu nu} into esp_electronic( )
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint))
-
             enddo
 
          endif
