@@ -543,13 +543,4 @@ module quick_oeproperties_module
    enddo
  end subroutine esp_shell_pair
 
-  subroutine logger(name, status)
-    use quick_files_module
-    implicit none
-    character (len=*), intent(in) :: name
-    character (len=*), intent(in) :: status
-    write(ioutfile, '(3(a,x))') '>>> DEBUG', name, status
-    call flush(ioutfile)
- end subroutine logger
-
 end module quick_oeproperties_module
