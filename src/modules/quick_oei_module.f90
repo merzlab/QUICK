@@ -314,14 +314,24 @@ end subroutine kineticO
 
 
 subroutine attrashell(IIsh,JJsh)
-   use allmod
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: quick_basis, attraxiao
+   use quick_molspec_module, only: quick_molspec, xyz, natom
    use quick_overlap_module, only: gpt, opf, overlap_core
+   use quick_constants_module, only : Pi
    !    use xiaoconstants
-   implicit double precision(a-h,o-z)
-   dimension aux(0:20)
+   implicit none
+
+   integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
+   double precision :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, g, U
+   double precision :: attra, const, constanttemp, PCsquare, Px, Py, Pz
+   double precision :: Z, constant2
+
+   double precision, dimension(0:20) :: aux
    double precision AA(3),BB(3),CC(3),PP(3)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
+   integer :: iatom
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
    Ax=xyz(1,quick_basis%katom(IIsh))
@@ -368,7 +378,7 @@ subroutine attrashell(IIsh,JJsh)
 
            !Calculate first two terms of O&S Eqn A20
            constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
-           constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+           const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
 
            !nextatom=number of external MM point charges. set to 0 if none used
            do iatom=1,natom+quick_molspec%nextatom
@@ -402,7 +412,7 @@ subroutine attrashell(IIsh,JJsh)
                !Calculate all the auxilary integrals and store in attraxiao
                !array
                do L = 0,maxm
-                  aux(L) = aux(L)*constant*Z
+                  aux(L) = aux(L)*const*Z
                   attraxiao(1,1,L)=aux(L)
                enddo
 
