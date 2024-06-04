@@ -40,12 +40,11 @@ module quick_oeproperties_module
 
    implicit none
    integer, intent(out) :: ierr
-   logical :: debug = .true.
    integer :: IIsh, JJsh
    integer :: igridpoint
    
-   double precision, allocatable :: esp_electronic(:)   
-   double precision, allocatable :: esp_nuclear(:)   
+   double precision, allocatable :: esp_electronic(:)
+   double precision, allocatable :: esp_nuclear(:)
 #ifdef MPIV
    double precision, allocatable :: esp_electronic_aggregate(:)
 #endif
@@ -60,7 +59,6 @@ module quick_oeproperties_module
    allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
 #endif
    
-   esp_nuclear(:) = 0.0d0
    esp_electronic(:) = 0.0d0
 #ifdef MPIV
    esp_electronic_aggregate(:) = 0.0d0
@@ -97,9 +95,9 @@ module quick_oeproperties_module
      call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
     ! Calls print ESP
 #ifdef MPIV
-     call print_esp(esp_nuclear,esp_electronic_aggregate, ierr)
+     call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
 #else
-     call print_esp(esp_nuclear,esp_electronic, ierr)
+     call print_esp(esp_nuclear,esp_electronic, quick_molspec%nextpoint, ierr)
 #endif
      close(iPropFile)
    endif
@@ -115,7 +113,7 @@ module quick_oeproperties_module
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the ESP data to file.prop                                !
  !---------------------------------------------------------------------------------------------!
- subroutine print_esp(esp_nuclear, esp_electronic, ierr)
+ subroutine print_esp(esp_nuclear, esp_electronic, nextpoint, ierr)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iPropFile, propFileName
@@ -123,24 +121,16 @@ module quick_oeproperties_module
 
    implicit none
    integer, intent(out) :: ierr
-   logical :: debug = .true.
+   integer, intent(in) :: nextpoint
 
-   double precision, allocatable :: esp_nuclear(:)
-   double precision, allocatable :: esp_electronic(:)
+   double precision :: esp_nuclear(nextpoint)
+   double precision :: esp_electronic(nextpoint)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
 
-  if (.not. allocated(esp_electronic)) then
-    allocate(esp_electronic(igridpoint))
-  endif
-
-   if (.not. allocated(esp_nuclear)) then
-     allocate(esp_nuclear(igridpoint))
-   endif
-
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-   write (ioutfile,'(" ***Printing Electrostatic Potential (ESP) [a.u.] at external points to file ",A,x,"***")') propFileName
+   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to file ",A,x,"***")') trim(propFileName)
    write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
    write (iPropFile,'(100("-"))')
    ! Do you want V_nuc and V_elec?
@@ -166,17 +156,13 @@ module quick_oeproperties_module
        Cz = quick_molspec%extxyz(3, igridpoint)
      endif
 
-     if (allocated(esp_electronic) .and. igridpoint <= size(esp_electronic)) then
-       ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
-       if (quick_method%esp_print_terms) then
-         write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-         esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
-       else
-         write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
-           (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
-       endif
+     ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
+     if (quick_method%esp_print_terms) then
+       write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+       esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
      else
-       write(iPropFile, '(3F14.10,3x,A)') Cx, Cy, Cz, 'N/A', 'N/A'
+       write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
+         (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
      endif
 
    end do
@@ -198,8 +184,6 @@ module quick_oeproperties_module
    double precision, intent(inout) :: esp_nuclear_term
    integer ,intent(in) :: igridpoint
    
-   logical :: debug = .true.
-
    esp_nuclear_term = 0.d0
 
      do inucleus=1,natom
@@ -229,8 +213,6 @@ module quick_oeproperties_module
    double precision, intent(inout) :: esp
 
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
-
-   logical :: debug = .true.
 
    AA(1)=Ax
    AA(2)=Ay
@@ -473,8 +455,6 @@ module quick_oeproperties_module
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
    integer :: igridpoint
-   logical :: debug = .true.
- 
    double precision, dimension(:), intent(inout) :: esp_electronic
   
    ! Related to positions of "QM" atoms
