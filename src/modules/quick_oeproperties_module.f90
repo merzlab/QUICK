@@ -220,6 +220,7 @@ module quick_oeproperties_module
    use quick_calculated_module, only : quick_qm_struct
    use quick_basis_module, only: attraxiao,quick_basis
    use quick_files_module, only: ioutfile
+   use quick_method_module, only: quick_method
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
@@ -436,8 +437,12 @@ module quick_oeproperties_module
               dense_sym_factor = 1.0d0
               if (III /= JJJ) dense_sym_factor = 2.0d0
 
-                 esp = esp + dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
-                       *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0) 
+              if (quick_method%UNRST) quick_qm_struct%denseSave(JJJ,III) = (quick_qm_struct%dense(JJJ,III)&
+                                                                           +quick_qm_struct%denseb(JJJ,III))
+
+             esp = esp + dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
+                                     *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+
             enddo
          enddo
 
@@ -489,7 +494,6 @@ module quick_oeproperties_module
    NII2=quick_basis%Qfinal(IIsh)
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
-            
  
    ! Calculation of V_elec starts here
    do ips=1,quick_basis%kprim(IIsh)
