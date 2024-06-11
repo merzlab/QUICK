@@ -11,7 +11,7 @@
 !---------------------------------------------------------------------!
 module quick_oeproperties_module
  private
- public :: compute_esp
+ public :: compute_esp, compute_efield
 
  contains
  !----------------------------------------------------------------------------!
@@ -131,7 +131,8 @@ module quick_oeproperties_module
    double precision :: Cx, Cy, Cz
 
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') trim(propFileName)
+   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') &
+           trim(propFileName)
    write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
    write (iPropFile,'(100("-"))')
    ! Do you want V_nuc and V_elec?
@@ -208,9 +209,6 @@ module quick_oeproperties_module
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                       
  !-----------------------------------------------------------------------------------------
 
-
-
-
  ! Experimental ------- feel free to add notes, delete, modify 
  ! EFIELD
 
@@ -218,6 +216,94 @@ module quick_oeproperties_module
 
  ! E_nuc = - grad. V_nuc 
  !       = - (d/drx, d/dry, d/drz) V_nuc(r)
+
+ subroutine compute_efield(ierr)
+  use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+  use quick_molspec_module, only : quick_molspec
+  use quick_files_module, only : ioutfile, iPropFile, propFileName
+  use quick_basis_module, only: jshell
+  use quick_mpi_module, only: master
+
+#ifdef MPIV
+   use mpi
+   use quick_basis_module, only: mpi_jshelln, mpi_jshell
+   use quick_mpi_module, only: mpirank, mpierror 
+#endif
+
+  implicit none
+  integer, intent(out) :: ierr
+  integer :: IIsh, JJsh
+  integer :: igridpoint
+  
+  !double precision, allocatable :: efield_electronic(:,:)
+  double precision, allocatable :: efield_nuclear(:,:)
+#ifdef MPIV
+  !double precision, allocatable :: efield_electronic_aggregate(:,:)
+#endif
+  integer :: i
+
+  ierr = 0
+  
+  ! Allocates & initiates EFIELD_NUC and EFIELD_ELEC arrays
+  allocate(efield_nuclear(3,quick_molspec%nextpoint))
+  
+#ifdef MPIV
+  !allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
+#endif
+  
+  !efield_electronic(:,:) = 0.0d0
+#ifdef MPIV
+  ! efeild_electronic_aggregate(:) = 0.0d0
+#endif
+
+ ! RECORD_TIME(timer_begin%TEFIELDGrid)
+
+  ! Computes ESP_NUC 
+  do igridpoint=1,quick_molspec%nextpoint
+    call efield_nuc(ierr, igridpoint, efield_nuclear(3,igridpoint))
+  end do
+
+!  ! Computes ESP_ELEC
+
+! #ifdef MPIV
+!   do i=1,mpi_jshelln(mpirank)
+!      IIsh=mpi_jshell(mpirank,i)
+!      do JJsh=IIsh,jshell
+!         call esp_shell_pair(IIsh, JJsh, esp_electronic)
+!      enddo
+!   enddo
+!   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
+!     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+! #else
+!   do IIsh = 1, jshell
+!      do JJsh = IIsh, jshell
+!        call esp_shell_pair(IIsh, JJsh, esp_electronic)
+!      end do
+!   end do
+! #endif
+
+!   RECORD_TIME(timer_end%TESPGrid)
+!   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
+  
+   if (master) then
+     call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
+!    ! Calls print ESP
+ !#ifdef MPIV
+!     call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
+! #else
+!     call print_esp(esp_nuclear,esp_electronic, quick_molspec%nextpoint, ierr)
+    call print_efield(efield_nuclear, quick_molspec%nextpoint, ierr)
+ !#endif
+     close(iPropFile)
+   endif
+
+!   deallocate(efield_electronic)
+  deallocate(efield_nuclear)
+#ifdef MPIV
+ ! deallocate(efield_electronic_aggregate)
+#endif
+end subroutine compute_efield
+
 
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
   use quick_molspec_module
@@ -229,7 +315,7 @@ module quick_oeproperties_module
   double precision, intent(out) :: efield_nuclear_term(3)
 
   double precision :: distance
-  double precision :: inv_dist_cube
+  double precision :: inv_dist_cube, rx_nuc_gridpoint, ry_nuc_gridpoint, rz_nuc_gridpoint
   integer :: inucleus
 
   efield_nuclear_term = 0.0d0
@@ -239,14 +325,66 @@ module quick_oeproperties_module
       distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extxyz(1:3, igridpoint), 3)
       inv_dist_cube = 1.0d0/(distance**3)
 
+      rx_nuc_gridpoint = (xyz(1, inucleus) - quick_molspec%extxyz(1, igridpoint))
+      ry_nuc_gridpoint = (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint))
+      rz_nuc_gridpoint = (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint))
+
      ! Compute components of gradient using the chain rule
-      efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (xyz(1, inucleus) - quick_molspec%extxyz(1, igridpoint)) * inv_dist_cube
-      efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint)) * inv_dist_cube 
-      efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint)) * inv_dist_cube
+      efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
   end do
 
 end subroutine efield_nuc
 
+!---------------------------------------------------------------------------------------------!
+ ! This subroutine formats and prints the ESP data to file.prop                                !
+ !---------------------------------------------------------------------------------------------!
+subroutine print_efield(efield_nuclear, nextpoint, ierr)
+  use quick_molspec_module, only: quick_molspec
+  use quick_method_module, only: quick_method
+  use quick_files_module, only: ioutfile, iPropFile, propFileName
+  use quick_constants_module, only: BOHRS_TO_A
+
+  implicit none
+  integer, intent(out) :: ierr
+  integer, intent(in) :: nextpoint
+
+  double precision :: efield_nuclear(3,nextpoint)
+
+  integer :: igridpoint
+  double precision :: Cx, Cy, Cz
+
+  ! If ESP_GRID is true, print to table X, Y, Z, V(r)
+  write (ioutfile,'(" *** Printing Electric Field (EFIELD) [a.u.] on grid ",A,x,"***")') trim(propFileName)
+  write (iPropFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
+  write (iPropFile,'(100("-"))')
+  ! Do you want V_nuc and V_elec?
+  if (quick_method%efield_grid) then
+    write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
+  endif
+
+  ! Collect ESP and print
+  do igridpoint = 1, quick_molspec%nextpoint 
+    if (quick_method%extgrid_angstrom)  then
+      Cx = (quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A)
+      Cy = (quick_molspec%extxyz(2, igridpoint)*BOHRS_TO_A)
+      Cz = (quick_molspec%extxyz(3, igridpoint)*BOHRS_TO_A)
+    else
+      Cx = quick_molspec%extxyz(1, igridpoint)
+      Cy = quick_molspec%extxyz(2, igridpoint)
+      Cz = quick_molspec%extxyz(3, igridpoint)
+    endif
+
+    ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
+    if (quick_method%efield_grid) then
+      write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+      efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
+      ! additional options later...
+    endif
+
+  end do
+end subroutine print_efield
 
 #define OEPROP
 #include "./include/attrashell.fh"

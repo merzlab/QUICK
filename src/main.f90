@@ -29,7 +29,7 @@
     use quick_exception_module
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_cshell_gradient_module, only: cshell_gradient
-    use quick_oeproperties_module, only: compute_esp
+    use quick_oeproperties_module, only: compute_esp, compute_efield
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
@@ -359,9 +359,14 @@
     endif
 
     ! 6.e Electrostatic Potential
-    if (quick_method%esp_grid) then
-      call compute_esp(ierr)
-    end if
+    !if (quick_method%esp_grid) then
+    !  call compute_esp(ierr)
+    !end if
+
+     ! 6.f Electrostatic Potential
+    if (quick_method%efield_grid) then
+        call compute_efield(ierr)
+      end if
     
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
