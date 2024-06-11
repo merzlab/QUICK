@@ -131,7 +131,7 @@ module quick_oeproperties_module
    double precision :: Cx, Cy, Cz
 
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to file ",A,x,"***")') trim(propFileName)
+   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') trim(propFileName)
    write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
    write (iPropFile,'(100("-"))')
    ! Do you want V_nuc and V_elec?
@@ -182,7 +182,7 @@ module quick_oeproperties_module
    double precision, external :: rootSquare
    integer inucleus
 
-   double precision, intent(inout) :: esp_nuclear_term
+   double precision, intent(out) :: esp_nuclear_term
    integer ,intent(in) :: igridpoint
    
    esp_nuclear_term = 0.d0
@@ -194,25 +194,63 @@ module quick_oeproperties_module
  end subroutine esp_nuc
 
  !-----------------------------------------------------------------------------------------
- ! This subroutine computes the 1 particle contribution to the V_elec(r)
+ ! The subroutine esp_1pdm computes the 1 particle contribution to the V_elec(r)
  ! This is \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
  ! See Eq. A14 of Oibara & Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
+ !
+ ! Then, the subroutine esp_shell_pair computes V_elec contribution for a shell pair for each
+ !rid point   
+ ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()    
+ ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                            
+ !
+ ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                                   
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
- ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        
+ ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                       
  !-----------------------------------------------------------------------------------------
 
- !-----------------------------------------------------------------------------------------!
- ! This subroutine computes the V_elec contribution for a shell pair for each grid point   !
- ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()   !  
- ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                            !
- ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                            !        
- ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                                !
- ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        !
- !-----------------------------------------------------------------------------------------!
+
+
+
+ ! Experimental ------- feel free to add notes, delete, modify 
+ ! EFIELD
+
+ ! EFIELD_GRID = -  (dx, dy, dz) ESP_GRID
+
+ ! E_nuc = - grad. V_nuc 
+ !       = - (d/drx, d/dry, d/drz) V_nuc(r)
+
+ subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
+  use quick_molspec_module
+  implicit none
+
+  integer, intent(inout) :: ierr
+  integer, intent(in) :: igridpoint
+  double precision, external :: rootSquare
+  double precision, intent(out) :: efield_nuclear_term(3)
+
+  double precision :: distance
+  double precision :: inv_dist_cube
+  integer :: inucleus
+
+  efield_nuclear_term = 0.0d0
+
+  ! Compute the distance between the grid point and each atom
+  do inucleus = 1, natom
+      distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extxyz(1:3, igridpoint), 3)
+      inv_dist_cube = 1.0d0/(distance**3)
+
+     ! Compute components of gradient using the chain rule
+      efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (xyz(1, inucleus) - quick_molspec%extxyz(1, igridpoint)) * inv_dist_cube
+      efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint)) * inv_dist_cube 
+      efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint)) * inv_dist_cube
+  end do
+
+end subroutine efield_nuc
+
+
 #define OEPROP
 #include "./include/attrashell.fh"
 #include "./include/nuclearattra.fh"
 #undef OEPROP
 
 end module quick_oeproperties_module
-

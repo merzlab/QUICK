@@ -6,6 +6,10 @@
 #include "./modules/include/nuclearattra.fh"
 #undef OEI
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! Commented out and moved to nuclearattra.fh, contains nuclearattra and esp_1pdm       !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 !subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz)
 !   !use allmod
 !   use quick_params_module, only: trans
