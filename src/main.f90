@@ -359,9 +359,9 @@
     endif
 
     ! 6.e Electrostatic Potential
-    !if (quick_method%esp_grid) then
-    !  call compute_esp(ierr)
-    !end if
+    if (quick_method%esp_grid) then
+      call compute_esp(ierr)
+    end if
 
      ! 6.f Electrostatic Potential
     if (quick_method%efield_grid) then

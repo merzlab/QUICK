@@ -194,29 +194,13 @@ module quick_oeproperties_module
      enddo
  end subroutine esp_nuc
 
- !-----------------------------------------------------------------------------------------
- ! The subroutine esp_1pdm computes the 1 particle contribution to the V_elec(r)
- ! This is \sum_{mu nu} P_{mu nu} * V_{mu nu}                                 
- ! See Eq. A14 of Oibara & Saika [J. Chem. Phys. 84, 3963 (1986)]                                     
- !
- ! Then, the subroutine esp_shell_pair computes V_elec contribution for a shell pair for each
- !rid point   
- ! It loops over each gridpoint, calls esp_1pdm and stores the value in esp_electronic()    
- ! This is - \sum_{mu nu} P_{mu nu} * V_{mu nu}                                            
- !
- ! See Eqn. A14 of Obara-Saika [J. Chem. Phys. 84, 3963 (1986)]                                   
- ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               
- ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                       
- !-----------------------------------------------------------------------------------------
 
- ! Experimental ------- feel free to add notes, delete, modify 
- ! EFIELD
 
- ! EFIELD_GRID = -  (dx, dy, dz) ESP_GRID
-
- ! E_nuc = - grad. V_nuc 
- !       = - (d/drx, d/dry, d/drz) V_nuc(r)
-
+ !----------------------------------------------------------------------------------!
+ ! This is the subroutine that "computes" the Electric Field (EFIELD)               !
+ ! at a given point , E(x,y,z) = E_nuc(x,y,z) + E_elec(x,y,z), printingto file.prop !
+ !                                                                                  !
+ !----------------------------------------------------------------------------------!
  subroutine compute_efield(ierr)
   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
   use quick_molspec_module, only : quick_molspec
@@ -256,7 +240,7 @@ module quick_oeproperties_module
   ! efeild_electronic_aggregate(:) = 0.0d0
 #endif
 
- ! RECORD_TIME(timer_begin%TEFIELDGrid)
+  RECORD_TIME(timer_begin%TEFIELDGrid)
 
   ! Computes ESP_NUC 
   do igridpoint=1,quick_molspec%nextpoint
@@ -282,8 +266,8 @@ module quick_oeproperties_module
 !   end do
 ! #endif
 
-!   RECORD_TIME(timer_end%TESPGrid)
-!   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
+   RECORD_TIME(timer_end%TESPGrid)
+   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
   
    if (master) then
      call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
@@ -338,8 +322,8 @@ end subroutine compute_efield
 end subroutine efield_nuc
 
 !---------------------------------------------------------------------------------------------!
- ! This subroutine formats and prints the ESP data to file.prop                                !
- !---------------------------------------------------------------------------------------------!
+ ! This subroutine formats and prints the EFIELD data to file.prop                            !
+ !--------------------------------------------------------------------------------------------!
 subroutine print_efield(efield_nuclear, nextpoint, ierr)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
@@ -359,9 +343,11 @@ subroutine print_efield(efield_nuclear, nextpoint, ierr)
   write (ioutfile,'(" *** Printing Electric Field (EFIELD) [a.u.] on grid ",A,x,"***")') trim(propFileName)
   write (iPropFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
   write (iPropFile,'(100("-"))')
-  ! Do you want V_nuc and V_elec?
+
   if (quick_method%efield_grid) then
     write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
+  else if (quick_method%efield_esp) then
+      write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP",8x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
   endif
 
   ! Collect ESP and print
@@ -378,6 +364,10 @@ subroutine print_efield(efield_nuclear, nextpoint, ierr)
 
     ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
     if (quick_method%efield_grid) then
+      write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+      efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
+    ! to finish
+    else if (quick_method%efield_esp) then
       write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
       efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
       ! additional options later...

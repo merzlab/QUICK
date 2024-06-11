@@ -77,6 +77,8 @@ module quick_method_module
         logical :: ext_grid = .false.  ! external grid points (x,y,z)
         logical :: esp_print_terms =  .false.  ! to print nuclear, electronic and total ESP
         logical :: extgrid_angstrom =  .false.  ! will print external X, Y, Z points in Angstrom as opposed to Bohr in properties file
+        logical :: efield_esp =  .false.  ! to print nuclear, electronic and total ESP
+
 
         ! those methods are mostly for research use
         logical :: FMM = .false.       ! Fast Multipole
@@ -227,6 +229,7 @@ module quick_method_module
             call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_print_terms,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%efield_esp,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%diisOpt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%core,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -470,7 +473,8 @@ module quick_method_module
             if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
             if (self%esp_print_terms)      write(io,'(" ESP_NUC, ESP_ELEC, ESP_TOTAL")')
             if (self%efield_grid)      write(io,'(" ELECTROSTATIC FIELD CALCULATION")')
-            if (self%efg_grid)      write(io,'(" ELECTROSTATIC FIELD GRADIENT CALCULATION")')
+            if (self%efield_esp)      write(io,'(" ELECTROSTATIC POTENTIAL & ELECTRIC FIELD CALCULATION")')
+            if (self%efg_grid)      write(io,'(" ELECTRIC FIELD GRADIENT CALCULATION")')
 
             if (self%DIVCON) then
                 write(io,'(" DIV & CON METHOD")',advance="no")
@@ -810,10 +814,14 @@ module quick_method_module
                self%ext_grid=.true.
            endif
            if (index(keyWD,'EFIELD').ne.0) then
-               self%esp_grid=.true.
                self%efield_grid=.true.
                self%ext_grid=.true.
            endif
+           if (index(keyWD,'EFIELD_ESP').ne.0) then
+            self%esp_grid=.true. 
+            self%efield_grid=.true.
+            self%ext_grid=.true.
+        endif
            if (index(keyWD,'ESP').ne.0) then
                self%esp_grid=.true.
                self%ext_grid=.true.
@@ -874,7 +882,8 @@ module quick_method_module
             self%analHess =  .false.  ! Analytical Hessian Matrix
             self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
             self%esp_print_terms = .false.        ! Electrostatic potential (ESP) on grid
-            self%efield_grid = .false.     ! Electric field (EF) corresponding to ESP 
+            self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
+            self%efield_esp = .false.        ! EFIELD and ESP are calculated
             self%efg_grid = .false.        ! Electric field gradient (EFG)
 
             self%diisOpt =  .false.  ! DIIS Optimization

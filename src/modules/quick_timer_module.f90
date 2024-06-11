@@ -58,8 +58,9 @@ module quick_timer_module
         double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
-        double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
-        double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
+        double precision:: Tdisp=0.0d0       ! Time for computing dispersion correction
+        double precision:: TESPGrid=0.0d0    ! Time for computing ESP on grid
+        double precision:: TEFIELDGrid=0.0d0 ! Time for computing EFIELD on grid
     end type quick_timer
 
     type quick_timer_cumer
@@ -106,6 +107,8 @@ module quick_timer_module
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
         double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
         double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
+        double precision:: TEFIELDGrid=0.0d0      ! Time for computing EFEILD on grid
+
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -218,6 +221,11 @@ module quick_timer_module
                 timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
+            if(quick_method%efield_grid) then
+                write (io,'("| EFIELD COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEFIELDGrid, &
+                timer_cumer%TEFIELDGrid/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
             if (quick_method%nodirect) &
             write (io,'("| 2E EVALUATION TIME =",F16.9,"( ",F5.2,"%)")') timer_end%T2eAll-timer_begin%T2eAll, &
                 (timer_end%T2eAll-timer_begin%T2eAll)/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -317,6 +325,14 @@ module quick_timer_module
             ! Electrostatic Potential Timing
                 write (io,'("| ESP COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TESPGrid, &
                     timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+#endif
+
+#ifdef DEBUGTIME
+            if (quick_method%efield_grid) then
+            ! Electrostatic Potential Timing
+                write (io,'("| EFIELD COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TEFIELDGrid, &
+                    timer_cumer%TEFIELDGrid/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 #endif
 
