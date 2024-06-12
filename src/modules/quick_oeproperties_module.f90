@@ -286,7 +286,7 @@ module quick_oeproperties_module
 !   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
   
    if (master) then
-     call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
+     call quick_open(iPropFile,propFileName,'U','F','A',.false.,ierr)
 !    ! Calls print ESP
  !#ifdef MPIV
 !     call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
@@ -378,7 +378,7 @@ subroutine print_efield(efield_nuclear, nextpoint, ierr)
 
     ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
     if (quick_method%efield_grid) then
-      write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+      write(iPropFile, '(2x,3(F14.10, 1x), 3x,ES14.6,3x,ES14.6,3x,ES14.6)') Cx, Cy, Cz,  &
       efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
       ! additional options later...
     endif
