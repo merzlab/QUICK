@@ -260,7 +260,7 @@ module quick_oeproperties_module
 
   ! Computes ESP_NUC 
   do igridpoint=1,quick_molspec%nextpoint
-    call efield_nuc(ierr, igridpoint, efield_nuclear(3,igridpoint))
+    call efield_nuc(ierr, igridpoint, efield_nuclear(1,igridpoint))
   end do
 
 !  ! Computes ESP_ELEC
