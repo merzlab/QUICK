@@ -27,7 +27,7 @@ module quick_oeproperties_module
  subroutine compute_esp(ierr)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_molspec_module, only : quick_molspec
-   use quick_files_module, only : ioutfile, iPropFile, propFileName
+   use quick_files_module, only : ioutfile, iPropFile, propFileName, iESPFile, espFileName
    use quick_basis_module, only: jshell
    use quick_mpi_module, only: master
  
@@ -93,14 +93,13 @@ module quick_oeproperties_module
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
    
    if (master) then
-     call quick_open(iPropFile,propFileName,'U','F','R',.false.,ierr)
-    ! Calls print ESP
+     call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
 #ifdef MPIV
      call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
 #else
      call print_esp(esp_nuclear,esp_electronic, quick_molspec%nextpoint, ierr)
 #endif
-     close(iPropFile)
+     close(iESPFile)
    endif
 
    deallocate(esp_electronic)
@@ -108,7 +107,6 @@ module quick_oeproperties_module
 #ifdef MPIV
    deallocate(esp_electronic_aggregate)
 #endif
-
  end subroutine compute_esp
 
  !---------------------------------------------------------------------------------------------!
@@ -117,7 +115,7 @@ module quick_oeproperties_module
  subroutine print_esp(esp_nuclear, esp_electronic, nextpoint, ierr)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
-   use quick_files_module, only: ioutfile, iPropFile, propFileName
+   use quick_files_module, only: ioutfile, iPropFile, propFileName,  iESPFile, espFileName
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
@@ -132,18 +130,18 @@ module quick_oeproperties_module
 
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
    write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') &
-           trim(propFileName)
-   write (iPropFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-   write (iPropFile,'(100("-"))')
+           trim(espFileName)
+   write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+   write (iESPFile,'(100("-"))')
    ! Do you want V_nuc and V_elec?
    if (quick_method%esp_print_terms) then
-     write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
+     write (iESPFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
      ! Do you want  X, Y, and Z in Angstrom?
    else if (quick_method%extgrid_angstrom)  then
-     write (iPropFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
+     write (iESPFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
    else
      ! Default is X, Y, and V_total in a.u.
-     write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
+     write (iESPFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
    endif
 
    ! Collect ESP and print
@@ -160,10 +158,10 @@ module quick_oeproperties_module
 
      ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
      if (quick_method%esp_print_terms) then
-       write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+       write(iESPFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
        esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
      else
-       write(iPropFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
+       write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
          (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
      endif
 
@@ -195,7 +193,6 @@ module quick_oeproperties_module
  end subroutine esp_nuc
 
 
-
  !----------------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electric Field (EFIELD)               !
  ! at a given point , E(x,y,z) = E_nuc(x,y,z) + E_elec(x,y,z), printingto file.prop !
@@ -204,7 +201,7 @@ module quick_oeproperties_module
  subroutine compute_efield(ierr)
   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
   use quick_molspec_module, only : quick_molspec
-  use quick_files_module, only : ioutfile, iPropFile, propFileName
+  use quick_files_module, only : ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
   use quick_basis_module, only: jshell
   use quick_mpi_module, only: master
 
@@ -247,46 +244,21 @@ module quick_oeproperties_module
     call efield_nuc(ierr, igridpoint, efield_nuclear(1,igridpoint))
   end do
 
-!  ! Computes ESP_ELEC
-
-! #ifdef MPIV
-!   do i=1,mpi_jshelln(mpirank)
-!      IIsh=mpi_jshell(mpirank,i)
-!      do JJsh=IIsh,jshell
-!         call esp_shell_pair(IIsh, JJsh, esp_electronic)
-!      enddo
-!   enddo
-!   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
-!     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
-! #else
-!   do IIsh = 1, jshell
-!      do JJsh = IIsh, jshell
-!        call esp_shell_pair(IIsh, JJsh, esp_electronic)
-!      end do
-!   end do
-! #endif
-
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
   
    if (master) then
-     call quick_open(iPropFile,propFileName,'U','F','A',.false.,ierr)
-!    ! Calls print ESP
- !#ifdef MPIV
-!     call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
-! #else
-!     call print_esp(esp_nuclear,esp_electronic, quick_molspec%nextpoint, ierr)
+    ! for now, back to 'R' mode
+     call quick_open(iEFIELDFile,efieldFileName,'U','F','A',.false.,ierr)
+
     call print_efield(efield_nuclear, quick_molspec%nextpoint, ierr)
- !#endif
-     close(iPropFile)
+     close(iEFIELDFile)
    endif
 
-!   deallocate(efield_electronic)
   deallocate(efield_nuclear)
 #ifdef MPIV
- ! deallocate(efield_electronic_aggregate)
 #endif
-end subroutine compute_efield
+ end subroutine compute_efield
 
 
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
@@ -304,7 +276,6 @@ end subroutine compute_efield
 
   efield_nuclear_term = 0.0d0
 
-  ! Compute the distance between the grid point and each atom
   do inucleus = 1, natom
       distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extxyz(1:3, igridpoint), 3)
       inv_dist_cube = 1.0d0/(distance**3)
@@ -313,7 +284,7 @@ end subroutine compute_efield
       ry_nuc_gridpoint = (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint))
       rz_nuc_gridpoint = (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint))
 
-     ! Compute components of gradient using the chain rule
+     ! Compute nuclear components to EFIELD_NUCLEAR
       efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
       efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
       efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
@@ -321,13 +292,13 @@ end subroutine compute_efield
 
 end subroutine efield_nuc
 
-!---------------------------------------------------------------------------------------------!
- ! This subroutine formats and prints the EFIELD data to file.prop                            !
+ !---------------------------------------------------------------------------------------------!
+ ! This subroutine tformats and prints the EFIELD data to file.prop                            !
  !--------------------------------------------------------------------------------------------!
 subroutine print_efield(efield_nuclear, nextpoint, ierr)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
-  use quick_files_module, only: ioutfile, iPropFile, propFileName
+  use quick_files_module, only: ioutfile, iPropFile, propFileName, iESPFile, espFileName, iEFIELDFile, efieldFileName
   use quick_constants_module, only: BOHRS_TO_A
 
   implicit none
@@ -340,17 +311,17 @@ subroutine print_efield(efield_nuclear, nextpoint, ierr)
   double precision :: Cx, Cy, Cz
 
   ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-  write (ioutfile,'(" *** Printing Electric Field (EFIELD) [a.u.] on grid ",A,x,"***")') trim(propFileName)
-  write (iPropFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
-  write (iPropFile,'(100("-"))')
+  write (ioutfile,'(" *** Printing Electric Field (EFIELD) [a.u.] on grid ",A,x,"***")') trim(efieldFileName)
+  write (iEFIELDFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
+  write (iEFIELDFile,'(100("-"))')
 
   if (quick_method%efield_grid) then
-    write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
+    write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
   else if (quick_method%efield_esp) then
-      write (iPropFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP",8x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
+      write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP",8x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
   endif
 
-  ! Collect ESP and print
+  ! Collect EFIELD and print
   do igridpoint = 1, quick_molspec%nextpoint 
     if (quick_method%extgrid_angstrom)  then
       Cx = (quick_molspec%extxyz(1, igridpoint)*BOHRS_TO_A)
@@ -364,12 +335,14 @@ subroutine print_efield(efield_nuclear, nextpoint, ierr)
 
     ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
     if (quick_method%efield_grid) then
-      write(iPropFile, '(2x,3(F14.10, 1x), 3x,ES14.6,3x,ES14.6,3x,ES14.6)') Cx, Cy, Cz,  &
+      write(iEFIELDFile, '(2x,3(F14.10, 1x), 3x,ES14.6,3x,ES14.6,3x,ES14.6)') Cx, Cy, Cz,  &
       efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
     ! to finish
-    else if (quick_method%efield_esp) then
-      write(iPropFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-      efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
+    !else if (quick_method%efield_esp) then
+     ! write(iEFIELDFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
+     ! efield_nuclear(1,igridpoint), efield_nuclear(2,igridpoint), efield_nuclear(3,igridpoint)
+     ! write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
+     ! (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
       ! additional options later...
     endif
 
