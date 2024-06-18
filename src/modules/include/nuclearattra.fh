@@ -1,4 +1,4 @@
-#if defined (OEPROP)
+#if defined (OEPROPESP)
  subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
 #elif defined (OEI)
  subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz)
@@ -8,7 +8,7 @@
    use quick_basis_module, only: attraxiao,quick_basis
    use quick_files_module, only: ioutfile
 
-#if defined (OEPROP)
+#if defined (OEPROPESP)
    use quick_method_module, only: quick_method
 #endif
 
@@ -23,7 +23,7 @@
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
 
-#if defined (OEPROP)
+#if defined (OEPROPESP)
    double precision, intent(inout) :: esp
 #endif
 
@@ -230,7 +230,7 @@
             do JJJ=max(III,JJJ1),JJJ2
                itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
 
-#if defined (OEPROP)
+#if defined (OEPROPESP)
               dense_sym_factor = 1.0d0
               if (III /= JJJ) dense_sym_factor = 2.0d0
 
@@ -251,7 +251,7 @@
    enddo
    201 return
 
-#if defined (OEPROP)
+#if defined (OEPROPESP)
  End subroutine esp_1pdm
 #elif defined (OEI)
  End subroutine nuclearattra

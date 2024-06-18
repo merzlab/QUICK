@@ -6,7 +6,7 @@
  ! First, calculates 〈 phi_mu | phi_nu 〉 for all mu and nu                               !
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                       !
  !-----------------------------------------------------------------------------------------!
-#if defined (OEPROP)
+#if defined (OEPROPESP)
 subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
 #elif defined (OEI)
 subroutine attrashell(IIsh, JJsh)
@@ -36,7 +36,7 @@ subroutine attrashell(IIsh, JJsh)
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g 
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
-#if defined (OEPROP)
+#if defined (OEPROPESP)
    integer :: igridpoint
    double precision, dimension(:), intent(inout) :: esp_electronic
 #elif defined (OEI)
@@ -77,7 +77,7 @@ subroutine attrashell(IIsh, JJsh)
            constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
            const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
            
-#if defined (OEPROP)
+#if defined (OEPROPESP)
            ! Loops over external grid points/MM atoms
             do igridpoint=1,quick_molspec%nextpoint
               Cx=quick_molspec%extxyz(1,igridpoint)
@@ -107,7 +107,7 @@ subroutine attrashell(IIsh, JJsh)
                call FmT(Maxm,U,aux)
                ! Calculate all the auxilary integrals and store in attraxiao array
                do L = 0,maxm
-#if defined (OEPROP)
+#if defined (OEPROPESP)
                   ! sign (-1.0d0) is used to ensure the auxilary integrals are negative
                   aux(L) = -1.0d0*aux(L)*const
 #elif defined (OEI)
@@ -117,7 +117,7 @@ subroutine attrashell(IIsh, JJsh)
                enddo
  
                NIJ1=10*NII2+NJJ2
-#if defined (OEPROP)
+#if defined (OEPROPESP)
                ! Call and get P_{mu nu} V_{mu nu} into esp_electronic( )
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint))
@@ -130,7 +130,7 @@ subroutine attrashell(IIsh, JJsh)
          endif
       enddo
    enddo
-#if defined (OEPROP)
+#if defined (OEPROPESP)
  end subroutine esp_shell_pair
 #elif defined (OEI)
  end subroutine attrashell

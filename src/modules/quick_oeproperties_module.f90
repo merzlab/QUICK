@@ -365,21 +365,21 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
       Cz = quick_molspec%extxyz(3, igridpoint)
     endif
 
-    ! Sum nuclear and electric components of EField and print.
+    ! Sum nuclear and electric components of EFIELD and print.
     if (quick_method%efield_grid) then
-      write(iEFIELDFile, '(3x,ES14.6,3x,ES14.6,3x,ES14.6)') &
-      efield_nuclear(1,igridpoint)+efield_electronic(1,igridpoint), &
-      efield_nuclear(2,igridpoint)+efield_electronic(2,igridpoint), &
-      efield_nuclear(3,igridpoint)+efield_electronic(3,igridpoint)
+      write(iEFIELDFile, '(2x,3(F14.10, 1x), 3x,ES14.6,3x,ES14.6,3x,ES14.6)') Cx, Cy, Cz,  &
+      (efield_nuclear(1,igridpoint)+efield_electronic(1,igridpoint)), &
+      (efield_nuclear(2,igridpoint)+efield_electronic(2,igridpoint)), &
+      (efield_nuclear(3,igridpoint)+efield_electronic(3,igridpoint))
     endif
 
   end do
 end subroutine print_efield
 
-#define OEPROP
+#define OEPROPESP
 #include "./include/attrashell.fh"
 #include "./include/nuclearattra.fh"
-#undef OEPROP
+#undef OEPROPESP
 
 subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,efield)
@@ -407,7 +407,6 @@ subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
    PP(1)=Px
    PP(2)=Py
    PP(3)=Pz
-
 
    select case (NIJ1+11)
 
