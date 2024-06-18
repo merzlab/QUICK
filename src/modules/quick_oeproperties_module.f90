@@ -293,6 +293,9 @@ module quick_oeproperties_module
 #endif
  end subroutine compute_efield
 
+ !-----------------------------------------------------------------------!
+ ! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)     !
+ !-----------------------------------------------------------------------!
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
   use quick_molspec_module
   implicit none
@@ -312,14 +315,14 @@ module quick_oeproperties_module
       distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extxyz(1:3, igridpoint), 3)
       inv_dist_cube = 1.0d0/(distance**3)
 
-      rx_nuc_gridpoint = (xyz(1, inucleus) - quick_molspec%extxyz(1, igridpoint))
-      ry_nuc_gridpoint = (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint))
-      rz_nuc_gridpoint = (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint))
+      rx_nuc_gridpoint = (quick_molspec%extxyz(1, igridpoint) - xyz(1, inucleus))
+      ry_nuc_gridpoint = (quick_molspec%extxyz(2, igridpoint) - xyz(2, inucleus))
+      rz_nuc_gridpoint = (quick_molspec%extxyz(3, igridpoint) - xyz(3, inucleus))
 
      ! Compute nuclear components to EFIELD_NUCLEAR
-      efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
-      efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
-      efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(1) = efield_nuclear_term(1) + quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(2) = efield_nuclear_term(2) + quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(3) = efield_nuclear_term(3) + quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
   end do
 
 end subroutine efield_nuc
