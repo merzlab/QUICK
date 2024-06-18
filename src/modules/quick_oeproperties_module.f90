@@ -2,6 +2,12 @@
 !---------------------------------------------------------------------!
 ! Created by Etienne Palos on  01/20/2024                             !
 ! Contributor: Vikrant Tripathy                                       !
+!                                                                     !
+! Purpose:  " Compute electrostatic properties on grid points "       !
+!                                                                     !
+! Capabilities:                                                       !
+!              - ESP        Serial and MPI                            !
+!              - EField     Serial                                    !
 !                                                                     ! 
 ! Copyright (C) 2024-2025                                             !
 !                                                                     !
@@ -14,6 +20,7 @@ module quick_oeproperties_module
  public :: compute_esp, compute_efield
 
  contains
+
  !----------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
  ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !
@@ -51,17 +58,16 @@ module quick_oeproperties_module
 
    ierr = 0
    
-   ! Allocates & initiates ESP_NUC and ESP_ELEC arrays
+   ! Allocates ESP_NUC and ESP_ELEC arrays
    allocate(esp_nuclear(quick_molspec%nextpoint))
    allocate(esp_electronic(quick_molspec%nextpoint))
 #ifdef MPIV
    allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
 #endif
-   
+
+   ! ESP_ELEC array need initialization as we will be iterating
+   ! over shells and updating ESP_ELEC.
    esp_electronic(:) = 0.0d0
-#ifdef MPIV
-   esp_electronic_aggregate(:) = 0.0d0
-#endif
 
    RECORD_TIME(timer_begin%TESPGrid)
 
@@ -70,15 +76,18 @@ module quick_oeproperties_module
      call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
    end do
 
-  ! Computes ESP_ELEC
-
+   ! Computes ESP_ELEC
+   ! Sum over contributions from different shell pairs
 #ifdef MPIV
+   ! MPI parallellization is performed over shell-pairs
+   ! Different processes consider different shell-pairs
    do Ish=1,mpi_jshelln(mpirank)
       IIsh=mpi_jshell(mpirank,Ish)
       do JJsh=IIsh,jshell
          call esp_shell_pair(IIsh, JJsh, esp_electronic)
       enddo
    enddo
+   ! MPI_REDUCE is called to sum over esp_electronic obtained from all the processes
    call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
      MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #else
@@ -91,7 +100,8 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
-   
+
+   ! Sum the nuclear and electronic part of ESP and print
    if (master) then
      call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
 #ifdef MPIV
@@ -110,7 +120,7 @@ module quick_oeproperties_module
  end subroutine compute_esp
 
  !---------------------------------------------------------------------------------------------!
- ! This subroutine formats and prints the ESP data to file.prop                                !
+ ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
  subroutine print_esp(esp_nuclear, esp_electronic, nextpoint, ierr)
    use quick_molspec_module, only: quick_molspec
@@ -195,7 +205,8 @@ module quick_oeproperties_module
 
  !----------------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electric Field (EFIELD)               !
- ! at a given point , E(x,y,z) = E_nuc(x,y,z) + E_elec(x,y,z), printingto file.prop !
+ ! at a given point , E(x,y,z) = E_nuc(x,y,z) + E_elec(x,y,z), printing the         !
+ ! result to file.efield                                                            !
  !                                                                                  !
  !----------------------------------------------------------------------------------!
  subroutine compute_efield(ierr)
@@ -225,27 +236,26 @@ module quick_oeproperties_module
 
    ierr = 0
   
-   ! Allocates & initiates EFIELD_NUC and EFIELD_ELEC arrays
+   ! Allocates efield_nuclear and efield_electronic arrays
    allocate(efield_electronic(3,quick_molspec%nextpoint))
    allocate(efield_nuclear(3,quick_molspec%nextpoint))
 
 #ifdef MPIV
    allocate(efield_electronic_aggregate(3,quick_molspec%nextpoint))
 #endif
-  
+
+   ! Initilizes efield_electronic as it will be updated to account
+   ! for contributions from different shell-pairs
    efield_electronic(:,:) = 0.0d0
-#ifdef MPIV
-   efield_electronic_aggregate(:,:) = 0.0d0
-#endif
 
    RECORD_TIME(timer_begin%TEFIELDGrid)
 
-   ! Computes ESP_NUC 
+   ! Computes efield_nuclear 
    do igridpoint=1,quick_molspec%nextpoint
      call efield_nuc(ierr, igridpoint, efield_nuclear(1,igridpoint))
    end do
 
-! Computes EField_ELEC
+   ! Computes EField_ELEC by summing over contrbutions from individual shell-pairs
 
 #ifdef MPIV
 !   do Ish=1,mpi_jshelln(mpirank)
@@ -264,9 +274,10 @@ module quick_oeproperties_module
    end do
 #endif
 
-   RECORD_TIME(timer_end%TESPGrid)
-   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
+   RECORD_TIME(timer_end%TEFIELDGrid)
+   timer_cumer%TEFIELDGrid=timer_cumer%TEFIELDGrid+timer_end%TEFIELDGrid-timer_begin%TEFIELDGrid
 
+   ! Sum the nuclear and electronic part of EField and print
    if (master) then
     ! for now, back to 'R' mode
      call quick_open(iEFIELDFile,efieldFileName,'U','F','R',.false.,ierr)
@@ -281,7 +292,6 @@ module quick_oeproperties_module
    deallocate(efield_electronic_aggregate)
 #endif
  end subroutine compute_efield
-
 
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
   use quick_molspec_module
@@ -1266,86 +1276,14 @@ subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
                Cgrad2=Cgrad2+Xconstant2*attraxiaoopt(2,itemp1,itemp2,0)
                Cgrad3=Cgrad3+Xconstant2*attraxiaoopt(3,itemp1,itemp2,0)
 
-!               itemp1new=trans(quick_basis%KLMN(1,III)+1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
-!               Agrad1=Agrad1+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))*attraxiao(itemp1new,itemp2,0)
-!               if(quick_basis%KLMN(1,III).ge.1)then
-!                  itemp1new=trans(quick_basis%KLMN(1,III)-1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
-!                  Agrad1=Agrad1-Xconstant2* &
-!                        quick_basis%KLMN(1,III)*attraxiao(itemp1new,itemp2,0)
-!               endif
-!
-!               itemp1new=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III)+1,quick_basis%KLMN(3,III))
-!               Agrad2=Agrad2+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))*attraxiao(itemp1new,itemp2,0)
-!               if(quick_basis%KLMN(2,III).ge.1)then
-!                  itemp1new=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III)-1,quick_basis%KLMN(3,III))
-!                  Agrad2=Agrad2-Xconstant2* &
-!                        quick_basis%KLMN(2,III)*attraxiao(itemp1new,itemp2,0)
-!               endif
-
-!               itemp1new=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III),quick_basis%KLMN(3,III)+1)
-!               Agrad3=Agrad3+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))*attraxiao(itemp1new,itemp2,0)
-!               if(quick_basis%KLMN(3,III).ge.1)then
-!                  itemp1new=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III),quick_basis%KLMN(3,III)-1)
-!                  Agrad3=Agrad3-Xconstant2* &
-!                        quick_basis%KLMN(3,III)*attraxiao(itemp1new,itemp2,0)
-!               endif
-
-!               itemp2new=trans(quick_basis%KLMN(1,JJJ)+1,quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
-!               Bgrad1=Bgrad1+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))*attraxiao(itemp1,itemp2new,0)
-!               if(quick_basis%KLMN(1,JJJ).ge.1)then
-!                  itemp2new=trans(quick_basis%KLMN(1,JJJ)-1,quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
-!                  Bgrad1=Bgrad1-Xconstant2* &
-!                        quick_basis%KLMN(1,JJJ)*attraxiao(itemp1,itemp2new,0)
-!               endif
-
-!               itemp2new=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ)+1,quick_basis%KLMN(3,JJJ))
-!               Bgrad2=Bgrad2+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))*attraxiao(itemp1,itemp2new,0)
-!               if(quick_basis%KLMN(2,JJJ).ge.1)then
-!                  itemp2new=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ)-1,quick_basis%KLMN(3,JJJ))
-!                  Bgrad2=Bgrad2-Xconstant2* &
-!                        quick_basis%KLMN(2,JJJ)*attraxiao(itemp1,itemp2new,0)
-!               endif
-
-!               itemp2new=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ)+1)
-!               Bgrad3=Bgrad3+2.0d0*Xconstant2* &
-!                     quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))*attraxiao(itemp1,itemp2new,0)
-!               if(quick_basis%KLMN(3,JJJ).ge.1)then
-!                  itemp2new=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ)-1)
-!                  Bgrad3=Bgrad3-Xconstant2* &
-!                        quick_basis%KLMN(3,JJJ)*attraxiao(itemp1,itemp2new,0)
-!               endif
             enddo
          enddo
       enddo
    enddo
 
-!   quick_qm_struct%gradient(iASTART+1) = quick_qm_struct%gradient(iASTART+1)+ AGrad1
-!   quick_qm_struct%gradient(iASTART+2) = quick_qm_struct%gradient(iASTART+2)+ AGrad2
-!   quick_qm_struct%gradient(iASTART+3) = quick_qm_struct%gradient(iASTART+3)+ AGrad3
-
-!   quick_qm_struct%gradient(iBSTART+1) = quick_qm_struct%gradient(iBSTART+1)+ BGrad1
-!   quick_qm_struct%gradient(iBSTART+2) = quick_qm_struct%gradient(iBSTART+2)+ BGrad2
-!   quick_qm_struct%gradient(iBSTART+3) = quick_qm_struct%gradient(iBSTART+3)+ BGrad3
-
-!if(iatom<=natom)then
-!   quick_qm_struct%gradient(iCSTART+1) = quick_qm_struct%gradient(iCSTART+1)+ CGrad1
-!   quick_qm_struct%gradient(iCSTART+2) = quick_qm_struct%gradient(iCSTART+2)+ CGrad2
-!   quick_qm_struct%gradient(iCSTART+3) = quick_qm_struct%gradient(iCSTART+3)+ CGrad3
-!else
-!  One electron-point charge attraction grdients, update point charge gradient vector 
-!   iCSTART = (iatom-natom-1)*3
-!   quick_qm_struct%ptchg_gradient(iCSTART+1) = quick_qm_struct%ptchg_gradient(iCSTART+1)+ CGrad1
-!   quick_qm_struct%ptchg_gradient(iCSTART+2) = quick_qm_struct%ptchg_gradient(iCSTART+2)+ CGrad2
-!   quick_qm_struct%ptchg_gradient(iCSTART+3) = quick_qm_struct%ptchg_gradient(iCSTART+3)+ CGrad3
    efield(1) = efield(1)- CGrad1
    efield(2) = efield(2)- CGrad2
    efield(3) = efield(3)- CGrad3
-!endif
 
 End subroutine efield_1pdm
 
@@ -1411,20 +1349,9 @@ End subroutine efield_1pdm
                    * 2.d0 * sqrt(g/Pi)
   
              do igridpoint=1,quick_molspec%nextpoint
-!                if(quick_basis%katom(IIsh).eq.iatom.and.quick_basis%katom(JJsh).eq.iatom)then
-!                    continue
-!                 else
-!                   if(iatom<=natom)then
-!                    Cx=xyz(1,iatom)
-!                    Cy=xyz(2,iatom)
-!                    Cz=xyz(3,iatom)
-!                    Z=-1.0d0*quick_molspec%chg(iatom)
-!                   else
                     Cx=quick_molspec%extxyz(1,igridpoint)
                     Cy=quick_molspec%extxyz(2,igridpoint)
                     Cz=quick_molspec%extxyz(3,igridpoint)
-!                    Z=-1.0d0*quick_molspec%extchg(iatom-natom)
-!                   endif
   
                    PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
   
@@ -1433,7 +1360,6 @@ End subroutine efield_1pdm
                    call FmT(Maxm,U,aux)
                    do L = 0,maxm
                       aux(L) = -1.0d0*aux(L)*constant
-!                      aux(L) = aux(L)*constant*Z
                       attraxiao(1,1,L)=aux(L)
                    enddo
   
