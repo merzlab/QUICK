@@ -1172,7 +1172,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
    efield(1) = efield(1)- CGrad1
    efield(2) = efield(2)- CGrad2
    efield(3) = efield(3)- CGrad3
-
 #elif defined (OEI)
                itemp1new=trans(quick_basis%KLMN(1,III)+1,quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
                Agrad1=Agrad1+2.0d0*Xconstant2* &
