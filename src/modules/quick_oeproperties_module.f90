@@ -21,6 +21,10 @@ module quick_oeproperties_module
 
  contains
 
+#define OEPROP
+#include "./include/attrashell.fh"
+#include "./include/nuclearattra.fh"
+#undef OEPROP
  !----------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
  ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !
@@ -376,10 +380,6 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
   end do
 end subroutine print_efield
 
-#define OEPROP
-#include "./include/attrashell.fh"
-#include "./include/nuclearattra.fh"
-#undef OEPROP
 
 ! subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
 !       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,efield)
