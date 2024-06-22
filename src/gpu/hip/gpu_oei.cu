@@ -1,27 +1,29 @@
 /*
-  !---------------------------------------------------------------------!
-  ! Written by Madu Manathunga on 06/17/2021                            !
-  !                                                                     !
-  ! Copyright (C) 2020-2021 Merz lab                                    !
-  ! Copyright (C) 2020-2021 Götz lab                                    !
-  !                                                                     !
-  ! This Source Code Form is subject to the terms of the Mozilla Public !
-  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
-  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
-  !_____________________________________________________________________!
+   !---------------------------------------------------------------------!
+   ! Written by Madu Manathunga on 06/17/2021                            !
+   !                                                                     !
+   ! Copyright (C) 2020-2021 Merz lab                                    !
+   ! Copyright (C) 2020-2021 Götz lab                                    !
+   !                                                                     !
+   ! This Source Code Form is subject to the terms of the Mozilla Public !
+   ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+   ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+   !_____________________________________________________________________!
 
-  !---------------------------------------------------------------------!
-  ! This source file contains functions required for QUICK one electron !
-  ! integral computation.                                               !
-  !---------------------------------------------------------------------!
-*/
+   !---------------------------------------------------------------------!
+   ! This source file contains functions required for QUICK one electron !
+   ! integral computation.                                               !
+   !---------------------------------------------------------------------!
+ */
 
 #include "gpu.h"
 #include "../gpu_common.h"
 
+
 static __constant__ gpu_simulation_type devSim;
-static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
-static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
+static __constant__ int devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
+static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
+
 
 #define STOREDIM 20
 #define REG_PF
@@ -40,11 +42,11 @@ static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
 #include "../gpu_oei_grad.h"
 
 /*
-  upload trans array to constant memory
-*/
-void upload_para_to_const_oei(){
+   upload trans array to constant memory
+ */
+void upload_para_to_const_oei() {
+    int trans[TRANSDIM * TRANSDIM * TRANSDIM];
 
-    int trans[TRANSDIM*TRANSDIM*TRANSDIM];
     // Data to trans
     {
         LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
@@ -168,38 +170,36 @@ void upload_para_to_const_oei(){
         LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
         LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
     }
+
     // upload to trans device location
     hipError_t status;
-
-    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(int)*TRANSDIM*TRANSDIM*TRANSDIM);
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(int) * TRANSDIM * TRANSDIM * TRANSDIM);
     PRINTERROR(status, " hipMemcpyToSymbol, Trans copy to constants failed")
-
 }
 
 
 /*
- upload gpu simulation type to constant memory
+   upload gpu simulation type to constant memory
  */
-void upload_sim_to_constant_oei(_gpu_type gpu){
+void upload_sim_to_constant_oei(_gpu_type gpu) {
     hipError_t status;
-        status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
-        PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
+    PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
 }
 
-#if defined DEBUG || defined DEBUGTIME
+
+#if defined(DEBUG) || defined(DEBUGTIME)
 static float totTime;
 #endif
 
+
 // interface for kernel launching
-void getOEI(_gpu_type gpu){
-
+void getOEI(_gpu_type gpu) {
     QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-
 }
 
-void get_oei_grad(_gpu_type gpu){
 
+void get_oei_grad(_gpu_type gpu) {
     QUICK_SAFE_CALL((get_oei_grad_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-
 }
 

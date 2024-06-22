@@ -33,16 +33,12 @@
 ! For the following definitions to work, one must use quick_exception_module
 ! in a subroutine. For MPI/MPI+GPU versions, quick_mpi_module must be used. 
 
-#if defined DEBUG || defined DEBUGTIME
-#  define CHECK_ERROR(ierr) 
+#ifdef MPIV
+#  define CHECK_ERR if(master .and. ierr /= 0)
 #else
-#  ifdef MPIV
-#    define CHECK_ERR if(master .and. ierr /= 0)
-#  else
-#    define CHECK_ERR if(ierr /= 0)
-#  endif
-#  define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
+#  define CHECK_ERR if(ierr /= 0)
 #endif
+#define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
 
 ! A safe subroutine call with error checking. Must use ierr integer variable
 ! to propagate the error.

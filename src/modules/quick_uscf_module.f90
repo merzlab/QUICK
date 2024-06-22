@@ -134,13 +134,11 @@ contains
 
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-  #if defined(WITH_MAGMA)
+#if defined(WITH_MAGMA)
      use quick_magma_module, only: magmaDIAG
-  #else
-    #if defined(WITH_ROCSOLVER)
+#elif defined(WITH_ROCSOLVER)
      use quick_rocsolver_module, only: rocDIAG
-    #endif
-  #endif
+#endif
 #endif
 #ifdef MPIV
      use mpi
@@ -332,7 +330,7 @@ contains
   
            ! The first part is ODS
   
-#if defined(GPU) || defined(MPIV_GPU)
+#if defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -617,42 +615,43 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
+#if defined(CUDA) || defined(CUDA_MPIV)
           RECORD_TIME(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
                 quick_qm_struct%E, quick_qm_struct%idegen, &
                 quick_qm_struct%vec, quick_qm_struct%co, &
                 V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
 #else
-  #if defined(HIP) || defined(HIP_MPIV)
+#if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-  #else
+#else
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-  #endif
+#endif
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-  #if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
            call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-  #else
-    #if defined(LAPACK) || defined(MKL)
+#elif defined(WITH_ROCSOLVER)
+           call rocDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#endif
+#else
+#if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-    #else
+#else
            call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-    #endif
-  #endif
+#endif
+#endif
            RECORD_TIME(timer_end%TDiag)
 #endif
 
@@ -717,44 +716,46 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
+#if defined(CUDA) || defined(CUDA_MPIV)
           RECORD_TIME(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%ob, quick_qm_struct%x, quick_scratch%hold,&
                 quick_qm_struct%EB, quick_qm_struct%idegen, &
                 quick_qm_struct%vec, quick_qm_struct%cob, &
                 V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
-
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
 #else
-  #if defined(HIP) || defined(HIP_MPIV)
+#if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
-  #else
+#else
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
-  #endif
+#endif
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-  #if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
            call magmaDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
-  #else
-    #if defined(LAPACK) || defined(MKL)
+#elif defined(WITH_ROCSOLVER)
+           call rocDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+#endif
+#else
+#if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
-    #else
+#else
            call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-    #endif
-  #endif
-           RECORD_TIME(timer_end%TDiag)
 #endif
+#endif
+#endif
+           RECORD_TIME(timer_end%TDiag)
+
            timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
 
            ! Calculate C = XC' and form a new density matrix.
@@ -899,7 +900,7 @@ contains
         !if (quick_method%debug)  call debug_SCF(jscf)
      enddo
   
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
+#if defined(CUDA) || defined(CUDA_MPIV)
      if(master .and. write_molden) then
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf
      endif  

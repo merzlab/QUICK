@@ -222,6 +222,7 @@ end subroutine check_quick_method_and_molspec
 subroutine initialGuess(ierr)
    use allmod
    use quick_sad_guess_module, only: getSadDense 
+   use quick_exception_module
    implicit none
    logical :: present
    integer :: failed

@@ -39,13 +39,13 @@ void gpack_initialize_()
 // setup debug file if necessary
 #ifdef DEBUG
 
-  #if defined(MPIV) && !defined(MPIV_GPU)
+#if defined(MPIV) && !defined(MPIV_GPU)
     char fname[16];
     sprintf(fname, "debug.oct.%i", mpirank);
     gpackDebugFile = fopen(fname, "w+");
-  #else
+#else
     gpackDebugFile = fopen("debug.oct", "w+");
-  #endif
+#endif
 
     gps->gpackDebugFile = gpackDebugFile;
 #endif

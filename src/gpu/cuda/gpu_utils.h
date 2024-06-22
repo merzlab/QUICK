@@ -9,10 +9,6 @@
 #include <cuda_runtime_api.h>
 //#include "nvToolsExt.h"
 
-#if defined(DEBUG) || defined(DEBUGTIME)
-static FILE *debugFile = NULL;
-#endif
-
 #define PRINTERROR(err, s) \
 { \
     if ((err) != cudaSuccess) { \

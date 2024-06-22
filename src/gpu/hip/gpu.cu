@@ -282,7 +282,11 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch){
         gpu -> gpu_sim.storeBB       = gpu -> scratch -> storeBB -> _devData;
         gpu -> gpu_sim.storeCC       = gpu -> scratch -> storeCC -> _devData;
     }
+
+    hipMemsetAsync(gpu->gpu_sim.store, 0, sizeof(QUICKDouble) * gpu->scratch->store->_length);
+    hipMemsetAsync(gpu->gpu_sim.store2, 0, sizeof(QUICKDouble) * gpu->scratch->store2->_length);
 }
+
 
 //-----------------------------------------------
 // deallocate device scratch 

@@ -13,9 +13,9 @@
 #include "gpu.h"
 #include <hip/hip_runtime.h>
 
+
 //#ifdef GPU_SPDF
 //#endif
-
 
 /*
  Constant Memory in GPU is fast but quite limited and hard to operate, usually not allocatable and 
@@ -27,15 +27,15 @@
  Sumindex: a array to store refect how many temp variable needed in VRR. can be elimited by hand writing code.
  */
 static __constant__ gpu_simulation_type devSim;
-static __constant__ unsigned char devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
-static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
+static __constant__ unsigned char devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
+static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 
 //#define USE_TEXTURE
 
-#ifdef USE_TEXTURE
-#define USE_TEXTURE_CUTMATRIX
-#define USE_TEXTURE_YCUTOFF
-#define USE_TEXTURE_XCOEFF
+#if defined(USE_TEXTURE)
+  #define USE_TEXTURE_CUTMATRIX
+  #define USE_TEXTURE_YCUTOFF
+  #define USE_TEXTURE_XCOEFF
 #endif
 
 #ifdef USE_TEXTURE_CUTMATRIX
@@ -49,13 +49,11 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #endif
 
 //#define USE_ERI_GRAD_STOREADD
-/*
-#ifdef USE_ERI_GRAD_STOREADD
-#define STORE_OPERATOR +=
-#else
-#define STORE_OPERATOR =  
-#endif
-*/
+//#ifdef USE_ERI_GRAD_STOREADD
+//  #define STORE_OPERATOR +=
+//#else
+//  #define STORE_OPERATOR =  
+//#endif
 
 #include "../gpu_get2e_subs_hrr.h"
 #include "../int.h"
@@ -554,22 +552,23 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 /*
  upload gpu simulation type to constant memory
  */
-void upload_sim_to_constant(_gpu_type gpu){
+void upload_sim_to_constant(_gpu_type gpu) {
     hipError_t status;
-	status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
-	PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
+    PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
 }
 
 
 // totTime is the timer for GPU 2e time. Only on under debug mode
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
 static float totTime;
 #endif
+
 
 #ifdef COMPILE_GPU_AOINT
 // =======   INTERFACE SECTION ===========================
 // interface to call Kernel subroutine
-void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t streamI, int streamID,  ERI_entry* aoint_buffer)
+void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t streamI, int streamID, ERI_entry* aoint_buffer)
 {
     QUICK_SAFE_CALL((getAOInt_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock, 0, streamI>>>(intStart, intEnd, aoint_buffer, streamID)));
 #ifdef GPU_SPDF
@@ -597,19 +596,18 @@ void getAOInt(_gpu_type gpu, QUICKULL intStart, QUICKULL intEnd, hipStream_t str
 }
 #endif
 
+
 // interface to call Kernel subroutine
 void get2e(_gpu_type gpu)
 {
     // Part spd
-//    roctxRangePush("SCF 2e");
+//    nvtxRangePushA("SCF 2e");
 
 #ifdef USE_TEXTURE
     bind_eri_texture(gpu);
 #endif
 
     QUICK_SAFE_CALL((get2e_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-
-    //get2e_kernel_sp<<<1,1>>>();
 
     QUICK_SAFE_CALL((get2e_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
@@ -638,22 +636,20 @@ void get2e(_gpu_type gpu)
     }
 #endif 
 
-//    get1e_();
-
     hipDeviceSynchronize();
-//    roctxRangePop();
+//    nvtxRangePop();
 
 #ifdef USE_TEXTURE
     unbind_eri_texture();
 #endif
-
 }
+
 
 // interface to call Kernel subroutine for uscf
 void get_oshell_eri(_gpu_type gpu)
 {
     // Part spd
-//    roctxRangePush("SCF 2e");
+//    nvtxRangePushA("SCF 2e");
 
 #ifdef USE_TEXTURE
     bind_eri_texture(gpu);
@@ -689,7 +685,7 @@ void get_oshell_eri(_gpu_type gpu)
 #endif
 
 //    hipDeviceSynchronize();
-//    roctxRangePop();
+//    nvtxRangePop();
 
 #ifdef USE_TEXTURE
     unbind_eri_texture();
@@ -706,12 +702,11 @@ void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer)
 }
 #endif
 
+
 // interface to call Kernel subroutine
 void getGrad(_gpu_type gpu)
 {
-
-//   roctxRangePush("Gradient 2e");
-
+//   nvtxRangePushA("Gradient 2e");
     QUICK_SAFE_CALL((getGrad_kernel_sp<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 
     QUICK_SAFE_CALL((getGrad_kernel_spd<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
@@ -724,36 +719,31 @@ void getGrad(_gpu_type gpu)
         QUICK_SAFE_CALL((getGrad_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((getGrad_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+
         if (gpu->maxL >= 3) {
         // Part f-3
 #ifdef GPU_SPDF
-
 //            printf("calling getGrad_kernel_spdf3 \n");
             QUICK_SAFE_CALL((getGrad_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
 
             //printf("calling getGrad_kernel_spdf4 \n");
 //            QUICK_SAFE_CALL((getGrad_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()))
-
 #endif
         }
     }
 
     hipDeviceSynchronize();   
-
-//    roctxRangePop();
-
+//    nvtxRangePop();
 }
 
 
 // interface to call uscf gradient Kernels
 void get_oshell_eri_grad(_gpu_type gpu)
 {
+//    nvtxRangePushA("Gradient 2e");
+    QUICK_SAFE_CALL((getGrad_oshell_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
-//   roctxRangePush("Gradient 2e");
-
-   QUICK_SAFE_CALL((getGrad_oshell_kernel_sp<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
-
-   QUICK_SAFE_CALL((getGrad_oshell_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+    QUICK_SAFE_CALL((getGrad_oshell_kernel_spd<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
@@ -773,49 +763,46 @@ void get_oshell_eri_grad(_gpu_type gpu)
     }
 
     hipDeviceSynchronize();
-//    roctxRangePop();
-
+//    nvtxRangePop();
 }
 
 
 #ifdef COMPILE_GPU_AOINT
 // =======   KERNEL SECTION ===========================
-__global__ void 
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer){
-    unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
-    int totalThreads = blockDim.x*gridDim.x;
+__global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer) {
+    unsigned int offside = blockIdx.x * blockDim.x + threadIdx.x;
+    int totalThreads = blockDim.x * gridDim.x;
     int const batchSize = 20;
     ERI_entry a[batchSize];
     int j = 0;
  
     QUICKULL myInt = (QUICKULL) (bufferSize) / totalThreads;
-    if ((bufferSize - myInt*totalThreads)> offside) myInt++;
+    if ((bufferSize - myInt * totalThreads) > offside) myInt++;
     
-    for (QUICKULL i = 1; i<=myInt; i++) {
-        
-        QUICKULL currentInt = totalThreads * (i-1) + offside;
+    for (QUICKULL i = 1; i <= myInt; i++) {
+        QUICKULL currentInt = totalThreads * (i - 1) + offside;
         a[j] = aoint_buffer[currentInt];
         j++;
+
         if (j == batchSize || i == myInt) {
-            
-            for (int k = 0; k<j; k++) {
+            for (int k = 0; k < j; k++) {
                 int III = a[k].IJ / devSim.nbasis + 1;
                 int JJJ = a[k].IJ % devSim.nbasis + 1;
                 int KKK = a[k].KL / devSim.nbasis + 1;
                 int LLL = a[k].KL % devSim.nbasis + 1;
                 
-                if (III <= devSim.nbasis && III >= 1 && JJJ <= devSim.nbasis && JJJ >= 1 && KKK <= devSim.nbasis && KKK >= 1 && LLL <= devSim.nbasis && LLL >= 1){
-                    /*QUICKDouble hybrid_coeff = 0.0;
-                    if (devSim.method == HF){
-                        hybrid_coeff = 1.0;
-                    }else if (devSim.method == B3LYP){
-                        hybrid_coeff = 0.2;
-                    }else if (devSim.method == DFT){
-                        hybrid_coeff = 0.0;
-                    }else if(devSim.method == LIBXC){
-			hybrid_coeff = devSim.hyb_coeff;			
-		    }
-                    */
+                if (III <= devSim.nbasis && III >= 1 && JJJ <= devSim.nbasis && JJJ >= 1
+                        && KKK <= devSim.nbasis && KKK >= 1 && LLL <= devSim.nbasis && LLL >= 1) {
+//                    QUICKDouble hybrid_coeff = 0.0;
+//                    if (devSim.method == HF) {
+//                        hybrid_coeff = 1.0;
+//                    } else if (devSim.method == B3LYP) {
+//                        hybrid_coeff = 0.2;
+//                    } else if (devSim.method == DFT) {
+//                        hybrid_coeff = 0.0;
+//                    } else if( devSim.method == LIBXC) {
+//			hybrid_coeff = devSim.hyb_coeff;			
+//		    }
 #ifdef USE_LEGACY_ATOMICS
                     addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
 #else
@@ -823,17 +810,17 @@ __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kernel(int bufferSize
 #endif
                 }
             }
+
             j = 0;
         }
-        
     }
-    
 }
 #endif
 
-void upload_para_to_const(){
-    
-    unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
+
+void upload_para_to_const() {
+    unsigned char trans[TRANSDIM * TRANSDIM * TRANSDIM];
+
     // Data to trans
     {
         LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
@@ -957,42 +944,36 @@ void upload_para_to_const(){
         LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
         LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
     }
+
     // upload to trans device location
     hipError_t status;
 
-    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(unsigned char)*TRANSDIM*TRANSDIM*TRANSDIM);
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(unsigned char) * TRANSDIM * TRANSDIM * TRANSDIM);
     PRINTERROR(status, " hipMemcpyToSymbol, Trans copy to constants failed")
-
 }
 
-void bind_eri_texture(_gpu_type gpu){
 
+void bind_eri_texture(_gpu_type gpu) {
 #ifdef USE_TEXTURE_CUTMATRIX
-    hipBindTexture(NULL, tex_cutMatrix, gpu->gpu_sim.cutMatrix, gpu->nshell*gpu->nshell*sizeof(QUICKDouble));
+    hipBindTexture(NULL, tex_cutMatrix, gpu->gpu_sim.cutMatrix, sizeof(QUICKDouble) * gpu->nshell * gpu->nshell);
 #endif
-
 #ifdef USE_TEXTURE_YCUTOFF
-    hipBindTexture(NULL, tex_YCutoff, gpu->gpu_sim.YCutoff, gpu->nshell*gpu->nshell*sizeof(QUICKDouble));
+    hipBindTexture(NULL, tex_YCutoff, gpu->gpu_sim.YCutoff, sizeof(QUICKDouble) * gpu->nshell * gpu->nshell);
 #endif
-
 #ifdef USE_TEXTURE_XCOEFF
-    hipBindTexture(NULL, tex_Xcoeff, gpu->gpu_sim.Xcoeff, gpu->jbasis*gpu->jbasis*2*2*sizeof(QUICKDouble));
+    hipBindTexture(NULL, tex_Xcoeff, gpu->gpu_sim.Xcoeff, sizeof(QUICKDouble) * 4 * gpu->jbasis * gpu->jbasis);
 #endif
-
 }
 
-void unbind_eri_texture(){
 
+void unbind_eri_texture() {
 #ifdef USE_TEXTURE_CUTMATRIX
     hipUnbindTexture(tex_cutMatrix);
 #endif
-
 #ifdef USE_TEXTURE_YCUTOFF
     hipUnbindTexture(tex_YCutoff);
 #endif
-
 #ifdef USE_TEXTURE_XCOEFF
     hipUnbindTexture(tex_Xcoeff);    
 #endif
-
 }

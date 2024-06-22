@@ -51,7 +51,11 @@ cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_GPU_SOURCES}
         ${CUDA_DEVICE_CODE_FLAGS}
         -I${CMAKE_CURRENT_SOURCE_DIR}/..
         )
-target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
+if(MPI)
+	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
+else()
+	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
+endif()
 
 if(INSIDE_AMBER)
 	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)

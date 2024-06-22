@@ -9,10 +9,6 @@
 #include <hip/hip_runtime_api.h>
 //#include "roctx.h"
 
-#if defined(DEBUG) || defined(DEBUGTIME)
-static FILE *debugFile = NULL;
-#endif
-
 #define PRINTERROR(err, s) \
 { \
     if ((err) != hipSuccess) { \

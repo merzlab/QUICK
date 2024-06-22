@@ -12,8 +12,8 @@ if(MPI)
 	target_compile_definitions(octree_mpi PUBLIC MPIV)
 endif()
 
-if(CUDA)
-	# This GPU implementation works for both CUDA and CUDA MPI
+if(CUDA OR HIP)
+	# This GPU implementation works for both CUDA/HIP and MPI+CUDA/MPI+HIP
 	copy_target(octree octree_gpu)
 	target_compile_definitions(octree_gpu PRIVATE GPU)
 endif()

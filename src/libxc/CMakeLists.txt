@@ -141,19 +141,21 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(xc PRIVATE -Wno-maybe-uninitialized)
 endif()
 
-if(CUDA)
+if(CUDA OR HIP)
 	# note: this is not a GPU implementation of libxc, it's just
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
-	target_compile_definitions(xc_gpu PRIVATE GPU ${QUICK_GPU_PLATFORM})
+	if(MPI)
+		target_compile_definitions(xc_gpu PRIVATE GPU ${QUICK_GPU_PLATFORM})
+        else()
+		target_compile_definitions(xc_gpu PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
+	endif()
 
 	if(INSIDE_AMBER)
 		target_link_libraries(xc_gpu libcew)
 	endif()
 	config_module_dirs(xc_gpu libxc/gpu)
-endif()
 
-# build cuda code
-if(CUDA)
+	# build gpu code
 	add_subdirectory(maple2c_device)
 endif()
