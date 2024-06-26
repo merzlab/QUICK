@@ -32,17 +32,20 @@ set_property(TARGET rocblas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 target_include_directories(rocblas_fortran_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 config_module_dirs(rocblas_fortran_obj quick/${QUICK_GPU_TARGET_NAME})
-# rocsolver
-#------------------------------------------------------------------------------------------
-set(ROCSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
 
-add_library(rocsolver_obj OBJECT ${ROCSOLVER_SOURCE})
-set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
-set_property(TARGET rocsolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+if(NOT MAGMA)
+	# rocsolver
+	#------------------------------------------------------------------------------------------
+	set(ROCSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
 
-add_dependencies(rocsolver_obj rocblas_fortran_obj)
-target_include_directories(rocsolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
-config_module_dirs(rocsolver_obj quick/${QUICK_GPU_TARGET_NAME})
+	add_library(rocsolver_obj OBJECT ${ROCSOLVER_SOURCE})
+	set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
+	set_property(TARGET rocsolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+	add_dependencies(rocsolver_obj rocblas_fortran_obj)
+	target_include_directories(rocsolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
+	config_module_dirs(rocsolver_obj quick/${QUICK_GPU_TARGET_NAME})
+endif()
 
 # rocblas and rocsolver results in fortran modules. Copy the targets into mpi_cuda folder. 
 if(MPI)
@@ -50,8 +53,10 @@ if(MPI)
 	config_module_dirs(rocblas_fortran_obj_mpi quick/mpi_${QUICK_GPU_TARGET_NAME})
 	set_property(TARGET rocblas_fortran_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 
-	copy_target(rocsolver_obj rocsolver_obj_mpi SWAP_SOURCES TO)
-	config_module_dirs(rocsolver_obj_mpi quick/mpi_${QUICK_GPU_TARGET_NAME})
-	set_property(TARGET rocsolver_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
-	add_dependencies(rocsolver_obj_mpi rocblas_fortran_obj_mpi)
+	if(NOT MAGMA)
+		copy_target(rocsolver_obj rocsolver_obj_mpi SWAP_SOURCES TO)
+		config_module_dirs(rocsolver_obj_mpi quick/mpi_${QUICK_GPU_TARGET_NAME})
+		set_property(TARGET rocsolver_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
+		add_dependencies(rocsolver_obj_mpi rocblas_fortran_obj_mpi)
+	endif()
 endif()

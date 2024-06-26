@@ -18,17 +18,15 @@
 module quick_rocsolver_module
 
     implicit none
-#if defined WITH_ROCSOLVER
     private
     public :: rocDIAG
     
     interface rocDIAG
         module procedure quick_rocsolver_dsyevd
     end interface rocDIAG
-#endif
+
 contains
 
-#if defined WITH_ROCSOLVER
     ! Driver for dsyevd, similar to DIAG and DIAGMKL. 
     subroutine quick_rocsolver_dsyevd(n, A, Eval, Evec, ierr)
 
@@ -120,7 +118,6 @@ contains
         !write(*,*) "hipFree(info) done"
 
         call rocBlasFinalize()
-
     end subroutine quick_rocsolver_dsyevd
-#endif
+
 end module quick_rocsolver_module
