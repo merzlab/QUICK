@@ -441,9 +441,6 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
                                               QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
                                               QUICKDouble RDx,QUICKDouble RDy,QUICKDouble RDz);
 
-
-__device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a);
-
 __device__ void vertical(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store, \
                          QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,  \
                          QUICKDouble WPtempx,QUICKDouble WPtempy,QUICKDouble WPtempz, \

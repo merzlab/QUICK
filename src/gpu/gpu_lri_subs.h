@@ -370,19 +370,16 @@ __device__ __forceinline__ void iclass_lri_spdf2
                  ->  -> 2
                  T = ROU * | P - Q|
                  */
-                
                 QUICKDouble Qx = RCx;
                 QUICKDouble Qy = RCy;
                 QUICKDouble Qz = RCz;
-
                 
-                
-                //QUICKDouble T = AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz));
+                //QUICKDouble T = AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz));
                 
                 //QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
-                FmT(I+J+K+L, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
-                for (int i = 0; i<=I+J+K+L; i++) {
+                FmT(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)), YVerticalTemp);
 
+                for (int i = 0; i <= I + J + K + L; i++) {
                     VY(0, 0, i) = VY(0, 0, i) * X2;
                 }
 #ifdef int_spd
@@ -524,14 +521,6 @@ __device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int 
 #include "gpu_fmt.h"
 #endif
 
-/*
- sqr for double precision. there no internal function to do that in fast-math-lib of GPU
- */
-__device__ __forceinline__ QUICKDouble quick_dsqr(QUICKDouble a)
-{
-    return a*a;
-}
-//#define quick_dsqr(a) ((a)*(a))
 
 #endif
 

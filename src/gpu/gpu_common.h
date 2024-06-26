@@ -49,13 +49,16 @@ static FILE *debugFile = NULL;
 #define LOC2(A,i1,i2,d1,d2)  (A[(i1) + (i2) * (d1)])
 #define LOC3(A,i1,i2,i3,d1,d2,d3) (A[(i3) + ((i2) + (i1) * (d2)) * (d3)])
 #define LOC4(A,i1,i2,i3,i4,d1,d2,d3,d4) (A[(i4) + (i3 + ((i2) + (i1) * (d2)) * (d3)) * (d4)])
-#define MAX(A,B) (((A) > (B)) ? (A) : (B))
-#define MIN(A,B) (((A) < (B)) ? (A) : (B))
 //TODO: remove unused d2
 #define LOCSTORE(A,i1,i2,d1,d2) (A[((i1) + (i2) * (d1)) * gridDim.x * blockDim.x])
 #define LOCVY(A,i1,i2,i3,d1,d2,d3) (A[((i3) + ((i2) + (i1) * (d2)) * (d3)) * gridDim.x * blockDim.x])
 #define LOCSTOREFULL(A,i1,i2,d1,d2,m) (A[(((i1) + (i2) * (d1)) * gridDim.x * blockDim.x) + ((m) * (d1) * (d2) * gridDim.x * blockDim.x)])
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
+
+#define SQR(x) ((x)*(x))
+#define CUBE(x) ((x)*(x)*(x))
+#define MAX(A,B) (((A) > (B)) ? (A) : (B))
+#define MIN(A,B) (((A) < (B)) ? (A) : (B))
 
 /* GPU kernel resource constants */
 #if defined(CUDA) || defined(CUDA_MPIV)

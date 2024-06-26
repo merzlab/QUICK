@@ -289,10 +289,10 @@ __device__ __forceinline__ void iclass_lri_grad
                 QUICKDouble Qy = RCy;
                 QUICKDouble Qz = RCz;
                 
-                //QUICKDouble T = AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz));
+                //QUICKDouble T = AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz));
                 
                 //QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
-                FmT(I+J+K+L+1, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
+                FmT(I+J+K+L+1, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)), YVerticalTemp);
                 
                 for (int i = 0; i<=I+J+K+L+1; i++) {
                 //    printf("FmT %f Fm*sqrt %f X2 %f \n", VY(0, 0, i), VY(0, 0, i)*sqrt(ABCD), X2/sqrt(ABCD));
@@ -628,10 +628,10 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
                 QUICKDouble Qy = RCy;
                 QUICKDouble Qz = RCz;
                 
-                //QUICKDouble T = AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz));
+                //QUICKDouble T = AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz));
                 
                 //QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
-                FmT(I+J+K+L+2, AB * CD * ABCD * ( quick_dsqr(Px-Qx) + quick_dsqr(Py-Qy) + quick_dsqr(Pz-Qz)), YVerticalTemp);
+                FmT(I+J+K+L+2, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)), YVerticalTemp);
                 
                 for (int i = 0; i<=I+J+K+L+2; i++) {
                     VY(0, 0, i) = VY(0, 0, i) * X2;

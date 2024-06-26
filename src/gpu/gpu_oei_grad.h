@@ -312,23 +312,24 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
         QUICKDouble BB = LOC2(devSim.gcexpo, JJJ , devSim.Ksumtype[JJ] - 1, MAXPRIM, nbasis);
 
         // get Xcoeff, which is a product of overlap prefactor and contraction coefficients 
-        QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI+III, kStartJ+JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
+                I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
-        if(abs(Xcoeff_oei) > devSim.coreIntegralCutoff){
-//        for(int iatom=0; iatom<totalatom; ++iatom){
+        if (abs(Xcoeff_oei) > devSim.coreIntegralCutoff){
+//        for (int iatom = 0; iatom<totalatom; ++iatom) {
 
-            QUICKDouble Cx = LOC2(devSim.allxyz, 0 , iatom, 3, totalatom);
-            QUICKDouble Cy = LOC2(devSim.allxyz, 1 , iatom, 3, totalatom);
-            QUICKDouble Cz = LOC2(devSim.allxyz, 2 , iatom, 3, totalatom);           
+            QUICKDouble Cx = LOC2(devSim.allxyz, 0, iatom, 3, totalatom);
+            QUICKDouble Cy = LOC2(devSim.allxyz, 1, iatom, 3, totalatom);
+            QUICKDouble Cz = LOC2(devSim.allxyz, 2, iatom, 3, totalatom);           
             QUICKDouble chg = -1.0 * devSim.allchg[iatom];
 
             // compute OS A21
-            //QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
+            //QUICKDouble U = Zeta * (SQR(Px - Cx) + SQR(Py - Cy) + SQR(Pz - Cz));
 
             // compute boys function values, the third term of OS A20
-            //QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
+            //QUICKDouble YVerticalTemp[VDIM1 * VDIM2 * VDIM3];
 
-            FmT(I+J+2, Zeta*(pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2)), YVerticalTemp);
+            FmT(I + J + 2, Zeta * (SQR(Px - Cx) + SQR(Py - Cy) + SQR(Pz - Cz)), YVerticalTemp);
 
             // compute all auxilary integrals and store
             for (int n = 0; n<=I+J+2; n++) {

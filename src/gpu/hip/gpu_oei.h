@@ -162,7 +162,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
             QUICKDouble chg = -1.0 * devSim.allchg[iatom];
 
             // compute boys function values, the third term of OS A20
-            FmT(I + J, Zeta * (pow(Px - Cx, 2) + pow(Py - Cy, 2) + pow(Pz - Cz, 2)), YVerticalTemp);
+            FmT(I + J, Zeta * (SQR(Px - Cx) + SQR(Py - Cy) + SQR(Pz - Cz)), YVerticalTemp);
 
             // compute all auxilary integrals and store
             for (int n = 0; n <= I + J; n++) {
