@@ -322,7 +322,7 @@ if(HIP)
     endif()
 
     list(APPEND AMD_HIP_FLAGS -fPIC -std=c++14)
-    set(TARGET_ID_SUPPORT ON)
+    #set(TARGET_ID_SUPPORT ON)
 
 #    if(HIP_WARP64)
 #        add_compile_definitions(QUICK_PLATFORM_AMD_WARP64)
@@ -357,6 +357,11 @@ if(HIP)
     endif()
 
     find_package(HipCUDA REQUIRED)
+
+    if(QUICK_DEBUG_HIP_ASAN)
+	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
+	list(APPEND CUDA_NVCC_FLAGS -fsanitize=address -fsanitize-recover=address -shared-libsan -g --offload-arch=${QUICK_USER_ARCH})
+    endif()
 
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 
