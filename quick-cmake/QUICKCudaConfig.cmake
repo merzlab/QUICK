@@ -274,7 +274,7 @@ if(CUDA)
 
     # SPDF
     if(ENABLEF)
-        list(APPEND CUDA_NVCC_FLAGS -DCUDA_SPDF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
     endif()
 
     if(DISABLE_OPTIMIZER_CONSTANTS)
@@ -299,9 +299,6 @@ endif()
 #option(HIP_RDC "Build relocatable device code, also known as separate compilation mode." FALSE)
 #option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
 if(HIP)
-    # HIP builds currently unavailable (TODO: fix post release)
-    message(FATAL_ERROR "Error: HIP support is currently unavailable in this QUICK release. Support will be added back in a future release.")
-
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
     set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
@@ -325,7 +322,7 @@ if(HIP)
     endif()
 
     list(APPEND AMD_HIP_FLAGS -fPIC -std=c++14)
-    set(TARGET_ID_SUPPORT ON)
+    #set(TARGET_ID_SUPPORT ON)
 
 #    if(HIP_WARP64)
 #        add_compile_definitions(QUICK_PLATFORM_AMD_WARP64)
@@ -360,6 +357,11 @@ if(HIP)
     endif()
 
     find_package(HipCUDA REQUIRED)
+
+    if(QUICK_DEBUG_HIP_ASAN)
+	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
+	list(APPEND CUDA_NVCC_FLAGS -fsanitize=address -fsanitize-recover=address -shared-libsan -g --offload-arch=${QUICK_USER_ARCH})
+    endif()
 
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 

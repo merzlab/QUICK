@@ -1129,7 +1129,7 @@ subroutine aoint(ierr)
 
    call obtain_leastIntCutoff(quick_method,ierr)
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
    write(ioutfile, '("  GPU-BASED 2-ELECTRON INTEGRAL GENERATOR")')
    write(ioutfile, '("  WRITTEN BY YIPU MIAO(FLORIDA)")')
    write(ioutfile, '("  THIS PROGRAM IS UNDER TEST PHASE")')
