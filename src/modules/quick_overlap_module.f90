@@ -232,38 +232,38 @@ subroutine fullx
    enddo
 
    RECORD_TIME(timer_end%T1eS)
-   timer_cumer%T1eS=timer_cumer%T1eS+timer_end%T1eS-timer_begin%T1eS
+   timer_cumer%T1eS = timer_cumer%T1eS + timer_end%T1eS - timer_begin%T1eS
 
-   call copySym(quick_qm_struct%s,nbasis)
+   call copySym(quick_qm_struct%s, nbasis)
 
    ! copy s matrix to scratch
-   call copyDMat(quick_qm_struct%s,quick_scratch%hold,nbasis)
+   call copyDMat(quick_qm_struct%s, quick_scratch%hold, nbasis)
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    RECORD_TIME(timer_begin%T1eSD)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
-   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx,quick_scratch%tmphold,&
-   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2,quick_scratch%tmpco, quick_scratch%V, nbasis)
+   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold, &
+   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
 #else
 #if defined(HIP) || defined(HIP_MPIV)
 #if defined(WITH_MAGMA)
-   call magmaDIAG(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+   call magmaDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
 #elif defined(WITH_ROCSOLVER)
-   call rocDIAG(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+   call rocDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
 #endif
 #else
 #if defined(LAPACK) || defined(MKL)
-   call DIAGMKL(nbasis,quick_scratch%hold,quick_scratch%Sminhalf,quick_scratch%hold2,IERROR)
+   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
 #else
-   call DIAG(NBASIS,quick_scratch%hold,NBASIS,quick_method%DMCutoff,quick_scratch%V,quick_scratch%Sminhalf,&
-   quick_scratch%IDEGEN1,quick_scratch%hold2,IERROR)
+   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
 #endif
 #endif
 #endif
 
    RECORD_TIME(timer_end%T1eSD)
-   timer_cumer%T1eSD=timer_cumer%T1eSD+timer_end%T1eSD-timer_begin%T1eSD
+   timer_cumer%T1eSD = timer_cumer%T1eSD + timer_end%T1eSD - timer_begin%T1eSD
 
    ! Consider the following:
 
