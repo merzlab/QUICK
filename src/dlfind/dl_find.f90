@@ -354,6 +354,9 @@ subroutine dlf_run(ierr2 &
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
+#ifdef MPIV
+  use quick_mpi_module
+#endif
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -892,7 +895,16 @@ subroutine dlf_run(ierr2 &
       if(.not.testconv) then
          if (glob%imicroiter < 2) then
             ! Standard convergence test
+#ifdef MPIV
+    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call flush()
+#endif
             call convergence_test(stat%ccycle,.true.,tconv)
+#ifdef MPIV
+    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call flush()
+    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+#endif
             if (tconv) then
               if (printl > 0) then
                 write(stdout,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') stat%ccycle

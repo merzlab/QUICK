@@ -341,6 +341,11 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 !  call test_update
   status=1
 
+#ifdef MPIV
+     ! we now have new geometry, and let other nodes know the new geometry
+     if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+#endif
+
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &                  
               quick_molspec%molchg, quick_molspec%iAtomType)                                      
