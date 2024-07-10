@@ -21,10 +21,19 @@ module quick_oeproperties_module
 
  contains
 
+!--------------------------------------------------------------------!
+!   The subroutines esp_shell_pair, efield_shell_pair and            !
+!   esp_1pdm, efield_1pdm are present in ./include/attrashell.fh     !
+!   and ./include/nuclearattra.fh header files respectively.         !
+!                                                                    !
+!   The header files are called with OEPROP being defined.           !
+!--------------------------------------------------------------------!
+
 #define OEPROP
 #include "./include/attrashell.fh"
 #include "./include/nuclearattra.fh"
 #undef OEPROP
+
  !----------------------------------------------------------------------------!
  ! This is the subroutine that "computes" the Electrostatic Potential (ESP)   !
  ! at a given point , V(r) = V_nuc(r) + V_elec(r), and prints it to file.prop !
@@ -297,6 +306,10 @@ module quick_oeproperties_module
 #endif
  end subroutine compute_efield
 
+!------------------------------------------------------------------------!
+! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)   !
+!------------------------------------------------------------------------!
+
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
   use quick_molspec_module
   implicit none
@@ -316,21 +329,21 @@ module quick_oeproperties_module
       distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extxyz(1:3, igridpoint), 3)
       inv_dist_cube = 1.0d0/(distance**3)
 
-      rx_nuc_gridpoint = (xyz(1, inucleus) - quick_molspec%extxyz(1, igridpoint))
-      ry_nuc_gridpoint = (xyz(2, inucleus) - quick_molspec%extxyz(2, igridpoint))
-      rz_nuc_gridpoint = (xyz(3, inucleus) - quick_molspec%extxyz(3, igridpoint))
+      rx_nuc_gridpoint = (quick_molspec%extxyz(1, igridpoint) - xyz(1, inucleus))
+      ry_nuc_gridpoint = (quick_molspec%extxyz(2, igridpoint) - xyz(2, inucleus))
+      rz_nuc_gridpoint = (quick_molspec%extxyz(3, igridpoint) - xyz(3, inucleus))
 
      ! Compute nuclear components to EFIELD_NUCLEAR
-      efield_nuclear_term(1) = efield_nuclear_term(1) - quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
-      efield_nuclear_term(2) = efield_nuclear_term(2) - quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
-      efield_nuclear_term(3) = efield_nuclear_term(3) - quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(1) = efield_nuclear_term(1) + quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(2) = efield_nuclear_term(2) + quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
+      efield_nuclear_term(3) = efield_nuclear_term(3) + quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
   end do
 
 end subroutine efield_nuc
 
  !---------------------------------------------------------------------------------------------!
- ! This subroutine tformats and prints the EFIELD data to file.prop                            !
- !--------------------------------------------------------------------------------------------!
+ ! This subroutine formats and prints the EFIELD data to file.efield                           !
+ !---------------------------------------------------------------------------------------------!
 subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
@@ -369,9 +382,9 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
       Cz = quick_molspec%extxyz(3, igridpoint)
     endif
 
-    ! Sum nuclear and electric components of EFIELD and print.
+    ! Sum nuclear and electric components of EField and print.
     if (quick_method%efield_grid) then
-      write(iEFIELDFile, '(2x,3(F14.10, 1x), 3x,ES14.6,3x,ES14.6,3x,ES14.6)') Cx, Cy, Cz,  &
+      write(iEFIELDFile, '(3x,ES14.6,3x,ES14.6,3x,ES14.6)') &
       (efield_nuclear(1,igridpoint)+efield_electronic(1,igridpoint)), &
       (efield_nuclear(2,igridpoint)+efield_electronic(2,igridpoint)), &
       (efield_nuclear(3,igridpoint)+efield_electronic(3,igridpoint))
