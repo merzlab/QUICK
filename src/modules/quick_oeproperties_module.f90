@@ -293,9 +293,9 @@ module quick_oeproperties_module
 #endif
  end subroutine compute_efield
 
- !-----------------------------------------------------------------------!
- ! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)     !
- !-----------------------------------------------------------------------!
+ !------------------------------------------------------------------------!
+ ! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)   !
+ !------------------------------------------------------------------------!
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
   use quick_molspec_module
   implicit none
@@ -327,9 +327,9 @@ module quick_oeproperties_module
 
 end subroutine efield_nuc
 
- !---------------------------------------------------------------------------------------------!
- ! This subroutine tformats and prints the EFIELD data to file.prop                            !
- !--------------------------------------------------------------------------------------------!
+ !----------------------------------------------------------------------------------------------!
+ ! This subroutine formats and prints the EFIELD data to file.efield                            !
+ !----------------------------------------------------------------------------------------------!
 subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
@@ -379,6 +379,14 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
   end do
 end subroutine print_efield
 
+!--------------------------------------------------------------------!
+!   The subroutines esp_shell_pair and esp_1pdm are present in       !
+!   ./include/attrashell.fh and ./include/nuclearattra.fh include    !
+!   files respectively.                                              !
+!                                                                    !
+!   The header files are called with OEPROP being defined.           !
+!--------------------------------------------------------------------!
+
 #define OEPROP
 #include "./include/attrashell.fh"
 #include "./include/nuclearattra.fh"
@@ -386,14 +394,23 @@ end subroutine print_efield
 
 subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,efield)
-   use allmod
+   use quick_params_module, only: trans
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: quick_basis, attraxiaoopt
+   use quick_calculated_module, only : quick_qm_struct
 
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision attra,aux(0:20)
+
    integer a(3),b(3)
-   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
+   integer Ips, Jps, IIsh, JJsh, NIJ1
+   integer iA,iB,III,III1,III2,JJJ,JJJ1,JJJ2,NBI1,NBI2,NBJ1,NBJ2
+   integer Iang,Jang,iAstart,iBstart,itemp,itemp1,itemp2,itempt
+   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g,DENSEJI
    double precision AA(3),BB(3),CC(3),PP(3)
+   double precision Agrad1,Agrad2,Agrad3,Bgrad1,Bgrad2,Bgrad3,Cgrad1,Cgrad2,Cgrad3
+   double precision X1temp,Xconstant,Xconstant1,Xconstant2
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    double precision, intent(inout) :: efield(3)
@@ -1291,14 +1308,24 @@ subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
 End subroutine efield_1pdm
 
   subroutine efield_shell_pair(IIsh,JJsh,efield_electronic)
-     use allmod
      use quick_overlap_module, only: opf, overlap
+     use quick_molspec_module, only: quick_molspec, xyz
+     use quick_basis_module, only: quick_basis, attraxiaoopt, attraxiao
+     use quick_method_module, only: quick_method
+     use quick_constants_module, only : Pi
      !    use xiaoconstants
 #ifdef MPIV
      use mpi
 #endif
-     implicit double precision(a-h,o-z)
-     dimension aux(0:20)
+     
+     implicit none
+
+     integer :: igridpoint
+     integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
+     double precision :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, g, U
+     double precision :: attra, constant, constanttemp, PCsquare, Px, Py, Pz
+
+     double precision, dimension(0:20) :: aux
      double precision AA(3),BB(3),CC(3),PP(3)
      common /xiaoattra/attra,aux,AA,BB,CC,PP,g
   
