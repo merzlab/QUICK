@@ -141,21 +141,36 @@ subroutine attrashell(IIsh, JJsh)
 #elif defined (OEI)
   subroutine attrashellopt(IIsh,JJsh)
 #endif
-    use allmod
     use quick_overlap_module, only: opf, overlap
+    use quick_molspec_module, only: quick_molspec, xyz
+    use quick_basis_module, only: quick_basis, attraxiaoopt, attraxiao
+    use quick_method_module, only: quick_method
+    use quick_constants_module, only: Pi
+#if defined (OEI)
+    use quick_molspec_module, only: natom
+#endif
     !    use xiaoconstants
 #ifdef MPIV
     use mpi
 #endif
-    implicit double precision(a-h,o-z)
-    dimension aux(0:20)
+    implicit none
+
+    integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
+    double precision :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, g, U
+    double precision :: attra, constant, constanttemp, PCsquare, Px, Py, Pz
+
+    double precision, dimension(0:20) :: aux
     double precision AA(3),BB(3),CC(3),PP(3)
     common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
     double precision RA(3),RB(3),RP(3), valopf, g_table(200)
 
 #if defined (OEPROP)
+    integer :: igridpoint
     double precision, intent(inout) :: efield_electronic(3,quick_molspec%nextpoint)
+#elif defined (OEI)
+    integer :: iatom
+    double precision :: Z
 #endif
 
     Ax=xyz(1,quick_basis%katom(IIsh))

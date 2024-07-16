@@ -265,18 +265,31 @@ subroutine efield_1pdm(Ips,Jps,IIsh,JJsh,NIJ1, &
 subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom)
 #endif
-   use allmod
-
-   implicit double precision(a-h,o-z)
+   use quick_params_module, only: trans
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: quick_basis, attraxiaoopt, attraxiao
+   use quick_calculated_module, only: quick_qm_struct
+#if defined (OEI)
+   use quick_molspec_module, only: natom
+#endif
+   implicit none
 
    double precision attra,aux(0:20)
+
    integer a(3),b(3)
-   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
+   integer Ips, Jps, IIsh, JJsh, NIJ1
+   integer iA, iB, III, III1, III2, JJJ, JJJ1, JJJ2, NBI1, NBI2, NBJ1, NBJ2
+   integer Iang, Jang, iAstart, iBstart, itemp, itemp1, itemp2, itempt
+   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g,DENSEJI
    double precision AA(3),BB(3),CC(3),PP(3)
+   double precision Agrad1, Agrad2, Agrad3, Bgrad1, Bgrad2, Bgrad3, Cgrad1, Cgrad2, Cgrad3
+   double precision X1temp,Xconstant,Xconstant1,Xconstant2
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
 #if defined (OEPROP)
    double precision, intent(inout) :: efield(3)
+#elif defined (OEI)
+   integer :: iatom,iC,iCstart,itemp1new,itemp2new
 #endif
 
    AA(1)=Ax
