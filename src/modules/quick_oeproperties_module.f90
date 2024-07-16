@@ -1276,7 +1276,6 @@ end subroutine print_efield
 !                   DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
 !                else
 !                   DENSEJI=quick_qm_struct%dense(JJJ,III)
->>>>>>> oeproperties-dev
 !                endif
 
 !                if(III.ne.JJJ)DENSEJI=2.0d0*DENSEJI
