@@ -75,9 +75,11 @@ subroutine attrashell(IIsh, JJsh)
            inv_g = 1.0d0 / dble(g)
  
            ! Calculate first two terms of Obara & Saika Eqn A20
-           constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
-           const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
-           
+           const = dexp(-(a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0)*inv_g)) * 2.d0 * Pi * inv_g
+           !constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
+           !const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
+           !const = 2.d0*(Pi/g)*constanttemp
+
 #if defined (OEPROP)
            ! Loops over external grid points/MM atoms
             do igridpoint=1,quick_molspec%nextpoint
