@@ -25,7 +25,7 @@ subroutine attrashell(IIsh, JJsh)
 
    integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2
    double precision :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, g, U
-   double precision :: attra, const, constanttemp, PCsquare, Px, Py, Pz
+   double precision :: attra, overlap_ss_prefix, PCsquare, Px, Py, Pz
 
 #if defined (OEI)
    double precision :: Z
@@ -75,7 +75,7 @@ subroutine attrashell(IIsh, JJsh)
            inv_g = 1.0d0 / dble(g)
  
            ! Calculate first two terms of Obara & Saika Eqn A20
-           const = dexp(-(a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0)*inv_g)) * 2.d0 * Pi * inv_g
+           overlap_ss_prefix = dexp(-(a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0)*inv_g)) * 2.d0 * Pi * inv_g
            !constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
            !const = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
            !const = 2.d0*(Pi/g)*constanttemp
@@ -112,9 +112,9 @@ subroutine attrashell(IIsh, JJsh)
                do L = 0,maxm
 #if defined (OEPROP)
                   ! sign (-1.0d0) is used to ensure the auxilary integrals are negative
-                  aux(L) = -1.0d0*aux(L)*const
+                  aux(L) = -1.0d0*aux(L)*overlap_ss_prefix
 #elif defined (OEI)
-                  aux(L) = aux(L)*const*Z
+                  aux(L) = aux(L)*overlap_ss_prefix*Z
 #endif
                   attraxiao(1,1,L)=aux(L)
                enddo
