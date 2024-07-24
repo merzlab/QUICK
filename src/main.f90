@@ -48,7 +48,17 @@
     use mpi
 #endif
 
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+    use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
+    use quick_basis_module, only: jbasis, jshell, maxcontract, nbasis, ncontract
+    use quick_basis_module, only: nprim, nshell, Ycutoff
+    use quick_molspec_module, only : natom, xyz
+    use quick_method_module, only: delete, upload
+#endif
 
+#if defined CUDA_MPIV || defined HIP_MPIV
+    use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
+#endif
 
     implicit none
 
