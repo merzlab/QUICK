@@ -249,7 +249,7 @@
 
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
-      call gpu_upload_oei(quick_molspec%nextpoint, quick_molspec%extxyz, ierr)
+!      call gpu_upload_oei(quick_molspec%nextpoint, quick_molspec%extxyz, ierr)
 
     endif
 #endif
