@@ -61,6 +61,7 @@ module quick_molspec_module
       ! coordinate of atoms and external atoms
       double precision, dimension(:,:), pointer :: xyz => null()
       double precision, dimension(:,:), allocatable :: extxyz
+      double precision, dimension(:,:), allocatable :: extpointxyz
 
       ! which atom type id every atom crosponds to
       integer,dimension(:),allocatable :: iattype
@@ -164,10 +165,10 @@ contains
       endif
 
       if (self%nextpoint.gt.0) then
-         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextpoint))
+         if (.not. allocated(self%extpointxyz)) allocate(self%extpointxyz(3,self%nextpoint))
          do i=1,self%nextpoint
             do j=1,3
-               self%extxyz(j,i)=0d0
+               self%extpointxyz(j,i)=0d0
             enddo
          enddo
       endif
@@ -202,10 +203,10 @@ contains
 
      if(self%nextpoint .gt. 0) then
       if(current_size /= self%nextpoint) then
-        deallocate(self%extxyz, stat=ierr)
-        allocate(self%extxyz(3,self%nextpoint), stat=ierr)
+        deallocate(self%extpointxyz, stat=ierr)
+        allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
         self%extchg=0.0d0
-        self%extxyz=0.0d0
+        self%extpointxyz=0.0d0
       endif
     endif
 
@@ -259,7 +260,7 @@ contains
 
       ! if exist external grid
       if (self%nextpoint.gt.0) then
-         if (allocated(self%extxyz)) deallocate(self%extxyz)
+         if (allocated(self%extpointxyz)) deallocate(self%extpointxyz)
        endif   
 
    end subroutine deallocate_quick_molspec
@@ -303,7 +304,7 @@ contains
       endif
 
       if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       endif
 
       call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -590,7 +591,7 @@ contains
               ifinal=80
               call rdword(keywd,istart,ifinal)
               call rdnum(keywd,istart,temp,ierror)
-              self%extxyz(j,i) = temp*A_TO_BOHRS
+              self%extpointxyz(j,i) = temp*A_TO_BOHRS
               istart=ifinal+1
           enddo
 
@@ -664,7 +665,7 @@ contains
 !            write(io,*)
 !            write(io,'(" -- EXTERNAL GRID : (X,Y,Z) -- ")')
 !            do i=1,self%nextpoint
-!               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3)
+!               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extpointxyz(j,i)*BOHRS_TO_A,j=1,3)
 !            enddo
 !         endif
 

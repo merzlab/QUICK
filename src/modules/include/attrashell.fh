@@ -83,9 +83,9 @@ subroutine attrashell(IIsh, JJsh)
 #if defined (OEPROP)
            ! Loops over external grid points/MM atoms
             do igridpoint=1,quick_molspec%nextpoint
-              Cx=quick_molspec%extxyz(1,igridpoint)
-              Cy=quick_molspec%extxyz(2,igridpoint)
-              Cz=quick_molspec%extxyz(3,igridpoint)
+              Cx=quick_molspec%extpointxyz(1,igridpoint)
+              Cy=quick_molspec%extpointxyz(2,igridpoint)
+              Cz=quick_molspec%extpointxyz(3,igridpoint)
 #elif defined (OEI)
             !nextatom=number of external MM point charges. set to 0 if none used
             do iatom=1,natom+quick_molspec%nextatom
@@ -221,9 +221,9 @@ subroutine attrashell(IIsh, JJsh)
 
 #if defined (OEPROP)
           do igridpoint=1,quick_molspec%nextpoint
-            Cx=quick_molspec%extxyz(1,igridpoint)
-            Cy=quick_molspec%extxyz(2,igridpoint)
-            Cz=quick_molspec%extxyz(3,igridpoint)
+            Cx=quick_molspec%extpointxyz(1,igridpoint)
+            Cy=quick_molspec%extpointxyz(2,igridpoint)
+            Cz=quick_molspec%extpointxyz(3,igridpoint)
 #elif defined (OEI)
           do iatom=1,natom+quick_molspec%nextatom
             if(quick_basis%katom(IIsh).eq.iatom.and.quick_basis%katom(JJsh).eq.iatom)then
