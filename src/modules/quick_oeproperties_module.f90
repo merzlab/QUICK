@@ -209,9 +209,15 @@ module quick_oeproperties_module
    
    esp_nuclear_term = 0.d0
 
+!     do inucleus=1,natom+quick_molspec%nextatom
      do inucleus=1,natom
-        distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extpointxyz(1:3,igridpoint), 3)
-        esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(inucleus) / distance
+!       if(inucleus<=natom)then
+         distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+         esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(inucleus) / distance
+!       else
+!         distance = rootSquare(quick_molspec%extxyz(1:3,inucleus-natom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+!         esp_nuclear_term = esp_nuclear_term + quick_molspec%extchg(inucleus-natom) / distance
+!       endif
      enddo
  end subroutine esp_nuc
 
@@ -310,7 +316,7 @@ module quick_oeproperties_module
 ! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)   !
 !------------------------------------------------------------------------!
  subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
-  use quick_molspec_module
+  use quick_molspec_module, only: natom, quick_molspec, xyz
   implicit none
 
   integer, intent(inout) :: ierr
@@ -324,7 +330,9 @@ module quick_oeproperties_module
 
   efield_nuclear_term = 0.0d0
 
+!  do inucleus = 1, natom+quick_molspec%nextatom
   do inucleus = 1, natom
+!    if(inucleus<=natom)then
       distance = rootSquare(xyz(1:3, inucleus), quick_molspec%extpointxyz(1:3, igridpoint), 3)
       inv_dist_cube = 1.0d0/(distance**3)
 
@@ -336,6 +344,19 @@ module quick_oeproperties_module
       efield_nuclear_term(1) = efield_nuclear_term(1) + quick_molspec%chg(inucleus) * (rx_nuc_gridpoint * inv_dist_cube)
       efield_nuclear_term(2) = efield_nuclear_term(2) + quick_molspec%chg(inucleus) * (ry_nuc_gridpoint * inv_dist_cube)
       efield_nuclear_term(3) = efield_nuclear_term(3) + quick_molspec%chg(inucleus) * (rz_nuc_gridpoint * inv_dist_cube)
+!    else
+!      distance = rootSquare(quick_molspec%extxyz(1:3, inucleus-natom), quick_molspec%extpointxyz(1:3, igridpoint), 3)
+!      inv_dist_cube = 1.0d0/(distance**3)
+!
+!      rx_nuc_gridpoint = (quick_molspec%extpointxyz(1, igridpoint) - quick_molspec%extxyz(1, inucleus-natom))
+!      ry_nuc_gridpoint = (quick_molspec%extpointxyz(2, igridpoint) - quick_molspec%extxyz(2, inucleus-natom))
+!      rz_nuc_gridpoint = (quick_molspec%extpointxyz(3, igridpoint) - quick_molspec%extxyz(3, inucleus-natom))
+!
+!     ! Compute nuclear components to EFIELD_NUCLEAR
+!      efield_nuclear_term(1) = efield_nuclear_term(1) + quick_molspec%extchg(inucleus-natom) * (rx_nuc_gridpoint * inv_dist_cube)
+!      efield_nuclear_term(2) = efield_nuclear_term(2) + quick_molspec%extchg(inucleus-natom) * (ry_nuc_gridpoint * inv_dist_cube)
+!      efield_nuclear_term(3) = efield_nuclear_term(3) + quick_molspec%extchg(inucleus-natom) * (rz_nuc_gridpoint * inv_dist_cube)
+!    endif
   end do
 
 end subroutine efield_nuc
