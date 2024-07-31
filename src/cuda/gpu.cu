@@ -1380,6 +1380,24 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 
 
 //-----------------------------------------------
+//  upload information for OEI calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_oeprop_(int* nextpoint, QUICKDouble* extpointxyz, int *ierr)
+{
+
+    // store coordinates and charges for oeprop calculation
+    gpu -> nextpoint       = *nextpoint;
+    gpu -> extpointxyz     = new cuda_buffer_type<QUICKDouble>(extpointxyz, 3, gpu->nextpoint);
+
+    gpu -> extpointxyz -> Upload();
+
+    gpu -> gpu_sim.nextpoint  = *nextpoint;
+    gpu -> gpu_sim.extpointxyz    = gpu -> extpointxyz -> _devData;
+
+}
+
+
+//-----------------------------------------------
 //  upload calculated information
 //-----------------------------------------------
 extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense)
