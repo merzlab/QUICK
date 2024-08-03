@@ -454,8 +454,78 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 }
 
 
-
 #ifndef OSHELL
+extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
+{
+
+  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+
+//    gpu -> gpu_calculated -> esp_electronic   =   new cuda_buffer_type<QUICKDouble>(gpu->nextpoint);
+
+//#ifdef LEGACY_ATOMIC_ADD
+//    gpu -> gpu_calculated -> esp_electronic   ->  DeleteGPU();
+//    gpu -> gpu_calculated -> oULL             =   new cuda_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+//    gpu -> gpu_calculated -> oULL             ->  Upload();
+//    gpu -> gpu_sim.oULL                       =   gpu -> gpu_calculated -> oULL -> _devData;
+/*#else
+    gpu -> gpu_calculated -> esp_electronic     ->  Upload();
+    gpu -> gpu_sim.esp_electronic = gpu -> gpu_calculated -> esp_electronic -> _devData;
+#endif
+*/        
+    upload_sim_to_constant_oeprop(gpu);
+    printf("nextpoint = %d \n",gpu -> nextpoint);
+  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+ 
+    upload_para_to_const_oeprop();
+  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+
+    getOEPROP(gpu);
+  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+/*
+#ifdef USE_LEGACY_ATOMICS
+    gpu -> gpu_calculated -> oULL -> Download();
+
+    cudaMemsetAsync(gpu -> gpu_calculated -> oULL -> _devData, 0, sizeof(QUICKULL)*gpu->nbasis*gpu->nbasis);
+
+    for (int i = 0; i< gpu->nbasis; i++) {
+        for (int j = i; j< gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+            }
+            else
+            {
+                valDB  = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
+        }
+    }
+#else
+*/
+    gpu -> gpu_calculated -> esp_electronic -> Download();
+    cudaMemsetAsync(gpu -> gpu_calculated -> esp_electronic -> _devData, 0, sizeof(QUICKDouble)*gpu->nextpoint);
+/*
+
+    for (int i = 0; i< gpu->nextpoint; i++) {
+      LOC2(gpu->gpu_calculated->esp_electronic->_hostData,i,0,gpu->nextpoint, gpu->nextpoint) = LOC2(gpu->gpu_calculated->esp_electronic->_hostData,0,i,gpu->nextpoint, gpu->nextpoint);
+        }
+    }
+
+
+#endif
+*/
+    printf("esp_electronic[0] = %f \n",esp_electronic[0]);
+    printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+    gpu -> gpu_calculated -> esp_electronic   -> DownloadSum(esp_electronic);
+    printf("esp_electronic[0] = %f \n",esp_electronic[0]);
+    printf("esp_electronic[1] = %f \n",esp_electronic[1]);
+}
+
+
+//#ifndef OSHELL
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
 

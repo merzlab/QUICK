@@ -51,6 +51,8 @@ module quick_oeproperties_module
    use quick_basis_module, only: jshell
    use quick_mpi_module, only: master
  
+   use quick_calculated_module, only: quick_qm_struct
+
 #ifdef MPIV
     use mpi
     use quick_basis_module, only: mpi_jshelln, mpi_jshell
@@ -68,6 +70,11 @@ module quick_oeproperties_module
    double precision, allocatable :: esp_electronic_aggregate(:)
 #endif
    integer :: Ish
+
+   Write(6,*)quick_qm_struct%osave(1,1)
+   Write(6,*)quick_qm_struct%osave(1,2)
+   Write(6,*)quick_qm_struct%osave(2,1)
+   Write(6,*)quick_qm_struct%osave(2,2)
 
    ierr = 0
    
@@ -90,8 +97,23 @@ module quick_oeproperties_module
    end do
 
    ! Computes ESP_ELEC
+   Write(6,*)'quick_qm_struct%denseSave(1,1) = ',quick_qm_struct%denseSave(1,1)
+#if defined CUDA || defined HIP
+   !Write(6,*)quick_qm_struct%dense(1,2)
+   Write(6,*)'quick_qm_struct%denseSave(1,2) = ',quick_qm_struct%denseSave(1,2)
+   Write(6,*)'quick_qm_struct%denseSave(1,6) = ',quick_qm_struct%denseSave(1,6)
+   Write(6,*)'quick_qm_struct%denseSave(1,7) = ',quick_qm_struct%denseSave(1,7)
+   Write(6,*)'quick_qm_struct%denseSave(2,2) = ',quick_qm_struct%denseSave(2,2)
+   Write(6,*)'quick_qm_struct%denseSave(2,6) = ',quick_qm_struct%denseSave(2,6)
+   Write(6,*)'quick_qm_struct%denseSave(2,7) = ',quick_qm_struct%denseSave(2,7)
+   Write(6,*)'quick_qm_struct%denseSave(6,6) = ',quick_qm_struct%denseSave(6,6)
+   Write(6,*)'quick_qm_struct%denseSave(6,7) = ',quick_qm_struct%denseSave(6,7)
+   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, ierr)
+   call gpu_get_oeprop(esp_electronic)
+   Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
+   Write(6,*)'esp_electronic(2) in oeprop = ',esp_electronic(2)
    ! Sum over contributions from different shell pairs
-#ifdef MPIV
+#elif defined MPIV
    ! MPI parallellization is performed over shell-pairs
    ! Different processes consider different shell-pairs
    do Ish=1,mpi_jshelln(mpirank)
@@ -109,6 +131,8 @@ module quick_oeproperties_module
         call esp_shell_pair(IIsh, JJsh, esp_electronic)
       end do
    end do
+   Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
+   Write(6,*)'esp_electronic(2) in oeprop = ',esp_electronic(2)
 #endif
 
    RECORD_TIME(timer_end%TESPGrid)

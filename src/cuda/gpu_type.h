@@ -39,6 +39,8 @@ struct gpu_calculated_type {
     cuda_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
 #endif
     cuda_buffer_type<QUICKDouble>*  distance; // distance matrix
+    cuda_buffer_type<QUICKDouble>*  esp_electronic; // electronic contribution to ESP
+//    cuda_buffer_type<QUICKDouble>*  denseSave;  // Density Matrix
 };
 
 // struct to hold large temporary device arrays
@@ -323,6 +325,10 @@ struct gpu_simulation_type {
     QUICKULL*                       obULL;
     QUICKDouble*                    dense;
     QUICKDouble*                    denseb;
+
+    // OEPROP
+    QUICKDouble*                    esp_electronic;
+//    QUICKDouble*                    denseSave;
     
     QUICKDouble*                    distance;
     QUICKDouble*                    Xcoeff;

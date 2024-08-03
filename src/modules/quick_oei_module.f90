@@ -112,7 +112,9 @@ subroutine get1e(deltaO)
 
 #if defined CUDA || defined HIP
          if(.not. quick_method%hasF) then
+           Write(6,*)quick_qm_struct%o(1,2)
            call gpu_get_oei(quick_qm_struct%o)
+           Write(6,*)quick_qm_struct%o(1,2)
          else
 
            do IIsh=1,jshell
@@ -250,6 +252,7 @@ subroutine get1e(deltaO)
 
    endif
 #endif
+           Write(6,*)quick_qm_struct%o(1,2)
 end subroutine get1e
 
 

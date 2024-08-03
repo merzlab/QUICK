@@ -249,9 +249,9 @@
 
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
-      if(quick_molspec%nextpoint .ne. 0)then
-        call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, ierr)
-      endif
+!      if(quick_molspec%nextpoint .ne. 0)then
+!        call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, ierr)
+!      endif
 
     endif
 #endif
