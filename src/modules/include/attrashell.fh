@@ -153,9 +153,7 @@ subroutine attrashell(IIsh, JJsh)
     use quick_molspec_module, only: natom
 #endif
     !    use xiaoconstants
-#ifdef MPIV
-    use mpi
-#endif
+
     implicit none
 
     integer :: IIsh, JJsh, ips, jps, L, Maxm, NII2, NIJ1, NJJ2

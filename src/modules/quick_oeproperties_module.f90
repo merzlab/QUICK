@@ -300,14 +300,14 @@ module quick_oeproperties_module
    ! Computes EField_ELEC by summing over contrbutions from individual shell-pairs
 
 #ifdef MPIV
-!   do Ish=1,mpi_jshelln(mpirank)
-!      IIsh=mpi_jshell(mpirank,i)
-!      do JJsh=IIsh,jshell
-!         call esp_shell_pair(IIsh, JJsh, esp_electronic)
-!      enddo
-!   enddo
-!   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
-!     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+   do Ish=1,mpi_jshelln(mpirank)
+      IIsh=mpi_jshell(mpirank,Ish)
+      do JJsh=IIsh,jshell
+         call efield_shell_pair(IIsh, JJsh, efield_electronic)
+      enddo
+   enddo
+   call MPI_REDUCE(efield_electronic, efield_electronic_aggregate, 3 * quick_molspec%nextpoint, &
+     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
@@ -323,8 +323,11 @@ module quick_oeproperties_module
    if (master) then
     ! for now, back to 'R' mode
      call quick_open(iEFIELDFile,efieldFileName,'U','F','R',.false.,ierr)
-
+#ifdef MPIV
+     call print_efield(efield_nuclear, efield_electronic_aggregate, quick_molspec%nextpoint, ierr)
+#else
      call print_efield(efield_nuclear, efield_electronic, quick_molspec%nextpoint, ierr)
+#endif
      close(iEFIELDFile)
    endif
 
