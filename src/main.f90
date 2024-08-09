@@ -73,7 +73,6 @@
     integer :: i,j,k
     double precision t1_t, t2_t
     common /timer/ t1_t, t2_t
-    double precision, dimension(:), allocatable :: esp_array
 
 
     !------------------------------------------------------------------
@@ -271,6 +270,20 @@
         
     endif
 
+    if (master) then
+
+      ! 6.e Electrostatic Potential
+      if (quick_method%esp_grid) then
+        call compute_esp(ierr)
+      endif
+
+      ! 6.f Electrostatic Potential
+      if (quick_method%efield_grid) then
+        call compute_efield(ierr)
+      endif
+
+    endif
+    
     !------------------------------------------------------------------
     ! 5. OPT Geometry if wanted
     !-----------------------------------------------------------------
@@ -369,17 +382,6 @@
         if (quick_method%dipole) call dipole
 
     endif
-
-    ! 6.e Electrostatic Potential
-    if (quick_method%esp_grid) then
-      call compute_esp(ierr)
-    end if
-
-     ! 6.f Electrostatic Potential
-    if (quick_method%efield_grid) then
-        call compute_efield(ierr)
-      end if
-    
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 

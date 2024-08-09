@@ -97,18 +97,20 @@ module quick_oeproperties_module
    end do
 
    ! Computes ESP_ELEC
-   Write(6,*)'quick_qm_struct%denseSave(1,1) = ',quick_qm_struct%denseSave(1,1)
+   Write(6,*)'quick_qm_struct%dense(1,1) = ',quick_qm_struct%dense(1,1)
 #if defined CUDA || defined HIP
    !Write(6,*)quick_qm_struct%dense(1,2)
    Write(6,*)'quick_qm_struct%denseSave(1,2) = ',quick_qm_struct%denseSave(1,2)
+   Write(6,*)'quick_qm_struct%denseSave(1,5) = ',quick_qm_struct%denseSave(1,5)
    Write(6,*)'quick_qm_struct%denseSave(1,6) = ',quick_qm_struct%denseSave(1,6)
    Write(6,*)'quick_qm_struct%denseSave(1,7) = ',quick_qm_struct%denseSave(1,7)
+   Write(6,*)'quick_qm_struct%denseSave(1,9) = ',quick_qm_struct%denseSave(1,9)
    Write(6,*)'quick_qm_struct%denseSave(2,2) = ',quick_qm_struct%denseSave(2,2)
    Write(6,*)'quick_qm_struct%denseSave(2,6) = ',quick_qm_struct%denseSave(2,6)
-   Write(6,*)'quick_qm_struct%denseSave(2,7) = ',quick_qm_struct%denseSave(2,7)
+   Write(6,*)'quick_qm_struct%denseSave(3,7) = ',quick_qm_struct%denseSave(3,7)
    Write(6,*)'quick_qm_struct%denseSave(6,6) = ',quick_qm_struct%denseSave(6,6)
    Write(6,*)'quick_qm_struct%denseSave(6,7) = ',quick_qm_struct%denseSave(6,7)
-   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, ierr)
+   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, quick_qm_struct%dense, ierr)
    call gpu_get_oeprop(esp_electronic)
    Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
    Write(6,*)'esp_electronic(2) in oeprop = ',esp_electronic(2)
