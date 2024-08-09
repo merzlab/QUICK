@@ -1382,7 +1382,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 //-----------------------------------------------
 //  upload information for OEI calculation
 //-----------------------------------------------
-extern "C" void gpu_upload_oeprop_(int* nextpoint, QUICKDouble* extpointxyz, QUICKDouble* esp_electronic, int *ierr)
+extern "C" void gpu_upload_oeprop_(int* nextpoint, QUICKDouble* extpointxyz, QUICKDouble* esp_electronic, QUICKDouble* dense, int *ierr)
 {
 
     // store coordinates and charges for oeprop calculation
@@ -1398,10 +1398,10 @@ extern "C" void gpu_upload_oeprop_(int* nextpoint, QUICKDouble* extpointxyz, QUI
     gpu -> gpu_calculated -> esp_electronic -> Upload();
     gpu -> gpu_sim.esp_electronic           =  gpu -> gpu_calculated -> esp_electronic -> _devData;
 
-    /*gpu -> gpu_calculated -> denseSave   =    new cuda_buffer_type<QUICKDouble>(denseSave, gpu->nbasis, gpu->nbasis);
-    gpu -> gpu_calculated -> denseSave    -> Upload();
-    gpu -> gpu_sim.denseSave             =  gpu -> gpu_calculated -> denseSave -> _devData;
-*/
+    gpu -> gpu_calculated -> dense   =    new cuda_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
+    gpu -> gpu_calculated -> dense   ->   Upload();
+    gpu -> gpu_sim.dense             =    gpu -> gpu_calculated -> dense -> _devData;
+
 }
 
 

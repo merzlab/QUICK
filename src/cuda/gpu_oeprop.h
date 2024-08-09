@@ -45,6 +45,7 @@ __device__ void addint_oeprop(unsigned int I, unsigned int J, unsigned int II, u
             //printf("III , JJJ , ipoint = %d %d %d \n", III, JJJ, ipoint);
             //printf("devSim.dense[1,0] = %f \n", devSim.dense[1,0]);
             QUICKDouble Y = dense_sym_factor * LOC2(devSim.dense,JJJ-1,III-1,devSim.nbasis,devSim.nbasis) * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
+//            QUICKDouble Y = dense_sym_factor * devSim.dense[III,JJJ] * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
             //}
 
             /*if( III == 10 && JJJ == 50 ) {
@@ -73,9 +74,9 @@ __device__ void addint_oeprop(unsigned int I, unsigned int J, unsigned int II, u
            //   }
            //   if(III == 1 && JJJ == 2 && ipoint == 0){
 /*              if(ipoint == 0){
-                printf("i, j, Y, dense[i-1,j-1], consI, consJ, STORE2, esp = %d %d %f %f %f %f %f %f\n", i, j, Y, devSim.dense[III1-1,JJJ1-1], devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM), devSim.esp_electronic[ipoint]);
-              }
-*/
+                printf("III, JJJ, Y, dense[i-1,j-1], consI, consJ, STORE2, esp = %d %d %f %f %f %f %f %f\n", III, JJJ, Y, devSim.dense[(JJJ-1)+(III-1)*devSim.nbasis], devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM), devSim.esp_electronic[ipoint]);
+              }*/
+
            /* if(ipoint <= 1){
               printf("devSim.esp_electronic[ipoint] = %d %f \n", ipoint, devSim.esp_electronic[ipoint]);
             }*/
@@ -185,7 +186,7 @@ __device__ void iclass_oeprop(unsigned int I, unsigned int J, unsigned int II, u
 
             QUICKDouble Cx = LOC2(devSim.extpointxyz, 0 , ipoint, 3, totalpoint);
             QUICKDouble Cy = LOC2(devSim.extpointxyz, 1 , ipoint, 3, totalpoint);
-            QUICKDouble Cz = LOC2(devSim.extpointxyz, 2 , ipoint, 3, totalpoint);           
+            QUICKDouble Cz = LOC2(devSim.extpointxyz, 2 , ipoint, 3, totalpoint); 
             //QUICKDouble chg = -1.0 * devSim.allchg[ipoint];
 
             // compute OS A21
