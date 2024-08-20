@@ -62,15 +62,7 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 //                        LOC2(devSim.KLMN, 2, JJJ - 1, 3,devSim.nbasis));
 //            }
 
-#if defined(USE_LEGACY_ATOMICS)
-            QUICKULL Yull = (QUICKULL) (fabs(Y * OSCALE) + (QUICKDouble) 0.5);
-            if (Y < (QUICKDouble)0.0) Yull = 0ull - Yull;
-
-            // Now add the contribution into Fock matrix.
-            QUICKADD(LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Yull);
-#else
             atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
-#endif
 
             //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM));
         }

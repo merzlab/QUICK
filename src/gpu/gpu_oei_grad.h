@@ -154,28 +154,6 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     int BStart = (devSim.katom[JJ]-1) * 3;
     int CStart = iatom * 3;
 
-#ifdef USE_LEGACY_ATOMICS
-    GRADADD(devSim.gradULL[AStart], AGradx);
-    GRADADD(devSim.gradULL[AStart + 1], AGrady);
-    GRADADD(devSim.gradULL[AStart + 2], AGradz);
-
-    GRADADD(devSim.gradULL[BStart], BGradx);
-    GRADADD(devSim.gradULL[BStart + 1], BGrady);
-    GRADADD(devSim.gradULL[BStart + 2], BGradz);
-
-if(iatom < devSim.natom){
-    GRADADD(devSim.gradULL[CStart], (-AGradx-BGradx));
-    GRADADD(devSim.gradULL[CStart + 1], (-AGrady-BGrady));
-    GRADADD(devSim.gradULL[CStart + 2], (-AGradz-BGradz));
-}else{
-    CStart = (iatom-devSim.natom) * 3;
-    GRADADD(devSim.ptchg_gradULL[CStart], (-AGradx-BGradx));
-    GRADADD(devSim.ptchg_gradULL[CStart + 1], (-AGrady-BGrady));
-    GRADADD(devSim.ptchg_gradULL[CStart + 2], (-AGradz-BGradz));
-}
-
-#else
-
     atomicAdd(&devSim.grad[AStart], AGradx);
     atomicAdd(&devSim.grad[AStart + 1], AGrady);
     atomicAdd(&devSim.grad[AStart + 2], AGradz);
@@ -184,19 +162,16 @@ if(iatom < devSim.natom){
     atomicAdd(&devSim.grad[BStart + 1], BGrady);
     atomicAdd(&devSim.grad[BStart + 2], BGradz);
 
-if(iatom < devSim.natom){
-    atomicAdd(&devSim.grad[CStart], (-AGradx-BGradx));
-    atomicAdd(&devSim.grad[CStart + 1], (-AGrady-BGrady));
-    atomicAdd(&devSim.grad[CStart + 2], (-AGradz-BGradz));
-}else{
-    CStart = (iatom-devSim.natom) * 3;
-    atomicAdd(&devSim.ptchg_grad[CStart], (-AGradx-BGradx));
-    atomicAdd(&devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
-    atomicAdd(&devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
-}
-
-#endif
-
+    if(iatom < devSim.natom){
+        atomicAdd(&devSim.grad[CStart], (-AGradx-BGradx));
+        atomicAdd(&devSim.grad[CStart + 1], (-AGrady-BGrady));
+        atomicAdd(&devSim.grad[CStart + 2], (-AGradz-BGradz));
+    }else{
+        CStart = (iatom-devSim.natom) * 3;
+        atomicAdd(&devSim.ptchg_grad[CStart], (-AGradx-BGradx));
+        atomicAdd(&devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
+        atomicAdd(&devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
+    }
 }
 
 

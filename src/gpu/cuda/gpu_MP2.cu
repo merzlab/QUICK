@@ -378,7 +378,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         QUICKULL val1 = (QUICKULL) (fabs(val1d * OSCALE) + (QUICKDouble) 0.5);
                         if (val1d < (QUICKDouble) 0.0)
                             val1 = 0ull - val1;
-                        QUICKADD(LOC2(devSim_MP2.oULL, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val1);
+                        atomicAdd(&LOC2(devSim_MP2.oULL, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val1);
                         // }
 
                         // ATOMIC ADD VALUE 2
@@ -393,7 +393,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                             QUICKULL val2 = (QUICKULL) (fabs(val2d * OSCALE) + (QUICKDouble) 0.5);
                             if (val2d < (QUICKDouble) 0.0)
                                 val2 = 0ull - val2;
-                            QUICKADD(LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val2);
+                            atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val2);
                             //  }
                         }
 
@@ -406,7 +406,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         }
                         if (DENSELJ * Y < (QUICKDouble) 0.0)
                             val3 = 0ull - val3;
-                        QUICKADD(LOC2(devSim_MP2.oULL, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val3);
+                        atomicAdd(&LOC2(devSim_MP2.oULL, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val3);
                         //}
 
                         // ATOMIC ADD VALUE 4
@@ -415,7 +415,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                             // if (abs(val4d) > devSim_MP2.integralCutoff) {
                             QUICKULL val4 = (QUICKULL) (fabs(val4d * OSCALE) + (QUICKDouble) 0.5);
                             if (val4d < (QUICKDouble) 0.0) val4 = 0ull - val4;
-                            QUICKADD(LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val4);
+                            atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val4);
                             //}
                         }
 
@@ -428,13 +428,13 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         if ((III != JJJ && III < KKK)
                                 || (III == JJJ && III == KKK && III < LLL)
                                 || (III == KKK && III <  JJJ && JJJ < LLL)) {
-                            QUICKADD(LOC2(devSim_MP2.oULL, MAX(JJJ,KKK) - 1, MIN(JJJ,KKK) - 1,
+                            atomicAdd(&LOC2(devSim_MP2.oULL, MAX(JJJ,KKK) - 1, MIN(JJJ,KKK) - 1,
                                         devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val5);
                         }
 
                         // ATOMIC ADD VALUE 5 - 2
                         if (III != JJJ && JJJ == KKK) {
-                            QUICKADD(LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
+                            atomicAdd(&LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
                                         devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val5);
                         }
                         //}
@@ -449,12 +449,12 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                                 if (val6d < (QUICKDouble) 0.0)
                                     val6 = 0ull - val6;
 
-                                QUICKADD(LOC2(devSim_MP2.oULL, MAX(JJJ,LLL) - 1, MIN(JJJ,LLL) - 1,
+                                atomicAdd(&LOC2(devSim_MP2.oULL, MAX(JJJ,LLL) - 1, MIN(JJJ,LLL) - 1,
                                             devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val6);
 
                                 // ATOMIC ADD VALUE 6 - 2
                                 if (JJJ == LLL && III != KKK) {
-                                    QUICKADD(LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
+                                    atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
                                                 devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val6);
                                 }
                             }

@@ -28,81 +28,66 @@
  */
 template <typename T> struct gpu_buffer_type;
 struct gpu_calculated_type {
-    int                             natom;  // number of atom
-    int                             nbasis; // number of basis sets
-    gpu_buffer_type<QUICKDouble>*  o;      // O matrix
-    gpu_buffer_type<QUICKDouble>*  ob;     // beta O matrix
-    gpu_buffer_type<QUICKDouble>*  dense;  // Density Matrix
-    gpu_buffer_type<QUICKDouble>*  denseb; // Beta Density Matrix
-#ifdef USE_LEGACY_ATOMICS
-    gpu_buffer_type<QUICKULL>*     oULL;   // Unsigned long long int type O matrix
-    gpu_buffer_type<QUICKULL>*     obULL;  // Unsigned long long int type Ob matrix
-#endif
-    gpu_buffer_type<QUICKDouble>*  distance; // distance matrix
+    int natom;  // number of atom
+    int nbasis; // number of basis sets
+    gpu_buffer_type<QUICKDouble>* o;      // O matrix
+    gpu_buffer_type<QUICKDouble>* ob;     // beta O matrix
+    gpu_buffer_type<QUICKDouble>* dense;  // Density Matrix
+    gpu_buffer_type<QUICKDouble>* denseb; // Beta Density Matrix
+    gpu_buffer_type<QUICKDouble>* distance; // distance matrix
 };
 
 // struct to hold large temporary device arrays
-struct gpu_scratch{
-
+struct gpu_scratch {
     gpu_buffer_type<QUICKDouble>* store;     // holds temporary primitive integrals in OEI and ERI algorithms
     gpu_buffer_type<QUICKDouble>* store2;    // holds temporary primitive integrals in OEI and ERI algorithms
     gpu_buffer_type<QUICKDouble>* storeAA;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
     gpu_buffer_type<QUICKDouble>* storeBB;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
     gpu_buffer_type<QUICKDouble>* storeCC;   // holds weighted temporary primitive integrals in OEI and ERI gradient algorithms
     gpu_buffer_type<QUICKDouble>* YVerticalTemp;  // holds boys function values
-
 };
 
-struct gpu_timer_type{
-
-   double                           t_2elb; // time for eri load balancing in mgpu version
-   double                           t_xclb; // time for xc load balancing in mgpu version
-   double                           t_xcrb; // time for xc load re-balancing in mgpu version
-   double                           t_xcpg; // grid pruning time
-
+struct gpu_timer_type {
+   double t_2elb; // time for eri load balancing in mgpu version
+   double t_xclb; // time for xc load balancing in mgpu version
+   double t_xcrb; // time for xc load re-balancing in mgpu version
+   double t_xcpg; // grid pruning time
 };
 
 struct gpu_cutoff_type {
-    int                             natom;
-    int                             nbasis;
-    int                             nshell;
+    int natom;
+    int nbasis;
+    int nshell;
     
     // the following are for pre-sorting cutoff
-    int                             sqrQshell;
-    gpu_buffer_type<int2>*         sorted_YCutoffIJ;
+    int sqrQshell;
+    gpu_buffer_type<int2>* sorted_YCutoffIJ;
     
     // Cutoff matrix
-    gpu_buffer_type<QUICKDouble>*  cutMatrix;
-    gpu_buffer_type<QUICKDouble>*  YCutoff;
-    gpu_buffer_type<QUICKDouble>*  cutPrim;
+    gpu_buffer_type<QUICKDouble>* cutMatrix;
+    gpu_buffer_type<QUICKDouble>* YCutoff;
+    gpu_buffer_type<QUICKDouble>* cutPrim;
     
     // Cutoff criteria
-    QUICKDouble                     integralCutoff;
-    QUICKDouble                     coreIntegralCutoff;
-    QUICKDouble                     primLimit;
-    QUICKDouble                     DMCutoff;
-    QUICKDouble                     XCCutoff;
-    QUICKDouble                     gradCutoff;
+    QUICKDouble integralCutoff;
+    QUICKDouble coreIntegralCutoff;
+    QUICKDouble primLimit;
+    QUICKDouble DMCutoff;
+    QUICKDouble XCCutoff;
+    QUICKDouble gradCutoff;
 
     // One electron pre-sorting cutoff
-    gpu_buffer_type<int2>*         sorted_OEICutoffIJ;
-    
+    gpu_buffer_type<int2>* sorted_OEICutoffIJ;
 };
 
 struct DFT_calculated_type {
-#ifdef USE_LEGACY_ATOMICS
-    QUICKULL                     Eelxc;      // exchange correction energy
-    QUICKULL                     aelec;      // alpha electron
-    QUICKULL                     belec;      // beta electron
-#else
-    QUICKDouble                     Eelxc;      // exchange correction energy
-    QUICKDouble                     aelec;      // alpha electron
-    QUICKDouble                     belec;      // beta electron
-#endif
+    QUICKDouble Eelxc;      // exchange correction energy
+    QUICKDouble aelec;      // alpha electron
+    QUICKDouble belec;      // beta electron
 };
 
 /*Madu Manathunga 11/21/2019*/
-struct XC_quadrature_type{
+struct XC_quadrature_type {
 	int npoints;								//Total number of packed grid points
 	int nbins;									//Total number of bins
 	int ntotbf;									//Total number of basis functions
@@ -114,15 +99,15 @@ struct XC_quadrature_type{
 	gpu_buffer_type<QUICKDouble>* gridz;		//Z coordinate of a grid point
 	gpu_buffer_type<QUICKDouble>* sswt;		//A version of weight required for gradients
 	gpu_buffer_type<QUICKDouble>* weight;		//Scuzeria weight of a grid point
-	gpu_buffer_type<int>*	gatm;			//To which atom does a given grid point belongs to?
-        gpu_buffer_type<int>*  bin_counter;            //Keeps track of bin borders 
-	gpu_buffer_type<int>*  dweight_ssd;            //Dummy weight of grid points for sswder 
-	gpu_buffer_type<int>*	basf;			//Basis function indices of all grid points
-	gpu_buffer_type<int>*	primf;			//Primitive function inidices of all grid points
-        gpu_buffer_type<int>*  primfpbin;                 //Number of primitive functions per bin
-	gpu_buffer_type<int>*	basf_locator;		//Helps accessing b.f. indices of a grid point
-	gpu_buffer_type<int>*	primf_locator;		//Helps accessing p.f. indices of a b.f.
-        gpu_buffer_type<int>*  bin_locator;            //Helps accessing bin of a grid point
+	gpu_buffer_type<int>* gatm;			//To which atom does a given grid point belongs to?
+        gpu_buffer_type<int>* bin_counter;            //Keeps track of bin borders 
+	gpu_buffer_type<int>* dweight_ssd;            //Dummy weight of grid points for sswder 
+	gpu_buffer_type<int>* basf;			//Basis function indices of all grid points
+	gpu_buffer_type<int>* primf;			//Primitive function inidices of all grid points
+        gpu_buffer_type<int>* primfpbin;                 //Number of primitive functions per bin
+	gpu_buffer_type<int>* basf_locator;		//Helps accessing b.f. indices of a grid point
+	gpu_buffer_type<int>* primf_locator;		//Helps accessing p.f. indices of a b.f.
+        gpu_buffer_type<int>* bin_locator;            //Helps accessing bin of a grid point
 
 	//Temporary variables
 	gpu_buffer_type<QUICKDouble>* densa;
@@ -140,7 +125,7 @@ struct XC_quadrature_type{
         gpu_buffer_type<QUICKDouble>* dphidx;          // x gradient of a basis function at a grid point 
         gpu_buffer_type<QUICKDouble>* dphidy;          // y gradient of a basis function at a grid point
         gpu_buffer_type<QUICKDouble>* dphidz;          // z gradient of a basis function at a grid point  
-        gpu_buffer_type<unsigned int>*  phi_loc;       // stores locations of phi array for each grid point
+        gpu_buffer_type<unsigned int>* phi_loc;       // stores locations of phi array for each grid point
 
         //Variables for ssw derivative calculation
         int npoints_ssd; //Total number of input points for ssd
@@ -150,7 +135,7 @@ struct XC_quadrature_type{
         gpu_buffer_type<QUICKDouble>* gridz_ssd;       //Z coordinate of a grid point
         gpu_buffer_type<QUICKDouble>* exc_ssd;
         gpu_buffer_type<QUICKDouble>* quadwt;          //quadrature weight
-        gpu_buffer_type<int>*  gatm_ssd;               //To which atom does a given grid point belongs to?
+        gpu_buffer_type<int>* gatm_ssd;               //To which atom does a given grid point belongs to?
 	gpu_buffer_type<QUICKDouble>* uw_ssd;          //Holds unnormalized weights during ssd calculation
 	
 	//Variables for grid weight calculation
@@ -160,26 +145,23 @@ struct XC_quadrature_type{
 
 	//Variables for obtaining octree info 
 	gpu_buffer_type<unsigned char>* gpweight;     //keeps track of significant grid points for octree pruning
-	gpu_buffer_type<unsigned int>*  cfweight;     //keeps track of significant b.f. for octree pruning 
-	gpu_buffer_type<unsigned int>*  pfweight;     //keeps track of significant p.f. for octree pruning
+	gpu_buffer_type<unsigned int>* cfweight;     //keeps track of significant b.f. for octree pruning 
+	gpu_buffer_type<unsigned int>* pfweight;     //keeps track of significant p.f. for octree pruning
 
         // mpi variables
-        gpu_buffer_type<char>*          mpi_bxccompute;
+        gpu_buffer_type<char>* mpi_bxccompute;
 
         // shared memory size
         int smem_size;                                 //size of shared memory buffer in xc kernels 
 };
 
-struct lri_data_type{
-
+struct lri_data_type {
     int zeta;
     gpu_buffer_type<QUICKDouble>* cc;
     gpu_buffer_type<QUICKDouble>* vrecip;
-
 };
 
 struct gpu_simulation_type {
-    
     // basic molecule information and method information
     QUICK_METHOD                    method;
     DFT_calculated_type*            DFT_calculated;

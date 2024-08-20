@@ -8,6 +8,7 @@
 
 #include "gpu_common.h"
 
+
 #undef STOREDIM
 
 #ifdef int_sp
@@ -39,6 +40,7 @@
 #define VDIM3 VDIM3_L
 #define STOREDIM STOREDIM_L
 #endif
+
 
 #ifdef OSHELL
 #ifdef int_sp
@@ -732,48 +734,21 @@ __device__ __forceinline__ void iclass_grad_spd
         }
     }
     
-    
-   
-#ifdef USE_LEGACY_ATOMICS 
-    GRADADD(devSim.gradULL[AStart], AGradx);
-    GRADADD(devSim.gradULL[AStart + 1], AGrady);
-    GRADADD(devSim.gradULL[AStart + 2], AGradz);
-    
-    
-    GRADADD(devSim.gradULL[BStart], BGradx);
-    GRADADD(devSim.gradULL[BStart + 1], BGrady);
-    GRADADD(devSim.gradULL[BStart + 2], BGradz);
-    
-    
-    GRADADD(devSim.gradULL[CStart], CGradx);
-    GRADADD(devSim.gradULL[CStart + 1], CGrady);
-    GRADADD(devSim.gradULL[CStart + 2], CGradz);
-    
-    
-    GRADADD(devSim.gradULL[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(devSim.gradULL[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(devSim.gradULL[DStart + 2], (-AGradz-BGradz-CGradz));
-#else    
     atomicAdd(&devSim.grad[AStart], AGradx);
     atomicAdd(&devSim.grad[AStart + 1], AGrady);
     atomicAdd(&devSim.grad[AStart + 2], AGradz);
-
 
     atomicAdd(&devSim.grad[BStart], BGradx);
     atomicAdd(&devSim.grad[BStart + 1], BGrady);
     atomicAdd(&devSim.grad[BStart + 2], BGradz);
 
-
     atomicAdd(&devSim.grad[CStart], CGradx);
     atomicAdd(&devSim.grad[CStart + 1], CGrady);
     atomicAdd(&devSim.grad[CStart + 2], CGradz);
 
-
     atomicAdd(&devSim.grad[DStart], (-AGradx-BGradx-CGradx));
     atomicAdd(&devSim.grad[DStart + 1], (-AGrady-BGrady-CGrady));
     atomicAdd(&devSim.grad[DStart + 2], (-AGradz-BGradz-CGradz));
-#endif
-    return;
 }
 #else
 
@@ -1643,47 +1618,21 @@ QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2, QUICKDouble
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
 #endif    
    
-#ifdef USE_LEGACY_ATOMICS 
-    GRADADD(devSim.gradULL[AStart], AGradx);
-    GRADADD(devSim.gradULL[AStart + 1], AGrady);
-    GRADADD(devSim.gradULL[AStart + 2], AGradz);
-    
-    
-    GRADADD(devSim.gradULL[BStart], BGradx);
-    GRADADD(devSim.gradULL[BStart + 1], BGrady);
-    GRADADD(devSim.gradULL[BStart + 2], BGradz);
-    
-    
-    GRADADD(devSim.gradULL[CStart], CGradx);
-    GRADADD(devSim.gradULL[CStart + 1], CGrady);
-    GRADADD(devSim.gradULL[CStart + 2], CGradz);
-    
-    
-    GRADADD(devSim.gradULL[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(devSim.gradULL[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(devSim.gradULL[DStart + 2], (-AGradz-BGradz-CGradz));
-#else 
     atomicAdd(&devSim.grad[AStart], AGradx);
     atomicAdd(&devSim.grad[AStart + 1], AGrady);
     atomicAdd(&devSim.grad[AStart + 2], AGradz);
-
 
     atomicAdd(&devSim.grad[BStart], BGradx);
     atomicAdd(&devSim.grad[BStart + 1], BGrady);
     atomicAdd(&devSim.grad[BStart + 2], BGradz);
 
-
     atomicAdd(&devSim.grad[CStart], CGradx);
     atomicAdd(&devSim.grad[CStart + 1], CGrady);
     atomicAdd(&devSim.grad[CStart + 2], CGradz);
 
-
     atomicAdd(&devSim.grad[DStart], (-AGradx-BGradx-CGradx));
     atomicAdd(&devSim.grad[DStart + 1], (-AGrady-BGrady-CGrady));
     atomicAdd(&devSim.grad[DStart + 2], (-AGradz-BGradz-CGradz));   
-#endif
-
-    return;
 }
 
 #endif
@@ -2019,29 +1968,18 @@ __device__ __forceinline__ void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* 
         }
     }
     
-    
     *Yaax = *Yaax * constant;
     *Yaay = *Yaay * constant;
     *Yaaz = *Yaaz * constant;
-    
     
     *Ybbx = *Ybbx * constant;
     *Ybby = *Ybby * constant;
     *Ybbz = *Ybbz * constant;
     
-    
     *Yccx = *Yccx * constant;
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
-    
-    
-    
-    return;
-    
 }
-
-
-
 
 
 #undef STOREDIM
@@ -2372,26 +2310,19 @@ __device__ __forceinline__ void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaa
         }
     }
     
-    
     *Yaax = *Yaax * constant;
     *Yaay = *Yaay * constant;
     *Yaaz = *Yaaz * constant;
-    
     
     *Ybbx = *Ybbx * constant;
     *Ybby = *Ybby * constant;
     *Ybbz = *Ybbz * constant;
     
-    
     *Yccx = *Yccx * constant;
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
-    
-    
-    
-    return;
-    
 }
+
 
 #undef STOREDIM
 #define STOREDIM STOREDIM_XL
@@ -2725,25 +2656,17 @@ __device__ __forceinline__ void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Ya
         }
     }
     
-    
     *Yaax = *Yaax * constant;
     *Yaay = *Yaay * constant;
     *Yaaz = *Yaaz * constant;
-    
     
     *Ybbx = *Ybbx * constant;
     *Ybby = *Ybby * constant;
     *Ybbz = *Ybbz * constant;
     
-    
     *Yccx = *Yccx * constant;
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
-    
-    
-    
-    return;
-    
 }
 
 #undef STOREDIM
@@ -2840,20 +2763,13 @@ __device__ __forceinline__ void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* 
     *Yaay = *Yaay * constant;
     *Yaaz = *Yaaz * constant;
     
-    
     *Ybbx = *Ybbx * constant;
     *Ybby = *Ybby * constant;
     *Ybbz = *Ybbz * constant;
     
-    
     *Yccx = *Yccx * constant;
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
-    
-    
-    
-    return;
-    
 }
 
 
@@ -2964,37 +2880,26 @@ __device__ __forceinline__ void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* 
         }
     }
     
-    
     *Yaax = *Yaax * constant;
     *Yaay = *Yaay * constant;
     *Yaaz = *Yaaz * constant;
-    
     
     *Ybbx = *Ybbx * constant;
     *Ybby = *Ybby * constant;
     *Ybbz = *Ybbz * constant;
     
-    
     *Yccx = *Yccx * constant;
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
-    
-    
-    
-    return;
-    
 }
-
 #endif
+
 
 #ifdef int_sp
-#ifndef sp_grad_fmt
-#define sp_grad_fmt
-#undef FMT_NAME
-#define FMT_NAME FmT_grad_sp
-#include "gpu_fmt.h"
+  #ifndef sp_grad_fmt
+    #define sp_grad_fmt
+    #undef FMT_NAME
+    #define FMT_NAME FmT_grad_sp
+    #include "gpu_fmt.h"
+  #endif
 #endif
-#endif
-
-
-

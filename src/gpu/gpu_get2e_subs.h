@@ -842,20 +842,11 @@ __device__ __forceinline__ void iclass_spdf10
 
                         if (abs(Y) > devSim.integralCutoff)
                         {
-#if defined(USE_LEGACY_ATOMICS)
-  #if defined(OSHELL)
-                            addint_oshell(devSim.oULL,devSim.obULL, Y, III, JJJ, KKK, LLL,
-                                    devSim.hyb_coeff, devSim.dense, devSim.denseb, devSim.nbasis);
-  #else
-                            addint(devSim.oULL, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
-  #endif
-#else
-  #if defined(OSHELL)
+#if defined(OSHELL)
                             addint_oshell(devSim.o,devSim.ob, Y, III, JJJ, KKK, LLL,
                                     devSim.hyb_coeff, devSim.dense, devSim.denseb, devSim.nbasis);
-  #else
+#else
                             addint(devSim.o, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
-  #endif
 #endif
                         }
                     }
@@ -1248,7 +1239,7 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
                             a.IJ = (III - 1) * devSim.nbasis + JJJ - 1;
                             a.KL = (KKK - 1) * devSim.nbasis + LLL - 1;
                             
-                            aoint_buffer[QUICKADD(devSim.intCount[streamID], 1)] = a;
+                            aoint_buffer[atomicAdd(&devSim.intCount[streamID], 1)] = a;
                         }
                     }
                 }
@@ -1262,26 +1253,14 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
 
 #ifndef new_quick_2_gpu_get2e_subs_h
   #define new_quick_2_gpu_get2e_subs_h
-  #if defined(USE_LEGACY_ATOMICS)
-    #if defined(OSHELL)
-__device__ __forceinline__ void addint_oshell(QUICKULL* oULL, QUICKULL* obULL, const QUICKDouble Y,
-        const int III, const int JJJ, const int KKK, const int LLL,
-        const QUICKDouble hybrid_coeff, QUICKDouble* dense, QUICKDouble* denseb, const int nbasis)
-    #else
-__device__ __forceinline__ void addint(QUICKULL* oULL, const QUICKDouble Y,
-        const int III, const int JJJ, const int KKK, const int LLL,
-        const QUICKDouble hybrid_coeff, QUICKDouble* dense, const int nbasis)
-    #endif
-  #else
-    #if defined(OSHELL)
+  #if defined(OSHELL)
 __device__ __forceinline__ void addint_oshell(QUICKDouble* o, QUICKDouble* ob,QUICKDouble Y,
         int III, int JJJ, int KKK, int LLL,
         QUICKDouble hybrid_coeff, QUICKDouble* dense, QUICKDouble* denseb,int nbasis)
-    #else
+  #else
 __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
         int III, int JJJ, int KKK, int LLL,
         QUICKDouble hybrid_coeff, QUICKDouble* dense, int nbasis)
-    #endif
   #endif
 {
   #if defined(OSHELL)
@@ -1305,15 +1284,8 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
     }
 
     QUICKDouble val1d = _tmp * DENSELK * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val1 = (QUICKULL) (fabs(val1d * OSCALE) + (QUICKDouble) 0.5);
-    if (val1d < (QUICKDouble) 0.0) val1 = 0ull - val1;
-    QUICKADD(LOC2(oULL, JJJ - 1, III - 1, nbasis, nbasis), val1);
-    QUICKADD(LOC2(obULL, JJJ - 1, III - 1, nbasis, nbasis), val1);
-    #else
     atomicAdd(&LOC2(o, JJJ - 1, III - 1, nbasis, nbasis), val1d);
     atomicAdd(&LOC2(ob, JJJ - 1, III - 1, nbasis, nbasis), val1d);
-    #endif
 
     // ATOMIC ADD VALUE 2
     if (LLL != JJJ || III != KKK) {
@@ -1323,87 +1295,36 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
         }
 
         QUICKDouble val2d = _tmp * DENSEJI * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-        QUICKULL val2 = (QUICKULL) (fabs(val2d * OSCALE) + (QUICKDouble) 0.5);
-        if (val2d < (QUICKDouble) 0.0) val2 = 0ull - val2;
-        QUICKADD(LOC2(oULL, LLL - 1, KKK - 1, nbasis, nbasis), val2);
-        QUICKADD(LOC2(obULL, LLL - 1, KKK - 1, nbasis, nbasis), val2);
-    #else
         atomicAdd(&LOC2(o, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
         atomicAdd(&LOC2(ob, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
-    #endif
     }
 
     // ATOMIC ADD VALUE 3
     QUICKDouble val3da = hybrid_coeff * DENSELJA * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val3a = (QUICKULL) (fabs(val3da * OSCALE) + (QUICKDouble) 0.5);
-    if (III == KKK && III <  JJJ && JJJ < LLL) {
-        val3a = (QUICKULL) (fabs(2 * val3da * OSCALE) + (QUICKDouble) 0.5);
-    }
-    if (DENSELJA * Y < (QUICKDouble) 0.0) val3a = 0ull - val3a;
-    QUICKADD(LOC2(oULL, KKK - 1, III - 1, nbasis, nbasis), 0ull - val3a);
-    #else
     if (III == KKK && III < JJJ && JJJ < LLL) {
         val3da *= 2.0;
     }
     atomicAdd(&LOC2(o, KKK - 1, III - 1, nbasis, nbasis), -val3da);
-    #endif
 
     QUICKDouble val3db = hybrid_coeff * DENSELJB * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val3b = (QUICKULL) (fabs(val3db * OSCALE) + (QUICKDouble) 0.5);
-    if (III == KKK && III <  JJJ && JJJ < LLL) {
-        val3b = (QUICKULL) (fabs(2.0 * val3db * OSCALE) + (QUICKDouble) 0.5);
-    }
-    if (DENSELJB * Y < (QUICKDouble) 0.0) val3b = 0ull - val3b;
-    QUICKADD(LOC2(obULL, KKK - 1, III - 1, nbasis, nbasis), 0ull - val3b);
-    #else
     if (III == KKK && III < JJJ && JJJ < LLL) {
         val3db *= 2.0;
     }
     atomicAdd(&LOC2(ob, KKK - 1, III - 1, nbasis, nbasis), -val3db);
-    #endif
 
     // ATOMIC ADD VALUE 4
     if (KKK != LLL) {
         QUICKDouble val4da = hybrid_coeff * DENSEKJA * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-        QUICKULL val4a = (QUICKULL) (fabs(val4da * OSCALE) + (QUICKDouble) 0.5);
-        if (val4da < (QUICKDouble) 0.0) val4a = 0ull - val4a;
-        QUICKADD(LOC2(oULL, LLL - 1, III - 1, nbasis, nbasis), 0ull - val4a);
-    #else
         atomicAdd(&LOC2(o, LLL - 1, III - 1, nbasis, nbasis), -val4da);
-    #endif
     }
 
     if (KKK != LLL) {
         QUICKDouble val4db = hybrid_coeff * DENSEKJB * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-        QUICKULL val4b = (QUICKULL) (fabs(val4db * OSCALE) + (QUICKDouble) 0.5);
-        if (val4db < (QUICKDouble) 0.0) val4b = 0ull - val4b;
-        QUICKADD(LOC2(obULL, LLL - 1, III - 1, nbasis, nbasis), 0ull - val4b);
-    #else
         atomicAdd(&LOC2(ob, LLL - 1, III - 1, nbasis, nbasis), -val4db);
-    #endif
     }
 
     // ATOMIC ADD VALUE 5
     QUICKDouble val5da = hybrid_coeff * DENSELIA * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val5a = (QUICKULL) (fabs(val5da * OSCALE) + (QUICKDouble) 0.5);
-    if (val5da < (QUICKDouble) 0.0) val5a = 0ull - val5a;
-
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III < JJJ && JJJ < LLL)) {
-        QUICKADD(LOC2(oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), 0ull - val5a);
-    }
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        QUICKADD(LOC2(oULL, JJJ - 1, KKK - 1, nbasis, nbasis), 0ull - val5a);
-    }
-    #else
     if ((III != JJJ && III < KKK)
             || (III == JJJ && III == KKK && III < LLL)
             || (III == KKK && III < JJJ && JJJ < LLL)) {
@@ -1413,23 +1334,8 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
     if (III != JJJ && JJJ == KKK) {
         atomicAdd(&LOC2(o, JJJ - 1, KKK - 1, nbasis, nbasis), -val5da);
     }
-    #endif
 
     QUICKDouble val5db = hybrid_coeff * DENSELIB * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val5b = (QUICKULL) (fabs(val5db * OSCALE) + (QUICKDouble) 0.5);
-    if (val5db < (QUICKDouble) 0.0) val5b = 0ull - val5b;
-
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III <  JJJ && JJJ < LLL)) {
-        QUICKADD(LOC2(obULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), 0ull - val5b);
-    }
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        QUICKADD(LOC2(obULL, JJJ - 1, KKK - 1, nbasis, nbasis), 0ull - val5b);
-    }
-    #else
     if ((III != JJJ && III < KKK)
             || (III == JJJ && III == KKK && III < LLL)
             || (III == KKK && III < JJJ && JJJ < LLL)) {
@@ -1439,54 +1345,29 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
     if (III != JJJ && JJJ == KKK) {
         atomicAdd(&LOC2(ob, JJJ - 1, KKK - 1, nbasis, nbasis), -val5db);
     }
-    #endif
 
     // ATOMIC ADD VALUE 6
     if (III != JJJ) {
         if (KKK != LLL) {
             QUICKDouble val6da = hybrid_coeff * DENSEKIA * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-            QUICKULL val6a = (QUICKULL) (fabs(val6da * OSCALE) + (QUICKDouble) 0.5);
-            if (val6da < (QUICKDouble) 0.0) val6a = 0ull - val6a;
-
-            QUICKADD(LOC2(oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), 0ull - val6a);
-
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                QUICKADD(LOC2(oULL, LLL - 1, JJJ - 1, nbasis, nbasis), 0ull - val6a);
-            }
-    #else
             atomicAdd(&LOC2(o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6da);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III != KKK) {
                 atomicAdd(&LOC2(o, LLL - 1, JJJ - 1, nbasis, nbasis), -val6da);
             }
-    #endif
         }
     }
 
     if (III != JJJ) {
         if (KKK != LLL) {
             QUICKDouble val6db = hybrid_coeff * DENSEKIB * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-            QUICKULL val6b = (QUICKULL) (fabs(val6db * OSCALE) + (QUICKDouble) 0.5);
-            if (val6db < (QUICKDouble) 0.0) val6b = 0ull - val6b;
-
-            QUICKADD(LOC2(obULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), 0ull - val6b);
-
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                QUICKADD(LOC2(obULL, LLL - 1, JJJ - 1, nbasis, nbasis), 0ull - val6b);
-            }
-    #else
             atomicAdd(&LOC2(ob, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6db);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III != KKK) {
                 atomicAdd(&LOC2(ob, LLL - 1, JJJ - 1, nbasis, nbasis), -val6db);
             }
-    #endif
         }
     }
 
@@ -1505,13 +1386,7 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
     }
     
     QUICKDouble val1d = _tmp * DENSELK * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val1 = (QUICKULL) (fabs(val1d * OSCALE) + (QUICKDouble) 0.5);
-    if (val1d < (QUICKDouble) 0.0) val1 = 0ull - val1;
-    QUICKADD(LOC2(oULL, JJJ - 1, III - 1, nbasis, nbasis), val1);
-    #else    
     atomicAdd(&LOC2(o, JJJ - 1, III - 1, nbasis, nbasis), val1d);
-    #endif
     
     // ATOMIC ADD VALUE 2
     if (LLL != JJJ || III != KKK) {
@@ -1521,60 +1396,24 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
         }
         
         QUICKDouble val2d = _tmp * DENSEJI * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-        QUICKULL val2 = (QUICKULL) (fabs(val2d * OSCALE) + (QUICKDouble) 0.5);
-        if (val2d < (QUICKDouble) 0.0) val2 = 0ull - val2;
-        QUICKADD(LOC2(oULL, LLL - 1, KKK - 1, nbasis, nbasis), val2);
-    #else
         atomicAdd(&LOC2(o, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
-    #endif
     }
     
     // ATOMIC ADD VALUE 3
     QUICKDouble val3d = hybrid_coeff * 0.5 * DENSELJ * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val3 = (QUICKULL) (fabs(val3d * OSCALE) + (QUICKDouble) 0.5);
-    if (III == KKK && III < JJJ && JJJ < LLL) {
-        val3 = (QUICKULL) (fabs(2.0 * val3d * OSCALE) + (QUICKDouble) 0.5);
-    }
-    if (DENSELJ * Y < (QUICKDouble) 0.0) val3 = 0ull - val3;
-    QUICKADD(LOC2(oULL, KKK - 1, III - 1, nbasis, nbasis), 0ull - val3);
-    #else    
     if (III == KKK && III < JJJ && JJJ < LLL) {
         val3d *= 2.0;
     }
     atomicAdd(&LOC2(o, KKK - 1, III - 1, nbasis, nbasis), -val3d);
-    #endif
 
     // ATOMIC ADD VALUE 4
     if (KKK != LLL) {
         QUICKDouble val4d = hybrid_coeff * 0.5 * DENSEKJ * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-        QUICKULL val4 = (QUICKULL) (fabs(val4d * OSCALE) + (QUICKDouble) 0.5);
-        if (val4d < (QUICKDouble) 0.0) val4 = 0ull - val4;
-        QUICKADD(LOC2(oULL, LLL - 1, III - 1, nbasis, nbasis), 0ull - val4);
-    #else
         atomicAdd(&LOC2(o, LLL - 1, III - 1, nbasis, nbasis), -val4d);
-    #endif
     }
     
     // ATOMIC ADD VALUE 5
     QUICKDouble val5d = hybrid_coeff * 0.5 * DENSELI * Y;
-    #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL val5 = (QUICKULL) (fabs(val5d*OSCALE) + (QUICKDouble) 0.5);
-    if (val5d < (QUICKDouble) 0.0) val5 = 0ull - val5;
-    
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III <  JJJ && JJJ < LLL)) {
-        QUICKADD(LOC2(oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), 0ull - val5);
-    }
-        
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        QUICKADD(LOC2(oULL, JJJ - 1, KKK - 1, nbasis, nbasis), 0ull - val5);
-    }
-    #else    
     if ((III != JJJ && III < KKK)
             || (III == JJJ && III == KKK && III < LLL)
             || (III == KKK && III <  JJJ && JJJ < LLL)) {
@@ -1586,30 +1425,17 @@ __device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
         atomicAdd(&LOC2(o, JJJ - 1, KKK - 1, nbasis, nbasis), -val5d);
     }
 
-    #endif
     // ATOMIC ADD VALUE 6
     if (III != JJJ) {
         if (KKK != LLL) {
             QUICKDouble val6d = hybrid_coeff * 0.5 * DENSEKI * Y;
 
-    #if defined(USE_LEGACY_ATOMICS)
-            QUICKULL val6 = (QUICKULL) (fabs(val6d * OSCALE) + (QUICKDouble) 0.5);
-            if (val6d < (QUICKDouble) 0.0) val6 = 0ull - val6;
-            
-            QUICKADD(LOC2(oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), 0ull - val6);
-            
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                QUICKADD(LOC2(oULL, LLL - 1, JJJ - 1, nbasis, nbasis), 0ull - val6);
-            }
-    #else
             atomicAdd(&LOC2(o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6d);
 
             // ATOMIC ADD VALUE 6 - 2
             if (JJJ == LLL && III != KKK) {
                 atomicAdd(&LOC2(o, LLL - 1, JJJ - 1, nbasis, nbasis), -val6d);
             }
-    #endif
         }
     }
   #endif

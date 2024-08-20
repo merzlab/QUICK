@@ -803,11 +803,7 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kerne
 //                    } else if( devSim.method == LIBXC) {
 //			hybrid_coeff = devSim.hyb_coeff;			
 //		    }
-#ifdef USE_LEGACY_ATOMICS
-                    addint(devSim.oULL, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
-#else
                     addint(devSim.o, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
-#endif
                 }
             }
 

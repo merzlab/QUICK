@@ -1378,36 +1378,8 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
 
-#ifdef USE_LEGACY_ATOMICS
-    gpu->gpu_calculated->o->DeleteGPU();
-    gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->oULL->Upload();
-    gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
-#else
     gpu->gpu_calculated->o->Upload();
     gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
-#endif
-
-    /*
-       oULL is the unsigned long long int type of O matrix. The reason to do so is because
-       Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
-       an comprimise way is to multiple a very large number (OSCALE), first and divided it
-       after atomic operator.
-     */
-    /*
-       for (int i = 0; i<gpu->nbasis; i++) {
-       for (int j = 0; j<gpu->nbasis; j++) {
-       QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
-
-       if (LOC2( gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)<(QUICKDouble)0.0)
-       {
-       valUII = 0ull - valUII;
-       }
-
-       LOC2( gpu->gpu_calculated->oULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
-       }
-       }
-     */
 
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
@@ -1443,34 +1415,8 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     gpu->gpu_calculated->ob = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
-#ifdef USE_LEGACY_ATOMICS
-    gpu->gpu_calculated->ob->DeleteGPU();
-    gpu->gpu_calculated->obULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->obULL->Upload();
-    gpu->gpu_sim.obULL = gpu->gpu_calculated->obULL->_devData;
-#else
     gpu->gpu_calculated->ob->Upload();
     gpu->gpu_sim.ob = gpu->gpu_calculated->ob->_devData;
-#endif
-
-    /*
-       obULL is the unsigned long long int type of Ob matrix. The reason to do so is because
-       Atomic Operator for CUDA 2.0 is only available for integer. So for double precision type,
-       an comprimise way is to multiple a very large number (OSCALE), first and divided it
-       after atomic operator.
-     */
-    /*for (int i = 0; i<gpu->nbasis; i++) {
-      for (int j = 0; j<gpu->nbasis; j++) {
-      QUICKULL valUII = (QUICKULL) (fabs ( LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)*OSCALE + (QUICKDouble)0.5));
-
-      if (LOC2( gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)<(QUICKDouble)0.0)
-      {
-      valUII = 0ull - valUII;
-      }
-
-      LOC2( gpu->gpu_calculated->obULL->_hostData, i, j, gpu->nbasis, gpu->nbasis) = valUII;
-      }
-      }*/
 
     gpu_upload_beta_density_matrix_(denseb);
 
@@ -1882,12 +1828,6 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     PRINTDEBUG("BEGIN TO UPLOAD GRAD")
 
     gpu->grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->natom);
-
-#ifdef USE_LEGACY_ATOMICS
-    gpu->gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu->natom);
-    gpu->gpu_sim.gradULL =  gpu->gradULL->_devData;
-    gpu->gradULL->Upload();
-#endif
 
     //gpu->grad->DeleteGPU();
     gpu->gpu_sim.grad =  gpu->grad->_devData;
@@ -2910,26 +2850,6 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
 
     PRINTDEBUG("COMPLETE KERNEL")
 
-#ifdef USE_LEGACY_ATOMICS
-    gpu->gpu_calculated->oULL->Download();
-
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            }
-            else
-            {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis) = (QUICKDouble)valDB*ONEOVEROSCALE;
-        }
-    }
-#else
     gpu->gpu_calculated->o->Download();
 
     for (int i = 0; i< gpu->nbasis; i++) {
@@ -2938,7 +2858,6 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
                 = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
         }
     }
-#endif
     gpu->gpu_calculated->o->Download(o);
 
 #ifdef DEBUG
@@ -2960,12 +2879,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
 
-#ifdef USE_LEGACY_ATOMICS
-    delete gpu->gpu_calculated->oULL;
-#endif
-
     PRINTDEBUG("COMPLETE RUNNING ADDINT")
-
 }
 #endif
 

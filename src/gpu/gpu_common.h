@@ -201,11 +201,7 @@ static FILE *debugFile = NULL;
 //typedef float  QUICKDouble;
 typedef float QUICKSingle;
 #define QUICKULL unsigned long long int
-#if defined(USE_LEGACY_ATOMICS)
-  #define QUICKAtomicType unsigned long long int
-#else
-  #define QUICKAtomicType double
-#endif
+#define QUICKAtomicType double
 
 
 /* SM Version enum */
@@ -233,25 +229,30 @@ struct ERI_entry {
 };
 
 
+//TODO: rewrite MP2 code and remove this constant
 /* energy scaling constants */
 #define OSCALE ((QUICKDouble) 1.0e12)
-#define ONEOVEROSCALE ((QUICKDouble) 1.0e-12)
-#define GRADSCALE ((QUICKDouble) 1.0e16)
-#define ONEOVERGRADSCALE ((QUICKDouble) 1.0e-16)
 
-/* atomic addition */
-#if defined(TEST)
-  #define QUICKADD(address, val) ((address) += (val))
-#else
-  #define QUICKADD(address, val) atomicAdd(&(address), (val))
-#endif
 
-#define GRADADD(address, val) \
-{ \
-    QUICKULL val2 = (QUICKULL) (fabs((val) * GRADSCALE) + (QUICKDouble) 0.5); \
-    if ( val < (QUICKDouble) 0.0 ) val2 = 0ull - val2; \
-    QUICKADD(address, val2); \
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
+GPU_DEVICE static inline double atomicAdd( double * address, double val )
+{
+    unsigned long long int *address_as_ull, old, assumed;
+
+    address_as_ull = (unsigned long long int *) address;
+    old = *address_as_ull;
+
+    do
+    {
+        assumed = old;
+        old = atomicCAS( address_as_ull, assumed,
+                __double_as_longlong(val + __longlong_as_double(assumed)) );
+    }
+    while ( assumed != old );
+
+    return __longlong_as_double( old );
 }
+#endif
 
 
 #endif

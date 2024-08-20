@@ -1616,28 +1616,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, DEV_SIM_DBL_HYB_COEFF \n", __FILE__, __LINE__, __func__);
 #endif    
    
-#ifdef USE_LEGACY_ATOMICS 
-
-    GRADADD(DEV_SIM_PTR_GRAD[AStart], AGradx);
-    GRADADD(DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
-    GRADADD(DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
-    
-    
-    GRADADD(DEV_SIM_PTR_GRAD[BStart], BGradx);
-    GRADADD(DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
-    GRADADD(DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
-    
-    
-    GRADADD(DEV_SIM_PTR_GRAD[CStart], CGradx);
-    GRADADD(DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
-    GRADADD(DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
-    
-    
-    GRADADD(DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
-    GRADADD(DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
-    GRADADD(DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));
-
-#else 
     atomicAdd(&DEV_SIM_PTR_GRAD[AStart], AGradx);
     atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
     atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
@@ -1656,7 +1634,6 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
     atomicAdd(&DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
     atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
     atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
-#endif
 
     return;
 }
