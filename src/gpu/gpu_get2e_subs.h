@@ -572,6 +572,11 @@ __device__ __forceinline__ void iclass_spdf10
        const QUICKDouble DNMax, QUICKDouble* YVerticalTemp, QUICKDouble* store)
 #endif
 {
+    QUICKDouble temp;
+#if defined(OSHELL)
+    QUICKDouble temp2;
+#endif
+
     /*
      kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
      and be careful with the index difference between Fortran and C++,
@@ -802,6 +807,15 @@ __device__ __forceinline__ void iclass_spdf10
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
             for (int KKK = MAX(III, KKK1); KKK <= KKK2; KKK++) {
+                QUICKDouble o_KI = 0.0;
+                QUICKDouble o_JK = 0.0;
+                QUICKDouble o_JK_MM = 0.0;
+#if defined(OSHELL)
+                QUICKDouble ob_KI = 0.0;
+                QUICKDouble ob_JK = 0.0;
+                QUICKDouble ob_JK_MM = 0.0;
+#endif
+
                 for (int LLL = MAX(KKK, LLL1); LLL <= LLL2; LLL++) {
                     if (III < KKK
                             || (III == JJJ && III == LLL)
@@ -843,14 +857,146 @@ __device__ __forceinline__ void iclass_spdf10
                         if (abs(Y) > devSim.integralCutoff)
                         {
 #if defined(OSHELL)
-                            addint_oshell(devSim.o,devSim.ob, Y, III, JJJ, KKK, LLL,
-                                    devSim.hyb_coeff, devSim.dense, devSim.denseb, devSim.nbasis);
+                            QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis)
+                                    + LOC2(devSim.denseb, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis));
+                            QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis)
+                                    + LOC2(devSim.denseb, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis));
+
+                            QUICKDouble DENSEKIA = (QUICKDouble) LOC2(devSim.dense, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSEKJA = (QUICKDouble) LOC2(devSim.dense, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELJA = (QUICKDouble) LOC2(devSim.dense, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELIA = (QUICKDouble) LOC2(devSim.dense, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+
+                            QUICKDouble DENSEKIB = (QUICKDouble) LOC2(devSim.denseb, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSEKJB = (QUICKDouble) LOC2(devSim.denseb, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELJB = (QUICKDouble) LOC2(devSim.denseb, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELIB = (QUICKDouble) LOC2(devSim.denseb, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+
+                            // ATOMIC ADD VALUE 1
+                            temp = (KKK == LLL) ? DENSELK * Y : 2.0 * DENSELK * Y;
+                            atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                            atomicAdd(&LOC2(devSim.ob, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+
+                            // ATOMIC ADD VALUE 2
+                            if (LLL != JJJ || III != KKK) {
+                                temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
+                                atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                                atomicAdd(&LOC2(devSim.ob, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                            }
+
+                            // ATOMIC ADD VALUE 3
+                            temp = (III == KKK && III < JJJ && JJJ < LLL)
+                                ? -2.0 * devSim.hyb_coeff * DENSELJA * Y : -(devSim.hyb_coeff * DENSELJA * Y);
+                            temp2 = (III == KKK && III < JJJ && JJJ < LLL)
+                                ? -2.0 * devSim.hyb_coeff * DENSELJB * Y : -(devSim.hyb_coeff * DENSELJB * Y);
+                            o_KI += temp;
+                            ob_KI += temp2;
+
+                            // ATOMIC ADD VALUE 4
+                            if (KKK != LLL) {
+                                temp = -(devSim.hyb_coeff * DENSEKJA * Y);
+                                temp2 = -(devSim.hyb_coeff * DENSEKJB * Y);
+                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                                atomicAdd(&LOC2(devSim.ob, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2);
+                            }
+
+                            // ATOMIC ADD VALUE 5
+                            temp = -(devSim.hyb_coeff * DENSELIA * Y);
+                            temp2 = -(devSim.hyb_coeff * DENSELIB * Y);
+                            if ((III != JJJ && III < KKK)
+                                    || (III == JJJ && III == KKK && III < LLL)
+                                    || (III == KKK && III < JJJ && JJJ < LLL)) {
+                                o_JK_MM += temp;
+                                ob_JK_MM += temp2;
+                            }
+
+                            // ATOMIC ADD VALUE 5 - 2
+                            if (III != JJJ && JJJ == KKK) {
+                                o_JK += temp;
+                                ob_JK += temp2;
+                            }
+
+                            // ATOMIC ADD VALUE 6
+                            if (III != JJJ && KKK != LLL) {
+                                temp = -(devSim.hyb_coeff * DENSEKIA * Y);
+                                temp2 = -(devSim.hyb_coeff * DENSEKIB * Y);
+                                atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+                                atomicAdd(&LOC2(devSim.ob, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp2);
+
+                                // ATOMIC ADD VALUE 6 - 2
+                                if (JJJ == LLL && III != KKK) {
+                                    atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+                                    atomicAdd(&LOC2(devSim.ob, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp2);
+                                }
+                            }
 #else
-                            addint(devSim.o, Y, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
+                            QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim.dense, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim.dense, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim.dense, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis);
+                            QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                            
+                            // ATOMIC ADD VALUE 1
+                            temp = (KKK == LLL) ? DENSELK * Y : 2.0 * DENSELK * Y;
+                            atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                            
+                            // ATOMIC ADD VALUE 2
+                            if (LLL != JJJ || III != KKK) {
+                                temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
+                                atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                            }
+                            
+                            // ATOMIC ADD VALUE 3
+                            temp = (III == KKK && III < JJJ && JJJ < LLL)
+                                ? -(devSim.hyb_coeff * DENSELJ * Y) : -0.5 * devSim.hyb_coeff * DENSELJ * Y;
+                            atomicAdd(&LOC2(devSim.o, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+
+                            // ATOMIC ADD VALUE 4
+                            if (KKK != LLL) {
+                                temp = -0.5 * devSim.hyb_coeff * DENSEKJ * Y;
+                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                            }
+                            
+                            // ATOMIC ADD VALUE 5
+                            temp = -0.5 * devSim.hyb_coeff * DENSELI * Y;
+                            if ((III != JJJ && III < KKK)
+                                    || (III == JJJ && III == KKK && III < LLL)
+                                    || (III == KKK && III <  JJJ && JJJ < LLL)) {
+                                atomicAdd(&LOC2(devSim.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), temp);
+                            }
+                            
+                            // ATOMIC ADD VALUE 5 - 2
+                            if (III != JJJ && JJJ == KKK) {
+                                atomicAdd(&LOC2(devSim.o, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                            }
+
+                            // ATOMIC ADD VALUE 6
+                            if (III != JJJ) {
+                                if (KKK != LLL) {
+                                    temp = -0.5 * devSim.hyb_coeff * DENSEKI * Y;
+
+                                    atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+
+                                    // ATOMIC ADD VALUE 6 - 2
+                                    if (JJJ == LLL && III != KKK) {
+                                        atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+                                    }
+                                }
+                            }
 #endif
                         }
                     }
                 }
+
+                atomicAdd(&LOC2(devSim.o, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), o_KI);
+                atomicAdd(&LOC2(devSim.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM);
+                atomicAdd(&LOC2(devSim.o, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK);
+#if defined(OSHELL)
+                atomicAdd(&LOC2(devSim.ob, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), ob_KI);
+                atomicAdd(&LOC2(devSim.ob, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), ob_JK_MM);
+                atomicAdd(&LOC2(devSim.ob, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), ob_JK);
+#endif
             }
         }
     }
@@ -1253,195 +1399,6 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
 
 #ifndef new_quick_2_gpu_get2e_subs_h
   #define new_quick_2_gpu_get2e_subs_h
-  #if defined(OSHELL)
-__device__ __forceinline__ void addint_oshell(QUICKDouble* o, QUICKDouble* ob,QUICKDouble Y,
-        int III, int JJJ, int KKK, int LLL,
-        QUICKDouble hybrid_coeff, QUICKDouble* dense, QUICKDouble* denseb,int nbasis)
-  #else
-__device__ __forceinline__ void addint(QUICKDouble* o, QUICKDouble Y,
-        int III, int JJJ, int KKK, int LLL,
-        QUICKDouble hybrid_coeff, QUICKDouble* dense, int nbasis)
-  #endif
-{
-  #if defined(OSHELL)
-    QUICKDouble DENSELK = (QUICKDouble) (LOC2(dense, LLL - 1, KKK - 1, nbasis, nbasis) + LOC2(denseb, LLL - 1, KKK - 1, nbasis, nbasis));
-    QUICKDouble DENSEJI = (QUICKDouble) (LOC2(dense, JJJ - 1, III - 1, nbasis, nbasis) + LOC2(denseb, JJJ - 1, III - 1, nbasis, nbasis));
-
-    QUICKDouble DENSEKIA = (QUICKDouble) LOC2(dense, KKK - 1, III - 1, nbasis, nbasis);
-    QUICKDouble DENSEKJA = (QUICKDouble) LOC2(dense, KKK - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELJA = (QUICKDouble) LOC2(dense, LLL - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELIA = (QUICKDouble) LOC2(dense, LLL - 1, III - 1, nbasis, nbasis);
-
-    QUICKDouble DENSEKIB = (QUICKDouble) LOC2(denseb, KKK - 1, III - 1, nbasis, nbasis);
-    QUICKDouble DENSEKJB = (QUICKDouble) LOC2(denseb, KKK - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELJB = (QUICKDouble) LOC2(denseb, LLL - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELIB = (QUICKDouble) LOC2(denseb, LLL - 1, III - 1, nbasis, nbasis);
-
-    // ATOMIC ADD VALUE 1
-    QUICKDouble _tmp = 2.0;
-    if (KKK == LLL) {
-        _tmp = 1.0;
-    }
-
-    QUICKDouble val1d = _tmp * DENSELK * Y;
-    atomicAdd(&LOC2(o, JJJ - 1, III - 1, nbasis, nbasis), val1d);
-    atomicAdd(&LOC2(ob, JJJ - 1, III - 1, nbasis, nbasis), val1d);
-
-    // ATOMIC ADD VALUE 2
-    if (LLL != JJJ || III != KKK) {
-        _tmp = 2.0;
-        if (III == JJJ) {
-            _tmp = 1.0;
-        }
-
-        QUICKDouble val2d = _tmp * DENSEJI * Y;
-        atomicAdd(&LOC2(o, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
-        atomicAdd(&LOC2(ob, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
-    }
-
-    // ATOMIC ADD VALUE 3
-    QUICKDouble val3da = hybrid_coeff * DENSELJA * Y;
-    if (III == KKK && III < JJJ && JJJ < LLL) {
-        val3da *= 2.0;
-    }
-    atomicAdd(&LOC2(o, KKK - 1, III - 1, nbasis, nbasis), -val3da);
-
-    QUICKDouble val3db = hybrid_coeff * DENSELJB * Y;
-    if (III == KKK && III < JJJ && JJJ < LLL) {
-        val3db *= 2.0;
-    }
-    atomicAdd(&LOC2(ob, KKK - 1, III - 1, nbasis, nbasis), -val3db);
-
-    // ATOMIC ADD VALUE 4
-    if (KKK != LLL) {
-        QUICKDouble val4da = hybrid_coeff * DENSEKJA * Y;
-        atomicAdd(&LOC2(o, LLL - 1, III - 1, nbasis, nbasis), -val4da);
-    }
-
-    if (KKK != LLL) {
-        QUICKDouble val4db = hybrid_coeff * DENSEKJB * Y;
-        atomicAdd(&LOC2(ob, LLL - 1, III - 1, nbasis, nbasis), -val4db);
-    }
-
-    // ATOMIC ADD VALUE 5
-    QUICKDouble val5da = hybrid_coeff * DENSELIA * Y;
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III < JJJ && JJJ < LLL)) {
-        atomicAdd(&LOC2(o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), -val5da);
-    }
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(o, JJJ - 1, KKK - 1, nbasis, nbasis), -val5da);
-    }
-
-    QUICKDouble val5db = hybrid_coeff * DENSELIB * Y;
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III < JJJ && JJJ < LLL)) {
-        atomicAdd(&LOC2(ob, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), -val5db);
-    }
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(ob, JJJ - 1, KKK - 1, nbasis, nbasis), -val5db);
-    }
-
-    // ATOMIC ADD VALUE 6
-    if (III != JJJ) {
-        if (KKK != LLL) {
-            QUICKDouble val6da = hybrid_coeff * DENSEKIA * Y;
-            atomicAdd(&LOC2(o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6da);
-
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                atomicAdd(&LOC2(o, LLL - 1, JJJ - 1, nbasis, nbasis), -val6da);
-            }
-        }
-    }
-
-    if (III != JJJ) {
-        if (KKK != LLL) {
-            QUICKDouble val6db = hybrid_coeff * DENSEKIB * Y;
-            atomicAdd(&LOC2(ob, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6db);
-
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                atomicAdd(&LOC2(ob, LLL - 1, JJJ - 1, nbasis, nbasis), -val6db);
-            }
-        }
-    }
-
-  #else
-    QUICKDouble DENSEKI = (QUICKDouble) LOC2(dense, KKK - 1, III - 1, nbasis, nbasis);
-    QUICKDouble DENSEKJ = (QUICKDouble) LOC2(dense, KKK - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELJ = (QUICKDouble) LOC2(dense, LLL - 1, JJJ - 1, nbasis, nbasis);
-    QUICKDouble DENSELI = (QUICKDouble) LOC2(dense, LLL - 1, III - 1, nbasis, nbasis);
-    QUICKDouble DENSELK = (QUICKDouble) LOC2(dense, LLL - 1, KKK - 1, nbasis, nbasis);
-    QUICKDouble DENSEJI = (QUICKDouble) LOC2(dense, JJJ - 1, III - 1, nbasis, nbasis);
-    
-    // ATOMIC ADD VALUE 1
-    QUICKDouble _tmp = 2.0;
-    if (KKK == LLL) {
-        _tmp = 1.0;
-    }
-    
-    QUICKDouble val1d = _tmp * DENSELK * Y;
-    atomicAdd(&LOC2(o, JJJ - 1, III - 1, nbasis, nbasis), val1d);
-    
-    // ATOMIC ADD VALUE 2
-    if (LLL != JJJ || III != KKK) {
-        _tmp = 2.0;
-        if (III == JJJ) {
-            _tmp = 1.0;
-        }
-        
-        QUICKDouble val2d = _tmp * DENSEJI * Y;
-        atomicAdd(&LOC2(o, LLL - 1, KKK - 1, nbasis, nbasis), val2d);
-    }
-    
-    // ATOMIC ADD VALUE 3
-    QUICKDouble val3d = hybrid_coeff * 0.5 * DENSELJ * Y;
-    if (III == KKK && III < JJJ && JJJ < LLL) {
-        val3d *= 2.0;
-    }
-    atomicAdd(&LOC2(o, KKK - 1, III - 1, nbasis, nbasis), -val3d);
-
-    // ATOMIC ADD VALUE 4
-    if (KKK != LLL) {
-        QUICKDouble val4d = hybrid_coeff * 0.5 * DENSEKJ * Y;
-        atomicAdd(&LOC2(o, LLL - 1, III - 1, nbasis, nbasis), -val4d);
-    }
-    
-    // ATOMIC ADD VALUE 5
-    QUICKDouble val5d = hybrid_coeff * 0.5 * DENSELI * Y;
-    if ((III != JJJ && III < KKK)
-            || (III == JJJ && III == KKK && III < LLL)
-            || (III == KKK && III <  JJJ && JJJ < LLL)) {
-        atomicAdd(&LOC2(o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, nbasis, nbasis), -val5d);
-    }
-    
-    // ATOMIC ADD VALUE 5 - 2
-    if (III != JJJ && JJJ == KKK) {
-        atomicAdd(&LOC2(o, JJJ - 1, KKK - 1, nbasis, nbasis), -val5d);
-    }
-
-    // ATOMIC ADD VALUE 6
-    if (III != JJJ) {
-        if (KKK != LLL) {
-            QUICKDouble val6d = hybrid_coeff * 0.5 * DENSEKI * Y;
-
-            atomicAdd(&LOC2(o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), -val6d);
-
-            // ATOMIC ADD VALUE 6 - 2
-            if (JJJ == LLL && III != KKK) {
-                atomicAdd(&LOC2(o, LLL - 1, JJJ - 1, nbasis, nbasis), -val6d);
-            }
-        }
-    }
-  #endif
-}
-
-
   #ifndef OSHELL  
 __device__ __forceinline__ bool call_iclass(const int I, const int J, const int K, const int L,
         const int II, const int JJ, const int KK, const int LL){
