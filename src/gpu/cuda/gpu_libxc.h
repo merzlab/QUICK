@@ -55,6 +55,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
                 num_of_funcs_ = *num_of_funcs;
                 arr_func_id_ = arr_func_id;
                 arr_mix_coeffs_ = (double*) malloc(sizeof(double) * num_of_funcs_);
+
                 for (int i = 0; i < num_of_funcs_; i++) {
                     arr_mix_coeffs_[i] = 1.0;
                 }
@@ -74,6 +75,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         num_of_funcs_ = *num_of_funcs;
         arr_func_id_ = arr_func_id;
         arr_mix_coeffs_ = (double*) malloc(sizeof(double) * num_of_funcs_);
+
         for (int i = 0; i < num_of_funcs_; i++) {
             arr_mix_coeffs_[i] = 1.0;
         }
@@ -132,20 +134,11 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         xc_func_end(&func);
     }
 
-    if (*num_of_funcs == 1) {
-        if (hyb_func.info->family == XC_FAMILY_HYB_GGA) {
-            if (hyb_func.n_func_aux > 0) {
-                free(arr_func_id_);
-                free(arr_mix_coeffs_);
-            } else {
-                free(arr_mix_coeffs_);
-            }
-        } else {
-            free(arr_mix_coeffs_);
-        }
-    } else {
-        free(arr_mix_coeffs_);
+    if (arr_func_id_ != arr_func_id)
+    {
+        free(arr_func_id_);
     }
+    free(arr_mix_coeffs_);
 
     return h_glinfo_array;
 }

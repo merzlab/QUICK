@@ -132,20 +132,11 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         xc_func_end(&func);
     }
 
-    if (*num_of_funcs == 1) {
-        if (hyb_func.info->family == XC_FAMILY_HYB_GGA) {
-            if (hyb_func.n_func_aux > 0) {
-                free(arr_func_id_);
-                free(arr_mix_coeffs_);
-            } else {
-                free(arr_mix_coeffs_);
-            }
-        } else {
-            free(arr_mix_coeffs_);
-        }
-    } else {
-        free(arr_mix_coeffs_);
+    if (arr_func_id_ != arr_func_id)
+    {
+        free(arr_func_id_);
     }
+    free(arr_mix_coeffs_);
 
     return h_glinfo_array;
 }
