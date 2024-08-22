@@ -251,6 +251,8 @@ void ResortERIs(_gpu_type gpu){
     gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
     gpu -> gpu_sim.ffStart = ffStart;
 
+    free(resorted_YCutoffIJ);
+    free(partial_eris);
 }
 
 void getGrad_ffff(_gpu_type gpu)
