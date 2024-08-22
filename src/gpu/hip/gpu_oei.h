@@ -33,13 +33,15 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
     int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
 
     for (int III = III1; III <= III2; III++) {
+        // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
+        int i = (int) LOC3(devTrans,
+                LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
+                TRANSDIM, TRANSDIM, TRANSDIM);
+
         for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
             // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
-            int i = (int) LOC3(devTrans,
-                    LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
-                    TRANSDIM, TRANSDIM, TRANSDIM);
             int j = (int) LOC3(devTrans,
                     LOC2(devSim.KLMN, 0, JJJ - 1, 3, devSim.nbasis),
                     LOC2(devSim.KLMN, 1, JJJ - 1, 3, devSim.nbasis),
@@ -47,7 +49,8 @@ __device__ void addint_oei(unsigned int I, unsigned int J, unsigned int II, unsi
                     TRANSDIM, TRANSDIM, TRANSDIM);
 
             // multiply the integral value by normalization constants.
-            QUICKDouble Y = devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
+            QUICKDouble Y = devSim.cons[III - 1] * devSim.cons[JJJ - 1]
+                * LOCSTORE(store2, i - 1, j - 1, STOREDIM, STOREDIM);
 
 //            if (III == 10 && JJJ == 50) {
 //                printf("OEI debug: III JJJ I J iatm i j c1 c2 store2 Y %d %d %d %d %d %d %d %f %f %f %f\n",
@@ -158,7 +161,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
 
             // compute all auxilary integrals and store
             for (int n = 0; n <= I + J; n++) {
-                VY(0, 0, n) = VY(0, 0, n) * Xcoeff_oei * chg;
+                VY(0, 0, n) *= Xcoeff_oei * chg;
                 //printf("aux: %d %f \n", i, VY(0, 0, i));
             }
 
@@ -169,8 +172,8 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
                     1.0 / (2.0 * Zeta), store, YVerticalTemp);
 
             // sum up primitive integral contributions
-            for (int i = Sumindex[J]; i < Sumindex[J+2]; ++i) {
-                for (int j = Sumindex[I]; j < Sumindex[I+2]; ++j) {
+            for (int i = Sumindex[J]; i < Sumindex[J + 2]; ++i) {
+                for (int j = Sumindex[I]; j < Sumindex[I + 2]; ++j) {
                     if (i < STOREDIM && j < STOREDIM) {
                         LOCSTORE(store2, j, i, STOREDIM, STOREDIM) += LOCSTORE(store, j, i, STOREDIM, STOREDIM);
                     }
