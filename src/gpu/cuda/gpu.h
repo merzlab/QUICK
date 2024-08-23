@@ -295,7 +295,6 @@ void unbind_eri_texture();
 //__device__ void gpu_shell(unsigned int II, unsigned int JJ, unsigned int KK, unsigned int LL);
 __device__ void addint(QUICKDouble* o, QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ __forceinline__ void addint_oshell(QUICKDouble* o, QUICKDouble* ob,QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, QUICKDouble* denseb,int nbasis);
-__device__ __forceinline__ void addint_lri(QUICKDouble Y, int III, int JJJ, int KKK, int LLL,QUICKDouble hybrid_coeff,  QUICKDouble* dense, int nbasis);
 __device__ void FmT_sp(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT_spd(const int MaxM, const QUICKDouble X, QUICKDouble* vals);
 __device__ void FmT(const int MaxM, const QUICKDouble X, QUICKDouble* vals);

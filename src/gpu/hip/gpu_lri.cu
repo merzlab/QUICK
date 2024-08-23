@@ -17,19 +17,20 @@
   !---------------------------------------------------------------------!
 */
 
-#ifdef CEW
+#if defined(CEW)
 
 #include "gpu.h"
 #include <hip/hip_runtime.h>
 
+
 static __constant__ gpu_simulation_type devSim;
-static __constant__ int devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
-static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
+static __constant__ int devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
+static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 
 
 #include "../gpu_lri_subs_hrr.h"
 
-namespace lri{
+namespace lri {
 #include "../int.h"
 }
 
@@ -46,10 +47,7 @@ namespace lri{
 #undef int_spdf10
 #include "../gpu_lri_subs.h"
 #include "../gpu_lri_subs_grad.h"
-
-
 //===================================
-
 #undef int_spd
 #undef int_spdf
 #define int_spdf2
@@ -62,26 +60,22 @@ namespace lri{
 #undef int_spdf9
 #undef int_spdf10
 #include "../gpu_lri_subs_grad.h"
-
-
-#ifdef GPU_SPDF
 //===================================
-
-#undef int_spd
-#undef int_spdf
-#define int_spdf2
-#undef int_spdf3
-#undef int_spdf4
-#undef int_spdf5
-#undef int_spdf6
-#undef int_spdf7
-#undef int_spdf8
-#undef int_spdf9
-#undef int_spdf10
-#include "../gpu_lri_subs.h"
-
+#if defined(GPU_SPDF)
+  #undef int_spd
+  #undef int_spdf
+  #define int_spdf2
+  #undef int_spdf3
+  #undef int_spdf4
+  #undef int_spdf5
+  #undef int_spdf6
+  #undef int_spdf7
+  #undef int_spdf8
+  #undef int_spdf9
+  #undef int_spdf10
+  #include "../gpu_lri_subs.h"
 #endif
-
+//===================================
 #undef int_spd
 #undef int_spdf
 #undef int_spdf2
@@ -98,90 +92,83 @@ namespace lri{
 /*
  upload gpu simulation type to constant memory
  */
-void upload_sim_to_constant_lri(_gpu_type gpu){
+void upload_sim_to_constant_lri(_gpu_type gpu) {
     hipError_t status;
-	status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
-	PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
+    PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed");
 }
 
 
 // totTime is the timer for GPU lri time. Only on under debug mode
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
 static float totTime;
 #endif
 
 // =======   INTERFACE SECTION ===========================
+
 
 // interface to call Kernel subroutine
 void get_lri(_gpu_type gpu)
 {
     // Part spd
 //    roctxRangePush("SCF lri");
-
     QUICK_SAFE_CALL((get_lri_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
  
-#ifdef GPU_SPDF
+#if defined(GPU_SPDF)
     if (gpu->maxL >= 3) {
         // Part f-1
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((get_lri_kernel_spdf2<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-3
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf3<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-4
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf4<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-5
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf5<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-6
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf6<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-7
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf7<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-8
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf8<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-9
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf9<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
         // Part f-10
-        //QUICK_SAFE_CALL((get_lri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_kernel_spdf10<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
     }
 #endif 
 
     hipDeviceSynchronize();
 //    roctxRangePop();
-
 }
 
 
 // interface to call Kernel subroutine
-
 void get_lri_grad(_gpu_type gpu)
 {
-
 //   roctxRangePush("Gradient lri");
-
     QUICK_SAFE_CALL((get_lri_grad_kernel<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
 
     if (gpu->maxL >= 2) {
-        //#ifdef GPU_SPDF
+//#if defined(GPU_SPDF)
         // Part f-1
-        //QUICK_SAFE_CALL((get_lri_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
+//        QUICK_SAFE_CALL((get_lri_grad_kernel_spdf<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-2
         QUICK_SAFE_CALL((get_lri_grad_kernel_spdf2<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()));
         // Part f-3
-        //    QUICK_SAFE_CALL((get_lri_grad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
-        //#endif
+//        QUICK_SAFE_CALL((get_lri_grad_kernel_spdf3<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
+//#endif
     }
 
     hipDeviceSynchronize();   
-
 //    roctxRangePop();
-
 }
 
 
 // =======   KERNEL SECTION ===========================
-void upload_para_to_const_lri(){
-    
-    int trans[TRANSDIM*TRANSDIM*TRANSDIM];
+void upload_para_to_const_lri() {
+    int trans[TRANSDIM * TRANSDIM * TRANSDIM];
     // Data to trans
     {
         LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
@@ -308,8 +295,7 @@ void upload_para_to_const_lri(){
     // upload to trans device location
     hipError_t status;
 
-    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(int)*TRANSDIM*TRANSDIM*TRANSDIM);
-    PRINTERROR(status, " hipMemcpyToSymbol, Trans copy to constants failed")
-
+    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(int) * TRANSDIM * TRANSDIM * TRANSDIM);
+    PRINTERROR(status, " hipMemcpyToSymbol, Trans copy to constants failed");
 }
 #endif
