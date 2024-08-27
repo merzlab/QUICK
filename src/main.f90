@@ -29,7 +29,7 @@
     use quick_exception_module
     use quick_cshell_eri_module, only: getEriPrecomputables
     use quick_cshell_gradient_module, only: cshell_gradient
-    use quick_oeproperties_module, only: compute_esp, compute_efield
+    use quick_oeproperties_module, only: compute_oeprop
     use quick_oshell_gradient_module, only: oshell_gradient
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
@@ -268,22 +268,11 @@
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
         
-    endif
-
-    if (master) then
-
-      ! 6.e Electrostatic Potential
-      if (quick_method%esp_grid) then
-        call compute_esp(ierr)
-      endif
-
-      ! 6.f Electrostatic Potential
-      if (quick_method%efield_grid) then
-        call compute_efield(ierr)
-      endif
+        ! One electron properties (ESP, EField) 
+        call compute_oeprop(ierr)
 
     endif
-    
+
     !------------------------------------------------------------------
     ! 5. OPT Geometry if wanted
     !-----------------------------------------------------------------
@@ -311,6 +300,10 @@
         else
             SAFE_CALL(cshell_gradient(ierr))
         endif
+
+        ! One electron properties (ESP, EField) 
+        call compute_oeprop(ierr)
+
     endif
 
     ! Now at this point we have an energy and a geometry.  If this is

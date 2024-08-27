@@ -17,9 +17,33 @@
 !---------------------------------------------------------------------!
 module quick_oeproperties_module
  private
- public :: compute_esp, compute_efield
+ public :: compute_oeprop
 
  contains
+
+!--------------------------------------------------------------------!
+!  The following subroutine "compute_oeprop" is the only routine     !
+!  called from outside. This routine performs calculations as per    !
+!  user provided keywords.                                           !
+!--------------------------------------------------------------------!
+
+ Subroutine compute_oeprop(ierr)
+   use quick_method_module, only: quick_method
+
+   implicit none
+   integer :: ierr
+
+   ! Electrostatic Potential
+   if (quick_method%esp_grid) then
+     call compute_esp(ierr)
+   endif
+
+   ! Electric field
+   if (quick_method%efield_grid) then
+     call compute_efield(ierr)
+   endif
+
+ end Subroutine
 
 !--------------------------------------------------------------------!
 !   The subroutines esp_shell_pair, efield_shell_pair and            !

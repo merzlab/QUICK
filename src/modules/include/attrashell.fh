@@ -123,7 +123,7 @@ subroutine attrashell(IIsh, JJsh)
 #if defined (OEPROP)
                ! Call and get P_{mu nu} V_{mu nu} into esp_electronic( )
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-                     Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint), igridpoint)
+                     Cx,Cy,Cz,Px,Py,Pz, esp_electronic(igridpoint))
 #elif defined (OEI)
                call nuclearattra(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
                      Cx,Cy,Cz,Px,Py,Pz)

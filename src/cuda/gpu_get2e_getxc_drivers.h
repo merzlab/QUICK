@@ -458,8 +458,6 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
 {
 
-  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
-
 //    gpu -> gpu_calculated -> esp_electronic   =   new cuda_buffer_type<QUICKDouble>(gpu->nextpoint);
 
 //#ifdef LEGACY_ATOMIC_ADD
@@ -517,11 +515,7 @@ extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
 
 #endif
 */
-    printf("esp_electronic[0] = %f \n",esp_electronic[0]);
-    printf("esp_electronic[1] = %f \n",esp_electronic[1]);
     gpu -> gpu_calculated -> esp_electronic   -> DownloadSum(esp_electronic);
-    printf("esp_electronic[0] = %f \n",esp_electronic[0]);
-    printf("esp_electronic[1] = %f \n",esp_electronic[1]);
 }
 
 

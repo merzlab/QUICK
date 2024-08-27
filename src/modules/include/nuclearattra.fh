@@ -1,5 +1,6 @@
 #if defined (OEPROP)
- subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp,point)
+ subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
+! subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp,point)
 #elif defined (OEI)
  subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz)
 #endif
@@ -26,7 +27,7 @@
 #if defined (OEPROP)
    double precision, intent(inout) :: esp
    double precision esp_update
-   integer point
+!   integer point
 #endif
 
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
@@ -243,9 +244,9 @@
                        *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
                  esp = esp + esp_update
 !               if(III .eq. 1 .and. JJJ .eq. 2 .and. point .eq. 1) then
-               if(point .eq. 1) then
-                 Write(6,*)'III, JJJ, update, dens, consI, consJ, STORE2, esp = ', III, JJJ, esp_update, quick_qm_struct%denseSave(JJJ,III), quick_basis%cons(III), quick_basis%cons(JJJ), Xconstant*attraxiao(itemp1,itemp2,0), esp
-               endif
+!               if(point .eq. 1) then
+!                 Write(6,*)'III, JJJ, update, dens, consI, consJ, STORE2, esp = ', III, JJJ, esp_update, quick_qm_struct%denseSave(JJJ,III), quick_basis%cons(III), quick_basis%cons(JJJ), Xconstant*attraxiao(itemp1,itemp2,0), esp
+!               endif
 #elif defined (OEI)
               quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
                Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
