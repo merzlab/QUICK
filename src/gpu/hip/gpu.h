@@ -147,8 +147,9 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char *gpweight, unsigned
 __global__ void get_pteval_kernel();
 __global__ void get_oshell_density_kernel();
 __global__ void get_cshell_density_kernel();
-/*__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, unsigned char *primf, unsigned int *primf_counter, int ibas, int ibasp);*/
-__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz, QUICKDouble* phi, QUICKDouble* dphidx, QUICKDouble* dphidy,  QUICKDouble* dphidz, int *primf, int *primf_counter, int ibas, int ibasp);
+__device__ void pteval_new(QUICKDouble gridx, QUICKDouble gridy, QUICKDouble gridz,
+        QUICKDouble * const phi, QUICKDouble * const dphidx, QUICKDouble * const dphidy,  QUICKDouble * const dphidz,
+        int const * const primf, int const * const primf_counter, int ibas, int ibasp);
 __global__ void get_sswgrad_kernel();
 __global__ void get_sswnumgrad_kernel();
 __global__ void getAddInt_kernel(int bufferSize, ERI_entry* aoint_buffer);

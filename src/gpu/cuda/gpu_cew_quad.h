@@ -129,7 +129,7 @@ __global__ void getcew_quad_kernel()
 
             pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
-            if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+            if (fabs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
                 for (int j = bfloc_st; j < bfloc_end; j++) {
                     int jbas = devSim_dft.basf[j];
                     QUICKDouble phi2, dphidx2, dphidy2, dphidz2;
@@ -198,7 +198,7 @@ __global__ void cshell_getcew_quad_grad_kernel()
                 QUICKDouble phi, dphidx, dphidy, dphidz;
                 pteval_new(gridx, gridy, gridz, &phi, &dphidx, &dphidy, &dphidz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);
 
-                if (abs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
+                if (fabs(phi+dphidx+dphidy+dphidz)> devSim_dft.DMCutoff ) {
                     //QUICKDouble dxdx, dxdy, dxdz, dydy, dydz, dzdz;
 
                     //pt2der_new(gridx, gridy, gridz, &dxdx, &dxdy, &dxdz, &dydy, &dydz, &dzdz, devSim_dft.primf, devSim_dft.primf_locator, ibas, i);

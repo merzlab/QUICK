@@ -150,7 +150,7 @@ __device__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsi
         QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ, I - devSim.Qstart[II],
                 J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
-        if (abs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
+        if (fabs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
             QUICKDouble Cx = LOC2(devSim.allxyz, 0, iatom, 3, totalatom);
             QUICKDouble Cy = LOC2(devSim.allxyz, 1, iatom, 3, totalatom);
             QUICKDouble Cz = LOC2(devSim.allxyz, 2, iatom, 3, totalatom);

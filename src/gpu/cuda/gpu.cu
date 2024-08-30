@@ -1304,7 +1304,7 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
 
 
                                     //if(Xcoeff_oei > gpu->gpu_cutoff->integralCutoff){
-                                    if(abs(Xcoeff_oei) > 0.0 ){
+                                    if(fabs(Xcoeff_oei) > 0.0 ){
                                     bSignificant=true;
                                     break;
                                     }
@@ -3052,10 +3052,9 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #endif
 
             // write to in-memory buffer.
-            for (int j = 0; j < gpu->intCount->_hostData[i]  ; j++) {
-
+            for (int j = 0; j < gpu->intCount->_hostData[i]; j++) {
                 a = gpu->aoint_buffer[i]->_hostData[j];
-                if (abs(a.value) > *maxIntegralCutoff) {
+                if (fabs(a.value) > *maxIntegralCutoff) {
                     aBuffer[bufferInt] = a.IJ;
                     bBuffer[bufferInt] = a.KL;
                     intBuffer[bufferInt] = a.value;

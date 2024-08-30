@@ -858,7 +858,7 @@ __device__ __forceinline__ void iclass_spdf10
                            RAx, RAy, RAz, RBx, RBy, RBz,
                            RCx, RCy, RCz, RDx, RDy, RDz);
 
-                        if (abs(Y) > devSim.integralCutoff)
+                        if (fabs(Y) > devSim.integralCutoff)
                         {
 #if defined(OSHELL)
                             QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis)
@@ -1371,7 +1371,7 @@ __device__ __forceinline__ void iclass_AOInt_spdf10
                               RAx, RAy, RAz, RBx, RBy, RBz,
                               RCx, RCy, RCz, RDx, RDy, RDz);
                         
-                        if (abs(Y) > devSim.maxIntegralCutoff) {
+                        if (fabs(Y) > devSim.maxIntegralCutoff) {
                             ERI_entry a;
                             a.value = Y;
                             a.IJ = (III - 1) * devSim.nbasis + JJJ - 1;

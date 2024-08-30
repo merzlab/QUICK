@@ -357,9 +357,9 @@ __device__ __forceinline__ void iclass_lri_spdf2
 
             //printf("II JJ III JJJ Y %d %d %d %d %f \n", II, JJ, III, JJJ, Y);
 #if defined(int_spd)
-            if (abs(Y) > 0.0e0)
+            if (fabs(Y) > 0.0e0)
 #else
-            if (abs(Y) > devSim.coreIntegralCutoff)
+            if (fabs(Y) > devSim.coreIntegralCutoff)
 #endif
             {
                 atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
