@@ -44,7 +44,9 @@ __device__ void addint_oeprop(unsigned int I, unsigned int J, unsigned int II, u
             if (III != JJJ) dense_sym_factor = 2.0;
             //printf("III , JJJ , ipoint = %d %d %d \n", III, JJJ, ipoint);
             //printf("devSim.dense[1,0] = %f \n", devSim.dense[1,0]);
-            QUICKDouble Y = dense_sym_factor * LOC2(devSim.dense,JJJ-1,III-1,devSim.nbasis,devSim.nbasis) * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
+            QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense,JJJ-1,III-1,devSim.nbasis,devSim.nbasis);
+            if(devSim.is_oshell) DENSEJI = DENSEJI + (QUICKDouble) LOC2(devSim.denseb,JJJ-1,III-1,devSim.nbasis,devSim.nbasis);
+            QUICKDouble Y = dense_sym_factor * DENSEJI * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
 //            QUICKDouble Y = dense_sym_factor * devSim.dense[III,JJJ] * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
             //}
 

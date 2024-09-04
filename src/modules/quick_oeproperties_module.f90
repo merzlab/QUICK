@@ -83,6 +83,11 @@ module quick_oeproperties_module
     use quick_mpi_module, only: mpirank, mpierror 
 #endif
 
+#if defined CUDA || defined CUDA_MPIV
+    use quick_method_module, only: quick_method
+#endif
+
+
    implicit none
    integer, intent(out) :: ierr
    integer :: IIsh, JJsh
@@ -113,6 +118,8 @@ module quick_oeproperties_module
    ! over shells and updating ESP_ELEC.
    esp_electronic(:) = 0.0d0
 
+   write(6,*)'timer_cumer%TESPGrid = ',timer_cumer%TESPGrid
+
    RECORD_TIME(timer_begin%TESPGrid)
 
    ! Computes ESP_NUC 
@@ -122,7 +129,7 @@ module quick_oeproperties_module
 
    ! Computes ESP_ELEC
    Write(6,*)'quick_qm_struct%dense(1,1) = ',quick_qm_struct%dense(1,1)
-#if defined CUDA || defined HIP
+#if defined CUDA || defined CUDA_MPIV
    !Write(6,*)quick_qm_struct%dense(1,2)
    Write(6,*)'quick_qm_struct%denseSave(1,2) = ',quick_qm_struct%denseSave(1,2)
    Write(6,*)'quick_qm_struct%denseSave(1,5) = ',quick_qm_struct%denseSave(1,5)
@@ -134,8 +141,15 @@ module quick_oeproperties_module
    Write(6,*)'quick_qm_struct%denseSave(3,7) = ',quick_qm_struct%denseSave(3,7)
    Write(6,*)'quick_qm_struct%denseSave(6,6) = ',quick_qm_struct%denseSave(6,6)
    Write(6,*)'quick_qm_struct%denseSave(6,7) = ',quick_qm_struct%denseSave(6,7)
-   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, quick_qm_struct%dense, ierr)
+!   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, quick_qm_struct%dense, ierr)
+   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, ierr)
+   call gpu_upload_density_matrix(quick_qm_struct%dense)
+   if (quick_method%UNRST) call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
    call gpu_get_oeprop(esp_electronic)
+#if defined MPIV
+   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
+     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+#endif
    Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
    Write(6,*)'esp_electronic(2) in oeprop = ',esp_electronic(2)
    ! Sum over contributions from different shell pairs
@@ -163,6 +177,8 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
+
+   write(6,*)'timer_cumer%TESPGrid = ',timer_cumer%TESPGrid
 
    ! Sum the nuclear and electronic part of ESP and print
    if (master) then

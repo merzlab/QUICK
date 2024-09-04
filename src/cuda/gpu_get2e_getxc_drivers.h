@@ -522,7 +522,6 @@ extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
 //#ifndef OSHELL
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
-
 //    gpu -> gpu_calculated -> o        =   new cuda_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 //#ifdef LEGACY_ATOMIC_ADD
