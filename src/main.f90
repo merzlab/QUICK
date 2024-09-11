@@ -288,7 +288,6 @@
 #else
             SAFE_CALL(dl_find(ierr, .true.)) 
 #endif
-
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif

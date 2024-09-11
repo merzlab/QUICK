@@ -42,22 +42,9 @@ __device__ void addint_oeprop(unsigned int I, unsigned int J, unsigned int II, u
             // multiply the integral value by normalization constants.
             QUICKDouble dense_sym_factor = 1.0;
             if (III != JJJ) dense_sym_factor = 2.0;
-            //printf("III , JJJ , ipoint = %d %d %d \n", III, JJJ, ipoint);
-            //printf("devSim.dense[1,0] = %f \n", devSim.dense[1,0]);
             QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense,JJJ-1,III-1,devSim.nbasis,devSim.nbasis);
             if(devSim.is_oshell) DENSEJI = DENSEJI + (QUICKDouble) LOC2(devSim.denseb,JJJ-1,III-1,devSim.nbasis,devSim.nbasis);
             QUICKDouble Y = dense_sym_factor * DENSEJI * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
-//            QUICKDouble Y = dense_sym_factor * devSim.dense[III,JJJ] * devSim.cons[III-1] * devSim.cons[JJJ-1] * LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM);
-            //}
-
-            /*if( III == 10 && JJJ == 50 ) {
-
-            printf("OEI debug: III JJJ I J iatm i j c1 c2 store Y %d %d %d %d %d %d %d %f %f %f %f\n", III, JJJ, I, J, iatom, i-1, j-1, devSim.cons[III-1], \
-            devSim.cons[JJJ-1], LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM), Y);
-            printf("OEI debug: dt1 dt2 dt3 dt4 dt5 dt6:  %d %d %d %d %d %d \n", LOC2(devSim.KLMN,0,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,III-1,3,devSim.nbasis),\
-            LOC2(devSim.KLMN,2,III-1,3,devSim.nbasis), LOC2(devSim.KLMN,0,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,1,JJJ-1,3,devSim.nbasis), LOC2(devSim.KLMN,2,JJJ-1,3,devSim.nbasis));
-            }*/
-
 
 /*#ifdef USE_LEGACY_ATOMICS
             QUICKULL Yull = (QUICKULL) (fabs( Y * OSCALE) + (QUICKDouble)0.5);
@@ -68,23 +55,8 @@ __device__ void addint_oeprop(unsigned int I, unsigned int J, unsigned int II, u
             QUICKADD(LOC2(devSim.oULL, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Yull);
 #else
 */
-           // printf("esp_electronic[ipoint] = %d %f \n",ipoint,devSim.esp_electronic[ipoint]);
-           // devSim.esp_electronic[ipoint] = devSim.esp_electronic[ipoint] + Y;
             atomicAdd(&devSim.esp_electronic[ipoint], Y);
-          //    if(ipoint == 0){
-           //     printf("III, JJJ = %d %d\n", III, JJJ);
-           //   }
-           //   if(III == 1 && JJJ == 2 && ipoint == 0){
-/*              if(ipoint == 0){
-                printf("III, JJJ, Y, dense[i-1,j-1], consI, consJ, STORE2, esp = %d %d %f %f %f %f %f %f\n", III, JJJ, Y, devSim.dense[(JJJ-1)+(III-1)*devSim.nbasis], devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM), devSim.esp_electronic[ipoint]);
-              }*/
-
-           /* if(ipoint <= 1){
-              printf("devSim.esp_electronic[ipoint] = %d %f \n", ipoint, devSim.esp_electronic[ipoint]);
-            }*/
-//            atomicAdd(&LOC2(devSim.esp_electronic, JJJ-1, III-1, devSim.nbasis, devSim.nbasis), Y);
 //#endif
-            //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store, i-1, j-1, STOREDIM, STOREDIM));
 
         }
     }
@@ -136,15 +108,6 @@ __device__ void iclass_oeprop(unsigned int I, unsigned int J, unsigned int II, u
     //QUICKDouble store[STOREDIM*STOREDIM];
 
     // initialize store2 array
-/*
-    for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
-        for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
-            if (i < STOREDIM && j < STOREDIM) {
-                LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0.0;
-            }
-        }
-    }
-*/
 
     for(int i=Sumindex[J]; i< Sumindex[J+2]; ++i){
         for(int j=Sumindex[I]; j<Sumindex[I+2]; ++j){
@@ -184,25 +147,16 @@ __device__ void iclass_oeprop(unsigned int I, unsigned int J, unsigned int II, u
         QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI+III, kStartJ+JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
         if(abs(Xcoeff_oei) > devSim.coreIntegralCutoff){
-//        for(int iatom=0; iatom<totalatom; ++iatom){
 
             QUICKDouble Cx = LOC2(devSim.extpointxyz, 0 , ipoint, 3, totalpoint);
             QUICKDouble Cy = LOC2(devSim.extpointxyz, 1 , ipoint, 3, totalpoint);
             QUICKDouble Cz = LOC2(devSim.extpointxyz, 2 , ipoint, 3, totalpoint); 
-            //QUICKDouble chg = -1.0 * devSim.allchg[ipoint];
-
-            // compute OS A21
-            //QUICKDouble U = Zeta * ( pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2) );
-
-            // compute boys function values, the third term of OS A20
-//            QUICKDouble YVerticalTemp[VDIM1*VDIM2*VDIM3];
 
             FmT(I+J, Zeta*(pow(Px-Cx, 2) + pow(Py-Cy, 2) + pow(Pz-Cz, 2)), YVerticalTemp);
 
             // compute all auxilary integrals and store
             for (int n = 0; n<=I+J; n++) {
                 VY(0, 0, n) = VY(0, 0, n) * Xcoeff_oei * (-1);
-                //printf("aux: %d %f \n", i, VY(0, 0, i));
             }
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme. 
@@ -261,7 +215,6 @@ __global__ void getOEPROP_kernel(){
         int iii = devSim.sorted_Qnumber[II];
         int jjj = devSim.sorted_Qnumber[JJ];
         
-        //printf(" tid: %d II JJ ii jj iii jjj %d  %d  %d  %d  %d  %d \n", (int) i, II, JJ, ii, jj, iii, jjj);
         
         // compute coulomb attraction for the selected shell pair.  
         iclass_oeprop(iii, jjj, ii, jj, ipoint, totalpoint, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset);

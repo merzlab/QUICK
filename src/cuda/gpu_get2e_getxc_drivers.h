@@ -471,14 +471,10 @@ extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
 #endif
 */        
     upload_sim_to_constant_oeprop(gpu);
-    printf("nextpoint = %d \n",gpu -> nextpoint);
-  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
  
     upload_para_to_const_oeprop();
-  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
 
     getOEPROP(gpu);
-  printf("esp_electronic[1] = %f \n",esp_electronic[1]);
 /*
 #ifdef USE_LEGACY_ATOMICS
     gpu -> gpu_calculated -> oULL -> Download();

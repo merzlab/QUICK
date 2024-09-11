@@ -193,9 +193,7 @@ static float totTime;
 // interface for kernel launching
 void getOEPROP(_gpu_type gpu){
 
-//    QUICK_SAFE_CALL((getOEPROP_kernel<<<1, 1>>>()));
     QUICK_SAFE_CALL((getOEPROP_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-//    printf("devSim.esp_electronic[0] = %d %f \n", 0, devSim.esp_electronic[0]);
 
 }
 
