@@ -42,7 +42,9 @@
     use quick_molspec_module, only: quick_molspec
     use quick_files_module, only: write_molden
     use quick_molspec_module, only : alloc
-    use quick_files_module, only : set_quick_files, print_quick_io_file
+    use quick_files_module, only: set_quick_files, print_quick_io_file
+
+    use quick_molsurface_module, only: generate_MKS_surfaces
 
 #ifdef MPIV
     use mpi
@@ -268,7 +270,10 @@
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
         
-        ! One electron properties (ESP, EField) 
+        ! One electron properties (ESP, EField)
+
+        !call generate_MKS_surfaces()
+
         call compute_oeprop(ierr)
 
     endif

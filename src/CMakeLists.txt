@@ -32,7 +32,7 @@ set(QUICK_MODULES_SOURCES
 	quick_dft_module.f90 quick_scf_operator_module.f90 quick_uscf_operator_module.f90
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
-	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90
+	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90 quick_molsurface_module.f90
 	oshell_quick_gradient_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
