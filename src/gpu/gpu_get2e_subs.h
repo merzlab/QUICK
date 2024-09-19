@@ -9,23 +9,22 @@
 
 
 #undef STOREDIM
-
 #if defined(int_sp)
   #undef VDIM3
   #undef LOCSTORE
   #undef VY
-  #define VDIM3 VDIM3_T
   #define STOREDIM STOREDIM_T
+  #define VDIM3 VDIM3_T
+  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
   #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
-  #define LOCSTORE(A,i1,i2,d1,d2)  (A[((i1) + (i2) * (d1)) * gridDim.x * blockDim.x])
 #elif defined(int_spd)
+  #define STOREDIM STOREDIM_S
   #undef VDIM3
   #undef VY
   #undef LOCSTORE
-  #define STOREDIM STOREDIM_S
   #define VDIM3 VDIM3_S
+  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
   #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
-  #define LOCSTORE(A,i1,i2,d1,d2)  A[((i1) + (i2) * (d1)) * gridDim.x * blockDim.x]
 #else
   #define STOREDIM STOREDIM_L
 #endif

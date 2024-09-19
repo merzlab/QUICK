@@ -17,8 +17,8 @@
 #undef LOCSTORE 
 #define STOREDIM STOREDIM_T 
 #define VDIM3 VDIM3_T 
-#define LOCSTORE(A,i1,i2,d1,d2)  A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
-#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3) 
+#define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
+#define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 
 __device__ __inline__ void ERint_vertical_sp(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL, 
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz, 

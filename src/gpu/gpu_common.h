@@ -46,17 +46,20 @@ static FILE *debugFile = NULL;
 #define BUFFERSIZE (150000)
 /* array indexing macros, where d1/d2/d3/d4 are array lengths per dimension
  * and i1/i2/i3/i4 are indexed positions per dimension */
-#define LOC2(A,i1,i2,d1,d2)  (A[(i1) + (i2) * (d1)])
-#define LOC3(A,i1,i2,i3,d1,d2,d3) (A[(i3) + ((i2) + (i1) * (d2)) * (d3)])
-#define LOC4(A,i1,i2,i3,i4,d1,d2,d3,d4) (A[(i4) + (i3 + ((i2) + (i1) * (d2)) * (d3)) * (d4)])
-//TODO: remove unused d2
-#define LOCSTORE(A,i1,i2,d1,d2) (A[((i1) + (i2) * (d1)) * gridDim.x * blockDim.x])
-#define LOCVY(A,i1,i2,i3,d1,d2,d3) (A[((i3) + ((i2) + (i1) * (d2)) * (d3)) * gridDim.x * blockDim.x])
-#define LOCSTOREFULL(A,i1,i2,d1,d2,m) (A[(((i1) + (i2) * (d1)) * gridDim.x * blockDim.x) + ((m) * (d1) * (d2) * gridDim.x * blockDim.x)])
+#define LOC2(A,i1,i2,d1,d2) (A[(i2) * (d1) + (i1)])
+#define LOC3(A,i1,i2,i3,d1,d2,d3) (A[((i1) * (d2) + (i2)) * (d3) + (i3)])
+#define LOC4(A,i1,i2,i3,i4,d1,d2,d3,d4) (A[(((i1) * (d2) + (i2)) * (d3) + i3) * (d4) + (i4)])
+// used in OEI and ERI code, auto-generated code
+#define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
+// used in ERI code
+#define LOCVY(A,i1,i2,i3,d1,d2,d3) (A[(((i1) * (d2) + (i2)) * (d3) + (i3)) * gridDim.x * blockDim.x])
+// used in gpu_oei_definitions.h
+#define LOCSTOREFULL(A,i1,i2,d1,d2,m) (A[(((m) * (d2) + (i2)) * (d1) + (i1)) * gridDim.x * blockDim.x])
+// used in OEI and ERI code, auto-generated code
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 
-#define SQR(x) ((x)*(x))
-#define CUBE(x) ((x)*(x)*(x))
+#define SQR(x) ((x) * (x))
+#define CUBE(x) ((x) * (x) * (x))
 #define MAX(A,B) (((A) > (B)) ? (A) : (B))
 #define MIN(A,B) (((A) < (B)) ? (A) : (B))
 

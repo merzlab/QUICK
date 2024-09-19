@@ -10,9 +10,9 @@
 #define new_quick_2_gpu_get2e_subs_hrr_h
 
 #undef STOREDIM
-#define STOREDIM STOREDIM_T 
 #undef LOCSTORE
-#define LOCSTORE(A,i1,i2,d1,d2) A[(i1+(i2)*(d1))*gridDim.x*blockDim.x]
+#define STOREDIM STOREDIM_T 
+#define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
 
 __device__ __forceinline__ int lefthrr_sp(const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
                                        const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,

@@ -11,10 +11,11 @@
  !_____________________________________________________________________!
 */
 
-__device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,
-        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz, QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz, QUICKDouble TwoZetaInv,
-        QUICKDouble* store, QUICKDouble* YVerticalTemp){ 
-
+__device__ __inline__ void OEint_vertical(int I, int J, int II, int JJ,
+        QUICKDouble PAx, QUICKDouble PAy, QUICKDouble PAz,
+        QUICKDouble PBx, QUICKDouble PBy, QUICKDouble PBz,
+        QUICKDouble PCx, QUICKDouble PCy, QUICKDouble PCz,
+        QUICKDouble TwoZetaInv, QUICKDouble * const store, QUICKDouble * const YVerticalTemp) {
   /* SS integral, m=0 */ 
   if(I == 0 && J == 0){ 
     LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) = VY(0, 0, 0);
