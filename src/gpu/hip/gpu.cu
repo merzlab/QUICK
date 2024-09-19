@@ -139,8 +139,6 @@ extern "C" void gpu_init_(int* ierr)
     hipGetDeviceProperties(&deviceProp, device);
     hipDeviceSynchronize();
 
-    hipDeviceSetCacheConfig(hipFuncCachePreferL1);
-
 #if defined(DEBUG)
     size_t val;
 
@@ -153,8 +151,6 @@ extern "C" void gpu_init_(int* ierr)
     hipDeviceGetLimit(&val, hipLimitMallocHeapSize);
     fprintf(gpu->debugFile,"Heap size limit:     %zu\n", val);
 #endif
-
-    hipDeviceSetLimit(hipLimitStackSize, 8192);
 
 #if defined(DEBUG)
     hipDeviceGetLimit(&val, hipLimitStackSize);

@@ -143,8 +143,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
     hipGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     hipDeviceSynchronize();
 
-    hipDeviceSetCacheConfig(hipFuncCachePreferL1);
-
     size_t val;
 
     hipDeviceGetLimit(&val, hipLimitStackSize);
@@ -161,8 +159,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i Heap size limit:     %zu\n", gpu -> mpirank,val);
 #endif
-
-    hipDeviceSetLimit(hipLimitStackSize, 8192);
 
     hipDeviceGetLimit(&val, hipLimitStackSize);
 #ifdef DEBUG

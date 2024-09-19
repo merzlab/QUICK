@@ -143,8 +143,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
     cudaGetDeviceProperties(&deviceProp, gpu -> gpu_dev_id);
     cudaDeviceSynchronize();
 
-    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-
     size_t val;
 
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
@@ -161,8 +159,6 @@ extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
 #ifdef DEBUG
     fprintf(gpu->debugFile,"mpirank: %i Heap size limit:     %zu\n", gpu -> mpirank,val);
 #endif
-
-    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
 
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG

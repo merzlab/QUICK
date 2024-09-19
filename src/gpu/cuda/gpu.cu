@@ -139,8 +139,6 @@ extern "C" void gpu_init_(int* ierr)
     cudaGetDeviceProperties(&deviceProp, device);
     cudaDeviceSynchronize();
 
-    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-
 #if defined(DEBUG)
     size_t val;
 
@@ -153,8 +151,6 @@ extern "C" void gpu_init_(int* ierr)
     cudaDeviceGetLimit(&val, cudaLimitMallocHeapSize);
     fprintf(gpu->debugFile,"Heap size limit:     %zu\n", val);
 #endif
-
-    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
 
 #if defined(DEBUG)
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
