@@ -92,7 +92,8 @@ module quick_oeproperties_module
    integer, intent(out) :: ierr
    integer :: IIsh, JJsh
    integer :: igridpoint
-   
+
+   double precision, allocatable :: esp_ext_point(:)
    double precision, allocatable :: esp_electronic(:)
    double precision, allocatable :: esp_nuclear(:)
 #ifdef MPIV
@@ -105,6 +106,7 @@ module quick_oeproperties_module
    ierr = 0
    
    ! Allocates ESP_NUC and ESP_ELEC arrays
+   allocate(esp_ext_point(quick_molspec%nextpoint))
    allocate(esp_nuclear(quick_molspec%nextpoint))
    allocate(esp_electronic(quick_molspec%nextpoint))
 #ifdef MPIV
@@ -124,8 +126,6 @@ module quick_oeproperties_module
 
    ! Computes ESP_ELEC
 #if defined CUDA || defined CUDA_MPIV
-   !Write(6,*)quick_qm_struct%dense(1,2)
-!   Write(6,*)'quick_qm_struct%denseSave(1,2) = ',quick_qm_struct%denseSave(1,2)
    call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, ierr)
    call gpu_upload_density_matrix(quick_qm_struct%dense)
    if (quick_method%UNRST) call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
@@ -134,7 +134,6 @@ module quick_oeproperties_module
    call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
      MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #endif
-!   Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
    ! Sum over contributions from different shell pairs
 #elif defined MPIV
    ! MPI parallellization is performed over shell-pairs
@@ -154,19 +153,31 @@ module quick_oeproperties_module
         call esp_shell_pair(IIsh, JJsh, esp_electronic)
       end do
    end do
-!   Write(6,*)'esp_electronic(1) in oeprop = ',esp_electronic(1)
 #endif
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
 
-   ! Sum the nuclear and electronic part of ESP and print
+   ! Sum the nuclear and electronic part of ESP
+   do igridpoint=1,quick_molspec%nextpoint
+#ifdef MPIV
+     esp_ext_point(igridpoint) = esp_nuclear(igridpoint)+esp_electronic_aggregate(igridpoint)
+#else
+     esp_ext_point(igridpoint) = esp_nuclear(igridpoint)+esp_electronic(igridpoint)
+#endif
+   end do
+
+   if (master) then
+     call compute_ESP_charge(esp_ext_point)
+   end if
+
+   ! Print ESP at external points
    if (master) then
      call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
 #ifdef MPIV
-     call print_esp(esp_nuclear,esp_electronic_aggregate, quick_molspec%nextpoint, ierr)
+     call print_esp(esp_ext_point, esp_nuclear, esp_electronic_aggregate, quick_molspec%nextpoint)
 #else
-     call print_esp(esp_nuclear,esp_electronic, quick_molspec%nextpoint, ierr)
+     call print_esp(esp_ext_point, esp_nuclear, esp_electronic, quick_molspec%nextpoint)
 #endif
      close(iESPFile)
    endif
@@ -178,19 +189,99 @@ module quick_oeproperties_module
 #endif
  end subroutine compute_esp
 
+!----------------------------------------------------------!
+!  Obtain ESP charge by solving:                           !
+!             Aq=B                                         !
+!  B is a column vector of dimension (natom+1)             !
+!  A is a symmetric matrix of dimension (natom+1,natom+1)  !
+!  q is a column vector of charges. Dimension: (natom+1)   !
+!                                                          !
+!  Only upper triangle of A is stored.                     !
+!----------------------------------------------------------!
+
+ subroutine compute_ESP_charge(esp)
+   use quick_molspec_module, only: quick_molspec, natom, xyz
+   use quick_files_module, only: ioutfile
+   use quick_mpi_module, only: master
+   use quick_exception_module, only: RaiseException
+
+   implicit none
+
+   integer :: iatom, jatom, igridpoint, ierr
+   double precision, intent(in) :: esp(quick_molspec%nextpoint)
+   double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
+   double precision :: distance, distanceb, invdistance, Net_charge
+   double precision, external :: rootSquare
+
+!  A and B are initialized. A(natom+1,natom+1) is set to a small number
+!  instead of zero to facilitate diagonalization of A.
+
+   do iatom = 1, natom
+     B(iatom) = 0
+     do jatom = 1, natom
+       A(jatom,iatom) = 0
+     end do
+   end do
+
+   B(natom+1) = quick_molspec%molchg
+
+   do jatom = 1, natom
+     A(jatom,natom+1) = 1
+   end do
+   A(natom+1,natom+1) = 0.001
+
+! The matrix A and vector B is formed.
+
+   do iatom = 1, natom  
+     do igridpoint = 1, quick_molspec%nextpoint
+       distance = rootSquare(xyz(1:3,iatom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+       invdistance = 1/distance
+       B(iatom) = B(iatom) + esp(igridpoint) * invdistance
+       do jatom = 1, iatom
+         distanceb = rootSquare(xyz(1:3,jatom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+         A(jatom,iatom) = A(jatom,iatom) + invdistance/distanceb
+       end do
+     end do
+   end do
+
+!  A is inverted.
+
+   SAFE_CALL(DTRTRI('U','N',natom+1,A,natom+1,ierr))
+
+!  A-1*B = B
+
+   call DTRMV('U','N','N',natom+1,A,natom+1,B,1)
+
+!  B is copied to charge array.
+
+   Net_charge = 0.d0
+
+   write (ioutfile,'("  ESP charges:")')
+   write (ioutfile,'("  ----------------")')
+   do iatom = 1, natom
+     Net_charge = Net_charge + B(iatom)
+     q(iatom) =B(iatom)
+     write (ioutfile,'(3x,I3,3x,F9.5)')iatom,q(iatom)
+   end do
+   write (ioutfile,'("  ----------------")')
+   write (ioutfile,'("  Net charge = ",F9.5)')Net_charge
+    write (ioutfile,'("  ")')
+
+ end subroutine compute_ESP_charge
+
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
- subroutine print_esp(esp_nuclear, esp_electronic, nextpoint, ierr)
+ subroutine print_esp(net_esp, esp_nuclear, esp_electronic, nextpoint)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iPropFile, propFileName,  iESPFile, espFileName
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
-   integer, intent(out) :: ierr
    integer, intent(in) :: nextpoint
 
+   double precision :: net_esp(nextpoint)
    double precision :: esp_nuclear(nextpoint)
    double precision :: esp_electronic(nextpoint)
 
@@ -228,10 +319,9 @@ module quick_oeproperties_module
      ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
      if (quick_method%esp_print_terms) then
        write(iESPFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-       esp_nuclear(igridpoint), esp_electronic(igridpoint), (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
+       esp_nuclear(igridpoint), esp_electronic(igridpoint), net_esp(igridpoint)
      else
-       write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz,  &
-         (esp_nuclear(igridpoint)+esp_electronic(igridpoint))
+       write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz, net_esp(igridpoint)
      endif
 
    end do
