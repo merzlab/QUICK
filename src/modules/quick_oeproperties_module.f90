@@ -155,9 +155,6 @@ module quick_oeproperties_module
    end do
 #endif
 
-   RECORD_TIME(timer_end%TESPGrid)
-   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
-
    ! Sum the nuclear and electronic part of ESP
    do igridpoint=1,quick_molspec%nextpoint
 #ifdef MPIV
@@ -167,9 +164,17 @@ module quick_oeproperties_module
 #endif
    end do
 
+   RECORD_TIME(timer_end%TESPGrid)
+   timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
+
+   RECORD_TIME(timer_begin%TESPCharge)
+
    if (master) then
      call compute_ESP_charge(esp_ext_point)
    end if
+
+   RECORD_TIME(timer_end%TESPCharge)
+   timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
 
    ! Print ESP at external points
    if (master) then
@@ -265,7 +270,7 @@ module quick_oeproperties_module
    end do
    write (ioutfile,'("  ----------------")')
    write (ioutfile,'("  Net charge = ",F9.5)')Net_charge
-    write (ioutfile,'("  ")')
+   write (ioutfile,'("  ")')
 
  end subroutine compute_ESP_charge
 
