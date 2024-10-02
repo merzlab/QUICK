@@ -292,6 +292,30 @@ if(HIP)
     set(HIPCUDA_EMULATE_VERSION "10.1" CACHE STRING "CUDA emulate version")
     set(AMD_HIP_FLAGS "")
 
+    execute_process(
+          COMMAND ${HIP_HIPCC_EXECUTABLE} --version
+          RESULT_VARIABLE HIPCC_VERSION_STRING)
+    string(REGEX MATCH "HIP version: ([0-9]+).([0-9]+).*" _ "${HIPCC_VERSION_STRING}")
+    set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(HIP_VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}" CACHE STRING "HIP version (reported by hipcc).")
+    mark_as_advanced(HIP_VERSION)
+
+    #  check ROCm version (as reported by hipcc),
+    #  as QUICK is known to trigger a known scalar register fill/spill bug
+    #  in several ROCm versions
+    if ( HIP_VERSION VERSION_GREATER_EQUAL 5.4
+	    AND HIP_VERSION VERSION_LESS_EQUAL 6.1 )
+        message(STATUS "")
+        message("************************************************************")
+	message("Error: Incompatible ROCm version: ${HIP_VERSION}")
+	message("The QUICK HIP codes trigger a known compiler scalar register ")
+	message(" fill/spill bug in ROCm >= v5.4.3 and <= v6.1.2.")
+        message("************************************************************")
+        message(STATUS "")
+        message(FATAL_ERROR)
+    endif()
+
     set(CUDA ON)
 
     # optimization level
