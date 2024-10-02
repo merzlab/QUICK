@@ -96,7 +96,7 @@ __device__ __forceinline__ void iclass_oei(unsigned int I, unsigned int J, unsig
         const QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
                 I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
 
-        if (fabs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
+        if (abs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
             const QUICKDouble Cx = LOC2(devSim.allxyz, 0, iatom, 3, totalatom);
             const QUICKDouble Cy = LOC2(devSim.allxyz, 1, iatom, 3, totalatom);
             const QUICKDouble Cz = LOC2(devSim.allxyz, 2, iatom, 3, totalatom);

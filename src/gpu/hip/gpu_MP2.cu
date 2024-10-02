@@ -360,7 +360,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                                 RAx, RAy, RAz, RBx, RBy, RBz,
                                 RCx, RCy, RCz, RDx, RDy, RDz);
 
-                        //   if(fabs(Y) * 1e-2 > devSim_MP2.integralCutoff) {
+                        //   if(abs(Y) * 1e-2 > devSim_MP2.integralCutoff) {
                         QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
                         QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
                         QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
@@ -375,7 +375,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         }
 
                         QUICKDouble val1d = _tmp * DENSELK * Y;
-                        //if (fabs(val1d) > devSim_MP2.integralCutoff) {
+                        //if (abs(val1d) > devSim_MP2.integralCutoff) {
                         QUICKULL val1 = (QUICKULL) (fabs(val1d * OSCALE) + (QUICKDouble) 0.5);
                         if (val1d < (QUICKDouble) 0.0)
                             val1 = 0ull - val1;
@@ -390,7 +390,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                             }
 
                             QUICKDouble val2d = _tmp * DENSEJI * Y;
-                            //   if (fabs(val2d) > devSim_MP2.integralCutoff) {
+                            //   if (abs(val2d) > devSim_MP2.integralCutoff) {
                             QUICKULL val2 = (QUICKULL) (fabs(val2d * OSCALE) + (QUICKDouble) 0.5);
                             if (val2d < (QUICKDouble) 0.0)
                                 val2 = 0ull - val2;
@@ -400,7 +400,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 
                         // ATOMIC ADD VALUE 3
                         QUICKDouble val3d = hybrid_coeff * 0.5 * DENSELJ * Y;
-                        //if (fabs(2 * val3d) > devSim_MP2.integralCutoff) {
+                        //if (abs(2 * val3d) > devSim_MP2.integralCutoff) {
                         QUICKULL val3 = (QUICKULL) (fabs(val3d * OSCALE) + (QUICKDouble) 0.5);
                         if (III == KKK && III <  JJJ && JJJ < LLL) {
                             val3 = (QUICKULL) (fabs(2 * val3d * OSCALE) + (QUICKDouble) 0.5);
@@ -413,7 +413,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         // ATOMIC ADD VALUE 4
                         if (KKK != LLL) {
                             QUICKDouble val4d = hybrid_coeff * 0.5 * DENSEKJ * Y;
-                            // if (fabs(val4d) > devSim_MP2.integralCutoff) {
+                            // if (abs(val4d) > devSim_MP2.integralCutoff) {
                             QUICKULL val4 = (QUICKULL) (fabs(val4d * OSCALE) + (QUICKDouble) 0.5);
                             if (val4d < (QUICKDouble) 0.0) val4 = 0ull - val4;
                             atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val4);
@@ -422,7 +422,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 
                         // ATOMIC ADD VALUE 5
                         QUICKDouble val5d = hybrid_coeff * 0.5 * DENSELI * Y;
-                        //if (fabs(val5d) > devSim_MP2.integralCutoff) {
+                        //if (abs(val5d) > devSim_MP2.integralCutoff) {
                         QUICKULL val5 = (QUICKULL) (fabs(val5d * OSCALE) + (QUICKDouble) 0.5);
                         if (val5d < (QUICKDouble) 0.0) val5 = 0ull - val5;
 
@@ -444,7 +444,7 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         if (III != JJJ) {
                             if (KKK != LLL) {
                                 QUICKDouble val6d = hybrid_coeff * 0.5 * DENSEKI * Y;
-                                //      if (fabs(val6d) > devSim_MP2.integralCutoff) {
+                                //      if (abs(val6d) > devSim_MP2.integralCutoff) {
 
                                 QUICKULL val6 = (QUICKULL) (fabs(val6d * OSCALE) + (QUICKDouble) 0.5);
                                 if (val6d < (QUICKDouble) 0.0)

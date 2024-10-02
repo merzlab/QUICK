@@ -307,7 +307,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char * const gpweight,
                         dphidz += tmpdz;
 
                         //Check the significance of the primitive
-                        if (fabs(tmp + tmpdx + tmpdy + tmpdz) > devSim_dft.XCCutoff) {
+                        if (abs(tmp + tmpdx + tmpdy + tmpdz) > devSim_dft.XCCutoff) {
                             atomicAdd(&pfweight[pfwid], 1);
                         }
                     }
@@ -318,7 +318,7 @@ __global__ void get_primf_contraf_lists_kernel(unsigned char * const gpweight,
                     dphidz *= x1i * y1i;
                 }
 
-                if (fabs(phi + dphidx + dphidy + dphidz) > devSim_dft.XCCutoff) {
+                if (abs(phi + dphidx + dphidy + dphidz) > devSim_dft.XCCutoff) {
                     atomicAdd(&cfweight[cfwid], 1);
                     sigcfcount++;
                 }
@@ -960,7 +960,7 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
 
         for (int i = 0; i < natom; i++) {
             for (int j = 0; j < 3; j++) {
-                if (fabs(uw) > devSim_dft.DMCutoff) {
+                if (abs(uw) > devSim_dft.DMCutoff) {
                     atomicAdd(&smemGrad[i * 3 + j], LOCUWSSD(uw_ssd, j, i, 3, natom) * Exc * quadwt * uw * (-p / sumUW));
                 }
             }
@@ -977,7 +977,7 @@ __device__ void sswanader(const QUICKDouble gridx, const QUICKDouble gridy, cons
 
     for (int i = 0; i < natom; i++) {
         for (int j = 0; j < 3; j++) {
-            if (fabs(parent_uw) > devSim_dft.DMCutoff) {
+            if (abs(parent_uw) > devSim_dft.DMCutoff) {
                 atomicAdd(&smemGrad[i * 3 + j], LOCUWSSD(uw_ssd, j, i, 3, natom) * (1.0 / sumUW) * Exc * quadwt * parent_uw);
             }
         }

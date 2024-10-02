@@ -1597,9 +1597,9 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
                 
                 
                 /*
-                if ( fabs(AGradx) > 0.0 || fabs(AGrady) > 0.0 || fabs(AGradz) > 0.0 ||
-                    fabs(BGradx) > 0.0 || fabs(BGrady) > 0.0 || fabs(BGradz) > 0.0 ||
-                    fabs(CGradx) > 0.0 || fabs(CGrady) > 0.0 || fabs(CGradz) > 0.0) {
+                if ( abs(AGradx) > 0.0 || abs(AGrady) > 0.0 || abs(AGradz) > 0.0 ||
+                    abs(BGradx) > 0.0 || abs(BGrady) > 0.0 || abs(BGradz) > 0.0 ||
+                    abs(CGradx) > 0.0 || abs(CGrady) > 0.0 || abs(CGradz) > 0.0) {
                     
                     printf("%i %i %i %i %i %i %i %i %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e \n", II, JJ, KK, LL, \
                            I, J, K, L, AGradx, AGrady, AGradz, BGradx, BGrady, BGradz, CGradx, CGrady, CGradz);
