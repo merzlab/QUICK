@@ -139,6 +139,9 @@ contains
     case(39)
       msg='Support for F functions is currently not available for GPU accelerated UHF/UDFT gradients.'
 
+    case(40)
+      msg='Matrix inversion failed during calculation of ESP charges.'
+
     case default
       msg='Unknown error.'
 

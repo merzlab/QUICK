@@ -44,7 +44,7 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	lbfgs.f90 Lsolve.f90 matComp.f90 matMul.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90
-	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90
+	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90 QuickErr.f90
 	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
 	ssw.f90 sum2Mat.f90 transpose.f90 tridi.f90
