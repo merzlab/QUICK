@@ -292,30 +292,6 @@ if(HIP)
     set(HIPCUDA_EMULATE_VERSION "10.1" CACHE STRING "CUDA emulate version")
     set(AMD_HIP_FLAGS "")
 
-    execute_process(
-          COMMAND ${HIP_HIPCC_EXECUTABLE} --version
-          RESULT_VARIABLE HIPCC_VERSION_STRING)
-    string(REGEX MATCH "HIP version: ([0-9]+).([0-9]+).*" _ "${HIPCC_VERSION_STRING}")
-    set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
-    set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
-    set(HIP_VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}" CACHE STRING "HIP version (reported by hipcc).")
-    mark_as_advanced(HIP_VERSION)
-
-    #  check ROCm version (as reported by hipcc),
-    #  as QUICK is known to trigger a known scalar register fill/spill bug
-    #  in several ROCm versions
-    if ( HIP_VERSION VERSION_GREATER_EQUAL 5.4
-	    AND HIP_VERSION VERSION_LESS_EQUAL 6.1 )
-        message(STATUS "")
-        message("************************************************************")
-	message("Error: Incompatible ROCm version: ${HIP_VERSION}")
-	message("The QUICK HIP codes trigger a known compiler scalar register ")
-	message(" fill/spill bug in ROCm >= v5.4.3 and <= v6.1.2.")
-        message("************************************************************")
-        message(STATUS "")
-        message(FATAL_ERROR)
-    endif()
-
     set(CUDA ON)
 
     # optimization level
@@ -347,7 +323,7 @@ if(HIP)
 
         if("${QUICK_USER_ARCH}" MATCHES "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
-            list(APPEND AMD_HIP_FLAGS -munsafe-fp-atomics -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
             set(FOUND "TRUE")
         endif()
 
@@ -360,6 +336,39 @@ if(HIP)
     endif()
 
     find_package(HipCUDA REQUIRED)
+
+    execute_process(
+          COMMAND ${HIP_HIPCC_EXECUTABLE} --version
+	  OUTPUT_VARIABLE HIPCC_VERSION_OUTPUT
+	  RESULT_VARIABLE HIPCC_VERSION_RESULT)
+
+    if(NOT HIPCC_VERSION_RESULT EQUAL "0")
+        message(FATAL_ERROR "Failed to get ROCm/HIP version.")
+    endif()
+
+    string(REPLACE "\n" ";" HIPCC_VERSION_OUTPUT ${HIPCC_VERSION_OUTPUT})
+    string(REGEX MATCH "rocm-([0-9]+).([0-9]+).([0-9]+)" _ "${HIPCC_VERSION_OUTPUT}")
+    set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(HIP_VERSION_PATCH ${CMAKE_MATCH_3})
+    set(HIP_VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}" CACHE STRING "ROCm/HIP version (reported by hipcc).")
+    mark_as_advanced(HIP_VERSION)
+    message(STATUS "Detected ROCm/HIP version: ${HIP_VERSION}")
+
+    #  check ROCm version (as reported by hipcc),
+    #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
+    #  in several ROCm versions
+    if ( HIP_VERSION VERSION_GREATER_EQUAL 5.4.3
+	    AND HIP_VERSION VERSION_LESS_EQUAL 6.2.0 )
+        message(STATUS "")
+        message("************************************************************")
+	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
+	message("The QUICK HIP codes trigger a known compiler scalar register ")
+	message(" fill/spill bug in ROCm >= v5.4.3 and <= v6.2.0.")
+        message("************************************************************")
+        message(STATUS "")
+        message(FATAL_ERROR)
+    endif()
 
     if(QUICK_DEBUG_HIP_ASAN)
 	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
