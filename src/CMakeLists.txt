@@ -47,8 +47,8 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90 QuickErr.f90
 	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
-	ssw.f90 sum2Mat.f90 transpose.f90 tridi.f90
-	upcase.f90 vett.f90 whatis.f90 whole.f90
+	ssw.f90 sum2Mat.f90 symmetrize.f90 transpose.f90
+        tridi.f90 upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90

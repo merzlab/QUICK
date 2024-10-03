@@ -194,42 +194,6 @@ module quick_oeproperties_module
 #endif
  end subroutine compute_esp
 
-!---------------------------------------------------------!
-!  Symmetrize either upper or lower square matrix         !
-!                                                         !
-!  Parameters:                                            !
-!      UPLO     'U'                                       !
-!               'L'                                       !
-!      mat      N * N matrix                              !
-!      N        size of the matrix                        !
-!---------------------------------------------------------!
-
- subroutine symmetrize(UPLO,mat,N)
-  implicit none
-
-  integer :: iatom, jatom, N
-  double precision :: mat(N,N)
-  character :: UPLO
-
-  if (UPLO == 'U') then
-    do iatom = 2,N
-      do jatom = 1,iatom - 1
-        mat(iatom,jatom) = mat(jatom,iatom)
-      end do
-    end do
-  else if (UPLO == 'L') then
-    do iatom = 2,N
-      do jatom = 1,iatom - 1
-        mat(jatom,iatom) = mat(iatom,jatom)
-      end do
-    end do
-  else
-     call QuickErr('UPLO has to be either U or L in symmetrize')
-    Return
-  end if
-
- end subroutine symmetrize
-
 !----------------------------------------------------------!
 !  Obtain ESP charge by solving:                           !
 !             Aq=B                                         !
@@ -255,7 +219,7 @@ module quick_oeproperties_module
    integer :: iatom, jatom, igridpoint, ierr, NB, LWORK, LDA
    double precision, intent(in) :: esp(quick_molspec%nextpoint)
    double precision, allocatable :: WORK(:)
-   double precision :: A(natom,natom), B(natom), q(natom)
+   double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
    double precision :: distance, distanceb, invdistance, Net_charge
 
    double precision :: One = 1.0d0, Zero = 0.0d0
@@ -269,6 +233,13 @@ module quick_oeproperties_module
        A(jatom,iatom) = 0
      end do
    end do
+
+   B(natom+1) = quick_molspec%molchg
+
+   do jatom = 1, natom
+     A(jatom,natom+1) = 1
+   end do
+   A(natom+1,natom+1) = 0
 
 ! The matrix A and vector B is formed.
 
@@ -284,20 +255,20 @@ module quick_oeproperties_module
      end do
    end do
 
-   call symmetrize('U',A,natom)
+   call symmetrize('U',A,natom+1)
 
 !  A is inverted.
 
-   NB = ILAENV(1,'DGETRI',' ',natom,-1,-1,-1)
+   NB = ILAENV(1,'DGETRI',' ',natom+1,-1,-1,-1)
 
-   LWORK = (natom)*NB
+   LWORK = (natom+1)*NB
 
    allocate(WORK(LWORK))
-   allocate(IPIV(natom))
+   allocate(IPIV(natom+1))
 
-   LDA = natom
-   CALL dgetrf(natom,natom,A,LDA,IPIV,ierr)
-   call DGETRI(natom,A,LDA,IPIV,WORK,LWORK,ierr)
+   LDA = natom+1
+   CALL dgetrf(natom+1,natom+1,A,LDA,IPIV,ierr)
+   call DGETRI(natom+1,A,LDA,IPIV,WORK,LWORK,ierr)
 
    if (ierr /= 0) then
      ierr = 40
@@ -306,7 +277,7 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
-   call DGEMV('N',natom,natom,One,A,LDA,B,1,Zero,q,1)
+   call DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
 
 !  B is copied to charge array.
 
@@ -316,10 +287,10 @@ module quick_oeproperties_module
    write (ioutfile,'("  ----------------")')
    do iatom = 1, natom
      Net_charge = Net_charge + q(iatom)
-     write (ioutfile,'(3x,I3,3x,F9.5)')iatom,q(iatom)
+     write (ioutfile,'(3x,I3,3x,F10.6)')iatom,q(iatom)
    end do
    write (ioutfile,'("  ----------------")')
-   write (ioutfile,'("  Net charge = ",F9.5)')Net_charge
+   write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
    write (ioutfile,'("  ")')
 
  end subroutine compute_ESP_charge
