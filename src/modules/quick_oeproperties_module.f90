@@ -38,24 +38,32 @@ module quick_oeproperties_module
    else
       write (ioutfile,'("  Skipping one-electron property calculation.")')
    end if
-!     double precision, allocatable :: esp_ext_point(:)
-!     allocate(esp_ext_point(quick_molspec%nextpoint))
-!   end if
 
  end Subroutine
 
  Subroutine compute_oeprop_grid()
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
+   use quick_mpi_module, only: master
+   use quick_files_module, only: iESPFile, espFileName
 
    implicit none
+   integer :: ierr
    double precision, allocatable :: esp_on_points(:)
 
    allocate(esp_on_points(quick_molspec%nextpoint))
 
+   ierr = 0
+
    ! Electrostatic Potential
    if (quick_method%esp_grid) then
      call compute_esp(quick_molspec%nextpoint,quick_molspec%extpointxyz,esp_on_points)
+     ! Print ESP at external points
+     if (master) then
+       call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
+       call print_esp(esp_on_points, quick_molspec%nextpoint, quick_molspec%extpointxyz)
+       close(iESPFile)
+     endif
    end if
 
    ! Electric field
@@ -88,12 +96,10 @@ module quick_oeproperties_module
  ! It calls the following subroutines:                                        !
  !     1. esp_nuc: Computes the nuclear contribution to the ESP               !
  !     2. esp_shell_pair: Computes the electronic contribution to the ESP     !
- !     3. print_esp: Prints the ESP to the output file.prop                   !
  !----------------------------------------------------------------------------!
  subroutine compute_esp(npoints,xyz_points,esp)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_molspec_module, only : quick_molspec
-   use quick_files_module, only : ioutfile, iPropFile, propFileName, iESPFile, espFileName
    use quick_basis_module, only: jshell
    use quick_mpi_module, only: master
  
@@ -197,17 +203,6 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_end%TESPCharge)
    timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
-
-   ! Print ESP at external points
-   if (master) then
-     call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
-#ifdef MPIV
-     call print_esp(esp, esp_nuclear, esp_electronic_aggregate, npoints, xyz_points)
-#else
-     call print_esp(esp, esp_nuclear, esp_electronic, npoints, xyz_points)
-#endif
-     close(iESPFile)
-   endif
 
    deallocate(esp_electronic)
    deallocate(esp_nuclear)
@@ -320,19 +315,17 @@ module quick_oeproperties_module
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
- subroutine print_esp(net_esp, esp_nuclear, esp_electronic, npoints, xyz_points)
+ subroutine print_esp(esp, npoints, xyz_points)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
-   use quick_files_module, only: ioutfile, iPropFile, propFileName,  iESPFile, espFileName
+   use quick_files_module, only: ioutfile,  iESPFile, espFileName
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
    integer, intent(in) :: npoints
 
    double precision :: xyz_points(3,npoints)
-   double precision :: net_esp(npoints)
-   double precision :: esp_nuclear(npoints)
-   double precision :: esp_electronic(npoints)
+   double precision :: esp(npoints)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
@@ -342,11 +335,7 @@ module quick_oeproperties_module
            trim(espFileName)
    write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
    write (iESPFile,'(100("-"))')
-   ! Do you want V_nuc and V_elec?
-   if (quick_method%esp_print_terms) then
-     write (iESPFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP_NUC",12x, "ESP_ELEC",8x,"ESP_TOTAL")')
-     ! Do you want  X, Y, and Z in Angstrom?
-   else if (quick_method%extgrid_angstrom)  then
+   if (quick_method%extgrid_angstrom)  then
      write (iESPFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
    else
      ! Default is X, Y, and V_total in a.u.
@@ -364,15 +353,7 @@ module quick_oeproperties_module
        Cy = xyz_points(2, igridpoint)
        Cz = xyz_points(3, igridpoint)
      endif
-
-     ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
-     if (quick_method%esp_print_terms) then
-       write(iESPFile, '(2x,3(F14.10, 1x), 3x,F14.10,3x,F14.10,3x,3F14.10)') Cx, Cy, Cz,  &
-       esp_nuclear(igridpoint), esp_electronic(igridpoint), net_esp(igridpoint)
-     else
-       write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz, net_esp(igridpoint)
-     endif
-
+     write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz, esp(igridpoint)
    end do
  end subroutine print_esp
 
