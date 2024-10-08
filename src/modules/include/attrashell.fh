@@ -7,7 +7,7 @@
  ! Then, P_{mu nu} * 〈 phi_mu | 1/|r-C| | phi_nu 〉                                        !
  !-----------------------------------------------------------------------------------------!
 #if defined (OEPROP)
-subroutine esp_shell_pair(IIsh, JJsh, esp_electronic)
+subroutine esp_shell_pair(IIsh, JJsh, npoints, xyz_points, esp_electronic)
 #elif defined (OEI)
 subroutine attrashell(IIsh, JJsh)
 #endif
@@ -37,8 +37,9 @@ subroutine attrashell(IIsh, JJsh)
    double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
 
 #if defined (OEPROP)
-   integer :: igridpoint
-   double precision, dimension(:), intent(inout) :: esp_electronic
+   integer :: igridpoint, npoints
+   double precision, intent(in) :: xyz_points(3,npoints)
+   double precision, intent(inout) :: esp_electronic(npoints)
 #elif defined (OEI)
    integer :: iatom
 #endif
@@ -82,10 +83,10 @@ subroutine attrashell(IIsh, JJsh)
 
 #if defined (OEPROP)
            ! Loops over external grid points/MM atoms
-            do igridpoint=1,quick_molspec%nextpoint
-              Cx=quick_molspec%extpointxyz(1,igridpoint)
-              Cy=quick_molspec%extpointxyz(2,igridpoint)
-              Cz=quick_molspec%extpointxyz(3,igridpoint)
+            do igridpoint=1,npoints
+              Cx=xyz_points(1,igridpoint)
+              Cy=xyz_points(2,igridpoint)
+              Cz=xyz_points(3,igridpoint)
 #elif defined (OEI)
             !nextatom=number of external MM point charges. set to 0 if none used
             do iatom=1,natom+quick_molspec%nextatom

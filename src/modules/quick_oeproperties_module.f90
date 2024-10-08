@@ -27,26 +27,43 @@ module quick_oeproperties_module
 !  user provided keywords.                                           !
 !--------------------------------------------------------------------!
 
- Subroutine compute_oeprop(ierr)
+ Subroutine compute_oeprop()
    use quick_method_module, only: quick_method
    use quick_files_module, only : ioutfile
 
    implicit none
-   integer :: ierr
+
+   if (quick_method%esp_grid .or. quick_method%efield_grid) then
+      call compute_oeprop_grid()
+   else
+      write (ioutfile,'("  Skipping one-electron property calculation.")')
+   end if
+!     double precision, allocatable :: esp_ext_point(:)
+!     allocate(esp_ext_point(quick_molspec%nextpoint))
+!   end if
+
+ end Subroutine
+
+ Subroutine compute_oeprop_grid()
+   use quick_molspec_module, only: quick_molspec
+   use quick_method_module, only: quick_method
+
+   implicit none
+   double precision, allocatable :: esp_on_points(:)
+
+   allocate(esp_on_points(quick_molspec%nextpoint))
 
    ! Electrostatic Potential
    if (quick_method%esp_grid) then
-     call compute_esp(ierr)
+     call compute_esp(quick_molspec%nextpoint,quick_molspec%extpointxyz,esp_on_points)
    end if
 
    ! Electric field
    if (quick_method%efield_grid) then
-     call compute_efield(ierr)
+     call compute_efield()
    end if
 
-   if (.not. quick_method%esp_grid .and. .not. quick_method%efield_grid) then
-     write (ioutfile,'("  Skipping one-electron property calculation.")')
-   end if
+   deallocate(esp_on_points)
 
  end Subroutine
 
@@ -73,7 +90,7 @@ module quick_oeproperties_module
  !     2. esp_shell_pair: Computes the electronic contribution to the ESP     !
  !     3. print_esp: Prints the ESP to the output file.prop                   !
  !----------------------------------------------------------------------------!
- subroutine compute_esp(ierr)
+ subroutine compute_esp(npoints,xyz_points,esp)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_molspec_module, only : quick_molspec
    use quick_files_module, only : ioutfile, iPropFile, propFileName, iESPFile, espFileName
@@ -94,11 +111,12 @@ module quick_oeproperties_module
 
 
    implicit none
-   integer, intent(out) :: ierr
+   integer :: ierr
    integer :: IIsh, JJsh
-   integer :: igridpoint
+   integer :: igridpoint, npoints
 
-   double precision, allocatable :: esp_ext_point(:)
+   double precision :: xyz_points(3,npoints), esp(npoints)
+
    double precision, allocatable :: esp_electronic(:)
    double precision, allocatable :: esp_nuclear(:)
 #ifdef MPIV
@@ -111,11 +129,10 @@ module quick_oeproperties_module
    ierr = 0
    
    ! Allocates ESP_NUC and ESP_ELEC arrays
-   allocate(esp_ext_point(quick_molspec%nextpoint))
-   allocate(esp_nuclear(quick_molspec%nextpoint))
-   allocate(esp_electronic(quick_molspec%nextpoint))
+   allocate(esp_nuclear(npoints))
+   allocate(esp_electronic(npoints))
 #ifdef MPIV
-   allocate(esp_electronic_aggregate(quick_molspec%nextpoint))
+   allocate(esp_electronic_aggregate(npoints))
 #endif
 
    ! ESP_ELEC array need initialization as we will be iterating
@@ -125,18 +142,18 @@ module quick_oeproperties_module
    RECORD_TIME(timer_begin%TESPGrid)
 
    ! Computes ESP_NUC 
-   do igridpoint=1,quick_molspec%nextpoint
-     call esp_nuc(ierr, igridpoint, esp_nuclear(igridpoint))
-   end do
+!   do igridpoint=1,npoints
+   call esp_nuc(npoints, xyz_points, esp_nuclear)
+!   end do
 
    ! Computes ESP_ELEC
 #if defined CUDA || defined CUDA_MPIV
-   call gpu_upload_oeprop(quick_molspec%nextpoint, quick_molspec%extpointxyz, esp_electronic, ierr)
+   call gpu_upload_oeprop(npoints, xyz_points, esp_electronic, ierr)
    call gpu_upload_density_matrix(quick_qm_struct%dense)
    if (quick_method%UNRST) call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
    call gpu_get_oeprop(esp_electronic)
 #if defined MPIV
-   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
+   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, npoints, &
      MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #endif
    ! Sum over contributions from different shell pairs
@@ -146,26 +163,26 @@ module quick_oeproperties_module
    do Ish=1,mpi_jshelln(mpirank)
       IIsh=mpi_jshell(mpirank,Ish)
       do JJsh=IIsh,jshell
-         call esp_shell_pair(IIsh, JJsh, esp_electronic)
+         call esp_shell_pair(IIsh, JJsh, npoints, xyz_points, esp_electronic)
       enddo
    enddo
    ! MPI_REDUCE is called to sum over esp_electronic obtained from all the processes
-   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, quick_molspec%nextpoint, &
+   call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, npoints, &
      MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
 #else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
-        call esp_shell_pair(IIsh, JJsh, esp_electronic)
+        call esp_shell_pair(IIsh, JJsh, npoints, xyz_points, esp_electronic)
       end do
    end do
 #endif
 
    ! Sum the nuclear and electronic part of ESP
-   do igridpoint=1,quick_molspec%nextpoint
+   do igridpoint=1,npoints
 #ifdef MPIV
-     esp_ext_point(igridpoint) = esp_nuclear(igridpoint)+esp_electronic_aggregate(igridpoint)
+     esp(igridpoint) = esp_nuclear(igridpoint)+esp_electronic_aggregate(igridpoint)
 #else
-     esp_ext_point(igridpoint) = esp_nuclear(igridpoint)+esp_electronic(igridpoint)
+     esp(igridpoint) = esp_nuclear(igridpoint)+esp_electronic(igridpoint)
 #endif
    end do
 
@@ -175,7 +192,7 @@ module quick_oeproperties_module
    RECORD_TIME(timer_begin%TESPCharge)
 
    if (master) then
-     call compute_ESP_charge(esp_ext_point)
+     call compute_ESP_charge(esp)
    end if
 
    RECORD_TIME(timer_end%TESPCharge)
@@ -185,9 +202,9 @@ module quick_oeproperties_module
    if (master) then
      call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
 #ifdef MPIV
-     call print_esp(esp_ext_point, esp_nuclear, esp_electronic_aggregate, quick_molspec%nextpoint)
+     call print_esp(esp, esp_nuclear, esp_electronic_aggregate, npoints, xyz_points)
 #else
-     call print_esp(esp_ext_point, esp_nuclear, esp_electronic, quick_molspec%nextpoint)
+     call print_esp(esp, esp_nuclear, esp_electronic, npoints, xyz_points)
 #endif
      close(iESPFile)
    endif
@@ -303,18 +320,19 @@ module quick_oeproperties_module
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
- subroutine print_esp(net_esp, esp_nuclear, esp_electronic, nextpoint)
+ subroutine print_esp(net_esp, esp_nuclear, esp_electronic, npoints, xyz_points)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iPropFile, propFileName,  iESPFile, espFileName
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
-   integer, intent(in) :: nextpoint
+   integer, intent(in) :: npoints
 
-   double precision :: net_esp(nextpoint)
-   double precision :: esp_nuclear(nextpoint)
-   double precision :: esp_electronic(nextpoint)
+   double precision :: xyz_points(3,npoints)
+   double precision :: net_esp(npoints)
+   double precision :: esp_nuclear(npoints)
+   double precision :: esp_electronic(npoints)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
@@ -336,15 +354,15 @@ module quick_oeproperties_module
    endif
 
    ! Collect ESP and print
-   do igridpoint = 1, nextpoint 
+   do igridpoint = 1, npoints
      if (quick_method%extgrid_angstrom)  then
-       Cx = (quick_molspec%extpointxyz(1, igridpoint)*BOHRS_TO_A)
-       Cy = (quick_molspec%extpointxyz(2, igridpoint)*BOHRS_TO_A)
-       Cz = (quick_molspec%extpointxyz(3, igridpoint)*BOHRS_TO_A)
+       Cx = (xyz_points(1, igridpoint)*BOHRS_TO_A)
+       Cy = (xyz_points(2, igridpoint)*BOHRS_TO_A)
+       Cz = (xyz_points(3, igridpoint)*BOHRS_TO_A)
      else
-       Cx = quick_molspec%extpointxyz(1, igridpoint)
-       Cy = quick_molspec%extpointxyz(2, igridpoint)
-       Cz = quick_molspec%extpointxyz(3, igridpoint)
+       Cx = xyz_points(1, igridpoint)
+       Cy = xyz_points(2, igridpoint)
+       Cz = xyz_points(3, igridpoint)
      endif
 
      ! Additional option 1 : PRINT ESP_NUC, ESP_ELEC, and ESP_TOTAL
@@ -361,30 +379,30 @@ module quick_oeproperties_module
  !-----------------------------------------------------------------------!
  ! This subroutine calculates V_nuc(r) = sum Z_k/|r-Rk|                  !
  !-----------------------------------------------------------------------!
- subroutine esp_nuc(ierr, igridpoint, esp_nuclear_term)
+ subroutine esp_nuc(npoints, xyz_points, esp_nuclear)
    use quick_molspec_module, only: natom, quick_molspec, xyz
 
    implicit none
-   integer, intent(inout) :: ierr
+   integer, intent(in) :: npoints
+   double precision, intent(in) :: xyz_points(3,npoints)
+   double precision, intent(out) :: esp_nuclear(npoints)
 
    double precision :: distance
    double precision, external :: rootSquare
-   integer inucleus
+   integer :: inucleus, igridpoint
 
-   double precision, intent(out) :: esp_nuclear_term
-   integer ,intent(in) :: igridpoint
-   
-   esp_nuclear_term = 0.d0
-
+   do igridpoint = 1, npoints
+     esp_nuclear(igridpoint) = 0.d0
      do inucleus=1,natom+quick_molspec%nextatom
        if(inucleus<=natom)then
-         distance = rootSquare(xyz(1:3,inucleus), quick_molspec%extpointxyz(1:3,igridpoint), 3)
-         esp_nuclear_term = esp_nuclear_term + quick_molspec%chg(inucleus) / distance
+         distance = rootSquare(xyz(1:3,inucleus), xyz_points(1:3,igridpoint), 3)
+         esp_nuclear(igridpoint) = esp_nuclear(igridpoint) + quick_molspec%chg(inucleus) / distance
        else
-         distance = rootSquare(quick_molspec%extxyz(1:3,inucleus-natom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
-         esp_nuclear_term = esp_nuclear_term + quick_molspec%extchg(inucleus-natom) / distance
+         distance = rootSquare(quick_molspec%extxyz(1:3,inucleus-natom), xyz_points(1:3,igridpoint), 3)
+         esp_nuclear(igridpoint) = esp_nuclear(igridpoint) + quick_molspec%extchg(inucleus-natom) / distance
        endif
      enddo
+   enddo
  end subroutine esp_nuc
 
 
@@ -394,7 +412,7 @@ module quick_oeproperties_module
  ! result to file.efield                                                            !
  !                                                                                  !
  !----------------------------------------------------------------------------------!
- subroutine compute_efield(ierr)
+ subroutine compute_efield()
   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
   use quick_molspec_module, only : quick_molspec
   use quick_files_module, only : ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
@@ -408,7 +426,7 @@ module quick_oeproperties_module
 #endif
 
    implicit none
-   integer, intent(out) :: ierr
+   integer :: ierr
    integer :: IIsh, JJsh
    integer :: igridpoint
   
@@ -437,7 +455,7 @@ module quick_oeproperties_module
 
    ! Computes efield_nuclear 
    do igridpoint=1,quick_molspec%nextpoint
-     call efield_nuc(ierr, igridpoint, efield_nuclear(1,igridpoint))
+     call efield_nuc(igridpoint, efield_nuclear(1,igridpoint))
    end do
 
    ! Computes EField_ELEC by summing over contrbutions from individual shell-pairs
@@ -467,9 +485,9 @@ module quick_oeproperties_module
     ! for now, back to 'R' mode
      call quick_open(iEFIELDFile,efieldFileName,'U','F','R',.false.,ierr)
 #ifdef MPIV
-     call print_efield(efield_nuclear, efield_electronic_aggregate, quick_molspec%nextpoint, ierr)
+     call print_efield(efield_nuclear, efield_electronic_aggregate, quick_molspec%nextpoint)
 #else
-     call print_efield(efield_nuclear, efield_electronic, quick_molspec%nextpoint, ierr)
+     call print_efield(efield_nuclear, efield_electronic, quick_molspec%nextpoint)
 #endif
      close(iEFIELDFile)
    endif
@@ -484,11 +502,10 @@ module quick_oeproperties_module
 !------------------------------------------------------------------------!
 ! This subroutine calculates EField_nuc(r) = sum Z_k*(r-Rk)/(|r-Rk|^3)   !
 !------------------------------------------------------------------------!
- subroutine efield_nuc(ierr, igridpoint, efield_nuclear_term)
+ subroutine efield_nuc(igridpoint, efield_nuclear_term)
   use quick_molspec_module, only: natom, quick_molspec, xyz
   implicit none
 
-  integer, intent(inout) :: ierr
   integer, intent(in) :: igridpoint
   double precision, external :: rootSquare
   double precision, intent(out) :: efield_nuclear_term(3)
@@ -532,14 +549,13 @@ end subroutine efield_nuc
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the EFIELD data to file.efield                           !
  !---------------------------------------------------------------------------------------------!
-subroutine print_efield(efield_nuclear, efield_electronic, nextpoint, ierr)
+subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
   use quick_files_module, only: ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
   use quick_constants_module, only: BOHRS_TO_A
 
   implicit none
-  integer, intent(out) :: ierr
   integer, intent(in) :: nextpoint
 
   double precision :: efield_nuclear(3,nextpoint), efield_electronic(3,nextpoint)

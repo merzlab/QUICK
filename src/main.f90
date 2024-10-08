@@ -274,7 +274,7 @@
 
         !call generate_MKS_surfaces()
 
-        call compute_oeprop(ierr)
+        call compute_oeprop()
 
     endif
 
@@ -306,7 +306,7 @@
         endif
 
         ! One electron properties (ESP, EField) 
-        call compute_oeprop(ierr)
+        call compute_oeprop()
 
     endif
 
