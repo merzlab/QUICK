@@ -29,6 +29,7 @@ module quick_oeproperties_module
 
  Subroutine compute_oeprop(ierr)
    use quick_method_module, only: quick_method
+   use quick_files_module, only : ioutfile
 
    implicit none
    integer :: ierr
@@ -36,12 +37,16 @@ module quick_oeproperties_module
    ! Electrostatic Potential
    if (quick_method%esp_grid) then
      call compute_esp(ierr)
-   endif
+   end if
 
    ! Electric field
    if (quick_method%efield_grid) then
      call compute_efield(ierr)
-   endif
+   end if
+
+   if (.not. quick_method%esp_grid .and. .not. quick_method%efield_grid) then
+     write (ioutfile,'("  Skipping one-electron property calculation.")')
+   end if
 
  end Subroutine
 
