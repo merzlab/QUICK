@@ -1,4 +1,4 @@
-name: MPI Build
+name: Build and Test QUICK MPI Version
 
 on:
   push:
@@ -9,65 +9,65 @@ on:
       - '**.md'
 
 jobs:
-  make-build:
+  build-and-test-mpi-legacy-configure-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install deps
+      - uses: actions/checkout@v4
+      - name: Install Dependencies for MPI Version
         run: sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
-      - name: Configure mpi
+      - name: Configure MPI Version
         run: ./configure --mpi --enablef --prefix $PWD/install gnu
-      - name: Build mpi
+      - name: Build MPI Version
         run: make
-      - name: Install mpi
+      - name: Install MPI Version
         run: make install
-      - name: Set environment variables
+      - name: Setup Environment Variables for Running Tests
         run: |
-             echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+             echo "DO_PARALLEL=mpirun -np 4" >> $GITHUB_ENV
              echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
-      - name: Test mpi
+      - name: Run Tests for MPI Version (Make) Using 4 MPI Processes
         run: make fulltest
-      - name: Archive test results
+      - name: Archive Test Results for MPI Version
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: mpi-tests
+            name: mpi-legacy-configure-make-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
             retention-days: 3
       - uses: actions/download-artifact@v4
         with:
-            name: mpi-tests
-      - name: Display structure of artifacts
+            name: mpi-legacy-configure-make-tests
+      - name: Display Artifacts
         run: ls -R
-  cmake-build:
+  build-and-test-mpi-cmake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install deps
+      - uses: actions/checkout@v4
+      - name: Install Dependencies for MPI Version (CMake)
         run: |
              sudo apt-get update
              sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
-      - name: Configure MPI
+      - name: Configure MPI Version (CMake)
         run: |
              mkdir build
              cd build
              cmake .. -DCOMPILER=GNU -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
-      - name: Build MPI
+      - name: Build MPI Version (CMake)
         run: |
              cd build
-             make -j2 install
-      - name: Set environment variables
+             make -j4 install
+      - name: Setup Environment Variables for Running Tests
         run: |
-             echo "DO_PARALLEL=mpirun -np 2" >> $GITHUB_ENV
+             echo "DO_PARALLEL=mpirun -np 4" >> $GITHUB_ENV
              echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
-      - name: Test mpi
+      - name: Run Tests for MPI Version
         run: |
           cd install
           ./runtest --mpi --full 
-      - name: Archive test results
+      - name: Archive Test Results for MPI Version (CMake)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: mpi-tests
+            name: mpi-cmake-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
             retention-days: 3

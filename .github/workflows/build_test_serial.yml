@@ -1,4 +1,4 @@
-name: Serial Build
+name: Build and Test QUICK Serial Version
 
 on:
   push:
@@ -9,61 +9,61 @@ on:
       - '**.md'
 
 jobs:
-  make-build:
+  build-and-test-serial-legacy-configure-make:
     runs-on: ubuntu-latest 
     steps:
-      - uses: actions/checkout@v2
-      - name: Install deps
+      - uses: actions/checkout@v4
+      - name: Install Dependencies for Serial Version
         run: sudo apt-get -y install gfortran
-      - name: Configure serial
+      - name: Configure Serial Version
         run: ./configure --serial --enablef --prefix $PWD/install gnu
-      - name: Build serial
+      - name: Build Serial Version
         run: make
-      - name: Install serial
+      - name: Install Serial Version
         run: make install
-      - name: Set environment variables
+      - name: Setup Environment Variables for Running Tests
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
-      - name: Test serial
+      - name: Run Tests for Serial Version (Make)
         run: make fulltest
-      - name: Archive test results
+      - name: Archive Test Results for Serial Version
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: serial-tests
+            name: serial-legacy-configure-make-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
             retention-days: 3
       - uses: actions/download-artifact@v4
         with:
-            name: serial-tests
-      - name: Display structure of artifacts
+            name: serial-legacy-configure-make-tests
+      - name: Display Artifacts
         run: ls -R
-  cmake-build:
+  build-and-test-serial-cmake:
     runs-on: ubuntu-latest 
     steps:
-      - uses: actions/checkout@v2
-      - name: Install deps
+      - uses: actions/checkout@v4
+      - name: Install Dependencies for Serial Version (CMake)
         run: |
              sudo apt-get update
              sudo apt-get -y install gfortran cmake
-      - name: Configure serial
+      - name: Configure Serial Version (CMake)
         run: |
              mkdir build
              cd build
              cmake .. -DCOMPILER=GNU -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
-      - name: Build serial
+      - name: Build Serial Version (CMake)
         run: |
              cd build
-             make -j2 install
-      - name: Set environment variables
+             make -j4 install
+      - name: Setup Environment Variables for Running Tests
         run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
-      - name: Test serial
+      - name: Run Tests for Serial Version
         run: |
              cd install
              ./runtest --serial --full
-      - name: Archive test results
+      - name: Archive Test Results for Serial Version (CMake)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: serial-tests
+            name: serial-cmake-tests
             path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
             retention-days: 3
