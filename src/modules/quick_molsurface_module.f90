@@ -19,7 +19,7 @@ module quick_molsurface_module
   implicit none
   private
 
-  public :: generate_vdW_surface, generate_MKS_surfaces
+  public :: generate_MKS_surfaces
 
   contains
 

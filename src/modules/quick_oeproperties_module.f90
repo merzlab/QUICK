@@ -30,11 +30,14 @@ module quick_oeproperties_module
  Subroutine compute_oeprop()
    use quick_method_module, only: quick_method
    use quick_files_module, only : ioutfile
+   use quick_molsurface_module, only: generate_MKS_surfaces
 
    implicit none
 
-   if (quick_method%esp_grid .or. quick_method%efield_grid) then
+   if (quick_method%ext_grid) then
       call compute_oeprop_grid()
+   else if (quick_method%esp_charge) then
+      call generate_MKS_surfaces() 
    else
       write (ioutfile,'("  Skipping one-electron property calculation.")')
    end if
@@ -549,11 +552,7 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   write (iEFIELDFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
   write (iEFIELDFile,'(100("-"))')
 
-  if (quick_method%efield_grid) then
-    write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
-  else if (quick_method%efield_esp) then
-      write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "ESP",8x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
-  endif
+  write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
 
   ! Collect ESP and print
   do igridpoint = 1, nextpoint 
