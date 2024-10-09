@@ -19,21 +19,22 @@ jobs:
         run: ./configure --mpi --enablef --prefix $PWD/install gnu
       - name: Build and Install MPI Version Using 4 Jobs
         run: make -j4 install
+      - name: Setup Environment Variables for Running Tests
+        run: |
+          echo "DO_PARALLEL='mpirun -np 4'" >> $GITHUB_ENV
+          echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Run Tests for MPI Version (Make) Using 4 MPI Processes
         run: make fulltest
-        env:
-          DO_PARALLEL: "mpirun -np 4"
-          QUICK_HOME: "$PWD/install"
       - name: Archive Test Results for MPI Version
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: mpi-legacy-configure-make-tests
-            path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
-            retention-days: 3
+          name: mpi-legacy-configure-make-tests
+          path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
+          retention-days: 3
       - uses: actions/download-artifact@v4
         with:
-            name: mpi-legacy-configure-make-tests
+          name: mpi-legacy-configure-make-tests
       - name: Display Artifacts
         run: ls -R
   build-and-test-mpi-cmake:
@@ -42,28 +43,29 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Dependencies for MPI Version (CMake)
         run: |
-             sudo apt-get update
-             sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
+          sudo apt-get update
+          sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
       - name: Configure MPI Version (CMake)
         run: |
-             mkdir build
-             cd build
-             cmake .. -DCOMPILER=GNU -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+          mkdir build
+          cd build
+          cmake .. -DCOMPILER=GNU -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
       - name: Build and Install MPI Version (CMake) Using 4 Jobs
         run: |
-             cd build
-             make -j4 install
+          cd build
+          make -j4 install
+      - name: Setup Environment Variables for Running Tests
+        run: |
+          echo "DO_PARALLEL='mpirun -np 4'" >> $GITHUB_ENV
+          echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
       - name: Run Tests for MPI Version Using 4 MPI Processes
         run: |
           cd install
-          ./runtest --mpi --full 
-        env:
-          DO_PARALLEL: "mpirun -np 4"
-          QUICK_HOME: "$PWD/install"
+          ./runtest --mpi --full
       - name: Archive Test Results for MPI Version (CMake)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: mpi-cmake-tests
-            path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
-            retention-days: 3
+          name: mpi-cmake-tests
+          path: /home/runner/work/QUICK/QUICK/install/test/runs/mpi
+          retention-days: 3
