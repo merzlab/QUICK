@@ -14,13 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Dependencies for Serial Version
-        run: sudo apt-get -y install gfortran
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gfortran
       - name: Configure Serial Version
         run: ./configure --serial --enablef --prefix $PWD/install gnu
       - name: Build and Install Serial Version Using 4 Jobs
-        run: make -j4 install
+        run: make -j4 all install
       - name: Setup Environment Variables for Running Tests
-        run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
       - name: Run Tests for Serial Version (Make)
         run: make fulltest
       - name: Archive Test Results for Serial Version
@@ -47,13 +50,14 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=GNU -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+          cmake .. -DCOMPILER=GNU -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
       - name: Build and Install Serial Version (CMake) Using 4 jobs
         run: |
           cd build
-          make -j4 install
+          cmake --build --parallel 4 .
       - name: Setup Environment Variables for Running Tests
-        run: echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
       - name: Run Tests for Serial Version
         run: |
           cd install

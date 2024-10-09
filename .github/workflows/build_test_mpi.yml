@@ -14,15 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Dependencies for MPI Version
-        run: sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
       - name: Configure MPI Version
         run: ./configure --mpi --enablef --prefix $PWD/install gnu
       - name: Build and Install MPI Version Using 4 Jobs
-        run: make -j4 install
+        run: make -j4 all install
       - name: Setup Environment Variables for Running Tests
         run: |
-          echo "DO_PARALLEL='mpirun -np 4'" >> $GITHUB_ENV
-          echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+          echo "DO_PARALLEL=mpirun -np 4" >> "$GITHUB_ENV"
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
       - name: Run Tests for MPI Version (Make) Using 4 MPI Processes
         run: make fulltest
       - name: Archive Test Results for MPI Version
@@ -49,15 +51,15 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=GNU -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/../install
+          cmake .. -DCOMPILER=GNU -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
       - name: Build and Install MPI Version (CMake) Using 4 Jobs
         run: |
           cd build
-          make -j4 install
+          cmake --build --parallel 4 .
       - name: Setup Environment Variables for Running Tests
         run: |
-          echo "DO_PARALLEL='mpirun -np 4'" >> $GITHUB_ENV
-          echo "QUICK_HOME=$PWD/install" >> $GITHUB_ENV
+          echo "DO_PARALLEL=mpirun -np 4" >> "$GITHUB_ENV"
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
       - name: Run Tests for MPI Version Using 4 MPI Processes
         run: |
           cd install
