@@ -54,7 +54,7 @@ jobs:
       - name: Build and Install Serial Version (CMake) Using 4 jobs
         run: |
           cd build
-          cmake --build --parallel 4 .
+          cmake --build . --parallel 4
       - name: Setup Environment Variables for Running Tests
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
