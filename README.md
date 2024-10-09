@@ -1,7 +1,7 @@
 <p align="right">
-<img src="https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg">
-<img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
-<img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
+ <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20Serial%20Version/badge.svg">
+ <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20MPI%20Version/badge.svg">
+ <img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
 </p>
 <p align="left">
 <img width="299" height="169" src="./tools/logo.png">
