@@ -28,18 +28,19 @@ module quick_files_module
 
     implicit none
 
-    character(len=80) :: inFileName     = ''
-    character(len=80) :: baseinFileName = ''
-    character(len=80) :: outFileName    = ''
-    character(len=80) :: dmxFileName    = ''
-    character(len=80) :: rstFileName    = ''
-    character(len=80) :: CPHFFileName   = ''
-    character(len=80) :: dataFileName   = ''
-    character(len=80) :: intFileName    = ''
-    character(len=80) :: moldenFileName = ''
-    character(len=80) :: propFileName   = ''
-    character(len=80) :: espFileName   = ''
+    character(len=80) :: inFileName       = ''
+    character(len=80) :: baseinFileName   = ''
+    character(len=80) :: outFileName      = ''
+    character(len=80) :: dmxFileName      = ''
+    character(len=80) :: rstFileName      = ''
+    character(len=80) :: CPHFFileName     = ''
+    character(len=80) :: dataFileName     = ''
+    character(len=80) :: intFileName      = ''
+    character(len=80) :: moldenFileName   = ''
+    character(len=80) :: propFileName     = ''
+    character(len=80) :: espFileName      = ''
     character(len=80) :: efieldFileName   = ''
+    character(len=80) :: VdwSurfFileName  = ''
 
 
     ! Basis set and directory
@@ -56,21 +57,22 @@ module quick_files_module
     character(len=80) :: basisCustName  = ''
     character(len=80) :: PDBFileName    = ''
 
-    integer :: inFile         = INFILEHANDLE     ! input file
-    integer :: iOutFile       = OUTFILEHANDLE    ! output file
-    integer :: iDmxFile       = DMXFILEHANDLE    ! density matrix file
-    integer :: iRstFile       = RSTFILEHANDLE    ! Restricted file
-    integer :: iCPHFFile      = CPHFFILEHANDLE   ! CPHF file
-    integer :: iBasisFile     = BASISFILEHANDLE  ! basis set file
-    integer :: iECPFile       = ECPFILEHANDLE    ! ECP file
-    integer :: iBasisCustFile = BASISCFILEHANDLE ! custom basis set file
-    integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
-    integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
-    integer :: iIntFile       = INTFILEHANDLE    ! integral file
-    integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
-    integer :: iPropFile      = PROPFILEHANDLE     ! properties file for esp, efield, efg, qmmm
-    integer :: iESPFile      =  ESPFILEHANDLE     ! properties file for esp
-    integer :: iEFIELDFile      = EFIELDFILEHANDLE     ! properties file for efield
+    integer :: inFile         = INFILEHANDLE         ! input file
+    integer :: iOutFile       = OUTFILEHANDLE        ! output file
+    integer :: iDmxFile       = DMXFILEHANDLE        ! density matrix file
+    integer :: iRstFile       = RSTFILEHANDLE        ! Restricted file
+    integer :: iCPHFFile      = CPHFFILEHANDLE       ! CPHF file
+    integer :: iBasisFile     = BASISFILEHANDLE      ! basis set file
+    integer :: iECPFile       = ECPFILEHANDLE        ! ECP file
+    integer :: iBasisCustFile = BASISCFILEHANDLE     ! custom basis set file
+    integer :: iPDBFile       = PDBFILEHANDLE        ! PDB input file
+    integer :: iDataFile      = DATAFILEHANDLE       ! Data file, similar to chk file in gaussian
+    integer :: iIntFile       = INTFILEHANDLE        ! integral file
+    integer :: iMoldenFile    = MOLDENFILEHANDLE     ! molden file
+    integer :: iPropFile      = PROPFILEHANDLE       ! properties file for esp, efield, efg, qmmm
+    integer :: iESPFile       = ESPFILEHANDLE        ! properties file for esp
+    integer :: iEFIELDFile    = EFIELDFILEHANDLE     ! properties file for efield
+    integer :: iVdwSurfFile   = VDWSURFFILEHANDLE    ! prints the calculated vanderwaals surface
 
 
     logical :: fexist = .false.         ! Check if file exists
@@ -139,6 +141,7 @@ module quick_files_module
         propFileName=inFileName(1:i-1)//'.prop'
         espFileName=inFileName(1:i-1)//'.esp'
         efieldFileName=inFileName(1:i-1)//'.efield'
+        VdwSurfFileName=inFileName(1:i-1)//'.vdw'
 
 
         return

@@ -31,42 +31,49 @@ module quick_oeproperties_module
    use quick_method_module, only: quick_method
    use quick_files_module, only : ioutfile
    use quick_molsurface_module, only: generate_MKS_surfaces
+   use quick_molspec_module, only: quick_molspec
 
    implicit none
 
    if (quick_method%ext_grid) then
-      call compute_oeprop_grid()
+      call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
    else if (quick_method%esp_charge) then
-      call generate_MKS_surfaces() 
+      call generate_MKS_surfaces(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz) 
+      call compute_oeprop_grid(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz)
    else
       write (ioutfile,'("  Skipping one-electron property calculation.")')
    end if
 
  end Subroutine
 
- Subroutine compute_oeprop_grid()
-   use quick_molspec_module, only: quick_molspec
+ Subroutine compute_oeprop_grid(npoints,xyz_points)
    use quick_method_module, only: quick_method
    use quick_mpi_module, only: master
    use quick_files_module, only: iESPFile, espFileName
 
    implicit none
-   integer :: ierr
+   integer :: ierr, npoints
+   double precision :: xyz_points(3,npoints)
    double precision, allocatable :: esp_on_points(:)
 
-   allocate(esp_on_points(quick_molspec%nextpoint))
+   allocate(esp_on_points(npoints))
 
    ierr = 0
 
    ! Electrostatic Potential
    if (quick_method%esp_grid) then
-     call compute_esp(quick_molspec%nextpoint,quick_molspec%extpointxyz,esp_on_points)
+     call compute_esp(npoints,xyz_points,esp_on_points)
      ! Print ESP at external points
      if (master) then
        call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
-       call print_esp(esp_on_points, quick_molspec%nextpoint, quick_molspec%extpointxyz)
+       call print_esp(esp_on_points,npoints,xyz_points)
        close(iESPFile)
      endif
+   end if
+
+   ! Compute ESP charge using the MKS grid
+   if (quick_method%esp_charge) then
+     call compute_esp(npoints,xyz_points,esp_on_points)
    end if
 
    ! Electric field
@@ -201,7 +208,7 @@ module quick_oeproperties_module
    RECORD_TIME(timer_begin%TESPCharge)
 
    if (master) then
-     call compute_ESP_charge(esp)
+     call compute_ESP_charge(npoints,xyz_points,esp)
    end if
 
    RECORD_TIME(timer_end%TESPCharge)
@@ -224,7 +231,7 @@ module quick_oeproperties_module
 !  Only upper triangle of A is stored.                     !
 !----------------------------------------------------------!
 
- subroutine compute_ESP_charge(esp)
+ subroutine compute_ESP_charge(npoints,xyz_points,esp)
    use quick_molspec_module, only: quick_molspec, natom, xyz
    use quick_files_module, only: ioutfile
    use quick_mpi_module, only: master
@@ -236,8 +243,8 @@ module quick_oeproperties_module
    double precision, external :: rootSquare
 
    integer, allocatable :: IPIV(:)
-   integer :: iatom, jatom, igridpoint, ierr, NB, LWORK, LDA
-   double precision, intent(in) :: esp(quick_molspec%nextpoint)
+   integer :: iatom, jatom, igridpoint, npoints, ierr, NB, LWORK, LDA
+   double precision, intent(in) :: esp(npoints), xyz_points(3,npoints)
    double precision, allocatable :: WORK(:)
    double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
    double precision :: distance, distanceb, invdistance, Net_charge
@@ -264,12 +271,12 @@ module quick_oeproperties_module
 ! The matrix A and vector B is formed.
 
    do iatom = 1, natom  
-     do igridpoint = 1, quick_molspec%nextpoint
-       distance = rootSquare(xyz(1:3,iatom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+     do igridpoint = 1, npoints
+       distance = rootSquare(xyz(1:3,iatom), xyz_points(1:3,igridpoint), 3)
        invdistance = 1/distance
        B(iatom) = B(iatom) + esp(igridpoint) * invdistance
        do jatom = 1, iatom
-         distanceb = rootSquare(xyz(1:3,jatom), quick_molspec%extpointxyz(1:3,igridpoint), 3)
+         distanceb = rootSquare(xyz(1:3,jatom), xyz_points(1:3,igridpoint), 3)
          A(jatom,iatom) = A(jatom,iatom) + invdistance/distanceb
        end do
      end do

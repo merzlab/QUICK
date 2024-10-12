@@ -54,6 +54,7 @@ module quick_method_module
         logical :: analGrad =  .false. ! Analytical Gradient
         logical :: analHess =  .false. ! Analytical Hessian Matrix
         logical :: esp_charge =  .false.    ! ESP charge on atoms
+        double precision :: espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
         logical :: esp_grid =  .false.      ! Electrostatic potential on a grid (ESP)
         logical :: efield_grid =  .false.   ! Electrostatic field (EFIELD)
         logical :: efg_grid =  .false.      ! Electrostatic field gradient (EFG)
@@ -226,6 +227,7 @@ module quick_method_module
             call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_charge,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%espgrid_spacing,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -468,7 +470,11 @@ module quick_method_module
             if (self%grad)      write(io,'(" GRADIENT CALCULATION")')
 
             ! computing esp, efield and efg
-            if (self%esp_charge)      write(io,'(" ESP CHARGE CALCULATION")')
+            if (self%esp_charge)then
+              write(io,'(" ESP CHARGE CALCULATION")')
+              write(io,'(" ESP grids are created at " F5.3 " A spacing ")') self%espgrid_spacing
+            end if
+
             if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
             if (self%efield_grid)      write(io,'(" ELECTROSTATIC FIELD CALCULATION")')
             if (self%efg_grid)      write(io,'(" ELECTRIC FIELD GRADIENT CALCULATION")')
@@ -818,6 +824,9 @@ module quick_method_module
            endif
            if (index(keyWD,'ESP_CHARGE').ne.0) then
                self%esp_charge=.true.
+               if (index(keyWD,'ESPGRID_SPACING').ne.0) then
+                 call read(keywd,'ESPGRID_SPACING', self%espgrid_spacing)
+               endif
            endif
         if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
             self%extgrid_angstrom=.true.
@@ -868,6 +877,7 @@ module quick_method_module
             self%analGrad =  .true.   ! Analytical Gradient
             self%analHess =  .false.  ! Analytical Hessian Matrix
             self%esp_charge = .false.        ! ESP charge on atoms
+            self%espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
             self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
             self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
             self%efg_grid = .false.        ! Electric field gradient (EFG)

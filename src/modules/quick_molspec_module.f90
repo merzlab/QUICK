@@ -34,6 +34,10 @@ module quick_molspec_module
       ! number of external grid points 
       integer :: nextpoint = 0
 
+      ! points on vanderwaals surface
+      integer :: nvdwpoint = 0
+      double precision, dimension(:,:), allocatable :: vdwpointxyz
+
       ! multiplicity
       integer :: imult = 1
 

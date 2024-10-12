@@ -43,23 +43,136 @@ module quick_molsurface_module
 ! where c = {1.4, 1.6, 1.8, 2.0}                                             !
 ! The MKS surfaces are used to evaluate ESP, EFIELD, and other properties    !
 !----------------------------------------------------------------------------!
-    
-  subroutine generate_MKS_surfaces()
 
-    integer :: i
-    
-    ! Generate the vdW surface using different scaling factors for vdw radii
-     call generate_vdW_surface(1.4)
-     call generate_vdW_surface(1.6)
-     call generate_vdW_surface(1.8)
-     call generate_vdW_surface(2.0)
-    
+  subroutine generate_MKS_surfaces(total_points,xyz_points)
+    use quick_molspec_module, only: natom
+    use quick_files_module, only: iVdwSurfFile, VdwSurfFileName
+
+    implicit none
+
+    double precision :: surface_points(3,natom*2000)
+    double precision, allocatable, intent(out) :: xyz_points(:,:)
+    double precision :: scaling_factors(4)
+    data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
+    integer :: npoints, total_points
+    integer :: i, j, k, ierr
+
+    allocate(xyz_points(3,natom*4000))
+
+    ierr = 0
+
+    total_points = 0
+
+    do j = 1, 4
+      ! Generate the vdW surface using different scaling factors for vdw radii
+      call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
+
+      do i = 1, npoints
+        do k = 1,3
+          xyz_points(k,total_points+i) = surface_points(k,i)
+        end do
+      end do
+
+      total_points = total_points + npoints
+    end do
+
+    call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+
+    do i = 1, total_points
+      write (iVdwSurfFile,'(2x,3(F14.10, 1x))') xyz_points(1,i), xyz_points(2,i), xyz_points(3,i)
+    end do
+
    end subroutine generate_MKS_surfaces
 
-  subroutine generate_vdW_surface(scale_factor)
+  subroutine generate_vdW_surface(scale_factor,npoints,surface_points)
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, natom, xyz
+    use quick_constants_module, only: PI, BOHRS_TO_A
 
-    real :: scale_factor, vdw_radii(16)
-    data vdw_radii/1.2,1.2,1.37,1.45,1.5,1.5,1.4,1.35,1.3,1.57,1.36,1.24,1.17,1.8,1.75,1.7/
+    implicit none
+
+    double precision, external :: rootSquare
+
+    integer, intent(out) :: npoints
+    integer :: i,j,k,ncircles,circle,npts,nphi
+    double precision :: scale_factor,espgrid_spacing
+    double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
+    double precision :: vdw_radii(16),atomic_vdw_radii(natom),xyz_sphere(3,4000)
+    double precision, intent(out) :: surface_points(3,natom*2000)
+    double precision :: thresh
+    logical :: proximal
+    data vdw_radii/1.2d0,1.2d0,1.37d0,1.45d0,1.5d0,1.5d0,1.4d0,1.35d0,1.3d0,1.57d0,1.36d0,1.24d0,1.17d0,1.8d0,1.75d0,1.7d0/
+
+    ! grid size must be converted to atomic unit
+    espgrid_spacing = quick_method%espgrid_spacing/BOHRS_TO_A
+
+    ! this threshold is necessary to avoid points on surface coming too close
+    ! points being too close leads has the artifact of those points having
+    ! larger weight during fitting. We try to avoid this.
+    thresh = espgrid_spacing/2.5
+
+    !  create an array of vanderwaals radii for atom. The radii are in atomic units. 
+    do i = 1, natom
+      atomic_vdw_radii(i) = vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
+    end do
+
+    npoints = 0
+
+    ! Go over each atom and get points on their vanderwaals surface using 
+    ! the correspnding atomic_vdw_radii
+    do i = 1, natom
+      npts = 0
+      radius = atomic_vdw_radii(i)
+      ! We will make circles on the surface. Find the number of circles to make.
+      ncircles = int(PI*radius/espgrid_spacing)+1
+      start_theta = (PI*radius-(ncircles-1)*espgrid_spacing)/(2*radius)
+      delta_theta = espgrid_spacing/radius
+      do circle = 1, ncircles
+        theta = start_theta+delta_theta*(circle-1)
+        rcircle = radius*sin(theta)
+        nphi = int(2*PI*rcircle/espgrid_spacing)
+        delta_phi = espgrid_spacing/rcircle
+        do j = 1, nphi
+          npts = npts + 1
+          xyz_sphere(1,npts) = xyz(1,i) + radius*cos(theta)
+          xyz_sphere(2,npts) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
+          xyz_sphere(3,npts) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
+          do k = 1, natom
+            if (k .ne. i)then
+              if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,k),3).lt.atomic_vdw_radii(k))then
+                npts = npts - 1
+                exit
+              end if
+            end if
+          end do
+        end do
+      end do
+
+      if (npoints.eq.0)then
+        do j = 1, npts
+          do k = 1, 3
+            surface_points(k,j) = xyz_sphere(k,j)
+          end do
+        end do
+        npoints = npts
+      else
+        do j = 1, npts
+          proximal = .False.
+          do k = 1, npoints
+            if (rootSquare(surface_points(1:3,k), xyz_sphere(1:3,j), 3).lt.thresh)then
+              proximal = .True.
+              exit
+            end if
+          end do
+          if (.not. proximal) then
+            npoints = npoints + 1
+            do k = 1,3
+              surface_points(k,npoints) = xyz_sphere(k,j)
+            end do
+          end if
+        end do
+      end if
+    end do
 
   end subroutine generate_vdW_surface
 
