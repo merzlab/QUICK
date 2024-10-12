@@ -50,6 +50,7 @@ module quick_oeproperties_module
    use quick_method_module, only: quick_method
    use quick_mpi_module, only: master
    use quick_files_module, only: iESPFile, espFileName
+   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
 
    implicit none
    integer :: ierr, npoints
@@ -74,6 +75,16 @@ module quick_oeproperties_module
    ! Compute ESP charge using the MKS grid
    if (quick_method%esp_charge) then
      call compute_esp(npoints,xyz_points,esp_on_points)
+
+   RECORD_TIME(timer_begin%TESPCharge)
+
+   if (master) then
+     call compute_ESP_charge(npoints,xyz_points,esp_on_points)
+   end if
+
+   RECORD_TIME(timer_end%TESPCharge)
+   timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
+
    end if
 
    ! Electric field
@@ -204,15 +215,6 @@ module quick_oeproperties_module
 
    RECORD_TIME(timer_end%TESPGrid)
    timer_cumer%TESPGrid=timer_cumer%TESPGrid+timer_end%TESPGrid-timer_begin%TESPGrid
-
-   RECORD_TIME(timer_begin%TESPCharge)
-
-   if (master) then
-     call compute_ESP_charge(npoints,xyz_points,esp)
-   end if
-
-   RECORD_TIME(timer_end%TESPCharge)
-   timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
 
    deallocate(esp_electronic)
    deallocate(esp_nuclear)
