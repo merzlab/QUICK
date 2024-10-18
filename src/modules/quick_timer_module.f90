@@ -61,7 +61,8 @@ module quick_timer_module
         double precision:: Tdisp=0.0d0       ! Time for computing dispersion correction
         double precision:: TESPGrid=0.0d0    ! Time for computing ESP on grid
         double precision:: TEFIELDGrid=0.0d0 ! Time for computing EFIELD on grid
-        double precision:: TESPCharge=0.0d0    ! Time for computing ESP on grid
+        double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
+        double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
     end type quick_timer
 
     type quick_timer_cumer
@@ -109,7 +110,8 @@ module quick_timer_module
         double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
         double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
         double precision:: TEFIELDGrid=0.0d0      ! Time for computing EFEILD on grid
-        double precision:: TESPCharge=0.0d0      ! Time for computing ESP on grid
+        double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
+        double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
 
     end type quick_timer_cumer
 
@@ -218,9 +220,14 @@ module quick_timer_module
                 timer_cumer%Tdisp/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
-            if(quick_method%esp_grid) then
+            if(quick_method%esp_grid .or. quick_method%esp_charge) then
                 write (io,'("| ESP COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPGrid, &
                 timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
+            if(quick_method%esp_charge) then
+                write (io,'("| ESP Surface Creation TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPSurface, &
+                timer_cumer%TESPSurface/(timer_end%TTotal-timer_begin%TTotal)*100
                 write (io,'("| ESP Charge COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPCharge, &
                 timer_cumer%TESPCharge/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
@@ -323,24 +330,6 @@ module quick_timer_module
                 write (io,'("| TOTAL MP2 TIME     =",F16.9,"( ",F5.2,"%)")') timer_cumer%TMP2, &
                     timer_cumer%TMP2/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
-
-#ifdef DEBUGTIME
-            if (quick_method%esp_grid) then
-            ! Electrostatic Potential Timing
-                write (io,'("| ESP COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TESPGrid, &
-                    timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
-                write (io,'("| ESP Charge COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TESPCharge, &
-                    timer_cumer%TESPCharge/(timer_end%TTotal-timer_begin%TTotal)*100
-            endif
-#endif
-
-#ifdef DEBUGTIME
-            if (quick_method%efield_grid) then
-            ! Electrostatic Potential Timing
-                write (io,'("| EFIELD COMPUTATION TIME        =",F16.9,"(",F5.2,"%)")') timer_cumer%TEFIELDGrid, &
-                    timer_cumer%TEFIELDGrid/(timer_end%TTotal-timer_begin%TTotal)*100
-            endif
-#endif
 
 #ifdef DEBUGTIME
             if (quick_method%dipole) then

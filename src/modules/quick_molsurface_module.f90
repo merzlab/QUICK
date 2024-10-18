@@ -44,43 +44,60 @@ module quick_molsurface_module
 ! The MKS surfaces are used to evaluate ESP, EFIELD, and other properties    !
 !----------------------------------------------------------------------------!
 
-  subroutine generate_MKS_surfaces(total_points,xyz_points)
-    use quick_molspec_module, only: natom
+  subroutine generate_MKS_surfaces()
+    use quick_molspec_module, only: natom, quick_molspec
+    use quick_method_module, only: quick_method
     use quick_files_module, only: iVdwSurfFile, VdwSurfFileName
+    use quick_exception_module, only: RaiseException
 
     implicit none
 
-    double precision :: surface_points(3,natom*2000)
-    double precision, allocatable, intent(out) :: xyz_points(:,:)
+    double precision :: surface_points(3,int(natom*500/quick_method%espgrid_spacing))
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
     integer :: i, j, k, ierr
+    integer :: max_points
+    double precision, allocatable :: xyz_points(:,:)
 
-    allocate(xyz_points(3,natom*4000))
 
-    ierr = 0
+    max_points = int(natom*1000/quick_method%espgrid_spacing)
 
-    total_points = 0
+    allocate(xyz_points(3,max_points))
 
-    do j = 1, 4
-      ! Generate the vdW surface using different scaling factors for vdw radii
-      call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
+      ierr = 0
 
-      do i = 1, npoints
-        do k = 1,3
-          xyz_points(k,total_points+i) = surface_points(k,i)
+      total_points = 0
+
+      do j = 1, 4
+        ! Generate the vdW surface using different scaling factors for vdw radii
+        call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
+
+        total_points = total_points + npoints
+
+        if(total_points .gt. max_points) then
+          ierr = 41
+          call RaiseException(ierr)
+        end if
+
+          do k = 1,3
+             xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
         end do
+
       end do
 
-      total_points = total_points + npoints
-    end do
+      quick_molspec%nvdwpoint = total_points
+      allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+      quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
 
-    call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+      deallocate(xyz_points)
 
-    do i = 1, total_points
-      write (iVdwSurfFile,'(2x,3(F14.10, 1x))') xyz_points(1,i), xyz_points(2,i), xyz_points(3,i)
-    end do
+      call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+
+      do i = 1, total_points
+        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i), &
+          quick_molspec%vdwpointxyz(2,i), quick_molspec%vdwpointxyz(3,i)
+      end do
 
    end subroutine generate_MKS_surfaces
 

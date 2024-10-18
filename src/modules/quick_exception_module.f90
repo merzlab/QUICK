@@ -142,6 +142,9 @@ contains
     case(40)
       msg='Matrix inversion failed during calculation of ESP charges.'
 
+    case(41)
+      msg='No of points out of range while creating vanderwaals surface for ESP charge calculation.'
+
     case default
       msg='Unknown error.'
 

@@ -32,14 +32,37 @@ module quick_oeproperties_module
    use quick_files_module, only : ioutfile
    use quick_molsurface_module, only: generate_MKS_surfaces
    use quick_molspec_module, only: quick_molspec
-
+   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+   use quick_mpi_module, only: master, mpierror
+#ifdef MPIV
+   use mpi
+#endif
    implicit none
 
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
    else if (quick_method%esp_charge) then
-      call generate_MKS_surfaces(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz) 
+
+      RECORD_TIME(timer_begin%TESPSurface)
+
+      if(master)then
+        call generate_MKS_surfaces()
+      endif
+#ifdef MPIV
+        call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+        if(.not.master)then
+          allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+        endif
+        call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+#endif
+
+      RECORD_TIME(timer_end%TESPSurface)
+      timer_cumer%TESPSurface=timer_cumer%TESPSurface+timer_end%TESPSurface-timer_begin%TESPSurface
+
       call compute_oeprop_grid(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz)
+
+      deallocate(quick_molspec%vdwpointxyz)
+
    else
       write (ioutfile,'("  Skipping one-electron property calculation.")')
    end if
@@ -76,14 +99,14 @@ module quick_oeproperties_module
    if (quick_method%esp_charge) then
      call compute_esp(npoints,xyz_points,esp_on_points)
 
-   RECORD_TIME(timer_begin%TESPCharge)
+     RECORD_TIME(timer_begin%TESPCharge)
 
-   if (master) then
-     call compute_ESP_charge(npoints,xyz_points,esp_on_points)
-   end if
+     if (master) then
+       call compute_ESP_charge(npoints,xyz_points,esp_on_points)
+     end if
 
-   RECORD_TIME(timer_end%TESPCharge)
-   timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
+     RECORD_TIME(timer_end%TESPCharge)
+     timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
 
    end if
 
