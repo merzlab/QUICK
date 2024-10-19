@@ -160,9 +160,9 @@ opt_wat_rhf_631g	            #Water: RHF geometry optimization test: s and p bas
 opt_wat_rhf_ccpvdz	            #Water: RHF geometry optimization test: s, p and d basis functions (Legacy optimizer)
 opt_wat_b3lyp_ccpvtz                #Water: RHF geometry optimization test: s, p, d and f basis functions (Legacy optimizer)
 opt_nh4_pbe0_def2svp                #NH4+: DFT geometry optimization test: s, p and d basis functions (Legacy optimizer)
-opt_merad_ub3lyp_631gss             #Caffeine: DFT B3LYP DL-FIND geometry optimization test: s and p basis functions (Baker test set)
+opt_merad_ub3lyp_631gss             #Caffeine: DFT B3LYP DL-FIND geometry optimization test: s and p and d basis functions (Baker test set)
 opt_hsoh_pbe0_def2svp               #Methyl radical: UDFT B3LYP geometry optimization test (Legacy optimizer)
-opt_c3h4_rhf_631g                   #Oxadisulfane: DFT PBE0 DL-FIND geometry optimization test with s, p and d basis functions
+opt_c3h4_rhf_631g                   #Oxadisulfane: DFT PBE0 DL-FIND geometry optimization test with s and p basis functions
 opt_caffeine_b3lyp_3-21g            #Allene: RHF DL-FIND geometry optimization test with s and p basis functions
 opt_c2h5rad_uhf_631gss              #Ethyl radical: UHF DL-FIND geometry optimization test
 opt_c2hrad_ub3lyp_ccpvdz            #Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test with s, p and d basis functions
