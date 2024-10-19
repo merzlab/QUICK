@@ -150,11 +150,11 @@ grad_ch5nos_pw91_631g               #CH5NOS: DFT gradient test: s and p basis fu
 grad_ch5nos_revpbe_631g             #CH5NOS: DFT gradient test: s and p basis functions, revPBE functional
 grad_wat_b3lyp_ccpvdz               #Water: DFT point charge gradient test: s and p and d basis functions
 grad_c10h9o2s_b3lyp_def2svp         #C10H9O2S: DFT point charge gradient test: s and p and d basis functions
-grad_daspi_meoh_b3lyp_sto3g         #DASPI-DCM: DFT point charge gradient test: s and p basis functions
-grad_hbdi_meoh_libxc_blyp_sto3g     #HBDI-MeOH: DFT point charge gradient test: s and p basis functions
-grad_naip_meoh_libxc_pbeh_sto3g     #NAIP-MeOH: DFT point charge gradient test: s and p basis functions
-grad_ncnaip_b3lyp_sto3g             #NAIP2-MeOH: DFT point charge gradient test: s and p basis functions
-grad_rpsb_meoh_rhf_sto3g            #RPSB-MeOH: RHF point charge gradient test: s and p basis functions
+grad_daspi_meoh_b3lyp_6-31g         #DASPI-DCM: DFT point charge gradient test: s and p basis functions
+grad_hbdi_meoh_libxc_blyp_def2sv_p  #HBDI-MeOH: DFT point charge gradient test: s and p basis functions
+grad_naip_meoh_libxc_pbeh_def2svp   #NAIP-MeOH: DFT point charge gradient test: s and p basis functions
+grad_ncnaip_b3lyp_631gss            #NAIP2-MeOH: DFT point charge gradient test: s and p basis functions
+grad_rpsb_meoh_rhf_321g             #RPSB-MeOH: RHF point charge gradient test: s and p basis functions
 grad_ohrad_b3lyp_631gss             #OH radical: UDFT B3LYP gradient test
 opt_wat_rhf_631g	            #Water: RHF geometry optimization test: s and p basis functions (Legacy optimizer)
 opt_wat_rhf_ccpvdz	            #Water: RHF geometry optimization test: s, p and d basis functions (Legacy optimizer)

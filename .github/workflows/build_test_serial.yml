@@ -16,7 +16,7 @@ jobs:
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran
+          sudo apt-get -y install gfortran parallel
       - name: 'Configure Serial Version'
         run: ./configure --serial --enablef --prefix $PWD/install gnu
       - name: 'Build and Install Serial Version Using 2 Jobs'
@@ -24,6 +24,7 @@ jobs:
       - name: 'Setup Environment Variables for Running Tests'
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version (Make)'
         run: make fulltest
       - name: 'Archive Test Results for Serial Version'
@@ -45,7 +46,7 @@ jobs:
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran cmake
+          sudo apt-get -y install gfortran cmake parallel
       - name: 'Configure Serial Version (CMake)'
         run: |
           mkdir build
@@ -59,6 +60,7 @@ jobs:
       - name: 'Setup Environment Variables for Running Tests'
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version'
         run: |
           cd install
