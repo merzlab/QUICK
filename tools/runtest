@@ -267,7 +267,7 @@ set_qexe_testlist()
 set_job_gpus()
 {
   total_gpus=`echo "$1" | awk '{print NF}'`
-  gpus_per_job=$((total_gpus/PARALLEL_TEST_COUNT))
+  gpus_per_job=$(($total_gpus/$PARALLEL_TEST_COUNT))
 
   if [ "$total_gpus" -lt "$PARALLEL_TEST_COUNT" ]; then
     echo "Error: invalid # GPUs detected in HIP_VISIBLE_DEVICES/CUDA_VISIBLE_DEVICES (# GPUs >= PARALLEL_TEST_COUNT)."
@@ -277,7 +277,7 @@ set_job_gpus()
   job_gpus=()
   for i in `seq 0 $(($PARALLEL_TEST_COUNT-1))`;
   do
-    job_gpus[$i]="`echo $1 | cut -f $((i*gpus_per_job+1))-$(((i+1)*gpus_per_job)) -d ' '`"
+    job_gpus[$i]="`echo $1 | cut -f $(($i*$gpus_per_job+1))-$((($i+1)*$gpus_per_job)) -d ' '`"
   done
 }
 
@@ -299,6 +299,10 @@ get_total_tests()
 {
   tests=()
   test_names=()
+  tot_ene_tests=0 
+  tot_grad_tests=0 
+  tot_opt_tests=0 
+  tot_api_tests=0 
   total_tests=0 
 
   if [ "$1" = 'yes' ]; then
@@ -307,7 +311,7 @@ get_total_tests()
     readarray -t -O "${#test_names[@]}" test_names <<< \
               "$(grep "^ene_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
-    tot_ene_tests=$((total_tests-tot_ene_tests))
+    tot_ene_tests=$(($total_tests-$tot_ene_tests))
   fi
 
   if [ "$2" = 'yes' ]; then
@@ -316,7 +320,7 @@ get_total_tests()
     readarray -t -O "${#test_names[@]}" test_names <<< \
               "$(grep "^grad_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
-    tot_grad_tests=$((total_tests-tot_grad_tests))
+    tot_grad_tests=$(($total_tests-$tot_grad_tests))
   fi
 
   if [ "$3" = 'yes' ]; then
@@ -325,7 +329,7 @@ get_total_tests()
     readarray -t -O "${#test_names[@]}" test_names <<< \
               "$(grep "^opt_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
-    tot_opt_tests=$((total_tests-tot_opt_tests))
+    tot_opt_tests=$(($total_tests-$tot_opt_tests))
   fi
 
   if [ "$4" = 'yes' ]; then
@@ -334,7 +338,7 @@ get_total_tests()
     readarray -t -O "${#test_names[@]}" test_names <<< \
               "$(grep "^api_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
-    tot_api_tests=$((total_tests-tot_api_tests))
+    tot_api_tests=$(($total_tests-$tot_api_tests))
   fi
 }
 
@@ -455,7 +459,6 @@ run_energy_test()
   if [ `check_f_error $1` -eq 0 ]; then
     check_energy "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
-    clean_up "$1"
     echo "" | tee -a "$6"
   else
     echo "SKIPPED." | tee -a "$6"
@@ -463,6 +466,7 @@ run_energy_test()
     echo "" | tee -a "$6"
   fi
   unlock_file "$6"
+  clean_up "$1"
 }
 
 
@@ -487,7 +491,6 @@ run_grad_test()
     check_energy "$1" "$5" "$6"
     check_gradient "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
-    clean_up "$1"
     echo "" | tee -a "$6"
   else
     echo "SKIPPED." | tee -a "$6"
@@ -495,6 +498,7 @@ run_grad_test()
     echo "" | tee -a "$6"
   fi
   unlock_file "$6"
+  clean_up "$1"
 }
 
 
@@ -518,7 +522,6 @@ run_opt_test()
   if [ `check_f_error $1` -eq 0 ]; then
     check_opt "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
-    clean_up "$1"
     echo "" | tee -a "$6"
   else
     echo "SKIPPED." | tee -a "$6"
@@ -526,6 +529,7 @@ run_opt_test()
     echo "" | tee -a "$6"
   fi
   unlock_file "$6"
+  clean_up "$1"
 }
 
 
@@ -548,14 +552,13 @@ run_api_test()
   echo "$2" | tee -a "$6"
   check_energy "$1" "$5" "$6"
   check_gradient "$1" "$5" "$6"
-  clean_up "$1"
   echo "" | tee -a "$6"
   unlock_file "$6"
+  clean_up "$1"
 }
 
 
 # check electronic, nuclear, and total energy output from test.
-# accuracy sets the tolerance. 
 #
 # arguments:
 #   $1: test name
@@ -563,17 +566,14 @@ run_api_test()
 #   $3: log file
 check_energy()
 {
-  accuracy='4.0e-5'
-
   awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$1.ref.out" > "$1.ref.ene"
   awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$1.out" > "$1.ene"
 
-  "$2/dacdif" -k -a "$accuracy" "$1.ref.ene" "$1.ene" | tee -a "$3"
+  "$2/dacdif" -k -a '4.0e-5' "$1.ref.ene" "$1.ene" | tee -a "$3"
 }
 
 
 # check nuclear and point charge gradients output from test.
-# accuracy sets the tolerance. 
 #
 # arguments:
 #   $1: test name
@@ -581,17 +581,14 @@ check_energy()
 #   $3: log file
 check_gradient()
 {
-  accuracy='4.0e-3'
-
   awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$1.ref.out" > "$1.ref.grad"
   awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$1.out" > "$1.grad"
 
-  "$2/dacdif" -k -a "$accuracy" "$1.ref.grad" "$1.grad" | tee -a "$3"
+  "$2/dacdif" -k -a '4.0e-3' "$1.ref.grad" "$1.grad" | tee -a "$3"
 }
 
 
 # check optimized geometry and force element output from test.
-# accuracy sets the tolerance. 
 #
 # arguments:
 #   $1: test name
@@ -599,12 +596,10 @@ check_gradient()
 #   $3: log file
 check_opt()
 {
-  accuracy='4.0e-3'
-
   awk '/GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$1.ref.out" > "$1.ref.opt"
   awk '/GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$1.out" > "$1.opt"
 
-  "$2/dacdif" -k -a "$accuracy" "$1.ref.opt" "$1.opt" | tee -a "$3"
+  "$2/dacdif" -k -a '4.0e-3' "$1.ref.opt" "$1.opt" | tee -a "$3"
 }
 
 
@@ -671,42 +666,42 @@ print_summary()
  
     for i in `seq 1 $total_tests`; do
       if [ "$i" -lt "$total_tests" ]; then
-        j=$((i+1))
+        j=$(($i+1))
         sed -n '/Running test '$i' of '$total_tests'/,/Running test /p' .quick.runtest.${buildtype}.summary.tmp1 > .quick.runtest.${buildtype}.summary.tmp2
       elif [ "$i" -eq "$total_tests" ]; then
         sed -n '/Running test '$total_tests'/,/All '$buildtype' tests are done/p' .quick.runtest.${buildtype}.summary.tmp1 > .quick.runtest.${buildtype}.summary.tmp2
       fi
   
       if [ `sed -n '/energy test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_ene=$((total_ene+1))
+        total_ene=$(($total_ene+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-          failed_ene=$((failed_ene+1))
+          failed_ene=$(($failed_ene+1))
         fi
         
       elif [ `sed -n '/gradient test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_grad=$((total_grad+1))
+        total_grad=$(($total_grad+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-          failed_grad=$((failed_grad+1))
+          failed_grad=$(($failed_grad+1))
         fi
       elif [ `sed -n '/geometry optimization test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_opt=$((total_opt+1))
+        total_opt=$(($total_opt+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-          failed_opt=$((failed_opt+1))
+          failed_opt=$(($failed_opt+1))
         fi
       elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_api=$((total_api+1))
+        total_api=$(($total_api+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-          failed_api=$((failed_api+1))
+          failed_api=$(($failed_api+1))
         fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$((failed_ene+failed_grad+failed_opt+failed_api))
+    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api))
 
     # update cumulative failed tests too
-    ncum_failed_tests=$((ncum_failed_tests+failed_total))
+    ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
 
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
     echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
@@ -1051,69 +1046,69 @@ for buildtype in $buildtypes; do
   tc_end=0
 
   if [ "$test_ene" = 'yes' ]; then
-    tc_start=1
-    tc_end="$tot_ene_tests"
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_ene_tests))
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
-        run_energy_test "${tests[$((tc-1))]}" "${test_names[$((tc-1))]}" "$tc" "$total_tests" \
+        run_energy_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
 		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
       done
     elif [ $has_parallel = 'yes' ]; then
-      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --will-cite run_energy_test {1} {2} {3} \
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_energy_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
-	      ::: "${tests[@]:$((tc_start-1)):$tc_end}" :::+ "${test_names[@]:$((tc_start-1)):$tc_end}" \
-	      :::+ `seq $tc_start $tc_end`
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_ene_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_ene_tests}" \
+	      ::: `seq $tc_start $tc_end`
     fi
   fi
 
   # Run gradient tests
   if [ "$test_grad" = 'yes' ]; then
-    tc_start=$((tc_end+1))
-    tc_end=$((tc_end+tot_grad_tests))
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_grad_tests))
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
-        run_grad_test "${tests[$((tc-1))]}" "${test_names[$((tc-1))]}" "$tc" "$total_tests" \
+        run_grad_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
 		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
       done
     elif [ $has_parallel = 'yes' ]; then
-      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --will-cite run_grad_test {1} {2} {3} \
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_grad_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
-	      ::: "${tests[@]:$((tc_start-1)):$tc_end}" :::+ "${test_names[@]:$((tc_start-1)):$tc_end}" \
-	      :::+ `seq $tc_start $tc_end`
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_grad_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_grad_tests}" \
+	      ::: `seq $tc_start $tc_end`
     fi
   fi
 
   # Run geometry optimization tests
   if [ "$test_opt" = 'yes' ]; then
-    tc_start=$((tc_end+1))
-    tc_end=$((tc_end+tot_opt_tests))
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_opt_tests))
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
-        run_opt_test "${tests[$((tc-1))]}" "${test_names[$((tc-1))]}" "$tc" "$total_tests" \
+        run_opt_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
 		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
       done
     elif [ $has_parallel = 'yes' ]; then
-      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --will-cite run_opt_test {1} {2} {3} \
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_opt_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
-	      ::: "${tests[@]:$((tc_start-1)):$tc_end}" :::+ "${test_names[@]:$((tc_start-1)):$tc_end}" \
-	      :::+ `seq $tc_start $tc_end`
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_opt_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_opt_tests}" \
+	      ::: `seq $tc_start $tc_end`
     fi
   fi
 
   # Run api tests
   if [ "$test_api" = 'yes' ]; then
-    tc_start=$((tc_end+1))
-    tc_end=$((tc_end+tot_api_tests))
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_api_tests))
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
-        run_api_test "${tests[$((tc-1))]}" "${test_names[$((tc-1))]}" "$tc" "$total_tests" \
+        run_api_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
 		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
       done
     elif [ $has_parallel = 'yes' ]; then
-      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --will-cite run_api_test {1} {2} {3} \
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_api_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
-	      ::: "${tests[@]:$((tc_start-1)):$tc_end}" :::+ "${test_names[@]:$((tc_start-1)):$tc_end}" \
-	      :::+ `seq $tc_start $tc_end`
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_api_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_api_tests}" \
+	      ::: `seq $tc_start $tc_end`
     fi
   fi
 
