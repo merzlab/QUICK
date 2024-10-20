@@ -469,7 +469,7 @@ run_test(){
 
     # Run the test case
     if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
-      $DO_PARALLEL "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
+      eval "$DO_PARALLEL $qbindir/$qexe $t.in" > /dev/null 2>&1
     else
       "$qbindir/$qexe" "$t.in" > /dev/null 2>&1
     fi
@@ -495,7 +495,7 @@ run_api_test(){
    
     #Run test
     if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
-      $DO_PARALLEL "$apipath/$apiexe" > /dev/null 2>&1
+      eval "$DO_PARALLEL $apipath/$apiexe" > /dev/null 2>&1
     else
       "$apipath/$apiexe" > /dev/null 2>&1
     fi
@@ -855,7 +855,7 @@ fi
 if [ "$mpi" = 'yes' -o "$cudampi" = 'yes' -o "$hipmpi" = 'yes' ]; then
    mpimsg=""
    if [ -z "$DO_PARALLEL" ]; then
-     echo "Error: MPI/CUDAMPI tests are requested but DO_PARALLEL variable is not set."
+     echo "Error: MPI/MPI+X tests are requested but DO_PARALLEL variable is not set."
      exit 1
    else
      ismpirun='yes'
