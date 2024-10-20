@@ -277,7 +277,7 @@ set_job_gpus()
   job_gpus=()
   for i in `seq 0 $(($PARALLEL_TEST_COUNT-1))`;
   do
-    job_gpus[$i]="`echo $1 | cut -f $(($i*$gpus_per_job+1))-$((($i+1)*$gpus_per_job)) -d ' '`"
+    job_gpus[$i]="`echo $1 | cut -f $(($i*$gpus_per_job+1))-$((($i+1)*$gpus_per_job)) -d ','`"
   done
 }
 
