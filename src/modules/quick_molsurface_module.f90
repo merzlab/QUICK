@@ -49,6 +49,8 @@ module quick_molsurface_module
     use quick_method_module, only: quick_method
     use quick_files_module, only: iVdwSurfFile, VdwSurfFileName
     use quick_exception_module, only: RaiseException
+    use quick_constants_module, only: BOHRS_TO_A
+    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
 
     implicit none
 
@@ -60,6 +62,7 @@ module quick_molsurface_module
     integer :: max_points
     double precision, allocatable :: xyz_points(:,:)
 
+    RECORD_TIME(timer_begin%TESPsurface)
 
     max_points = int(natom*1000/quick_method%espgrid_spacing)
 
@@ -92,11 +95,14 @@ module quick_molsurface_module
 
       deallocate(xyz_points)
 
+      RECORD_TIME(timer_end%TESPsurface)
+      timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
+
       call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
 
       do i = 1, total_points
-        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i), &
-          quick_molspec%vdwpointxyz(2,i), quick_molspec%vdwpointxyz(3,i)
+        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i)*BOHRS_TO_A, &
+          quick_molspec%vdwpointxyz(2,i)*BOHRS_TO_A, quick_molspec%vdwpointxyz(3,i)*BOHRS_TO_A
       end do
 
    end subroutine generate_MKS_surfaces

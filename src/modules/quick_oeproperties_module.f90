@@ -32,7 +32,6 @@ module quick_oeproperties_module
    use quick_files_module, only : ioutfile
    use quick_molsurface_module, only: generate_MKS_surfaces
    use quick_molspec_module, only: quick_molspec
-   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_mpi_module, only: master, mpierror
 #ifdef MPIV
    use mpi
@@ -42,8 +41,6 @@ module quick_oeproperties_module
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
    else if (quick_method%esp_charge) then
-
-      RECORD_TIME(timer_begin%TESPSurface)
 
       if(master)then
         call generate_MKS_surfaces()
@@ -55,9 +52,6 @@ module quick_oeproperties_module
         endif
         call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
-
-      RECORD_TIME(timer_end%TESPSurface)
-      timer_cumer%TESPSurface=timer_cumer%TESPSurface+timer_end%TESPSurface-timer_begin%TESPSurface
 
       call compute_oeprop_grid(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz)
 
@@ -261,6 +255,7 @@ module quick_oeproperties_module
    use quick_files_module, only: ioutfile
    use quick_mpi_module, only: master
    use quick_exception_module, only: RaiseException
+   use quick_constants_module, only : symbol
 
    implicit none
 
@@ -339,7 +334,7 @@ module quick_oeproperties_module
    write (ioutfile,'("  ----------------")')
    do iatom = 1, natom
      Net_charge = Net_charge + q(iatom)
-     write (ioutfile,'(3x,I3,3x,F10.6)')iatom,q(iatom)
+     write (ioutfile,'(3x,I3,3x,A2,3x,F10.6)')iatom,symbol(quick_molspec%iattype(iatom)),q(iatom)
    end do
    write (ioutfile,'("  ----------------")')
    write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
