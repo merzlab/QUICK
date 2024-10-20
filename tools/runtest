@@ -304,7 +304,8 @@ get_total_tests()
   if [ "$1" = 'yes' ]; then
     tot_ene_tests="${#tests[@]}"
     tests+=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< `grep "^ene_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}'`
+    readarray -t -O "${#test_names[@]}" test_names <<< \
+              "$(grep "^ene_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
     tot_ene_tests=$((total_tests-tot_ene_tests))
   fi
@@ -312,7 +313,8 @@ get_total_tests()
   if [ "$2" = 'yes' ]; then
     tot_grad_tests="${#tests[@]}"
     tests+=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< `grep "^grad_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}'`
+    readarray -t -O "${#test_names[@]}" test_names <<< \
+              "$(grep "^grad_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
     tot_grad_tests=$((total_tests-tot_grad_tests))
   fi
@@ -320,7 +322,8 @@ get_total_tests()
   if [ "$3" = 'yes' ]; then
     tot_opt_tests="${#tests[@]}"
     tests+=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< `grep "^opt_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}'`
+    readarray -t -O "${#test_names[@]}" test_names <<< \
+              "$(grep "^opt_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
     tot_opt_tests=$((total_tests-tot_opt_tests))
   fi
@@ -328,7 +331,8 @@ get_total_tests()
   if [ "$4" = 'yes' ]; then
     tot_api_tests="${#tests[@]}"
     tests+=(`grep "^api_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< `grep "^api_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}'`
+    readarray -t -O "${#test_names[@]}" test_names <<< \
+              "$(grep "^api_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
     total_tests="${#tests[@]}"
     tot_api_tests=$((total_tests-tot_api_tests))
   fi
@@ -628,7 +632,7 @@ check_dipole()
 #   $1: test name
 clean_up()
 {
-  rm -f "$1.ref.out" "$1.in" "ddtmp.$1*" "$1.*ene" "$1.*grad" "$1.*dipole" "$1.*opt"
+  rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt
 }
 
 
@@ -668,7 +672,7 @@ print_summary()
     for i in `seq 1 $total_tests`; do
       if [ "$i" -lt "$total_tests" ]; then
         j=$((i+1))
-        sed -n '/Running test '$i' of '$total_tests'/,/Running test '$j' of '$total_tests'/p' .quick.runtest.${buildtype}.summary.tmp1 > .quick.runtest.${buildtype}.summary.tmp2
+        sed -n '/Running test '$i' of '$total_tests'/,/Running test /p' .quick.runtest.${buildtype}.summary.tmp1 > .quick.runtest.${buildtype}.summary.tmp2
       elif [ "$i" -eq "$total_tests" ]; then
         sed -n '/Running test '$total_tests'/,/All '$buildtype' tests are done/p' .quick.runtest.${buildtype}.summary.tmp1 > .quick.runtest.${buildtype}.summary.tmp2
       fi
