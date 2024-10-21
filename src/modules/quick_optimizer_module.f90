@@ -146,7 +146,7 @@ contains
            enddo
         endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
         call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
               quick_molspec%molchg, quick_molspec%iAtomType)
         call gpu_upload_xyz(xyz)
@@ -157,7 +157,7 @@ contains
         call getEriPrecomputables
         call schwarzoff
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
         call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
               ncontract, itype, aexp, dcoeff, &
               quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -171,7 +171,7 @@ contains
 
         call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
       timer_begin%T2elb = timer_end%T2elb
       call mgpu_get_2elb_time(timer_end%T2elb)
       timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -182,7 +182,7 @@ contains
         call getEnergy(.false., ierr)
 
         !   This line is for test only
-        !   quick_method%bCUDA = .false.
+        !   quick_method%bGPU = .false.
         ! Now we have several scheme to obtain gradient. For now,
         ! only analytical gradient is available
 
@@ -203,12 +203,12 @@ contains
            endif
         endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-        if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+        if (quick_method%bGPU) then
           call gpu_cleanup()
         endif
 #endif
-          !quick_method%bCUDA=.true.
+          !quick_method%bGPU=.true.
         if (master) then
 
            !-----------------------------------------------------------------------

@@ -61,50 +61,42 @@ if(CUDA)
             message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2 and SM5.3")
             message(STATUS "BE AWARE: CUDA 7.5 does not support GTX-1080, Titan-XP, DGX-1, V100 or other Pascal/Volta based GPUs.")
             list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
         elseif(${CUDA_VERSION} VERSION_EQUAL 8.0)
             message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0 and SM6.1,")
             message(STATUS "BE AWARE: CUDA 8.0 does not support V100, GV100, Titan-V or later GPUs")
             list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             
         elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 9.0) AND (${CUDA_VERSION} VERSION_LESS 10.0)) 
             message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1 and SM7.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
         elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 10.0) AND (${CUDA_VERSION} VERSION_LESS 11.0))
             message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0 and SM7.5")
             list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_EQUAL 11.0))
 	    message(STATUS "Configuring QUICK for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5 and SM8.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.1) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 11.7))
 	    message(STATUS "Configuring QUICK for SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0 and SM8.6")
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
 
 	elseif((${CUDA_VERSION} VERSION_EQUAL 11.8))
             message(STATUS "Configuring QUICK for SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9 and SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM37FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 	    
 	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS 12.5))
             message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9 and SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 
 	else()
@@ -118,7 +110,6 @@ if(CUDA)
         if("${QUICK_USER_ARCH}" MATCHES "kepler")
             message(STATUS "Configuring QUICK for SM3.5")
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             set(FOUND "TRUE")
         endif()
@@ -126,7 +117,6 @@ if(CUDA)
         if("${QUICK_USER_ARCH}" MATCHES "maxwell")
 	    message(STATUS "Configuring QUICK for SM5.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
-	    list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             set(FOUND "TRUE")
         endif()
@@ -274,15 +264,11 @@ if(CUDA)
 
     # SPDF
     if(ENABLEF)
-        list(APPEND CUDA_NVCC_FLAGS -DCUDA_SPDF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
     endif()
 
     if(DISABLE_OPTIMIZER_CONSTANTS)
         set(CUDA_DEVICE_CODE_FLAGS -Xptxas --disable-optimizer-constants)
-    endif()
-
-    if(USE_LEGACY_ATOMICS)
-        list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
     endif()
 	
     if(NOT INSIDE_AMBER)
@@ -299,9 +285,6 @@ endif()
 #option(HIP_RDC "Build relocatable device code, also known as separate compilation mode." FALSE)
 #option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
 if(HIP)
-    # HIP builds currently unavailable (TODO: fix post release)
-    message(FATAL_ERROR "Error: HIP support is currently unavailable in this QUICK release. Support will be added back in a future release.")
-
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
     set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
@@ -325,28 +308,22 @@ if(HIP)
     endif()
 
     list(APPEND AMD_HIP_FLAGS -fPIC -std=c++14)
-    set(TARGET_ID_SUPPORT ON)
+    #set(TARGET_ID_SUPPORT ON)
 
 #    if(HIP_WARP64)
 #        add_compile_definitions(QUICK_PLATFORM_AMD_WARP64)
 #    endif()
 
-    # HIP codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (gfx906 and gfx908)
-    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "gfx906") OR ("${QUICK_USER_ARCH}" MATCHES "gfx908")))
-	    message(FATAL_ERROR "Error: Unsupported HIP options (ENABLEF with -DUSE_LEGACY_ATOMICS). ${PROJECT_NAME} support for f-functions requires newer HIP architecture targets not using LEGACY_ATOMICS.  Please specify architectures with QUICK_USER_ARCH not needing LEGACY_ATOMICS (post-gfx908) or disable f-function support.")
-    endif()
-
     if( NOT "${QUICK_USER_ARCH}" STREQUAL "")
         set(FOUND "FALSE")
         if("${QUICK_USER_ARCH}" MATCHES "gfx908")
             message(STATUS "Configuring QUICK for gfx908")
-            list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
             set(FOUND "TRUE")
         endif()
 
         if("${QUICK_USER_ARCH}" MATCHES "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
-            list(APPEND AMD_HIP_FLAGS -munsafe-fp-atomics -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
             set(FOUND "TRUE")
         endif()
 
@@ -354,12 +331,49 @@ if(HIP)
             message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a.")
         endif()
     else()
-        list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
         set(QUICK_USER_ARCH "gfx908")
         message(STATUS "AMD GPU architecture not specified. Code will be optimized for gfx908.")
     endif()
 
     find_package(HipCUDA REQUIRED)
+
+    execute_process(
+          COMMAND ${HIP_HIPCC_EXECUTABLE} --version
+	  OUTPUT_VARIABLE HIPCC_VERSION_OUTPUT
+	  RESULT_VARIABLE HIPCC_VERSION_RESULT)
+
+    if(NOT HIPCC_VERSION_RESULT EQUAL "0")
+        message(FATAL_ERROR "Failed to get ROCm/HIP version.")
+    endif()
+
+    string(REPLACE "\n" ";" HIPCC_VERSION_OUTPUT ${HIPCC_VERSION_OUTPUT})
+    string(REGEX MATCH "rocm-([0-9]+).([0-9]+).([0-9]+)" _ "${HIPCC_VERSION_OUTPUT}")
+    set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(HIP_VERSION_PATCH ${CMAKE_MATCH_3})
+    set(HIP_VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}" CACHE STRING "ROCm/HIP version (reported by hipcc).")
+    mark_as_advanced(HIP_VERSION)
+    message(STATUS "Detected ROCm/HIP version: ${HIP_VERSION}")
+
+    #  check ROCm version (as reported by hipcc),
+    #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
+    #  in several ROCm versions
+    if ( HIP_VERSION VERSION_GREATER_EQUAL 5.4.3
+	    AND HIP_VERSION VERSION_LESS_EQUAL 6.2.0 )
+        message(STATUS "")
+        message("************************************************************")
+	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
+	message("The QUICK HIP codes trigger a known compiler scalar register ")
+	message(" fill/spill bug in ROCm >= v5.4.3 and <= v6.2.0.")
+        message("************************************************************")
+        message(STATUS "")
+        message(FATAL_ERROR)
+    endif()
+
+    if(QUICK_DEBUG_HIP_ASAN)
+	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
+	list(APPEND CUDA_NVCC_FLAGS -fsanitize=address -fsanitize-recover=address -shared-libsan -g --offload-arch=${QUICK_USER_ARCH})
+    endif()
 
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 

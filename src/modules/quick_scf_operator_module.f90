@@ -86,8 +86,8 @@ contains
 #endif
   
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if (quick_method%bGPU) then
   
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
@@ -103,7 +103,7 @@ contains
 
 
 !     if (quick_method%nodirect) then
-!#ifdef CUDA
+!#if defined(GPU)
 !        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
 !#else
 !#ifndef MPI
@@ -121,15 +121,15 @@ contains
   !  Start the timer for 2e-integrals
      RECORD_TIME(timer_begin%T2e)
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-        if (quick_method%bCUDA) then          
+#if defined(GPU) || defined(MPIV_GPU)
+        if (quick_method%bGPU) then          
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
   !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
      if(bMPI) then
@@ -148,7 +148,7 @@ contains
         enddo
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
         endif                             
 #endif
  !    endif
@@ -308,9 +308,9 @@ contains
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   
-     if(quick_method%bCUDA) then
+     if(quick_method%bGPU) then
 
         if(deltaO) call gpu_upload_density_matrix(quick_qm_struct%dense)
 
@@ -339,7 +339,7 @@ contains
      endif
   
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
            irad_init = quick_dft_grid%igridptll(mpirank+1)
            irad_end = quick_dft_grid%igridptul(mpirank+1)

@@ -90,7 +90,7 @@ xc_gga_enhancement_t
 xc_get_gga_enhancement_factor(int func_id)
 {
   switch(func_id){
-#ifndef CUDA //Madu: temporary blocked this in CUDA version
+#if !defined(GPU) || !defined(MPIV_GPU) //Madu: temporary blocked this in GPU versions
   case XC_GGA_X_WC:
     return xc_gga_x_wc_enhance;
 
