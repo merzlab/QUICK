@@ -100,22 +100,36 @@ print_help()
   Use this script as ./runtest [flags]                            
                                                                             
   Available flags are:                                                      
-      --serial       Tests QUICK serial version                                
-      --mpi          Tests QUICK MPI parallel version                           
-      --cuda         Tests QUICK GPU version
-      --cudampi      Tests QUICK multi-GPU version
-      --hip          Tests QUICK AMD GPU version
-      --hipmpi       Tests QUICK AMD multi-GPU version
-      --ene          Run only energy tests
-      --grad         Run only gradient tests
-      --opt          Run only geometry optimization tests
-      --api          Run only api tests
-      --full         Run a large set of tests (Default: no)
-      --nolog        Disable writing output into runtest.log (Default: no)
+      --serial              Tests QUICK serial version                                
+      --mpi                 Tests QUICK MPI parallel version                           
+      --cuda                Tests QUICK GPU version
+      --cudampi             Tests QUICK multi-GPU version
+      --hip                 Tests QUICK AMD GPU version
+      --hipmpi              Tests QUICK AMD multi-GPU version
+      --ene                 Run only energy tests
+      --grad                Run only gradient tests
+      --opt                 Run only geometry optimization tests
+      --api                 Run only api tests
+      --full                Run a large set of tests (Default: no)
+      --nolog               Disable writing output into runtest.log (Default: no)
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
-  
+
+  Environment variables which influence this script:
+      DO_PARALLEL           Command for launching MPI/MPI+X versions
+                            Example: DO_PARALLEL=\"mpirun -np 2\"
+      CUDA_VISIBLE_DEVICES  Comma-seperated list of GPU IDs to use
+                            for GPU versions (CUDA/HIP)
+                            Example: CUDA_VISIBLE_DEVICES=\"0,1\"
+      HIP_VISIBLE_DEVICES   Comma-seperated list of GPU IDs to use
+                            for GPU versions (HIP)
+                            Example: HIP_VISIBLE_DEVICES=\"2,3\"
+      PARALLEL_TEST_COUNT   Number of tests to run in parallel using GNU parallel;
+                            can be combined with the above 3 variables
+			    for parallel testing with applicable QUICK versions
+                            Example: PARALLEL_TEST_COUNT=\"2\"
+
   "
 
   exit 0;
