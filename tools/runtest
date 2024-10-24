@@ -280,7 +280,7 @@ set_qexe_testlist()
 #   job_gpus: array of GPU IDs assigned to each job (0-based indexing)
 set_job_gpus()
 {
-  total_gpus=`echo "$1" | awk '{print NF}'`
+  total_gpus=`echo "$1" | awk -F ',' '{print NF}'`
   gpus_per_job=$(($total_gpus/$PARALLEL_TEST_COUNT))
 
   if [ "$total_gpus" -lt "$PARALLEL_TEST_COUNT" ]; then
