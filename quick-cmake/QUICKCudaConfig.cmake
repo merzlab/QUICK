@@ -374,27 +374,37 @@ if(HIP)
     #  check ROCm version (as reported by hipcc),
     #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
     #  in several ROCm versions
-    if ( HIP_VERSION VERSION_GREATER_EQUAL 5.4.3
-	    AND HIP_VERSION VERSION_LESS_EQUAL 6.2.0 )
+    if (${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3
+           AND ${HIP_VERSION} VERSION_LESS_EQUAL 6.2.0 )
         message(STATUS "")
         message("************************************************************")
 	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
-	message("The QUICK HIP codes trigger a known compiler scalar register ")
-	message(" fill/spill bug in ROCm >= v5.4.3 and <= v6.2.0.")
+        message("  The QUICK HIP codes trigger a known compiler scalar register ")
+        message("  fill/spill bug in ROCm >= v5.4.3 and <= v6.2.0.")
+        message("  Please build QUICK with a known working ROCm version.")
         message("************************************************************")
         message(STATUS "")
         message(FATAL_ERROR)
     endif()
+
+    list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 
     if(QUICK_DEBUG_HIP_ASAN)
 	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
 	list(APPEND CUDA_NVCC_FLAGS -fsanitize=address -fsanitize-recover=address -shared-libsan -g --offload-arch=${QUICK_USER_ARCH})
     endif()
 
-    list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
+    # SPDF
+    if(ENABLEF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
+    endif()
+ 
+    if(USE_LEGACY_ATOMICS)
+        list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+    endif()
 
     set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
-    set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
+    set(CMAKE_CXX_LINKER ${HIP_HIPCC_EXECUTABLE})
 
 #    if(HIP_RDC)
 #        # Only hipcc can link a library compiled using RDC mode
