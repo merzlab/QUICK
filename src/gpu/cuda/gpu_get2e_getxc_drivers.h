@@ -27,55 +27,102 @@ extern "C" void gpu_get_oshell_eri_(bool *deltaO, QUICKDouble* o, QUICKDouble* o
 extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #endif
 {
-    PRINTDEBUG("BEGIN TO RUN GET ERI")
+    PRINTDEBUG("BEGIN TO RUN GET ERI");
     upload_sim_to_constant(gpu);
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
+    PRINTDEBUG("BEGIN TO RUN KERNEL");
 
 #ifdef OSHELL
-    get_oshell_eri(gpu);
+        get_oshell_eri(gpu);
 #else
     get2e(gpu);
 #endif
 
-    PRINTDEBUG("COMPLETE KERNEL")
+    PRINTDEBUG("COMPLETE KERNEL");
 
-    gpu -> gpu_calculated -> o -> Download();
-    cudaMemsetAsync(gpu -> gpu_calculated -> o -> _devData, 0, sizeof(QUICKDouble)*gpu->nbasis*gpu->nbasis);
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL->Download();
+    cudaMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
 
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            }
+            else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData , i , j , gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData , j , i , gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
-#ifdef OSHELL
-    gpu -> gpu_calculated -> ob -> Download();
-    cudaMemsetAsync(gpu -> gpu_calculated -> ob -> _devData, 0, sizeof(QUICKDouble)*gpu->nbasis*gpu->nbasis);
 
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->ob->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+#  if defined(OSHELL)
+    gpu->gpu_calculated->obULL->Download();
+    cudaMemsetAsync(gpu->gpu_calculated->obULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            }
+            else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
+#  endif
+#else
+    gpu->gpu_calculated->o->Download();
+    cudaMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+        }
+    }
+#  if defined(OSHELL)
+    gpu->gpu_calculated->ob->Download();
+    cudaMemsetAsync(gpu->gpu_calculated->ob->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+        }
+    }
+#  endif
 #endif
 
-    gpu -> gpu_calculated -> o    -> DownloadSum(o);
-
-#ifdef OSHELL
-    gpu -> gpu_calculated -> ob   -> DownloadSum(ob);
+    gpu->gpu_calculated->o->DownloadSum(o);
+#if defined(OSHELL)
+    gpu->gpu_calculated->ob->DownloadSum(ob);
 #endif
 
-    PRINTDEBUG("DELETE TEMP VARIABLES")
+    PRINTDEBUG("DELETE TEMP VARIABLES");
 
-    if(gpu -> gpu_sim.method == HF){
+    if (gpu->gpu_sim.method == HF) {
         delete gpu->gpu_calculated->o;
         delete gpu->gpu_calculated->dense;
-
-#ifdef OSHELL
+#if defined(USE_LEGACY_ATOMICS)
+        delete gpu->gpu_calculated->oULL;
+#  if defined(OSHELL)
+        delete gpu->gpu_calculated->obULL;
+#  endif
+#endif
+#if defined(OSHELL)
         delete gpu->gpu_calculated->ob;
         delete gpu->gpu_calculated->denseb;
 #endif
-
-    }else if(*deltaO != 0){
+    } else if (*deltaO != 0) {
         delete gpu->gpu_calculated->dense;
 #ifdef OSHELL
         delete gpu->gpu_calculated->denseb;
@@ -84,7 +131,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
     delete gpu->gpu_cutoff->cutMatrix;
 
-    PRINTDEBUG("COMPLETE RUNNING GET2E")
+    PRINTDEBUG("COMPLETE RUNNING GET2E");
 }
 
 
@@ -94,9 +141,9 @@ extern "C" void gpu_get_oshell_eri_grad_(QUICKDouble* grad)
 extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
 #endif
 {
-    PRINTDEBUG("BEGIN TO RUN GRAD")
+    PRINTDEBUG("BEGIN TO RUN GRAD");
     upload_sim_to_constant(gpu);
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
+    PRINTDEBUG("BEGIN TO RUN KERNEL");
 
     if(gpu -> gpu_sim.is_oshell == true){
         get_oshell_eri_grad(gpu);
@@ -116,24 +163,44 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
     }
 #endif
 
-    PRINTDEBUG("COMPLETE KERNEL")
+    PRINTDEBUG("COMPLETE KERNEL");
 
-    if(gpu -> gpu_sim.method == HF){
-        gpu -> grad -> Download();
+    if (gpu->gpu_sim.method == HF) {
+#if defined(USE_LEGACY_ATOMICS)
+        gpu -> gradULL -> Download();
+
+        for (int i = 0; i < 3 * gpu->natom; i++) {
+            QUICKULL valULL = gpu->gradULL->_hostData[i];
+            QUICKDouble valDB;
+
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+
+            gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        }
+#else
+        gpu->grad->Download();
+#endif
     }
 
-    if(gpu -> gpu_sim.method == HF){
-        gpu -> grad -> DownloadSum(grad);
+    if (gpu -> gpu_sim.method == HF) {
+        gpu->grad->DownloadSum(grad);
 
-        delete gpu -> grad;
+        delete gpu->grad;
+#if defined(USE_LEGACY_ATOMICS)
+        delete gpu->gradULL;
+#endif
         delete gpu->gpu_calculated->dense;
 
-#ifdef OSHELL
+#if defined(OSHELL)
         delete gpu->gpu_calculated->denseb;
 #endif
     }
 
-    PRINTDEBUG("COMPLETE RUNNING GRAD")
+    PRINTDEBUG("COMPLETE RUNNING GRAD");
 }
 
 
@@ -143,55 +210,142 @@ extern "C" void gpu_get_oshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
 extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
 #endif
 {
-    PRINTDEBUG("BEGIN TO RUN GETXC")
+    PRINTDEBUG("BEGIN TO RUN GETXC");
 
     gpu->DFT_calculated = new gpu_buffer_type<DFT_calculated_type>(1, 1);
+#if defined(USE_LEGACY_ATOMICS)
+    QUICKULL valUII = (QUICKULL) (fabs(*Eelxc * OSCALE) + 0.5);
+    if (*Eelxc < 0.0) {
+        valUII = 0ull - valUII;
+    }
+    gpu->DFT_calculated->_hostData[0].Eelxc = valUII;
+
+    valUII = (QUICKULL) (fabs(*aelec * OSCALE) + 0.5);
+    if (*aelec < 0.0) {
+        valUII = 0ull - valUII;
+    }
+    gpu->DFT_calculated->_hostData[0].aelec = valUII;
+
+    valUII = (QUICKULL) (fabs(*belec * OSCALE) + 0.5);
+    if (*belec < 0.0) {
+        valUII = 0ull - valUII;
+    }
+    gpu->DFT_calculated->_hostData[0].belec = valUII;
+#else
     gpu->DFT_calculated->_hostData[0].Eelxc = 0.0;
     gpu->DFT_calculated->_hostData[0].aelec = 0.0;
     gpu->DFT_calculated->_hostData[0].belec = 0.0;
+#endif
     gpu->DFT_calculated->Upload();
     gpu->gpu_sim.DFT_calculated = gpu->DFT_calculated->_devData;
 
     upload_sim_to_constant_dft(gpu);
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
+    PRINTDEBUG("BEGIN TO RUN KERNEL");
 
     getxc(gpu);
 
     gpu->DFT_calculated->Download();
 
-    gpu -> gpu_calculated -> o -> Download();
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL->Download();
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
 
-#ifdef OSHELL
-    gpu -> gpu_calculated -> ob -> Download();
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->ob->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+#  if defined(OSHELL)
+    gpu->gpu_calculated->obULL->Download();
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
+#  endif
+
+    QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
+    QUICKDouble valDB;
+    if (valULL >= 0x8000000000000000ull) {
+        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+    } else {
+        valDB = (QUICKDouble) valULL;
+    }
+    *Eelxc = (QUICKDouble) valDB * ONEOVEROSCALE;
+
+    valULL = gpu->DFT_calculated->_hostData[0].aelec;
+    if (valULL >= 0x8000000000000000ull) {
+        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+    } else {
+        valDB = (QUICKDouble) valULL;
+    }
+    *aelec = (QUICKDouble) valDB * ONEOVEROSCALE;
+
+    valULL = gpu->DFT_calculated->_hostData[0].belec;
+    if (valULL >= 0x8000000000000000ull) {
+        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+    } else {
+        valDB = (QUICKDouble) valULL;
+    }
+    *belec = (QUICKDouble) valDB * ONEOVEROSCALE;
+#else
+    gpu->gpu_calculated->o->Download();
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+        }
+    }
+
+#  if defined(OSHELL)
+    gpu->gpu_calculated->ob->Download();
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j,gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+        }
+    }
+#  endif
+
+    *Eelxc = gpu->DFT_calculated->_hostData[0].Eelxc;
+    *aelec = gpu->DFT_calculated->_hostData[0].aelec;
+    *belec = gpu->DFT_calculated->_hostData[0].belec;
 #endif
 
-    *Eelxc = gpu->DFT_calculated -> _hostData[0].Eelxc;
-    *aelec = gpu->DFT_calculated -> _hostData[0].aelec;
-    *belec = gpu->DFT_calculated -> _hostData[0].belec;
-
-    gpu -> gpu_calculated -> o    -> DownloadSum(o);
-#ifdef OSHELL
-    gpu -> gpu_calculated -> ob    -> DownloadSum(ob);
+    gpu->gpu_calculated->o->DownloadSum(o);
+#if defined(OSHELL)
+    gpu->gpu_calculated->ob->DownloadSum(ob);
 #endif
 
-    PRINTDEBUG("DELETE TEMP VARIABLES")
+    PRINTDEBUG("DELETE TEMP VARIABLES");
 
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
-
-#ifdef OSHELL
+#if defined(OSHELL)
     delete gpu->gpu_calculated->ob;
     delete gpu->gpu_calculated->denseb;
+#endif
+#if defined(USE_LEGACY_ATOMICS)
+    delete gpu->gpu_calculated->oULL;
+#  if defined(OSHELL)
+    delete gpu->gpu_calculated->obULL;
+#  endif
 #endif
 }
 
@@ -202,8 +356,8 @@ extern "C" void gpu_get_oshell_xcgrad_(QUICKDouble *grad)
 extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 {
-#if defined(CEW)
-    gpu -> cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+#if defined(CEW) && !defined(USE_LEGACY_ATOMICS)
+    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
 #endif
 
     // calculate smem size
@@ -214,16 +368,35 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
     memset(gpu->grad->_hostData, 0, gpu -> gpu_xcq -> smem_size);
 
     getxc_grad(gpu);
-    gpu -> grad -> Download();
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gradULL->Download();
 
-    gpu -> grad -> DownloadSum(grad);
+    for (int i = 0; i < 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+        if (valULL >= 0x8000000000000000ull) {
+            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+        } else {
+            valDB = (QUICKDouble) valULL;
+        }
 
-#if defined(CEW)
-    gpu -> cew_grad->DownloadSum(grad);
-    delete gpu -> cew_grad;
+        gpu->grad->_hostData[i] += (QUICKDouble) valDB * ONEOVERGRADSCALE;
+    }
+#else
+    gpu->grad->Download();
 #endif
 
-    delete gpu -> grad;
+    gpu->grad->DownloadSum(grad);
+
+#if defined(CEW) && !defined(USE_LEGACY_ATOMICS)
+    gpu->cew_grad->DownloadSum(grad);
+    delete gpu->cew_grad;
+#endif
+
+    delete gpu->grad;
+#ifdef USE_LEGACY_ATOMICS
+    delete gpu->gradULL;
+#endif
     delete gpu->gpu_calculated->dense;
 
 #ifdef OSHELL
@@ -253,14 +426,35 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     getOEI(gpu);
 
-    gpu -> gpu_calculated -> o -> Download();
-    cudaMemsetAsync(gpu -> gpu_calculated -> o -> _devData, 0, sizeof(QUICKDouble)*gpu->nbasis*gpu->nbasis);
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL->Download();
+
+    cudaMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
 
     for (int i = 0; i< gpu->nbasis; i++) {
         for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis);
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
+#else
+    gpu->gpu_calculated->o-> Download();
+    cudaMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis);
+        }
+    }
+#endif
 
     /*
        for (int i = 0; i< gpu->nbasis; i++) {
@@ -282,10 +476,18 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 {
     // upload point charge grad vector
-    if(gpu -> nextatom > 0) {
-        gpu -> ptchg_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
-        gpu -> ptchg_grad -> Upload();
-        gpu -> gpu_sim.ptchg_grad =  gpu -> ptchg_grad -> _devData;
+    if (gpu->nextatom > 0) {
+        gpu->ptchg_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
+
+#if defined(USE_LEGACY_ATOMICS)
+        gpu->ptchg_gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu->nextatom);
+        gpu->ptchg_gradULL->Upload();
+        gpu->gpu_sim.ptchg_gradULL = gpu->ptchg_gradULL->_devData;
+        gpu->ptchg_grad->DeleteGPU();
+#else
+        gpu->ptchg_grad->Upload();
+        gpu->gpu_sim.ptchg_grad =  gpu->ptchg_grad->_devData;
+#endif
     }
 
     upload_sim_to_constant_oei(gpu);
@@ -293,8 +495,24 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     get_oei_grad(gpu);
 
     // download gradients
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gradULL->Download();
+    cudaMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+    for (int i = 0; i < 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+        if (valULL >= 0x8000000000000000ull) {
+            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+        } else {
+            valDB = (QUICKDouble) valULL;
+        }
+
+        gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+    }
+#else
     gpu->grad->Download();
-    cudaMemsetAsync(gpu -> grad -> _devData, 0, sizeof(QUICKDouble)*3*gpu->natom);
+    cudaMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+#endif
 
     gpu->grad->DownloadSum(grad);
 
@@ -304,9 +522,27 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
           }
           */
     // download point charge gradients
-    if(gpu -> nextatom > 0) {
+    if (gpu -> nextatom > 0) {
+#if defined(USE_LEGACY_ATOMICS)
+        gpu->ptchg_gradULL->Download();
+
+        cudaMemsetAsync(gpu->ptchg_gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->nextatom);
+
+        for (int i = 0; i < 3 * gpu->nextatom; i++) {
+            QUICKULL valULL = gpu->ptchg_gradULL->_hostData[i];
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+
+            gpu->ptchg_grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        }
+#else
         gpu->ptchg_grad->Download();
-        cudaMemsetAsync(gpu -> ptchg_grad -> _devData, 0, sizeof(QUICKDouble)*3*gpu->nextatom);
+        cudaMemsetAsync(gpu->ptchg_grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->nextatom);
+#endif
 
         /*      for(int i=0; i<3*gpu->nextatom; ++i){
                 printf("ptchg_grad: %d %f \n", i, gpu->ptchg_grad->_hostData[i]);
@@ -316,8 +552,11 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     }
 
     // ptchg_grad is no longer needed. reclaim the memory.
-    if(gpu -> nextatom > 0 && !gpu->gpu_sim.use_cew) {
-        SAFE_DELETE(gpu -> ptchg_grad);
+    if (gpu->nextatom > 0 && !gpu->gpu_sim.use_cew) {
+        SAFE_DELETE(gpu->ptchg_grad);
+#if defined(USE_LEGACY_ATOMICS)
+        SAFE_DELETE(gpu->ptchg_gradULL);
+#endif
     }
 }
 
@@ -348,14 +587,35 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
     upload_sim_to_constant_dft(gpu);
     getcew_quad(gpu);
 
-    gpu -> gpu_calculated -> o -> Download();
-    cudaMemsetAsync(gpu -> gpu_calculated -> o -> _devData, 0, sizeof(QUICKDouble)*gpu->nbasis*gpu->nbasis);
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL->Download();
 
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis) = LOC2(gpu->gpu_calculated->o->_hostData,j,i,gpu->nbasis, gpu->nbasis);
+    cudaMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
         }
     }
+#else
+    gpu->gpu_calculated->o->Download();
+    cudaMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
+                = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+        }
+    }
+#endif
 
     /*    int idxf90=0;
           for (int i = 0; i< gpu->nbasis; i++) {
@@ -383,8 +643,24 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     get_lri_grad(gpu);
 
     // download gradients
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gradULL->Download();
+    cudaMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+    for (int i = 0; i < 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+        if (valULL >= 0x8000000000000000ull) {
+            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+        } else {
+            valDB = (QUICKDouble) valULL;
+        }
+
+        gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+    }
+#else
     gpu->grad->Download();
-    cudaMemsetAsync(gpu -> grad -> _devData, 0, sizeof(QUICKDouble)*3*gpu->natom);
+    cudaMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+#endif
 
     gpu->grad->DownloadSum(grad);
 
@@ -394,8 +670,24 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
           }
           */
     // download point charge gradients
-    if(gpu -> nextatom > 0) {
+    if (gpu->nextatom > 0) {
+#if defined(USE_LEGACY_ATOMICS)
+        gpu->ptchg_gradULL->Download();
+
+        for (int i = 0; i < 3 * gpu->nextatom; i++) {
+            QUICKULL valULL = gpu->ptchg_gradULL->_hostData[i];
+            QUICKDouble valDB;
+            if (valULL >= 0x8000000000000000ull) {
+                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            } else {
+                valDB = (QUICKDouble) valULL;
+            }
+
+            gpu->ptchg_grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        }
+#else
         gpu->ptchg_grad->Download();
+#endif
 
         /*      for(int i=0; i<3*gpu->nextatom; ++i){
                 printf("ptchg_grad: %d %f \n", i, gpu->ptchg_grad->_hostData[i]);
@@ -405,18 +697,25 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     }
 
     // ptchg_grad is no longer needed. reclaim the memory.
-    if(gpu -> nextatom > 0) {
-        SAFE_DELETE(gpu -> ptchg_grad);
+    if (gpu->nextatom > 0) {
+        SAFE_DELETE(gpu->ptchg_grad);
+#if defined(USE_LEGACY_ATOMICS)
+        SAFE_DELETE(gpu->ptchg_gradULL);
+#endif
     }
 }
 
 
 extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
 {
-    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu -> nextatom);
+#if defined(USE_LEGACY_ATOMICS)
+    memset(gpu->grad->_hostData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+#else
+    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
+#endif
 
     // calculate smem size
-    gpu -> gpu_xcq -> smem_size = gpu->natom * 3 * sizeof(QUICKULL);
+    gpu->gpu_xcq->smem_size =  sizeof(QUICKULL) * gpu->natom * 3;
 
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
@@ -424,13 +723,34 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     getcew_quad_grad(gpu);
 
     // download gradients
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gradULL->Download();
+    cudaMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+
+    for (int i = 0; i < 3 * gpu->natom; i++) {
+        QUICKULL valULL = gpu->gradULL->_hostData[i];
+        QUICKDouble valDB;
+        if (valULL >= 0x8000000000000000ull) {
+            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+        } else {
+            valDB = (QUICKDouble) valULL;
+        }
+
+        // make sure to add rather than assign. we already computed one part of the cew
+        // gradients on host asynchronously.
+        gpu->grad->_hostData[i] += (QUICKDouble) valDB * ONEOVERGRADSCALE;
+    }
+#else
     gpu->grad->Download();
-    cudaMemsetAsync(gpu -> grad -> _devData, 0, sizeof(QUICKDouble)*3*gpu->natom);
+    cudaMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+#endif
 
     gpu->grad->DownloadSum(grad);
 
-    gpu -> cew_grad ->DownloadSum(grad);
-    SAFE_DELETE(gpu -> cew_grad);
+#if !defined(USE_LEGACY_ATOMICS)
+    gpu->cew_grad->DownloadSum(grad);
+    SAFE_DELETE(gpu->cew_grad);
+#endif
 }
 #endif
 #endif

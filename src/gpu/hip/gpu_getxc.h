@@ -291,9 +291,15 @@ __global__ void cshell_getxc_kernel()
             }
 #endif
 
+#if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&devSim_dft.DFT_calculated[0].Eelxc, _tmp, OSCALE);
+            GPUATOMICADD(&devSim_dft.DFT_calculated[0].aelec, weight * density, OSCALE);
+            GPUATOMICADD(&devSim_dft.DFT_calculated[0].belec, weight * densityb, OSCALE);
+#else
             atomicAdd(&devSim_dft.DFT_calculated[0].Eelxc, _tmp);
-            atomicAdd(&devSim_dft.DFT_calculated[0].aelec, weight*density);
-            atomicAdd(&devSim_dft.DFT_calculated[0].belec, weight*densityb);
+            atomicAdd(&devSim_dft.DFT_calculated[0].aelec, weight * density);
+            atomicAdd(&devSim_dft.DFT_calculated[0].belec, weight * densityb);
+#endif
 
             for (int i = bfloc_st; i< bfloc_end; ++i) {
                 int ibas = devSim_dft.basf[i];
@@ -310,13 +316,21 @@ __global__ void cshell_getxc_kernel()
                         QUICKDouble _tmp = (phi * phi2 * dfdr + xdot * (phi*dphidx2 + phi2*dphidx) \
                                 + ydot * (phi*dphidy2 + phi2*dphidy) + zdot * (phi*dphidz2 + phi2*dphidz))*weight;
 
+#if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp, OSCALE);
+#else
                         atomicAdd(&LOC2(devSim_dft.o, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp);
+#endif
 
 #ifdef OSHELL
                         QUICKDouble _tmpb = (phi * phi2 * dfdrb + xdotb * (phi*dphidx2 + phi2*dphidx)
                                 + ydotb * (phi*dphidy2 + phi2*dphidy) + zdotb * (phi*dphidz2 + phi2*dphidz))*weight;
 
+#if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim_dft.obULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmpb, OSCALE);
+#else
                         atomicAdd(&LOC2(devSim_dft.ob, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmpb);
+#endif
 #endif
                     }
                 }
@@ -332,13 +346,23 @@ __global__ void oshell_getxcgrad_kernel()
 __global__ void cshell_getxcgrad_kernel()
 #endif
 {
+#if defined(USE_LEGACY_ATOMICS)
     //declare smem grad vector
-    extern __shared__ QUICKDouble smem_buffer[];
-    QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
+    extern __shared__ QUICKULL smem_buffer[];
+    QUICKULL* smemGrad = (QUICKULL*) smem_buffer;
 
     // initialize smem grad
-    for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-        smemGrad[i]=0.0;
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+        smemGrad[i] = 0ull;
+#else
+    //declare smem grad vector
+    extern __shared__ QUICKDouble smem_buffer[];
+    QUICKDouble* smemGrad = (QUICKDouble*) smem_buffer;
+
+    // initialize smem grad
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+        smemGrad[i] = 0.0;
+#endif
 
     __syncthreads();
 
@@ -568,9 +592,9 @@ __global__ void cshell_getxcgrad_kernel()
                         }
 #endif
 
-                        atomicAdd(&smemGrad[Istart], Gradx);
-                        atomicAdd(&smemGrad[Istart+1], Grady);
-                        atomicAdd(&smemGrad[Istart+2], Gradz);
+                        GPUATOMICADD(&smemGrad[Istart], Gradx, GRADSCALE);
+                        GPUATOMICADD(&smemGrad[Istart + 1], Grady, GRADSCALE);
+                        GPUATOMICADD(&smemGrad[Istart + 2], Gradz, GRADSCALE);
                         sumGradx += Gradx;
                         sumGrady += Grady;
                         sumGradz += Gradz;
@@ -580,9 +604,9 @@ __global__ void cshell_getxcgrad_kernel()
 
             int Istart = (devSim_dft.gatm[gid]-1) * 3;
 
-            atomicAdd(&smemGrad[Istart], -sumGradx);
-            atomicAdd(&smemGrad[Istart+1], -sumGrady);
-            atomicAdd(&smemGrad[Istart+2], -sumGradz);
+            GPUATOMICADD(&smemGrad[Istart], -sumGradx, GRADSCALE);
+            GPUATOMICADD(&smemGrad[Istart + 1], -sumGrady, GRADSCALE);
+            GPUATOMICADD(&smemGrad[Istart + 2], -sumGradz, GRADSCALE);
         }
         //Set weights for sswder calculation
         if(density < devSim_dft.DMCutoff){
@@ -598,8 +622,12 @@ __global__ void cshell_getxcgrad_kernel()
     __syncthreads();
 
     // update gmem grad vector
-    for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-        atomicAdd(&devSim_dft.grad[i],smemGrad[i]);
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+#if defined(USE_LEGACY_ATOMICS)
+        atomicAdd(&devSim_dft.gradULL[i], smemGrad[i]);
+#else
+        atomicAdd(&devSim_dft.grad[i], smemGrad[i]);
+#endif
 
     __syncthreads();
 }

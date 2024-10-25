@@ -362,7 +362,11 @@ __device__ __forceinline__ void iclass_lri_spdf2
             if (abs(Y) > devSim.coreIntegralCutoff)
 #endif
             {
+#if defined(USE_LEGACY_ATOMICS)
+                GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, nbasis, nbasis), Y, OSCALE);    
+#else
                 atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
+#endif
             }
         }
     }

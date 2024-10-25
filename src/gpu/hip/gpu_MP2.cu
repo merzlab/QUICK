@@ -67,19 +67,20 @@ void get2e_MP2(_gpu_type gpu)
 #endif
 }
 
+
 __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
 {
-    unsigned int offside = blockIdx.x*blockDim.x+threadIdx.x;
-    int totalThreads = blockDim.x*gridDim.x;
+    unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
+    int totalThreads = blockDim.x * gridDim.x;
 
     QUICKULL jshell = (QUICKULL) devSim_MP2.sqrQshell;
     QUICKULL myInt = (QUICKULL) jshell * jshell / totalThreads;
 
-    if ((jshell * jshell - myInt * totalThreads) > offside)
+    if (jshell * jshell - myInt * totalThreads > offset)
         myInt++;
 
     for (QUICKULL i = 1; i <= myInt; i++) {
-        QUICKULL currentInt = totalThreads * (i - 1) + offside;
+        QUICKULL currentInt = totalThreads * (i - 1) + offset;
         QUICKULL a = (QUICKULL) currentInt / jshell;
         QUICKULL b = (QUICKULL) (currentInt - a * jshell);
 
@@ -129,13 +130,16 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kerne
         if (ii <= kk) {
             int nshell = devSim_MP2.nshell;
             QUICKDouble DNMax = MAX(
-                    MAX(4.0 * LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell), 4.0 * LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
-                    MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell), LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
-                        MAX(LOC2(devSim_MP2.cutMatrix, jj, kk, nshell, nshell), LOC2(devSim_MP2.cutMatrix, jj, ll, nshell, nshell))));
+                    MAX(4.0 * LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell),
+                        4.0 * LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
+                    MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell),
+                            LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
+                        MAX(LOC2(devSim_MP2.cutMatrix, jj, kk, nshell, nshell),
+                            LOC2(devSim_MP2.cutMatrix, jj, ll, nshell, nshell))));
 
-            if ((LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell))
+            if (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell)
                     > devSim_MP2.integralCutoff
-                    && (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax)
+                    && LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax
                     > devSim_MP2.integralCutoff) {
                 int iii = devSim_MP2.sorted_Qnumber[II];
                 int jjj = devSim_MP2.sorted_Qnumber[JJ];
@@ -348,7 +352,13 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
 
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
+            QUICKDouble o_JI = 0.0;
+
             for (int KKK = MAX(III, KKK1); KKK <= KKK2; KKK++) {
+                QUICKDouble o_KI = 0.0;
+                QUICKDouble o_JK = 0.0;
+                QUICKDouble o_JK_MM = 0.0;
+
                 for (int LLL = MAX(KKK, LLL1); LLL <= LLL2; LLL++) {
                     if (III < KKK
                             || (III == JJJ && III == LLL)
@@ -369,102 +379,108 @@ __device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned
                         QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim_MP2.dense, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
 
                         // ATOMIC ADD VALUE 1
-                        QUICKDouble _tmp = 2.0;
-                        if (KKK == LLL) {
-                            _tmp = 1.0;
-                        }
-
-                        QUICKDouble val1d = _tmp * DENSELK * Y;
-                        //if (abs(val1d) > devSim_MP2.integralCutoff) {
-                        QUICKULL val1 = (QUICKULL) (fabs(val1d * OSCALE) + (QUICKDouble) 0.5);
-                        if (val1d < (QUICKDouble) 0.0)
-                            val1 = 0ull - val1;
-                        atomicAdd(&LOC2(devSim_MP2.oULL, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val1);
-                        // }
+                        temp = (KKK == LLL) ? DENSELK * Y : 2.0 * DENSELK * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+                        o_JI += temp;
+//                        }
 
                         // ATOMIC ADD VALUE 2
                         if (LLL != JJJ || III != KKK) {
-                            _tmp = 2.0;
-                            if (III == JJJ) {
-                                _tmp = 1.0;
-                            }
-
-                            QUICKDouble val2d = _tmp * DENSEJI * Y;
-                            //   if (abs(val2d) > devSim_MP2.integralCutoff) {
-                            QUICKULL val2 = (QUICKULL) (fabs(val2d * OSCALE) + (QUICKDouble) 0.5);
-                            if (val2d < (QUICKDouble) 0.0)
-                                val2 = 0ull - val2;
-                            atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), val2);
-                            //  }
+                            temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
+//                            if (abs(temp) > devSim_MP2.integralCutoff) {
+#if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#endif
+//                            }
                         }
 
                         // ATOMIC ADD VALUE 3
-                        QUICKDouble val3d = hybrid_coeff * 0.5 * DENSELJ * Y;
-                        //if (abs(2 * val3d) > devSim_MP2.integralCutoff) {
-                        QUICKULL val3 = (QUICKULL) (fabs(val3d * OSCALE) + (QUICKDouble) 0.5);
-                        if (III == KKK && III <  JJJ && JJJ < LLL) {
-                            val3 = (QUICKULL) (fabs(2 * val3d * OSCALE) + (QUICKDouble) 0.5);
-                        }
-                        if (DENSELJ * Y < (QUICKDouble) 0.0)
-                            val3 = 0ull - val3;
-                        atomicAdd(&LOC2(devSim_MP2.oULL, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val3);
-                        //}
+                        temp = (III == KKK && III < JJJ && JJJ < LLL)
+                            ? -(hybrid_coeff * DENSELJ * Y) : -0.5 * hybrid_coeff * DENSELJ * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+                        o_KI += temp;
+//                        }
 
                         // ATOMIC ADD VALUE 4
                         if (KKK != LLL) {
-                            QUICKDouble val4d = hybrid_coeff * 0.5 * DENSEKJ * Y;
-                            // if (abs(val4d) > devSim_MP2.integralCutoff) {
-                            QUICKULL val4 = (QUICKULL) (fabs(val4d * OSCALE) + (QUICKDouble) 0.5);
-                            if (val4d < (QUICKDouble) 0.0) val4 = 0ull - val4;
-                            atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val4);
-                            //}
+                            temp = -0.5 * hybrid_coeff * DENSEKJ * Y;
+//                            if (abs(temp) > devSim_MP2.integralCutoff) {
+#  if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#  else
+                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#  endif
+//                            }
                         }
 
                         // ATOMIC ADD VALUE 5
-                        QUICKDouble val5d = hybrid_coeff * 0.5 * DENSELI * Y;
-                        //if (abs(val5d) > devSim_MP2.integralCutoff) {
-                        QUICKULL val5 = (QUICKULL) (fabs(val5d * OSCALE) + (QUICKDouble) 0.5);
-                        if (val5d < (QUICKDouble) 0.0) val5 = 0ull - val5;
-
+                        temp = -0.5 * hybrid_coeff * DENSELI * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
                         if ((III != JJJ && III < KKK)
                                 || (III == JJJ && III == KKK && III < LLL)
-                                || (III == KKK && III <  JJJ && JJJ < LLL)) {
-                            atomicAdd(&LOC2(devSim_MP2.oULL, MAX(JJJ,KKK) - 1, MIN(JJJ,KKK) - 1,
-                                        devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val5);
+                                || (III == KKK && III < JJJ && JJJ < LLL)) {
+                            o_JK_MM += temp;
                         }
 
                         // ATOMIC ADD VALUE 5 - 2
                         if (III != JJJ && JJJ == KKK) {
-                            atomicAdd(&LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
-                                        devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val5);
+                            o_JK += temp;
                         }
-                        //}
+//                        }
 
                         // ATOMIC ADD VALUE 6
-                        if (III != JJJ) {
-                            if (KKK != LLL) {
-                                QUICKDouble val6d = hybrid_coeff * 0.5 * DENSEKI * Y;
-                                //      if (abs(val6d) > devSim_MP2.integralCutoff) {
+                        if (III != JJJ && KKK != LLL) {
+                            temp = -0.5 * hybrid_coeff * DENSEKI * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+#if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
+                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                            atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
+                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#endif
 
-                                QUICKULL val6 = (QUICKULL) (fabs(val6d * OSCALE) + (QUICKDouble) 0.5);
-                                if (val6d < (QUICKDouble) 0.0)
-                                    val6 = 0ull - val6;
-
-                                atomicAdd(&LOC2(devSim_MP2.oULL, MAX(JJJ,LLL) - 1, MIN(JJJ,LLL) - 1,
-                                            devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val6);
-
-                                // ATOMIC ADD VALUE 6 - 2
-                                if (JJJ == LLL && III != KKK) {
-                                    atomicAdd(&LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
-                                                devSim_MP2.nbasis, devSim_MP2.nbasis), 0ull - val6);
-                                }
+                            // ATOMIC ADD VALUE 6 - 2
+                            if (JJJ == LLL && III != KKK) {
+#if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
+                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                                atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, JJJ - 1,
+                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#endif
                             }
-                            //}
+//                            }
                         }
                     }
-                    //}
                 }
+
+#if defined(USE_LEGACY_ATOMICS)
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, KKK - 1, III - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI, OSCALE);
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM, OSCALE);
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK, OSCALE);
+#else
+                atomicAdd(&LOC2(devSim_MP2.o, KKK - 1, III - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI);
+                atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM);
+                atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, KKK - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK);
+#endif
             }
+
+#if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, III - 1,
+                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI, OSCALE);
+#else
+            atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, III - 1,
+                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI);
+#endif
         }
     }
 }

@@ -96,8 +96,12 @@ void get_cew_accdens(_gpu_type gpu) {
 
         int Istart = (gpu -> gpu_xcq -> gatm -> _hostData[i]-1) * 3;
 
-        for(int j=0; j<3; j++)
-            gpu -> cew_grad->_hostData[Istart+j] += cewGrad[j];
+        for (int j = 0; j < 3; j++)
+#if defined(USE_LEGACY_ATOMICS)
+            gpu->grad->_hostData[Istart+j] += cewGrad[j];
+#else
+            gpu->cew_grad->_hostData[Istart+j] += cewGrad[j];
+#endif
     }
 
     delete gridpt;
@@ -138,7 +142,11 @@ __global__ void getcew_quad_kernel()
 
                     QUICKDouble _tmp = phi * phi2 * dfdr * weight;
 
+#if defined(USE_LEGACY_ATOMICS)
+                    GPUATOMICADD(&LOC2(devSim_dft.oULL, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp, OSCALE);
+#else
                     atomicAdd(&LOC2(devSim_dft.o, jbas, ibas, devSim_dft.nbasis, devSim_dft.nbasis), _tmp);
+#endif
                 }
             }
         }
@@ -154,13 +162,23 @@ __global__ void oshell_getcew_quad_grad_kernel()
 __global__ void cshell_getcew_quad_grad_kernel()
 #endif
 {
+#if defined(USE_LEGACY_ATOMICS)
     //declare smem grad vector
-    extern __shared__ QUICKDouble smem_buffer[];
-    QUICKDouble* smemGrad=(QUICKDouble*)smem_buffer;
+    extern __shared__ QUICKULL smem_buffer[];
+    QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
 
     // initialize smem grad
-    for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-        smemGrad[i]=0.0;
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+        smemGrad[i] = 0ull;
+#else
+    //declare smem grad vector
+    extern __shared__ QUICKDouble smem_buffer[];
+    QUICKDouble* smemGrad = (QUICKDouble*) smem_buffer;
+
+    // initialize smem grad
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+        smemGrad[i] = 0.0;
+#endif
 
     __syncthreads();
 
@@ -222,9 +240,9 @@ __global__ void cshell_getcew_quad_grad_kernel()
                         QUICKDouble Gradz = - 2.0 * denseij * weight * (dfdr * dphidz * phi2);
                         //printf("test quad grad %f %f %f %f %f %f %f %f %f %f\n", gridx, gridy, gridz, denseij, weight, dfdr, dphidx, dphidy, dphidz, phi2);
 
-                        atomicAdd(&smemGrad[Istart], Gradx);
-                        atomicAdd(&smemGrad[Istart+1], Grady);
-                        atomicAdd(&smemGrad[Istart+2], Gradz);
+                        GPUATOMICADD(&smemGrad[Istart], Gradx, GRADSCALE);
+                        GPUATOMICADD(&smemGrad[Istart + 1], Grady, GRADSCALE);
+                        GPUATOMICADD(&smemGrad[Istart + 2], Gradz, GRADSCALE);
                         sumGradx += Gradx;
                         sumGrady += Grady;
                         sumGradz += Gradz;
@@ -234,9 +252,9 @@ __global__ void cshell_getcew_quad_grad_kernel()
 
             int Istart = (devSim_dft.gatm[gid]-1)*3;
 
-            atomicAdd(&smemGrad[Istart], -sumGradx);
-            atomicAdd(&smemGrad[Istart+1], -sumGrady);
-            atomicAdd(&smemGrad[Istart+2], -sumGradz);
+            GPUATOMICADD(&smemGrad[Istart], -sumGradx, GRADSCALE);
+            GPUATOMICADD(&smemGrad[Istart + 1], -sumGrady, GRADSCALE);
+            GPUATOMICADD(&smemGrad[Istart + 2], -sumGradz, GRADSCALE);
         }
 
         //Set weights for sswder calculation
@@ -252,8 +270,12 @@ __global__ void cshell_getcew_quad_grad_kernel()
     __syncthreads();
 
     // update gmem grad vector
-    for(int i = threadIdx.x; i< devSim_dft.natom * 3; i+=blockDim.x)
-        atomicAdd(&devSim_dft.grad[i],smemGrad[i]);
+    for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)
+#if defined(USE_LEGACY_ATOMICS)
+        atomicAdd(&devSim_dft.gradULL[i], smemGrad[i]);
+#else
+        atomicAdd(&devSim_dft.grad[i], smemGrad[i]);
+#endif
 
     __syncthreads();
 }

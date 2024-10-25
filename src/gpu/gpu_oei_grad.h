@@ -154,23 +154,23 @@ __device__ void add_oei_grad(unsigned int I, unsigned int J, unsigned int II, un
     int BStart = (devSim.katom[JJ]-1) * 3;
     int CStart = iatom * 3;
 
-    atomicAdd(&devSim.grad[AStart], AGradx);
-    atomicAdd(&devSim.grad[AStart + 1], AGrady);
-    atomicAdd(&devSim.grad[AStart + 2], AGradz);
+    GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
 
-    atomicAdd(&devSim.grad[BStart], BGradx);
-    atomicAdd(&devSim.grad[BStart + 1], BGrady);
-    atomicAdd(&devSim.grad[BStart + 2], BGradz);
+    GPUATOMICADD(&devSim.gradULL[BStart], BGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 1], BGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 2], BGradz, GRADSCALE);
 
-    if(iatom < devSim.natom){
-        atomicAdd(&devSim.grad[CStart], (-AGradx-BGradx));
-        atomicAdd(&devSim.grad[CStart + 1], (-AGrady-BGrady));
-        atomicAdd(&devSim.grad[CStart + 2], (-AGradz-BGradz));
-    }else{
-        CStart = (iatom-devSim.natom) * 3;
-        atomicAdd(&devSim.ptchg_grad[CStart], (-AGradx-BGradx));
-        atomicAdd(&devSim.ptchg_grad[CStart + 1], (-AGrady-BGrady));
-        atomicAdd(&devSim.ptchg_grad[CStart + 2], (-AGradz-BGradz));
+    if (iatom < devSim.natom) {
+        GPUATOMICADD(&devSim.gradULL[CStart], -AGradx - BGradx, GRADSCALE);
+        GPUATOMICADD(&devSim.gradULL[CStart + 1], -AGrady - BGrady, GRADSCALE);
+        GPUATOMICADD(&devSim.gradULL[CStart + 2], -AGradz - BGradz, GRADSCALE);
+    } else {
+        CStart = (iatom - devSim.natom) * 3;
+        GPUATOMICADD(&devSim.ptchg_gradULL[CStart], -AGradx - BGradx, GRADSCALE);
+        GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 1], -AGrady - BGrady, GRADSCALE);
+        GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 2], -AGradz - BGradz, GRADSCALE);
     }
 }
 

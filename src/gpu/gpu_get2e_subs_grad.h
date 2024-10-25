@@ -822,21 +822,21 @@ __device__ __forceinline__ void iclass_grad_spd
         }
     }
 
-    atomicAdd(&devSim.grad[AStart], AGradx);
-    atomicAdd(&devSim.grad[AStart + 1], AGrady);
-    atomicAdd(&devSim.grad[AStart + 2], AGradz);
-
-    atomicAdd(&devSim.grad[BStart], BGradx);
-    atomicAdd(&devSim.grad[BStart + 1], BGrady);
-    atomicAdd(&devSim.grad[BStart + 2], BGradz);
-
-    atomicAdd(&devSim.grad[CStart], CGradx);
-    atomicAdd(&devSim.grad[CStart + 1], CGrady);
-    atomicAdd(&devSim.grad[CStart + 2], CGradz);
-
-    atomicAdd(&devSim.grad[DStart], (-AGradx - BGradx - CGradx));
-    atomicAdd(&devSim.grad[DStart + 1], (-AGrady-BGrady-CGrady));
-    atomicAdd(&devSim.grad[DStart + 2], (-AGradz-BGradz-CGradz));
+    GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[BStart], BGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 1], BGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 2], BGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[CStart], CGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[CStart + 1], CGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[CStart + 2], CGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[DStart], -AGradx - BGradx - CGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[DStart + 1], -AGrady - BGrady - CGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[DStart + 2], -AGradz - BGradz - CGradz, GRADSCALE);
 }
 
 
@@ -1557,21 +1557,21 @@ __device__ __forceinline__ void iclass_grad_spdf8
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
 #endif
 
-    atomicAdd(&devSim.grad[AStart], AGradx);
-    atomicAdd(&devSim.grad[AStart + 1], AGrady);
-    atomicAdd(&devSim.grad[AStart + 2], AGradz);
-
-    atomicAdd(&devSim.grad[BStart], BGradx);
-    atomicAdd(&devSim.grad[BStart + 1], BGrady);
-    atomicAdd(&devSim.grad[BStart + 2], BGradz);
-
-    atomicAdd(&devSim.grad[CStart], CGradx);
-    atomicAdd(&devSim.grad[CStart + 1], CGrady);
-    atomicAdd(&devSim.grad[CStart + 2], CGradz);
-
-    atomicAdd(&devSim.grad[DStart], (-AGradx - BGradx - CGradx));
-    atomicAdd(&devSim.grad[DStart + 1], (-AGrady - BGrady - CGrady));
-    atomicAdd(&devSim.grad[DStart + 2], (-AGradz - BGradz - CGradz));
+    GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[BStart], BGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 1], BGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[BStart + 2], BGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[CStart], CGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[CStart + 1], CGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[CStart + 2], CGradz, GRADSCALE);
+    
+    GPUATOMICADD(&devSim.gradULL[DStart], -AGradx - BGradx - CGradx, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[DStart + 1], -AGrady - BGrady - CGrady, GRADSCALE);
+    GPUATOMICADD(&devSim.gradULL[DStart + 2], -AGradz - BGradz - CGradz, GRADSCALE);
 }
 #endif
 

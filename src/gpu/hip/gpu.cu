@@ -57,7 +57,7 @@ extern "C" void gpu_startup_(int* ierr)
 #if defined DEBUG || defined DEBUGTIME
     gpu->debugFile = debugFile;
 #endif
-    PRINTDEBUG("CREATE NEW GPU")
+    PRINTDEBUG("CREATE NEW GPU");
 }
 
 
@@ -66,7 +66,7 @@ extern "C" void gpu_startup_(int* ierr)
 //-----------------------------------------------
 extern "C" void gpu_init_(int* ierr)
 {
-    PRINTDEBUG("BEGIN TO INIT")
+    PRINTDEBUG("BEGIN TO INIT");
     int device = -1;
     int gpuCount = 0;
     hipError_t status;
@@ -185,7 +185,7 @@ extern "C" void gpu_init_(int* ierr)
         gpu->sswGradThreadsPerBlock = SM_2X_SSW_GRAD_THREADS_PER_BLOCK;
     }
 
-    PRINTDEBUG("FINISH INIT")
+    PRINTDEBUG("FINISH INIT");
 }
 
 
@@ -288,7 +288,7 @@ extern "C" void gpu_deallocate_scratch_(bool* deallocate_gradient_scratch)
 //-----------------------------------------------
 extern "C" void gpu_shutdown_(int* ierr)
 {
-    PRINTDEBUG("BEGIN TO SHUTDOWN")
+    PRINTDEBUG("BEGIN TO SHUTDOWN");
 
     delete gpu;
     hipDeviceReset( );
@@ -313,7 +313,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     hipEventCreate(&start);
     hipEventCreate(&end);
     hipEventRecord(start, 0);
-    PRINTDEBUG("BEGIN TO SETUP")
+    PRINTDEBUG("BEGIN TO SETUP");
 
   #if defined(MPIV_GPU)
     fprintf(gpu->debugFile,"mpirank %i natoms %i \n", gpu->mpirank, *natom );
@@ -356,7 +356,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     hipEventDestroy(start);
     hipEventDestroy(end);
 
-    PRINTDEBUG("FINISH SETUP")
+    PRINTDEBUG("FINISH SETUP");
 #endif
 
 
@@ -431,7 +431,7 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD COORDINATES")
+    PRINTDEBUG("BEGIN TO UPLOAD COORDINATES");
 //    gpu->gpu_basis->xyz = new gpu_buffer_type<QUICKDouble>(atom_xyz, 3, gpu->natom);
 //    gpu->gpu_basis->xyz->Upload( );
     gpu->gpu_calculated->distance = new gpu_buffer_type<QUICKDouble>(gpu->natom, gpu->natom);
@@ -465,7 +465,7 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING COORDINATES")
+    PRINTDEBUG("COMPLETE UPLOADING COORDINATES");
 }
 
 
@@ -474,7 +474,7 @@ extern "C" void gpu_upload_xyz_(QUICKDouble* atom_xyz)
 //-----------------------------------------------
 extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
 {
-    PRINTDEBUG("BEGIN TO UPLOAD ATOM AND CHARGE")
+    PRINTDEBUG("BEGIN TO UPLOAD ATOM AND CHARGE");
 
     gpu->iattype = new gpu_buffer_type<int>(atom, gpu->natom);
     gpu->chg = new gpu_buffer_type<QUICKDouble>(atom_chg, gpu->natom);
@@ -484,7 +484,7 @@ extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg)
     gpu->gpu_sim.chg = gpu->chg->_devData;
     gpu->gpu_sim.iattype = gpu->iattype->_devData;
 
-    PRINTDEBUG("COMPLETE UPLOADING ATOM AND CHARGE")
+    PRINTDEBUG("COMPLETE UPLOADING ATOM AND CHARGE");
 }
 
 
@@ -502,7 +502,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD CUTOFF")
+    PRINTDEBUG("BEGIN TO UPLOAD CUTOFF");
 
     gpu->gpu_cutoff->integralCutoff = *integralCutoff;
     gpu->gpu_cutoff->coreIntegralCutoff = *coreIntegralCutoff;
@@ -529,7 +529,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING CUTOFF")
+    PRINTDEBUG("COMPLETE UPLOADING CUTOFF");
 }
 
 
@@ -546,7 +546,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD CUTOFF")
+    PRINTDEBUG("BEGIN TO UPLOAD CUTOFF");
 
     gpu->gpu_cutoff->natom = gpu->natom;
     gpu->gpu_cutoff->YCutoff = new gpu_buffer_type<QUICKDouble>(YCutoff, gpu->nshell, gpu->nshell);
@@ -613,7 +613,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                             }
                         }
 
-                        PRINTDEBUG("FINISH STEP 2")
+                        PRINTDEBUG("FINISH STEP 2");
                             flag = true;
                         for (int i = 0; i < b - 1; i ++)
                         {
@@ -649,7 +649,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                                 break;
                         }
                         flag = true;
-                        PRINTDEBUG("FINISH STEP 3")
+                        PRINTDEBUG("FINISH STEP 3");
 
                             if (b != 0) {
 
@@ -702,7 +702,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                                 }
                             }
 
-                            PRINTDEBUG("FINISH STEP 1")
+                            PRINTDEBUG("FINISH STEP 1");
 #ifdef DEBUG
                                 fprintf(gpu->debugFile,"a=%i b=%i\n", a, b);
 #endif
@@ -731,7 +731,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                                 if (flag == true)
                                     break;
                             }
-                            PRINTDEBUG("FINISH STEP 2")
+                            PRINTDEBUG("FINISH STEP 2");
                                 flag = true;
                             for (int i = 0; i < b - 1; i ++)
                             {
@@ -786,7 +786,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                                 }
                             }
 
-                            PRINTDEBUG("FINISH STEP 3")
+                            PRINTDEBUG("FINISH STEP 3");
                         }
                     }
                 }
@@ -806,7 +806,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
             //  }
             /*
-               PRINTDEBUG("WORKING on F Orbital")
+               PRINTDEBUG("WORKING on F Orbital");
 
                gpu->gpu_basis->fStart = a;
                gpu->gpu_sim.fStart = a;
@@ -844,7 +844,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
             }
             }
 
-            PRINTDEBUG("FINISH STEP 1")
+            PRINTDEBUG("FINISH STEP 1");
             printf("a=%i b=%i\n", a, b);
             for (int i = 0; i < b - 1; i ++)
             {
@@ -872,7 +872,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
             break;
             }
 
-            PRINTDEBUG("FINISH STEP 2")
+            PRINTDEBUG("FINISH STEP 2");
             flag = true;
 
             for (int i = 0; i < b - 1; i ++)
@@ -910,7 +910,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
             }
 
             flag = true;
-            PRINTDEBUG("FINISH STEP 3")
+            PRINTDEBUG("FINISH STEP 3");
 
     }
     }
@@ -996,7 +996,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                     }
 
 
-                    PRINTDEBUG("FINISH STEP 1")
+                    PRINTDEBUG("FINISH STEP 1");
 #ifdef DEBUG
                         fprintf(gpu->debugFile,"a=%i b=%i\n", a, b);
 #endif
@@ -1026,7 +1026,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                             break;
                     }
 
-                    PRINTDEBUG("FINISH STEP 2")
+                    PRINTDEBUG("FINISH STEP 2");
                         flag = true;
 
                     for (int i = 0; i < b - 1; i ++)
@@ -1064,7 +1064,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
                     }
 
                     flag = true;
-                    PRINTDEBUG("FINISH STEP 3")
+                    PRINTDEBUG("FINISH STEP 3");
                 }
             }
         }
@@ -1182,7 +1182,7 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING CUTOFF")
+    PRINTDEBUG("COMPLETE UPLOADING CUTOFF");
 
 }
 
@@ -1369,10 +1369,20 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD O MATRIX")
+    PRINTDEBUG("BEGIN TO UPLOAD O MATRIX");
 
     gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
+    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
+
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->o->DeleteGPU();
+    gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+    gpu->gpu_calculated->oULL->Upload();
+    gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
+#else
+    gpu->gpu_calculated->o->Upload();
+    gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
+#endif
 
     gpu->gpu_calculated->o->Upload();
     gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
@@ -1391,7 +1401,7 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING O MATRIX")
+    PRINTDEBUG("COMPLETE UPLOADING O MATRIX");
 }
 
 
@@ -1407,12 +1417,19 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX")
+    PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX");
 
     gpu->gpu_calculated->ob = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->ob->DeleteGPU();
+    gpu->gpu_calculated->obULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+    gpu->gpu_calculated->obULL->Upload();
+    gpu->gpu_sim.obULL = gpu->gpu_calculated->obULL->_devData;
+#else
     gpu->gpu_calculated->ob->Upload();
     gpu->gpu_sim.ob = gpu->gpu_calculated->ob->_devData;
+#endif
 
     gpu_upload_beta_density_matrix_(denseb);
 
@@ -1426,7 +1443,7 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING BETA O MATRIX")
+    PRINTDEBUG("COMPLETE UPLOADING BETA O MATRIX");
 
 }
 
@@ -1466,7 +1483,7 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD BASIS")
+    PRINTDEBUG("BEGIN TO UPLOAD BASIS");
 
     gpu->gpu_basis->nshell          =   *nshell;
     gpu->gpu_basis->nprim           =   *nprim;
@@ -1808,7 +1825,7 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING BASIS")
+    PRINTDEBUG("COMPLETE UPLOADING BASIS");
 }
 
 
@@ -1821,12 +1838,18 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO UPLOAD GRAD")
+    PRINTDEBUG("BEGIN TO UPLOAD GRAD");
 
     gpu->grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->natom);
 
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu->natom);
+    gpu->gpu_sim.gradULL = gpu->gradULL->_devData;
+    gpu->gradULL->Upload();
+#endif
+
     //gpu->grad->DeleteGPU();
-    gpu->gpu_sim.grad =  gpu->grad->_devData;
+    gpu->gpu_sim.grad = gpu->grad->_devData;
     gpu->grad->Upload();
 
 
@@ -1843,7 +1866,7 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING GRAD")
+    PRINTDEBUG("COMPLETE UPLOADING GRAD");
 }
 
 
@@ -1905,9 +1928,9 @@ extern "C" void gpu_upload_cew_vrecip_(int *ierr)
 //Computes grid weights before grid point packing
 extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *wtang, QUICKDouble *rwt, QUICKDouble *rad3, QUICKDouble *sswt, QUICKDouble *weight, int *gatm, int *count){
 
-    PRINTDEBUG("BEGIN TO COMPUTE SSW")
+    PRINTDEBUG("BEGIN TO COMPUTE SSW");
 
-        gpu->gpu_xcq->npoints       = *count;
+    gpu->gpu_xcq->npoints       = *count;
     gpu->xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
 
     gpu->gpu_xcq->gridx = new gpu_buffer_type<QUICKDouble>(gridx, gpu->gpu_xcq->npoints);
@@ -1963,14 +1986,14 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
     SAFE_DELETE(gpu->gpu_xcq->sswt);
     SAFE_DELETE(gpu->gpu_xcq->weight);
 
-    PRINTDEBUG("END COMPUTE SSW")
+    PRINTDEBUG("END COMPUTE SSW");
 
 }
 
 
 void prune_grid_sswgrad()
 {
-    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD")
+    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID FOR SSWGRAD");
 #ifdef MPIV_GPU
     hipEvent_t t_startp, t_endp;
     float t_timep;
@@ -2095,7 +2118,7 @@ void prune_grid_sswgrad()
 
     upload_sim_to_constant_dft(gpu);
 
-    PRINTDEBUG("COMPLETE UPLOADING DFT GRID FOR SSWGRAD")
+    PRINTDEBUG("COMPLETE UPLOADING DFT GRID FOR SSWGRAD");
 
     //Clean up temporary arrays
     free(tmp_gridx);
@@ -2121,7 +2144,7 @@ void prune_grid_sswgrad()
 void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gridz, QUICKDouble *sigrad2, unsigned char *gpweight,
         unsigned int *cfweight, unsigned int *pfweight, int *bin_locator, int count, double DMCutoff, double XCCutoff, int nbins)
 {
-    PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ")
+    PRINTDEBUG("BEGIN TO OBTAIN PRIMITIVE & BASIS FUNCTION LISTS ");
 
     gpu->gpu_xcq->npoints       = count;
     gpu->xc_threadsPerBlock       = SM_2X_XCGRAD_THREADS_PER_BLOCK;
@@ -2229,14 +2252,14 @@ void gpu_get_octree_info(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble *gr
     hipFree(d_cfweight);
     hipFree(d_pfweight);
 
-    PRINTDEBUG("PRIMITIVE & BASIS FUNCTION LISTS OBTAINED")
+    PRINTDEBUG("PRIMITIVE & BASIS FUNCTION LISTS OBTAINED");
 }
 
 
 #ifdef DEBUG
 void print_uploaded_dft_info()
 {
-    PRINTDEBUG("PRINTING UPLOADED DFT DATA")
+    PRINTDEBUG("PRINTING UPLOADED DFT DATA");
 
     fprintf(gpu->debugFile,"Number of grid points: %i \n", gpu->gpu_xcq->npoints);
     fprintf(gpu->debugFile,"Bin size: %i \n", gpu->gpu_xcq->bin_size);
@@ -2244,7 +2267,7 @@ void print_uploaded_dft_info()
     fprintf(gpu->debugFile,"Number of total basis functions: %i \n", gpu->gpu_xcq->ntotbf);
     fprintf(gpu->debugFile,"Number of total primitive functions: %i \n", gpu->gpu_xcq->ntotpf);
 
-    PRINTDEBUG("GRID POINTS & WEIGHTS")
+    PRINTDEBUG("GRID POINTS & WEIGHTS");
 
     for(int i=0; i<gpu->gpu_xcq->npoints; i++){
         fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight_ssd=%i \n",i,
@@ -2253,7 +2276,7 @@ void print_uploaded_dft_info()
                 gpu->gpu_xcq->dweight_ssd->_hostData[i]);
     }
 
-    PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS")
+    PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS");
 
     for(int bin_id=0; bin_id<gpu->gpu_xcq->nbins; bin_id++){
 
@@ -2270,7 +2293,7 @@ void print_uploaded_dft_info()
 
     }
 
-    PRINTDEBUG("RADIUS OF SIGNIFICANCE")
+    PRINTDEBUG("RADIUS OF SIGNIFICANCE");
 
     for(int i=0; i<gpu->nbasis; i++){
         fprintf(gpu->debugFile,"ibas=%i sigrad2=%f \n", i, gpu->gpu_basis->sigrad2->_hostData[i]);
@@ -2284,7 +2307,7 @@ void print_uploaded_dft_info()
         }
     }
 
-    PRINTDEBUG("END PRINTING UPLOADED DFT DATA")
+    PRINTDEBUG("END PRINTING UPLOADED DFT DATA");
 }
 #endif
 
@@ -2294,7 +2317,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
         *bin_counter,int *gridb_count, int *nbins, int *nbtotbf, int *nbtotpf, int *isg, QUICKDouble *sigrad2, QUICKDouble *DMCutoff,
         QUICKDouble *XCCutoff){
 
-    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
+    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID");
 
     gpu->gpu_xcq->npoints       = *gridb_count;
     gpu->gpu_xcq->nbins         = *nbins;
@@ -2419,7 +2442,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
     print_uploaded_dft_info();
 #endif
 
-    PRINTDEBUG("COMPLETE UPLOADING DFT GRID")
+    PRINTDEBUG("COMPLETE UPLOADING DFT GRID");
 
 //    int nblocks = (int) ((*gridb_count / SM_2X_XC_THREADS_PER_BLOCK) + 1);
 //    test_xc_upload <<<nblocks, SM_2X_XC_THREADS_PER_BLOCK>>>( );
@@ -2432,7 +2455,7 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
 //-----------------------------------------------
 extern "C" void gpu_reupload_dft_grid_()
 {
-    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID")
+    PRINTDEBUG("BEGIN TO UPLOAD DFT GRID");
 
     gpu->gpu_xcq->gridx->ReallocateGPU();
     gpu->gpu_xcq->gridy->ReallocateGPU();
@@ -2506,7 +2529,7 @@ extern "C" void gpu_reupload_dft_grid_()
 
     reupload_pteval( );
 
-    PRINTDEBUG("COMPLETE UPLOADING DFT GRID")
+    PRINTDEBUG("COMPLETE UPLOADING DFT GRID");
 }
 
 
@@ -2515,7 +2538,7 @@ extern "C" void gpu_reupload_dft_grid_()
 //-----------------------------------------------
 extern "C" void gpu_delete_dft_dev_grid_()
 {
-    PRINTDEBUG("DEALLOCATING DFT GRID")
+    PRINTDEBUG("DEALLOCATING DFT GRID");
 
     gpu->gpu_xcq->gridx->DeleteGPU();
     gpu->gpu_xcq->gridy->DeleteGPU();
@@ -2542,13 +2565,13 @@ extern "C" void gpu_delete_dft_dev_grid_()
 
     delete_pteval(true);
 
-    PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
+    PRINTDEBUG("FINISHED DEALLOCATING DFT GRID");
 }
 
 
 extern "C" void gpu_delete_dft_grid_()
 {
-    PRINTDEBUG("DEALLOCATING DFT GRID")
+    PRINTDEBUG("DEALLOCATING DFT GRID");
 
     SAFE_DELETE(gpu->gpu_xcq->gridx);
     SAFE_DELETE(gpu->gpu_xcq->gridy);
@@ -2578,13 +2601,13 @@ extern "C" void gpu_delete_dft_grid_()
     SAFE_DELETE(gpu->gpu_xcq->mpi_bxccompute);
 #endif
     delete_pteval(false);
-    PRINTDEBUG("FINISHED DEALLOCATING DFT GRID")
+    PRINTDEBUG("FINISHED DEALLOCATING DFT GRID");
 }
 
 
 void gpu_delete_sswgrad_vars()
 {
-    PRINTDEBUG("DEALLOCATING SSWGRAD VARIABLES")
+    PRINTDEBUG("DEALLOCATING SSWGRAD VARIABLES");
 
     SAFE_DELETE(gpu->gpu_xcq->gridx_ssd);
     SAFE_DELETE(gpu->gpu_xcq->gridy_ssd);
@@ -2597,7 +2620,7 @@ void gpu_delete_sswgrad_vars()
     SAFE_DELETE(gpu->gpu_xcq->mpi_bxccompute);
 #endif
 
-    PRINTDEBUG("FINISHED DEALLOCATING SSWGRAD VARIABLES")
+    PRINTDEBUG("FINISHED DEALLOCATING SSWGRAD VARIABLES");
 }
 
 
@@ -2658,7 +2681,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     hipEventRecord(start, 0);
 #endif
 
-    PRINTDEBUG("BEGIN TO RUN ADD INT")
+    PRINTDEBUG("BEGIN TO RUN ADD INT");
 
     FILE *intFile;
     int aBuffer[BUFFERSIZE], bBuffer[BUFFERSIZE];
@@ -2687,7 +2710,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
         hipStreamCreate( &stream[i] );
     }
 
-    PRINTDEBUG("BEGIN TO RUN KERNEL")
+    PRINTDEBUG("BEGIN TO RUN KERNEL");
 
     upload_sim_to_constant(gpu);
 
@@ -2844,16 +2867,36 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
         delete gpu->aoint_buffer[i];
     }
 
-    PRINTDEBUG("COMPLETE KERNEL")
+    PRINTDEBUG("COMPLETE KERNEL");
 
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL->Download();
+    
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
+            QUICKDouble valDB;
+            
+            if (valULL >= 0x8000000000000000ull) {
+                valDB  = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
+            }
+            else {
+                valDB  = (QUICKDouble) valULL;
+            }
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+        }
+    }
+#else
     gpu->gpu_calculated->o->Download();
 
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            LOC2(gpu->gpu_calculated->o->_hostData,i,j,gpu->nbasis, gpu->nbasis)
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
                 = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
         }
     }
+#endif
     gpu->gpu_calculated->o->Download(o);
 
 #ifdef DEBUG
@@ -2866,7 +2909,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     hipEventDestroy(end);
 #endif
 
-    PRINTDEBUG("DELETE TEMP VARIABLES")
+    PRINTDEBUG("DELETE TEMP VARIABLES");
 
     delete gpu->gpu_calculated->o;
     delete gpu->gpu_calculated->dense;
@@ -2874,8 +2917,11 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
+#if defined(USE_LEGACY_ATOMICS)
+    delete gpu->gpu_calculated->oULL;
+#endif    
 
-    PRINTDEBUG("COMPLETE RUNNING ADDINT")
+    PRINTDEBUG("COMPLETE RUNNING ADDINT");
 }
 #endif
 
@@ -2896,7 +2942,7 @@ char *trim(char *s)
 #ifdef COMPILE_GPU_AOINT
 extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxIntegralCutoff, int* intNum, char* intFileName)
 {
-    PRINTDEBUG("BEGIN TO RUN AOINT")
+    PRINTDEBUG("BEGIN TO RUN AOINT");
 
     ERI_entry a;
     FILE *intFile;
@@ -3115,7 +3161,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #ifdef DEBUG
     fprintf(gpu->debugFile," TOTAL INT = %i \n", *intNum);
 #endif
-    PRINTDEBUG("END TO RUN AOINT KERNEL")
+    PRINTDEBUG("END TO RUN AOINT KERNEL");
 
 #ifdef DEBUG
     clock_t end_cpu = clock();

@@ -204,7 +204,11 @@ static FILE *debugFile = NULL;
 //typedef float  QUICKDouble;
 typedef float QUICKSingle;
 #define QUICKULL unsigned long long int
-#define QUICKAtomicType double
+#if defined(USE_LEGACY_ATOMICS)
+  #define QUICKAtomicType unsigned long long int
+#else
+  #define QUICKAtomicType double
+#endif
 
 
 /* SM Version enum */
@@ -232,12 +236,18 @@ struct ERI_entry {
 };
 
 
-//TODO: rewrite MP2 code and remove this constant
-/* energy scaling constants */
-#define OSCALE ((QUICKDouble) 1.0e12)
+#if defined(USE_LEGACY_ATOMICS)
+  /* powers in the following constants represent the number of digits
+   * to keep in the mantissa (fractional part) when converting floating point values
+   * to/from integer values for use in GPU integer atomic operations */
 
-
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
+  /* keep 12 digits in the mantissa (fractional part) for energy-related calculations */
+  #define OSCALE (1.0e12)
+  #define ONEOVEROSCALE (1.0e-12)
+  /* keep 16 digits in the mantissa (fractional part) for gradient-related calculations */
+  #define GRADSCALE (1.0e16)
+  #define ONEOVERGRADSCALE (1.0e-16)
+#elif defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
 __device__ static inline double atomicAdd( double * address, double val )
 {
     unsigned long long int *address_as_ull, old, assumed;
@@ -255,6 +265,18 @@ __device__ static inline double atomicAdd( double * address, double val )
 
     return __longlong_as_double( old );
 }
+#endif
+
+#if defined(USE_LEGACY_ATOMICS)
+  #define GPUATOMICADD(address, val, scale) \
+{ \
+    QUICKULL temp_ULL = (QUICKULL) (fabs((val) * (scale)) + 0.5); \
+    if ((val) < 0.0) \
+        temp_ULL = 0ull - temp_ULL; \
+    atomicAdd((address), temp_ULL); \
+}
+#else
+  #define GPUATOMICADD(address, val, scale) atomicAdd((address), (val));
 #endif
 
 

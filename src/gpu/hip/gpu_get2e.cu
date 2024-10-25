@@ -803,7 +803,152 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) getAddInt_kerne
 //                    } else if( devSim.method == LIBXC) {
 //			hybrid_coeff = devSim.hyb_coeff;			
 //		    }
-                    addint(devSim.o, a[k].value, III, JJJ, KKK, LLL, devSim.hyb_coeff, devSim.dense, devSim.nbasis);
+
+#if defined(OSHELL)
+                    QUICKDouble DENSELK = (QUICKDouble) (LOC2(devSim.dense, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis)
+                            + LOC2(devSim.denseb, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis));
+                    QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis)
+                            + LOC2(devSim.denseb, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis));
+
+                    QUICKDouble DENSEKIA = (QUICKDouble) LOC2(devSim.dense, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSEKJA = (QUICKDouble) LOC2(devSim.dense, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELJA = (QUICKDouble) LOC2(devSim.dense, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELIA = (QUICKDouble) LOC2(devSim.dense, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+
+                    QUICKDouble DENSEKIB = (QUICKDouble) LOC2(devSim.denseb, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSEKJB = (QUICKDouble) LOC2(devSim.denseb, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELJB = (QUICKDouble) LOC2(devSim.denseb, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELIB = (QUICKDouble) LOC2(devSim.denseb, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+#else
+                    QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim.dense, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim.dense, KKK - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim.dense, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim.dense, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim.dense, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis);
+                    QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis);
+#endif
+
+                    // ATOMIC ADD VALUE 1
+                    temp = (KKK == LLL) ? DENSELK * a[k].value : 2.0 * DENSELK * a[k].value;
+                    o_JI += temp;
+#if defined(OSHELL)
+                    ob_JI += temp;
+#endif
+
+                    // ATOMIC ADD VALUE 2
+                    if (LLL != JJJ || III != KKK) {
+                        temp = (III == JJJ) ? DENSEJI * a[k].value : 2.0 * DENSEJI * a[k].value;
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
+#if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.ob, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
+#endif
+                    }
+
+                    // ATOMIC ADD VALUE 3
+#if defined(OSHELL)
+                    temp = (III == KKK && III < JJJ && JJJ < LLL)
+                        ? -2.0 * devSim.hyb_coeff * DENSELJA * a[k].value : -(devSim.hyb_coeff * DENSELJA * a[k].value);
+                    temp2 = (III == KKK && III < JJJ && JJJ < LLL)
+                        ? -2.0 * devSim.hyb_coeff * DENSELJB * a[k].value : -(devSim.hyb_coeff * DENSELJB * a[k].value);
+                    o_KI += temp;
+                    ob_KI += temp2;
+#else
+                    temp = (III == KKK && III < JJJ && JJJ < LLL)
+                        ? -(devSim.hyb_coeff * DENSELJ * a[k].value) : -0.5 * devSim.hyb_coeff * DENSELJ * a[k].value;
+                    o_KI += temp;
+#endif
+
+                    // ATOMIC ADD VALUE 4
+                    if (KKK != LLL) {
+#if defined(OSHELL)
+                        temp = -(devSim.hyb_coeff * DENSEKJA * a[k].value);
+                        temp2 = -(devSim.hyb_coeff * DENSEKJB * a[k].value);
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+                        GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                        atomicAdd(&LOC2(devSim.ob, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
+#else
+                        temp = -0.5 * devSim.hyb_coeff * DENSEKJ * a[k].value;
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
+#endif
+                    }
+
+                    // ATOMIC ADD VALUE 5
+#if defined(OSHELL)
+                    temp = -(devSim.hyb_coeff * DENSELIA * a[k].value);
+                    temp2 = -(devSim.hyb_coeff * DENSELIB * a[k].value);
+#else
+                    temp = -0.5 * devSim.hyb_coeff * DENSELI * a[k].value;
+#endif
+                    if ((III != JJJ && III < KKK)
+                            || (III == JJJ && III == KKK && III < LLL)
+                            || (III == KKK && III < JJJ && JJJ < LLL)) {
+                        o_JK_MM += temp;
+#if defined(OSHELL)
+                        ob_JK_MM += temp2;
+#endif
+                    }
+
+                    // ATOMIC ADD VALUE 5 - 2
+                    if (III != JJJ && JJJ == KKK) {
+                        o_JK += temp;
+#if defined(OSHELL)
+                        ob_JK += temp2;
+#endif
+                    }
+
+                    // ATOMIC ADD VALUE 6
+                    if (III != JJJ && KKK != LLL) {
+#if defined(OSHELL)
+                        temp = -(devSim.hyb_coeff * DENSEKIA * a[k].value);
+                        temp2 = -(devSim.hyb_coeff * DENSEKIB * a[k].value);
+#else
+                        temp = -0.5 * devSim.hyb_coeff * DENSEKI * a[k].value;
+#endif
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
+#if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                        GPUATOMICADD(&LOC2(devSim.obULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
+                        atomicAdd(&LOC2(devSim.ob, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
+#endif
+
+                        // ATOMIC ADD VALUE 6 - 2
+                        if (JJJ == LLL && III != KKK) {
+#  if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
+                            atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
+#if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
+                            atomicAdd(&LOC2(devSim.ob, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
+#endif
+                        }
+                    }
                 }
             }
 

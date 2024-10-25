@@ -893,9 +893,17 @@ __device__ __forceinline__ void iclass_spdf10
                             // ATOMIC ADD VALUE 2
                             if (LLL != JJJ || III != KKK) {
                                 temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
 #if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.ob, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
 #endif
                             }
 
@@ -918,11 +926,20 @@ __device__ __forceinline__ void iclass_spdf10
 #if defined(OSHELL)
                                 temp = -(devSim.hyb_coeff * DENSEKJA * Y);
                                 temp2 = -(devSim.hyb_coeff * DENSEKJB * Y);
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+                                GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
                                 atomicAdd(&LOC2(devSim.ob, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
 #else
                                 temp = -0.5 * devSim.hyb_coeff * DENSEKJ * Y;
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
 #endif
                             }
 
@@ -958,16 +975,32 @@ __device__ __forceinline__ void iclass_spdf10
 #else
                                 temp = -0.5 * devSim.hyb_coeff * DENSEKI * Y;
 #endif
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
 #if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim.obULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
                                 atomicAdd(&LOC2(devSim.ob, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
 #endif
 
                                 // ATOMIC ADD VALUE 6 - 2
                                 if (JJJ == LLL && III != KKK) {
+#  if defined(USE_LEGACY_ATOMICS)
+                                    GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
+#  else
                                     atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+#  endif
 #if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                                    GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
+#  else
                                     atomicAdd(&LOC2(devSim.ob, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp2);
+#  endif
 #endif
                                 }
                             }
@@ -975,19 +1008,39 @@ __device__ __forceinline__ void iclass_spdf10
                     }
                 }
 
+#  if defined(USE_LEGACY_ATOMICS)
+                GPUATOMICADD(&LOC2(devSim.oULL, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), o_KI, OSCALE);
+                GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM, OSCALE);
+                GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK, OSCALE);
+#  else
                 atomicAdd(&LOC2(devSim.o, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), o_KI);
                 atomicAdd(&LOC2(devSim.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM);
                 atomicAdd(&LOC2(devSim.o, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK);
+#  endif
 #if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+                GPUATOMICADD(&LOC2(devSim.obULL, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), ob_KI, OSCALE);
+                GPUATOMICADD(&LOC2(devSim.obULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), ob_JK_MM, OSCALE);
+                GPUATOMICADD(&LOC2(devSim.obULL, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), ob_JK, OSCALE);
+#  else
                 atomicAdd(&LOC2(devSim.ob, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), ob_KI);
                 atomicAdd(&LOC2(devSim.ob, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), ob_JK_MM);
                 atomicAdd(&LOC2(devSim.ob, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), ob_JK);
+#  endif
 #endif
             }
 
+#  if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI, OSCALE);
+#  else
             atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI);
+#  endif
 #if defined(OSHELL)
+#  if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&LOC2(devSim.obULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), ob_JI, OSCALE);
+#  else
             atomicAdd(&LOC2(devSim.ob, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), ob_JI);
+#  endif
 #endif
         }
     }

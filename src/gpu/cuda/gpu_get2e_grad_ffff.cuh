@@ -1615,26 +1615,21 @@ const smem_dbl_ptr, unsigned char** const smem_char_ptr, unsigned char* const sm
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, DEV_SIM_DBL_HYB_COEFF \n", __FILE__, __LINE__, __func__);
 #endif    
    
-    atomicAdd(&DEV_SIM_PTR_GRAD[AStart], AGradx);
-    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 1], AGrady);
-    atomicAdd(&DEV_SIM_PTR_GRAD[AStart + 2], AGradz);
-
-
-    atomicAdd(&DEV_SIM_PTR_GRAD[BStart], BGradx);
-    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 1], BGrady);
-    atomicAdd(&DEV_SIM_PTR_GRAD[BStart + 2], BGradz);
-
-
-    atomicAdd(&DEV_SIM_PTR_GRAD[CStart], CGradx);
-    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 1], CGrady);
-    atomicAdd(&DEV_SIM_PTR_GRAD[CStart + 2], CGradz);
-
-
-    atomicAdd(&DEV_SIM_PTR_GRAD[DStart], (-AGradx-BGradx-CGradx));
-    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 1], (-AGrady-BGrady-CGrady));
-    atomicAdd(&DEV_SIM_PTR_GRAD[DStart + 2], (-AGradz-BGradz-CGradz));   
-
-    return;
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[AStart], AGradx, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[AStart + 1], AGrady, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[AStart + 2], AGradz, GRADSCALE);
+    
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[BStart], BGradx, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[BStart + 1], BGrady, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[BStart + 2], BGradz, GRADSCALE);
+    
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[CStart], CGradx, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[CStart + 1], CGrady, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[CStart + 2], CGradz, GRADSCALE);
+    
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[DStart], -AGradx - BGradx - CGradx, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[DStart + 1], -AGrady - BGrady - CGrady, GRADSCALE);
+    GPUATOMICADD(&DEV_SIM_PTR_GRAD[DStart + 2], -AGradz - BGradz - CGradz, GRADSCALE);
 }
 
 

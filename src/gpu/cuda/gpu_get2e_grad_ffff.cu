@@ -311,7 +311,11 @@ void getGrad_ffff(_gpu_type gpu)
         int2_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.sorted_YCutoffIJ;
         char_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.mpi_bcompute;
         char_ptr_buffer[ERI_GRAD_FFFF_TPB*1+i] = gpu->gpu_sim.KLMN;
+#if defined(USE_LEGACY_ATOMICS)
+        grad_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.gradULL;
+#else
         grad_ptr_buffer[ERI_GRAD_FFFF_TPB*0+i] = gpu->gpu_sim.grad;
+#endif
     }
 
     LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;

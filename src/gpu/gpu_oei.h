@@ -171,7 +171,12 @@ __device__ __forceinline__ void iclass_oei(unsigned int I, unsigned int J, unsig
 //                        LOC2(devSim.KLMN, 2, JJJ - 1, 3,devSim.nbasis));
 //            }
 
+            // Now add the contribution into Fock matrix.
+#if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y, OSCALE);
+#else
             atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
+#endif
 
             //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM));
         }
