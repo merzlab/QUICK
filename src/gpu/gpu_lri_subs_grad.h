@@ -576,6 +576,7 @@ __device__ __forceinline__ void iclass_lri_grad_spdf2
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
 #endif
 
+#if defined(USE_LEGACY_ATOMICS)
     GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
@@ -594,6 +595,26 @@ __device__ __forceinline__ void iclass_lri_grad_spdf2
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 1], -AGrady - BGrady, GRADSCALE);
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 2], -AGradz - BGradz, GRADSCALE);
     }
+#else
+    atomicAdd(&devSim.grad[AStart], AGradx);
+    atomicAdd(&devSim.grad[AStart + 1], AGrady);
+    atomicAdd(&devSim.grad[AStart + 2], AGradz);
+
+    atomicAdd(&devSim.grad[BStart], BGradx);
+    atomicAdd(&devSim.grad[BStart + 1], BGrady);
+    atomicAdd(&devSim.grad[BStart + 2], BGradz);
+
+    if (iatom < devSim.natom) {
+        atomicAdd(&devSim.grad[CStart], -AGradx - BGradx);
+        atomicAdd(&devSim.grad[CStart + 1], -AGrady - BGrady);
+        atomicAdd(&devSim.grad[CStart + 2], -AGradz - BGradz);
+    } else {
+        CStart = (iatom - devSim.natom) * 3;
+        atomicAdd(&devSim.ptchg_grad[CStart], -AGradx - BGradx);
+        atomicAdd(&devSim.ptchg_grad[CStart + 1], -AGrady - BGrady);
+        atomicAdd(&devSim.ptchg_grad[CStart + 2], -AGradz - BGradz);
+    }
+#endif
 }
 
 

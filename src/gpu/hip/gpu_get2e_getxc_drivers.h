@@ -394,7 +394,7 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 
     delete gpu->grad;
-#ifdef USE_LEGACY_ATOMICS
+#if defined(USE_LEGACY_ATOMICS)
     delete gpu->gradULL;
 #endif
     delete gpu->gpu_calculated->dense;

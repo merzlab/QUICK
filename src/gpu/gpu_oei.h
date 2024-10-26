@@ -14,7 +14,7 @@
    ! This source file contains functions required for QUICK one electron !
    ! integral computation.                                               !
    !---------------------------------------------------------------------!
-   */
+*/
 
 #undef FMT_NAME
 #define FMT_NAME FmT
@@ -54,7 +54,7 @@ __device__ __forceinline__ void iclass_oei(unsigned int I, unsigned int J, unsig
        See J. Chem. Phys. 1986, 84, 3963−3974 for theoretical details.
     */
     for (int i = Sumindex[J]; i < Sumindex[J + 2]; ++i) {
-        for (int j = Sumindex[I]; j<Sumindex[I + 2]; ++j) {
+        for (int j = Sumindex[I]; j < Sumindex[I + 2]; ++j) {
             if (i < STOREDIM && j < STOREDIM) {
                 LOCSTORE(store, j, i, STOREDIM, STOREDIM) = 0.0;
             }

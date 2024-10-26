@@ -51,12 +51,55 @@ extern "C" void gpu_startup_(int* ierr)
 
     gpu = new gpu_type;
 
-    gpu->totalCPUMemory = 0;
-    gpu->totalGPUMemory = 0;
-
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
     gpu->debugFile = debugFile;
 #endif
+    gpu->totalCPUMemory = 0;
+    gpu->totalGPUMemory = 0;
+    gpu->gpu_dev_id = -1;
+    gpu->blocks = 0;
+    gpu->threadsPerBlock = 0;
+    gpu->twoEThreadsPerBlock = 0;
+    gpu->XCThreadsPerBlock = 0;
+    gpu->gradThreadsPerBlock = 0;
+    gpu->xc_blocks = 0;
+    gpu->xc_threadsPerBlock = 0;
+    gpu->sswGradThreadsPerBlock = 0;
+    gpu->mpirank = -1;
+    gpu->mpisize = 0;    
+    gpu->timer = NULL;
+    gpu->natom = 0;
+    gpu->nextatom = 0;
+    gpu->nbasis = 0;
+    gpu->nElec = 0;
+    gpu->imult = 0;
+    gpu->molchg = 0;
+    gpu->iAtomType = 0;
+    gpu->nshell = 0;
+    gpu->nprim = 0;
+    gpu->jshell = 0;
+    gpu->jbasis = 0;
+    gpu->maxL = 0;
+    gpu->iattype = NULL;
+    gpu->xyz = NULL;
+    gpu->allxyz = NULL;
+    gpu->chg = NULL;
+    gpu->allchg = NULL;
+    gpu->DFT_calculated = NULL;
+    gpu->grad = NULL;
+    gpu->ptchg_grad = NULL;
+    gpu->gradULL = NULL;
+    gpu->ptchg_gradULL = NULL;
+    gpu->cew_grad = NULL;
+    gpu->gpu_calculated = NULL;
+    gpu->gpu_basis = NULL;
+    gpu->gpu_cutoff = NULL;
+    gpu->gpu_xcq = NULL;
+    gpu->aoint_buffer = NULL;
+    gpu->intCount = NULL;
+    gpu->scratch = NULL;
+    gpu->lri_data = NULL;
+
     PRINTDEBUG("CREATE NEW GPU");
 }
 
@@ -234,17 +277,16 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch)
     gpu->scratch->store = new gpu_buffer_type<QUICKDouble>(store_size);
     gpu->scratch->store->DeleteCPU( );
 
+    gpu->scratch->store2 = new gpu_buffer_type<QUICKDouble>(store_size);
+    gpu->scratch->store2->DeleteCPU( );
+
     gpu->scratch->YVerticalTemp = new gpu_buffer_type<QUICKDouble>(
             gpu->blocks * gpu->twoEThreadsPerBlock * VDIM1 * VDIM2 * VDIM3);
     gpu->scratch->YVerticalTemp->DeleteCPU( );
 
     gpu->gpu_sim.store = gpu->scratch->store->_devData;
-    gpu->gpu_sim.YVerticalTemp = gpu->scratch->YVerticalTemp->_devData;
-
-    gpu->scratch->store2 = new gpu_buffer_type<QUICKDouble>(store_size);
-    gpu->scratch->store2->DeleteCPU( );
-
     gpu->gpu_sim.store2 = gpu->scratch->store2->_devData;
+    gpu->gpu_sim.YVerticalTemp = gpu->scratch->YVerticalTemp->_devData;
 
     if (*allocate_gradient_scratch) {
         gpu->scratch->storeAA = new gpu_buffer_type<QUICKDouble>(store_size);
@@ -259,10 +301,22 @@ extern "C" void gpu_allocate_scratch_(bool* allocate_gradient_scratch)
         gpu->gpu_sim.storeAA = gpu->scratch->storeAA->_devData;
         gpu->gpu_sim.storeBB = gpu->scratch->storeBB->_devData;
         gpu->gpu_sim.storeCC = gpu->scratch->storeCC->_devData;
+    } else {
+        gpu->scratch->storeAA = NULL;
+        gpu->scratch->storeBB = NULL;
+        gpu->scratch->storeCC = NULL;
+        gpu->gpu_sim.storeAA = NULL;
+        gpu->gpu_sim.storeBB = NULL;
+        gpu->gpu_sim.storeCC = NULL;
     }
 
     hipMemsetAsync(gpu->gpu_sim.store, 0, sizeof(QUICKDouble) * gpu->scratch->store->_length);
     hipMemsetAsync(gpu->gpu_sim.store2, 0, sizeof(QUICKDouble) * gpu->scratch->store2->_length);
+    if (*allocate_gradient_scratch) {
+        hipMemsetAsync(gpu->gpu_sim.storeAA, 0, sizeof(QUICKDouble) * gpu->scratch->storeAA->_length);
+        hipMemsetAsync(gpu->gpu_sim.storeBB, 0, sizeof(QUICKDouble) * gpu->scratch->storeBB->_length);
+        hipMemsetAsync(gpu->gpu_sim.storeCC, 0, sizeof(QUICKDouble) * gpu->scratch->storeCC->_length);
+    }
 }
 
 
@@ -307,7 +361,6 @@ extern "C" void gpu_shutdown_(int* ierr)
 extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int* molchg,
         int* iAtomType)
 {
-
 #if defined(DEBUG)
     hipEvent_t start,end;
     hipEventCreate(&start);
@@ -326,14 +379,84 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->imult = *imult;
     gpu->molchg = *molchg;
     gpu->iAtomType = *iAtomType;
+
     gpu->gpu_calculated = new gpu_calculated_type;
-    gpu->gpu_basis = new gpu_basis_type;
-    gpu->gpu_cutoff = new gpu_cutoff_type;
-    gpu->gpu_xcq = new XC_quadrature_type;
     gpu->gpu_calculated->natom = *natom;
-    gpu->gpu_basis->natom = *natom;
     gpu->gpu_calculated->nbasis = *nbasis;
+    gpu->gpu_calculated->o = NULL;
+    gpu->gpu_calculated->ob = NULL;
+    gpu->gpu_calculated->dense = NULL;
+    gpu->gpu_calculated->denseb = NULL;
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->oULL = NULL;
+    gpu->gpu_calculated->obULL = NULL;
+#endif
+    gpu->gpu_calculated->distance = NULL;
+
+    gpu->gpu_basis = new gpu_basis_type;
+    gpu->gpu_basis->natom = *natom;
     gpu->gpu_basis->nbasis = *nbasis;
+    gpu->gpu_basis->nshell = 0;
+    gpu->gpu_basis->nprim = 0;
+    gpu->gpu_basis->jshell = 0;
+    gpu->gpu_basis->jbasis = 0;
+    gpu->gpu_basis->Qshell = 0;
+    gpu->gpu_basis->maxcontract = 0;
+    gpu->gpu_basis->prim_total = 0;
+    gpu->gpu_basis->fStart = 0;
+    gpu->gpu_basis->ffStart = 0;
+    gpu->gpu_basis->ncontract = NULL;
+    gpu->gpu_basis->itype = NULL;
+    gpu->gpu_basis->aexp = NULL;
+    gpu->gpu_basis->dcoeff = NULL;
+    gpu->gpu_basis->ncenter = NULL;
+    gpu->gpu_basis->sigrad2 = NULL;
+    gpu->gpu_basis->kstart = NULL;
+    gpu->gpu_basis->katom  = NULL;
+    gpu->gpu_basis->kprim = NULL;
+    gpu->gpu_basis->Ksumtype = NULL;
+    gpu->gpu_basis->Qnumber = NULL;
+    gpu->gpu_basis->Qstart = NULL;
+    gpu->gpu_basis->Qfinal = NULL;
+    gpu->gpu_basis->Qsbasis = NULL;
+    gpu->gpu_basis->Qfbasis = NULL;
+    gpu->gpu_basis->sorted_Qnumber = NULL;
+    gpu->gpu_basis->sorted_Q = NULL;
+    gpu->gpu_basis->gccoeff = NULL;
+    gpu->gpu_basis->Xcoeff = NULL;
+    gpu->gpu_basis->Xcoeff_oei = NULL;
+    gpu->gpu_basis->expoSum = NULL;
+    gpu->gpu_basis->weightedCenterX = NULL;
+    gpu->gpu_basis->weightedCenterY = NULL;
+    gpu->gpu_basis->weightedCenterZ = NULL;
+    gpu->gpu_basis->cons = NULL;
+    gpu->gpu_basis->gcexpo = NULL;
+    gpu->gpu_basis->KLMN = NULL;
+    gpu->gpu_basis->Apri = NULL;
+    gpu->gpu_basis->Kpri = NULL;
+    gpu->gpu_basis->PpriX = NULL;
+    gpu->gpu_basis->PpriY = NULL;
+    gpu->gpu_basis->PpriZ = NULL;
+    gpu->gpu_basis->prim_start = NULL;
+    gpu->gpu_basis->mpi_bcompute = NULL;
+    gpu->gpu_basis->mpi_boeicompute = NULL;
+
+    gpu->gpu_cutoff = new gpu_cutoff_type;
+    gpu->gpu_cutoff->natom = 0;
+    gpu->gpu_cutoff->nbasis = 0;
+    gpu->gpu_cutoff->nshell = 0;
+    gpu->gpu_cutoff->sqrQshell = 0;
+    gpu->gpu_cutoff->sorted_YCutoffIJ = NULL;
+    gpu->gpu_cutoff->cutMatrix = NULL;
+    gpu->gpu_cutoff->YCutoff = NULL;
+    gpu->gpu_cutoff->cutPrim = NULL;
+    gpu->gpu_cutoff->integralCutoff = 0.0;
+    gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
+    gpu->gpu_cutoff->primLimit = 0.0;
+    gpu->gpu_cutoff->DMCutoff = 0.0;
+    gpu->gpu_cutoff->XCCutoff = 0.0;
+    gpu->gpu_cutoff->gradCutoff = 0.0;
+    gpu->gpu_cutoff->sorted_OEICutoffIJ = NULL;
 
     gpu->gpu_sim.natom = *natom;
     gpu->gpu_sim.nbasis = *nbasis;
@@ -342,6 +465,57 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_sim.molchg = *molchg;
     gpu->gpu_sim.iAtomType = *iAtomType;
     gpu->gpu_sim.use_cew = false;
+
+    gpu->gpu_xcq = new XC_quadrature_type;
+    gpu->gpu_xcq->npoints = 0;
+    gpu->gpu_xcq->nbins = 0;
+    gpu->gpu_xcq->ntotbf = 0;
+    gpu->gpu_xcq->ntotpf = 0;
+    gpu->gpu_xcq->bin_size = 0;
+    gpu->gpu_xcq->gridy = NULL;
+    gpu->gpu_xcq->gridz = NULL;
+    gpu->gpu_xcq->sswt = NULL;
+    gpu->gpu_xcq->weight = NULL;
+    gpu->gpu_xcq->gatm = NULL;
+    gpu->gpu_xcq->bin_counter = NULL;
+    gpu->gpu_xcq->dweight_ssd = NULL;
+    gpu->gpu_xcq->basf = NULL;
+    gpu->gpu_xcq->primf = NULL;
+    gpu->gpu_xcq->primfpbin = NULL;
+    gpu->gpu_xcq->basf_locator = NULL;
+    gpu->gpu_xcq->primf_locator = NULL;
+    gpu->gpu_xcq->bin_locator = NULL;
+    gpu->gpu_xcq->densa = NULL;
+    gpu->gpu_xcq->densb = NULL;
+    gpu->gpu_xcq->gax = NULL;
+    gpu->gpu_xcq->gbx = NULL;
+    gpu->gpu_xcq->gay = NULL;
+    gpu->gpu_xcq->gby = NULL;
+    gpu->gpu_xcq->gaz = NULL;
+    gpu->gpu_xcq->gbz = NULL;
+    gpu->gpu_xcq->exc = NULL;
+    gpu->gpu_xcq->xc_grad = NULL;
+    gpu->gpu_xcq->gxc_grad = NULL;
+    gpu->gpu_xcq->phi = NULL;
+    gpu->gpu_xcq->dphidx = NULL;
+    gpu->gpu_xcq->dphidy = NULL;
+    gpu->gpu_xcq->dphidz = NULL;
+    gpu->gpu_xcq->phi_loc = NULL;
+    gpu->gpu_xcq->npoints_ssd = 0;
+    gpu->gpu_xcq->gridy_ssd = NULL;
+    gpu->gpu_xcq->gridz_ssd = NULL;
+    gpu->gpu_xcq->exc_ssd = NULL;
+    gpu->gpu_xcq->quadwt = NULL;
+    gpu->gpu_xcq->gatm_ssd = NULL;
+    gpu->gpu_xcq->uw_ssd = NULL;
+    gpu->gpu_xcq->wtang = NULL;
+    gpu->gpu_xcq->rwt = NULL;
+    gpu->gpu_xcq->rad3 = NULL;
+    gpu->gpu_xcq->gpweight = NULL;
+    gpu->gpu_xcq->cfweight = NULL;
+    gpu->gpu_xcq->pfweight = NULL;
+    gpu->gpu_xcq->mpi_bxccompute = NULL;
+    gpu->gpu_xcq->smem_size = 0;
 
     upload_para_to_const( );
 
@@ -1384,9 +1558,6 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
     gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
 #endif
 
-    gpu->gpu_calculated->o->Upload();
-    gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
-
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
 
@@ -1877,8 +2048,10 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 {
     gpu->lri_data = new lri_data_type;
 
-    gpu->lri_data->cc   = new gpu_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
+    gpu->lri_data->zeta = 0;
+    gpu->lri_data->cc = new gpu_buffer_type<QUICKDouble>(cc, gpu->natom+gpu->nextatom);
     gpu->lri_data->cc->Upload();
+    gpu->lri_data->vrecip = NULL;
 
     gpu->gpu_sim.lri_zeta = *zeta;
 
@@ -2269,8 +2442,8 @@ void print_uploaded_dft_info()
 
     PRINTDEBUG("GRID POINTS & WEIGHTS");
 
-    for(int i=0; i<gpu->gpu_xcq->npoints; i++){
-        fprintf(gpu->debugFile,"Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight_ssd=%i \n",i,
+    for (int i = 0; i < gpu->gpu_xcq->npoints; i++) {
+        fprintf(gpu->debugFile, "Grid: %i x=%f y=%f z=%f sswt=%f weight=%f gatm=%i dweight_ssd=%i \n", i,
                 gpu->gpu_xcq->gridx->_hostData[i], gpu->gpu_xcq->gridy->_hostData[i], gpu->gpu_xcq->gridz->_hostData[i],
                 gpu->gpu_xcq->sswt->_hostData[i], gpu->gpu_xcq->weight->_hostData[i], gpu->gpu_xcq->gatm->_hostData[i],
                 gpu->gpu_xcq->dweight_ssd->_hostData[i]);
@@ -2278,32 +2451,25 @@ void print_uploaded_dft_info()
 
     PRINTDEBUG("BASIS & PRIMITIVE FUNCTION LISTS");
 
-    for(int bin_id=0; bin_id<gpu->gpu_xcq->nbins; bin_id++){
-
-        for(int i=gpu->gpu_xcq->basf_locator->_hostData[bin_id]; i<gpu->gpu_xcq->basf_locator->_hostData[bin_id+1] ; i++){
-
-            for(int j=gpu->gpu_xcq->primf_locator->_hostData[i]; j< gpu->gpu_xcq->primf_locator->_hostData[i+1]; j++){
-
-                fprintf(gpu->debugFile,"Bin ID= %i basf location= %i ibas= %i primf location= %i jprim= %i \n", bin_id, i,
+    for (int bin_id = 0; bin_id < gpu->gpu_xcq->nbins; bin_id++) {
+        for (int i = gpu->gpu_xcq->basf_locator->_hostData[bin_id]; i < gpu->gpu_xcq->basf_locator->_hostData[bin_id + 1]; i++) {
+            for (int j = gpu->gpu_xcq->primf_locator->_hostData[i]; j < gpu->gpu_xcq->primf_locator->_hostData[i + 1]; j++) {
+                fprintf(gpu->debugFile, "Bin ID= %i basf location= %i ibas= %i primf location= %i jprim= %i \n", bin_id, i,
                         gpu->gpu_xcq->basf->_hostData[i], j, gpu->gpu_xcq->primf->_hostData[j]);
-
             }
-
         }
-
     }
 
     PRINTDEBUG("RADIUS OF SIGNIFICANCE");
 
-    for(int i=0; i<gpu->nbasis; i++){
-        fprintf(gpu->debugFile,"ibas=%i sigrad2=%f \n", i, gpu->gpu_basis->sigrad2->_hostData[i]);
+    for (int i = 0; i < gpu->nbasis; i++) {
+        fprintf(gpu->debugFile, "ibas=%i sigrad2=%f \n", i, gpu->gpu_basis->sigrad2->_hostData[i]);
     }
 
-    for(int i=0; i<gpu->nbasis; i++){
-        for(int j=0; j<gpu->gpu_basis->maxcontract; j++){
-
-            fprintf(gpu->debugFile,"ibas=%i jprim=%i dcoeff=%f \n",i,j, gpu->gpu_basis->dcoeff->_hostData[ j + i * gpu->gpu_basis->maxcontract]);
-
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = 0; j < gpu->gpu_basis->maxcontract; j++) {
+            fprintf(gpu->debugFile, "ibas=%i jprim=%i dcoeff=%f \n", i, j,
+                    gpu->gpu_basis->dcoeff->_hostData[j + i * gpu->gpu_basis->maxcontract]);
         }
     }
 
@@ -3093,8 +3259,7 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #endif
 
             // write to in-memory buffer.
-            for (int j = 0; j < gpu->intCount->_hostData[i]  ; j++) {
-
+            for (int j = 0; j < gpu->intCount->_hostData[i]; j++) {
                 a = gpu->aoint_buffer[i]->_hostData[j];
                 if (abs(a.value) > *maxIntegralCutoff) {
                     aBuffer[bufferInt] = a.IJ;
