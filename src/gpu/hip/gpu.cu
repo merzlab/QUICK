@@ -3040,17 +3040,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            
-            if (valULL >= 0x8000000000000000ull) {
-                valDB  = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            }
-            else {
-                valDB  = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 #else

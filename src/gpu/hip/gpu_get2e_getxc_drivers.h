@@ -45,17 +45,10 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            }
-            else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData , i , j , gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData , j , i , gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 
@@ -65,17 +58,10 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            }
-            else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 #  endif
@@ -170,16 +156,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
         gpu -> gradULL -> Download();
 
         for (int i = 0; i < 3 * gpu->natom; i++) {
-            QUICKULL valULL = gpu->gradULL->_hostData[i];
-            QUICKDouble valDB;
-
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-
-            gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+            gpu->grad->_hostData[i] = ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
         }
 #else
         gpu->grad->Download();
@@ -250,15 +227,10 @@ extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
     gpu->gpu_calculated->oULL->Download();
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 
@@ -266,43 +238,17 @@ extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
     gpu->gpu_calculated->obULL->Download();
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble)(valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->obULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->ob->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->ob->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 #  endif
 
-    QUICKULL valULL = gpu->DFT_calculated -> _hostData[0].Eelxc;
-    QUICKDouble valDB;
-    if (valULL >= 0x8000000000000000ull) {
-        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-    } else {
-        valDB = (QUICKDouble) valULL;
-    }
-    *Eelxc = (QUICKDouble) valDB * ONEOVEROSCALE;
-
-    valULL = gpu->DFT_calculated->_hostData[0].aelec;
-    if (valULL >= 0x8000000000000000ull) {
-        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-    } else {
-        valDB = (QUICKDouble) valULL;
-    }
-    *aelec = (QUICKDouble) valDB * ONEOVEROSCALE;
-
-    valULL = gpu->DFT_calculated->_hostData[0].belec;
-    if (valULL >= 0x8000000000000000ull) {
-        valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-    } else {
-        valDB = (QUICKDouble) valULL;
-    }
-    *belec = (QUICKDouble) valDB * ONEOVEROSCALE;
+    *Eelxc = ULLTODOUBLE(gpu->DFT_calculated -> _hostData[0].Eelxc) * ONEOVEROSCALE;
+    *aelec = ULLTODOUBLE(gpu->DFT_calculated -> _hostData[0].aelec) * ONEOVEROSCALE;
+    *belec = ULLTODOUBLE(gpu->DFT_calculated -> _hostData[0].belec) * ONEOVEROSCALE;
 #else
     gpu->gpu_calculated->o->Download();
 
@@ -372,15 +318,7 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
     gpu->gradULL->Download();
 
     for (int i = 0; i < 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-        if (valULL >= 0x8000000000000000ull) {
-            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-        } else {
-            valDB = (QUICKDouble) valULL;
-        }
-
-        gpu->grad->_hostData[i] += (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        gpu->grad->_hostData[i] += ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();
@@ -431,21 +369,16 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     hipMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
 
-    for (int i = 0; i< gpu->nbasis; i++) {
-        for (int j = i; j< gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+    for (int i = 0; i < gpu->nbasis; i++) {
+        for (int j = i; j < gpu->nbasis; j++) {
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 #else
-    gpu->gpu_calculated->o-> Download();
+    gpu->gpu_calculated->o->Download();
     hipMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
 
     for (int i = 0; i < gpu->nbasis; i++) {
@@ -499,15 +432,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     gpu->gradULL->Download();
     hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
     for (int i = 0; i < 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-        if (valULL >= 0x8000000000000000ull) {
-            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-        } else {
-            valDB = (QUICKDouble) valULL;
-        }
-
-        gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        gpu->grad->_hostData[i] = ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();
@@ -529,15 +454,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
         hipMemsetAsync(gpu->ptchg_gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->nextatom);
 
         for (int i = 0; i < 3 * gpu->nextatom; i++) {
-            QUICKULL valULL = gpu->ptchg_gradULL->_hostData[i];
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-
-            gpu->ptchg_grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+            gpu->ptchg_grad->_hostData[i] = ULLTODOUBLE(gpu->ptchg_gradULL->_hostData[i]) * ONEOVERGRADSCALE;
         }
 #else
         gpu->ptchg_grad->Download();
@@ -594,15 +511,10 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
-            QUICKULL valULL = LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis);
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
-            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = (QUICKDouble) valDB * ONEOVEROSCALE;
+            QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
+                * ONEOVEROSCALE;
+            LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis) = val;
+            LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis) = val;
         }
     }
 #else
@@ -647,15 +559,7 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     gpu->gradULL->Download();
     hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
     for (int i = 0; i < 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-        if (valULL >= 0x8000000000000000ull) {
-            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-        } else {
-            valDB = (QUICKDouble) valULL;
-        }
-
-        gpu->grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        gpu->grad->_hostData[i] = ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();
@@ -675,15 +579,7 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
         gpu->ptchg_gradULL->Download();
 
         for (int i = 0; i < 3 * gpu->nextatom; i++) {
-            QUICKULL valULL = gpu->ptchg_gradULL->_hostData[i];
-            QUICKDouble valDB;
-            if (valULL >= 0x8000000000000000ull) {
-                valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-            } else {
-                valDB = (QUICKDouble) valULL;
-            }
-
-            gpu->ptchg_grad->_hostData[i] = (QUICKDouble) valDB * ONEOVERGRADSCALE;
+            gpu->ptchg_grad->_hostData[i] = ULLTODOUBLE(gpu->ptchg_gradULL->_hostData[i]) * ONEOVERGRADSCALE;
         }
 #else
         gpu->ptchg_grad->Download();
@@ -728,17 +624,9 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
 
     for (int i = 0; i < 3 * gpu->natom; i++) {
-        QUICKULL valULL = gpu->gradULL->_hostData[i];
-        QUICKDouble valDB;
-        if (valULL >= 0x8000000000000000ull) {
-            valDB = -(QUICKDouble) (valULL ^ 0xffffffffffffffffull);
-        } else {
-            valDB = (QUICKDouble) valULL;
-        }
-
         // make sure to add rather than assign. we already computed one part of the cew
         // gradients on host asynchronously.
-        gpu->grad->_hostData[i] += (QUICKDouble) valDB * ONEOVERGRADSCALE;
+        gpu->grad->_hostData[i] += ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();

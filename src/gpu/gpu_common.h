@@ -247,7 +247,27 @@ struct ERI_entry {
   /* keep 16 digits in the mantissa (fractional part) for gradient-related calculations */
   #define GRADSCALE (1.0e16)
   #define ONEOVERGRADSCALE (1.0e-16)
-#elif defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
+
+  /* convert QUICKDouble to unsigned long long before accumlating using integer atomics */
+  #if defined(CUDA) || defined(CUDA_MPIV)
+    #define GPUATOMICADD(address, val, scale) \
+{ \
+    unsigned long long int temp_ULL; \
+    asm("mov.b64    %0, %1;" : "=l"(temp_ULL) : "l"(llrint((val) * (scale)))); \
+    atomicAdd((address), temp_ULL); \
+}
+  #elif defined(HIP) || defined(HIP_MPIV)
+    #define GPUATOMICADD(address, val, scale) \
+{ \
+    unsigned long long int temp_ULL = (unsigned long long int) llrint((val)); \
+    atomicAdd((address), temp_ULL); \
+}
+  #endif
+
+  /* convert unsigned long long to QUICKDouble */
+  #define ULLTODOUBLE(val) (((val) >= 0x8000000000000000ull) ? -(QUICKDouble) ((val) ^ 0xffffffffffffffffull) : (QUICKDouble) (val))
+#else
+  #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
 __device__ static inline double atomicAdd( double * address, double val )
 {
     unsigned long long int *address_as_ull, old, assumed;
@@ -265,17 +285,8 @@ __device__ static inline double atomicAdd( double * address, double val )
 
     return __longlong_as_double( old );
 }
-#endif
+  #endif
 
-#if defined(USE_LEGACY_ATOMICS)
-  #define GPUATOMICADD(address, val, scale) \
-{ \
-    QUICKULL temp_ULL = (QUICKULL) (fabs((val) * (scale)) + 0.5); \
-    if ((val) < 0.0) \
-        temp_ULL = 0ull - temp_ULL; \
-    atomicAdd((address), temp_ULL); \
-}
-#else
   #define GPUATOMICADD(address, val, scale) atomicAdd((address), (val));
 #endif
 
