@@ -17,6 +17,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran parallel
+      - name: 'Log Softare Environment Configuration'
+        run: |
+          echo "Ubuntu version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          dpkg -l | grep ^ii | grep -i glibc
+          echo
+          echo "GCC (gfortran) version:"
+          gfortran --version
       - name: 'Configure Serial Version'
         run: ./configure --serial --enablef --prefix $PWD/install gnu
       - name: 'Build and Install Serial Version Using 2 Jobs'
@@ -47,6 +60,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran cmake parallel
+      - name: 'Log Softare Environment Configuration (CMake)'
+        run: |
+          echo "Ubuntu version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          dpkg -l | grep ^ii | grep -i glibc
+          echo
+          echo "GCC (gfortran) version:"
+          gfortran --version
+          echo
+          echo "CMake version:"
+          cmake --version
       - name: 'Configure Serial Version (CMake)'
         run: |
           mkdir build
