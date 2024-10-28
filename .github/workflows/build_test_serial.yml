@@ -26,10 +26,12 @@ jobs:
           uname -a
           echo
           ldd --version
-          dpkg -l | grep ^ii | grep -i glibc
           echo
           echo "GCC (gfortran) version:"
           gfortran --version
+          echo
+          echo "GNU Parallel version:"
+          parallel --version
       - name: 'Configure Serial Version'
         run: ./configure --serial --enablef --prefix $PWD/install gnu
       - name: 'Build and Install Serial Version Using 2 Jobs'
@@ -69,13 +71,15 @@ jobs:
           uname -a
           echo
           ldd --version
-          dpkg -l | grep ^ii | grep -i glibc
           echo
           echo "GCC (gfortran) version:"
           gfortran --version
           echo
           echo "CMake version:"
           cmake --version
+          echo
+          echo "GNU Parallel version:"
+          parallel --version
       - name: 'Configure Serial Version (CMake)'
         run: |
           mkdir build
