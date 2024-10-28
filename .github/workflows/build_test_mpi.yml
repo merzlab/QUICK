@@ -26,7 +26,7 @@ jobs:
           uname -a
           echo
           echo "Glibc version:"
-          dpkg -l | grep ^ii | grep -i glibc
+          ldd --version
           echo
           echo "GCC (gfortran) version:"
           gfortran --version
@@ -72,7 +72,7 @@ jobs:
           uname -a
           echo
           echo "Glibc version:"
-          dpkg -l | grep ^ii | grep -i glibc
+          ldd --version
           echo
           echo "GCC (gfortran) version:"
           gfortran --version

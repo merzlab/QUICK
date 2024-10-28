@@ -25,7 +25,7 @@ jobs:
           echo "Kernel version:"
           uname -a
           echo
-          echo "Glibc version:"
+          ldd --version
           dpkg -l | grep ^ii | grep -i glibc
           echo
           echo "GCC (gfortran) version:"
@@ -68,7 +68,7 @@ jobs:
           echo "Kernel version:"
           uname -a
           echo
-          echo "Glibc version:"
+          ldd --version
           dpkg -l | grep ^ii | grep -i glibc
           echo
           echo "GCC (gfortran) version:"
