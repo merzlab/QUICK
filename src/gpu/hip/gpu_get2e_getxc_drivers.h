@@ -191,23 +191,9 @@ extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
 
     gpu->DFT_calculated = new gpu_buffer_type<DFT_calculated_type>(1, 1);
 #if defined(USE_LEGACY_ATOMICS)
-    QUICKULL valUII = (QUICKULL) (fabs(*Eelxc * OSCALE) + 0.5);
-    if (*Eelxc < 0.0) {
-        valUII = 0ull - valUII;
-    }
-    gpu->DFT_calculated->_hostData[0].Eelxc = valUII;
-
-    valUII = (QUICKULL) (fabs(*aelec * OSCALE) + 0.5);
-    if (*aelec < 0.0) {
-        valUII = 0ull - valUII;
-    }
-    gpu->DFT_calculated->_hostData[0].aelec = valUII;
-
-    valUII = (QUICKULL) (fabs(*belec * OSCALE) + 0.5);
-    if (*belec < 0.0) {
-        valUII = 0ull - valUII;
-    }
-    gpu->DFT_calculated->_hostData[0].belec = valUII;
+    gpu->DFT_calculated->_hostData[0].Eelxc = DOUBLETOULL(*Eelxc * OSCALE);
+    gpu->DFT_calculated->_hostData[0].aelec = DOUBLETOULL(*aelec * OSCALE);
+    gpu->DFT_calculated->_hostData[0].belec = DOUBLETOULL(*belec * OSCALE);
 #else
     gpu->DFT_calculated->_hostData[0].Eelxc = 0.0;
     gpu->DFT_calculated->_hostData[0].aelec = 0.0;

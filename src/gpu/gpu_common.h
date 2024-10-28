@@ -264,8 +264,11 @@ struct ERI_entry {
 }
   #endif
 
-  /* convert unsigned long long to QUICKDouble */
+  /* convert unsigned long long to QUICKDouble in host code */
   #define ULLTODOUBLE(val) (((val) >= 0x8000000000000000ull) ? -(QUICKDouble) ((val) ^ 0xffffffffffffffffull) : (QUICKDouble) (val))
+
+  /* convert QUICKDouble to unsigned long long in host code */
+  #define DOUBLETOULL(val) ((unsigned long long int) llrint((val)))
 #else
   #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600
 __device__ static inline double atomicAdd( double * address, double val )
