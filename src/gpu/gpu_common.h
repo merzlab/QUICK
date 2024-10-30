@@ -259,7 +259,7 @@ struct ERI_entry {
   #elif defined(HIP) || defined(HIP_MPIV)
     #define GPUATOMICADD(address, val, scale) \
 { \
-    unsigned long long int temp_ULL = (unsigned long long int) llrint((val)); \
+    unsigned long long int temp_ULL = (unsigned long long int) llrint((val) * (scale)); \
     atomicAdd((address), temp_ULL); \
 }
   #endif
