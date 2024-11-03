@@ -64,7 +64,7 @@ module quick_molsurface_module
 
     RECORD_TIME(timer_begin%TESPsurface)
 
-    max_points = int(natom*1000/quick_method%espgrid_spacing)
+    max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
 
     allocate(xyz_points(3,max_points))
 
