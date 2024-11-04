@@ -333,7 +333,7 @@ module quick_oeproperties_module
    allocate(IPIV(natom+1))
 
    LDA = natom+1
-   CALL dgetrf(natom+1,natom+1,A,LDA,IPIV,ierr)
+   CALL DGETRF(natom+1,natom+1,A,LDA,IPIV,ierr)
    call DGETRI(natom+1,A,LDA,IPIV,WORK,LWORK,ierr)
 
    if (ierr /= 0) then
@@ -343,7 +343,11 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
+#if defined CUDA
+   call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
+#else
    call DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
+#endif
 
 !  B is copied to charge array.
 
