@@ -35,6 +35,7 @@ subroutine wchk_int(chk,key,nvalu,fail)
    write(chk) 'I '
    write(chk) nvalu
    fail=1
+   return
    200  return
 
 end
@@ -376,18 +377,19 @@ subroutine wchk_darray(chk,key,x,y,z,dim,fail)
       enddo
    endif
 
-   fail=0
-   do
-      read(chk,end=100,err=200)
-   enddo
-
-   100  rewind(chk)
+!   fail=0
+!   do
+!      read(chk,end=100,err=200)
+!   enddo
+!
+!   100  rewind(chk)
    write(chk) '#'//kline(1:40)
    write(chk) 'RR'
    write(chk) x*y*z
    write(chk) (((dim(i,j,k),i=1,x),j=1,y),k=1,z)
-   fail=1
-   200  return
+!   fail=1
+!   200  return
+   return
 
 end
 
