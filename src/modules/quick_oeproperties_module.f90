@@ -66,7 +66,7 @@ module quick_oeproperties_module
  Subroutine compute_oeprop_grid(npoints,xyz_points)
    use quick_method_module, only: quick_method
    use quick_mpi_module, only: master
-   use quick_files_module, only: iESPFile, espFileName
+   use quick_files_module, only: iESPFile, espFileName, iVdwSurfFile, VdwSurfFileName
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
 
    implicit none
@@ -84,7 +84,7 @@ module quick_oeproperties_module
      ! Print ESP at external points
      if (master) then
        call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
-       call print_esp(esp_on_points,npoints,xyz_points)
+       call print_esp(esp_on_points,npoints,xyz_points,iESPFile,espFileName)
        close(iESPFile)
      endif
    end if
@@ -92,6 +92,11 @@ module quick_oeproperties_module
    ! Compute ESP charge using the MKS grid
    if (quick_method%esp_charge) then
      call compute_esp(npoints,xyz_points,esp_on_points)
+     if (master) then
+       call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+       call print_esp(esp_on_points,npoints,xyz_points,iVdwSurfFile,VdwSurfFileName)
+       close(iVdwSurfFile)
+     endif
 
      RECORD_TIME(timer_begin%TESPCharge)
 
@@ -345,14 +350,17 @@ module quick_oeproperties_module
  !---------------------------------------------------------------------------------------------!
  ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
- subroutine print_esp(esp, npoints, xyz_points)
+ subroutine print_esp(esp, npoints, xyz_points, iESPFile, espFileName)
    use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
-   use quick_files_module, only: ioutfile,  iESPFile, espFileName
+   use quick_files_module, only: ioutfile, iVdwSurfFile
    use quick_constants_module, only: BOHRS_TO_A
 
    implicit none
    integer, intent(in) :: npoints
+
+   integer, intent(in) :: iESPFile
+   character :: espFileName*(*)
 
    double precision :: xyz_points(3,npoints)
    double precision :: esp(npoints)
@@ -360,14 +368,28 @@ module quick_oeproperties_module
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
 
+   if (iESPFile.eq.iVdwSurfFile)then
+     quick_method%extgrid_angstrom = .True.
+   endif
+
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-   write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') &
-           trim(espFileName)
-   write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
-   write (iESPFile,'(100("-"))')
    if (quick_method%extgrid_angstrom)  then
+     if (iESPFile.eq.iVdwSurfFile)then
+       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) at points on vdw surface to ",A,x,"with coordinates in angstroms***")') &
+           trim(espFileName)
+       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) with coordinates of the points on vdw surface in angstroms")')
+     else
+       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) at external points to ",A,x,"with coordinates in angstroms***")') &
+           trim(espFileName)
+       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) with coordinates in angstroms")')
+     endif
+     write (iESPFile,'(100("-"))')
      write (iESPFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
    else
+     write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') &
+           trim(espFileName)
+     write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+     write (iESPFile,'(100("-"))')
      ! Default is X, Y, and V_total in a.u.
      write (iESPFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
    endif
