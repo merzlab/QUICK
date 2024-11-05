@@ -98,12 +98,12 @@ module quick_molsurface_module
       RECORD_TIME(timer_end%TESPsurface)
       timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
 
-      call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+!      call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
 
-      do i = 1, total_points
-        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i)*BOHRS_TO_A, &
-          quick_molspec%vdwpointxyz(2,i)*BOHRS_TO_A, quick_molspec%vdwpointxyz(3,i)*BOHRS_TO_A
-      end do
+!      do i = 1, total_points
+!        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i)*BOHRS_TO_A, &
+!          quick_molspec%vdwpointxyz(2,i)*BOHRS_TO_A, quick_molspec%vdwpointxyz(3,i)*BOHRS_TO_A
+!      end do
 
    end subroutine generate_MKS_surfaces
 
