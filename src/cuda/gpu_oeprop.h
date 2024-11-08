@@ -193,7 +193,7 @@ __global__ void getOEPROP_kernel(){
   unsigned int totalpoint = devSim.nextpoint;
 
   QUICKULL jshellsq = (QUICKULL) (jshell * jshell);
-  long double inv_jshell2 = (long double) (1.0/jshellsq);
+  double inv_jshell2 = (double) (1.0/jshellsq);
   QUICKULL ncalcs = (QUICKULL) (jshellsq * totalpoint);
 
   for (QUICKULL i = offset; i < ncalcs; i+= totalThreads) {
