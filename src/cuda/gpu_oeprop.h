@@ -192,13 +192,17 @@ __global__ void getOEPROP_kernel(){
   unsigned int totalatom = devSim.natom+devSim.nextatom;
   unsigned int totalpoint = devSim.nextpoint;
 
-  for (QUICKULL i = offset; i < jshell * jshell * totalpoint; i+= totalThreads) {
+  QUICKULL jshellsq = (QUICKULL) (jshell * jshell);
+  long double inv_jshell2 = (long double) (1.0/jshellsq);
+  QUICKULL ncalcs = (QUICKULL) (jshellsq * totalpoint);
+
+  for (QUICKULL i = offset; i < ncalcs; i+= totalThreads) {
 
     // use the global index to obtain shell pair. Note that here we obtain a couple of indices that helps us to obtain
     // shell number (ii and jj) and quantum numbers (iii, jjj).
-    
-    unsigned int ipoint = (int) i/(jshell * jshell);
-    unsigned int idx   = i - ipoint * jshell * jshell;
+
+    unsigned int ipoint = (unsigned int) (i*inv_jshell2);
+    unsigned int idx   = (unsigned int) (i - ipoint * jshellsq);
 
 #ifdef CUDA_MPIV
       if(devSim.mpi_boeicompute[idx] > 0){
@@ -214,7 +218,6 @@ __global__ void getOEPROP_kernel(){
         // get the quantum number (or angular momentum of shells, s=0, p=1 and so on.)
         int iii = devSim.sorted_Qnumber[II];
         int jjj = devSim.sorted_Qnumber[JJ];
-        
         
         // compute coulomb attraction for the selected shell pair.  
         iclass_oeprop(iii, jjj, ii, jj, ipoint, totalpoint, totalatom, devSim.YVerticalTemp+offset, devSim.store+offset, devSim.store2+offset);
