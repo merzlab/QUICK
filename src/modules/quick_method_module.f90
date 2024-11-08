@@ -426,7 +426,7 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%readPMat) write(io,'(" READ DENSITY MATRIX TO FILE")')
+            if (self%readPMat) write(io,'(" READ DENSITY MATRIX From FILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
             if (self%Skip) write(io,'(" SKIPPING SCF CALCULATION")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
