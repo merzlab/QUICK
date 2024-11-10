@@ -153,7 +153,7 @@ contains
   
   ! electdiis
   !-------------------------------------------------------
-  ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
+  ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
   
      use allmod
@@ -182,9 +182,11 @@ contains
 #endif
 
      implicit none
-  
+
+     logical fail
+
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done
@@ -197,7 +199,7 @@ contains
      double precision :: Sum2Mat,rms
      integer :: I,J,K,L,IERROR
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
+     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
 
      double precision :: c_coords(3),c_zeta,c_chg
@@ -374,7 +376,7 @@ contains
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
            ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
            ! above code can be used. Store this (the ODS term) in the all error
            ! matrix.
@@ -714,7 +716,17 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
+ 
+          if(quick_method%writepmat)then
+             ! open data file then write calculated info to dat file
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+!             rewind(iDataFile)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+             call wchk_darray(iDataFile, "denseSave",    nbasis, nbasis, 1, quick_qm_struct%denseSave,    fail)
+             close(iDataFile)
+          endif
+ 
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)

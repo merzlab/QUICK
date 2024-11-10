@@ -29,14 +29,33 @@ module quick_oeproperties_module
 
  Subroutine compute_oeprop()
    use quick_method_module, only: quick_method
-   use quick_files_module, only : ioutfile
+   use quick_files_module, only : ioutfile, iDataFile, dataFileName
    use quick_molsurface_module, only: generate_MKS_surfaces
    use quick_molspec_module, only: quick_molspec
    use quick_mpi_module, only: master, mpierror
+   use quick_calculated_module, only: quick_qm_struct
 #ifdef MPIV
    use mpi
 #endif
    implicit none
+
+   logical fail
+   integer ierr, nbasis
+
+   if(quick_method%readPMat)then
+     nbasis = quick_molspec%nbasis
+     if(master)then
+       open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+       call rchk_int(iDataFile, "nbasis", nbasis, fail)
+       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+       call rchk_darray(iDataFile, "denseSave", nbasis, nbasis, 1, quick_qm_struct%denseSave, fail)
+       close(iDataFile)
+     endif
+#ifdef MPIV
+     call MPI_BCAST(quick_qm_struct%denseSave,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+#endif
+   endif
 
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
@@ -319,7 +338,7 @@ module quick_oeproperties_module
    allocate(IPIV(natom+1))
 
    LDA = natom+1
-   CALL dgetrf(natom+1,natom+1,A,LDA,IPIV,ierr)
+   CALL DGETRF(natom+1,natom+1,A,LDA,IPIV,ierr)
    call DGETRI(natom+1,A,LDA,IPIV,WORK,LWORK,ierr)
 
    if (ierr /= 0) then
@@ -329,7 +348,11 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
+#if defined CUDA
+   call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
+#else
    call DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
+#endif
 
 !  B is copied to charge array.
 

@@ -29,8 +29,8 @@ subroutine read_job_and_atom(ierr)
    ! Instant variables
    integer i,j,k
    integer istrt
-   character(len=200) :: keyWD
-   character(len=20) :: tempstring
+   character(len=300) :: keyWD
+   character(len=100) :: tempstring
    integer, intent(inout) :: ierr
 
    if (master) then
@@ -45,11 +45,16 @@ subroutine read_job_and_atom(ierr)
         keyWD=quick_api%Keywd
       else
         SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
-        read (inFile,'(A200)') keyWD
+        keyWD(:)=''
+        do while(.true.)
+          read (inFile,'(A100)') tempstring
+          if(trim(tempstring).eq.'') exit
+          keyWD=trim(keyWD)//' '//trim(tempstring)
+        end do
       endif
 
-      call upcase(keyWD,200)
-      write(iOutFile,'("  KEYWORD=",a)') keyWD
+      call upcase(keyWD,300)
+      write(iOutFile,'("  KEYWORD=",a)') trim(keyWD)
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
       SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
