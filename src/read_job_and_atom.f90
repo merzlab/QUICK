@@ -53,11 +53,12 @@ subroutine read_job_and_atom(ierr)
         end do
       endif
 
-      call upcase(keyWD,300)
-      write(iOutFile,'("  KEYWORD=",a)') trim(keyWD)
-
       ! These interfaces,"read","check" and "print" are from quick_method_module
       SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
+
+      write(iOutFile,'("  KEYWORD=",a)') trim(keyWD)
+!      call upcase(keyWD,300)
+
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
       call check(quick_method,iOutFile,ierr) ! check the correctness
       call print(quick_method,iOutFile,ierr) ! then print method

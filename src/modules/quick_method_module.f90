@@ -426,7 +426,7 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%readPMat) write(io,'(" READ DENSITY MATRIX From FILE")')
+            if (self%readPMat) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
             if (self%Skip) write(io,'(" SKIPPING SCF CALCULATION")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
@@ -529,12 +529,25 @@ module quick_method_module
             use quick_exception_module
             use quick_mpi_module
             use quick_files_module, only : write_molden
+            use quick_files_module, only : dataFileName
             implicit none
             character(len=300) :: keyWD
             character(len=300) :: tempstring
             integer :: itemp,i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
+            logical :: found
+
+            tempstring = keyWD
+            call upcase(tempstring,300)
+            if (index(tempstring,'READPMAT').ne.0)then
+                self%readPMat=.true.
+                call read(tempstring, 'READPMAT', i, j, .false., found)
+                if(found)then
+                  dataFileName = keyWD(i:i+j-2)
+                endif
+                Write(6,*)'dataFileName = ',dataFileName
+            endif
 
             call upcase(keyWD,300)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
@@ -659,7 +672,7 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'READ').ne.0)      self%readPMat=.true.
+
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
             if (index(keyWD,'SKIP').ne.0)      self%Skip=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
