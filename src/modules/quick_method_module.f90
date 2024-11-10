@@ -522,8 +522,6 @@ module quick_method_module
 
         end subroutine print_quick_method
 
-
-
         !------------------------
         ! read quick_method
         !------------------------
@@ -532,13 +530,13 @@ module quick_method_module
             use quick_mpi_module
             use quick_files_module, only : write_molden
             implicit none
-            character(len=200) :: keyWD
-            character(len=200) :: tempstring
+            character(len=300) :: keyWD
+            character(len=300) :: tempstring
             integer :: itemp,i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
 
-            call upcase(keyWD,200)
+            call upcase(keyWD,300)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
             if (index(keyWD,'MFCC').ne.0)       self%MFCC=.true.
             if (index(keyWD,'FMM').ne.0)        self%FMM=.true.
@@ -1082,10 +1080,10 @@ module quick_method_module
            use quick_exception_module
 
            implicit none
-           character(len=200), intent(in) :: f_keywd
+           character(len=300), intent(in) :: f_keywd
            type(quick_method_type), intent(inout) :: self
            integer, intent(inout) :: ierr
-           character(len=200) :: func1, func2 
+           character(len=300) :: func1, func2 
            character(len=256) :: functional_name
            integer :: f_id, nof_f, istart, iend, imid
            double precision :: x_hyb_coeff
@@ -1123,7 +1121,7 @@ module quick_method_module
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,200)
+                call upcase(functional_name,300)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1
