@@ -268,9 +268,7 @@
                           -(timer_end%T2elb-timer_begin%T2elb)
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
-      if(.not.quick_method%Skip)then
         SAFE_CALL(getEnergy(.false.,ierr))
-      endif
         ! One electron properties (ESP, EField)
 
         !call generate_MKS_surfaces()

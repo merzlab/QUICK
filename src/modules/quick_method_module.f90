@@ -46,7 +46,6 @@ module quick_method_module
         logical :: readDMX =  .false.  ! flag to read density matrix
         logical :: readPMat = .false.  ! flag to read density matrix
         logical :: writePMat = .false. ! flag to write density matrix
-        logical :: Skip = .false.      ! Skip SCF and go to property calculations
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
@@ -250,7 +249,6 @@ module quick_method_module
             call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%readPMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%Skip,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ext_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -428,7 +426,6 @@ module quick_method_module
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
             if (self%readPMat) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
-            if (self%Skip) write(io,'(" SKIPPING SCF CALCULATION")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
@@ -546,7 +543,7 @@ module quick_method_module
                 if(found)then
                   dataFileName = keyWD(i:i+j-2)
                 endif
-                Write(6,*)'dataFileName = ',dataFileName
+                self%iscf = 1
             endif
 
             call upcase(keyWD,300)
@@ -674,7 +671,6 @@ module quick_method_module
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
 
             if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
-            if (index(keyWD,'SKIP').ne.0)      self%Skip=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
             !if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) self%extgrid_angstrom=.true.
@@ -915,7 +911,6 @@ module quick_method_module
             self%calcDensLap = .false. ! calculate density lap
             self%readPMat = .false.    ! Input density matrix
             self%writePMat = .false.   ! Output density matrix
-            self%Skip = .false.        ! Skipping single point SCF calculation
             self%extCharges = .false.  ! external charge
             self%ext_grid = .false.    ! external grid points
             self%extgrid_angstrom = .false.   ! external grid points (same as above) output in angstrom
