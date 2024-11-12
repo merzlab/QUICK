@@ -56,6 +56,7 @@ subroutine attrashell(IIsh, JJsh)
    NII2=quick_basis%Qfinal(IIsh)
    NJJ2=quick_basis%Qfinal(JJsh)
    Maxm=NII2+NJJ2
+   NIJ1=10*NII2+NJJ2
             
    ! Calculation of V_elec starts here
    do ips=1,quick_basis%kprim(IIsh)
@@ -120,7 +121,7 @@ subroutine attrashell(IIsh, JJsh)
                   attraxiao(1,1,L)=aux(L)
                enddo
  
-               NIJ1=10*NII2+NJJ2
+!               NIJ1=10*NII2+NJJ2
 #if defined (OEPROP)
                ! Call and get P_{mu nu} V_{mu nu} into esp_electronic( )
                call esp_1pdm(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
