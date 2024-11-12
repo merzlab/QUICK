@@ -170,8 +170,10 @@ contains
      call copySym(quick_qm_struct%ob,nbasis)
 
   !  recover density if calculate difference
-     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
-     if (deltaO) quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
+     if (deltaO) then
+       quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+       quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
+     endif
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy

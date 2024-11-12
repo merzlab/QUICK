@@ -213,6 +213,12 @@
       call FFattra(0)
    end select
 
+!  Only unique shell-pairs (IIsh and JJsh) are considered here
+!  III1 to III2 are basis function indices of IIsh
+!  JJJ1 to JJJ2 are basis function indices of JJsh
+!  max(III,JJJ1) is primarily required when IIsh = JJsh as
+!  otherwise JJJ1 is always greater than III
+
    do Iang=quick_basis%Qstart(IIsh),quick_basis%Qfinal(IIsh)
       X1temp=quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)+Iang)
       do Jang=quick_basis%Qstart(JJsh),quick_basis%Qfinal(JJsh)
@@ -237,16 +243,21 @@
               dense_sym_factor = 1.0d0
               if (III /= JJJ) dense_sym_factor = 2.0d0
 
-                 if (quick_method%UNRST) quick_qm_struct%denseSave(JJJ,III) = (quick_qm_struct%dense(JJJ,III)&
-                   +quick_qm_struct%denseb(JJJ,III))
+                 if (quick_method%UNRST) then
+                   esp_update = dense_sym_factor*quick_qm_struct%denseab(JJJ,III)*Xconstant &
+                     *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+                 else
+                   esp_update = dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
+                     *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+                 endif
 
-                 esp_update = dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
-                       *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+!                 if (quick_method%UNRST) quick_qm_struct%denseSave(JJJ,III) = (quick_qm_struct%dense(JJJ,III)&
+!                   +quick_qm_struct%denseb(JJJ,III))
+!
+!                 esp_update = dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
+!                       *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
+
                  esp = esp + esp_update
-!               if(III .eq. 1 .and. JJJ .eq. 2 .and. point .eq. 1) then
-!               if(point .eq. 1) then
-!                 Write(6,*)'III, JJJ, update, dens, consI, consJ, STORE2, esp = ', III, JJJ, esp_update, quick_qm_struct%denseSave(JJJ,III), quick_basis%cons(III), quick_basis%cons(JJJ), Xconstant*attraxiao(itemp1,itemp2,0), esp
-!               endif
 #elif defined (OEI)
               quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
                Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
