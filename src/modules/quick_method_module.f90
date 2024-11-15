@@ -44,8 +44,8 @@ module quick_method_module
         logical :: debug =  .false.    ! debug mode
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
-        logical :: readPMat = .false.  ! flag to read density matrix
-        logical :: writePMat = .false. ! flag to write density matrix
+        logical :: readden = .false.  ! flag to read density matrix
+        logical :: writeden = .false. ! flag to write density matrix
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
@@ -235,8 +235,8 @@ module quick_method_module
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%readPMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%readden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%writeden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -410,8 +410,8 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%readPMat) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
-            if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
+            if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
@@ -504,13 +504,13 @@ module quick_method_module
             use quick_mpi_module
             use quick_files_module, only : write_molden
             implicit none
-            character(len=200) :: keyWD
-            character(len=200) :: tempstring
+            character(len=300) :: keyWD
+            character(len=300) :: tempstring
             integer :: itemp,i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
 
-            call upcase(keyWD,200)
+            call upcase(keyWD,300)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
             if (index(keyWD,'MFCC').ne.0)       self%MFCC=.true.
             if (index(keyWD,'FMM').ne.0)        self%FMM=.true.
@@ -633,7 +633,7 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
+            if (index(keyWD,'WRITE').ne.0)      self%writeden=.true.
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
 
@@ -651,6 +651,9 @@ module quick_method_module
                     self%ifragbasis=1
                 endif
             endif
+
+            !Read density matrix
+            if (index(keyWD,'READDEN').ne.0) self%readden=.true.
 
             if (self%DFT) then
                 if (index(keyWD,'SG0').ne.0) then
@@ -840,8 +843,8 @@ module quick_method_module
             self%hasF = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
-            self%readPMat = .false.    ! Input density matrix
-            self%writePMat = .false.   ! Output density matrix
+            self%readden = .false.    ! Input density matrix
+            self%writeden = .false.   ! Output density matrix
             self%extCharges = .false.  ! external charge
             self%PDB = .false.         ! PDB input
             self%SAD = .true.          ! SAD initial guess
