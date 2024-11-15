@@ -543,7 +543,6 @@ module quick_method_module
                 if(found)then
                   dataFileName = keyWD(i:i+j-2)
                 endif
-!                self%iscf = 1
             endif
 
             call upcase(keyWD,300)
