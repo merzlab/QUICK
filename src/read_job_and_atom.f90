@@ -49,7 +49,15 @@ subroutine read_job_and_atom(ierr)
         do while(.true.)
           read (inFile,'(A100)') tempstring
           if(trim(tempstring).eq.'') exit
-          keyWD=trim(keyWD)//' '//trim(tempstring)
+          if(tempstring(1:1).eq.'$')then
+            call upcase(tempstring(2:2),4)
+            if (tempstring(2:5).eq.'DATA')then
+              ! read data file
+              SAFE_CALL(read_data_file(tempstring))
+            endif
+          else
+            keyWD=trim(keyWD)//' '//trim(tempstring)
+          endif
         end do
       endif
 
@@ -65,7 +73,8 @@ subroutine read_job_and_atom(ierr)
       ! read basis file
       SAFE_CALL(read_basis_file(keywd,ierr))
       call print_basis_file(iOutFile)
-      if (quick_method%ecp) call print_ecp_file(iOutFile)
+      call print_data_file(iOutFile) 
+     if (quick_method%ecp) call print_ecp_file(iOutFile)
       
       ! If PDB flag is on, then call readPDB to read PDB file and 
       ! rewrite input file so that there will be no difference between
