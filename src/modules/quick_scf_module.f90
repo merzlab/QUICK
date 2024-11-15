@@ -270,6 +270,16 @@ contains
      !-------------- END MPI / ALL NODE -----------
 #endif
   
+   if(quick_method%readPMat)then
+     nbasis = quick_molspec%nbasis
+     if(master)then
+       open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+       call rchk_int(iDataFile, "nbasis", nbasis, fail)
+       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+       close(iDataFile)
+     endif
+   endif
+
 #ifdef MPIV
      if (bMPI) then
   !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -723,7 +733,7 @@ contains
 !             rewind(iDataFile)
              call wchk_int(iDataFile, "nbasis", nbasis, fail)
              call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             call wchk_darray(iDataFile, "denseSave",    nbasis, nbasis, 1, quick_qm_struct%denseSave,    fail)
+!             call wchk_darray(iDataFile, "denseSave",    nbasis, nbasis, 1, quick_qm_struct%denseSave,    fail)
              close(iDataFile)
           endif
  

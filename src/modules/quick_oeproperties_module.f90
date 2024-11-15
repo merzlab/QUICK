@@ -42,20 +42,20 @@ module quick_oeproperties_module
    logical fail
    integer ierr, nbasis
 
-   if(quick_method%readPMat)then
-     nbasis = quick_molspec%nbasis
-     if(master)then
-       open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-       call rchk_int(iDataFile, "nbasis", nbasis, fail)
-       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-       call rchk_darray(iDataFile, "denseSave", nbasis, nbasis, 1, quick_qm_struct%denseSave, fail)
-       close(iDataFile)
-     endif
-#ifdef MPIV
-     call MPI_BCAST(quick_qm_struct%denseSave,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-#endif
-   endif
+!   if(quick_method%readPMat)then
+!     nbasis = quick_molspec%nbasis
+!     if(master)then
+!       open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+!       call rchk_int(iDataFile, "nbasis", nbasis, fail)
+!       call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+!       call rchk_darray(iDataFile, "denseSave", nbasis, nbasis, 1, quick_qm_struct%denseSave, fail)
+!       close(iDataFile)
+!     endif
+!#ifdef MPIV
+!     call MPI_BCAST(quick_qm_struct%denseSave,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!     call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!#endif
+!   endif
 
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
