@@ -44,6 +44,7 @@ module quick_method_module
         logical :: debug =  .false.    ! debug mode
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
+        logical :: readPMat = .false.  ! flag to read density matrix
         logical :: writePMat = .false. ! flag to write density matrix
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
@@ -234,6 +235,7 @@ module quick_method_module
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%readPMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -408,6 +410,7 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
+            if (self%readPMat) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
             if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
@@ -837,6 +840,7 @@ module quick_method_module
             self%hasF = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
+            self%readPMat = .false.    ! Input density matrix
             self%writePMat = .false.   ! Output density matrix
             self%extCharges = .false.  ! external charge
             self%PDB = .false.         ! PDB input
