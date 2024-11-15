@@ -202,11 +202,12 @@ __global__ void getOEPROP_kernel(){
     // For each shell pair, we are going over all the external points before
     // moving to the next shell pair.
     unsigned int idx    = (unsigned int) (i/totalpoint);
-    unsigned int ipoint = (unsigned int) (i - idx * totalpoint);
 
 #ifdef CUDA_MPIV
     if(devSim.mpi_boeicompute[idx] > 0){
 #endif
+
+      unsigned int ipoint = (unsigned int) (i - idx * totalpoint);
 
       int II = devSim.sorted_OEICutoffIJ[idx].x;
       int JJ = devSim.sorted_OEICutoffIJ[idx].y;
