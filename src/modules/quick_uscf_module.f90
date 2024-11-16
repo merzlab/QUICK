@@ -147,7 +147,9 @@ contains
 #endif
 
      implicit none
-  
+ 
+     logical :: fail
+ 
      ! variable inputed to return
      integer :: jscf                ! scf interation
      integer, intent(inout) :: ierr
@@ -231,6 +233,17 @@ contains
      !-------------- END MPI / ALL NODE -----------
 #endif
   
+        if(quick_method%readden)then
+          nbasis = quick_molspec%nbasis
+          if(master)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            call rchk_int(iDataFile, "nbasis", nbasis, fail)
+            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+            close(iDataFile)
+          endif
+        endif
+ 
 #ifdef MPIV
      if (bMPI) then
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -822,6 +835,15 @@ contains
   
         if (master) then
   
+           if(quick_method%writeden)then 
+             ! open data file then write calculated info to dat file
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+             call wchk_darray(iDataFile, "denseb",    nbasis, nbasis, 1, quick_qm_struct%denseb,    fail)
+             close(iDataFile)
+           endif 
+
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
