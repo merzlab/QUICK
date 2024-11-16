@@ -381,7 +381,7 @@ subroutine wchk_darray(chk,key,x,y,z,dim,fail)
 !   do
 !      read(chk,end=100,err=200)
 !   enddo
-!
+
 !   100  rewind(chk)
    write(chk) '#'//kline(1:40)
    write(chk) 'RR'
