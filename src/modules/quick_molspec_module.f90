@@ -287,8 +287,13 @@ contains
 
     use quick_constants_module
     use quick_exception_module
+    use quick_method_module, only: quick_method
+    use quick_files_module, only : iDataFile, dataFileName
 
     implicit none
+
+    integer :: fail
+
     type (quick_molspec_type) :: self
     integer, intent(inout) :: ierr
     integer :: input,rdinml,i,j,k
@@ -296,12 +301,13 @@ contains
     integer :: iAtomType
     integer :: nextatom
     double precision :: temp,rdnml
-    character(len=200) :: keywd
+    character(len=300) :: keywd
+    character(len=300) :: tempstring
     logical :: is_extcharge = .false.
     logical :: is_blank
     logical, intent(in)   :: isTemplate
     logical, intent(in)   :: hasKeywd
-    character(len=200), intent(in) :: apikeywd
+    character(len=300), intent(in) :: apikeywd
 
     !---------------------
     ! PART I
@@ -310,12 +316,19 @@ contains
 
     if( .not. hasKeywd ) then
       rewind(input)
-      read (input,'(A132)') keywd
+      keyWD(:)=''
+      do while(.true.)
+        read (input,'(A300)') tempstring
+        if(trim(tempstring).eq.'') exit
+        if(tempstring(1:1).ne.'$')then
+          keyWD=trim(keyWD)//' '//trim(tempstring)
+        endif
+      enddo
     else
       keywd = apikeywd
     endif
 
-    call upcase(keywd,200)
+    call upcase(keywd,300)
 
     ! Read Charge
     if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
@@ -330,50 +343,75 @@ contains
 
   if( .not. isTemplate) then
 
-    call findBlock(input,1)
+    ! If reading from data file
+    if(quick_method%read_coord)then
 
-    ! first is to read atom and atom kind
-    iAtomType = 1
-    natom = 0
-    nextatom = 0
-    do
-       read(input,'(A80)',end=111,err=111) keywd
-       i=1;j=80
-       call upcase(keywd,80)
-       call rdword(keywd,i,j)
-       if (is_blank(keywd,1,80)) exit
+      open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+      call rchk_int(iDataFile, "natom", natom, fail)
+      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+      call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
+      close(iDataFile)
 
-       do k=0,92
+      ! Reading external charges from data file is not yet implemented
+      nextatom = 0
+      self%nextatom = nextatom
+
+      iAtomType = 0
+
+      do i = 1, natom
+        if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
+          iAtomType=iAtomType+1
+          self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
+        endif
+      enddo
+
+      self%iAtomType = iAtomType
+
+    ! Reading from input file
+    else
+      call findBlock(input,1)
+
+      ! first is to read atom and atom kind
+      iAtomType = 1
+      natom = 0
+      nextatom = 0
+      do
+        read(input,'(A80)',end=111,err=111) keywd
+        i=1;j=80
+        call upcase(keywd,80)
+        call rdword(keywd,i,j)
+        if (is_blank(keywd,1,80)) exit
+        do k=0,92
           if (keywd(i:j) == symbol(k)) then
-             natom=natom+1
-             ! check if atom type has been shown before
-             if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
-                !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
-                self%atom_type_sym(iAtomType)=symbol(k)
-                iAtomType=iAtomType+1
-             endif
+            natom=natom+1
+            ! check if atom type has been shown before
+            if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
+              !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
+              self%atom_type_sym(iAtomType)=symbol(k)
+              iAtomType=iAtomType+1
+            endif
           endif
-       enddo
-    enddo
+        enddo
+      enddo
+      111     continue
 
-    111     continue
-
-    ! read external charge part
-    if (is_extcharge)  then
-       rewind(input)
-       call findBlock(input,2)
-       do
+      ! read external charge part
+      if (is_extcharge)  then
+        rewind(input)
+        call findBlock(input,2)
+        do
           read(input,'(A80)',end=112,err=112) keywd
           if (is_blank(keywd,1,80)) exit
           nextatom=nextatom+1
-       enddo
+        enddo
+      endif
+
+      112     continue
+
+      iAtomType=iAtomType-1
+      self%iAtomType = iAtomType
+      self%nextatom = nextatom
     endif
-
-    112     continue
-
-    iAtomType=iAtomType-1
-    self%iAtomType = iAtomType
-    self%nextatom = nextatom
   endif
 
   end subroutine read_quick_molspec
@@ -394,7 +432,7 @@ contains
       integer i,j,k,istart,ifinal
       integer ierror
       double precision temp
-      character(len=200) keywd
+      character(len=300) keywd
 
 
       rewind(input)
@@ -451,7 +489,7 @@ contains
         integer i,j,k,istart,ifinal
         integer nextatom,ierror
         double precision temp
-        character(len=200) keywd
+        character(len=300) keywd
 
         rewind(input)
         call findBlock(input,2)

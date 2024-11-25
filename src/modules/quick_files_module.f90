@@ -184,11 +184,13 @@ module quick_files_module
 
             i = index(keywd,'BASIS=',.false.)
 
-            j = scan(keywd(i:lenkwd),' ',.false.)
+!            j = scan(keywd(i:lenkwd),' ',.false.)
+            j = scan(keywd(i+6:),' ',.false.)
 
             basis_sets=trim(basisdir) // "/basis_link"
 
-            basisSetName = keywd(i+6:i+j-2)
+!            basisSetName = keywd(i+6:i+j-2)
+            basisSetName = keywd(i+6:i+5+j)
             search_keywd= "#" // trim(basisSetName)
             ! Check if the basis_link file exists
 

@@ -30,7 +30,7 @@ subroutine read_job_and_atom(ierr)
    integer i,j,k
    integer istrt
    character(len=300) :: keyWD
-   character(len=100) :: tempstring
+   character(len=300) :: tempstring
    integer, intent(inout) :: ierr
 
    if (master) then
@@ -47,7 +47,7 @@ subroutine read_job_and_atom(ierr)
         SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
         keyWD(:)=''
         do while(.true.)
-          read (inFile,'(A100)') tempstring
+          read (inFile,'(A300)') tempstring
           if(trim(tempstring).eq.'') exit
           if(tempstring(1:1).eq.'$')then
             call upcase(tempstring(2:2),4)
@@ -62,6 +62,7 @@ subroutine read_job_and_atom(ierr)
       endif
 
       call upcase(keyWD,300)
+      keyWD = adjustl(keyWD)
       write(iOutFile,'("  KEYWORD=",a)') trim(keyWD)
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
@@ -71,7 +72,7 @@ subroutine read_job_and_atom(ierr)
       call print(quick_method,iOutFile,ierr) ! then print method
     
       ! read basis file
-      SAFE_CALL(read_basis_file(keywd,ierr))
+      SAFE_CALL(read_basis_file(keyWD,ierr))
       call print_basis_file(iOutFile)
       call print_data_file(iOutFile) 
      if (quick_method%ecp) call print_ecp_file(iOutFile)

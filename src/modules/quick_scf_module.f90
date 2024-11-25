@@ -183,7 +183,7 @@ contains
 
      implicit none
  
-     logical :: fail
+     integer :: fail
  
      ! variable inputed to return
      integer :: jscf                ! scf iteration
