@@ -37,11 +37,11 @@
          exportMO, exportSCF, exportOPT
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
-    use quick_files_module, only: ioutfile, outFileName
+    use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
     use quick_mpi_module, only: master, bMPI, print_quick_mpi, mpirank
     use quick_molspec_module, only: quick_molspec
     use quick_files_module, only: write_molden
-    use quick_molspec_module, only : alloc
+    use quick_molspec_module, only : natom, alloc
     use quick_files_module, only: set_quick_files, print_quick_io_file
 
     use quick_molsurface_module, only: generate_MKS_surfaces
@@ -54,7 +54,7 @@
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
     use quick_basis_module, only: jbasis, jshell, maxcontract, nbasis, ncontract
     use quick_basis_module, only: nprim, nshell, Ycutoff
-    use quick_molspec_module, only : natom, xyz
+    use quick_molspec_module, only : xyz
     use quick_method_module, only: delete, upload
 #endif
 
