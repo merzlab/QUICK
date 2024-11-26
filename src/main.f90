@@ -64,6 +64,9 @@
 
     implicit none
 
+ 
+    integer :: fail
+ 
 #if defined CUDA || defined HIP
     integer :: gpu_device_id = -1
 #endif
@@ -294,6 +297,16 @@
 #endif
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
+        endif
+
+        if(master) then
+          if(quick_method%writexyz)then
+            call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+          endif 
         endif
     endif
     

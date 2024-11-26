@@ -21,6 +21,8 @@ subroutine getMol(ierr)
 
    implicit none
 
+   integer :: fail
+
    logical :: present
    integer :: i,j,k,itemp
    integer, intent(inout) :: ierr
@@ -33,11 +35,24 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if(.not. isTemplate) then
-       call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
-       CHECK_ERROR(ierr)
-        ! read molecule coordinates
-        call read2(quick_molspec,inFile,ierr)
-        close(inFile)
+        if(quick_method%read_coord)then
+
+          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+          call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
+          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+          close(iDataFile)
+
+          quick_molspec%xyz => xyz
+
+        else
+
+          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+          CHECK_ERROR(ierr)
+          ! read molecule coordinates
+          call read2(quick_molspec,inFile,ierr)
+          close(inFile)
+
+        endif
       endif
 
       quick_molspec%nbasis   => nbasis
