@@ -26,17 +26,17 @@ subroutine wchk_int(chk,key,nvalu,fail)
       enddo
    endif
 
-   fail=0
-   do
-      read(chk,end=100,err=200)
-   enddo
-   100  rewind(chk)
+!   fail=0
+!   do
+!      read(chk,end=100,err=200)
+!   enddo
+!   100  rewind(chk)
    write(chk) '#'//kline(1:40)
    write(chk) 'I '
    write(chk) nvalu
-   fail=1
-   return
-   200  return
+!   fail=1
+!   return
+!   200  return
 
 end
 

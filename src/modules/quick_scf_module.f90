@@ -273,6 +273,7 @@ contains
           nbasis = quick_molspec%nbasis
           if(master)then
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            rewind(iDataFile)
             call rchk_int(iDataFile, "nbasis", nbasis, fail)
             call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
             close(iDataFile)
