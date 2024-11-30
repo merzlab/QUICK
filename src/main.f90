@@ -243,7 +243,17 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
-        
+
+        if(master) then
+          if(quick_method%writexyz)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+          endif 
+        endif
+
     endif
 
     !------------------------------------------------------------------
@@ -268,10 +278,11 @@
 
         if(master) then
           if(quick_method%writexyz)then
-            call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
             call wchk_int(iDataFile, "natom", natom, fail)
             call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
             call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
             close(iDataFile)
           endif 
         endif
