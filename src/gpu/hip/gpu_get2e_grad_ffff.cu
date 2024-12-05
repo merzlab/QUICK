@@ -32,8 +32,9 @@ devTrans : arrays to save the mapping index, will be elimited by hand writing un
 Sumindex: a array to store refect how many temp variable needed in VRR. can be elimited by hand writing code.
 */
 static __constant__ gpu_simulation_type devSim;
-static __constant__ unsigned char devTrans[TRANSDIM*TRANSDIM*TRANSDIM];
-static __constant__ int Sumindex[10]={0,0,1,4,10,20,35,56,84,120};
+static __constant__ unsigned char devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
+static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
+
 
 //#define USE_TEXTURE
 
@@ -54,26 +55,24 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #endif
 
 //#define USE_ERI_GRAD_STOREADD
-/*
-#ifdef USE_ERI_GRAD_STOREADD
-#define STORE_OPERATOR +=
-#else
-#define STORE_OPERATOR =
-#endif
-*/
+//#ifdef USE_ERI_GRAD_STOREADD
+//  #define STORE_OPERATOR +=
+//#else
+//  #define STORE_OPERATOR =
+//#endif
 
-#define ERI_GRAD_FFFF_TPB 32
-#define ERI_GRAD_FFFF_BPSM 8
+#define ERI_GRAD_FFFF_TPB (32)
+#define ERI_GRAD_FFFF_BPSM (8)
 
-#define ERI_GRAD_FFFF_SMEM_INT_SIZE 7
-#define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE 10
-#define ERI_GRAD_FFFF_SMEM_DBL_SIZE 3
-#define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE 19
-#define ERI_GRAD_FFFF_SMEM_CHAR_SIZE 512
-#define ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE 2
-#define ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE 1
+#define ERI_GRAD_FFFF_SMEM_INT_SIZE (7)
+#define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE (10)
+#define ERI_GRAD_FFFF_SMEM_DBL_SIZE (3)
+#define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE (19)
+#define ERI_GRAD_FFFF_SMEM_CHAR_SIZE (512)
+#define ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE (2)
+#define ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE (1)
 
-#define ERI_GRAD_FFFF_SMEM_PTR_SIZE 1
+#define ERI_GRAD_FFFF_SMEM_PTR_SIZE (1)
 
 #define DEV_SIM_INT_PTR_KATOM smem_int_ptr[ERI_GRAD_FFFF_TPB*0+threadIdx.x]
 #define DEV_SIM_INT_PTR_KPRIM smem_int_ptr[ERI_GRAD_FFFF_TPB*1+threadIdx.x]
@@ -124,23 +123,17 @@ texture <int2, hipTextureType1D, hipReadModeElementType> tex_Xcoeff;
 #define DEV_SIM_CHAR_TRANS smem_char
 
 #ifdef GPU_SPDF
-//===================================
-
-
-#define int_spdf4
-#include "../gpu_eri_grad_vrr_ffff.h"
-#include "gpu_get2e_grad_ffff.cuh"
-
+  #define int_spdf4
+  #include "../gpu_eri_grad_vrr_ffff.h"
+  #include "gpu_get2e_grad_ffff.cuh"
 #endif
-
 #undef int_spdf4
 
 //Include the kernels for open shell eri calculations
 #define OSHELL
-
 #ifdef GPU_SPDF
-#define int_spdf4
-//#include "gpu_get2e_grad_ffff.cuh"
+  #define int_spdf4
+//  #include "gpu_get2e_grad_ffff.cuh"
 #endif
 #undef OSHELL
 
@@ -151,7 +144,7 @@ static float totTime;
 #endif
 
 
-struct Partial_ERI{
+struct Partial_ERI {
     int YCutoffIJ_x;
     int YCutoffIJ_y;
     int Qnumber_x;
@@ -163,41 +156,40 @@ struct Partial_ERI{
     int kprim_score;
 };
 
-bool ComparePrimNum(Partial_ERI p1, Partial_ERI p2){
+
+bool ComparePrimNum(Partial_ERI p1, Partial_ERI p2) {
     return p1.kprim_score > p2.kprim_score;
 }
 
-void ResortERIs(_gpu_type gpu){
 
-    int2 eri_type_order[]={{0,0},{0,1},{1,0},{1,1},{0,2},{2,0},{1,2},{2,1},{0,3},{3,0},{2,2},{1,3},{3,1},
-        {2,3},{3,2},{3,3}};
-    unsigned char eri_type_order_map[]={0,1,3,6,10,13,15,16};
+void ResortERIs(_gpu_type gpu) {
+    int2 eri_type_order[] = {{0,0}, {0,1}, {1,0}, {1,1},
+        {0,2}, {2,0}, {1,2}, {2,1},
+        {0,3}, {3,0}, {2,2}, {1,3},
+        {3,1}, {2,3}, {3,2}, {3,3}};
+    unsigned char eri_type_order_map[] = {0, 1, 3, 6, 10, 13, 15, 16};
     int eri_type_block_map[17];
-    int2 *resorted_YCutoffIJ=(int2*) malloc(sizeof(int2)*gpu->gpu_cutoff->sqrQshell);
-    bool ffset= false;
+    int2 *resorted_YCutoffIJ = (int2 *) malloc(sizeof(int2) * gpu->gpu_cutoff->sqrQshell);
+    bool ffset = false;
 
     // Step 1: sort according sum of angular momentum of a partial ERI. (ie. i+j of <ij| ).
     // Step 2: sort according to type order specified in eri_type_order array. This ensures that eri vector follows the order we
     // want.
-
-
-    int idx1=0;
-    int idx2=0;
+    int idx1 = 0;
+    int idx2 = 0;
     int ffStart = 0;
 
-    for(int ij_sum=0;ij_sum<=6; ij_sum++){
-        for(int ieto=eri_type_order_map[ij_sum];ieto<eri_type_order_map[ij_sum+1];ieto++){
-            int2 lbl_t=eri_type_order[ieto];
-            eri_type_block_map[idx2]=idx1;
-            for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-                if(gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
-                        ->_hostData[i].x] == lbl_t.x && gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y] ==
-                        lbl_t.y){
+    for (int ij_sum = 0; ij_sum <= 6; ij_sum++) {
+        for (int ieto = eri_type_order_map[ij_sum]; ieto < eri_type_order_map[ij_sum + 1]; ieto++) {
+            int2 lbl_t = eri_type_order[ieto];
+            eri_type_block_map[idx2] = idx1;
+            for (int i = 0; i < gpu->gpu_cutoff->sqrQshell; i++) {
+                if (gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x] == lbl_t.x
+                        && gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y] == lbl_t.y) {
                     resorted_YCutoffIJ[idx1].x = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x;
                     resorted_YCutoffIJ[idx1].y = gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y;
                     idx1++;
                 }
-
             }
             idx2++;
         }
@@ -205,55 +197,53 @@ void ResortERIs(_gpu_type gpu){
 
     eri_type_block_map[idx2]=idx1;
 
-    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x=resorted_YCutoffIJ[i].x;
-        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y=resorted_YCutoffIJ[i].y;
+    for (int i = 0; i < gpu->gpu_cutoff->sqrQshell; i++) {
+        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x=resorted_YCutoffIJ[i].x;
+        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y=resorted_YCutoffIJ[i].y;
 
-        if(ffset == false && (gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x]+gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y]) == 6){
+        if (ffset == false
+                && gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].x]
+                + gpu->gpu_basis->sorted_Qnumber->_hostData[resorted_YCutoffIJ[i].y] == 6){
             ffStart = i;
             ffset = true;
         }
     }
 
-
     // create an array of structs
-    Partial_ERI *partial_eris = (Partial_ERI*) malloc(sizeof(Partial_ERI)*gpu->gpu_cutoff->sqrQshell);
+    Partial_ERI *partial_eris = (Partial_ERI *) malloc(sizeof(Partial_ERI) * gpu->gpu_cutoff->sqrQshell);
 
-    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-        int kprim1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
-            ->_hostData[i].x]];
-        int kprim2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
-            ->_hostData[i].y]];
-        int kprim_score = 10*std::max(kprim1,kprim2)+std::min(kprim1,kprim2)+(kprim1+kprim2);
-        partial_eris[i] = {gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x, gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y,
-            gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], \
-                gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y], \
-                gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
-                ->_hostData[i].x]], \
-                gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ
-                ->_hostData[i].y]], \
-                gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x], \
-                gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y],
+    for (int i = 0; i < gpu->gpu_cutoff->sqrQshell; i++) {
+        int kprim1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x]];
+        int kprim2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y]];
+        int kprim_score = 10 * std::max(kprim1, kprim2) + std::min(kprim1, kprim2) + (kprim1 + kprim2);
+        partial_eris[i] = {gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x,
+            gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y,
+            gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x],
+            gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y],
+            gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x]],
+            gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y]],
+            gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x],
+            gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y],
             kprim_score};
     }
 
-
-    for(int i=0; i<16;i++){
-        std::sort(partial_eris+eri_type_block_map[i],partial_eris+eri_type_block_map[i+1],ComparePrimNum);
+    for (int i = 0; i < 16; i++) {
+        std::sort(partial_eris + eri_type_block_map[i], partial_eris + eri_type_block_map[i + 1], ComparePrimNum);
     }
 
-    for(int i=0; i<gpu->gpu_cutoff->sqrQshell; i++){
-        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x = partial_eris[i].YCutoffIJ_x;
-        gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y = partial_eris[i].YCutoffIJ_y;
+    for (int i = 0; i < gpu->gpu_cutoff->sqrQshell; i++) {
+        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x = partial_eris[i].YCutoffIJ_x;
+        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y = partial_eris[i].YCutoffIJ_y;
     }
 
-    gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> Upload();
-    gpu -> gpu_sim.sorted_YCutoffIJ = gpu -> gpu_cutoff -> sorted_YCutoffIJ  -> _devData;
-    gpu -> gpu_sim.ffStart = ffStart;
+    gpu->gpu_cutoff->sorted_YCutoffIJ->Upload();
+    gpu->gpu_sim.sorted_YCutoffIJ = gpu->gpu_cutoff->sorted_YCutoffIJ->_devData;
+    gpu->gpu_sim.ffStart = ffStart;
 
     free(resorted_YCutoffIJ);
     free(partial_eris);
 }
+
 
 void getGrad_ffff(_gpu_type gpu)
 {
@@ -448,43 +438,43 @@ void getGrad_ffff(_gpu_type gpu)
     unsigned char *dev_char_buffer;
     QUICKAtomicType **dev_grad_ptr_buffer;
 
-    hipMalloc((void **)&dev_int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int));
-    hipMalloc((void **)&dev_int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int*));
-    hipMalloc((void **)&dev_dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble));
-    hipMalloc((void **)&dev_dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
-    hipMalloc((void **)&dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
-    hipMalloc((void **)&dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
-    hipMalloc((void **)&dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char));
-    hipMalloc((void **)&dev_grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*));
+    gpuMalloc((void **) &dev_int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int));
+    gpuMalloc((void **) &dev_int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int*));
+    gpuMalloc((void **) &dev_dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble));
+    gpuMalloc((void **) &dev_dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
+    gpuMalloc((void **) &dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*));
+    gpuMalloc((void **) &dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned char*));
+    gpuMalloc((void **) &dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char));
+    gpuMalloc((void **) &dev_grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*));
 
-
-    hipMemcpy(dev_int_buffer, int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int), hipMemcpyHostToDevice);
-    hipMemcpy(dev_int_ptr_buffer, int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int*), hipMemcpyHostToDevice);
-    hipMemcpy(dev_dbl_buffer, dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble), hipMemcpyHostToDevice);
-    hipMemcpy(dev_dbl_ptr_buffer, dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*), hipMemcpyHostToDevice);
-    hipMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*), hipMemcpyHostToDevice);
-    hipMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
+    gpuMemcpy(dev_int_buffer, int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_int_ptr_buffer, int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int*), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_dbl_buffer, dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_dbl_ptr_buffer, dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(int2*), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(unsigned
                 char*), hipMemcpyHostToDevice);
-    hipMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char), hipMemcpyHostToDevice);
-    hipMemcpy(dev_grad_ptr_buffer, grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*),
+    gpuMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE*sizeof(unsigned char), hipMemcpyHostToDevice);
+    gpuMemcpy(dev_grad_ptr_buffer, grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE*ERI_GRAD_FFFF_TPB*sizeof(QUICKAtomicType*),
             hipMemcpyHostToDevice);
 
+    // Part f-3
     if (gpu->maxL >= 3) {
-        // Part f-3
 #ifdef GPU_SPDF
-        QUICK_SAFE_CALL((getGrad_kernel_ffff<<<gpu->blocks*ERI_GRAD_FFFF_BPSM, ERI_GRAD_FFFF_TPB,
-                    sizeof(int)*ERI_GRAD_FFFF_SMEM_INT_SIZE*ERI_GRAD_FFFF_TPB+
-                    sizeof(QUICKDouble)*ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB+sizeof(QUICKDouble*)*ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(int*)*ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE*ERI_GRAD_FFFF_TPB+
-                    sizeof(int2*)*ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned
-                        char*)*ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE*ERI_GRAD_FFFF_TPB+sizeof(unsigned char)*ERI_GRAD_FFFF_SMEM_CHAR_SIZE+
-                    sizeof(QUICKAtomicType*)*ERI_GRAD_FFFF_SMEM_PTR_SIZE*ERI_GRAD_FFFF_TPB>>>(dev_int_buffer,
-                        dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer, dev_char_ptr_buffer, dev_char_buffer,
-                        dev_grad_ptr_buffer,gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
+        QUICK_SAFE_CALL((getGrad_kernel_ffff <<<gpu->blocks * ERI_GRAD_FFFF_BPSM, ERI_GRAD_FFFF_TPB,
+                    (sizeof(int) * ERI_GRAD_FFFF_SMEM_INT_SIZE
+                     + sizeof(QUICKDouble) * ERI_GRAD_FFFF_SMEM_DBL_SIZE
+                     + sizeof(QUICKDouble *) * ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE
+                     + sizeof(int *) * ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE
+                     + sizeof(int2 *) * ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE
+                     + sizeof(unsigned char *) * ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE
+                     + sizeof(QUICKAtomicType *) * ERI_GRAD_FFFF_SMEM_PTR_SIZE) * ERI_GRAD_FFFF_TPB
+                    + sizeof(unsigned char) * ERI_GRAD_FFFF_SMEM_CHAR_SIZE>>>
+                    (dev_int_buffer, dev_int_ptr_buffer, dev_dbl_buffer, dev_dbl_ptr_buffer, dev_int2_ptr_buffer,
+                     dev_char_ptr_buffer, dev_char_buffer, dev_grad_ptr_buffer,gpu->gpu_sim.ffStart, gpu->gpu_sim.sqrQshell)))
 
 #endif
     }
-
-    hipDeviceSynchronize();
 
     free(int_buffer);
     free(int_ptr_buffer);
@@ -494,173 +484,166 @@ void getGrad_ffff(_gpu_type gpu)
     free(char_ptr_buffer);
     free(grad_ptr_buffer);
 
-    hipFree(dev_int_buffer);
-    hipFree(dev_int_ptr_buffer);
-    hipFree(dev_dbl_buffer);
-    hipFree(dev_dbl_ptr_buffer);
-    hipFree(dev_int2_ptr_buffer);
-    hipFree(dev_char_ptr_buffer);
-    hipFree(dev_char_buffer);
-    hipFree(dev_grad_ptr_buffer);
+    gpuFree(dev_int_buffer);
+    gpuFree(dev_int_ptr_buffer);
+    gpuFree(dev_dbl_buffer);
+    gpuFree(dev_dbl_ptr_buffer);
+    gpuFree(dev_int2_ptr_buffer);
+    gpuFree(dev_char_ptr_buffer);
+    gpuFree(dev_char_buffer);
+    gpuFree(dev_grad_ptr_buffer);
 }
 
 
 // interface to call uscf gradient Kernels
 void get_oshell_eri_grad_ffff(_gpu_type gpu)
 {
-//   roctxRangePush("Gradient 2e");
+//   nvtxRangePushA("Gradient 2e");
 
     // compute one electron gradients in the meantime
     //get_oneen_grad_();
 
-    if (gpu->maxL >= 3) {
-        // Part f-3
-        //    QUICK_SAFE_CALL((getGrad_oshell_kernel_ffff<<<gpu->blocks, gpu->gradThreadsPerBlock>>>()))
-        //#endif
-    }
+    // Part f-3
+//    if (gpu->maxL >= 3) {
+//        QUICK_SAFE_CALL((getGrad_oshell_kernel_ffff <<<gpu->blocks, gpu->gradThreadsPerBlock>>> ()))
+//#endif
+//    }
 
-    hipDeviceSynchronize();
-//    roctxRangePop();
+//    nvtxRangePop();
 }
 
 
 void upload_para_to_const_ffff() {
-    unsigned char trans[TRANSDIM*TRANSDIM*TRANSDIM];
-    // Data to trans
-    {
-        LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
-        LOC3(trans, 0, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   4;
-        LOC3(trans, 0, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  10;
-        LOC3(trans, 0, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  20;
-        LOC3(trans, 0, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  35;
-        LOC3(trans, 0, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  56;
-        LOC3(trans, 0, 0, 6, TRANSDIM, TRANSDIM, TRANSDIM) =  84;
-        LOC3(trans, 0, 0, 7, TRANSDIM, TRANSDIM, TRANSDIM) = 120;
-        LOC3(trans, 0, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   3;
-        LOC3(trans, 0, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   6;
-        LOC3(trans, 0, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  17;
-        LOC3(trans, 0, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  32;
-        LOC3(trans, 0, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  48;
-        LOC3(trans, 0, 1, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  67;
-        LOC3(trans, 0, 1, 6, TRANSDIM, TRANSDIM, TRANSDIM) = 100;
-        LOC3(trans, 0, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   9;
-        LOC3(trans, 0, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  16;
-        LOC3(trans, 0, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  23;
-        LOC3(trans, 0, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  42;
-        LOC3(trans, 0, 2, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  73;
-        LOC3(trans, 0, 2, 5, TRANSDIM, TRANSDIM, TRANSDIM) = 106;
-        LOC3(trans, 0, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  19;
-        LOC3(trans, 0, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  31;
-        LOC3(trans, 0, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  43;
-        LOC3(trans, 0, 3, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  79;
-        LOC3(trans, 0, 3, 4, TRANSDIM, TRANSDIM, TRANSDIM) = 112;
-        LOC3(trans, 0, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  34;
-        LOC3(trans, 0, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  49;
-        LOC3(trans, 0, 4, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  74;
-        LOC3(trans, 0, 4, 3, TRANSDIM, TRANSDIM, TRANSDIM) = 113;
-        LOC3(trans, 0, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  55;
-        LOC3(trans, 0, 5, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  68;
-        LOC3(trans, 0, 5, 2, TRANSDIM, TRANSDIM, TRANSDIM) = 107;
-        LOC3(trans, 0, 6, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  83;
-        LOC3(trans, 0, 6, 1, TRANSDIM, TRANSDIM, TRANSDIM) = 101;
-        LOC3(trans, 0, 7, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 119;
-        LOC3(trans, 1, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   2;
-        LOC3(trans, 1, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   7;
-        LOC3(trans, 1, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  15;
-        LOC3(trans, 1, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  28;
-        LOC3(trans, 1, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  50;
-        LOC3(trans, 1, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  69;
-        LOC3(trans, 1, 0, 6, TRANSDIM, TRANSDIM, TRANSDIM) = 102;
-        LOC3(trans, 1, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   5;
-        LOC3(trans, 1, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  11;
-        LOC3(trans, 1, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  26;
-        LOC3(trans, 1, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  41;
-        LOC3(trans, 1, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  59;
-        LOC3(trans, 1, 1, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  87;
-        LOC3(trans, 1, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  13;
-        LOC3(trans, 1, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  25;
-        LOC3(trans, 1, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  36;
-        LOC3(trans, 1, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  60;
-        LOC3(trans, 1, 2, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  88;
-        LOC3(trans, 1, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  30;
-        LOC3(trans, 1, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  40;
-        LOC3(trans, 1, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  61;
-        LOC3(trans, 1, 3, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  94;
-        LOC3(trans, 1, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  52;
-        LOC3(trans, 1, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  58;
-        LOC3(trans, 1, 4, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  89;
-        LOC3(trans, 1, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  71;
-        LOC3(trans, 1, 5, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  86;
-        LOC3(trans, 1, 6, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 104;
-        LOC3(trans, 2, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   8;
-        LOC3(trans, 2, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  14;
-        LOC3(trans, 2, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  22;
-        LOC3(trans, 2, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  44;
-        LOC3(trans, 2, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  75;
-        LOC3(trans, 2, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) = 108;
-        LOC3(trans, 2, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  12;
-        LOC3(trans, 2, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  24;
-        LOC3(trans, 2, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  37;
-        LOC3(trans, 2, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  62;
-        LOC3(trans, 2, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  90;
-        LOC3(trans, 2, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  21;
-        LOC3(trans, 2, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  38;
-        LOC3(trans, 2, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  66;
-        LOC3(trans, 2, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  99;
-        LOC3(trans, 2, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  46;
-        LOC3(trans, 2, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  64;
-        LOC3(trans, 2, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  98;
-        LOC3(trans, 2, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  77;
-        LOC3(trans, 2, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  92;
-        LOC3(trans, 2, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 110;
-        LOC3(trans, 3, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  18;
-        LOC3(trans, 3, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  27;
-        LOC3(trans, 3, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  45;
-        LOC3(trans, 3, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  80;
-        LOC3(trans, 3, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) = 114;
-        LOC3(trans, 3, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  29;
-        LOC3(trans, 3, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  39;
-        LOC3(trans, 3, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  63;
-        LOC3(trans, 3, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  95;
-        LOC3(trans, 3, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  47;
-        LOC3(trans, 3, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  65;
-        LOC3(trans, 3, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  97;
-        LOC3(trans, 3, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  81;
-        LOC3(trans, 3, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  96;
-        LOC3(trans, 3, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 116;
-        LOC3(trans, 4, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  33;
-        LOC3(trans, 4, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  51;
-        LOC3(trans, 4, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  76;
-        LOC3(trans, 4, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) = 115;
-        LOC3(trans, 4, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  53;
-        LOC3(trans, 4, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  57;
-        LOC3(trans, 4, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  91;
-        LOC3(trans, 4, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  78;
-        LOC3(trans, 4, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  93;
-        LOC3(trans, 4, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 117;
-        LOC3(trans, 5, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  54;
-        LOC3(trans, 5, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  70;
-        LOC3(trans, 5, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) = 109;
-        LOC3(trans, 5, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  72;
-        LOC3(trans, 5, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  85;
-        LOC3(trans, 5, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 111;
-        LOC3(trans, 6, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  82;
-        LOC3(trans, 6, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) = 103;
-        LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
-        LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
-    }
-    // upload to trans device location
+    unsigned char trans[TRANSDIM * TRANSDIM * TRANSDIM];
     hipError_t status;
 
-    status = hipMemcpyToSymbol(HIP_SYMBOL(devTrans), trans, sizeof(unsigned char)*TRANSDIM*TRANSDIM*TRANSDIM);
-    PRINTERROR(status, " hipMemcpyToSymbol, Trans copy to constants failed")
+    LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
+    LOC3(trans, 0, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   4;
+    LOC3(trans, 0, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  10;
+    LOC3(trans, 0, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  20;
+    LOC3(trans, 0, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  35;
+    LOC3(trans, 0, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  56;
+    LOC3(trans, 0, 0, 6, TRANSDIM, TRANSDIM, TRANSDIM) =  84;
+    LOC3(trans, 0, 0, 7, TRANSDIM, TRANSDIM, TRANSDIM) = 120;
+    LOC3(trans, 0, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   3;
+    LOC3(trans, 0, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   6;
+    LOC3(trans, 0, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  17;
+    LOC3(trans, 0, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  32;
+    LOC3(trans, 0, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  48;
+    LOC3(trans, 0, 1, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  67;
+    LOC3(trans, 0, 1, 6, TRANSDIM, TRANSDIM, TRANSDIM) = 100;
+    LOC3(trans, 0, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   9;
+    LOC3(trans, 0, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  16;
+    LOC3(trans, 0, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  23;
+    LOC3(trans, 0, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  42;
+    LOC3(trans, 0, 2, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  73;
+    LOC3(trans, 0, 2, 5, TRANSDIM, TRANSDIM, TRANSDIM) = 106;
+    LOC3(trans, 0, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  19;
+    LOC3(trans, 0, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  31;
+    LOC3(trans, 0, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  43;
+    LOC3(trans, 0, 3, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  79;
+    LOC3(trans, 0, 3, 4, TRANSDIM, TRANSDIM, TRANSDIM) = 112;
+    LOC3(trans, 0, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  34;
+    LOC3(trans, 0, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  49;
+    LOC3(trans, 0, 4, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  74;
+    LOC3(trans, 0, 4, 3, TRANSDIM, TRANSDIM, TRANSDIM) = 113;
+    LOC3(trans, 0, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  55;
+    LOC3(trans, 0, 5, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  68;
+    LOC3(trans, 0, 5, 2, TRANSDIM, TRANSDIM, TRANSDIM) = 107;
+    LOC3(trans, 0, 6, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  83;
+    LOC3(trans, 0, 6, 1, TRANSDIM, TRANSDIM, TRANSDIM) = 101;
+    LOC3(trans, 0, 7, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 119;
+    LOC3(trans, 1, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   2;
+    LOC3(trans, 1, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   7;
+    LOC3(trans, 1, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  15;
+    LOC3(trans, 1, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  28;
+    LOC3(trans, 1, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  50;
+    LOC3(trans, 1, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  69;
+    LOC3(trans, 1, 0, 6, TRANSDIM, TRANSDIM, TRANSDIM) = 102;
+    LOC3(trans, 1, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   5;
+    LOC3(trans, 1, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  11;
+    LOC3(trans, 1, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  26;
+    LOC3(trans, 1, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  41;
+    LOC3(trans, 1, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  59;
+    LOC3(trans, 1, 1, 5, TRANSDIM, TRANSDIM, TRANSDIM) =  87;
+    LOC3(trans, 1, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  13;
+    LOC3(trans, 1, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  25;
+    LOC3(trans, 1, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  36;
+    LOC3(trans, 1, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  60;
+    LOC3(trans, 1, 2, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  88;
+    LOC3(trans, 1, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  30;
+    LOC3(trans, 1, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  40;
+    LOC3(trans, 1, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  61;
+    LOC3(trans, 1, 3, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  94;
+    LOC3(trans, 1, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  52;
+    LOC3(trans, 1, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  58;
+    LOC3(trans, 1, 4, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  89;
+    LOC3(trans, 1, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  71;
+    LOC3(trans, 1, 5, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  86;
+    LOC3(trans, 1, 6, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 104;
+    LOC3(trans, 2, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   8;
+    LOC3(trans, 2, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  14;
+    LOC3(trans, 2, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  22;
+    LOC3(trans, 2, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  44;
+    LOC3(trans, 2, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  75;
+    LOC3(trans, 2, 0, 5, TRANSDIM, TRANSDIM, TRANSDIM) = 108;
+    LOC3(trans, 2, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  12;
+    LOC3(trans, 2, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  24;
+    LOC3(trans, 2, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  37;
+    LOC3(trans, 2, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  62;
+    LOC3(trans, 2, 1, 4, TRANSDIM, TRANSDIM, TRANSDIM) =  90;
+    LOC3(trans, 2, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  21;
+    LOC3(trans, 2, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  38;
+    LOC3(trans, 2, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  66;
+    LOC3(trans, 2, 2, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  99;
+    LOC3(trans, 2, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  46;
+    LOC3(trans, 2, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  64;
+    LOC3(trans, 2, 3, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  98;
+    LOC3(trans, 2, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  77;
+    LOC3(trans, 2, 4, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  92;
+    LOC3(trans, 2, 5, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 110;
+    LOC3(trans, 3, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  18;
+    LOC3(trans, 3, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  27;
+    LOC3(trans, 3, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  45;
+    LOC3(trans, 3, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  80;
+    LOC3(trans, 3, 0, 4, TRANSDIM, TRANSDIM, TRANSDIM) = 114;
+    LOC3(trans, 3, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  29;
+    LOC3(trans, 3, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  39;
+    LOC3(trans, 3, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  63;
+    LOC3(trans, 3, 1, 3, TRANSDIM, TRANSDIM, TRANSDIM) =  95;
+    LOC3(trans, 3, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  47;
+    LOC3(trans, 3, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  65;
+    LOC3(trans, 3, 2, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  97;
+    LOC3(trans, 3, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  81;
+    LOC3(trans, 3, 3, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  96;
+    LOC3(trans, 3, 4, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 116;
+    LOC3(trans, 4, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  33;
+    LOC3(trans, 4, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  51;
+    LOC3(trans, 4, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  76;
+    LOC3(trans, 4, 0, 3, TRANSDIM, TRANSDIM, TRANSDIM) = 115;
+    LOC3(trans, 4, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  53;
+    LOC3(trans, 4, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  57;
+    LOC3(trans, 4, 1, 2, TRANSDIM, TRANSDIM, TRANSDIM) =  91;
+    LOC3(trans, 4, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  78;
+    LOC3(trans, 4, 2, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  93;
+    LOC3(trans, 4, 3, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 117;
+    LOC3(trans, 5, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  54;
+    LOC3(trans, 5, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  70;
+    LOC3(trans, 5, 0, 2, TRANSDIM, TRANSDIM, TRANSDIM) = 109;
+    LOC3(trans, 5, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  72;
+    LOC3(trans, 5, 1, 1, TRANSDIM, TRANSDIM, TRANSDIM) =  85;
+    LOC3(trans, 5, 2, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 111;
+    LOC3(trans, 6, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =  82;
+    LOC3(trans, 6, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) = 103;
+    LOC3(trans, 6, 1, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 105;
+    LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
+
+    gpuMemcpyToSymbol((const void *) devTrans, (const void *) trans, sizeof(unsigned char)*TRANSDIM*TRANSDIM*TRANSDIM);
 }
 
 
 void upload_sim_to_constant_ffff(_gpu_type gpu) {
-    hipError_t status;
-    status = hipMemcpyToSymbol(HIP_SYMBOL(devSim), &gpu->gpu_sim, sizeof(gpu_simulation_type));
-    PRINTERROR(status, " hipMemcpyToSymbol, sim copy to constants failed")
+    gpuMemcpyToSymbol((const void *) &devSim, (const void *) &gpu->gpu_sim, sizeof(gpu_simulation_type));
 
     upload_para_to_const_ffff();
 }

@@ -55,6 +55,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
                 num_of_funcs_ = *num_of_funcs;
                 arr_func_id_ = arr_func_id;
                 arr_mix_coeffs_ = (double*) malloc(sizeof(double) * num_of_funcs_);
+
                 for (int i = 0; i < num_of_funcs_; i++) {
                     arr_mix_coeffs_[i] = 1.0;
                 }
@@ -74,12 +75,13 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         num_of_funcs_ = *num_of_funcs;
         arr_func_id_ = arr_func_id;
         arr_mix_coeffs_ = (double*) malloc(sizeof(double) * num_of_funcs_);
+
         for (int i = 0; i < num_of_funcs_; i++) {
             arr_mix_coeffs_[i] = 1.0;
         }
     }
 
-    hipHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_, hipHostMallocMapped);
+    gpuHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_, hipHostMallocMapped);
 
     for (int i = 0; i < num_of_funcs_; i++) {
         xc_func_type func;
@@ -147,5 +149,5 @@ void libxc_cleanup(gpu_libxc_info** d_glinfo, int n_func) {
         gpu_libxc_cleanup(d_glinfo[i]);
     }
 
-    hipHostFree(d_glinfo);
+    gpuFreeHost(d_glinfo);
 }

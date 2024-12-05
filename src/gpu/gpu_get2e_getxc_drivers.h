@@ -41,7 +41,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
-    hipMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -54,7 +54,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
 #  if defined(OSHELL)
     gpu->gpu_calculated->obULL->Download();
-    hipMemsetAsync(gpu->gpu_calculated->obULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->obULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -67,7 +67,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #  endif
 #else
     gpu->gpu_calculated->o->Download();
-    hipMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -77,7 +77,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
     }
 #  if defined(OSHELL)
     gpu->gpu_calculated->ob->Download();
-    hipMemsetAsync(gpu->gpu_calculated->ob->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->ob->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -344,16 +344,15 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
       gpu -> gpu_sim.o = gpu -> gpu_calculated -> o -> _devData;
 #endif
 */
+    
     upload_sim_to_constant_oei(gpu);
-
     upload_para_to_const_oei();
 
     getOEI(gpu);
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
-
-    hipMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -365,7 +364,7 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
     }
 #else
     gpu->gpu_calculated->o->Download();
-    hipMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -416,13 +415,14 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     // download gradients
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gradULL->Download();
-    hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom, 0);
+
     for (int i = 0; i < 3 * gpu->natom; i++) {
         gpu->grad->_hostData[i] = ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();
-    hipMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom, 0);
 #endif
 
     gpu->grad->DownloadSum(grad);
@@ -436,15 +436,14 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     if (gpu -> nextatom > 0) {
 #if defined(USE_LEGACY_ATOMICS)
         gpu->ptchg_gradULL->Download();
-
-        hipMemsetAsync(gpu->ptchg_gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->nextatom);
+        gpuMemsetAsync(gpu->ptchg_gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->nextatom, 0);
 
         for (int i = 0; i < 3 * gpu->nextatom; i++) {
             gpu->ptchg_grad->_hostData[i] = ULLTODOUBLE(gpu->ptchg_gradULL->_hostData[i]) * ONEOVERGRADSCALE;
         }
 #else
         gpu->ptchg_grad->Download();
-        hipMemsetAsync(gpu->ptchg_grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->nextatom);
+        gpuMemsetAsync(gpu->ptchg_grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->nextatom, 0);
 #endif
 
         /*      for(int i=0; i<3*gpu->nextatom; ++i){
@@ -492,8 +491,7 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
-
-    hipMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -505,7 +503,7 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
     }
 #else
     gpu->gpu_calculated->o->Download();
-    hipMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis);
+    gpuMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis, 0);
 
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
@@ -543,13 +541,13 @@ extern "C" void gpu_get_lri_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     // download gradients
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gradULL->Download();
-    hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom, 0);
     for (int i = 0; i < 3 * gpu->natom; i++) {
         gpu->grad->_hostData[i] = ULLTODOUBLE(gpu->gradULL->_hostData[i]) * ONEOVERGRADSCALE;
     }
 #else
     gpu->grad->Download();
-    hipMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom, 0);
 #endif
 
     gpu->grad->DownloadSum(grad);
@@ -607,7 +605,7 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     // download gradients
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gradULL->Download();
-    hipMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->gradULL->_devData, 0, sizeof(QUICKULL) * 3 * gpu->natom, 0);
 
     for (int i = 0; i < 3 * gpu->natom; i++) {
         // make sure to add rather than assign. we already computed one part of the cew
@@ -616,7 +614,7 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
     }
 #else
     gpu->grad->Download();
-    hipMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
+    gpuMemsetAsync(gpu->grad->_devData, 0, sizeof(QUICKDouble) * 3 * gpu->natom, 0);
 #endif
 
     gpu->grad->DownloadSum(grad);

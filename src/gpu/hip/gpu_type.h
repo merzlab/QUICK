@@ -9,16 +9,18 @@
 
 /*
  * this head file includes following type define
-    a. common variables             : see details below
-    b. gpu type and buffer type     : for communication between GPU and CPU
+ a. common variables             : see details below
+ b. gpu type and buffer type     : for communication between GPU and CPU
  */
 
-#include <stdio.h>
 #include "../gpu_common.h"
 #include "gpu_utils.h"
 #include "gpu_libxc_type.h"
 
 #include <hip/hip_runtime.h>
+
+#include <stdio.h>
+
 
 /*
  ****************************************************************
@@ -51,26 +53,26 @@ struct gpu_scratch {
 };
 
 struct gpu_timer_type {
-   double t_2elb; // time for eri load balancing in mgpu version
-   double t_xclb; // time for xc load balancing in mgpu version
-   double t_xcrb; // time for xc load re-balancing in mgpu version
-   double t_xcpg; // grid pruning time
+    double t_2elb; // time for eri load balancing in mgpu version
+    double t_xclb; // time for xc load balancing in mgpu version
+    double t_xcrb; // time for xc load re-balancing in mgpu version
+    double t_xcpg; // grid pruning time
 };
 
 struct gpu_cutoff_type {
     int natom;
     int nbasis;
     int nshell;
-    
+
     // the following are for pre-sorting cutoff
     int sqrQshell;
     gpu_buffer_type<int2> *sorted_YCutoffIJ;
-    
+
     // Cutoff matrix
     gpu_buffer_type<QUICKDouble> *cutMatrix;
     gpu_buffer_type<QUICKDouble> *YCutoff;
     gpu_buffer_type<QUICKDouble> *cutPrim;
-    
+
     // Cutoff criteria
     QUICKDouble integralCutoff;
     QUICKDouble coreIntegralCutoff;
@@ -103,19 +105,19 @@ struct XC_quadrature_type {
     int ntotpf; //Total number of primitive functions
     int bin_size; //Size of an octree bin
 
-    gpu_buffer_type<QUICKDouble> *gridx;		//X coordinate of a grid point
-    gpu_buffer_type<QUICKDouble> *gridy;		//Y coordinate of a grid point
-    gpu_buffer_type<QUICKDouble> *gridz;		//Z coordinate of a grid point
-    gpu_buffer_type<QUICKDouble> *sswt;		//A version of weight required for gradients
-    gpu_buffer_type<QUICKDouble> *weight;		//Scuzeria weight of a grid point
-    gpu_buffer_type<int> *gatm;			//To which atom does a given grid point belongs to?
-    gpu_buffer_type<int> *bin_counter;            //Keeps track of bin borders 
-    gpu_buffer_type<int> *dweight_ssd;            //Dummy weight of grid points for sswder 
-    gpu_buffer_type<int> *basf;			//Basis function indices of all grid points
-    gpu_buffer_type<int> *primf;			//Primitive function inidices of all grid points
+    gpu_buffer_type<QUICKDouble> *gridx;                //X coordinate of a grid point
+    gpu_buffer_type<QUICKDouble> *gridy;                //Y coordinate of a grid point
+    gpu_buffer_type<QUICKDouble> *gridz;                //Z coordinate of a grid point
+    gpu_buffer_type<QUICKDouble> *sswt;         //A version of weight required for gradients
+    gpu_buffer_type<QUICKDouble> *weight;               //Scuzeria weight of a grid point
+    gpu_buffer_type<int> *gatm;                 //To which atom does a given grid point belongs to?
+    gpu_buffer_type<int> *bin_counter;            //Keeps track of bin borders
+    gpu_buffer_type<int> *dweight_ssd;            //Dummy weight of grid points for sswder
+    gpu_buffer_type<int> *basf;                 //Basis function indices of all grid points
+    gpu_buffer_type<int> *primf;                        //Primitive function inidices of all grid points
     gpu_buffer_type<int> *primfpbin;                 //Number of primitive functions per bin
-    gpu_buffer_type<int> *basf_locator;		//Helps accessing b.f. indices of a grid point
-    gpu_buffer_type<int> *primf_locator;		//Helps accessing p.f. indices of a b.f.
+    gpu_buffer_type<int> *basf_locator;         //Helps accessing b.f. indices of a grid point
+    gpu_buffer_type<int> *primf_locator;                //Helps accessing p.f. indices of a b.f.
     gpu_buffer_type<int> *bin_locator;            //Helps accessing bin of a grid point
 
     //Temporary variables
@@ -130,10 +132,10 @@ struct XC_quadrature_type {
     gpu_buffer_type<QUICKDouble> *exc;
     gpu_buffer_type<QUICKDouble> *xc_grad;
     gpu_buffer_type<QUICKDouble> *gxc_grad;        // a global xc gradient vector of size number_of_blocks * number_of_threads_per_block
-    gpu_buffer_type<QUICKDouble> *phi;             // value of a basis function at a grid point 
-    gpu_buffer_type<QUICKDouble> *dphidx;          // x gradient of a basis function at a grid point 
+    gpu_buffer_type<QUICKDouble> *phi;             // value of a basis function at a grid point
+    gpu_buffer_type<QUICKDouble> *dphidx;          // x gradient of a basis function at a grid point
     gpu_buffer_type<QUICKDouble> *dphidy;          // y gradient of a basis function at a grid point
-    gpu_buffer_type<QUICKDouble> *dphidz;          // z gradient of a basis function at a grid point  
+    gpu_buffer_type<QUICKDouble> *dphidz;          // z gradient of a basis function at a grid point
     gpu_buffer_type<unsigned int> *phi_loc;       // stores locations of phi array for each grid point
 
     //Variables for ssw derivative calculation
@@ -146,22 +148,22 @@ struct XC_quadrature_type {
     gpu_buffer_type<QUICKDouble> *quadwt;          //quadrature weight
     gpu_buffer_type<int> *gatm_ssd;               //To which atom does a given grid point belongs to?
     gpu_buffer_type<QUICKDouble> *uw_ssd;          //Holds unnormalized weights during ssd calculation
-    
+
     //Variables for grid weight calculation
     gpu_buffer_type<QUICKDouble> *wtang;
     gpu_buffer_type<QUICKDouble> *rwt;
     gpu_buffer_type<QUICKDouble> *rad3;
 
-    //Variables for obtaining octree info 
+    //Variables for obtaining octree info
     gpu_buffer_type<unsigned char> *gpweight;     //keeps track of significant grid points for octree pruning
-    gpu_buffer_type<unsigned int> *cfweight;     //keeps track of significant b.f. for octree pruning 
+    gpu_buffer_type<unsigned int> *cfweight;     //keeps track of significant b.f. for octree pruning
     gpu_buffer_type<unsigned int> *pfweight;     //keeps track of significant p.f. for octree pruning
 
     // mpi variables
     gpu_buffer_type<char> *mpi_bxccompute;
 
     // shared memory size
-    int smem_size;                                 //size of shared memory buffer in xc kernels 
+    int smem_size;                                 //size of shared memory buffer in xc kernels
 };
 
 struct lri_data_type {
@@ -175,14 +177,14 @@ struct gpu_simulation_type {
     QUICK_METHOD method;
     DFT_calculated_type *DFT_calculated;
     XC_quadrature_type *xcq;
-    QUICKDouble hyb_coeff;   
+    QUICKDouble hyb_coeff;
     bool is_oshell;
- 
+
     // used for DFT
     int isg;        // isg algrothm
     bool prePtevl;   // precompute and store values and gradients of basis functions at grid points
     QUICKDouble *sigrad2;    // basis set range
-    
+
     int natom;
     int nextatom;
     int nbasis;
@@ -206,7 +208,7 @@ struct gpu_simulation_type {
     int nbins;                                  //Total number of bins
     int ntotbf;                                 //Total number of basis functions
     int ntotpf;                                 //Total number of primitive functions
-    int bin_size;				//Size of an octree bin
+    int bin_size;                               //Size of an octree bin
     int npoints_ssd;                  //Total number of input points for ssd
 
     QUICKDouble *gridx;       //X coordinate of a grid point
@@ -234,21 +236,21 @@ struct gpu_simulation_type {
     QUICKDouble *wtang;
     QUICKDouble *rwt;
     QUICKDouble *rad3;
-    QUICKDouble *phi;             // value of a basis function at a grid point 
-    QUICKDouble *dphidx;          // x gradient of a basis function at a grid point 
+    QUICKDouble *phi;             // value of a basis function at a grid point
+    QUICKDouble *dphidx;          // x gradient of a basis function at a grid point
     QUICKDouble *dphidy;          // y gradient of a basis function at a grid point
     QUICKDouble *dphidz;          // z gradient of a basis function at a grid point
-    unsigned int* phi_loc;        // stores locations of phi array for each grid point      
+    unsigned int* phi_loc;        // stores locations of phi array for each grid point
 
     int *gatm;               //To which atom does a given grid point belongs to?
     int *gatm_ssd;           //Parent atom index for sswder calculation
     int *dweight;            //Dummy weight of grid points
-    int *dweight_ssd;        //Dummy weight of grid points for sswder 
+    int *dweight_ssd;        //Dummy weight of grid points for sswder
     int *basf;               //Basis function indices of all grid points
     int *primf;              //Primitive function inidices of all grid points
     int *primfpbin;             //Number of primitive functions per bin
     int *basf_locator;       //Helps accessing b.f. indices of a grid point
-    int *primf_locator;      //Helps accessing p.f. indices of a b.f.   
+    int *primf_locator;      //Helps accessing p.f. indices of a b.f.
     int *bin_locator;        //Helps accessing bin of a grid point
     unsigned char *gpweight;   //keeps track of significant grid points for octree pruning
     unsigned int *cfweight;   //keeps track of significant b.f. for octree pruning
@@ -259,24 +261,24 @@ struct gpu_simulation_type {
 
     // libxc data
     gpu_libxc_info **glinfo;        // pointer to an array hosting gpu_libxc_info type pointers
-    int nauxfunc;                   // number of auxilary functions, equal to the length of array pointed by glinfo     
+    int nauxfunc;                   // number of auxilary functions, equal to the length of array pointed by glinfo
 
     // Gaussian Type function
     int *ncontract;
     int *itype;
     QUICKDouble *aexp;
     QUICKDouble *dcoeff;
-    
+
     //charge and atom type
     int *iattype;
     QUICKDouble *chg;
     QUICKDouble *allchg; // charges of nuclei and external charges for oei
-    
+
     // Some more infos about basis function
     QUICKDouble *xyz;
     QUICKDouble *allxyz; // coordinates of nuclei and external charges for oei
     int *ncenter;
-  
+
     int *kstart;
     int *katom;
     int *kprim;
@@ -302,7 +304,7 @@ struct gpu_simulation_type {
     QUICKULL *obULL;
     QUICKDouble *dense;
     QUICKDouble *denseb;
-    
+
     QUICKDouble *distance;
     QUICKDouble *Xcoeff;
     QUICKDouble *Xcoeff_oei; // precomputed overlap prefactor for oei
@@ -310,7 +312,7 @@ struct gpu_simulation_type {
     QUICKDouble *weightedCenterX;
     QUICKDouble *weightedCenterY;
     QUICKDouble *weightedCenterZ;
-    
+
     // cutoff
     int sqrQshell;
     int2 *sorted_YCutoffIJ;
@@ -324,17 +326,17 @@ struct gpu_simulation_type {
     QUICKDouble XCCutoff;
     QUICKDouble gradCutoff;
     int2 *sorted_OEICutoffIJ;
-    
+
     // for ERI generator
 #if defined(COMPILE_GPU_AOINT)
     ERI_entry **aoint_buffer;
 #endif
-    
+
     QUICKDouble maxIntegralCutoff;
     QUICKDouble leastIntegralCutoff;
     int iBatchSize;
     QUICKULL *intCount;
-    
+
     // For Grad
     QUICKDouble *grad;
     QUICKDouble *ptchg_grad;
@@ -342,7 +344,7 @@ struct gpu_simulation_type {
     QUICKULL *gradULL;
     QUICKULL *ptchg_gradULL;
 #endif
-  
+
     // mpi variable definitions
     int mpirank;
     int mpisize;
@@ -380,21 +382,21 @@ struct gpu_basis_type {
     int Qshell;
     int maxcontract;
     int prim_total;
-    
+
     int fStart;
     int ffStart;
-    
+
     // Gaussian Type function
     gpu_buffer_type<int> *ncontract;
     gpu_buffer_type<int> *itype;
     gpu_buffer_type<QUICKDouble> *aexp;
     gpu_buffer_type<QUICKDouble> *dcoeff;
-  
+
     // Some more infos about basis function
     gpu_buffer_type<int> *ncenter;
     gpu_buffer_type<QUICKDouble> *sigrad2;
     gpu_buffer_type<int> *kstart;
-    gpu_buffer_type<int> *katom;  
+    gpu_buffer_type<int> *katom;
     gpu_buffer_type<int> *kprim;
     gpu_buffer_type<int> *Ksumtype;
     gpu_buffer_type<int> *Qnumber;
@@ -438,20 +440,20 @@ struct gpu_type {
     // Memory parameters
     long long int totalCPUMemory; // total CPU memory allocated
     long long int totalGPUMemory; // total GPU memory allocated
-    // Launch parameters
+                                  // Launch parameters
     int gpu_dev_id;  // set 0 for master GPU
     unsigned int blocks;
     unsigned int threadsPerBlock;
     unsigned int twoEThreadsPerBlock;
     unsigned int XCThreadsPerBlock;
     unsigned int gradThreadsPerBlock;
-    unsigned int xc_blocks;	//Num of blocks for octree based dft implementation
-    unsigned int xc_threadsPerBlock; //Num of threads/block for octree based dft implementation   
+    unsigned int xc_blocks;     //Num of blocks for octree based dft implementation
+    unsigned int xc_threadsPerBlock; //Num of threads/block for octree based dft implementation
     unsigned int sswGradThreadsPerBlock;
     // mpi variable definitions
     int mpirank;
-    int mpisize;    
-    // timer 
+    int mpisize;
+    // timer
     gpu_timer_type *timer;
     // Molecule specification part
     int natom;
@@ -461,20 +463,20 @@ struct gpu_type {
     int imult;
     int molchg;
     int iAtomType;
-    
+
     int nshell;
     int nprim;
     int jshell;
     int jbasis;
     int maxL;
-    
+
     gpu_buffer_type<int> *iattype;
     gpu_buffer_type<QUICKDouble> *xyz;
     gpu_buffer_type<QUICKDouble> *allxyz; // coordinates of nuclei and external point charges
     gpu_buffer_type<QUICKDouble> *chg;
     gpu_buffer_type<QUICKDouble> *allchg; // charges of nuclei and external point charges
     gpu_buffer_type<DFT_calculated_type> *DFT_calculated;
-    
+
     // For gradient
     gpu_buffer_type<QUICKDouble> *grad;
     gpu_buffer_type<QUICKDouble> *ptchg_grad;
@@ -493,8 +495,10 @@ struct gpu_type {
     lri_data_type *lri_data;
 };
 
+
 typedef struct gpu_type *_gpu_type;
 static _gpu_type gpu = NULL;
+
 
 // template to pack buffered data for GPU-CPU communication
 template <typename T>
@@ -505,7 +509,7 @@ struct gpu_buffer_type {
     T *_hostData;   // data on host (CPU)
     T *_devData;    // data on device (GPU)
     T *_f90Data;    // if constructed from f90 array, it is the pointer
-    
+
     // constructor
     gpu_buffer_type(int length);
     gpu_buffer_type(int length, bool bPinned);
@@ -516,24 +520,24 @@ struct gpu_buffer_type {
     gpu_buffer_type(T* f90Data, unsigned int length, unsigned int length2);
     gpu_buffer_type(T* f90data, int length);
     gpu_buffer_type(T* f90Data, unsigned int length);
-    
+
     // destructor
-    virtual ~gpu_buffer_type();    
-    
+    virtual ~gpu_buffer_type();
+
     // allocate and deallocate data
     void Allocate();
     void Deallocate();
 
     // reallocate device memory for an existing template
     void ReallocateGPU();
-    
+
     // use pinned data communication method. Upload and Download from host to device
-    void Upload();      
+    void Upload();
     void UploadAsync();
     void Download();
     void Download(T* f90Data);
     void DownloadSum(T* f90Data);
-    
+
     void DeleteCPU();
     void DeleteGPU();
 };
@@ -541,63 +545,71 @@ struct gpu_buffer_type {
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(int length) :
-_length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
+    _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(int length, bool bPinned) :
-_length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(bPinned)
+    _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(bPinned)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(unsigned int length) :
-_length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
+    _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(int length, int length2) :
-_length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
+    _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(unsigned int length, unsigned int length2) :
-_length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
+    _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(NULL), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, unsigned int length, unsigned int length2) :
-_length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
+    _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, int length, int length2) :
-_length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
+    _length(length), _length2(length2), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
+
 
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, unsigned int length) :
-_length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
+    _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
 
+
 template <typename T>
 gpu_buffer_type<T> :: gpu_buffer_type(T* f90data, int length) :
-_length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
+    _length(length), _length2(1), _hostData(NULL), _devData(NULL), _f90Data(f90data), _bPinned(false)
 {
     Allocate();
 }
@@ -609,76 +621,68 @@ gpu_buffer_type<T> :: ~gpu_buffer_type()
     Deallocate();
 }
 
+
 template <typename T>
 void gpu_buffer_type<T> :: Allocate()
 {
-    
     PRINTDEBUG(">>BEGIN TO ALLOCATE TEMPLATE");
 
     if (! _f90Data) // if not constructed from f90 array
     {
-        hipError_t status;
         if (!_bPinned) {
             //Allocate GPU memeory
-            status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
-            gpu->totalCPUMemory   += _length*_length2*sizeof(T);
-            
+            gpuMalloc((void**) &_devData, sizeof(T) * _length * _length2);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
+            gpu->totalCPUMemory += sizeof(T) * _length * _length2;
+
             //Allocate CPU emembory
-            _hostData = new T[_length*_length2];
-            memset(_hostData, 0, _length*_length2*sizeof(T));
-        }else{
+            _hostData = new T[_length * _length2];
+            memset(_hostData, 0, sizeof(T) * _length * _length2);
+        } else {
             //Allocate GPU memeory
-            status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
-            gpu->totalCPUMemory   += _length*_length2*sizeof(T);
-            
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
+            gpu->totalCPUMemory += sizeof(T) * _length * _length2;
+
             //Allocate CPU emembory
-            status = hipHostGetDevicePointer((void **)&_devData, (void *)_hostData, 0);
-            PRINTERROR(status, " hipHostGetDevicePointer gpu_buffer_type :: Allocate failed!");
-            memset(_hostData, 0, _length*_length2*sizeof(T));
+            gpuHostGetDevicePointer((void **) &_devData, (void *) _hostData, 0);
+            memset(_hostData, 0, sizeof(T) * _length * _length2);
         }
-    }else {
-        hipError_t status;
+    } else {
         if (!_bPinned) {
             //Allocate GPU memeory
-            status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
-            gpu->totalCPUMemory   += _length*_length2*sizeof(T);
-            
+            gpuMalloc((void**) &_devData, sizeof(T) * _length * _length2);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
+            gpu->totalCPUMemory += sizeof(T) * _length * _length2;
+
             //Allocate CPU emembory
-            _hostData = new T[_length*_length2];
-            memset(_hostData, 0, _length*_length2*sizeof(T));
-        }else{
+            _hostData = new T[_length * _length2];
+            memset(_hostData, 0, sizeof(T) * _length * _length2);
+        } else {
             //Allocate GPU memeory
-            status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
-            gpu->totalCPUMemory   += _length*_length2*sizeof(T);
-            
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
+            gpu->totalCPUMemory += sizeof(T) * _length * _length2;
+
             //Allocate CPU emembory
-            status = hipHostGetDevicePointer((void **)&_devData, (void *)_hostData, 0);
-            PRINTERROR(status, " hipHostGetDevicePointer gpu_buffer_type :: Allocate failed!");
-            memset(_hostData, 0, _length*_length2*sizeof(T));
+            gpuHostGetDevicePointer((void **) &_devData, (void *) _hostData, 0);
+            memset(_hostData, 0, sizeof(T) * _length * _length2);
         }
-        
+
         // copy f90 data to _hostData
         size_t index_c = 0;
         size_t index_f = 0;
-        for (size_t j=0; j<_length2; j++) {
-            for (size_t i=0; i<_length; i++) {
+        for (size_t j = 0; j < _length2; j++) {
+            for (size_t i = 0; i < _length; i++) {
                 index_c = j * _length + i;
                 _hostData[index_c] = _f90Data[index_f++];
             }
         }
-        
     }
-    PRINTMEM("ALLOCATE GPU MEMORY",(unsigned long long int)_length*_length2*sizeof(T))
-    PRINTMEM("GPU++",gpu->totalGPUMemory);
-    PRINTMEM("CPU++",gpu->totalCPUMemory);
+
+    PRINTMEM("ALLOCATE GPU MEMORY", (unsigned long long int) sizeof(T) * _length * _length2);
+    PRINTMEM("GPU++", gpu->totalGPUMemory);
+    PRINTMEM("CPU++", gpu->totalCPUMemory);
     PRINTDEBUG("<<FINISH ALLOCATION TEMPLATE");
 }
 
@@ -686,39 +690,37 @@ void gpu_buffer_type<T> :: Allocate()
 template <typename T>
 void gpu_buffer_type<T> :: ReallocateGPU()
 {
-  PRINTDEBUG(">>BEGIN TO REALLOCATE GPU");
+    PRINTDEBUG(">>BEGIN TO REALLOCATE GPU");
 
-   hipError_t status;
+    hipError_t status;
 
-   if (_devData == NULL) // if memory has not been allocated
+    if (_devData == NULL) // if memory has not been allocated
     {
         if (!_bPinned) {
             //Allocate GPU memeory
-            status = hipMalloc((void**)&_devData,_length*_length2*sizeof(T));
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
+            gpuMalloc((void**) &_devData, sizeof(T) * _length * _length2);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
 
-        }else{
+        } else {
             //Allocate GPU memeory
-            status = hipHostAlloc((void**)&_hostData, _length*_length2*sizeof(T),hipHostMallocMapped);
-            PRINTERROR(status, " hipMalloc gpu_buffer_type :: Allocate failed!");
-            gpu->totalGPUMemory   += _length*_length2*sizeof(T);
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpu->totalGPUMemory += sizeof(T) * _length * _length2;
 
         }
-    }else{
+    } else {
 #ifndef CUDART_VERSION
-       status=hipErrorInvalidValue;
+        status = hipErrorInvalidValue;
 #elif (CUDART_VERSION < 10010)
-       status=hipErrorInvalidDevicePointer;
+        status = hipErrorInvalidDevicePointer;
 #else
-       status=hipErrorNotMappedAsPointer;
+        status = hipErrorNotMappedAsPointer;
 #endif
-        PRINTERROR(status, " hipMalloc gpu_buffer_type :: Reallocation failed!");
+        PRINTERROR(status, " gpuMalloc gpu_buffer_type :: Reallocation failed!");
     }
 
-    PRINTMEM("ALLOCATE GPU MEMORY",(unsigned long long int)_length*_length2*sizeof(T))
-    PRINTMEM("GPU++",gpu->totalGPUMemory);
-    PRINTMEM("CPU  ",gpu->totalCPUMemory);
+    PRINTMEM("ALLOCATE GPU MEMORY", (unsigned long long int) sizeof(T) * _length * _length2);
+    PRINTMEM("GPU++", gpu->totalGPUMemory);
+    PRINTMEM("CPU  ", gpu->totalCPUMemory);
     PRINTDEBUG("<<FINISHED ALLOCATING GPU");
 }
 
@@ -726,147 +728,134 @@ void gpu_buffer_type<T> :: ReallocateGPU()
 template <typename T>
 void gpu_buffer_type<T> :: Deallocate()
 {
-
     PRINTDEBUG(">>BEGIN TO DEALLOCATE TEMPLATE");
     if (!_bPinned) {
-        
         if (_devData != NULL) {
-            hipError_t status;
-            status = hipFree(_devData);
-            //	status = hipHostFree(_hostData);
-            PRINTERROR(status, " hipFree gpu_buffer_type :: Deallocate failed!");
-            gpu->totalGPUMemory -= _length*_length2*sizeof(T);
+            gpuFree(_devData);
+            gpu->totalGPUMemory -= sizeof(T) * _length * _length2;
         }
-        
+
         if (_hostData != NULL) {
-//            free(_hostData);
             delete [] _hostData;
-            gpu->totalCPUMemory -= _length*_length2*sizeof(T);
+            gpu->totalCPUMemory -= sizeof(T) * _length * _length2;
         }
-    }else{
-        hipError_t status;
-        status = hipHostFree(_hostData);
-        PRINTERROR(status, " hipFree gpu_buffer_type :: Deallocate failed!");
-        gpu->totalGPUMemory -= _length*_length2*sizeof(T);
-        gpu->totalCPUMemory -= _length*_length2*sizeof(T);
+    } else {
+        gpuFreeHost(_hostData);
+        gpu->totalGPUMemory -= sizeof(T) * _length * _length2;
+        gpu->totalCPUMemory -= sizeof(T) * _length * _length2;
     }
     _hostData = NULL;
     _devData = NULL;
     _f90Data = NULL;
+
 #ifdef DEBUG
-    
-    PRINTMEM("GPU--",gpu->totalGPUMemory);
-    PRINTMEM("CPU--",gpu->totalCPUMemory);
-    
+    PRINTMEM("GPU--", gpu->totalGPUMemory);
+    PRINTMEM("CPU--", gpu->totalCPUMemory);
 #endif
     PRINTDEBUG("<<FINSH DEALLOCATION TEMPLATE");
-
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: Upload()
 {
-
     PRINTDEBUG(">>BEGIN TO UPLOAD TEMPLATE");
 
-    hipError_t status;
-    status = hipMemcpy(_devData,_hostData,_length*_length2*sizeof(T),hipMemcpyHostToDevice);
-    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Upload failed!");
-    PRINTDEBUG("<<FINISH UPLOADING TEMPLATE");
+    gpuMemcpy(_devData, _hostData, sizeof(T) * _length * _length2, hipMemcpyHostToDevice);
 
+    PRINTDEBUG("<<FINISH UPLOADING TEMPLATE");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: UploadAsync()
 {
-
     PRINTDEBUG(">>BEGIN TO UPLOAD TEMPLATE");
 
-    hipError_t status;
-    status = hipMemcpyAsync(_devData,_hostData,_length*_length2*sizeof(T),hipMemcpyHostToDevice);
-    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Upload failed!");
-    PRINTDEBUG("<<FINISH UPLOADING TEMPLATE");
+    gpuMemcpyAsync(_devData, _hostData, sizeof(T) * _length * _length2, hipMemcpyHostToDevice, 0);
 
+    PRINTDEBUG("<<FINISH UPLOADING TEMPLATE");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: Download()
 {
-
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE");
-    hipError_t status;
-    status = hipMemcpy(_hostData,_devData,_length*_length2*sizeof(T),hipMemcpyDeviceToHost);
-    PRINTERROR(status, " hipMemcpy gpu_buffer_type :: Download failed!");
+
+    gpuMemcpy(_hostData, _devData, sizeof(T) * _length * _length2, hipMemcpyDeviceToHost);
+
     PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: Download(T* f90Data)
 {
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE TO FORTRAN ARRAY");
+
     size_t index_c = 0;
-    size_t index_f;
     for (size_t i = 0; i < _length; i++) {
         for (size_t j = 0; j <_length2; j++) {
-            index_f = j*_length+i;
-            f90Data[index_f] = _hostData[index_c++];
+            f90Data[j * _length + i] = _hostData[index_c++];
         }
     }
+
     PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE TO FORTRAN ARRAY");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: DownloadSum(T* f90Data)
 {
     PRINTDEBUG(">>BEGIN TO DOWNLOAD TEMPLATE TO FORTRAN ARRAY");
+
     size_t index_c = 0;
-    size_t index_f;
     for (size_t i = 0; i < _length; i++) {
         for (size_t j = 0; j <_length2; j++) {
-            index_f = j*_length+i;
-            f90Data[index_f] += _hostData[index_c++];
+            f90Data[j * _length + i] += _hostData[index_c++];
         }
     }
+
     PRINTDEBUG("<<FINISH DOWNLOADING TEMPLATE TO FORTRAN ARRAY");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: DeleteCPU()
 {
-    
     PRINTDEBUG(">>BEGIN TO DELETE CPU");
-    
+
     if (_hostData != NULL) {
-//        free(_hostData);
         delete [] _hostData;
         _hostData = NULL;
+
 #ifdef DEBUG
-        gpu->totalCPUMemory -= _length*_length2*sizeof(T);
-        
-        PRINTMEM("GPU  ",gpu->totalGPUMemory);
-        PRINTMEM("CPU--",gpu->totalCPUMemory);
-        
+        gpu->totalCPUMemory -= sizeof(T) * _length * _length2;
+        PRINTMEM("GPU  ", gpu->totalGPUMemory);
+        PRINTMEM("CPU--", gpu->totalCPUMemory);
 #endif
     }
+
     PRINTDEBUG("<<FINSH DELETE CPU");
 }
+
 
 template <typename T>
 void gpu_buffer_type<T> :: DeleteGPU()
 {
-    
     PRINTDEBUG(">>BEGIN TO DELETE GPU");
-    
-    if (_devData != NULL) { 
-        hipFree(_devData);
+
+    if (_devData != NULL) {
+        gpuFree(_devData);
         _devData = NULL;
+
 #ifdef DEBUG
-        gpu->totalGPUMemory -= _length*_length2*sizeof(T);
-    
-        PRINTMEM("GPU--",gpu->totalGPUMemory);
-    	PRINTMEM("CPU  ",gpu->totalCPUMemory);
-    
+        gpu->totalGPUMemory -= sizeof(T) * _length * _length2;
+        PRINTMEM("GPU--", gpu->totalGPUMemory);
+        PRINTMEM("CPU  ", gpu->totalCPUMemory);
 #endif
     }
+
     PRINTDEBUG("<<FINSH DELETE CPU");
 }

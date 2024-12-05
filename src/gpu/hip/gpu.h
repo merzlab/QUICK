@@ -7,14 +7,15 @@
  *  Copyright 2011 University of Florida. All rights reserved.
  *
  */
-#ifndef QUICK_GPU_H
-#define QUICK_GPU_H
+#if !defined(__QUICK_GPU_H_)
+#define __QUICK_GPU_H_
 
 #include "gpu_type.h"
 
 //Madu Manathunga 07/01/2019: Libxc header files
 #include "util.h"
 #include "../xc_redistribute.h"
+
 
 // device initial and shutdown operation
 extern "C" void gpu_set_device_(int* gpu_dev_id, int* ierr);
@@ -23,24 +24,27 @@ extern "C" void gpu_init_(int* ierr);
 extern "C" void gpu_shutdown_(int* ierr);
 
 extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
-                                     int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv, int* ierr);
-
+        int* gpu_num_proc, double* gpu_core_freq,char* gpu_dev_name,
+        int* name_len, int* majorv, int* minorv, int* ierr);
 
 // molecule, basis sets, and some other information
 extern "C" void gpu_upload_method_(int* quick_method, bool* is_oshell, double* hyb_coeff);
 extern "C" void gpu_upload_atom_and_chg_(int* atom, QUICKDouble* atom_chg);
-extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,QUICKDouble* primLimit, QUICKDouble* DMCutoff, QUICKDouble* coreIntegralCutoff);
+extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integralCutoff,
+        QUICKDouble* primLimit, QUICKDouble* DMCutoff, QUICKDouble* coreIntegralCutoff);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutPrim);
 extern "C" void gpu_upload_energy_(QUICKDouble* E);
 extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDouble* vec, QUICKDouble* dense);
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb);
 extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb);
-extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jbasis, int* maxcontract, \
-                                  int* ncontract, int* itype,     QUICKDouble* aexp,      QUICKDouble* dcoeff,\
-                                  int* first_basis_function, int* last_basis_function, int* first_shell_basis_function, int* last_shell_basis_function, \
-                                  int* ncenter,   int* kstart,    int* katom,     int* ktype,     int* kprim,  int* kshell, int* Ksumtype, \
-                                  int* Qnumber,   int* Qstart,    int* Qfinal,    int* Qsbasis,   int* Qfbasis,\
-                                  QUICKDouble* gccoeff,           QUICKDouble* cons,      QUICKDouble* gcexpo, int* KLMN);
+extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jbasis,
+        int* maxcontract, int* ncontract, int* itype, QUICKDouble* aexp,
+        QUICKDouble* dcoeff, int* first_basis_function, int* last_basis_function,
+        int* first_shell_basis_function, int* last_shell_basis_function,
+        int* ncenter, int* kstart, int* katom, int* ktype, int* kprim,
+        int* kshell, int* Ksumtype, int* Qnumber, int* Qstart, int* Qfinal,
+        int* Qsbasis, int* Qfbasis, QUICKDouble* gccoeff, QUICKDouble* cons,
+        QUICKDouble* gcexpo, int* KLMN);
 extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff);
 extern "C" void gpu_cleanup_();
 
@@ -289,7 +293,6 @@ void upload_sim_to_constant_dft(_gpu_type gpu);
 void upload_sim_to_constant_lri(_gpu_type gpu);
 
 void upload_para_to_const();
-char *trim(char *s);
 
 void bind_eri_texture(_gpu_type gpu);
 void unbind_eri_texture();
@@ -682,5 +685,6 @@ __global__ void getcew_quad_kernel();
 __global__ void oshell_getcew_quad_grad_kernel();
 __global__ void cshell_getcew_quad_grad_kernel();
 #endif
+
 
 #endif

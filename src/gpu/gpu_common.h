@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef QUICK_GPU_COMMON_H
-#define QUICK_GPU_COMMON_H
+#if !defined(__QUICK_GPU_COMMON_H_)
+#define __QUICK_GPU_COMMON_H_
 
 #include <stdio.h>
 

@@ -7,7 +7,6 @@ set(QUICK_GPU_TARGET_NAME "cuda")
 set(GPU_LD_FLAGS "") # hipcc requires special flags for linking (see below)
 
 if(CUDA)
-
     find_package(CUDA REQUIRED)
 
     if(NOT CUDA_FOUND)
@@ -266,7 +265,7 @@ if(CUDA)
     endif()
 
     # extra CUDA flags
-    list(APPEND CUDA_NVCC_FLAGS -use_fast_math)
+    list(APPEND CUDA_NVCC_FLAGS --use_fast_math)
 
     if(TARGET_LINUX OR TARGET_OSX)
         list(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC)

@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /*
    !---------------------------------------------------------------------!
    ! Written by Madu Manathunga on 09/29/2021                            !
@@ -24,38 +23,23 @@
 #ifndef OSHELL
 void getcew_quad(_gpu_type gpu) {
     QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
-
-    hipDeviceSynchronize();
 }
 
 
 void getcew_quad_grad(_gpu_type gpu) {
-    if(gpu -> gpu_sim.is_oshell == true) {
+    if (gpu -> gpu_sim.is_oshell == true) {
         QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-        hipDeviceSynchronize();
-
         QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
     } else {
         QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-
-        hipDeviceSynchronize();
-
         QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-        //QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>()));
     }
-
-    hipDeviceSynchronize();
 
     get_cew_accdens(gpu);
 
     prune_grid_sswgrad();
 
     get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>();
-
-    //get_sswnumgrad_kernel<<< 1,1, gpu -> gpu_xcq -> smem_size>>>();
-
-    hipDeviceSynchronize();
 
     gpu_delete_sswgrad_vars();
 }
@@ -99,9 +83,9 @@ void get_cew_accdens(_gpu_type gpu) {
 
         for (int j = 0; j < 3; j++)
 #if defined(USE_LEGACY_ATOMICS)
-            gpu->grad->_hostData[Istart + j] += cewGrad[j];
+            gpu->grad->_hostData[Istart+j] += cewGrad[j];
 #else
-            gpu->cew_grad->_hostData[Istart + j] += cewGrad[j];
+            gpu->cew_grad->_hostData[Istart+j] += cewGrad[j];
 #endif
     }
 
@@ -166,7 +150,7 @@ __global__ void cshell_getcew_quad_grad_kernel()
 #if defined(USE_LEGACY_ATOMICS)
     //declare smem grad vector
     extern __shared__ QUICKULL smem_buffer[];
-    QUICKULL* smemGrad = (QUICKULL*) smem_buffer;
+    QUICKULL* smemGrad=(QUICKULL*)smem_buffer;
 
     // initialize smem grad
     for (int i = threadIdx.x; i < devSim_dft.natom * 3; i += blockDim.x)

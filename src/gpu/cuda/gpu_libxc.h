@@ -81,7 +81,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         }
     }
 
-    cudaHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_, cudaHostAllocMapped);
+    gpuHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_, cudaHostAllocMapped);
 
     for (int i = 0; i < num_of_funcs_; i++) {
         xc_func_type func;
@@ -149,5 +149,5 @@ void libxc_cleanup(gpu_libxc_info** d_glinfo, int n_func) {
         gpu_libxc_cleanup(d_glinfo[i]);
     }
 
-    cudaFreeHost(d_glinfo);
+    gpuFreeHost(d_glinfo);
 }

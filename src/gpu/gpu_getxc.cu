@@ -1,6 +1,11 @@
-#include "gpu.h"
-#include <cuda.h>
-#include "../libxc_dev_funcs.h"
+#if defined(CUDA) || defined(CUDA_MPIV)
+  #include "cuda/gpu.h"
+#elif defined(HIP) || defined(HIP_MPIV)
+  #include "hip/gpu.h"
+#endif
+
+#include "libxc_dev_funcs.h"
+
 #include "gpu_work_gga_x.cu"
 #include "gpu_work_gga_c.cu"
 #include "gpu_work_lda.cu"
@@ -38,125 +43,89 @@ static float totTime;
    upload gpu simulation type to constant memory
 */
 void upload_sim_to_constant_dft(_gpu_type gpu) {
-    cudaError_t status;
-
-    PRINTDEBUG("UPLOAD CONSTANT DFT");
-    status = cudaMemcpyToSymbol(devSim_dft, &gpu->gpu_sim, sizeof(gpu_simulation_type));
-//    status = cudaMemcpyToSymbol("devSim_dft", &gpu->gpu_sim, sizeof(gpu_simulation_type), 0, cudaMemcpyHostToDevice);
-    PRINTERROR(status, " cudaMemcpyToSymbol, dft sim copy to constants failed");
-    PRINTDEBUG("FINISH UPLOAD CONSTANT DFT");
+    gpuMemcpyToSymbol((const void *) &devSim_dft, (const void *) &gpu->gpu_sim, sizeof(gpu_simulation_type));
 }
 
 
 void get_ssw(_gpu_type gpu) {
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
+#if defined(DEBUG)
+    GPU_TIMER_CREATE();
+    GPU_TIMER_START();
 #endif
 
-    QUICK_SAFE_CALL((get_ssw_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
+    QUICK_SAFE_CALL((get_ssw_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
 
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    totTime+=time;
-    fprintf(gpu->debugFile,"Time to compute grid weights on gpu:%f ms total time:%f ms\n", time, totTime);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
+#if defined(DEBUG)
+    GPU_TIMER_STOP();
+    totTime += time;
+    fprintf(gpu->debugFile, "Time to compute grid weights on gpu:%f ms total time:%f ms\n", time, totTime);
+    GPU_TIMER_DESTROY();
 #endif
 }
 
 
 void get_primf_contraf_lists(_gpu_type gpu, unsigned char *gpweight,
         unsigned int *cfweight, unsigned int *pfweight) {
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
+#if defined(DEBUG)
+    GPU_TIMER_CREATE();
+    GPU_TIMER_START();
 #endif
 
-    QUICK_SAFE_CALL((get_primf_contraf_lists_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>
+    QUICK_SAFE_CALL((get_primf_contraf_lists_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>>
                 (gpweight, cfweight, pfweight)));
 
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    totTime+=time;
+#if defined(DEBUG)
+    GPU_TIMER_STOP();
+    totTime += time;
     fprintf(gpu->debugFile, "Time to compute primitive and contracted indices on gpu: %f ms total time:%f ms\n", time, totTime);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
+    GPU_TIMER_DESTROY();
 #endif
 }
 
 
 void getpteval(_gpu_type gpu) {
-    QUICK_SAFE_CALL((get_pteval_kernel<<< gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-    cudaDeviceSynchronize();
+    QUICK_SAFE_CALL((get_pteval_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
 }
 
 
 void getxc(_gpu_type gpu) {
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
+#if defined(DEBUG)
+    GPU_TIMER_CREATE();
+    GPU_TIMER_START();
 #endif
 
     if (gpu->gpu_sim.is_oshell == true) {
-        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((oshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_oshell_density_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
+        QUICK_SAFE_CALL((oshell_getxc_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
     } else {
-        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((cshell_getxc_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((get_cshell_density_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
+        QUICK_SAFE_CALL((cshell_getxc_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
     }
-    cudaDeviceSynchronize();
 
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    totTime+=time;
-    fprintf(gpu->debugFile,"this DFT cycle:%f ms total time:%f ms\n", time, totTime);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
+#if defined(DEBUG)
+    GPU_TIMER_STOP();
+    totTime += time;
+    fprintf(gpu->debugFile, "this DFT cycle:%f ms total time:%f ms\n", time, totTime);
+    GPU_TIMER_DESTROY();
 #endif
+
 //    nvtxRangePop();
 }
 
 
 void getxc_grad(_gpu_type gpu) {
-#ifdef DEBUG
-    cudaEvent_t start,end;
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-    cudaEventRecord(start, 0);
+#if defined(DEBUG)
+    GPU_TIMER_CREATE();
+    GPU_TIMER_START();
 #endif
 
     if (gpu->gpu_sim.is_oshell == true) {
-        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((oshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
+        QUICK_SAFE_CALL((get_oshell_density_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
+        QUICK_SAFE_CALL((oshell_getxcgrad_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>> ()));
     } else {
-        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        cudaDeviceSynchronize();
-
-        QUICK_SAFE_CALL((cshell_getxcgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
+        QUICK_SAFE_CALL((get_cshell_density_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock>>> ()));
+        QUICK_SAFE_CALL((cshell_getxcgrad_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>> ()));
     }
-    cudaDeviceSynchronize();
 
 #ifdef CEW
     if (gpu->gpu_sim.use_cew) {
@@ -166,26 +135,18 @@ void getxc_grad(_gpu_type gpu) {
 
     prune_grid_sswgrad();
 
-    QUICK_SAFE_CALL((get_sswgrad_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
-
-    //get_sswgrad_kernel<<<1,1, gpu->gpu_xcq->smem_size>>>();
-
-    //QUICK_SAFE_CALL((get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
-
-    cudaDeviceSynchronize();
+    QUICK_SAFE_CALL((get_sswgrad_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>> ()));
+//    QUICK_SAFE_CALL((get_sswnumgrad_kernel <<<gpu->blocks, gpu->sswGradThreadsPerBlock, gpu->gpu_xcq->smem_size>>> ()));
 
     gpu_delete_sswgrad_vars();
 
-#ifdef DEBUG
-    cudaEventRecord(end, 0);
-    cudaEventSynchronize(end);
-    float time;
-    cudaEventElapsedTime(&time, start, end);
-    totTime+=time;
-    fprintf(gpu->debugFile,"this DFT cycle:%f ms total time:%f ms\n", time, totTime);
-    cudaEventDestroy(start);
-    cudaEventDestroy(end);
+#if defined(DEBUG)
+    GPU_TIMER_STOP();
+    totTime += time;
+    fprintf(gpu->debugFile, "this DFT cycle:%f ms total time:%f ms\n", time, totTime);
+    GPU_TIMER_DESTROY();
 #endif
+
 //    nvtxRangePop();
 }
 

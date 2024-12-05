@@ -9,9 +9,10 @@
 
 #include "gpu_startup.h"
 
-extern "C" void gpu_set_device_(int* gpu_dev_id)
+#include <stdio.h>
+
+
+extern "C" void gpu_set_device_(int * gpu_dev_id)
 {
-    cudaError_t status;
-    status=cudaSetDevice(*gpu_dev_id);
-    cudaThreadSynchronize();
+    gpuSetDevice(*gpu_dev_id);
 }
