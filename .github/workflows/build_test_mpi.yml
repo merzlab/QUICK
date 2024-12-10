@@ -17,6 +17,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
+      - name: 'Log Softare Environment Configuration'
+        run: |
+          echo "Ubuntu version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "GCC (gfortran) version:"
+          gfortran --version
+          echo
+          echo "MPI version:"
+          mpirun --version
       - name: 'Configure MPI Version'
         run: ./configure --mpi --enablef --prefix $PWD/install gnu
       - name: 'Build and Install MPI Version Using 2 Jobs'
@@ -47,6 +63,25 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev
+      - name: 'Log Softare Environment Configuration (CMake)'
+        run: |
+          echo "Ubuntu version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "GCC (gfortran) version:"
+          gfortran --version
+          echo
+          echo "MPI version:"
+          mpirun --version
+          echo
+          echo "CMake version:"
+          cmake --version
       - name: 'Configure MPI Version (CMake)'
         run: |
           mkdir build
