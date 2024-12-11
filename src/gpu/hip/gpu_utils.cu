@@ -194,7 +194,7 @@ void _gpuHostAlloc(void **ptr, size_t size, unsigned int flags, const char * con
     fflush(stderr);
 #endif
 
-    ret = hipHostAlloc(ptr, size, flags);
+    ret = hipHostMalloc(ptr, size, flags);
 
     if (ret != hipSuccess)
     {

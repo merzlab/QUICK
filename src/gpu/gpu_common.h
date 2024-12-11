@@ -269,8 +269,7 @@ struct ERI_entry {
   /* iterative (computationally expensive) approach to emulate full double
    * precision atomics using integer atomics on GPUs lacking hardware support,
    * as given in the CUDA developer documentation */
-  #if ((defined(CUDA) || defined(CUDA_MPIV)) && defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600) \
-      || ((defined(HIP) || defined(HIP_MPIV)) && !defined(__HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__))
+  #if ((defined(CUDA) || defined(CUDA_MPIV)) && defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 600)
 __device__ static inline double atomicAdd(double * address, double val)
 {
     unsigned long long int *address_as_ull, old, assumed;

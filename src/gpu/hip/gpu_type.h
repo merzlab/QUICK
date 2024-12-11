@@ -640,7 +640,8 @@ void gpu_buffer_type<T> :: Allocate()
             memset(_hostData, 0, sizeof(T) * _length * _length2);
         } else {
             //Allocate GPU memeory
-            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2,
+			    hipHostMallocNumaUser | hipHostMallocPortable);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
             gpu->totalCPUMemory += sizeof(T) * _length * _length2;
 
@@ -660,7 +661,8 @@ void gpu_buffer_type<T> :: Allocate()
             memset(_hostData, 0, sizeof(T) * _length * _length2);
         } else {
             //Allocate GPU memeory
-            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2,
+			    hipHostMallocNumaUser | hipHostMallocPortable);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
             gpu->totalCPUMemory += sizeof(T) * _length * _length2;
 
@@ -703,7 +705,8 @@ void gpu_buffer_type<T> :: ReallocateGPU()
 
         } else {
             //Allocate GPU memeory
-            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, hipHostMallocMapped);
+            gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2,
+			    hipHostMallocNumaUser | hipHostMallocPortable);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
 
         }

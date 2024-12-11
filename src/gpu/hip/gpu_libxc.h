@@ -81,7 +81,8 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
         }
     }
 
-    gpuHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_, hipHostMallocMapped);
+    gpuHostAlloc((void**) &h_glinfo_array, sizeof(gpu_libxc_info*) * num_of_funcs_,
+		    hipHostMallocNumaUser | hipHostMallocPortable);
 
     for (int i = 0; i < num_of_funcs_; i++) {
         xc_func_type func;
