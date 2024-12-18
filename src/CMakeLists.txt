@@ -209,10 +209,6 @@ if(CUDA)
 		copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 		target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 		set_target_properties(libquick_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
-#		target_compile_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-#			--use_fast_math
-#			--relocatable-device-code=true
-#			>)
 
 		# change link libraries and mod dirs for CUDA
 		remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
@@ -264,10 +260,6 @@ if(MPI AND CUDA)
 		copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 		target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 		set_target_properties(libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
-#		target_compile_options(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-#			--use_fast_math
-#			--relocatable-device-code=true
-#			>)
 
 		remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
 
