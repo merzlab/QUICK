@@ -373,13 +373,12 @@ if(HIP)
     #  check ROCm version (as reported by hipcc),
     #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
     #  in several ROCm versions
-    if (${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3
-           AND ${HIP_VERSION} VERSION_LESS_EQUAL 6.2.0 )
+    if (${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3)
         message(STATUS "")
         message("************************************************************")
 	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
         message("  The QUICK HIP codes trigger a known compiler scalar register ")
-        message("  fill/spill bug in ROCm >= v5.4.3 and <= v6.2.0.")
+        message("  fill/spill bug in ROCm >= v5.4.3.")
         message("  Please build QUICK with a known working ROCm version.")
         message("************************************************************")
         message(STATUS "")
