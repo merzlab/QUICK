@@ -37,7 +37,7 @@ set_property(TARGET rocblas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 target_include_directories(rocblas_fortran_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 config_module_dirs(rocblas_fortran_obj quick/${QUICK_GPU_TARGET_NAME})
 
-if(NOT MAGMA)
+if(NOT MAGMA AND ${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
 	# rocsolver
 	#------------------------------------------------------------------------------------------
 	set(ROCSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
@@ -57,7 +57,7 @@ if(MPI)
 	config_module_dirs(rocblas_fortran_obj_mpi quick/mpi_${QUICK_GPU_TARGET_NAME})
 	set_property(TARGET rocblas_fortran_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 
-	if(NOT MAGMA)
+	if(NOT MAGMA AND ${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
 		copy_target(rocsolver_obj rocsolver_obj_mpi SWAP_SOURCES TO)
 		config_module_dirs(rocsolver_obj_mpi quick/mpi_${QUICK_GPU_TARGET_NAME})
 		set_property(TARGET rocsolver_obj_mpi PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})

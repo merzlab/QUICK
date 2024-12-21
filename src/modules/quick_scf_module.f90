@@ -633,6 +633,13 @@ contains
            call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
 #elif defined(WITH_ROCSOLVER)
            call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#else
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#else
+           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
+                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
+#endif
 #endif
 #else
 #if defined(LAPACK) || defined(MKL)

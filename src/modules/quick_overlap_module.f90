@@ -251,6 +251,13 @@ subroutine fullx
    call magmaDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
 #elif defined(WITH_ROCSOLVER)
    call rocDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
+#else
+#if defined(LAPACK) || defined(MKL)
+   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
+#else
+   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
+   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
+#endif
 #endif
 #else
 #if defined(LAPACK) || defined(MKL)
