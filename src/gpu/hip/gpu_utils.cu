@@ -29,7 +29,7 @@ void _gpuGetDeviceCount(int * count, const char * const filename, int line)
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipGetDeviceCount failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipGetDeviceCount failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -72,12 +72,12 @@ void _gpuGetDeviceCount(int device, const char * const filename, int line)
         const char *str = hipGetErrorString(ret);
 
         if (ret == hipErrorInvalidDevice) {
-            fprintf(stderr, "[ERROR] invalid CUDA device ID set (%d).\n", device);
+            fprintf(stderr, "[ERROR] invalid GPU device ID set (%d).\n", device);
         } else if (ret == hipErrorContextAlreadyInUse) {
-            fprintf(stderr, "[ERROR] CUDA device with specified ID already in use (%d).\n", device);
+            fprintf(stderr, "[ERROR] GPU device with specified ID already in use (%d).\n", device);
         }
 
-        fprintf(stderr, "[ERROR] CUDA error: hipSetDevice failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipSetDevice failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -134,7 +134,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMalloc failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMalloc failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -203,7 +203,7 @@ void _gpuHostAlloc(void **ptr, size_t size, unsigned int flags, const char * con
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipHostAlloc failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipHostAlloc failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -277,7 +277,7 @@ void _gpuFree(void *ptr, const char * const filename, int line)
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[WARNING] CUDA error: hipFree failure\n");
+        fprintf(stderr, "[WARNING] GPU error: hipFree failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -338,7 +338,7 @@ void _gpuFreeHost(void * ptr, const char * const filename, int line)
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[WARNING] CUDA error: hipHostFree failure\n");
+        fprintf(stderr, "[WARNING] GPU error: hipHostFree failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -381,7 +381,7 @@ void _gpuMemset(void *ptr, int data, size_t count,
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMemset failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMemset failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -427,7 +427,7 @@ void _gpuMemsetAsync(void *ptr, int data, size_t count,
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMemsetAsync failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMemsetAsync failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -519,7 +519,7 @@ void _gpuMemcpy(void * const dest, void const * const src, size_t count,
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMemcpy failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMemcpy failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -566,7 +566,7 @@ void _gpuMemcpyAsync(void * const dest, void const * const src, size_t count,
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMemcpyAsync failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMemcpyAsync failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -611,7 +611,7 @@ void _gpuMemcpyToSymbol(void const * const symbol, void const * const src, size_
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipMemcpyToSymbol failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipMemcpyToSymbol failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -656,7 +656,7 @@ void _gpuHostGetDevicePointer(void ** pdev, void * const phost, unsigned int fla
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipHostGetDevicePointer failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipHostGetDevicePointer failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -797,7 +797,7 @@ void _gpuHostReallocCheck(void **ptr, size_t *cur_size, size_t new_size,
 
 /* Safe wrapper around hipEventCreate
  *
- * event: created CUDA event
+ * event: created GPU event
  * filename: NULL-terminated source filename where function call originated
  * line: line of source file where function call originated
  */
@@ -817,7 +817,7 @@ void _gpuEventCreate(hipEvent_t * event, const char * const filename, int line)
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipEventCreate failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipEventCreate failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -839,7 +839,7 @@ void _gpuEventCreate(hipEvent_t * event, const char * const filename, int line)
 
 /* Safe wrapper around hipEventDestroy
  *
- * event: CUDA event to destroy
+ * event: GPU event to destroy
  * filename: NULL-terminated source filename where function call originated
  * line: line of source file where function call originated
  */
@@ -859,7 +859,7 @@ void _gpuEventDestroy(hipEvent_t event, const char * const filename, int line)
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipEventDestroy failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipEventDestroy failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -881,8 +881,8 @@ void _gpuEventDestroy(hipEvent_t event, const char * const filename, int line)
 
 /* Safe wrapper around hipEventElapsedTime
  *
- * time: elapsed time between CUDA events (in ms)
- * start, end: CUDA events to compute elapsed time for
+ * time: elapsed time between GPU events (in ms)
+ * start, end: GPU events to compute elapsed time for
  * filename: NULL-terminated source filename where function call originated
  * line: line of source file where function call originated
  */
@@ -902,7 +902,7 @@ void _gpuEventElapsedTime(float * time, hipEvent_t start, hipEvent_t end, const 
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipEventElapsedTime failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipEventElapsedTime failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -924,8 +924,8 @@ void _gpuEventElapsedTime(float * time, hipEvent_t start, hipEvent_t end, const 
 
 /* Safe wrapper around hipEventRecord
  *
- * event: CUDA event to record
- * stream: CUDA stream in which to record event
+ * event: GPU event to record
+ * stream: GPU stream in which to record event
  * filename: NULL-terminated source filename where function call originated
  * line: line of source file where function call originated
  */
@@ -945,7 +945,7 @@ void _gpuEventRecord(hipEvent_t event, hipStream_t stream, const char * const fi
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipEventRecord failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipEventRecord failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
@@ -967,7 +967,7 @@ void _gpuEventRecord(hipEvent_t event, hipStream_t stream, const char * const fi
 
 /* Safe wrapper around hipEventSynchronize
  *
- * event: CUDA event to record
+ * event: GPU event to record
  * filename: NULL-terminated source filename where function call originated
  * line: line of source file where function call originated
  */
@@ -987,7 +987,7 @@ void _gpuEventSynchronize(hipEvent_t event, const char * const filename, int lin
 #endif
         const char *str = hipGetErrorString(ret);
 
-        fprintf(stderr, "[ERROR] CUDA error: hipEventSynchronize failure\n");
+        fprintf(stderr, "[ERROR] GPU error: hipEventSynchronize failure\n");
 #if defined(MPIV_GPU)
         fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
                 line, (int) strlen(filename), filename, rank);
