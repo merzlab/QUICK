@@ -61,9 +61,9 @@ Citation
 --------
 Please cite QUICK-24.03 as follows.
 
-Manathunga, M.; O'Hearn, K. A., Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
-Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03 
-University of California San Diego, CA and
+Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
+Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03.
+University of California, San Diego, CA and
 Michigan State University, East Lansing, MI, 2024.
 
 If you perform density functional theory calculations please also cite:
