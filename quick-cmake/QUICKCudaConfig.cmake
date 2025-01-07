@@ -329,6 +329,7 @@ if(HIP)
 
     if( NOT "${QUICK_USER_ARCH}" STREQUAL "")
         set(FOUND "FALSE")
+
         if("${QUICK_USER_ARCH}" MATCHES "gfx908")
             message(STATUS "Configuring QUICK for gfx908")
             list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
@@ -341,8 +342,14 @@ if(HIP)
             set(FOUND "TRUE")
         endif()
 
+        if("${QUICK_USER_ARCH}" MATCHES "gfx942")
+            message(STATUS "Configuring QUICK for gfx942")
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            set(FOUND "TRUE")
+        endif()
+
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a, gfx942.")
         endif()
     else()
         set(QUICK_USER_ARCH "gfx908")
