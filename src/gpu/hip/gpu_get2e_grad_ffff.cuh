@@ -1492,8 +1492,6 @@ __device__ static inline void iclass_grad_ffff
     int LLL1 = LOC2(DEV_SIM_INT_PTR_QSBASIS, LL, L, DEV_SIM_INT_NSHELL, 4);
     int LLL2 = LOC2(DEV_SIM_INT_PTR_QFBASIS, LL, L, DEV_SIM_INT_NSHELL, 4);
 
-    int IJKLTYPE = 999;
-
     int nbasis = DEV_SIM_INT_NBASIS;
 
     for (int III = III1; III <= III2; III++) {

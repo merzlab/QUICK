@@ -1448,14 +1448,6 @@ __device__ static inline void iclass_grad_ffff
         }
     }
 
-//   for (int i = Sumindex[K]; i < Sumindex[K + L + 2]; i++) {
-//       for (int j = Sumindex[I]; j < Sumindex[I + J + 2]; j++) {
-//           if (i < STOREDIM && j < STOREDIM) {
-//               printf("STORE   %d   %d   %d   %d   %d   %d   %d   %d   %d   %d   %.9f \n",II, JJ, KK, LL, I, J, K, L, j, i, LOCSTORE(store, j, i , STOREDIM, STOREDIM));
-//           }
-//       }
-//    }
-
     QUICKDouble AGradx = 0.0;
     QUICKDouble AGrady = 0.0;
     QUICKDouble AGradz = 0.0;
@@ -1490,8 +1482,6 @@ __device__ static inline void iclass_grad_ffff
     int KKK2 = LOC2(DEV_SIM_INT_PTR_QFBASIS, KK, K, DEV_SIM_INT_NSHELL, 4);
     int LLL1 = LOC2(DEV_SIM_INT_PTR_QSBASIS, LL, L, DEV_SIM_INT_NSHELL, 4);
     int LLL2 = LOC2(DEV_SIM_INT_PTR_QFBASIS, LL, L, DEV_SIM_INT_NSHELL, 4);
-
-    int IJKLTYPE = 999;
 
     int nbasis = DEV_SIM_INT_NBASIS;
 

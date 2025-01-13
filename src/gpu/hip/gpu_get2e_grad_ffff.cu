@@ -25,11 +25,9 @@
  *         set. Note it only store the location, so it's mostly a set of pointer to GPU memory. and with some non-pointer
  *         value like the number of basis set. See gpu_type.h for details.
  * devTrans: arrays to save the mapping index, will be elimited by hand writing unrolling code.
- * Sumindex: a array to store refect how many temp variable needed in VRR. can be elimited by hand writing code.
  */
 static __constant__ gpu_simulation_type devSim;
 static __constant__ unsigned char devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
-static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 
 
 //#define USE_TEXTURE
@@ -510,7 +508,6 @@ void get_oshell_eri_grad_ffff(_gpu_type gpu)
 
 void upload_para_to_const_ffff() {
     unsigned char trans[TRANSDIM * TRANSDIM * TRANSDIM];
-    hipError_t status;
 
     LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
     LOC3(trans, 0, 0, 1, TRANSDIM, TRANSDIM, TRANSDIM) =   4;
