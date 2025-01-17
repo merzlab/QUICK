@@ -1185,224 +1185,224 @@ __device__ static inline void iclass_grad_ffff
                 }
 
 #if defined(int_spdf4)
-                ERint_grad_vrr_ffff_1(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_1(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_2(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_2(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_3(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_3(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_4(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_4(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_5(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_5(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_6(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_6(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_7(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_7(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_8(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_8(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_9(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_9(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_10(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_10(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_11(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_11(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_12(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_12(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_13(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_13(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_14(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_14(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_15(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_15(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_16(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_16(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_17(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_17(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_18(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_18(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_19(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_19(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_20(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_20(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_21(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_21(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_22(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_22(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_23(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_23(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_24(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_24(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_25(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_25(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_26(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_26(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_27(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_27(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_28(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_28(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_29(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_29(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_30(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_30(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_31(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_31(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,
                         (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                         0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD, store2, YVerticalTemp);
 
-                ERint_grad_vrr_ffff_32(I, J, K, L, II, JJ, KK, LL,
+                ERint_grad_vrr_ffff_32(I, J, K, L,
                         Px - RAx, Py - RAy, Pz - RAz,
                         (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                         Qx - RCx, Qy - RCy, Qz - RCz,

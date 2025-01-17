@@ -732,7 +732,7 @@ __device__ __forceinline__ void iclass_spdf10
                 }
 
 #if defined(int_sp)
-		ERint_vertical_sp
+                ERint_vertical_sp
 #elif defined(int_spd)
                 ERint_vertical_spd
 #elif defined(int_spdf)
@@ -756,7 +756,7 @@ __device__ __forceinline__ void iclass_spdf10
 #elif defined(int_spdf10)
                 ERint_vertical_spdf_8
 #endif
-                    (I, J, K, L, II, JJ, KK, LL, 
+                    (I, J, K, L,
                      Px - RAx, Py - RAy, Pz - RAz, (Px * AB + Qx * CD) * ABCD - Px,
                      (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                      Qx - RCx, Qy - RCy, Qz - RCz, (Px * AB + Qx * CD) * ABCD - Qx,

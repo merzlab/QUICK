@@ -57,7 +57,7 @@ static __constant__ unsigned char devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
 #define ERI_GRAD_FFFF_TPB (32)
 #define ERI_GRAD_FFFF_BPSM (8)
 
-#define ERI_GRAD_FFFF_SMEM_INT_SIZE (7)
+#define ERI_GRAD_FFFF_SMEM_INT_SIZE (5)
 #define ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE (10)
 #define ERI_GRAD_FFFF_SMEM_DBL_SIZE (3)
 #define ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE (19)
@@ -106,13 +106,10 @@ static __constant__ unsigned char devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
 #define DEV_SIM_INT_NBASIS smem_int[ERI_GRAD_FFFF_TPB + threadIdx.x]
 #define DEV_SIM_INT_NSHELL smem_int[ERI_GRAD_FFFF_TPB * 2 + threadIdx.x]
 #define DEV_SIM_INT_JBASIS smem_int[ERI_GRAD_FFFF_TPB * 3 + threadIdx.x]
-#define DEV_SIM_INT_SQRQSHELL smem_int[ERI_GRAD_FFFF_TPB * 4 + threadIdx.x]
-#define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB * 5 + threadIdx.x]
-#define DEV_SIM_INT_FFSTART smem_int[ERI_GRAD_FFFF_TPB * 6 + threadIdx.x]
+#define DEV_SIM_INT_PRIM_TOTAL smem_int[ERI_GRAD_FFFF_TPB * 4 + threadIdx.x]
 
 #define DEV_SIM_PTR_GRAD smem_grad_ptr[threadIdx.x]
 
-#define LOCTRANS(A,i1,i2,i3,d1,d2,d3) A[(i3 + ((i2) + (i1) * (d2)) * (d3)) * ERI_GRAD_FFFF_TPB + threadIdx.x]
 #define DEV_SIM_CHAR_TRANS smem_char
 
 #if defined(GPU_SPDF)
@@ -242,13 +239,13 @@ void getGrad_ffff(_gpu_type gpu)
 {
     ResortERIs(gpu);
 
-    int *int_buffer = (int*) malloc(ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int));
-    int **int_ptr_buffer = (int**) malloc(ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int*));
-    QUICKDouble *dbl_buffer = (QUICKDouble*) malloc(ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB * sizeof(QUICKDouble));
-    QUICKDouble **dbl_ptr_buffer = (QUICKDouble**) malloc(ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB*sizeof(QUICKDouble*));
-    int2 **int2_ptr_buffer = (int2**) malloc(ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE*ERI_GRAD_FFFF_TPB * sizeof(int2*));
-    unsigned char **char_ptr_buffer = (unsigned char**) malloc(ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(unsigned char*));
-    QUICKAtomicType **grad_ptr_buffer = (QUICKAtomicType**) malloc(ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKAtomicType*));
+    int *int_buffer = (int *) malloc(sizeof(int) * ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB);
+    int **int_ptr_buffer = (int **) malloc(sizeof(int *) * ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    QUICKDouble *dbl_buffer = (QUICKDouble*) malloc(sizeof(QUICKDouble) * ERI_GRAD_FFFF_SMEM_DBL_SIZE*ERI_GRAD_FFFF_TPB);
+    QUICKDouble **dbl_ptr_buffer = (QUICKDouble **) malloc(sizeof(QUICKDouble *) * ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    int2 **int2_ptr_buffer = (int2 **) malloc(sizeof(int2 *) * ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    unsigned char **char_ptr_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    QUICKAtomicType **grad_ptr_buffer = (QUICKAtomicType **) malloc(sizeof(QUICKAtomicType *) * ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB);
     unsigned char trans[TRANSDIM * TRANSDIM * TRANSDIM];
 
     for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
@@ -256,9 +253,10 @@ void getGrad_ffff(_gpu_type gpu)
         int_buffer[ERI_GRAD_FFFF_TPB + i] = gpu->gpu_sim.nbasis;
         int_buffer[ERI_GRAD_FFFF_TPB * 2 + i] = gpu->gpu_sim.nshell;
         int_buffer[ERI_GRAD_FFFF_TPB * 3 + i] = gpu->gpu_sim.jbasis;
-        int_buffer[ERI_GRAD_FFFF_TPB * 4 + i] = gpu->gpu_sim.sqrQshell;
-        int_buffer[ERI_GRAD_FFFF_TPB * 5 + i] = gpu->gpu_sim.prim_total;
-        int_buffer[ERI_GRAD_FFFF_TPB * 6 + i] = gpu->gpu_sim.ffStart;
+        int_buffer[ERI_GRAD_FFFF_TPB * 4 + i] = gpu->gpu_sim.prim_total;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
         int_ptr_buffer[i] = gpu->gpu_sim.katom;
         int_ptr_buffer[ERI_GRAD_FFFF_TPB + i] = gpu->gpu_sim.kprim;
         int_ptr_buffer[ERI_GRAD_FFFF_TPB * 2 + i] = gpu->gpu_sim.kstart;
@@ -269,9 +267,15 @@ void getGrad_ffff(_gpu_type gpu)
         int_ptr_buffer[ERI_GRAD_FFFF_TPB * 7 + i] = gpu->gpu_sim.Qstart;
         int_ptr_buffer[ERI_GRAD_FFFF_TPB * 8 + i] = gpu->gpu_sim.sorted_Q;
         int_ptr_buffer[ERI_GRAD_FFFF_TPB * 9 + i] = gpu->gpu_sim.sorted_Qnumber;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
         dbl_buffer[i] = gpu->gpu_sim.primLimit;
         dbl_buffer[ERI_GRAD_FFFF_TPB + i] = gpu->gpu_sim.gradCutoff;
         dbl_buffer[ERI_GRAD_FFFF_TPB * 2 + i] = gpu->gpu_sim.hyb_coeff;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
         dbl_ptr_buffer[i] = gpu->gpu_sim.cons;
         dbl_ptr_buffer[ERI_GRAD_FFFF_TPB + i] = gpu->gpu_sim.cutMatrix;
         dbl_ptr_buffer[ERI_GRAD_FFFF_TPB * 2 + i] = gpu->gpu_sim.cutPrim;
@@ -291,9 +295,18 @@ void getGrad_ffff(_gpu_type gpu)
         dbl_ptr_buffer[ERI_GRAD_FFFF_TPB * 16 + i] = gpu->gpu_sim.xyz;
         dbl_ptr_buffer[ERI_GRAD_FFFF_TPB * 17 + i] = gpu->gpu_sim.YCutoff;
         dbl_ptr_buffer[ERI_GRAD_FFFF_TPB * 18 + i] = gpu->gpu_sim.YVerticalTemp;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
         int2_ptr_buffer[i] = gpu->gpu_sim.sorted_YCutoffIJ;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
         char_ptr_buffer[i] = gpu->gpu_sim.mpi_bcompute;
         char_ptr_buffer[ERI_GRAD_FFFF_TPB + i] = gpu->gpu_sim.KLMN;
+    }
+
+    for (int i = 0; i < ERI_GRAD_FFFF_TPB; i++) {
 #if defined(USE_LEGACY_ATOMICS)
         grad_ptr_buffer[i] = gpu->gpu_sim.gradULL;
 #else
@@ -431,25 +444,23 @@ void getGrad_ffff(_gpu_type gpu)
     unsigned char *dev_char_buffer;
     QUICKAtomicType **dev_grad_ptr_buffer;
 
-    gpuMalloc((void **) &dev_int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int));
-    gpuMalloc((void **) &dev_int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int*));
-    gpuMalloc((void **) &dev_dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKDouble));
-    gpuMalloc((void **) &dev_dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKDouble*));
-    gpuMalloc((void **) &dev_int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int2*));
-    gpuMalloc((void **) &dev_char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(unsigned char*));
-    gpuMalloc((void **) &dev_char_buffer, ERI_GRAD_FFFF_SMEM_CHAR_SIZE * sizeof(unsigned char));
-    gpuMalloc((void **) &dev_grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKAtomicType*));
+    gpuMalloc((void **) &dev_int_buffer, sizeof(int) * ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_int_ptr_buffer, sizeof(int *) * ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_dbl_buffer, sizeof(QUICKDouble) * ERI_GRAD_FFFF_SMEM_DBL_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_dbl_ptr_buffer, sizeof(QUICKDouble *) * ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_int2_ptr_buffer, sizeof(int2 *) * ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_char_ptr_buffer, sizeof(unsigned char *) * ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB);
+    gpuMalloc((void **) &dev_char_buffer, sizeof(unsigned char) * ERI_GRAD_FFFF_SMEM_CHAR_SIZE);
+    gpuMalloc((void **) &dev_grad_ptr_buffer, sizeof(QUICKAtomicType *) * ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB);
 
-    gpuMemcpy(dev_int_buffer, int_buffer, ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_int_ptr_buffer, int_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int*), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_dbl_buffer, dbl_buffer, ERI_GRAD_FFFF_SMEM_DBL_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKDouble), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_dbl_ptr_buffer, dbl_ptr_buffer, ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKDouble*), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(int2*), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_char_ptr_buffer, char_ptr_buffer, ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(unsigned
-                char*), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_char_buffer, &trans, ERI_GRAD_FFFF_SMEM_CHAR_SIZE * sizeof(unsigned char), hipMemcpyHostToDevice);
-    gpuMemcpy(dev_grad_ptr_buffer, grad_ptr_buffer, ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB * sizeof(QUICKAtomicType*),
-            hipMemcpyHostToDevice);
+    gpuMemcpy(dev_int_buffer, int_buffer, sizeof(int) * ERI_GRAD_FFFF_SMEM_INT_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_int_ptr_buffer, int_ptr_buffer, sizeof(int *) * ERI_GRAD_FFFF_SMEM_INT_PTR_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_dbl_buffer, dbl_buffer, sizeof(QUICKDouble) * ERI_GRAD_FFFF_SMEM_DBL_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_dbl_ptr_buffer, dbl_ptr_buffer, sizeof(QUICKDouble *) * ERI_GRAD_FFFF_SMEM_DBL_PTR_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_int2_ptr_buffer, int2_ptr_buffer, sizeof(int2 *) * ERI_GRAD_FFFF_SMEM_INT2_PTR_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_char_ptr_buffer, char_ptr_buffer, sizeof(unsigned char *) * ERI_GRAD_FFFF_SMEM_CHAR_PTR_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_char_buffer, &trans, sizeof(unsigned char) * ERI_GRAD_FFFF_SMEM_CHAR_SIZE, hipMemcpyHostToDevice);
+    gpuMemcpy(dev_grad_ptr_buffer, grad_ptr_buffer, sizeof(QUICKAtomicType *) * ERI_GRAD_FFFF_SMEM_PTR_SIZE * ERI_GRAD_FFFF_TPB, hipMemcpyHostToDevice);
 
     // Part f-3
     if (gpu->maxL >= 3) {

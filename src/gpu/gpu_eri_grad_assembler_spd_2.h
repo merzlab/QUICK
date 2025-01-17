@@ -1,37 +1,40 @@
 /*
- !---------------------------------------------------------------------!
- ! Written by QUICK-GenInt code generator on 08/02/2022                !
- !                                                                     !
- ! Copyright (C) 2020-2021 Merz lab                                    !
- ! Copyright (C) 2020-2021 Götz lab                                    !
- !                                                                     !
- ! This Source Code Form is subject to the terms of the Mozilla Public !
- ! License, v. 2.0. If a copy of the MPL was not distributed with this !
- ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
- !_____________________________________________________________________!
-*/
+   !---------------------------------------------------------------------!
+   ! Written by QUICK-GenInt code generator on 08/02/2022                !
+   !                                                                     !
+   ! Copyright (C) 2020-2021 Merz lab                                    !
+   ! Copyright (C) 2020-2021 Götz lab                                    !
+   !                                                                     !
+   ! This Source Code Form is subject to the terms of the Mozilla Public !
+   ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+   ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+   !_____________________________________________________________________!
+   */
 
-#undef STOREDIM 
-#undef VDIM3 
-#undef VY 
-#undef LOCSTORE 
+#undef STOREDIM
+#undef VDIM3
+#undef VY
+#undef LOCSTORE
 #undef STORE_OPERATOR
-#define STOREDIM STOREDIM_XL 
-#define VDIM3 VDIM3_L 
+#define STOREDIM STOREDIM_XL
+#define VDIM3 VDIM3_L
 #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 #define STORE_OPERATOR =
 
-__device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, const int K, const int L, const int II, const int JJ, const int KK, const int LL, 
-        const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz, const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz, 
-        const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz, const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz, 
-        const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp, const QUICKDouble ABcom, const QUICKDouble CDcom, 
-        QUICKDouble* store, QUICKDouble* YVerticalTemp){ 
-
+__device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, const int K, const int L,
+        const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
+        const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
+        const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
+        const QUICKDouble WQtempx, const QUICKDouble WQtempy, const QUICKDouble WQtempz,
+        const QUICKDouble ABCDtemp, const QUICKDouble ABtemp, const QUICKDouble CDtemp,
+        const QUICKDouble ABcom, const QUICKDouble CDcom,
+        QUICKDouble * const store, QUICKDouble * const YVerticalTemp)
+{
     // [SS|SS] integral - Start
     QUICKDouble VY_0 = VY(0, 0, 0);
     LOCSTORE(store, 0, 0, STOREDIM, STOREDIM) STORE_OPERATOR VY_0;
-    // [SS|SS] integral - End 
+    // [SS|SS] integral - End
 
     if ((I+J) >=  0 && (K+L)>= 1)
     {
@@ -42,152 +45,152 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
         LOCSTORE(store, 0, 1, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * VY_0 + WQtempx * VY_1;
         LOCSTORE(store, 0, 2, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * VY_0 + WQtempy * VY_1;
         LOCSTORE(store, 0, 3, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * VY_0 + WQtempz * VY_1;
-        // [SS|PS] integral - End 
+        // [SS|PS] integral - End
 
-       if ((I+J) >=  0 && (K+L)>= 2)
-       {
+        if ((I+J) >=  0 && (K+L)>= 2)
+        {
 
-           // [SS|DS] integral - Start
-           QUICKDouble VY_0 = VY(0, 0, 0);
-           QUICKDouble VY_1 = VY(0, 0, 1);
-           QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
-           QUICKDouble VY_2 = VY(0, 0, 2);
-           QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
-           LOCSTORE(store, 0, 7, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
-           QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
-           QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
-           LOCSTORE(store, 0, 8, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
-           LOCSTORE(store, 0, 4, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
-           QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
-           QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
-           LOCSTORE(store, 0, 9, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
-           LOCSTORE(store, 0, 6, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
-           LOCSTORE(store, 0, 5, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
-           // [SS|DS] integral - End 
+            // [SS|DS] integral - Start
+            QUICKDouble VY_0 = VY(0, 0, 0);
+            QUICKDouble VY_1 = VY(0, 0, 1);
+            QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
+            QUICKDouble VY_2 = VY(0, 0, 2);
+            QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
+            LOCSTORE(store, 0, 7, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
+            QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
+            QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
+            LOCSTORE(store, 0, 8, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
+            LOCSTORE(store, 0, 4, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
+            QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
+            QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
+            LOCSTORE(store, 0, 9, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
+            LOCSTORE(store, 0, 6, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
+            LOCSTORE(store, 0, 5, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
+            // [SS|DS] integral - End
 
-           if ((I+J) >=  0 && (K+L)>= 3)
-           {
+            if ((I+J) >=  0 && (K+L)>= 3)
+            {
 
-               // [SS|FS] integral - Start
-               QUICKDouble VY_0 = VY(0, 0, 0);
-               QUICKDouble VY_1 = VY(0, 0, 1);
-               QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
-               QUICKDouble VY_2 = VY(0, 0, 2);
-               QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
-               QUICKDouble VY_3 = VY(0, 0, 3);
-               QUICKDouble x_0_2_2 = Qtempy * VY_2 + WQtempy * VY_3;
-               QUICKDouble x_0_4_0 = Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
-               QUICKDouble x_0_4_1 = Qtempx * x_0_2_1 + WQtempx * x_0_2_2;
-               LOCSTORE(store, 0, 11, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_4_0 + WQtempx * x_0_4_1 + CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
-               QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
-               QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
-               QUICKDouble x_0_3_2 = Qtempz * VY_2 + WQtempz * VY_3;
-               QUICKDouble x_0_5_0 = Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
-               QUICKDouble x_0_5_1 = Qtempy * x_0_3_1 + WQtempy * x_0_3_2;
-               LOCSTORE(store, 0, 15, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_5_0 + WQtempy * x_0_5_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-               LOCSTORE(store, 0, 10, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_5_0 + WQtempx * x_0_5_1;
-               QUICKDouble x_0_6_0 = Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
-               QUICKDouble x_0_6_1 = Qtempx * x_0_3_1 + WQtempx * x_0_3_2;
-               LOCSTORE(store, 0, 13, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_6_0 + WQtempx * x_0_6_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-               QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
-               QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
-               QUICKDouble x_0_1_2 = Qtempx * VY_2 + WQtempx * VY_3;
-               QUICKDouble x_0_7_0 = Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
-               QUICKDouble x_0_7_1 = Qtempx * x_0_1_1 + WQtempx * x_0_1_2 + CDtemp * (VY_1 - ABcom * VY_2);
-               LOCSTORE(store, 0, 17, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_7_0 + WQtempx * x_0_7_1 + 2.000000 * CDtemp * (x_0_1_0 - ABcom * x_0_1_1);
-               QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
-               QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
-               LOCSTORE(store, 0, 18, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_8_0 + WQtempy * x_0_8_1 + 2.000000 * CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
-               LOCSTORE(store, 0, 12, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_8_0 + WQtempx * x_0_8_1;
-               QUICKDouble x_0_9_0 = Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
-               QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
-               LOCSTORE(store, 0, 19, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_9_0 + WQtempz * x_0_9_1 + 2.000000 * CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-               LOCSTORE(store, 0, 16, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_9_0 + WQtempy * x_0_9_1;
-               LOCSTORE(store, 0, 14, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_9_0 + WQtempx * x_0_9_1;
-               // [SS|FS] integral - End 
-
-               if ((I+J) >=  0 && (K+L)>= 4)
-               {
-
-                // [SS|GS] integral - Start
+                // [SS|FS] integral - Start
                 QUICKDouble VY_0 = VY(0, 0, 0);
                 QUICKDouble VY_1 = VY(0, 0, 1);
-                QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
-                QUICKDouble VY_2 = VY(0, 0, 2);
-                QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
-                QUICKDouble VY_3 = VY(0, 0, 3);
-                QUICKDouble x_0_3_2 = Qtempz * VY_2 + WQtempz * VY_3;
-                QUICKDouble VY_4 = VY(0, 0, 4);
-                QUICKDouble x_0_3_3 = Qtempz * VY_3 + WQtempz * VY_4;
-                QUICKDouble x_0_5_0 = Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
-                QUICKDouble x_0_5_1 = Qtempy * x_0_3_1 + WQtempy * x_0_3_2;
-                QUICKDouble x_0_5_2 = Qtempy * x_0_3_2 + WQtempy * x_0_3_3;
-                QUICKDouble x_0_10_0 = Qtempx * x_0_5_0 + WQtempx * x_0_5_1;
-                QUICKDouble x_0_10_1 = Qtempx * x_0_5_1 + WQtempx * x_0_5_2;
-                LOCSTORE(store, 0, 23, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_10_0 + WQtempx * x_0_10_1 + CDtemp * (x_0_5_0 - ABcom * x_0_5_1);
                 QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
+                QUICKDouble VY_2 = VY(0, 0, 2);
                 QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
+                QUICKDouble VY_3 = VY(0, 0, 3);
                 QUICKDouble x_0_2_2 = Qtempy * VY_2 + WQtempy * VY_3;
-                QUICKDouble x_0_2_3 = Qtempy * VY_3 + WQtempy * VY_4;
                 QUICKDouble x_0_4_0 = Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
                 QUICKDouble x_0_4_1 = Qtempx * x_0_2_1 + WQtempx * x_0_2_2;
-                QUICKDouble x_0_4_2 = Qtempx * x_0_2_2 + WQtempx * x_0_2_3;
-                QUICKDouble x_0_11_0 = Qtempx * x_0_4_0 + WQtempx * x_0_4_1 + CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
-                QUICKDouble x_0_11_1 = Qtempx * x_0_4_1 + WQtempx * x_0_4_2 + CDtemp * (x_0_2_1 - ABcom * x_0_2_2);
-                LOCSTORE(store, 0, 28, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_11_0 + WQtempx * x_0_11_1 + 2.000000 * CDtemp * (x_0_4_0 - ABcom * x_0_4_1);
-                QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
-                QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
-                QUICKDouble x_0_8_2 = Qtempy * x_0_2_2 + WQtempy * x_0_2_3 + CDtemp * (VY_2 - ABcom * VY_3);
-                QUICKDouble x_0_12_0 = Qtempx * x_0_8_0 + WQtempx * x_0_8_1;
-                QUICKDouble x_0_12_1 = Qtempx * x_0_8_1 + WQtempx * x_0_8_2;
-                LOCSTORE(store, 0, 20, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_12_0 + WQtempx * x_0_12_1 + CDtemp * (x_0_8_0 - ABcom * x_0_8_1);
+                LOCSTORE(store, 0, 11, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_4_0 + WQtempx * x_0_4_1 + CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
+                QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
+                QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
+                QUICKDouble x_0_3_2 = Qtempz * VY_2 + WQtempz * VY_3;
+                QUICKDouble x_0_5_0 = Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
+                QUICKDouble x_0_5_1 = Qtempy * x_0_3_1 + WQtempy * x_0_3_2;
+                LOCSTORE(store, 0, 15, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_5_0 + WQtempy * x_0_5_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
+                LOCSTORE(store, 0, 10, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_5_0 + WQtempx * x_0_5_1;
                 QUICKDouble x_0_6_0 = Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
                 QUICKDouble x_0_6_1 = Qtempx * x_0_3_1 + WQtempx * x_0_3_2;
-                QUICKDouble x_0_6_2 = Qtempx * x_0_3_2 + WQtempx * x_0_3_3;
-                QUICKDouble x_0_13_0 = Qtempx * x_0_6_0 + WQtempx * x_0_6_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-                QUICKDouble x_0_13_1 = Qtempx * x_0_6_1 + WQtempx * x_0_6_2 + CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
-                LOCSTORE(store, 0, 26, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_13_0 + WQtempx * x_0_13_1 + 2.000000 * CDtemp * (x_0_6_0 - ABcom * x_0_6_1);
-                QUICKDouble x_0_9_0 = Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
-                QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
-                QUICKDouble x_0_9_2 = Qtempz * x_0_3_2 + WQtempz * x_0_3_3 + CDtemp * (VY_2 - ABcom * VY_3);
-                QUICKDouble x_0_14_0 = Qtempx * x_0_9_0 + WQtempx * x_0_9_1;
-                QUICKDouble x_0_14_1 = Qtempx * x_0_9_1 + WQtempx * x_0_9_2;
-                LOCSTORE(store, 0, 21, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_14_0 + WQtempx * x_0_14_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
-                QUICKDouble x_0_15_0 = Qtempy * x_0_5_0 + WQtempy * x_0_5_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-                QUICKDouble x_0_15_1 = Qtempy * x_0_5_1 + WQtempy * x_0_5_2 + CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
-                LOCSTORE(store, 0, 30, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_15_0 + WQtempy * x_0_15_1 + 2.000000 * CDtemp * (x_0_5_0 - ABcom * x_0_5_1);
-                LOCSTORE(store, 0, 24, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_15_0 + WQtempx * x_0_15_1;
-                QUICKDouble x_0_16_0 = Qtempy * x_0_9_0 + WQtempy * x_0_9_1;
-                QUICKDouble x_0_16_1 = Qtempy * x_0_9_1 + WQtempy * x_0_9_2;
-                LOCSTORE(store, 0, 25, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_16_0 + WQtempx * x_0_16_1;
-                LOCSTORE(store, 0, 22, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_16_0 + WQtempy * x_0_16_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
+                LOCSTORE(store, 0, 13, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_6_0 + WQtempx * x_0_6_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
                 QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
                 QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
                 QUICKDouble x_0_1_2 = Qtempx * VY_2 + WQtempx * VY_3;
-                QUICKDouble x_0_1_3 = Qtempx * VY_3 + WQtempx * VY_4;
                 QUICKDouble x_0_7_0 = Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
                 QUICKDouble x_0_7_1 = Qtempx * x_0_1_1 + WQtempx * x_0_1_2 + CDtemp * (VY_1 - ABcom * VY_2);
-                QUICKDouble x_0_7_2 = Qtempx * x_0_1_2 + WQtempx * x_0_1_3 + CDtemp * (VY_2 - ABcom * VY_3);
-                QUICKDouble x_0_17_0 = Qtempx * x_0_7_0 + WQtempx * x_0_7_1 + 2.000000 * CDtemp * (x_0_1_0 - ABcom * x_0_1_1);
-                QUICKDouble x_0_17_1 = Qtempx * x_0_7_1 + WQtempx * x_0_7_2 + 2.000000 * CDtemp * (x_0_1_1 - ABcom * x_0_1_2);
-                LOCSTORE(store, 0, 32, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_17_0 + WQtempx * x_0_17_1 + 3.000000 * CDtemp * (x_0_7_0 - ABcom * x_0_7_1);
-                QUICKDouble x_0_18_0 = Qtempy * x_0_8_0 + WQtempy * x_0_8_1 + 2.000000 * CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
-                QUICKDouble x_0_18_1 = Qtempy * x_0_8_1 + WQtempy * x_0_8_2 + 2.000000 * CDtemp * (x_0_2_1 - ABcom * x_0_2_2);
-                LOCSTORE(store, 0, 33, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_18_0 + WQtempy * x_0_18_1 + 3.000000 * CDtemp * (x_0_8_0 - ABcom * x_0_8_1);
-                LOCSTORE(store, 0, 29, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_18_0 + WQtempx * x_0_18_1;
-                QUICKDouble x_0_19_0 = Qtempz * x_0_9_0 + WQtempz * x_0_9_1 + 2.000000 * CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
-                QUICKDouble x_0_19_1 = Qtempz * x_0_9_1 + WQtempz * x_0_9_2 + 2.000000 * CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
-                LOCSTORE(store, 0, 34, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_19_0 + WQtempz * x_0_19_1 + 3.000000 * CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
-                LOCSTORE(store, 0, 31, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_19_0 + WQtempy * x_0_19_1;
-                LOCSTORE(store, 0, 27, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_19_0 + WQtempx * x_0_19_1;
-                // [SS|GS] integral - End 
+                LOCSTORE(store, 0, 17, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_7_0 + WQtempx * x_0_7_1 + 2.000000 * CDtemp * (x_0_1_0 - ABcom * x_0_1_1);
+                QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
+                QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
+                LOCSTORE(store, 0, 18, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_8_0 + WQtempy * x_0_8_1 + 2.000000 * CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
+                LOCSTORE(store, 0, 12, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_8_0 + WQtempx * x_0_8_1;
+                QUICKDouble x_0_9_0 = Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
+                QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
+                LOCSTORE(store, 0, 19, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_9_0 + WQtempz * x_0_9_1 + 2.000000 * CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
+                LOCSTORE(store, 0, 16, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_9_0 + WQtempy * x_0_9_1;
+                LOCSTORE(store, 0, 14, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_9_0 + WQtempx * x_0_9_1;
+                // [SS|FS] integral - End
 
-               }
-           }
-       }
-   }
-   if ((I+J) >=  1 && (K+L)>= 0)
-   {
+                if ((I+J) >=  0 && (K+L)>= 4)
+                {
+
+                    // [SS|GS] integral - Start
+                    QUICKDouble VY_0 = VY(0, 0, 0);
+                    QUICKDouble VY_1 = VY(0, 0, 1);
+                    QUICKDouble x_0_3_0 = Qtempz * VY_0 + WQtempz * VY_1;
+                    QUICKDouble VY_2 = VY(0, 0, 2);
+                    QUICKDouble x_0_3_1 = Qtempz * VY_1 + WQtempz * VY_2;
+                    QUICKDouble VY_3 = VY(0, 0, 3);
+                    QUICKDouble x_0_3_2 = Qtempz * VY_2 + WQtempz * VY_3;
+                    QUICKDouble VY_4 = VY(0, 0, 4);
+                    QUICKDouble x_0_3_3 = Qtempz * VY_3 + WQtempz * VY_4;
+                    QUICKDouble x_0_5_0 = Qtempy * x_0_3_0 + WQtempy * x_0_3_1;
+                    QUICKDouble x_0_5_1 = Qtempy * x_0_3_1 + WQtempy * x_0_3_2;
+                    QUICKDouble x_0_5_2 = Qtempy * x_0_3_2 + WQtempy * x_0_3_3;
+                    QUICKDouble x_0_10_0 = Qtempx * x_0_5_0 + WQtempx * x_0_5_1;
+                    QUICKDouble x_0_10_1 = Qtempx * x_0_5_1 + WQtempx * x_0_5_2;
+                    LOCSTORE(store, 0, 23, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_10_0 + WQtempx * x_0_10_1 + CDtemp * (x_0_5_0 - ABcom * x_0_5_1);
+                    QUICKDouble x_0_2_0 = Qtempy * VY_0 + WQtempy * VY_1;
+                    QUICKDouble x_0_2_1 = Qtempy * VY_1 + WQtempy * VY_2;
+                    QUICKDouble x_0_2_2 = Qtempy * VY_2 + WQtempy * VY_3;
+                    QUICKDouble x_0_2_3 = Qtempy * VY_3 + WQtempy * VY_4;
+                    QUICKDouble x_0_4_0 = Qtempx * x_0_2_0 + WQtempx * x_0_2_1;
+                    QUICKDouble x_0_4_1 = Qtempx * x_0_2_1 + WQtempx * x_0_2_2;
+                    QUICKDouble x_0_4_2 = Qtempx * x_0_2_2 + WQtempx * x_0_2_3;
+                    QUICKDouble x_0_11_0 = Qtempx * x_0_4_0 + WQtempx * x_0_4_1 + CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
+                    QUICKDouble x_0_11_1 = Qtempx * x_0_4_1 + WQtempx * x_0_4_2 + CDtemp * (x_0_2_1 - ABcom * x_0_2_2);
+                    LOCSTORE(store, 0, 28, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_11_0 + WQtempx * x_0_11_1 + 2.000000 * CDtemp * (x_0_4_0 - ABcom * x_0_4_1);
+                    QUICKDouble x_0_8_0 = Qtempy * x_0_2_0 + WQtempy * x_0_2_1 + CDtemp * (VY_0 - ABcom * VY_1);
+                    QUICKDouble x_0_8_1 = Qtempy * x_0_2_1 + WQtempy * x_0_2_2 + CDtemp * (VY_1 - ABcom * VY_2);
+                    QUICKDouble x_0_8_2 = Qtempy * x_0_2_2 + WQtempy * x_0_2_3 + CDtemp * (VY_2 - ABcom * VY_3);
+                    QUICKDouble x_0_12_0 = Qtempx * x_0_8_0 + WQtempx * x_0_8_1;
+                    QUICKDouble x_0_12_1 = Qtempx * x_0_8_1 + WQtempx * x_0_8_2;
+                    LOCSTORE(store, 0, 20, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_12_0 + WQtempx * x_0_12_1 + CDtemp * (x_0_8_0 - ABcom * x_0_8_1);
+                    QUICKDouble x_0_6_0 = Qtempx * x_0_3_0 + WQtempx * x_0_3_1;
+                    QUICKDouble x_0_6_1 = Qtempx * x_0_3_1 + WQtempx * x_0_3_2;
+                    QUICKDouble x_0_6_2 = Qtempx * x_0_3_2 + WQtempx * x_0_3_3;
+                    QUICKDouble x_0_13_0 = Qtempx * x_0_6_0 + WQtempx * x_0_6_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
+                    QUICKDouble x_0_13_1 = Qtempx * x_0_6_1 + WQtempx * x_0_6_2 + CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
+                    LOCSTORE(store, 0, 26, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_13_0 + WQtempx * x_0_13_1 + 2.000000 * CDtemp * (x_0_6_0 - ABcom * x_0_6_1);
+                    QUICKDouble x_0_9_0 = Qtempz * x_0_3_0 + WQtempz * x_0_3_1 + CDtemp * (VY_0 - ABcom * VY_1);
+                    QUICKDouble x_0_9_1 = Qtempz * x_0_3_1 + WQtempz * x_0_3_2 + CDtemp * (VY_1 - ABcom * VY_2);
+                    QUICKDouble x_0_9_2 = Qtempz * x_0_3_2 + WQtempz * x_0_3_3 + CDtemp * (VY_2 - ABcom * VY_3);
+                    QUICKDouble x_0_14_0 = Qtempx * x_0_9_0 + WQtempx * x_0_9_1;
+                    QUICKDouble x_0_14_1 = Qtempx * x_0_9_1 + WQtempx * x_0_9_2;
+                    LOCSTORE(store, 0, 21, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_14_0 + WQtempx * x_0_14_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
+                    QUICKDouble x_0_15_0 = Qtempy * x_0_5_0 + WQtempy * x_0_5_1 + CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
+                    QUICKDouble x_0_15_1 = Qtempy * x_0_5_1 + WQtempy * x_0_5_2 + CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
+                    LOCSTORE(store, 0, 30, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_15_0 + WQtempy * x_0_15_1 + 2.000000 * CDtemp * (x_0_5_0 - ABcom * x_0_5_1);
+                    LOCSTORE(store, 0, 24, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_15_0 + WQtempx * x_0_15_1;
+                    QUICKDouble x_0_16_0 = Qtempy * x_0_9_0 + WQtempy * x_0_9_1;
+                    QUICKDouble x_0_16_1 = Qtempy * x_0_9_1 + WQtempy * x_0_9_2;
+                    LOCSTORE(store, 0, 25, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_16_0 + WQtempx * x_0_16_1;
+                    LOCSTORE(store, 0, 22, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_16_0 + WQtempy * x_0_16_1 + CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
+                    QUICKDouble x_0_1_0 = Qtempx * VY_0 + WQtempx * VY_1;
+                    QUICKDouble x_0_1_1 = Qtempx * VY_1 + WQtempx * VY_2;
+                    QUICKDouble x_0_1_2 = Qtempx * VY_2 + WQtempx * VY_3;
+                    QUICKDouble x_0_1_3 = Qtempx * VY_3 + WQtempx * VY_4;
+                    QUICKDouble x_0_7_0 = Qtempx * x_0_1_0 + WQtempx * x_0_1_1 + CDtemp * (VY_0 - ABcom * VY_1);
+                    QUICKDouble x_0_7_1 = Qtempx * x_0_1_1 + WQtempx * x_0_1_2 + CDtemp * (VY_1 - ABcom * VY_2);
+                    QUICKDouble x_0_7_2 = Qtempx * x_0_1_2 + WQtempx * x_0_1_3 + CDtemp * (VY_2 - ABcom * VY_3);
+                    QUICKDouble x_0_17_0 = Qtempx * x_0_7_0 + WQtempx * x_0_7_1 + 2.000000 * CDtemp * (x_0_1_0 - ABcom * x_0_1_1);
+                    QUICKDouble x_0_17_1 = Qtempx * x_0_7_1 + WQtempx * x_0_7_2 + 2.000000 * CDtemp * (x_0_1_1 - ABcom * x_0_1_2);
+                    LOCSTORE(store, 0, 32, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_17_0 + WQtempx * x_0_17_1 + 3.000000 * CDtemp * (x_0_7_0 - ABcom * x_0_7_1);
+                    QUICKDouble x_0_18_0 = Qtempy * x_0_8_0 + WQtempy * x_0_8_1 + 2.000000 * CDtemp * (x_0_2_0 - ABcom * x_0_2_1);
+                    QUICKDouble x_0_18_1 = Qtempy * x_0_8_1 + WQtempy * x_0_8_2 + 2.000000 * CDtemp * (x_0_2_1 - ABcom * x_0_2_2);
+                    LOCSTORE(store, 0, 33, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_18_0 + WQtempy * x_0_18_1 + 3.000000 * CDtemp * (x_0_8_0 - ABcom * x_0_8_1);
+                    LOCSTORE(store, 0, 29, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_18_0 + WQtempx * x_0_18_1;
+                    QUICKDouble x_0_19_0 = Qtempz * x_0_9_0 + WQtempz * x_0_9_1 + 2.000000 * CDtemp * (x_0_3_0 - ABcom * x_0_3_1);
+                    QUICKDouble x_0_19_1 = Qtempz * x_0_9_1 + WQtempz * x_0_9_2 + 2.000000 * CDtemp * (x_0_3_1 - ABcom * x_0_3_2);
+                    LOCSTORE(store, 0, 34, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_0_19_0 + WQtempz * x_0_19_1 + 3.000000 * CDtemp * (x_0_9_0 - ABcom * x_0_9_1);
+                    LOCSTORE(store, 0, 31, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_0_19_0 + WQtempy * x_0_19_1;
+                    LOCSTORE(store, 0, 27, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_0_19_0 + WQtempx * x_0_19_1;
+                    // [SS|GS] integral - End
+
+                }
+            }
+        }
+    }
+    if ((I+J) >=  1 && (K+L)>= 0)
+    {
 
         // [PS|SS] integral - Start
         QUICKDouble VY_0 = VY(0, 0, 0);
@@ -195,10 +198,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
         LOCSTORE(store, 1, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * VY_0 + WPtempx * VY_1;
         LOCSTORE(store, 2, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * VY_0 + WPtempy * VY_1;
         LOCSTORE(store, 3, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * VY_0 + WPtempz * VY_1;
-        // [PS|SS] integral - End 
+        // [PS|SS] integral - End
 
-       if ((I+J) >=  1 && (K+L)>= 1)
-       {
+        if ((I+J) >=  1 && (K+L)>= 1)
+        {
 
             // [PS|PS] integral - Start
             QUICKDouble VY_0 = VY(0, 0, 0);
@@ -219,10 +222,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
             LOCSTORE(store, 3, 3, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_0_3_0 + WPtempz * x_0_3_1 + ABCDtemp * VY_1;
             LOCSTORE(store, 2, 3, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_0_3_0 + WPtempy * x_0_3_1;
             LOCSTORE(store, 1, 3, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_0_3_0 + WPtempx * x_0_3_1;
-            // [PS|PS] integral - End 
+            // [PS|PS] integral - End
 
-           if ((I+J) >=  1 && (K+L)>= 2)
-           {
+            if ((I+J) >=  1 && (K+L)>= 2)
+            {
 
                 // [PS|DS] integral - Start
                 QUICKDouble VY_1 = VY(0, 0, 1);
@@ -268,10 +271,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                 LOCSTORE(store, 3, 9, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_0_9_0 + WPtempz * x_0_9_1 + 2.000000 * ABCDtemp * x_0_3_1;
                 LOCSTORE(store, 2, 9, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_0_9_0 + WPtempy * x_0_9_1;
                 LOCSTORE(store, 1, 9, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_0_9_0 + WPtempx * x_0_9_1;
-                // [PS|DS] integral - End 
+                // [PS|DS] integral - End
 
-               if ((I+J) >=  1 && (K+L)>= 3)
-               {
+                if ((I+J) >=  1 && (K+L)>= 3)
+                {
 
                     // [PS|FS] integral - Start
                     QUICKDouble VY_1 = VY(0, 0, 1);
@@ -359,10 +362,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                     LOCSTORE(store, 3, 19, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_0_19_0 + WPtempz * x_0_19_1 + 3.000000 * ABCDtemp * x_0_9_1;
                     LOCSTORE(store, 2, 19, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_0_19_0 + WPtempy * x_0_19_1;
                     LOCSTORE(store, 1, 19, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_0_19_0 + WPtempx * x_0_19_1;
-                    // [PS|FS] integral - End 
+                    // [PS|FS] integral - End
 
-                   if ((I+J) >=  1 && (K+L)>= 4)
-                   {
+                    if ((I+J) >=  1 && (K+L)>= 4)
+                    {
 
                         // [PS|GS] integral - Start
                         QUICKDouble VY_1 = VY(0, 0, 1);
@@ -515,13 +518,13 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                         LOCSTORE(store, 3, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_0_34_0 + WPtempz * x_0_34_1 + 4.000000 * ABCDtemp * x_0_19_1;
                         LOCSTORE(store, 2, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_0_34_0 + WPtempy * x_0_34_1;
                         LOCSTORE(store, 1, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_0_34_0 + WPtempx * x_0_34_1;
-                        // [PS|GS] integral - End 
+                        // [PS|GS] integral - End
 
-                   }
-               }
-           }
-           if ((I+J) >=  2 && (K+L)>= 1)
-           {
+                    }
+                }
+            }
+            if ((I+J) >=  2 && (K+L)>= 1)
+            {
 
                 // [DS|PS] integral - Start
                 QUICKDouble VY_1 = VY(0, 0, 1);
@@ -567,10 +570,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                 LOCSTORE(store, 9, 3, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_9_0_0 + WQtempz * x_9_0_1 + 2.000000 * ABCDtemp * x_3_0_1;
                 LOCSTORE(store, 9, 2, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_9_0_0 + WQtempy * x_9_0_1;
                 LOCSTORE(store, 9, 1, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_9_0_0 + WQtempx * x_9_0_1;
-                // [DS|PS] integral - End 
+                // [DS|PS] integral - End
 
-               if ((I+J) >=  2 && (K+L)>= 2)
-               {
+                if ((I+J) >=  2 && (K+L)>= 2)
+                {
 
                     // [DS|DS] integral - Start
                     QUICKDouble VY_0 = VY(0, 0, 0);
@@ -689,10 +692,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                     LOCSTORE(store, 9, 9, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_3_9_0 + WPtempz * x_3_9_1 + ABtemp * (x_0_9_0 - CDcom * x_0_9_1) + 2.000000 * ABCDtemp * x_3_3_1;
                     LOCSTORE(store, 6, 6, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_3_6_0 + WPtempx * x_3_6_1 + ABCDtemp * x_3_3_1;
                     LOCSTORE(store, 5, 5, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_3_5_0 + WPtempy * x_3_5_1 + ABCDtemp * x_3_3_1;
-                    // [DS|DS] integral - End 
+                    // [DS|DS] integral - End
 
-                   if ((I+J) >=  2 && (K+L)>= 3)
-                   {
+                    if ((I+J) >=  2 && (K+L)>= 3)
+                    {
 
                         // [DS|FS] integral - Start
                         QUICKDouble VY_0 = VY(0, 0, 0);
@@ -908,10 +911,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                         LOCSTORE(store, 9, 19, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_3_19_0 + WPtempz * x_3_19_1 + ABtemp * (x_0_19_0 - CDcom * x_0_19_1) + 3.000000 * ABCDtemp * x_3_9_1;
                         LOCSTORE(store, 5, 16, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_3_16_0 + WPtempy * x_3_16_1 + ABCDtemp * x_3_9_1;
                         LOCSTORE(store, 6, 14, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_3_14_0 + WPtempx * x_3_14_1 + ABCDtemp * x_3_9_1;
-                        // [DS|FS] integral - End 
+                        // [DS|FS] integral - End
 
-                       if ((I+J) >=  2 && (K+L)>= 4)
-                       {
+                        if ((I+J) >=  2 && (K+L)>= 4)
+                        {
 
                             // [DS|GS] integral - Start
                             QUICKDouble VY_0 = VY(0, 0, 0);
@@ -1264,12 +1267,12 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                             LOCSTORE(store, 9, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_3_34_0 + WPtempz * x_3_34_1 + ABtemp * (x_0_34_0 - CDcom * x_0_34_1) + 4.000000 * ABCDtemp * x_3_19_1;
                             LOCSTORE(store, 5, 31, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_3_31_0 + WPtempy * x_3_31_1 + ABCDtemp * x_3_19_1;
                             LOCSTORE(store, 6, 27, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_3_27_0 + WPtempx * x_3_27_1 + ABCDtemp * x_3_19_1;
-                            // [DS|GS] integral - End 
+                            // [DS|GS] integral - End
 
-                       }
-                   }
-                   if ((I+J) >=  3 && (K+L)>= 2)
-                   {
+                        }
+                    }
+                    if ((I+J) >=  3 && (K+L)>= 2)
+                    {
 
                         // [FS|DS] integral - Start
                         QUICKDouble VY_2 = VY(0, 0, 2);
@@ -1485,10 +1488,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                         LOCSTORE(store, 19, 9, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_19_3_0 + WQtempz * x_19_3_1 + CDtemp * (x_19_0_0 - ABcom * x_19_0_1) + 3.000000 * ABCDtemp * x_9_3_1;
                         LOCSTORE(store, 19, 6, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_19_3_0 + WQtempx * x_19_3_1;
                         LOCSTORE(store, 19, 5, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_19_3_0 + WQtempy * x_19_3_1;
-                        // [FS|DS] integral - End 
+                        // [FS|DS] integral - End
 
-                       if ((I+J) >=  3 && (K+L)>= 3 && (I+J+K+L)>6)
-                       {
+                        if ((I+J) >=  3 && (K+L)>= 3 && (I+J+K+L)>6)
+                        {
 
                             // [FS|FS] integral - Start
                             QUICKDouble VY_1 = VY(0, 0, 1);
@@ -2043,10 +2046,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                             LOCSTORE(store, 19, 19, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_19_9_0 + WQtempz * x_19_9_1 + 2.000000 * CDtemp * (x_19_3_0 - ABcom * x_19_3_1) + 3.000000 * ABCDtemp * x_9_9_1;
                             LOCSTORE(store, 19, 16, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_19_9_0 + WQtempy * x_19_9_1;
                             LOCSTORE(store, 19, 14, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_19_9_0 + WQtempx * x_19_9_1;
-                            // [FS|FS] integral - End 
+                            // [FS|FS] integral - End
 
-                           if ((I+J) >=  3 && (K+L)>= 4)
-                           {
+                            if ((I+J) >=  3 && (K+L)>= 4)
+                            {
 
                                 // [FS|GS] integral - Start
                                 QUICKDouble VY_1 = VY(0, 0, 1);
@@ -2827,11 +2830,11 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                                 LOCSTORE(store, 19, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_9_34_0 + WPtempz * x_9_34_1 + 2.000000 * ABtemp * (x_3_34_0 - CDcom * x_3_34_1) + 4.000000 * ABCDtemp * x_9_19_1;
                                 LOCSTORE(store, 16, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_9_34_0 + WPtempy * x_9_34_1;
                                 LOCSTORE(store, 14, 34, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_9_34_0 + WPtempx * x_9_34_1;
-                                // [FS|GS] integral - End 
+                                // [FS|GS] integral - End
 
-                           }
-                           if ((I+J) >=  4 && (K+L)>= 3)
-                           {
+                            }
+                            if ((I+J) >=  4 && (K+L)>= 3)
+                            {
 
                                 // [GS|FS] integral - Start
                                 QUICKDouble VY_3 = VY(0, 0, 3);
@@ -3612,10 +3615,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                                 LOCSTORE(store, 34, 19, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_34_9_0 + WQtempz * x_34_9_1 + 2.000000 * CDtemp * (x_34_3_0 - ABcom * x_34_3_1) + 4.000000 * ABCDtemp * x_19_9_1;
                                 LOCSTORE(store, 34, 16, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_34_9_0 + WQtempy * x_34_9_1;
                                 LOCSTORE(store, 34, 14, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_34_9_0 + WQtempx * x_34_9_1;
-                                // [GS|FS] integral - End 
+                                // [GS|FS] integral - End
 
-                               if ((I+J) >=  4 && (K+L)>= 4)
-                               {
+                                if ((I+J) >=  4 && (K+L)>= 4)
+                                {
 
                                     // [GS|GS] integral - Start
                                     QUICKDouble VY_2 = VY(0, 0, 2);
@@ -5260,13 +5263,13 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                                     LOCSTORE(store, 34, 34, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_34_19_0 + WQtempz * x_34_19_1 + 3.000000 * CDtemp * (x_34_9_0 - ABcom * x_34_9_1) + 4.000000 * ABCDtemp * x_19_19_1;
                                     LOCSTORE(store, 34, 31, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_34_19_0 + WQtempy * x_34_19_1;
                                     LOCSTORE(store, 34, 27, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_34_19_0 + WQtempx * x_34_19_1;
-                                    // [GS|GS] integral - End 
+                                    // [GS|GS] integral - End
 
-                               }
-                           }
-                       }
-                       if ((I+J) >=  4 && (K+L)>= 2)
-                       {
+                                }
+                            }
+                        }
+                        if ((I+J) >=  4 && (K+L)>= 2)
+                        {
 
                             // [GS|DS] integral - Start
                             QUICKDouble VY_2 = VY(0, 0, 2);
@@ -5619,13 +5622,13 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                             LOCSTORE(store, 34, 9, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_34_3_0 + WQtempz * x_34_3_1 + CDtemp * (x_34_0_0 - ABcom * x_34_0_1) + 4.000000 * ABCDtemp * x_19_3_1;
                             LOCSTORE(store, 34, 6, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_34_3_0 + WQtempx * x_34_3_1;
                             LOCSTORE(store, 34, 5, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_34_3_0 + WQtempy * x_34_3_1;
-                            // [GS|DS] integral - End 
+                            // [GS|DS] integral - End
 
-                       }
-                   }
-               }
-               if ((I+J) >=  3 && (K+L)>= 1)
-               {
+                        }
+                    }
+                }
+                if ((I+J) >=  3 && (K+L)>= 1)
+                {
 
                     // [FS|PS] integral - Start
                     QUICKDouble VY_1 = VY(0, 0, 1);
@@ -5713,10 +5716,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                     LOCSTORE(store, 19, 3, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_19_0_0 + WQtempz * x_19_0_1 + 3.000000 * ABCDtemp * x_9_0_1;
                     LOCSTORE(store, 19, 2, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_19_0_0 + WQtempy * x_19_0_1;
                     LOCSTORE(store, 19, 1, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_19_0_0 + WQtempx * x_19_0_1;
-                    // [FS|PS] integral - End 
+                    // [FS|PS] integral - End
 
-                   if ((I+J) >=  4 && (K+L)>= 1)
-                   {
+                    if ((I+J) >=  4 && (K+L)>= 1)
+                    {
 
                         // [GS|PS] integral - Start
                         QUICKDouble VY_1 = VY(0, 0, 1);
@@ -5869,14 +5872,14 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                         LOCSTORE(store, 34, 3, STOREDIM, STOREDIM) STORE_OPERATOR Qtempz * x_34_0_0 + WQtempz * x_34_0_1 + 4.000000 * ABCDtemp * x_19_0_1;
                         LOCSTORE(store, 34, 2, STOREDIM, STOREDIM) STORE_OPERATOR Qtempy * x_34_0_0 + WQtempy * x_34_0_1;
                         LOCSTORE(store, 34, 1, STOREDIM, STOREDIM) STORE_OPERATOR Qtempx * x_34_0_0 + WQtempx * x_34_0_1;
-                        // [GS|PS] integral - End 
+                        // [GS|PS] integral - End
 
-                   }
-               }
-           }
-       }
-       if ((I+J) >=  2 && (K+L)>= 0)
-       {
+                    }
+                }
+            }
+        }
+        if ((I+J) >=  2 && (K+L)>= 0)
+        {
 
             // [DS|SS] integral - Start
             QUICKDouble VY_0 = VY(0, 0, 0);
@@ -5894,10 +5897,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
             LOCSTORE(store, 9, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_3_0_0 + WPtempz * x_3_0_1 + ABtemp * (VY_0 - CDcom * VY_1);
             LOCSTORE(store, 6, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_3_0_0 + WPtempx * x_3_0_1;
             LOCSTORE(store, 5, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_3_0_0 + WPtempy * x_3_0_1;
-            // [DS|SS] integral - End 
+            // [DS|SS] integral - End
 
-           if ((I+J) >=  3 && (K+L)>= 0)
-           {
+            if ((I+J) >=  3 && (K+L)>= 0)
+            {
 
                 // [FS|SS] integral - Start
                 QUICKDouble VY_0 = VY(0, 0, 0);
@@ -5935,10 +5938,10 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                 LOCSTORE(store, 19, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_9_0_0 + WPtempz * x_9_0_1 + 2.000000 * ABtemp * (x_3_0_0 - CDcom * x_3_0_1);
                 LOCSTORE(store, 16, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_9_0_0 + WPtempy * x_9_0_1;
                 LOCSTORE(store, 14, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_9_0_0 + WPtempx * x_9_0_1;
-                // [FS|SS] integral - End 
+                // [FS|SS] integral - End
 
-               if ((I+J) >=  4 && (K+L)>= 0)
-               {
+                if ((I+J) >=  4 && (K+L)>= 0)
+                {
 
                     // [GS|SS] integral - Start
                     QUICKDouble VY_0 = VY(0, 0, 0);
@@ -6011,14 +6014,12 @@ __device__ __inline__ void ERint_grad_vertical_spd_2(const int I, const int J, c
                     LOCSTORE(store, 34, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempz * x_19_0_0 + WPtempz * x_19_0_1 + 3.000000 * ABtemp * (x_9_0_0 - CDcom * x_9_0_1);
                     LOCSTORE(store, 31, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempy * x_19_0_0 + WPtempy * x_19_0_1;
                     LOCSTORE(store, 27, 0, STOREDIM, STOREDIM) STORE_OPERATOR Ptempx * x_19_0_0 + WPtempx * x_19_0_1;
-                    // [GS|SS] integral - End 
-
-               }
-           }
-       }
-   }
-
- } 
+                    // [GS|SS] integral - End
+                }
+            }
+        }
+    }
+}
 
 #undef STORE_OPERATOR
 #define STORE_OPERATOR +=
