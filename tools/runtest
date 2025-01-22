@@ -83,9 +83,9 @@ check_for_req_deps()
     fullpath=`which $prog`
     if [ ! -x "$fullpath" ]; then
       if [ ! -f "$fullpath" ]; then
-        echo "Error: $fullpath not found. Install this program to run this test script."
+        echo "Error: $prog not found. Install this program to run this test script."
       else
-        echo "Error: $fullpath found but not executable. Install this program to run this test script."
+        echo "Error: $prog found but not executable. Install this program to run this test script."
       fi
       exit 1;
     fi
