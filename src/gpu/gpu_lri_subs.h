@@ -15,15 +15,23 @@
    ! center integrals necessary for CEW method.                          !
    !---------------------------------------------------------------------!
    */
+
 #include "gpu_common.h"
 
 #undef STOREDIM
-
+#undef VDIM3
+#undef VY
 #if defined(int_spd)
   #define STOREDIM STOREDIM_S
 #else
   #define STOREDIM STOREDIM_L
 #endif
+#define VDIM3 VDIM3_L
+#define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
+
+#undef FMT_NAME
+#define FMT_NAME FmT
+#include "gpu_fmt.h"
 
 
 /*
@@ -372,21 +380,5 @@ __device__ __forceinline__ void iclass_lri_spdf2
     }
 }
 
-
-#ifndef new_quick_2_gpu_lri_subs_h
-  #define new_quick_2_gpu_lri_subs_h
-  #ifndef old_fmt
-    #define old_fmt
-
-    #undef VDIM3
-    #undef VY
-    #define VDIM3 VDIM3_L
-    #define VY(a,b,c) LOCVY(YVerticalTemp, a, b, c, VDIM1, VDIM2, VDIM3)
-
-    #undef FMT_NAME
-    #define FMT_NAME FmT
-    #include "gpu_fmt.h"
-  #endif
-#endif
 
 #undef STOREDIM

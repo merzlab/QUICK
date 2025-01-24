@@ -7,9 +7,10 @@
 //
 //
 
+#if !defined(__QUICK_GPU_GET2E_GRAD_FFFF_H_)
+#define __QUICK_GPU_GET2E_GRAD_FFFF_H_
 
 #undef STOREDIM
-
 #if defined int_spdf4
   #undef VDIM3
   #define VDIM3 VDIM3_L
@@ -26,10 +27,6 @@
   #define STORE_DIM_I_CC (110)
   #define STORE_DIM_J_CC (80)
 #endif
-
-
-#if !defined(new_quick_2_gpu_get2e_subs_grad_h)
-#define new_quick_2_gpu_get2e_subs_grad_h
 
 #undef STOREDIM
 #define STOREDIM STOREDIM_XL
@@ -977,7 +974,6 @@ __device__ static inline void hrrwholegrad2_ffff(QUICKDouble* const Yaax, QUICKD
     *Yccy *= constant;
     *Yccz *= constant;
 }
-#endif
 
 
 /*
@@ -1799,3 +1795,6 @@ __global__ void __launch_bounds__(ERI_GRAD_FFFF_TPB, ERI_GRAD_FFFF_BPSM) getGrad
 #endif
     }
 }
+
+
+#endif

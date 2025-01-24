@@ -1,5 +1,8 @@
-// FMT_NAME should be FmT/FmT_sp/FmT_spd and defined somewhere
-__device__ __forceinline__ void FMT_NAME(const int MaxM, const QUICKDouble X,
+#if !defined(__QUICK_GPU_FMT_H_)
+#define __QUICK_GPU_FMT_H_
+
+
+__device__ static inline void FMT_NAME(const int MaxM, const QUICKDouble X,
         QUICKDouble * const YVerticalTemp) {
     const QUICKDouble XINV = 1.0 / X;
     const QUICKDouble E = exp(-X);
@@ -67,3 +70,6 @@ __device__ __forceinline__ void FMT_NAME(const int MaxM, const QUICKDouble X,
         }
     }
 }
+
+
+#endif

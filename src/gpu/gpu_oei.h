@@ -16,9 +16,11 @@
    !---------------------------------------------------------------------!
 */
 
+#if !defined(__QUICK_GPU_OEI_H_)
+#define __QUICK_GPU_OEI_H_
+
 #undef FMT_NAME
 #define FMT_NAME FmT
-
 #include "gpu_fmt.h"
 
 
@@ -220,3 +222,6 @@ __global__ void getOEI_kernel() {
 #endif
     }
 }
+
+
+#endif

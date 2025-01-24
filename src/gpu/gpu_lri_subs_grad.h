@@ -19,7 +19,6 @@
 #include "gpu_common.h"
 
 #undef STOREDIM
-
 #if defined(int_spd)
   #define STOREDIM STOREDIM_S
 #else
@@ -618,8 +617,8 @@ __device__ __forceinline__ void iclass_lri_grad_spdf2
 }
 
 
-#ifndef new_quick_2_gpu_get2e_subs_grad_h
-  #define new_quick_2_gpu_get2e_subs_grad_h
+#if !defined(__gpu_get2e_subs_grad_h_)
+  #define __gpu_get2e_subs_grad_h_
   #undef STOREDIM
   #define STOREDIM STOREDIM_S
 __device__ __forceinline__ void hrrwholegrad_lri(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,

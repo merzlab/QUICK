@@ -16,6 +16,9 @@
    !---------------------------------------------------------------------!
 */
 
+#if !defined(__QUICK_GPU_OEI_GRAD_H_)
+#define __QUICK_GPU_OEI_GRAD_H_
+
 
 __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
@@ -409,3 +412,6 @@ __global__ void get_oei_grad_kernel() {
 #endif
     }
 }
+
+
+#endif

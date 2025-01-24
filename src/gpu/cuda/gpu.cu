@@ -43,6 +43,146 @@ static char *trim(char *s)
 
 
 //-----------------------------------------------
+// checks available gmem and upload temporary large arrays
+// to store values and gradients of basis functions
+//-----------------------------------------------
+static void upload_pteval()
+{
+    gpu->gpu_sim.prePtevl = false;
+
+//    // compute available amount of global memory
+//    size_t free, total;
+//
+//    cudaMemGetInfo(&free, &total);
+//    printf("Total GMEM= %lli Free= %lli \n", total,free);
+//
+//    // calculate the size of an array
+//    int count=0;
+//    unsigned int phi_loc[gpu->gpu_xcq->npoints];
+//    int oidx=0;
+//    int bffb = gpu->gpu_xcq->basf_locator->_hostData[1] - gpu->gpu_xcq->basf_locator->_hostData[0];
+//
+//    for (int i = 0; i < gpu->gpu_xcq->npoints; i++) {
+//        phi_loc[i]=count;
+//        int nidx=gpu->gpu_xcq->bin_locator->_hostData[i];
+//        if(nidx != oidx) bffb = gpu->gpu_xcq->basf_locator->_hostData[nidx+1] - gpu->gpu_xcq->basf_locator->_hostData[nidx];
+//        count += bffb;
+//    }
+//
+//    // amount of memory in bytes for 4 such arrays
+//    size_t reqMem = count * 32;
+//
+//    // estimate memory for future needs, 6 nbasis * nbasis 2D arrays of double type
+//    size_t estMem = gpu->nbasis * gpu->nbasis * 48 + gpu->gpu_xcq->npoints * 4;
+//
+//    printf("Size of each pteval array= %lli Required memory for pteval= %lli Total avail= %lli\n", count, reqMem,free-estMem);
+//
+//    if (reqMem < free - estMem) {
+//        gpu->gpu_sim.prePtevl = true;
+//        gpu->gpu_xcq->phi_loc          = new gpu_buffer_type<unsigned int>(gpu->gpu_xcq->npoints);
+//        gpu->gpu_xcq->phi          = new gpu_buffer_type<QUICKDouble>(count);
+//        gpu->gpu_xcq->dphidx       = new gpu_buffer_type<QUICKDouble>(count);
+//        gpu->gpu_xcq->dphidy       = new gpu_buffer_type<QUICKDouble>(count);
+//        gpu->gpu_xcq->dphidz       = new gpu_buffer_type<QUICKDouble>(count);
+//
+//        memcpy(gpu->gpu_xcq->phi_loc->_hostData, &phi_loc, sizeof(unsigned int)*gpu->gpu_xcq->npoints);
+//
+//        gpu->gpu_xcq->phi_loc->Upload();
+//        gpu->gpu_xcq->phi->Upload();
+//        gpu->gpu_xcq->dphidx->Upload();
+//        gpu->gpu_xcq->dphidy->Upload();
+//        gpu->gpu_xcq->dphidz->Upload();
+//
+//        gpu->gpu_sim.phi_loc = gpu->gpu_xcq->phi_loc->_devData;
+//        gpu->gpu_sim.phi = gpu->gpu_xcq->phi->_devData;
+//        gpu->gpu_sim.dphidx = gpu->gpu_xcq->dphidx->_devData;
+//        gpu->gpu_sim.dphidy = gpu->gpu_xcq->dphidy->_devData;
+//        gpu->gpu_sim.dphidz = gpu->gpu_xcq->dphidz->_devData;
+//
+//        upload_sim_to_constant_dft(gpu);
+//
+//        getpteval(gpu);
+//
+//        gpu->gpu_xcq->phi->Download();
+//        gpu->gpu_xcq->dphidx->Download();
+//        gpu->gpu_xcq->dphidy->Download();
+//        gpu->gpu_xcq->dphidz->Download();
+//    }
+}
+
+
+//-----------------------------------------------
+// Check memory and reupload for xc grad calculation
+// if there is enough space
+//-----------------------------------------------
+static void reupload_pteval()
+{
+    gpu->gpu_sim.prePtevl = false;
+
+//    // compute available amount of global memory
+//    size_t free, total;
+//
+//    cudaMemGetInfo(&free, &total);
+//    printf("Total GMEM= %lli Free= %lli \n", total,free);
+//
+//    // amount of memory in bytes for 4 such arrays
+//    size_t reqMem = gpu->gpu_xcq->phi->_length * 32 + gpu->gpu_xcq->npoints * 4;
+//
+//    // estimate memory for future needs, 2 nbasis * nbasis 2D arrays of double type
+//    // and 2 grad arrays of double type
+//    size_t estMem = gpu->nbasis * gpu->nbasis * 16 + gpu->natom * 48;
+//
+//    printf("Required memory for pteval= %lli Total avail= %lli\n", reqMem,free-estMem);
+//
+//    if (reqMem < free - estMem ) {
+//        gpu->gpu_sim.prePtevl = true;
+//
+//        gpu->gpu_xcq->phi_loc->ReallocateGPU();
+//        gpu->gpu_xcq->phi->ReallocateGPU();
+//        gpu->gpu_xcq->dphidx->ReallocateGPU();
+//        gpu->gpu_xcq->dphidy->ReallocateGPU();
+//        gpu->gpu_xcq->dphidz->ReallocateGPU();
+//
+//        gpu->gpu_xcq->phi_loc->Upload();
+//        gpu->gpu_xcq->phi->Upload();
+//        gpu->gpu_xcq->dphidx->Upload();
+//        gpu->gpu_xcq->dphidy->Upload();
+//        gpu->gpu_xcq->dphidz->Upload();
+//
+//        gpu->gpu_sim.phi_loc = gpu->gpu_xcq->phi_loc->_devData;
+//        gpu->gpu_sim.phi = gpu->gpu_xcq->phi->_devData;
+//        gpu->gpu_sim.dphidx = gpu->gpu_xcq->dphidx->_devData;
+//        gpu->gpu_sim.dphidy = gpu->gpu_xcq->dphidy->_devData;
+//        gpu->gpu_sim.dphidz = gpu->gpu_xcq->dphidz->_devData;
+//    }
+}
+
+
+//-----------------------------------------------
+// Delete both device and host pteval data
+//-----------------------------------------------
+static void delete_pteval(bool devOnly) {
+    /*    if(gpu->gpu_sim.prePtevl == true){
+
+          if(devOnly){
+          gpu->gpu_xcq->phi_loc->DeleteGPU();
+          gpu->gpu_xcq->phi->DeleteGPU();
+          gpu->gpu_xcq->dphidx->DeleteGPU();
+          gpu->gpu_xcq->dphidy->DeleteGPU();
+          gpu->gpu_xcq->dphidz->DeleteGPU();
+          }else{
+          SAFE_DELETE(gpu->gpu_xcq->phi_loc);
+          SAFE_DELETE(gpu->gpu_xcq->phi);
+          SAFE_DELETE(gpu->gpu_xcq->dphidx);
+          SAFE_DELETE(gpu->gpu_xcq->dphidy);
+          SAFE_DELETE(gpu->gpu_xcq->dphidz);
+          }
+          }
+     */
+}
+
+
+//-----------------------------------------------
 // Set up specified device and be ready to ignite
 //-----------------------------------------------
 extern "C" void gpu_set_device_(int* gpu_dev_id, int* ierr)
@@ -3214,146 +3354,6 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 //        if(gpu->gpu_xcq->primfpbin->_hostData[i] >= maxpfpbin)
 //            printf("bin_id= %i nprimf= %i \n", i, gpu->gpu_xcq->primfpbin->_hostData[i]);
 //}
-
-
-//-----------------------------------------------
-// checks available gmem and upload temporary large arrays
-// to store values and gradients of basis functions
-//-----------------------------------------------
-void upload_pteval()
-{
-    gpu->gpu_sim.prePtevl = false;
-
-//    // compute available amount of global memory
-//    size_t free, total;
-//
-//    cudaMemGetInfo(&free, &total);
-//    printf("Total GMEM= %lli Free= %lli \n", total,free);
-//
-//    // calculate the size of an array
-//    int count=0;
-//    unsigned int phi_loc[gpu->gpu_xcq->npoints];
-//    int oidx=0;
-//    int bffb = gpu->gpu_xcq->basf_locator->_hostData[1] - gpu->gpu_xcq->basf_locator->_hostData[0];
-//
-//    for (int i = 0; i < gpu->gpu_xcq->npoints; i++) {
-//        phi_loc[i]=count;
-//        int nidx=gpu->gpu_xcq->bin_locator->_hostData[i];
-//        if(nidx != oidx) bffb = gpu->gpu_xcq->basf_locator->_hostData[nidx+1] - gpu->gpu_xcq->basf_locator->_hostData[nidx];
-//        count += bffb;
-//    }
-//
-//    // amount of memory in bytes for 4 such arrays
-//    size_t reqMem = count * 32;
-//
-//    // estimate memory for future needs, 6 nbasis * nbasis 2D arrays of double type
-//    size_t estMem = gpu->nbasis * gpu->nbasis * 48 + gpu->gpu_xcq->npoints * 4;
-//
-//    printf("Size of each pteval array= %lli Required memory for pteval= %lli Total avail= %lli\n", count, reqMem,free-estMem);
-//
-//    if (reqMem < free - estMem) {
-//        gpu->gpu_sim.prePtevl = true;
-//        gpu->gpu_xcq->phi_loc          = new gpu_buffer_type<unsigned int>(gpu->gpu_xcq->npoints);
-//        gpu->gpu_xcq->phi          = new gpu_buffer_type<QUICKDouble>(count);
-//        gpu->gpu_xcq->dphidx       = new gpu_buffer_type<QUICKDouble>(count);
-//        gpu->gpu_xcq->dphidy       = new gpu_buffer_type<QUICKDouble>(count);
-//        gpu->gpu_xcq->dphidz       = new gpu_buffer_type<QUICKDouble>(count);
-//
-//        memcpy(gpu->gpu_xcq->phi_loc->_hostData, &phi_loc, sizeof(unsigned int)*gpu->gpu_xcq->npoints);
-//
-//        gpu->gpu_xcq->phi_loc->Upload();
-//        gpu->gpu_xcq->phi->Upload();
-//        gpu->gpu_xcq->dphidx->Upload();
-//        gpu->gpu_xcq->dphidy->Upload();
-//        gpu->gpu_xcq->dphidz->Upload();
-//
-//        gpu->gpu_sim.phi_loc = gpu->gpu_xcq->phi_loc->_devData;
-//        gpu->gpu_sim.phi = gpu->gpu_xcq->phi->_devData;
-//        gpu->gpu_sim.dphidx = gpu->gpu_xcq->dphidx->_devData;
-//        gpu->gpu_sim.dphidy = gpu->gpu_xcq->dphidy->_devData;
-//        gpu->gpu_sim.dphidz = gpu->gpu_xcq->dphidz->_devData;
-//
-//        upload_sim_to_constant_dft(gpu);
-//
-//        getpteval(gpu);
-//
-//        gpu->gpu_xcq->phi->Download();
-//        gpu->gpu_xcq->dphidx->Download();
-//        gpu->gpu_xcq->dphidy->Download();
-//        gpu->gpu_xcq->dphidz->Download();
-//    }
-}
-
-
-//-----------------------------------------------
-// Check memory and reupload for xc grad calculation
-// if there is enough space
-//-----------------------------------------------
-void reupload_pteval()
-{
-    gpu->gpu_sim.prePtevl = false;
-
-//    // compute available amount of global memory
-//    size_t free, total;
-//
-//    cudaMemGetInfo(&free, &total);
-//    printf("Total GMEM= %lli Free= %lli \n", total,free);
-//
-//    // amount of memory in bytes for 4 such arrays
-//    size_t reqMem = gpu->gpu_xcq->phi->_length * 32 + gpu->gpu_xcq->npoints * 4;
-//
-//    // estimate memory for future needs, 2 nbasis * nbasis 2D arrays of double type
-//    // and 2 grad arrays of double type
-//    size_t estMem = gpu->nbasis * gpu->nbasis * 16 + gpu->natom * 48;
-//
-//    printf("Required memory for pteval= %lli Total avail= %lli\n", reqMem,free-estMem);
-//
-//    if (reqMem < free - estMem ) {
-//        gpu->gpu_sim.prePtevl = true;
-//
-//        gpu->gpu_xcq->phi_loc->ReallocateGPU();
-//        gpu->gpu_xcq->phi->ReallocateGPU();
-//        gpu->gpu_xcq->dphidx->ReallocateGPU();
-//        gpu->gpu_xcq->dphidy->ReallocateGPU();
-//        gpu->gpu_xcq->dphidz->ReallocateGPU();
-//
-//        gpu->gpu_xcq->phi_loc->Upload();
-//        gpu->gpu_xcq->phi->Upload();
-//        gpu->gpu_xcq->dphidx->Upload();
-//        gpu->gpu_xcq->dphidy->Upload();
-//        gpu->gpu_xcq->dphidz->Upload();
-//
-//        gpu->gpu_sim.phi_loc = gpu->gpu_xcq->phi_loc->_devData;
-//        gpu->gpu_sim.phi = gpu->gpu_xcq->phi->_devData;
-//        gpu->gpu_sim.dphidx = gpu->gpu_xcq->dphidx->_devData;
-//        gpu->gpu_sim.dphidy = gpu->gpu_xcq->dphidy->_devData;
-//        gpu->gpu_sim.dphidz = gpu->gpu_xcq->dphidz->_devData;
-//    }
-}
-
-
-//-----------------------------------------------
-// Delete both device and host pteval data
-//-----------------------------------------------
-void delete_pteval(bool devOnly) {
-    /*    if(gpu->gpu_sim.prePtevl == true){
-
-          if(devOnly){
-          gpu->gpu_xcq->phi_loc->DeleteGPU();
-          gpu->gpu_xcq->phi->DeleteGPU();
-          gpu->gpu_xcq->dphidx->DeleteGPU();
-          gpu->gpu_xcq->dphidy->DeleteGPU();
-          gpu->gpu_xcq->dphidz->DeleteGPU();
-          }else{
-          SAFE_DELETE(gpu->gpu_xcq->phi_loc);
-          SAFE_DELETE(gpu->gpu_xcq->phi);
-          SAFE_DELETE(gpu->gpu_xcq->dphidx);
-          SAFE_DELETE(gpu->gpu_xcq->dphidy);
-          SAFE_DELETE(gpu->gpu_xcq->dphidz);
-          }
-          }
-     */
-}
 
 
 //-----------------------------------------------

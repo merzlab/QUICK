@@ -21,79 +21,6 @@
 
 
 #ifndef OSHELL
-void getcew_quad(_gpu_type gpu) {
-    QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
-}
-
-
-void getcew_quad_grad(_gpu_type gpu) {
-    if (gpu -> gpu_sim.is_oshell == true) {
-        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-    } else {
-        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
-        QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
-    }
-
-    get_cew_accdens(gpu);
-
-    prune_grid_sswgrad();
-
-    get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>();
-
-    gpu_delete_sswgrad_vars();
-}
-
-
-void get_cew_accdens(_gpu_type gpu) {
-    QUICKDouble *gridpt = new QUICKDouble[3];
-    QUICKDouble *cewGrad= new QUICKDouble[3];
-
-    gpu -> gpu_xcq -> densa -> Download();
-
-    if(gpu -> gpu_sim.is_oshell == true)
-        gpu -> gpu_xcq -> densb -> Download();
-
-    for(int i=0; i< gpu -> gpu_xcq -> npoints;i++) {
-        QUICKDouble weight = gpu -> gpu_xcq -> weight -> _hostData[i];
-        QUICKDouble densea = gpu -> gpu_xcq -> densa -> _hostData[i];
-        QUICKDouble denseb = densea;
-
-        if(gpu -> gpu_sim.is_oshell == true)
-            denseb = gpu -> gpu_xcq -> densb -> _hostData[i];
-
-        gridpt[0] = gpu -> gpu_xcq -> gridx -> _hostData[i];
-        gridpt[1] = gpu -> gpu_xcq -> gridy -> _hostData[i];
-        gridpt[2] = gpu -> gpu_xcq -> gridz -> _hostData[i];
-
-        const QUICKDouble charge_density = -weight * (densea+denseb);
-
-        for(int j=0; j<3; j++)
-            cewGrad[j]=0.0;
-
-        QUICKDouble const *cnst_gridpt = gridpt;
-
-        // this function comes from cew library in amber
-        cew_accdensatpt_(cnst_gridpt, &charge_density, cewGrad);
-
-        //printf("cew_accdensatpt %f %f %f %f %f %f %f \n", gridpt[0], gridpt[1], gridpt[2], charge_density\
-        ,cewGrad[0], cewGrad[1], cewGrad[2]);
-
-        int Istart = (gpu -> gpu_xcq -> gatm -> _hostData[i]-1) * 3;
-
-        for (int j = 0; j < 3; j++)
-#if defined(USE_LEGACY_ATOMICS)
-            gpu->grad->_hostData[Istart+j] += cewGrad[j];
-#else
-            gpu->cew_grad->_hostData[Istart+j] += cewGrad[j];
-#endif
-    }
-
-    delete gridpt;
-    delete cewGrad;
-}
-
-
 __global__ void getcew_quad_kernel()
 {
     unsigned int offset = blockIdx.x*blockDim.x+threadIdx.x;
@@ -263,5 +190,78 @@ __global__ void cshell_getcew_quad_grad_kernel()
 #endif
 
     __syncthreads();
+}
+
+
+void getcew_quad(_gpu_type gpu) {
+    QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock>>>()));
+}
+
+
+void getcew_quad_grad(_gpu_type gpu) {
+    if (gpu -> gpu_sim.is_oshell == true) {
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+    } else {
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu -> blocks, gpu -> xc_threadsPerBlock, gpu -> gpu_xcq -> smem_size>>>()));
+    }
+
+    get_cew_accdens(gpu);
+
+    prune_grid_sswgrad();
+
+    get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu -> gpu_xcq -> smem_size>>>();
+
+    gpu_delete_sswgrad_vars();
+}
+
+
+void get_cew_accdens(_gpu_type gpu) {
+    QUICKDouble *gridpt = new QUICKDouble[3];
+    QUICKDouble *cewGrad= new QUICKDouble[3];
+
+    gpu -> gpu_xcq -> densa -> Download();
+
+    if(gpu -> gpu_sim.is_oshell == true)
+        gpu -> gpu_xcq -> densb -> Download();
+
+    for(int i=0; i< gpu -> gpu_xcq -> npoints;i++) {
+        QUICKDouble weight = gpu -> gpu_xcq -> weight -> _hostData[i];
+        QUICKDouble densea = gpu -> gpu_xcq -> densa -> _hostData[i];
+        QUICKDouble denseb = densea;
+
+        if(gpu -> gpu_sim.is_oshell == true)
+            denseb = gpu -> gpu_xcq -> densb -> _hostData[i];
+
+        gridpt[0] = gpu -> gpu_xcq -> gridx -> _hostData[i];
+        gridpt[1] = gpu -> gpu_xcq -> gridy -> _hostData[i];
+        gridpt[2] = gpu -> gpu_xcq -> gridz -> _hostData[i];
+
+        const QUICKDouble charge_density = -weight * (densea+denseb);
+
+        for(int j=0; j<3; j++)
+            cewGrad[j]=0.0;
+
+        QUICKDouble const *cnst_gridpt = gridpt;
+
+        // this function comes from cew library in amber
+        cew_accdensatpt_(cnst_gridpt, &charge_density, cewGrad);
+
+        //printf("cew_accdensatpt %f %f %f %f %f %f %f \n", gridpt[0], gridpt[1], gridpt[2], charge_density\
+        ,cewGrad[0], cewGrad[1], cewGrad[2]);
+
+        int Istart = (gpu -> gpu_xcq -> gatm -> _hostData[i]-1) * 3;
+
+        for (int j = 0; j < 3; j++)
+#if defined(USE_LEGACY_ATOMICS)
+            gpu->grad->_hostData[Istart+j] += cewGrad[j];
+#else
+            gpu->cew_grad->_hostData[Istart+j] += cewGrad[j];
+#endif
+    }
+
+    delete gridpt;
+    delete cewGrad;
 }
 #endif

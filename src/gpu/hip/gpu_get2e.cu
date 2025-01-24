@@ -13,10 +13,6 @@
 #include "gpu.h"
 #include <hip/hip_runtime.h>
 
-
-//#ifdef GPU_SPDF
-//#endif
-
 /*
  Constant Memory in GPU is fast but quite limited and hard to operate, usually not allocatable and 
  readonly. So we put the following variables into constant memory:
