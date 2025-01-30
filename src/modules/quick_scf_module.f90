@@ -800,12 +800,12 @@ contains
 #endif
         if (quick_method%debug)  call debug_SCF(jscf)
      enddo
-  
-#if defined(CUDA) || defined(CUDA_MPIV)
+
      if(master .and. write_molden) then 
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
      endif
 
+#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
