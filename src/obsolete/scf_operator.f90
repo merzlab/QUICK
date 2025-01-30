@@ -84,8 +84,8 @@ subroutine scf_operator(deltaO)
 !  Start the timer for 2e-integrals
    call cpu_time(timer_begin%T2e)
 
-#if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
 
       if(quick_method%HF)then      
          call gpu_upload_method(0, 1.0d0)
@@ -105,7 +105,7 @@ subroutine scf_operator(deltaO)
 #endif
 
    if (quick_method%nodirect) then
-#ifdef CUDA
+#if defined(GPU)
       call gpu_addint(quick_qm_struct%o, intindex, intFileName)
 #else
 #ifndef MPI
@@ -120,15 +120,15 @@ subroutine scf_operator(deltaO)
 ! The previous two terms are the one electron part of the Fock matrix.
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
-#if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then          
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then          
          call gpu_get2e(quick_qm_struct%o)  
       else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#if defined MPIV && !defined CUDA_MPIV 
+#if defined(MPIV) && !defined(MPIV_GPU)
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
@@ -147,7 +147,7 @@ subroutine scf_operator(deltaO)
       enddo
 #endif
 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
       endif                             
 #endif
    endif
@@ -297,10 +297,8 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
-
-#if defined CUDA || defined CUDA_MPIV
-
-   if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if(quick_method%bGPU) then
 
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
@@ -326,7 +324,7 @@ subroutine get_xc
    endif
 
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)

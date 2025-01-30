@@ -122,8 +122,8 @@ contains
 
      endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if (quick_method%bGPU) then
         call gpu_cleanup()
      endif
 #endif
@@ -256,9 +256,9 @@ contains
   !  2) One electron gradients
   !---------------------------------------------------------------------
   ! Note that we will call this subroutine asynchronously with ERI
-  ! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
+  ! gradient kernel call (see gpu_get2e.cu) in GPU and MPI+GPU versions
   
-!#if !defined CUDA && !defined CUDA_MPIV
+!#if !defined(GPU) && !defined(MPIV_GPU)
 #ifdef OSHELL
     call get_oshell_oneen_grad
 #else
@@ -310,8 +310,7 @@ contains
         call get_cshell_xc_grad
 #endif
   
-#if defined CUDA_MPIV || defined HIP_MPIV
-
+#if defined(MPIV_GPU)
         call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
 #endif
   
@@ -321,8 +320,8 @@ contains
      endif
   
   ! delete dft grid from the device if dft/cew was used
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+  if (quick_method%bGPU) then
 
     if (quick_method%DFT &
 #ifdef CEW
@@ -578,8 +577,7 @@ contains
      call cshell_density_cutoff
 #endif 
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
         call gpu_upload_density_matrix(quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff,&
                                quick_method%coreIntegralCutoff)
@@ -593,7 +591,7 @@ contains
           call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
         else
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
      else
@@ -855,8 +853,8 @@ contains
       call cshell_density_cutoff
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if (quick_method%bGPU) then
   
 !        call gpu_upload_density_matrix(quick_qm_struct%dense)
 !        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
@@ -872,7 +870,7 @@ contains
      else
 #endif
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
   
      if (bMPI) then
         nshell_mpi = mpi_jshelln(mpirank)
@@ -915,7 +913,7 @@ contains
               enddo
            enddo
         enddo
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
      endif
 #endif
 
@@ -1024,9 +1022,8 @@ contains
      allocate( dp(3,natom) )
      dp = 0.d0
      
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-     if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if(quick_method%bGPU) then
   
         call gpu_reupload_dft_grid()
   
@@ -1054,7 +1051,7 @@ contains
         enddo
      endif
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
            irad_init = quick_dft_grid%igridptll(mpirank+1)
            irad_end = quick_dft_grid%igridptul(mpirank+1)
