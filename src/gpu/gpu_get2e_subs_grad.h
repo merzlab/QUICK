@@ -9,44 +9,13 @@
 #include "gpu_common.h"
 
 
-#undef STOREDIM
-#if defined(int_sp)
-  #undef VDIM3
-  #undef LOCSTORE
-  #undef VY
-  #define STOREDIM STOREDIM_GRAD_T
-  #define VDIM3 VDIM3_GRAD_T
-  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
-  #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
-#elif defined(int_spd)
-  #undef VDIM3
-  #undef VY
-  #undef LOCSTORE
-  #define STOREDIM STOREDIM_S
-  #define VDIM3 VDIM3_S
-  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
-  #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
-#elif defined(int_spdf) || defined(int_spdf2)
-  #undef VDIM3
-  #define STOREDIM STOREDIM_GRAD_S
-  #define VDIM3 VDIM3_L
-#elif defined(int_spdf3) || defined(int_spdf4)
-  #undef VDIM3
-  #define STOREDIM STOREDIM_XL
-  #define VDIM3 VDIM3_L
-#else
-  #undef VDIM3
-  #define STOREDIM STOREDIM_L
-  #define VDIM3 VDIM3_L
-#endif
-
 #undef FMT_NAME
 #define FMT_NAME FmT
 #include "gpu_fmt.h"
 
 
-#ifndef new_quick_2_gpu_get2e_subs_grad_h
-  #define new_quick_2_gpu_get2e_subs_grad_h
+#ifndef gpu_get2e_subs_grad_h
+  #define gpu_get2e_subs_grad_h
   #undef STOREDIM
   #define STOREDIM STOREDIM_GRAD_T
 __device__ static inline void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
@@ -1191,6 +1160,38 @@ __device__ static inline void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* Ya
     *Yccy = *Yccy * constant;
     *Yccz = *Yccz * constant;
 }
+#endif
+
+
+#undef STOREDIM
+#if defined(int_sp)
+  #undef VDIM3
+  #undef LOCSTORE
+  #undef VY
+  #define STOREDIM STOREDIM_GRAD_T
+  #define VDIM3 VDIM3_GRAD_T
+  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
+  #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
+#elif defined(int_spd)
+  #undef VDIM3
+  #undef VY
+  #undef LOCSTORE
+  #define STOREDIM STOREDIM_S
+  #define VDIM3 VDIM3_S
+  #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
+  #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
+#elif defined(int_spdf) || defined(int_spdf2)
+  #undef VDIM3
+  #define STOREDIM STOREDIM_GRAD_S
+  #define VDIM3 VDIM3_L
+#elif defined(int_spdf3) || defined(int_spdf4)
+  #undef VDIM3
+  #define STOREDIM STOREDIM_XL
+  #define VDIM3 VDIM3_L
+#else
+  #undef VDIM3
+  #define STOREDIM STOREDIM_L
+  #define VDIM3 VDIM3_L
 #endif
 
 
