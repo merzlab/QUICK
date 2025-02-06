@@ -35,145 +35,12 @@
 
 
 /*
-   Note that this driver implementations are very similar to the ones implemented by Yipu Miao in gpu_get2e_subs.h.
-   To understand the following comments better, please refer to Figure 2(b) and 2(d) in Miao and Merz 2015 paper.
-
-   In the following kernel, we treat f orbital into 5 parts.
-
-  type:   ss sp ps sd ds pp dd sf pf | df ff |
-  ss                                 |       |
-  sp                                 |       |
-  ps                                 | zone  |
-  sd                                 |  2    |
-  ds         zone 0                  |       |
-  pp                                 |       |
-  dd                                 |       |
-  sf                                 |       |
-  pf                                 |       |
-  -------------------------------------------
-  df         zone 1                  | z | z |
-  ff                                 | 3 | 4 |
-  -------------------------------------------
-  
-  
-  because the single f orbital kernel is impossible to compile completely, we treat VRR as:
-  
-  
-  I+J  0 1 2 3 4 | 5 | 6 |
-  0 ----------------------
-  1|             |       |
-  2|   Kernel    |  K2   |
-  3|     0       |       |
-  4|             |       |
-  -----------------------|
-  5|   Kernel    | K | K |
-  6|     1       | 3 | 4 |
-  ------------------------
-  
-  Their responses for
-  I+J          K+L
-  Kernel 0:   0-4           0-4
-  Kernel 1:   0-4           5,6
-  Kernel 2:   5,6           0-4
-  Kernel 3:   5             5,6
-  Kernel 4:   6             5,6
-  
-  Integrals in zone need kernel:
-  zone 0: kernel 0
-  zone 1: kernel 0,1
-  zone 2: kernel 0,2
-  zone 3: kernel 0,1,2,3
-  zone 4: kernel 0,1,2,3,4
-  
-  so first, kernel 0: zone 0,1,2,3,4 (get_lri_kernel()), if no f, then that's it.
-  second,   kernel 1: zone 1,3,4(get_lri_kernel_spdf())
-  then,     kernel 2: zone 2,3,4(get_lri_kernel_spdf2())
-  then,     kernel 3: zone 3,4(get_lri_kernel_spdf3())
-  finally,  kernel 4: zone 4(get_lri_kernel_spdf4())
-*/
-#if defined(int_spd)
-__global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel()
-#elif defined(int_spdf2)
-__global__ void
-__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
-#endif
-{
-    unsigned int offside = blockIdx.x * blockDim.x + threadIdx.x;
-    int totalThreads = blockDim.x * gridDim.x;
-
-    // jshell and jshell2 defines the regions in i+j and k+l axes respectively.
-    // sqrQshell= Qshell x Qshell; where Qshell is the number of sorted shells (see gpu_upload_basis_ in gpu.cu)
-    // for details on sorting.
-#if defined(int_spd)
-    /*
-       Here we walk through full cutoff matrix.
-
-       --sqrQshell --
-       _______________
-       |             |  |
-       |             |  |
-       |             | sqrQshell
-       |             |  |
-       |             |  |
-       |_____________|  |
-
-*/
-    QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
-#elif defined(int_spdf2)
-    QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
-#endif
-
-    unsigned int totalatom = devSim.natom + devSim.nextatom;
-
-    for (QUICKULL i = offside; i < jshell * totalatom; i+= totalThreads) {
-#if defined(int_spd)
-        // Zone 0
-        QUICKULL iatom = (QUICKULL) i / jshell;
-        QUICKULL b = (QUICKULL) (i - iatom * jshell);
-#elif defined(int_spdf2)
-        // Zone 2
-        QUICKULL iatom = (QUICKULL) i / jshell;
-        QUICKULL b = (QUICKULL) (i - iatom * jshell);
-        //a = a + devSim.fStart;
-#endif
-
-#if defined(MPIV_GPU)
-        if (devSim.mpi_bcompute[b] > 0) {
-#endif
-            int II = devSim.sorted_YCutoffIJ[b].x;
-            int JJ = devSim.sorted_YCutoffIJ[b].y;
-
-            int ii = devSim.sorted_Q[II];
-            int jj = devSim.sorted_Q[JJ];
-
-//            printf("b II JJ ii jj %lu %lu %d %d %d %d \n", jshell, b, II, JJ, ii, jj);
-
-            int iii = devSim.sorted_Qnumber[II];
-            int jjj = devSim.sorted_Qnumber[JJ];
-
-            // assign values to dummy variables, to be cleaned up eventually
-#if defined(int_spd)
-            iclass_lri(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
-#elif defined(int_spdf2)
-            if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
-                iclass_lri_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
-            }
-#endif
-#if defined(MPIV_GPU)
-        }
-#endif
-    }
-}
-
-
-/*
    iclass_lri subroutine is to generate 3 center intergrals using HRR and VRR method.
 */
 #if defined(int_spd)
-__device__ __forceinline__ void iclass_lri
+__device__ static inline void iclass_lri
 #elif(defined int_spdf2)
-__device__ __forceinline__ void iclass_lri_spdf2
+__device__ static inline void iclass_lri_spdf2
 #endif
 (int I, int J, unsigned int II, unsigned int JJ, int iatom,
  unsigned int totalatom, QUICKDouble* YVerticalTemp, QUICKDouble* store)
@@ -377,6 +244,139 @@ __device__ __forceinline__ void iclass_lri_spdf2
 #endif
             }
         }
+    }
+}
+
+
+/*
+   Note that this driver implementations are very similar to the ones implemented by Yipu Miao in gpu_get2e_subs.h.
+   To understand the following comments better, please refer to Figure 2(b) and 2(d) in Miao and Merz 2015 paper.
+
+   In the following kernel, we treat f orbital into 5 parts.
+
+  type:   ss sp ps sd ds pp dd sf pf | df ff |
+  ss                                 |       |
+  sp                                 |       |
+  ps                                 | zone  |
+  sd                                 |  2    |
+  ds         zone 0                  |       |
+  pp                                 |       |
+  dd                                 |       |
+  sf                                 |       |
+  pf                                 |       |
+  -------------------------------------------
+  df         zone 1                  | z | z |
+  ff                                 | 3 | 4 |
+  -------------------------------------------
+  
+  
+  because the single f orbital kernel is impossible to compile completely, we treat VRR as:
+  
+  
+  I+J  0 1 2 3 4 | 5 | 6 |
+  0 ----------------------
+  1|             |       |
+  2|   Kernel    |  K2   |
+  3|     0       |       |
+  4|             |       |
+  -----------------------|
+  5|   Kernel    | K | K |
+  6|     1       | 3 | 4 |
+  ------------------------
+  
+  Their responses for
+  I+J          K+L
+  Kernel 0:   0-4           0-4
+  Kernel 1:   0-4           5,6
+  Kernel 2:   5,6           0-4
+  Kernel 3:   5             5,6
+  Kernel 4:   6             5,6
+  
+  Integrals in zone need kernel:
+  zone 0: kernel 0
+  zone 1: kernel 0,1
+  zone 2: kernel 0,2
+  zone 3: kernel 0,1,2,3
+  zone 4: kernel 0,1,2,3,4
+  
+  so first, kernel 0: zone 0,1,2,3,4 (get_lri_kernel()), if no f, then that's it.
+  second,   kernel 1: zone 1,3,4(get_lri_kernel_spdf())
+  then,     kernel 2: zone 2,3,4(get_lri_kernel_spdf2())
+  then,     kernel 3: zone 3,4(get_lri_kernel_spdf3())
+  finally,  kernel 4: zone 4(get_lri_kernel_spdf4())
+*/
+#if defined(int_spd)
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel()
+#elif defined(int_spdf2)
+__global__ void
+__launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get_lri_kernel_spdf2()
+#endif
+{
+    unsigned int offside = blockIdx.x * blockDim.x + threadIdx.x;
+    int totalThreads = blockDim.x * gridDim.x;
+
+    // jshell and jshell2 defines the regions in i+j and k+l axes respectively.
+    // sqrQshell= Qshell x Qshell; where Qshell is the number of sorted shells (see gpu_upload_basis_ in gpu.cu)
+    // for details on sorting.
+#if defined(int_spd)
+    /*
+       Here we walk through full cutoff matrix.
+
+       --sqrQshell --
+       _______________
+       |             |  |
+       |             |  |
+       |             | sqrQshell
+       |             |  |
+       |             |  |
+       |_____________|  |
+
+*/
+    QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
+#elif defined(int_spdf2)
+    QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
+#endif
+
+    unsigned int totalatom = devSim.natom + devSim.nextatom;
+
+    for (QUICKULL i = offside; i < jshell * totalatom; i+= totalThreads) {
+#if defined(int_spd)
+        // Zone 0
+        QUICKULL iatom = (QUICKULL) i / jshell;
+        QUICKULL b = (QUICKULL) (i - iatom * jshell);
+#elif defined(int_spdf2)
+        // Zone 2
+        QUICKULL iatom = (QUICKULL) i / jshell;
+        QUICKULL b = (QUICKULL) (i - iatom * jshell);
+        //a = a + devSim.fStart;
+#endif
+
+#if defined(MPIV_GPU)
+        if (devSim.mpi_bcompute[b] > 0) {
+#endif
+            int II = devSim.sorted_YCutoffIJ[b].x;
+            int JJ = devSim.sorted_YCutoffIJ[b].y;
+
+            int ii = devSim.sorted_Q[II];
+            int jj = devSim.sorted_Q[JJ];
+
+//            printf("b II JJ ii jj %lu %lu %d %d %d %d \n", jshell, b, II, JJ, ii, jj);
+
+            int iii = devSim.sorted_Qnumber[II];
+            int jjj = devSim.sorted_Qnumber[JJ];
+
+            // assign values to dummy variables, to be cleaned up eventually
+#if defined(int_spd)
+            iclass_lri(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
+#elif defined(int_spdf2)
+            if ( (iii + jjj) > 4 && (iii + jjj) <= 6 ) {
+                iclass_lri_spdf2(iii, jjj, ii, jj, iatom, totalatom, devSim.YVerticalTemp+offside, devSim.store+offside);
+            }
+#endif
+#if defined(MPIV_GPU)
+        }
+#endif
     }
 }
 

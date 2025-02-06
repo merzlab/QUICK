@@ -22,7 +22,8 @@
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 #define STORE_OPERATOR =
 
-__device__ __inline__ void ERint_grad_vertical_spdf_1(const int I, const int J, const int K, const int L,
+
+__device__ static inline void ERint_grad_vertical_spdf_1(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -31,27 +32,23 @@ __device__ __inline__ void ERint_grad_vertical_spdf_1(const int I, const int J, 
         const QUICKDouble ABcom, const QUICKDouble CDcom,
         QUICKDouble * const store, QUICKDouble * const YVerticalTemp)
 {
-    if ((I + J) >= 7 && (K + L) >= 0)
-    {
+    if ((I + J) >= 7 && (K + L) >= 0) {
 #include "iclass_ksss.h"
     }
-    if ((I + J) >= 7 && (K + L) >= 1)
-    {
+    if ((I + J) >= 7 && (K + L) >= 1) {
 #include "iclass_ksps.h"
     }
-    if ((I + J) >= 7 && (K + L) >= 2)
-    {
+    if ((I + J) >= 7 && (K + L) >= 2) {
 #include "iclass_ksds.h"
     }
-    if ((I + J) >= 7 && (K + L) >= 3)
-    {
+    if ((I + J) >= 7 && (K + L) >= 3) {
 #include "iclass_ksfs.h"
     }
-    if ((I + J) >= 7 && (K + L) >= 4)
-    {
+    if ((I + J) >= 7 && (K + L) >= 4) {
 #include "iclass_ksgs.h"
     }
 }
+
 
 #undef STORE_OPERATOR
 #define STORE_OPERATOR +=

@@ -24,7 +24,7 @@
 #include "gpu_fmt.h"
 
 
-__device__ __forceinline__ void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
+__device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
         QUICKDouble * const store, QUICKDouble * const store2) {
     /*
@@ -114,7 +114,11 @@ __device__ __forceinline__ void iclass_oei(unsigned int I, unsigned int J, unsig
             }
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme.
-            OEint_vertical(I, J, II, JJ, Px - Ax, Py - Ay, Pz - Az,
+            OEint_vertical(I, J, 
+#if defined(DEBUG_OEI)
+                    II, JJ, 
+#endif
+                    Px - Ax, Py - Ay, Pz - Az,
                     Px - Bx, Py - By, Pz - Bz,
                     Px - Cx, Py - Cy, Pz - Cz,
                     1.0 / (2.0 * Zeta), store, YVerticalTemp);

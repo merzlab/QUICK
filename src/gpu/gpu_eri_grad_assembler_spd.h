@@ -22,7 +22,8 @@
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 #define STORE_OPERATOR =
 
-__device__ __inline__ void ERint_grad_vertical_spd(const int I, const int J, const int K, const int L,
+
+__device__ static inline void ERint_grad_vertical_spd(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -32,103 +33,80 @@ __device__ __inline__ void ERint_grad_vertical_spd(const int I, const int J, con
         QUICKDouble * const store, QUICKDouble * const YVerticalTemp)
 {
 #include "iclass_ssss.h"
-    if ((I+J) >=  0 && (K+L)>= 1)
-    {
+    if ((I+J) >=  0 && (K+L)>= 1) {
 #include "iclass_ssps.h"
-        if ((I+J) >=  0 && (K+L)>= 2)
-        {
+        if ((I+J) >=  0 && (K+L)>= 2) {
 #include "iclass_ssds.h"
-            if ((I+J) >=  0 && (K+L)>= 3)
-            {
+            if ((I+J) >=  0 && (K+L)>= 3) {
 #include "iclass_ssfs.h"
-                if ((I+J) >=  0 && (K+L)>= 4)
-                {
+                if ((I+J) >=  0 && (K+L)>= 4) {
 #include "iclass_ssgs.h"
                 }
             }
         }
     }
-    if ((I+J) >=  1 && (K+L)>= 0)
-    {
+    if ((I+J) >=  1 && (K+L)>= 0) {
 #include "iclass_psss.h"
-        if ((I+J) >=  1 && (K+L)>= 1)
-        {
+        if ((I+J) >=  1 && (K+L)>= 1) {
 #include "iclass_psps.h"
-            if ((I+J) >=  1 && (K+L)>= 2)
-            {
+            if ((I+J) >=  1 && (K+L)>= 2) {
 #include "iclass_psds.h"
-                if ((I+J) >=  1 && (K+L)>= 3)
-                {
+                if ((I+J) >=  1 && (K+L)>= 3) {
 #include "iclass_psfs.h"
-                    if ((I+J) >=  1 && (K+L)>= 4)
-                    {
+                    if ((I+J) >=  1 && (K+L)>= 4) {
 #include "iclass_psgs.h"
                     }
                 }
             }
-            if ((I+J) >=  2 && (K+L)>= 1)
-            {
+            if ((I+J) >=  2 && (K+L)>= 1) {
 #include "iclass_dsps.h"
-                if ((I+J) >=  2 && (K+L)>= 2)
-                {
+                if ((I+J) >=  2 && (K+L)>= 2) {
 #include "iclass_dsds.h"
-                    if ((I+J) >=  2 && (K+L)>= 3)
-                    {
+                    if ((I+J) >=  2 && (K+L)>= 3) {
 #include "iclass_dsfs.h"
-                        if ((I+J) >=  2 && (K+L)>= 4)
-                        {
+                        if ((I+J) >=  2 && (K+L)>= 4) {
 #include "iclass_dsgs.h"
                         }
                     }
-                    if ((I+J) >=  3 && (K+L)>= 2)
-                    {
+                    if ((I+J) >=  3 && (K+L)>= 2) {
 #include "iclass_fsds.h"
-                        if ((I+J) >=  3 && (K+L)>= 3 && (I+J+K+L)>6)
-                        {
+                        if ((I+J) >=  3 && (K+L)>= 3 && (I+J+K+L)>6) {
 #include "iclass_fsfs.h"
-                            if ((I+J) >=  3 && (K+L)>= 4)
-                            {
+                            if ((I+J) >=  3 && (K+L)>= 4) {
 #include "iclass_fsgs.h"
                             }
-                            if ((I+J) >=  4 && (K+L)>= 3)
-                            {
+                            if ((I+J) >=  4 && (K+L)>= 3) {
 #include "iclass_gsfs.h"
-                                if ((I+J) >=  4 && (K+L)>= 4)
-                                {
+                                if ((I+J) >=  4 && (K+L)>= 4) {
 #include "iclass_gsgs.h"
                                 }
                             }
                         }
-                        if ((I+J) >=  4 && (K+L)>= 2)
-                        {
+                        if ((I+J) >=  4 && (K+L)>= 2) {
 #include "iclass_gsds.h"
                         }
                     }
                 }
-                if ((I+J) >=  3 && (K+L)>= 1)
-                {
+                if ((I+J) >=  3 && (K+L)>= 1) {
 #include "iclass_fsps.h"
-                    if ((I+J) >=  4 && (K+L)>= 1)
-                    {
+                    if ((I+J) >=  4 && (K+L)>= 1) {
 #include "iclass_gsps.h"
                     }
                 }
             }
         }
-        if ((I+J) >=  2 && (K+L)>= 0)
-        {
+        if ((I+J) >=  2 && (K+L)>= 0) {
 #include "iclass_dsss.h"
-            if ((I+J) >=  3 && (K+L)>= 0)
-            {
+            if ((I+J) >=  3 && (K+L)>= 0) {
 #include "iclass_fsss.h"
-                if ((I+J) >=  4 && (K+L)>= 0)
-                {
+                if ((I+J) >=  4 && (K+L)>= 0) {
 #include "iclass_gsss.h"
                 }
             }
         }
     }
 }
+
 
 #undef STORE_OPERATOR
 #define STORE_OPERATOR +=

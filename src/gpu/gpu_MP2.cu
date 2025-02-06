@@ -34,7 +34,7 @@ static float totTime;
 #endif
 
 
-__device__ static void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp)
+__device__ static inline void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTemp)
 {
     const QUICKDouble PIE4 = (QUICKDouble) PI / 4.0;
     const QUICKDouble XINV = (QUICKDouble) 1.0 / X;
@@ -104,455 +104,7 @@ __device__ static void FmT_MP2(int MaxM, QUICKDouble X, QUICKDouble* YVerticalTe
 }
 
 
-/*
-   upload gpu simulation type to constant memory
- */
-void upload_sim_to_constant_MP2(_gpu_type gpu){
-    gpuMemcpyToSymbol((const void *) &devSim_MP2, (const void *) &gpu->gpu_sim, sizeof(gpu_simulation_type));
-}
-
-
-void get2e_MP2(_gpu_type gpu)
-{
-#if defined(DEBUG)
-    GPU_TIMER_CREATE();
-    GPU_TIMER_START();
-#endif
-
-    printf("BLOCK= %i, THREADSperBLOCK= %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);
-    get2e_MP2_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>> ();
-
-#if defined(DEBUG)
-    GPU_TIMER_STOP();
-    totTime += time;
-    fprintf(gpu->debugFile, "this cycle:%f ms total time:%f ms\n", time, totTime);
-    GPU_TIMER_DESTROY();
-#endif
-}
-
-
-__global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
-{
-    unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
-    int totalThreads = blockDim.x * gridDim.x;
-
-    QUICKULL jshell = (QUICKULL) devSim_MP2.sqrQshell;
-    QUICKULL myInt = (QUICKULL) jshell * jshell / totalThreads;
-
-    if (jshell * jshell - myInt * totalThreads > offset)
-        myInt++;
-
-    for (QUICKULL i = 1; i <= myInt; i++) {
-        QUICKULL currentInt = totalThreads * (i - 1) + offset;
-        QUICKULL a = (QUICKULL) currentInt / jshell;
-        QUICKULL b = (QUICKULL) (currentInt - a * jshell);
-
-        /*
-           the following code is to implement a better index mode.
-           The original one can be see as:
-           Large....Small
-           Large ->->->
-           ...   ->->->
-           Small ->->->
-
-           now it changed to
-           Large....Small
-           Large ->->|  -> ->
-           ...   <-<-|  |  |
-           Small <-<-<-<-  |
-           <-<-<-<-<-
-           Theortically, it can avoid divergence but after test, we
-           find it has limited effect and something it will slows down
-           because of the extra FP calculation required.
-         */
-//        QUICKULL a, b;
-//        double aa = (double) ((currentInt + 1) * 1E-4);
-//        QUICKULL t = (QUICKULL) (sqrt(aa) * 1E2);
-//        if ((currentInt +1 ) == t * t) {
-//            t--;
-//        }
-//
-//        QUICKULL k = currentInt - t *t;
-//        if (k <= t) {
-//            a = k;
-//            b = t;
-//        } else {
-//            a = t;
-//            b = 2 * t - k;
-//        }
-
-        int II = devSim_MP2.sorted_YCutoffIJ[a].x;
-        int JJ = devSim_MP2.sorted_YCutoffIJ[a].y;
-        int KK = devSim_MP2.sorted_YCutoffIJ[b].x;
-        int LL = devSim_MP2.sorted_YCutoffIJ[b].y;
-        int ii = devSim_MP2.sorted_Q[II];
-        int jj = devSim_MP2.sorted_Q[JJ];
-        int kk = devSim_MP2.sorted_Q[KK];
-        int ll = devSim_MP2.sorted_Q[LL];
-
-        if (ii <= kk) {
-            int nshell = devSim_MP2.nshell;
-            QUICKDouble DNMax = MAX(
-                    MAX(4.0 * LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell),
-                        4.0 * LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
-                    MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell),
-                            LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
-                        MAX(LOC2(devSim_MP2.cutMatrix, jj, kk, nshell, nshell),
-                            LOC2(devSim_MP2.cutMatrix, jj, ll, nshell, nshell))));
-
-            if (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell)
-                    > devSim_MP2.integralCutoff
-                    && LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax
-                    > devSim_MP2.integralCutoff) {
-                int iii = devSim_MP2.sorted_Qnumber[II];
-                int jjj = devSim_MP2.sorted_Qnumber[JJ];
-                int kkk = devSim_MP2.sorted_Qnumber[KK];
-                int lll = devSim_MP2.sorted_Qnumber[LL];
-
-                iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
-            }
-        }
-    }
-}
-
-
-/*
-   iclass subroutine is to generate 2-electron intergral using HRR and VRR method, which is the most
-   performance algrithem for electron intergral evaluation. See description below for details
- */
-__device__ void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ,
-        unsigned int KK, unsigned int LL, QUICKDouble DNMax)
-{
-    /*
-       kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
-       and be careful with the index difference between Fortran and C++,
-       Fortran starts array index with 1 and C++ starts 0.
-
-       RA, RB, RC, and RD are the coordinates for atom katomA, katomB, katomC and katomD,
-       which means they are corrosponding coorinates for shell II, JJ, KK, and LL.
-       And we don't need the coordinates now, so we will not retrieve the data now.
-     */
-    QUICKDouble RAx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RAy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RAz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RCx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RCy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RCz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
-
-    /*
-       kPrimI, J, K and L indicates the primtive gaussian function number
-       kStartI, J, K, and L indicates the starting guassian function for shell I, J, K, and L.
-       We retrieve from global memory and save them to register to avoid multiple retrieve.
-     */
-    int kPrimI = devSim_MP2.kprim[II];
-    int kPrimJ = devSim_MP2.kprim[JJ];
-    int kPrimK = devSim_MP2.kprim[KK];
-    int kPrimL = devSim_MP2.kprim[LL];
-    int kStartI = devSim_MP2.kstart[II] - 1;
-    int kStartJ = devSim_MP2.kstart[JJ] - 1;
-    int kStartK = devSim_MP2.kstart[KK] - 1;
-    int kStartL = devSim_MP2.kstart[LL] - 1;
-
-    /*
-       store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
-       of GPU limitation, we can not do that now.
-
-       See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
-     */
-    QUICKDouble store[STOREDIM * STOREDIM];
-
-    /*
-       Initial the neccessary element for
-     */
-    for (int i = Sumindex_MP2[K + 1] + 1; i <= Sumindex_MP2[K + L + 2]; i++) {
-        for (int j = Sumindex_MP2[I + 1] + 1; j <= Sumindex_MP2[I + J + 2]; j++) {
-            LOC2(store, j - 1, i - 1, STOREDIM, STOREDIM) = 0;
-        }
-    }
-
-    for (int i = 0; i < kPrimI * kPrimJ; i++) {
-        int JJJ = (int) i / kPrimI;
-        int III = (int) i - kPrimI * JJJ;
-        /*
-           In the following comments, we have I, J, K, L denote the primitive gaussian function we use, and
-           for example, expo(III, ksumtype(II)) stands for the expo for the IIIth primitive guassian function for II shell,
-           we use I to express the corresponding index.
-           AB = expo(I)+expo(J)
-           --->                --->
-           ->     expo(I) * xyz (I) + expo(J) * xyz(J)
-           P  = ---------------------------------------
-           expo(I) + expo(J)
-           Those two are pre-calculated in CPU stage.
-
-         */
-        int ii_start = devSim_MP2.prim_start[II];
-        int jj_start = devSim_MP2.prim_start[JJ];
-
-        QUICKDouble AB = LOC2(devSim_MP2.expoSum, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
-        QUICKDouble Px = LOC2(devSim_MP2.weightedCenterX, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
-        QUICKDouble Py = LOC2(devSim_MP2.weightedCenterY, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
-        QUICKDouble Pz = LOC2(devSim_MP2.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
-
-        /*
-           X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
-           cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
-         */
-        QUICKDouble cutoffPrim = DNMax * LOC2(devSim_MP2.cutPrim, kStartI + III, kStartJ + JJJ, devSim_MP2.jbasis, devSim_MP2.jbasis);
-        QUICKDouble X1 = LOC4(devSim_MP2.Xcoeff, kStartI + III, kStartJ + JJJ,
-                I - devSim_MP2.Qstart[II], J - devSim_MP2.Qstart[JJ], devSim_MP2.jbasis, devSim_MP2.jbasis, 2, 2);
-
-        for (int j = 0; j < kPrimK * kPrimL; j++) {
-            int LLL = (int) j / kPrimK;
-            int KKK = (int) j - kPrimK * LLL;
-
-            if (cutoffPrim * LOC2(devSim_MP2.cutPrim, kStartK + KKK, kStartL + LLL, devSim_MP2.jbasis, devSim_MP2.jbasis)
-                    > devSim_MP2.primLimit) {
-                /*
-                   CD = expo(L)+expo(K)
-                   ABCD = 1/ (AB + CD) = 1 / (expo(I)+expo(J)+expo(K)+expo(L))
-                   AB * CD      (expo(I)+expo(J))*(expo(K)+expo(L))
-                   Rou(Greek Letter) =   ----------- = ------------------------------------
-                   AB + CD         expo(I)+expo(J)+expo(K)+expo(L)
-
-                   expo(I)+expo(J)                        expo(K)+expo(L)
-                   ABcom = --------------------------------  CDcom = --------------------------------
-                   expo(I)+expo(J)+expo(K)+expo(L)           expo(I)+expo(J)+expo(K)+expo(L)
-
-                   ABCDtemp = 1/2(expo(I)+expo(J)+expo(K)+expo(L))
-                 */
-                int kk_start = devSim_MP2.prim_start[KK];
-                int ll_start = devSim_MP2.prim_start[LL];
-
-                QUICKDouble CD = LOC2(devSim_MP2.expoSum, kk_start + KKK, ll_start + LLL, devSim_MP2.prim_total, devSim_MP2.prim_total);
-                QUICKDouble ABCD = 1.0 / (AB + CD);
-
-                /*
-                   X2 is the multiplication of four indices normalized coeffecient
-                 */
-                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim_MP2.Xcoeff, kStartK + KKK, kStartL + LLL,
-                        K - devSim_MP2.Qstart[KK], L - devSim_MP2.Qstart[LL], devSim_MP2.jbasis, devSim_MP2.jbasis, 2, 2);
-
-                /*
-                   Q' is the weighting center of K and L
-                   --->           --->
-                   ->  ------>       expo(K)*xyz(K)+expo(L)*xyz(L)
-                   Q = P'(K,L)  = ------------------------------
-                   expo(K) + expo(L)
-
-                   W' is the weight center for I, J, K, L
-
-                   --->             --->             --->            --->
-                   ->     expo(I)*xyz(I) + expo(J)*xyz(J) + expo(K)*xyz(K) +expo(L)*xyz(L)
-                   W = -------------------------------------------------------------------
-                   expo(I) + expo(J) + expo(K) + expo(L)
-                   ->  ->  2
-                   RPQ =| P - Q |
-
-                   ->  -> 2
-                   T = ROU * | P - Q|
-                 */
-
-                QUICKDouble Qx = LOC2(devSim_MP2.weightedCenterX, kk_start + KKK, ll_start + LLL,
-                        devSim_MP2.prim_total, devSim_MP2.prim_total);
-                QUICKDouble Qy = LOC2(devSim_MP2.weightedCenterY, kk_start + KKK, ll_start + LLL,
-                        devSim_MP2.prim_total, devSim_MP2.prim_total);
-                QUICKDouble Qz = LOC2(devSim_MP2.weightedCenterZ, kk_start + KKK, ll_start + LLL,
-                        devSim_MP2.prim_total, devSim_MP2.prim_total);
-                QUICKDouble YVerticalTemp[VDIM1 * VDIM2 * VDIM3];
-
-                FmT_MP2(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
-                        YVerticalTemp);
-
-                for (int i = 0; i <= I + J + K + L; i++) {
-                    VY(0, 0, i) *= X2;
-                }
-
-                vertical_MP2(I, J, K, L, YVerticalTemp, store,
-                        Px - RAx, Py - RAy, Pz - RAz,
-                        (Px * AB + Qx * CD) * ABCD - Px,
-                        (Py * AB + Qy * CD) * ABCD - Py,
-                        (Pz * AB + Qz * CD) * ABCD - Pz,
-                        Qx - RCx, Qy - RCy, Qz - RCz,
-                        (Px * AB + Qx * CD) * ABCD - Qx,
-                        (Py * AB + Qy * CD) * ABCD - Qy,
-                        (Pz * AB + Qz * CD) * ABCD - Qz,
-                        0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
-            }
-        }
-    }
-
-    // IJKLTYPE is the I, J, K, L type
-    int IJKLTYPE = (int) (1000 * I + 100 *J + 10 * K + L);
-
-    QUICKDouble RBx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RBy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RBz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RDx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RDy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
-    QUICKDouble RDz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
-
-    int III1 = LOC2(devSim_MP2.Qsbasis, II, I, devSim_MP2.nshell, 4);
-    int III2 = LOC2(devSim_MP2.Qfbasis, II, I, devSim_MP2.nshell, 4);
-    int JJJ1 = LOC2(devSim_MP2.Qsbasis, JJ, J, devSim_MP2.nshell, 4);
-    int JJJ2 = LOC2(devSim_MP2.Qfbasis, JJ, J, devSim_MP2.nshell, 4);
-    int KKK1 = LOC2(devSim_MP2.Qsbasis, KK, K, devSim_MP2.nshell, 4);
-    int KKK2 = LOC2(devSim_MP2.Qfbasis, KK, K, devSim_MP2.nshell, 4);
-    int LLL1 = LOC2(devSim_MP2.Qsbasis, LL, L, devSim_MP2.nshell, 4);
-    int LLL2 = LOC2(devSim_MP2.Qfbasis, LL, L, devSim_MP2.nshell, 4);
-
-    // maxIJKL is the max of I,J, K,L
-    int maxIJKL = (int) MAX(MAX(I,J), MAX(K,L));
-
-    if ((maxIJKL == 2 && (J != 0 || L != 0)) || maxIJKL >= 3) {
-        IJKLTYPE = 999;
-    }
-
-    QUICKDouble hybrid_coeff = 0.0;
-    if (devSim_MP2.method == HF) {
-        hybrid_coeff = 1.0;
-    } else if (devSim_MP2.method == B3LYP) {
-        hybrid_coeff = 0.2;
-    } else if (devSim_MP2.method == DFT) {
-        hybrid_coeff = 0.0;
-    }
-
-    for (int III = III1; III <= III2; III++) {
-        for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
-            QUICKDouble o_JI = 0.0;
-
-            for (int KKK = MAX(III, KKK1); KKK <= KKK2; KKK++) {
-                QUICKDouble o_KI = 0.0;
-                QUICKDouble o_JK = 0.0;
-                QUICKDouble o_JK_MM = 0.0;
-
-                for (int LLL = MAX(KKK, LLL1); LLL <= LLL2; LLL++) {
-                    if (III < KKK
-                            || (III == JJJ && III == LLL)
-                            || (III == JJJ && III < LLL)
-                            || (JJJ == LLL && III < JJJ)
-                            || (III == KKK && III < JJJ && JJJ < LLL)) {
-                        QUICKDouble Y = (QUICKDouble) hrrwhole_MP2(I, J, K, L,
-                                III, JJJ, KKK, LLL, IJKLTYPE, store,
-                                RAx, RAy, RAz, RBx, RBy, RBz,
-                                RCx, RCy, RCz, RDx, RDy, RDz);
-
-                        //   if(abs(Y) * 1e-2 > devSim_MP2.integralCutoff) {
-                        QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-                        QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-                        QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-                        QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-                        QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-                        QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim_MP2.dense, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
-
-                        // ATOMIC ADD VALUE 1
-                        temp = (KKK == LLL) ? DENSELK * Y : 2.0 * DENSELK * Y;
-//                        if (abs(temp) > devSim_MP2.integralCutoff) {
-                        o_JI += temp;
-//                        }
-
-                        // ATOMIC ADD VALUE 2
-                        if (LLL != JJJ || III != KKK) {
-                            temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
-//                            if (abs(temp) > devSim_MP2.integralCutoff) {
-#if defined(USE_LEGACY_ATOMICS)
-                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
-#else
-                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
-#endif
-//                            }
-                        }
-
-                        // ATOMIC ADD VALUE 3
-                        temp = (III == KKK && III < JJJ && JJJ < LLL)
-                            ? -(hybrid_coeff * DENSELJ * Y) : -0.5 * hybrid_coeff * DENSELJ * Y;
-//                        if (abs(temp) > devSim_MP2.integralCutoff) {
-                        o_KI += temp;
-//                        }
-
-                        // ATOMIC ADD VALUE 4
-                        if (KKK != LLL) {
-                            temp = -0.5 * hybrid_coeff * DENSEKJ * Y;
-//                            if (abs(temp) > devSim_MP2.integralCutoff) {
-#  if defined(USE_LEGACY_ATOMICS)
-                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
-#  else
-                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
-#  endif
-//                            }
-                        }
-
-                        // ATOMIC ADD VALUE 5
-                        temp = -0.5 * hybrid_coeff * DENSELI * Y;
-//                        if (abs(temp) > devSim_MP2.integralCutoff) {
-                        if ((III != JJJ && III < KKK)
-                                || (III == JJJ && III == KKK && III < LLL)
-                                || (III == KKK && III < JJJ && JJJ < LLL)) {
-                            o_JK_MM += temp;
-                        }
-
-                        // ATOMIC ADD VALUE 5 - 2
-                        if (III != JJJ && JJJ == KKK) {
-                            o_JK += temp;
-                        }
-//                        }
-
-                        // ATOMIC ADD VALUE 6
-                        if (III != JJJ && KKK != LLL) {
-                            temp = -0.5 * hybrid_coeff * DENSEKI * Y;
-//                        if (abs(temp) > devSim_MP2.integralCutoff) {
-#if defined(USE_LEGACY_ATOMICS)
-                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
-                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
-#else
-                            atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
-                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
-#endif
-
-                            // ATOMIC ADD VALUE 6 - 2
-                            if (JJJ == LLL && III != KKK) {
-#if defined(USE_LEGACY_ATOMICS)
-                                GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
-                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
-#else
-                                atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, JJJ - 1,
-                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
-#endif
-                            }
-//                            }
-                        }
-                    }
-                }
-
-#if defined(USE_LEGACY_ATOMICS)
-                GPUATOMICADD(&LOC2(devSim_MP2.oULL, KKK - 1, III - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI, OSCALE);
-                GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM, OSCALE);
-                GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK, OSCALE);
-#else
-                atomicAdd(&LOC2(devSim_MP2.o, KKK - 1, III - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI);
-                atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM);
-                atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, KKK - 1,
-                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK);
-#endif
-            }
-
-#if defined(USE_LEGACY_ATOMICS)
-            GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, III - 1,
-                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI, OSCALE);
-#else
-            atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, III - 1,
-                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI);
-#endif
-        }
-    }
-}
-
-
-__device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store,
+__device__ static inline void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalTemp, QUICKDouble* store,
         QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
         QUICKDouble WPtempx,QUICKDouble WPtempy,QUICKDouble WPtempz,
         QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
@@ -5464,7 +5016,207 @@ __device__ void vertical_MP2(int I, int J, int K, int L, QUICKDouble* YVerticalT
 }
 
 
-__device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L,
+#if !defined(GPU_SP)
+__device__ static inline int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
+        int KLMNAx, int KLMNAy, int KLMNAz,
+        int KLMNBx, int KLMNBy, int KLMNBz,
+        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+{
+    int numAngularL;
+    switch (IJTYPE) {
+
+        case 0:
+            {
+                numAngularL = 1;
+                coefAngularL[0] = 1.0;
+                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                break;
+            }
+        case 1:
+            {
+                coefAngularL[0] = 1.0;
+                numAngularL = 2;
+                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
+                angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+
+                if (KLMNBx != 0) {
+                    coefAngularL[1] = RAx-RBx;
+                }else if(KLMNBy !=0 ){
+                    coefAngularL[1] = RAy-RBy;
+                }else if (KLMNBz != 0) {
+                    coefAngularL[1] = RAz-RBz;
+                }
+                break;
+            }
+        case 2:
+            {
+                coefAngularL[0] = 1.0;
+                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
+
+                if (KLMNBx == 2) {
+                    numAngularL = 3;
+                    QUICKDouble tmp = RAx - RBx;
+                    coefAngularL[1] = 2 * tmp;
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    coefAngularL[2]= tmp * tmp;
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if(KLMNBy == 2) {
+                    numAngularL = 3;
+                    QUICKDouble tmp = RAy - RBy;
+                    coefAngularL[1] = 2 * tmp;
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    coefAngularL[2]= tmp * tmp;
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBz == 2 ){
+                    numAngularL = 3;
+                    QUICKDouble tmp = RAz - RBz;
+                    coefAngularL[1] = 2 * tmp;
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    coefAngularL[2]= tmp * tmp;
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBx == 1 && KLMNBy == 1){
+                    numAngularL = 4;
+                    coefAngularL[1] = RAx - RBx;
+                    coefAngularL[2] = RAy - RBy;
+                    coefAngularL[3] = (RAx - RBx) * (RAy - RBy);
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+
+                }else if (KLMNBx == 1 && KLMNBz == 1) {
+                    numAngularL = 4;
+                    coefAngularL[1] = RAx - RBx;
+                    coefAngularL[2] = RAz - RBz;
+                    coefAngularL[3] = (RAx - RBx) * (RAz - RBz);
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBy == 1 && KLMNBz == 1) {
+                    numAngularL = 4;
+                    coefAngularL[1] = RAy - RBy;
+                    coefAngularL[2] = RAz - RBz;
+                    coefAngularL[3] = (RAy - RBy) * (RAz - RBz);
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }
+                break;
+            }
+        case 3:
+            {
+                coefAngularL[0] = 1.0;
+                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
+                if (KLMNBx == 3) {
+                    numAngularL = 4;
+                    QUICKDouble tmp = RAx - RBx;
+
+                    coefAngularL[1] = 3 * tmp;
+                    coefAngularL[2] = 3 * tmp * tmp;
+                    coefAngularL[3] = tmp * tmp * tmp;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBy == 3) {
+                    numAngularL = 4;
+                    QUICKDouble tmp = RAy - RBy;
+                    coefAngularL[1] = 3 * tmp;
+                    coefAngularL[2] = 3 * tmp * tmp;
+                    coefAngularL[3] = tmp * tmp * tmp;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBz == 3) {
+                    numAngularL = 4;
+
+                    QUICKDouble tmp = RAz - RBz;
+                    coefAngularL[1] = 3 * tmp;
+                    coefAngularL[2] = 3 * tmp * tmp;
+                    coefAngularL[3] = tmp * tmp * tmp;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBx == 1 && KLMNBy ==2) {
+                    numAngularL = 6;
+                    QUICKDouble tmp = RAx - RBx;
+                    QUICKDouble tmp2 = RAy - RBy;
+
+                    coefAngularL[1] = tmp;
+                    coefAngularL[2] = 2 * tmp2;
+                    coefAngularL[3] = 2 * tmp * tmp2;
+                    coefAngularL[4] = tmp2 * tmp2;
+                    coefAngularL[5] = tmp * tmp2 * tmp2;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBx == 1 && KLMNBz ==2) {
+                    numAngularL = 6;
+                    QUICKDouble tmp = RAx - RBx;
+                    QUICKDouble tmp2 = RAz - RBz;
+                    coefAngularL[1] = tmp;
+                    coefAngularL[2] = 2 * tmp2;
+                    coefAngularL[3] = 2 * tmp * tmp2;
+                    coefAngularL[4] = tmp2 * tmp2;
+                    coefAngularL[5] = tmp * tmp2 * tmp2;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBy == 1 && KLMNBz ==2) {
+                    numAngularL = 6;
+                    QUICKDouble tmp = RAy - RBy;
+                    QUICKDouble tmp2 = RAz - RBz;
+                    coefAngularL[1] = tmp;
+                    coefAngularL[2] = 2 * tmp2;
+                    coefAngularL[3] = 2 * tmp * tmp2;
+                    coefAngularL[4] = tmp2 * tmp2;
+                    coefAngularL[5] = tmp * tmp2 * tmp2;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }else if (KLMNBx == 1 && KLMNBy == 1) {
+                    numAngularL = 8;
+                    QUICKDouble tmp = RAx - RBx;
+                    QUICKDouble tmp2 = RAy - RBy;
+                    QUICKDouble tmp3 = RAz - RBz;
+
+                    coefAngularL[1] = tmp;
+                    coefAngularL[2] = tmp2;
+                    coefAngularL[3] = tmp3;
+                    coefAngularL[4] = tmp * tmp2;
+                    coefAngularL[5] = tmp * tmp3;
+                    coefAngularL[6] = tmp2 * tmp3;
+                    coefAngularL[7] = tmp * tmp2 * tmp3;
+
+                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx+1, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx+1, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx+1, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[6] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
+                    angularL[7] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+                }
+                break;
+
+            }
+    }
+    return numAngularL;
+}
+#endif
+
+
+__device__ static inline QUICKDouble hrrwhole_MP2(int I, int J, int K, int L,
         int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store,
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz,
@@ -5748,204 +5500,425 @@ __device__ QUICKDouble hrrwhole_MP2(int I, int J, int K, int L,
 }
 
 
-#ifndef GPU_SP
-__device__ int lefthrr_MP2(QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
-        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
-        int KLMNAx, int KLMNAy, int KLMNAz,
-        int KLMNBx, int KLMNBy, int KLMNBz,
-        int IJTYPE,QUICKDouble* coefAngularL, int* angularL)
+/*
+   iclass subroutine is to generate 2-electron intergral using HRR and VRR method, which is the most
+   performance algrithem for electron intergral evaluation. See description below for details
+ */
+__device__ static inline void iclass_MP2(int I, int J, int K, int L, unsigned int II, unsigned int JJ,
+        unsigned int KK, unsigned int LL, QUICKDouble DNMax)
 {
-    int numAngularL;
-    switch (IJTYPE) {
+    /*
+       kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
+       and be careful with the index difference between Fortran and C++,
+       Fortran starts array index with 1 and C++ starts 0.
 
-        case 0:
-            {
-                numAngularL = 1;
-                coefAngularL[0] = 1.0;
-                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                break;
-            }
-        case 1:
-            {
-                coefAngularL[0] = 1.0;
-                numAngularL = 2;
-                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
-                angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+       RA, RB, RC, and RD are the coordinates for atom katomA, katomB, katomC and katomD,
+       which means they are corrosponding coorinates for shell II, JJ, KK, and LL.
+       And we don't need the coordinates now, so we will not retrieve the data now.
+     */
+    QUICKDouble RAx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RAy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RAz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[II] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RCx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RCy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RCz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[KK] - 1, 3, devSim_MP2.natom);
 
-                if (KLMNBx != 0) {
-                    coefAngularL[1] = RAx-RBx;
-                }else if(KLMNBy !=0 ){
-                    coefAngularL[1] = RAy-RBy;
-                }else if (KLMNBz != 0) {
-                    coefAngularL[1] = RAz-RBz;
-                }
-                break;
-            }
-        case 2:
-            {
-                coefAngularL[0] = 1.0;
-                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
+    /*
+       kPrimI, J, K and L indicates the primtive gaussian function number
+       kStartI, J, K, and L indicates the starting guassian function for shell I, J, K, and L.
+       We retrieve from global memory and save them to register to avoid multiple retrieve.
+     */
+    int kPrimI = devSim_MP2.kprim[II];
+    int kPrimJ = devSim_MP2.kprim[JJ];
+    int kPrimK = devSim_MP2.kprim[KK];
+    int kPrimL = devSim_MP2.kprim[LL];
+    int kStartI = devSim_MP2.kstart[II] - 1;
+    int kStartJ = devSim_MP2.kstart[JJ] - 1;
+    int kStartK = devSim_MP2.kstart[KK] - 1;
+    int kStartL = devSim_MP2.kstart[LL] - 1;
 
-                if (KLMNBx == 2) {
-                    numAngularL = 3;
-                    QUICKDouble tmp = RAx - RBx;
-                    coefAngularL[1] = 2 * tmp;
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    coefAngularL[2]= tmp * tmp;
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if(KLMNBy == 2) {
-                    numAngularL = 3;
-                    QUICKDouble tmp = RAy - RBy;
-                    coefAngularL[1] = 2 * tmp;
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    coefAngularL[2]= tmp * tmp;
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBz == 2 ){
-                    numAngularL = 3;
-                    QUICKDouble tmp = RAz - RBz;
-                    coefAngularL[1] = 2 * tmp;
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    coefAngularL[2]= tmp * tmp;
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBx == 1 && KLMNBy == 1){
-                    numAngularL = 4;
-                    coefAngularL[1] = RAx - RBx;
-                    coefAngularL[2] = RAy - RBy;
-                    coefAngularL[3] = (RAx - RBx) * (RAy - RBy);
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
+    /*
+       store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
+       of GPU limitation, we can not do that now.
 
-                }else if (KLMNBx == 1 && KLMNBz == 1) {
-                    numAngularL = 4;
-                    coefAngularL[1] = RAx - RBx;
-                    coefAngularL[2] = RAz - RBz;
-                    coefAngularL[3] = (RAx - RBx) * (RAz - RBz);
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBy == 1 && KLMNBz == 1) {
-                    numAngularL = 4;
-                    coefAngularL[1] = RAy - RBy;
-                    coefAngularL[2] = RAz - RBz;
-                    coefAngularL[3] = (RAy - RBy) * (RAz - RBz);
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }
-                break;
-            }
-        case 3:
-            {
-                coefAngularL[0] = 1.0;
-                angularL[0] = (int) LOC3(devTrans_MP2, KLMNAx + KLMNBx, KLMNAy + KLMNBy, KLMNAz + KLMNBz, TRANSDIM, TRANSDIM, TRANSDIM);
-                if (KLMNBx == 3) {
-                    numAngularL = 4;
-                    QUICKDouble tmp = RAx - RBx;
+       See M.Head-Gordon and J.A.Pople, Jchem.Phys., 89, No.9 (1988) for VRR algrithem details.
+     */
+    QUICKDouble store[STOREDIM * STOREDIM];
 
-                    coefAngularL[1] = 3 * tmp;
-                    coefAngularL[2] = 3 * tmp * tmp;
-                    coefAngularL[3] = tmp * tmp * tmp;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx+2, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBy == 3) {
-                    numAngularL = 4;
-                    QUICKDouble tmp = RAy - RBy;
-                    coefAngularL[1] = 3 * tmp;
-                    coefAngularL[2] = 3 * tmp * tmp;
-                    coefAngularL[3] = tmp * tmp * tmp;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBz == 3) {
-                    numAngularL = 4;
-
-                    QUICKDouble tmp = RAz - RBz;
-                    coefAngularL[1] = 3 * tmp;
-                    coefAngularL[2] = 3 * tmp * tmp;
-                    coefAngularL[3] = tmp * tmp * tmp;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBx == 1 && KLMNBy ==2) {
-                    numAngularL = 6;
-                    QUICKDouble tmp = RAx - RBx;
-                    QUICKDouble tmp2 = RAy - RBy;
-
-                    coefAngularL[1] = tmp;
-                    coefAngularL[2] = 2 * tmp2;
-                    coefAngularL[3] = 2 * tmp * tmp2;
-                    coefAngularL[4] = tmp2 * tmp2;
-                    coefAngularL[5] = tmp * tmp2 * tmp2;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+2, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBx == 1 && KLMNBz ==2) {
-                    numAngularL = 6;
-                    QUICKDouble tmp = RAx - RBx;
-                    QUICKDouble tmp2 = RAz - RBz;
-                    coefAngularL[1] = tmp;
-                    coefAngularL[2] = 2 * tmp2;
-                    coefAngularL[3] = 2 * tmp * tmp2;
-                    coefAngularL[4] = tmp2 * tmp2;
-                    coefAngularL[5] = tmp * tmp2 * tmp2;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBy == 1 && KLMNBz ==2) {
-                    numAngularL = 6;
-                    QUICKDouble tmp = RAy - RBy;
-                    QUICKDouble tmp2 = RAz - RBz;
-                    coefAngularL[1] = tmp;
-                    coefAngularL[2] = 2 * tmp2;
-                    coefAngularL[3] = 2 * tmp * tmp2;
-                    coefAngularL[4] = tmp2 * tmp2;
-                    coefAngularL[5] = tmp * tmp2 * tmp2;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+2, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy+1, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }else if (KLMNBx == 1 && KLMNBy == 1) {
-                    numAngularL = 8;
-                    QUICKDouble tmp = RAx - RBx;
-                    QUICKDouble tmp2 = RAy - RBy;
-                    QUICKDouble tmp3 = RAz - RBz;
-
-                    coefAngularL[1] = tmp;
-                    coefAngularL[2] = tmp2;
-                    coefAngularL[3] = tmp3;
-                    coefAngularL[4] = tmp * tmp2;
-                    coefAngularL[5] = tmp * tmp3;
-                    coefAngularL[6] = tmp2 * tmp3;
-                    coefAngularL[7] = tmp * tmp2 * tmp3;
-
-                    angularL[1] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx+1, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[2] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[3] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx+1, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[4] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx, KLMNAx+1, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[5] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAx+1, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[6] = (int) LOC3(devTrans_MP2, KLMNAx+1, KLMNAx, KLMNAx, TRANSDIM, TRANSDIM, TRANSDIM);
-                    angularL[7] = (int) LOC3(devTrans_MP2, KLMNAx, KLMNAy, KLMNAz, TRANSDIM, TRANSDIM, TRANSDIM);
-                }
-                break;
-
-            }
+    /*
+       Initial the neccessary element for
+     */
+    for (int i = Sumindex_MP2[K + 1] + 1; i <= Sumindex_MP2[K + L + 2]; i++) {
+        for (int j = Sumindex_MP2[I + 1] + 1; j <= Sumindex_MP2[I + J + 2]; j++) {
+            LOC2(store, j - 1, i - 1, STOREDIM, STOREDIM) = 0;
+        }
     }
-    return numAngularL;
-}
+
+    for (int i = 0; i < kPrimI * kPrimJ; i++) {
+        int JJJ = (int) i / kPrimI;
+        int III = (int) i - kPrimI * JJJ;
+        /*
+           In the following comments, we have I, J, K, L denote the primitive gaussian function we use, and
+           for example, expo(III, ksumtype(II)) stands for the expo for the IIIth primitive guassian function for II shell,
+           we use I to express the corresponding index.
+           AB = expo(I)+expo(J)
+           --->                --->
+           ->     expo(I) * xyz (I) + expo(J) * xyz(J)
+           P  = ---------------------------------------
+           expo(I) + expo(J)
+           Those two are pre-calculated in CPU stage.
+
+         */
+        int ii_start = devSim_MP2.prim_start[II];
+        int jj_start = devSim_MP2.prim_start[JJ];
+
+        QUICKDouble AB = LOC2(devSim_MP2.expoSum, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
+        QUICKDouble Px = LOC2(devSim_MP2.weightedCenterX, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
+        QUICKDouble Py = LOC2(devSim_MP2.weightedCenterY, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
+        QUICKDouble Pz = LOC2(devSim_MP2.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim_MP2.prim_total, devSim_MP2.prim_total);
+
+        /*
+           X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
+           cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
+         */
+        QUICKDouble cutoffPrim = DNMax * LOC2(devSim_MP2.cutPrim, kStartI + III, kStartJ + JJJ, devSim_MP2.jbasis, devSim_MP2.jbasis);
+        QUICKDouble X1 = LOC4(devSim_MP2.Xcoeff, kStartI + III, kStartJ + JJJ,
+                I - devSim_MP2.Qstart[II], J - devSim_MP2.Qstart[JJ], devSim_MP2.jbasis, devSim_MP2.jbasis, 2, 2);
+
+        for (int j = 0; j < kPrimK * kPrimL; j++) {
+            int LLL = (int) j / kPrimK;
+            int KKK = (int) j - kPrimK * LLL;
+
+            if (cutoffPrim * LOC2(devSim_MP2.cutPrim, kStartK + KKK, kStartL + LLL, devSim_MP2.jbasis, devSim_MP2.jbasis)
+                    > devSim_MP2.primLimit) {
+                /*
+                   CD = expo(L)+expo(K)
+                   ABCD = 1/ (AB + CD) = 1 / (expo(I)+expo(J)+expo(K)+expo(L))
+                   AB * CD      (expo(I)+expo(J))*(expo(K)+expo(L))
+                   Rou(Greek Letter) =   ----------- = ------------------------------------
+                   AB + CD         expo(I)+expo(J)+expo(K)+expo(L)
+
+                   expo(I)+expo(J)                        expo(K)+expo(L)
+                   ABcom = --------------------------------  CDcom = --------------------------------
+                   expo(I)+expo(J)+expo(K)+expo(L)           expo(I)+expo(J)+expo(K)+expo(L)
+
+                   ABCDtemp = 1/2(expo(I)+expo(J)+expo(K)+expo(L))
+                 */
+                int kk_start = devSim_MP2.prim_start[KK];
+                int ll_start = devSim_MP2.prim_start[LL];
+
+                QUICKDouble CD = LOC2(devSim_MP2.expoSum, kk_start + KKK, ll_start + LLL, devSim_MP2.prim_total, devSim_MP2.prim_total);
+                QUICKDouble ABCD = 1.0 / (AB + CD);
+
+                /*
+                   X2 is the multiplication of four indices normalized coeffecient
+                 */
+                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim_MP2.Xcoeff, kStartK + KKK, kStartL + LLL,
+                        K - devSim_MP2.Qstart[KK], L - devSim_MP2.Qstart[LL], devSim_MP2.jbasis, devSim_MP2.jbasis, 2, 2);
+
+                /*
+                   Q' is the weighting center of K and L
+                   --->           --->
+                   ->  ------>       expo(K)*xyz(K)+expo(L)*xyz(L)
+                   Q = P'(K,L)  = ------------------------------
+                   expo(K) + expo(L)
+
+                   W' is the weight center for I, J, K, L
+
+                   --->             --->             --->            --->
+                   ->     expo(I)*xyz(I) + expo(J)*xyz(J) + expo(K)*xyz(K) +expo(L)*xyz(L)
+                   W = -------------------------------------------------------------------
+                   expo(I) + expo(J) + expo(K) + expo(L)
+                   ->  ->  2
+                   RPQ =| P - Q |
+
+                   ->  -> 2
+                   T = ROU * | P - Q|
+                 */
+
+                QUICKDouble Qx = LOC2(devSim_MP2.weightedCenterX, kk_start + KKK, ll_start + LLL,
+                        devSim_MP2.prim_total, devSim_MP2.prim_total);
+                QUICKDouble Qy = LOC2(devSim_MP2.weightedCenterY, kk_start + KKK, ll_start + LLL,
+                        devSim_MP2.prim_total, devSim_MP2.prim_total);
+                QUICKDouble Qz = LOC2(devSim_MP2.weightedCenterZ, kk_start + KKK, ll_start + LLL,
+                        devSim_MP2.prim_total, devSim_MP2.prim_total);
+                QUICKDouble YVerticalTemp[VDIM1 * VDIM2 * VDIM3];
+
+                FmT_MP2(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
+                        YVerticalTemp);
+
+                for (int i = 0; i <= I + J + K + L; i++) {
+                    VY(0, 0, i) *= X2;
+                }
+
+                vertical_MP2(I, J, K, L, YVerticalTemp, store,
+                        Px - RAx, Py - RAy, Pz - RAz,
+                        (Px * AB + Qx * CD) * ABCD - Px,
+                        (Py * AB + Qy * CD) * ABCD - Py,
+                        (Pz * AB + Qz * CD) * ABCD - Pz,
+                        Qx - RCx, Qy - RCy, Qz - RCz,
+                        (Px * AB + Qx * CD) * ABCD - Qx,
+                        (Py * AB + Qy * CD) * ABCD - Qy,
+                        (Pz * AB + Qz * CD) * ABCD - Qz,
+                        0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
+            }
+        }
+    }
+
+    // IJKLTYPE is the I, J, K, L type
+    int IJKLTYPE = (int) (1000 * I + 100 *J + 10 * K + L);
+
+    QUICKDouble RBx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RBy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RBz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RDx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RDy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
+    QUICKDouble RDz = LOC2(devSim_MP2.xyz, 2, devSim_MP2.katom[LL] - 1, 3, devSim_MP2.natom);
+
+    int III1 = LOC2(devSim_MP2.Qsbasis, II, I, devSim_MP2.nshell, 4);
+    int III2 = LOC2(devSim_MP2.Qfbasis, II, I, devSim_MP2.nshell, 4);
+    int JJJ1 = LOC2(devSim_MP2.Qsbasis, JJ, J, devSim_MP2.nshell, 4);
+    int JJJ2 = LOC2(devSim_MP2.Qfbasis, JJ, J, devSim_MP2.nshell, 4);
+    int KKK1 = LOC2(devSim_MP2.Qsbasis, KK, K, devSim_MP2.nshell, 4);
+    int KKK2 = LOC2(devSim_MP2.Qfbasis, KK, K, devSim_MP2.nshell, 4);
+    int LLL1 = LOC2(devSim_MP2.Qsbasis, LL, L, devSim_MP2.nshell, 4);
+    int LLL2 = LOC2(devSim_MP2.Qfbasis, LL, L, devSim_MP2.nshell, 4);
+
+    // maxIJKL is the max of I,J, K,L
+    int maxIJKL = (int) MAX(MAX(I,J), MAX(K,L));
+
+    if ((maxIJKL == 2 && (J != 0 || L != 0)) || maxIJKL >= 3) {
+        IJKLTYPE = 999;
+    }
+
+    QUICKDouble hybrid_coeff = 0.0;
+    if (devSim_MP2.method == HF) {
+        hybrid_coeff = 1.0;
+    } else if (devSim_MP2.method == B3LYP) {
+        hybrid_coeff = 0.2;
+    } else if (devSim_MP2.method == DFT) {
+        hybrid_coeff = 0.0;
+    }
+
+    for (int III = III1; III <= III2; III++) {
+        for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
+            QUICKDouble o_JI = 0.0;
+
+            for (int KKK = MAX(III, KKK1); KKK <= KKK2; KKK++) {
+                QUICKDouble o_KI = 0.0;
+                QUICKDouble o_JK = 0.0;
+                QUICKDouble o_JK_MM = 0.0;
+
+                for (int LLL = MAX(KKK, LLL1); LLL <= LLL2; LLL++) {
+                    if (III < KKK
+                            || (III == JJJ && III == LLL)
+                            || (III == JJJ && III < LLL)
+                            || (JJJ == LLL && III < JJJ)
+                            || (III == KKK && III < JJJ && JJJ < LLL)) {
+                        QUICKDouble Y = (QUICKDouble) hrrwhole_MP2(I, J, K, L,
+                                III, JJJ, KKK, LLL, IJKLTYPE, store,
+                                RAx, RAy, RAz, RBx, RBy, RBz,
+                                RCx, RCy, RCz, RDx, RDy, RDz);
+
+                        //   if(abs(Y) * 1e-2 > devSim_MP2.integralCutoff) {
+                        QUICKDouble DENSEKI = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        QUICKDouble DENSEKJ = (QUICKDouble) LOC2(devSim_MP2.dense, KKK - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        QUICKDouble DENSELJ = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, JJJ - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        QUICKDouble DENSELI = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        QUICKDouble DENSELK = (QUICKDouble) LOC2(devSim_MP2.dense, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+                        QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim_MP2.dense, JJJ - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis);
+
+                        // ATOMIC ADD VALUE 1
+                        temp = (KKK == LLL) ? DENSELK * Y : 2.0 * DENSELK * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+                        o_JI += temp;
+//                        }
+
+                        // ATOMIC ADD VALUE 2
+                        if (LLL != JJJ || III != KKK) {
+                            temp = (III == JJJ) ? DENSEJI * Y : 2.0 * DENSEJI * Y;
+//                            if (abs(temp) > devSim_MP2.integralCutoff) {
+#if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, KKK - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
 #endif
+//                            }
+                        }
+
+                        // ATOMIC ADD VALUE 3
+                        temp = (III == KKK && III < JJJ && JJJ < LLL)
+                            ? -(hybrid_coeff * DENSELJ * Y) : -0.5 * hybrid_coeff * DENSELJ * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+                        o_KI += temp;
+//                        }
+
+                        // ATOMIC ADD VALUE 4
+                        if (KKK != LLL) {
+                            temp = -0.5 * hybrid_coeff * DENSEKJ * Y;
+//                            if (abs(temp) > devSim_MP2.integralCutoff) {
+#  if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#  else
+                            atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, III - 1, devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#  endif
+//                            }
+                        }
+
+                        // ATOMIC ADD VALUE 5
+                        temp = -0.5 * hybrid_coeff * DENSELI * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+                        if ((III != JJJ && III < KKK)
+                                || (III == JJJ && III == KKK && III < LLL)
+                                || (III == KKK && III < JJJ && JJJ < LLL)) {
+                            o_JK_MM += temp;
+                        }
+
+                        // ATOMIC ADD VALUE 5 - 2
+                        if (III != JJJ && JJJ == KKK) {
+                            o_JK += temp;
+                        }
+//                        }
+
+                        // ATOMIC ADD VALUE 6
+                        if (III != JJJ && KKK != LLL) {
+                            temp = -0.5 * hybrid_coeff * DENSEKI * Y;
+//                        if (abs(temp) > devSim_MP2.integralCutoff) {
+#if defined(USE_LEGACY_ATOMICS)
+                            GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
+                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                            atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1,
+                                        devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#endif
+
+                            // ATOMIC ADD VALUE 6 - 2
+                            if (JJJ == LLL && III != KKK) {
+#if defined(USE_LEGACY_ATOMICS)
+                                GPUATOMICADD(&LOC2(devSim_MP2.oULL, LLL - 1, JJJ - 1,
+                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp, OSCALE);
+#else
+                                atomicAdd(&LOC2(devSim_MP2.o, LLL - 1, JJJ - 1,
+                                            devSim_MP2.nbasis, devSim_MP2.nbasis), temp);
+#endif
+                            }
+//                            }
+                        }
+                    }
+                }
+
+#if defined(USE_LEGACY_ATOMICS)
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, KKK - 1, III - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI, OSCALE);
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM, OSCALE);
+                GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, KKK - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK, OSCALE);
+#else
+                atomicAdd(&LOC2(devSim_MP2.o, KKK - 1, III - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_KI);
+                atomicAdd(&LOC2(devSim_MP2.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK_MM);
+                atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, KKK - 1,
+                            devSim_MP2.nbasis, devSim_MP2.nbasis), o_JK);
+#endif
+            }
+
+#if defined(USE_LEGACY_ATOMICS)
+            GPUATOMICADD(&LOC2(devSim_MP2.oULL, JJJ - 1, III - 1,
+                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI, OSCALE);
+#else
+            atomicAdd(&LOC2(devSim_MP2.o, JJJ - 1, III - 1,
+                        devSim_MP2.nbasis, devSim_MP2.nbasis), o_JI);
+#endif
+        }
+    }
+}
+
+
+__global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_MP2_kernel()
+{
+    unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
+    int totalThreads = blockDim.x * gridDim.x;
+
+    QUICKULL jshell = (QUICKULL) devSim_MP2.sqrQshell;
+    QUICKULL myInt = (QUICKULL) jshell * jshell / totalThreads;
+
+    if (jshell * jshell - myInt * totalThreads > offset)
+        myInt++;
+
+    for (QUICKULL i = 1; i <= myInt; i++) {
+        QUICKULL currentInt = totalThreads * (i - 1) + offset;
+        QUICKULL a = (QUICKULL) currentInt / jshell;
+        QUICKULL b = (QUICKULL) (currentInt - a * jshell);
+
+        /*
+           the following code is to implement a better index mode.
+           The original one can be see as:
+           Large....Small
+           Large ->->->
+           ...   ->->->
+           Small ->->->
+
+           now it changed to
+           Large....Small
+           Large ->->|  -> ->
+           ...   <-<-|  |  |
+           Small <-<-<-<-  |
+           <-<-<-<-<-
+           Theortically, it can avoid divergence but after test, we
+           find it has limited effect and something it will slows down
+           because of the extra FP calculation required.
+         */
+//        QUICKULL a, b;
+//        double aa = (double) ((currentInt + 1) * 1E-4);
+//        QUICKULL t = (QUICKULL) (sqrt(aa) * 1E2);
+//        if ((currentInt +1 ) == t * t) {
+//            t--;
+//        }
+//
+//        QUICKULL k = currentInt - t *t;
+//        if (k <= t) {
+//            a = k;
+//            b = t;
+//        } else {
+//            a = t;
+//            b = 2 * t - k;
+//        }
+
+        int II = devSim_MP2.sorted_YCutoffIJ[a].x;
+        int JJ = devSim_MP2.sorted_YCutoffIJ[a].y;
+        int KK = devSim_MP2.sorted_YCutoffIJ[b].x;
+        int LL = devSim_MP2.sorted_YCutoffIJ[b].y;
+        int ii = devSim_MP2.sorted_Q[II];
+        int jj = devSim_MP2.sorted_Q[JJ];
+        int kk = devSim_MP2.sorted_Q[KK];
+        int ll = devSim_MP2.sorted_Q[LL];
+
+        if (ii <= kk) {
+            int nshell = devSim_MP2.nshell;
+            QUICKDouble DNMax = MAX(
+                    MAX(4.0 * LOC2(devSim_MP2.cutMatrix, ii, jj, nshell, nshell),
+                        4.0 * LOC2(devSim_MP2.cutMatrix, kk, ll, nshell, nshell)),
+                    MAX(MAX(LOC2(devSim_MP2.cutMatrix, ii, ll, nshell, nshell),
+                            LOC2(devSim_MP2.cutMatrix, ii, kk, nshell, nshell)),
+                        MAX(LOC2(devSim_MP2.cutMatrix, jj, kk, nshell, nshell),
+                            LOC2(devSim_MP2.cutMatrix, jj, ll, nshell, nshell))));
+
+            if (LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell)
+                    > devSim_MP2.integralCutoff
+                    && LOC2(devSim_MP2.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim_MP2.YCutoff, ii, jj, nshell, nshell) * DNMax
+                    > devSim_MP2.integralCutoff) {
+                int iii = devSim_MP2.sorted_Qnumber[II];
+                int jjj = devSim_MP2.sorted_Qnumber[JJ];
+                int kkk = devSim_MP2.sorted_Qnumber[KK];
+                int lll = devSim_MP2.sorted_Qnumber[LL];
+
+                iclass_MP2(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax);
+            }
+        }
+    }
+}
 
 
 void upload_para_to_const_MP2()
@@ -6074,4 +6047,31 @@ void upload_para_to_const_MP2()
     LOC3(trans, 7, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) = 118;
 
     gpuMemcpyToSymbol((const void *) devTrans_MP2, (const void *) trans, sizeof(int) * TRANSDIM * TRANSDIM * TRANSDIM);
+}
+
+
+/*
+   upload gpu simulation type to constant memory
+ */
+void upload_sim_to_constant_MP2(_gpu_type gpu){
+    gpuMemcpyToSymbol((const void *) &devSim_MP2, (const void *) &gpu->gpu_sim, sizeof(gpu_simulation_type));
+}
+
+
+void get2e_MP2(_gpu_type gpu)
+{
+#if defined(DEBUG)
+    GPU_TIMER_CREATE();
+    GPU_TIMER_START();
+#endif
+
+    printf("BLOCK= %i, THREADSperBLOCK= %i\n", gpu->blocks, gpu->twoEThreadsPerBlock);
+    get2e_MP2_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>> ();
+
+#if defined(DEBUG)
+    GPU_TIMER_STOP();
+    totTime += time;
+    fprintf(gpu->debugFile, "this cycle:%f ms total time:%f ms\n", time, totTime);
+    GPU_TIMER_DESTROY();
+#endif
 }

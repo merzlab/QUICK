@@ -22,7 +22,8 @@
 #define VY(a,b,c) LOCVY(YVerticalTemp, (a), (b), (c), VDIM1, VDIM2, VDIM3)
 #define STORE_OPERATOR =
 
-__device__ __inline__ void ERint_grad_vrr_ffff_1(const int I, const int J, const int K, const int L,
+
+__device__ static inline void ERint_grad_vrr_ffff_1(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -39,7 +40,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_1(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_2(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_2(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -56,7 +57,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_2(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_3(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_3(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -73,7 +74,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_3(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_4(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_4(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -90,7 +91,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_4(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_5(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_5(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -107,7 +108,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_5(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_6(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_6(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -124,7 +125,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_6(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_7(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_7(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -141,7 +142,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_7(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_8(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_8(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -158,7 +159,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_8(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_9(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_9(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -175,7 +176,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_9(const int I, const int J, const
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_10(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_10(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -192,7 +193,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_10(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_11(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_11(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -209,7 +210,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_11(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_12(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_12(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -226,7 +227,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_12(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_13(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_13(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -243,7 +244,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_13(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_14(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_14(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -260,7 +261,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_14(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_15(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_15(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -277,7 +278,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_15(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_16(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_16(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -294,7 +295,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_16(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_17(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_17(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -311,7 +312,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_17(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_18(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_18(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -328,7 +329,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_18(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_19(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_19(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -345,7 +346,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_19(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_20(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_20(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -362,7 +363,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_20(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_21(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_21(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -379,7 +380,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_21(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_22(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_22(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -396,7 +397,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_22(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_23(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_23(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -413,7 +414,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_23(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_24(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_24(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -430,7 +431,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_24(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_25(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_25(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -447,7 +448,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_25(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_26(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_26(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -464,7 +465,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_26(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_27(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_27(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -481,7 +482,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_27(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_28(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_28(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -498,7 +499,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_28(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_29(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_29(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -515,7 +516,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_29(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_30(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_30(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -532,7 +533,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_30(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_31(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_31(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -549,7 +550,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_31(const int I, const int J, cons
 }
 
 
-__device__ __inline__ void ERint_grad_vrr_ffff_32(const int I, const int J, const int K, const int L,
+__device__ static inline void ERint_grad_vrr_ffff_32(const int I, const int J, const int K, const int L,
         const QUICKDouble Ptempx, const QUICKDouble Ptempy, const QUICKDouble Ptempz,
         const QUICKDouble WPtempx, const QUICKDouble WPtempy, const QUICKDouble WPtempz,
         const QUICKDouble Qtempx, const QUICKDouble Qtempy, const QUICKDouble Qtempz,
@@ -564,6 +565,7 @@ __device__ __inline__ void ERint_grad_vrr_ffff_32(const int I, const int J, cons
 #include "iclass_fshs.h"
 #endif
 }
+
 
 #undef STORE_OPERATOR
 #define STORE_OPERATOR +=

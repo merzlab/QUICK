@@ -33,7 +33,7 @@ static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 #include "gpu_lri_subs_hrr.h"
 
 namespace lri {
-#include "int.h"
+#include "int_lri.h"
 }
 
 #define int_spd

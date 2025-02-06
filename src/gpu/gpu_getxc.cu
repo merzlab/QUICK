@@ -22,9 +22,9 @@ static float totTime;
 
 #define LOCUWSSD(A, i1, i2, d1, d2) A[((i1) + (i2) * (d1)) * gridDim.x * blockDim.x]
 
-#define  SSW_NUMGRAD_DELTA (2.5E-5)
-#define  SSW_NUMGRAD_DELTA2 (5.0E-5)
-#define  RECIP_SSW_NUMGRAD_DELTA2 (20000.0)
+#define SSW_NUMGRAD_DELTA (2.5E-5)
+#define SSW_NUMGRAD_DELTA2 (5.0E-5)
+#define RECIP_SSW_NUMGRAD_DELTA2 (20000.0)
 
 #define SSW_POLYFAC1 (3.4179687500)
 #define SSW_POLYFAC2 (8.344650268554688)

@@ -20,7 +20,7 @@
 #define __QUICK_GPU_OEI_GRAD_H_
 
 
-__device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
+__device__ static inline void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
         QUICKDouble * const store, QUICKDouble * const store2,
         QUICKDouble * const storeAA, QUICKDouble * const storeBB) {
@@ -133,7 +133,11 @@ __device__ void iclass_oei_grad(unsigned int I, unsigned int J, unsigned int II,
             }
 
             // decompose all attraction integrals to their auxilary integrals through VRR scheme.
-            oei_grad_vertical(I, J, II, JJ, Px - Ax, Py - Ay, Pz - Az,
+            oei_grad_vertical(I, J, 
+#if defined(DEBUG_OEI)
+                    II, JJ,
+#endif
+                    Px - Ax, Py - Ay, Pz - Az,
                     Px - Bx, Py - By, Pz - Bz,
                     Px - Cx, Py - Cy, Pz - Cz,
                     1.0 / (2.0 * Zeta), store, YVerticalTemp);
