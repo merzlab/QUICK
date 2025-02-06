@@ -305,9 +305,6 @@ __device__ static inline void iclass_spdf10
         }
     }
     
-    // IJKLTYPE is the I, J, K,L type
-    int IJKLTYPE = (int) (1000 * I + 100 *J + 10 * K + L);
-
     QUICKDouble RBx = LOC2(devSim.xyz, 0, devSim.katom[JJ] - 1, 3, devSim.natom);
     QUICKDouble RBy = LOC2(devSim.xyz, 1, devSim.katom[JJ] - 1, 3, devSim.natom);
     QUICKDouble RBz = LOC2(devSim.xyz, 2, devSim.katom[JJ] - 1, 3, devSim.natom);
@@ -323,13 +320,6 @@ __device__ static inline void iclass_spdf10
     int KKK2 = LOC2(devSim.Qfbasis, KK, K, devSim.nshell, 4);
     int LLL1 = LOC2(devSim.Qsbasis, LL, L, devSim.nshell, 4);
     int LLL2 = LOC2(devSim.Qfbasis, LL, L, devSim.nshell, 4);
-    
-    // maxIJKL is the max of I,J,K,L
-    int maxIJKL = (int) MAX(MAX(I,J), MAX(K,L));
-    
-    if (((maxIJKL == 2) && (J != 0 || L != 0)) || (maxIJKL >= 3)) {
-        IJKLTYPE = 999;
-    }
     
 //    QUICKDouble hybrid_coeff = 0.0;
 //    if (devSim.method == HF) {
@@ -392,7 +382,7 @@ __device__ static inline void iclass_spdf10
                         QUICKDouble Y = (QUICKDouble) hrrwhole2
 #endif
                            (I, J, K, L,
-                           III, JJJ, KKK, LLL, IJKLTYPE, store,
+                           III, JJJ, KKK, LLL, store,
                            RAx, RAy, RAz, RBx, RBy, RBz,
                            RCx, RCy, RCz, RDx, RDy, RDz);
 
@@ -1379,9 +1369,6 @@ __device__ static inline void iclass_AOInt_spdf10
         }
     }
     
-    // IJKLTYPE is the I, J, K, L type
-    int IJKLTYPE = (int) (1000 * I + 100 *J + 10 * K + L);
-    
     QUICKDouble RBx = LOC2(devSim.xyz, 0, devSim.katom[JJ] - 1, 3, devSim.natom);
     QUICKDouble RBy = LOC2(devSim.xyz, 1, devSim.katom[JJ] - 1, 3, devSim.natom);
     QUICKDouble RBz = LOC2(devSim.xyz, 2, devSim.katom[JJ] - 1, 3, devSim.natom);
@@ -1398,13 +1385,6 @@ __device__ static inline void iclass_AOInt_spdf10
     int LLL1 = LOC2(devSim.Qsbasis, LL, L, devSim.nshell, 4);
     int LLL2 = LOC2(devSim.Qfbasis, LL, L, devSim.nshell, 4);
     
-    // maxIJKL is the max of I,J,K,L
-    int maxIJKL = (int) MAX(MAX(I, J), MAX(K, L));
-    
-    if ((maxIJKL == 2 && (J != 0 || L != 0)) || maxIJKL >= 3) {
-        IJKLTYPE = 999;
-    }
-    
     // Store generated ERI to buffer
     for (int III = III1; III <= III2; III++) {
         for (int JJJ = MAX(III, JJJ1); JJJ <= JJJ2; JJJ++) {
@@ -1418,7 +1398,7 @@ __device__ static inline void iclass_AOInt_spdf10
                         QUICKDouble Y = (QUICKDouble) hrrwhole2
     #endif
                             (I, J, K, L,
-                              III, JJJ, KKK, LLL, IJKLTYPE, store,
+                              III, JJJ, KKK, LLL, store,
                               RAx, RAy, RAz, RBx, RBy, RBz,
                               RCx, RCy, RCz, RDx, RDy, RDz);
                         

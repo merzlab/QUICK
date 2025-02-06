@@ -5666,7 +5666,7 @@ __device__ static inline void iclass_MP2(int I, int J, int K, int L, unsigned in
     }
 
     // IJKLTYPE is the I, J, K, L type
-    int IJKLTYPE = (int) (1000 * I + 100 *J + 10 * K + L);
+    int IJKLTYPE = (int) (1000 * I + 100 * J + 10 * K + L);
 
     QUICKDouble RBx = LOC2(devSim_MP2.xyz, 0, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);
     QUICKDouble RBy = LOC2(devSim_MP2.xyz, 1, devSim_MP2.katom[JJ] - 1, 3, devSim_MP2.natom);

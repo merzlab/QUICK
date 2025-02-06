@@ -701,8 +701,7 @@ __device__ static inline int lefthrr_sp(const QUICKDouble RAx, const QUICKDouble
 
 
 __device__ static inline QUICKDouble hrrwhole_sp(const int I, const int J, const int K, const int L,
-        const int III, const int JJJ, const int KKK, const int LLL,
-        const int IJKLTYPE, QUICKDouble * const store,
+        const int III, const int JJJ, const int KKK, const int LLL, QUICKDouble * const store,
         const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
         const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
         const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz,
@@ -965,8 +964,7 @@ __device__ static inline int lefthrr_spd(const QUICKDouble RAx, const QUICKDoubl
 
 
 __device__ static inline QUICKDouble hrrwhole(const int I, const int J, const int K, const int L,
-        const int III, const int JJJ, const int KKK, const int LLL,
-        const int IJKLTYPE, QUICKDouble * const store,
+        const int III, const int JJJ, const int KKK, const int LLL, QUICKDouble * const store,
         const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
         const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
         const QUICKDouble RCx, const QUICKDouble RCy, const QUICKDouble RCz,
@@ -1011,7 +1009,7 @@ __device__ static inline QUICKDouble hrrwhole(const int I, const int J, const in
 #undef STOREDIM
 #define STOREDIM STOREDIM_L
 __device__ static inline QUICKDouble hrrwhole2(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1054,7 +1052,7 @@ __device__ static inline QUICKDouble hrrwhole2(int I, int J, int K, int L,
 
 
 __device__ static inline QUICKDouble hrrwhole2_1(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1112,7 +1110,7 @@ __device__ static inline QUICKDouble hrrwhole2_1(int I, int J, int K, int L,
 
 
 __device__ static inline QUICKDouble hrrwhole2_2(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1174,7 +1172,7 @@ __device__ static inline QUICKDouble hrrwhole2_2(int I, int J, int K, int L,
    therefore, k = 3 and l = 3 is confirmed.
 */
 __device__ static inline QUICKDouble hrrwhole2_5(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1235,7 +1233,7 @@ __device__ static inline QUICKDouble hrrwhole2_5(int I, int J, int K, int L,
    therefore, i = 3 and j = 3 is confirmed.
 */
 __device__ static inline QUICKDouble hrrwhole2_6(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1295,7 +1293,7 @@ __device__ static inline QUICKDouble hrrwhole2_6(int I, int J, int K, int L,
    when this subroutine is called, only (ij|kl) k+l = 5 and i+j = 5 is computed, but (k+l)>=5 and (i+J)>=5 is entering this subroutine
 */
 __device__ static inline QUICKDouble hrrwhole2_3(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1417,7 +1415,7 @@ __device__ static inline QUICKDouble hrrwhole2_3(int I, int J, int K, int L,
    if (k+l) = 6, then, k=3 and l=3
 */
 __device__ static inline QUICKDouble hrrwhole2_4(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1475,7 +1473,7 @@ __device__ static inline QUICKDouble hrrwhole2_4(int I, int J, int K, int L,
 
 // For this subroutine, the basic idea is the same with hrrwhole2_4, just swap i to k and j to l.
 __device__ static inline QUICKDouble hrrwhole2_7(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1531,7 +1529,7 @@ __device__ static inline QUICKDouble hrrwhole2_7(int I, int J, int K, int L,
 
 // For hrrwhole2_8,9,10, the situation is much simple, i=3, j=3, k=3, l=3
 __device__ static inline QUICKDouble hrrwhole2_8(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1553,7 +1551,7 @@ __device__ static inline QUICKDouble hrrwhole2_8(int I, int J, int K, int L,
 
 
 __device__ static inline QUICKDouble hrrwhole2_9(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,
@@ -1575,7 +1573,7 @@ __device__ static inline QUICKDouble hrrwhole2_9(int I, int J, int K, int L,
 
 
 __device__ static inline QUICKDouble hrrwhole2_10(int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble * const store,
+        int III, int JJJ, int KKK, int LLL, QUICKDouble * const store,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz,
         QUICKDouble RCx, QUICKDouble RCy, QUICKDouble RCz,

@@ -184,9 +184,6 @@ __device__ static inline void iclass_lri_spdf2
 #endif
     }
 
-    // IJKLTYPE is the I, J, K, L type
-    int IJKLTYPE = (int) (1000 * I + 100 * J);
-
     QUICKDouble RBx, RBy, RBz;
 
     RBx = LOC2(devSim.xyz, 0, devSim.katom[JJ] - 1, 3, devSim.natom);
@@ -197,13 +194,6 @@ __device__ static inline void iclass_lri_spdf2
     int III2 = LOC2(devSim.Qfbasis, II, I, devSim.nshell, 4);
     int JJJ1 = LOC2(devSim.Qsbasis, JJ, J, devSim.nshell, 4);
     int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
-
-    // maxIJKL is the max of I, J, K, L
-    int maxIJKL = (int) MAX(I, J);
-
-    if ((maxIJKL == 2 && J != 0) || maxIJKL >= 3) {
-        IJKLTYPE = 999;
-    }
 
     /*QUICKDouble hybrid_coeff = 0.0;
       if (devSim.method == HF){
@@ -226,7 +216,7 @@ __device__ static inline void iclass_lri_spdf2
             QUICKDouble Y = (QUICKDouble) hrrwhole_lri_2
 #endif
                 (I, J, 0, 0,
-                 III, JJJ, 0, 0, IJKLTYPE, store,
+                 III, JJJ, 0, 0, store,
                  RAx, RAy, RAz, RBx, RBy, RBz,
                  RCx, RCy, RCz, 0.0, 0.0, 0.0);
 

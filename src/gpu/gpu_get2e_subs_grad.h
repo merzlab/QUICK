@@ -21,8 +21,7 @@
 __device__ static inline void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
         QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
         QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz,
-        const int I, const int J, const int K, const int L,
-        const int III, int JJJ, const int KKK, const int LLL, const int IJKLTYPE,
+        const int J, const int L, const int III, int JJJ, const int KKK, const int LLL,
         QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,
         const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
         const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
@@ -331,8 +330,7 @@ __device__ static inline void hrrwholegrad_sp(QUICKDouble* Yaax, QUICKDouble* Ya
 __device__ static inline void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
         QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
         QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz,
-        const int I, const int J, const int K, const int L,
-        const int III, int JJJ, const int KKK, const int LLL, const int IJKLTYPE,
+        const int J, const int L, const int III, int JJJ, const int KKK, const int LLL,
         QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,
         const QUICKDouble RAx, const QUICKDouble RAy, const QUICKDouble RAz,
         const QUICKDouble RBx, const QUICKDouble RBy, const QUICKDouble RBz,
@@ -641,8 +639,7 @@ __device__ static inline void hrrwholegrad(QUICKDouble* Yaax, QUICKDouble* Yaay,
 __device__ static inline void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
         QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
         QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz,
-        int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
+        int J, int L, int III, int JJJ, int KKK, int LLL,
         QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz,
@@ -951,8 +948,7 @@ __device__ static inline void hrrwholegrad2(QUICKDouble* Yaax, QUICKDouble* Yaay
 __device__ static inline void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
         QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
         QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz,
-        int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
+        int J, int L, int III, int JJJ, int KKK, int LLL,
         QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz,
@@ -1040,8 +1036,7 @@ __device__ static inline void hrrwholegrad2_1(QUICKDouble* Yaax, QUICKDouble* Ya
 __device__ static inline void hrrwholegrad2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
         QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
         QUICKDouble* Yccx, QUICKDouble* Yccy, QUICKDouble* Yccz,
-        int I, int J, int K, int L,
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE,
+        int J, int L, int III, int JJJ, int KKK, int LLL,
         QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB, QUICKDouble* storeCC,
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz,
@@ -1476,7 +1471,6 @@ __device__ static inline void iclass_grad_spd
     int LLL1 = LOC2(devSim.Qsbasis, LL, L, devSim.nshell, 4);
     int LLL2 = LOC2(devSim.Qfbasis, LL, L, devSim.nshell, 4);
 
-    int IJKLTYPE = 999;
     int nbasis = devSim.nbasis;
 
     for (int III = III1; III <= III2; III++) {
@@ -1497,7 +1491,7 @@ __device__ static inline void iclass_grad_spd
                         hrrwholegrad
 #endif
                             (&Yaax, &Yaay, &Yaaz, &Ybbx, &Ybby, &Ybbz, &Yccx, &Yccy, &Yccz,
-                             I, J, K, L, III, JJJ, KKK, LLL, IJKLTYPE,
+                             J, L, III, JJJ, KKK, LLL,
                              store, storeAA, storeBB, storeCC,
                              RAx, RAy, RAz, RBx, RBy, RBz, RCx, RCy, RCz, RDx, RDy, RDz);
 
@@ -2205,7 +2199,6 @@ __device__ static inline void iclass_grad_spdf8
     int LLL1 = LOC2(devSim.Qsbasis, LL, L, devSim.nshell, 4);
     int LLL2 = LOC2(devSim.Qfbasis, LL, L, devSim.nshell, 4);
 
-    int IJKLTYPE = 999;
     int nbasis = devSim.nbasis;
 
     for (int III = III1; III <= III2; III++) {
@@ -2231,8 +2224,7 @@ __device__ static inline void iclass_grad_spdf8
                             (&Yaax, &Yaay, &Yaaz,
                              &Ybbx, &Ybby, &Ybbz,
                              &Yccx, &Yccy, &Yccz,
-                             I, J, K, L,
-                             III, JJJ, KKK, LLL, IJKLTYPE,
+                             J, L, III, JJJ, KKK, LLL, 
                              store, storeAA, storeBB, storeCC,
                              RAx, RAy, RAz, RBx, RBy, RBz,
                              RCx, RCy, RCz, RDx, RDy, RDz);

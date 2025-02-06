@@ -23,12 +23,12 @@
   #define __gpu_get2e_subs_grad_h_
   #undef STOREDIM
   #define STOREDIM STOREDIM_S
-__device__ static inline void hrrwholegrad_lri(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
-        QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
-        int I, int J, int III, int JJJ, int IJKLTYPE,
-        QUICKDouble* store, QUICKDouble* storeAA, QUICKDouble* storeBB,
-        QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
-        QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz)
+__device__ static inline void hrrwholegrad_lri(QUICKDouble * const Yaax, QUICKDouble * const Yaay, QUICKDouble * const Yaaz,
+        QUICKDouble * const Ybbx, QUICKDouble * const Ybby, QUICKDouble * const Ybbz,
+        int J, int III, int JJJ,
+        QUICKDouble * const store, QUICKDouble * const storeAA, QUICKDouble * const storeBB,
+        QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz)
 {
     unsigned char angularL[12];
     QUICKDouble coefAngularL[12];
@@ -200,12 +200,12 @@ __device__ static inline void hrrwholegrad_lri(QUICKDouble* Yaax, QUICKDouble* Y
 
   #undef STOREDIM
   #define STOREDIM STOREDIM_L
-__device__ static inline void hrrwholegrad_lri2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
-        QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
-        int I, int J, int III, int JJJ, int IJKLTYPE, 
-        QUICKDouble* store, QUICKDouble AA, QUICKDouble BB,
-        QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz,
-        QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz)
+__device__ static inline void hrrwholegrad_lri2(QUICKDouble * const Yaax, QUICKDouble * const Yaay, QUICKDouble * const Yaaz,
+        QUICKDouble * const Ybbx, QUICKDouble * const Ybby, QUICKDouble * const Ybbz,
+        int J, int III, int JJJ,
+        QUICKDouble * const store, QUICKDouble AA, QUICKDouble BB,
+        QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
+        QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz)
 {
     unsigned char angularL[12];
     QUICKDouble coefAngularL[12];
@@ -376,10 +376,10 @@ __device__ static inline void hrrwholegrad_lri2(QUICKDouble* Yaax, QUICKDouble* 
 }
 
 
-__device__ static inline void hrrwholegrad_lri2_2(QUICKDouble* Yaax, QUICKDouble* Yaay, QUICKDouble* Yaaz,
-        QUICKDouble* Ybbx, QUICKDouble* Ybby, QUICKDouble* Ybbz,
-        int I, int J, int III, int JJJ, int IJKLTYPE,
-        QUICKDouble* store, QUICKDouble AA, QUICKDouble BB,
+__device__ static inline void hrrwholegrad_lri2_2(QUICKDouble * const Yaax, QUICKDouble * const Yaay, QUICKDouble * const Yaaz,
+        QUICKDouble * const Ybbx, QUICKDouble * const Ybby, QUICKDouble * const Ybbz,
+        int J, int III, int JJJ,
+        QUICKDouble * const store, QUICKDouble AA, QUICKDouble BB,
         QUICKDouble RAx, QUICKDouble RAy, QUICKDouble RAz,
         QUICKDouble RBx, QUICKDouble RBy, QUICKDouble RBz)
 {
@@ -493,8 +493,8 @@ __device__ static inline void iclass_oshell_lri_grad
 __device__ static inline void iclass_lri_grad
   #endif
 (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom,
- QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2,
- QUICKDouble* storeAA, QUICKDouble* storeBB) {
+ QUICKDouble * const YVerticalTemp, QUICKDouble * const store, QUICKDouble * const store2,
+ QUICKDouble * const storeAA, QUICKDouble * const storeBB) {
     /*
        kAtom A, B, C ,D is the coresponding atom for shell ii, jj, kk, ll
        and be careful with the index difference between Fortran and C++,
@@ -695,7 +695,6 @@ __device__ static inline void iclass_lri_grad
     int JJJ1 = LOC2(devSim.Qsbasis, JJ, J, devSim.nshell, 4);
     int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
 
-    int  IJKLTYPE = 999;
     int  nbasis = devSim.nbasis;
 
     for (int III = III1; III <= III2; III++) {
@@ -705,7 +704,7 @@ __device__ static inline void iclass_lri_grad
 
             hrrwholegrad_lri(&Yaax, &Yaay, &Yaaz,
                     &Ybbx, &Ybby, &Ybbz,
-                    I, J, III, JJJ, IJKLTYPE,
+                    J, III, JJJ,
                     store, storeAA, storeBB,
                     RAx, RAy, RAz, RBx, RBy, RBz);
 
@@ -931,7 +930,6 @@ __device__ static inline void iclass_lri_grad_spdf2
             int JJJ1 = LOC2(devSim.Qsbasis, JJ, J, devSim.nshell, 4);
             int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
 
-            int  IJKLTYPE = 999;
             int  nbasis = devSim.nbasis;
 
             for (int III = III1; III <= III2; III++) {
@@ -946,7 +944,7 @@ __device__ static inline void iclass_lri_grad_spdf2
 #endif
                     (&Yaax, &Yaay, &Yaaz,
                      &Ybbx, &Ybby, &Ybbz,
-                     I, J, III, JJJ, IJKLTYPE,
+                     J, III, JJJ,
                      store2, AA, BB,
                      RAx, RAy, RAz, RBx, RBy, RBz);
 
@@ -1032,13 +1030,13 @@ __global__ void
 get_lri_grad_kernel_spdf2()
 #endif
 {
-    unsigned int offside = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     int totalThreads = blockDim.x * gridDim.x;
 
     unsigned int totalatom = devSim.natom + devSim.nextatom;
     QUICKULL jshell = (QUICKULL) devSim.sqrQshell;
 
-    for (QUICKULL i = offside; i < totalatom * jshell; i += totalThreads) {
+    for (QUICKULL i = offset; i < totalatom * jshell; i += totalThreads) {
         QUICKULL iatom = (QUICKULL) i / jshell;
         QUICKULL b = (QUICKULL) (i - iatom * jshell);
 
@@ -1056,15 +1054,15 @@ get_lri_grad_kernel_spdf2()
 
 #if defined(int_spd)
         iclass_lri_grad(iii, jjj, ii, jj, iatom, totalatom,
-                devSim.YVerticalTemp+offside, devSim.store+offside,
-                devSim.store2+offside, devSim.storeAA+offside,
-                devSim.storeBB+offside);
+                devSim.YVerticalTemp + offset, devSim.store + offset,
+                devSim.store2 + offset, devSim.storeAA + offset,
+                devSim.storeBB + offset);
 #elif defined(int_spdf2)
         if (iii + jjj >= 4) {
             iclass_lri_grad_spdf2(iii, jjj, ii, jj, iatom, totalatom,
-                    devSim.YVerticalTemp+offside, devSim.store+offside,
-                    devSim.store2+offside, devSim.storeAA+offside,
-                    devSim.storeBB+offside);
+                    devSim.YVerticalTemp + offset, devSim.store + offset,
+                    devSim.store2 + offset, devSim.storeAA + offset,
+                    devSim.storeBB + offset);
         }
 #endif
 #if defined(MPIV_GPU)

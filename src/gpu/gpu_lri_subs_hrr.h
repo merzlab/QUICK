@@ -37,7 +37,7 @@ __device__ static inline QUICKDouble quick_pow(QUICKDouble a, int power)
 
 
 __device__ static inline QUICKDouble hrrwhole_lri(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -67,7 +67,7 @@ __device__ static inline QUICKDouble hrrwhole_lri(int I, int J, int K, int L, \
 #undef STOREDIM
 #define STOREDIM STOREDIM_L
 __device__ static inline QUICKDouble hrrwhole_lri_2(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -102,7 +102,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2(int I, int J, int K, int L, 
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_1(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -154,7 +154,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_1(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_2(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -208,7 +208,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_2(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_5(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -261,7 +261,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_5(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_6(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -314,7 +314,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_6(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -421,7 +421,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_3(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_4(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -478,7 +478,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_4(int I, int J, int K, int L
 
 // For this subroutine, the basic idea is the same with hrrwhole2_4, just swap i to k and j to l.
 __device__ static inline QUICKDouble hrrwhole_lri_2_7(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -525,7 +525,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_7(int I, int J, int K, int L
 
 // For hrrwhole2_8,9,10, the situation is much simple, i=3, j=3, k=3, l=3
 __device__ static inline QUICKDouble hrrwhole_lri_2_8(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -545,7 +545,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_8(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_9(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
@@ -565,7 +565,7 @@ __device__ static inline QUICKDouble hrrwhole_lri_2_9(int I, int J, int K, int L
 
 
 __device__ static inline QUICKDouble hrrwhole_lri_2_10(int I, int J, int K, int L, \
-        int III, int JJJ, int KKK, int LLL, int IJKLTYPE, QUICKDouble* store, \
+        int III, int JJJ, int KKK, int LLL, QUICKDouble* store, \
         QUICKDouble RAx,QUICKDouble RAy,QUICKDouble RAz, \
         QUICKDouble RBx,QUICKDouble RBy,QUICKDouble RBz, \
         QUICKDouble RCx,QUICKDouble RCy,QUICKDouble RCz, \
