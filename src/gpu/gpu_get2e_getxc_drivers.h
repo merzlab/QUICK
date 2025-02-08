@@ -21,7 +21,7 @@
 //-----------------------------------------------
 //  core part, compute 2-e integrals
 //-----------------------------------------------
-#ifdef OSHELL
+#if defined(OSHELL)
 extern "C" void gpu_get_oshell_eri_(bool *deltaO, QUICKDouble* o, QUICKDouble* ob)
 #else
 extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
@@ -31,8 +31,8 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
     upload_sim_to_constant(gpu);
     PRINTDEBUG("BEGIN TO RUN KERNEL");
 
-#ifdef OSHELL
-        get_oshell_eri(gpu);
+#if defined(OSHELL)
+    get_oshell_eri(gpu);
 #else
     get2e(gpu);
 #endif
@@ -110,7 +110,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #endif
     } else if (*deltaO != 0) {
         delete gpu->gpu_calculated->dense;
-#ifdef OSHELL
+#if defined(OSHELL)
         delete gpu->gpu_calculated->denseb;
 #endif
     }
@@ -121,7 +121,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 }
 
 
-#ifdef OSHELL
+#if defined(OSHELL)
 extern "C" void gpu_get_oshell_eri_grad_(QUICKDouble* grad)
 #else
 extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
@@ -137,7 +137,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
         getGrad(gpu);
     }
 
-#ifdef GPU_SPDF
+#if defined(GPU_SPDF)
     if (gpu->maxL >= 3) {
         upload_sim_to_constant_ffff(gpu);
 
@@ -181,7 +181,7 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
 }
 
 
-#ifdef OSHELL
+#if defined(OSHELL)
 extern "C" void gpu_get_oshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o, QUICKDouble *ob)
 #else
 extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICKDouble* belec, QUICKDouble *o)
@@ -282,7 +282,7 @@ extern "C" void gpu_get_cshell_xc_(QUICKDouble* Eelxc, QUICKDouble* aelec, QUICK
 }
 
 
-#ifdef OSHELL
+#if defined(OSHELL)
 extern "C" void gpu_get_oshell_xcgrad_(QUICKDouble *grad)
 #else
 extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
@@ -323,18 +323,18 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
     delete gpu->gpu_calculated->dense;
 
-#ifdef OSHELL
+#if defined(OSHELL)
     delete gpu->gpu_calculated->denseb;
 #endif
 }
 
 
-#ifndef OSHELL
+#if !defined(OSHELL)
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
     //    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
-    //#ifdef LEGACY_ATOMIC_ADD
+    //#if defined(LEGACY_ATOMIC_ADD)
     //    gpu -> gpu_calculated -> o        ->  DeleteGPU();
     //    gpu -> gpu_calculated -> oULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     //    gpu -> gpu_calculated -> oULL     -> Upload();
@@ -385,7 +385,7 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     //    SAFE_DELETE(gpu -> gpu_calculated -> o);
 
-    //#ifdef LEGACY_ATOMIC_ADD
+    //#if defined(LEGACY_ATOMIC_ADD)
     //    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
     //#endif
 }
@@ -468,7 +468,7 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 {
     //    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
-    //#ifdef LEGACY_ATOMIC_ADD
+    //#if defined(LEGACY_ATOMIC_ADD)
     //    gpu -> gpu_calculated -> o        ->  DeleteGPU();
     //    gpu -> gpu_calculated -> oULL     =   new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     //    gpu -> gpu_calculated -> oULL     -> Upload();
@@ -524,7 +524,7 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     //    SAFE_DELETE(gpu -> gpu_calculated -> o);
 
-    //#ifdef LEGACY_ATOMIC_ADD
+    //#if defined(LEGACY_ATOMIC_ADD)
     //    SAFE_DELETE(gpu -> gpu_calculated -> oULL);
     //#endif
 }

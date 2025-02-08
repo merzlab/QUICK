@@ -519,14 +519,9 @@ __device__ static inline void iclass_lri_grad
     */
     int kPrimI = devSim.kprim[II];
     int kPrimJ = devSim.kprim[JJ];
-    int kPrimK = 1;
-    int kPrimL = 1;
 
     int kStartI = devSim.kstart[II]-1;
     int kStartJ = devSim.kstart[JJ]-1;
-
-    int K=0;
-    int L=0;
 
     /*
        store saves temp contracted integral as [as|bs] type. the dimension should be allocatable but because
@@ -708,12 +703,12 @@ __device__ static inline void iclass_lri_grad
                     store, storeAA, storeBB,
                     RAx, RAy, RAz, RBx, RBy, RBz);
 
-#if defined(OSHELL)
+  #if defined(OSHELL)
             QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ - 1, III - 1, nbasis, nbasis)
                     + LOC2(devSim.denseb, JJJ - 1, III - 1, nbasis, nbasis));
-#else
+  #else
             QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ - 1, III - 1, nbasis, nbasis);
-#endif
+  #endif
 
             QUICKDouble constant;
             if (III != JJJ) {
@@ -734,6 +729,7 @@ __device__ static inline void iclass_lri_grad
         }
     }
 
+#if defined(USE_LEGACY_ATOMICS)
     GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
@@ -752,6 +748,26 @@ __device__ static inline void iclass_lri_grad
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 1], -AGrady - BGrady, GRADSCALE);
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 2], -AGradz - BGradz, GRADSCALE);
     }    
+#else
+    atomicAdd(&devSim.grad[AStart], AGradx);
+    atomicAdd(&devSim.grad[AStart + 1], AGrady);
+    atomicAdd(&devSim.grad[AStart + 2], AGradz);
+
+    atomicAdd(&devSim.grad[BStart], BGradx);
+    atomicAdd(&devSim.grad[BStart + 1], BGrady);
+    atomicAdd(&devSim.grad[BStart + 2], BGradz);
+
+    if (iatom < devSim.natom) {
+        atomicAdd(&devSim.grad[CStart], -AGradx - BGradx);
+        atomicAdd(&devSim.grad[CStart + 1], -AGrady - BGrady);
+        atomicAdd(&devSim.grad[CStart + 2], -AGradz - BGradz);
+    } else {
+        CStart = (iatom - devSim.natom) * 3;
+        atomicAdd(&devSim.ptchg_grad[CStart], -AGradx - BGradx);
+        atomicAdd(&devSim.ptchg_grad[CStart + 1], -AGrady - BGrady);
+        atomicAdd(&devSim.ptchg_grad[CStart + 2], -AGradz - BGradz);
+    }    
+#endif
 }
 
 
@@ -760,15 +776,15 @@ __device__ static inline void iclass_lri_grad
    iclass subroutine is to generate 2-electron intergral using HRR and VRR method, which is the most
    performance algrithem for electron intergral evaluation. See description below for details
 */
-#if defined(OSHELL)
-  #if defined(int_spdf2)
+  #if defined(OSHELL)
+    #if defined(int_spdf2)
 __device__ static inline void iclass_oshell_lri_grad_spdf2
-  #endif
-#else
-  #if defined(int_spdf2)
+    #endif
+  #else
+    #if defined(int_spdf2)
 __device__ static inline void iclass_lri_grad_spdf2
+    #endif
   #endif
-#endif
 (int I, int J, unsigned int II, unsigned int JJ, int iatom, unsigned int totalatom,
  QUICKDouble* YVerticalTemp, QUICKDouble* store, QUICKDouble* store2,
  QUICKDouble* storeAA, QUICKDouble* storeBB) {
@@ -797,6 +813,8 @@ __device__ static inline void iclass_lri_grad_spdf2
        */
     int kPrimI = devSim.kprim[II];
     int kPrimJ = devSim.kprim[JJ];
+    int kPrimK = 1;
+    int kPrimL = 1;
 
     int kStartI = devSim.kstart[II] - 1;
     int kStartJ = devSim.kstart[JJ] - 1;
@@ -910,14 +928,14 @@ __device__ static inline void iclass_lri_grad_spdf2
                 }
             }
 
-#if defined(int_spdf2)
+  #if defined(int_spdf2)
             lri::vertical2_spdf2(I, J + 1, 0, 1, YVerticalTemp, store2,
                     Px - RAx, Py - RAy, Pz - RAz,
                     (Px * AB + Qx * CD) * ABCD - Px, (Py * AB + Qy * CD) * ABCD - Py, (Pz * AB + Qz * CD) * ABCD - Pz,
                     Qx - RCx, Qy - RCy, Qz - RCz,
                     (Px * AB + Qx * CD) * ABCD - Qx, (Py * AB + Qy * CD) * ABCD - Qy, (Pz * AB + Qz * CD) * ABCD - Qz,
                     0.5 * ABCD, 0.5 / AB, 0.5 / CD, AB * ABCD, CD * ABCD);
-#endif
+  #endif
 
             QUICKDouble RBx, RBy, RBz;
 
@@ -937,23 +955,23 @@ __device__ static inline void iclass_lri_grad_spdf2
                     QUICKDouble Yaax, Yaay, Yaaz;
                     QUICKDouble Ybbx, Ybby, Ybbz;
 
-#if defined(int_spdf2)
+  #if defined(int_spdf2)
                     hrrwholegrad_lri2_2
-#else
+  #else
                     hrrwholegrad_lri2
-#endif
+  #endif
                     (&Yaax, &Yaay, &Yaaz,
                      &Ybbx, &Ybby, &Ybbz,
                      J, III, JJJ,
                      store2, AA, BB,
                      RAx, RAy, RAz, RBx, RBy, RBz);
 
-#if defined(OSHELL)
+  #if defined(OSHELL)
                     QUICKDouble DENSEJI = (QUICKDouble) (LOC2(devSim.dense, JJJ - 1, III - 1, nbasis, nbasis)
                             + LOC2(devSim.denseb, JJJ - 1, III - 1, nbasis, nbasis));
-#else
+  #else
                     QUICKDouble DENSEJI = (QUICKDouble) LOC2(devSim.dense, JJJ - 1, III - 1, nbasis, nbasis);
-#endif
+  #endif
 
                     QUICKDouble constant;
                     if (III != JJJ) {
@@ -974,11 +992,11 @@ __device__ static inline void iclass_lri_grad_spdf2
         }
     }
 
-#if defined(DEBUG)
+  #if defined(DEBUG)
     //printf("FILE: %s, LINE: %d, FUNCTION: %s, devSim.hyb_coeff \n", __FILE__, __LINE__, __func__);
-#endif
+  #endif
 
-#if defined(USE_LEGACY_ATOMICS)
+  #if defined(USE_LEGACY_ATOMICS)
     GPUATOMICADD(&devSim.gradULL[AStart], AGradx, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 1], AGrady, GRADSCALE);
     GPUATOMICADD(&devSim.gradULL[AStart + 2], AGradz, GRADSCALE);
@@ -997,7 +1015,7 @@ __device__ static inline void iclass_lri_grad_spdf2
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 1], -AGrady - BGrady, GRADSCALE);
         GPUATOMICADD(&devSim.ptchg_gradULL[CStart + 2], -AGradz - BGradz, GRADSCALE);
     }
-#else
+  #else
     atomicAdd(&devSim.grad[AStart], AGradx);
     atomicAdd(&devSim.grad[AStart + 1], AGrady);
     atomicAdd(&devSim.grad[AStart + 2], AGradz);
@@ -1016,8 +1034,9 @@ __device__ static inline void iclass_lri_grad_spdf2
         atomicAdd(&devSim.ptchg_grad[CStart + 1], -AGrady - BGrady);
         atomicAdd(&devSim.ptchg_grad[CStart + 2], -AGradz - BGradz);
     }
-#endif
+  #endif
 }
+#endif
 
 
 #if defined(int_spd)

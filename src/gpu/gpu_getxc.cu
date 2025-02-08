@@ -4,6 +4,10 @@
   #include "hip/gpu.h"
 #endif
 
+#if defined(CEW)
+  #include "iface.hpp"
+#endif
+
 #include "libxc_dev_funcs.h"
 
 #include "gpu_work_gga_x.cu"
@@ -91,7 +95,7 @@ __device__ static inline void pteval_new(QUICKDouble gridx, QUICKDouble gridy, Q
     *dphidy = 0.0;
     *dphidz = 0.0;
 
-//    for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
+//    for (int i = 0; i < devSim_dft.ncontract[ibas - 1]; i++) {
     for (int i = primf_counter[ibasp]; i < primf_counter[ibasp + 1]; i++) {
         int kprim = (int) primf[i];
         QUICKDouble aexp = LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
@@ -307,7 +311,7 @@ __device__ static inline QUICKDouble SSW(QUICKDouble gridx, QUICKDouble gridy, Q
 
     /* !!!! this part can be done in CPU*/
     QUICKDouble distnbor = 1e3;
-    for (int i = 0; i<natom; i++) {
+    for (int i = 0; i < natom; i++) {
         if (i != iparent - 1) {
             QUICKDouble distance = distance_ptr[i];
 
@@ -353,9 +357,9 @@ __device__ static inline QUICKDouble SSW(QUICKDouble gridx, QUICKDouble gridy, Q
     for (int jatm = 0; jatm < natom; jatm++)
     {
         if (jatm != iparent - 1 && wofparent != 0.0e0) {
-            QUICKDouble xjatm = LOC2(xyz, 0, jatm, 3, natom) ;
-            QUICKDouble yjatm = LOC2(xyz, 1, jatm, 3, natom) ;
-            QUICKDouble zjatm = LOC2(xyz, 2, jatm, 3, natom) ;
+            QUICKDouble xjatm = LOC2(xyz, 0, jatm, 3, natom);
+            QUICKDouble yjatm = LOC2(xyz, 1, jatm, 3, natom);
+            QUICKDouble zjatm = LOC2(xyz, 2, jatm, 3, natom);
 
             QUICKDouble rij = distance_ptr[jatm];
 
@@ -377,7 +381,7 @@ __device__ static inline QUICKDouble SSW(QUICKDouble gridx, QUICKDouble gridy, Q
 
             if (confocal >= 0.64) {
                 wofparent = 0.0e0;
-            } else if (confocal>=-0.64e0) {
+            } else if (confocal >= -0.64e0) {
                 //QUICKDouble frctn = confocal * 1.5625;
                 //QUICKDouble frctn3 = frctn * frctn * frctn;
                 //QUICKDouble gofconfocal = (35.0 * frctn - 35.0 * frctn3 +21.0 * frctn * frctn * frctn3 - 5.0 * frctn * frctn3 * frctn3) * 0.062500;
@@ -638,22 +642,23 @@ __device__ static inline void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICK
        are therefore goint to store them.  They are the unnormalized weights.
        The array is called UW for obvious reasons.
     */
-#ifdef DEBUG
-    //    printf("gridx: %f  gridy: %f  gridz: %f, exc: %.10e, quadwt: %.10e, iparent: %i \n",gridx, gridy, gridz, Exc, quadwt, iparent);
+#if defined(DEBUG)
+//    printf("gridx: %f  gridy: %f  gridz: %f, exc: %.10e, quadwt: %.10e, iparent: %i \n", gridx, gridy, gridz, Exc, quadwt, iparent);
 #endif
 
     QUICKDouble sumUW = 0.0;
     QUICKDouble xiatm, yiatm, ziatm, xjatm, yjatm, zjatm, xlatm, ylatm, zlatm;
     QUICKDouble rig, rjg, rlg, rij, rjl;
 
-    for(int iatm=0;iatm<devSim_dft.natom;iatm++){
+    for (int iatm = 0; iatm < devSim_dft.natom; iatm++) {
         QUICKDouble tmp_uw = get_unnormalized_weight(gridx, gridy, gridz, iatm);
-        devSim_dft.uw_ssd[gid*devSim_dft.natom+iatm] = tmp_uw;
+        devSim_dft.uw_ssd[gid * devSim_dft.natom + iatm] = tmp_uw;
         sumUW = sumUW + tmp_uw;
     }
 
-#ifdef DEBUG
-    //printf("gridx: %f  gridy: %f  gridz: %f, exc: %.10e, quadwt: %.10e, iparent: %i, sumUW: %.10e \n",gridx, gridy, gridz, Exc, quadwt, iparent, sumUW);
+#if defined(DEBUG)
+//    printf("gridx: %f  gridy: %f  gridz: %f, exc: %.10e, quadwt: %.10e, iparent: %i, sumUW: %.10e \n",
+//            gridx, gridy, gridz, Exc, quadwt, iparent, sumUW);
 #endif
 
     /*
@@ -696,17 +701,17 @@ __device__ static inline void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICK
             QUICKDouble u = (rig - rjg) / rij;
             QUICKDouble t = (-35.0 * CUBE(a + u)) / ((a - u) * (16.0 * CUBE(a)
                         + 29.0 * SQR(a) * u + 20.0 * a * SQR(u) + 5.0 * CUBE(u)));
-            //QUICKDouble uw_iparent = get_unnormalized_weight(gridx, gridy, gridz, iparent-1);
-            QUICKDouble uw_iparent = devSim_dft.uw_ssd[gid*devSim_dft.natom+(iparent-1)];
+            //QUICKDouble uw_iparent = get_unnormalized_weight(gridx, gridy, gridz, iparent - 1);
+            QUICKDouble uw_iparent = devSim_dft.uw_ssd[gid * devSim_dft.natom + (iparent - 1)];
             //QUICKDouble uw_jatm = get_unnormalized_weight(gridx, gridy, gridz, jatm);
-            QUICKDouble uw_jatm = devSim_dft.uw_ssd[gid*devSim_dft.natom+jatm];
+            QUICKDouble uw_jatm = devSim_dft.uw_ssd[gid * devSim_dft.natom + jatm];
 
-            wtgradjx = wtgradjx + uw_iparent*dmudx*t/sumUW;
-            wtgradjy = wtgradjy + uw_iparent*dmudy*t/sumUW;
-            wtgradjz = wtgradjz + uw_iparent*dmudz*t/sumUW;
+            wtgradjx += uw_iparent * dmudx * t / sumUW;
+            wtgradjy += uw_iparent * dmudy * t / sumUW;
+            wtgradjz += uw_iparent * dmudz * t / sumUW;
 
-#ifdef DEBUG
-            //  printf("gridx: %f  gridy: %f  gridz: %f \n",wtgradjx, wtgradjy, wtgradjz);
+#if defined(DEBUG)
+//            printf("gridx: %f  gridy: %f  gridz: %f \n", wtgradjx, wtgradjy, wtgradjz);
 #endif
 
             for (int latm = 0; latm < devSim_dft.natom; latm++) {
@@ -726,13 +731,15 @@ __device__ static inline void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICK
                     t = (-35.0 * CUBE(a + u)) / ((a - u) * (16.0 * CUBE(a) + 29.0 * SQR(a) * u + 20.0 * a * SQR(u) + 5.0 * CUBE(u)));
                     //QUICKDouble uw_latm = get_unnormalized_weight(gridx, gridy, gridz, latm);
                     QUICKDouble uw_latm = devSim_dft.uw_ssd[gid * devSim_dft.natom + latm];
-                    wtgradjx = wtgradjx - uw_latm * uw_iparent * dmudx * t / SQR(sumUW);
-                    wtgradjy = wtgradjy - uw_latm * uw_iparent * dmudy * t / SQR(sumUW);
-                    wtgradjz = wtgradjz - uw_latm * uw_iparent * dmudz * t / SQR(sumUW);
+                    wtgradjx -= uw_latm * uw_iparent * dmudx * t / SQR(sumUW);
+                    wtgradjy -= uw_latm * uw_iparent * dmudy * t / SQR(sumUW);
+                    wtgradjz -= uw_latm * uw_iparent * dmudz * t / SQR(sumUW);
                 }
             }
-#ifdef DEBUG
-            //  printf("gridx: %f  gridy: %f  gridz: %f \n",wtgradjx, wtgradjy, wtgradjz);
+
+#if defined(DEBUG)
+//            printf("gridx: %f  gridy: %f  gridz: %f \n", wtgradjx, wtgradjy, wtgradjz);
+
 #endif
             for (int latm = 0; latm < devSim_dft.natom; latm++) {
                 if (latm != jatm) {
@@ -750,23 +757,23 @@ __device__ static inline void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICK
                     u = (rjg - rlg) / rjl;
                     t = (-35.0 * CUBE(a + u)) / ((a - u) * (16.0 * CUBE(a) + 29.0 * SQR(a) * u + 20.0 * a * SQR(u) + 5.0 * CUBE(u)));
 
-                    wtgradjx = wtgradjx + uw_jatm * uw_iparent * dmudx * t / SQR(sumUW);
-                    wtgradjy = wtgradjy + uw_jatm * uw_iparent * dmudy * t / SQR(sumUW);
-                    wtgradjz = wtgradjz + uw_jatm * uw_iparent * dmudz * t / SQR(sumUW);
+                    wtgradjx += uw_jatm * uw_iparent * dmudx * t / SQR(sumUW);
+                    wtgradjy += uw_jatm * uw_iparent * dmudy * t / SQR(sumUW);
+                    wtgradjz += uw_jatm * uw_iparent * dmudz * t / SQR(sumUW);
                 }
             }
-#ifdef DEBUG
-            //  printf("gridx: %f  gridy: %f  gridz: %f \n",wtgradjx, wtgradjy, wtgradjz);
+
+#if defined(DEBUG)
+//            printf("gridx: %f  gridy: %f  gridz: %f \n", wtgradjx, wtgradjy, wtgradjz);
 #endif
 
-            //      Now do the rotational invariance part of the derivatives.
+            // Now do the rotational invariance part of the derivatives.
+            wtgradix -= wtgradjx;
+            wtgradiy -= wtgradjy;
+            wtgradiz -= wtgradjz;
 
-            wtgradix = wtgradix - wtgradjx;
-            wtgradiy = wtgradiy - wtgradjy;
-            wtgradiz = wtgradiz - wtgradjz;
-
-#ifdef DEBUG
-            //printf("gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n",wtgradjx, wtgradjy, wtgradjz, Exc, quadwt);
+#if defined(DEBUG)
+//            printf("gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n", wtgradjx, wtgradjy, wtgradjz, Exc, quadwt);
 #endif
 
             // We should now have the derivatives of the SS weights.  Now just add it to the temporary gradient vector in shared memory.
@@ -774,11 +781,10 @@ __device__ static inline void sswder(QUICKDouble gridx, QUICKDouble gridy, QUICK
             GPUATOMICADD(&smemGrad[jstart + 1], wtgradjy * Exc * quadwt, GRADSCALE);
             GPUATOMICADD(&smemGrad[jstart + 2], wtgradjz * Exc * quadwt, GRADSCALE);
         }
-
     }
 
-#ifdef DEBUG
-    //printf("istart: %i  gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n",istart, wtgradix, wtgradiy, wtgradiz, Exc, quadwt);
+#if defined(DEBUG)
+//    printf("istart: %i  gridx: %f  gridy: %f  gridz: %f Exc: %e quadwt: %e\n", istart, wtgradix, wtgradiy, wtgradiz, Exc, quadwt);
 #endif
 
     // update the temporary gradient vector
@@ -879,8 +885,8 @@ __device__ static inline void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, Q
         z1iplus2 = z1 * z1;
     }
 
-//    for (int i = 0; i < devSim_dft.ncontract[ibas-1]; i++) {
-    for (int i = primf_counter[ibasp]; i < primf_counter[ibasp+1]; i++) {
+//    for (int i = 0; i < devSim_dft.ncontract[ibas - 1]; i++) {
+    for (int i = primf_counter[ibasp]; i < primf_counter[ibasp + 1]; i++) {
         int kprim = (int) primf[i];
         QUICKDouble aexp = LOC2(devSim_dft.aexp, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis);
         QUICKDouble temp = LOC2(devSim_dft.dcoeff, kprim, ibas, devSim_dft.maxcontract, devSim_dft.nbasis)
@@ -927,8 +933,9 @@ __device__ static inline void pt2der_new(QUICKDouble gridx, QUICKDouble gridy, Q
 
 
 // Given the densities and the two gradients, return the energy.
-__device__ static inline QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
-        QUICKDouble gbx,     QUICKDouble gby,      QUICKDouble gbz)
+__device__ static inline QUICKDouble becke_e(QUICKDouble density, QUICKDouble densityb,
+        QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
+        QUICKDouble gbx, QUICKDouble gby, QUICKDouble gbz)
 {
     /*
        Becke exchange functional
@@ -977,7 +984,8 @@ __device__ static inline QUICKDouble becke_e(QUICKDouble density, QUICKDouble de
 // density gradients, return the derivative of f with regard to the alpha
 //denisty, the alpha-alpha gradient invariant, and the alpha beta gradient
 // invariant.
-__device__ static inline void becke(QUICKDouble density, QUICKDouble gx, QUICKDouble gy, QUICKDouble gz,
+__device__ static inline void becke(QUICKDouble density,
+        QUICKDouble gx, QUICKDouble gy, QUICKDouble gz,
         QUICKDouble gotherx, QUICKDouble gothery, QUICKDouble gotherz,
         QUICKDouble* dfdr, QUICKDouble* dfdgg, QUICKDouble* dfdggo)
 {
@@ -1017,7 +1025,8 @@ __device__ static inline void becke(QUICKDouble density, QUICKDouble gx, QUICKDo
 // the spin that density is not, i.e. beta if density is alpha) return
 // the derivative of the lyp correlation functional with regard to the density
 // and the derivatives with regard to the gradient invariants.
-__device__ static inline void lyp(QUICKDouble pa, QUICKDouble pb, QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
+__device__ static inline void lyp(QUICKDouble pa, QUICKDouble pb,
+        QUICKDouble gax, QUICKDouble gay, QUICKDouble gaz,
         QUICKDouble gbx, QUICKDouble gby, QUICKDouble gbz,
         QUICKDouble* dfdr, QUICKDouble* dfdgg, QUICKDouble* dfdggo)
 {
@@ -2209,10 +2218,14 @@ __device__ static inline void LD0194(QUICKDouble* x, QUICKDouble* y, QUICKDouble
 
 
 #include "gpu_getxc.h"
-#include "gpu_cew_quad.h"
+#if defined(CEW)
+  #include "gpu_cew_quad.h"
+#endif
 #define OSHELL
 #include "gpu_getxc.h"
-#include "gpu_cew_quad.h"
+#if defined(CEW)
+  #include "gpu_cew_quad.h"
+#endif
 #undef OSHELL
 
 
@@ -2407,7 +2420,7 @@ __global__ void get_sswgrad_kernel() {
         QUICKDouble quadwt = devSim_dft.quadwt[gid];
         int gatm = devSim_dft.gatm_ssd[gid];
 
-        sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd+offset, gatm, devSim_dft.natom);
+        sswanader(gridx, gridy, gridz, exc, quadwt, smemGrad, devSim_dft.uw_ssd + offset, gatm, devSim_dft.natom);
     }
     __syncthreads();
 
@@ -2538,14 +2551,14 @@ __global__ void get_sswnumgrad_kernel() {
 
         if(iatom == gatm-1) zparent = zatm;
 
-        sswt1 = SSW(xparent + tx, yparent + ty, zparent + tz, devSim_dft.xyz, \
+        sswt1 = SSW(xparent + tx, yparent + ty, zparent + tz, devSim_dft.xyz,
                 xparent, yparent, zparent, xatm, yatm, zatm, iatom, gatm, natom);
 
         zatm -= SSW_NUMGRAD_DELTA2;
 
         if(iatom == gatm-1) zparent = zatm;
 
-        sswt2 = SSW(xparent + tx, yparent + ty, zparent + tz, devSim_dft.xyz, \
+        sswt2 = SSW(xparent + tx, yparent + ty, zparent + tz, devSim_dft.xyz,
                 xparent, yparent, zparent, xatm, yatm, zatm, iatom, gatm, natom);
 
         QUICKDouble dpz = (sswt1-sswt2) * gradfac;
@@ -2582,6 +2595,59 @@ __global__ void get_sswnumgrad_kernel() {
     __syncthreads();
 
 }
+
+#if defined(CEW)
+static void get_cew_accdens(_gpu_type gpu) {
+    QUICKDouble *gridpt = new QUICKDouble[3];
+    QUICKDouble *cewGrad= new QUICKDouble[3];
+
+    gpu->gpu_xcq->densa->Download();
+
+    if (gpu->gpu_sim.is_oshell == true) {
+        gpu->gpu_xcq->densb->Download();
+    }
+
+    for (int i = 0; i < gpu->gpu_xcq->npoints; i++) {
+        QUICKDouble weight = gpu->gpu_xcq->weight->_hostData[i];
+        QUICKDouble densea = gpu->gpu_xcq->densa->_hostData[i];
+        QUICKDouble denseb = densea;
+
+        if (gpu -> gpu_sim.is_oshell == true) {
+            denseb = gpu->gpu_xcq->densb->_hostData[i];
+        }
+
+        gridpt[0] = gpu->gpu_xcq->gridx->_hostData[i];
+        gridpt[1] = gpu->gpu_xcq->gridy->_hostData[i];
+        gridpt[2] = gpu->gpu_xcq->gridz->_hostData[i];
+
+        const QUICKDouble charge_density = -weight * (densea + denseb);
+
+        for (int j = 0; j < 3; j++) {
+            cewGrad[j] = 0.0;
+        }
+
+        QUICKDouble const *cnst_gridpt = gridpt;
+
+        // this function comes from cew library in amber
+        cew_accdensatpt_(cnst_gridpt, &charge_density, cewGrad);
+
+        //printf("cew_accdensatpt %f %f %f %f %f %f %f \n", gridpt[0], gridpt[1], gridpt[2], charge_density, cewGrad[0], cewGrad[1], cewGrad[2]);
+
+        int Istart = (gpu->gpu_xcq->gatm->_hostData[i] - 1) * 3;
+
+        for (int j = 0; j < 3; j++) {
+#if defined(USE_LEGACY_ATOMICS)
+            gpu->grad->_hostData[Istart + j] += cewGrad[j];
+#else
+            gpu->cew_grad->_hostData[Istart + j] += cewGrad[j];
+#endif
+        }
+    }
+
+    delete gridpt;
+    delete cewGrad;
+}
+#endif
 
 
 /*
@@ -2672,7 +2738,7 @@ void getxc_grad(_gpu_type gpu) {
         QUICK_SAFE_CALL((cshell_getxcgrad_kernel <<<gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>> ()));
     }
 
-#ifdef CEW
+#if defined(CEW)
     if (gpu->gpu_sim.use_cew) {
         get_cew_accdens(gpu);
     }
@@ -2694,3 +2760,29 @@ void getxc_grad(_gpu_type gpu) {
 
 //    nvtxRangePop();
 }
+
+
+#if defined(CEW)
+void getcew_quad(_gpu_type gpu) {
+    QUICK_SAFE_CALL((getcew_quad_kernel<<< gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+}
+
+
+void getcew_quad_grad(_gpu_type gpu) {
+    if (gpu->gpu_sim.is_oshell == true) {
+        QUICK_SAFE_CALL((get_oshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((oshell_getcew_quad_grad_kernel<<< gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
+    } else {
+        QUICK_SAFE_CALL((get_cshell_density_kernel<<<gpu->blocks, gpu->xc_threadsPerBlock>>>()));
+        QUICK_SAFE_CALL((cshell_getcew_quad_grad_kernel<<< gpu->blocks, gpu->xc_threadsPerBlock, gpu->gpu_xcq->smem_size>>>()));
+    }
+
+    get_cew_accdens(gpu);
+
+    prune_grid_sswgrad();
+
+    get_sswnumgrad_kernel<<< gpu->blocks, gpu->sswGradThreadsPerBlock, gpu->gpu_xcq->smem_size>>>();
+
+    gpu_delete_sswgrad_vars();
+}
+#endif

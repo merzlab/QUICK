@@ -100,7 +100,6 @@ void get_lri_grad(_gpu_type gpu);
 void upload_para_to_const_lri();
 void getcew_quad(_gpu_type gpu);
 void getcew_quad_grad(_gpu_type gpu);
-void get_cew_accdens(_gpu_type gpu);
 #endif
 
 void upload_sim_to_constant(_gpu_type gpu);
