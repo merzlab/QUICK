@@ -228,7 +228,7 @@ __device__ static inline void iclass_lri_spdf2
 #endif
             {
 #if defined(USE_LEGACY_ATOMICS)
-                GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, nbasis, nbasis), Y, OSCALE);    
+                GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y, OSCALE);    
 #else
                 atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
 #endif
