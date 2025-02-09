@@ -1,22 +1,18 @@
-
-#if defined HIP || defined HIP_MPIV
-
-#define DEV_MALLOC hipMalloc
-#define DEV_MEMCPY hipMemcpy
-#define DEV_MEMCPY_HOST_TO_DEVICE hipMemcpyHostToDevice 
-
-#else
-
-#define DEV_MALLOC cudaMalloc
-#define DEV_MEMCPY cudaMemcpy
-#define DEV_MEMCPY_HOST_TO_DEVICE cudaMemcpyHostToDevice
-
+#if defined(HIP) || defined(HIP_MPIV)
+#  define DEV_MALLOC hipMalloc
+#  define DEV_MEMCPY hipMemcpy
+#  define DEV_MEMCPY_HOST_TO_DEVICE hipMemcpyHostToDevice 
+#elif defined(CUDA) || defined(CUDA_MPIV)
+#  define DEV_MALLOC cudaMalloc
+#  define DEV_MEMCPY cudaMemcpy
+#  define DEV_MEMCPY_HOST_TO_DEVICE cudaMemcpyHostToDevice
 #endif
+
 
 //Uploads parameters required for kernels. *p is a pointer to libxc functional, gpu_work_params is a pointer
 //to host memory location containing worker paramters 
-void* gpu_upload_maple2c_params(const xc_func_type *p){
-
+void* gpu_upload_maple2c_params(const xc_func_type *p)
+{
         void *d_maple_params;
 
 #ifdef DEBUG 
@@ -26,13 +22,13 @@ void* gpu_upload_maple2c_params(const xc_func_type *p){
         DEV_MALLOC((void**)&d_maple_params, p->params_byte_size);
         DEV_MEMCPY(d_maple_params, (p->params), p->params_byte_size, DEV_MEMCPY_HOST_TO_DEVICE);
         return d_maple_params;
-
 }
+
 
 //Uploads paramters required for kernels. *p is a pointer to libxc functional, gpu_work_params is a pointer
 //to host memory location containing worker paramters 
-void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
-
+void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params)
+{
         void *d_work_params;
         int work_param_size;
 
@@ -73,8 +69,10 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params){
 
 }
 
+
 //returns a pointer to an empty device array
-double* gpu_upload_libxc_out_array(int size){
+double* gpu_upload_libxc_out_array(int size)
+{
         double *d_double_arr;
         int arr_size = size * sizeof(double);
         DEV_MALLOC((void**)&d_double_arr, arr_size);
@@ -82,8 +80,10 @@ double* gpu_upload_libxc_out_array(int size){
         return d_double_arr;
 }
 
+
 //returns a pointer to a populated device array 
-double* gpu_upload_libxc_input_array(const double *h_input, int size){
+double* gpu_upload_libxc_input_array(const double *h_input, int size)
+{
         double *d_double_arr;
         int arr_size = size * sizeof(double);
         DEV_MALLOC((void**)&d_double_arr, arr_size);
@@ -92,9 +92,10 @@ double* gpu_upload_libxc_input_array(const double *h_input, int size){
         return d_double_arr;
 }
 
-//Returns an integer that uniquly identifies the gpu worker
-int get_gpu_worker(const xc_func_type *p){
 
+//Returns an integer that uniquly identifies the gpu worker
+int get_gpu_worker(const xc_func_type *p)
+{
         int gpu_wt = 0;
 
         //check the family
@@ -121,8 +122,9 @@ int get_gpu_worker(const xc_func_type *p){
 
 }
 
-gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np){
 
+gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double mix_coeff, int np)
+{
 	gpu_libxc_info h_glinfo;
 
 	h_glinfo.func_id = p->info->number;
@@ -143,8 +145,10 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
 	return d_glinfo;
 }
 
+
 /*
-gpu_libxc_out* gpu_upload_libxc_out(int np){
+gpu_libxc_out* gpu_upload_libxc_out(int np)
+{
 	gpu_libxc_out h_glout;
 	h_glout.d_zk = gpu_upload_libxc_out_array(np);
 	h_glout.d_vrho = gpu_upload_libxc_out_array(np);
@@ -158,7 +162,9 @@ gpu_libxc_out* gpu_upload_libxc_out(int np){
 	return d_glout;
 }
 
-gpu_libxc_in* gpu_upload_libxc_in(const double* h_rho, const double *h_sigma, int np){
+
+gpu_libxc_in* gpu_upload_libxc_in(const double* h_rho, const double *h_sigma, int np)
+{
         gpu_libxc_in h_glin;
         h_glin.d_rho = gpu_upload_libxc_input_array(h_rho, np);
         h_glin.d_sigma = gpu_upload_libxc_input_array(h_sigma, np);

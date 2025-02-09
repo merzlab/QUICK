@@ -1,20 +1,16 @@
-
-#if defined HIP || defined HIP_MPIV
-
-#define DEV_FREE hipFree
-#define DEV_MEMCPY hipMemcpy
-#define DEV_MEMCPY_DEVICE_TO_HOST hipMemcpyDeviceToHost
-
-#else
-
-#define DEV_FREE cudaFree
-#define DEV_MEMCPY cudaMemcpy
-#define DEV_MEMCPY_DEVICE_TO_HOST cudaMemcpyDeviceToHost
-
+#if defined(HIP) || defined(HIP_MPIV)
+#  define DEV_FREE hipFree
+#  define DEV_MEMCPY hipMemcpy
+#  define DEV_MEMCPY_DEVICE_TO_HOST hipMemcpyDeviceToHost
+#elif defined(CUDA) || defined(CUDA_MPIV)
+#  define DEV_FREE cudaFree
+#  define DEV_MEMCPY cudaMemcpy
+#  define DEV_MEMCPY_DEVICE_TO_HOST cudaMemcpyDeviceToHost
 #endif
 
-void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo){
 
+void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo)
+{
         // d_glinfo is a pointer to a struct hosting some device pointers. In order to free
         // device memory pointed by these child pointers, we must access them.
 	gpu_libxc_info* h_glinfo;
@@ -28,6 +24,4 @@ void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo){
         DEV_FREE(d_glinfo);
 
         free(h_glinfo);
-
 }
-
