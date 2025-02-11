@@ -147,6 +147,8 @@ hipmpiinstall: hipmpi
 
 aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
+	if [ -e $(lapackfolder)/libblas.$(libsuffix) ]; then mv $(lapackfolder)/libblas.$(libsuffix) $(installfolder)/lib64/libblas.$(libsuffix).3.12; ln -s -T $(installfolder)/lib64/libblas.$(libsuffix).3.12 $(installfolder)/lib64/libblas.$(libsuffix).3; ln -s -T $(installfolder)/lib64/libblas.$(libsuffix).3 $(installfolder)/lib64/libblas.$(libsuffix); fi; \
+	if [ -e $(lapackfolder)/liblapack.$(libsuffix) ]; then mv $(lapackfolder)/liblapack.$(libsuffix).3.12 $(installfolder)/lib64/liblapack.$(libsuffix); ln -s -T $(installfolder)/lib64/liblapack.$(libsuffix).3.12 $(installfolder)/lib64/liblapack.$(libsuffix).3; ln -s -T $(installfolder)/lib64/liblapack.$(libsuffix).3 $(installfolder)/lib64/liblapack.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
 	mv $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \

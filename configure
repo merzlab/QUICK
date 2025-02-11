@@ -857,6 +857,14 @@ if [ ! -d "$QUICK_HOME/bin" ]; then
   mkdir -p "$QUICK_HOME/bin"
 fi
 
+if [ ! -d "$QUICK_HOME/lib" ]; then
+  mkdir -p "$QUICK_HOME/lib"
+fi
+
+if [ ! -d "$QUICK_HOME/lib64" ]; then
+  mkdir -p "$QUICK_HOME/lib64"
+fi
+
 for buildtype in $buildtypes; do
   if [ ! -d "$QUICK_HOME/build/lib/$buildtype" ]; then
     mkdir -p "$QUICK_HOME/build/lib/$buildtype"
