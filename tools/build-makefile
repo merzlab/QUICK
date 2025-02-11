@@ -138,6 +138,8 @@ cpmakein:
 	@cp ./make.in $(modfolder)
 	@cp ./make.in $(dlfindfolder)
 	@cp ./make.in $(dftd3folder)
+	# use GCC Makefile template for LAPACK build
+	@cp $(lapackfolder)/INSTALL/make.inc.gfortran $(lapackfolder)/make.inc
 
 #================= common subroutine library ============================
 quick_subs:
@@ -275,6 +277,7 @@ clean:
 	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
 	@-rm -f $(libxcobjfolder)/*.o $(dlfindobjfolder)/*.o $(libxcdevobjfolder)/*.o \
 	$(dftd3objfolder)/*.o
+	@-rm -f $(lapackfolder)/make.inc
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(hipfolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
