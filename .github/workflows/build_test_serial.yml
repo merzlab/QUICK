@@ -19,7 +19,7 @@ jobs:
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran parallel
+          sudo apt-get -y install gfortran parallel git
       - name: 'Log Softare Environment Configuration'
         run: |
           echo "Ubuntu version:"

@@ -19,7 +19,7 @@ jobs:
       - name: 'Install Dependencies for MPI Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
+          sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev git
       - name: 'Log Softare Environment Configuration'
         run: |
           echo "Ubuntu version:"
