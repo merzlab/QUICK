@@ -13,7 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: 'Install Dependencies for Serial Version'
+      - name: 'Checkout Repository and Submodules, and Install Dependencies for Serial Version'
+        with:
+          submodules: recursive
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran parallel
@@ -58,7 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: 'Install Dependencies for Serial Version (CMake)'
+      - name: 'Checkout Repository and Submodules, and Install Dependencies for Serial Version (CMake)'
+        with:
+          submodules: recursive
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran cmake parallel
