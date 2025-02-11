@@ -12,10 +12,11 @@ jobs:
   build-and-test-mpi-legacy-configure-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: 'Checkout Repository and Submodules, and Install Dependencies for MPI Version'
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: 'Install Dependencies for MPI Version'
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
@@ -60,10 +61,11 @@ jobs:
   build-and-test-mpi-cmake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: 'Checkout Repository and Submodules, and Install Dependencies for MPI Version (CMake)'
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: 'Install Dependencies for MPI Version (CMake)'
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran cmake openmpi-bin openmpi-common libopenmpi-dev

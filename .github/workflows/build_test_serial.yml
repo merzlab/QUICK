@@ -12,10 +12,11 @@ jobs:
   build-and-test-serial-legacy-configure-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: 'Checkout Repository and Submodules, and Install Dependencies for Serial Version'
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran parallel
@@ -59,10 +60,11 @@ jobs:
   build-and-test-serial-cmake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: 'Checkout Repository and Submodules, and Install Dependencies for Serial Version (CMake)'
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
           sudo apt-get -y install gfortran cmake parallel
