@@ -149,10 +149,8 @@ aminstall: all
 	@if [ -d $(installfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
 	mv $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/serial/libblas-quick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libblas-quick.$(libsuffix) $(installfolder)/lib/libblas-quick.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \
 	mv $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/mpi/libblas-quick.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libblas-quick.$(libsuffix) $(installfolder)/lib/libblas-quick.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then mv $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(installfolder)/lib/libquick-cuda.$(libsuffix); \
 	mv $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then mv $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(installfolder)/lib/libquick-cudampi.$(libsuffix); \
@@ -239,7 +237,6 @@ makeinclean:
 	@-rm -f $(subfolder)/make.in
 	@-rm -f $(modfolder)/make.in
 	@-rm -f $(octfolder)/make.in
-	@-rm -f $(blasfolder)/make.in
 	@-rm -f $(cudafolder)/make.in
 	@-rm -f $(hipfolder)/make.in
 

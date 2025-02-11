@@ -458,23 +458,23 @@ fi
 # Function to check for mkl library and dependencies.
 check_mkl(){
   if [ -z $MKLROOT ]; then
-    echo "MKL is not loaded. Inbuilt diagonalizer will be used."
+    echo "MKL is not loaded. Built-in diagonalizer will be used."
     return 1
   fi
 
   MKLLIBPATH=$MKLROOT/lib/intel64
   if [ ! -e "$MKLLIBPATH/libmkl_intel_lp64.so" ]; then
-    echo "libmkl_intel_lp64.so cannot be found. Inbuilt diagonalizer will be used."
+    echo "libmkl_intel_lp64.so cannot be found. Built-in diagonalizer will be used."
     return 1
   fi
 
   if [ ! -e "$MKLLIBPATH/libmkl_intel_thread.so" ]; then
-    echo "libmkl_intel_thread.so cannot be found. Inbuilt diagonalizer will be used."
+    echo "libmkl_intel_thread.so cannot be found. Built-in diagonalizer will be used."
     return 1
   fi
 
   if [ ! -e "$MKLLIBPATH/libmkl_core.so" ]; then
-    echo "libmkl_core.so cannot be found. Inbuilt diagonalizer will be used."
+    echo "libmkl_core.so cannot be found. Built-in diagonalizer will be used."
     return 1
   fi
 
@@ -486,11 +486,11 @@ check_lapack(){
 
   if [ ! -z "$BLASROOT" ]; then
     if [ ! -e "$BLASROOT/lib/libopenblas.so" ]; then
-      echo "libopenblas.so cannot be found. Inbuilt diagonalizer will be used."
+      echo "libopenblas.so cannot be found. Built-in diagonalizer will be used."
       return 1
     fi
   else
-    echo "OPENBLAS is not loaded. Inbuilt diagonalizer will be used."
+    echo "OPENBLAS is not loaded. Built-in diagonalizer will be used."
     return 1
   fi
 }
@@ -650,8 +650,6 @@ fort_ext_lib_flags=''
 # set common folders
 libxcobjfolder=''
 libxcdevobjfolder=''
-blasobjfolder=''
-lapackoobjfolder=''
 dlfindobjfolder=''
 dftd3objfolder=''
 
@@ -896,18 +894,6 @@ for buildtype in $buildtypes; do
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
 
   fi
-
-  # create blasobj directory
-  if [ ! -d "$QUICK_HOME/build/common/cpu/blasobj" ]; then
-    mkdir -p "$QUICK_HOME/build/common/cpu/blasobj"
-  fi
-  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
-
-  # create lapackobj directory
-  if [ ! -d "$QUICK_HOME/build/common/cpu/lapackobj" ]; then
-    mkdir -p "$QUICK_HOME/build/common/cpu/lapackobj"
-  fi
-  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
   
   # create dlfindobj directory
   if [ ! -d "$QUICK_HOME/build/common/cpu/dlfindobj" ]; then
@@ -1468,7 +1454,7 @@ for buildtype in $buildtypes; do
     testtype='installtest'
   fi
 
-  # set libxcobj and blasobj folder
+  # set libxcobj folder
   if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
     libxcobjfolder="$QUICK_HOME/build/common/cpu/libxcobj"
     libxcdevobjfolder=""
@@ -1476,19 +1462,12 @@ for buildtype in $buildtypes; do
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   elif [ "$buildtype" = 'hip' -o "$buildtype" = 'hipmpi' ]; then
-    blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
     libxcobjfolder="$QUICK_HOME/build/common/gpu/libxcobj"
     libxcdevobjfolder="$QUICK_HOME/build/common/gpu/libxcdevobj"
   fi
  
-  # set blasobj folder
-  blasobjfolder="$QUICK_HOME/build/common/cpu/blasobj"
- 
   # set dlfindobj folder
   dlfindobjfolder="$QUICK_HOME/build/common/cpu/dlfindobj"
-
-  # set lapack folder
-  lapackobjfolder="$QUICK_HOME/build/common/cpu/lapackobj"
 
   #set dftd3obj folder
   dftd3objfolder="$QUICK_HOME/build/common/cpu/dftd3obj"
@@ -1523,7 +1502,6 @@ VB=$verbose
 # source directories
 srcfolder=$QUICK_HOME/src
 subfolder=$QUICK_HOME/src/subs
-blasfolder=$QUICK_HOME/src/blas
 lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
@@ -1545,8 +1523,6 @@ libxcdevobjfolder=$libxcdevobjfolder
 dlfindobjfolder=$dlfindobjfolder
 dftd3objfolder=$dftd3objfolder
 mainobjfolder=$QUICK_HOME/build/obj/$buildtype/main
-blasobjfolder=$blasobjfolder
-lapackobjfolder=$lapackobjfolder
 libfolder=$QUICK_HOME/build/lib/$buildtype
 inclfolder=$QUICK_HOME/build/include/$buildtype
 
@@ -1655,7 +1631,6 @@ installfolder=$quick_prefix
 
 # source directories
 subfolder=$QUICK_HOME/src/subs
-blasfolder=$QUICK_HOME/src/blas
 lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
