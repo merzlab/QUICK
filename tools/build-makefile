@@ -138,10 +138,6 @@ cpmakein:
 	@cp ./make.in $(modfolder)
 	@cp ./make.in $(dlfindfolder)
 	@cp ./make.in $(dftd3folder)
-	cp $(lapackfolder)/../lapack-patches/make.inc $(lapackfolder)/make.inc
-	git apply --directory=$(lapackfolder) $(lapackfolder)/../lapack-patches/blas-sharedlib.patch
-	git apply --directory=$(lapackfolder) $(lapackfolder)/../lapack-patches/lapack-sharedlib.patch
-	git status $(lapackfolder)
 
 #================= common subroutine library ============================
 quick_subs:
