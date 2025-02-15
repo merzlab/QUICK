@@ -12,7 +12,10 @@ jobs:
   build-and-test-serial-legacy-configure-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
@@ -39,6 +42,11 @@ jobs:
       - name: 'Setup Environment Variables for Running Tests'
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version (Make)'
         run: make fulltest
@@ -57,7 +65,10 @@ jobs:
   build-and-test-serial-cmake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
@@ -93,6 +104,11 @@ jobs:
       - name: 'Setup Environment Variables for Running Tests'
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version'
         run: |

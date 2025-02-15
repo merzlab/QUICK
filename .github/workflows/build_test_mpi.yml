@@ -12,7 +12,10 @@ jobs:
   build-and-test-mpi-legacy-configure-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Install Dependencies for MPI Version'
         run: |
           sudo apt-get update
@@ -39,8 +42,13 @@ jobs:
         run: make -j2 all install
       - name: 'Setup Environment Variables for Running Tests'
         run: |
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
       - name: 'Run Tests for MPI Version (Make) Using 2 MPI Processes'
         run: make fulltest
       - name: 'Archive Test Results for MPI Version'
@@ -58,7 +66,10 @@ jobs:
   build-and-test-mpi-cmake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository and Submodules'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Install Dependencies for MPI Version (CMake)'
         run: |
           sudo apt-get update
@@ -94,8 +105,13 @@ jobs:
           cmake --install .
       - name: 'Setup Environment Variables for Running Tests'
         run: |
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
       - name: 'Run Tests for MPI Version Using 2 MPI Processes'
         run: |
           cd install
