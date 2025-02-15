@@ -43,10 +43,10 @@ jobs:
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
           echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
-          echo "QUICK_BASIS=$QUICK_INSTALL/basis" >> "$GITHUB_ENV"
-          echo "PATH=$QUICK_INSTALL/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version (Make)'
         run: make fulltest
@@ -105,10 +105,10 @@ jobs:
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
           echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
-          echo "QUICK_BASIS=$QUICK_INSTALL/basis" >> "$GITHUB_ENV"
-          echo "PATH=$QUICK_INSTALL/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version'
         run: |
