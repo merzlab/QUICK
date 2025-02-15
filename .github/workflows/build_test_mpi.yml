@@ -19,7 +19,7 @@ jobs:
       - name: 'Install Dependencies for MPI Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev git
+          sudo apt-get -y install gfortran openmpi-bin openmpi-common libopenmpi-dev
       - name: 'Log Softare Environment Configuration'
         run: |
           echo "Ubuntu version:"
@@ -42,8 +42,13 @@ jobs:
         run: make -j2 all install
       - name: 'Setup Environment Variables for Running Tests'
         run: |
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$QUICK_INSTALL/basis" >> "$GITHUB_ENV"
+          echo "PATH=$QUICK_INSTALL/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
       - name: 'Run Tests for MPI Version (Make) Using 2 MPI Processes'
         run: make fulltest
       - name: 'Archive Test Results for MPI Version'
@@ -100,8 +105,13 @@ jobs:
           cmake --install .
       - name: 'Setup Environment Variables for Running Tests'
         run: |
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_INSTALL=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$QUICK_INSTALL/basis" >> "$GITHUB_ENV"
+          echo "PATH=$QUICK_INSTALL/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
       - name: 'Run Tests for MPI Version Using 2 MPI Processes'
         run: |
           cd install
