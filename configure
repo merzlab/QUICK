@@ -1276,6 +1276,14 @@ for buildtype in $buildtypes; do
   # set compiler specific flags
   case "$compiler" in
     gnu)
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
+		  cflags="$cflags -fopenmp"
+		fi
+      fi
+      ;;
     clang)
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
@@ -1446,6 +1454,8 @@ for buildtype in $buildtypes; do
   # set dlfind flags
   case "$compiler" in
     gnu)
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      ;;
     clang)
       fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
       ;;
