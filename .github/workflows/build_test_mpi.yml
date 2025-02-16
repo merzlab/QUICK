@@ -10,30 +10,47 @@ on:
 
 jobs:
   build-and-test-mpi-legacy-configure-make:
-    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '10'
+            c-compiler: 'gcc-10'
+            cxx-compiler: 'g++-10'
+            fortran-compiler: 'gfortran-10'
+            compiler-install: 'gcc-10 g++-10 gfortran-10'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '11'
+            c-compiler: 'gcc-11'
+            cxx-compiler: 'g++-11'
+            fortran-compiler: 'gfortran-11'
+            compiler-install: 'gcc-11 g++-11 gfortran-11'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '12'
             c-compiler: 'gcc-12'
             cxx-compiler: 'g++-12'
             fortran-compiler: 'gfortran-12'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '13'
             c-compiler: 'gcc-13'
             cxx-compiler: 'g++-13'
             fortran-compiler: 'gfortran-13'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '14'
             c-compiler: 'gcc-14'
             cxx-compiler: 'g++-14'
             fortran-compiler: 'gfortran-14'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-    name: Ubuntu 24.04 - MPI - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - MPI - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for MPI Version'
@@ -43,7 +60,7 @@ jobs:
             openmpi-bin openmpi-common libopenmpi-dev
       - name: 'Log Softare Environment Configuration'
         run: |
-          echo "Ubuntu version:"
+          echo "OS version:"
           cat /etc/os-release
           echo
           echo "Kernel version:"
@@ -93,42 +110,61 @@ jobs:
         run: |
           ls -R
   build-and-test-mpi-cmake:
-    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '10'
+            c-compiler: 'gcc-10'
+            cxx-compiler: 'g++-10'
+            fortran-compiler: 'gfortran-10'
+            compiler-install: 'gcc-10 g++-10 gfortran-10'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '11'
+            c-compiler: 'gcc-11'
+            cxx-compiler: 'g++-11'
+            fortran-compiler: 'gfortran-11'
+            compiler-install: 'gcc-11 g++-11 gfortran-11'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '12'
             c-compiler: 'gcc-12'
             cxx-compiler: 'g++-12'
             fortran-compiler: 'gfortran-12'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '13'
             c-compiler: 'gcc-13'
             cxx-compiler: 'g++-13'
             fortran-compiler: 'gfortran-13'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
-          - compiler-type: 'gnu'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
             compiler-version: '14'
             c-compiler: 'gcc-14'
             cxx-compiler: 'g++-14'
             fortran-compiler: 'gfortran-14'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-          - compiler-type: 'clang'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'clang'
             compiler-version: '17'
             c-compiler: 'clang-17'
             cxx-compiler: 'clang++-17'
             fortran-compiler: 'gfortran-13'
             compiler-install: 'clang-17 gfortran-13'
-          - compiler-type: 'clang'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'clang'
             compiler-version: '18'
             c-compiler: 'clang-18'
             cxx-compiler: 'clang++-18'
             fortran-compiler: 'gfortran-14'
             compiler-install: 'clang-18 gfortran-14'
-    name: Ubuntu 24.04 - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for MPI Version (CMake)'
@@ -138,7 +174,7 @@ jobs:
             cmake openmpi-bin openmpi-common libopenmpi-dev
       - name: 'Log Softare Environment Configuration (CMake)'
         run: |
-          echo "Ubuntu version:"
+          echo "OS version:"
           cat /etc/os-release
           echo
           echo "Kernel version:"
