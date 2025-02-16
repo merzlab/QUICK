@@ -62,25 +62,34 @@ jobs:
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
-        run: ./configure --serial --enablef --prefix $PWD/install ${{ matrix.compiler-type }}
+        run: |
+          ./configure --serial --enablef --prefix $PWD/install \
+            ${{ matrix.compiler-type }}
       - name: 'Build and Install Serial Version Using 2 Jobs'
-        run: make -j2 all install
+        run: |
+          make -j2 all install
       - name: 'Run Tests for Serial Version (Make)'
-        run: make fulltest
+        run: |
+          make fulltest
       - name: 'Upload Test Artifacts for Serial Version'
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: >
+            serial-legacy-configure-make-tests-
+              ${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
         uses: actions/download-artifact@v4
         with:
-          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: >
+            serial-legacy-configure-make-tests-
+            ${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
-        run: ls -R
+        run: |
+          ls -R
   build-and-test-serial-cmake:
     runs-on: ubuntu-24.04
     strategy:
@@ -152,7 +161,9 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=MANUAL -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_Fortran_COMPILER=$FC -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+          cmake .. -DCOMPILER=MANUAL -DCMAKE_C_COMPILER=$CC \
+            -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_Fortran_COMPILER=$FC \
+            -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
       - name: 'Build and Install Serial Version (CMake) Using 2 Jobs'
         run: |
           cd build
@@ -166,13 +177,17 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: >
+            serial-cmake-tests-${{ matrix.compiler-type }}-
+              ${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version (CMake)'
         uses: actions/download-artifact@v4
         with:
-          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: >
+            serial-cmake-tests-${{ matrix.compiler-type }}-
+              ${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
