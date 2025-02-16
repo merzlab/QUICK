@@ -33,6 +33,7 @@ jobs:
             cxx-compiler: 'g++-14'
             fortran-compiler: 'gfortran-14'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+    name: Ubuntu 24.04 - Serial - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version'
@@ -75,18 +76,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: >
-            serial-legacy-configure-make-tests-
-              ${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
         uses: actions/download-artifact@v4
         with:
-          name: >
-            serial-legacy-configure-make-tests-
-            ${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: |
           ls -R
@@ -126,12 +123,14 @@ jobs:
             cxx-compiler: 'clang++-18'
             fortran-compiler: 'gfortran-14'
             compiler-install: 'clang-18 gfortran-14'
+    name: Ubuntu 24.04 - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel
+          sudo apt-get -y install ${{ matrix.compiler-install }} \
+            cmake parallel
       - name: 'Log Softare Environment Configuration (CMake)'
         run: |
           echo "Ubuntu version:"
@@ -177,17 +176,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: >
-            serial-cmake-tests-${{ matrix.compiler-type }}-
-              ${{ matrix.compiler-version }}
+          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version (CMake)'
         uses: actions/download-artifact@v4
         with:
-          name: >
-            serial-cmake-tests-${{ matrix.compiler-type }}-
-              ${{ matrix.compiler-version }}
+          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
