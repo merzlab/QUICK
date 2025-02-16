@@ -50,7 +50,7 @@ jobs:
           ldd --version
           echo
           echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} matrix.compiler-version }} --version
+          ${{ matrix.fortran-compiler }} --version
           echo
           echo "GNU Parallel version:"
           parallel --version
