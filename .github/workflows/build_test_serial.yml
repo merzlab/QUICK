@@ -10,13 +10,17 @@ on:
 
 jobs:
   build-and-test-serial-legacy-configure-make:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler-version: [12, 13, 14]
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran parallel
+          sudo apt-get -y install gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }} gfortran-${{ matrix.compiler-version }} parallel
       - name: 'Log Softare Environment Configuration'
         run: |
           echo "Ubuntu version:"
@@ -28,18 +32,21 @@ jobs:
           ldd --version
           echo
           echo "GCC (gfortran) version:"
-          gfortran --version
+          gfortran-${{ matrix.compiler-version }} --version
           echo
           echo "GNU Parallel version:"
           parallel --version
+      - name: 'Setup Environment Variables for Building and Running Tests'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
+          echo "CC=gcc-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "CXX=g++-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "FC=gfortran-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: ./configure --serial --enablef --prefix $PWD/install gnu
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: make -j2 all install
-      - name: 'Setup Environment Variables for Running Tests'
-        run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
-          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version (Make)'
         run: make fulltest
       - name: 'Archive Test Results for Serial Version'
@@ -55,13 +62,17 @@ jobs:
       - name: 'Display Artifacts'
         run: ls -R
   build-and-test-serial-cmake:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler-version: [12, 13, 14]
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gfortran cmake parallel
+          sudo apt-get -y install gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }} gfortran-${{ matrix.compiler-version }} cmake parallel
       - name: 'Log Softare Environment Configuration (CMake)'
         run: |
           echo "Ubuntu version:"
@@ -73,27 +84,30 @@ jobs:
           ldd --version
           echo
           echo "GCC (gfortran) version:"
-          gfortran --version
+          gfortran-${{ matrix.compiler-version }} --version
           echo
           echo "CMake version:"
           cmake --version
           echo
           echo "GNU Parallel version:"
           parallel --version
+      - name: 'Setup Environment Variables for Building and Running Tests'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
+          echo "CC=gcc-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "CXX=g++-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "FC=gfortran-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version (CMake)'
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=GNU -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+          cmake .. -DCOMPILER=MANUAL -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_Fortran_COMPILER=$FC -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
       - name: 'Build and Install Serial Version (CMake) Using 2 Jobs'
         run: |
           cd build
           cmake --build . --parallel 2
           cmake --install .
-      - name: 'Setup Environment Variables for Running Tests'
-        run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
-          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
       - name: 'Run Tests for Serial Version'
         run: |
           cd install
