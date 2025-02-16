@@ -49,16 +49,18 @@ jobs:
         run: make -j2 all install
       - name: 'Run Tests for Serial Version (Make)'
         run: make fulltest
-      - name: 'Archive Test Results for Serial Version'
+      - name: 'Upload Test Artifacts for Serial Version'
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: format('serial-legacy-configure-make-tests-gcc-{0}', ${{ matrix.compiler-version }})
+          name: serial-legacy-configure-make-tests-gcc-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
-      - uses: actions/download-artifact@v4
+          compression-level: 6
+      - name: 'Download Test Artifacts for Serial Version'
+        uses: actions/download-artifact@v4
         with:
-          name: format('serial-legacy-configure-make-tests-gcc-{0}', ${{ matrix.compiler-version }})
+          name: serial-legacy-configure-make-tests-gcc-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
   build-and-test-serial-cmake:
@@ -112,15 +114,17 @@ jobs:
         run: |
           cd install
           ./runtest --serial --full
-      - name: 'Archive Test Results for Serial Version (CMake)'
+      - name: 'Upload Test Artifacts for Serial Version (CMake)'
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: format('serial-cmake-tests-gcc-{0}', ${{ matrix.compiler-version }})
+          name: serial-cmake-tests-gcc-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
-      - uses: actions/download-artifact@v4
+          compression-level: 6
+      - name: 'Download Test Artifacts for Serial Version (CMake)'
+        uses: actions/download-artifact@v4
         with:
-          name: format('serial-legacy-configure-make-tests-gcc-{0}', ${{ matrix.compiler-version }})
+          name: serial-cmake-tests-gcc-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
