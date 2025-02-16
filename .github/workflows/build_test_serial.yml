@@ -131,7 +131,7 @@ jobs:
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{ compiler-install }} cmake parallel
+          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel
       - name: 'Log Softare Environment Configuration (CMake)'
         run: |
           echo "Ubuntu version:"
