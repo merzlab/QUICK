@@ -194,17 +194,15 @@ case "$compiler" in
       if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='gcc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='g++'; else cxx="$CXX";fi
-      fort_search=$fort
-      cc_search=$cc
-      cxx_search=$cxx
     else
       if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
       if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
-      fort_search='gfortran'
-      cc_search='gcc'
-      cxx_search='g++'
     fi
+
+    fort_search=$fort
+    cc_search=$cc
+    cxx_search=$cxx
     ;;
 
   intel)
@@ -214,17 +212,15 @@ case "$compiler" in
       if [ -z "$FC" ]; then fort='ifort'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='icc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='icpc'; else cxx="$CXX";fi
-      fort_search=$fort
-      cc_search=$cc
-      cxx_search=$cxx
     else
       if [ -z "$MPIF90" ]; then fort='mpiifort'; else fort="$MPIF90";fi
       if [ -z "$MPICC" ]; then cc='mpiicc'; else cc="$MPICC";fi
       if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
-      fort_search='ifort'
-      cc_search='icc'
-      cxx_search='icpc'
     fi
+
+    fort_search=$fort
+    cc_search=$cc
+    cxx_search=$cxx
     ;;
 
   pgi)
@@ -234,17 +230,15 @@ case "$compiler" in
       if [ -z "$FC" ]; then fort='pgfortran'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='pgcc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='pgc++'; else cxx="$CXX";fi
-      fort_search=$fort
-      cc_search=$cc
-      cxx_search=$cxx
     else
       if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
       if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
-      fort_search='pgfortran'
-      cc_search='pgcc'
-      cxx_search='pgc++'
     fi
+
+    fort_search=$fort
+    cc_search=$cc
+    cxx_search=$cxx
     ;;
 
   nvidia)
@@ -259,17 +253,15 @@ case "$compiler" in
       if [ -z "$FC" ]; then fort='nvfortran'; else fort="$FC";fi
       if [ -z "$CC" ]; then cc='nvc'; else cc="$CC";fi
       if [ -z "$CXX" ]; then cxx='nvc++'; else cxx="$CXX";fi
-      fort_search=$fort
-      cc_search=$cc
-      cxx_search=$cxx
     else
       if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
       if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
-      fort_search='nvfortran'
-      cc_search='nvc'
-      cxx_search='nvc++'
     fi
+
+    fort_search=$fort
+    cc_search=$cc
+    cxx_search=$cxx
     ;;
 
   *)
