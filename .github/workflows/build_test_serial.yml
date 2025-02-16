@@ -14,13 +14,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler-version: [12, 13, 14]
+        include:
+          - compiler-type: 'gnu'
+            compiler-version: '12'
+            c-compiler: 'gcc-12'
+            cxx-compiler: 'g++-12'
+            fortran-compiler: 'gfortran-12'
+            compiler-install: 'gcc-12 g++-12 gfortran-12'
+          - compiler-type: 'gnu'
+            compiler-version: '13'
+            c-compiler: 'gcc-13'
+            cxx-compiler: 'g++-13'
+            fortran-compiler: 'gfortran-13'
+            compiler-install: 'gcc-13 g++-13 gfortran-13'
+          - compiler-type: 'gnu'
+            compiler-version: '14'
+            c-compiler: 'gcc-14'
+            cxx-compiler: 'g++-14'
+            fortran-compiler: 'gfortran-14'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }} gfortran-${{ matrix.compiler-version }} parallel
+          sudo apt-get -y install $${{ matrix.compiler-install }} parallel
       - name: 'Log Softare Environment Configuration'
         run: |
           echo "Ubuntu version:"
@@ -31,8 +49,8 @@ jobs:
           echo
           ldd --version
           echo
-          echo "GCC (gfortran) version:"
-          gfortran-${{ matrix.compiler-version }} --version
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} matrix.compiler-version }} --version
           echo
           echo "GNU Parallel version:"
           parallel --version
@@ -40,11 +58,11 @@ jobs:
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
-          echo "CC=gcc-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
-          echo "CXX=g++-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
-          echo "FC=gfortran-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
-        run: ./configure --serial --enablef --prefix $PWD/install gnu
+        run: ./configure --serial --enablef --prefix $PWD/install ${{ matrix.compiler-type }}
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: make -j2 all install
       - name: 'Run Tests for Serial Version (Make)'
@@ -53,14 +71,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: serial-legacy-configure-make-tests-gcc-${{ matrix.compiler-version }}
+          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
         uses: actions/download-artifact@v4
         with:
-          name: serial-legacy-configure-make-tests-gcc-${{ matrix.compiler-version }}
+          name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
   build-and-test-serial-cmake:
@@ -68,13 +86,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler-version: [12, 13, 14]
+        include:
+          - compiler-type: 'gnu'
+            compiler-version: '12'
+            c-compiler: 'gcc-12'
+            cxx-compiler: 'g++-12'
+            fortran-compiler: 'gfortran-12'
+            compiler-install: 'gcc-12 g++-12 gfortran-12'
+          - compiler-type: 'gnu'
+            compiler-version: '13'
+            c-compiler: 'gcc-13'
+            cxx-compiler: 'g++-13'
+            fortran-compiler: 'gfortran-13'
+            compiler-install: 'gcc-13 g++-13 gfortran-13'
+          - compiler-type: 'gnu'
+            compiler-version: '14'
+            c-compiler: 'gcc-14'
+            cxx-compiler: 'g++-14'
+            fortran-compiler: 'gfortran-14'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+          - compiler-type: 'clang'
+            compiler-version: '17'
+            c-compiler: 'clang-17'
+            cxx-compiler: 'clang++-17'
+            fortran-compiler: 'gfortran-13'
+            compiler-install: 'clang-17 gfortran-13'
+          - compiler-type: 'clang'
+            compiler-version: '18'
+            c-compiler: 'clang-18'
+            cxx-compiler: 'clang++-18'
+            fortran-compiler: 'gfortran-14'
+            compiler-install: 'clang-18 gfortran-14'
     steps:
       - uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
-          sudo apt-get -y install gcc-${{ matrix.compiler-version }} g++-${{ matrix.compiler-version }} gfortran-${{ matrix.compiler-version }} cmake parallel
+          sudo apt-get -y install ${{ compiler-install }} cmake parallel
       - name: 'Log Softare Environment Configuration (CMake)'
         run: |
           echo "Ubuntu version:"
@@ -85,8 +133,8 @@ jobs:
           echo
           ldd --version
           echo
-          echo "GCC (gfortran) version:"
-          gfortran-${{ matrix.compiler-version }} --version
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
           echo
           echo "CMake version:"
           cmake --version
@@ -97,9 +145,9 @@ jobs:
         run: |
           echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
-          echo "CC=gcc-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
-          echo "CXX=g++-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
-          echo "FC=gfortran-${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version (CMake)'
         run: |
           mkdir build
@@ -118,13 +166,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: serial-cmake-tests-gcc-${{ matrix.compiler-version }}
+          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version (CMake)'
         uses: actions/download-artifact@v4
         with:
-          name: serial-cmake-tests-gcc-${{ matrix.compiler-version }}
+          name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: ls -R
