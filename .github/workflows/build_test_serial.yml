@@ -1,5 +1,9 @@
 name: 'Build and Test QUICK Serial Version'
 
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     paths-ignore:
@@ -52,7 +56,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version'
         run: |
           sudo apt-get update
@@ -161,7 +166,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
-      - uses: actions/checkout@v4
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
       - name: 'Install Dependencies for Serial Version (CMake)'
         run: |
           sudo apt-get update
