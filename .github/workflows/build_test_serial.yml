@@ -58,11 +58,13 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Install Dependencies for Serial Version'
+      - name: 'Linux: Install Dependencies for Serial Version'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get -y install ${{ matrix.compiler-install }} parallel
-      - name: 'Log Softare Environment Configuration'
+      - name: 'Linux: Log Softare Environment Configuration'
+        if: runner.os == 'Linux'
         run: |
           echo "OS version:"
           cat /etc/os-release
@@ -99,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+          path: ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
@@ -168,12 +170,14 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Install Dependencies for Serial Version (CMake)'
+      - name: 'Linux: Install Dependencies for Serial Version (CMake)'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get -y install ${{ matrix.compiler-install }} \
             cmake parallel
-      - name: 'Log Softare Environment Configuration (CMake)'
+      - name: 'Linux: Log Softare Environment Configuration (CMake)'
+        if: runner.os == 'Linux'
         run: |
           echo "OS version:"
           cat /etc/os-release
@@ -219,7 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: /home/runner/work/QUICK/QUICK/install/test/runs/serial
+          path: ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version (CMake)'
