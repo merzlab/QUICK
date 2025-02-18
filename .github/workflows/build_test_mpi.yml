@@ -112,14 +112,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: |
           ls -R
@@ -252,14 +252,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version (CMake)'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
         run: |
           ls -R
