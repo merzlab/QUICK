@@ -58,6 +58,7 @@ module quick_method_module
         logical :: analHess =  .false. ! Analytical Hessian Matrix
         logical :: esp_charge =  .false.    ! ESP charge on atoms
         double precision :: espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
+        character(len=5) :: vdw_radii       ! Van der waals radius type
         logical :: esp_grid =  .false.      ! Electrostatic potential on a grid (ESP)
         logical :: efield_grid =  .false.   ! Electrostatic field (EFIELD)
         logical :: efg_grid =  .false.      ! Electrostatic field gradient (EFG)
@@ -231,6 +232,7 @@ module quick_method_module
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_charge,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%espgrid_spacing,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+!            call MPI_BCAST(self%vdw_radii,1,mpi_character,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -482,6 +484,17 @@ module quick_method_module
             if (self%esp_charge)then
               write(io,'(" ESP CHARGE CALCULATION")')
               write(io,'(" ESP grids are created at " F5.3 " A spacing ")') self%espgrid_spacing
+              if (self%vdw_radii == "BONDI")then
+                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                  "J. Phys. Chem. 1964, 68, 3, 441–451"
+              else if (self%vdw_radii == "TC")then
+                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                  "J. Chem. Theory Comput. 2024, 20, 17, 7469–7478"
+              else
+                call PrtErr(OUTFILEHANDLE, 'The keyword vdw_radii has unknown value. Please use either BONDI or TC.')
+                call quick_exit(OUTFILEHANDLE,1)
+                
+              end if
             end if
 
             if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
@@ -824,7 +837,7 @@ module quick_method_module
                     ierr=35
                 endif
             endif
-
+            CHECK_ERROR(ierr)
 
           ! Electrostatic Potential(ESP), Field (EF), Field Gradient (EFG) on a grid
            if (index(keyWD,'EFG_GRID').ne.0) then
@@ -844,12 +857,15 @@ module quick_method_module
                if (index(keyWD,'ESPGRID_SPACING').ne.0) then
                  call read(keywd,'ESPGRID_SPACING', self%espgrid_spacing)
                endif
+               if (index(keyWD,'VDW_RADII').ne.0) then
+                 call read(keywd,'VDW_RADII', tempstring)
+                 self%vdw_radii = trim(tempstring)
+               endif
            endif
         if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
             self%extgrid_angstrom=.true.
             self%ext_grid=.true.
         endif
-            CHECK_ERROR(ierr)
 
         end subroutine read_quick_method
 
@@ -895,6 +911,7 @@ module quick_method_module
             self%analHess =  .false.  ! Analytical Hessian Matrix
             self%esp_charge = .false.        ! ESP charge on atoms
             self%espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
+            self%vdw_radii = "BONDI"     ! Van der waals radius type
             self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
             self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
             self%efg_grid = .false.        ! Electric field gradient (EFG)

@@ -50,11 +50,11 @@ module quick_oeproperties_module
         call generate_MKS_surfaces()
       endif
 #ifdef MPIV
-        call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-        if(.not.master)then
-          allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
-        endif
-        call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      if(.not.master)then
+        allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+      endif
+      call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
 
       call compute_oeprop_grid(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz)

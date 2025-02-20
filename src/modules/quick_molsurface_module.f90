@@ -28,13 +28,38 @@ module quick_molsurface_module
 ! "Li", "Be",                                                              "B",  "C",  "N",  "O",  "F", "Ne",
 ! "Na", "Mg",                                                             "Al", "Si",  "P",  "S", "Cl", "Ar",
 !  "K", "Ca", "Sc", "Ti",  "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",
-!  ]
+! "Rb", "Sr",  "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te",  "I", "Xe",
+! "Cs", "Ba", "La", "Hf", "Ta",  "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rd",
+! "Fr", "Ra", "Ac", "Rf", "Db", "Sg", "Bh", "Bh", "Mt", "Ds", "Rg", "Cn"  "Nh", "Fl", "Mc", "Lv", "Ts", "Og",
+!  
+!  "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu",
+!  "Th", "Pa",  "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr",
+! ]
 
-! Merz-Kollman_vdw_radii = [ 
-! 1.20,                                                                                                 1.20,
-! 1.37, 1.45,                                                             1.50, 1.50, 1.40, 1.35, 1.30, 1.57,
-! 1.36, 1.24,                                                             1.17, 1.80, 1.75, 1.70, 0.00, 0.00,
-! 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+! Bondi_vdw_radii (J. Phys. Chem. 1964, 68, 3, 441–451) = [ 
+! 1.20,                                                                                                  1.40,
+! 1.82,   --,                                                                --, 1.70, 1.55, 1.52, 1.47, 1.54,
+! 2.27, 1.73,                                                                --, 2.10, 1.80, 1.80, 1.75, 1.88,
+! 2.75,   --,   --,   --,   --,   --,   --,   --,   --,  1.63, 1.40, 1.39, 1.87,   --, 1.85, 1.90, 1.85, 2.02,
+!   --,   --,   --,   --,   --,   --,   --,   --,   --,  1.63, 1.72, 1.58, 1.93, 2.17,   --, 2.06, 1.98, 2.16,
+!   --,   --,   --,   --,   --,   --,   --,   --,   --,  1.75, 1.66, 1.55, 1.96, 2.02,   --,   --,   --,   --,
+!   --,   --,   --,   --,   --,   --,   --,   --,   --,    --,   --,   --,   --,   --,   --,   --,   --,   --,
+!
+!   --,   --,   --,   --,   --,   --,   --,   --,   --,  --,   --,   --,   --,   --,
+!   --,   --, 1.86,   --,   --,   --,   --,   --,   --,  --,   --,   --,   --,   --,
+! ]
+
+! Tkatchenko_vdw_radii (J. Chem. Theory Comput. 2024, 20, 17, 7469–7478) = [ 
+! 1.67,                                                                                                  1.41,
+! 2.80, 2.27,                                                              2.08, 1.91, 1.80, 1.71, 1.63, 1.55,
+! 2.80, 2.48,                                                              2.41, 2.27, 2.14, 2.06, 1.98, 1.91,
+! 3.04, 2.79, 2.60, 2.61, 2.56, 2.54, 2.47, 2.44, 2.39,  2.36, 2.34, 2.28, 2.36, 2.29, 2.20, 2.19, 2.09, 2.02,
+! 3.08, 2.87, 2.79, 2.65, 2.60, 2.56, 2.52, 2.49, 2.46,  2.15, 2.39, 2.33, 2.45, 2.38, 2.31, 2.27, 2.23, 2.17,
+! 3.18, 3.01, 2.91, 2.62, 2.50, 2.47, 2.44, 2.41, 2.39,  2.35, 2.25, 2.23, 2.36, 2.34, 2.35, 2.32, 2.30, 2.24,
+! 3.08, 2.97, 2.89, 2.65, 2.30, 2.29, 2.27, 2.25, 2.24,  2.22, 2.22, 2.17, 2.19, 2.21, 2.48,   --, 2.51, 2.41,
+!
+! 2.89, 2.91, 2.90, 2.88, 2.86, 2.85, 2.78, 2.81, 2.80, 2.78, 2.76, 2.75, 2.73, 2.73,
+! 2.92, 2.77, 2.70, 2.77, 2.71, 2.71, 2.75, 2.69, 2.68, 2.67, 2.66, 2.64, 2.64, 3.08,
 ! ]
 
 !----------------------------------------------------------------------------!
@@ -98,19 +123,14 @@ module quick_molsurface_module
       RECORD_TIME(timer_end%TESPsurface)
       timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
 
-!      call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
-
-!      do i = 1, total_points
-!        write (iVdwSurfFile,'(2x,3(F14.10, 1x))') quick_molspec%vdwpointxyz(1,i)*BOHRS_TO_A, &
-!          quick_molspec%vdwpointxyz(2,i)*BOHRS_TO_A, quick_molspec%vdwpointxyz(3,i)*BOHRS_TO_A
-!      end do
-
    end subroutine generate_MKS_surfaces
 
   subroutine generate_vdW_surface(scale_factor,npoints,surface_points)
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, natom, xyz
     use quick_constants_module, only: PI, BOHRS_TO_A
+    use quick_exception_module, only: RaiseException
+    use quick_constants_module, only : symbol
 
     implicit none
 
@@ -120,11 +140,33 @@ module quick_molsurface_module
     integer :: i,j,k,ncircles,circle,npts,nphi
     double precision :: scale_factor,espgrid_spacing
     double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
-    double precision :: vdw_radii(16),atomic_vdw_radii(natom),xyz_sphere(3,4000)
+    double precision :: Bondi_vdw_radii(118), Tkatchenko_vdw_radii(118)
+    integer :: Bondi_atom_list(38)
+    double precision :: atomic_vdw_radii(natom),xyz_sphere(3,4000)
     double precision, intent(out) :: surface_points(3,natom*2000)
     double precision :: thresh
     logical :: proximal
-    data vdw_radii/1.2d0,1.2d0,1.37d0,1.45d0,1.5d0,1.5d0,1.4d0,1.35d0,1.3d0,1.57d0,1.36d0,1.24d0,1.17d0,1.8d0,1.75d0,1.7d0/
+    data Bondi_vdw_radii/ &
+    1.20d0,                                                                                                                1.40d0, &
+    1.82d0, 0.0d0,                                                                       0.0d0,1.70d0,1.55d0,1.52d0,1.47d0,1.54d0, &
+    2.27d0,1.73d0,                                                                       0.0d0,2.10d0,1.80d0,1.80d0,1.75d0,1.88d0, &
+    2.75d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0,1.63d0,1.40d0,1.39d0,1.87d0, 0.0d0,1.85d0,1.90d0,1.85d0,2.02d0, &
+     0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0,1.63d0,1.72d0,1.58d0,1.93d0,2.17d0, 0.0d0,2.06d0,1.98d0,2.16d0, &
+     0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, &
+     0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0,1.75d0,1.66d0,1.55d0,1.96d0,2.02d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, &
+     0.0d0,1.86d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, &
+     0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0/
+    data Tkatchenko_vdw_radii/ &
+    1.67d0,                                                                                                                1.41d0, &
+    2.80d0,2.27d0,                                                                      2.08d0,1.91d0,1.80d0,1.71d0,1.63d0,1.55d0, &
+    2.80d0,2.48d0,                                                                      2.41d0,2.27d0,2.14d0,2.06d0,1.98d0,1.91d0, &
+    3.04d0,2.79d0,2.60d0,2.61d0,2.56d0,2.54d0,2.47d0,2.44d0,2.39d0,2.36d0,2.34d0,2.28d0,2.36d0,2.29d0,2.20d0,2.19d0,2.09d0,2.02d0, &
+    3.08d0,2.87d0,2.79d0,2.65d0,2.60d0,2.56d0,2.52d0,2.49d0,2.46d0,2.15d0,2.39d0,2.33d0,2.45d0,2.38d0,2.31d0,2.27d0,2.23d0,2.17d0, &
+    3.18d0,3.01d0,2.91d0,2.89d0,2.91d0,2.90d0,2.88d0,2.86d0,2.85d0,2.78d0,2.81d0,2.80d0,2.78d0,2.76d0,2.75d0,2.73d0,2.73d0,2.62d0, &
+    2.50d0,2.47d0,2.44d0,2.41d0,2.39d0,2.35d0,2.25d0,2.23d0,2.36d0,2.34d0,2.35d0,2.32d0,2.30d0,2.24d0,3.08d0,2.97d0,2.89d0,2.92d0, &
+    2.77d0,2.70d0,2.77d0,2.71d0,2.71d0,2.75d0,2.69d0,2.68d0,2.67d0,2.66d0,2.64d0,2.64d0,3.08d0,2.65d0,2.30d0,2.29d0,2.27d0,2.25d0, &
+    2.24d0,2.22d0,2.22d0,2.17d0,2.19d0,2.21d0,2.48d0,0.0d0,2.51d0,2.41d0/
+    data Bondi_atom_list/1,2,3,6,7,8,9,10,11,12,14,15,16,17,18,19,28,29,30,31,33,34,35,36,46,47,48,49,50,52,53,54,78,79,80,81,82,92/
 
     ! grid size must be converted to atomic unit
     espgrid_spacing = quick_method%espgrid_spacing/BOHRS_TO_A
@@ -134,10 +176,33 @@ module quick_molsurface_module
     ! larger weight during fitting. We try to avoid this.
     thresh = espgrid_spacing/2.5
 
-    !  create an array of vanderwaals radii for atom. The radii are in atomic units. 
-    do i = 1, natom
-      atomic_vdw_radii(i) = vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
-    end do
+    !  create an array of vanderwaals radii for atom. The radii are in atomic units.
+    if (quick_method%vdw_radii == "BONDI")then
+      do i = 1, natom
+        ! checking if every atom has a corresponding Van der waals radius defined
+        if (any(int(quick_molspec%chg(i)) == Bondi_atom_list)) then 
+          atomic_vdw_radii(i) = Bondi_vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
+        else
+          do j = 1, natom
+            if (.not. any(int(quick_molspec%chg(j)) == Bondi_atom_list)) then
+              call PrtErr(OUTFILEHANDLE, symbol(quick_molspec%iattype(j))//" does not have available Bondi Van Der Waals radius.")
+            end if
+          end do
+          call PrtErr(OUTFILEHANDLE, 'Please use the keyword vdw_radii=TC to avoid this.')
+          call quick_exit(OUTFILEHANDLE,1)
+        endif
+      end do
+    else if (quick_method%vdw_radii == "TC")then
+      do i = 1, natom
+        ! Tkatchenko_vdw_radii does not have the data for Lv
+        if (int(quick_molspec%chg(i)) /= 116) then
+          atomic_vdw_radii(i) = Tkatchenko_vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
+        else
+          call PrtErr(OUTFILEHANDLE, 'The Van Der Waals radius of the element Lv is not available')
+          call quick_exit(OUTFILEHANDLE,1)
+        endif
+      end do
+    endif
 
     npoints = 0
 
