@@ -186,6 +186,21 @@ end subroutine dlf_global_real_sum
 
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_tasks_real_sum0(a,n)
+
+  use dlf_parameter_module, only: rk
+  implicit none
+
+  integer :: n
+  real(rk) :: a
+! **********************************************************************
+
+  return
+  
+end subroutine dlf_tasks_real_sum0
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_tasks_real_sum(a,n)
 
   use dlf_parameter_module, only: rk
@@ -198,6 +213,36 @@ subroutine dlf_tasks_real_sum(a,n)
   return
   
 end subroutine dlf_tasks_real_sum
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_tasks_real_sum2(a,n)
+
+  use dlf_parameter_module, only: rk
+  implicit none
+
+  integer :: n
+  real(rk), dimension(n,n) :: a
+! **********************************************************************
+
+  return
+  
+end subroutine dlf_tasks_real_sum2
+
+
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+subroutine dlf_tasks_real_sum3(a,n)
+
+  use dlf_parameter_module, only: rk
+  implicit none
+
+  integer :: n
+  real(rk), dimension(n,n,n) :: a
+! **********************************************************************
+
+  return
+  
+end subroutine dlf_tasks_real_sum3
 
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
