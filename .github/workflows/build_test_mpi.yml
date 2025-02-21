@@ -21,44 +21,44 @@ jobs:
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
             compiler-version: '10'
-            c-compiler: 'gcc-10'
-            cxx-compiler: 'g++-10'
-            fortran-compiler: 'gfortran-10'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
             compiler-version: '11'
-            c-compiler: 'gcc-11'
-            cxx-compiler: 'g++-11'
-            fortran-compiler: 'gfortran-11'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '12'
-            c-compiler: 'gcc-12'
-            cxx-compiler: 'g++-12'
-            fortran-compiler: 'gfortran-12'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '13'
-            c-compiler: 'gcc-13'
-            cxx-compiler: 'g++-13'
-            fortran-compiler: 'gfortran-13'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
             compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - MPI - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
@@ -71,6 +71,17 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install ${{ matrix.compiler-install }} \
             openmpi-bin openmpi-common libopenmpi-dev
+          which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
+          if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
+            sudo rm /usr/bin/${{ matrix.c-compiler }}
+            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
+              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+            fi
+          fi
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
@@ -129,111 +140,165 @@ jobs:
       matrix:
         include:
           - os: 'ubuntu-22.04'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '10'
-            c-compiler: 'gcc-10'
-            cxx-compiler: 'g++-10'
-            fortran-compiler: 'gfortran-10'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
           - os: 'ubuntu-22.04'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '11'
-            c-compiler: 'gcc-11'
-            cxx-compiler: 'g++-11'
-            fortran-compiler: 'gfortran-11'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
           - os: 'ubuntu-24.04'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '12'
-            c-compiler: 'gcc-12'
-            cxx-compiler: 'g++-12'
-            fortran-compiler: 'gfortran-12'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
           - os: 'ubuntu-24.04'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '13'
-            c-compiler: 'gcc-13'
-            cxx-compiler: 'g++-13'
-            fortran-compiler: 'gfortran-13'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
           - os: 'ubuntu-24.04'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
           - os: 'ubuntu-24.04'
-            compiler-type: 'clang'
+            compiler-type: 'CLANG'
             compiler-version: '17'
-            c-compiler: 'clang-17'
-            cxx-compiler: 'clang++-17'
-            fortran-compiler: 'gfortran-13'
-            compiler-install: 'clang-17 gfortran-13'
-          - os: 'ubuntu-24.04'
-            compiler-type: 'clang'
-            compiler-version: '18'
-            c-compiler: 'clang-18'
-            cxx-compiler: 'clang++-18'
-            fortran-compiler: 'gfortran-14'
-            compiler-install: 'clang-18 gfortran-14'
-          - os: 'ubuntu-24.04-arm'
-            compiler-type: 'gnu'
-            compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
-            compiler-install: 'gcc-14 g++-14 gfortran-14'
-          - os: 'ubuntu-24.04-arm'
-            compiler-type: 'clang'
-            compiler-version: '18'
-            c-compiler: 'clang-18'
-            cxx-compiler: 'clang++-18'
-            fortran-compiler: 'gfortran-14'
-            compiler-install: 'clang-18 gfortran-14'
-          - os: 'macos-13'
-            compiler-type: 'gnu'
-            compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
-            compiler-install: 'gcc@14'
-          - os: 'macos-13'
-            compiler-type: 'clang'
-            compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
-            fortran-compiler: 'gfortran-14'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-17 gfortran'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'CLANG'
+            compiler-version: '18'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-18 gfortran'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'CLANG'
+            compiler-version: '18'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-18 gfortran'
+          - os: 'macos-13'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc@14'
+          - os: 'macos-13'
+            compiler-type: 'CLANG'
+            compiler-version: '15'
+            fortran-compiler-version: '14'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'llvm@15 gcc@14'
           - os: 'macos-14'
-            compiler-type: 'gnu'
+            compiler-type: 'GNU'
             compiler-version: '14'
-            c-compiler: 'gcc-14'
-            cxx-compiler: 'g++-14'
-            fortran-compiler: 'gfortran-14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
             compiler-install: 'gcc@14'
           - os: 'macos-14'
-            compiler-type: 'clang'
+            compiler-type: 'CLANG'
             compiler-version: '15'
+            fortran-compiler-version: '14'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
-            fortran-compiler: 'gfortran-14'
+            fortran-compiler: 'gfortran'
             compiler-install: 'llvm@15 gcc@14'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
+      - name: 'Linux: Setup Environment Variables for Building and Running Tests'
+        if: runner.os == 'Linux'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+      - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
+        if: runner.os == 'macOS'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.os }} == 'macos-13' ]]; then
+            echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
+            echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
+            echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
+            echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
+          fi
       - name: 'Linux: Install Dependencies for MPI Version'
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get -y install ${{ matrix.compiler-install }} \
             cmake openmpi-bin openmpi-common libopenmpi-dev
+          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            sudo rm /usr/bin/${{ matrix.c-compiler }}
+            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+            fi
+          fi
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
           brew install ${{ matrix.compiler-install }} cmake open-mpi
+          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+              $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+              $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+            elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+            fi
+          fi
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
@@ -271,22 +336,11 @@ jobs:
           echo
           echo "CMake version:"
           cmake --version
-      - name: 'Setup Environment Variables for Running Tests'
-        run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
-          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure MPI Version'
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=MANUAL -DCMAKE_C_COMPILER=$CC \
-            -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_Fortran_COMPILER=$FC \
+          cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
             -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
