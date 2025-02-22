@@ -174,6 +174,35 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 endif()
 
 
+# IntelLLVM
+# --------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
+    set(OPT_CFLAGS -O3)
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
+    set(OPT_CXXFLAGS -O3)
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
+    set(OPT_FFLAGS -O3)
+
+    if(WARNINGS)
+	add_flags(Fortran "-warn all" "-warn nounused")
+	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
+		
+	if(NOT IFORT_CHECK_INTERFACES)
+	    # disable errors from type mismatches
+	    add_flags(Fortran -warn nointerfaces)
+	endif()
+    endif()		
+
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp")
+endif()
 
 
 # PGI, CRAY, CLANG: NOT SUPPORTED
