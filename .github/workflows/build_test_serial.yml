@@ -305,6 +305,9 @@ jobs:
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
           echo "OS version:"
           cat /etc/os-release
           echo
@@ -317,7 +320,6 @@ jobs:
           ${{ matrix.fortran-compiler }} --version
           echo
           if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            source /opt/intel/oneapi/setvars.sh
             echo "MKL install directory:"
             echo "${MKLROOT}"
             echo
