@@ -179,17 +179,18 @@ endif()
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
-    set(OPT_CFLAGS -O3)
+    set(OPT_CFLAGS -O2)
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
-    set(OPT_CXXFLAGS -O3)
+    set(OPT_CXXFLAGS -O2)
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
-    set(OPT_FFLAGS -O3)
+    set(CMAKE_Fortran_FLAGS "-fpp -diag-disable 8291")
+    set(OPT_FFLAGS -O2)
 
     if(WARNINGS)
 	add_flags(Fortran "-warn all" "-warn nounused")
@@ -200,8 +201,6 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
 	    add_flags(Fortran -warn nointerfaces)
 	endif()
     endif()		
-
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp")
 endif()
 
 
