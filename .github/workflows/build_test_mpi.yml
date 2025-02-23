@@ -188,6 +188,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+          - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2025.0.1'
             c-compiler: 'mpiicx'
