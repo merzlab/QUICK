@@ -28,9 +28,9 @@
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
-    use quick_cshell_eri_module, only: getEriPrecomputables
-    use quick_cshell_gradient_module, only: cshell_gradient
-    use quick_oshell_gradient_module, only: oshell_gradient
+    use quick_eri_cshell_module, only: getEriPrecomputables
+    use quick_grad_cshell_module, only: cshell_gradient
+    use quick_grad_oshell_module, only: oshell_gradient
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &

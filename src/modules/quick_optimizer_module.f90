@@ -33,9 +33,9 @@ contains
      use allmod
      use quick_gridpoints_module
      use quick_cutoff_module, only: schwarzoff
-     use quick_cshell_eri_module, only: getEriPrecomputables
-     use quick_cshell_gradient_module, only: scf_gradient
-     use quick_oshell_gradient_module, only: uscf_gradient
+     use quick_eri_cshell_module, only: getEriPrecomputables
+     use quick_grad_cshell_module, only: scf_gradient
+     use quick_grad_oshell_module, only: uscf_gradient
      use quick_exception_module
      use quick_molden_module, only: quick_molden
 #ifdef MPIV

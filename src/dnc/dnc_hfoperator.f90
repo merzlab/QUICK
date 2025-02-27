@@ -220,7 +220,7 @@ subroutine hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
     use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEriEnergy
+   use quick_eri_cshell_module, only: getCshellEriEnergy
    implicit double precision(a-h,o-z)
 
    double precision cutoffTest,testtmp,oneElecO(nbasis,nbasis)
@@ -297,7 +297,7 @@ subroutine mpi_hfoperatordc(oneElecO)
    use allmod
    use quick_gaussian_class_module
    use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEriEnergy
+   use quick_eri_cshell_module, only: getCshellEriEnergy
    use mpi
    implicit double precision(a-h,o-z)
 
