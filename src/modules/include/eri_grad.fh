@@ -20,9 +20,9 @@
 #include "util.fh"
 
 #ifdef OSHELL
-module quick_oshell_eri_grad_module
+module quick_eri_grad_oshell_module
 #else
-module quick_cshell_eri_grad_module
+module quick_eri_grad_cshell_module
 #endif
 
    implicit double precision(a-h,o-z)
@@ -769,7 +769,7 @@ end subroutine iclass_grad_cshell
 #endif
 
 #ifdef OSHELL
-end module quick_oshell_eri_grad_module
+end module quick_eri_grad_oshell_module
 #else
-end module quick_cshell_eri_grad_module
+end module quick_eri_grad_cshell_module
 #endif

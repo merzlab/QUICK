@@ -46,7 +46,7 @@ end subroutine calchessian
 
 subroutine fdhessian(failed)
   use allmod
-  use quick_cshell_gradient_module, only: cshell_gradient
+  use quick_grad_cshell_module, only: cshell_gradient
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)

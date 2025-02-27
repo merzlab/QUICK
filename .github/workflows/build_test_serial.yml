@@ -182,6 +182,20 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'INTELLLVM'
+            compiler-version: '2024.2.1'
+            c-compiler: 'icx'
+            cxx-compiler: 'icpx'
+            fortran-compiler: 'ifx'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'INTELLLVM'
+            compiler-version: '2025.0.1'
+            c-compiler: 'icx'
+            cxx-compiler: 'icpx'
+            fortran-compiler: 'ifx'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -258,6 +272,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            sudo apt install -y gpg-agent wget
+            wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+              | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+            echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+              | sudo tee /etc/apt/sources.list.d/oneAPI.list
+            sudo apt update
+          fi
           sudo apt-get -y install ${{ matrix.compiler-install }} \
             cmake parallel
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
@@ -290,6 +312,9 @@ jobs:
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
           echo "OS version:"
           cat /etc/os-release
           echo
@@ -301,6 +326,11 @@ jobs:
           echo "Fortran compiler version:"
           ${{ matrix.fortran-compiler }} --version
           echo
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            echo "MKL install directory:"
+            echo "${MKLROOT}"
+            echo
+          fi
           echo "CMake version:"
           cmake --version
           echo
@@ -327,15 +357,28 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-            -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+            cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
+              -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE
+          else
+            cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
+              -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+          fi
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
           cd build
           cmake --build . --parallel 2
           cmake --install .
       - name: 'Run Tests for Serial Version'
         run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
           cd install
           ./runtest --serial --full
       - name: 'Upload Test Artifacts for Serial Version'

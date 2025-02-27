@@ -302,11 +302,10 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use allmod
   use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
-  use quick_cshell_gradient_module, only: scf_gradient
   use quick_cutoff_module, only: schwarzoff
-  use quick_cshell_eri_module, only: getEriPrecomputables
-  use quick_cshell_gradient_module, only: scf_gradient
-  use quick_oshell_gradient_module, only: uscf_gradient
+  use quick_eri_cshell_module, only: getEriPrecomputables
+  use quick_grad_cshell_module, only: scf_gradient
+  use quick_grad_oshell_module, only: uscf_gradient
   use quick_method_module,only: quick_method
   use quick_exception_module, only: RaiseException 
 #ifdef MPIV
@@ -413,7 +412,7 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
   use driver_parameter_module
   use dlf_parameter_module
 !  use allmod
-!  use quick_cshell_gradient_module, only: cshell_gradient
+!  use quick_grad_cshell_module, only: cshell_gradient
   !use vib_pot
   implicit none
   integer   ,intent(in)    :: nvar

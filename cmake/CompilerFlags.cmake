@@ -349,7 +349,7 @@ endif()
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
 	set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
-	set(OPT_CFLAGS -ipo -O3)
+	set(OPT_CFLAGS -O3)
 		
 	#  How flags get set for optimization depend on whether we have a MIC processor,
     #  the version of Intel compiler we have, and whether we are cross-compiling
@@ -385,7 +385,7 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
 		set(CMAKE_Fortran_FLAGS_DEBUG "/Zi")
 	else()
 		set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
-		set(OPT_FFLAGS -ipo -O3)
+		set(OPT_FFLAGS -O3)
 		
 		if(SSE)
 			if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 11 OR ${CMAKE_Fortran_COMPILER_VERSION} VERSION_EQUAL 11)

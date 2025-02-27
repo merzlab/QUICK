@@ -113,7 +113,7 @@ end subroutine gradient
 
 subroutine scf_gradient
    use allmod
-   use quick_gradient_module
+   use quick_grad_cshell_module
 #ifdef MPIV
    use mpi
 #endif
@@ -601,7 +601,7 @@ end subroutine get_kinetic_grad
 subroutine get_electron_replusion_grad
 
    use allmod
-   use quick_gradient_module
+   use quick_grad_cshell_module
    use quick_cutoff_module, only: cshell_dnscreen
 #ifdef MPIV
    use mpi
