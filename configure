@@ -76,7 +76,7 @@ echo  "
                      mirp and dependency installation directories. These paths must 
                      contain lib and include directories.
 
-  Supported compilers are: gnu, intel, pgi, nvidia
+  Supported compilers are: gnu, intel, pgi, clang, nvidia
 
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:
@@ -200,9 +200,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='gfortran'
-      cc_search='gcc'
-      cxx_search='g++'
+    fort_search='gcc'
+    cc_search='gcc'
+    cxx_search='gcc'
     ;;
 
   intel)
@@ -218,9 +218,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='ifort'
-      cc_search='icc'
-      cxx_search='icpc'
+    fort_search='ifort'
+    cc_search='icc'
+    cxx_search='icpc'
     ;;
 
   pgi)
@@ -236,9 +236,27 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='pgfortran'
-      cc_search='pgcc'
-      cxx_search='pgc++'
+    fort_search='pgfortran'
+    cc_search='pgcc'
+    cxx_search='pgc++'
+    ;;
+
+  clang)
+    echo "Requested compiler: Clang."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ] && [ "$hipmpi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='clang'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='clang++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+    fort_search='gcc'
+    cc_search='clang'
+    cxx_search='clang'
     ;;
 
   nvidia)
@@ -259,9 +277,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='nvfortran'
-      cc_search='nvc'
-      cxx_search='nvc++'
+    fort_search='nvfortran'
+    cc_search='nvc'
+    cxx_search='nvc++'
     ;;
 
   *)
@@ -716,6 +734,7 @@ while [ $# -gt 0 ]; do
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     pgi)           compiler='pgi';;
+    clang)         compiler='clang';;
     nvidia)        compiler='nvidia';;
     -h| -H| -help| --help) print_help;;
      *)  echo  "Error: $1 is an unknown flag."
@@ -1195,7 +1214,7 @@ if [ "$debug" = 'yes' ]; then
   blas_opt_flags='-O0'
 
   case "$compiler" in
-    gnu | pgi | nvidia)
+    gnu | pgi | clang | nvidia)
       fort_debug_flags='-g -DDEBUG -DDEBUGTIME'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
@@ -1257,6 +1276,15 @@ for buildtype in $buildtypes; do
   # set compiler specific flags
   case "$compiler" in
     gnu)
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
+		  cflags="$cflags -fopenmp"
+		fi
+      fi
+      ;;
+    clang)
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
@@ -1426,6 +1454,9 @@ for buildtype in $buildtypes; do
   # set dlfind flags
   case "$compiler" in
     gnu)
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      ;;
+    clang)
       fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
       ;;
     intel|pgi|nvidia)
