@@ -36,6 +36,7 @@ void _gpuEventDestroy(cudaEvent_t, const char * const, int);
 void _gpuEventElapsedTime(float *, cudaEvent_t, cudaEvent_t, const char * const, int);
 void _gpuEventRecord(cudaEvent_t, cudaStream_t, const char * const, int);
 void _gpuEventSynchronize(cudaEvent_t, const char * const, int);
+void _gpuDeviceSynchronize(const char * const, int);
 
 #define gpuGetDeviceCount(c) _gpuGetDeviceCount((c), __FILE__, __LINE__);
 #define gpuSetDevice(d) _gpuSetDevice((d), __FILE__, __LINE__);
@@ -57,6 +58,7 @@ void _gpuEventSynchronize(cudaEvent_t, const char * const, int);
 #define gpuEventElapsedTime(t, s, e) _gpuEventElapsedTime((t), (s), (e), __FILE__, __LINE__);
 #define gpuEventRecord(e, s) _gpuEventRecord((e), (s), __FILE__, __LINE__);
 #define gpuEventSynchronize(e) _gpuEventSynchronize((e), __FILE__, __LINE__);
+#define gpuDeviceSynchronize() _gpuDeviceSynchronize(__FILE__, __LINE__);
 
 
 #define PRINTERROR(err, s) \

@@ -161,6 +161,9 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
 #else
         gpu->grad->Download();
 #endif
+    } else {
+        /* sync to wait for kernel completion for CPU-side timers */
+        gpuDeviceSynchronize( );
     }
 
     if (gpu -> gpu_sim.method == HF) {

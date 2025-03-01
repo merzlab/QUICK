@@ -1005,3 +1005,44 @@ void _gpuEventSynchronize(hipEvent_t event, const char * const filename, int lin
 #endif
     }
 }
+
+
+/* Safe wrapper around hipDeviceSynchronize
+ *
+ * filename: NULL-terminated source filename where function call originated
+ * line: line of source file where function call originated
+ */
+void _gpuDeviceSynchronize(const char * const filename, int line)
+{
+#if defined(MPIV_GPU)
+    int rank;
+#endif
+    hipError_t ret;
+
+    ret = hipDeviceSynchronize();
+
+    if (ret != hipSuccess)
+    {
+#if defined(MPIV_GPU)
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+        const char *str = hipGetErrorString(ret);
+
+        fprintf(stderr, "[ERROR] GPU error: hipDeviceSynchronize failure\n");
+#if defined(MPIV_GPU)
+        fprintf(stderr, "  [INFO] At line %d in file %.*s on MPI processor %d\n",
+                line, (int) strlen(filename), filename, rank);
+#else
+        fprintf(stderr, "  [INFO] At line %d in file %.*s\n",
+                line, (int) strlen(filename), filename);
+#endif
+        fprintf(stderr, "  [INFO] Error code: %d\n", ret);
+        fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
+
+#if defined(MPIV_GPU)
+        MPI_Abort(MPI_COMM_WORLD, 1);
+#else
+        exit(1);
+#endif
+    }
+}
