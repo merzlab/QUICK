@@ -70,10 +70,10 @@ subroutine get1e(deltaO)
 #endif
 
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   
    implicit double precision(a-h,o-z)
+
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
 
@@ -437,9 +437,10 @@ end subroutine attrashell
      use quick_overlap_module, only: opf, overlap
      !    use xiaoconstants
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit double precision(a-h,o-z)
+
      dimension aux(0:20)
      double precision AA(3),BB(3),CC(3),PP(3)
      common /xiaoattra/attra,aux,AA,BB,CC,PP,g

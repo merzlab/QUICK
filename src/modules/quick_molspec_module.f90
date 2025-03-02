@@ -244,7 +244,7 @@ contains
    subroutine broadcast_quick_molspec(self,ierr)
       use quick_mpi_module
       use quick_exception_module
-      use mpi
+      use mpi_f08
 
       implicit none
       type (quick_molspec_type) self

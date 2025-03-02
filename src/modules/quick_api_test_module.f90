@@ -103,7 +103,7 @@ contains
   ! initialize mpi library and save mpirank and mpisize
   subroutine mpi_initialize(mpisize, mpirank, master, mpierror)
 
-    use mpi
+    use mpi_f08
     implicit none
 
     integer, intent(inout) :: mpisize, mpirank, mpierror
@@ -143,7 +143,7 @@ contains
 
   subroutine mpi_exit
 
-    use mpi
+    use mpi_f08
     implicit none
     integer :: mpierror
 

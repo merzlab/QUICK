@@ -141,9 +141,8 @@ contains
 #endif
 #endif
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
-
      implicit none
   
      ! variable inputed to return

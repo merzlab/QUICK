@@ -38,9 +38,8 @@ contains
      use quick_oshell_eri_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only:get1eEnergy, get1e
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
-  
      implicit none
   
   !   double precision oneElecO(nbasis,nbasis)
@@ -282,7 +281,7 @@ contains
      use xc_f90_types_m
      use xc_f90_lib_m
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit none
   

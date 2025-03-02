@@ -76,7 +76,7 @@ subroutine get_eri_precomputables
 
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
    implicit none
 
