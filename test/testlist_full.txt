@@ -167,7 +167,8 @@ opt_caffeine_b3lyp_3-21g            #Caffeine: DFT B3LYP DL-FIND geometry optimi
 opt_c2h5rad_uhf_631gss              #Ethyl radical: UHF DL-FIND geometry optimization test: s, p and d basis functions
 opt_c2hrad_ub3lyp_ccpvdz            #Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test: s, p and d basis functions
 api_water_rhf_631g                  #Water: API test
-
+esp_charge_acetone_b3lyp_def2svp    #ESP test: Tests both ESP charges and ESP on van der Waals surface.
+esp_grid_acetone_b3lyp_def2svp      #ESP test: Tests ESP calculation on external points
 
 
 
