@@ -1,0 +1,3 @@
+$DATA=wr_acetate_xyz_checkpoint.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=6-31g* denserms=1.0e-6 read_coord
+

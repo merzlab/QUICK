@@ -57,6 +57,7 @@ test_ene='no'
 test_grad='no'
 test_opt='no'
 test_api='no'
+test_wr='no'
 uspec_test='no'
 test_length='short'
 
@@ -110,6 +111,7 @@ print_help()
       --grad                Run only gradient tests
       --opt                 Run only geometry optimization tests
       --api                 Run only api tests
+      --wr                  Run only read-write tests
       --full                Run a large set of tests (Default: no)
       --nolog               Disable writing output into runtest.log (Default: no)
                                                                             
@@ -317,6 +319,7 @@ get_total_tests()
   tot_grad_tests=0 
   tot_opt_tests=0 
   tot_api_tests=0 
+  tot_wr_tests=0 
   total_tests=0 
 
   if [ "$1" = 'yes' ]; then
@@ -354,6 +357,15 @@ get_total_tests()
     total_tests="${#tests[@]}"
     tot_api_tests=$(($total_tests-$tot_api_tests))
   fi
+
+  if [ "$5" = 'yes' ]; then
+    tot_wr_tests="${#tests[@]}"
+    tests+=(`grep "^wr_" "$test_list" | awk '{print $1}'`)
+    readarray -t -O "${#test_names[@]}" test_names <<< \
+              "$(grep "^wr_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
+    total_tests="${#tests[@]}"
+    tot_wr_tests=$(($total_tests-$tot_wr_tests))
+  fi
 }
 
 
@@ -383,6 +395,11 @@ set_test()
   fi
 
   cp "$2/saved/$1.out" "$1.ref.out"
+
+  if [ `echo "$1" | grep '^wr_' | wc -l` -eq 1 ]; then
+    cp "$2/$1_read.in" ./
+    cp "$2/saved/$1_read.out" "$1_read.ref.out"
+  fi
 }
 
 
@@ -399,8 +416,14 @@ run_test()
   # Run the test case
   if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
     eval "$DO_PARALLEL $qbindir/$qexe $1.in" > /dev/null 2>&1
+    if [ `echo "$1" | grep '^wr_' | wc -l` -eq 1 ]; then
+      eval "$DO_PARALLEL $qbindir/$qexe $1_read.in" > /dev/null 2>&1
+    fi
   else
     "$qbindir/$qexe" "$1.in" > /dev/null 2>&1
+    if [ `echo "$1" | grep '^wr_' | wc -l` -eq 1 ]; then
+      "$qbindir/$qexe" "$1_read.in" > /dev/null 2>&1
+    fi
   fi
 
   if [ "$?" -ne 0 ] && [ `check_f_error $1` -eq 0 ]; then
@@ -575,6 +598,37 @@ run_api_test()
 }
 
 
+# wrapper function for testing reading and writing checkpoint files.
+#
+# arguments:
+#   $1: test
+#   $2: test name
+#   $3: test number for this test
+#   $4: total number of tests
+#   $5: directory containing test files and scripts
+#   $6: log file
+#   $7: job slot (GNU parallel) (1-based indexing)
+run_wr_test()
+{
+  set_test "$1" "$5" "$7"
+  run_test "$1" "$2" "$3" "$4" "$6"
+  lock_file "$6"
+  echo "Running test $3 of $4" | tee -a "$6"
+  echo "$2" | tee -a "$6"
+  if [ `check_f_error $1` -eq 0 ]; then
+    check_energy "$1" "$5" "$6"
+    check_energy "$1_read" "$5" "$6"
+    echo "" | tee -a "$6"
+  else
+    echo "SKIPPED." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  fi
+  unlock_file "$6"
+  clean_up "$1"
+}
+
+
 # check electronic, nuclear, and total energy output from test.
 #
 # arguments:
@@ -645,6 +699,7 @@ check_dipole()
 clean_up()
 {
   rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt
+  rm -f $1_read.ref.out $1_read.in $1_read.*ene $1_read.*opt
 }
 
 
@@ -667,16 +722,18 @@ print_summary()
     total_grad=0
     total_opt=0
     total_api=0
+    total_wr=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
     failed_api=0
+    failed_wr=0
  
     # set testlist
     set_qexe_testlist "$buildtype"
  
     # get the number of tests to run
-    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api"
+    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_wr"
  
     # grab stuff from temporary log files
     sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/.quick.${buildtype}.runtest.log > .quick.runtest.${buildtype}.summary.tmp1
@@ -710,12 +767,17 @@ print_summary()
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
         fi
+      elif [ `sed -n '/WR test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+        total_wr=$(($total_wr+1))
+        if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_wr=$(($failed_wr+1))
+        fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api))
+    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api+$failed_wr))
 
     # update cumulative failed tests too
     ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
@@ -725,6 +787,7 @@ print_summary()
     echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    WR tests: $failed_wr/$total_wr (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
@@ -774,6 +837,7 @@ while [ $# -gt 0 ]; do
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
     --api)         test_api='yes';uspec_test='yes';;
+    --wr)          test_wr='yes';uspec_test='yes';;
     --full)        test_length='full';;
     --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
@@ -1001,7 +1065,7 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   #       utilizes a export and eval approach for string representation of shell functions)
   export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
-	  check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
+	  run_wr_test check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1024,6 +1088,7 @@ if [ "$uspec_test" = 'no' ]; then
   test_grad='yes'
   test_opt='yes'
   test_api='yes'
+  test_wr='yes'
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1042,7 +1107,7 @@ for buildtype in $buildtypes; do
   set_qexe_testlist "$buildtype"
 
   # get the number of tests to run
-  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api"
+  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_wr"
 
   cd "$testdir/runs/$buildtype"
 
@@ -1118,6 +1183,23 @@ for buildtype in $buildtypes; do
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_api_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_api_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_api_tests}" \
+	      ::: `seq $tc_start $tc_end`
+    fi
+  fi
+
+  # Run wr tests
+  if [ "$test_wr" = 'yes' ]; then
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_wr_tests))
+    if [ $has_parallel = 'no' ]; then
+      for tc in `seq $tc_start $tc_end`; do
+        run_wr_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+      done
+    elif [ $has_parallel = 'yes' ]; then
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_wr_test {1} {2} {3} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_wr_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_wr_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
   fi

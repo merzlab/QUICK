@@ -26,7 +26,7 @@ subroutine wrtrestart
 
   ! The purpose of this routine is to write out an input file based
   ! on the result of a previous calculation.  Thus the restart file
-  ! should be the same as the input file, except gifferent geometry.
+  ! should be the same as the input file, except different geometry.
 
   open(infile,file=infilename,status='old')
   open(irstfile,file=rstfilename,status='unknown')
