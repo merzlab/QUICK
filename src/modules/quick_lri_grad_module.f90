@@ -51,7 +51,7 @@ contains
     use quick_params_module
     use quick_scratch_module
     use quick_calculated_module
-    use quick_cshell_eri_module
+    use quick_eri_cshell_module
     
     implicit none
     
