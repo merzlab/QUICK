@@ -110,7 +110,7 @@ subroutine get1e(deltaO)
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eV)
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
          else
@@ -196,7 +196,7 @@ subroutine get1e(deltaO)
       !-----------------------------------------------------------------
       RECORD_TIME(timer_begin%T1eV)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
       else

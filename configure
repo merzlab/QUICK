@@ -1334,7 +1334,7 @@ for buildtype in $buildtypes; do
 
     if [ "$enablef" = 'yes' ]; then
       echo "F functions will be compiled in the $buildtype version."
-      cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
+      cuda_incl_flags="$cuda_incl_flags -DGPU_SPDF"
     fi
 
     # set cew flag for nvcc
@@ -1359,7 +1359,7 @@ for buildtype in $buildtypes; do
 
     if [ "$enablef" = 'yes' ]; then
       echo "F functions will be compiled in the $buildtype version."
-      hip_incl_flags="$hip_incl_flags -DHIP_SPDF"
+      hip_incl_flags="$hip_incl_flags -DGPU_SPDF"
     fi
 
   fi
@@ -1373,31 +1373,31 @@ for buildtype in $buildtypes; do
 
   elif [ "$buildtype" = 'cuda' ]; then
 
-    fort_flags="$fort_flags -DCUDA"
-    cc_flags="$cc_flags -DCUDA"
-    cxx_flags="$cxx_flags -DCUDA"
-    cuda_incl_flags="$cuda_incl_flags -DCUDA"
+    fort_flags="$fort_flags -DGPU -DCUDA"
+    cc_flags="$cc_flags -DGPU -DCUDA"
+    cxx_flags="$cxx_flags -DGPU -DCUDA"
+    cuda_incl_flags="$cuda_incl_flags -DGPU -DCUDA"
 
   elif [ "$buildtype" = 'cudampi' ]; then
 
-    fort_flags="$fort_flags -DMPIV -DCUDA_MPIV"
-    cc_flags="$cc_flags -DMPIV -DCUDA_MPIV"
-    cxx_flags="$cxx_flags -DMPIV -DCUDA_MPIV"
-    cuda_incl_flags="$cuda_incl_flags -DMPIV -DCUDA_MPIV"
+    fort_flags="$fort_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cc_flags="$cc_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cuda_incl_flags="$cuda_incl_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
 
   elif [ "$buildtype" = 'hip' ]; then
 
-    fort_flags="$fort_flags -DHIP"
-    cc_flags="$cc_flags -DHIP"
-    cxx_flags="$cxx_flags -DHIP"
-    hip_incl_flags="$hip_incl_flags -DHIP"
+    fort_flags="$fort_flags -DGPU -DHIP"
+    cc_flags="$cc_flags -DGPU -DHIP"
+    cxx_flags="$cxx_flags -DGPU -DHIP"
+    hip_incl_flags="$hip_incl_flags -DGPU -DHIP"
 
   elif [ "$buildtype" = 'hipmpi' ]; then
 
-    fort_flags="$fort_flags -DMPIV -DHIP_MPIV"
-    cc_flags="$cc_flags -DMPIV -DHIP_MPIV"
-    cxx_flags="$cxx_flags -DMPIV -DHIP_MPIV"
-    hip_incl_flags="$hip_incl_flags -DMPIV -DHIP_MPIV"
+    fort_flags="$fort_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    cc_flags="$cc_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    hip_incl_flags="$hip_incl_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
 
   fi
 
@@ -1469,13 +1469,13 @@ for buildtype in $buildtypes; do
   if [ "$buildtype" = 'mpi' ]; then
     fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV"
   elif [ "$buildtype" = 'cuda' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DCUDA"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DGPU -DCUDA"
   elif [ "$buildtype" = 'cudampi' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DCUDA_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
   elif [ "$buildtype" = 'hip' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DHIP"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DGPU -DHIP"
   elif [ "$buildtype" = 'hipmpi' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DHIP_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
   fi
 
   # set the installer

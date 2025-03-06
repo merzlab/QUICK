@@ -11,7 +11,7 @@ module quick_cew_module
   public :: quick_cew_grad
   public :: print
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   public :: upload
   public :: delete
   public :: cew_accdens
@@ -67,7 +67,7 @@ module quick_cew_module
      end subroutine cew_accdens
   end interface
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   ! MM: interface for GPU uploading of cew info
   interface upload
     module procedure upload_cew
@@ -296,8 +296,7 @@ contains
     !        where (r|a0) = exp( - quick_cew%zeta * |r-Ra|^2 )
 
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
     if(.not. allocated(chgs)) allocate(chgs(quick_molspec%natom+quick_molspec%nextatom))
 
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
@@ -396,7 +395,7 @@ contains
     ! and negate it.
     !
 
-#if !defined (CUDA) && !defined (CUDA_MPIV) && !defined (HIP) && !defined (HIP_MPIV)
+#if !defined(GPU) && !defined(MPIV_GPU)
     call quick_cew_prescf_quad()
 #endif    
     
@@ -438,7 +437,7 @@ contains
    double precision :: Vrecip, cew_pt(3),localsswt
    
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
@@ -716,8 +715,7 @@ contains
     !        gc(2) = gc(2) + D(i,j) * qc * d/dYc (ij|c0)
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
     call gpu_delete_lri(ierr)
@@ -741,7 +739,7 @@ contains
     enddo
 #endif
 
-#if !defined (CUDA) && !defined (CUDA_MPIV) && !defined (HIP) && !defined (HIP_MPIV)
+#if !defined(GPU) && !defined(MPIV_GPU)
     call quick_cew_grad_quad()
 #endif
     
@@ -931,7 +929,7 @@ contains
    integer :: irad_init, irad_end
 #endif
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)
@@ -1174,7 +1172,7 @@ end do
 
   end subroutine quick_cew_grad_quad
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   ! MM: upload cew info onto GPU
   subroutine upload_cew(self, ierr)
 

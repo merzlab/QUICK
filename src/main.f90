@@ -41,7 +41,7 @@
 
     implicit none
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
     integer :: gpu_device_id = -1
 #endif
 
@@ -86,10 +86,9 @@
     endif masterwork_readInput
     !--------------------End MPI/MASTER----------------------------------
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
 
-    !------------------- CUDA -------------------------------------------
-    ! startup cuda device
+    ! startup GPU device
     SAFE_CALL(gpu_startup(ierr))
 #ifdef __PGI
     iarg = COMMAND_ARGUMENT_COUNT()
@@ -115,12 +114,11 @@
 
     SAFE_CALL(gpu_init(ierr))
 
-    ! write cuda information
+    ! write GPU information
     SAFE_CALL(gpu_write_info(iOutFile, ierr))
-    !------------------- END CUDA ---------------------------------------
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
 
     SAFE_CALL(mgpu_query(mpisize ,mpirank, mgpu_id, ierr))
 
@@ -166,7 +164,7 @@
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
 
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
 
@@ -210,7 +208,7 @@
         call schwarzoff ! pre-calculate schwarz cutoff criteria
     endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     if(.not.quick_method%opt)then
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
       ncontract, itype, aexp, dcoeff, &
@@ -228,7 +226,7 @@
     endif
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -350,22 +348,22 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method,ierr)
 #endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #endif
 
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
     if (master) then
        SAFE_CALL(gpu_shutdown(ierr))
     endif
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))
     SAFE_CALL(mgpu_shutdown(ierr))
 #endif

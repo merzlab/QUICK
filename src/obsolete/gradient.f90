@@ -63,8 +63,8 @@ subroutine gradient(ierr)
       call scf_gradient
    endif
 
-#if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
       call gpu_cleanup()
    endif
 #endif
@@ -181,9 +181,9 @@ endif
 !  2) One electron gradients
 !---------------------------------------------------------------------
 ! Note that we will call this subroutine asynchronously with ERI
-! gradient kernel call (see gpu_get2e.cu) in CUDA and CUDA_MPI versions
+! gradient kernel call (see gpu_get2e.cu) in GPU and MPI_GPU versions
 
-#if !defined CUDA && !defined CUDA_MPIV
+#if !defined(GPU) && !defined(MPIV_GPU)
    call get_oneen_grad
 #endif
 !---------------------------------------------------------------------
@@ -211,7 +211,7 @@ endif
 
       call get_xc_grad
 
-#ifdef CUDA_MPIV
+#if defined(MPIV_GPU)
       call mgpu_get_xcrb_time(timer_cumer%TDFTrb, timer_cumer%TDFTpg)
 #endif
 
@@ -626,8 +626,8 @@ subroutine get_electron_replusion_grad
       enddo
    enddo
 
-#if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
 
       if(quick_method%HF)then
          call gpu_upload_method(0, 1.0d0)
@@ -649,7 +649,7 @@ subroutine get_electron_replusion_grad
    else
 #endif
 
-#if defined MPIV && !defined CUDA_MPIV 
+#if defined(MPIV) && !defined(MPIV_GPU)
 
    if (bMPI) then
       nshell_mpi = mpi_jshelln(mpirank)
@@ -688,7 +688,7 @@ subroutine get_electron_replusion_grad
             enddo
          enddo
       enddo
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
    endif
 #endif
 
@@ -756,20 +756,16 @@ subroutine get_xc_grad
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
    type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
 
-#if defined CUDA || defined CUDA_MPIV
-
-   if(quick_method%bCUDA) then
-
+#if defined(GPU) || defined(MPIV_GPU)
+   if(quick_method%bGPU) then
       call gpu_reupload_dft_grid()
 
       call gpu_xcgrad(quick_qm_struct%gradient, quick_method%nof_functionals, quick_method%functional_id, &
 quick_method%xc_polarization)
 
       call gpu_delete_dft_grid()
-
    endif
 #else
-
    if(quick_method%uselibxc) then
 !  Initiate the libxc functionals
       do ifunc=1, quick_method%nof_functionals
@@ -783,7 +779,7 @@ quick_method%xc_polarization)
       enddo
    endif
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
          irad_init = quick_dft_grid%igridptll(mpirank+1)
          irad_end = quick_dft_grid%igridptul(mpirank+1)

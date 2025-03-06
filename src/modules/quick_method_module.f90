@@ -7,7 +7,9 @@
 !
 #include "util.fh"
 
+
 #define FUNCTIONAL_ID_SIZE (10)
+
 
 module quick_method_module
     use quick_constants_module
@@ -143,8 +145,8 @@ module quick_method_module
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
-        logical :: bCUDA                ! if CUDA is used here
+#if defined(GPU) || defined(MPIV_GPU)
+        logical :: bGPU                 ! if GPU is used here
 #endif
 
     end type quick_method_type
@@ -173,7 +175,7 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
     interface upload
         module procedure upload_method
     end interface upload
@@ -185,6 +187,7 @@ module quick_method_module
 #endif
 
     contains
+
 #ifdef MPIV
         !------------------------
         ! Broadcast quick_method
@@ -273,9 +276,9 @@ module quick_method_module
             call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 
         end subroutine broadcast_quick_method
-
-
 #endif
+
+
         !------------------------
         ! print quick_method
         !------------------------
@@ -283,7 +286,7 @@ module quick_method_module
             use xc_f90_types_m
             use xc_f90_lib_m
             use quick_exception_module
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
             use quick_magma_module, only: magmaPrintInfo
 #endif
             implicit none
@@ -389,7 +392,7 @@ module quick_method_module
               write(io,'(" DIRECT SCF ")')
             endif
 
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
             call magmaPrintInfo(io, ierr)
 #endif
 
@@ -490,7 +493,6 @@ module quick_method_module
             endif !io.ne.0
 
         end subroutine print_quick_method
-
 
 
         !------------------------
@@ -781,8 +783,8 @@ module quick_method_module
                 endif
             endif
             CHECK_ERROR(ierr)
-
         end subroutine read_quick_method
+
 
         !------------------------
         ! initial quick_method
@@ -888,11 +890,11 @@ module quick_method_module
             self%coarse_cutoff=.false.
             self%tight_cutoff=.false.
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
-            self%bCUDA  = .true.
+#if defined(GPU) || defined(MPIV_GPU)
+            self%bGPU   = .true.
 #endif
-
         end subroutine init_quick_method
+
 
         !------------------------
         ! check quick_method
@@ -951,8 +953,8 @@ module quick_method_module
 
             ! tighten XCCutoff if diffuse functions exist
             if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
-
         end subroutine check_quick_method
+
 
         subroutine obtain_leastIntCutoff(self,ierr)
             use quick_constants_module
@@ -975,7 +977,6 @@ module quick_method_module
             if (self%pmaxrms .gt. 1.0d0/10.0d0**8.5) self%maxIntegralCutoff = TEN_TO_MINUS9
             if (self%pmaxrms .gt. 1.0d0/10.0d0**7.5) self%maxIntegralCutoff = TEN_TO_MINUS8
             if (self%integralCutoff .le. self%maxIntegralCutoff) self%maxIntegralCutoff=self%integralCutoff
-
         end subroutine obtain_leastIntCutoff
 
 
@@ -1001,8 +1002,8 @@ module quick_method_module
             quick_method%integralCutoff=TEN_TO_MINUS11
             quick_method%primLimit=min(quick_method%integralCutoff,self%primLimit)
             endif
-
         end subroutine adjust_Cutoff
+
 
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
@@ -1081,11 +1082,11 @@ module quick_method_module
           ierr=32
           return
         endif
-
         end subroutine set_libxc_func_info
 
+
+#if defined(GPU) || defined(MPIV_GPU)
         ! subroutine to upload method and libxc info in to gpu
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         subroutine upload_method(self, ierr)
           
           implicit none
@@ -1095,7 +1096,7 @@ module quick_method_module
 
           
 
-          if (self%bCUDA) then
+          if (self%bGPU ) then
             if(self%HF)then
               call gpu_upload_method(0, self%UNRST, 1.0d0)
             elseif(self%uselibxc)then
@@ -1109,6 +1110,7 @@ module quick_method_module
 
           endif
         end subroutine upload_method
+
 
         subroutine delete_method(self,ierr)
 
