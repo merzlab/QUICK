@@ -195,8 +195,7 @@ module quick_method_module
         subroutine broadcast_quick_method(self, ierr)
             use quick_MPI_module
             use quick_exception_module            
-            use mpi
-
+            use mpi_f08
             implicit none
 
             type(quick_method_type) self
