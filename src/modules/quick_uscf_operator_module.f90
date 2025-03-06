@@ -35,8 +35,8 @@ contains
   !-------------------------------------------------------
      use allmod
      use quick_cutoff_module, only: oshell_density_cutoff
-     use quick_oshell_eri_module, only: getOshellEri, getOshellEriEnergy 
-     use quick_oei_module, only:get1eEnergy, get1e
+     use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
+     use quick_oei_module, only: get1eEnergy, get1e
 #ifdef MPIV
      use mpi
 #endif

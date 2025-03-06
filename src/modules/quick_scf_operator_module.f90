@@ -35,7 +35,7 @@ contains
   !-------------------------------------------------------
      use allmod
      use quick_cutoff_module, only: cshell_density_cutoff
-     use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
+     use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
      use quick_oei_module, only:get1eEnergy,get1e
 #ifdef MPIV
      use mpi

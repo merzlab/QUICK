@@ -467,18 +467,18 @@ end subroutine get_quick_energy_gradients
 subroutine run_quick(self,ierr)
 
   use quick_timer_module
-  use quick_method_module, only : quick_method
+  use quick_method_module, only: quick_method
   use quick_files_module
-  use quick_calculated_module, only : quick_qm_struct
-  use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
   use quick_exception_module
-  use quick_cshell_eri_module, only: getEriPrecomputables
-  use quick_cshell_gradient_module, only: cshell_gradient
-  use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_eri_cshell_module, only: getEriPrecomputables
+  use quick_grad_cshell_module, only: cshell_gradient
+  use quick_grad_oshell_module, only: oshell_gradient
   use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
-  use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+  use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 
 

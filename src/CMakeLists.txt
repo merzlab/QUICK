@@ -26,14 +26,14 @@ set(QUICK_MODULES_SOURCES
 	quick_files_module.f90 quick_timer_module.f90 quick_gridpoints_module.f90
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90
 	quick_scratch_module.f90 quick_all_module.f90 quick_scf_module.f90
-	quick_gradient_module.f90 quick_api_module.f90 quick_api_test_module.f90
+	quick_grad_cshell_module.f90 quick_api_module.f90 quick_api_test_module.f90
 	quick_cutoff_module.f90 quick_exception_module.f90 quick_input_parser_module.f90
-	quick_eri_module.f90 quick_eri_grad_module.f90 quick_oei_module.f90
+	quick_eri_cshell_module.f90 quick_eri_grad_cshell_module.f90 quick_oei_module.f90
 	quick_dft_module.f90 quick_scf_operator_module.f90 quick_uscf_operator_module.f90
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
-	quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
-	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90
-	oshell_quick_gradient_module.f90 quick_dftd3_module.f90 quick_molden_module.f90)
+        quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
+	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90
+	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90
