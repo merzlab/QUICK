@@ -52,7 +52,7 @@
 
   KEYWORD=HF  BASIS=DEF2-TZVP CUTOFF=1.0E-9 DENSERMS=1.0E-6 GRADIENT DIPOLE CHARGE=0                                                                                                                              
  ============== JOB CARD =============
- METHOD = HATREE FOCK
+ METHOD = HARTREE FOCK
  DIRECT SCF 
  SAD INITAL GUESS 
  USE DIIS SCF
