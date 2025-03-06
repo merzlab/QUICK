@@ -8,8 +8,8 @@ subroutine optimize(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_cutoff_module, only: schwarzoff
-   use quick_cshell_eri_module, only: getEriPrecomputables
-   use quick_gradient_module, only: scf_gradient
+   use quick_eri_cshell_module, only: getEriPrecomputables
+   use quick_grad_cshell_module, only: scf_gradient
 #ifdef MPIV
    use mpi_f08
 #endif

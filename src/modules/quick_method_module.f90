@@ -302,7 +302,7 @@ module quick_method_module
             if (io.ne.0) then
             write(io,'(" ============== JOB CARD =============")')
             if (self%HF) then
-                write(io,'(" METHOD = HATREE FOCK")')
+                write(io,'(" METHOD = HARTREE FOCK")')
             else if (self%MP2) then
                 write(io,'(" METHOD = SECOND ORDER PERTURBATION THEORY")')
             else if (self%DFT) then
@@ -1022,6 +1022,10 @@ module quick_method_module
            double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
+ 
+           functional_name = ''
+           func1 = ''
+           func2 = ''
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them

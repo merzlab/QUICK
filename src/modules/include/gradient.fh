@@ -20,9 +20,9 @@
 #include "util.fh"
 
 #ifdef OSHELL
-module quick_oshell_gradient_module
+module quick_grad_oshell_module
 #else
-module quick_cshell_gradient_module
+module quick_grad_cshell_module
 #endif
 
   implicit double precision(a-h,o-z)
@@ -185,7 +185,7 @@ contains
     use quick_cew_module
 #endif
 #ifdef OSHELL
-     use quick_cshell_gradient_module
+     use quick_grad_cshell_module
 #endif
 #ifdef MPIV
      use mpi_f08
@@ -685,7 +685,7 @@ contains
 
      use allmod
 #ifdef OSHELL
-     use quick_cshell_gradient_module, only:get_ijbas_derivative
+     use quick_grad_cshell_module, only: get_ijbas_derivative
 #endif
 #ifdef MPIV
      use mpi_f08
@@ -829,10 +829,10 @@ contains
      use allmod
 #ifdef OSHELL
    use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
-   use quick_oshell_eri_grad_module, only: oshell_eri_grad
+   use quick_eri_grad_oshell_module, only: oshell_eri_grad
 #else
    use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
-   use quick_cshell_eri_grad_module, only: cshell_eri_grad
+   use quick_eri_grad_cshell_module, only: cshell_eri_grad
 #endif
 #ifdef MPIV
      use mpi_f08
@@ -1513,7 +1513,7 @@ contains
 #endif
 
 #ifdef OSHELL
-end module quick_oshell_gradient_module
+end module quick_grad_oshell_module
 #else
-end module quick_cshell_gradient_module
+end module quick_grad_cshell_module
 #endif
