@@ -128,6 +128,28 @@ module quick_files_module
 
     end subroutine
 
+    subroutine read_data_file(line)
+      use quick_exception_module
+      use quick_input_parser_module  
+
+      implicit none
+
+      character line*(*)
+
+      call read(line,'$DATA',datafilename)
+
+    end subroutine
+
+    subroutine print_data_file(io)
+        implicit none
+
+        ! pass-in Parameter
+        integer io
+
+        write (io,'("| DATA FILE  =    ",a)') trim(dataFileName)
+
+    end subroutine
+
     subroutine read_basis_file(keywd,ierr)
 
         use quick_exception_module
@@ -162,11 +184,13 @@ module quick_files_module
 
             i = index(keywd,'BASIS=',.false.)
 
-            j = scan(keywd(i:lenkwd),' ',.false.)
+!            j = scan(keywd(i:lenkwd),' ',.false.)
+            j = scan(keywd(i+6:),' ',.false.)
 
             basis_sets=trim(basisdir) // "/basis_link"
 
-            basisSetName = keywd(i+6:i+j-2)
+!            basisSetName = keywd(i+6:i+j-2)
+            basisSetName = keywd(i+6:i+5+j)
             search_keywd= "#" // trim(basisSetName)
             ! Check if the basis_link file exists
 
@@ -272,7 +296,6 @@ module quick_files_module
 
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
-        write (io,'("| DATA FILE  :    ",a)') trim(dataFileName)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
 
         return
