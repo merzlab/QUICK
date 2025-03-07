@@ -31,34 +31,29 @@
 #define MOLDENFILEHANDLE 2031
 
 ! For the following definitions to work, one must use quick_exception_module
-! in a subroutine. For MPI/CUDAMPI versions, quick_mpi_module must be used. 
+! in a subroutine. For MPI/MPI+GPU versions, quick_mpi_module must be used. 
 
-#if defined DEBUG || defined DEBUGTIME
-#define CHECK_ERROR(ierr) 
-#else
 #ifdef MPIV
-#define CHECK_ERR if(master .and. ierr /= 0)
+#  define CHECK_ERR if(master .and. ierr /= 0)
 #else
-#define CHECK_ERR if(ierr /= 0)
+#  define CHECK_ERR if(ierr /= 0)
 #endif
 #define CHECK_ERROR(ierr) CHECK_ERR call RaiseException(ierr) 
-#endif
 
 ! A safe subroutine call with error checking. Must use ierr integer variable
 ! to propagate the error.
 #define SAFE_CALL(x) call x ;CHECK_ERROR(ierr)
 
-#if defined HIP || defined HIP_MPIV
-#define GPU_DGEMM rocDGEMM
-#endif
-
-#if (defined CUDA && !defined HIP) || (defined CUDA_MPIV && !defined HIP_MPIV)
-#define GPU_DGEMM CUBLAS_DGEMM
+#if defined(HIP) || defined(HIP_MPIV)
+#  define GPU_DGEMM rocDGEMM
+#elif defined(CUDA) || defined(CUDA_MPIV)
+#  define GPU_DGEMM CUBLAS_DGEMM
 #endif
 
 #ifdef REPORT_CPU_TIME
-#define RECORD_TIME(t) call cpu_time(t)
+#  define RECORD_TIME(t) call cpu_time(t)
 #else
-#define RECORD_TIME(t) call walltime(t)
+#  define RECORD_TIME(t) call walltime(t)
 #endif
+
 #endif
