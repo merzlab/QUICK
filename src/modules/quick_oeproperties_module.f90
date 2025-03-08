@@ -347,7 +347,7 @@ module quick_oeproperties_module
    write (ioutfile,'("  ----------------")')
    do iatom = 1, natom
      Net_charge = Net_charge + q(iatom)
-     write (ioutfile,'(3x,I3,3x,A2,3x,F10.6)')iatom,symbol(quick_molspec%iattype(iatom)),q(iatom)
+     write (ioutfile,'(3x,I3,3x,A2,3x,F10.6)') iatom, symbol(quick_molspec%iattype(iatom)), q(iatom)
    end do
    write (ioutfile,'("  ----------------")')
    write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
@@ -383,20 +383,28 @@ module quick_oeproperties_module
    ! If ESP_GRID is true, print to table X, Y, Z, V(r)
    if (quick_method%extgrid_angstrom)  then
      if (iESPFile.eq.iVdwSurfFile)then
-       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) at points on vdw surface to ",A,x,"with coordinates in angstroms***")') &
+       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) &
+               &at points on vdw surface to ",A,x,"with coordinates &
+               &in angstroms***")') &
            trim(espFileName)
-       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) with coordinates of the points on vdw surface in angstroms")')
+       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) &
+               &with coordinates of the points on vdw surface in angstroms")')
      else
-       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) at external points to ",A,x,"with coordinates in angstroms***")') &
+       write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) &
+               at external points to ",A,x,"with coordinates &
+               in angstroms***")') &
            trim(espFileName)
-       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) with coordinates in angstroms")')
+       write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) &
+               &with coordinates in angstroms")')
      endif
      write (iESPFile,'(100("-"))')
      write (iESPFile,'(6x,"X[A]",10x ,"Y[A]",9x,"Z[A]",13x, "ESP_TOTAL [a.u.] ")')
    else
-     write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) [a.u.] at external points to ",A,x,"***")') &
+     write (ioutfile,'(" *** Printing Electrostatic Potential (ESP) &
+             &[a.u.] at external points to ",A,x,"***")') &
            trim(espFileName)
-     write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) [atomic units] ")')
+     write (iESPFile,'(/," ELECTROSTATIC POTENTIAL CALCULATION (ESP) &
+             &[atomic units] ")')
      write (iESPFile,'(100("-"))')
      ! Default is X, Y, and V_total in a.u.
      write (iESPFile,'(9x,"X",13x,"Y",12x,"Z",16x,"ESP")')
@@ -605,11 +613,14 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   double precision :: Cx, Cy, Cz
 
   ! If ESP_GRID is true, print to table X, Y, Z, V(r)
-  write (ioutfile,'(" *** Printing Electric Field (EFIELD) [a.u.] on grid ",A,x,"***")') trim(efieldFileName)
-  write (iEFIELDFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) [atomic units] ")')
+  write (ioutfile,'(" *** Printing Electric Field (EFIELD) &
+          &[a.u.] on grid ",A,x,"***")') trim(efieldFileName)
+  write (iEFIELDFile,'(/," ELECTRIC FIELD CALCULATION (EFIELD) &
+          &[atomic units] ")')
   write (iEFIELDFile,'(100("-"))')
 
-  write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, "EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
+  write (iEFIELDFile,'(9x,"X",13x,"Y",12x,"Z",16x, &
+          &"EFIELD_X",12x, "EFIELD_Y",8x,"EFIELD_Z")')
 
   ! Collect ESP and print
   do igridpoint = 1, nextpoint 
