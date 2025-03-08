@@ -369,7 +369,7 @@ contains
       call wchk_darray(idatafile, "vec",      nbasis, nbasis, 1, self%vec,      fail)
       call wchk_darray(idatafile, "dense",    nbasis, nbasis, 1, self%dense,    fail)
       call wchk_darray(idatafile, "E",        nbasis, 1,      1, self%E,        fail)
-      call wchk_darray(idatafile, "iDegen",   nbasis, 1,      1, self%iDegen,   fail)
+      call wchk_iarray(idatafile, "iDegen",   nbasis, 1,      1, self%iDegen,   fail)
       call wchk_darray(idatafile, "Mulliken", nbasis, 1,      1, self%Mulliken, fail)
       call wchk_darray(idatafile, "Lowdin",   nbasis, 1,      1, self%Lowdin,   fail)
 

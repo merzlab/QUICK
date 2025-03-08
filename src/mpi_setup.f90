@@ -354,8 +354,8 @@
     
     end subroutine MPI_setup_hfoperator
 
-#if defined CUDA_MPIV || defined HIP_MPIV
 
+#if defined(MPIV_GPU)
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup multi GPUs
 ! Madu Manathunga 07/22/2020
@@ -436,8 +436,7 @@
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
-#if !(defined CUDA_MPIV) || !(defined HIP_MPIV)
-
+#if !defined(MPIV_GPU)
    if(master) then
       do impi=1, mpisize
          itotgridspn(impi)=0
@@ -478,7 +477,7 @@
       call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
       call MPI_BCAST(quick_dft_grid%bin_locator,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)

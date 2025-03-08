@@ -80,7 +80,7 @@ subroutine getMol(ierr)
    call readbasis(natom,0,0,0,0,ierr)
    ! F implementation of GPU ERI code currently doesnt support open shell
    ! gradient calculations
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
    if(quick_method%hasF .and. quick_method%unrst .and. quick_method%grad) then
        ierr=39
        return
@@ -237,6 +237,7 @@ end subroutine check_quick_method_and_molspec
 subroutine initialGuess(ierr)
    use allmod
    use quick_sad_guess_module, only: getSadDense 
+   use quick_exception_module
    implicit none
    logical :: present
    integer :: failed
