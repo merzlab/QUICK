@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /*
  *  gpu_startup.h
  *  new_quick
@@ -62,6 +61,12 @@ void get_oei_grad(_gpu_type gpu);
 void upload_sim_to_constant_oei(_gpu_type gpu);
 void upload_para_to_const_oei();
 
+// c interface ESP
+extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic);
+void getOEPROP(_gpu_type gpu);
+void upload_sim_to_constant_oeprop(_gpu_type gpu);
+void upload_para_to_const_oeprop();
+
 // c interface [gpu_get2e]
 extern "C" void get1e_();
 extern "C" void get_oneen_grad_();
@@ -92,7 +97,6 @@ void get2e_MP2(_gpu_type gpu);
 void getAddInt(_gpu_type gpu, int bufferSize, ERI_entry* aoint_buffer);
 void getGrad(_gpu_type gpu);
 void get_oshell_eri_grad(_gpu_type gpu);
-
 
 #if defined(CEW)
 void get_lri(_gpu_type gpu);
