@@ -350,7 +350,7 @@ contains
        check_iso = index(keywd(:j),'ISO=')
        if (check_iso /=0) j=check_iso-2 
 
-       do k=0,71
+       do k=0,92
           if (keywd(i:j) == symbol(k)) then
              natom=natom+1
              ! check if atom type has been shown before

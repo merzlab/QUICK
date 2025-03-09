@@ -313,11 +313,11 @@ subroutine electdiisdc(jscf,PRMS)
                do i=1,mpi_dc_fragn(ittt)
                   itt=mpi_dc_frag(ittt,i)
                   call MPI_RECV(codcsub(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                        mpi_double_precision,ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                        mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                   call MPI_RECV(codcsubtran(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                        mpi_double_precision,ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                        mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                   call MPI_RECV(evaldcsub(itt,1:NNmax),NNmax,mpi_double_precision, &
-                        ittt,itt,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+                        ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
                enddo
             enddo
          endif

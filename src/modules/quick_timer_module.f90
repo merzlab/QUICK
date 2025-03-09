@@ -138,7 +138,7 @@ module quick_timer_module
         ! For Master nodes or single process timing infomations
         !----------------------------------------------------
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     call get_mgpu_time()
 #endif
 
@@ -186,7 +186,7 @@ module quick_timer_module
                 timer_cumer%TDFTGrdPck/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
             endif
-#if defined CUDA_MPIV || defined HIP_MPIV && DEBUGTIME
+#if defined(MPIV_GPU) && DEBUGTIME
             t_tot_lb=timer_cumer%t2elb+timer_cumer%tdftlb+timer_cumer%tdftrb
             write (io,'("| TOTAL LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') t_tot_lb, &
             t_tot_lb/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -373,7 +373,7 @@ module quick_timer_module
 !                MPI_timer_cumer=timer_cumer
 !                max_timer_cumer=timer_cumer
 !                do i=1,mpisize-1
-!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
 !                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
@@ -462,7 +462,7 @@ module quick_timer_module
     end subroutine mpi_setup_timer
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     subroutine get_mgpu_time
         use quick_mpi_module
         use mpi

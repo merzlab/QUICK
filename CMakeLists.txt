@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 22.03)
+project(quick LANGUAGES NONE VERSION 24.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
@@ -174,6 +174,34 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 endif()
 
 
+# IntelLLVM
+# --------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
+    set(OPT_CFLAGS -O2)
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
+    set(OPT_CXXFLAGS -O2)
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
+    set(CMAKE_Fortran_FLAGS "-fpp -diag-disable 8291")
+    set(OPT_FFLAGS -O2)
+
+    if(WARNINGS)
+	add_flags(Fortran "-warn all" "-warn nounused")
+	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
+		
+	if(NOT IFORT_CHECK_INTERFACES)
+	    # disable errors from type mismatches
+	    add_flags(Fortran -warn nointerfaces)
+	endif()
+    endif()		
+endif()
 
 
 # PGI, CRAY, CLANG: NOT SUPPORTED
@@ -288,6 +316,9 @@ if(INSIDE_AMBER)
 
 	# install tests dir
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
+
+        # install runtest script
+        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests)
 
 else()
 	# Standalone install

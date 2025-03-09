@@ -44,7 +44,6 @@ set(PMEMD_DEFAULT_PRECISION SPFP)
 #-------------------------------------------------------------------------------
 
 if(${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
-
       
 	if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 	
@@ -61,9 +60,26 @@ if(${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
 				list(APPEND PMEMD_CFLAGS -xHost)
 			endif()
 		endif()
-
 	endif()
 	
+elseif({CMAKE_C_COMPILER_ID} STREQUAL "IntelLLVM")
+      
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+	
+		set(PMEMD_CFLAGS -O3 -mdynamic-no-pic -no-prec-div -ipo -xHost)
+
+	else()
+
+		set(PMEMD_CFLAGS -ipo -O3)
+		
+		if(SSE)
+			if(NOT "${SSE_TYPES}" STREQUAL "")
+				list(APPEND PMEMD_CFLAGS "-ax${SSE_TYPES}")
+			else()
+				list(APPEND PMEMD_CFLAGS -xHost)
+			endif()
+		endif()
+	endif()
 	
 else()
 	#use regular compiler optimization flags
@@ -206,7 +222,20 @@ endif()
 option(GTI "Use GTI version of pmemd.cuda instead of AFE version" TRUE)
 
 if(CUDA)
-	set(PMEMD_NVCC_FLAGS -use_fast_math -O3)
+	if(HIP)
+		set(PMEMD_NVCC_FLAGS -O3)
+		# list(APPEND PMEMD_NVCC_FLAGS -ffast-math)
+
+		list(APPEND PMEMD_NVCC_FLAGS -std=c++14) 
+
+		if(DISABLE_WARNINGS)
+			list(APPEND PMEMD_NVCC_FLAGS -w)
+		endif()
+	else()
+		set(PMEMD_NVCC_FLAGS -use_fast_math -O3)
+
+		list(APPEND PMEMD_NVCC_FLAGS --std c++11) 
+	endif()
 	
 	set(PMEMD_CUDA_DEFINES -DCUDA)
 	
@@ -218,12 +247,21 @@ if(CUDA)
 		message(STATUS "Building the AFE version of pmemd.cuda")
 	endif()
 
-	list(APPEND PMEMD_NVCC_FLAGS --std c++11) 
+	
 
 	if(MPI)
 		list(APPEND PMEMD_NVCC_FLAGS -DMPICH_IGNORE_CXX_SEEK)
-	endif()
 
+		option(MVAPICH2GDR_GPU_DIRECT_COMM "Use MVAPICH2-GDR for inter-GPU communications. \
+This requires using MVAPICH2-GDR version 2.3.7 or later as your MPI." FALSE)
+#		TODO determine how to check for MVAPICH2-GDR
+#		if(MVAPICH2GDR_GPU_DIRECT_COMM AND NOT MVAPICH2GDR_GPU_DIRECT_COMM_ENABLED)
+#			message(FATAL_ERROR "MVAPICH2GDR_GPU_DIRECT_COMM is selected for inter-GPU communications but MVAPICH2-GDR was not found.")
+#		endif()
+		if(MVAPICH2GDR_GPU_DIRECT_COMM)
+			list(APPEND PMEMD_CUDA_DEFINES -DMVAPICH2GDR_GPU_DIRECT_COMM)
+		endif()
+	endif()
 
 	option(NCCL "Use NCCL for inter-GPU communications." FALSE)
 	if(NCCL AND NOT nccl_ENABLED)
@@ -234,6 +272,10 @@ if(CUDA)
 		list(APPEND PMEMD_CUDA_DEFINES -DNCCL)
 	endif()
 
+	option(VKFFT "Use VkFFT instead of cuFFT/hipFFT" FALSE)
+	if(VKFFT)
+		list(APPEND PMEMD_CUDA_DEFINES -DVKFFT)
+	endif()
 
 endif()
 

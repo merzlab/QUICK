@@ -23,7 +23,7 @@
       call MPI_GET_PROCESSOR_NAME(pname,namelen,mpierror)
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
     
-      if(.not. allocated(MPI_STATUS)) allocate(MPI_STATUS(MPI_STATUS_SIZE))
+      if(.not. allocated(QUICK_MPI_STATUS)) allocate(QUICK_MPI_STATUS(MPI_STATUS_SIZE))
     
       if (mpirank.eq.0) then
         master=.true.
@@ -352,8 +352,8 @@
     
     end subroutine MPI_setup_hfoperator
 
-#if defined CUDA_MPIV || defined HIP_MPIV
 
+#if defined(MPIV_GPU)
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Setup multi GPUs
 ! Madu Manathunga 07/22/2020
@@ -375,7 +375,7 @@
         mgpu_ids(1)=mgpu_id
 
         do i=1,mpisize-1
-          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+          call MPI_RECV(mgpu_ids(i+1),1,mpi_integer,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
         enddo
         
       endif
@@ -434,8 +434,7 @@
  
    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 
-#if !(defined CUDA_MPIV) || !(defined HIP_MPIV)
-
+#if !defined(MPIV_GPU)
    if(master) then
       do impi=1, mpisize
          itotgridspn(impi)=0
@@ -476,7 +475,7 @@
       call MPI_BCAST(quick_basis%gcexpo,size(quick_basis%gcexpo),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(quick_molspec%chg,size(quick_molspec%chg),mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
       call MPI_BCAST(quick_dft_grid%bin_locator,quick_dft_grid%gridb_count,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 #else
       call MPI_BCAST(quick_dft_grid%igridptll,mpisize,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -588,8 +587,10 @@ call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
    else
 
       do i=1,mpisize-1
-         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
-         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_sswt,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(quick_xcg_tmp%tmp_weight,quick_dft_grid%init_ngpts,mpi_double_precision,i,i,MPI_COMM_WORLD,&
+                 QUICK_MPI_STATUS,IERROR)
 
          do j=1,quick_dft_grid%init_ngpts
             quick_xcg_tmp%sswt(j)=quick_xcg_tmp%sswt(j)+quick_xcg_tmp%tmp_sswt(j)

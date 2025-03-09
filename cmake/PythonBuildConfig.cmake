@@ -70,8 +70,7 @@ skip building Python packages, or set DOWNLOAD_MINICONDA to TRUE to create a pyt
 		# --------------------------------------------------------------------
 		# tkinter's capitalization changes based on the python version
 		check_python_package(tkinter HAVE_TKINTER)
-		check_python_package(Tkinter HAVE_TKINTER)
-		
+
 		if(NOT HAVE_TKINTER)
 			message(FATAL_ERROR "Could not find the Python Tkinter package.  You must install tk through your package manager (python-tk/python3-tk on Ubuntu, tk on Arch),\
 	 and the tkinter Python package will get installed.  If you cannot get Tkinter, disable BUILD_PYTHON to skip building Python packages, or enable DOWNLOAD_MINICONDA.")
@@ -169,22 +168,14 @@ skip building Python packages, or set DOWNLOAD_MINICONDA to TRUE to create a pyt
 
 		cmake_parse_arguments(IPL "" "BUILD_DIR" "SCRIPT_ARGS" ${ARGN})
 
-		if("${IPL_BUILD_DIR}" STREQUAL "")
-			# use default build dir
-			set(IPL_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/python-build)
-		endif()
-	
 		list_to_space_separated(SCRIPT_ARGS_SPC ${IPL_SCRIPT_ARGS})
-				
+
         install(CODE "
         ${FIX_BACKSLASHES_CMD}
         execute_process(
 		    COMMAND \"${CMAKE_COMMAND}\" -E env
-		     ${PYTHONPATH_SET_CMD}
 		     \"${PYTHON_EXECUTABLE}\"
-		    ./setup.py build -b \"${IPL_BUILD_DIR}\"
-		    install -f ${PYTHON_PREFIX_ARG}
-		    \"--install-scripts=\${CMAKE_INSTALL_PREFIX_BS}bin\"
+		    ./setup.py install -f ${PYTHON_PREFIX_ARG} --single-version-externally-managed --root /
 		    ${SCRIPT_ARGS_SPC}
 		    WORKING_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}\")"
 		    COMPONENT Python)

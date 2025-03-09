@@ -1,0 +1,411 @@
+name: 'Build and Test QUICK MPI Version'
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-and-test-mpi-legacy-configure-make:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '10'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-10 g++-10 gfortran-10'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '11'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-11 g++-11 gfortran-11'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
+            compiler-version: '12'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-12 g++-12 gfortran-12'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
+            compiler-version: '13'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-13 g++-13 gfortran-13'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'gnu'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - MPI - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+      - name: 'Linux: Install Dependencies for MPI Version'
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install ${{ matrix.compiler-install }} \
+            openmpi-bin openmpi-common libopenmpi-dev
+          which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
+          if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
+            sudo rm /usr/bin/${{ matrix.c-compiler }}
+            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
+              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+            fi
+          fi
+      - name: 'Linux: Log Softare Environment Configuration'
+        if: runner.os == 'Linux'
+        run: |
+          echo "OS version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
+          echo
+          echo "MPI version:"
+          mpirun --version
+      - name: 'Setup Environment Variables for Running Tests'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+      - name: 'Configure MPI Version'
+        run: |
+          ./configure --mpi --enablef --prefix $PWD/install \
+            ${{ matrix.compiler-type }}
+      - name: 'Build and Install MPI Version Using 2 Jobs'
+        run: |
+          make -j2 all install
+      - name: 'Run Tests for MPI Version (Make) Using 2 MPI Processes'
+        run: |
+          make fulltest
+      - name: 'Upload Test Artifacts for MPI Version'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          path: ${{ github.workspace }}/install/test/runs/mpi
+          retention-days: 3
+          compression-level: 6
+      - name: 'Download Test Artifacts for MPI Version'
+        uses: actions/download-artifact@v4
+        with:
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+      - name: 'Display Artifacts'
+        run: |
+          ls -R
+  build-and-test-mpi-cmake:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: 'ubuntu-22.04'
+            compiler-type: 'GNU'
+            compiler-version: '10'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-10 g++-10 gfortran-10'
+          - os: 'ubuntu-22.04'
+            compiler-type: 'GNU'
+            compiler-version: '11'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-11 g++-11 gfortran-11'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'GNU'
+            compiler-version: '12'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-12 g++-12 gfortran-12'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'GNU'
+            compiler-version: '13'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-13 g++-13 gfortran-13'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'CLANG'
+            compiler-version: '17'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-17 gfortran'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'CLANG'
+            compiler-version: '18'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-18 gfortran'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'INTELLLVM'
+            compiler-version: '2024.2.1'
+            c-compiler: 'mpiicx'
+            cxx-compiler: 'mpiicpx'
+            fortran-compiler: 'mpiifx'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2 intel-oneapi-ccl-devel-2021.14'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'INTELLLVM'
+            compiler-version: '2025.0.1'
+            c-compiler: 'mpiicx'
+            cxx-compiler: 'mpiicpx'
+            fortran-compiler: 'mpiifx'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0 intel-oneapi-ccl-devel-2021.14'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'CLANG'
+            compiler-version: '18'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'clang-18 gfortran'
+          - os: 'macos-13'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc@14'
+          - os: 'macos-13'
+            compiler-type: 'CLANG'
+            compiler-version: '15'
+            fortran-compiler-version: '14'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'llvm@15 gcc@14'
+          - os: 'macos-14'
+            compiler-type: 'GNU'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc@14'
+          - os: 'macos-14'
+            compiler-type: 'CLANG'
+            compiler-version: '15'
+            fortran-compiler-version: '14'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'llvm@15 gcc@14'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+      - name: 'Linux: Setup Environment Variables for Building and Running Tests'
+        if: runner.os == 'Linux'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+      - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
+        if: runner.os == 'macOS'
+        run: |
+          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.os }} == 'macos-13' ]]; then
+            echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
+            echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
+            echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
+            echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
+          fi
+      - name: 'Linux: Install Dependencies for MPI Version'
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            sudo apt install -y gpg-agent wget
+            wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+              | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+            echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+              | sudo tee /etc/apt/sources.list.d/oneAPI.list
+            sudo apt update
+          fi
+          sudo apt-get -y install ${{ matrix.compiler-install }} \
+            cmake openmpi-bin openmpi-common libopenmpi-dev
+          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            sudo rm /usr/bin/${{ matrix.c-compiler }}
+            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+            fi
+          fi
+      - name: 'MacOS: Install Dependencies for Serial Version'
+        if: runner.os == 'macOS'
+        run: |
+          brew install ${{ matrix.compiler-install }} cmake open-mpi
+          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+              $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+              $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+            elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+            fi
+          fi
+      - name: 'Linux: Log Softare Environment Configuration'
+        if: runner.os == 'Linux'
+        run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
+          echo "OS version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
+          echo
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            echo "MKL install directory:"
+            echo "${MKLROOT}"
+            echo
+          fi
+          echo "MPI version:"
+          mpirun --version
+          echo
+          echo "CMake version:"
+          cmake --version
+      - name: 'MacOS: Log Softare Environment Configuration'
+        if: runner.os == 'macOS'
+        run: |
+          echo "OS version:"
+          cat /System/Library/CoreServices/SystemVersion.plist
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
+          echo
+          echo "MPI version:"
+          mpirun --version
+          echo
+          echo "CMake version:"
+          cmake --version
+      - name: 'Configure MPI Version'
+        run: |
+          mkdir build
+          cd build
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+            cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
+              -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE
+          else
+            cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
+              -DMPI=TRUE -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+          fi
+      - name: 'Build and Install MPI Version Using 2 Jobs'
+        run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
+          cd build
+          cmake --build . --parallel 2
+          cmake --install .
+      - name: 'Run Tests for MPI Version Using 2 MPI Processes'
+        run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
+          cd install
+          ./runtest --mpi --full
+      - name: 'Upload Test Artifacts for MPI Version'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          path: ${{ github.workspace }}/install/test/runs/mpi
+          retention-days: 3
+          compression-level: 6
+      - name: 'Download Test Artifacts for MPI Version'
+        uses: actions/download-artifact@v4
+        with:
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+      - name: 'Display Artifacts'
+        run: |
+          ls -R

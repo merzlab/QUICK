@@ -259,7 +259,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   endif
 #endif
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
 
   ! startup cuda device
   SAFE_CALL(gpu_startup(ierr))
@@ -270,10 +270,10 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 
   ! write cuda information
   SAFE_CALL(gpu_write_info(iOutFile,ierr))
-    !------------------- END CUDA ---------------------------------------
+    !------------------- END GPU ---------------------------------------
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
 
   SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
 
@@ -285,14 +285,14 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 
 #endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call gpu_allocate_scratch(.true.)
 #endif
 
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call upload(quick_method, ierr)
 #endif
 
@@ -467,18 +467,18 @@ end subroutine get_quick_energy_gradients
 subroutine run_quick(self,ierr)
 
   use quick_timer_module
-  use quick_method_module, only : quick_method
+  use quick_method_module, only: quick_method
   use quick_files_module
-  use quick_calculated_module, only : quick_qm_struct
-  use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
   use quick_exception_module
-  use quick_cshell_eri_module, only: getEriPrecomputables
-  use quick_cshell_gradient_module, only: cshell_gradient
-  use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_eri_cshell_module, only: getEriPrecomputables
+  use quick_grad_cshell_module, only: cshell_gradient
+  use quick_grad_oshell_module, only: oshell_gradient
   use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
-  use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+  use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 
 
@@ -544,7 +544,7 @@ subroutine run_quick(self,ierr)
     call schwarzoff
   endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
 
@@ -567,7 +567,7 @@ subroutine run_quick(self,ierr)
   ! stop the timer for initial guess
   RECORD_TIME(timer_end%TIniGuess)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -620,8 +620,8 @@ subroutine run_quick(self,ierr)
 #endif
   endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-      if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
 #endif
@@ -760,7 +760,7 @@ subroutine set_quick_molspecs(self,ierr)
 
 end subroutine set_quick_molspecs
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
 
 ! uploads molecular information into gpu
 subroutine gpu_upload_molspecs(ierr)
@@ -846,19 +846,16 @@ subroutine delete_quick_job(ierr)
   integer, intent(out) :: ierr
   ierr=0
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call delete(quick_method,ierr)
-#endif
-
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call gpu_deallocate_scratch(.true.)
 #endif
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
   SAFE_CALL(gpu_shutdown(ierr))
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
   SAFE_CALL(delete_mgpu_setup(ierr))
   SAFE_CALL(mgpu_shutdown(ierr))
 #endif

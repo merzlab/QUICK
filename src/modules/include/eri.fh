@@ -14,9 +14,9 @@
 !_____________________________________________________________________!
 
 #ifdef OSHELL
-module quick_oshell_eri_module
+module quick_eri_oshell_module
 #else
-module quick_cshell_eri_module
+module quick_eri_cshell_module
 #endif
 
    implicit double precision(a-h,o-z)
@@ -1193,7 +1193,7 @@ subroutine aoint(ierr)
 
    call obtain_leastIntCutoff(quick_method,ierr)
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
    write(ioutfile, '("  GPU-BASED 2-ELECTRON INTEGRAL GENERATOR")')
    write(ioutfile, '("  WRITTEN BY YIPU MIAO(FLORIDA)")')
    write(ioutfile, '("  THIS PROGRAM IS UNDER TEST PHASE")')
@@ -1518,8 +1518,8 @@ end subroutine addInt
 #endif
 
 #ifdef OSHELL
-end module quick_oshell_eri_module
+end module quick_eri_oshell_module
 #else
-end module quick_cshell_eri_module
+end module quick_eri_cshell_module
 #endif
 
