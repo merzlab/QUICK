@@ -35,9 +35,9 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_magma_module.o $(objfolder)/quick_overlap_module.o $(objfolder)/quick_gridpoints_module.o \
 		$(objfolder)/quick_cutoff_module.o \
 		$(objfolder)/quick_eri_cshell_module.o $(objfolder)/quick_eri_oshell_module.o $(objfolder)/quick_lri_module.o \
-		$(objfolder)/quick_molden_module.o $(objfolder)/quick_eri_grad_cshell_module.o \
-                $(objfolder)/quick_eri_fock1_module.o $(objfolder)/quick_eri_fock1_oshell_module.o \
-		$(objfolder)/quick_eri_grad_oshell_module.o $(objfolder)/quick_lri_grad_module.o \
+		$(objfolder)/quick_molden_module.o $(objfolder)/quick_lri_grad_module.o  \
+                $(objfolder)/quick_eri_fock1_cshell_module.o $(objfolder)/quick_eri_fock1_oshell_module.o \
+		$(objfolder)/quick_eri_grad_cshell_module.o $(objfolder)/quick_eri_grad_oshell_module.o \
 		$(objfolder)/quick_cew_module.o $(objfolder)/quick_oei_module.o $(objfolder)/quick_dft_module.o \
 		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_grad_cshell_module.o \
 		$(objfolder)/quick_grad_oshell_module.o \

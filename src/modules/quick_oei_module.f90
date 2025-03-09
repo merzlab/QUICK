@@ -553,6 +553,9 @@ end subroutine attrashell
   subroutine attrashellfock1(IIsh,JJsh)
      use allmod
      use quick_overlap_module, only: opf, overlap
+#ifdef MPIV
+     use mpi
+#endif
      !    use xiaoconstants
      implicit double precision(a-h,o-z)
      dimension aux(0:20)
@@ -560,9 +563,6 @@ end subroutine attrashell
      common /xiaoattra/attra,aux,AA,BB,CC,PP,g
   
      double precision RA(3),RB(3),RP(3), valopf, g_table(200)
-#ifdef MPIV
-     include "mpif.h"
-#endif
   
      Ax=xyz(1,quick_basis%katom(IIsh))
      Ay=xyz(2,quick_basis%katom(IIsh))

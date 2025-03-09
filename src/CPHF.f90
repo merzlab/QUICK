@@ -8,7 +8,7 @@ subroutine form_D1W1
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic, attrashellfock1
   use quick_cutoff_module, only: cshell_density_cutoff
-  use quick_cshell_eri_module, only: getCshellEri
+  use quick_eri_cshell_module, only: getCshellEri
 
   implicit double precision(a-h,o-z)
 
@@ -25,7 +25,7 @@ subroutine form_d1const
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic, attrashellfock1
   use quick_cutoff_module, only: cshell_density_cutoff
-  use quick_cshell_eri_module, only: getCshellEri
+  use quick_eri_cshell_module, only: getCshellEri
 
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
@@ -54,7 +54,7 @@ subroutine form_CPHF
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic, attrashellfock1
   use quick_cutoff_module, only: cshell_density_cutoff
-  use quick_cshell_eri_module, only: getCshellEri
+  use quick_eri_cshell_module, only: getCshellEri
 
   implicit double precision(a-h,o-z)
   dimension natend(natom)

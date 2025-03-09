@@ -46,8 +46,8 @@ end subroutine calchessian
 
 subroutine fdhessian(failed)
   use allmod
-  use quick_cshell_gradient_module, only: cshell_gradient
-  use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_grad_cshell_module, only: cshell_gradient
+  use quick_grad_oshell_module, only: oshell_gradient
   use quick_exception_module, only: RaiseException
   implicit double precision(a-h,o-z)
 
@@ -118,8 +118,8 @@ subroutine HFHessian
   use allmod
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
-  use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
-  use quick_cshell_eri_fock1_module
+  use quick_cutoff_module, only: cshell_density_cutoff, cshell_dnscreen
+  use quick_eri_fock1_cshell_module
  
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
@@ -289,7 +289,7 @@ subroutine get_oneen_hessian
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic, attrashellfock1
   use quick_cutoff_module, only: cshell_density_cutoff
-  use quick_cshell_eri_module, only: getCshellEri
+  use quick_eri_cshell_module, only: getCshellEri
 
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
@@ -1985,8 +1985,8 @@ subroutine get_eri_hessian
   use allmod
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
-  use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
-  use quick_cshell_eri_fock1_module
+  use quick_cutoff_module, only: cshell_density_cutoff, cshell_dnscreen
+  use quick_eri_fock1_cshell_module
 
   implicit double precision(a-h,o-z)
   dimension itype2(3,2),ielecfld(3)
@@ -2130,7 +2130,7 @@ subroutine get_eri_hessian
                        cutmatrix(II,LL),cutmatrix(II,KK),cutmatrix(JJ,KK),cutmatrix(JJ,LL))
                        cutoffTest=testCutoff*DNmax
                        if(cutoffTest.gt.quick_method%gradCutoff)then
-                          call cshell_eri_fock1
+                          call eri_fock1_cshell
                        endif
                     endif
                  endif

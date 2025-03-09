@@ -20,17 +20,17 @@
 #include "util.fh"
 
 #ifdef OSHELL
-module quick_oshell_eri_fock1_module
+module quick_eri_fock1_oshell_module
 #else
-module quick_cshell_eri_fock1_module
+module quick_eri_fock1_cshell_module
 #endif
 
    implicit double precision(a-h,o-z)
 #ifdef OSHELL
-   public  :: oshell_eri_fock1
+   public  :: eri_fock1_oshell
    private :: iclass_fock1_oshell
 #else
-   public  :: cshell_eri_fock1
+   public  :: eri_fock1_cshell
    private :: iclass_fock1_cshell
 #endif 
 contains
@@ -38,9 +38,9 @@ contains
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
 #ifdef OSHELL
-subroutine oshell_eri_fock1
+subroutine eri_fock1_oshell
 #else
-subroutine cshell_eri_fock1
+subroutine eri_fock1_cshell
 #endif
 
    use allmod
@@ -194,9 +194,9 @@ subroutine cshell_eri_fock1
    call deallocshellopt(quick_scratch)
 
 #ifdef OSHELL
-end subroutine oshell_eri_fock1
+end subroutine eri_fock1_oshell
 #else
-end subroutine cshell_eri_fock1
+end subroutine eri_fock1_cshell
 #endif
 
 
@@ -1757,7 +1757,7 @@ end subroutine iclass_fock1_cshell
 #endif
 
 #ifdef OSHELL
-end module quick_oshell_eri_fock1_module
+end module quick_eri_fock1_oshell_module
 #else
-end module quick_cshell_eri_fock1_module
+end module quick_eri_fock1_cshell_module
 #endif
