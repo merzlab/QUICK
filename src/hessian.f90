@@ -295,6 +295,7 @@ subroutine get_oneen_hessian
   dimension itype2(3,2),ielecfld(3)
   double precision g_table(200),a,b
   integer i,j,k,ii,jj,kk,g_count
+  logical :: ijcon
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 2)  The negative of the energy weighted density matrix element i j
