@@ -283,7 +283,6 @@
             call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
             call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
             close(iDataFile)
-            close(iDataFile)
           endif 
         endif
     endif
