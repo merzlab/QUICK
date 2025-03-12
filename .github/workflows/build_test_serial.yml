@@ -196,6 +196,13 @@ jobs:
             cxx-compiler: 'icpx'
             fortran-compiler: 'ifx'
             compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'PGI'
+            compiler-version: '25.1'
+            c-compiler: 'pgfc'
+            cxx-compiler: 'pgfc++'
+            fortran-compiler: 'pgf90'
+            compiler-install: 'nvhpc-25-1 gfortran'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -253,6 +260,15 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+            echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
+            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+            echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
+            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+          fi
       - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'macOS'
         run: |
@@ -279,9 +295,15 @@ jobs:
             echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
               | sudo tee /etc/apt/sources.list.d/oneAPI.list
             sudo apt update
+          elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+            sudo apt install -y gpg-agent wget
+            wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
+              | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
+            echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
+              | sudo tee /etc/apt/sources.list.d/nvhpc.list
+            sudo apt update
           fi
-          sudo apt-get -y install ${{ matrix.compiler-install }} \
-            cmake parallel
+          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -295,7 +317,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install ${{ matrix.compiler-install }} cmake parallel
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake parallel
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
