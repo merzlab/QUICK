@@ -146,6 +146,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
             compiler-version: '11'
@@ -153,6 +154,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '12'
@@ -160,6 +162,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '13'
@@ -167,6 +170,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -174,6 +178,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '17'
@@ -181,6 +186,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-17 gfortran'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -188,6 +194,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2024.2.1'
@@ -195,6 +202,7 @@ jobs:
             cxx-compiler: 'mpiicpx'
             fortran-compiler: 'mpiifx'
             compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2 intel-oneapi-ccl-devel-2021.14'
+            mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2025.0.1'
@@ -202,6 +210,15 @@ jobs:
             cxx-compiler: 'mpiicpx'
             fortran-compiler: 'mpiifx'
             compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0 intel-oneapi-ccl-devel-2021.14'
+            mpi-install: ''
+          - os: 'ubuntu-24.04'
+            compiler-type: 'PGI'
+            compiler-version: '25.1'
+            c-compiler: 'pgcc'
+            cxx-compiler: 'pgcc++'
+            fortran-compiler: 'pgf90'
+            compiler-install: 'nvhpc-25-1 gfortran'
+            mpi-install: ''
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -209,6 +226,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -216,6 +234,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-13'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -223,6 +242,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-13'
             compiler-type: 'CLANG'
             compiler-version: '15'
@@ -231,6 +251,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'llvm@15 gcc@14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -238,6 +259,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             compiler-version: '15'
@@ -246,6 +268,7 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'llvm@15 gcc@14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -262,6 +285,15 @@ jobs:
           echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+            echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
+            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+            echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
+            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+          fi
       - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'macOS'
         run: |
@@ -291,9 +323,15 @@ jobs:
             echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
               | sudo tee /etc/apt/sources.list.d/oneAPI.list
             sudo apt update
+          elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+            sudo apt install -y gpg-agent wget
+            wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
+              | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
+            echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
+              | sudo tee /etc/apt/sources.list.d/nvhpc.list
+            sudo apt update
           fi
-          sudo apt-get -y install ${{ matrix.compiler-install }} \
-            cmake openmpi-bin openmpi-common libopenmpi-dev
+          sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -307,7 +345,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install ${{ matrix.compiler-install }} cmake open-mpi
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
