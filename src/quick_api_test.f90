@@ -21,9 +21,8 @@
     use quick_api_module, only : setQuickMPI
 #endif
 #ifdef MPIV
-    use mpi
+    use mpi_f08
 #endif
-
     implicit none
 
     ! i, j are some integers useful for loops, frames is the number of

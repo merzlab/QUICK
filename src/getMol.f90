@@ -16,9 +16,8 @@ subroutine getMol(ierr)
    use quick_gridpoints_module
    use quick_exception_module
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
    implicit none
 
    logical :: present

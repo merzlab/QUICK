@@ -36,9 +36,8 @@
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
 #ifdef MPIV
-    use mpi
+    use mpi_f08
 #endif
-
     implicit none
 
 #if defined(GPU)

@@ -818,8 +818,7 @@ end subroutine set_quick_mpi
 ! broadcasts results from master to slaves
 
 subroutine broadcast_quick_mpi_results(self,ierr)
-  use mpi
-
+  use mpi_f08
   implicit none
 
   type(quick_api_type), intent(inout) :: self
