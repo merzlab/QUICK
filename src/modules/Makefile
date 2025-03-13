@@ -41,7 +41,7 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_mpi_module.o $(o
 		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
 		$(objfolder)/oshell_quick_gradient_module.o \
 		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
-		$(objfolder)/quick_dftd3_module.o 
+		$(objfolder)/quick_dftd3_module.o $(objfolder)/hdf5_utils.o $(objfolder)/quick_restart_module.o
 
 opt_modobj=$(objfolder)/quick_optimizer_module.o
 

@@ -241,6 +241,9 @@ if(ENABLEF)
   add_definitions(-DENABLEF)
 endif()
 
+# HDF5
+include(ConfigureHDF5)
+
 # CUDA compiler flags
 # --------------------------------------------------------------------
 include(QUICKCudaConfig)

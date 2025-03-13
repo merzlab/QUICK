@@ -35,6 +35,7 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+!    use quick_restart_module, only: data_write_info
 #ifdef MPIV
     use mpi
 #endif
@@ -142,6 +143,8 @@
 
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
+!    !write the required info to data file
+!    if(quick_method%writeden .or. quick_method%writexyz) call data_write_info()
     !allocate essential variables
     call alloc(quick_molspec,ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
