@@ -159,6 +159,8 @@ module quick_gridpoints_module
 
     
     call alloc_xcg_tmp_variables(xcg_tmp)
+    xcg_tmp%sswt = 0.0d0
+    xcg_tmp%weight = 0.0d0
 
 #ifdef MPIV
    if(master) then
