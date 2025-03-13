@@ -116,8 +116,8 @@ set(LIBXC_GPU_SOURCES
 
 # -------------------------------------------------------------
 # enable optimization
-set_property(SOURCE ${LIBXC_C_SOURCES} PROPERTY COMPILE_FLAGS ${OPT_CFLAGS_SPC})
-set_property(SOURCE ${LIBXC_FORTRAN_SOURCES} PROPERTY COMPILE_FLAGS ${OPT_FFLAGS_SPC})
+set_property(SOURCE ${LIBXC_C_SOURCES} PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
+set_property(SOURCE ${LIBXC_FORTRAN_SOURCES} PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 
 # -------------------------------------------------------------
 # Generate fortran mangling header

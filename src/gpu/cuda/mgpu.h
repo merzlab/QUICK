@@ -32,7 +32,6 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
 
     int gpuCount = 0;           // Total number of GPU devices available
-    size_t minMem = 4000000000; // Threshold  memory (in bytes) for device selection criteria
     cudaError_t status;
 
     gpuGetDeviceCount(&gpuCount);
@@ -54,9 +53,6 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 
     if (devProp.major < 3) {
         *ierr = 29;
-        return;
-    } else if (devProp.totalGlobalMem < minMem) {
-        *ierr = 30;
         return;
     }
 
@@ -82,14 +78,59 @@ void mgpu_startup(int mpirank, int* ierr)
 
     gpu = new gpu_type;
 
+#if defined DEBUG || defined DEBUGTIME
+    gpu->debugFile = debugFile;
+#endif
+    gpu->totalCPUMemory = 0;
+    gpu->totalGPUMemory = 0;
+    gpu->gpu_dev_id = -1;
+    gpu->blocks = 0;
+    gpu->threadsPerBlock = 0;
+    gpu->twoEThreadsPerBlock = 0;
+    gpu->XCThreadsPerBlock = 0;
+    gpu->gradThreadsPerBlock = 0;
+    gpu->xc_blocks = 0;
+    gpu->xc_threadsPerBlock = 0;
+    gpu->sswGradThreadsPerBlock = 0;
+    gpu->mpirank = -1;
+    gpu->mpisize = 0;    
+    gpu->timer = NULL;
+    gpu->natom = 0;
+    gpu->nextatom = 0;
+    gpu->nbasis = 0;
+    gpu->nElec = 0;
+    gpu->imult = 0;
+    gpu->molchg = 0;
+    gpu->iAtomType = 0;
+    gpu->nshell = 0;
+    gpu->nprim = 0;
+    gpu->jshell = 0;
+    gpu->jbasis = 0;
+    gpu->maxL = 0;
+    gpu->iattype = NULL;
+    gpu->xyz = NULL;
+    gpu->allxyz = NULL;
+    gpu->chg = NULL;
+    gpu->allchg = NULL;
+    gpu->DFT_calculated = NULL;
+    gpu->grad = NULL;
+    gpu->ptchg_grad = NULL;
+    gpu->gradULL = NULL;
+    gpu->ptchg_gradULL = NULL;
+    gpu->cew_grad = NULL;
+    gpu->gpu_calculated = NULL;
+    gpu->gpu_basis = NULL;
+    gpu->gpu_cutoff = NULL;
+    gpu->gpu_xcq = NULL;
+    gpu->aoint_buffer = NULL;
+    gpu->intCount = NULL;
+    gpu->scratch = NULL;
+    gpu->lri_data = NULL;
+
     gpu->timer = new gpu_timer_type;
     gpu->timer->t_2elb = 0.0;
     gpu->timer->t_xclb = 0.0;
     gpu->timer->t_xcrb = 0.0;
-
-#if defined DEBUG || defined DEBUGTIME
-    gpu->debugFile = debugFile;
-#endif
 
     PRINTDEBUG("CREATE NEW GPU")
 }

@@ -24,7 +24,7 @@ endif()
 set(CUBLAS_FORTRAN_SOURCE cublas/fortran_thunking.c)
 
 add_library(cublas_fortran_obj OBJECT ${CUBLAS_FORTRAN_SOURCE})
-set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS}) 
+set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
 set_property(TARGET cublas_fortran_obj PROPERTY COMPILE_DEFINITIONS CUBLAS_USE_THUNKING)
 set_property(TARGET cublas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -36,7 +36,7 @@ target_include_directories(cublas_fortran_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 set(CUSOLVER_SOURCE cusolver/quick_cusolver.c)
 
 add_library(cusolver_obj OBJECT ${CUSOLVER_SOURCE})
-set_property(TARGET cusolver_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS}) 
+set_property(TARGET cusolver_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
 set_property(TARGET cusolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 target_include_directories(cusolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
