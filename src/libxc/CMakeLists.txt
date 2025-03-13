@@ -128,7 +128,7 @@ FortranCInterface_HEADER(${CMAKE_CURRENT_BINARY_DIR}/xc-fortran-mangling.h)
 # create libraries
 
 add_library(xc STATIC ${LIBXC_C_SOURCES} ${LIBXC_FORTRAN_SOURCES})
-set_property(TARGET xc PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(xc PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 target_include_directories(xc PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(xc PUBLIC USE_CMAKE_MANGLING)
 if(INSIDE_AMBER)
@@ -141,19 +141,21 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	target_compile_options(xc PRIVATE -Wno-maybe-uninitialized)
 endif()
 
-if(CUDA)
+if(CUDA OR HIP)
 	# note: this is not a GPU implementation of libxc, it's just
 	# configured to call one.
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
-	target_compile_definitions(xc_gpu PRIVATE ${QUICK_GPU_PLATFORM})
+	if(MPI)
+		target_compile_definitions(xc_gpu PRIVATE GPU ${QUICK_GPU_PLATFORM})
+        else()
+		target_compile_definitions(xc_gpu PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
+	endif()
 
 	if(INSIDE_AMBER)
 		target_link_libraries(xc_gpu libcew)
 	endif()
 	config_module_dirs(xc_gpu libxc/gpu)
-endif()
 
-# build cuda code
-if(CUDA)
+	# build gpu code
 	add_subdirectory(maple2c_device)
 endif()

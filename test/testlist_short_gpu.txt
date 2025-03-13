@@ -1,0 +1,34 @@
+ene_psb5_rhf_631g	            #PSB5: RHF energy test: s and p basis functions
+ene_psb5_rhf_631gss	            #PSB5: RHF energy test: s, p and d basis functions
+ene_acetone_rhf_321g                #Acetone: RHF energy test: s and p basis functions
+ene_psb3_blyp_631g	            #PSB3: DFT energy test: s and p basis functions, BLYP functional
+ene_psb3_blyp_631gss	            #PSB3: DFT energy test: s, p and d basis functions, BLYP functional
+ene_psb3_b3lyp_631g	            #PSB3: DFT energy test: s and p basis functions, native B3LYP functional
+ene_psb3_b3lyp_631gss	            #PSB3: DFT energy test: s, p and d basis functions, native B3LYP functional
+ene_C2H6_b3lyp_def2tzvp             #C2H6: DFT energy test: s, p, d and f basis functions, native B3LYP functional
+ene_psb3_libxc_lda_631g             #PSB3: DFT energy test: s and p basis functions, libxc LDA functional
+ene_psb3_libxc_gga_631g             #PSB3: DFT energy test: s and p basis functions, libxc GGA functional
+ene_psb3_libxc_hgga_631g            #PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional
+ene_wat2_mp2_631g	            #Water-2 MP2 energy test: s and p basis functions
+ene_wat2_mp2_631gss	            #Water-2 MP2 energy test: s, p and d basis functions
+grad_psb3_b3lyp_631g                #PSB3: DFT gradient test: s and p basis functions
+grad_psb3_b3lyp_631gss              #PSB3: DFT gradient test: s and p and d basis functions
+grad_ch3conhch3_b3lyp_ccpvdz        #CH3CONHCH3: DFT gradient test: s and p and d basis functions
+grad_NaCl_b3lyp_def2svp             #NaCl: DFT gradient test: DEF2-SVP basis set
+grad_CH4_pbe0_6311g2df2pd           #CH4: DFT gradient test: s, p, d and f basis functions
+grad_nma_rhf_def2tzvp               #NMA: RHF gradient test with DEF2-TZVP basis set: s, p, d and f basis functions
+grad_wat_b3lyp_ccpvdz               #Water: DFT point charge gradient test: s and p and d basis functions
+grad_c10h9o2s_b3lyp_def2svp         #C10H9O2S: DFT point charge gradient test: s and p and d basis functions
+grad_daspi_meoh_b3lyp_6-31g         #DASPI-DCM: DFT point charge gradient test: s and p basis functions
+grad_rpsb_meoh_rhf_321g             #RPSB-MeOH: RHF point charge gradient test: s and p basis functions
+grad_ohrad_b3lyp_631gss             #OH radical: UDFT B3LYP gradient test
+opt_wat_rhf_631g	            #Water: RHF geometry optimization test: s and p basis functions (Legacy optimizer)
+opt_wat_rhf_ccpvdz	            #Water: RHF geometry optimization test: s, p and d basis functions (Legacy optimizer)
+opt_nh4_pbe0_def2svp                #NH4+: DFT geometry optimization test: s, p and d basis functions (Legacy optimizer)
+opt_hsoh_pbe0_def2svp               #Oxadisulfane: DFT PBE0 DL-FIND geometry optimization test: s, p and d basis functions
+opt_c3h4_rhf_631g                   #Allene: RHF DL-FIND geometry optimization test: s and p basis functions
+opt_caffeine_b3lyp_3-21g            #Caffeine: DFT B3LYP DL-FIND geometry optimization test: s and p basis functions (Baker test set)
+opt_c2h5rad_uhf_631gss              #Ethyl radical: UHF DL-FIND geometry optimization test: s, p and d basis functions
+opt_c2hrad_ub3lyp_ccpvdz            #Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test: s, p and d basis functions
+api_water_rhf_631g                  #Water: API test
+

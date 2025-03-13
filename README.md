@@ -1,7 +1,7 @@
 <p align="right">
-<img src="https://github.com/Madu86/QUICK/workflows/Serial%20Build/badge.svg">
-<img src="https://github.com/Madu86/QUICK/workflows/MPI%20Build/badge.svg">
-<img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
+ <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20Serial%20Version/badge.svg?branch=master">
+ <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20MPI%20Version/badge.svg?branch=master">
+ <img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
 </p>
 <p align="left">
 <img width="299" height="169" src="./tools/logo.png">
@@ -24,7 +24,7 @@ Features
 * Supports QM/MM calculations with Amber22 and later
 * Fortran API to use QUICK as QM energy and force engine
 * MPI parallelization for CPU platforms
-* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs (HIP available in QUICK-23.08, currently disabled)
+* Massively parallel GPU implementation via CUDA/HIP for Nvidia/AMD GPUs
 * Multi-GPU support via MPI + CUDA/HIP, also across multiple compute nodes
 
 Limitations
@@ -36,7 +36,6 @@ Limitations
 * Effective core potentials (ECPs) are not supported
 * DFT calculations are performed exclusively using the SG1 grid system 
 * No meta-GGA functionals, no range-separated hybrid functionals
-* HIP (AMD GPU support) is currently disabled (available in QUICK-23.08 but not QUICK-24.03)
 
 Installation
 ------------
@@ -61,9 +60,9 @@ Citation
 --------
 Please cite QUICK-24.03 as follows.
 
-Manathunga, M.; O'Hearn, K. A., Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
-Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03 
-University of California San Diego, CA and
+Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
+Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03.
+University of California, San Diego, CA and
 Michigan State University, East Lansing, MI, 2024.
 
 If you perform density functional theory calculations please also cite:

@@ -56,7 +56,7 @@ module quick_gridpoints_module
     !function
     integer,dimension(:), allocatable   :: primf_counter
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     !an array indicating bin of a grid point
     integer,dimension(:), allocatable   :: bin_locator
 #endif
@@ -235,7 +235,7 @@ module quick_gridpoints_module
     call get_sigrad()
 
     !Calculate the grid weights and store them
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
 
     call gpu_get_ssw(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%arr_wtang, xcg_tmp%arr_rwt, xcg_tmp%arr_rad3, &
@@ -243,7 +243,7 @@ module quick_gridpoints_module
 
 #else
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
 
    if(bMPI) then
 
@@ -265,7 +265,7 @@ module quick_gridpoints_module
         xcg_tmp%weight(idx)=xcg_tmp%sswt(idx)*xcg_tmp%arr_wtang(idx)*xcg_tmp%arr_rwt(idx)*xcg_tmp%arr_rad3(idx)
     enddo
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
    if(bMPI) then
       call get_mpi_ssw
    endif
@@ -274,7 +274,7 @@ module quick_gridpoints_module
 
 #endif
 
-#ifdef MPIV
+#if defined(MPIV)
    if(master) then
 #endif
 
@@ -285,12 +285,12 @@ module quick_gridpoints_module
     !Measure time to pack grid points
     RECORD_TIME(timer_begin%TDFTGrdPck)
 
-#ifdef MPIV
+#if defined(MPIV)
    endif
 #endif
 
     ! octree run and grid point packing are currently done using a single gpu
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
    if(master) then
 #endif
 
@@ -313,7 +313,7 @@ module quick_gridpoints_module
     timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
     timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     endif
 #endif
 
@@ -338,9 +338,8 @@ module quick_gridpoints_module
     if(master) then
 #endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
+#if defined(MPIV_GPU)
    if(master) then
 #endif
 
@@ -348,7 +347,7 @@ module quick_gridpoints_module
      call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
      self%bin_locator, self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     endif
 #endif
 
@@ -366,7 +365,7 @@ module quick_gridpoints_module
     endif
 #endif
 
-#if !defined CUDA && !defined HIP
+#if !defined(GPU)
 !    do i=1, self%nbins
 !        nid = self%bin_counter(i+1)-self%bin_counter(i)
 
@@ -399,11 +398,11 @@ module quick_gridpoints_module
 !    enddo
 
     ! relinquish memory allocated for octree and grid point packing
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
    if(master) then
 #endif
     call gpack_finalize()
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     endif
 #endif
 
@@ -439,7 +438,7 @@ module quick_gridpoints_module
 
         if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
 
-#if !defined CUDA || !defined CUDA_MPIV || !defined HIP || !defined HIP_MPIV
+#if !defined(GPU) || !defined(MPIV_GPU)
         isDFT = .true.
         call alloc(quick_basis, isDFT)
 #endif
@@ -455,7 +454,7 @@ module quick_gridpoints_module
 
         if (allocated(sigrad2)) deallocate(sigrad2)
 
-#if !defined CUDA || !defined CUDA_MPIV || !defined HIP || !defined HIP_MPIV
+#if !defined(GPU) || !defined(MPIV_GPU)
         isDFT = .true.
         call dealloc(quick_basis, isDFT)
 #endif
@@ -479,7 +478,7 @@ module quick_gridpoints_module
         if (.not. allocated(self%basf_counter)) allocate(self%basf_counter(self%nbins + 1))
         if (.not. allocated(self%primf_counter)) allocate(self%primf_counter(self%nbtotbf + 1))
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
         if (.not. allocated(self%bin_locator)) allocate(self%bin_locator(self%gridb_count))
 #endif
         if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
@@ -538,7 +537,7 @@ module quick_gridpoints_module
         if (allocated(self%basf_counter)) deallocate(self%basf_counter)
         if (allocated(self%primf_counter)) deallocate(self%primf_counter)
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
         if (allocated(self%bin_locator)) deallocate(self%bin_locator)
 #endif
         if (allocated(self%bin_counter)) deallocate(self%bin_counter)
