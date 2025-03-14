@@ -398,11 +398,10 @@ set_test()
     cp "$2/$1.in" ./
   fi
 
-  cp "$2/saved/$1.out" "$1.ref.out"
-
   if [ `echo "$1" | grep '^rw_' | wc -l` -eq 1 ]; then
     cp "$2/$1_read.in" ./
-    cp "$2/saved/$1_read.out" "$1_read.ref.out"
+  else
+    cp "$2/saved/$1.out" "$1.ref.out"
   fi
 }
 
@@ -620,8 +619,7 @@ run_rw_test()
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
   if [ `check_f_error $1` -eq 0 ]; then
-    check_energy "$1" "$5" "$6"
-    check_energy "$1_read" "$5" "$6"
+    check_rw "$1" "$5" "$6"
     echo "" | tee -a "$6"
   else
     echo "SKIPPED." | tee -a "$6"
@@ -630,6 +628,30 @@ run_rw_test()
   fi
   unlock_file "$6"
   clean_up "$1"
+}
+
+
+# check energy and/or coordinates of restart files and compare
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: log file
+check_rw()
+{
+  if [ `echo "$1" | grep '_density_' | wc -l` -eq 1 ]; then
+    grep " TOTAL ENERGY         =" "$1.out"|tail -1|awk '{print $NF}' > "$1.ene"
+    grep " TOTAL ENERGY         =" "$1_read.out"|head -1|awk '{print $NF}' > "$1_read.ene"
+
+    "$2/dacdif" -k -a '1.0e-8' "$1_read.ene" "$1.ene" | tee -a "$3"
+  fi
+
+  if [ `echo "$1" | grep '_xyz_' | wc -l` -eq 1 ]; then
+    awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out"| sed -n '3,$p' | head -n -2 > "$1.xyz"
+    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_read.out" | sed -n '2,$p' | head -n -1 > "$1_read.xyz"
+
+    "$2/dacdif" -k -a '2.0e-4' "$1_read.xyz" "$1.xyz" | tee -a "$3"
+  fi
 }
 
 
@@ -702,7 +724,7 @@ check_dipole()
 #   $1: test name
 clean_up()
 {
-  rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt
+  rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt $1.*xyz
   rm -f $1_read.ref.out $1_read.in $1_read.*ene $1_read.*opt
 }
 
