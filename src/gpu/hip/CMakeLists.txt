@@ -1,4 +1,4 @@
-set(QUICK_HIP_SOURCE gpu_utils.cu gpu.cu gpu_type.cu gpu_get2e.cu ../gpu_oei.cu ../gpu_lri.cu ../xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
+set(QUICK_HIP_SOURCE gpu_utils.cu gpu.cu gpu_type.cu gpu_get2e.cu ../gpu_oei.cu ../gpu_oeprop.cu ../gpu_lri.cu ../xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
      
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
 cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels STATIC ${QUICK_HIP_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DGPU -D${QUICK_GPU_PLATFORM})

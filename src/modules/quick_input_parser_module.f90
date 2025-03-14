@@ -10,6 +10,7 @@ module quick_input_parser_module
         module procedure read_integer_keyword
         module procedure read_float_keyword
         module procedure read_string_keyword
+        module procedure read_string_endpoints_keyword
     end interface read
 
     contains
@@ -145,5 +146,35 @@ module quick_input_parser_module
                 endif
             endif        
         end subroutine read_string_keyword
+
+        subroutine read_string_endpoints_keyword(line, keyword, i, j, required, found)
+            implicit none
+            character(len=*), intent(in) :: line
+            character(len=*), intent(in) :: keyword
+            logical, intent(in), optional :: required
+            integer, intent(out) :: i,j
+            integer :: ierror
+            logical, intent(out) :: found   
+            logical :: reqdef !default value of required         
+
+            reqdef = .true.
+            if(present(required)) then
+                reqdef=required
+            endif
+
+            call trimSpace(i,j,line,keyword,found)
+            
+            if(reqdef .and. .not. found) then
+                call PrtErr(OUTFILEHANDLE, "Keyword "//trim(keyword)//" needs an input value.")
+                call quick_exit(OUTFILEHANDLE,1)
+            endif
+
+            if(found) then
+                if(ierror/=0) then
+                    call PrtErr(OUTFILEHANDLE, "Error with keyword "//trim(keyword)//" encountered.")
+                    call quick_exit(OUTFILEHANDLE,1)
+                endif
+            endif        
+        end subroutine read_string_endpoints_keyword
 
 end module quick_input_parser_module
