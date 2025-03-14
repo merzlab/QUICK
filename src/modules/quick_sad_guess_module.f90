@@ -83,6 +83,7 @@ contains
      quick_method%ZMAT=.false.
      quick_method%divcon=.false.
      quick_method%nodirect=.false.
+
      call allocate_mol_sad(quick_molspec%iatomtype)
   
   
