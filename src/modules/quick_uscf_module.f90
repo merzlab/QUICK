@@ -131,6 +131,7 @@ contains
      use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
+!     use quick_restart_module, only: write_double_array
 
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
@@ -834,15 +835,19 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
-           if(quick_method%writeden)then 
+
+!          if(quick_method%writeden)then
+!            call write_double_array(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
+!            call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
+!          endif
+!           if(quick_method%writeden)then 
              ! open data file then write calculated info to dat file
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             call wchk_darray(iDataFile, "denseb",    nbasis, nbasis, 1, quick_qm_struct%denseb,    fail)
-             close(iDataFile)
-           endif 
+!             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+!             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+!             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+!             call wchk_darray(iDataFile, "denseb",    nbasis, nbasis, 1, quick_qm_struct%denseb,    fail)
+!             close(iDataFile)
+!           endif 
 
 #ifdef USEDAT
            ! open data file then write calculated info to dat file

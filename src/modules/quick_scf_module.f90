@@ -162,6 +162,7 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
+!     use quick_restart_module, only: write_double_array
 
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
@@ -728,13 +729,14 @@ contains
   
         if (master) then
 
-           if(quick_method%writeden)then 
-             ! open data file then write calculated info to dat file
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             close(iDataFile)
-           endif 
+!          if(quick_method%writeden) call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+!           if(quick_method%writeden)then 
+!             ! open data file then write calculated info to dat file
+!             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+!             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+!             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+!             close(iDataFile)
+!           endif 
 
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
